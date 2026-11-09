@@ -1,7 +1,7 @@
 unit Gallery.State;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, Fpas.Tui.Editors as Editors,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, Fpas.Tui.Editors as Editors,
   System as Sys;
 
 public type Page = enum: byte
@@ -171,7 +171,7 @@ begin
   end with;
 end function;
 
-public function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
+public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   const Next: Model := case Message of
     when Msg.Show(const Value: Page): State with
@@ -260,19 +260,19 @@ begin
     );
     when Msg.Quit: State;
   end case;
-  const Commands: array of App.Command<Msg> := case Message of
-    when Msg.Quit: [App.Exit<Msg>()];
-    when Msg.ChooseDocument(_): [App.Focus<Msg>('document-editor')];
+  const Commands: array of Mvu.Command<Msg> := case Message of
+    when Msg.Quit: [Mvu.Exit<Msg>()];
+    when Msg.ChooseDocument(_): [Mvu.Focus<Msg>('document-editor')];
     else if Next.Active = Page.Multiline and Next.Active <> State.Active then [
-        App.Focus<Msg>('document-editor')
+        Mvu.Focus<Msg>('document-editor')
       ]
       else if Next.Active = Page.TextInput and Next.Active <> State.Active then [
-          App.Focus<Msg>('text-entry')
+          Mvu.Focus<Msg>('text-entry')
         ]
         else []
         end if
       end if;
   end case;
-  return new App.Transition<Model, Msg>(Next, Commands);
+  return new Mvu.Transition<Model, Msg>(Next, Commands);
 end function;
 end unit;

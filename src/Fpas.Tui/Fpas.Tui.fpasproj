@@ -11,12 +11,13 @@
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeTuiRuntime</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Fpas.Mvu/Fpas.Mvu.fpasproj" />
     <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" PrivateAssets="all" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   <Target Name="IncludeTuiRuntime">
     <ItemGroup>
-      <BuildOutputInPackage Include="$(TargetDir)Fpas.Processes.dll;$(TargetDir)Fpas.Core.dll" />
+      <BuildOutputInPackage Include="$(TargetDir)Fpas.Processes.dll" />
     </ItemGroup>
   </Target>
 </Project>

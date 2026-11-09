@@ -1,0 +1,21 @@
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fpas.Mvu</PackageId>
+    <Version>0.1.0-dev</Version>
+    <Description>Functional Pascal model, update and effect runtime for .NET.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeMvuRuntime</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <Target Name="IncludeMvuRuntime">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(TargetDir)Fpas.Core.dll" />
+    </ItemGroup>
+  </Target>
+</Project>

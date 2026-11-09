@@ -1,7 +1,7 @@
 program MultilineContract;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Editors as Editors,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Editors as Editors,
   Fpas.Tui.Themes as Themes, System as Sys, System.Console as Console;
 
 type Model = record
@@ -25,7 +25,7 @@ begin
   return Msg.Navigate(Position);
 end function;
 
-function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   const Next: Model := case Message of
     when Msg.Edit(const Change: Editors.TextEdit): new Model(
@@ -37,7 +37,7 @@ begin
       Position := Position;
     end with;
   end case;
-  return new App.Transition<Model, Msg>(Next, []);
+  return new Mvu.Transition<Model, Msg>(Next, []);
 end function;
 
 function View(State: Model): E.Element<Msg>;

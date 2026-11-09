@@ -1,7 +1,7 @@
 unit Mandelbrot.Explorer;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
   Mandelbrot.Model as M, Mandelbrot.Palette as P, Mandelbrot.Render as R,
   System as Sys, System.Globalization as Globalization, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
@@ -9,7 +9,7 @@ uses
 const RenderId: string := 'mandelbrot';
 const Colors: Themes.Palette := Themes.Dark();
 
-function Render(State: M.State; Gate: Threads.SemaphoreSlim): App.Command<M.Message>;
+function Render(State: M.State; Gate: Threads.SemaphoreSlim): Mvu.Command<M.Message>;
   async function Work(Post: function(M.Message): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
   begin
     await Gate.WaitAsync(Token);
@@ -25,16 +25,16 @@ function Render(State: M.State; Gate: Threads.SemaphoreSlim): App.Command<M.Mess
   end function;
 begin
   if State.Columns = 0 or State.Rows = 0 then
-    return App.CancelBackground<M.Message>(RenderId);
+    return Mvu.CancelBackground<M.Message>(RenderId);
   end if;
 
-  return App.StartBackground<M.Message>(
+  return Mvu.StartBackground<M.Message>(
     RenderId, Work, function(Failure: Sys.Exception): M.Message => M.Message.Failed(Failure.Message)
   );
 end function;
 
-public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.Message): App.Transition<M.State, M.Message>;
-  function Update(State: M.State; Message: M.Message): App.Transition<M.State, M.Message>;
+public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.Message): Mvu.Transition<M.State, M.Message>;
+  function Update(State: M.State; Message: M.Message): Mvu.Transition<M.State, M.Message>;
   begin
     var Next: M.State := State;
     var Camera: M.Camera := State.Camera;
@@ -70,22 +70,22 @@ public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.M
       when M.Message.Reset:
         Camera := new M.Camera();
       when M.Message.ToggleHelp:
-        return new App.Transition<M.State, M.Message>(
+        return new Mvu.Transition<M.State, M.Message>(
           State with
             Help := not State.Help;
           end with, []
         );
       when M.Message.Exit:
-        return new App.Transition<M.State, M.Message>(State, [App.Exit<M.Message>()]);
+        return new Mvu.Transition<M.State, M.Message>(State, [Mvu.Exit<M.Message>()]);
       when M.Message.Rendered(const Image: array of E.Cell):
-        return new App.Transition<M.State, M.Message>(
+        return new Mvu.Transition<M.State, M.Message>(
           State with
             Image := Image;
             Ready := true;
           end with, []
         );
       when M.Message.Failed(const Reason: string):
-        return new App.Transition<M.State, M.Message>(
+        return new Mvu.Transition<M.State, M.Message>(
           State with
             Failure := Reason;
           end with, []
@@ -93,7 +93,7 @@ public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.M
     end case;
 
     if Camera = State.Camera and Next.Columns = State.Columns and Next.Rows = State.Rows then
-      return new App.Transition<M.State, M.Message>(State, []);
+      return new Mvu.Transition<M.State, M.Message>(State, []);
     end if;
 
     Next := Next with
@@ -101,7 +101,7 @@ public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.M
       Ready := false;
       Failure := '';
     end with;
-    return new App.Transition<M.State, M.Message>(Next, [Render(Next, Gate)]);
+    return new Mvu.Transition<M.State, M.Message>(Next, [Render(Next, Gate)]);
   end function;
 begin
   return Update;

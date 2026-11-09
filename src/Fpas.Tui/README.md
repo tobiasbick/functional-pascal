@@ -10,11 +10,15 @@ processes one queued entry per step.
 
 ## Application and host
 
-`Update` returns a model and typed commands. `StartBackground` runs work with a
-cancellation token and a `Post` function that completes on queue admission.
-Starting work with the same ID replaces the previous run. The host discards
-already queued results from cancelled or replaced runs. `Exit` closes the
-session and joins its cancelled work.
+Use `Fpas.Mvu.Application.Transition` as the result of `Update` and use
+`Fpas.Mvu.Application` to construct commands such as `StartBackground`,
+`CancelBackground`, `Focus` and `Exit`. The [shared MVU runtime](../Fpas.Mvu/README.md)
+owns message delivery and runs background work and cancellation callbacks off
+the host thread.
+
+`Exit` stops admission and requests cancellation. A headless driver can await
+`CloseAsync` for cleanup after the step returns. `Dispose` joins outstanding
+cleanup and releases the host connection.
 
 The FIFO holds 64 entries. `Send` returns an input ID after admission or
 `QueueFull`. A manual `Step` processes one entry, and `Wait` observes the
@@ -115,7 +119,8 @@ path as unmodified Enter on the focused control. Activation itself leaves
 focus in place. A click still uses the pointer position, such as when
 placing the caret or selecting a list row.
 
-Return `App.Focus<TMsg>(Id)` from `Update` to focus a control in the
+Include `Mvu.Focus<TMsg>(Id)` from `Fpas.Mvu.Application` in the transition's
+commands to focus a control in the
 resulting view. The host applies the last focus request of the turn after
 layout and modal focus reconciliation. It ignores targets that are missing,
 disabled or outside the active focus scope.
@@ -288,8 +293,8 @@ demonstrates a live switch from its Options overlay.
 
 ## Build and inspect
 
-The package contains the TUI library, its terminal adapter and the matching
-FPAS runtime support assembly. Use the current local FPAS SDK to build the
+The package contains the TUI library and its terminal adapter and depends on
+`Fpas.Mvu`. Use the current local FPAS SDK to build the
 source project and the [filter list example](../../examples/tui/filter-list/).
 The [widget gallery](../../examples/tui/gallery/) shows the available
 controls and layout elements in all five themes.

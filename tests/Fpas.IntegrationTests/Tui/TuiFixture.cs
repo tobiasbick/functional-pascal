@@ -9,7 +9,7 @@ internal static class TuiFixture
     {
         var library = await BuildLibrary(program);
         var source = await File.ReadAllTextAsync(Path.Combine(Fixtures, fixture));
-        await program.Compile(source, "--reference", library, "--reference", program.FilePath("Fpas.Processes.dll"));
+        await program.Compile(source, References(program, library));
         return source;
     }
 
@@ -22,19 +22,36 @@ internal static class TuiFixture
         var main = Path.Combine(folder, "main.fpas");
         await program.Compile(await File.ReadAllTextAsync(main),
             [.. Directory.GetFiles(folder, "*.fpas").Where(path => path != main),
-             "--reference", library, "--reference", program.FilePath("Fpas.Processes.dll")]);
+             .. References(program, library)]);
     }
 
     internal static async Task<string> BuildLibrary(Debuggee program)
     {
         var cli = TestEnvironment.Metadata("FpasCliPath");
         var platform = Path.Combine(Path.GetDirectoryName(cli)!, "Fpas.Processes.dll");
+        var mvu = await BuildMvu(program);
         var library = program.FilePath("Fpas.Tui.dll");
         var sources = Directory.GetFiles(Path.Combine(Fixtures, "lib"), "*.fpas", SearchOption.AllDirectories);
         var compiled = await ProcessRunner.RunAsync([cli, "compile", .. sources, "--output", library, "--target", "library",
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", platform]);
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", platform, "--reference", mvu]);
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
         File.Copy(platform, program.FilePath("Fpas.Processes.dll"));
         return library;
     }
+
+    private static async Task<string> BuildMvu(Debuggee program)
+    {
+        var cli = TestEnvironment.Metadata("FpasCliPath");
+        var library = program.FilePath("Fpas.Mvu.dll");
+        var folder = Path.Combine(AppContext.BaseDirectory, "Fixtures", "mvu", "lib");
+        var sources = Directory.GetFiles(folder, "*.fpas", SearchOption.AllDirectories);
+        var compiled = await ProcessRunner.RunAsync([cli, "compile", .. sources, "--output", library, "--target", "library",
+            "--reference-dir", TestEnvironment.ReferenceDirectory]);
+        Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
+        return library;
+    }
+
+    private static string[] References(Debuggee program, string library) =>
+        ["--reference", library, "--reference", program.FilePath("Fpas.Mvu.dll"),
+         "--reference", program.FilePath("Fpas.Processes.dll")];
 }

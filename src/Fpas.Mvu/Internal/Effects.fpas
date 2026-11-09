@@ -1,0 +1,194 @@
+unit Fpas.Mvu.Internal.Effects;
+
+uses
+  System as Sys, System.Collections.Generic as Generic, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+type Run = record
+  Version: long;
+  Source: Threads.CancellationTokenSource;
+  Work: Tasks.Task;
+  Cancellation: Tasks.Task?;
+
+  /// Creates a run and takes ownership of its cancellation source.
+  /// <param name="Version">The generation attached to its messages.</param>
+  /// <param name="Source">The worker's cancellation source.</param>
+  /// <param name="Work">The task representing the worker body.</param>
+  /// <returns>The run before any cancellation request.</returns>
+  public static function Start(
+    Version: long; Source: Threads.CancellationTokenSource; Work: Tasks.Task
+  ): Run;
+  begin
+    return new Run(Version, Source, Work, null);
+  end function;
+
+  /// Returns the generation attached to the worker's messages.
+  public function Generation(): long;
+  begin
+    return self.Version;
+  end function;
+
+  /// Returns the run with its asynchronous cancellation request recorded.
+  public function RequestCancel(): Run;
+  begin
+    if self.Cancellation <> null then
+      return self;
+    end if;
+
+    return new Run(self.Version, self.Source, self.Work, self.Source.CancelAsync());
+  end function;
+
+  /// Reports whether the body or its cancellation callbacks are still running.
+  public function Running(): bool;
+  begin
+    const Callback: Tasks.Task? := self.Cancellation;
+    return not self.Work.IsCompleted or (Callback <> null and not Callback.IsCompleted);
+  end function;
+
+  /// Returns a task that observes the body and callbacks, then disposes the source.
+  public async function Join(): Tasks.Task;
+  begin
+    try
+      const Callback: Tasks.Task? := self.Cancellation;
+      if Callback = null then
+        await self.Work.ConfigureAwait(false);
+      else
+        await Tasks.Task.WhenAll(self.Work, Callback).ConfigureAwait(false);
+      end if;
+    catch Failure: Sys.OperationCanceledException when self.Source.IsCancellationRequested do
+    finally
+      self.Source.Dispose();
+    end try;
+  end function;
+end record;
+
+/// Manages effect generations and cleanup on the session's owner.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+public type State<TMsg> = record
+  /// Schedules work with the supplied ID, body and failure mapper.
+  public Start: procedure(
+    string, function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+    function(Sys.Exception): TMsg
+  );
+  /// Invalidates a generation and starts cancellation.
+  public Cancel: procedure(string);
+  /// Reports whether an effect message belongs to the current generation.
+  public IsCurrent: function(string, long): bool;
+  /// Counts runs with a worker or cancellation callbacks still executing.
+  public Pending: function(): int;
+  /// Requests cancellation and returns the cleanup task.
+  public Close: function(): Tasks.Task;
+end record;
+
+/// Creates an effect owner that sends results through the session mailbox.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <param name="Enqueue">Posts a generation-tagged message using the run's cancellation token.</param>
+/// <returns>The effect owner.</returns>
+public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task): State<TMsg>;
+  async function Perform(
+    Id: string; Version: long; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg; Token: Threads.CancellationToken
+  ): Tasks.Task;
+    function Post(Message: TMsg): Tasks.Task;
+    begin
+      return Enqueue(Id, Version, Message, Token);
+    end function;
+  begin
+    try
+      Token.ThrowIfCancellationRequested();
+      await Work(Post, Token).ConfigureAwait(false);
+    catch Failure: Sys.Exception do
+      if not Token.IsCancellationRequested then
+        await Post(OnFailure(Failure)).ConfigureAwait(false);
+      end if;
+    end try;
+  end function;
+
+  procedure Prune();
+  begin
+    for Index: int := Workers.Count - 1 downto 0 do
+      const Worker: Run := Workers[Index];
+      if not Worker.Running() then
+        const Completion: Tasks.Task := Worker.Join();
+        if Completion.IsFaulted then
+          Cleanup.Add(Completion);
+        end if;
+
+        Workers.RemoveAt(Index);
+      end if;
+    end for;
+  end procedure;
+
+  procedure Cancel(Id: string);
+  begin
+    var Version: long := 0L;
+    if not Versions.Remove(Id, out Version) then
+      return;
+    end if;
+
+    for Index: int := Workers.Count - 1 downto 0 do
+      const Worker: Run := Workers[Index];
+      if Worker.Generation() = Version then
+        Workers[Index] := Worker.RequestCancel();
+        break;
+      end if;
+    end for;
+  end procedure;
+
+  procedure Start(
+    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg
+  );
+  begin
+    Prune();
+    Cancel(Id);
+    Sequence := Sequence + 1L;
+    const Version: long := Sequence;
+    const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+    const Task: Tasks.Task := Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Perform(Id, Version, Work, OnFailure, Source.Token)
+      )
+    );
+    Versions.Add(Id, Version);
+    Workers.Add(Run.Start(Version, Source, Task));
+  end procedure;
+
+  function IsCurrent(Id: string; Version: long): bool;
+  begin
+    var Current: long := 0L;
+    return Versions.TryGetValue(Id, out Current) and Current = Version;
+  end function;
+
+  function Pending(): int;
+  begin
+    Prune();
+    var Count: int := Workers.Count;
+    for Completion: Tasks.Task in Cleanup do
+      if not Completion.IsCompleted then
+        Count := Count + 1;
+      end if;
+    end for;
+
+    return Count;
+  end function;
+
+  function Close(): Tasks.Task;
+  begin
+    Prune();
+    Versions.Clear();
+    for Worker: Run in Workers do
+      Cleanup.Add(Worker.RequestCancel().Join());
+    end for;
+
+    Workers.Clear();
+    return Tasks.Task.WhenAll(Cleanup.ToArray());
+  end function;
+begin
+  const Workers: Generic.List<Run> := new Generic.List<Run>();
+  const Versions: Generic.Dictionary<string, long> := new Generic.Dictionary<string, long>();
+  const Cleanup: Generic.List<Tasks.Task> := new Generic.List<Tasks.Task>();
+  var Sequence: long := 0L;
+  return new State<TMsg>(Start, Cancel, IsCurrent, Pending, Close);
+end function;
+end unit;

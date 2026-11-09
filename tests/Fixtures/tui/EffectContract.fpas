@@ -1,7 +1,8 @@
 program EffectContract;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
+  Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime, Fpas.Tui.Application as App,
+  Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = union
@@ -9,15 +10,27 @@ type Msg = union
   Replace;
   StartFailure;
   StartUntilExit;
+  StartBlocked;
+  Cancel;
+  Touch;
   Changed(Value: string);
   Quit;
 end union;
 
 const Deadline: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5);
+const BodyStarted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const BodyRelease: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
 const Posted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
 const Replaced: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const ReplacementRelease: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
 const Started: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
@@ -26,21 +39,36 @@ const Started: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
 const Stopping: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
+const StopRelease: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
 const Release: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
 const Joined: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
+const LateRejected: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const BeginBlockedPost: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const BlockedPost: Tasks.TaskCompletionSource<Tasks.Task> := new Tasks.TaskCompletionSource<Tasks.Task>(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
 
 procedure ObserveReplacement();
 begin
   Replaced.SetResult();
+  ReplacementRelease.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
 end procedure;
 
 procedure ObserveStop();
 begin
   Stopping.SetResult();
+  StopRelease.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+  raise new Sys.InvalidOperationException('callback boom');
 end procedure;
 
 async function Original(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
@@ -48,6 +76,8 @@ begin
   using const Registration: Threads.CancellationTokenRegistration := Token.Register(
     ObserveReplacement
   );
+  BodyStarted.SetResult();
+  BodyRelease.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
   await Post(Msg.Changed('obsolete'));
   Posted.SetResult();
   await Replaced.Task.WaitAsync(Deadline);
@@ -66,11 +96,25 @@ end function;
 
 async function UntilExit(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
 begin
-  using const Registration: Threads.CancellationTokenRegistration := Token.Register(ObserveStop);
+  discard Token.Register(ObserveStop);
   Started.SetResult();
   await Stopping.Task.WaitAsync(Deadline);
+  try
+    await Post(Msg.Changed('late'));
+  catch Error: Sys.OperationCanceledException do
+    LateRejected.SetResult();
+  end try;
+
   await Release.Task.WaitAsync(Deadline);
   Joined.SetResult();
+end function;
+
+async function UntilMailboxCloses(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  await BeginBlockedPost.Task.WaitAsync(Deadline);
+  const Pending: Tasks.Task := Post(Msg.Changed('blocked'));
+  BlockedPost.SetResult(Pending);
+  await Pending;
 end function;
 
 function Failed(Error: Sys.Exception): Msg;
@@ -78,33 +122,42 @@ begin
   return Msg.Changed('failed: ' + Error.Message);
 end function;
 
-function Update(State: string; Message: Msg): App.Transition<string, Msg>;
+function Update(State: string; Message: Msg): Mvu.Transition<string, Msg>;
 begin
   case Message of
     when Msg.StartOriginal:
-      return new App.Transition<string, Msg>(
+      return new Mvu.Transition<string, Msg>(
         State,
-        [App.StartBackground<Msg>('job', Original, Failed)]
+        [Mvu.StartBackground<Msg>('job', Original, Failed)]
       );
     when Msg.Replace:
-      return new App.Transition<string, Msg>(
+      return new Mvu.Transition<string, Msg>(
         State,
-        [App.StartBackground<Msg>('job', Replacement, Failed)]
+        [Mvu.StartBackground<Msg>('job', Replacement, Failed)]
       );
     when Msg.StartFailure:
-      return new App.Transition<string, Msg>(
+      return new Mvu.Transition<string, Msg>(
         State,
-        [App.StartBackground<Msg>('failing', Failing, Failed)]
+        [Mvu.StartBackground<Msg>('failing', Failing, Failed)]
       );
     when Msg.StartUntilExit:
-      return new App.Transition<string, Msg>(
+      return new Mvu.Transition<string, Msg>(
         State,
-        [App.StartBackground<Msg>('until-exit', UntilExit, Failed)]
+        [Mvu.StartBackground<Msg>('until-exit', UntilExit, Failed)]
       );
+    when Msg.StartBlocked:
+      return new Mvu.Transition<string, Msg>(
+        State,
+        [Mvu.StartBackground<Msg>('blocked', UntilMailboxCloses, Failed)]
+      );
+    when Msg.Cancel:
+      return new Mvu.Transition<string, Msg>(State, [Mvu.CancelBackground<Msg>('until-exit')]);
+    when Msg.Touch:
+      return new Mvu.Transition<string, Msg>(State + '!', []);
     when Msg.Changed(const Value: string):
-      return new App.Transition<string, Msg>(Value, []);
+      return new Mvu.Transition<string, Msg>(Value, []);
     when Msg.Quit:
-      return new App.Transition<string, Msg>(State, [App.Exit<Msg>()]);
+      return new Mvu.Transition<string, Msg>(State, [Mvu.Exit<Msg>()]);
   end case;
 end function;
 
@@ -115,6 +168,7 @@ begin
     E.Button<Msg>('replacement', 'Replacement', Msg.Replace),
     E.Button<Msg>('failing', 'Failing', Msg.StartFailure),
     E.Button<Msg>('until-exit', 'Until exit', Msg.StartUntilExit),
+    E.Button<Msg>('cancel', 'Cancel', Msg.Cancel), E.Button<Msg>('touch', 'Touch', Msg.Touch),
     E.Button<Msg>('quit', 'Quit', Msg.Quit)
   );
 end function;
@@ -156,25 +210,44 @@ begin
     30,
     8
   );
-  Send(Session, 'original');
-  Send(Session, 'replacement');
-  discard Session.Step();
-  Posted.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
-  discard Session.Step();
-  Replaced.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
-  StepEffect(Session, 'initial');
-  StepEffect(Session, 'replacement');
+  try
+    Send(Session, 'original');
+    discard Session.Step();
+    BodyStarted.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    Send(Session, 'touch');
+    discard Session.Step();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'initial!' then
+      raise new Sys.InvalidOperationException('The worker prefix blocked another button.');
+    end if;
 
-  Send(Session, 'failing');
-  discard Session.Step();
-  if Session.Snapshot().Lines[0].TrimEnd() <> 'replacement' then
-    raise new Sys.InvalidOperationException('The failure message ran in the starting step.');
-  end if;
+    Send(Session, 'replacement');
+    Send(Session, 'touch');
+    BodyRelease.SetResult();
+    Posted.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    discard Session.Step();
+    Replaced.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    discard Session.Step();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'initial!!' then
+      raise new Sys.InvalidOperationException('Replacement cancellation blocked another button.');
+    end if;
 
-  StepEffect(Session, 'failed: worker boom');
+    StepEffect(Session, 'initial!!');
+    StepEffect(Session, 'replacement');
+
+    Send(Session, 'failing');
+    discard Session.Step();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'replacement' then
+      raise new Sys.InvalidOperationException('The failure message ran in the starting step.');
+    end if;
+
+    StepEffect(Session, 'failed: worker boom');
+  finally
+    discard BodyRelease.TrySetResult();
+    discard ReplacementRelease.TrySetResult();
+  end try;
 end procedure;
 
-procedure CheckExit();
+procedure CheckExitSession();
 begin
   using const Session: App.HeadlessSession := App.StartHeadless<string, Msg>(
     'initial',
@@ -183,44 +256,117 @@ begin
     30,
     8
   );
-  Send(Session, 'until-exit');
-  discard Session.Step();
-  Started.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
-  Send(Session, 'quit');
-
-  const Exiting: Tasks.Task<App.StepResult> := Tasks.Task.Run<App.StepResult>(
-    function(): App.StepResult => Session.Step()
-  );
   try
+    Send(Session, 'until-exit');
+    discard Session.Step();
+    Started.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    Send(Session, 'cancel');
+    discard Session.Step();
     Stopping.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
-    if Exiting.Wait(100) then
+    LateRejected.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    Send(Session, 'touch');
+    discard Session.Step();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'initial!' then
+      raise new Sys.InvalidOperationException('Explicit cancellation blocked another button.');
+    end if;
+
+    Send(Session, 'quit');
+    case Session.Step() of
+      when App.StepResult.Processed(_, _, _):
+      else
+        raise new Sys.InvalidOperationException('Exit did not return from the host step.');
+    end case;
+    const Closing: Tasks.Task := Session.CloseAsync();
+    if Session.IsOpen() or Closing.IsCompleted then
+      raise new Sys.InvalidOperationException('Shutdown must close admission before joining work.');
+    end if;
+
+    case Session.Send(App.Input.Activate('quit')) of
+      when App.Admission.Closed:
+      else
+        raise new Sys.InvalidOperationException('The exited session still admits input.');
+    end case;
+
+    Release.SetResult();
+    Joined.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    if Closing.IsCompleted then
       raise new Sys.InvalidOperationException(
-        'Exit returned before its cancelled worker completed.'
+        'Shutdown forgot an outstanding cancellation callback.'
       );
     end if;
+
+    StopRelease.SetResult();
+    Closing.WaitAsync(Deadline).GetAwaiter().GetResult();
   finally
     discard Release.TrySetResult();
+    discard StopRelease.TrySetResult();
+  end try;
+end procedure;
+
+procedure CheckExit();
+begin
+  try
+    CheckExitSession();
+  catch Failure: Sys.AggregateException do
+    if Failure.Flatten().InnerExceptions[0].Message = 'callback boom' then
+      return;
+    end if;
+
+    raise;
   end try;
 
-  case Exiting.WaitAsync(Deadline).GetAwaiter().GetResult() of
-    when App.StepResult.Processed(_, _, _):
-      if not Joined.Task.IsCompletedSuccessfully or Session.IsOpen() then
-        raise new Sys.InvalidOperationException(
-          'Exit did not join the worker and close the session.'
-        );
-      end if;
-    else
-      raise new Sys.InvalidOperationException('Unexpected exit outcome.');
-  end case;
+  raise new Sys.InvalidOperationException('Shutdown lost the callback failure.');
+end procedure;
 
-  case Session.Send(App.Input.Activate('quit')) of
-    when App.Admission.Closed:
-    else
-      raise new Sys.InvalidOperationException('The exited session still admits input.');
-  end case;
+procedure CheckCore();
+begin
+  const Core: Runtime.Runtime<string, Msg, string> := Runtime.Start<string, Msg, string>(
+    'initial', Update, procedure(Request: Mvu.HostRequest) begin end procedure, 1
+  );
+  try
+    case Core.Post(Msg.Touch) of
+      when Runtime.Admission.Queued:
+      else
+        raise new Sys.InvalidOperationException('The runtime did not admit its first message.');
+    end case;
+
+    case Core.Post(Msg.Touch) of
+      when Runtime.Admission.Full:
+      else
+        raise new Sys.InvalidOperationException('The runtime exceeded the mailbox bound.');
+    end case;
+
+    discard Core.Advance();
+    if Core.Model() <> 'initial!' then
+      raise new Sys.InvalidOperationException('The runtime did not apply exactly one transition.');
+    end if;
+
+    Core.Dispatch(Msg.StartBlocked);
+    discard Core.Send('occupy the mailbox');
+    BeginBlockedPost.SetResult();
+    const Pending: Tasks.Task := BlockedPost.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    if Pending.IsCompleted then
+      raise new Sys.InvalidOperationException('The effect post did not wait for mailbox capacity.');
+    end if;
+    const Closing: Tasks.Task := Core.Close();
+    Closing.WaitAsync(Deadline).GetAwaiter().GetResult();
+    if not Pending.IsCompleted or Pending.IsCompletedSuccessfully then
+      raise new Sys.InvalidOperationException('Closing did not reject a blocked effect post.');
+    end if;
+
+    case Core.Post(Msg.Touch) of
+      when Runtime.Admission.Closed:
+      else
+        raise new Sys.InvalidOperationException('A closed runtime admitted another message.');
+    end case;
+  finally
+    discard BeginBlockedPost.TrySetResult();
+    Core.Close().WaitAsync(Deadline).GetAwaiter().GetResult();
+  end try;
 end procedure;
 
 begin
+  CheckCore();
   CheckReplacementAndFailure();
   CheckExit();
   Console.WriteLine('effect contracts verified');

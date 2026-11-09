@@ -1,8 +1,8 @@
 program TabsContract;
 
-uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
 
-function Update(State: int; Message: int): App.Transition<int, int>;
+function Update(State: int; Message: int): Mvu.Transition<int, int>;
 begin
   raise new Sys.InvalidOperationException('Rendering tabs sent an update.');
 end function;

@@ -1,13 +1,13 @@
 program TableContract;
 
-uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
 
 const Columns: array of E.TableColumn := [
   new E.TableColumn('A', new E.Flex(Basis := 1, Minimum := 1, Maximum := 1)),
   new E.TableColumn('B', new E.Flex(Basis := 3, Minimum := 3, Maximum := 3))
 ];
 
-function Update(State: bool; Message: int): App.Transition<bool, int>;
+function Update(State: bool; Message: int): Mvu.Transition<bool, int>;
 begin
   raise new Sys.InvalidOperationException('Rendering a table sent an update.');
 end function;

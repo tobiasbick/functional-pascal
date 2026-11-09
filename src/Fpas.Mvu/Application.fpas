@@ -1,0 +1,78 @@
+unit Fpas.Mvu.Application;
+
+uses System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+/// A request for the host that owns the input, view and presentation.
+public type HostRequest = union
+  /// Ask the host to finish the session.
+  Close;
+  /// Ask the host to focus the control with the supplied stable ID.
+  Focus(Id: string);
+end union;
+
+/// Work requested by an update.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+public type Command<TMsg> = union
+  /// Start work under Id. Work receives a post function and cancellation token.
+  /// OnFailure maps an exception from the work into an application message.
+  Start(
+    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg
+  );
+  /// Cancel the current run of the supplied effect ID.
+  Cancel(Id: string);
+  /// Forward a request to the host.
+  Host(Request: HostRequest);
+end union;
+
+/// The result of handling one application message.
+/// <typeparam name="TModel">The application's model type.</typeparam>
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+public type Transition<TModel, TMsg> = record
+  /// The model to commit.
+  public Model: TModel;
+  /// The commands to execute in order after committing the model.
+  public Commands: array of Command<TMsg>;
+end record;
+
+/// Requests that the host finish the session.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <returns>The close command.</returns>
+public function Exit<TMsg>(): Command<TMsg>;
+begin
+  return Command<TMsg>.Host(HostRequest.Close);
+end function;
+
+/// Requests focus in the view produced by the update.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <param name="Id">The host's stable control ID.</param>
+/// <returns>The focus command.</returns>
+public function Focus<TMsg>(Id: string): Command<TMsg>;
+begin
+  return Command<TMsg>.Host(HostRequest.Focus(Id));
+end function;
+
+/// Describes an owned background run that may post messages while it executes.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <param name="Id">A nonempty ID. Starting it again replaces its previous run.</param>
+/// <param name="Work">The work. Its post task completes when the mailbox admits the message.</param>
+/// <param name="OnFailure">Maps a worker exception into an application message.</param>
+/// <returns>The command that starts the run.</returns>
+public function StartBackground<TMsg>(
+  Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+  OnFailure: function(Sys.Exception): TMsg
+): Command<TMsg>;
+requires Id.Length > 0;
+begin
+  return Command<TMsg>.Start(Id, Work, OnFailure);
+end function;
+
+/// Requests cancellation and invalidates queued messages from the cancelled run.
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <param name="Id">The ID of the run to cancel.</param>
+/// <returns>The cancellation command.</returns>
+public function CancelBackground<TMsg>(Id: string): Command<TMsg>;
+begin
+  return Command<TMsg>.Cancel(Id);
+end function;
+end unit;

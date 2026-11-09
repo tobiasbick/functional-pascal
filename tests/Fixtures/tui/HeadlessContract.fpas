@@ -1,7 +1,7 @@
 program HeadlessContract;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
   Fpas.Tui.Themes as Themes, Fpas.Tui.Status as Status,
   Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Layout.Flexible as F, System.IO as IO,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
@@ -22,20 +22,20 @@ begin
   discard Posted.TrySetResult(true);
 end function;
 
-function Update(State: int; Message: Msg): App.Transition<int, Msg>;
+function Update(State: int; Message: Msg): Mvu.Transition<int, Msg>;
 begin
   case Message of
     when Msg.Start:
-      return new App.Transition<int, Msg>(
+      return new Mvu.Transition<int, Msg>(
         State,
-        [App.StartBackground<Msg>('task', Work, function(Error: Sys.Exception): Msg => Msg.Fail)]
+        [Mvu.StartBackground<Msg>('task', Work, function(Error: Sys.Exception): Msg => Msg.Fail)]
       );
     when Msg.Cancel:
-      return new App.Transition<int, Msg>(State, [App.CancelBackground<Msg>('task')]);
+      return new Mvu.Transition<int, Msg>(State, [Mvu.CancelBackground<Msg>('task')]);
     when Msg.Progress:
-      return new App.Transition<int, Msg>(1, []);
+      return new Mvu.Transition<int, Msg>(1, []);
     when Msg.Fail:
-      return new App.Transition<int, Msg>(-1, []);
+      return new Mvu.Transition<int, Msg>(-1, []);
   end case;
 end function;
 
@@ -183,9 +183,9 @@ begin
 end procedure;
 
 procedure CheckCanvas(Glyph: string);
-  function Unchanged(State: int; Message: int): App.Transition<int, int>;
+  function Unchanged(State: int; Message: int): Mvu.Transition<int, int>;
   begin
-    return new App.Transition<int, int>(State, []);
+    return new Mvu.Transition<int, int>(State, []);
   end function;
 
   function WideCell(Column: int; Row: int): E.Cell;
@@ -217,9 +217,9 @@ begin
   end if;
 end procedure;
 
-function OverlayUpdate(State: int; Message: int): App.Transition<int, int>;
+function OverlayUpdate(State: int; Message: int): Mvu.Transition<int, int>;
 begin
-  return new App.Transition<int, int>(Message, []);
+  return new Mvu.Transition<int, int>(Message, []);
 end function;
 
 function OverlayView(State: int): E.Element<int>;
@@ -422,9 +422,9 @@ begin
 end procedure;
 
 procedure CheckLiveTheme();
-  function UpdateTheme(State: bool; Message: bool): App.Transition<bool, bool>;
+  function UpdateTheme(State: bool; Message: bool): Mvu.Transition<bool, bool>;
   begin
-    return new App.Transition<bool, bool>(Message, []);
+    return new Mvu.Transition<bool, bool>(Message, []);
   end function;
 
   function ThemeFor(State: bool): E.Theme;

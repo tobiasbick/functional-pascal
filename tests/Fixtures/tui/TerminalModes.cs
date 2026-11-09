@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Fpas.Tui;
 using Microsoft.Win32.SafeHandles;
+using Mvu = Fpas.Mvu.Application;
 
 var fail = args[0] == "failure";
 using var terminal = new NativeTerminal();
@@ -26,10 +27,10 @@ File.WriteAllText("terminal-modes.json", JsonSerializer.Serialize(new
     Error = failure?.Message
 }));
 
-Application.Transition<int, int> Update(int state, int message)
+Mvu.Transition<int, int> Update(int state, int message)
 {
     active = terminal.Read();
-    if (!fail) return new(state, [Application.Exit<int>()]);
+    if (!fail) return new(state, [Mvu.Exit<int>()]);
     terminal.DisconnectOutput();
     return new(message, []);
 }

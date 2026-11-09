@@ -1,7 +1,7 @@
 program FilterList;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, System as Sys,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, System as Sys,
   System.Collections.Generic as Generic, System.Console as Console,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 
@@ -77,10 +77,10 @@ begin
   end for;
 end function;
 
-function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   var Next: Model := State;
-  var Commands: array of App.Command<Msg> := [];
+  var Commands: array of Mvu.Command<Msg> := [];
   case Message of
     when Msg.FilterChanged(const Value: string):
       Next := State with
@@ -123,7 +123,7 @@ begin
         Failure := '';
       end with;
       Commands := [
-        App.StartBackground<Msg>(
+        Mvu.StartBackground<Msg>(
           'refresh', RefreshItems,
           function(Error: Sys.Exception): Msg => Msg.RefreshFailed(Error.Message)
         )
@@ -139,10 +139,10 @@ begin
         Failure := Reason;
       end with;
     when Msg.Quit:
-      Commands := [App.Exit<Msg>()];
+      Commands := [Mvu.Exit<Msg>()];
   end case;
 
-  return new App.Transition<Model, Msg>(Next, Commands);
+  return new Mvu.Transition<Model, Msg>(Next, Commands);
 end function;
 
 function SameList(Previous: ListDeps; Current: ListDeps): bool;

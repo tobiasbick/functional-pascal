@@ -88,6 +88,12 @@ input delivery, leak checks and final application publishing.
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
 of a worker failure on a later step, and joining cancelled workers before exit.
+The effect fixture drives the same update function in the TUI and directly
+through [Fpas.Mvu](../src/Fpas.Mvu/README.md). It holds a worker before its first
+await and holds cancellation callbacks during replacement and explicit cancel,
+then checks that another button can still update the TUI. It also checks
+release of a blocked writer and observes callback completion and failure at
+shutdown.
 It also checks initial and resized viewports in the gallery, canvas size
 notifications and the priority of typed characters in a focused editor.
 The gallery verifies that an empty text field shows its placeholder after

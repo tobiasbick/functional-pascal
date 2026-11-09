@@ -1,6 +1,6 @@
 program CanvasInputContract;
 
-uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
 
 type State = record
   public Notice: string := '';
@@ -15,7 +15,7 @@ type Msg = union
   Shortcut;
 end union;
 
-function Update(Model: State; Message: Msg): App.Transition<State, Msg>;
+function Update(Model: State; Message: Msg): Mvu.Transition<State, Msg>;
 begin
   const Next: State := case Message of
     when Msg.Resized(const Columns: int, const Rows: int): Model with
@@ -30,7 +30,7 @@ begin
       Notice := Model.Notice + 'shortcut ';
     end with;
   end case;
-  return new App.Transition<State, Msg>(Next, []);
+  return new Mvu.Transition<State, Msg>(Next, []);
 end function;
 
 function Resize(Columns: int; Rows: int): Msg;

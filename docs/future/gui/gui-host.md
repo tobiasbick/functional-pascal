@@ -1,6 +1,6 @@
 # GUI MVU host
 
-Depends on the [managed binding](../../../src/Fpas.Gui.Cui/README.md), [MVU core](shared-mvu.md)
+Depends on the [managed binding](../../../src/Fpas.Gui.Cui/README.md), [MVU core](../../../src/Fpas.Mvu/README.md)
 and [widget contracts](shared-widgets.md). Implement `Fpas.Gui` as the FPAS
 adapter from shared declarative views to CUI.
 
@@ -37,7 +37,7 @@ adapter from shared declarative views to CUI.
   Use the binding's platform wake operation; do not mutate CUI from worker tasks
   or require continuous polling/rendering as the normal idle strategy.
 - [ ] Handle close, rendering failure and exceptions with the
-  [MVU shutdown protocol](shared-mvu.md#cancellation-and-shutdown). Keep the
+  [MVU shutdown protocol](../../../src/Fpas.Mvu/README.md#cancellation-and-shutdown). Keep the
   native event loop responsive while cancellation and worker cleanup finish.
   Wake it on shutdown completion and release CUI resources on the owner thread.
   Keep exceptions out of unmanaged callback frames.

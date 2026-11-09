@@ -1,0 +1,227 @@
+unit Fpas.Mvu.Session;
+
+uses
+  Fpas.Mvu.Application as App, Fpas.Mvu.Internal.Effects as Effects, System as Sys,
+  System.Threading as Threads, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
+
+/// The outcome of posting to the session mailbox.
+public type Admission = union
+  /// The item entered the FIFO.
+  Queued;
+  /// The mailbox is open but at capacity.
+  Full;
+  /// The session no longer admits items.
+  Closed;
+end union;
+
+/// The outcome of advancing the session by at most one mailbox item.
+/// <typeparam name="TInput">The host's raw input type.</typeparam>
+public type Step<TInput> = union
+  /// The mailbox has no work for the owner.
+  Idle;
+  /// The owner must route the supplied host input.
+  Input(Value: TInput);
+  /// The runtime applied a message.
+  Updated;
+  /// A superseded effect's result was discarded.
+  Stale;
+end union;
+
+/// Owns one model, mailbox and group of effects.
+/// <typeparam name="TModel">The application's model type.</typeparam>
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <typeparam name="TInput">The host's raw input type.</typeparam>
+public type Runtime<TModel, TMsg, TInput> = record
+  /// Reads the current model on the host owner.
+  public Model: function(): TModel;
+  /// Posts a host input. Multiple producers may post.
+  public Send: function(TInput): Admission;
+  /// Posts an application message. Multiple producers may post.
+  public Post: function(TMsg): Admission;
+  /// Applies one message synchronously on the owner, for example after routing input.
+  public Dispatch: procedure(TMsg);
+  /// Advances one FIFO item on the host owner.
+  public Advance: function(): Step<TInput>;
+  /// Waits for possible work or closure. The supplied token cancels the wait.
+  public WaitForWork: function(Threads.CancellationToken): Tasks.Task<bool>;
+  /// Waits for possible capacity or closure. The supplied token cancels the wait.
+  public WaitForSpace: function(Threads.CancellationToken): Tasks.Task<bool>;
+  /// Reports whether the session accepts work.
+  public IsOpen: function(): bool;
+  /// Counts queued items for host diagnostics.
+  public QueueCount: function(): int;
+  /// Counts workers and cancellation callbacks still executing, on the owner.
+  public PendingEffects: function(): int;
+  /// Stops admission on the owner and returns the same completion task on every call.
+  public Close: function(): Tasks.Task;
+end record;
+
+type Entry<TMsg, TInput> = union
+  Empty;
+  Input(Value: TInput);
+  Message(Value: TMsg);
+  Background(Id: string; Version: long; Value: TMsg);
+end union;
+
+/// Creates a manually driven session without a view or window system.
+/// <typeparam name="TModel">The application's model type.</typeparam>
+/// <typeparam name="TMsg">The application's message type.</typeparam>
+/// <typeparam name="TInput">The host's raw input type.</typeparam>
+/// <param name="InitialModel">The model before processing any messages.</param>
+/// <param name="Update">The transition to run on the owner for each applied message.</param>
+/// <param name="NotifyHost">Receives focus and close requests on the owner.</param>
+/// <param name="Capacity">Positive bound for the shared mailbox.</param>
+/// <returns>The session. Serialize model reads, steps and close on the owner.</returns>
+public function Start<TModel, TMsg, TInput>(
+  InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
+  NotifyHost: procedure(App.HostRequest); Capacity: int
+): Runtime<TModel, TMsg, TInput>;
+requires Capacity > 0;
+  function Model(): TModel;
+  begin
+    return Current;
+  end function;
+
+  function IsOpen(): bool;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      return Cleanup = null;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function TryEnqueue(Item: Entry<TMsg, TInput>): Admission;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      if Cleanup <> null then
+        return Admission.Closed;
+      end if;
+
+      return if Queue.Writer.TryWrite(Item) then Admission.Queued else Admission.Full end if;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function Send(Input: TInput): Admission;
+  begin
+    return TryEnqueue(Entry<TMsg, TInput>.Input(Input));
+  end function;
+
+  function Post(Message: TMsg): Admission;
+  begin
+    return TryEnqueue(Entry<TMsg, TInput>.Message(Message));
+  end function;
+
+  function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    return if IsOpen() then Queue.Reader.WaitToReadAsync(Cancellation).AsTask()
+      else Tasks.Task.FromResult<bool>(false)
+      end if;
+  end function;
+
+  function WaitForSpace(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    return if IsOpen() then Queue.Writer.WaitToWriteAsync(Cancellation).AsTask()
+      else Tasks.Task.FromResult<bool>(false)
+      end if;
+  end function;
+
+  function Close(): Tasks.Task;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      const Existing: Tasks.Task? := Cleanup;
+      if Existing <> null then
+        return Existing;
+      end if;
+
+      const Closing: Tasks.Task := Workers.Close();
+      Cleanup := Closing;
+      discard Queue.Writer.TryComplete();
+      var Unused: Entry<TMsg, TInput> := Entry<TMsg, TInput>.Empty;
+      while Queue.Reader.TryRead(out Unused) do
+      end while;
+
+      return Closing;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  procedure Dispatch(Message: TMsg);
+  begin
+    if not IsOpen() then
+      return;
+    end if;
+    const Next: App.Transition<TModel, TMsg> := Update(Current, Message);
+    Current := Next.Model;
+    for Command: App.Command<TMsg> in Next.Commands do
+      case Command of
+        when App.Command.Cancel(const Id: string):
+          Workers.Cancel(Id);
+        when App.Command.Start(
+          const Id: string,
+          const Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+          const OnFailure: function(Sys.Exception): TMsg
+        ):
+          Workers.Start(Id, Work, OnFailure);
+        when App.Command.Host(const Request: App.HostRequest):
+          case Request of
+            when App.HostRequest.Close:
+              discard Close();
+              NotifyHost(Request);
+              return;
+            else
+              NotifyHost(Request);
+          end case;
+      end case;
+    end for;
+  end procedure;
+
+  function Advance(): Step<TInput>;
+  begin
+    var Item: Entry<TMsg, TInput> := Entry<TMsg, TInput>.Empty;
+    if not IsOpen() or not Queue.Reader.TryRead(out Item) then
+      return Step<TInput>.Idle;
+    end if;
+
+    case Item of
+      when Entry.Input(const Value: TInput):
+        return Step<TInput>.Input(Value);
+      when Entry.Message(const Value: TMsg):
+        Dispatch(Value);
+        return Step<TInput>.Updated;
+      when Entry.Background(const Id: string, const Version: long, const Value: TMsg):
+        if Workers.IsCurrent(Id, Version) then
+          Dispatch(Value);
+          return Step<TInput>.Updated;
+        end if;
+
+        return Step<TInput>.Stale;
+      when Entry.Empty:
+        return Step<TInput>.Idle;
+    end case;
+  end function;
+begin
+  const Gate: Sys.Object := new Sys.Object();
+  const Queue: Channels.Channel<Entry<TMsg, TInput>> := Channels.Channel.CreateBounded<Entry<TMsg, TInput>>(
+    Capacity
+  );
+  const Workers: Effects.State<TMsg> := Effects.Create<TMsg>(
+    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => Queue.Writer.WriteAsync(
+      Entry<TMsg, TInput>.Background(Id, Version, Message),
+      Cancellation
+    ).AsTask()
+  );
+  var Current: TModel := InitialModel;
+  var Cleanup: Tasks.Task? := null;
+  return new Runtime<TModel, TMsg, TInput>(
+    Model, Send, Post, Dispatch, Advance, WaitForWork, WaitForSpace, IsOpen,
+    function(): int => Queue.Reader.Count, Workers.Pending, Close
+  );
+end function;
+end unit;

@@ -4,9 +4,15 @@ Build the private native `fpas_cui` module from the repository's pinned
 [CUI sources](../../../third-party/cui/UPSTREAM.md). The upstream CMake target
 selects the platform backend and compiles the separate C files. FPAS adds
 `bridge.c` for window options, screenshot buffers and Win32 live-resize callbacks.
-[`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, lists,
-tables, scrolling and modal dialogs. Tabs and multiline editing use the upstream
-entry points. The table adapter keeps column descriptors alive through the frame.
+[`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, text
+editing, lists, tables, tabs, scrolling, modal dialogs and images. The table
+adapter keeps column descriptors alive through the frame. Check the lifetime
+of borrowed strings and other inputs for each new adapter.
+
+The image adapter verifies OpenGL storage after upload. CUI copies pixel data
+during the upload and queues the texture handle for frame rendering. Callers
+keep that texture alive while CUI can still render the frame. The software
+renderer aborts if its native allocator runs out of memory.
 
 The resize callback draws an open CUI frame on the UI thread. Its caller owns
 the callback and user data through detachment or window destruction. Wake targets
@@ -19,7 +25,7 @@ The managed window serializes posting and release before it destroys the target 
 - Linux: X11 development headers/libraries and the usual C development tools.
 - Windows: MSVC with the Windows SDK, or a suitable MinGW toolchain.
 
-The native link and render test passes for the shared and static builds on
+The native link, render and editor tests pass for the shared and static builds on
 Windows x64 with MSVC and Ubuntu x64 under WSL 2 with GCC. The
 [distribution reference](../../../docs/build/distribution.md#native-cui-assets)
 describes the prebuilt SDK assets and notices.
@@ -51,11 +57,11 @@ the outputs in the build directory's `Release/` subdirectory. Keep the shared
 import library and static archive in separate build directories.
 
 The optional smoke target is an independent C consumer linked through
-`fpas::cui`. It initializes the bundled fonts, creates a widget tree and verifies
-software-rendered pixels. It needs no X server. Configure each linkage variant
-with tests enabled to check both linking paths and the control adapters. On
-Windows, the live-resize test also creates a hidden window and verifies callback
-registration and detachment.
+`fpas::cui`. It initializes the bundled fonts, checks that Enter inserts a line
+break in a text area and verifies software-rendered pixels. The editor test checks
+multiline keyboard navigation and undo isolation across document replacement.
+Both tests run without a display. On Windows, the live-resize test creates a
+hidden window and verifies callback registration and detachment.
 
 For Linux ABI inspection, check public symbols in each output:
 

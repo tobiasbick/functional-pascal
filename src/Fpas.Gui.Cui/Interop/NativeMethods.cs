@@ -68,6 +68,26 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void EndBox(nint context);
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_begin", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void BeginScroll(nint context, string id, float height, int horizontal);
+
+    [LibraryImport(Library, EntryPoint = "cui_scroll_end")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void EndScroll(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_scroll_to", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void ScrollTo(nint context, string id, float offset);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_dialog_begin", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int BeginDialog(nint context, string title, ref int open);
+
+    [LibraryImport(Library, EntryPoint = "cui_dialog_end")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void EndDialog(nint context);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_request_focus", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void RequestFocus(nint context, string id);
@@ -113,9 +133,22 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial byte Checkbox(nint context, string label, ref byte value, nint options);
 
-    [LibraryImport(Library, EntryPoint = "fpas_cui_text_input", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_text_edit", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int Input(nint context, string id, byte* buffer, nuint capacity);
+    internal static unsafe partial int TextEdit(nint context, string id, byte* buffer, nuint capacity,
+        float height, long documentVersion, ref int anchor, ref int caret);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_image_create")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial nuint CreateImage(nint app, int width, int height, byte* rgba);
+
+    [LibraryImport(Library, EntryPoint = "cui_image_destroy")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void DestroyImage(nint context, nuint texture);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_image")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Image(nint context, nuint texture, float width, float height);
 
     [LibraryImport(Library, EntryPoint = "cui_last_rect")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

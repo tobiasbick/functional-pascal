@@ -25,8 +25,9 @@ int main(void) {
     }
     cui_set_viewport(ui, (float)width, (float)height, 1);
     cui_set_reduced_motion(ui, true);
-    char text[64] = "FPAS";
+    char text[64] = "";
     bool focused = false;
+    int enter_events = 0;
     for (int frame = 0; frame < 3; frame++) {
         cui_begin_frame(ui, 1.0f / 60.0f);
         fpas_cui_scroll_begin(ui, "smoke-scroll", 160, 0);
@@ -36,15 +37,25 @@ int main(void) {
         (void)fpas_cui_list_item(ui, "Selected", 1);
         (void)fpas_cui_tab_item(ui, "Tab", 1);
         cui_box_end(ui);
-        if (frame == 0) fpas_cui_request_focus(ui, "editor");
-        if (cui_input_ex(ui, "editor", text, sizeof text, NULL) & CUI_FOCUSED) focused = true;
+        if (frame == 0) {
+            fpas_cui_request_focus(ui, "editor");
+            cui_input_text(ui, "FPAS");
+        }
+        if (frame == 1) {
+            cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+            cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+            cui_input_text(ui, "CUI");
+        }
+        int editor_events = fpas_cui_text_area(ui, "editor", text, sizeof text, 96);
+        if (editor_events & CUI_FOCUSED) focused = true;
+        if (frame == 1) enter_events = editor_events;
         if (fpas_cui_table_begin(ui, "smoke-table", (const char *const[]){ "Status" }, 1)) {
             (void)fpas_cui_table_row(ui, 1);
             cui_table_cell_text(ui, "Linked successfully");
             cui_table_end(ui);
         }
         int open = 1;
-        if (fpas_cui_dialog_begin(ui, "CUI dialog", &open)) {
+        if (frame == 2 && fpas_cui_dialog_begin(ui, "CUI dialog", &open)) {
             cui_text(ui, "Modal contents");
             cui_dialog_end(ui);
         }
@@ -54,6 +65,10 @@ int main(void) {
     }
     if (!focused) {
         fprintf(stderr, "The requested control did not gain focus.\n");
+        goto cleanup;
+    }
+    if (!(enter_events & CUI_CHANGED) || (enter_events & CUI_SUBMITTED) || strcmp(text, "FPAS\nCUI") != 0) {
+        fprintf(stderr, "Enter did not insert a line break in the text area.\n");
         goto cleanup;
     }
     const cui_draw_data *draw = cui_get_draw_data(ui);

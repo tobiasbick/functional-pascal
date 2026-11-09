@@ -15,17 +15,6 @@ void fpas_cui_request_focus(cui_ctx *ui, const char *id) {
     ui->focus_next_request = cui_make_id(ui, id);
 }
 
-int fpas_cui_text_input(cui_ctx *ui, const char *id, char *buffer, size_t capacity) {
-    const struct cui_edit_state *previous_editor = ui->edit;
-    int events = cui_input_ex(ui, id, buffer, capacity, NULL);
-    /* CUI otherwise leaves typed text available to another editor that gains focus this frame. */
-    if (ui->edit != previous_editor || ui->focus == cui_make_id(ui, id)) {
-        ui->text_in_len = 0;
-        ui->text_in[0] = '\0';
-    }
-    return events;
-}
-
 void fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal) {
     const cui_scroll_opts options = {
         .id = id, .width = CUI_FILL, .height = height > 0 ? CUI_PX(height) : CUI_FILL,

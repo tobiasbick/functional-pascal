@@ -28,6 +28,28 @@ CUI_API void fpas_cui_request_focus(cui_ctx *ui, const char *id);
  * @return CUI text-input event flags. */
 CUI_API int fpas_cui_text_input(cui_ctx *ui, const char *id, char *buffer, size_t capacity);
 
+/** Draws a multiline editor and claims the pending text if it handled input.
+ * @param ui Current UI-thread context.
+ * @param id Borrowed stable UTF-8 control identity.
+ * @param buffer Writable, zero-terminated UTF-8 text.
+ * @param capacity Buffer size in bytes including the terminator.
+ * @param height Positive finite height in logical units.
+ * @return CUI text-input event flags. */
+CUI_API int fpas_cui_text_area(cui_ctx *ui, const char *id, char *buffer, size_t capacity, float height);
+
+/** Draws an editor with host-supplied selection. A new document version clears undo and scroll state.
+ * @param ui Current UI-thread context.
+ * @param id Borrowed stable UTF-8 control identity.
+ * @param buffer Writable, zero-terminated UTF-8 text.
+ * @param capacity Buffer size in bytes including the terminator.
+ * @param height Zero for a single-line editor, positive finite logical height for a multiline editor.
+ * @param document_version Nonzero token that changes on document replacement.
+ * @param anchor Input and output byte offset of the selection anchor, at a UTF-8 scalar boundary.
+ * @param caret Input and output byte offset of the caret, at a UTF-8 scalar boundary.
+ * @return CUI text-input event flags. */
+CUI_API int fpas_cui_text_edit(cui_ctx *ui, const char *id, char *buffer, size_t capacity, float height,
+                               int64_t document_version, int *anchor, int *caret);
+
 /** Begins a scroll area. Close it with cui_scroll_end.
  * @param ui Current UI-thread context.
  * @param id Borrowed stable identity.
@@ -69,6 +91,21 @@ CUI_API int fpas_cui_table_row(cui_ctx *ui, int selected);
  * @param open Input and output open flag, represented as zero or one.
  * @return Nonzero when dialog contents should be drawn. Pair with cui_dialog_end. */
 CUI_API int fpas_cui_dialog_begin(cui_ctx *ui, const char *title, int *open);
+
+/** Uploads an RGBA8 image and verifies OpenGL texture storage.
+ * @param app Live UI-thread application with its renderer current.
+ * @param width Positive width in pixels.
+ * @param height Positive height in pixels.
+ * @param rgba Borrowed pixel array with four packed bytes per pixel.
+ * @return An owned renderer texture, or zero on upload failure. Release it with cui_image_destroy. */
+CUI_API cui_texture fpas_cui_image_create(cui_app *app, int width, int height, const void *rgba);
+
+/** Queues a texture for rendering in the current view.
+ * @param ui Current UI-thread context.
+ * @param texture Live texture belonging to this context. Keep it alive while the frame can be rendered.
+ * @param width Positive finite display width in logical units.
+ * @param height Positive finite display height in logical units. */
+CUI_API void fpas_cui_image(cui_ctx *ui, cui_texture texture, float width, float height);
 
 /** Sets the Win32 live-resize renderer. The callback draws on the UI thread.
  * @param app UI-thread application with no callback currently in flight.

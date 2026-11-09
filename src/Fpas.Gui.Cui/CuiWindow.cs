@@ -5,13 +5,17 @@ using Fpas.Gui.Cui.Text;
 namespace Fpas.Gui.Cui;
 
 /// <summary>Owns a low-level CUI window on its creating UI thread and accepts wake requests from workers.</summary>
-public sealed class CuiWindow : IDisposable
+public sealed partial class CuiWindow : IDisposable
 {
-    private enum Layout { Column, Row, Table }
+    [ThreadStatic]
+    private static bool openGlWindow;
+
+    private enum Layout { Column, Row, Table, Scroll, Dialog }
     private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
     private readonly nint context;
+    private readonly bool usesOpenGl;
     private readonly Lock wakeLock = new();
     private readonly List<LayoutScope> layouts = new();
     private nint app;
@@ -32,6 +36,13 @@ public sealed class CuiWindow : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         if (!Enum.IsDefined(renderer)) throw new ArgumentOutOfRangeException(nameof(renderer));
+        // CUI leaves the window's OpenGL context current on the creating thread.
+        if (openGlWindow)
+        {
+            if (renderer == CuiRenderer.OpenGl)
+                throw new InvalidOperationException("A CUI OpenGL window already owns this thread's OpenGL context.");
+            renderer = CuiRenderer.Software;
+        }
         app = NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0);
         if (app == 0) throw new InvalidOperationException("CUI could not create a window. Check the native display connection.");
         wakeTarget = NativeMethods.OpenWakeTarget(app);
@@ -41,6 +52,8 @@ public sealed class CuiWindow : IDisposable
             throw new InvalidOperationException("CUI could not open the window's platform wake target.");
         }
         context = NativeMethods.Context(app);
+        usesOpenGl = NativeMethods.IsSoftware(app) == 0;
+        if (usesOpenGl) openGlWindow = true;
     }
 
     /// <summary>Gets the actual native window backend.</summary>
@@ -72,7 +85,8 @@ public sealed class CuiWindow : IDisposable
         bool presented = inFrame;
         inFrame = NativeMethods.Frame(app) != 0;
         hasPresentedFrame |= presented;
-        if (!inFrame) CloseWakeTarget();
+        if (inFrame) AdvanceImageFrame();
+        else CloseWakeTarget();
         return inFrame;
     }
 
@@ -117,6 +131,67 @@ public sealed class CuiWindow : IDisposable
 
     /// <summary>Closes the innermost layout when it is a row.</summary>
     public void EndRow() => EndLayout(Layout.Row);
+
+    /// <summary>Opens a full-width scroll container in the current frame.</summary>
+    /// <param name="id">Nonempty stable identity unique in the current CUI ID scope.</param>
+    /// <param name="height">Positive height in logical units, or zero to fill the available height.</param>
+    /// <param name="horizontal">Whether overflowing content may also scroll horizontally.</param>
+    public void BeginScroll(string id, float height = 0, bool horizontal = false)
+    {
+        CheckFrame();
+        Utf8.Validate(id, nameof(id));
+        ArgumentException.ThrowIfNullOrEmpty(id);
+        if (!float.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
+        NativeMethods.BeginScroll(context, id, height, horizontal ? 1 : 0);
+        layouts.Add(new(Layout.Scroll));
+    }
+
+    /// <summary>Closes the innermost layout when it is a scroll container.</summary>
+    public void EndScroll()
+    {
+        RequireLayout(Layout.Scroll);
+        NativeMethods.EndScroll(context);
+        layouts.RemoveAt(layouts.Count - 1);
+    }
+
+    /// <summary>Requests a vertical scroll offset before drawing a previously laid out container.</summary>
+    /// <param name="id">The identity passed to <see cref="BeginScroll"/>, in the same CUI ID scope.</param>
+    /// <param name="offset">Nonnegative finite offset in logical units from the top. CUI clamps it to the content.</param>
+    public void ScrollTo(string id, float offset)
+    {
+        CheckFrame();
+        Utf8.Validate(id, nameof(id));
+        ArgumentException.ThrowIfNullOrEmpty(id);
+        if (!float.IsFinite(offset) || offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
+        NativeMethods.ScrollTo(context, id, offset);
+    }
+
+    /// <summary>Opens a native modal dialog scope when its contents need to be drawn.</summary>
+    /// <param name="title">Nonempty UTF-8 title. Use <c>###id</c> for an identity independent of the visible title.</param>
+    /// <param name="open">Visibility requested by the host. CUI sets it to false on dismissal.</param>
+    /// <returns>Whether to draw contents and call <see cref="EndDialog"/>, including during the closing animation.</returns>
+    public bool BeginDialog(string title, ref bool open)
+    {
+        CheckFrame();
+        Utf8.Validate(title, nameof(title));
+        ArgumentException.ThrowIfNullOrEmpty(title);
+        // CUI's native modal stacks hold eight scopes.
+        if (layouts.Count(static scope => scope.Kind == Layout.Dialog) >= 8)
+            throw new InvalidOperationException("CUI supports up to eight nested dialog scopes.");
+        int visible = open ? 1 : 0;
+        bool draw = NativeMethods.BeginDialog(context, title, ref visible) != 0;
+        open = visible != 0;
+        if (draw) layouts.Add(new(Layout.Dialog));
+        return draw;
+    }
+
+    /// <summary>Closes the innermost layout when it is a dialog.</summary>
+    public void EndDialog()
+    {
+        RequireLayout(Layout.Dialog);
+        NativeMethods.EndDialog(context);
+        layouts.RemoveAt(layouts.Count - 1);
+    }
 
     /// <summary>Requests focus for a control when CUI next draws it as focusable.</summary>
     /// <param name="id">Nonempty stable control identity, such as the ID passed to <see cref="TextInput"/>.</param>
@@ -224,17 +299,35 @@ public sealed class CuiWindow : IDisposable
         return changed;
     }
 
-    /// <summary>Adds a text editor backed by an owned UTF-8 buffer.</summary>
+    /// <summary>Adds a single-line text editor backed by an owned UTF-8 buffer.</summary>
     /// <param name="id">Nonempty stable control identity.</param>
     /// <param name="value">Buffer owned across frames by the host.</param>
     /// <returns>Native change, submission and focus flags.</returns>
-    public unsafe CuiTextInputEvents TextInput(string id, CuiTextBuffer value)
+    public CuiTextInputEvents TextInput(string id, CuiTextBuffer value) => DrawTextEditor(id, value, height: 0);
+
+    /// <summary>Adds a multiline text editor with word wrapping backed by an owned UTF-8 buffer.</summary>
+    /// <param name="id">Nonempty stable control identity.</param>
+    /// <param name="value">Buffer owned across frames by the host.</param>
+    /// <param name="height">Positive finite height in logical units.</param>
+    /// <returns>Native change, submission and focus flags.</returns>
+    public CuiTextInputEvents TextArea(string id, CuiTextBuffer value, float height = 96)
+    {
+        if (!float.IsFinite(height) || height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
+        return DrawTextEditor(id, value, height);
+    }
+
+    private unsafe CuiTextInputEvents DrawTextEditor(string id, CuiTextBuffer value, float height)
     {
         CheckFrame(); Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
         ArgumentNullException.ThrowIfNull(value);
+        var (anchor, caret) = value.ByteSelection;
+        CuiTextInputEvents events;
         fixed (byte* buffer = value.Bytes)
-            return (CuiTextInputEvents)NativeMethods.Input(context, id, buffer, (nuint)value.Capacity);
+            events = (CuiTextInputEvents)NativeMethods.TextEdit(context, id, buffer, (nuint)value.Capacity,
+                height, value.DocumentVersion, ref anchor, ref caret);
+        value.ReadNativeSelection(anchor, caret, (events & CuiTextInputEvents.Changed) != 0);
+        return events;
     }
 
     /// <summary>Gets the most recent widget's rectangle from the latest native layout.</summary>
@@ -256,7 +349,7 @@ public sealed class CuiWindow : IDisposable
     public void SetLeftButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 0, down ? (byte)1 : (byte)0); }
 
     /// <summary>Injects text into the focused native editor.</summary>
-    /// <param name="text">Valid Unicode input without zero characters.</param>
+    /// <param name="text">Valid Unicode input without zero characters. CUI discards control characters.</param>
     public void TypeText(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.TypeText(context, text); }
 
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
@@ -280,6 +373,8 @@ public sealed class CuiWindow : IDisposable
         CheckOpen();
         CloseWakeTarget();
         NativeMethods.Destroy(app);
+        ForgetImages();
+        if (usesOpenGl) openGlWindow = false;
         app = 0;
         inFrame = false;
     }

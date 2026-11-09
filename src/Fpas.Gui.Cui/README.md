@@ -11,10 +11,12 @@ MVU/declarative GUI library is tracked in the [GUI plans](../../docs/future/gui/
   unblock an idle `NextFrame`. It returns false once `NextFrame` observes closure
   or the owner disposes the window. Dispose releases the wake target before
   destroying the window and is idempotent.
-- `NextFrame` presents the preceding view and begins a new one. Close rows,
-  columns and tables in reverse opening order before presenting or capturing a
-  frame. The binding also provides headings, text, buttons, checkboxes and
-  single-line editors.
+- A UI thread can own one OpenGL CUI window at a time. A second window with
+  `CuiRenderer.Auto` uses software rendering. A second explicit OpenGL request
+  throws, so it cannot replace the current context of the first window.
+- `NextFrame` presents the preceding view and begins a new one. Close containers
+  in reverse opening order before presenting or capturing a frame. The binding
+  also provides headings, text, buttons and checkboxes.
 - `ListItem` draws the selection state passed by the host and reports whether
   the item was activated. The host chooses the selection for subsequent frames.
   Give items distinct `###id` suffixes when they can have the same label.
@@ -24,16 +26,41 @@ MVU/declarative GUI library is tracked in the [GUI plans](../../docs/future/gui/
   starts a row, paints the supplied selection and reports activation. Add text
   with `TableCell` in column order and finish with `EndTable`. CUI fills omitted
   cells with empty cells.
+- `BeginScroll` and `EndScroll` wrap a full-width scroll container. Use a fixed
+  height in logical units or zero to fill the available height. CUI scrolls
+  overflowing content vertically, with horizontal scrolling available as an
+  option. To request a vertical offset, call `ScrollTo` before drawing the
+  container in a later frame. Use the same ID and ID scope.
+- `BeginDialog` takes a host-owned open flag and updates it on dismissal. Draw
+  the contents and call `EndDialog` whenever `BeginDialog` returns true. CUI can
+  still draw a closing animation after it clears the open flag. Use a `###id`
+  suffix to keep the dialog identity stable when the title changes.
 - `RequestFocus` takes a stable control ID during an open frame. CUI consumes
   the request when it next draws a matching focusable control. Call it before
   drawing the target. A later request replaces a pending one. Characters an
   editor has handled stay with that editor if focus moves in the same frame.
+- `TextInput` provides single-line editing. `TextArea` wraps multiline text and
+  uses a positive logical height (96 by default). Enter submits a single-line
+  field and inserts a line break in a text area.
 - `CuiTextBuffer` owns bounded, zero-terminated UTF-8 text across frames. The
   array is pinned during native editing calls; these widgets copy paint text
-  into CUI-owned frame memory. Synchronize buffer access with its UI thread.
-- Buffer conversion methods map UTF-16 document offsets and UTF-8 byte offsets
-  at grapheme boundaries. Invalid/truncated Unicode, embedded zeros and oversized
-  replacement text are rejected without truncating or overwriting valid text.
+  into CUI-owned frame memory. Keep one buffer per stable editor identity and
+  access it on the owning UI thread.
+- `Selection` stores the anchor and caret as UTF-16 offsets. Set it before
+  drawing an editor and read it after the call, including frames where only the
+  selection moved. CUI navigates wrapped lines with the arrow keys, Home and End.
+  The binding snaps reported code-point positions to grapheme boundaries in the
+  direction of movement and uses those positions on the next draw.
+- `SetText` replaces the document and moves the caret to the start. The overload
+  taking `CuiTextSelection` sets both together. The next draw clears the editor's
+  native undo history and scroll offsets. Invalid Unicode, embedded zeros,
+  oversized text or an invalid selection leave the current document intact.
+- `CreateImage` copies tightly packed RGBA8 pixels into a texture owned by the
+  window. `Image` draws it at an explicit size in logical units. Use and dispose
+  images on their owning UI thread. Disposal prevents new draws immediately and
+  releases the texture after the last frame that references it can no longer be
+  replayed. Disposing the window releases its remaining textures and invalidates
+  any image objects the caller still holds.
 - `Size` reports the size observed by the native event loop. `Resize` requests
   a change asynchronously. `CapturePng` requires an earlier presented frame and
   closed layouts, and ends the current render frame even when writing fails.
@@ -75,11 +102,12 @@ absent on Linux. The test project sets `CUI_SCALE=1` for its test host and
 fixture processes so the expected PNG pixel dimensions are independent of the
 desktop scale. The cases exercise actual shared-library loading,
 software/OpenGL rendering, returned events and compacting managed collections,
-thread ownership, nested layout, focus transfer and controlled selection in
-lists, tables and tabs. They also cover idle wakeup during shutdown, resize
-capture and capture-failure recovery. Input
-is injected through CUI's public API. OS keyboard and pointer delivery are
-separate checks.
+thread ownership, nested layout, focus transfer, document replacement, grapheme
+boundaries after edits and controlled selection in lists, tables and tabs. They
+also cover scroll geometry, modal click routing and dismissal, image replacement
+and ownership, idle wakeup during shutdown, resize capture and capture-failure
+recovery. The tests inject input through CUI's public API.
+OS keyboard and pointer delivery are separate checks.
 Keep Xvfb's `-noreset` option: the suite repeatedly closes its last window and
 immediately opens another, which must not race with a display-server reset.
 

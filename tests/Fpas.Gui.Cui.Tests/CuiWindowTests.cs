@@ -124,6 +124,34 @@ public sealed class CuiWindowTests
         Assert.Equal("Grüße", second.Text);
     }
 
+    /// <summary>Preserves Unicode and line breaks when editing a native text area.</summary>
+    [GuiFact]
+    [Trait("Category", "NativeGui")]
+    public void TextAreaEditsMultilineTextAndUsesRequestedHeight()
+    {
+        using var window = new CuiWindow("Multiline input", renderer: CuiRenderer.Software, continuous: true);
+        var text = new CuiTextBuffer("\n東京 🧭");
+        var other = new CuiTextBuffer("");
+        const string id = "document";
+        const float height = 136;
+
+        Assert.True(window.NextFrame());
+        window.RequestFocus(id);
+        window.TextArea(id, text, height);
+        window.TextInput("other", other);
+
+        Assert.True(window.NextFrame());
+        window.TypeText("Grüße");
+        var events = window.TextArea(id, text, height);
+        Assert.Equal(height, window.LastRectangle.Height);
+        window.RequestFocus("other");
+        window.TextInput("other", other);
+
+        Assert.True(events.HasFlag(CuiTextInputEvents.Changed));
+        Assert.Equal("Grüße\n東京 🧭", text.Text);
+        Assert.Empty(other.Text);
+    }
+
     /// <summary>Identifies the control exercised by the controlled selection cases.</summary>
     public enum SelectionWidget
     {

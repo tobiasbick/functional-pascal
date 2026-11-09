@@ -56,4 +56,18 @@ public sealed class CuiTextBufferTests
         Assert.Equal(0, empty.GetUtf8Offset(0));
         Assert.Equal(0, empty.GetUtf16Offset(0));
     }
+
+    /// <summary>Preserves the current document and selection when replacement positions split a grapheme.</summary>
+    [Fact]
+    public void InvalidReplacementPreservesDocumentAndSelection()
+    {
+        var buffer = new CuiTextBuffer("a😀");
+        var selection = new CuiTextSelection(3, 1);
+        buffer.Selection = selection;
+
+        Assert.Throws<ArgumentException>(() => buffer.SetText("e\u0301", new(1, 0)));
+
+        Assert.Equal("a😀", buffer.Text);
+        Assert.Equal(selection, buffer.Selection);
+    }
 }

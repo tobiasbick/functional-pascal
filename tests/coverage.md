@@ -43,14 +43,24 @@ Debug/Release acceptance runs the same contracts without platform skips.
 software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
 The window tests check nested row and column geometry and route text input
 between editors using programmatic focus and a non-ASCII control ID.
+The text area test checks its requested height and edits a multiline Unicode
+buffer before moving focus to a single-line field in the same frame.
+`CuiTextEditingTests` checks that reported selections and the next edit respect
+grapheme boundaries, and that a replacement document uses the supplied selection.
+`CuiContainerTests` checks that a scroll offset moves content within a fixed
+viewport and that a modal dialog intercepts outside clicks and reports dismissal.
+`CuiImageTests` checks rendered pixels when replacing a queued image in the same
+frame. It also verifies window and UI-thread ownership and teardown with a live image.
 The selection tests activate list items, table rows and tabs. They compare
 captured backgrounds before the click, while the host keeps the old selection
 and after the host applies the new selection. The table case also exercises UTF-8
 column titles and text cells.
 `CuiWakeupTests` waits for a noncontinuous window to go idle, posts a wakeup from
 a worker and checks that the window rejects new wakeups after disposal. Native
-CTest cases link the control adapters through both library variants and exercise
-Win32 live-resize callback registration and detachment.
+CTest cases link the control adapters through both library variants and check
+line breaks, multiline keyboard navigation and undo isolation across document
+replacements. The Win32 case exercises live-resize callback registration and
+detachment.
 `FpasProjectTests` builds the internal `Fixtures/gui` project with a fresh local
 FPAS SDK and the solution-built CLR binding. It verifies project-reference native
 asset/notices delivery, execution from another working directory, rendered PNG

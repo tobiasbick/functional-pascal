@@ -23,6 +23,8 @@ default SDK parallelism and separate `.temp-data/dist/windows` or
 
 Copy only `bin/fpas.exe` or `bin/fpas` to the destination. On Linux retain executable
 permissions. No companion DLL, helper executable or runtimeconfig file is needed.
+On demand, the executable creates `fpas-assets/` beside itself for embedded assets
+that require real files. Copying that directory to another installation is unnecessary.
 The scripts preserve unrelated files in `bin/`; they also write the matching
 package to `sdk/feed/` and evict only that SDK version from the active NuGet cache.
 
@@ -76,13 +78,18 @@ The .NET host extracts bundled native runtime libraries to its per-bundle cache.
 account running FPAS. The host coordinates concurrent first starts.
 
 FPAS materializes only file-based assets needed by metadata readers, MSBuild,
-the debugger or SDK export. Its default cache root is
-`%LOCALAPPDATA%/fpas/assets` on Windows and `$XDG_CACHE_HOME/fpas/assets` (otherwise
-`$HOME/.cache/fpas/assets`) on Linux. `FPAS_ASSET_CACHE` overrides it with an absolute
-path. Each asset has a SHA-256 directory; publication uses an atomic file move,
+the debugger or SDK export. Its default cache root is `fpas-assets/` beside the
+executable, independent of the working directory. A distribution in `bin/` therefore
+uses `bin/fpas-assets/<SHA-256>/`. The executable's directory must be writable;
+`FPAS_ASSET_CACHE` selects another writable root using an absolute path.
+Each asset has a SHA-256 directory; publication uses an atomic file move,
 concurrent starts converge, and content is verified and repaired from the embedded
 copy before reuse. These operations never download assets. Different versions
 can coexist without replacing each other's files.
+
+The FPAS cache can be deleted together with its installation directory. Old hash
+directories are retained until removed explicitly. The .NET host's native runtime
+cache is separate and still uses the location described above.
 
 Both caches belong to the running account. They can be removed after its compiler,
 debugger workers and MSBuild processes have exited; the next launch recreates
@@ -101,7 +108,8 @@ the exported SDK also contains `tools/compiler/debugger-notices.txt`.
 isolated package cache. It copies only the executable into a fresh directory,
 hides the build checkout, removes .NET host search paths, and checks eight parallel
 first compilations, JSON failures, concurrent SDK export, conflict handling and asset-cache
-repair. It builds through the matching SDK and explicit executable override,
-rejects compiler mismatches, publishes and certificate-signs an external application,
+repair. It verifies executable-local hash directories, recreation after cache removal
+and an explicit cache-root override. It builds through the matching SDK and explicit
+executable override, rejects compiler mismatches, publishes and certificate-signs an external application,
 and exercises check/query, real stdio LSP, batch
 debugging and DAP using the delivered executable. See [build acceptance](../../tests/coverage.md#build-acceptance).

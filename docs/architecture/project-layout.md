@@ -7,8 +7,9 @@ Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
 Fpas.Deployment owns file-based access to embedded distribution assets, their
-content-addressed user cache, and shared CMS delivery signatures. The CLI's Distribution directory owns bundling and
-offline SDK export; the [distribution reference](../build/distribution.md) owns deployment.
+content-addressed cache beside the executable, and shared CMS delivery signatures.
+The CLI's Distribution directory owns bundling and offline SDK export;
+the [distribution reference](../build/distribution.md) owns deployment.
 Examples and applications build and run through the SDK. The responsibilities
 below describe their boundaries.
 

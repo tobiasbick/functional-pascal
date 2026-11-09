@@ -334,7 +334,8 @@ of other package versions and unrelated deployed files, and first-run bootstrap.
 Only the executable is copied into a fresh delivery directory. With the build
 checkout hidden and .NET host search disabled, concurrent first starts compile
 real sources, return JSON diagnostics and export the matching embedded SDK.
-The same test checks export conflicts, explicit replacement, asset-cache repair,
+The same test checks export conflicts, explicit replacement, executable-local
+asset-cache hashes, repair, recreation after deletion and an explicit cache override,
 SDK invocation through the executable and rejection of different compiler bytes.
 The copied launcher also publishes, certificate-signs and executes an external
 application through its matching exported SDK, exercising bundled cryptography.

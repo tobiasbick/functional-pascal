@@ -1,4 +1,5 @@
 using Fpas.Tests.Support;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Build;
@@ -13,9 +14,9 @@ public sealed partial class LocalDeploymentTests
         isolated["PATH"] = ""; isolated["DOTNET_MULTILEVEL_LOOKUP"] = "0";
         var output = Path.Combine(Path.GetDirectoryName(consumer)!, "direct"); Directory.CreateDirectory(output);
         var source = Path.Combine(consumer, "Probe.fpas");
-        async Task<ProcessResult> Compile(string name) => await ProcessRunner.RunExecutableAsync(launcher,
+        async Task<ProcessResult> Compile(string name, IReadOnlyDictionary<string, string?>? variables = null) => await ProcessRunner.RunExecutableAsync(launcher,
             ["compile", source, "--target", "library", "--output", Path.Combine(output, name + ".dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], workingDirectory: consumer, environment: isolated);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], workingDirectory: consumer, environment: variables ?? isolated);
         Directory.Move(checkout, checkout + ".offline");
         try
         {
@@ -46,9 +47,23 @@ public sealed partial class LocalDeploymentTests
             foreach (var result in exports) Assert.True(result.ExitCode == 0, result.Output + result.Error);
             var licenses = await ProcessRunner.RunExecutableAsync(launcher, ["licenses"], workingDirectory: consumer, environment: isolated);
             Assert.Equal(0, licenses.ExitCode); Assert.Contains("MIT License", licenses.Output);
-            var core = Assert.Single(Directory.GetFiles(environment["FPAS_ASSET_CACHE"]!, "Fpas.Core.dll", SearchOption.AllDirectories));
-            var bytes = File.ReadAllBytes(core); File.WriteAllText(core, "corrupted cache");
+            var assets = Path.Combine(Path.GetDirectoryName(launcher)!, "fpas-assets");
+            var core = Assert.Single(Directory.GetFiles(assets, "Fpas.Core.dll", SearchOption.AllDirectories));
+            var bytes = File.ReadAllBytes(core);
+            Assert.Equal(Convert.ToHexString(SHA256.HashData(bytes)), Path.GetFileName(Path.GetDirectoryName(core)));
+            File.WriteAllText(core, "corrupted cache");
             Assert.Equal(0, (await Compile("repaired")).ExitCode); Assert.Equal(bytes, File.ReadAllBytes(core));
+            Directory.Delete(assets, recursive: true);
+            Assert.Equal(0, (await Compile("recreated")).ExitCode); Assert.Equal(bytes, File.ReadAllBytes(core));
+            if (firstRun)
+            {
+                var overridden = isolated.ToDictionary(pair => pair.Key, pair => pair.Value);
+                var overrideRoot = Path.Combine(Path.GetDirectoryName(consumer)!, "overridden-assets");
+                overridden["FPAS_ASSET_CACHE"] = overrideRoot;
+                var result = await Compile("overridden", overridden);
+                Assert.True(result.ExitCode == 0, result.Output + result.Error);
+                Assert.Equal(bytes, File.ReadAllBytes(Assert.Single(Directory.GetFiles(overrideRoot, "Fpas.Core.dll", SearchOption.AllDirectories))));
+            }
         }
         finally { Directory.Move(checkout + ".offline", checkout); }
         Assert.Equal(File.ReadAllBytes(Path.Combine(checkout, "sdk", "feed", "Fpas.NET.Sdk." + version + ".nupkg")),

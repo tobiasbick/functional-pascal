@@ -4,23 +4,33 @@ using System.Security.Cryptography;
 
 namespace Fpas.Deployment;
 
-// File consumers (metadata readers, MSBuild and native loaders) need real files even
-// when the executable's managed assemblies are loaded directly from its bundle.
+/// <summary>Provides real files for metadata readers, MSBuild and native loaders that consume bundled assets.</summary>
 public static class DistributionAssets
 {
     private const string Prefix = "Fpas.Distribution.";
 
+    /// <summary>Gets whether the entry assembly is loaded from a single-file executable.</summary>
     public static bool IsBundled => Location(Assembly.GetEntryAssembly()!).Length == 0;
 
     [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "An empty location selects the embedded asset, never an adjacent assembly.")]
     private static string Location(Assembly assembly) => assembly.Location;
 
+    /// <summary>Returns an assembly's file, extracting its embedded copy when bundled.</summary>
+    /// <param name="assembly">The managed assembly whose file is needed.</param>
+    /// <returns>The absolute path to the assembly file.</returns>
     public static string Managed(Assembly assembly)
         => Location(assembly) is { Length: > 0 } path ? path : Materialize(assembly.GetName().Name + ".dll");
 
+    /// <summary>Returns an adjacent support file, extracting its embedded copy when bundled.</summary>
+    /// <param name="owner">The assembly that owns the support file.</param>
+    /// <param name="name">The support filename.</param>
+    /// <returns>The absolute path to the support file.</returns>
     public static string Sidecar(Assembly owner, string name)
         => Location(owner) is { Length: > 0 } path ? Path.Combine(Path.GetDirectoryName(path)!, name) : Materialize(name);
 
+    /// <summary>Extracts and verifies an embedded asset in the configured or executable-local cache.</summary>
+    /// <param name="name">The embedded asset filename.</param>
+    /// <returns>The absolute path to the verified asset in its SHA-256 directory.</returns>
     public static string Materialize(string name)
     {
         if (Path.GetFileName(name) != name) throw new ArgumentException("An asset name must be a filename.", nameof(name));
@@ -30,12 +40,7 @@ public static class DistributionAssets
         var bytes = data.ToArray(); var hash = Convert.ToHexString(SHA256.HashData(bytes));
         var root = Environment.GetEnvironmentVariable("FPAS_ASSET_CACHE");
         if (string.IsNullOrEmpty(root))
-        {
-            var home = OperatingSystem.IsWindows() ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
-                : Environment.GetEnvironmentVariable("XDG_CACHE_HOME") is { Length: > 0 } xdg ? xdg
-                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".cache");
-            root = Path.Combine(home, "fpas", "assets");
-        }
+            root = Path.Combine(AppContext.BaseDirectory, "fpas-assets");
         if (!Path.IsPathFullyQualified(root)) throw new IOException("FPAS_ASSET_CACHE must be an absolute path.");
         var directory = Path.Combine(root, hash); var file = Path.Combine(directory, name);
         if (OperatingSystem.IsWindows()) Directory.CreateDirectory(directory);

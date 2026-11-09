@@ -25,9 +25,9 @@ public sealed partial class LocalDeploymentTests
         Directory.CreateDirectory(otherVersion); File.WriteAllText(Path.Combine(otherVersion, "keep"), "other SDK version");
         var unrelated = Path.Combine(packages, "unrelated", "1.0.0");
         Directory.CreateDirectory(unrelated); File.WriteAllText(Path.Combine(unrelated, "keep"), "other package");
-        var assets = directory.File("assets");
+        var assets = directory.File(Path.Combine("delivery", "fpas-assets"));
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = packages,
-            ["FPAS_ASSET_CACHE"] = assets, ["DOTNET_BUNDLE_EXTRACT_BASE_DIR"] = directory.File("bundle") };
+            ["FPAS_ASSET_CACHE"] = null, ["DOTNET_BUNDLE_EXTRACT_BASE_DIR"] = directory.File("bundle") };
         var consumer = directory.File("consumer"); Directory.CreateDirectory(consumer);
         File.WriteAllText(Path.Combine(consumer, "Probe.fpasproj"), $"<Project Sdk=\"Fpas.NET.Sdk/{version}\"><PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Library</OutputType></PropertyGroup></Project>");
         File.WriteAllText(Path.Combine(consumer, "Probe.fpas"), "unit Probe; public function Read(): int; begin return 42; end function; end unit;");
@@ -51,7 +51,7 @@ public sealed partial class LocalDeploymentTests
                 Directory.GetFiles(Path.Combine(checkout, "bin")).Select(Path.GetFileName).Order());
             File.Copy(Path.Combine(checkout, "bin", Path.GetFileName(launcher)), launcher, overwrite: true);
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            Assert.Single(Directory.GetFileSystemEntries(delivery));
+            if (run == 0) Assert.Single(Directory.GetFileSystemEntries(delivery));
             Assert.True(File.Exists(Path.Combine(checkout, "sdk", "feed", $"Fpas.NET.Sdk.{version}.nupkg")));
             Assert.False(Directory.Exists(sdkCache));
             Assert.Equal("other SDK version", File.ReadAllText(Path.Combine(otherVersion, "keep")));
@@ -83,7 +83,8 @@ public sealed partial class LocalDeploymentTests
                 await CheckSdkCompiler(consumer, launcher, sdkCache, environment);
                 await CheckDebugger(checkout, consumer, launcher, version, packages, environment);
             }
-            Assert.Single(Directory.GetFileSystemEntries(delivery));
+            Assert.Equal(new[] { launcher, assets }.Order(), Directory.GetFileSystemEntries(delivery).Order());
+            Assert.False(Directory.Exists(Path.Combine(consumer, "fpas-assets")));
         }
 
         static void Copy(string source, string target)

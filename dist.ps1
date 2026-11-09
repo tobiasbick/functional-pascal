@@ -33,12 +33,14 @@ try {
     $cachePath = $cacheInfo.Substring('global-packages: '.Length)
     if (-not [System.IO.Path]::IsPathRooted($cachePath)) { throw 'NuGet package cache must be an absolute path.' }
     $cacheRoot = [System.IO.Path]::GetFullPath($cachePath)
-    $sdkCache = [System.IO.Path]::GetFullPath((Join-Path $cacheRoot 'fpas.net.sdk'))
-    $versionCache = [System.IO.Path]::GetFullPath((Join-Path $sdkCache $sdkVersion.ToLowerInvariant()))
-    if ([System.IO.Path]::GetDirectoryName($versionCache) -ne $sdkCache) { throw 'Invalid SDK cache target.' }
-    if (Test-Path -LiteralPath $versionCache) { Remove-Item -LiteralPath $versionCache -Recurse -Force }
+    foreach ($packageId in @('fpas.net.sdk', 'fpas.gui.cui')) {
+        $packageCache = [System.IO.Path]::GetFullPath((Join-Path $cacheRoot $packageId))
+        $versionCache = [System.IO.Path]::GetFullPath((Join-Path $packageCache $sdkVersion.ToLowerInvariant()))
+        if ([System.IO.Path]::GetDirectoryName($versionCache) -ne $packageCache) { throw 'Invalid package cache target.' }
+        if (Test-Path -LiteralPath $versionCache) { Remove-Item -LiteralPath $versionCache -Recurse -Force }
+    }
     Write-Host "Deployed self-contained single-file bin/fpas.exe with embedded Fpas.NET.Sdk $sdkVersion."
-    Write-Host "Refreshed the local Fpas.NET.Sdk $sdkVersion cache; consumers restore from the feed."
+    Write-Host "Refreshed the local Fpas.NET.Sdk and Fpas.Gui.Cui $sdkVersion caches; consumers restore from the feed."
 }
 finally {
     Pop-Location

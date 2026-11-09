@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RunSettingsFilePath>$(MSBuildThisFileDirectory)gui.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <ItemGroup>

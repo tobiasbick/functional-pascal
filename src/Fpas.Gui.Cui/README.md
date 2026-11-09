@@ -59,8 +59,9 @@ MVU/declarative GUI library is tracked in the [GUI plans](../../docs/future/gui/
   window. `Image` draws it at an explicit size in logical units. Use and dispose
   images on their owning UI thread. Disposal prevents new draws immediately and
   releases the texture after the last frame that references it can no longer be
-  replayed. Disposing the window releases its remaining textures and invalidates
-  any image objects the caller still holds.
+  replayed. On window disposal, the binding finishes the open frame without
+  presenting it, releases its remaining textures and invalidates any image
+  objects the caller still holds before destroying the renderer.
 - `Size` reports the size observed by the native event loop. `Resize` requests
   a change asynchronously. `CapturePng` requires an earlier presented frame and
   closed layouts, and ends the current render frame even when writing fails.
@@ -85,8 +86,7 @@ xvfb-run -a -s '-screen 0 1400x1000x24 -nolisten tcp -noreset' \
 `FpasCuiCMakeCommand` selects a non-default CMake executable;
 `FpasCuiCMakeArguments` supplies local CMake configuration such as X11 paths.
 Build outputs stay in `obj/native/<rid>/<configuration>/shared/`. The source
-build accepts matching `linux-x64`/`win-x64` hosts; prebuilt cross-RID asset
-selection for consuming projects belongs to [GUI publishing](../../docs/future/gui/fpas-publishing.md).
+build accepts matching `linux-x64`/`win-x64` hosts.
 The [distribution SDK](../../docs/build/distribution.md#native-cui-assets)
 includes both native library variants and their notices for its RID.
 
@@ -108,8 +108,39 @@ also cover scroll geometry, modal click routing and dismissal, image replacement
 and ownership, idle wakeup during shutdown, resize capture and capture-failure
 recovery. The tests inject input through CUI's public API.
 OS keyboard and pointer delivery are separate checks.
+The texture lifetime test counts native software-renderer allocations and
+releases during image replacement and repeated window teardown. It injects a
+recoverable allocation failure through the renderer interface.
 Keep Xvfb's `-noreset` option: the suite repeatedly closes its last window and
 immediately opens another, which must not race with a display-server reset.
+
+## Packaged binding
+
+The distribution build writes `Fpas.Gui.Cui` and `Fpas.NET.Sdk` packages at the
+same version to its local feed. The binding package contains the managed
+assembly, the shared and static CUI libraries for the build's RID, and the
+license notices. Use a feed with the package for the application's target RID.
+
+Add a normal package reference in the FPAS or CLR project that uses CUI:
+
+```xml
+<PackageReference Include="Fpas.Gui.Cui" Version="0.1.0-dev" />
+```
+
+The package's `buildTransitive` targets reach the final executable through
+project and package references. They select `RuntimeIdentifier`, or the .NET
+SDK's host RID when it is unset. The build reports unsupported RIDs and packages
+missing the selected native asset.
+
+An ordinary build and the framework-dependent, apphost and self-contained
+publish modes copy the shared library beside the application. The `single-file`
+mode bundles it for extraction by the .NET host. Native AOT links the CUI archive
+and OS libraries into the executable using `DirectPInvoke` and `NativeLibrary`.
+All modes deliver the six notices under `licenses/cui/`. The CLI ownership
+manifest and optional CMS signature cover the executable, any loose native
+library and the notices.
+See [FPAS publishing](../../docs/build/publishing.md) and
+[.NET Native AOT interop](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/interop).
 
 ## FPAS integration fixture
 
@@ -121,18 +152,31 @@ project reference to the solution-built binding. It does not rebuild the native
 module or change its restore assets while tests use it.
 
 The FPAS program exercises button activation, by-reference checkbox updates,
-UTF-8 editing under compacting collections and native geometry. It checks
-`using` disposal on normal exit and exception unwinding. Each renderer must
-produce a nonuniform PNG of the expected size. The harness also verifies native
+UTF-8 editing under compacting collections, layout scopes, dialogs and images.
+It checks `using` disposal on normal exit and exception unwinding. Each renderer
+must produce a PNG with the expected image color. The harness also verifies native
 library/license delivery and launches from a separate working directory without
 library-search overrides. The fixture and managed window tests pass on Windows
 x64 and on Ubuntu x64 under WSL 2 with Xvfb. Both runs exercise the CUI software
 and OpenGL renderers. The WSL run uses software OpenGL.
 
-This fixture verifies emitted FPAS CIL and interop. The planned MVU/declarative
-host owns the public application API. Package-based binding consumption and final
-publishing modes are separate integration work.
+### Packaged publishing fixture
 
-Additional controls and resources, managed resize callbacks and FPAS publishing
-integration remain in their owning plans. The library enables AOT compatibility
-analysis.
+Set `FPAS_TEST_GUI_AOT=1` to include the publishing case in the GUI test suite.
+Use the [Native AOT prerequisites](../../docs/build/publishing.md#modes-and-prerequisites)
+and the CUI source-build prerequisites above. The test also uses `dumpbin` on
+Windows and `readelf` on Linux to inspect the executable's imports. On Linux,
+use a `TMPDIR` path without spaces for the Native AOT linker.
+
+The [publishing test](../../tests/Fpas.Gui.Cui.Tests/FpasProjectTests.Publishing.cs)
+builds both distribution packages in a fresh feed and restores the GUI package
+through a C# project reference. It publishes all five modes with `fpas publish`
+into the same owned output and checks that mode changes remove stale runtime
+files. It verifies each signature with a pinned certificate and checks that
+verification rejects changes to the loose CUI library and a license notice.
+
+Both renderers run from a separate working directory without library-search
+overrides. For single-file and Native AOT, the test copies only the executable
+to a clean directory. Single-file must extract the exact packaged shared library.
+Native AOT must run without CUI imports or extraction. The suite runs on Windows
+x64 and Ubuntu x64 under WSL 2 with Xvfb.

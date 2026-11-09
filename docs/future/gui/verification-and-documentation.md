@@ -6,10 +6,9 @@ whole application path and makes it usable outside the repository.
 
 ## Integration matrix
 
-- [ ] Verify native asset selection and publish a GUI consumer on Linux x64 and
-  Windows x64 in each mode (framework-dependent, apphost, self-contained,
-  managed single-file and NativeAOT with the static archive). Exercise software
-  and OpenGL rendering, windowed application startup and UI-thread teardown.
+- [ ] Publish an application built on the public FPAS GUI host on Linux x64
+  and Windows x64 in all five modes. Verify native asset selection, software
+  and OpenGL rendering, windowed startup and UI-thread teardown.
 - [ ] Use packaged SDK/library assets for end-to-end tests. Launch from another
   working directory without source/build-tree paths or library search overrides.
 - [ ] For NativeAOT, move only the executable to an empty directory, remove .NET

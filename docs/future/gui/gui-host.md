@@ -1,6 +1,6 @@
 # GUI MVU host
 
-Depends on the [managed binding](managed-binding.md), [MVU core](shared-mvu.md)
+Depends on the [managed binding](../../../src/Fpas.Gui.Cui/README.md), [MVU core](shared-mvu.md)
 and [widget contracts](shared-widgets.md). Implement `Fpas.Gui` as the FPAS
 adapter from shared declarative views to CUI.
 
@@ -19,7 +19,9 @@ adapter from shared declarative views to CUI.
   Reevaluate responsive view/layout when its actual dependencies change.
 - [ ] Handle native live-resize callbacks without reentering Update or command
   execution. Such callbacks may redraw the current view; defer application
-  messages until the owning loop can process them safely.
+  messages until the owning loop can process them safely. Root callback state
+  and delegates until detachment. Surface managed failures after returning
+  from the native callback.
 - [ ] Publish host snapshots only after a successful presentation. Expose
   semantic control information for tests without pretending the GUI is a cell grid.
 

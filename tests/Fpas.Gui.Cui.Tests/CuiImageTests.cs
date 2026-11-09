@@ -76,4 +76,48 @@ public sealed class CuiImageTests
         owner.Dispose();
         image.Dispose();
     }
+
+    /// <summary>Checks native texture counts through failed uploads, frame retirement and repeated window teardown.</summary>
+    [GuiFact]
+    [Trait("Category", "NativeGui")]
+    public void NativeTextureCountsReturnToZeroAcrossWindowSessions()
+    {
+        using var audit = new CuiTextureAudit();
+        byte[] pixels = [255, 0, 0, 255];
+        const int sessions = 3;
+        for (int session = 0; session < sessions; session++)
+        {
+            using (var window = new CuiWindow("Texture accounting", renderer: CuiRenderer.Software, continuous: true))
+            {
+                audit.Attach(window);
+                using (window.CreateImage(1, 1, pixels))
+                    Assert.Equal(1, audit.ImageCount);
+                Assert.Equal(0, audit.ImageCount);
+
+                var original = window.CreateImage(1, 1, pixels);
+                audit.RejectNextImage();
+                Assert.Throws<InvalidOperationException>(() => window.CreateImage(1, 1, pixels));
+                Assert.Equal(1, audit.ImageCount);
+
+                Assert.True(window.NextFrame());
+                window.Image(original, 40, 40);
+                original.Dispose();
+                var replacement = window.CreateImage(1, 1, pixels);
+                Assert.Equal(2, audit.ImageCount);
+                Assert.True(window.NextFrame());
+                Assert.Equal(2, audit.ImageCount);
+                window.Image(replacement, 40, 40);
+                Assert.True(window.NextFrame());
+                Assert.Equal(1, audit.ImageCount);
+
+                var queued = window.CreateImage(1, 1, pixels);
+                window.Image(queued, 40, 40);
+                queued.Dispose();
+                Assert.Equal(2, audit.ImageCount);
+            }
+            Assert.Null(audit.CallbackFailure);
+            Assert.Equal(0, audit.TextureCount);
+        }
+        Assert.Equal(sessions, audit.RejectedUploads);
+    }
 }

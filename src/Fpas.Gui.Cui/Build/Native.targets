@@ -13,7 +13,7 @@
     <!-- The pinned CUI visualization code shadows a parameter. Keep MSVC's warning visible. -->
     <MSBuildWarningsNotAsErrors Condition="'$(FpasCuiNativeRid)' == 'win-x64'">$(MSBuildWarningsNotAsErrors);C4457</MSBuildWarningsNotAsErrors>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(FpasCuiSkipSourceBuild)' != 'true'">
     <Content Include="$(FpasCuiNativeOutput)/$(FpasCuiNativeFile)" Link="$(FpasCuiNativeFile)"
              Condition="'$(FpasCuiNativeFile)' != '' and '$(FpasCuiNativeLinkage)' == 'shared'"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -22,7 +22,8 @@
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <!-- CMake owns incremental recompilation; reconfigure when callers change options. -->
-  <Target Name="BuildFpasCuiNative" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+  <Target Name="BuildFpasCuiNative" BeforeTargets="BeforeBuild"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(FpasCuiSkipSourceBuild)' != 'true'">
     <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64. Requested $(FpasCuiNativeRid)." />
     <Error Condition="'$(FpasCuiBuildShared)' == ''" Text="CUI native linkage must be shared or static. Requested $(FpasCuiNativeLinkage)." />
     <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkRuntimeIdentifier)'"

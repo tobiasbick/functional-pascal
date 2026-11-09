@@ -51,6 +51,8 @@ grapheme boundaries, and that a replacement document uses the supplied selection
 viewport and that a modal dialog intercepts outside clicks and reports dismissal.
 `CuiImageTests` checks rendered pixels when replacing a queued image in the same
 frame. It also verifies window and UI-thread ownership and teardown with a live image.
+The texture lifetime case counts actual software-renderer allocations and
+releases across replacements, rejected uploads and repeated window teardown.
 The selection tests activate list items, table rows and tabs. They compare
 captured backgrounds before the click, while the host keeps the old selection
 and after the host applies the new selection. The table case also exercises UTF-8
@@ -63,9 +65,17 @@ replacements. The Win32 case exercises live-resize callback registration and
 detachment.
 `FpasProjectTests` builds the internal `Fixtures/gui` project with a fresh local
 FPAS SDK and the solution-built CLR binding. It verifies project-reference native
-asset/notices delivery, execution from another working directory, rendered PNG
-content, button/checkbox/Unicode edits and FPAS `using` cleanup on normal and
-exceptional exits. Both renderers must actually be selected.
+asset/notices delivery, execution from another working directory, button and
+checkbox interaction, multiline Unicode edits, layout, dialogs, image pixels
+and FPAS `using` cleanup on normal and exceptional exits. Both renderers must
+actually be selected.
+The opt-in publishing case restores the GUI package through a C# project
+reference and checks missing or unsupported RID diagnostics. It publishes and
+signs all five modes into the same owned directory. It verifies both renderers,
+the CUI asset and notice hashes, stale file cleanup and signature rejection
+after CUI library or notice tampering. Single-file and Native AOT run with only
+the executable present. The case verifies the extracted CUI file for single-file
+and checks that Native AOT neither imports nor extracts CUI.
 
 Run the GUI suite under Xvfb on headless Linux; see the
 [binding reference](../src/Fpas.Gui.Cui/README.md#source-build-and-verification).

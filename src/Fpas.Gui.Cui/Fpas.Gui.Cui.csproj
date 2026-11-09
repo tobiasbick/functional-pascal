@@ -5,4 +5,5 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <Import Project="Build/Native.targets" />
+  <Import Project="Build/Package.targets" Condition="'$(FpasCuiPackageAssetRoot)' != ''" />
 </Project>

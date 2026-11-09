@@ -1,28 +1,34 @@
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Build;
 
 public sealed partial class LocalDeploymentTests
 {
-    private static void CheckCuiAssets(string package, string checkout)
+    private static void CheckCuiAssets(string package, string guiPackage, string checkout)
     {
         bool windows = OperatingSystem.IsWindows();
         string rid = windows ? "win-x64" : "linux-x64";
         string shared = windows ? "fpas_cui.dll" : "libfpas_cui.so";
         string archive = windows ? "fpas_cui.lib" : "libfpas_cui.a";
         using var contents = ZipFile.OpenRead(package);
+        using var binding = ZipFile.OpenRead(guiPackage);
+        Assert.NotNull(binding.GetEntry("lib/net10.0/Fpas.Gui.Cui.dll"));
+        Assert.NotNull(binding.GetEntry("buildTransitive/Fpas.Gui.Cui.targets"));
         var unpacked = Path.GetDirectoryName(package)!;
         var library = Path.Combine(unpacked, shared);
         var sharedEntry = contents.GetEntry($"tools/gui/runtimes/{rid}/native/{shared}");
         Assert.NotNull(sharedEntry);
+        CheckSameAsset(sharedEntry, binding.GetEntry($"native/{rid}/shared/{shared}"));
         sharedEntry.ExtractToFile(library);
         var handle = NativeLibrary.Load(library);
         try { Assert.NotEqual(IntPtr.Zero, NativeLibrary.GetExport(handle, "fpas_cui_wake_post")); }
         finally { NativeLibrary.Free(handle); }
         var archiveEntry = contents.GetEntry($"tools/gui/runtimes/{rid}/static/{archive}");
         Assert.NotNull(archiveEntry);
+        CheckSameAsset(archiveEntry, binding.GetEntry($"native/{rid}/static/{archive}"));
         using (var stream = archiveEntry.Open())
         {
             Span<byte> magic = stackalloc byte[8];
@@ -34,9 +40,18 @@ public sealed partial class LocalDeploymentTests
             string filename = $"LICENSE-{name}.txt";
             var entry = contents.GetEntry("tools/gui/licenses/" + filename);
             Assert.NotNull(entry);
+            CheckSameAsset(entry, binding.GetEntry("licenses/cui/" + filename));
             using var notice = new StreamReader(entry.Open());
             Assert.Equal(File.ReadAllText(Path.Combine(checkout, "third-party", "cui", filename)), notice.ReadToEnd());
         }
+    }
+
+    private static void CheckSameAsset(ZipArchiveEntry sdk, ZipArchiveEntry? binding)
+    {
+        Assert.NotNull(binding);
+        using var sdkStream = sdk.Open();
+        using var bindingStream = binding.Open();
+        Assert.Equal(SHA256.HashData(sdkStream), SHA256.HashData(bindingStream));
     }
 
     private static async Task CheckMissingCuiAssets(string sdkProject, string checkout, string output,

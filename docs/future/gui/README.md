@@ -9,22 +9,19 @@ and static libraries with headless consumer link/render checks. The
 [distribution SDK](../../build/distribution.md#native-cui-assets) carries both
 library variants and their notices for the host RID. The initial
 [C# binding](../../../src/Fpas.Gui.Cui/README.md) provides window/control interop,
-UTF-8 buffers and an automatic local native build. The binding tests and FPAS
-fixture pass with software and OpenGL rendering on Windows x64 and Ubuntu x64
-under WSL 2. Widget coverage, consumer packaging, publishing and the
-FPAS-facing libraries remain open.
+UTF-8 buffers and an automatic local native build. The
+[packaged FPAS fixture](../../../src/Fpas.Gui.Cui/README.md#packaged-publishing-fixture)
+passes in all five publish modes with software and OpenGL rendering on Windows
+x64 and Ubuntu x64 under WSL 2. The remaining phases build the public FPAS host
+and share its MVU and widget contracts with the TUI.
 
 ## Execution order
 
-Follow this order and check off the tasks and acceptance criteria in each file.
-The files refine native integration, FPAS delivery, shared MVU and widget/TUI
-alignment into independently verifiable changes.
+Follow this order and verify the acceptance criteria in each file.
 
 | Phase | Work | Prerequisites |
 | --- | --- | --- |
-| 2 | [Managed binding](managed-binding.md) | Native CUI build and SDK assets |
-| 3 | [FPAS projects and publishing](fpas-publishing.md) | Managed binding |
-| 4 | [Shared MVU core](shared-mvu.md) | FPAS integration smoke fixture |
+| 4 | [Shared MVU core](shared-mvu.md) | [FPAS integration fixture](../../../src/Fpas.Gui.Cui/README.md#fpas-integration-fixture) |
 | 5 | [Shared widget contracts](shared-widgets.md) | MVU boundaries |
 | 6 | [GUI host](gui-host.md) | MVU core and widget contracts |
 | 7 | [TUI alignment](tui-alignment.md) | Shared contracts and GUI host |

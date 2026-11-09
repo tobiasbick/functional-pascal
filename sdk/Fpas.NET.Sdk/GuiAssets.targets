@@ -1,4 +1,9 @@
 <Project>
+  <ItemGroup Condition="'$(FpasCuiDistributionRid)' != ''">
+    <ProjectReference Include="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" ReferenceOutputAssembly="false"
+                      AdditionalProperties="FpasCuiSkipSourceBuild=true" />
+  </ItemGroup>
+
   <Target Name="ResolveFpasGuiDistributionInputs" Condition="'$(FpasCuiDistributionRid)' != ''">
     <Error Condition="'$(FpasCuiDistributionRid)' != 'win-x64' and '$(FpasCuiDistributionRid)' != 'linux-x64'"
            Text="No CUI distribution assets for RID '$(FpasCuiDistributionRid)'. Supported RIDs are win-x64 and linux-x64." />
@@ -36,5 +41,11 @@
       <None Include="@(_FpasCuiBinary)" Pack="true" />
       <None Include="@(_FpasCuiLicense)" Pack="true" PackagePath="tools/gui/licenses/" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="PackFpasGuiBinding" AfterTargets="Pack" DependsOnTargets="ResolveFpasGuiDistributionInputs"
+          Condition="'$(FpasCuiDistributionRid)' != ''">
+    <MSBuild Projects="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" Targets="Pack"
+             Properties="Configuration=$(Configuration);NoBuild=true;FpasCuiSkipSourceBuild=true;FpasCuiPackageAssetRoot=$(_FpasCuiRoot);PackageVersion=$(PackageVersion);PackageOutputPath=$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(PackageOutputPath)'))" />
   </Target>
 </Project>

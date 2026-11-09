@@ -20,6 +20,12 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
     return cui_app_create(&options);
 }
 
+void fpas_cui_finish_frame_for_destroy(cui_app *app) {
+    if (!app->in_frame) return;
+    cui_end_frame(app->ui);
+    app->in_frame = false;
+}
+
 void fpas_cui_set_resize_renderer(cui_app *app, void (*render)(cui_ctx *, void *), void *user) {
     app->frame_cb = render;
     app->frame_user = render ? user : NULL;

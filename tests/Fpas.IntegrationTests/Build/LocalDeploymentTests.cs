@@ -22,8 +22,11 @@ public sealed partial class LocalDeploymentTests
         var xml = XDocument.Load(sdkProject); xml.Root!.Element("PropertyGroup")!.Element("Version")!.Value = version; xml.Save(sdkProject);
         var packages = directory.File("packages");
         var sdkCache = Path.Combine(packages, "fpas.net.sdk", version);
+        var guiCache = Path.Combine(packages, "fpas.gui.cui", version);
         var otherVersion = Path.Combine(packages, "fpas.net.sdk", "0.0.0-preserve");
         Directory.CreateDirectory(otherVersion); File.WriteAllText(Path.Combine(otherVersion, "keep"), "other SDK version");
+        var otherGuiVersion = Path.Combine(packages, "fpas.gui.cui", "0.0.0-preserve");
+        Directory.CreateDirectory(otherGuiVersion); File.WriteAllText(Path.Combine(otherGuiVersion, "keep"), "other GUI version");
         var unrelated = Path.Combine(packages, "unrelated", "1.0.0");
         Directory.CreateDirectory(unrelated); File.WriteAllText(Path.Combine(unrelated, "keep"), "other package");
         var assets = directory.File(Path.Combine("delivery", "fpas-assets"));
@@ -41,6 +44,7 @@ public sealed partial class LocalDeploymentTests
         for (var run = 0; run < 2; run++)
         {
             Directory.CreateDirectory(sdkCache); File.WriteAllText(Path.Combine(sdkCache, "stale"), "cached previous tools");
+            Directory.CreateDirectory(guiCache); File.WriteAllText(Path.Combine(guiCache, "stale"), "cached previous binding");
             var script = Path.Combine(checkout, OperatingSystem.IsWindows() ? "dist.ps1" : "dist.sh");
             var shell = OperatingSystem.IsWindows()
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
@@ -54,8 +58,12 @@ public sealed partial class LocalDeploymentTests
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             if (run == 0) Assert.Single(Directory.GetFileSystemEntries(delivery));
             Assert.True(File.Exists(Path.Combine(checkout, "sdk", "feed", $"Fpas.NET.Sdk.{version}.nupkg")));
+            var guiPackage = Path.Combine(checkout, "sdk", "feed", $"Fpas.Gui.Cui.{version}.nupkg");
+            Assert.True(File.Exists(guiPackage));
             Assert.False(Directory.Exists(sdkCache));
+            Assert.False(Directory.Exists(guiCache));
             Assert.Equal("other SDK version", File.ReadAllText(Path.Combine(otherVersion, "keep")));
+            Assert.Equal("other GUI version", File.ReadAllText(Path.Combine(otherGuiVersion, "keep")));
             Assert.Equal("other package", File.ReadAllText(Path.Combine(unrelated, "keep")));
             if (run == 0) File.WriteAllText(Path.Combine(checkout, "bin", "keep"), "unrelated deployment file");
             Assert.Equal("unrelated deployment file", File.ReadAllText(Path.Combine(checkout, "bin", "keep")));
@@ -80,7 +88,7 @@ public sealed partial class LocalDeploymentTests
             await CheckLanguageServer(consumer, launcher, sdkCache, environment);
             if (run == 0)
             {
-                CheckCuiAssets(Path.Combine(directory.File("exported-feed"), $"Fpas.NET.Sdk.{version}.nupkg"), checkout);
+                CheckCuiAssets(Path.Combine(directory.File("exported-feed"), $"Fpas.NET.Sdk.{version}.nupkg"), guiPackage, checkout);
                 await CheckMissingCuiAssets(sdkProject, checkout, directory.File("missing-rid"), environment);
                 await CheckPublishing(consumer, launcher, directory.File("exported-feed"), version, environment);
                 await CheckSdkCompiler(consumer, launcher, sdkCache, environment);

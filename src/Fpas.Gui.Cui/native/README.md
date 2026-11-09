@@ -11,7 +11,9 @@ of borrowed strings and other inputs for each new adapter.
 
 The image adapter verifies OpenGL storage after upload. CUI copies pixel data
 during the upload and queues the texture handle for frame rendering. Callers
-keep that texture alive while CUI can still render the frame. The software
+keep that texture alive while CUI can still render the frame.
+`fpas_cui_finish_frame_for_destroy` completes deferred paint without presenting
+before the binding releases its textures and destroys the window. The software
 renderer aborts if its native allocator runs out of memory.
 
 The resize callback draws an open CUI frame on the UI thread. Its caller owns

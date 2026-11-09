@@ -17,3 +17,11 @@ internal sealed class GuiTheoryAttribute : TheoryAttribute
 {
     public GuiTheoryAttribute() => Skip = GuiAvailability.SkipReason;
 }
+
+internal sealed class GuiPublishingFactAttribute : FactAttribute
+{
+    public GuiPublishingFactAttribute() => Skip = GuiAvailability.SkipReason ??
+        (Environment.GetEnvironmentVariable("FPAS_TEST_GUI_AOT") == "1"
+            ? null
+            : "Set FPAS_TEST_GUI_AOT=1 to run the GUI publishing test with the native toolchain.");
+}

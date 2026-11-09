@@ -9,6 +9,17 @@ public sealed partial class CuiWindow
     private readonly List<(nuint Texture, long LastDrawnFrame)> retiredTextures = [];
     private long imageFrame;
 
+    /// <summary>Uploads pixels from an array to a texture owned by this window on its UI thread.</summary>
+    /// <param name="pixelWidth">Positive width in pixels.</param>
+    /// <param name="pixelHeight">Positive height in pixels.</param>
+    /// <param name="rgba">Exactly four tightly packed RGBA bytes per pixel. CUI copies the pixels during the call.</param>
+    /// <returns>The owned image. Dispose it when it is no longer needed.</returns>
+    public CuiImage CreateImage(int pixelWidth, int pixelHeight, byte[] rgba)
+    {
+        ArgumentNullException.ThrowIfNull(rgba);
+        return CreateImage(pixelWidth, pixelHeight, rgba.AsSpan());
+    }
+
     /// <summary>Uploads pixels to a texture owned by this window on its UI thread.</summary>
     /// <param name="pixelWidth">Positive width in pixels.</param>
     /// <param name="pixelHeight">Positive height in pixels.</param>
@@ -79,10 +90,19 @@ public sealed partial class CuiWindow
         }
     }
 
-    private void ForgetImages()
+    private void ReleaseImages()
     {
-        // Native window destruction finishes the open frame before destroying the renderer and its textures.
-        foreach (CuiImage image in images) image.Invalidate();
+        if (images.Count == 0 && retiredTextures.Count == 0) return;
+
+        // Finish deferred paint while the textures are still valid. Teardown never presents that frame.
+        NativeMethods.FinishFrameForDestroy(app);
+        foreach (CuiImage image in images)
+        {
+            NativeMethods.DestroyImage(context, image.Texture);
+            image.Invalidate();
+        }
+        foreach (var (texture, _) in retiredTextures)
+            NativeMethods.DestroyImage(context, texture);
         images.Clear();
         retiredTextures.Clear();
     }

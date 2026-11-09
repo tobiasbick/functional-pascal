@@ -4,9 +4,9 @@ internal sealed class TemporaryDirectory : IDisposable
 {
     internal string Path { get; }
 
-    internal TemporaryDirectory(string? parent = null)
+    internal TemporaryDirectory(string? parent = null, string prefix = "fpas tests ")
     {
-        Path = System.IO.Path.Combine(parent ?? System.IO.Path.GetTempPath(), "fpas tests " + Guid.NewGuid().ToString("N"));
+        Path = System.IO.Path.Combine(parent ?? System.IO.Path.GetTempPath(), prefix + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path);
     }
     internal string File(string name) => System.IO.Path.GetFullPath(System.IO.Path.Combine(Path, name));

@@ -16,6 +16,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Destroy(nint app);
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_finish_frame_for_destroy")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void FinishFrameForDestroy(nint app);
+
     [LibraryImport(Library, EntryPoint = "cui_app_frame")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial byte Frame(nint app);

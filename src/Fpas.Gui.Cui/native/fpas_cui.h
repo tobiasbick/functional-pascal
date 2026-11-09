@@ -3,6 +3,10 @@
 
 #include <cui/cui_app.h>
 
+/** Finishes deferred paint without presenting before resource and window destruction.
+ * @param app Live UI-thread application. Destroy it without opening or presenting another frame. */
+CUI_API void fpas_cui_finish_frame_for_destroy(cui_app *app);
+
 /** Begins a full-width column. Close it with cui_box_end.
  * @param ui Current UI-thread context.
  * @param padding Nonnegative logical padding.

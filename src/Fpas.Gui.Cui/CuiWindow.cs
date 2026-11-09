@@ -372,8 +372,8 @@ public sealed partial class CuiWindow : IDisposable
         if (app == 0) return;
         CheckOpen();
         CloseWakeTarget();
+        ReleaseImages();
         NativeMethods.Destroy(app);
-        ForgetImages();
         if (usesOpenGl) openGlWindow = false;
         app = 0;
         inFrame = false;

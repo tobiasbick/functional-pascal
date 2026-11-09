@@ -26,8 +26,9 @@ Copy only `bin/fpas.exe` or `bin/fpas` to the destination. On Linux retain execu
 permissions. No companion DLL, helper executable or runtimeconfig file is needed.
 On demand, the executable creates `fpas-assets/` beside itself for embedded assets
 that require real files. Copying that directory to another installation is unnecessary.
-The scripts preserve unrelated files in `bin/`; they also write the matching
-package to `sdk/feed/` and evict only that SDK version from the active NuGet cache.
+The scripts preserve unrelated files in `bin/`. They write the matching SDK and
+GUI binding packages to `sdk/feed/` and evict those versions from the active
+NuGet cache.
 
 Publication uses compressed, self-contained .NET single-file deployment without
 trimming. Native AOT requires trimming and does not support the dynamic code used
@@ -84,12 +85,13 @@ The embedded SDK package carries the native files for the distribution's RID.
 | `tools/gui/licenses/` | Six CUI and bundled-component notices | Same notices |
 
 The scripts set `FpasCuiDistributionRid` for both the SDK build and pack. Packing
-reports the RID and filename if an expected binary is missing. `fpas sdk export`
-delivers the package offline. Use separate feeds when exporting distributions
-for different RIDs with the same SDK version. The compiler and terminal programs have no CUI
-runtime dependency. Ordinary compiler and SDK development builds can omit the
-distribution property. Automatic asset selection and final application linking
-belong to [GUI publishing](../future/gui/fpas-publishing.md).
+also creates `Fpas.Gui.Cui.<version>.nupkg` with the managed binding, the same
+native files and transitive build targets. Supply this package alongside the SDK
+in the local feed for GUI projects. Use separate feeds for distributions built
+for different RIDs at the same version. The compiler and terminal programs have
+no CUI runtime dependency. Ordinary compiler and SDK development builds can
+omit the distribution property. See the [packaged binding](../../src/Fpas.Gui.Cui/README.md#packaged-binding)
+for project references and RID selection.
 
 ## Extraction and ownership
 

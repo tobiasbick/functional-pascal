@@ -36,6 +36,12 @@ executables run independently of compiler, sources and feed. PDBs are optional
 for execution; retain them for debugging. Project-requested content files can
 remain separate and must also be copied. Directory modes need all runtime files.
 
+For applications using the [packaged CUI binding](../../src/Fpas.Gui.Cui/README.md#packaged-binding),
+directory modes include the shared CUI library beside the application. Single-file
+publication bundles it for native extraction. Native AOT links CUI statically.
+All five modes deliver the notices under `licenses/cui/`. The CLI inventories
+the files it delivers, including those notices, and covers them when signing.
+
 AOT enforces linker/AOT warnings as errors in the CLI. Dynamic loading, reflection
 and runtime code generation in imported libraries can make an application
 unsuitable; failure never silently selects another mode. Use `single-file` when
@@ -126,6 +132,11 @@ failure preservation, deadline cleanup, solution/standalone selection, no-build
 reuse, independent RSA signature verification and incremental re-signing,
 public/delay signing, pinned CMS certificates and tampering controls for FPAS and
 C# hosts.
+
+The [packaged GUI fixture](../../src/Fpas.Gui.Cui/README.md#packaged-publishing-fixture)
+publishes and signs all five modes with the CUI binding referenced transitively.
+It runs both renderers on Windows and Linux and verifies native asset placement,
+extraction and static linking.
 
 See Microsoft's [Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/),
 [single-file](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)

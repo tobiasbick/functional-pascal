@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Description>FPAS CUI binding with native assets for the distribution RID.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <_FpasCuiPackShared Condition="'$(FpasCuiDistributionRid)' == 'win-x64'">fpas_cui.dll</_FpasCuiPackShared>
+    <_FpasCuiPackArchive Condition="'$(FpasCuiDistributionRid)' == 'win-x64'">fpas_cui.lib</_FpasCuiPackArchive>
+    <_FpasCuiPackShared Condition="'$(FpasCuiDistributionRid)' == 'linux-x64'">libfpas_cui.so</_FpasCuiPackShared>
+    <_FpasCuiPackArchive Condition="'$(FpasCuiDistributionRid)' == 'linux-x64'">libfpas_cui.a</_FpasCuiPackArchive>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Update="Build/Fpas.Gui.Cui.targets" Pack="true" PackagePath="buildTransitive/Fpas.Gui.Cui.targets" />
+    <_FpasCuiPackFile Include="$(FpasCuiPackageAssetRoot)/shared/out/$(_FpasCuiPackShared)"
+                      PackagePath="native/$(FpasCuiDistributionRid)/shared/$(_FpasCuiPackShared)" />
+    <_FpasCuiPackFile Include="$(FpasCuiPackageAssetRoot)/static/out/$(_FpasCuiPackArchive)"
+                      PackagePath="native/$(FpasCuiDistributionRid)/static/$(_FpasCuiPackArchive)" />
+    <_FpasCuiPackLicense Include="CUI;Geist;Inter;Lucide;stb;Unicode" />
+    <_FpasCuiPackFile Include="@(_FpasCuiPackLicense->'$(MSBuildProjectDirectory)/../../third-party/cui/LICENSE-%(Identity).txt')"
+                      PackagePath="licenses/cui/" />
+  </ItemGroup>
+
+  <Target Name="PackFpasCuiAssets" BeforeTargets="_GetPackageFiles">
+    <Error Condition="'$(_FpasCuiPackShared)' == ''" Text="Fpas.Gui.Cui packages support win-x64 and linux-x64." />
+    <Error Condition="!Exists('%(_FpasCuiPackFile.Identity)')" Text="Missing CUI package input '%(_FpasCuiPackFile.Identity)'. Build the matching distribution SDK before packing." />
+    <ItemGroup>
+      <None Include="@(_FpasCuiPackFile)" Pack="true" />
+    </ItemGroup>
+  </Target>
+</Project>

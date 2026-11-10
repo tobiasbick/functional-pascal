@@ -180,6 +180,30 @@ public sealed class TuiGalleryTests
             Assert.True(Control(await Request("snapshot"), "check-toggle").GetProperty("enabled").GetBoolean());
             await Choose("previous-page");
 
+            await Focus("drawer-open");
+            await Choose("drawer-open");
+            var drawer = await Request("snapshot");
+            Assert.True(Control(drawer, "drawer/close").GetProperty("focused").GetBoolean());
+            Assert.False(Control(drawer, "drawer-open").GetProperty("enabled").GetBoolean());
+            Assert.Equal("presented", await Key("Tab"));
+            Assert.True(Control(await Request("snapshot"), "pages/buttons").GetProperty("focused").GetBoolean());
+            Assert.Equal("presented", await Key("Escape"));
+            Assert.True(Control(await Request("snapshot"), "drawer-open").GetProperty("focused").GetBoolean());
+
+            var opener = Control(compact, "drawer-open");
+            int x = opener.GetProperty("column").GetInt32();
+            int y = opener.GetProperty("row").GetInt32();
+            Assert.Equal("presented", await Click(x, y));
+            Assert.Equal("presented", await Click(39, 1));
+            Assert.True(Control(await Request("snapshot"), "drawer-open").GetProperty("focused").GetBoolean());
+            await Choose("drawer-open");
+            await Choose("pages/checkbox");
+            var selected = await Request("snapshot");
+            Assert.True(Control(selected, "check-toggle").GetProperty("enabled").GetBoolean());
+            Assert.DoesNotContain(selected.GetProperty("controls").EnumerateArray(),
+                item => item.GetProperty("id").GetString() == "drawer/close");
+            await Choose("previous-page");
+
             await Resize(32, 17);
             await Choose("theme-amber");
             var amber = await Request("snapshot");

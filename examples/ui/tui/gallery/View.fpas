@@ -1,19 +1,28 @@
 unit Gallery.View;
 
-uses Gallery.State as G, Gallery.Previews as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as Themes, Fpas.Ui.Tui.Status as Status, System.Collections.Generic as Generic;
+uses Gallery.State as G, Gallery.Previews as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as Themes, Fpas.Ui.Tui.Status as Status, System.Collections.Generic as Generic, System as Sys;
 
 function Pages(Active: G.Page): E.Element<G.Msg>;
 begin
-  const Items: Generic.List<Ch.ListItem<G.Msg>> := new Generic.List<Ch.ListItem<G.Msg>>();
+  const Sections: Generic.List<N.Section<G.Msg>> := new Generic.List<N.Section<G.Msg>>();
+  const Items: Generic.List<N.Item<G.Msg>> := new Generic.List<N.Item<G.Msg>>();
   for Page: G.Page in G.Pages do
+    if Page = G.Page.Layout then
+      Sections.Add(new N.Section<G.Msg>('Components', Items.ToArray()));
+      Items.Clear();
+    end if;
+
     Items.Add(
-      new Ch.ListItem<G.Msg>(
-        Page.ToString().ToLowerInvariant(), G.Title(Page), G.Msg.Show(Page), Page = Active
-      )
+      new N.Item<G.Msg>(Page.ToString().ToLowerInvariant(), G.Title(Page), G.Msg.Show(Page))
     );
   end for;
 
-  return E.Border<G.Msg>(E.List<G.Msg>('pages', Items.ToArray()), 'Widgets');
+  Sections.Add(new N.Section<G.Msg>('Extended', Items.ToArray()));
+  return N.Sidebar<G.Msg>(
+    'pages',
+    Sections.ToArray(),
+    Active.ToString().ToLowerInvariant()
+  );
 end function;
 
 function ThemeButton(Current: G.Preset; Target: G.Preset): E.Element<G.Msg>;
@@ -118,6 +127,20 @@ begin
   const Compact: bool := Viewport.Columns < 42;
   const Dimensions: string := Viewport.Columns.ToString() + ' × ' + Viewport.Rows.ToString();
   const Heading: string := if Compact then 'Gallery' else 'FPAS  /  Widget Gallery' end if;
+  const Title: E.Element<G.Msg> := E.Styled<G.Msg>(
+    E.Text<G.Msg>(Heading + '   ' + Dimensions),
+    S.Role.Heading
+  );
+  const Header: E.Element<G.Msg> := if Compact then E.Row<G.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      Title, Icons.IconButton<G.Msg>(
+        'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', G.Msg.SetDrawer(true),
+        new Icons.Options(TerminalGlyph := '≡')
+      )
+    )
+    else Title
+    end if;
+  const Navigation: E.Element<G.Msg> := Pages(State.Active);
   const Preview: E.Element<G.Msg> := E.Styled<G.Msg>(
     E.Border<G.Msg>(
       E.Column<G.Msg>(
@@ -131,7 +154,7 @@ begin
     else E.Row<G.Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
       E.Size<G.Msg>(
-        Pages(State.Active),
+        E.Border<G.Msg>(E.ScrollView<G.Msg>('pages-scroll', Navigation), 'Widgets'),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(17)), Minimum := L.Measure.Cells(11))
       ),
       E.Size<G.Msg>(Preview, new L.Flex(Basis := L.Extent.Fill))
@@ -145,13 +168,13 @@ begin
     )
     else Line
     end if;
-  return Views.Screen<G.Msg>(
+  const Page: E.Element<G.Msg> := Views.Screen<G.Msg>(
     E.Column<G.Msg>(
       new L.Flow(
         Padding := L.Spacing.Fixed(L.Measure.Cells(1)),
         Gap := L.Spacing.Fixed(L.Measure.Cells(if Compact then 0 else 1 end if))
       ),
-      E.Styled<G.Msg>(E.Text<G.Msg>(Heading + '   ' + Dimensions), S.Role.Heading),
+      Header,
       E.Size<G.Msg>(Body, new L.Flex(Basis := L.Extent.Fill, Minimum := L.Measure.Cells(4))),
       ThemeBar(State.Appearance, Viewport.Columns),
       Footer
@@ -159,6 +182,13 @@ begin
     Overlays,
     Keys
   );
+  return if Compact then Sheets.Sheet<G.Msg>(
+      'drawer', Page, Navigation, State.Drawer,
+      new Sheets.Options('Components', Edge := Sheets.Side.Left, Size := 200),
+      G.Msg.SetDrawer(false)
+    )
+    else Page
+    end if;
 end function;
 
 public function View(State: G.Model; Viewport: L.Viewport): E.Element<G.Msg>;

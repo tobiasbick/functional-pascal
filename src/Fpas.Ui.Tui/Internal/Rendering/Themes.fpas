@@ -24,6 +24,10 @@ public type ButtonStyles = record
   public Active: ButtonAppearance;
   // Discard-action colors.
   public Destructive: ButtonAppearance;
+  // Transparent or outlined resting surface.
+  public Ghost: ButtonAppearance;
+  // Accent-colored link presentation.
+  public Link: ButtonAppearance;
   // Disabled control colors.
   public Disabled: T.Style;
 end record;
@@ -143,6 +147,12 @@ begin
         new T.Style(Canvas, ErrorColor),
         Error,
         new T.Style(ErrorColor, HoverColor)
+      ),
+      Ghost := new ButtonAppearance(new T.Style(Text, null), Focus, Hover),
+      Link := new ButtonAppearance(
+        new T.Style(Accent, null),
+        Focus,
+        new T.Style(Accent, HoverColor)
       ),
       Disabled := new T.Style(Rgb(C.TextMuted, Canvas), Surface)
     )

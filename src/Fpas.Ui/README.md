@@ -31,8 +31,11 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | --- | --- | --- | --- |
 | Text and titled or plain divider | Yes | Yes | Yes |
 | Button variants and controlled checkbox | Yes | Yes | Yes |
+| Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Controlled text input and multiline editor | Yes | Yes | Yes |
 | Action list, selection list, text table and tabs | Yes | Yes | Yes |
+| Sidebar navigation | Yes | Yes | Yes |
+| Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Percentage progress | Yes | Yes | Yes |
 | Rows, columns, borders and modal overlays | Yes | Yes | Yes |
 | CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
@@ -121,6 +124,55 @@ The top modal owns focus and pointer input. It tries its initial focus ID,
 then the first enabled focus stop. Tab remains within the modal. Escape
 invokes its dismissal callback when present. Closing a modal restores
 the prior focus if it is still available.
+
+## Sidebar navigation
+
+`Fpas.Ui.Navigation.Sidebar` takes ordered sections of keyed destinations and
+the active key from the model. An empty section title omits the heading. Keys
+are unique across sections. Each enabled destination is a focus stop. Tab and
+Shift+Tab move focus, while a click, Enter or Space sends the item's message.
+Focus can move independently of the active page. A null active key clears the
+selection, and an unknown key is rejected during preflight.
+
+Use `Navigation.ItemId(SidebarId, Key)` to address a destination for focus. The
+GUI uses CUI's native navigation rows and shared animated highlight. The TUI
+uses themed text rows. Both hosts display badge text, and the GUI can show a
+glyph from the CUI icon font. Use the normal layout and scroll view to place or
+size the sidebar.
+
+## Sheet and drawer
+
+`Fpas.Ui.Sheets.Sheet` takes a base view, a sheet body, model-owned visibility,
+and a dismissal message. Keep the sheet in the view while closed to let the
+GUI animate the body out. Give the sheet and its descendants distinct IDs.
+
+`Sheets.Options` sets the title, optional description, edge and size. The
+default is a right sheet, 400 logical units wide. Size is width for left and
+right edges and height for top and bottom edges. Both hosts constrain the
+panel to the viewport and scroll the body beneath its pinned header.
+
+The open sheet owns keyboard focus and pointer input. It tries the requested
+initial focus and falls back to its close button. Use `Sheets.CloseId(Id)` to
+address that button. The button, a click on the dimmed backdrop, or Escape
+proposes dismissal. A focused editor gets Escape first to collapse its
+selection or leave editing. When the model closes the sheet, the host
+restores prior focus if available. GUI uses CUI's slide transition. TUI
+draws the sheet directly in cells and supports Page Up and Page Down for
+the body when the focused control leaves those keys available.
+
+## Icon button
+
+`Fpas.Ui.IconButtons.IconButton` takes a stable ID, a CUI font glyph, a
+tooltip that names the action, and the activation message. The ghost style
+is the default. Options set the style, size, selected state, input permission,
+busy state and shortcut hint. Bind the shortcut separately if it should run
+the action.
+
+Tab focuses an enabled icon button. Click, Enter or Space proposes its message.
+A busy button keeps focus and suppresses activation. Changing the glyph or
+tooltip preserves the button's identity. GUI draws the glyph with CUI. TUI
+uses the supplied terminal glyph or the tooltip text, shows an ellipsis while
+busy, and puts the hover hint on the last terminal row.
 
 ## Text editing and scrolling
 

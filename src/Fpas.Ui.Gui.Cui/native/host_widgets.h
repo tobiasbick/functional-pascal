@@ -83,6 +83,7 @@ CUI_API int fpas_cui_modal_begin(cui_ctx *ui, const char *id, int open);
  * @param ui Owner context.
  * @return Modal key while its content is open. */
 CUI_API unsigned int fpas_cui_modal_key(cui_ctx *ui);
+
 /** Copies canvas operations into native frame memory.
  * @param ui Owner context.
  * @param id Canvas identity.

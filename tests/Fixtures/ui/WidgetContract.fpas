@@ -2,7 +2,7 @@ program WidgetContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
   System as Sys, System.Console as Console;
 
 type Msg = variant
@@ -177,6 +177,23 @@ begin
   Rejects(
     E.SelectionList<Msg>('items', [new C.SelectionItem('x', 'First')], 'missing', SelectKey),
     V.Target.Portable, 'selection[items]', 'Unknown selected key missing'
+  );
+  const Destination: N.Item<Msg> := new N.Item<Msg>('x', 'Destination', Msg.Clicked);
+  const Section: N.Section<Msg> := new N.Section<Msg>('First', [Destination]);
+  Rejects(
+    N.Sidebar<Msg>('nav', [Section, new N.Section<Msg>('Second', [Destination])], 'x'),
+    V.Target.Portable, 'sidebar[nav]', 'Duplicate item key x'
+  );
+  Rejects(
+    N.Sidebar<Msg>('nav', [Section], 'missing'),
+    V.Target.Portable, 'sidebar[nav]', 'Unknown selected key missing'
+  );
+  Rejects(
+    E.Column<Msg>(
+      N.Sidebar<Msg>('nav', [Section], 'x'),
+      E.Button<Msg>('nav/x', 'Collision', Msg.Clicked)
+    ),
+    V.Target.Portable, 'button[nav/x]', 'Duplicate ID nav/x'
   );
   Rejects(
     E.Table<Msg>(

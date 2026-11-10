@@ -130,6 +130,12 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
     end if;
 
     case Pressed of
+      when K.Key.Escape:
+        if Position.Anchor = Position.Caret then
+          return false;
+        end if;
+
+        self.Move(Position.Caret, false);
       when K.Key.Enter:
         if Extend then
           return false;

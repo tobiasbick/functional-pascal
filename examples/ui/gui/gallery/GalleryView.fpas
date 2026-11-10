@@ -2,7 +2,18 @@ unit GuiGallery.View;
 
 uses
   GuiGallery.State as State, GuiGallery.Previews as Preview, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Styles as S;
+  Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
+  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, System as Sys;
+
+function Destination(Key: string; Label: string; Icon: int): N.Item<State.Msg>;
+begin
+  return new N.Item<State.Msg>(
+    Key,
+    Label,
+    State.Msg.Navigate(Key),
+    Icon := Sys.Char.ConvertFromUtf32(Icon)
+  );
+end function;
 
 // Builds responsive navigation, the active preview and the model-owned overlay.
 //
@@ -14,46 +25,64 @@ uses
 // The complete gallery view.
 public function Build(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
 begin
-  const Navigation: E.Element<State.Msg> := E.SelectionList<State.Msg>(
+  const Navigation: E.Element<State.Msg> := N.Sidebar<State.Msg>(
     'navigation', [
-      new C.SelectionItem('controls', 'Controls'),
-      new C.SelectionItem('editors', 'Editors'),
-      new C.SelectionItem('collections', 'Collections'),
-      new C.SelectionItem('layout', 'Layout and scrolling'),
-      new C.SelectionItem(
-        'graphics',
-        'Images and canvas'
+      new N.Section<State.Msg>(
+        'Components', [
+          Destination('controls', 'Controls', $E1B4),
+          Destination('editors', 'Editors', $E198),
+          Destination('collections', 'Collections', $E0AD)
+        ]
       ),
-      new C.SelectionItem('effects', 'Effects and modal')
+      new N.Section<State.Msg>(
+        'Extended', [
+          Destination('layout', 'Layout and scrolling', $E1C1),
+          Destination('graphics', 'Images and canvas', $E0F6),
+          Destination('effects', 'Effects and modal', $E529)
+        ]
+      )
     ],
-    Model.Page, function(Key: string): State.Msg => State.Msg.Navigate(Key)
+    Model.Page
   );
   const Content: E.Element<State.Msg> := Preview.View(Model);
-  const Body: E.Element<State.Msg> := if Viewport.Width =
-      L.SizeClass.Compact then E.Column<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Normal),
-      Navigation,
-      Content
-    )
+  const Compact: bool := Viewport.Width = L.SizeClass.Compact;
+  const Body: E.Element<State.Msg> := if Compact then Content
     else E.Row<State.Msg>(
       new L.Flow(Gap := L.Spacing.Loose),
       E.Size<State.Msg>(
-        Navigation,
+        E.ScrollView<State.Msg>('navigation-scroll', Navigation),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(190)))
       ),
       E.Size<State.Msg>(Content, new L.Flex(Basis := L.Extent.Fill))
     )
     end if;
-  const Base: E.Element<State.Msg> := E.Column<State.Msg>(
+  const Actions: E.Element<State.Msg> := E.Row<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    E.Button<State.Msg>('theme', 'Switch theme', State.Msg.Theme),
+    E.Button<State.Msg>('quit', 'Close', State.Msg.Quit)
+  );
+  const Header: E.Element<State.Msg> := if Compact then E.Row<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      Icons.IconButton<State.Msg>(
+        'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', State.Msg.SetDrawer(true)
+      ),
+      Actions
+    )
+    else Actions
+    end if;
+  const Page: E.Element<State.Msg> := E.Column<State.Msg>(
     new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal),
     E.Styled<State.Msg>(E.Text<State.Msg>('FPAS graphical widget gallery'), S.Role.Heading),
-    E.Row<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Normal),
-      E.Button<State.Msg>('theme', 'Switch theme', State.Msg.Theme),
-      E.Button<State.Msg>('quit', 'Close', State.Msg.Quit)
-    ),
-    Body
+    Header,
+    E.Size<State.Msg>(Body, new L.Flex(Basis := L.Extent.Fill))
   );
+  const Base: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
+      'drawer', Page, Navigation, Model.Drawer,
+      new Sheets.Options('Components', Edge := Sheets.Side.Left, Size := 280),
+      State.Msg.SetDrawer(false)
+    )
+    else Page
+    end if;
   if not Model.Modal then
     return Base;
   end if;

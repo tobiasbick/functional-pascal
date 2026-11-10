@@ -103,7 +103,20 @@ begin
         ) * Flow.Gap
         else 0
         end if);
-    when E.Element.Scrollable(_, _, _), E.Element.ControlledScroll(_, _, _, _, _):
+    when E.Element.Scrollable(_, _, _), E.Element.ControlledScroll(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.EdgeSheet(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ):
       return 0;
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return Minimum<TMsg>(Child, Horizontal, false) + 2;
@@ -183,7 +196,7 @@ end function;
 public function CanStretch<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Explicit: bool := false): bool;
 begin
   case Node of
-    when E.Element.Action(_, _, _, _, _, _, _), E.Element.Toggle(_, _, _, _, _):
+    when E.Element.Action(_, _, _, _), E.Element.Toggle(_, _, _, _, _):
       return Horizontal and Explicit;
     when E.Element.Gauge(_), E.Element.DocumentEditor(_, _, _, _, _, _, _):
       return Horizontal;
@@ -284,10 +297,8 @@ begin
         end if;
     when E.Element.Toggle(_, const Caption: string, _, _, _):
       return if Horizontal then G.Measure(Caption) + 4 else 1 end if;
-    when E.Element.Action(_, const Caption: string, _, _, const Role: string, _, _):
-      return if Horizontal then G.Measure(
-          Caption
-        ) + (if Role = 'button' then 2 else 0 end if)
+    when E.Element.Action(_, _, _, const View: E.ActionView):
+      return if Horizontal then Sys.Math.Max(View.MinimumWidth, G.Measure(View.Caption) + 2)
         else 1
         end if;
     when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
@@ -377,6 +388,8 @@ begin
       _
     ):
       return Intrinsic<TMsg>(Child, Horizontal, Columns);
+    when E.Element.EdgeSheet(_, _, _, _, _, _):
+      return 0;
     when E.Element.Panel(
       const Body: E.Element<TMsg>,
       const Footer: E.Element<TMsg>,

@@ -62,6 +62,8 @@ public type Model = record
   public LogCount: int := 9;
   public LogPosition: L.ScrollPosition := L.ScrollPosition.End;
   public Overlay: bool := false;
+  // Compact navigation sheet visibility.
+  public Drawer: bool := false;
   public OverlayPosition: L.ScrollPosition := L.ScrollPosition.Offset(L.Measure.Cells(0));
   public ActiveTab: string := 'general';
   public TabName: string := 'Gallery';
@@ -96,6 +98,7 @@ public type Msg = variant
   ResizeCanvas(Columns: int; Rows: int);
   CanvasEvent(Value: string);
   SetOverlay(Open: bool);
+  SetDrawer(Open: bool);
   ScrollOverlay(Position: L.ScrollPosition);
   ChooseTab(Key: string);
   EditTabName(Value: Ed.TextEdit);
@@ -178,9 +181,11 @@ begin
   const Next: Model := case Message of
     when Msg.Show(const Value: Page): State with
       Active := Value;
+      Drawer := false;
     end with;
     when Msg.MovePage(const Direction: int): State with
       Active := Adjacent(State.Active, Direction);
+      Drawer := false;
     end with;
     when Msg.ChangeTheme(const Value: Preset): State with
       Appearance := Value;
@@ -234,7 +239,11 @@ begin
     end with;
     when Msg.SetOverlay(const Open: bool): State with
       Overlay := Open;
+      Drawer := false;
       OverlayPosition := L.ScrollPosition.Offset(L.Measure.Cells(0));
+    end with;
+    when Msg.SetDrawer(const Open: bool): State with
+      Drawer := Open;
     end with;
     when Msg.ScrollOverlay(const Position: L.ScrollPosition): State with
       OverlayPosition := Position;

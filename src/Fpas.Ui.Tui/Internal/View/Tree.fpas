@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Choices as C, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Choices as C, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, System as Sys;
 
 // Resolved cell allocation data consumed only by terminal layout.
 public type Flex = record
@@ -53,6 +53,28 @@ public type ScrollPosition = variant
   End;
 end variant;
 
+// Appearance and traversal policy for a direct terminal action.
+public type ActionView = record
+  // Visible text painted inside the button.
+  public Caption: string;
+  // Semantic label when it differs from the visible text.
+  public Name: string? := null;
+  // Role exposed in snapshots.
+  public Role: string := 'button';
+  // Model-owned value exposed in snapshots.
+  public Value: string := '';
+  // Semantic button style.
+  public Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
+  // Allow Up and Down to cycle focus as well as Tab.
+  public ArrowFocus: bool := true;
+  // Minimum total width in cells, including button padding.
+  public MinimumWidth: int := 0;
+  // Optional contextual hint for the hovered control.
+  public Hint: string := '';
+  // Keep the action focusable while suppressing activation.
+  public Busy: bool := false;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -66,10 +88,7 @@ public type Element<TMsg> = variant
   // Paint terminal status and priority-ordered hints.
   StatusLine(Message: string; Hints: array of string);
   // Paint and route a direct action with semantic button styling.
-  Action(
-    Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string;
-    Variant: UiStyle.ButtonVariant
-  );
+  Action(Id: string; Message: TMsg; Enabled: bool; View: ActionView);
   // Paint controlled text with host-owned cell viewport state and shared event mapping.
   DocumentEditor(
     Id: string; Text: string; Position: Editors.EditorPosition; Events: Editors.IEvents<TMsg>;
@@ -121,6 +140,11 @@ public type Element<TMsg> = variant
   Layer(
     Id: string; Modal: bool; InitialFocus: string; OnEscape: Sys.Func<TMsg>?; Content: Element<TMsg>;
     Shortcuts: array of K.ShortcutBinding<TMsg>; Limits: K.OverlayLimits?
+  );
+  // Place a modal sheet at a viewport edge with a fixed header and a scrolling body.
+  EdgeSheet(
+    Id: string; Settings: Sheets.Options; Size: int; Content: Element<TMsg>;
+    Dismiss: TMsg; Colors: T.Style
   );
 end variant;
 end unit;

@@ -1,8 +1,10 @@
 # TUI Widget Gallery
 
-Choose a widget from the list on the left and try it in the preview on the
-right. Below 42 columns, the gallery shows one pane with Previous and Next
-buttons. Below 32 columns or 12 rows, it asks for more space. Use the theme
+Choose a widget from the grouped sidebar on the left and try it in the preview on the
+right. Below 42 columns, the **Components** menu glyph opens the sidebar in a left drawer.
+Select a page to close it, or dismiss it with Escape, the close button, or a
+click on the backdrop. Previous and Next also switch pages in the compact
+view. Below 32 columns or 12 rows, the gallery asks for more space. Use the theme
 buttons below the preview to switch between Light, Dark, Green, Blue and Amber.
 The selected page and its values stay in place as you resize or change themes.
 
@@ -14,7 +16,7 @@ dotnet build examples/ui/tui/gallery/WidgetGallery.fpasproj
 dotnet examples/ui/tui/gallery/bin/Debug/net10.0/WidgetGallery.dll
 ```
 
-Use the mouse or select a page with the arrow keys and Enter. Page Up and
+Use the mouse or focus a page with Tab and activate it with Enter or Space. Page Up and
 Page Down switch pages when focus is outside the list and scroll view previews. Tab moves focus between
 controls and Ctrl+Q exits. The overlay captures focus until you close it with
 Escape or its Close button.

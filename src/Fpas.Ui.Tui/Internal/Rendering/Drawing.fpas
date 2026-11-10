@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Drawing;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Graphics as Graphics, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;
 
 public type Operation = record
   public Value: string;
@@ -8,6 +8,8 @@ public type Operation = record
   public Clip: F.Rect;
   public Style: T.Style;
   public Wrap: bool;
+  // Composites a scrim over previously drawn cells when present.
+  public Tint: Graphics.Color? := null;
 end record;
 
 public type PaintedRow = record
@@ -227,6 +229,20 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
 
   procedure Draw(Item: Operation);
   begin
+    const Tint: Graphics.Color? := Item.Tint;
+    if Tint <> null then
+      for Column: int := Item.Clip.X to Item.Clip.X + Item.Clip.Width - 1 do
+        const Cell: T.Cell := Buffer[Column];
+        Buffer[Column] := new T.Cell(
+          Cell.Text, new T.Style(
+            Th.Rgb(Tint, Cell.Colors.Foreground ?? Blank.Colors.Foreground ?? $FFFFFF),
+            Th.Rgb(Tint, Cell.Colors.Background ?? Blank.Colors.Background ?? 0)
+          )
+        );
+      end for;
+
+      return;
+    end if;
     const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
       Item.Value
     );

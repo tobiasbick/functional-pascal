@@ -135,6 +135,20 @@ focus commands and background-result delivery. It also runs the same view and
 ThemeFor callback through both hosts, verifies all light/dark accent palettes
 by native readback, custom palettes, logical fixed sizing and normalized growth.
 The terminal host retains its cell renderer and CUI-compatible allocation.
+The portable fixture also exercises sidebar focus and keyboard activation in
+both hosts. The native gallery changes pages by clicking its sidebar, and the
+shared preflight fixture checks duplicate keys across sections, unknown active
+keys and conflicts with generated focus IDs.
+
+The compact gallery scenarios check sheet dismissal and focus restoration,
+blocked base input, and sidebar selection in both hosts. The packaged GUI
+consumer opens a sheet in each delivery mode. The terminal CUI fixture checks
+all four sheet edges and scrolls the body beneath the pinned header.
+
+The native icon-button case changes the icon and tooltip while focused and
+checks activation and busy/disabled input. The terminal CUI fixture checks
+the busy state, Space activation and the displayed shortcut hint. Both
+compact galleries open their drawer through an icon button.
 
 The terminal CUI fixture checks proportional shrinkage, bounded and fractional
 growth, fixed overflow, logical dimensions on each axis, inherited styles and

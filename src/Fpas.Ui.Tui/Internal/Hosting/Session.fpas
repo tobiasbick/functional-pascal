@@ -276,6 +276,7 @@ public function Start<TModel, TMsg>(
     const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
       Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId()
     );
+    D.ShowHint<TMsg>(Layout, Viewport.Columns, Theme, Hover, Routing.ScopeId());
     const Prior: App.Frame? := Published;
     const Before: A.Layout<TMsg>? := Current;
     if Prior <> null and Before <> null and Prior.Columns = Viewport.Columns and Prior.Rows =

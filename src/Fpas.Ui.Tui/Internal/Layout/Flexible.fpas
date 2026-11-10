@@ -1,6 +1,25 @@
 unit Fpas.Ui.Tui.Internal.Layout.Flexible;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
+
+// Resolves an explicit terminal distance.
+//
+// ## Parameters
+// - `Value`: Validated cell or portable logical measure.
+// - `Horizontal`: Whether the distance is measured in columns rather than rows.
+//
+// ## Returns
+// Cell count.
+public function Cells(Value: L.Measure; Horizontal: bool := true): int;
+begin
+  case Value of
+    when L.Measure.Cells(const Count: int):
+      return Count;
+    when L.Measure.Logical(const Units: int):
+      const Scale: int := if Horizontal then 8 else 16 end if;
+      return cast<int>((cast<long>(Units) + Scale - 1L) div Scale);
+  end case;
+end function;
 
 public type Rect = record
   public X: int;

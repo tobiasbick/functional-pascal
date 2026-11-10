@@ -60,6 +60,9 @@ are errors. Empty/all-disabled tabs show no panel.
 
 Tab and Shift+Tab traverse enabled controls. Enter activates actions and
 eligible selected rows. A typed space also activates buttons and checkboxes.
+The [shared sidebar](../Fpas.Ui/README.md#sidebar-navigation) uses the same
+destination keys and activation messages as the GUI. Tab moves between its
+items, and Enter or Space activates the focused item.
 Disabled controls receive no focus or input. Arrows skip disabled collection
 items; CanActivate=false leaves an item selectable without activating it.
 Tabs support Left/Right, Home/End and skip disabled items.
@@ -84,6 +87,10 @@ The top modal owns keyboard and pointer input. It tries its initial focus,
 then the first enabled control, and restores previous eligible focus on close.
 Mvu.Focus applies the last request after layout/modal reconciliation. Missing,
 disabled and out-of-scope targets are ignored.
+
+The [shared sheet](../Fpas.Ui/README.md#sheet-and-drawer) docks to any edge,
+with a pinned close button and a dimmed backdrop. Scroll its body with the
+wheel or Page Up and Page Down. Escape and a click on the backdrop can dismiss it.
 
 ## Terminal extensions
 

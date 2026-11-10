@@ -30,5 +30,11 @@ public type ButtonVariant = enum: byte
   Active;
   // An action that discards or deletes data.
   Destructive;
+  // A bordered action with a transparent surface.
+  Outline;
+  // An action with a quiet, transparent resting surface.
+  Ghost;
+  // An action styled as a link.
+  Link;
 end enum;
 end unit;

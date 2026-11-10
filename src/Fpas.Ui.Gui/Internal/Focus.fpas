@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -21,6 +21,10 @@ begin
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
+    when E.Element.IconAction(const Id: string, _, _, _, const Settings: Icons.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
     when E.Element.Toggle(const Id: string, _, _, _, const Enabled: bool):
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -39,6 +43,22 @@ begin
           if Item.Enabled then
             return Id;
           end if;
+        end for;
+      end if;
+    when E.Element.Sidebar(
+      const Id: string,
+      const Sections: array of N.Section<TMsg>,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Section: N.Section<TMsg> in Sections do
+          for Item: N.Item<TMsg> in Section.Items do
+            const ItemId: string := N.ItemId(Id, Item.Key);
+            if Item.Enabled and (Preferred = null or Preferred = ItemId) then
+              return ItemId;
+            end if;
+          end for;
         end for;
       end if;
     when E.Element.Selectable(
@@ -108,6 +128,19 @@ begin
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Modal(_, _, const Content: E.Element<TMsg>, _, _):
       return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.Sheet(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, _, _
+    ):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+      const Close: string := Sheets.CloseId(Id);
+      if Preferred = null or Preferred = Close then
+        return Close;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
     when E.Element.Deferred(const Id: string, _):
       return First<TMsg>(Prepared.Subviews[Id].Tree, Prepared, Preferred);
     else
@@ -131,6 +164,15 @@ public function TopModal<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>
 begin
   case Node of
     when E.Element.Modal(const Id: string, _, const Content: E.Element<TMsg>, _, _):
+      const Inner: string? := TopModal<TMsg>(Content, Prepared);
+      return if Inner = null then Id else Inner end if;
+    when E.Element.Sheet(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, _, _
+    ):
+      if not Open then
+        return TopModal<TMsg>(Base, Prepared);
+      end if;
       const Inner: string? := TopModal<TMsg>(Content, Prepared);
       return if Inner = null then Id else Inner end if;
     when E.Element.Stack(const Children: array of E.Element<TMsg>, _, _):
@@ -162,4 +204,57 @@ begin
 
   return null;
 end function;
+
+// Records the focus return target and resolves the first request for a new modal.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+// ## Parameters
+// - `State`: Current frame.
+// - `Id`: Modal identity.
+// - `Content`: Prepared modal subtree.
+// - `Initial`: Preferred focus request when opening.
+// - `Close`: Optional built-in close button and default focus.
+public procedure Enter<TMsg>(State: C.State<TMsg>; Id: string; Content: E.Element<TMsg>; Initial: string?; Close: string? := null);
+  function Resolve(Preferred: string?): string?;
+  begin
+    if Preferred = null or Preferred = Close then
+      return Preferred;
+    end if;
+
+    return First<TMsg>(Content, State.Prepared, Preferred);
+  end function;
+begin
+  discard State.SeenModals.Add(Id);
+  if State.Modals.ContainsKey(Id) then
+    return;
+  end if;
+
+  var Restore: string := '';
+  for Control: App.Control in State.Previous do
+    if Control.Focused then
+      Restore := C.Token(Control.Role, Control.Id, Control.Key);
+    end if;
+  end for;
+
+  State.Modals.Add(Id, Restore);
+
+  var Requested: string? := null;
+  if State.Focus.Count > 0 and State.Focus.Peek().StartsWith(
+    'app:',
+    Sys.StringComparison.Ordinal
+  )
+  then
+    Requested := Resolve(State.Focus.Peek().Substring(4));
+  end if;
+
+  State.Focus.Clear();
+  const Target: string? := Requested ?? Resolve(Initial) ?? Close ?? First<TMsg>(
+    Content,
+    State.Prepared
+  );
+  if Target <> null then
+    State.Focus.Enqueue('app:' + Target);
+  end if;
+end procedure;
 end unit;

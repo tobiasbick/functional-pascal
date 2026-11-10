@@ -23,6 +23,7 @@ workflow to work on the compiler/toolchain.
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Desktop GUI, shared widgets and terminal UI | [GUI handbook](pascal/libraries/gui.md), [terminal host](../src/Fpas.Ui.Tui/README.md) |
+| CUI gallery and widget parity across GUI and TUI | [CUI widget gaps](future/cui-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
 | Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [workspace architecture](architecture/workspaces.md) |

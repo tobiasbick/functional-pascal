@@ -67,7 +67,7 @@ public sealed partial class CuiWindow
         ArgumentOutOfRangeException.ThrowIfNegative(kind);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(kind, 3);
         ArgumentOutOfRangeException.ThrowIfNegative(variant);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(variant, 4);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(variant, 7);
         return NativeMethods.Control(context, Stable(id), text, kind, enabled ? 1 : 0, selected ? 1 : 0, variant, focus ? 1 : 0);
     }
 
@@ -196,12 +196,18 @@ public sealed partial class CuiWindow
         bool visible = NativeMethods.ModalBegin(context, Stable(id), open ? 1 : 0) != 0;
         if (visible)
         {
-            uint key = NativeMethods.ModalKey(context);
-            if (modalKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
-            modalKeys[id] = key; usedModals.Add(id);
+            TrackModal(id);
             layouts.Add(new(Layout.Dialog));
         }
         return visible;
+    }
+
+    private void TrackModal(string id)
+    {
+        uint key = NativeMethods.ModalKey(context);
+        if (modalKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
+        modalKeys[id] = key;
+        usedModals.Add(id);
     }
 
     /// <summary>Draws a native progress meter.</summary>

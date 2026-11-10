@@ -46,8 +46,13 @@ public sealed partial class GuiPublishingTests
             await Read(frame => frame.Find("text").Value == "z");
             input.Resize(520, 900);
             await Read(frame => frame.Width == 520 && frame.Height == 900 && frame.Dark && frame.Find("text").Value == "z");
+            await Click("drawer-open");
+            await Read(frame => frame.Controls.Any(control =>
+                control.Id == "navigation" && control.Key == "effects" && control.X >= 28));
             await Click("navigation", "effects");
             await Read(frame => frame.Has("modal-open"));
+            // CUI retains the input-blocking scrim while the drawer slides out.
+            await Task.Delay(TimeSpan.FromMilliseconds(500), token);
             await Click("modal-open");
             await Read(frame => frame.Has("modal-close") && frame.Find("modal-close").Focused);
             await Key("Escape", true); await Key("Escape", false);

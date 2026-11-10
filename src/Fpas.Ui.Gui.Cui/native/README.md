@@ -10,6 +10,11 @@ editing, lists, tables, tabs, scrolling, modal dialogs and images. The table
 adapter keeps column descriptors alive through the frame. Check the lifetime
 of borrowed strings and other inputs for each new adapter.
 
+New widget adapters live in `widgets/` with one implementation and header per
+widget. `fpas_cui.c` includes their implementations after the shared helpers
+so the adapters can use the private CUI types. The managed bindings are partial
+files on `CuiWindow` and `NativeMethods`.
+
 The image adapter verifies OpenGL storage after upload. CUI copies pixel data
 during the upload and queues the texture handle for frame rendering. Callers
 keep that texture alive while CUI can still render the frame.

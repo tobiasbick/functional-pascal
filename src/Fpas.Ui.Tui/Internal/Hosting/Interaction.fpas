@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Controls.Selection as SelectionOps, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Hosting.TabNavigation as TabKeys, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Hosting.ListNavigation as Lists, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, Fpas.Ui.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Ui.Tui.Internal.Hosting.MultilineEditor as Multi, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Controls.Selection as SelectionOps, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Hosting.TabNavigation as TabKeys, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Hosting.ListNavigation as Lists, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, Fpas.Ui.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Ui.Tui.Internal.Hosting.MultilineEditor as Multi, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -62,6 +62,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     if Scope <> FocusScope then
       Captured := '';
       MiddleCaptured := '';
+      CapturedScrim := false;
       Hover := '';
       if FocusScope <> '' and Saved.ContainsKey(
         FocusScope
@@ -153,8 +154,38 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return null;
   end function;
 
+  function OnScrim(Layout: A.Layout<TMsg>; Column: int; Row: int): bool;
+  begin
+    const Modal: A.Scope<TMsg>? := Layout.Active;
+    if Modal = null or Row < 0 or Row >= Layout.Lines.Length or Column < 0
+      or Column >= Layout.Cells.Length div Layout.Lines.Length
+    then
+      return false;
+    end if;
+    const Panel: F.Rect? := Modal.Panel;
+    return Panel <> null and not Panel.Contains(Column, Row);
+  end function;
+
+  function Dismiss(Modal: A.Scope<TMsg>?): bool;
+  begin
+    if Modal <> null then
+      case Modal.Escape of
+        when is Sys.Func<TMsg> as Callback:
+          Apply(Callback.Invoke());
+          return true;
+        else
+      end case;
+    end if;
+
+    return false;
+  end function;
+
   procedure ClickAt(Layout: A.Layout<TMsg>; Button: K.MouseButton; Column: int; Row: int);
   begin
+    if Button = K.MouseButton.Left and OnScrim(Layout, Column, Row) then
+      discard Dismiss(Layout.Active);
+      return;
+    end if;
     const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
     if Control = null or (Button = K.MouseButton.Middle and Control.Role <> 'canvas') then
       return;
@@ -193,6 +224,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     case Kind of
       when K.PointerKind.Press:
         if Button = K.MouseButton.Left then
+          CapturedScrim := OnScrim(Layout, Column, Row);
           Captured := Hover;
           if Captured <> '' then
             Focus := Captured;
@@ -201,6 +233,14 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           MiddleCaptured := Hover;
         end if;
       when K.PointerKind.Release:
+        if Button = K.MouseButton.Left then
+          const WasScrim: bool := CapturedScrim;
+          CapturedScrim := false;
+          if WasScrim and OnScrim(Layout, Column, Row) then
+            discard Dismiss(Layout.Active);
+            return;
+          end if;
+        end if;
         const Held: string := if Button = K.MouseButton.Left then Captured
           else MiddleCaptured
           end if;
@@ -236,15 +276,24 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return;
     end if;
     const Modal: A.Scope<TMsg>? := Layout.Active;
-    if Modal <> null and Key = K.Key.Escape then
-      case Modal.Escape of
-        when is Sys.Func<TMsg> as Callback:
-          Apply(Callback.Invoke());
-          return;
-        else
-      end case;
-    end if;
     const Control: A.Control<TMsg>? := Focused(Layout);
+    if Key = K.Key.Escape then
+      if Modal <> null and Modal.ExitEditFocus <> '' and Control <> null then
+        const Editor: TextEditing.ITextEditor? := EditorFor(Control);
+        if Editor <> null then
+          if not Editor.Key(Key, K.KeyModifiers.None) then
+            Focus := Modal.ExitEditFocus;
+          end if;
+
+          return;
+        end if;
+      end if;
+
+      if Dismiss(Modal) then
+        return;
+      end if;
+    end if;
+
     if Control <> null then
       if Key = K.Key.Enter and Modifiers = K.KeyModifiers.None and Invoke(Control) then
         return;
@@ -252,7 +301,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
       case Control.Action of
         when A.Binding.Invoke(_), A.Binding.Toggle(_):
-          if Key = K.Key.Up or Key = K.Key.Down then
+          if Control.ArrowFocus and (Key = K.Key.Up or Key = K.Key.Down) then
             Cycle(Layout, Key = K.Key.Up);
             return;
           end if;
@@ -280,6 +329,20 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         when A.Binding.Canvas(_, _, _):
       end case;
     end if;
+
+    if Modal <> null and Modal.Panel <> null and Modifiers = K.KeyModifiers.None
+      and (Key = K.Key.PageUp or Key = K.Key.PageDown)
+    then
+      for Region: A.ScrollRegion in Layout.Regions do
+        if Region.Id = Modal.Id and Region.Scope = Modal.Id then
+          MoveScroll(
+            Region,
+            if Key = K.Key.PageUp then -Region.Bounds.Height else Region.Bounds.Height end if
+          );
+          return;
+        end if;
+      end for;
+    end if;
     const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then Layout.GlobalKeys
       else Modal.Shortcuts
       end if;
@@ -299,6 +362,16 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     if Control <> null and Eligible(Control, FocusScope) then
       discard Invoke(Control);
     end if;
+  end procedure;
+
+  procedure MoveScroll(Region: A.ScrollRegion; Delta: int);
+  begin
+    const Before: int := if ScrollOffsets.ContainsKey(Region.Id) then ScrollOffsets[Region.Id]
+      else 0
+      end if;
+    ScrollOffsets[Region.Id] := cast<int>(Sys.Math.Clamp(
+      cast<long>(Before) + cast<long>(Delta), 0L, cast<long>(Region.Maximum)
+    ));
   end procedure;
 
   procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
@@ -336,16 +409,8 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
           return;
         end if;
-        const Before: int := if ScrollOffsets.ContainsKey(
-            Region.Id
-          ) then ScrollOffsets[Region.Id]
-          else 0
-          end if;
-        ScrollOffsets[Region.Id] := cast<int>(Sys.Math.Clamp(
-          cast<long>(Before) + cast<long>(Delta),
-          0L,
-          cast<long>(Region.Maximum)
-        ));
+
+        MoveScroll(Region, Delta);
         return;
       end if;
     end for;
@@ -388,6 +453,7 @@ begin
   var Focus: string := '';
   var Hover: string := '';
   var Captured: string := '';
+  var CapturedScrim: bool := false;
   var MiddleCaptured: string := '';
   var FocusScope: string := '';
   return new State<TMsg>(

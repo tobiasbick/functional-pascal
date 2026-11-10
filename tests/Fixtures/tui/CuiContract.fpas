@@ -3,6 +3,7 @@ program CuiContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes,
   Fpas.Ui.Graphics as G, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Choices,
+  Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.TerminalExtensions.Input as Keys,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
   Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Tables as Tables,
   System as Sys, System.Console as Console;
@@ -163,11 +164,102 @@ begin
   Check(Rejected, 'Fixed and growing sizes must not be combined.');
 end procedure;
 
+procedure SheetPlacement();
+begin
+  for Side: Sheets.Side in Sys.Enum.GetValues<Sheets.Side>() do
+    const View: function(int): E.Element<int> := function(State: int): E.Element<int> => Sheets.Sheet<int>(
+      'sheet', E.Button<int>('under', 'Background', 5),
+      E.Column<int>(E.Button<int>('inside', 'Body', 2), E.Text<int>('Last line')),
+      State = 0, new Sheets.Options(
+        'Header', Description := 'Detail', Edge := Side,
+        Size := 64, InitialFocus := 'inside'
+      ), 1
+    );
+    using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+      0,
+      Update,
+      View,
+      32,
+      12
+    );
+    const Frame: Tui.Frame := Session.Snapshot();
+    const Close: Tui.ControlSnapshot := Frame.Controls[1];
+    const Column: int := if Side = Sheets.Side.Left then 7 else 29 end if;
+    const Row: int := if Side = Sheets.Side.Bottom then 7 else 1 end if;
+    Check(
+      Close.Id = Sheets.CloseId('sheet') and Close.Column = Column and Close.Row = Row,
+      'Wrong sheet placement: ' + Side.ToString()
+    );
+    Check(
+      not Frame.Controls[0].Enabled and Frame.Controls[2].Focused,
+      'The sheet must honor initial focus and block base input.'
+    );
+    Check(
+      Frame.Lines[Row].Contains('Head') and Frame.Lines[0].Contains('Background'),
+      'The pinned header or background was lost.'
+    );
+    if Side = Sheets.Side.Top or Side = Sheets.Side.Bottom then
+      discard Session.Send(Tui.Input.KeyPress(Keys.Key.PageDown, Keys.KeyModifiers.None));
+      discard Session.Step();
+      const Scrolled: Tui.Frame := Session.Snapshot();
+      Check(
+        Scrolled.Lines[Row].Contains('Header') and Scrolled.Lines[Row + 2].Contains('Last line'),
+        'Scrolling moved the pinned header or lost the final body row.'
+      );
+    end if;
+  end for;
+end procedure;
+
+procedure IconAction();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      E.Button<int>('ready', 'Finish loading', 1),
+      Icons.IconButton<int>(
+        'icon', Sys.Char.ConvertFromUtf32($E115), 'Components', 2,
+        new Icons.Options(
+          Loading := State = 0,
+          Enabled := State < 2,
+          Shortcut := 'M',
+          TerminalGlyph := '≡'
+        )
+      )
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 32, 10);
+  discard Session.Send(Tui.Input.Focus('icon'));
+  discard Session.Step();
+  discard Session.Send(Tui.Input.Character(' '));
+  discard Session.Step();
+  const Busy: Tui.ControlSnapshot := Session.Snapshot().Controls[1];
+  Check(
+    Busy.Value = 'loading' and Busy.Focused,
+    'Busy icon button must keep focus and suppress activation.'
+  );
+  discard Session.Send(Tui.Input.Activate('ready'));
+  discard Session.Step();
+  discard Session.Send(Tui.Input.Pointer(Keys.PointerKind.Move, Busy.Column, Busy.Row));
+  discard Session.Step();
+  Check(
+    Session.Snapshot().Lines[9].Contains('Components · M'),
+    'Terminal icon button tooltip and shortcut hint.'
+  );
+  discard Session.Send(Tui.Input.Character(' '));
+  discard Session.Step();
+  Check(
+    not Session.Snapshot().Controls[1].Enabled,
+    'Terminal icon button did not activate from Space.'
+  );
+end procedure;
+
 begin
   Allocation();
   TableContent();
   SemanticColors();
   LogicalDistances();
+  SheetPlacement();
+  IconAction();
   Console.WriteLine('CUI terminal contracts verified');
 end;
 end program;

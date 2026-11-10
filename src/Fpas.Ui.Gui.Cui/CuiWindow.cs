@@ -10,7 +10,7 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Table, Scroll, Dialog, Group }
+    private enum Layout { Column, Row, Table, Scroll, Dialog, Sheet, Group }
     private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0, int Node = -1);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
@@ -201,7 +201,7 @@ public sealed partial class CuiWindow : IDisposable
         Utf8.Validate(title, nameof(title));
         ArgumentException.ThrowIfNullOrEmpty(title);
         // CUI's native modal stacks hold eight scopes.
-        if (layouts.Count(static scope => scope.Kind == Layout.Dialog) >= 8)
+        if (layouts.Count(static scope => scope.Kind is Layout.Dialog or Layout.Sheet) >= 8)
             throw new InvalidOperationException("CUI supports up to eight nested dialog scopes.");
         int visible = open ? 1 : 0;
         bool draw = NativeMethods.BeginDialog(context, title, ref visible) != 0;

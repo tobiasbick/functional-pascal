@@ -5,7 +5,11 @@ contracts. Build or run `GuiWidgetGallery.fpasproj` with `dotnet build` or
 `dotnet run --project`. Native source prerequisites are listed in the
 [CUI build reference](../../../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
 
-Choose a page with the pointer or Tab and arrow keys. Controls demonstrate
+Choose a page in the grouped sidebar with the pointer, or use Tab and activate
+an entry with Enter or Space. At less than 600 logical units wide, the
+**Components** menu icon opens the sidebar in a left drawer. Selecting a page closes
+the drawer. Escape, its close button, and clicking the backdrop also dismiss it.
+Controls demonstrate
 button variants, disabled states, checkboxes and progress. Editors support
 Unicode documents and selection. Collections show actions, keyed selection,
 tables, tabs and an empty list. Layout shows fixed/fill sizing, borders, semantic

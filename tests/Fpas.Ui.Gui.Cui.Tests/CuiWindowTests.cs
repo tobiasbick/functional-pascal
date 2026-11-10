@@ -67,6 +67,41 @@ public sealed class CuiWindowTests
         Capture(window, 640, 480);
     }
 
+    /// <summary>Keeps focus when an icon changes and suppresses activation while busy or disabled.</summary>
+    [GuiFact]
+    public void IconButtonKeepsItsIdentityAndHonorsInputState()
+    {
+        using var window = new CuiWindow("Icon button", renderer: CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        Assert.False(Draw("\uE115", "Menu", focus: true));
+        var bounds = window.GetControlRectangle("icon");
+        Assert.True(bounds.Width > 0);
+        Assert.Equal(bounds.Width, bounds.Height);
+
+        Assert.True(Draw("\uE13D", "Add", key: 2));
+        Assert.True(window.ControlFocused("icon"));
+        Assert.False(Draw("\uE13D", "Adding", key: 6, loading: true));
+        Assert.True(window.ControlFocused("icon"));
+        Assert.False(Draw("\uE13D", "Add", key: 2, enabled: false));
+        Assert.False(window.ControlFocused("icon"));
+
+        bool Draw(string glyph, string title, int key = 0, bool enabled = true, bool loading = false, bool focus = false)
+        {
+            Assert.True(window.NextFrame());
+            if (key != 0)
+            {
+                window.SetKey(key, true);
+                window.SetKey(key, false);
+            }
+            window.BeginColumn();
+            bool activated = window.IconButton("icon", glyph, title, "", 6, 0, enabled, loading, false, focus);
+            window.TrackLastControl("icon");
+            window.EndColumn();
+            window.Present();
+            return activated;
+        }
+    }
+
     /// <summary>Places row children side by side with the requested gap inside a column.</summary>
     [GuiFact]
     [Trait("Category", "NativeGui")]

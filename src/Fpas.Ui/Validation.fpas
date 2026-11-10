@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -73,6 +73,27 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if not Sys.Enum.IsDefined<S.ButtonVariant>(Variant) then
           Rules.Reject(At, 'Unknown button variant.');
         end if;
+      when E.Element.IconAction(
+        const Id: string,
+        const Icon: string,
+        const Tooltip: string,
+        _,
+        const Settings: Icons.Options
+      ):
+        const At: string := Identify(Id, Location + '/iconButton');
+        Rules.CheckText(Icon, At + '/icon');
+        Rules.CheckText(Tooltip, At + '/tooltip');
+        Rules.CheckText(Settings.Shortcut, At + '/shortcut');
+        Rules.CheckText(Settings.TerminalGlyph, At + '/terminalGlyph');
+        if Sys.String.IsNullOrWhiteSpace(Icon) or Sys.String.IsNullOrWhiteSpace(Tooltip) then
+          Rules.Reject(At, 'An icon button needs an icon and a tooltip.');
+        end if;
+
+        if not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
+          or not Sys.Enum.IsDefined<Icons.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(At, 'Unknown icon button variant or size.');
+        end if;
       when E.Element.Toggle(const Id: string, const Label: string, _, _, _):
         Rules.CheckText(Label, Identify(Id, Location + '/checkbox'));
       when E.Element.Editor(
@@ -89,6 +110,26 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.CheckKey(Keys, Item.Key, At);
           Rules.CheckText(Item.Text, At + '/' + Item.Key);
         end for;
+      when E.Element.Sidebar(
+        const Id: string,
+        const Sections: array of N.Section<TMsg>,
+        const Active: string?,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/sidebar');
+        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Section: N.Section<TMsg> in Sections do
+          Rules.CheckText(Section.Title, At + '/heading');
+          for Item: N.Item<TMsg> in Section.Items do
+            Rules.CheckKey(Keys, Item.Key, At);
+            const ItemAt: string := Identify(N.ItemId(Id, Item.Key), At + '/item');
+            Rules.CheckText(Item.Label, ItemAt);
+            Rules.CheckText(Item.Icon, ItemAt + '/icon');
+            Rules.CheckText(Item.Badge, ItemAt + '/badge');
+          end for;
+        end for;
+
+        Rules.CheckSelected(Keys, Active, At);
       when E.Element.Selectable(
         const Id: string, const Items: array of C.SelectionItem, const Selected: string?, _, _, _
       ):
@@ -208,6 +249,25 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/modal');
         if InitialFocus <> null then
           Rules.CheckText(InitialFocus, At + '/initialFocus');
+        end if;
+
+        Visit(Base, At + '/base');
+        Visit(Content, At + '/content');
+      when E.Element.Sheet(
+        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _,
+        const Settings: Sheets.Options, _
+      ):
+        const At: string := Identify(Id, Location + '/sheet');
+        discard Identify(Sheets.CloseId(Id), At + '/close');
+        Rules.CheckText(Settings.Title, At + '/title');
+        Rules.CheckText(Settings.Description, At + '/description');
+        const Initial: string? := Settings.InitialFocus;
+        if Initial <> null then
+          Rules.CheckText(Initial, At + '/initialFocus');
+        end if;
+
+        if Settings.Size <= 0 or not Sys.Enum.IsDefined<Sheets.Side>(Settings.Edge) then
+          Rules.Reject(At, 'A sheet needs a positive size and a valid edge.');
         end if;
 
         Visit(Base, At + '/base');

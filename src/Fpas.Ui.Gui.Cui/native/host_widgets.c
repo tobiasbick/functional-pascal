@@ -1,34 +1,5 @@
 #include "fpas_cui.h"
 
-static int fpas_find(cui_ctx *ui, cui_id id) {
-    for (int i = ui->node_count - 1; i >= 0; --i) if (ui->nodes[i].id == id) return i;
-    return -1;
-}
-
-static int fpas_label_node(cui_ctx *ui, int node) {
-    for (int child = ui->nodes[node].first; child >= 0; child = ui->nodes[child].next) {
-        if ((ui->nodes[child].flags & CUI_NF_TEXT) && ui->nodes[child].font != CUI_FONT_ICONS) return child;
-        int found = fpas_label_node(ui, child);
-        if (found >= 0) return found;
-    }
-    return -1;
-}
-
-/* Retain the upstream widget's interaction/paint but supply literal text separately from identity. */
-static void fpas_literal(cui_ctx *ui, int node, const char *text, cui_color color) {
-    int label = fpas_label_node(ui, node);
-    if (label < 0) {
-        cui__open(ui, node);
-        label = cui__text_node(ui, text, -1, CUI_FONT_MEDIUM, cui__fs(ui, ui->theme.text_body), color, false);
-        cui__close(ui);
-    } else {
-        ui->nodes[label].text = cui__frame_strdup(ui, text, (int)strlen(text));
-        ui->nodes[label].text_len = (int)strlen(text);
-    }
-    ui->last_node = node;
-    ui->last_id = ui->nodes[node].id;
-}
-
 int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
                     int enabled, int selected, int variant, int focus) {
     cui_id key = cui_make_id(ui, id);
@@ -45,8 +16,7 @@ int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
         const cui_list_item_opts options = { .selected = value };
         activated = cui_list_item_ex(ui, id, &options);
     } else {
-        cui_button_variant native_variant = variant == 1 ? CUI_BUTTON_PRIMARY :
-            variant == 4 ? CUI_BUTTON_DANGER : variant == 2 ? CUI_BUTTON_SECONDARY : CUI_BUTTON_DEFAULT;
+        cui_button_variant native_variant = fpas_button_variant(variant);
         const cui_button_opts options = { .variant = native_variant, .selected = value || variant == 3 };
         color = cui__button_colors(ui, native_variant == CUI_BUTTON_DEFAULT ? CUI_BUTTON_SECONDARY : native_variant, options.selected).fg;
         activated = cui_button_ex(ui, id, &options);

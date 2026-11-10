@@ -11,10 +11,12 @@ end protocol;
 
 public type Direct<TMsg> = record implements IActivatable<TMsg>
   public Message: TMsg;
+  // Whether activation is suspended while the widget is busy.
+  public Busy: bool := false;
 
   public function Activate(): Result<TMsg>;
   begin
-    return Result<TMsg>.Send(self.Message);
+    return if self.Busy then Result<TMsg>.NoAction else Result<TMsg>.Send(self.Message) end if;
   end function;
 end record;
 

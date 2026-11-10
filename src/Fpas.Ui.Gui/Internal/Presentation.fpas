@@ -5,6 +5,10 @@ uses
   Fpas.Ui.Gui.Internal.Controls as Widgets, Fpas.Ui.Gui.Internal.Collections as Choices,
   Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as Ch,
+  Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar,
+  Fpas.Ui.Sheets as Sheets,
+  Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet,
+  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton,
   Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys,
   System.Collections.Generic as Generic;
 
@@ -63,7 +67,20 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end case;
 
         Visit(Child);
-      when E.Element.Modal(_, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _):
+      when E.Element.Modal(
+        _,
+        const Base: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        _,
+        _
+      ), E.Element.Sheet(
+        _,
+        const Base: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        _,
+        _,
+        _
+      ):
         Visit(Base);
         Visit(Content);
       when E.Element.TabSet(_, _, _, _, const Panel: E.Element<TMsg>?, _):
@@ -203,12 +220,24 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           MultipleLines,
           Placeholder
         );
+      when E.Element.IconAction(
+        const Id: string, const Icon: string, const Tooltip: string, const Message: TMsg,
+        const Settings: Icons.Options
+      ):
+        IconButton.Draw<TMsg>(Current, Id, Icon, Tooltip, Message, Settings);
       when E.Element.ActionList(
         const Id: string,
         const Items: array of Ch.ListItem<TMsg>,
         const Enabled: bool
       ):
         Choices.Actions<TMsg>(Current, Id, Items, Enabled);
+      when E.Element.Sidebar(
+        const Id: string,
+        const Sections: array of N.Section<TMsg>,
+        const Active: string?,
+        const Enabled: bool
+      ):
+        Sidebar.Draw<TMsg>(Current, Id, Sections, Active, Enabled);
       when E.Element.Selectable(
         const Id: string,
         const Items: array of Ch.SelectionItem,
@@ -358,51 +387,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Initial: string?,
         const Dismiss: Sys.Func<TMsg>?
       ):
+        if Current.PaintingClosed then
+          Visit(Base, Current, Horizontal, Align);
+          return;
+        end if;
+
         Visit(
           Base, Current with
             AcceptInput := false;
           end with, Horizontal, Align
         );
-        discard Current.SeenModals.Add(Id);
-        if not Current.Modals.ContainsKey(Id) then
-          var Restore: string := '';
-          for Control: App.Control in Current.Previous do
-            if Control.Focused then
-              Restore := C.Token(Control.Role, Control.Id, Control.Key);
-            end if;
-          end for;
-
-          Current.Modals.Add(Id, Restore);
-          var Explicit: string? := null;
-          if Current.Focus.Count > 0 and Current.Focus.Peek().StartsWith(
-            'app:',
-            Sys.StringComparison.Ordinal
-          )
-          then
-            Explicit := Focus.First<TMsg>(
-              Content,
-              Current.Prepared,
-              Current.Focus.Peek().Substring(4)
-            );
-          end if;
-
-          Current.Focus.Clear();
-          const First: string? := Focus.First<TMsg>(Content, Current.Prepared);
-          const Requested: string? := if Initial = null then null
-            else Focus.First<TMsg>(
-              Content,
-              Current.Prepared,
-              Initial
-            )
-            end if;
-          if Explicit <> null then
-            Current.Focus.Enqueue('app:' + Explicit);
-          elsif Requested <> null then
-            Current.Focus.Enqueue('app:' + Requested);
-          elsif First <> null then
-            Current.Focus.Enqueue('app:' + First);
-          end if;
-        end if;
+        Focus.Enter<TMsg>(Current, Id, Content, Initial);
         const ModalInput: bool := Current.Interactive and Current.ActiveModal = Id;
         if ModalInput and Current.Window.KeyPressed(3) then
           case Dismiss of
@@ -420,6 +415,23 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           );
           Current.Window.EndDialog();
         end if;
+      when E.Element.Sheet(
+        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
+      ):
+        Sheet.Draw<TMsg>(
+          Current,
+          Id,
+          Base,
+          Content,
+          Open,
+          Settings,
+          Dismiss,
+          Horizontal,
+          Align,
+          Visit
+        );
+        return;
       when E.Element.Deferred(const Id: string, _):
         Visit(Current.Prepared.Subviews[Id].Tree, Current, Horizontal, Align);
         return;

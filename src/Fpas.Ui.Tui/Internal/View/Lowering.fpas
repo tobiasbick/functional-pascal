@@ -1,25 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
-
-// Resolves an explicit terminal distance.
-//
-// ## Parameters
-// - `Value`: Validated cell or portable logical measure.
-// - `Horizontal`: Whether the distance is measured in columns rather than rows.
-//
-// ## Returns
-// Cell count.
-public function Cells(Value: L.Measure; Horizontal: bool := true): int;
-begin
-  case Value of
-    when L.Measure.Cells(const Count: int):
-      return Count;
-    when L.Measure.Logical(const Units: int):
-      const Scale: int := if Horizontal then 8 else 16 end if;
-      return cast<int>((cast<long>(Units) + Scale - 1L) div Scale);
-  end case;
-end function;
+uses Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -35,7 +16,7 @@ begin
   var Grow: int := Value.Grow;
   case Value.Basis of
     when L.Extent.Fixed(const Distance: L.Measure):
-      Basis := Cells(Distance, Horizontal);
+      Basis := Geometry.Cells(Distance, Horizontal);
     when L.Extent.Fill:
       Grow := Sys.Math.Max(1, Grow);
     else
@@ -43,8 +24,8 @@ begin
   const Minimum: L.Measure? := Value.Minimum;
   const Maximum: L.Measure? := Value.Maximum;
   return new E.Flex(
-    Basis, if Minimum = null then 0 else Cells(Minimum, Horizontal) end if,
-    if Maximum = null then int.MaxValue else Cells(Maximum, Horizontal) end if, Grow
+    Basis, if Minimum = null then 0 else Geometry.Cells(Minimum, Horizontal) end if,
+    if Maximum = null then int.MaxValue else Geometry.Cells(Maximum, Horizontal) end if, Grow
   );
 end function;
 
@@ -60,7 +41,7 @@ begin
     when L.Spacing.Loose:
       return if Horizontal then 2 else 1 end if;
     when L.Spacing.Fixed(const Distance: L.Measure):
-      return Cells(Distance, Horizontal);
+      return Geometry.Cells(Distance, Horizontal);
   end case;
 end function;
 
@@ -133,7 +114,12 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         const Enabled: bool,
         const Variant: UiStyle.ButtonVariant
       ):
-        return E.Element<TMsg>.Action(Id, Text, Message, Enabled, 'button', '', Variant);
+        return E.Element<TMsg>.Action(
+          Id,
+          Message,
+          Enabled,
+          new E.ActionView(Text, Variant := Variant)
+        );
       when Ui.Element.Toggle(
         const Id: string,
         const Text: string,
@@ -162,6 +148,14 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
           Enabled,
           MultipleLines
         );
+      when Ui.Element.IconAction(
+        const Id: string,
+        _,
+        const Tooltip: string,
+        const Message: TMsg,
+        const Settings: Icons.Options
+      ):
+        return IconButton.Lower<TMsg>(Id, Tooltip, Message, Settings);
       when Ui.Element.ActionList(
         const Id: string,
         const Items: array of Ch.ListItem<TMsg>,
@@ -177,6 +171,13 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         end for;
 
         return E.Element<TMsg>.Choices(Id, Copy.ToArray());
+      when Ui.Element.Sidebar(
+        const Id: string,
+        const Sections: array of N.Section<TMsg>,
+        const Active: string?,
+        const Enabled: bool
+      ):
+        return Sidebar.Lower<TMsg>(Id, Sections, Active, Enabled);
       when Ui.Element.Selectable(
         const Id: string,
         const Items: array of Ch.SelectionItem,
@@ -303,7 +304,7 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
               when L.ScrollPosition.End:
                 Native := E.ScrollPosition.End;
               when L.ScrollPosition.Offset(const Distance: L.Measure):
-                Native := E.ScrollPosition.Offset(Cells(Distance, false));
+                Native := E.ScrollPosition.Offset(Geometry.Cells(Distance, false));
               else
             end case;
 
@@ -338,6 +339,14 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
             )
           ],
           []
+        );
+      when Ui.Element.Sheet(
+        const Id: string, const Base: Ui.Element<TMsg>, const Content: Ui.Element<TMsg>,
+        const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
+      ):
+        return Sheet.Lower<TMsg>(
+          Id, Visit(Base, Colors, ParentHorizontal), Open, Settings, Dismiss, Colors, Theme,
+          function(Panel: T.Style): E.Element<TMsg> => Visit(Content, Panel)
         );
       when Ui.Element.Deferred(const Id: string, _):
         return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);

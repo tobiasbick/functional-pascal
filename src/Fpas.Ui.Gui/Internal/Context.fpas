@@ -35,6 +35,8 @@ public type State<TMsg> = record
   public Interactive: bool;
   // The sole modal scope permitted to accept input.
   public ActiveModal: string?;
+  // Draw a closing sheet without publishing its controls or opening nested layers.
+  public PaintingClosed: bool := false;
 end record;
 
 // Encodes an unambiguous native/tracking identity.
@@ -94,6 +96,10 @@ end function;
 // - `Control`: Its semantic descriptor.
 public procedure Track<TMsg>(State: State<TMsg>; Control: App.Control);
 begin
+  if State.PaintingClosed then
+    return;
+  end if;
+
   State.Window.TrackLastControl(Token(Control.Role, Control.Id, Control.Key));
   State.Controls.Add(Control);
 end procedure;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Buttons;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic;
 
 public function Resolve(
   Theme: Th.Theme; Variant: UiStyle.ButtonVariant; Enabled: bool;
@@ -20,6 +20,8 @@ begin
     when UiStyle.ButtonVariant.Primary: Styles.Primary;
     when UiStyle.ButtonVariant.Active: Styles.Active;
     when UiStyle.ButtonVariant.Destructive: Styles.Destructive;
+    when UiStyle.ButtonVariant.Ghost, UiStyle.ButtonVariant.Outline: Styles.Ghost;
+    when UiStyle.ButtonVariant.Link: Styles.Link;
     when UiStyle.ButtonVariant.Default: Styles.Default;
     else Styles.Secondary;
   end case;
@@ -30,15 +32,30 @@ end function;
 
 public procedure Paint(
   Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: T.Style;
-  Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool
+  Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool;
+  MinimumWidth: int := 0
 );
 begin
-  const Color: T.Style? := if IsButton then Resolve(Theme, Variant, Enabled) else null end if;
+  const Resolved: T.Style? := if IsButton then Resolve(Theme, Variant, Enabled) else null end if;
+  const Color: T.Style? := if Resolved = null then null
+    else new T.Style(
+      Resolved.Foreground ?? Style.Foreground, Resolved.Background ?? Style.Background
+    )
+    end if;
   if Color <> null then
     D.Fill(Operations, Clip, Color);
   end if;
+  const Extra: int := if MinimumWidth <= 2 then 0
+    else Sys.Math.Max(0, MinimumWidth - 2 - G.Measure(Caption))
+    end if;
+  const Centered: string := if Extra = 0 then Caption
+    else new string(#32, Extra div 2) + Caption + new string(#32, Extra - Extra div 2)
+    end if;
   const Display: string := if not IsButton then Caption
-    else if Theme.Widgets = null then '[' + Caption + ']' else ' ' + Caption + ' ' end if
+    else if Theme.Widgets = null or Variant = UiStyle.ButtonVariant.Outline then '[' + Centered +
+        ']'
+      else ' ' + Centered + ' '
+      end if
     end if;
   if Display <> '' then
     Operations.Add(new D.Operation(Display, Area, Clip, Color ?? Style, false));

@@ -39,7 +39,8 @@ The host implements the graphical profile in the [shared widget reference](../Fp
 - Literal text and separators; all button variants and controlled checkboxes.
 - Single-line/multiline Unicode editing with model-owned text and directional
   UTF-16 grapheme selections, distinct edit/navigation messages and placeholders.
-- Keyed action/selection lists, tab panels and text tables with column constraints.
+- Grouped sidebar navigation with native CUI icons and text badges, keyed action
+  and selection lists, tab panels and text tables with column constraints.
   Arrows skip disabled choices; Enter/double-click activation respects CanActivate.
 - Percentage progress, rows/columns, content/fill/fixed sizing, bounds, weighted
   growth, automatic content shrinkage, alignment, borders and semantic style roles.
@@ -47,6 +48,8 @@ The host implements the graphical profile in the [shared widget reference](../Fp
   and typed user proposals. End follows content growth; layout does not emit input.
 - Modal overlays with exclusive input/focus, initial focus (first enabled fallback),
   optional Escape dismissal and restoration of available prior focus.
+- [Edge sheets and drawers](../Fpas.Ui/README.md#sheet-and-drawer) with native
+  CUI slide transitions, a dimmed backdrop, and a scrolling body.
 - Owned packed RGBA images and clipped rectangle/line canvases in logical units.
 
 Visible labels do not encode identity, including literal `##`. Widget IDs and

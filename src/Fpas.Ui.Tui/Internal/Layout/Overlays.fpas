@@ -1,6 +1,8 @@
 unit Fpas.Ui.Tui.Internal.Layout.Overlays;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M, System as Sys;
+uses
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M, System as Sys;
 
 public type PanelBounds = record
   public Body: F.Rect;

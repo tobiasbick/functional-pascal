@@ -54,10 +54,9 @@ begin
   Check(Session.Step(), 'Unexpected close.');
 end procedure;
 
-procedure Click(Session: App.Session<State.Msg>; Id: string; Item: string := '');
+procedure ClickAt(Session: App.Session<State.Msg>; Bounds: Cui.CuiRectangle);
 begin
-  Target := Control(Session, Id, Item).Bounds;
-  Check(Target.Width > 0 and Target.Height > 0, 'Empty click target: ' + Id);
+  Target := Bounds;
   Action := 1;
   Advance(Session);
   Action := 2;
@@ -66,6 +65,13 @@ begin
   Advance(Session);
   Action := 0;
   Advance(Session);
+end procedure;
+
+procedure Click(Session: App.Session<State.Msg>; Id: string; Item: string := '');
+begin
+  const Bounds: Cui.CuiRectangle := Control(Session, Id, Item).Bounds;
+  Check(Bounds.Width > 0 and Bounds.Height > 0, 'Empty click target: ' + Id);
+  ClickAt(Session, Bounds);
 end procedure;
 
 async function Gated(Post: function(State.Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
@@ -166,9 +172,11 @@ begin
   Check(Control(Session, 'checked').Value = 'True', 'Controlled checkbox.');
   Click(Session, 'theme');
   Check((Session.Snapshot().Theme.Appearance = Themes.Mode.Dark), 'Theme selection.');
-  discard Session.Post(State.Msg.Navigate('editors'));
-  Advance(Session);
-  Check(Session.Snapshot().Editors = 3, 'Editor ownership.');
+  Click(Session, 'navigation', 'editors');
+  Check(
+    Session.Snapshot().Editors = 3 and Control(Session, 'navigation', 'editors').Value = 'True',
+    'Sidebar navigation and editor ownership.'
+  );
   discard Session.Post(State.Msg.Focus('document'));
   Advance(Session);
   Check(Control(Session, 'document').Focused, 'Last focus request did not win.');
@@ -266,6 +274,37 @@ begin
   Check(
     (Session.Snapshot().Theme.Appearance = Themes.Mode.Dark) and HasText(Session, 'Count: 1'),
     'Responsive view reset state.'
+  );
+  Click(Session, 'drawer-open');
+  Check(
+    Control(Session, 'drawer/close').Focused and not Control(Session, 'drawer-open').Enabled
+    and Control(Session, 'navigation', 'effects').Value = 'True',
+    'Drawer focus, modality, or model selection.'
+  );
+  Click(Session, 'drawer/close');
+  Advance(Session);
+  Check(Control(Session, 'drawer-open').Focused, 'Close button did not restore focus.');
+  Click(Session, 'drawer-open');
+  var Scrim: Cui.CuiRectangle := new Cui.CuiRectangle();
+  Scrim.X := cast<float>(470);
+  Scrim.Y := cast<float>(100);
+  ClickAt(Session, Scrim);
+  Advance(Session);
+  Check(Control(Session, 'drawer-open').Focused, 'Scrim did not dismiss the drawer.');
+  Click(Session, 'drawer-open');
+  Key := 3;
+  Action := 5;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Advance(Session);
+  Check(Control(Session, 'drawer-open').Focused, 'Escape did not dismiss the drawer.');
+  Click(Session, 'drawer-open');
+  Click(Session, 'navigation', 'editors');
+  Advance(Session);
+  Check(
+    Session.Snapshot().Editors = 3 and Control(Session, 'drawer-open').Focused,
+    'Choosing a drawer destination did not close the drawer and change pages.'
   );
 end procedure;
 

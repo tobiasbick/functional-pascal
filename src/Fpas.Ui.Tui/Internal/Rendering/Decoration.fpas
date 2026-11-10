@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, System.Collections.Generic as Generic;
+uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -60,7 +60,7 @@ begin
       else Theme.Focus
       end if
     end if;
-  const Style: T.Style := if Control.Role = 'button' then Buttons.Resolve(
+  const Style: T.Style := if Control.ButtonStyle then Buttons.Resolve(
       Theme, Control.Variant, Control.Enabled, Focused, not Focused
     ) ?? Standard
     else Standard
@@ -131,4 +131,32 @@ begin
 
   return Controls.ToArray();
 end function;
+
+// Shows a hovered action's hint on the terminal's last line for this frame.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Current cells and routing.
+// - `Columns`: Terminal width.
+// - `Theme`: Colors for the hint.
+// - `Hover`: Hovered control identity.
+// - `Scope`: Current input scope.
+public procedure ShowHint<TMsg>(Layout: A.Layout<TMsg>; Columns: int; Theme: Th.Theme; Hover: string; Scope: string);
+begin
+  const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Hover);
+  if Control = null or Control.Hint = '' or Control.Scope <> Scope then
+    return;
+  end if;
+
+  const Area: F.Rect := new F.Rect(0, 0, Columns, 1);
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
+  const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+  const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
+  Operations.Add(new D.Operation(' ' + Glyphs.SingleLine(Control.Hint), Area, Area, Colors, false));
+  const Hint: D.Surface := D.Render(Operations, Columns, 1, [], Colors);
+  const Row: int := Layout.Lines.Length - 1;
+  Sys.Array.Copy(Hint.Cells, 0, Layout.Cells, Row * Columns, Columns);
+  Layout.Lines[Row] := Hint.Lines[0];
+end procedure;
 end unit;

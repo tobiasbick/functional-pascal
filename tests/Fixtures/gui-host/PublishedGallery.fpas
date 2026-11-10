@@ -190,6 +190,19 @@ begin
     Session.Dispose();
   end for;
 
+  using const Compact: Gui.Session<State.Msg> := Open(Renderer, 'FPAS packaged drawer', 520);
+  Check(Compact.Step(), 'Compact gallery failed to present.');
+  Send(Compact, State.Msg.SetDrawer(true));
+  Check(
+    Control(Compact, 'drawer/close').Focused and Control(Compact, 'drawer/close').Bounds.Width > 0,
+    'The packaged native sheet did not expose its close button.'
+  );
+  Send(Compact, State.Msg.Navigate('editors'));
+  Check(
+    Compact.Snapshot().Editors = 3 and Control(Compact, 'drawer-open').Enabled,
+    'The packaged drawer did not release the base view.'
+  );
+
   Console.WriteLine(
     'packaged gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then 'software'
       else 'opengl'

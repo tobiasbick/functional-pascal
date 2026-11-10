@@ -23,6 +23,12 @@ public type Control<TMsg> = record
   public Enabled: bool;
   public Action: Binding<TMsg>;
   public Variant: UiStyle.ButtonVariant;
+  // Apply semantic button styling to keyboard focus and hover.
+  public ButtonStyle: bool := false;
+  // Allow Up and Down to cycle focus on this direct action.
+  public ArrowFocus: bool := false;
+  // Optional contextual hint shown on hover.
+  public Hint: string := '';
 end record;
 
 public type Scope<TMsg> = record
@@ -30,6 +36,10 @@ public type Scope<TMsg> = record
   public Initial: string;
   public Escape: Sys.Func<TMsg>?;
   public Shortcuts: array of K.ShortcutBinding<TMsg>;
+  // Panel bounds for dismissible scrim input.
+  public Panel: F.Rect? := null;
+  // Focus target after Escape has left an editor, if the layer supports it.
+  public ExitEditFocus: string := '';
 end record;
 
 public type ScrollRegion = record

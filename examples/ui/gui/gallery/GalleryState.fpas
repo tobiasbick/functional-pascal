@@ -28,6 +28,8 @@ public type Model = record
   public Tab: string? := 'one';
   // Overlay visibility.
   public Modal: bool := false;
+  // Compact navigation sheet visibility.
+  public Drawer: bool := false;
   // Background operation status.
   public Status: string := 'Ready';
   // Controlled scroll request.
@@ -49,6 +51,7 @@ public type Msg = variant
   Tab(Key: string);
   Open;
   Close;
+  SetDrawer(Open: bool);
   Start;
   Cancel;
   Done;
@@ -80,6 +83,7 @@ begin
     when Msg.Navigate(const Page: string):
       Next := Current with
         Page := Page;
+        Drawer := false;
       end with;
     when Msg.Theme:
       Next := Current with
@@ -126,10 +130,15 @@ begin
     when Msg.Open:
       Next := Current with
         Modal := true;
+        Drawer := false;
       end with;
     when Msg.Close:
       Next := Current with
         Modal := false;
+      end with;
+    when Msg.SetDrawer(const Open: bool):
+      Next := Current with
+        Drawer := Open;
       end with;
     when Msg.Start:
       Next := Current with

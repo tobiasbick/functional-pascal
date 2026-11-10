@@ -1,0 +1,170 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Sheet;
+
+uses
+  Fpas.Ui.Sheets as Sheets, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  System as Sys, System.Collections.Generic as Generic;
+
+// Final placement of a sheet and its pinned close button and scrolling body.
+type SheetBounds = record
+  // Whole panel, excluding the surrounding scrim.
+  public Panel: F.Rect;
+  // Header close-button cell.
+  public Close: F.Rect;
+  // Interior viewport reserved for scrolling content.
+  public Body: F.Rect;
+end record;
+
+// Paints a sheet's scrim and frame and calculates its interactive geometry.
+//
+// ## Parameters
+// - `Operations`: Ordered terminal paint operations.
+// - `Area`: Available viewport.
+// - `Settings`: Shared sheet options.
+// - `Size`: Requested extent in cells.
+// - `Colors`: Resolved sheet colors.
+// - `Theme`: Terminal theme providing the scrim and border.
+// ## Returns
+// Bounds of the panel, close button and body.
+function PaintSheet(
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Settings: Sheets.Options;
+  Size: int; Colors: T.Style; Theme: Th.Theme
+): SheetBounds;
+begin
+  const InsetX: int := if Area.Width >= 5 then 1 else 0 end if;
+  const InsetY: int := if Area.Height >= 5 then 1 else 0 end if;
+  const Wide: bool := Settings.Edge = Sheets.Side.Left or Settings.Edge = Sheets.Side.Right;
+  const Width: int := Sys.Math.Min(
+    Area.Width - 2 * InsetX, if Wide then Size else Area.Width end if
+  );
+  const Height: int := Sys.Math.Min(
+    Area.Height - 2 * InsetY, if Wide then Area.Height else Size end if
+  );
+  const X: int := if Settings.Edge = Sheets.Side.Right then Area.X + Area.Width - InsetX - Width
+    else Area.X + InsetX
+    end if;
+  const Y: int := if Settings.Edge = Sheets.Side.Bottom then Area.Y + Area.Height - InsetY - Height
+    else Area.Y + InsetY
+    end if;
+  const Panel: F.Rect := new F.Rect(X, Y, Width, Height);
+  const Framed: bool := Width >= 4 and Height >= 3;
+  const Edge: int := if Framed then 1 else 0 end if;
+  const Close: F.Rect := new F.Rect(X + Width - 1 - Edge, Y, 1, 1);
+  const Title: F.Rect := new F.Rect(X + Edge, Y, Sys.Math.Max(0, Width - 2 * Edge - 1), 1);
+  const DetailRows: int := if Settings.Description <> '' and Height > Edge + 1 then 1 else 0 end if;
+  const Detail: F.Rect := new F.Rect(X + Edge, Y + 1, Width - 2 * Edge, DetailRows);
+  const Body: F.Rect := new F.Rect(
+    X + Edge, Y + 1 + DetailRows, Width - 2 * Edge,
+    Sys.Math.Max(0, Height - 1 - DetailRows - Edge)
+  );
+
+  Operations.Add(new D.Operation('', Area, Area, Colors, false, Tint := Theme.Colors.Scrim));
+  D.Fill(Operations, Panel, Colors);
+  if Framed then
+    D.Border(Operations, Panel, Panel, '', Colors, Theme.Widgets);
+  end if;
+
+  Operations.Add(new D.Operation(Settings.Title, Title, Title, Colors, false));
+  Operations.Add(new D.Operation('×', Close, Panel, Colors, false));
+  if DetailRows > 0 then
+    const Muted: T.Style := new T.Style(
+      Th.Rgb(Theme.Colors.TextSecondary, Colors.Background ?? 0), Colors.Background
+    );
+    Operations.Add(new D.Operation(Settings.Description, Detail, Detail, Muted, false));
+  end if;
+
+  return new SheetBounds(Panel, Close, Body);
+end function;
+
+// Resolves an open sheet into a terminal layer over its base view.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable sheet identity.
+// - `Base`: Lowered underlying view.
+// - `Open`: Model-owned visibility.
+// - `Settings`: Header, edge, size and initial focus.
+// - `Dismiss`: Proposed dismissal message.
+// - `Colors`: Current terminal colors.
+// - `Theme`: Semantic palette for the sheet.
+// - `LowerContent`: Resolves the body with the sheet's colors.
+// ## Returns
+// The base and its sheet layer when visible.
+public function Lower<TMsg>(
+  Id: string; Base: E.Element<TMsg>; Open: bool; Settings: Sheets.Options;
+  Dismiss: TMsg; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element<TMsg>
+): E.Element<TMsg>;
+begin
+  if not Open then
+    return Base;
+  end if;
+
+  const Across: bool := Settings.Edge = Sheets.Side.Left or Settings.Edge = Sheets.Side.Right;
+  const Size: int := F.Cells(L.Measure.Logical(Settings.Size), Across);
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Colors.Background ?? 0);
+  const Panel: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+  return E.Element<TMsg>.Desktop(
+    Base, [
+      E.Element<TMsg>.EdgeSheet(
+        Id,
+        Settings,
+        Size,
+        E.Element<TMsg>.Scrollable(Id, LowerContent(Panel), true),
+        Dismiss,
+        Panel
+      )
+    ], []
+  );
+end function;
+
+// Places the sheet body and registers its input scope and built-in close action.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Placement<TMsg> = record
+  // Modal input scope with scrim dismissal.
+  public Scope: A.Scope<TMsg>;
+  // Close button placed in the header.
+  public Close: A.Control<TMsg>;
+  // Available viewport for the scrollable body.
+  public Body: F.Rect;
+end record;
+
+// Draws the sheet chrome and resolves geometry and routing for its body.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Operations`: Ordered paint operations.
+// - `Screen`: Available viewport.
+// - `Id`: Stable sheet identity.
+// - `Settings`: Header, edge and focus settings.
+// - `Size`: Extent in cells.
+// - `Colors`: Resolved sheet colors.
+// - `Theme`: Semantic palette.
+// - `Dismiss`: Proposed dismissal message.
+// - `FocusReturn`: Inherited fallback control identity.
+// ## Returns
+// The sheet's placement and input bindings.
+public function Arrange<TMsg>(
+  Operations: Generic.List<D.Operation>; Screen: F.Rect; Id: string; Settings: Sheets.Options;
+  Size: int; Colors: T.Style; Theme: Th.Theme; Dismiss: TMsg; FocusReturn: string
+): Placement<TMsg>;
+begin
+  const Bounds: SheetBounds := PaintSheet(Operations, Screen, Settings, Size, Colors, Theme);
+  const Close: string := Sheets.CloseId(Id);
+  const Scope: A.Scope<TMsg> := new A.Scope<TMsg>(
+    Id, Settings.InitialFocus ?? Close, function(): TMsg => Dismiss, [], Bounds.Panel,
+    ExitEditFocus := Close
+  );
+  const Control: A.Control<TMsg> := new A.Control<TMsg>(
+    Close, 'Close', 'button', '', Bounds.Close, Id, FocusReturn, true,
+    A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Dismiss)), S.ButtonVariant.Default,
+    ButtonStyle := true, ArrowFocus := true
+  );
+  return new Placement<TMsg>(Scope, Control, Bounds.Body);
+end function;
+end unit;

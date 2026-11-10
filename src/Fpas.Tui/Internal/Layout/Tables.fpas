@@ -1,17 +1,14 @@
 unit Fpas.Tui.Internal.Layout.Tables;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.SelectionLists as S,
-  Fpas.Tui.Internal.Rendering.Glyphs as G, Fpas.Tui.Internal.Rendering.Drawing as D,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Tui.Internal.View.Tree as E, Fpas.Tui.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Rendering.Glyphs as G, Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 const Gutter: int := 4;
 
-public function Items(Rows: array of E.TableRow): array of E.SelectionItem;
+public function Items(Rows: array of Ch.TableRow): array of Ch.SelectionItem;
 begin
-  const Values: Generic.List<E.SelectionItem> := new Generic.List<E.SelectionItem>(Rows.Length);
-  for Row: E.TableRow in Rows do
-    Values.Add(new E.SelectionItem(Row.Key, '', Row.CanActivate));
+  const Values: Generic.List<Ch.SelectionItem> := new Generic.List<Ch.SelectionItem>(Rows.Length);
+  for Row: Ch.TableRow in Rows do
+    Values.Add(new Ch.SelectionItem(Row.Key, '', Row.Enabled, Row.CanActivate));
   end for;
 
   return Values.ToArray();
@@ -52,7 +49,7 @@ end function;
 
 procedure DrawCells(
   Widths: array of int; Caption: function(int): string; Line: F.Rect; Clip: F.Rect;
-  Style: E.Style; Operations: Generic.List<D.Operation>
+  Style: T.Style; Operations: Generic.List<D.Operation>
 );
 begin
   const Right: int := Line.X + Line.Width;
@@ -76,11 +73,11 @@ end procedure;
 
 public procedure DrawHeader(
   Columns: array of E.TableColumn; Widths: array of int; Line: F.Rect; Clip: F.Rect;
-  Style: E.Style; Widgets: E.WidgetStyles?; Operations: Generic.List<D.Operation>
+  Style: T.Style; Widgets: Th.WidgetStyles?; Operations: Generic.List<D.Operation>
 );
 begin
-  const Header: E.Style := if Widgets = null then Style
-    else new E.Style(
+  const Header: T.Style := if Widgets = null then Style
+    else new T.Style(
       Widgets.BorderColor,
       Style.Background
     )
@@ -96,12 +93,12 @@ begin
 end procedure;
 
 public procedure DrawBody<TMsg>(
-  Rows: array of E.TableRow; Widths: array of int; List: S.Viewport<TMsg>; Area: F.Rect; Clip: F.Rect;
-  Style: E.Style; Widgets: E.WidgetStyles?; Operations: Generic.List<D.Operation>
+  Rows: array of Ch.TableRow; Widths: array of int; List: S.Viewport<TMsg>; Area: F.Rect; Clip: F.Rect;
+  Style: T.Style; Widgets: Th.WidgetStyles?; Operations: Generic.List<D.Operation>
 );
 begin
   for Index: int := List.First to Sys.Math.Min(Rows.Length, List.First + List.Rows) - 1 do
-    const Row: E.TableRow := Rows[Index];
+    const Row: Ch.TableRow := Rows[Index];
     const Line: F.Rect := new F.Rect(Area.X, Clip.Y + Index - List.First, Area.Width, 1);
     const Selected: bool := Index = List.Selected;
     D.ListRow(

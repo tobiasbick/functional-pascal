@@ -1,25 +1,16 @@
 unit Fpas.Tui.Internal.Rendering.Decoration;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Scene as A,
-  Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V,
-  Fpas.Tui.Internal.Layout.TabHeaders as Tabs,
-  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Tui.Internal.Rendering.Buttons as Buttons,
-  Fpas.Tui.Internal.Layout.EditorView as EditorView, Fpas.Tui.Internal.Rendering.EditorText as EditorText,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Editors as Ed, Fpas.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Tui.Internal.Layout.EditorView as EditorView, Fpas.Tui.Internal.Rendering.EditorText as EditorText, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
-  Cells: array of E.Cell; Columns: int; Control: A.Control<TMsg>;
-  Theme: E.Theme; Focused: bool; Selection: function(string, string): Edit.Selection
+  Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
+  Theme: Th.Theme; Focused: bool
 );
-  procedure Mark(Column: int; Row: int; Style: E.Style);
+  procedure Mark(Column: int; Row: int; Style: T.Style);
   begin
     if Control.Bounds.Contains(Column, Row) then
       const Index: int := Row * Columns + Column;
-      Cells[Index] := new E.Cell(Cells[Index].Text, Style);
+      Cells[Index] := new T.Cell(Cells[Index].Text, Style);
     end if;
   end procedure;
 begin
@@ -63,20 +54,22 @@ begin
       return;
     else
   end case;
-  const Widgets: E.WidgetStyles? := Theme.Widgets;
-  const Standard: E.Style := if not Focused then Theme.Hover
+  const Widgets: Th.WidgetStyles? := Theme.Widgets;
+  const Standard: T.Style := if not Focused then Theme.Hover
     else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
       else Theme.Focus
       end if
     end if;
-  const Style: E.Style := Buttons.Resolve(
+  const Style: T.Style := Buttons.Resolve(
     Theme, Control.Variant, Control.Enabled, Focused, not Focused
   ) ?? Standard;
   const ShowsPlaceholder: bool := case Control.Action of
-    when A.Binding.Edit(_, _, const Show: bool): Show;
+    when A.Binding.Multiline(
+      const View: EditorView.Viewport<TMsg>
+    ): View.Document.Text = '' and not View.MultipleLines;
     else false;
   end case;
-  const HintStyle: E.Style := if ShowsPlaceholder then D.PlaceholderStyle(
+  const HintStyle: T.Style := if ShowsPlaceholder then D.PlaceholderStyle(
       Style,
       Theme
     )
@@ -92,37 +85,13 @@ begin
     case Control.Action of
       when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
         EditorText.MarkSelection(View.Document, Theme, Mark);
-      when A.Binding.Edit(const Value: string, _, _):
-        if Bounds.Width <= 2 then
-          return;
-        end if;
-        const Range: Edit.Selection := Selection(Control.Id, Value);
-        const Start: int := G.ViewStart(Value, Range.Caret, Bounds.Width - 2);
-        const First: int := Bounds.X + 2 + G.Measure(
-          Value.Substring(
-            Start,
-            Sys.Math.Max(Start, Sys.Math.Min(Range.Caret, Range.Anchor)) - Start
-          )
-        );
-        const Last: int := Bounds.X + 2 + G.Measure(
-          Value.Substring(Start, Sys.Math.Max(Range.Caret, Range.Anchor) - Start)
-        );
-        var EndCell: int := Sys.Math.Max(First, Last - 1);
-        if ShowsPlaceholder and Bounds.Contains(First, Bounds.Y) then
-          EndCell := First + Sys.Math.Max(1, G.Width(Cells[Bounds.Y * Columns + First].Text)) - 1;
-        end if;
-
-        for X: int := First to Sys.Math.Min(EndCell, Bounds.X + Bounds.Width - 1) do
-          Mark(X, Bounds.Y, Theme.Caret);
-        end for;
       else
     end case;
   end if;
 end procedure;
 
 public function Capture<TMsg>(
-  Layout: A.Layout<TMsg>; Columns: int; Theme: E.Theme; Focus: string; Hover: string; Scope: string;
-  Selection: function(string, string): Edit.Selection
+  Layout: A.Layout<TMsg>; Columns: int; Theme: Th.Theme; Focus: string; Hover: string; Scope: string
 ): array of App.ControlSnapshot;
 begin
   const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>(
@@ -143,11 +112,18 @@ begin
         Control.Bounds.Height,
         Focused,
         Hovered,
-        Control.Enabled and Control.Scope = Scope
+        Control.Enabled and Control.Scope = Scope,
+        case Control.Action of
+          when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>): new Ed.EditorPosition(
+            View.Document.Position.Caret,
+            View.Document.Position.Anchor
+          );
+          else null;
+        end case
       )
     );
     if Focused or Hovered then
-      Apply<TMsg>(Layout.Cells, Columns, Control, Theme, Focused, Selection);
+      Apply<TMsg>(Layout.Cells, Columns, Control, Theme, Focused);
     end if;
   end for;
 

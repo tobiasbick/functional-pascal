@@ -1,6 +1,6 @@
 unit Mandelbrot.Model;
 
-uses Fpas.Tui.Elements as E, Mandelbrot.Palette as P, System as Sys;
+uses Fpas.Ui.Terminal as T, Mandelbrot.Palette as P, System as Sys;
 
 public type Camera = record
   public X: double := -0.75;
@@ -38,7 +38,7 @@ public type State = record
   public Camera: Camera := new Camera();
   public Columns: int := 0;
   public Rows: int := 0;
-  public Image: array of E.Cell := [];
+  public Image: array of T.Cell := [];
   public Ready: bool := false;
   public Help: bool := false;
   public Failure: string := '';
@@ -54,7 +54,7 @@ public type Message = union
   Reset;
   ToggleHelp;
   Exit;
-  Rendered(Image: array of E.Cell);
+  Rendered(Image: array of T.Cell);
   Failed(Reason: string);
 end union;
 end unit;

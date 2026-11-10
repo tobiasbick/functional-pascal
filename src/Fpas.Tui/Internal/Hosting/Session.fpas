@@ -1,14 +1,6 @@
 unit Fpas.Tui.Internal.Hosting.Session;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime, Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
-  Fpas.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Layout.Equivalence as Q,
-  Fpas.Tui.Internal.Hosting.Interaction as I,
-  Fpas.Tui.Internal.Hosting.Viewports as V,
-  Fpas.Tui.Internal.Rendering.Decoration as D, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
-  Fpas.Processes.Terminal as Terminal,
-  System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Tui.Internal.View.Lowering as Lower, Fpas.Tui.Internal.View.EditorState as Editors, Fpas.Mvu.Session as Runtime, Fpas.Tui.Application as App, Fpas.Tui.Internal.View.Tree as E, Fpas.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Layout.Equivalence as Q, Fpas.Tui.Internal.Hosting.Interaction as I, Fpas.Tui.Internal.Hosting.Viewports as V, Fpas.Tui.Internal.Rendering.Decoration as D, Fpas.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   /// The input receipt ID exposed by the terminal host.
@@ -42,9 +34,9 @@ end procedure;
 /// <returns>The host session.</returns>
 public function Start<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, App.Viewport): E.Element<TMsg>; Columns: int; Rows: int;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
   Present: procedure(App.Frame); Manual: bool;
-  ThemeFor: function(TModel): E.Theme
+  ThemeFor: function(TModel): Th.Theme
 ): App.HeadlessSession;
   function Close(): Tasks.Task;
   begin
@@ -100,7 +92,7 @@ public function Start<TModel, TMsg>(
         Value.Columns,
         Value.Rows,
         cast<array of string>(Value.Lines.Clone()),
-        cast<array of E.Cell>(Value.Cells.Clone()),
+        cast<array of T.Cell>(Value.Cells.Clone()),
         cast<array of App.ControlSnapshot>(Value.Controls.Clone())
       );
     finally
@@ -204,15 +196,33 @@ public function Start<TModel, TMsg>(
   end procedure;
 
   procedure Paint();
-    function Arrange(Theme: E.Theme; Previous: A.Layout<TMsg>?; Routing: I.State<TMsg>): A.Layout<TMsg>;
+    function Arrange(Theme: Th.Theme; Previous: A.Layout<TMsg>?): A.Layout<TMsg>;
     begin
       Phase := 'view';
-      const Root: E.Element<TMsg> := View(Core.Model(), Viewport);
-      Phase := 'layout_or_drawing';
-      return Arrangement.Arrange<TMsg>(
-        Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme,
-        function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
+      const Size: L.Viewport := new L.Viewport(
+        if Viewport.Columns < 60 then L.SizeClass.Compact
+          elsif Viewport.Columns < 100 then L.SizeClass.Regular
+          else L.SizeClass.Expanded
+          end if,
+        if Viewport.Rows < 20 then L.SizeClass.Compact
+          elsif Viewport.Rows < 35 then L.SizeClass.Regular
+          else L.SizeClass.Expanded
+          end if
       );
+      const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
+        View(Core.Model(), Size),
+        Validation.Target.Terminal,
+        if Previous = null then null else Previous.Prepared end if,
+        new T.Viewport(Viewport.Columns, Viewport.Rows)
+      );
+      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme, EditorPositions);
+      Phase := 'layout_or_drawing';
+      const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+        Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
+      );
+      return Native with
+        Prepared := Candidate;
+      end with;
     end function;
   begin
     const Routing: I.State<TMsg>? := Interaction;
@@ -221,8 +231,8 @@ public function Start<TModel, TMsg>(
     end if;
 
     Phase := 'view';
-    var Theme: E.Theme := ThemeFor(Core.Model());
-    var Layout: A.Layout<TMsg> := Arrange(Theme, Current, Routing);
+    var Theme: Th.Theme := ThemeFor(Core.Model());
+    var Layout: A.Layout<TMsg> := Arrange(Theme, Current);
     var Previous: A.Layout<TMsg>? := Current;
     for Pass: int := 1 to 16 do
       Phase := 'update';
@@ -245,7 +255,7 @@ public function Start<TModel, TMsg>(
       Previous := Layout;
       Phase := 'view';
       Theme := ThemeFor(Core.Model());
-      Layout := Arrange(Theme, Previous, Routing);
+      Layout := Arrange(Theme, Previous);
     end for;
 
     Phase := 'layout_or_drawing';
@@ -258,7 +268,7 @@ public function Start<TModel, TMsg>(
     const Focus: string := Routing.FocusId();
     const Hover: string := Routing.HoverId();
     const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
-      Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId(), Routing.Selection
+      Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId()
     );
     const Prior: App.Frame? := Published;
     const Before: A.Layout<TMsg>? := Current;
@@ -307,7 +317,7 @@ public function Start<TModel, TMsg>(
 
     case Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
-        Viewport := new App.Viewport(NewColumns, NewRows);
+        Viewport := new V.Dimensions(NewColumns, NewRows);
       else
         I.Dispatch<TMsg>(Routing, Layout, Event);
     end case;
@@ -397,8 +407,9 @@ begin
   const Outcomes: Generic.Dictionary<long, App.StepResult> := new Generic.Dictionary<long, App.StepResult>();
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const EditorPositions: Generic.Dictionary<string, Editors.Entry> := new Generic.Dictionary<string, Editors.Entry>();
   var PendingFocus: string? := null;
-  var Viewport: App.Viewport := new App.Viewport(Columns, Rows);
+  var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
   var Published: App.Frame? := null;
   var FrameId: long := 0L;

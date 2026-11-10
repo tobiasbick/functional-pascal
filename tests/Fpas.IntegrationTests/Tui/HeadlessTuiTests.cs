@@ -17,6 +17,7 @@ public sealed class HeadlessTuiTests
     [InlineData("tabs.fpas", "tab fallback contracts verified\n")]
     [InlineData("table.fpas", "table contracts verified\n")]
     [InlineData("multiline.fpas", "multiline editor contracts verified\n")]
+    [InlineData("shared.fpas", "shared terminal contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {
         using var program = new Debuggee("headless-tui");
@@ -131,7 +132,7 @@ public sealed class HeadlessTuiTests
             Assert.Equal("presented", await Focus("theme-blue"));
             await Choose("theme-blue");
             var themed = await Request("snapshot");
-            Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("style").GetProperty("background").GetInt32());
+            Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("colors").GetProperty("background").GetInt32());
             Assert.Equal("amber", Control(themed, "sample-list").GetProperty("value").GetString());
             Assert.Contains("▸ Amber", Screen(themed));
             Assert.True(Control(themed, "theme-blue").GetProperty("focused").GetBoolean());
@@ -501,7 +502,7 @@ public sealed class HeadlessTuiTests
         static string? Cell(JsonElement frame, int column, int row) =>
             frame.GetProperty("cells")[row * frame.GetProperty("columns").GetInt32() + column].GetProperty("text").GetString();
         static JsonElement CellStyle(JsonElement frame, int column, int row) =>
-            frame.GetProperty("cells")[row * frame.GetProperty("columns").GetInt32() + column].GetProperty("style");
+            frame.GetProperty("cells")[row * frame.GetProperty("columns").GetInt32() + column].GetProperty("colors");
         static JsonElement ControlStyle(JsonElement frame, string id)
         {
             var control = Control(frame, id);

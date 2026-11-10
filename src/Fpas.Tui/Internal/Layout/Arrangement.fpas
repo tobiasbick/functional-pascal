@@ -1,25 +1,12 @@
 unit Fpas.Tui.Internal.Layout.Arrangement;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Layout.SelectionLists as S,
-  Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Layout.Subviews as Subviews,
-  Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Layout.TabHeaders as Tabs,
-  Fpas.Tui.Internal.Layout.Stacks as Stacks, Fpas.Tui.Internal.Layout.Tables as Tables,
-  Fpas.Tui.Internal.Layout.Overlays as Overlays, Fpas.Tui.Internal.Rendering.Canvases as Canvases,
-  Fpas.Tui.Internal.Rendering.StatusLines as Status,
-  Fpas.Tui.Internal.Rendering.Buttons as Buttons,
-  Fpas.Tui.Editors as Editors, Fpas.Tui.Internal.Layout.EditorView as EditorView,
-  Fpas.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Tui.Internal.Layout.Scene as A,
-  Fpas.Tui.Internal.Rendering.Glyphs as G, Fpas.Tui.Internal.Rendering.Drawing as D,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Layout as L, Fpas.Tui.Internal.View.Tree as E, Fpas.Tui.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.Stacks as Stacks, Fpas.Tui.Internal.Layout.Tables as Tables, Fpas.Tui.Internal.Layout.Overlays as Overlays, Fpas.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Tui.Internal.Rendering.StatusLines as Status, Fpas.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Tui.Internal.View.Editors as Editors, Fpas.Tui.Internal.Layout.EditorView as EditorView, Fpas.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
-  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: E.Theme;
-  Caret: function(string, string): int
+  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme
 ): A.Layout<TMsg>;
-  procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: E.Style; Wrap: bool);
+  procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: T.Style; Wrap: bool);
   begin
     if Value.Length > 0 then
       Operations.Add(new D.Operation(Value, Area, Clip, Style, Wrap));
@@ -27,8 +14,8 @@ public function Arrange<TMsg>(
   end procedure;
 
   function ArrangeRows(
-    Id: string; Role: string; Items: array of E.SelectionItem; Key: string; Bounds: F.Rect; ScopeId: string;
-    OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+    Id: string; Role: string; Items: array of Ch.SelectionItem; Key: string; Bounds: F.Rect; ScopeId: string;
+    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?
   ): S.Viewport<TMsg>;
   begin
     const Max: int := Sys.Math.Max(0, Items.Length - Bounds.Height);
@@ -40,7 +27,12 @@ public function Arrange<TMsg>(
       Regions.Add(new A.ScrollRegion(Id, ScopeId, Bounds, Max));
     end if;
     const Action: A.Binding<TMsg> := A.Binding<TMsg>.SelectList(List);
-    Register(Id, Id, Role, List.Key(), Bounds, ScopeId, Items.Length > 0, Action);
+    var Enabled: bool := false;
+    for Item: Ch.SelectionItem in Items do
+      Enabled := Enabled or Item.Enabled;
+    end for;
+
+    Register(Id, Id, Role, List.Key(), Bounds, ScopeId, Enabled, Action);
     return List;
   end function;
 
@@ -61,7 +53,7 @@ public function Arrange<TMsg>(
   procedure Register(
     Id: string; Label: string; Role: string; Value: string;
     Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
-    Variant: E.ButtonVariant := E.ButtonVariant.Default
+    Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default
   );
   begin
     if Id.Length = 0 or not Ids.Add(Id) then
@@ -77,7 +69,7 @@ public function Arrange<TMsg>(
     end if;
   end procedure;
 
-  procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: E.Style);
+  procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
   begin
     const Clip: F.Rect := F.Intersect(Area, Limit);
     if Clip.Width = 0 or Clip.Height = 0 then
@@ -93,52 +85,78 @@ public function Arrange<TMsg>(
         Status.Draw(Operations, Area, Clip, Style, Message, Hints);
       when E.Element.Action(
         const Id: string, const Caption: string, const Message: TMsg, const Enabled: bool,
-        const Role: string, const Value: string, const Variant: E.ButtonVariant
+        const Role: string, const Value: string, const Variant: UiStyle.ButtonVariant
       ):
         Buttons.Paint(
           Operations, Area, Clip, Style, Theme, Caption, Role = 'button', Variant, Enabled
         );
         const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Message));
         Register(Id, Caption, Role, Value, Clip, ScopeId, Enabled, Action, Variant);
-      when E.Element.Editor(
+      when E.Element.Toggle(
         const Id: string,
-        const Value: string,
-        const Change: function(string): TMsg,
-        const Placeholder: string
+        const Caption: string,
+        const Checked: bool,
+        const Change: function(bool): TMsg,
+        const Enabled: bool
       ):
-        const Hint: string := if Value = '' then G.SingleLine(Placeholder) else '' end if;
-        D.TextField(Operations, Area, Clip, Value, Hint, Caret(Id, Value), Style, Theme);
+        const Label: string := (if Checked then '[x] ' else '[ ] ' end if) + Caption;
+        Buttons.Paint(
+          Operations,
+          Area,
+          Clip,
+          Style,
+          Theme,
+          Label,
+          false,
+          UiStyle.ButtonVariant.Default,
+          Enabled
+        );
         Register(
           Id,
-          Id,
-          'textbox',
-          Value,
+          Label,
+          'checkbox',
+          if Checked then 'true' else 'false' end if,
           Clip,
           ScopeId,
-          true,
-          A.Binding<TMsg>.Edit(Value, Change, Hint <> '')
+          Enabled,
+          A.Binding<TMsg>.Toggle(new Actions.Toggle<TMsg>(Checked, Change))
         );
       when E.Element.DocumentEditor(
         const Id: string,
         const Text: string,
         const Position: Editors.EditorPosition,
-        const OnEdit: function(Editors.TextEdit): TMsg,
-        const OnNavigate: function(Editors.EditorPosition): TMsg
+        const Events: Editors.IEvents<TMsg>,
+        const Placeholder: string,
+        const Enabled: bool,
+        const MultipleLines: bool
       ):
-        const Document: EditorView.Document := EditorView.Arrange(Text, Clip, Position);
-        EditorText.Draw(Operations, Document, Style, Theme);
+        const Inner: F.Rect := if MultipleLines then Clip
+          else new F.Rect(
+            Clip.X + 2,
+            Clip.Y,
+            Sys.Math.Max(0, Clip.Width - 2),
+            1
+          )
+          end if;
+        const Document: EditorView.Document := EditorView.Arrange(Text, Inner, Position);
+        discard Events.Navigate(Document.Position);
+        if MultipleLines then
+          EditorText.Draw(Operations, Document, Style, Theme);
+        else
+          EditorText.DrawField(Operations, Document, Area, Clip, Placeholder, Style, Theme);
+        end if;
         const View: EditorView.Viewport<TMsg> := new EditorView.Viewport<TMsg>(
           Document,
-          OnEdit,
-          OnNavigate
+          Events,
+          MultipleLines
         );
-        Register(Id, Id, 'textbox', Text, Clip, ScopeId, true, A.Binding<TMsg>.Multiline(View));
-      when E.Element.Choices(const Id: string, const Items: array of E.ListItem<TMsg>):
+        Register(Id, Id, 'textbox', Text, Clip, ScopeId, Enabled, A.Binding<TMsg>.Multiline(View));
+      when E.Element.Choices(const Id: string, const Items: array of Ch.ListItem<TMsg>):
         const Max: int := Sys.Math.Max(0, Items.Length - Area.Height);
         const First: int := Offset(Id, Max);
         Regions.Add(new A.ScrollRegion(Id, ScopeId, Clip, Max));
         for Index: int := First to Sys.Math.Min(Items.Length, First + Area.Height) - 1 do
-          const Item: E.ListItem<TMsg> := Items[Index];
+          const Item: Ch.ListItem<TMsg> := Items[Index];
           const Line: F.Rect := new F.Rect(Area.X, Area.Y + Index - First, Area.Width, 1);
           D.ListRow(Operations, Line, Clip, Item.Text, Item.Selected, Style, Widgets);
           Register(
@@ -148,13 +166,13 @@ public function Arrange<TMsg>(
             if Item.Selected then 'true' else 'false' end if,
             F.Intersect(Line, Clip),
             ScopeId,
-            true,
+            Item.Enabled,
             A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Item.Message))
           );
         end for;
       when E.Element.Selectable(
-        const Id: string, const Items: array of E.SelectionItem, const Key: string,
-        const OnSelect: function(string): TMsg, const OnActivate: function(string): TMsg
+        const Id: string, const Items: array of Ch.SelectionItem, const Key: string,
+        const OnSelect: function(string): TMsg, const OnActivate: Sys.Func<string, TMsg>?
       ):
         const List: S.Viewport<TMsg> := ArrangeRows(
           Id,
@@ -170,10 +188,10 @@ public function Arrange<TMsg>(
       when E.Element.TableView(
         const Id: string,
         const Columns: array of E.TableColumn,
-        const Rows: array of E.TableRow,
+        const Rows: array of Ch.TableRow,
         const Key: string,
         const OnSelect: function(string): TMsg,
-        const OnActivate: function(string): TMsg
+        const OnActivate: Sys.Func<string, TMsg>?
       ):
         const Widths: array of int := Tables.Widths(Columns, Area.Width);
         const Header: F.Rect := new F.Rect(Area.X, Area.Y, Area.Width, 1);
@@ -189,7 +207,7 @@ public function Arrange<TMsg>(
           Tables.DrawBody<TMsg>(Rows, Widths, List, Area, Body, Style, Widgets, Operations);
         end if;
       when E.Element.TabSet(
-        const Id: string, const Items: array of E.TabItem, const ActiveIndex: int,
+        const Id: string, const Items: array of Ch.TabItem, const ActiveIndex: int,
         const OnSelect: function(string): TMsg, const Panel: E.Element<TMsg>?
       ):
         if Items.Length = 0 then
@@ -209,7 +227,16 @@ public function Arrange<TMsg>(
             Operations
           );
           const Action: A.Binding<TMsg> := A.Binding<TMsg>.SelectTab(Header);
-          Register(Id, Id, 'tablist', Header.Key(), Visible, ScopeId, ActiveIndex >= 0, Action);
+          Register(
+            Id,
+            Id,
+            'tablist',
+            Header.Key(),
+            Visible,
+            ScopeId,
+            ActiveIndex >= 0 and Items[ActiveIndex].Enabled,
+            Action
+          );
         end if;
 
         if Panel <> null then
@@ -228,8 +255,8 @@ public function Arrange<TMsg>(
         D.Progress(Operations, Area, Clip, Percent, Style, Widgets);
       when E.Element.Sized(const Child: E.Element<TMsg>, _):
         Visit(Child, Area, Clip, ScopeId, Style);
-      when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: E.Style):
-        if ChildStyle.Background >= 0 and ChildStyle.Background <> Style.Background then
+      when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: T.Style):
+        if ChildStyle.Background <> null and ChildStyle.Background <> Style.Background then
           D.Fill(Operations, Clip, ChildStyle);
         end if;
 
@@ -248,20 +275,22 @@ public function Arrange<TMsg>(
             Sys.Math.Max(0, Area.Height - 2)
           ), Clip, ScopeId, Style
         );
-      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>):
-        const Height: int := V.ContentHeight<TMsg>(Child, Area);
-        const Max: int := Height - Area.Height;
-        Regions.Add(new A.ScrollRegion(Id, ScopeId, Clip, Max));
-        VisitScrolled(
+      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>, const Bar: bool):
+        const Layout: V.Geometry<TMsg> := V.Arrange<TMsg>(
           Child,
-          new F.Rect(Area.X, Area.Y - Offset(Id, Max), Area.Width, Height),
+          E.ScrollPosition.Offset(Offset(Id, int.MaxValue)),
+          Area,
           Clip,
-          ScopeId,
-          Style
+          Bar,
+          null
         );
+        Scroll[Id] := Layout.View.Offset;
+        Regions.Add(new A.ScrollRegion(Id, ScopeId, Clip, Layout.View.Maximum));
+        VisitScrolled(Child, Layout.Content, Layout.Clip, ScopeId, Style);
+        V.DrawBar<TMsg>(Layout.View, Operations, Area, Clip, Style, Widgets);
       when E.Element.ControlledScroll(
         const Id: string, const Child: E.Element<TMsg>, const Position: E.ScrollPosition,
-        const OnScroll: function(E.ScrollChange): TMsg, const ShowScrollbar: bool
+        const OnScroll: Sys.Func<L.ScrollChange, TMsg>, const ShowScrollbar: bool
       ):
         const Layout: V.Geometry<TMsg> := V.Arrange<TMsg>(
           Child, Position, Area, Clip, ShowScrollbar, OnScroll
@@ -285,19 +314,14 @@ public function Arrange<TMsg>(
         VisitScrolled(Child, Layout.Content, Layout.Clip, ScopeId, Style);
         V.DrawBar<TMsg>(View, Operations, Area, Clip, Style, Widgets);
       when E.Element.Custom(
-        const Width: int, const Height: int, const DrawCell: function(int, int): E.Cell,
+        const Width: int, const Height: int, const DrawCell: function(int, int): T.Cell,
         const Action: E.CanvasBinding<TMsg>
       ):
         var CanvasArea: F.Rect := F.Intersect(Clip, new F.Rect(Area.X, Area.Y, Width, Height));
         var OriginX: int := Area.X;
         var OriginY: int := Area.Y;
         case Action of
-          when E.CanvasBinding.Click(const Id: string, const Click: function(int, int): TMsg):
-            Register(
-              Id, Id, 'canvas', '', CanvasArea, ScopeId, true,
-              A.Binding<TMsg>.Canvas(OriginX, OriginY, new E.CanvasEvents<TMsg>(OnClick := Click))
-            );
-          when E.CanvasBinding.Responsive(const Id: string, const Events: E.CanvasEvents<TMsg>):
+          when E.CanvasBinding.Responsive(const Id: string, const Events: T.CanvasEvents<TMsg>):
             CanvasArea := Clip;
             OriginX := Clip.X;
             OriginY := Clip.Y;
@@ -317,15 +341,23 @@ public function Arrange<TMsg>(
                 return;
               end if;
             end if;
-          when E.CanvasBinding.None:
+          when E.CanvasBinding.Fixed(const Id: string, const Events: T.CanvasEvents<TMsg>):
+            Register(
+              Id, Id, 'canvas', '', CanvasArea, ScopeId,
+              Events.OnClick <> null or Events.OnMiddleClick <> null or Events.OnScroll <> null,
+              A.Binding<TMsg>.Canvas(OriginX, OriginY, Events)
+            );
         end case;
 
-        Canvases.Paint(DrawCell, OriginX, OriginY, CanvasArea, Operations);
+        Canvases.Paint(DrawCell, OriginX, OriginY, CanvasArea, Style, Operations);
       when E.Element.Desktop(
         const Content: E.Element<TMsg>, const Layers: array of E.Element<TMsg>,
-        const Keys: array of E.ShortcutBinding<TMsg>
+        const Keys: array of K.ShortcutBinding<TMsg>
       ):
-        GlobalKeys := Keys;
+        if Keys.Length > 0 then
+          GlobalKeys := Keys;
+        end if;
+
         Visit(Content, Area, Clip, ScopeId, Style);
         for Layer: E.Element<TMsg> in Layers do
           Visit(Layer, Area, Clip, ScopeId, Style);
@@ -347,10 +379,10 @@ public function Arrange<TMsg>(
         const Id: string,
         const Modal: bool,
         const Initial: string,
-        const Escape: E.EscapeBinding<TMsg>,
+        const Escape: Sys.Func<TMsg>?,
         const Content: E.Element<TMsg>,
-        const Keys: array of E.ShortcutBinding<TMsg>,
-        const Limits: E.OverlayLimits?
+        const Keys: array of K.ShortcutBinding<TMsg>,
+        const Limits: K.OverlayLimits?
       ):
         if Modal then
           Active := new A.Scope<TMsg>(Id, Initial, Escape, Keys);
@@ -358,12 +390,10 @@ public function Arrange<TMsg>(
         const Bounds: F.Rect := Overlays.Place<TMsg>(Content, Clip, Limits);
         D.Fill(Operations, Bounds, Style);
         Visit(Content, Bounds, Bounds, if Modal then Id else ScopeId end if, Style);
-      when E.Element.Deferred(_, _):
-        raise new Sys.InvalidOperationException('Unresolved cached subview.');
     end case;
   end procedure;
 
-  procedure VisitScrolled(Child: E.Element<TMsg>; Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: E.Style);
+  procedure VisitScrolled(Child: E.Element<TMsg>; Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style);
   begin
     const PreviousWrap: bool := WrapText;
     WrapText := true;
@@ -382,7 +412,7 @@ public function Arrange<TMsg>(
 
   procedure VisitStack(
     Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow;
-    Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: E.Style
+    Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style
   );
   begin
     const Bounds: array of F.Rect := Stacks.Bounds<TMsg>(
@@ -399,7 +429,7 @@ public function Arrange<TMsg>(
     end for;
   end procedure;
 begin
-  const Widgets: E.WidgetStyles? := Theme.Widgets;
+  const Widgets: Th.WidgetStyles? := Theme.Widgets;
   const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
   const Allocations: Generic.List<F.AllocationMemo> := new Generic.List<F.AllocationMemo>();
   const PreviousAllocations: array of F.AllocationMemo := if Previous = null then []
@@ -408,24 +438,19 @@ begin
   const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
-  const Next: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
-  const PreviousCache: Generic.Dictionary<string, E.CacheEntry<TMsg>> := if Previous =
-      null then new Generic.Dictionary<string, E.CacheEntry<TMsg>>()
-    else Previous.Cache
-    end if;
   var Active: A.Scope<TMsg>? := null;
   var FocusReturn: string := '';
   var WrapText: bool := false;
-  var GlobalKeys: array of E.ShortcutBinding<TMsg> := [];
+  var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
-  Visit(Subviews.Resolve<TMsg>(Root, PreviousCache, Next), Screen, Screen, '', Theme.Text);
+  Visit(Root, Screen, Screen, '', Theme.Text);
   const PreviousRows: array of D.PaintedRow := if Previous = null then []
     else Previous.Painted
     end if;
   const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, Theme.Text);
   return new A.Layout<TMsg>(
     Surface.Lines, Surface.Cells, Controls.ToArray(), Active, GlobalKeys, Regions.ToArray(),
-    Next, Surface.Rows, Allocations.ToArray()
+    Surface.Rows, Allocations.ToArray()
   );
 end function;
 end unit;

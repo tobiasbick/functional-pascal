@@ -1,6 +1,6 @@
 unit Fpas.Tui.Internal.Layout.Flexible;
 
-uses Fpas.Tui.Elements as E, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
+uses Fpas.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
 
 public type Rect = record
   public X: int;

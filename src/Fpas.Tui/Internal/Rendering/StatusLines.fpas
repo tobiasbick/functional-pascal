@@ -1,9 +1,6 @@
 unit Fpas.Tui.Internal.Rendering.StatusLines;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  System.Collections.Generic as Generic, System.Text as Text;
+uses Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Glyphs as G, System.Collections.Generic as Generic, System.Text as Text;
 
 const Gap: string := '  ';
 
@@ -18,7 +15,7 @@ begin
 end function;
 
 public procedure Draw(
-  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: E.Style;
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: T.Style;
   Message: string; Hints: array of string
 );
 begin

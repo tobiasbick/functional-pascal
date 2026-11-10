@@ -1,14 +1,20 @@
 unit Fpas.Tui.Internal.Hosting.Viewports;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Scene as A,
-  Fpas.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Layout.Flexible as F, System as Sys;
+
+/// Exact cell dimensions retained by the terminal host.
+public type Dimensions = record
+  /// Terminal width in cells.
+  public Columns: int;
+  /// Terminal height in cells.
+  public Rows: int;
+end record;
 
 public function Notify<TMsg>(Before: A.Layout<TMsg>?; After: A.Layout<TMsg>; Apply: procedure(TMsg)): bool;
   function Send(Control: A.Control<TMsg>; Columns: int; Rows: int): bool;
   begin
     case Control.Action of
-      when A.Binding.Canvas(_, _, const Events: E.CanvasEvents<TMsg>):
+      when A.Binding.Canvas(_, _, const Events: T.CanvasEvents<TMsg>):
         const Changed: Sys.Func<int, int, TMsg>? := Events.OnResize;
         case Changed of
           when is Sys.Func<int, int, TMsg> as Callback:

@@ -1,8 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses
-  Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Styles as S,
-  Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 /// A declarative view for a host to prepare and present.
 /// <typeparam name="TMsg">The application message type.</typeparam>
@@ -63,6 +61,21 @@ public type Element<TMsg> = union
   TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
   /// Draw a terminal canvas and route input in cells.
   TerminalCanvas(Id: string; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
+  /// Display a terminal status message and priority-ordered hints.
+  TerminalStatus(Message: string; Hints: array of string);
+  /// Compose terminal content, floating layers and scoped shortcuts.
+  TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
+  /// A terminal floating layer with optional modal focus and explicit percentage limits.
+  TerminalLayer(
+    Id: string; Content: Element<TMsg>; InitialFocus: string?; OnDismiss: Sys.Func<TMsg>?;
+    Shortcuts: array of Keys.ShortcutBinding<TMsg>; Limits: Keys.OverlayLimits?; Modal: bool
+  );
+  /// A terminal overlay body with a pinned footer.
+  TerminalPanel(Body: Element<TMsg>; Footer: Element<TMsg>; Title: string; Padding: byte);
+  /// A terminal canvas with an explicit cell extent.
+  TerminalFixedCanvas(Id: string; Columns: int; Rows: int; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
+  /// Resolve a terminal-specific subtree using exact cell dimensions.
+  TerminalViewport(Id: string; Build: function(T.Viewport): Element<TMsg>);
   /// Display pixels with the supplied width and height in GUI logical units.
   GraphicImage(Id: string; Data: G.Pixels; Width: int; Height: int);
   /// Paint drawing operations in a clipped GUI logical viewport.

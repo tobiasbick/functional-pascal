@@ -1,6 +1,6 @@
 unit Mandelbrot.Palette;
 
-uses Fpas.Tui.Elements as E, System as Sys;
+uses Fpas.Ui.Terminal as T, System as Sys;
 
 public type Kind = enum
   DeepOcean;
@@ -21,7 +21,7 @@ const Aurora: array of int := [
   $34A968, $64BF64, $94D976, $BCE68A, $EAF0B4, $F8F8E0
 ];
 
-public const Blank: E.Cell := new E.Cell(' ', new E.Style(0, 0));
+public const Blank: T.Cell := new T.Cell(' ', new T.Style(0, 0));
 
 public function Name(Palette: Kind): string;
 begin
@@ -37,7 +37,7 @@ begin
   end case;
 end function;
 
-public function Color(Palette: Kind; Escape: double): E.Cell;
+public function Color(Palette: Kind; Escape: double): T.Cell;
 begin
   const Ramp: string := ' ░▒▓█';
   const Phase: double := Escape * 0.08;
@@ -56,6 +56,6 @@ begin
       raise new Sys.ArgumentOutOfRangeException('Palette');
   end case;
 
-  return new E.Cell(Ramp[Shade].ToString(), new E.Style(Rgb, 0));
+  return new T.Cell(Ramp[Shade].ToString(), new T.Style(Rgb, 0));
 end function;
 end unit;

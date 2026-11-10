@@ -1,19 +1,15 @@
 unit Mandelbrot.Explorer;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
-  Mandelbrot.Model as M, Mandelbrot.Palette as P, Mandelbrot.Render as R,
-  System as Sys, System.Globalization as Globalization, System.Threading as Threads,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Tui.Themes as Themes, Mandelbrot.Model as M, Mandelbrot.Palette as P, Mandelbrot.Render as R, System as Sys, System.Globalization as Globalization, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 const RenderId: string := 'mandelbrot';
-const Colors: Themes.Palette := Themes.Dark();
+const Colors: Themes.Theme := Themes.Dark();
 
 function Render(State: M.State; Gate: Threads.SemaphoreSlim): Mvu.Command<M.Message>;
   async function Work(Post: function(M.Message): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
   begin
     await Gate.WaitAsync(Token);
-    var Image: array of E.Cell := [];
+    var Image: array of T.Cell := [];
     try
       Image := R.Compute(State.Camera, State.Columns, State.Rows, Token);
     finally
@@ -77,7 +73,7 @@ public function CreateUpdate(Gate: Threads.SemaphoreSlim): function(M.State, M.M
         );
       when M.Message.Exit:
         return new Mvu.Transition<M.State, M.Message>(State, [Mvu.Exit<M.Message>()]);
-      when M.Message.Rendered(const Image: array of E.Cell):
+      when M.Message.Rendered(const Image: array of T.Cell):
         return new Mvu.Transition<M.State, M.Message>(
           State with
             Image := Image;
@@ -129,7 +125,7 @@ begin
   );
 end function;
 
-const CanvasInput: E.CanvasEvents<M.Message> := new E.CanvasEvents<M.Message>(
+const CanvasInput: T.CanvasEvents<M.Message> := new T.CanvasEvents<M.Message>(
   Resize,
   Center,
   Reset,
@@ -150,11 +146,18 @@ end function;
 function Meter(Label: string; Value: string; Percent: int): E.Element<M.Message>;
 begin
   return E.Row<M.Message>(
-    new E.Flow(Gap := 1),
-    E.Size<M.Message>(E.Text<M.Message>(Label + ' ' + Value), new E.Flex(Basis := 17)),
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+    E.Size<M.Message>(
+      E.Text<M.Message>(Label + ' ' + Value),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(17)))
+    ),
     E.Size<M.Message>(
       E.ProgressBar<M.Message>(Percent),
-      new E.Flex(Basis := 14, Grow := 1, Maximum := 32)
+      new L.Flex(
+        Basis := L.Extent.Fixed(L.Measure.Cells(14)),
+        Grow := 1,
+        Maximum := L.Measure.Cells(32)
+      )
     )
   );
 end function;
@@ -168,7 +171,7 @@ begin
     else if Data.Ready then 'ready' else 'rendering' end if
     end if;
   return E.Column<M.Message>(
-    E.Styled<M.Message>(
+    E.CellStyled<M.Message>(
       E.Text<M.Message>(
         'center=(' + Camera.X.ToString('F4', Culture) + ', ' +
         Camera.Y.ToString('F4', Culture) + ')  ' + P.Name(Camera.Palette) + '  ' + Status
@@ -182,18 +185,17 @@ end function;
 
 function Help(): E.Element<M.Message>;
 begin
-  return E.Overlay<M.Message>(
-    'help', true, 'close-help', M.Message.ToggleHelp,
-    E.Styled<M.Message>(
+  return Views.Layer<M.Message>(
+    'help', E.CellStyled<M.Message>(
       E.Border<M.Message>(
         E.Column<M.Message>(
-          new E.Flow(Padding := 1),
+          new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(1))),
           E.Text<M.Message>('Arrows or left click · pan and center'),
           E.Text<M.Message>('+ / - or mouse wheel · zoom'),
           E.Text<M.Message>('Page Up / Down · change iterations'),
           E.Text<M.Message>('1 / 2 / 3 · change color palette'),
           E.Text<M.Message>('R or middle click · reset'),
-          E.Styled<M.Message>(
+          E.CellStyled<M.Message>(
             E.Button<M.Message>('close-help', 'Esc Close', M.Message.ToggleHelp),
             Colors.Primary
           )
@@ -201,36 +203,56 @@ begin
         'Controls'
       ),
       Colors.Panel
-    ), []
+    ), [], InitialFocus := 'close-help', OnDismiss := function(): M.Message => M.Message.ToggleHelp
   );
 end function;
 
-const Shortcuts: array of E.ShortcutBinding<M.Message> := [
-  E.Shortcut<M.Message>(E.Key.Left, E.KeyModifiers.None, M.Message.Pan(-1, 0)),
-  E.Shortcut<M.Message>(E.Key.Right, E.KeyModifiers.None, M.Message.Pan(1, 0)),
-  E.Shortcut<M.Message>(E.Key.Up, E.KeyModifiers.None, M.Message.Pan(0, 1)),
-  E.Shortcut<M.Message>(E.Key.Down, E.KeyModifiers.None, M.Message.Pan(0, -1)),
-  E.Shortcut<M.Message>(E.Key.PageUp, E.KeyModifiers.None, M.Message.Iterate(32)),
-  E.Shortcut<M.Message>(E.Key.PageDown, E.KeyModifiers.None, M.Message.Iterate(-32)),
-  E.Shortcut<M.Message>(E.Key.Escape, E.KeyModifiers.None, M.Message.Exit),
-  E.CharacterShortcut<M.Message>('+', M.Message.Zoom(0.82)),
-  E.CharacterShortcut<M.Message>('=', M.Message.Zoom(0.82)),
-  E.CharacterShortcut<M.Message>('-', M.Message.Zoom(1.0 / 0.82)),
-  E.CharacterShortcut<M.Message>('1', M.Message.SelectPalette(P.Kind.DeepOcean)),
-  E.CharacterShortcut<M.Message>('2', M.Message.SelectPalette(P.Kind.Ember)),
-  E.CharacterShortcut<M.Message>('3', M.Message.SelectPalette(P.Kind.Aurora)),
-  E.CharacterShortcut<M.Message>('h', M.Message.ToggleHelp),
-  E.CharacterShortcut<M.Message>('H', M.Message.ToggleHelp),
-  E.CharacterShortcut<M.Message>('r', M.Message.Reset),
-  E.CharacterShortcut<M.Message>('R', M.Message.Reset)
+const Shortcuts: array of InputKeys.ShortcutBinding<M.Message> := [
+  InputKeys.Shortcut<M.Message>(
+    InputKeys.Key.Left,
+    InputKeys.KeyModifiers.None,
+    M.Message.Pan(-1, 0)
+  ),
+  InputKeys.Shortcut<M.Message>(
+    InputKeys.Key.Right,
+    InputKeys.KeyModifiers.None,
+    M.Message.Pan(1, 0)
+  ),
+  InputKeys.Shortcut<M.Message>(InputKeys.Key.Up, InputKeys.KeyModifiers.None, M.Message.Pan(0, 1)),
+  InputKeys.Shortcut<M.Message>(
+    InputKeys.Key.Down,
+    InputKeys.KeyModifiers.None,
+    M.Message.Pan(0, -1)
+  ),
+  InputKeys.Shortcut<M.Message>(
+    InputKeys.Key.PageUp,
+    InputKeys.KeyModifiers.None,
+    M.Message.Iterate(32)
+  ),
+  InputKeys.Shortcut<M.Message>(
+    InputKeys.Key.PageDown,
+    InputKeys.KeyModifiers.None,
+    M.Message.Iterate(-32)
+  ),
+  InputKeys.Shortcut<M.Message>(InputKeys.Key.Escape, InputKeys.KeyModifiers.None, M.Message.Exit),
+  InputKeys.CharacterShortcut<M.Message>('+', M.Message.Zoom(0.82)),
+  InputKeys.CharacterShortcut<M.Message>('=', M.Message.Zoom(0.82)),
+  InputKeys.CharacterShortcut<M.Message>('-', M.Message.Zoom(1.0 / 0.82)),
+  InputKeys.CharacterShortcut<M.Message>('1', M.Message.SelectPalette(P.Kind.DeepOcean)),
+  InputKeys.CharacterShortcut<M.Message>('2', M.Message.SelectPalette(P.Kind.Ember)),
+  InputKeys.CharacterShortcut<M.Message>('3', M.Message.SelectPalette(P.Kind.Aurora)),
+  InputKeys.CharacterShortcut<M.Message>('h', M.Message.ToggleHelp),
+  InputKeys.CharacterShortcut<M.Message>('H', M.Message.ToggleHelp),
+  InputKeys.CharacterShortcut<M.Message>('r', M.Message.Reset),
+  InputKeys.CharacterShortcut<M.Message>('R', M.Message.Reset)
 ];
 
-const Footer: E.Element<M.Message> := E.Styled<M.Message>(
+const Footer: E.Element<M.Message> := E.CellStyled<M.Message>(
   E.Text<M.Message>('Arrows pan   +/- zoom   1/2/3 palette   H help   Esc quit'), Colors.Muted
 );
 
 public function View(State: M.State): E.Element<M.Message>;
-  function Draw(Column: int; Row: int): E.Cell;
+  function Draw(Column: int; Row: int): T.Cell;
   begin
     if Column < State.Columns and Row < State.Rows and State.Image.Length > 0 then
       return State.Image[Row * State.Columns + Column];
@@ -243,12 +265,12 @@ begin
     E.CellCanvas<M.Message>('fractal', Draw, CanvasInput), 'Mandelbrot Explorer'
   );
   const Body: E.Element<M.Message> := E.Column<M.Message>(
-    E.Size<M.Message>(Canvas, new E.Flex(Grow := 1)),
+    E.Size<M.Message>(Canvas, new L.Flex(Grow := 1)),
     E.CachedSubview<Details, M.Message>(
       'details', new Details(State.Camera, State.Ready, State.Failure), DetailView, DetailsEqual
     ),
     Footer
   );
-  return E.Screen<M.Message>(Body, if State.Help then [Help()] else [] end if, Shortcuts);
+  return Views.Screen<M.Message>(Body, if State.Help then [Help()] else [] end if, Shortcuts);
 end function;
 end unit;

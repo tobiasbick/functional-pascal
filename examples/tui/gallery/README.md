@@ -36,7 +36,7 @@ Escape hint.
 | Overlay | Scroll the notes with the wheel or Tab into the body and use Page Down. Resize and check that Close stays in the footer. |
 | Tabs | Switch with Left and Right or the mouse. Tab enters the panel. Ctrl+T returns to General. Try it from the Appearance checkbox to see focus return to the bar. |
 | Table | Resize the world catalog to see the name column adapt. Scroll the rows under the header, then select a world and open it with Enter. |
-| Multiline editor | Paste several lines, then switch between Notes and Draft. Each document retains its caret and scroll position. Only text edits change its status to Edited. |
+| Multiline editor | Paste several lines, then switch between Notes and Draft. Each document retains its caret and selection; the host manages its viewport. Only text edits change its status to Edited. |
 
 The gallery uses the same model and views in the
 [private debug terminal](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)

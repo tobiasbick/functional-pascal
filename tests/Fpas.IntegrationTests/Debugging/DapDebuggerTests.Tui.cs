@@ -91,7 +91,7 @@ public sealed partial class DapDebuggerTests
             ["inputId"] = theme.GetProperty("inputId").GetInt64()
         })).GetProperty("status").GetString());
         var themed = (await client.Success("fpasTuiSnapshot", new() { ["cells"] = true })).GetProperty("frame");
-        Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("style").GetProperty("background").GetInt32());
+        Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("colors").GetProperty("background").GetInt32());
         Assert.Contains(themed.GetProperty("controls").EnumerateArray(), control =>
             control.GetProperty("id").GetString() == "theme-blue" && control.GetProperty("focused").GetBoolean());
         await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "key", ["key"] = "Escape" } });

@@ -1,8 +1,6 @@
 program WidgetGallery;
 
-uses
-  Gallery.State as G, Gallery.View as Views, Fpas.Tui.Application as App,
-  System as Sys, System.Threading as Threads;
+uses Gallery.State as G, Gallery.View as Views, Fpas.Tui.Application as App, System as Sys, System.Threading as Threads;
 
 begin
   const Initial: G.Model := new G.Model();

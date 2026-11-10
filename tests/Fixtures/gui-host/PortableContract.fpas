@@ -1,0 +1,324 @@
+program PortableContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C,
+  Fpas.Ui.Editors as Ed, Fpas.Ui.TerminalExtensions.Input as Keys,
+  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as Tui,
+  Fpas.Gui.Application as Gui, Fpas.Gui.Internal.Session as Host, Fpas.Gui.Cui as Cui,
+  System as Sys, System.Collections.Generic as Generic, System.Console as Console,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type Model = record
+  public Checked: bool := false;
+  public Selected: string := 'first';
+  public Tab: string := 'one';
+  public Text: string := 'abc';
+  public Position: Ed.EditorPosition := new Ed.EditorPosition(3, 3);
+  public Modal: bool := false;
+  public Completed: bool := false;
+end record;
+
+type Msg = union
+  Toggle(Value: bool);
+  Select(Key: string);
+  Tab(Key: string);
+  Edit(Value: Ed.TextEdit);
+  Navigate(Value: Ed.EditorPosition);
+  Modal(Value: bool);
+  Focus(Id: string);
+  Done;
+  Failed(Reason: string);
+end union;
+
+const Trace: Generic.List<string> := new Generic.List<string>();
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+async function Work(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  await Post(Msg.Done).ConfigureAwait(false);
+end function;
+
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  var Next: Model := State;
+  var Commands: array of Mvu.Command<Msg> := [];
+  case Message of
+    when Msg.Toggle(const Value: bool):
+      Commands := [
+        Mvu.Focus<Msg>('list'),
+        Mvu.StartBackground<Msg>(
+          'work',
+          Work,
+          function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
+        )
+      ];
+      Trace.Add('toggle:' + Value.ToString());
+      Next := State with
+        Checked := Value;
+      end with;
+    when Msg.Select(const Key: string):
+      Trace.Add('select:' + Key);
+      Next := State with
+        Selected := Key;
+      end with;
+    when Msg.Tab(const Key: string):
+      Trace.Add('tab:' + Key);
+      Next := State with
+        Tab := Key;
+      end with;
+    when Msg.Edit(const Value: Ed.TextEdit):
+      Trace.Add('edit:' + Value.Text);
+      Next := State with
+        Text := Value.Text;
+        Position := Value.Position;
+      end with;
+    when Msg.Navigate(const Value: Ed.EditorPosition):
+      Trace.Add('navigate');
+      Next := State with
+        Position := Value;
+      end with;
+    when Msg.Modal(const Value: bool):
+      Trace.Add('modal:' + Value.ToString());
+      Next := State with
+        Modal := Value;
+      end with;
+    when Msg.Done:
+      Trace.Add('effect:done');
+      Next := State with
+        Completed := true;
+      end with;
+    when Msg.Failed(const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    when Msg.Focus(const Id: string):
+      Commands := [Mvu.Focus<Msg>(Id)];
+  end case;
+
+  return new Mvu.Transition<Model, Msg>(Next, Commands);
+end function;
+
+function View(State: Model; Viewport: L.Viewport): E.Element<Msg>;
+begin
+  const Base: E.Element<Msg> := E.Column<Msg>(
+    new L.Flow(Gap := L.Spacing.Normal), [
+      E.Checkbox<Msg>(
+        'toggle',
+        'Toggle',
+        State.Checked,
+        function(Value: bool): Msg => Msg.Toggle(Value)
+      ),
+      E.TextInput<Msg>(
+        'text',
+        State.Text,
+        State.Position,
+        function(Edit: Ed.TextEdit): Msg => Msg.Edit(Edit),
+        function(Position: Ed.EditorPosition): Msg => Msg.Navigate(Position)
+      ),
+      E.SelectionList<Msg>(
+        'list',
+        [
+          new C.SelectionItem('first', 'First'),
+          new C.SelectionItem('off', 'Off', false),
+          new C.SelectionItem('last', 'Last', CanActivate := false)
+        ],
+        State.Selected,
+        function(Key: string): Msg => Msg.Select(Key)
+      ),
+      E.Tabs<Msg>(
+        'tabs',
+        [new C.TabItem('one', 'One'), new C.TabItem('two', 'Two')],
+        State.Tab,
+        function(Key: string): Msg => Msg.Tab(Key),
+        function(Key: string): E.Element<Msg> => E.Text<Msg>('Panel: ' + Key)
+      ),
+      E.Button<Msg>('open', 'Open', Msg.Modal(true)),
+      E.Text<Msg>(if State.Completed then 'Work complete' else 'Work pending' end if)
+    ]
+  );
+  return if State.Modal then E.Overlay<Msg>(
+      'modal',
+      Base,
+      E.Button<Msg>('close', 'Close', Msg.Modal(false)),
+      'close',
+      function(): Msg => Msg.Modal(false)
+    )
+    else Base
+    end if;
+end function;
+
+procedure Turn(Session: Tui.HeadlessSession; Input: Tui.Input);
+begin
+  discard Session.Send(Input);
+  discard Session.Step();
+end procedure;
+
+function TerminalTrace(): string;
+begin
+  Trace.Clear();
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    80,
+    30
+  );
+  Turn(Session, Tui.Input.Activate('toggle'));
+  Check(Session.Snapshot().Controls[2].Focused, 'Terminal focus effect.');
+  using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
+    5000
+  );
+  Check(
+    Session.WaitForWork(Deadline.Token).GetAwaiter().GetResult(),
+    'Terminal effect did not post.'
+  );
+  discard Session.Step();
+  Check(Trace.Contains('effect:done'), 'Terminal shared worker result.');
+  Turn(Session, Tui.Input.Focus('list'));
+  Turn(Session, Tui.Input.KeyPress(Keys.Key.Down, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[2].Value = 'last', 'Terminal selection.');
+  Turn(Session, Tui.Input.Focus('tabs'));
+  Turn(Session, Tui.Input.KeyPress(Keys.Key.Right, Keys.KeyModifiers.None));
+  Turn(Session, Tui.Input.Focus('text'));
+  Turn(Session, Tui.Input.Paste('z'));
+  Turn(Session, Tui.Input.Focus('open'));
+  Turn(Session, Tui.Input.Activate('open'));
+  var Focused: string := '';
+  for Control: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    if Control.Focused then
+      Focused := Control.Id;
+    end if;
+  end for;
+
+  Check(Focused = 'close', 'Terminal modal focus.');
+  Turn(Session, Tui.Input.KeyPress(Keys.Key.Escape, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[4].Focused, 'Terminal modal focus restoration.');
+  return Sys.String.Join('|', Trace);
+end function;
+
+function GraphicalTrace(): string;
+  procedure Advance(Session: Gui.Session<Msg>);
+  begin
+    Check(Session.Step(), 'Unexpected GUI close.');
+  end procedure;
+  function Control(Session: Gui.Session<Msg>; Id: string; Key: string := ''): Gui.Control;
+  begin
+    for Entry: Gui.Control in Session.Snapshot().Controls do
+      if Entry.Id = Id and Entry.Key = Key then
+        return Entry;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('Missing graphical control: ' + Id + '/' + Key);
+  end function;
+  procedure Inject();
+  begin
+    if Action = 1 or Action = 2 then
+      Window.MovePointer(Target.X + Target.Width / 2, Target.Y + Target.Height / 2);
+      Window.SetLeftButton(Action = 1);
+    elsif Action = 3 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+    elsif Action = 4 then
+      Window.TypeText('z');
+    end if;
+  end procedure;
+  procedure Click(Session: Gui.Session<Msg>; Id: string);
+  begin
+    Target := Control(Session, Id).Bounds;
+    Action := 1;
+    Advance(Session);
+    Action := 2;
+    Advance(Session);
+    Action := 0;
+    Advance(Session);
+  end procedure;
+begin
+  Trace.Clear();
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Portable widgets',
+    800,
+    700,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  Window.SetReducedMotion(true);
+  var Action: int := 0;
+  var Key: int := 0;
+  var Target: Cui.CuiRectangle := new Cui.CuiRectangle();
+  using const Session: Gui.Session<Msg> := Host.Start<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    Window,
+    64,
+    Inject
+  );
+  Advance(Session);
+  Click(Session, 'toggle');
+  for I: int := 1 to 8 do
+    if Trace.Contains('effect:done') then
+      break;
+    end if;
+
+    Advance(Session);
+  end for;
+
+  Check(
+    Trace.Contains('effect:done') and Control(Session, 'list', 'first').Focused,
+    'Graphical shared worker or focus effect.'
+  );
+  discard Session.Post(Msg.Focus('list'));
+  Advance(Session);
+  Key := 10;
+  Action := 3;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(Control(Session, 'list', 'last').Value = 'True', 'Graphical disabled-item skip.');
+  discard Session.Post(Msg.Focus('tabs'));
+  Advance(Session);
+  Key := 8;
+  Action := 3;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(Control(Session, 'tabs', 'two').Value = 'True', 'Graphical tab navigation.');
+  discard Session.Post(Msg.Focus('text'));
+  Advance(Session);
+  Action := 4;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(Control(Session, 'text').Value = 'abcz', 'Graphical controlled editor.');
+  Click(Session, 'open');
+  Check(
+    Control(Session, 'close').Focused and not Control(Session, 'open').Enabled,
+    'Graphical modal focus.'
+  );
+  Key := 3;
+  Action := 3;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Advance(Session);
+  Check(Control(Session, 'open').Focused, 'Graphical modal focus restoration.');
+  return Sys.String.Join('|', Trace);
+end function;
+
+begin
+  const Terminal: string := TerminalTrace();
+  const Graphical: string := GraphicalTrace();
+  Check(Terminal = Graphical, 'Portable message mismatch: ' + Terminal + ' / ' + Graphical);
+  Check(
+    Terminal = 'toggle:True|effect:done|select:last|tab:two|edit:abcz|modal:True|modal:False',
+    'Unexpected shared transitions: ' + Terminal
+  );
+  Console.WriteLine('portable TUI and GUI contracts verified');
+end;
+end program;

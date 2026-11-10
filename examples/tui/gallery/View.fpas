@@ -1,15 +1,13 @@
 unit Gallery.View;
 
-uses
-  Gallery.State as G, Gallery.Previews as P, Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
-  Fpas.Tui.Themes as Themes, Fpas.Tui.Status as Status, System.Collections.Generic as Generic;
+uses Gallery.State as G, Gallery.Previews as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Tui.Themes as Themes, Fpas.Tui.Status as Status, System.Collections.Generic as Generic;
 
 function Pages(Active: G.Page): E.Element<G.Msg>;
 begin
-  const Items: Generic.List<E.ListItem<G.Msg>> := new Generic.List<E.ListItem<G.Msg>>();
+  const Items: Generic.List<Ch.ListItem<G.Msg>> := new Generic.List<Ch.ListItem<G.Msg>>();
   for Page: G.Page in G.Pages do
     Items.Add(
-      new E.ListItem<G.Msg>(
+      new Ch.ListItem<G.Msg>(
         Page.ToString().ToLowerInvariant(), G.Title(Page), G.Msg.Show(Page), Page = Active
       )
     );
@@ -23,13 +21,13 @@ begin
   const Label: string := Target.ToString();
   return E.Button<G.Msg>(
     'theme-' + Label.ToLowerInvariant(), Label, G.Msg.ChangeTheme(Target),
-    Variant := if Current = Target then E.ButtonVariant.Active else E.ButtonVariant.Secondary end if
+    Variant := if Current = Target then S.ButtonVariant.Active else S.ButtonVariant.Secondary end if
   );
 end function;
 
 function ThemeBar(Current: G.Preset; Columns: int): E.Element<G.Msg>;
 begin
-  const Flow: E.Flow := new E.Flow(Gap := 1);
+  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)));
   const Light: E.Element<G.Msg> := ThemeButton(Current, G.Preset.Light);
   const Dark: E.Element<G.Msg> := ThemeButton(Current, G.Preset.Dark);
   const Green: E.Element<G.Msg> := ThemeButton(Current, G.Preset.Green);
@@ -42,28 +40,40 @@ begin
 
   const Buttons: E.Element<G.Msg> := E.Row<G.Msg>(Flow, Light, Dark, Green, Blue, Amber);
   return if Columns < 52 then Buttons
-    else E.Row<G.Msg>(new E.Flow(Gap := 1), E.Text<G.Msg>('Theme: ' + Current.ToString()), Buttons)
+    else E.Row<G.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      E.Text<G.Msg>('Theme: ' + Current.ToString()),
+      Buttons
+    )
     end if;
 end function;
 
-const PreviousPage: E.ShortcutBinding<G.Msg> := E.Shortcut<G.Msg>(
-  E.Key.PageUp, E.KeyModifiers.None, G.Msg.MovePage(-1)
+const PreviousPage: InputKeys.ShortcutBinding<G.Msg> := InputKeys.Shortcut<G.Msg>(
+  InputKeys.Key.PageUp, InputKeys.KeyModifiers.None, G.Msg.MovePage(-1)
 );
-const NextPage: E.ShortcutBinding<G.Msg> := E.Shortcut<G.Msg>(
-  E.Key.PageDown, E.KeyModifiers.None, G.Msg.MovePage(1)
+const NextPage: InputKeys.ShortcutBinding<G.Msg> := InputKeys.Shortcut<G.Msg>(
+  InputKeys.Key.PageDown, InputKeys.KeyModifiers.None, G.Msg.MovePage(1)
 );
-const Quit: E.ShortcutBinding<G.Msg> := E.Shortcut<G.Msg>(E.Key.Q, E.KeyModifiers.Ctrl, G.Msg.Quit);
+const Quit: InputKeys.ShortcutBinding<G.Msg> := InputKeys.Shortcut<G.Msg>(
+  InputKeys.Key.Q,
+  InputKeys.KeyModifiers.Ctrl,
+  G.Msg.Quit
+);
 
-const Keys: array of E.ShortcutBinding<G.Msg> := [
+const Keys: array of InputKeys.ShortcutBinding<G.Msg> := [
   PreviousPage, NextPage,
-  E.Shortcut<G.Msg>(E.Key.T, E.KeyModifiers.Ctrl, G.Msg.ChooseTab('general')),
+  InputKeys.Shortcut<G.Msg>(
+    InputKeys.Key.T,
+    InputKeys.KeyModifiers.Ctrl,
+    G.Msg.ChooseTab('general')
+  ),
   Quit
 ];
 
 const QuitHint: string := Status.Hint<G.Msg>(Quit, 'Quit');
-const EscapeHint: string := Status.Hint(E.Key.Escape, E.KeyModifiers.None, 'Close');
+const EscapeHint: string := Status.Hint(InputKeys.Key.Escape, InputKeys.KeyModifiers.None, 'Close');
 const Hints: array of string := [
-  QuitHint, Status.Hint(E.Key.Tab, E.KeyModifiers.None, 'Focus'),
+  QuitHint, Status.Hint(InputKeys.Key.Tab, InputKeys.KeyModifiers.None, 'Focus'),
   Status.Hint<G.Msg>(PreviousPage, 'Previous page'), Status.Hint<G.Msg>(NextPage, 'Next page')
 ];
 
@@ -83,15 +93,15 @@ end function;
 function PageButtons(): E.Element<G.Msg>;
 begin
   return E.Row<G.Msg>(
-    new E.Flow(Gap := 1),
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
     E.Button<G.Msg>('previous-page', 'Previous', G.Msg.MovePage(-1)),
     E.Button<G.Msg>('next-page', 'Next', G.Msg.MovePage(1))
   );
 end function;
 
-public function View(State: G.Model; Viewport: App.Viewport): E.Element<G.Msg>;
+function Build(State: G.Model; Viewport: T.Viewport): E.Element<G.Msg>;
 begin
-  const Colors: Themes.Palette := G.Colors(State.Appearance);
+  const Colors: Themes.Theme := G.Colors(State.Appearance);
   const Overlays: array of E.Element<G.Msg> := if State.Overlay then [P.Overlay(State, Colors)]
     else []
     end if;
@@ -99,8 +109,8 @@ begin
     const Help: string := if State.Overlay then ' Escape closes the overlay.'
       else ' Ctrl+Q quits.'
       end if;
-    return E.Screen<G.Msg>(
-      E.Styled<G.Msg>(E.Text<G.Msg>('Resize to 32 × 12.' + Help), Colors.Heading),
+    return Views.Screen<G.Msg>(
+      E.CellStyled<G.Msg>(E.Text<G.Msg>('Resize to 32 × 12.' + Help), Colors.Heading),
       Overlays, Keys
     );
   end if;
@@ -108,38 +118,54 @@ begin
   const Compact: bool := Viewport.Columns < 42;
   const Dimensions: string := Viewport.Columns.ToString() + ' × ' + Viewport.Rows.ToString();
   const Heading: string := if Compact then 'Gallery' else 'FPAS  /  Widget Gallery' end if;
-  const Preview: E.Element<G.Msg> := E.Styled<G.Msg>(
+  const Preview: E.Element<G.Msg> := E.CellStyled<G.Msg>(
     E.Border<G.Msg>(
       E.Column<G.Msg>(
-        new E.Flow(Padding := if Compact then 0 else 1 end if),
-        E.Size<G.Msg>(P.Body(State, Colors), new E.Flex(Grow := 1))
+        new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(if Compact then 0 else 1 end if))),
+        E.Size<G.Msg>(P.Body(State, Colors), new L.Flex(Grow := 1))
       ), G.Title(State.Active)
     ),
     Colors.Panel
   );
   const Body: E.Element<G.Msg> := if Compact then Preview
     else E.Row<G.Msg>(
-      new E.Flow(Gap := 1),
-      E.Size<G.Msg>(Pages(State.Active), new E.Flex(Basis := 17, Minimum := 11)),
-      E.Size<G.Msg>(Preview, new E.Flex(Basis := 0, Grow := 1))
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      E.Size<G.Msg>(
+        Pages(State.Active),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(17)), Minimum := L.Measure.Cells(11))
+      ),
+      E.Size<G.Msg>(Preview, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(0)), Grow := 1))
     )
     end if;
-  const Line: E.Element<G.Msg> := E.Styled<G.Msg>(StatusLine(State, Compact), Colors.Muted);
+  const Line: E.Element<G.Msg> := E.CellStyled<G.Msg>(StatusLine(State, Compact), Colors.Muted);
   const Footer: E.Element<G.Msg> := if Compact then E.Row<G.Msg>(
-      new E.Flow(Gap := 1), PageButtons(), E.Size<G.Msg>(Line, new E.Flex(Basis := 0, Grow := 1))
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      PageButtons(),
+      E.Size<G.Msg>(Line, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(0)), Grow := 1))
     )
     else Line
     end if;
-  return E.Screen<G.Msg>(
+  return Views.Screen<G.Msg>(
     E.Column<G.Msg>(
-      new E.Flow(Padding := 1, Gap := if Compact then 0 else 1 end if),
-      E.Styled<G.Msg>(E.Text<G.Msg>(Heading + '   ' + Dimensions), Colors.Heading),
-      E.Size<G.Msg>(Body, new E.Flex(Basis := 4, Grow := 1)),
+      new L.Flow(
+        Padding := L.Spacing.Fixed(L.Measure.Cells(1)),
+        Gap := L.Spacing.Fixed(L.Measure.Cells(if Compact then 0 else 1 end if))
+      ),
+      E.CellStyled<G.Msg>(E.Text<G.Msg>(Heading + '   ' + Dimensions), Colors.Heading),
+      E.Size<G.Msg>(Body, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(4)), Grow := 1)),
       ThemeBar(State.Appearance, Viewport.Columns),
       Footer
     ),
     Overlays,
     Keys
+  );
+end function;
+
+public function View(State: G.Model; Viewport: L.Viewport): E.Element<G.Msg>;
+begin
+  return Views.Viewport<G.Msg>(
+    'gallery-window',
+    function(Size: T.Viewport): E.Element<G.Msg> => Build(State, Size)
   );
 end function;
 end unit;

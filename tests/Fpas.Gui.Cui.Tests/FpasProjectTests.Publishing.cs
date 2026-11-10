@@ -99,7 +99,7 @@ public sealed partial class FpasProjectTests
         string executable = Path.Combine(output, entry);
         if (mode == "aot")
         {
-            string dependencies = await InspectDependencies(executable);
+            string dependencies = await NativeDependencies.Read(executable);
             Assert.DoesNotContain("fpas_cui", dependencies, StringComparison.OrdinalIgnoreCase);
             Assert.Contains(OperatingSystem.IsWindows() ? "opengl32.dll" : "libX11.so.6", dependencies, StringComparison.OrdinalIgnoreCase);
         }
@@ -190,23 +190,4 @@ public sealed partial class FpasProjectTests
         }
     }
 
-    private static async Task<string> InspectDependencies(string executable)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            var readelf = await ProcessRunner.RunExecutableAsync("readelf", ["--wide", "--dynamic", executable]);
-            Assert.True(readelf.ExitCode == 0, readelf.Output + readelf.Error);
-            return readelf.Output;
-        }
-
-        string vswhere = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-            "Microsoft Visual Studio", "Installer", "vswhere.exe");
-        var locate = await ProcessRunner.RunExecutableAsync(vswhere, ["-latest", "-products", "*", "-requires",
-            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-find", @"VC\Tools\MSVC\**\bin\Hostx64\x64\dumpbin.exe"]);
-        Assert.True(locate.ExitCode == 0, locate.Output + locate.Error);
-        string dumpbin = Assert.Single(locate.Output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries));
-        var dump = await ProcessRunner.RunExecutableAsync(dumpbin, ["/dependents", executable]);
-        Assert.True(dump.ExitCode == 0, dump.Output + dump.Error);
-        return dump.Output;
-    }
 }

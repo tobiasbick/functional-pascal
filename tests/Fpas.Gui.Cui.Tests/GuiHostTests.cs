@@ -6,7 +6,7 @@ namespace Fpas.Gui.Cui.Tests;
 /// <summary>Exercises the FPAS MVU owner loop with real CUI presentation and native interactions.</summary>
 public sealed class GuiHostTests
 {
-    /// <summary>Builds the public example and runs frame, input, validation, lifetime and queue contracts.</summary>
+    /// <summary>Builds the public examples and checks frame, input, validation, lifetime and queue contracts.</summary>
     /// <param name="renderer">The renderer that must be selected by the FPAS host.</param>
     [GuiTheory]
     [InlineData("software")]
@@ -37,11 +37,15 @@ public sealed class GuiHostTests
             foreach (var reference in project.Descendants("ProjectReference").Where(reference =>
                 reference.Attribute("Include")!.Value.EndsWith("Fpas.Gui.Cui.csproj", StringComparison.Ordinal)))
                 reference.SetAttributeValue("Include", TestEnvironment.Metadata("FpasCuiProject"));
+            foreach (var reference in project.Descendants("ProjectReference").Where(reference =>
+                reference.Attribute("Include")!.Value.EndsWith("Fpas.Processes.csproj", StringComparison.Ordinal)))
+                reference.SetAttributeValue("Include", TestEnvironment.Metadata("FpasProcessesProject"));
             project.Save(path);
         }
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = directory.File("packages"), ["LD_LIBRARY_PATH"] = null };
         foreach (string project in new[] { "src/Fpas.Mvu/Fpas.Mvu.fpasproj", "src/Fpas.Ui/Fpas.Ui.fpasproj",
-            "src/Fpas.Gui/Fpas.Gui.fpasproj", "examples/gui/counter/GuiCounter.fpasproj", "examples/gui/gallery/GuiWidgetGallery.fpasproj" })
+            "src/Fpas.Gui/Fpas.Gui.fpasproj", "src/Fpas.Tui/Fpas.Tui.fpasproj",
+            "examples/gui/counter/GuiCounter.fpasproj", "examples/gui/gallery/GuiWidgetGallery.fpasproj" })
         {
             var build = await ProcessRunner.RunAsync(["build", directory.File(project), "-c", configuration,
                 "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
@@ -70,5 +74,30 @@ public sealed class GuiHostTests
         Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
         Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
         PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);
+
+        if (renderer != "software") return;
+        File.WriteAllText(directory.File("Portable.fpasproj"), $"""
+            <Project Sdk="Fpas.NET.Sdk/{version}">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <OutputType>Exe</OutputType>
+                <EnableDefaultFpasCompileItems>false</EnableDefaultFpasCompileItems>
+              </PropertyGroup>
+              <ItemGroup>
+                <Compile Remove="**/*.fpas" />
+                <Compile Include="PortableContract.fpas" />
+                <ProjectReference Include="src/Fpas.Tui/Fpas.Tui.fpasproj" />
+                <ProjectReference Include="src/Fpas.Gui/Fpas.Gui.fpasproj" />
+              </ItemGroup>
+            </Project>
+            """);
+        var portableBuild = await ProcessRunner.RunAsync(["build", directory.File("Portable.fpasproj"), "-c", configuration,
+            "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
+            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
+        Assert.True(portableBuild.ExitCode == 0, portableBuild.Output + portableBuild.Error);
+        var portable = await ProcessRunner.RunAsync([directory.File($"bin/{configuration}/net10.0/Portable.dll")],
+            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(30));
+        Assert.True(portable.ExitCode == 0, portable.Output + portable.Error);
+        Assert.Equal("portable TUI and GUI contracts verified" + Environment.NewLine, portable.Output);
     }
 }

@@ -1,0 +1,222 @@
+unit Fpas.Ui.Internal.Rules;
+
+uses Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Graphics as G, System as Sys, System.Text as Text, System.Collections.Generic as Generic;
+
+const StrictUtf8: Sys.Text.UTF8Encoding := new Sys.Text.UTF8Encoding(false, true);
+
+/// Raises a diagnostic for a rejected view option.
+/// <param name="Location">Tree path or control identity.</param>
+/// <param name="Message">Violated contract.</param>
+public procedure Reject(Location: string; Message: string);
+begin
+  raise new Sys.ArgumentException(Location + ' — ' + Message);
+end procedure;
+
+/// Checks that text can be passed to either host without truncation or invalid encoding.
+/// <param name="Value">Text to validate.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckText(Value: string; Location: string);
+begin
+  if Value.Contains(Sys.Char.MinValue) then
+    Reject(Location, 'Text contains an embedded zero character.');
+  end if;
+
+  try
+    discard StrictUtf8.GetByteCount(Value);
+  catch Error: Text.EncoderFallbackException do
+    Reject(Location, 'Text contains an invalid UTF-16 sequence.');
+  end try;
+end procedure;
+
+/// Checks explicit units and a nonnegative distance.
+/// <param name="Value">Explicit distance.</param>
+/// <param name="Profile">Receiving host profile.</param>
+/// <param name="Location">Diagnostic location.</param>
+/// <returns>The validated distance in its declared units.</returns>
+public function CheckMeasure(Value: L.Measure; Profile: V.Target; Location: string): int;
+begin
+  var Amount: int := 0;
+  case Value of
+    when L.Measure.Cells(const Cells: int):
+      if Profile <> V.Target.Terminal then
+        Reject(Location, 'Cell units require the terminal profile.');
+      end if;
+
+      Amount := Cells;
+    when L.Measure.Logical(const Units: int):
+      if Profile <> V.Target.Graphical then
+        Reject(Location, 'Logical units require the graphical profile.');
+      end if;
+
+      Amount := Units;
+  end case;
+
+  if Amount < 0 then
+    Reject(Location, 'A distance must be nonnegative.');
+  end if;
+
+  return Amount;
+end function;
+
+/// Checks size units, ordered bounds and nonnegative allocation weights.
+/// <param name="Settings">Size constraints.</param>
+/// <param name="Profile">Receiving host profile.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckFlex(Settings: L.Flex; Profile: V.Target; Location: string);
+begin
+  if Settings.Grow < 0 or Settings.Shrink < 0 then
+    Reject(Location, 'Growth and shrinkage weights must be nonnegative.');
+  end if;
+
+  case Settings.Basis of
+    when L.Extent.Fixed(const Value: L.Measure):
+      discard CheckMeasure(Value, Profile, Location + '/basis');
+    else
+  end case;
+  const Min: L.Measure? := Settings.Minimum;
+  const Max: L.Measure? := Settings.Maximum;
+  const Minimum: int := if Min = null then 0
+    else CheckMeasure(
+      Min,
+      Profile,
+      Location + '/minimum'
+    )
+    end if;
+  const Maximum: int := if Max = null then int.MaxValue
+    else CheckMeasure(
+      Max,
+      Profile,
+      Location + '/maximum'
+    )
+    end if;
+  if Minimum > Maximum then
+    Reject(Location, 'The minimum exceeds the maximum.');
+  end if;
+end procedure;
+
+/// Checks the units of explicit spacing.
+/// <param name="Value">Semantic or explicit spacing.</param>
+/// <param name="Profile">Receiving host profile.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckSpacing(Value: L.Spacing; Profile: V.Target; Location: string);
+begin
+  case Value of
+    when L.Spacing.Fixed(const Amount: L.Measure):
+      discard CheckMeasure(Amount, Profile, Location);
+    else
+  end case;
+end procedure;
+
+/// Adds a valid collection-local identity and rejects duplicates.
+/// <param name="Keys">Previously visited keys.</param>
+/// <param name="Key">Item identity.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckKey(Keys: Generic.HashSet<string>; Key: string; Location: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(Key) then
+    Reject(Location, 'Item keys must be nonempty.');
+  end if;
+
+  CheckText(Key, Location);
+  if not Keys.Add(Key) then
+    Reject(Location, 'Duplicate item key ' + Key + '.');
+  end if;
+end procedure;
+
+/// Checks that a supplied selection refers to an item in the collection.
+/// <param name="Keys">Permitted item identities.</param>
+/// <param name="Key">Requested selection, or null.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckSelected(Keys: Generic.HashSet<string>; Key: string?; Location: string);
+begin
+  if Key <> null and not Keys.Contains(Key) then
+    Reject(Location, 'Unknown selected key ' + Key + '.');
+  end if;
+end procedure;
+
+/// Checks normalized text and directional grapheme-boundary selection.
+/// <param name="Value">Model-owned text.</param>
+/// <param name="Position">Model-owned selection.</param>
+/// <param name="MultipleLines">Whether LF line breaks are permitted.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckEditor(Value: string; Position: Ed.EditorPosition; MultipleLines: bool; Location: string);
+begin
+  CheckText(Value, Location);
+  if Value.Contains(
+    cast<char>(13)
+  ) or Value.Contains(cast<char>(8232)) or Value.Contains(cast<char>(8233))
+  then
+    Reject(Location, 'Normalize document line breaks to LF before setting its selection.');
+  end if;
+
+  if not MultipleLines and Value.Contains(cast<char>(10)) then
+    Reject(Location, 'A single-line document contains a line break.');
+  end if;
+
+  if not Ed.ValidPosition(Value, Position) then
+    Reject(Location, 'Caret and anchor must be UTF-16 grapheme boundaries within the document.');
+  end if;
+end procedure;
+
+/// Rejects a backend extension on an incompatible target.
+/// <param name="Profile">Receiving host profile.</param>
+/// <param name="Required">Extension owner.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure RequireProfile(Profile: V.Target; Required: V.Target; Location: string);
+begin
+  if Profile <> Required then
+    Reject(Location, 'This extension requires the ' + Required.ToString() + ' profile.');
+  end if;
+end procedure;
+
+/// Checks a terminal color override.
+/// <param name="Value">24-bit RGB value, or null to inherit.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckColor(Value: int?; Location: string);
+begin
+  if Value <> null and (Value < 0 or Value > 16777215) then
+    Reject(Location, 'Terminal colors must be 24-bit RGB values.');
+  end if;
+end procedure;
+
+/// Checks a positive logical drawing extent.
+/// <param name="Width">Logical width.</param>
+/// <param name="Height">Logical height.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckViewport(Width: int; Height: int; Location: string);
+begin
+  if Width <= 0 or Height <= 0 then
+    Reject(Location, 'The graphical viewport needs positive dimensions.');
+  end if;
+end procedure;
+
+/// Checks finite vector geometry and positive extents or strokes.
+/// <param name="Paint">Drawing operation.</param>
+/// <param name="Location">Diagnostic location.</param>
+public procedure CheckPaint(Paint: G.Paint; Location: string);
+begin
+  case Paint of
+    when G.Paint.FillRect(
+      const X: double, const Y: double, const Width: double, const Height: double, _
+    ):
+      if not (double.IsFinite(X) and double.IsFinite(Y) and double.IsFinite(Width)
+        and double.IsFinite(Height) and Width > 0.0 and Height > 0.0)
+      then
+        Reject(Location, 'A rectangle needs finite coordinates and positive extents.');
+      end if;
+    when G.Paint.Line(
+      const X1: double,
+      const Y1: double,
+      const X2: double,
+      const Y2: double,
+      const Thickness: double,
+      _
+    ):
+      if not (double.IsFinite(X1) and double.IsFinite(Y1) and double.IsFinite(X2)
+        and double.IsFinite(Y2) and double.IsFinite(Thickness) and Thickness > 0.0)
+      then
+        Reject(Location, 'A line needs finite coordinates and positive thickness.');
+      end if;
+  end case;
+end procedure;
+end unit;

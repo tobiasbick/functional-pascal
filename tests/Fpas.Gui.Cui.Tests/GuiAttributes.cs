@@ -18,6 +18,13 @@ internal sealed class GuiTheoryAttribute : TheoryAttribute
     public GuiTheoryAttribute() => Skip = GuiAvailability.SkipReason;
 }
 
+internal sealed class X11GuiFactAttribute : FactAttribute
+{
+    public X11GuiFactAttribute() => Skip = !OperatingSystem.IsLinux()
+        ? "This OS event-path check uses X11/XTest on Linux."
+        : GuiAvailability.SkipReason;
+}
+
 internal sealed class GuiPublishingFactAttribute : FactAttribute
 {
     public GuiPublishingFactAttribute() => Skip = GuiAvailability.SkipReason ??

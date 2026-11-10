@@ -1,17 +1,19 @@
 program CanvasInputContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, System as Sys, System.Console as Console;
 
 type State = record
   public Notice: string := '';
   public Editor: string := '';
+  public Position: Ed.EditorPosition := new Ed.EditorPosition();
   public Columns: int := 0;
   public Rows: int := 0;
 end record;
 
 type Msg = union
   Resized(Columns: int; Rows: int);
-  Edited(Text: string);
+  Edited(Value: Ed.TextEdit);
+  Navigated(Position: Ed.EditorPosition);
   Shortcut;
 end union;
 
@@ -23,8 +25,12 @@ begin
       Columns := Columns;
       Rows := Rows;
     end with;
-    when Msg.Edited(const Text: string): Model with
-      Editor := Text;
+    when Msg.Edited(const Value: Ed.TextEdit): Model with
+      Editor := Value.Text;
+      Position := Value.Position;
+    end with;
+    when Msg.Navigated(const Position: Ed.EditorPosition): Model with
+      Position := Position;
     end with;
     when Msg.Shortcut: Model with
       Notice := Model.Notice + 'shortcut ';
@@ -39,24 +45,33 @@ begin
 end function;
 
 function View(Model: State): E.Element<Msg>;
-  function Draw(Column: int; Row: int): E.Cell;
+  function Draw(Column: int; Row: int): T.Cell;
   begin
     if Column >= Model.Columns or Row >= Model.Rows then
       raise new Sys.InvalidOperationException('Canvas drew before its size was reported.');
     end if;
 
-    return new E.Cell('X', new E.Style(Foreground := $117733));
+    return new T.Cell('X', new T.Style(Foreground := $117733));
   end function;
 begin
-  return E.Screen<Msg>(
+  return Views.Screen<Msg>(
     E.Column<Msg>(
-      E.Size<Msg>(E.Text<Msg>(Model.Notice), new E.Flex(Basis := 1, Minimum := 1)),
       E.Size<Msg>(
-        E.CellCanvas<Msg>('viewport', Draw, new E.CanvasEvents<Msg>(OnResize := Resize)),
-        new E.Flex(Grow := 1)
+        E.Text<Msg>(Model.Notice),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(1)), Minimum := L.Measure.Cells(1))
       ),
-      E.TextInput<Msg>('editor', Model.Editor, function(Text: string): Msg => Msg.Edited(Text))
-    ), [], [E.CharacterShortcut<Msg>('2', Msg.Shortcut)]
+      E.Size<Msg>(
+        E.CellCanvas<Msg>('viewport', Draw, new T.CanvasEvents<Msg>(OnResize := Resize)),
+        new L.Flex(Grow := 1)
+      ),
+      E.TextInput<Msg>(
+        'editor',
+        Model.Editor,
+        Model.Position,
+        function(Value: Ed.TextEdit): Msg => Msg.Edited(Value),
+        function(Position: Ed.EditorPosition): Msg => Msg.Navigated(Position)
+      )
+    ), [], [InputKeys.CharacterShortcut<Msg>('2', Msg.Shortcut)]
   );
 end function;
 
@@ -93,7 +108,7 @@ begin
     8
   );
   ExpectNotice(Session, '36x6');
-  if Session.Snapshot().Cells[36].Style.Foreground <> $117733 then
+  if Session.Snapshot().Cells[36].Colors.Foreground <> $117733 then
     raise new Sys.InvalidOperationException('Canvas focus changed a drawn pixel.');
   end if;
 

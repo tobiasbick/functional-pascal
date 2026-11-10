@@ -188,6 +188,7 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Gui` | FPAS owner loop adapting shared MVU transitions and validated widget trees to CUI |
 | `Fpas.Mvu` | FPAS model/mailbox runtime and background-effect lifetime shared by UI hosts |
 | `Fpas.Ui` | Host-independent FPAS widget data, cached subviews and validation profiles |
+| `Fpas.Tui` | FPAS terminal owner loop, shared-widget adapter, native cell layout and rendering; depends on MVU and Ui without CUI |
 | `Fpas.Compiler.Tests` | C# xUnit unit tests for compiler components and their observable rules |
 | `Fpas.IntegrationTests` | C# xUnit tests for the actual compiler executable, generated programs, .NET interop, and complete MSBuild builds |
 | `Fpas.Gui.Cui.Tests` | Native GUI/interop tests and the packaged-SDK FPAS GUI fixture |

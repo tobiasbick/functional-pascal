@@ -1,33 +1,31 @@
 unit Fpas.Tui.Internal.Rendering.Presentation;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  System as Sys, System.IO as IO, System.Text as Text;
+uses Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.IO as IO, System.Text as Text;
 
-function Color(Value: int; Foreground: bool): string;
+function Color(Value: int?; Foreground: bool): string;
 begin
-  if Value < 0 then
+  if Value = null then
     return if Foreground then '39' else '49' end if;
   end if;
-  const Rgb: int := Sys.Math.Min(Value, 16777215);
+  const Rgb: int := Sys.Math.Min(cast<int>(Value), 16777215);
   return (if Foreground then '38;2;' else '48;2;' end if) + (Rgb div 65536).ToString() + ';' +
     (Rgb div 256 mod 256).ToString() + ';' + (Rgb mod 256).ToString();
 end function;
 
-public function Create(WriteOutput: procedure(string)): procedure(int, int, array of E.Cell);
-  procedure Write(Columns: int; Rows: int; Cells: array of E.Cell; Full: bool);
+public function Create(WriteOutput: procedure(string)): procedure(int, int, array of T.Cell);
+  procedure Write(Columns: int; Rows: int; Cells: array of T.Cell; Full: bool);
   begin
     const Output: Text.StringBuilder := new Text.StringBuilder();
     if Full then
       discard Output.Append(Escape).Append('[2J');
     end if;
-    var Style: E.Style? := null;
+    var Style: T.Style? := null;
     for Y: int := 0 to Rows - 1 do
       var X: int := 0;
       var Cursor: int := -1;
       while X < Columns do
         const Index: int := Y * Columns + X;
-        const Cell: E.Cell := Cells[Index];
+        const Cell: T.Cell := Cells[Index];
         const Span: int := Sys.Math.Max(1, G.Width(Cell.Text));
         if Cell.Text <> '' and (Full or Cell <> Baseline[Index]
           or (Span = 2 and X + 1 < Columns and Cells[Index + 1] <> Baseline[Index + 1]))
@@ -37,12 +35,12 @@ public function Create(WriteOutput: procedure(string)): procedure(int, int, arra
               Y + 1
             ).Append(';').Append(X + 1).Append('H');
           end if;
-          const Previous: E.Style? := Style;
-          if Previous = null or Previous <> Cell.Style then
+          const Previous: T.Style? := Style;
+          if Previous = null or Previous <> Cell.Colors then
             discard Output.Append(Escape).Append('[').Append(
-              Color(Cell.Style.Foreground, true)
-            ).Append(';').Append(Color(Cell.Style.Background, false)).Append('m');
-            Style := Cell.Style;
+              Color(Cell.Colors.Foreground, true)
+            ).Append(';').Append(Color(Cell.Colors.Background, false)).Append('m');
+            Style := Cell.Colors;
           end if;
 
           discard Output.Append(Cell.Text);
@@ -59,7 +57,7 @@ public function Create(WriteOutput: procedure(string)): procedure(int, int, arra
     end if;
   end procedure;
 
-  procedure Present(Columns: int; Rows: int; Cells: array of E.Cell);
+  procedure Present(Columns: int; Rows: int; Cells: array of T.Cell);
   begin
     try
       Write(Columns, Rows, Cells, Columns <> LastColumns or Rows <> LastRows);
@@ -77,7 +75,7 @@ begin
   const Escape: char := #27;
   var LastColumns: int := 0;
   var LastRows: int := 0;
-  var Baseline: array of E.Cell := [];
+  var Baseline: array of T.Cell := [];
   return Present;
 end function;
 end unit;

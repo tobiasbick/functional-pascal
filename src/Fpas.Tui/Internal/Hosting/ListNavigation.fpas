@@ -1,37 +1,48 @@
 unit Fpas.Tui.Internal.Hosting.ListNavigation;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.SelectionLists as S,
-  Fpas.Tui.Internal.Controls.Selection as Selections, System as Sys;
+uses Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Controls.Selection as Selections, System as Sys;
 
 public function Key<TMsg>(
-  List: S.Viewport<TMsg>; Pressed: E.Key; Modifiers: E.KeyModifiers; Apply: procedure(TMsg);
+  List: S.Viewport<TMsg>; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg);
   Scroll: procedure(int)
 ): bool;
 begin
-  if Modifiers <> E.KeyModifiers.None then
+  if Modifiers <> K.KeyModifiers.None then
     return false;
   end if;
   const Last: int := List.Items.Length - 1;
   var Next: int := List.Selected;
   case Pressed of
-    when E.Key.Up:
+    when K.Key.Up:
       Next := if Next < 0 then Last else Next - 1 end if;
-    when E.Key.Down:
+    when K.Key.Down:
       Next := Next + 1;
-    when E.Key.Home:
+    when K.Key.Home:
       Next := 0;
-    when E.Key.End:
+    when K.Key.End:
       Next := Last;
-    when E.Key.PageUp:
+    when K.Key.PageUp:
       Next := if Next < 0 then Last else Next - List.Rows end if;
-    when E.Key.PageDown:
+    when K.Key.PageDown:
       Next := if Next < 0 then 0 else Next + List.Rows end if;
     else
       return false;
   end case;
 
-  const Index: int := Sys.Math.Clamp(Next, 0, Last);
+  const Direction: int := if Pressed = K.Key.Up or Pressed = K.Key.Home or Pressed =
+      K.Key.PageUp then -1
+    else 1
+    end if;
+  const SearchDirection: int := if Pressed = K.Key.Home then 1
+    elsif Pressed = K.Key.End then -1
+    else Direction
+    end if;
+  const Index: int := Selections.Find<TMsg>(
+    List,
+    Sys.Math.Clamp(Next, 0, Last),
+    SearchDirection,
+    false
+  );
   if Index = List.Selected then
     Scroll(S.Reveal(Index, List.First, List.Rows));
   else

@@ -1,18 +1,6 @@
 unit Fpas.Tui.Application;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Elements as E, Fpas.Tui.Internal.Hosting.Session as Host,
-  Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
-  Fpas.Processes.Terminal as Terminal,
-  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
-
-/// The current terminal size in cells, before layout.
-public type Viewport = record
-  /// Width in cells.
-  public Columns: int;
-  /// Height in cells.
-  public Rows: int;
-end record;
+uses Fpas.Ui.Editors as Ed, Fpas.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Tui.Internal.Hosting.Session as Host, Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 /// An event to route against the current terminal view.
 public type Input = union
@@ -23,7 +11,7 @@ public type Input = union
   /// Change the viewport to the supplied size in cells.
   Resize(Columns: int; Rows: int);
   /// Press a named key with the supplied modifiers.
-  KeyPress(Key: E.Key; Modifiers: E.KeyModifiers);
+  KeyPress(Key: K.Key; Modifiers: K.KeyModifiers);
   /// Route one typed character.
   Character(Text: string);
   /// Insert text into the focused editor.
@@ -33,11 +21,11 @@ public type Input = union
   /// Click the primary button at the supplied cell.
   Click(Column: int; Row: int);
   /// Click the supplied mouse button at the supplied cell.
-  ButtonClick(Button: E.MouseButton; Column: int; Row: int);
+  ButtonClick(Button: K.MouseButton; Column: int; Row: int);
   /// Route a pointer event at the supplied cell.
-  Pointer(Kind: E.PointerKind; Column: int; Row: int);
+  Pointer(Kind: K.PointerKind; Column: int; Row: int);
   /// Route a pointer event with a button at the supplied cell.
-  ButtonPointer(Kind: E.PointerKind; Button: E.MouseButton; Column: int; Row: int);
+  ButtonPointer(Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
   /// Scroll at the supplied cell. Negative deltas scroll up.
   Scroll(Column: int; Row: int; Delta: int);
 end union;
@@ -66,6 +54,8 @@ public type ControlSnapshot = record
   public Hovered: bool;
   /// Whether the control accepts interaction.
   public Enabled: bool;
+  /// Directional UTF-16 editor selection, or null for other controls.
+  public Position: Ed.EditorPosition? := null;
 end record;
 
 /// A detached snapshot of a successfully presented terminal view.
@@ -79,7 +69,7 @@ public type Frame = record
   /// Rows as plain text.
   public Lines: array of string;
   /// Styled cells in row order.
-  public Cells: array of E.Cell;
+  public Cells: array of T.Cell;
   /// Visible control descriptors.
   public Controls: array of ControlSnapshot;
 end record;
@@ -214,10 +204,10 @@ end record;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int
 ): HeadlessSession;
 begin
-  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new E.Theme());
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
 end function;
 
 /// Starts a manually driven terminal session.
@@ -232,11 +222,11 @@ end function;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Theme: E.Theme
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
 ): HeadlessSession;
 begin
   return StartHeadless<TModel, TMsg>(
-    InitialModel, Update, View, Columns, Rows, function(State: TModel): E.Theme => Theme
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
   );
 end function;
 
@@ -252,12 +242,12 @@ end function;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): E.Theme
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): Th.Theme
 ): HeadlessSession;
 begin
   return StartHeadless<TModel, TMsg>(
     InitialModel, Update,
-    function(State: TModel; Size: Viewport): E.Element<TMsg> => View(State),
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
     Columns, Rows, ThemeFor
   );
 end function;
@@ -273,10 +263,10 @@ end function;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int
 ): HeadlessSession;
 begin
-  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new E.Theme());
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
 end function;
 
 /// Starts a manually driven terminal session.
@@ -291,11 +281,11 @@ end function;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int; Theme: E.Theme
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
 ): HeadlessSession;
 begin
   return StartHeadless<TModel, TMsg>(
-    InitialModel, Update, View, Columns, Rows, function(State: TModel): E.Theme => Theme
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
   );
 end function;
 
@@ -311,8 +301,8 @@ end function;
 /// <returns>The session with its initial frame published.</returns>
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int;
-  ThemeFor: function(TModel): E.Theme
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+  ThemeFor: function(TModel): Th.Theme
 ): HeadlessSession;
   procedure Present(Value: Frame);
   begin
@@ -337,13 +327,13 @@ end function;
 /// <param name="Update">The application transition called for each message.</param>
 /// <param name="View">Builds the terminal view from the current model.</param>
 public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): E.Element<TMsg>
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, new E.Theme());
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
 end procedure;
 
-function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of E.Cell);
+function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of T.Cell);
   procedure WriteOutput(Value: string);
   begin
     Device.Write(Value);
@@ -360,10 +350,10 @@ end function;
 /// <param name="View">Builds the terminal view from the current model.</param>
 /// <param name="Theme">The fixed theme.</param>
 public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): E.Element<TMsg>; Theme: E.Theme
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>; Theme: Th.Theme
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): E.Theme => Theme);
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
 end procedure;
 
 /// Resolves the theme from the current model before drawing each terminal frame.
@@ -375,11 +365,13 @@ end procedure;
 /// <param name="ThemeFor">Selects the theme for the current model.</param>
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; ThemeFor: function(TModel): E.Theme
+  View: function(TModel): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
 );
 begin
   Run<TModel, TMsg>(
-    InitialModel, Update, function(State: TModel; Size: Viewport): E.Element<TMsg> => View(State),
+    InitialModel,
+    Update,
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
     ThemeFor
   );
 end procedure;
@@ -392,10 +384,10 @@ end procedure;
 /// <param name="View">Builds the terminal view from the current model and viewport.</param>
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, new E.Theme());
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
 end procedure;
 
 /// Runs the application on the current terminal.
@@ -407,13 +399,13 @@ end procedure;
 /// <param name="Theme">The fixed theme.</param>
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>; Theme: E.Theme
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Theme: Th.Theme
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): E.Theme => Theme);
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
 end procedure;
 
-/// Gives the view the terminal dimensions before laying out each frame.
+/// Gives the view portable size classes before laying out each frame.
 /// <typeparam name="TModel">The application model type.</typeparam>
 /// <typeparam name="TMsg">The application message type.</typeparam>
 /// <param name="InitialModel">The model before processing messages.</param>
@@ -422,7 +414,7 @@ end procedure;
 /// <param name="ThemeFor">Selects the theme for the current model.</param>
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, Viewport): E.Element<TMsg>; ThemeFor: function(TModel): E.Theme
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
 );
   procedure Present(Value: Frame);
   begin
@@ -430,7 +422,7 @@ public procedure Run<TModel, TMsg>(
   end procedure;
 begin
   using const Device: Terminal.ConsoleTerminal := new Terminal.ConsoleTerminal();
-  const Write: procedure(int, int, array of E.Cell) := TerminalWriter(Device);
+  const Write: procedure(int, int, array of T.Cell) := TerminalWriter(Device);
   const Session: HeadlessSession := Host.Start<TModel, TMsg>(
     InitialModel,
     Update,

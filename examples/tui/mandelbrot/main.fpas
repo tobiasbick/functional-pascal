@@ -1,8 +1,6 @@
 program MandelbrotExplorer;
 
-uses
-  Fpas.Tui.Application as App, Fpas.Tui.Themes as Themes,
-  Mandelbrot.Explorer as Explorer, Mandelbrot.Model as M, System.Threading as Threads;
+uses Fpas.Tui.Application as App, Fpas.Tui.Themes as Themes, Mandelbrot.Explorer as Explorer, Mandelbrot.Model as M, System.Threading as Threads;
 
 begin
   using const Gate: Threads.SemaphoreSlim := new Threads.SemaphoreSlim(1, 1);
@@ -10,7 +8,7 @@ begin
     new M.State(),
     Explorer.CreateUpdate(Gate),
     Explorer.View,
-    Themes.Dark().Theme
+    Themes.Dark()
   );
 end;
 end program;

@@ -180,7 +180,19 @@ begin
     Views = 4 and CacheBuilds = 1 and Updates = 1,
     'Resize invalidation or cached subtree reuse.'
   );
-  Window.CapturePng(Capture);
+  const BeforeCaptureId: long := Session.Snapshot().Id;
+  var CaptureFailed: bool := false;
+  try
+    Session.CapturePng(Capture + '/missing.png');
+  catch Error: Sys.IO.IOException do
+    CaptureFailed := true;
+  end try;
+
+  Check(
+    CaptureFailed and Session.IsOpen() and Session.Snapshot().Id = BeforeCaptureId,
+    'Capture failure changed session state.'
+  );
+  Session.CapturePng(Capture);
   discard Session.Post(Msg.Quit);
   Check(not Session.Step() and not Session.IsOpen(), 'Exit did not close.');
   case Session.Post(Msg.Increment) of
@@ -269,7 +281,13 @@ begin
         Rejected := Rejected + 1;
       end try;
 
-      Check(Rejected = 3, 'Owner checks.');
+      try
+        Session.CapturePng('wrong-owner.png');
+      catch Error: Sys.InvalidOperationException do
+        Rejected := Rejected + 1;
+      end try;
+
+      Check(Rejected = 4, 'Owner checks.');
       case Session.Post(Msg.Increment) of
         when Runtime.Admission.Queued:
         else

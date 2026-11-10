@@ -125,24 +125,6 @@ begin
   ).Replace(#13, #32).Replace(#10, #32).Replace(#8232, #32).Replace(#8233, #32);
 end function;
 
-public function ViewStart(Value: string; Caret: int; Columns: int): int;
-begin
-  if Columns <= 0 then
-    return Caret;
-  end if;
-  const Prefix: string := Value.Substring(0, Caret);
-  var Remaining: int := Measure(Prefix);
-  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Prefix);
-  var Start: int := 0;
-  while Remaining >= Columns and Glyphs.MoveNext() do
-    const Glyph: string := Glyphs.GetTextElement();
-    Remaining := Remaining - Width(Glyph);
-    Start := Glyphs.ElementIndex + Glyph.Length;
-  end while;
-
-  return Start;
-end function;
-
 public function IndexAt(Value: string; Start: int; Column: int): int;
 begin
   if Column <= 0 then

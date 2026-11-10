@@ -1,8 +1,6 @@
 program MultilineContract;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Editors as Editors,
-  Fpas.Tui.Themes as Themes, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.Editors as Editors, Fpas.Tui.Themes as Themes, System as Sys, System.Console as Console;
 
 type Model = record
   public Text: string := '';
@@ -44,8 +42,8 @@ function View(State: Model): E.Element<Msg>;
 begin
   return E.Column<Msg>(
     E.Size<Msg>(
-      Editors.Multiline<Msg>('editor', State.Text, State.Position, Edited, Navigated),
-      new E.Flex(Basis := 3, Minimum := 3)
+      E.Multiline<Msg>('editor', State.Text, State.Position, Edited, Navigated),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(3)), Minimum := L.Measure.Cells(3))
     ),
     E.Text<Msg>('Edits ' + State.Edits.ToString())
   );
@@ -84,7 +82,7 @@ end procedure;
 
 begin
   using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
-    new Model(), Update, View, 8, 4, Themes.Dark().Theme
+    new Model(), Update, View, 8, 4, Themes.Dark()
   );
   const Pasted: string := 'A' + new string([#13, #10]) + '界' + new string(#13, 1) + 'C' +
     new string(#8232, 1) + 'D' + new string(#8233, 1) + 'E';
@@ -92,7 +90,7 @@ begin
   ExpectLines(Session, 'A', '界', 'C', 'D', 'E');
   const End: App.Frame := Session.Snapshot();
   if End.Lines[0].TrimEnd() <> 'C' or End.Lines[2].TrimEnd() <> 'E'
-    or End.Cells[17].Style.Background <> $8CE2C1 or End.Lines[3].TrimEnd() <> 'Edits 1'
+    or End.Cells[17].Colors.Background <> $8CE2C1 or End.Lines[3].TrimEnd() <> 'Edits 1'
   then
     raise new Sys.InvalidOperationException('Paste must keep the new caret visible and edit once.');
   end if;
@@ -102,7 +100,7 @@ begin
     raise new Sys.InvalidOperationException('The wheel must scroll independently of the caret.');
   end if;
 
-  Turn(Session, App.Input.KeyPress(E.Key.End, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.End, InputKeys.KeyModifiers.Ctrl));
   if Session.Snapshot().Lines[
     0
   ].TrimEnd() <> 'C' or Session.Snapshot().Lines[3].TrimEnd() <> 'Edits 1'
@@ -112,8 +110,8 @@ begin
     );
   end if;
 
-  Turn(Session, App.Input.KeyPress(E.Key.Home, E.KeyModifiers.Ctrl));
-  Turn(Session, App.Input.KeyPress(E.Key.Backspace, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Home, InputKeys.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Backspace, InputKeys.KeyModifiers.None));
   if Session.Snapshot().Lines[3].TrimEnd() <> 'Edits 1' then
     raise new Sys.InvalidOperationException(
       'Backspace at the document start must leave it unchanged.'
@@ -121,34 +119,34 @@ begin
   end if;
 
   Turn(Session, App.Input.Click(1, 1));
-  Turn(Session, App.Input.KeyPress(E.Key.Delete, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Delete, InputKeys.KeyModifiers.None));
   ExpectLines(Session, 'A', '', 'C', 'D', 'E');
-  Turn(Session, App.Input.KeyPress(E.Key.Enter, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Enter, InputKeys.KeyModifiers.None));
   ExpectLines(Session, 'A', '', '', 'C', 'D', 'E');
 
-  Turn(Session, App.Input.KeyPress(E.Key.End, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.End, InputKeys.KeyModifiers.Ctrl));
   Turn(Session, App.Input.TextInput('0123456789'));
   Turn(Session, App.Input.Resize(4, 4));
   const Narrow: App.Frame := Session.Snapshot();
-  if Narrow.Lines[2] <> '789 ' or Narrow.Cells[11].Style.Background <> $8CE2C1 then
+  if Narrow.Lines[2] <> '789 ' or Narrow.Cells[11].Colors.Background <> $8CE2C1 then
     raise new Sys.InvalidOperationException(
       'The caret must remain visible on a long line after resize.'
     );
   end if;
 
-  Turn(Session, App.Input.KeyPress(E.Key.A, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.A, InputKeys.KeyModifiers.Ctrl));
   Turn(Session, App.Input.TextInput('Done'));
   ExpectText(Session, 'Done');
 
-  Turn(Session, App.Input.KeyPress(E.Key.A, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.A, InputKeys.KeyModifiers.Ctrl));
   const LF: string := new string(#10, 1);
   Turn(Session, App.Input.Paste('abcd' + LF + 'x' + LF + '0123'));
-  Turn(Session, App.Input.KeyPress(E.Key.Home, E.KeyModifiers.Ctrl));
-  Turn(Session, App.Input.KeyPress(E.Key.End, E.KeyModifiers.None));
-  Turn(Session, App.Input.KeyPress(E.Key.Down, E.KeyModifiers.None));
-  Turn(Session, App.Input.KeyPress(E.Key.Down, E.KeyModifiers.None));
-  Turn(Session, App.Input.KeyPress(E.Key.Up, E.KeyModifiers.Shift));
-  Turn(Session, App.Input.KeyPress(E.Key.Backspace, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Home, InputKeys.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.End, InputKeys.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Down, InputKeys.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Down, InputKeys.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Up, InputKeys.KeyModifiers.Shift));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Backspace, InputKeys.KeyModifiers.None));
   ExpectLines(Session, 'abcd', 'x');
   Console.WriteLine('multiline editor contracts verified');
 end;

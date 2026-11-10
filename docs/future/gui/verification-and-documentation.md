@@ -1,60 +1,36 @@
-# Verification and documentation
+# GUI distribution Windows acceptance
 
-Close the implementation with real FPAS consumers, packaged assets and platform
-evidence. Per-stage checks belong to their owning files; this stage verifies the
-whole application path and makes it usable outside the repository.
+The [handbook](../../pascal/libraries/gui.md), [host reference](../../../src/Fpas.Gui/README.md),
+[publishing reference](../../build/publishing.md) and
+[acceptance map](../../../tests/coverage.md#native-gui) describe the implemented
+application and its checks. Phase 8 still requires native Windows x64 evidence.
 
-## Integration matrix
+## Windows desktop
 
-- [ ] Publish an application built on the public FPAS GUI host on Linux x64
-  and Windows x64 in all five modes. Verify native asset selection, software
-  and OpenGL rendering, windowed startup and UI-thread teardown.
-- [ ] Use packaged SDK/library assets for end-to-end tests. Launch from another
-  working directory without source/build-tree paths or library search overrides.
-- [ ] For NativeAOT, move only the executable to an empty directory, remove .NET
-  search overrides and confirm no own native-library extraction or CUI dependency.
-  Inspect the native result as well as its exit code.
-- [ ] Cover button, checkbox, UTF-8 editing, focus, modal interaction, scrolling,
-  background completion, cancellation and shutdown through the public FPAS host.
-- [ ] Use the [FPAS GUI gallery](../../../examples/gui/gallery/README.md) as a real
-  application consumer. Check bounded navigation/interaction scenarios and
-  screenshots under Xvfb on Linux and on Windows, with both renderers.
-- [ ] Publish and launch the gallery in NativeAOT and managed single-file modes
-  using packaged assets; include it in checks for resize/theme state preservation.
-- [ ] Distinguish injected CUI input tests from tests of OS input delivery.
-  Add a bounded OS event-path check where platform automation is available;
-  record unsupported environments precisely rather than claiming verification.
-- [ ] Check repeated session/resource lifetimes with stable owned-resource counts
-  and explicit disposal assertions. Use native diagnostics for unexplained growth;
-  process working set alone does not establish a leak.
-- [ ] Keep snapshots/screenshots and temporary publish outputs in ignored
-  `.temp-data` locations. Do not turn cloud timing or executable-size observations
-  into permanent benchmark/history entries.
+- [ ] Build Debug and Release using the Windows native toolchain. Run compiler,
+  SDK/documentation, GUI/shared-widget and TUI regressions for those configurations.
+- [ ] Set `FPAS_TEST_GUI_AOT=1` and run the complete Fpas.Gui.Cui.Tests suite
+  with software and OpenGL rendering. Retain screenshots and logs using
+  `FPAS_GUI_TEST_ARTIFACTS` under `.temp-data`.
+- [ ] Run both publishing matrices: the signed binding fixture and the public
+  package-only gallery. Check all five modes, RID selection, six license notices,
+  executable-only single-file/NativeAOT startup, extraction and dumpbin imports.
+  Start from another directory with runtime/library search overrides removed.
+- [ ] Exercise real Win32 pointer and keyboard delivery, Unicode editing,
+  modal Escape/focus restoration, resize with theme/model state preserved,
+  and native window close. The X11/XTest case is Linux-specific and is skipped
+  on Windows; injected CUI input does not replace this OS event-path check.
+- [ ] Verify the packaged single-file and NativeAOT gallery with native resize,
+  theme changes and close, including work/cancellation pending during cleanup.
+  Use the [phase 6 host checks](gui-host.md) for live-resize callback and shutdown
+  ownership requirements.
+- [ ] Confirm resource retirement and repeated owner-thread teardown using
+  native texture accounting and retained editor/image counts. Investigate
+  unexplained growth with native diagnostics rather than a working-set threshold.
+- [ ] Close the [phase 6](gui-host.md) and [phase 7](tui-alignment.md) Windows
+  checks, resolve findings and remove this folder when no acceptance work remains.
 
-## User and agent documentation
-
-- [ ] Add a concise GUI handbook entry and runnable FPAS examples using the
-  canonical MVU/widget API. Explain startup, model/messages, effects, input and
-  deterministic cleanup with one normal authoring path.
-- [ ] Link the GUI gallery from the GUI/library guidance and example index,
-  alongside the TUI gallery. Document its pages and supported widget variants.
-- [ ] Link the [widget reference](../../../src/Fpas.Ui/README.md) from both
-  host guides and document the options each implemented adapter supports.
-- [ ] Describe normal publishing versus NativeAOT static linking. State source
-  build prerequisites, consumer asset delivery and OS/window/driver dependencies.
-  Do not ask GUI consumers to download/build CUI manually.
-- [ ] Record actual platform limits: Windows/Linux x64 support, software/OpenGL,
-  direct Wayland limitations, accessibility and complex-text/IME constraints.
-  Do not promise capabilities that the adapter or CUI does not supply.
-- [ ] Update the agent reference with a focused route to the implemented GUI/MVU
-  guidance. Keep native internals and long build procedures in their owning docs.
-- [ ] Update library, SDK/distribution and test references where their contracts
-  change. Verify links and compile/run the new FPAS documentation examples.
-
-## Closure
-
-- [ ] Resolve implementation findings and complete the affected compiler/SDK,
-  GUI/MVU/shared-widget and TUI regression checks. Mark unavailable platform
-  checks as open rather than treating cloud-only success as completion.
-- [ ] Ensure the owning references describe current behavior. Remove completed
-  work from these plans and delete the folder once no implementation work remains.
+Linux OS input uses real X server events through XTest. Other input fixtures use
+direct CUI injection. Keep that distinction in any platform evidence. Screenshots
+and temporary deliveries belong under ignored `.temp-data`; no cloud timing or
+binary-size observations belong in permanent benchmark history.

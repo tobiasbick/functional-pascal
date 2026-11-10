@@ -1,0 +1,41 @@
+unit Fpas.Tui.Internal.View.Editors;
+
+uses Fpas.Tui.Internal.Controls.Activation as Actions;
+
+/// Caret and anchor are UTF-16 offsets. View offsets are zero-based rows and cells.
+public type EditorPosition = record
+  /// Directional UTF-16 caret offset.
+  public Caret: int := 0;
+  /// Directional UTF-16 selection anchor.
+  public Anchor: int := 0;
+  /// First visible logical row.
+  public TopRow: int := 0;
+  /// First visible cell column.
+  public LeftColumn: int := 0;
+  /// Vertical navigation cell column; -1 selects the current column.
+  public PreferredColumn: int := -1;
+  /// Whether layout follows the caret.
+  public FollowCaret: bool := true;
+end record;
+
+/// Resolved terminal edit before shared message mapping.
+public type TextEdit = record
+  /// Proposed document text.
+  public Text: string;
+  /// Document selection and cell viewport.
+  public Position: EditorPosition;
+end record;
+
+/// Connects resolved native editing to shared document messages.
+/// <typeparam name="TMsg">Application message type.</typeparam>
+public type IEvents<TMsg> = protocol
+  /// Proposes an edited document and its directional selection.
+  /// <param name="Change">Replacement text and resolved visual position.</param>
+  /// <returns>The application edit proposal.</returns>
+  function Edit(Change: TextEdit): TMsg;
+  /// Stores host-owned viewport state and optionally proposes selection.
+  /// <param name="Position">Resolved terminal position.</param>
+  /// <returns>A selection proposal or no application action.</returns>
+  function Navigate(Position: EditorPosition): Actions.Result<TMsg>;
+end protocol;
+end unit;

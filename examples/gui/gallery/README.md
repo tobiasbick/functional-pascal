@@ -19,6 +19,10 @@ and responsive composition, and `Previews.fpas` the widget inventory. Control ID
 are stable; collection keys belong to their containing ID.
 
 Managed source publication uses the normal [FPAS publish modes](../../../docs/build/publishing.md).
-NativeAOT requires the packaged CUI binding for static linking; the complete
-packaged-gallery publish matrix is tracked in [distribution verification](../../../docs/future/gui/verification-and-documentation.md).
+For application publication, reference the Fpas.Gui package from the matching
+distribution feed. Its transitive CUI package supplies prebuilt shared and static
+libraries. NativeAOT links CUI into the executable; managed single-file delivery
+extracts the bundled native library. GuiPublishingTests exercises the complete
+gallery in all five modes with both renderers, controlled values, theme,
+selection, images, effects and repeated cleanup.
 A headless Linux run needs a virtual display such as Xvfb.

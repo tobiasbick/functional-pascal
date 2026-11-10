@@ -1,9 +1,6 @@
 program EffectContract;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime, Fpas.Tui.Application as App,
-  Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = union
   StartOriginal;

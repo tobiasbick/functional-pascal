@@ -11,6 +11,14 @@ GUI tests need a display; on headless Linux, run them under Xvfb with software
 OpenGL support. Without `DISPLAY`, window tests are skipped; text-buffer tests
 still run. See the [GUI test reference](../../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
 
+The GUI suite's Linux OS-input test also requires `libXtst.so.6` and the XTest
+extension. Set `FPAS_TEST_GUI_AOT=1` to include both native publishing matrices.
+`FPAS_GUI_TEST_ARTIFACTS` names an optional directory for retained gallery
+screenshots, logs, delivery matrices and native import checks; use `.temp-data`
+for local evidence. A custom TMPDIR inside the checkout must isolate its build
+and central-package properties from the repository, as the package-only fixture
+does for its consumers.
+
 ## Build the compiler and tests
 
 Restore, compile, and execute tests as separate steps:

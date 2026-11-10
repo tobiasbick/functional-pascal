@@ -1,22 +1,22 @@
 unit Fpas.Tui.Internal.Rendering.Canvases;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  System.Collections.Generic as Generic;
+uses Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Glyphs as G, System.Collections.Generic as Generic;
 
 public procedure Paint(
-  Draw: function(int, int): E.Cell; Column: int; Row: int; Clip: F.Rect;
+  Draw: function(int, int): T.Cell; Column: int; Row: int; Clip: F.Rect; Parent: T.Style;
   Operations: Generic.List<D.Operation>
 );
 begin
   for Y: int := Clip.Y to Clip.Y + Clip.Height - 1 do
     var X: int := Clip.X;
     while X < Clip.X + Clip.Width do
-      const Cell: E.Cell := Draw(X - Column, Y - Row);
+      const Cell: T.Cell := Draw(X - Column, Y - Row);
       const Glyph: string := G.Sanitize(Cell.Text);
       const Span: int := G.Width(Glyph);
-      Operations.Add(new D.Operation(Glyph, new F.Rect(X, Y, Span, 1), Clip, Cell.Style, false));
+      const Colors: T.Style := new T.Style(
+        Cell.Colors.Foreground ?? Parent.Foreground, Cell.Colors.Background ?? Parent.Background
+      );
+      Operations.Add(new D.Operation(Glyph, new F.Rect(X, Y, Span, 1), Clip, Colors, false));
       X := X + Span;
     end while;
   end for;

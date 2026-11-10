@@ -1,10 +1,8 @@
 unit Mandelbrot.Render;
 
-uses
-  Fpas.Tui.Elements as E, Mandelbrot.Model as M, Mandelbrot.Palette as P, System as Sys, System.Linq as Linq,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Terminal as T, Mandelbrot.Model as M, Mandelbrot.Palette as P, System as Sys, System.Linq as Linq, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
-function Pixel(X: double; Y: double; Camera: M.Camera; Token: Threads.CancellationToken): E.Cell;
+function Pixel(X: double; Y: double; Camera: M.Camera; Token: Threads.CancellationToken): T.Cell;
 begin
   var Re: double := 0.0;
   var Im: double := 0.0;
@@ -29,7 +27,7 @@ begin
   return P.Color(Camera.Palette, Escape);
 end function;
 
-public function Compute(Camera: M.Camera; Columns: int; Rows: int; Token: Threads.CancellationToken): array of E.Cell;
+public function Compute(Camera: M.Camera; Columns: int; Rows: int; Token: Threads.CancellationToken): array of T.Cell;
   procedure DrawRow(Row: int);
   begin
     const Y: double := Camera.YAt(Row, Rows);
@@ -39,8 +37,8 @@ public function Compute(Camera: M.Camera; Columns: int; Rows: int; Token: Thread
     end for;
   end procedure;
 begin
-  const Cells: array of E.Cell := Linq.Enumerable.ToArray<E.Cell>(
-    Linq.Enumerable.Repeat<E.Cell>(P.Blank, Columns * Rows)
+  const Cells: array of T.Cell := Linq.Enumerable.ToArray<T.Cell>(
+    Linq.Enumerable.Repeat<T.Cell>(P.Blank, Columns * Rows)
   );
   const Options: Tasks.ParallelOptions := new Tasks.ParallelOptions();
   Options.CancellationToken := Token;

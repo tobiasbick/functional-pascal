@@ -34,6 +34,7 @@
     <None Include="../../examples/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/SharedContract.fpas" Link="Fixtures/tui/shared.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CanvasInputContract.fpas" Link="Fixtures/tui/canvas-input.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TabsContract.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TableContract.fpas" Link="Fixtures/tui/table.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -62,7 +63,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/ui/lib" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

@@ -139,6 +139,13 @@ publishes and signs all five modes with the CUI binding referenced transitively.
 It runs both renderers on Windows and Linux and verifies native asset placement,
 extraction and static linking.
 
+The [public GUI host](../../src/Fpas.Gui/README.md) is consumed through the
+Fpas.Gui package, which brings its MVU/widget libraries and the native binding
+transitively. GuiPublishingTests publishes the full FPAS gallery in all five
+modes and checks controlled state, background completion/cancellation, resource
+removal and repeated owner-thread teardown. Its single-file and NativeAOT cases
+run with only the executable present and .NET host search disabled.
+
 See Microsoft's [Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/),
 [single-file](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)
 and [strong-name](https://learn.microsoft.com/en-us/dotnet/standard/assembly/sign-strong-name) references.

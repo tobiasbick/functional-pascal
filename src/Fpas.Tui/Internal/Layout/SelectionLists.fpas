@@ -1,18 +1,14 @@
 unit Fpas.Tui.Internal.Layout.SelectionLists;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Tui.Internal.Controls.Selection as Selections,
-  Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Tui.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Controls.Selection as Selections, Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public type Viewport<TMsg> = record implements Actions.IActivatable<TMsg>, Selections.ISelectable<TMsg>
-  public Items: array of E.SelectionItem;
+  public Items: array of Ch.SelectionItem;
   public Selected: int;
   public First: int;
   public Rows: int;
   public OnSelect: function(string): TMsg;
-  public OnActivate: function(string): TMsg;
+  public OnActivate: Sys.Func<string, TMsg>?;
 
   public function Count(): int;
   begin
@@ -26,7 +22,7 @@ public type Viewport<TMsg> = record implements Actions.IActivatable<TMsg>, Selec
 
   public function CanSelect(Index: int): bool;
   begin
-    return Index >= 0 and Index < self.Items.Length;
+    return Index >= 0 and Index < self.Items.Length and self.Items[Index].Enabled;
   end function;
 
   public function Select(Index: int): Actions.Result<TMsg>;
@@ -41,8 +37,15 @@ public type Viewport<TMsg> = record implements Actions.IActivatable<TMsg>, Selec
 
   public function Activate(): Actions.Result<TMsg>;
   begin
-    if self.Selected >= 0 and self.Items[self.Selected].CanActivate then
-      return Actions.Result<TMsg>.Send(self.OnActivate(self.Key()));
+    if self.Selected >= 0 and self.Items[
+      self.Selected
+    ].Enabled and self.Items[self.Selected].CanActivate
+    then
+      case self.OnActivate of
+        when is Sys.Func<string, TMsg> as Callback:
+          return Actions.Result<TMsg>.Send(Callback.Invoke(self.Key()));
+        else
+      end case;
     end if;
 
     return Actions.Result<TMsg>.NoAction;
@@ -63,8 +66,8 @@ begin
 end function;
 
 public function Arrange<TMsg>(
-  Items: array of E.SelectionItem; Key: string; Rows: int; Offset: int;
-  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg; Previous: Viewport<TMsg>?
+  Items: array of Ch.SelectionItem; Key: string; Rows: int; Offset: int;
+  OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Previous: Viewport<TMsg>?
 ): Viewport<TMsg>;
 begin
   var Selected: int := -1;
@@ -86,11 +89,11 @@ end function;
 
 public procedure Draw<TMsg>(
   List: Viewport<TMsg>; Operations: Generic.List<D.Operation>; Clip: F.Rect;
-  Style: E.Style; Widgets: E.WidgetStyles?
+  Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
   for Index: int := List.First to Sys.Math.Min(List.Items.Length, List.First + Clip.Height) - 1 do
-    const Item: E.SelectionItem := List.Items[Index];
+    const Item: Ch.SelectionItem := List.Items[Index];
     const Line: F.Rect := new F.Rect(Clip.X, Clip.Y + Index - List.First, Clip.Width, 1);
     const Label: string := if Item.CanActivate then Item.Text else '[x] ' + Item.Text end if;
     D.ListRow(Operations, Line, Clip, Label, Index = List.Selected, Style, Widgets);
@@ -100,11 +103,7 @@ end procedure;
 public function Equivalent<TMsg>(Left: Viewport<TMsg>; Right: Viewport<TMsg>): bool;
 begin
   if Left.Selected <> Right.Selected or Left.First <> Right.First or Left.Rows <> Right.Rows
-    or Left.Items.Length <> Right.Items.Length or not Sys.Object.Equals(
-    Left.OnSelect,
-    Right.OnSelect
-  )
-    or not Sys.Object.Equals(Left.OnActivate, Right.OnActivate)
+    or Left.Items.Length <> Right.Items.Length
   then
     return false;
   end if;

@@ -66,8 +66,10 @@ public sealed partial class DapDebuggerTests
         await Send(new() { ["kind"] = "activate", ["control"] = "document-draft" });
         await WaitFor(new() { ["text"] = "Draft idea" });
         await Send(new() { ["kind"] = "activate", ["control"] = "document-notes" });
-        await WaitFor(new() { ["text"] = "Field notes" });
+        await WaitFor(new() { ["text"] = "End of notes" });
         var restored = (await client.Success("fpasTuiSnapshot")).GetProperty("frame");
+        Assert.Equal(editor.GetProperty("position").ToString(),
+            Control(restored, "document-editor").GetProperty("position").ToString());
         await client.Success("fpasTuiTerminalInput",
             new() { ["bytes"] = Convert.ToBase64String("\u001b[200~\r\nAdded\r\nRow\u001b[201~"u8) });
         await WaitFor(new() { ["text"] = "Row" });

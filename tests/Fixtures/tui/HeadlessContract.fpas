@@ -1,10 +1,6 @@
 program HeadlessContract;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
-  Fpas.Tui.Themes as Themes, Fpas.Tui.Status as Status,
-  Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Layout.Flexible as F, System.IO as IO,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Tui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Tui.Status as Status, Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Tui.Internal.View.Lowering as Lower;
 
 type Msg = union
   Start;
@@ -160,10 +156,10 @@ begin
   var Writes: int := 0;
   var Last: string := '';
   var FailNext: bool := false;
-  const Draw: procedure(int, int, array of E.Cell) := P.Create(Output);
-  const Style: E.Style := new E.Style();
-  const Initial: array of E.Cell := [new E.Cell('a', Style), new E.Cell('b', Style)];
-  const Changed: array of E.Cell := [Initial[0], new E.Cell('c', Style)];
+  const Draw: procedure(int, int, array of T.Cell) := P.Create(Output);
+  const Style: T.Style := new T.Style();
+  const Initial: array of T.Cell := [new T.Cell('a', Style), new T.Cell('b', Style)];
+  const Changed: array of T.Cell := [Initial[0], new T.Cell('c', Style)];
   Draw(2, 1, Initial);
   Draw(2, 1, Initial);
   if Writes <> 1 then
@@ -188,14 +184,14 @@ procedure CheckCanvas(Glyph: string);
     return new Mvu.Transition<int, int>(State, []);
   end function;
 
-  function WideCell(Column: int; Row: int): E.Cell;
+  function WideCell(Column: int; Row: int): T.Cell;
   begin
-    return new E.Cell(Glyph, new E.Style());
+    return new T.Cell(Glyph, new T.Style());
   end function;
 
   function Canvas(State: int): E.Element<int>;
   begin
-    return E.CellCanvas<int>(2, 1, WideCell);
+    return Views.FixedCanvas<int>('wide', 2, 1, WideCell, new T.CanvasEvents<int>());
   end function;
 begin
   using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
@@ -224,9 +220,9 @@ end function;
 
 function OverlayView(State: int): E.Element<int>;
 begin
-  const A: E.ListItem<int> := new E.ListItem<int>('a', 'Alpha', 4);
-  const B: E.ListItem<int> := new E.ListItem<int>('b', 'Beta', if State = 5 then 6 else 4 end if);
-  const Items: array of E.ListItem<int> := if State >= 4 then [B, A] else [A, B] end if;
+  const A: Ch.ListItem<int> := new Ch.ListItem<int>('a', 'Alpha', 4);
+  const B: Ch.ListItem<int> := new Ch.ListItem<int>('b', 'Beta', if State = 5 then 6 else 4 end if);
+  const Items: array of Ch.ListItem<int> := if State >= 4 then [B, A] else [A, B] end if;
   const Base: E.Element<int> := E.Column<int>(
     E.Button<int>('options', 'Options', 1, State <> 3),
     E.List<int>('items', Items)
@@ -234,19 +230,33 @@ begin
   var Layers: array of E.Element<int> := [];
   if State = 1 then
     Layers := [
-      E.Overlay<int>(
-        'options-overlay', true, 'missing', 3,
+      Views.Layer<int>(
+        'options-overlay',
         E.Column<int>(E.Button<int>('close', 'Close', 0), E.Button<int>('details', 'Details', 2)),
-        [E.Shortcut<int>(E.Key.R, E.KeyModifiers.Ctrl, 2)]
+        [InputKeys.Shortcut<int>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, 2)],
+        InitialFocus := 'missing',
+        OnDismiss := function(): int => 3
       )
     ];
   else
     if State = 2 then
-      Layers := [E.Overlay<int>('details-overlay', true, 'missing', 3, E.Text<int>('Details'), [])];
+      Layers := [
+        Views.Layer<int>(
+          'details-overlay',
+          E.Text<int>('Details'),
+          [],
+          InitialFocus := 'missing',
+          OnDismiss := function(): int => 3
+        )
+      ];
     end if;
   end if;
 
-  return E.Screen<int>(Base, Layers, [E.Shortcut<int>(E.Key.R, E.KeyModifiers.Ctrl, 5)]);
+  return Views.Screen<int>(
+    Base,
+    Layers,
+    [InputKeys.Shortcut<int>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, 5)]
+  );
 end function;
 
 procedure ExpectFocus(Session: App.HeadlessSession; Expected: string);
@@ -284,22 +294,22 @@ begin
     raise new Sys.InvalidOperationException('The modal overlay let a click reach the base.');
   end if;
 
-  Turn(Session, App.Input.KeyPress(E.Key.Tab, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Tab, InputKeys.KeyModifiers.None));
   ExpectFocus(Session, 'details');
-  Turn(Session, App.Input.KeyPress(E.Key.Tab, E.KeyModifiers.Shift));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Tab, InputKeys.KeyModifiers.Shift));
   ExpectFocus(Session, 'close');
   Turn(Session, App.Input.Activate('close'));
   ExpectFocus(Session, 'options');
   Turn(Session, App.Input.Activate('options'));
-  Turn(Session, App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl));
   ExpectFocus(Session, '');
-  Turn(Session, App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Escape, InputKeys.KeyModifiers.None));
   ExpectFocus(Session, 'items/a');
   Turn(Session, App.Input.Activate('items/b'));
   Turn(Session, App.Input.Focus('items/b'));
   ExpectFocus(Session, 'items/b');
   const Original: App.Frame := Session.Snapshot();
-  Turn(Session, App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl));
   const Changed: App.Frame := Session.Snapshot();
   if Original.Id = Changed.Id or not Sys.String.Join('|', Original.Lines).Equals(
     Sys.String.Join('|', Changed.Lines)
@@ -362,12 +372,12 @@ begin
     end if;
   end for;
 
-  const Rules: array of E.Flex := [
-    new E.Flex(Minimum := 2, Maximum := 6, Grow := 1),
-    new E.Flex(Minimum := 3, Maximum := 9, Grow := 1)
+  const Rules: array of L.Flex := [
+    new L.Flex(Minimum := L.Measure.Cells(2), Maximum := L.Measure.Cells(6), Grow := 1),
+    new L.Flex(Minimum := L.Measure.Cells(3), Maximum := L.Measure.Cells(9), Grow := 1)
   ];
-  const Grown: array of int := F.Allocate([4, 4], Rules, 11);
-  const Shrunk: array of int := F.Allocate([4, 4], Rules, 4);
+  const Grown: array of int := F.Allocate([4, 4], [Lower.Flex(Rules[0]), Lower.Flex(Rules[1])], 11);
+  const Shrunk: array of int := F.Allocate([4, 4], [Lower.Flex(Rules[0]), Lower.Flex(Rules[1])], 4);
   if Grown[0] <> 6 or Grown[1] <> 5 or Shrunk[0] <> 2 or Shrunk[1] <> 3 then
     raise new Sys.InvalidOperationException('Unexpected bounded cell allocation.');
   end if;
@@ -384,11 +394,11 @@ procedure CheckDividers();
   end function;
 begin
   using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(
-    0, Update, DividerView, 10, 3, Themes.Dark().Theme
+    0, Update, DividerView, 10, 3, TerminalThemes.Dark()
   );
   const Full: App.Frame := Session.Snapshot();
   if Full.Lines[0] <> '──────────' or Full.Lines[1] <> '─ 界e z ──'
-    or Full.Cells[0].Style.Foreground <> $5A748F or Full.Controls.Length <> 1
+    or Full.Cells[0].Colors.Foreground <> $5A748F or Full.Controls.Length <> 1
   then
     raise new Sys.InvalidOperationException('Unexpected divider layout, style or control list.');
   end if;
@@ -408,12 +418,16 @@ end procedure;
 
 procedure CheckStatusHints();
 begin
-  const Chord: E.ShortcutBinding<Msg> := E.Shortcut<Msg>(
-    E.Key.F2,
-    cast<E.KeyModifiers>(cast<int>(E.KeyModifiers.Ctrl) or cast<int>(E.KeyModifiers.Shift)),
+  const Chord: InputKeys.ShortcutBinding<Msg> := InputKeys.Shortcut<Msg>(
+    InputKeys.Key.F2,
+    cast<InputKeys.KeyModifiers>(cast<int>(InputKeys.KeyModifiers.Ctrl)
+      or cast<int>(InputKeys.KeyModifiers.Shift)),
     Msg.Start
   );
-  const Character: E.ShortcutBinding<Msg> := E.CharacterShortcut<Msg>('?', Msg.Start);
+  const Character: InputKeys.ShortcutBinding<Msg> := InputKeys.CharacterShortcut<Msg>(
+    '?',
+    Msg.Start
+  );
   if Status.Hint<Msg>(Chord, 'Start') <> 'Ctrl+Shift+F2 Start'
     or Status.Hint<Msg>(Character, 'Help') <> '? Help'
   then
@@ -427,18 +441,20 @@ procedure CheckLiveTheme();
     return new Mvu.Transition<bool, bool>(Message, []);
   end function;
 
-  function ThemeFor(State: bool): E.Theme;
+  function ThemeFor(State: bool): TerminalThemes.Theme;
   begin
     const Background: int := if State then $39566C else $102030 end if;
-    return new E.Theme(Text := new E.Style(Foreground := $D0E2F5, Background := Background));
+    return new TerminalThemes.Theme(
+      Text := new T.Style(Foreground := $D0E2F5, Background := Background)
+    );
   end function;
 
   function StableView(State: bool): E.Element<bool>;
   begin
     return E.Column<bool>(
-      E.Styled<bool>(
+      E.CellStyled<bool>(
         E.Button<bool>('theme', 'Change color', true),
-        new E.Style(Foreground := $E0ECF5)
+        new T.Style(Foreground := $E0ECF5)
       )
     );
   end function;
@@ -450,8 +466,8 @@ begin
   Turn(Session, App.Input.Activate('theme'));
   const Recolored: App.Frame := Session.Snapshot();
   const Last: int := Recolored.Cells.Length - 1;
-  if Recolored.Id <= Original.Id or Original.Cells[Last].Style.Background <> $102030
-    or Recolored.Cells[Last].Style.Background <> $39566C
+  if Recolored.Id <= Original.Id or Original.Cells[Last].Colors.Background <> $102030
+    or Recolored.Cells[Last].Colors.Background <> $39566C
   then
     raise new Sys.InvalidOperationException('The custom theme did not repaint unchanged rows.');
   end if;

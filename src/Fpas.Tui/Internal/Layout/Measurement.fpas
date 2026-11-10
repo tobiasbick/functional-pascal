@@ -1,10 +1,6 @@
 unit Fpas.Tui.Internal.Layout.Measurement;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.Tables as Tables,
-  Fpas.Tui.Internal.Rendering.StatusLines as Status,
-  Fpas.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Tui.Internal.View.Tree as E, Fpas.Ui.Choices as Ch, Fpas.Ui.Layout as L, Fpas.Tui.Internal.Rendering.Glyphs as G, Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.Tables as Tables, Fpas.Tui.Internal.Rendering.StatusLines as Status, Fpas.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
@@ -16,9 +12,9 @@ begin
   end case;
 end function;
 
-public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: E.Alignment): int;
+public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
 begin
-  return if Align = E.Alignment.Stretch then Available
+  return if Align = L.Alignment.Stretch then Available
     else Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
     end if;
 end function;
@@ -74,39 +70,49 @@ begin
       return if Horizontal and Title <> '' then G.Measure(G.SingleLine(Title)) + 4 else 1 end if;
     when E.Element.StatusLine(const Message: string, const Hints: array of string):
       return if Horizontal then Status.PreferredWidth(Message, Hints) else 1 end if;
-    when E.Element.DocumentEditor(_, _, _, _, _):
-      return if Horizontal then 24 else 5 end if;
+    when E.Element.DocumentEditor(
+      _,
+      const Value: string,
+      _,
+      _,
+      const Placeholder: string,
+      _,
+      const MultipleLines: bool
+    ):
+      return if MultipleLines then (if Horizontal then 24
+          else 5
+          end if)
+        else (if Horizontal then Sys.Math.Max(
+            12,
+            Sys.Math.Max(G.Measure(Value), G.Measure(G.SingleLine(Placeholder))) + 2
+          )
+          else 1
+          end if)
+        end if;
+    when E.Element.Toggle(_, const Caption: string, _, _, _):
+      return if Horizontal then G.Measure(Caption) + 4 else 1 end if;
     when E.Element.Action(_, const Caption: string, _, _, const Role: string, _, _):
       return if Horizontal then G.Measure(
           Caption
         ) + (if Role = 'button' then 2 else 0 end if)
         else 1
         end if;
-    when E.Element.Editor(_, const Value: string, _, const Placeholder: string):
-      if Horizontal then
-        return Sys.Math.Max(
-          12,
-          Sys.Math.Max(G.Measure(Value), G.Measure(G.SingleLine(Placeholder))) + 2
-        );
-      end if;
-
-      return 1;
-    when E.Element.Choices(_, const Items: array of E.ListItem<TMsg>):
+    when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
       if not Horizontal then
         return Items.Length;
       end if;
       var Width: int := 0;
-      for Item: E.ListItem<TMsg> in Items do
+      for Item: Ch.ListItem<TMsg> in Items do
         Width := Sys.Math.Max(Width, G.Measure(Item.Text) + 2);
       end for;
 
       return Width;
-    when E.Element.Selectable(_, const Items: array of E.SelectionItem, _, _, _):
+    when E.Element.Selectable(_, const Items: array of Ch.SelectionItem, _, _, _):
       if not Horizontal then
         return Items.Length;
       end if;
       var Width: int := 0;
-      for Item: E.SelectionItem in Items do
+      for Item: Ch.SelectionItem in Items do
         const Prefix: int := if Item.CanActivate then 2 else 6 end if;
         Width := Sys.Math.Max(Width, G.Measure(Item.Text) + Prefix);
       end for;
@@ -117,13 +123,13 @@ begin
     when E.Element.TableView(
       _,
       const Columns: array of E.TableColumn,
-      const Rows: array of E.TableRow,
+      const Rows: array of Ch.TableRow,
       _,
       _,
       _
     ):
       return if Horizontal then Tables.Preferred(Columns) else Rows.Length + 1 end if;
-    when E.Element.TabSet(_, const Items: array of E.TabItem, _, _, const Panel: E.Element<TMsg>?):
+    when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
       const Body: int := if Panel = null then 0
         else Intrinsic<TMsg>(
           Panel,
@@ -160,7 +166,7 @@ begin
     ), E.Element.Decorated(
       const Child: E.Element<TMsg>,
       _
-    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>), E.Element.ControlledScroll(
+    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
       _, const Child: E.Element<TMsg>, _, _, _
     ), E.Element.Desktop(
       const Child: E.Element<TMsg>,
@@ -203,8 +209,6 @@ begin
       ) + 2;
     when E.Element.Custom(const Columns: int, const Rows: int, _, _):
       return if Horizontal then Columns else Rows end if;
-    when E.Element.Deferred(_, _):
-      raise new Sys.InvalidOperationException('Unresolved cached subview.');
   end case;
 end function;
 end unit;

@@ -1,10 +1,10 @@
 unit Fpas.Tui.Internal.Controls.TextEditing;
 
-uses Fpas.Tui.Elements as E;
+uses Fpas.Ui.TerminalExtensions.Input as K;
 
 public type ITextEditor = protocol
   procedure Insert(Text: string);
   procedure Place(Column: int; Row: int);
-  function Key(Pressed: E.Key; Modifiers: E.KeyModifiers): bool;
+  function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): bool;
 end protocol;
 end unit;

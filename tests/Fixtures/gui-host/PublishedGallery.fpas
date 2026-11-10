@@ -1,0 +1,242 @@
+program PublishedGallery;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Gui.Application as Gui,
+  Fpas.Gui.Cui as Cui, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L, Fpas.Mvu.Session as Mvu,
+  System as Sys, System.Console as Console, System.Text as Text, System.Diagnostics as Diagnostics;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+begin
+  for Value: Gui.Control in Session.Snapshot().Controls do
+    if Value.Id = Id and Value.Key = Key then
+      return Value;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id + '/' + Key);
+end function;
+
+function HasText(Session: Gui.Session<State.Msg>; Value: string): bool;
+begin
+  for Item: string in Session.Snapshot().Text do
+    if Item = Value then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure Send(Session: Gui.Session<State.Msg>; Message: State.Msg);
+begin
+  case Session.Post(Message) of
+    when Mvu.Admission.Queued:
+    else
+      raise new Sys.InvalidOperationException('Message was not admitted.');
+  end case;
+
+  Check(Session.Step(), 'Unexpected session close.');
+end procedure;
+
+function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session<State.Msg>;
+begin
+  return Gui.Start<State.Model, State.Msg>(
+    new State.Model(), State.Update, View.Build,
+    new Gui.Options(Title := Title, Width := Width, Height := Height, Renderer := Renderer),
+    function(Model: State.Model): bool => Model.Dark
+  );
+end function;
+
+procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  for Run: int := 1 to 3 do
+    using const Session: Gui.Session<State.Msg> := Open(Renderer, 'FPAS packaged gallery');
+    var Rejected: bool := false;
+    try
+      Session.CapturePng(Capture);
+    catch Error: Sys.InvalidOperationException do
+      Rejected := true;
+    end try;
+
+    Check(Rejected, 'Capture before first presentation.');
+    Check(
+      Session.Step() and Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software),
+      'Requested renderer unavailable.'
+    );
+    Send(Session, State.Msg.Increment);
+    Send(Session, State.Msg.Check(true));
+    Send(Session, State.Msg.Theme);
+    Check(
+      HasText(
+        Session,
+        'Count: 1'
+      ) and Control(Session, 'checked').Value = 'True' and Session.Snapshot().Dark,
+      'Controlled model or theme.'
+    );
+    Send(Session, State.Msg.Navigate('editors'));
+    const Replacement: string := 'aλ👋z';
+    const Selection: Ed.EditorPosition := new Ed.EditorPosition(Replacement.Length, 1);
+    Send(Session, State.Msg.Edit(new Ed.TextEdit(Replacement, Selection)));
+    Check(
+      Control(
+        Session,
+        'text'
+      ).Value = Replacement and Control(Session, 'text').Position = Selection,
+      'Unicode directional selection.'
+    );
+    Send(Session, State.Msg.Navigate('collections'));
+    Send(Session, State.Msg.Select('beta'));
+    Send(Session, State.Msg.Tab('two'));
+    Check(
+      Control(
+        Session,
+        'selection',
+        'beta'
+      ).Value = 'True' and Control(Session, 'tabs', 'two').Value = 'True',
+      'Collection selection.'
+    );
+    Send(Session, State.Msg.Navigate('layout'));
+    Send(
+      Session,
+      State.Msg.Scroll(
+        new L.ScrollChange(L.ScrollPosition.End, L.Measure.Logical(0), L.Measure.Logical(0))
+      )
+    );
+    Check(
+      double.Parse(
+        Control(Session, 'scroll').Value,
+        Sys.Globalization.CultureInfo.InvariantCulture
+      ) > 0.0,
+      'Controlled scroll did not resolve to the end.'
+    );
+    for Frame: int := 1 to 6 do
+      Send(Session, State.Msg.Navigate('graphics'));
+      Check(
+        Session.Snapshot().Images = 1 and Session.Snapshot().Editors = 0,
+        'Image replacement accounting.'
+      );
+      if Run = 1 and Frame = 1 then
+        Session.CapturePng(Capture);
+      end if;
+
+      Send(Session, State.Msg.Navigate('editors'));
+      Check(
+        Session.Snapshot().Images = 0 and Session.Snapshot().Editors = 3,
+        'Removed resource accounting.'
+      );
+      Check(
+        Control(Session, 'text').Value = Replacement and Session.Snapshot().Dark,
+        'Navigation reset model state.'
+      );
+    end for;
+
+    Send(Session, State.Msg.Navigate('effects'));
+    Send(Session, State.Msg.Focus('modal-open'));
+    Send(Session, State.Msg.Open);
+    Check(
+      Control(Session, 'modal-close').Focused and not Control(Session, 'modal-open').Enabled,
+      'Modal focus and input gating.'
+    );
+    Send(Session, State.Msg.Close);
+    Check(Session.Step(), 'Focus restoration closed the window.');
+    Check(Control(Session, 'modal-open').Focused, 'Modal focus restoration.');
+    Send(Session, State.Msg.Start);
+    Send(Session, State.Msg.Cancel);
+    Check(HasText(Session, 'Status: Cancelled'), 'Cancellation.');
+    Send(Session, State.Msg.Start);
+    Send(Session, State.Msg.Increment);
+    Check(HasText(Session, 'Count: 2'), 'Window did not remain responsive during work.');
+    const Deadline: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+    while not HasText(Session, 'Status: Completed') and Deadline.ElapsedMilliseconds < 5000L do
+      Check(Session.Step(), 'Background completion closed the window.');
+    end while;
+
+    Check(HasText(Session, 'Status: Completed'), 'Background result did not reach the owner.');
+    Send(Session, State.Msg.Start);
+    discard Session.Post(State.Msg.Quit);
+    while Session.Step() do
+    end while;
+
+    Check(not Session.IsOpen(), 'Admission remained open after shutdown.');
+    case Session.Post(State.Msg.Increment) of
+      when Mvu.Admission.Closed:
+      else
+        raise new Sys.InvalidOperationException('Late message admitted.');
+    end case;
+
+    Rejected := false;
+    try
+      Session.CapturePng(Capture);
+    catch Error: Sys.ObjectDisposedException do
+      Rejected := true;
+    end try;
+
+    Check(Rejected, 'Capture used a destroyed native window.');
+    Session.Dispose();
+  end for;
+
+  Console.WriteLine(
+    'packaged gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then 'software'
+      else 'opengl'
+      end if
+  );
+end procedure;
+
+function Encoded(Value: string): string;
+begin
+  return Sys.Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(Value));
+end function;
+
+procedure Observe(Title: string; Capture: string);
+begin
+  using const Session: Gui.Session<State.Msg> := Open(Cui.CuiRenderer.Software, Title);
+  while Session.Step() do
+    const Frame: Gui.Frame := Session.Snapshot();
+    Console.WriteLine(
+      'FRAME ' + Frame.Id.ToString() + ' ' + cast<int>(Frame.Size.Width).ToString() + ' ' +
+      cast<int>(Frame.Size.Height).ToString() + ' ' + Frame.Dark.ToString()
+    );
+    for Label: string in Frame.Text do
+      Console.WriteLine('TEXT ' + Encoded(Label));
+    end for;
+
+    for Item: Gui.Control in Frame.Controls do
+      Console.WriteLine(
+        'CONTROL ' + Encoded(Item.Id) + ' ' + Encoded(Item.Key) + ' ' + Encoded(Item.Value) + ' ' +
+        cast<int>(Item.Bounds.X).ToString() + ' ' + cast<int>(Item.Bounds.Y).ToString() + ' ' +
+        cast<int>(Item.Bounds.Width).ToString() + ' ' + cast<int>(Item.Bounds.Height).ToString() +
+        ' ' + Item.Focused.ToString()
+      );
+    end for;
+
+    Session.CapturePng(Capture);
+    Console.WriteLine('END');
+  end while;
+end procedure;
+
+procedure Run(Arguments: array of string);
+requires Arguments.Length = 3 or Arguments.Length = 4;
+begin
+  if Arguments[1] = 'observe' then
+    Observe(Arguments[2], Arguments[3]);
+    return;
+  end if;
+
+  Check(Arguments[1] = 'software' or Arguments[1] = 'opengl', 'Unknown renderer.');
+  Verify(
+    if Arguments[1] = 'software' then Cui.CuiRenderer.Software else Cui.CuiRenderer.OpenGl end if,
+    Arguments[2]
+  );
+end procedure;
+
+begin
+  Run(Sys.Environment.GetCommandLineArgs());
+end;
+end program;

@@ -1,13 +1,6 @@
 unit Fpas.Tui.Internal.Layout.Equivalence;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Scene as Tree,
-  Fpas.Tui.Internal.Layout.SelectionLists as S, System as Sys,
-  Fpas.Tui.Internal.Layout.ScrollViews as V,
-  Fpas.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Tui.Internal.Layout.TabHeaders as Tabs,
-  Fpas.Tui.Internal.Layout.EditorView as EditorView,
-  System.Collections.Generic as Generic;
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.Layout.Scene as Tree, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.EditorView as EditorView, System.Collections.Generic as Generic;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin
@@ -19,18 +12,10 @@ begin
         else
           return false;
       end case;
-    when Tree.Binding.Edit(
-      const Value: string,
-      const Change: function(string): TMsg,
-      const Hint: bool
-    ):
+    when Tree.Binding.Toggle(const Value: Actions.Toggle<TMsg>):
       case Right of
-        when Tree.Binding.Edit(
-          const OtherValue: string,
-          const OtherChange: function(string): TMsg,
-          const OtherHint: bool
-        ):
-          return Value = OtherValue and Hint = OtherHint and Sys.Object.Equals(Change, OtherChange);
+        when Tree.Binding.Toggle(const Other: Actions.Toggle<TMsg>):
+          return Value.Checked = Other.Checked;
         else
           return false;
       end case;
@@ -65,10 +50,10 @@ begin
     when Tree.Binding.Canvas(
       const Column: int,
       const Row: int,
-      const Events: E.CanvasEvents<TMsg>
+      const Events: T.CanvasEvents<TMsg>
     ):
       case Right of
-        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: E.CanvasEvents<TMsg>):
+        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: T.CanvasEvents<TMsg>):
           return X = Column and Y = Row and Events = Other;
         else
           return false;
@@ -76,7 +61,7 @@ begin
   end case;
 end function;
 
-function SameKeys<TMsg>(Left: array of E.ShortcutBinding<TMsg>; Right: array of E.ShortcutBinding<TMsg>): bool;
+function SameKeys<TMsg>(Left: array of K.ShortcutBinding<TMsg>; Right: array of K.ShortcutBinding<TMsg>): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -105,26 +90,12 @@ begin
     return false;
   end if;
 
-  case Left.Escape of
-    when E.EscapeBinding.Send(const Message: TMsg):
-      case Right.Escape of
-        when E.EscapeBinding.Send(const Other: TMsg):
-          return Generic.EqualityComparer<TMsg>.Default.Equals(Message, Other);
-        else
-          return false;
-      end case;
-    when E.EscapeBinding.None:
-      case Right.Escape of
-        when E.EscapeBinding.None:
-          return true;
-        else
-          return false;
-      end case;
-  end case;
+  return true;
 end function;
 
 public function Equivalent<TMsg>(Left: Tree.Layout<TMsg>; Right: Tree.Layout<TMsg>): bool;
 begin
+  // Callback identity is not presentation state. The host always installs the new routing tree.
   if Left.Cells.Length <> Right.Cells.Length or Left.Controls.Length <> Right.Controls.Length
     or Left.Regions.Length <> Right.Regions.Length
     or not SameScope<TMsg>(

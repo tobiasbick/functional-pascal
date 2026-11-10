@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Fpas.Tui;
+using Fpas.Ui;
 using Microsoft.Win32.SafeHandles;
 using Mvu = Fpas.Mvu.Application;
 

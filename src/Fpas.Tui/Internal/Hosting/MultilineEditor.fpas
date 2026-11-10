@@ -1,13 +1,10 @@
 unit Fpas.Tui.Internal.Hosting.MultilineEditor;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Editors as Editors, Fpas.Tui.Internal.Layout.EditorView as View,
-  Fpas.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Tui.Internal.Hosting.Editing as Edit,
-  System as Sys;
+uses Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.View.Editors as Editors, Fpas.Tui.Internal.Layout.EditorView as View, Fpas.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys;
 
 const NewLine: string := new string(#10, 1);
-const ExtendDocument: E.KeyModifiers := cast<E.KeyModifiers>(cast<int>(E.KeyModifiers.Ctrl)
-  or cast<int>(E.KeyModifiers.Shift));
+const ExtendDocument: K.KeyModifiers := cast<K.KeyModifiers>(cast<int>(K.KeyModifiers.Ctrl)
+  or cast<int>(K.KeyModifiers.Shift));
 
 public type Handler<TMsg> = record implements TextEditing.ITextEditor
   public Viewport: View.Viewport<TMsg>;
@@ -18,7 +15,11 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
     const Document: View.Document := self.Viewport.Document;
     const Position: Editors.EditorPosition := View.Resolve(Document, Requested);
     if Position <> Document.Position then
-      self.Apply(self.Viewport.OnNavigate(Position));
+      case self.Viewport.Events.Navigate(Position) of
+        when Actions.Result.Send(const Message: TMsg):
+          self.Apply(Message);
+        when Actions.Result.NoAction:
+      end case;
     end if;
   end procedure;
 
@@ -50,7 +51,7 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
     end if;
 
     const Updated: View.Document := View.Arrange(Change.Text, Document.Area, Requested);
-    self.Apply(self.Viewport.OnEdit(new Editors.TextEdit(Updated.Text, Updated.Position)));
+    self.Apply(self.Viewport.Events.Edit(new Editors.TextEdit(Updated.Text, Updated.Position)));
   end procedure;
 
   public procedure Insert(Text: string);
@@ -65,7 +66,11 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
       NewLine
     ).Replace(#13, #10).Replace(#8232, #10).Replace(#8233, #10);
     self.Commit(
-      Edit.Replace(Document.Text, new Edit.Selection(Position.Caret, Position.Anchor), Normalized)
+      Edit.Replace(
+        Document.Text,
+        new Edit.Selection(Position.Caret, Position.Anchor),
+        if self.Viewport.MultipleLines then Normalized else G.SingleLine(Normalized) end if
+      )
     );
   end procedure;
 
@@ -73,21 +78,34 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
   begin
     const Document: View.Document := self.Viewport.Document;
     const Position: Editors.EditorPosition := Document.Position;
-    self.Move(View.IndexAt(Document, Position.TopRow + Row, Position.LeftColumn + Column), false);
+    self.Move(
+      View.IndexAt(
+        Document,
+        Position.TopRow + Row,
+        Position.LeftColumn + Column - (if self.Viewport.MultipleLines then 0 else 2 end if)
+      ),
+      false
+    );
   end procedure;
 
-  public function Key(Pressed: E.Key; Modifiers: E.KeyModifiers): bool;
+  public function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): bool;
   begin
     const Document: View.Document := self.Viewport.Document;
     const Position: Editors.EditorPosition := Document.Position;
-    const Extend: bool := Modifiers = E.KeyModifiers.Shift or Modifiers = ExtendDocument;
-    if Modifiers = E.KeyModifiers.Ctrl or Modifiers = ExtendDocument then
+    const Extend: bool := Modifiers = K.KeyModifiers.Shift or Modifiers = ExtendDocument;
+    if not self.Viewport.MultipleLines and (Pressed = K.Key.Enter or Pressed = K.Key.Up or Pressed =
+      K.Key.Down or Pressed = K.Key.PageUp or Pressed = K.Key.PageDown)
+    then
+      return false;
+    end if;
+
+    if Modifiers = K.KeyModifiers.Ctrl or Modifiers = ExtendDocument then
       case Pressed of
-        when E.Key.Home:
+        when K.Key.Home:
           self.Move(0, Extend);
-        when E.Key.End:
+        when K.Key.End:
           self.Move(Document.Text.Length, Extend);
-        when E.Key.A:
+        when K.Key.A:
           if Extend then
             return false;
           end if;
@@ -107,54 +125,54 @@ public type Handler<TMsg> = record implements TextEditing.ITextEditor
       return true;
     end if;
 
-    if Modifiers <> E.KeyModifiers.None and Modifiers <> E.KeyModifiers.Shift then
+    if Modifiers <> K.KeyModifiers.None and Modifiers <> K.KeyModifiers.Shift then
       return false;
     end if;
 
     case Pressed of
-      when E.Key.Enter:
+      when K.Key.Enter:
         if Extend then
           return false;
         end if;
 
         self.Insert(NewLine);
-      when E.Key.Backspace, E.Key.Delete:
+      when K.Key.Backspace, K.Key.Delete:
         self.Commit(
           Edit.Delete(
             Document.Text,
             new Edit.Selection(Position.Caret, Position.Anchor),
-            Pressed = E.Key.Backspace
+            Pressed = K.Key.Backspace
           )
         );
-      when E.Key.Left:
+      when K.Key.Left:
         const First: int := Sys.Math.Min(Position.Caret, Position.Anchor);
         self.Move(
           if not Extend and Position.Caret <> Position.Anchor then First
             else Edit.Previous(Document.Text, Position.Caret)
             end if, Extend
         );
-      when E.Key.Right:
+      when K.Key.Right:
         const Last: int := Sys.Math.Max(Position.Caret, Position.Anchor);
         self.Move(
           if not Extend and Position.Caret <> Position.Anchor then Last
             else Edit.Next(Document.Text, Position.Caret)
             end if, Extend
         );
-      when E.Key.Home, E.Key.End:
+      when K.Key.Home, K.Key.End:
         const Line: View.Line := Document.Lines[View.RowAt(Document.Lines, Position.Caret)];
         self.Move(
-          if Pressed = E.Key.Home then Line.Start else Line.Start + Line.Text.Length end if,
+          if Pressed = K.Key.Home then Line.Start else Line.Start + Line.Text.Length end if,
           Extend
         );
-      when E.Key.Up, E.Key.Down, E.Key.PageUp, E.Key.PageDown:
+      when K.Key.Up, K.Key.Down, K.Key.PageUp, K.Key.PageDown:
         const Row: int := View.RowAt(Document.Lines, Position.Caret);
         const Goal: int := if Position.PreferredColumn >= 0 then Position.PreferredColumn
           else View.ColumnAt(Document.Lines[Row], Position.Caret)
           end if;
         const Delta: int := case Pressed of
-          when E.Key.Up: -1;
-          when E.Key.Down: 1;
-          when E.Key.PageUp: -Document.Area.Height;
+          when K.Key.Up: -1;
+          when K.Key.Down: 1;
+          when K.Key.PageUp: -Document.Area.Height;
           else Document.Area.Height;
         end case;
         const Target: int := Sys.Math.Clamp(Row + Delta, 0, Document.Lines.Length - 1);
@@ -176,14 +194,16 @@ begin
     cast<long>(View.MaximumTop(Viewport.Document))
   ));
   if Top <> Position.TopRow then
-    Apply(
-      Viewport.OnNavigate(
-        Position with
-          TopRow := Top;
-          FollowCaret := false;
-        end with
-      )
-    );
+    case Viewport.Events.Navigate(
+      Position with
+        TopRow := Top;
+        FollowCaret := false;
+      end with
+    ) of
+      when Actions.Result.Send(const Message: TMsg):
+        Apply(Message);
+      when Actions.Result.NoAction:
+    end case;
   end if;
 end procedure;
 end unit;

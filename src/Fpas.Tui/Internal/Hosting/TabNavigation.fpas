@@ -1,25 +1,23 @@
 unit Fpas.Tui.Internal.Hosting.TabNavigation;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Controls.Selection as Selections,
-  Fpas.Tui.Internal.Layout.TabHeaders as Tabs;
+uses Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.Controls.Selection as Selections, Fpas.Tui.Internal.Layout.TabHeaders as Tabs;
 
 public function Key<TMsg>(
-  Bar: Tabs.Header<TMsg>; Pressed: E.Key; Modifiers: E.KeyModifiers; Apply: procedure(TMsg)
+  Bar: Tabs.Header<TMsg>; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)
 ): bool;
 begin
-  if Modifiers <> E.KeyModifiers.None then
+  if Modifiers <> K.KeyModifiers.None then
     return false;
   end if;
   var Index: int := -1;
   case Pressed of
-    when E.Key.Left:
+    when K.Key.Left:
       Index := Selections.Find<TMsg>(Bar, Bar.Active - 1, -1, true);
-    when E.Key.Right:
+    when K.Key.Right:
       Index := Selections.Find<TMsg>(Bar, Bar.Active + 1, 1, true);
-    when E.Key.Home:
+    when K.Key.Home:
       Index := Selections.Find<TMsg>(Bar, 0, 1, false);
-    when E.Key.End:
+    when K.Key.End:
       Index := Selections.Find<TMsg>(Bar, Bar.Count() - 1, -1, false);
     else
       return false;

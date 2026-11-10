@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Fpas.Mvu/Fpas.Mvu.fpasproj" />
+    <ProjectReference Include="../Fpas.Ui/Fpas.Ui.fpasproj" />
     <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" PrivateAssets="all" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>

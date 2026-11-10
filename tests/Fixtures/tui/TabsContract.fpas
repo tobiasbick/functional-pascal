@@ -1,6 +1,6 @@
 program TabsContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
 
 function Update(State: int; Message: int): Mvu.Transition<int, int>;
 begin
@@ -18,15 +18,15 @@ end function;
 
 function View(State: int): E.Element<int>;
 begin
-  const Items: array of E.TabItem := if State = 3 then []
+  const Items: array of Ch.TabItem := if State = 3 then []
     else [
-      new E.TabItem('disabled', 'Disabled', false),
-      new E.TabItem('first', 'First', State < 2),
-      new E.TabItem('last', 'Last', State < 2)
+      new Ch.TabItem('disabled', 'Disabled', false),
+      new Ch.TabItem('first', 'First', State < 2),
+      new Ch.TabItem('last', 'Last', State < 2)
     ]
     end if;
   return E.Tabs<int>(
-    'tabs', Items, if State = 0 then 'missing' else 'disabled' end if,
+    'tabs', Items, if State = 0 or State = 3 then null else 'disabled' end if,
     function(Key: string): int => 1, Panel
   );
 end function;

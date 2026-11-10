@@ -1,10 +1,24 @@
 program TableContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+uses Fpas.Ui.Validation as V, Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
 
-const Columns: array of E.TableColumn := [
-  new E.TableColumn('A', new E.Flex(Basis := 1, Minimum := 1, Maximum := 1)),
-  new E.TableColumn('B', new E.Flex(Basis := 3, Minimum := 3, Maximum := 3))
+const Columns: array of Ch.TableColumn := [
+  new Ch.TableColumn(
+    'A',
+    new L.Flex(
+      Basis := L.Extent.Fixed(L.Measure.Cells(1)),
+      Minimum := L.Measure.Cells(1),
+      Maximum := L.Measure.Cells(1)
+    )
+  ),
+  new Ch.TableColumn(
+    'B',
+    new L.Flex(
+      Basis := L.Extent.Fixed(L.Measure.Cells(3)),
+      Minimum := L.Measure.Cells(3),
+      Maximum := L.Measure.Cells(3)
+    )
+  )
 ];
 
 function Update(State: bool; Message: int): Mvu.Transition<bool, int>;
@@ -19,12 +33,19 @@ end function;
 
 function View(Empty: bool): E.Element<int>;
 begin
-  const Rows: array of E.TableRow := if Empty then []
+  const Rows: array of Ch.TableRow := if Empty then []
     else [
-      new E.TableRow('one', ['界', 'OK'])
+      new Ch.TableRow('one', ['界', 'OK'])
     ]
     end if;
-  return E.Table<int>('table', Columns, Rows, 'one', Message, Message);
+  return E.Table<int>(
+    'table',
+    Columns,
+    Rows,
+    if Empty then null else 'one' end if,
+    Message,
+    Message
+  );
 end function;
 
 begin
@@ -51,13 +72,15 @@ begin
   end if;
   var Rejected: bool := false;
   try
-    discard E.Table<int>(
-      'bad',
-      Columns,
-      [new E.TableRow('one', ['Missing cell'])],
-      '',
-      Message,
-      Message
+    discard V.Prepare<int>(
+      E.Table<int>(
+        'bad',
+        Columns,
+        [new Ch.TableRow('one', ['Missing cell'])],
+        null,
+        Message,
+        Message
+      ), V.Target.Terminal
     );
   catch Failure: Sys.ArgumentException do
     Rejected := true;

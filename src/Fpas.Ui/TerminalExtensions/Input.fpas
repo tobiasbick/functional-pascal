@@ -1,0 +1,197 @@
+unit Fpas.Ui.TerminalExtensions.Input;
+
+uses System as Sys;
+
+/// Named terminal key independent of terminal escape encoding.
+public type Key = enum: byte
+  /// The Unknown key.
+  Unknown;
+  /// The Enter key.
+  Enter;
+  /// The Escape key.
+  Escape;
+  /// The Tab key.
+  Tab;
+  /// The Backspace key.
+  Backspace;
+  /// The Delete key.
+  Delete;
+  /// The Left key.
+  Left;
+  /// The Right key.
+  Right;
+  /// The Up key.
+  Up;
+  /// The Down key.
+  Down;
+  /// The Home key.
+  Home;
+  /// The End key.
+  End;
+  /// The Insert key.
+  Insert;
+  /// The PageUp key.
+  PageUp;
+  /// The PageDown key.
+  PageDown;
+  /// The F1 key.
+  F1;
+  /// The F2 key.
+  F2;
+  /// The F3 key.
+  F3;
+  /// The F4 key.
+  F4;
+  /// The F5 key.
+  F5;
+  /// The F6 key.
+  F6;
+  /// The F7 key.
+  F7;
+  /// The F8 key.
+  F8;
+  /// The F9 key.
+  F9;
+  /// The F10 key.
+  F10;
+  /// The F11 key.
+  F11;
+  /// The F12 key.
+  F12;
+  /// The A key.
+  A;
+  /// The B key.
+  B;
+  /// The C key.
+  C;
+  /// The D key.
+  D;
+  /// The E key.
+  E;
+  /// The F key.
+  F;
+  /// The G key.
+  G;
+  /// The H key.
+  H;
+  /// The I key.
+  I;
+  /// The J key.
+  J;
+  /// The K key.
+  K;
+  /// The L key.
+  L;
+  /// The M key.
+  M;
+  /// The N key.
+  N;
+  /// The O key.
+  O;
+  /// The P key.
+  P;
+  /// The Q key.
+  Q;
+  /// The R key.
+  R;
+  /// The S key.
+  S;
+  /// The T key.
+  T;
+  /// The U key.
+  U;
+  /// The V key.
+  V;
+  /// The W key.
+  W;
+  /// The X key.
+  X;
+  /// The Y key.
+  Y;
+  /// The Z key.
+  Z;
+end enum;
+
+/// Combinable terminal modifier flags.
+public type KeyModifiers = enum: byte
+  /// No modifiers.
+  None = 0;
+  /// Shift modifier.
+  Shift = 1;
+  /// Alt modifier.
+  Alt = 2;
+  /// Control modifier.
+  Ctrl = 4;
+end enum;
+
+/// Terminal pointer transition.
+public type PointerKind = enum: byte
+  /// Pointer movement.
+  Move;
+  /// Button press.
+  Press;
+  /// Button release.
+  Release;
+end enum;
+
+/// Supported terminal click button.
+public type MouseButton = enum: byte
+  /// The Left key.
+  Left;
+  /// Middle pointer button.
+  Middle;
+end enum;
+
+/// A typed scoped terminal shortcut.
+/// <typeparam name="TMsg">Application message type.</typeparam>
+public type ShortcutBinding<TMsg> = record
+  /// Named key when Character is empty.
+  public PressedKey: Key;
+  /// Required key modifiers.
+  public Modifiers: KeyModifiers;
+  /// Message to dispatch after a matching input.
+  public Message: TMsg;
+  /// Exact printable scalar, or empty for a named key.
+  public Character: string := '';
+end record;
+
+/// Percentage limits for a centered terminal layer.
+public type OverlayLimits = record
+  /// Maximum percentage of available columns, in 1..100.
+  public MaxWidthPercent: int := 100;
+  /// Maximum percentage of available rows, in 1..100.
+  public MaxHeightPercent: int := 100;
+end record;
+
+/// Binds a named key and modifier combination in one terminal scope.
+/// <typeparam name="TMsg">Application message type.</typeparam>
+/// <param name="PressedKey">Named key.</param>
+/// <param name="Modifiers">Required modifiers.</param>
+/// <param name="Message">Message dispatched when input matches.</param>
+/// <returns>A shortcut for a screen or modal layer.</returns>
+public function Shortcut<TMsg>(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding<TMsg>;
+begin
+  return new ShortcutBinding<TMsg>(PressedKey, Modifiers, Message);
+end function;
+
+/// Binds a typed character when the focused control does not accept text.
+/// <typeparam name="TMsg">Application message type.</typeparam>
+/// <param name="Character">Exactly one printable Unicode scalar.</param>
+/// <param name="Message">Message dispatched when the character matches.</param>
+/// <returns>A character shortcut for one terminal scope.</returns>
+public function CharacterShortcut<TMsg>(Character: string; Message: TMsg): ShortcutBinding<TMsg>;
+begin
+  var Rune: Sys.Text.Rune := new Sys.Text.Rune(0);
+  if not Sys.Text.Rune.TryGetRuneAt(
+    Character,
+    0,
+    out Rune
+  ) or Rune.Utf16SequenceLength <> Character.Length
+    or Sys.Text.Rune.IsControl(Rune)
+  then
+    raise new Sys.ArgumentException('A character shortcut requires one printable Unicode scalar.');
+  end if;
+
+  return new ShortcutBinding<TMsg>(Key.Unknown, KeyModifiers.None, Message, Character);
+end function;
+end unit;

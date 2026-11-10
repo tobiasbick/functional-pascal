@@ -1,9 +1,6 @@
 unit Fpas.Tui.Internal.Layout.EditorView;
 
-uses
-  Fpas.Tui.Editors as Editors, Fpas.Tui.Internal.Hosting.Editing as Edit,
-  Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Glyphs as G,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Tui.Internal.View.Editors as Editors, Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic;
 
 public type Line = record
   public Start: int;
@@ -19,8 +16,8 @@ end record;
 
 public type Viewport<TMsg> = record
   public Document: Document;
-  public OnEdit: function(Editors.TextEdit): TMsg;
-  public OnNavigate: function(Editors.EditorPosition): TMsg;
+  public Events: Editors.IEvents<TMsg>;
+  public MultipleLines: bool;
 end record;
 
 function Split(Text: string): array of Line;
@@ -114,9 +111,6 @@ public function Equivalent<TMsg>(Left: Viewport<TMsg>; Right: Viewport<TMsg>): b
 begin
   return Left.Document.Text = Right.Document.Text and Left.Document.Position =
     Right.Document.Position
-    and Sys.Object.Equals(
-    Left.OnEdit,
-    Right.OnEdit
-  ) and Sys.Object.Equals(Left.OnNavigate, Right.OnNavigate);
+    and Left.MultipleLines = Right.MultipleLines;
 end function;
 end unit;

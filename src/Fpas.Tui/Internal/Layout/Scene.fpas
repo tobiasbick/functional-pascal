@@ -1,20 +1,15 @@
 unit Fpas.Tui.Internal.Layout.Scene;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V,
-  Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.EditorView as EditorView,
-  Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Rendering.Drawing as D,
-  System.Collections.Generic as Generic;
+uses Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Layout.EditorView as EditorView, Fpas.Tui.Internal.Controls.Activation as Actions, Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
 public type Binding<TMsg> = union
   Invoke(Action: Actions.Direct<TMsg>);
-  Edit(Value: string; Change: function(string): TMsg; ShowsPlaceholder: bool);
+  Toggle(Action: Actions.Toggle<TMsg>);
   Multiline(View: EditorView.Viewport<TMsg>);
   SelectList(List: S.Viewport<TMsg>);
   SelectTab(Bar: Tabs.Header<TMsg>);
   Scroll(View: V.Viewport<TMsg>);
-  Canvas(Column: int; Row: int; Events: E.CanvasEvents<TMsg>);
+  Canvas(Column: int; Row: int; Events: T.CanvasEvents<TMsg>);
 end union;
 
 public type Control<TMsg> = record
@@ -27,14 +22,14 @@ public type Control<TMsg> = record
   public FocusReturn: string;
   public Enabled: bool;
   public Action: Binding<TMsg>;
-  public Variant: E.ButtonVariant;
+  public Variant: UiStyle.ButtonVariant;
 end record;
 
 public type Scope<TMsg> = record
   public Id: string;
   public Initial: string;
-  public Escape: E.EscapeBinding<TMsg>;
-  public Shortcuts: array of E.ShortcutBinding<TMsg>;
+  public Escape: Sys.Func<TMsg>?;
+  public Shortcuts: array of K.ShortcutBinding<TMsg>;
 end record;
 
 public type ScrollRegion = record
@@ -47,14 +42,15 @@ end record;
 
 public type Layout<TMsg> = record
   public Lines: array of string;
-  public Cells: array of E.Cell;
+  public Cells: array of T.Cell;
   public Controls: array of Control<TMsg>;
   public Active: Scope<TMsg>?;
-  public GlobalKeys: array of E.ShortcutBinding<TMsg>;
+  public GlobalKeys: array of K.ShortcutBinding<TMsg>;
   public Regions: array of ScrollRegion;
-  public Cache: Generic.Dictionary<string, E.CacheEntry<TMsg>>;
   public Painted: array of D.PaintedRow;
   public Allocations: array of F.AllocationMemo;
+  /// Last successful shared preflight/cache, retained by the owner.
+  public Prepared: Validation.Prepared<TMsg>? := null;
 end record;
 
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;
@@ -75,6 +71,8 @@ begin
   case Action of
     when Binding.Invoke(const Direct: Actions.Direct<TMsg>):
       return Direct;
+    when Binding.Toggle(const Checkbox: Actions.Toggle<TMsg>):
+      return Checkbox;
     when Binding.SelectList(const List: S.Viewport<TMsg>):
       return List;
     else

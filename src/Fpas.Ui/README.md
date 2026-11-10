@@ -1,7 +1,7 @@
 # Fpas.Ui
 
-Fpas.Ui defines the declarative view used by the GUI adapter and the planned TUI
-migration. It is an FPAS library with ordinary .NET 10 records, unions and
+Fpas.Ui defines the declarative view used by the GUI and TUI adapters.
+It is an FPAS library with ordinary .NET 10 records, unions and
 delegates. It can be used with [Fpas.Mvu](../Fpas.Mvu/README.md) and has no
 dependency on a host, renderer or CUI.
 
@@ -25,7 +25,7 @@ them. Replace changed data on a subsequent view.
 `Fpas.Ui.Validation.Prepare` checks the following profiles. The table defines
 the contract accepted by the validator. The host references describe rendering
 and input support. [GUI adapter](../Fpas.Gui/README.md),
-[TUI migration](../../docs/future/gui/tui-alignment.md).
+[TUI adapter](../Fpas.Tui/README.md).
 
 | Widget or option | Portable | Terminal | Graphical |
 | --- | --- | --- | --- |
@@ -41,6 +41,7 @@ and input support. [GUI adapter](../Fpas.Gui/README.md),
 | Fixed basis, bounds, spacing and scroll offsets in logical units | | | Yes |
 | Semantic style roles and typed cached subviews | Yes | Yes | Yes |
 | `CellStyled` colors and `CellCanvas` drawing/input | | Yes | |
+| Terminal screens/layers, pinned panels, status hints, exact viewport and fixed canvas | | Yes | |
 | Packed RGBA image and logical-coordinate vector canvas | | | Yes |
 
 ## Layout and style
@@ -56,7 +57,9 @@ or `Measure.Logical` in their corresponding target profile.
 `Layout.Viewport` expresses width and height independently as compact, regular
 or expanded. The host maps its measurements to these classes. Applications
 that depend on exact rows, cells or GUI dimensions can choose separate views
-with the same model and update function.
+with the same model and update function. `TerminalExtensions.Views.Viewport`
+resolves a terminal subtree from exact `Terminal.Viewport` columns and rows.
+The terminal host supplies this context to Prepare before any drawing.
 
 `Styled` and button variants select semantic theme roles. Supply a theme key
 or the relevant theme values as typed `CachedSubview` dependencies when

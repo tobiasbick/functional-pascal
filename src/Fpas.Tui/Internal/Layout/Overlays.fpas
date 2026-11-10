@@ -1,8 +1,6 @@
 unit Fpas.Tui.Internal.Layout.Overlays;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Layout.Measurement as M, System as Sys;
+uses Fpas.Tui.Internal.View.Tree as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.Measurement as M, System as Sys;
 
 public type PanelBounds = record
   public Body: F.Rect;
@@ -10,7 +8,7 @@ public type PanelBounds = record
   public Framed: bool;
 end record;
 
-public function Place<TMsg>(Content: E.Element<TMsg>; Area: F.Rect; Limits: E.OverlayLimits?): F.Rect;
+public function Place<TMsg>(Content: E.Element<TMsg>; Area: F.Rect; Limits: K.OverlayLimits?): F.Rect;
 begin
   var MaxWidth: int := Area.Width;
   var MaxHeight: int := Area.Height;

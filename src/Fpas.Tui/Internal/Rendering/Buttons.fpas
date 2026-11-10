@@ -1,16 +1,14 @@
 unit Fpas.Tui.Internal.Rendering.Buttons;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
+uses Fpas.Tui.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
 
 public function Resolve(
-  Theme: E.Theme; Variant: E.ButtonVariant; Enabled: bool;
+  Theme: Th.Theme; Variant: UiStyle.ButtonVariant; Enabled: bool;
   Focused: bool := false; Hovered: bool := false
-): E.Style?;
+): T.Style?;
 begin
-  const Styles: E.ButtonStyles? := Theme.Buttons;
-  if Styles = null or Variant = E.ButtonVariant.Default then
+  const Styles: Th.ButtonStyles? := Theme.Buttons;
+  if Styles = null or Variant = UiStyle.ButtonVariant.Default then
     return null;
   end if;
 
@@ -18,10 +16,10 @@ begin
     return Styles.Disabled;
   end if;
 
-  const Appearance: E.ButtonAppearance := case Variant of
-    when E.ButtonVariant.Primary: Styles.Primary;
-    when E.ButtonVariant.Active: Styles.Active;
-    when E.ButtonVariant.Destructive: Styles.Destructive;
+  const Appearance: Th.ButtonAppearance := case Variant of
+    when UiStyle.ButtonVariant.Primary: Styles.Primary;
+    when UiStyle.ButtonVariant.Active: Styles.Active;
+    when UiStyle.ButtonVariant.Destructive: Styles.Destructive;
     else Styles.Secondary;
   end case;
   return if Focused then Appearance.Focused
@@ -30,11 +28,11 @@ begin
 end function;
 
 public procedure Paint(
-  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: E.Style;
-  Theme: E.Theme; Caption: string; IsButton: bool; Variant: E.ButtonVariant; Enabled: bool
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: T.Style;
+  Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool
 );
 begin
-  const Color: E.Style? := Resolve(Theme, Variant, Enabled);
+  const Color: T.Style? := Resolve(Theme, Variant, Enabled);
   if Color <> null then
     D.Fill(Operations, Clip, Color);
   end if;

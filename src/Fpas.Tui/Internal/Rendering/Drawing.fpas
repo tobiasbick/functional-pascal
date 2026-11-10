@@ -1,32 +1,29 @@
 unit Fpas.Tui.Internal.Rendering.Drawing;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic,
-  System.Globalization as Global, System.Text as Text;
+uses Fpas.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;
 
 public type Operation = record
   public Value: string;
   public Area: F.Rect;
   public Clip: F.Rect;
-  public Style: E.Style;
+  public Style: T.Style;
   public Wrap: bool;
 end record;
 
 public type PaintedRow = record
   public Operations: array of Operation;
-  public DefaultStyle: E.Style;
-  public Cells: array of E.Cell;
+  public DefaultStyle: T.Style;
+  public Cells: array of T.Cell;
   public Text: string;
 end record;
 
 public type Surface = record
   public Rows: array of PaintedRow;
-  public Cells: array of E.Cell;
+  public Cells: array of T.Cell;
   public Lines: array of string;
 end record;
 
-public procedure Fill(Operations: Generic.List<Operation>; Area: F.Rect; Style: E.Style);
+public procedure Fill(Operations: Generic.List<Operation>; Area: F.Rect; Style: T.Style);
 begin
   const Spaces: string := new string(#32, Area.Width);
   for Row: int := Area.Y to Area.Y + Area.Height - 1 do
@@ -36,47 +33,27 @@ begin
   end for;
 end procedure;
 
-public function PlaceholderStyle(Field: E.Style; Theme: E.Theme): E.Style;
+public function PlaceholderStyle(Field: T.Style; Theme: Th.Theme): T.Style;
 begin
   return if Theme.PlaceholderColor < 0 then Field
-    else new E.Style(Theme.PlaceholderColor, Field.Background)
+    else new T.Style(Theme.PlaceholderColor, Field.Background)
     end if;
 end function;
 
-public procedure TextField(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Value: string;
-  Hint: string; Caret: int; Style: E.Style; Theme: E.Theme
-);
-begin
-  const Widgets: E.WidgetStyles? := Theme.Widgets;
-  const Field: E.Style := if Widgets = null then Style else Widgets.Field end if;
-  const Prompt: string := if Widgets = null then '> ' else '› ' end if;
-  if Widgets <> null then
-    Fill(Operations, Clip, Field);
-  end if;
-
-  const Start: int := G.ViewStart(Value, Caret, Area.Width - 2);
-  Operations.Add(new Operation(Prompt + Value.Substring(Start), Area, Clip, Field, false));
-  if Hint <> '' and Area.Width > 2 then
-    const Content: F.Rect := new F.Rect(Area.X + 2, Area.Y, Area.Width - 2, 1);
-    Operations.Add(new Operation(Hint, Content, Clip, PlaceholderStyle(Field, Theme), false));
-  end if;
-end procedure;
-
-public function SelectionStyle(Selected: bool; Style: E.Style; Widgets: E.WidgetStyles?): E.Style;
+public function SelectionStyle(Selected: bool; Style: T.Style; Widgets: Th.WidgetStyles?): T.Style;
 begin
   return if Selected and Widgets <> null then Widgets.Selected else Style end if;
 end function;
 
 public procedure ListRow(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
-  Caption: string; Selected: bool; Style: E.Style; Widgets: E.WidgetStyles?
+  Caption: string; Selected: bool; Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
   const Prefix: string := if Selected then if Widgets = null then '* ' else '▸ ' end if
     else '  '
     end if;
-  const Color: E.Style := SelectionStyle(Selected, Style, Widgets);
+  const Color: T.Style := SelectionStyle(Selected, Style, Widgets);
   if Selected and Widgets <> null then
     Fill(Operations, F.Intersect(Area, Clip), Color);
   end if;
@@ -84,24 +61,24 @@ begin
   Operations.Add(new Operation(Prefix + Caption, Area, Clip, Color, false));
 end procedure;
 
-function BorderStyle(Style: E.Style; Widgets: E.WidgetStyles?): E.Style;
+function BorderStyle(Style: T.Style; Widgets: Th.WidgetStyles?): T.Style;
 begin
   return if Widgets = null then Style
-    else new E.Style(
+    else new T.Style(
       Widgets.BorderColor,
       Style.Background
     )
     end if;
 end function;
 
-function HorizontalEdge(Widgets: E.WidgetStyles?): char;
+function HorizontalEdge(Widgets: Th.WidgetStyles?): char;
 begin
   return if Widgets = null then #45 else #9472 end if;
 end function;
 
 public procedure Divider(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
-  Style: E.Style; Widgets: E.WidgetStyles?
+  Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
   const Width: int := Clip.X + Clip.Width - Area.X;
@@ -133,14 +110,14 @@ end procedure;
 
 public procedure Border(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
-  Style: E.Style; Widgets: E.WidgetStyles?
+  Style: T.Style; Widgets: Th.WidgetStyles?
 );
   procedure Line(Value: string; Column: int; Row: int; Width: int);
   begin
     Operations.Add(new Operation(Value, new F.Rect(Column, Row, Width, 1), Clip, Color, false));
   end procedure;
 begin
-  const Color: E.Style := BorderStyle(Style, Widgets);
+  const Color: T.Style := BorderStyle(Style, Widgets);
   const Rounded: bool := Widgets <> null;
   const Edge: char := HorizontalEdge(Widgets);
   const Vertical: string := if Rounded then '│' else '|' end if;
@@ -169,7 +146,7 @@ end procedure;
 
 public procedure Progress(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Percent: int;
-  Style: E.Style; Widgets: E.WidgetStyles?
+  Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
   const Amount: int := Percent * Area.Width div 100;
@@ -186,7 +163,7 @@ begin
     Operations.Add(
       new Operation(
         new string(#9473, Amount), new F.Rect(Area.X, Area.Y, Amount, 1), Clip,
-        new E.Style(Widgets.ProgressFillColor, Style.Background), false
+        new T.Style(Widgets.ProgressFillColor, Style.Background), false
       )
     );
   end if;
@@ -195,7 +172,7 @@ begin
     Operations.Add(
       new Operation(
         new string(#9472, Left), new F.Rect(Area.X + Amount, Area.Y, Left, 1), Clip,
-        new E.Style(Widgets.ProgressTrackColor, Style.Background), false
+        new T.Style(Widgets.ProgressTrackColor, Style.Background), false
       )
     );
   end if;
@@ -216,7 +193,7 @@ begin
   return true;
 end function;
 
-function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; Blank: E.Cell): PaintedRow;
+function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; Blank: T.Cell): PaintedRow;
   procedure Erase(Column: int);
   begin
     const Old: string := Buffer[Column].Text;
@@ -231,7 +208,7 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
     Buffer[Column] := Blank;
   end procedure;
 
-  procedure Put(Column: int; Value: string; Style: E.Style; Clip: F.Rect);
+  procedure Put(Column: int; Value: string; Style: T.Style; Clip: F.Rect);
   begin
     const Glyph: string := G.Sanitize(Value);
     const Span: int := G.Width(Glyph);
@@ -241,9 +218,9 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
         Erase(Column + 1);
       end if;
 
-      Buffer[Column] := new E.Cell(Glyph, Style);
+      Buffer[Column] := new T.Cell(Glyph, Style);
       if Span = 2 then
-        Buffer[Column + 1] := new E.Cell('', Style);
+        Buffer[Column + 1] := new T.Cell('', Style);
       end if;
     end if;
   end procedure;
@@ -281,7 +258,7 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
     end while;
   end procedure;
 begin
-  const Buffer: Generic.List<E.Cell> := new Generic.List<E.Cell>(Columns);
+  const Buffer: Generic.List<T.Cell> := new Generic.List<T.Cell>(Columns);
   for Column: int := 1 to Columns do
     Buffer.Add(Blank);
   end for;
@@ -290,19 +267,19 @@ begin
     Draw(Item);
   end for;
   const Line: Text.StringBuilder := new Text.StringBuilder();
-  for Cell: E.Cell in Buffer do
+  for Cell: T.Cell in Buffer do
     discard Line.Append(Cell.Text);
   end for;
 
-  return new PaintedRow(Operations, Blank.Style, Buffer.ToArray(), Line.ToString());
+  return new PaintedRow(Operations, Blank.Colors, Buffer.ToArray(), Line.ToString());
 end function;
 
 public function Render(
   Operations: Generic.List<Operation>; Columns: int; Rows: int;
-  Previous: array of PaintedRow; DefaultStyle: E.Style
+  Previous: array of PaintedRow; DefaultStyle: T.Style
 ): Surface;
 begin
-  const Blank: E.Cell := new E.Cell(' ', DefaultStyle);
+  const Blank: T.Cell := new T.Cell(' ', DefaultStyle);
   const Pending: Generic.List<Generic.List<Operation>> := new Generic.List<Generic.List<Operation>>(
     Rows
   );
@@ -317,7 +294,7 @@ begin
     end for;
   end for;
   const Painted: Generic.List<PaintedRow> := new Generic.List<PaintedRow>(Rows);
-  const Cells: Generic.List<E.Cell> := new Generic.List<E.Cell>(Columns * Rows);
+  const Cells: Generic.List<T.Cell> := new Generic.List<T.Cell>(Columns * Rows);
   const Lines: Generic.List<string> := new Generic.List<string>(Rows);
   for Row: int := 0 to Rows - 1 do
     const Plan: array of Operation := Pending[Row].ToArray();

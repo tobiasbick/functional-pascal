@@ -2,6 +2,14 @@ unit Fpas.Ui.Terminal;
 
 uses System as Sys;
 
+/// Exact dimensions for an explicitly terminal-specific responsive subtree.
+public type Viewport = record
+  /// Available terminal columns.
+  public Columns: int;
+  /// Available terminal rows.
+  public Rows: int;
+end record;
+
 /// Optional terminal color overrides using 24-bit RGB values.
 public type Style = record
   /// The foreground color or null to inherit.

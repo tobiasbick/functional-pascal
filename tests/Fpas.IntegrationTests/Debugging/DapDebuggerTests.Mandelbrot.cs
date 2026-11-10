@@ -25,7 +25,7 @@ public sealed partial class DapDebuggerTests
         await Type("2"u8.ToArray());
         await Wait(new() { ["text"] = "Ember  ready" });
         Assert.Contains((await Frame()).GetProperty("cells").EnumerateArray(), cell =>
-            cell.GetProperty("style").GetProperty("foreground").GetInt32() == 0xB03A00);
+            cell.GetProperty("colors").GetProperty("foreground").GetInt32() == 0xB03A00);
 
         await Type("+\u001b[<64;8;6M"u8.ToArray());
         await Wait(new() { ["text"] = "Zoom 1.39x" });
@@ -83,7 +83,7 @@ public sealed partial class DapDebuggerTests
         var cells = frame.GetProperty("cells");
         var stride = frame.GetProperty("columns").GetInt32();
         var start = canvas.GetProperty("row").GetInt32() * stride + canvas.GetProperty("column").GetInt32();
-        Assert.Equal(0, cells[start + height / 2 * stride + width / 2].GetProperty("style").GetProperty("foreground").GetInt32());
-        Assert.InRange(cells[start].GetProperty("style").GetProperty("foreground").GetInt32(), 1, 0xFFFFFF);
+        Assert.Equal(0, cells[start + height / 2 * stride + width / 2].GetProperty("colors").GetProperty("foreground").GetInt32());
+        Assert.InRange(cells[start].GetProperty("colors").GetProperty("foreground").GetInt32(), 1, 0xFFFFFF);
     }
 }

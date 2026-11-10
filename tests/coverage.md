@@ -95,8 +95,24 @@ and checks that Native AOT neither imports nor extracts CUI.
 Run the GUI suite under Xvfb on headless Linux; see the
 [binding reference](../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
 Window cases are skipped on Linux without `DISPLAY`. Encoding tests still run.
-The [GUI plan](../docs/future/gui/verification-and-documentation.md) tracks OS
-input delivery, leak checks and final application publishing.
+
+`GuiPublishingTests` packages Fpas.Mvu, Fpas.Ui and Fpas.Gui with a fresh SDK and
+the matching native binding. A package-only consumer runs the real gallery in
+all five delivery modes under software and OpenGL. It checks Unicode selection,
+controlled widgets, modal focus, scrolling, theme state, background completion
+and cancellation, resource removal and repeated public-session teardown.
+NativeAOT/single-file run from an executable-only directory without .NET host
+search; the test checks extraction and ELF imports on Linux. Capture checks
+cover the public owner-thread PNG operation and preserve the session on failure.
+
+The separate Linux X11 case drives actual X server events through XTest:
+pointer/button input, Ctrl+A and typing, native resize, modal Escape and
+WM_DELETE_WINDOW close. It checks published model values, selection of the
+responsive layout, focus and theme preservation. Other GUI input tests inject
+directly through CUI; they are not evidence of OS event delivery. Native texture
+accounting and editor/image counts establish owned-resource cleanup; process
+working set is not the acceptance criterion. Windows platform evidence remains
+in the [GUI plan](../docs/future/gui/verification-and-documentation.md).
 
 ## Shared widget contracts
 
@@ -107,6 +123,19 @@ diagnostics for incompatible units or extensions, duplicate IDs and keys,
 malformed tables, invalid selections and split graphemes.
 
 ## Terminal UI
+
+Both hosts use the same [Fpas.Ui](../src/Fpas.Ui/README.md) tree. GuiHostTests
+compiles a portable view with the same model/update callbacks for both hosts
+and compares checkbox, editor, selection, tab and modal messages, values,
+focus commands and background-result delivery. The terminal host retains its
+cell layout and renderer.
+
+The shared terminal fixture checks disabled collection focus, deferred checkbox
+mapping, Space/Enter activation, disabled-row navigation, rejected controlled
+edits, host-owned scrollbar options, fresh routing with reused frames and
+preflight diagnostics before drawing. TerminalBoundaryTests compiles and runs
+the terminal libraries with an unavailable GUI build command, no CUI files,
+and checks that their assembly references contain no GUI dependency.
 
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
@@ -129,8 +158,8 @@ The gallery checks themed button variants, disabled, hovered and focused
 appearance, live palette changes and activation of the destructive variant.
 The multiline fixture checks grapheme-safe deletion, newline normalization,
 caret visibility on resize and navigation without an edit message. The
-gallery DAP test restores a document's caret and scroll position and pastes
-several lines through the private terminal.
+gallery DAP test restores a document's model-owned selection, follows its caret
+after a document switch and pastes several lines through the private terminal.
 The gallery DAP test resizes the private terminal across the layout threshold
 with a modal overlay open and closes it with Enter through the terminal.
 The headless gallery checks the overlay caps, body scrolling and the

@@ -1,9 +1,6 @@
 unit Fpas.Tui.Internal.Layout.ScrollViews;
 
-uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
-  Fpas.Tui.Internal.Layout.Measurement as M,
-  Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Layout as L, Fpas.Tui.Internal.View.Tree as E, Fpas.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Tui.Internal.Layout.Flexible as F, Fpas.Tui.Internal.Layout.Measurement as M, Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public type Viewport<TMsg> = record
   public Offset: int;
@@ -11,7 +8,7 @@ public type Viewport<TMsg> = record
   public Rows: int;
   public Following: bool;
   public Bar: bool;
-  public OnScroll: function(E.ScrollChange): TMsg;
+  public OnScroll: Sys.Func<L.ScrollChange, TMsg>?;
 end record;
 
 public type Geometry<TMsg> = record
@@ -27,7 +24,7 @@ end function;
 
 function Resolve<TMsg>(
   Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
-  ShowScrollbar: bool; OnScroll: function(E.ScrollChange): TMsg
+  ShowScrollbar: bool; OnScroll: Sys.Func<L.ScrollChange, TMsg>?
 ): Viewport<TMsg>;
 begin
   const Maximum: int := Sys.Math.Max(0, ContentRows - Area.Height);
@@ -48,7 +45,7 @@ end function;
 
 public function Arrange<TMsg>(
   Child: E.Element<TMsg>; Position: E.ScrollPosition; Area: F.Rect; Clip: F.Rect;
-  ShowScrollbar: bool; OnScroll: function(E.ScrollChange): TMsg
+  ShowScrollbar: bool; OnScroll: Sys.Func<L.ScrollChange, TMsg>?
 ): Geometry<TMsg>;
 begin
   var Height: int := ContentHeight<TMsg>(Child, Area);
@@ -67,7 +64,7 @@ end function;
 
 public procedure DrawBar<TMsg>(
   View: Viewport<TMsg>; Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect;
-  Style: E.Style; Widgets: E.WidgetStyles?
+  Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
   if not View.Bar then
@@ -80,11 +77,11 @@ begin
   );
   const Start: int := cast<int>(cast<long>(View.Offset) * cast<long>(View.Rows - Thumb) div
     cast<long>(View.Maximum));
-  const TrackStyle: E.Style := if Widgets = null then Style
-    else new E.Style(Widgets.ProgressTrackColor, Style.Background)
+  const TrackStyle: T.Style := if Widgets = null then Style
+    else new T.Style(Widgets.ProgressTrackColor, Style.Background)
     end if;
-  const ThumbStyle: E.Style := if Widgets = null then Style
-    else new E.Style(Widgets.ProgressFillColor, Style.Background)
+  const ThumbStyle: T.Style := if Widgets = null then Style
+    else new T.Style(Widgets.ProgressFillColor, Style.Background)
     end if;
   for Row: int := 0 to View.Rows - 1 do
     const BarCell: F.Rect := new F.Rect(Area.X + Area.Width - 1, Area.Y + Row, 1, 1);
@@ -101,9 +98,6 @@ end procedure;
 public function Equivalent<TMsg>(Left: Viewport<TMsg>; Right: Viewport<TMsg>): bool;
 begin
   return Left.Offset = Right.Offset and Left.Maximum = Right.Maximum and Left.Rows = Right.Rows
-    and Left.Following = Right.Following and Left.Bar = Right.Bar and Sys.Object.Equals(
-    Left.OnScroll,
-    Right.OnScroll
-  );
+    and Left.Following = Right.Following and Left.Bar = Right.Bar;
 end function;
 end unit;

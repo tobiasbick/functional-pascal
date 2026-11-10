@@ -1,9 +1,6 @@
 program FilterList;
 
-uses
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, System as Sys,
-  System.Collections.Generic as Generic, System.Console as Console,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Tui.Themes as TerminalThemes, System as Sys, System.Collections.Generic as Generic, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Preset = enum: byte
   Light;
@@ -14,11 +11,12 @@ type Preset = enum: byte
 end enum;
 
 type Msg = union
-  FilterChanged(Value: string);
+  FilterChanged(Value: Ed.TextEdit);
+  FilterMoved(Position: Ed.EditorPosition);
   SelectItem(Id: string);
   OpenOptions;
   CloseOptions;
-  ScrollOptions(Position: E.ScrollPosition);
+  ScrollOptions(Position: L.ScrollPosition);
   ShowHidden(Value: bool);
   ChangeTheme(Value: Preset);
   ResetOptions;
@@ -36,10 +34,11 @@ end record;
 
 type Model = record
   public Filter: string := '';
+  public FilterPosition: Ed.EditorPosition := new Ed.EditorPosition();
   public Selected: string := '';
   public ShowHidden: bool := false;
   public Options: bool := false;
-  public OptionsPosition: E.ScrollPosition := E.ScrollPosition.Offset(0);
+  public OptionsPosition: L.ScrollPosition := L.ScrollPosition.Offset(L.Measure.Cells(0));
   public Appearance: Preset := Preset.Dark;
   public Progress: int := 0;
   public Refreshing: bool := false;
@@ -48,25 +47,25 @@ end record;
 
 const Names: array of string := ['Amber', 'Birch', 'Cedar', 'Hidden'];
 
-function ColorsFor(State: Model): Themes.Palette;
+function ColorsFor(State: Model): TerminalThemes.Theme;
 begin
   case State.Appearance of
     when Preset.Light:
-      return Themes.Light();
+      return TerminalThemes.Light();
     when Preset.Green:
-      return Themes.Green();
+      return TerminalThemes.Green();
     when Preset.Blue:
-      return Themes.Blue();
+      return TerminalThemes.Blue();
     when Preset.Amber:
-      return Themes.Amber();
+      return TerminalThemes.Amber();
     else
-      return Themes.Dark();
+      return TerminalThemes.Dark();
   end case;
 end function;
 
-function ThemeFor(State: Model): E.Theme;
+function ThemeFor(State: Model): TerminalThemes.Theme;
 begin
-  return ColorsFor(State).Theme;
+  return ColorsFor(State);
 end function;
 
 async function RefreshItems(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
@@ -82,9 +81,14 @@ begin
   var Next: Model := State;
   var Commands: array of Mvu.Command<Msg> := [];
   case Message of
-    when Msg.FilterChanged(const Value: string):
+    when Msg.FilterChanged(const Value: Ed.TextEdit):
       Next := State with
-        Filter := Value;
+        Filter := Value.Text;
+        FilterPosition := Value.Position;
+      end with;
+    when Msg.FilterMoved(const Position: Ed.EditorPosition):
+      Next := State with
+        FilterPosition := Position;
       end with;
     when Msg.SelectItem(const Id: string):
       Next := State with
@@ -93,13 +97,13 @@ begin
     when Msg.OpenOptions:
       Next := State with
         Options := true;
-        OptionsPosition := E.ScrollPosition.Offset(0);
+        OptionsPosition := L.ScrollPosition.Offset(L.Measure.Cells(0));
       end with;
     when Msg.CloseOptions:
       Next := State with
         Options := false;
       end with;
-    when Msg.ScrollOptions(const Position: E.ScrollPosition):
+    when Msg.ScrollOptions(const Position: L.ScrollPosition):
       Next := State with
         OptionsPosition := Position;
       end with;
@@ -159,10 +163,10 @@ end function;
 
 function BuildList(Deps: ListDeps): E.Element<Msg>;
 begin
-  const Items: Generic.List<E.ListItem<Msg>> := new Generic.List<E.ListItem<Msg>>();
+  const Items: Generic.List<Ch.ListItem<Msg>> := new Generic.List<Ch.ListItem<Msg>>();
   for Name: string in Names do
     if Matches(Name, Deps) then
-      Items.Add(new E.ListItem<Msg>(Name, Name, Msg.SelectItem(Name), Name = Deps.Selected));
+      Items.Add(new Ch.ListItem<Msg>(Name, Name, Msg.SelectItem(Name), Name = Deps.Selected));
     end if;
   end for;
 
@@ -171,22 +175,26 @@ begin
     end if;
 end function;
 
-function Status(State: Model; Colors: Themes.Palette): E.Element<Msg>;
+function Status(State: Model; Colors: TerminalThemes.Theme): E.Element<Msg>;
 begin
   if State.Failure <> '' then
-    return E.Styled<Msg>(E.Text<Msg>('Refresh failed · ' + State.Failure), Colors.Error);
+    return E.CellStyled<Msg>(E.Text<Msg>('Refresh failed · ' + State.Failure), Colors.Error);
   end if;
   const Label: string := if State.Refreshing then 'Refreshing'
     else if State.Progress = 100 then 'Up to date' else 'Ready' end if
     end if;
   return E.Row<Msg>(
-    new E.Flow(Gap := 1),
-    E.Styled<Msg>(E.Text<Msg>(Label), Colors.Muted),
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+    E.CellStyled<Msg>(E.Text<Msg>(Label), Colors.Muted),
     E.Size<Msg>(
       E.ProgressBar<Msg>(State.Progress),
-      new E.Flex(Basis := 18, Grow := 1, Maximum := 24)
+      new L.Flex(
+        Basis := L.Extent.Fixed(L.Measure.Cells(18)),
+        Grow := 1,
+        Maximum := L.Measure.Cells(24)
+      )
     ),
-    E.Styled<Msg>(E.Text<Msg>(State.Progress.ToString() + '%'), Colors.Muted)
+    E.CellStyled<Msg>(E.Text<Msg>(State.Progress.ToString() + '%'), Colors.Muted)
   );
 end function;
 
@@ -197,21 +205,21 @@ begin
     'theme-' + Name.ToLowerInvariant(),
     Name,
     Msg.ChangeTheme(Value),
-    Variant := if Value = Selected then E.ButtonVariant.Active else E.ButtonVariant.Secondary end if
+    Variant := if Value = Selected then S.ButtonVariant.Active else S.ButtonVariant.Secondary end if
   );
 end function;
 
-function OptionsScrolled(Change: E.ScrollChange): Msg;
+function OptionsScrolled(Change: L.ScrollChange): Msg;
 begin
   return Msg.ScrollOptions(Change.Position);
 end function;
 
-function Options(State: Model; Colors: Themes.Palette): E.Element<Msg>;
+function Options(State: Model; Colors: TerminalThemes.Theme): E.Element<Msg>;
 begin
   const Settings: E.Element<Msg> := E.Column<Msg>(
-    new E.Flow(Gap := 1),
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
     E.Text<Msg>('Choose which entries appear in the results.'),
-    E.Styled<Msg>(
+    E.CellStyled<Msg>(
       E.Checkbox<Msg>(
         'show-hidden', 'Show hidden', State.ShowHidden,
         function(Value: bool): Msg => Msg.ShowHidden(Value)
@@ -220,11 +228,14 @@ begin
     E.Column<Msg>(
       E.Text<Msg>('Theme · ' + State.Appearance.ToString()),
       E.Row<Msg>(
-        new E.Flow(Gap := 1), ThemeChoice(Preset.Light, State.Appearance),
-        ThemeChoice(Preset.Dark, State.Appearance), ThemeChoice(Preset.Green, State.Appearance)
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+        ThemeChoice(Preset.Light, State.Appearance),
+        ThemeChoice(Preset.Dark, State.Appearance),
+        ThemeChoice(Preset.Green, State.Appearance)
       ),
       E.Row<Msg>(
-        new E.Flow(Gap := 1), ThemeChoice(Preset.Blue, State.Appearance),
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+        ThemeChoice(Preset.Blue, State.Appearance),
         ThemeChoice(Preset.Amber, State.Appearance)
       )
     ),
@@ -234,24 +245,27 @@ begin
     'options-body', Settings, State.OptionsPosition, OptionsScrolled
   );
   const Footer: E.Element<Msg> := E.Row<Msg>(
-    new E.Flow(Gap := 1),
-    E.Size<Msg>(E.Text<Msg>(''), new E.Flex(Grow := 1)),
-    E.Button<Msg>('reset', 'Ctrl+R Reset', Msg.ResetOptions, Variant := E.ButtonVariant.Secondary),
-    E.Button<Msg>('close', 'Esc Done', Msg.CloseOptions, Variant := E.ButtonVariant.Primary)
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+    E.Size<Msg>(E.Text<Msg>(''), new L.Flex(Grow := 1)),
+    E.Button<Msg>('reset', 'Ctrl+R Reset', Msg.ResetOptions, Variant := S.ButtonVariant.Secondary),
+    E.Button<Msg>('close', 'Esc Done', Msg.CloseOptions, Variant := S.ButtonVariant.Primary)
   );
-  const Content: E.Element<Msg> := E.Styled<Msg>(
-    E.OverlayPanel<Msg>(Body, Footer, 'Options', Padding := 1), Colors.Panel
+  const Content: E.Element<Msg> := E.CellStyled<Msg>(
+    Views.Panel<Msg>(Body, Footer, 'Options', Padding := 1), Colors.Panel
   );
-  return E.Overlay<Msg>(
-    'options-overlay', true, 'show-hidden', Msg.CloseOptions, Content,
-    [E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.ResetOptions)],
-    new E.OverlayLimits(MaxWidthPercent := 95, MaxHeightPercent := 90)
+  return Views.Layer<Msg>(
+    'options-overlay',
+    Content,
+    [InputKeys.Shortcut<Msg>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, Msg.ResetOptions)],
+    InitialFocus := 'show-hidden',
+    OnDismiss := function(): Msg => Msg.CloseOptions,
+    Limits := new InputKeys.OverlayLimits(MaxWidthPercent := 95, MaxHeightPercent := 90)
   );
 end function;
 
 function View(State: Model): E.Element<Msg>;
 begin
-  const Colors: Themes.Palette := ColorsFor(State);
+  const Colors: TerminalThemes.Theme := ColorsFor(State);
   const Deps: ListDeps := new ListDeps(State.Filter, State.Selected, State.ShowHidden);
   var Count: int := 0;
   for Name: string in Names do
@@ -265,52 +279,68 @@ begin
     BuildList,
     SameList
   );
-  const Footer: E.Element<Msg> := if State.Options then E.Styled<Msg>(
+  const Footer: E.Element<Msg> := if State.Options then E.CellStyled<Msg>(
       E.Text<Msg>('Options open · Esc to close'),
       Colors.Muted
     )
     else E.Row<Msg>(
-      new E.Flow(Gap := 1),
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
       E.Button<Msg>(
         'options',
         'Ctrl+O Options',
         Msg.OpenOptions,
-        Variant := E.ButtonVariant.Secondary
+        Variant := S.ButtonVariant.Secondary
       ),
-      E.Button<Msg>('refresh', 'Ctrl+R Refresh', Msg.Refresh, Variant := E.ButtonVariant.Primary),
-      E.Button<Msg>('quit', 'Ctrl+Q Quit', Msg.Quit, Variant := E.ButtonVariant.Secondary)
+      E.Button<Msg>('refresh', 'Ctrl+R Refresh', Msg.Refresh, Variant := S.ButtonVariant.Primary),
+      E.Button<Msg>('quit', 'Ctrl+Q Quit', Msg.Quit, Variant := S.ButtonVariant.Secondary)
     )
     end if;
   const Body: E.Element<Msg> := E.Column<Msg>(
-    new E.Flow(Gap := 1, Padding := 1),
+    new L.Flow(
+      Gap := L.Spacing.Fixed(L.Measure.Cells(1)),
+      Padding := L.Spacing.Fixed(L.Measure.Cells(1))
+    ),
     E.Row<Msg>(
-      new E.Flow(Gap := 1),
-      E.Size<Msg>(E.Styled<Msg>(E.Text<Msg>('Filter list'), Colors.Heading), new E.Flex(Grow := 1)),
-      E.Styled<Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      E.Size<Msg>(
+        E.CellStyled<Msg>(E.Text<Msg>('Filter list'), Colors.Heading),
+        new L.Flex(Grow := 1)
+      ),
+      E.CellStyled<Msg>(
         E.Text<Msg>(Count.ToString() + (if Count = 1 then ' match' else ' matches' end if)),
         Colors.Muted
       )
     ),
     E.Row<Msg>(
-      new E.Flow(Gap := 1), E.Styled<Msg>(E.Text<Msg>('Search'), Colors.Muted),
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+      E.CellStyled<Msg>(E.Text<Msg>('Search'), Colors.Muted),
       E.Size<Msg>(
         E.TextInput<Msg>(
           'filter',
           State.Filter,
-          function(Value: string): Msg => Msg.FilterChanged(Value),
+          State.FilterPosition,
+          function(Value: Ed.TextEdit): Msg => Msg.FilterChanged(Value),
+          function(Position: Ed.EditorPosition): Msg => Msg.FilterMoved(Position),
           Placeholder := 'Filter by name…'
         ),
-        new E.Flex(Grow := 1)
+        new L.Flex(Grow := 1)
       )
     ),
     E.Size<Msg>(
-      E.Styled<Msg>(
+      E.CellStyled<Msg>(
         E.Border<Msg>(
-          E.Column<Msg>(new E.Flow(Padding := 1), E.Size<Msg>(Results, new E.Flex(Grow := 1))),
+          E.Column<Msg>(
+            new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(1))),
+            E.Size<Msg>(Results, new L.Flex(Grow := 1))
+          ),
           'Results'
         ), Colors.Panel
       ),
-      new E.Flex(Basis := 6, Minimum := 3, Grow := 1)
+      new L.Flex(
+        Basis := L.Extent.Fixed(L.Measure.Cells(6)),
+        Minimum := L.Measure.Cells(3),
+        Grow := 1
+      )
     ),
     Status(State, Colors),
     Footer
@@ -321,11 +351,11 @@ begin
     ]
     else []
     end if;
-  return E.Screen<Msg>(
+  return Views.Screen<Msg>(
     Body, Layers, [
-      E.Shortcut<Msg>(E.Key.O, E.KeyModifiers.Ctrl, Msg.OpenOptions),
-      E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.Refresh),
-      E.Shortcut<Msg>(E.Key.Q, E.KeyModifiers.Ctrl, Msg.Quit)
+      InputKeys.Shortcut<Msg>(InputKeys.Key.O, InputKeys.KeyModifiers.Ctrl, Msg.OpenOptions),
+      InputKeys.Shortcut<Msg>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, Msg.Refresh),
+      InputKeys.Shortcut<Msg>(InputKeys.Key.Q, InputKeys.KeyModifiers.Ctrl, Msg.Quit)
     ]
   );
 end function;
@@ -341,14 +371,14 @@ begin
   raise new Sys.InvalidOperationException('Missing expected control: ' + Id);
 end function;
 
-procedure CheckPalette(Session: App.HeadlessSession; Control: string; Expected: Themes.Palette);
+procedure CheckPalette(Session: App.HeadlessSession; Control: string; Expected: TerminalThemes.Theme);
 begin
   discard Session.Send(App.Input.Focus(Control));
   discard Session.Step();
   discard Session.Send(App.Input.Activate(Control));
   discard Session.Step();
   const Frame: App.Frame := Session.Snapshot();
-  if Frame.Cells[0].Style.Background <> Expected.Theme.Text.Background then
+  if Frame.Cells[0].Colors.Background <> Expected.Text.Background then
     raise new Sys.InvalidOperationException(
       'The palette was not applied to the current frame: ' + Control
     );
@@ -374,7 +404,7 @@ begin
     raise new Sys.InvalidOperationException('Paste was not normalized.');
   end if;
 
-  discard Session.Send(App.Input.KeyPress(E.Key.A, E.KeyModifiers.Ctrl));
+  discard Session.Send(App.Input.KeyPress(InputKeys.Key.A, InputKeys.KeyModifiers.Ctrl));
   discard Session.Step();
   discard Session.Send(App.Input.TextInput('bir'));
   discard Session.Step();
@@ -385,9 +415,9 @@ begin
   const Selected: App.Frame := Session.Snapshot();
   const Birch: App.ControlSnapshot := RequireControl(Selected, 'items/Birch');
   const Filter: App.ControlSnapshot := RequireControl(Selected, 'filter', true);
-  const Marker: E.Cell := Selected.Cells[Birch.Row * Selected.Columns + Birch.Column];
-  const Field: E.Cell := Selected.Cells[Filter.Row * Selected.Columns + Filter.Column];
-  if Birch.Focused or Marker.Text <> '▸' or Marker.Style.Background = Field.Style.Background then
+  const Marker: T.Cell := Selected.Cells[Birch.Row * Selected.Columns + Birch.Column];
+  const Field: T.Cell := Selected.Cells[Filter.Row * Selected.Columns + Filter.Column];
+  if Birch.Focused or Marker.Text <> '▸' or Marker.Colors.Background = Field.Colors.Background then
     raise new Sys.InvalidOperationException(
       'Selection did not remain visible when focus returned to the filter.'
     );
@@ -398,15 +428,15 @@ begin
   discard Session.Send(App.Input.Activate('options'));
   discard Session.Step();
   discard RequireControl(Session.Snapshot(), 'show-hidden', true);
-  CheckPalette(Session, 'theme-light', Themes.Light());
-  CheckPalette(Session, 'theme-green', Themes.Green());
-  CheckPalette(Session, 'theme-blue', Themes.Blue());
-  CheckPalette(Session, 'theme-amber', Themes.Amber());
-  CheckPalette(Session, 'theme-dark', Themes.Dark());
-  discard Session.Send(App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
+  CheckPalette(Session, 'theme-light', TerminalThemes.Light());
+  CheckPalette(Session, 'theme-green', TerminalThemes.Green());
+  CheckPalette(Session, 'theme-blue', TerminalThemes.Blue());
+  CheckPalette(Session, 'theme-amber', TerminalThemes.Amber());
+  CheckPalette(Session, 'theme-dark', TerminalThemes.Dark());
+  discard Session.Send(App.Input.KeyPress(InputKeys.Key.Escape, InputKeys.KeyModifiers.None));
   discard Session.Step();
   discard RequireControl(Session.Snapshot(), 'options', true);
-  discard Session.Send(App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  discard Session.Send(App.Input.KeyPress(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl));
   discard Session.Step();
   using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
     5000

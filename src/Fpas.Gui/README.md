@@ -75,14 +75,20 @@ semantic control descriptors (ID, role, item key, value, editor position, enable
 focus, hover and finalized bounds), resource counts and theme. It is available on
 the owner after close/failure; reading before the first presentation throws.
 IsSoftware reports actual renderer selection, including fallback.
+CapturePng(Path) saves the last presented native frame on the owner outside Step.
+It requires a live window, a completed presentation and an existing destination
+directory. Capture failures leave the session usable.
 
 ## Build and verification
 
 Build examples through the [local SDK workflow](../../docs/build/development.md#build-an-fpas-application).
-The source reference delivers CUI's shared library and notices. The
-[binding package](../Fpas.Gui.Cui/README.md#packaged-binding) supplies prebuilt native
-assets and static NativeAOT linking; final host packaging belongs to
-[distribution verification](../../docs/future/gui/verification-and-documentation.md).
+The source reference delivers CUI's shared library and notices. Applications can
+reference the Fpas.Gui package from the local distribution feed. Its dependencies
+deliver Fpas.Mvu, Fpas.Ui and the [binding package](../Fpas.Gui.Cui/README.md#packaged-binding)
+with prebuilt native assets and static NativeAOT linking. Consumers do not build
+CUI. NativeAOT publication needs the .NET platform's native toolchain.
+See the [GUI handbook](../../docs/pascal/libraries/gui.md) for the application path,
+publishing modes and platform limits.
 
 GuiHostTests builds all three FPAS libraries, the counter and gallery through a
 fresh SDK, then exercises native input and semantic snapshots under both renderers.
@@ -91,4 +97,8 @@ background completion, gated worker/cancellation responsiveness, closing redraws
 owner enforcement, failure cleanup and resource removal. CuiHostLayoutTests checks
 basis/grow/shrink/bounds; CuiHostResourceTests uses native texture accounting across
 replacement and repeated sessions. Platform acceptance is tracked in the
-[host plan](../../docs/future/gui/gui-host.md).
+[host plan](../../docs/future/gui/gui-host.md). GuiPublishingTests restores the
+complete GUI through packages and exercises the gallery in all five publish
+modes, including executable-only NativeAOT/single-file delivery. Its Linux X11
+case sends OS keyboard, pointer, resize and close events; the other input cases
+inject directly into CUI.

@@ -29,6 +29,7 @@ public sealed class TerminalModeTests
               <ItemGroup>
                 <Reference Include="Fpas.Tui" HintPath="Fpas.Tui.dll" />
                 <Reference Include="Fpas.Mvu" HintPath="Fpas.Mvu.dll" />
+                <Reference Include="Fpas.Ui" HintPath="Fpas.Ui.dll" />
                 <Reference Include="Fpas.Processes" HintPath="Fpas.Processes.dll" />
                 <Reference Include="Fpas.Core" HintPath="Fpas.Core.dll" />
               </ItemGroup>

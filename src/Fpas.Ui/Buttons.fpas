@@ -1,0 +1,61 @@
+unit Fpas.Ui.Buttons;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G;
+
+// Button sizes in CUI's native order.
+public type Size = enum: byte
+  // Use the standard control size.
+  Medium;
+  // Use the compact control size.
+  Small;
+  // Use the large control size.
+  Large;
+end enum;
+
+// Model-owned presentation and input options for a button.
+public type Options = record
+  // The button's semantic style. Default uses secondary outside groups and ghost inside them.
+  public Variant: S.ButtonVariant := S.ButtonVariant.Default;
+  // Requested control size.
+  public ControlSize: Size := Size.Medium;
+  // Whether the button accepts input and focus.
+  public Enabled: bool := true;
+  // Shows a busy indicator in place of the leading icon and suppresses activation.
+  public Loading: bool := false;
+  // Whether to show the selected appearance.
+  public Selected: bool := false;
+  // Native glyph placed before the label.
+  public Icon: string := '';
+  // Native glyph placed after the label.
+  public IconRight: string := '';
+  // Terminal equivalent of the leading glyph. Empty omits it.
+  public TerminalIcon: string := '';
+  // Terminal equivalent of the trailing glyph. Empty omits it.
+  public TerminalIconRight: string := '';
+  // Hover tooltip text.
+  public Tooltip: string := '';
+  // Shortcut hint displayed with the tooltip. Applications bind the key separately.
+  public Shortcut: string := '';
+  // Use intrinsic, fixed or available width independently of the parent's main axis.
+  public Width: L.Extent := L.Extent.Content;
+  // Optional foreground for the label and icons.
+  public Color: G.Color? := null;
+end record;
+
+// Builds a button whose identity survives label and icon changes.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Text`: Literal label.
+// - `Message`: Proposed message on activation.
+// - `Settings`: Optional input and appearance settings.
+// ## Returns
+// A portable button.
+public function Button<TMsg>(Id: string; Text: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ButtonAction(Id, Text, Message, Settings ?? new Options());
+end function;
+end unit;

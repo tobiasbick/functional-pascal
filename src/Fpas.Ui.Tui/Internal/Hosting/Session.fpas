@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -35,6 +35,7 @@ end procedure;
 // - `Present`: Publishes a successfully rendered frame.
 // - `Manual`: Allows stepping through the control pipe.
 // - `ThemeFor`: Selects the theme for the current model.
+// - `WriteClipboard`: Optional terminal clipboard transport.
 //
 // ## Returns
 // The host session.
@@ -42,7 +43,7 @@ public function Start<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
   Present: procedure(App.Frame); Manual: bool;
-  ThemeFor: function(TModel): SharedThemes.Theme
+  ThemeFor: function(TModel): SharedThemes.Theme; WriteClipboard: Sys.Action<string>? := null
 ): App.HeadlessSession;
   function Close(): Tasks.Task;
   begin
@@ -221,7 +222,12 @@ public function Start<TModel, TMsg>(
         if Previous = null then null else Previous.Prepared end if,
         new T.Viewport(Viewport.Columns, Viewport.Rows)
       );
-      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme, EditorPositions);
+      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
+        Candidate,
+        Theme,
+        EditorPositions,
+        CopyFeedback
+      );
       Phase := 'layout_or_drawing';
       const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
         Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
@@ -231,6 +237,7 @@ public function Start<TModel, TMsg>(
       end with;
     end function;
   begin
+    discard CopyFeedback.Expire();
     const Routing: I.State<TMsg>? := Interaction;
     if Routing = null then
       raise new Sys.InvalidOperationException('Missing interaction state.');
@@ -361,6 +368,10 @@ public function Start<TModel, TMsg>(
       Phase := 'update';
       case Core.Advance() of
         when Runtime.Step.Idle:
+          if Core.IsOpen() and CopyFeedback.Expire() then
+            Paint();
+          end if;
+
           return App.StepResult.Idle;
         when Runtime.Step.Input(const Entry: PendingInput):
           // A breakpoint in Update can stop every thread in the debuggee.
@@ -415,6 +426,7 @@ begin
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
   const EditorPositions: Generic.Dictionary<string, Editors.Entry> := new Generic.Dictionary<string, Editors.Entry>();
+  const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
   var PendingFocus: string? := null;
   var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;

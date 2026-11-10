@@ -2,7 +2,7 @@ unit Fpas.Ui.Tui.Internal.Widgets.IconButton;
 
 uses
   Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Controls.Activation as A;
 
 // Resolves an icon button into a terminal action with a visible glyph or text.
 //
@@ -34,7 +34,7 @@ begin
     else 5;
   end case;
   return E.Element<TMsg>.Action(
-    Id, Message, Settings.Enabled, new E.ActionView(
+    Id, new A.Direct<TMsg>(Message, Settings.Loading), Settings.Enabled, new E.ActionView(
       Caption,
       Name := Tooltip,
       Role := 'icon-button',
@@ -45,8 +45,7 @@ begin
       Variant := Variant,
       ArrowFocus := false,
       MinimumWidth := Width,
-      Hint := Hint,
-      Busy := Settings.Loading
+      Hint := Hint
     )
   );
 end function;

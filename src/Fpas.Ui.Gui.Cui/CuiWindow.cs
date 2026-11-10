@@ -10,7 +10,7 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Table, Scroll, Dialog, Sheet, Group }
+    private enum Layout { Column, Row, Table, Scroll, Dialog, Sheet, Group, ButtonGroup }
     private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0, int Node = -1);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
@@ -235,18 +235,6 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Adds text to the current frame.</summary>
     /// <param name="text">Valid Unicode display text.</param>
     public void Text(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.Text(context, text, 0); }
-
-    /// <summary>Adds a button and reports activation.</summary>
-    /// <param name="label">CUI label including its stable identity suffix.</param>
-    /// <param name="enabled">Whether the control accepts pointer and keyboard input.</param>
-    /// <returns>Whether the button was activated.</returns>
-    public bool Button(string label, bool enabled = true)
-    {
-        CheckFrame(); Utf8.Validate(label, nameof(label));
-        NativeMethods.PushDisabled(context, enabled ? (byte)0 : (byte)1);
-        try { return NativeMethods.Button(context, label, 0) != 0; }
-        finally { NativeMethods.PopDisabled(context); }
-    }
 
     /// <summary>Draws a list item with a host-owned selection state and reports activation.</summary>
     /// <param name="label">Visible UTF-8 label. Use <c>###id</c> to give the item a stable identity independent of its label.</param>

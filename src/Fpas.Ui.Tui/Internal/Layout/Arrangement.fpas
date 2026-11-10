@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Layout.Overlays as Overlays, Fpas.Ui.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Layout.Overlays as Overlays, Fpas.Ui.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -65,7 +65,7 @@ public function Arrange<TMsg>(
     Id: string; Label: string; Role: string; Value: string;
     Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
-    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''
+    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null
   );
   begin
     AddControl(
@@ -82,7 +82,8 @@ public function Arrange<TMsg>(
         Variant,
         ButtonStyle,
         ArrowFocus,
-        Hint
+        Hint,
+        Foreground
       )
     );
   end procedure;
@@ -102,7 +103,10 @@ public function Arrange<TMsg>(
       when E.Element.StatusLine(const Message: string, const Hints: array of string):
         Status.Draw(Operations, Area, Clip, Style, Message, Hints);
       when E.Element.Action(
-        const Id: string, const Message: TMsg, const Enabled: bool, const View: E.ActionView
+        const Id: string,
+        const Handler: Actions.IActivatable<TMsg>,
+        const Enabled: bool,
+        const View: E.ActionView
       ):
         Buttons.Paint(
           Operations,
@@ -114,14 +118,17 @@ public function Arrange<TMsg>(
           true,
           View.Variant,
           Enabled,
-          View.MinimumWidth
+          View.MinimumWidth,
+          View.Padding,
+          View.FixedWidth <> null or View.FillWidth,
+          View.Foreground,
+          View.Joined
         );
-        const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(
-          new Actions.Direct<TMsg>(Message, View.Busy)
-        );
+        const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(Handler);
         Register(
           Id, View.Name ?? View.Caption, View.Role, View.Value, Clip, ScopeId, Enabled, Action,
-          View.Variant, ButtonStyle := true, ArrowFocus := View.ArrowFocus, Hint := View.Hint
+          View.Variant, ButtonStyle := true, ArrowFocus := View.ArrowFocus, Hint := View.Hint,
+          Foreground := View.Foreground
         );
       when E.Element.Toggle(
         const Id: string,
@@ -298,6 +305,8 @@ public function Arrange<TMsg>(
         const Flow: E.Flow
       ):
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
+      when E.Element.ButtonGroup(const Body: E.Element<TMsg>):
+        Visit(Body, Group.Bounds<TMsg>(Body, Area), Clip, ScopeId, Style);
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
         D.Border(Operations, Area, Clip, Title, Style, Widgets);
         Visit(

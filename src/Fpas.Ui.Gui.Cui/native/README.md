@@ -15,6 +15,16 @@ widget. `fpas_cui.c` includes their implementations after the shared helpers
 so the adapters can use the private CUI types. The managed bindings are partial
 files on `CuiWindow` and `NativeMethods`.
 
+`widgets/button.c` passes the portable button options to CUI and replaces
+its label text after creating the native label slot. This keeps literal
+`##` text, leading and trailing icons, and loading spinners independent of
+the stable identity.
+
+`widgets/copy_button.c` keeps the icon face stable when the glyph switches
+from copy to check. The vendored CUI helper changes the key at that point
+and loses keyboard focus. The adapter submits text through CUI's clipboard
+provider and expires the confirmation on the host's monotonic clock.
+
 The image adapter verifies OpenGL storage after upload. CUI copies pixel data
 during the upload and queues the texture handle for frame rendering. Callers
 keep that texture alive while CUI can still render the frame.

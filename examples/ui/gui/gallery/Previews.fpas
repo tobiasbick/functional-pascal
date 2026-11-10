@@ -1,6 +1,7 @@
 unit GuiGallery.Previews;
 
 uses
+  GuiGallery.Buttons as Buttons,
   GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C,
   Fpas.Ui.Graphics as G, System.Collections.Generic as Lists;
@@ -26,43 +27,7 @@ public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   case Model.Page of
     when 'controls':
-      return E.Column<State.Msg>(
-        new L.Flow(Gap := L.Spacing.Normal),
-        E.Text<State.Msg>('Count: ' + Model.Count.ToString()),
-        E.Button<State.Msg>('increment', 'Increment ## literal label', State.Msg.Increment),
-        E.Button<State.Msg>(
-          'primary',
-          'Primary',
-          State.Msg.Increment,
-          Variant := S.ButtonVariant.Primary
-        ),
-        E.Button<State.Msg>(
-          'secondary',
-          'Secondary',
-          State.Msg.Increment,
-          Variant := S.ButtonVariant.Secondary
-        ),
-        E.Button<State.Msg>(
-          'active',
-          'Active',
-          State.Msg.Increment,
-          Variant := S.ButtonVariant.Active
-        ),
-        E.Button<State.Msg>(
-          'destructive',
-          'Destructive',
-          State.Msg.Increment,
-          Variant := S.ButtonVariant.Destructive
-        ),
-        E.Button<State.Msg>('disabled', 'Disabled', State.Msg.Increment, false),
-        E.Checkbox<State.Msg>(
-          'checked',
-          'Model-owned checkbox',
-          Model.Checked,
-          function(Value: bool): State.Msg => State.Msg.Check(Value)
-        ),
-        E.ProgressBar<State.Msg>(Model.Count mod 101)
-      );
+      return Buttons.View(Model);
     when 'editors':
       return E.Column<State.Msg>(
         new L.Flow(Gap := L.Spacing.Normal),

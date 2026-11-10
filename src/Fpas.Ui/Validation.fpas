@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -73,6 +73,31 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if not Sys.Enum.IsDefined<S.ButtonVariant>(Variant) then
           Rules.Reject(At, 'Unknown button variant.');
         end if;
+      when E.Element.ButtonAction(
+        const Id: string,
+        const Label: string,
+        _,
+        const Settings: B.Options
+      ):
+        const At: string := Identify(Id, Location + '/button');
+        Rules.CheckText(Label, At);
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.IconRight, At + '/iconRight');
+        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
+        Rules.CheckText(Settings.TerminalIconRight, At + '/terminalIconRight');
+        Rules.CheckText(Settings.Tooltip, At + '/tooltip');
+        Rules.CheckText(Settings.Shortcut, At + '/shortcut');
+        if not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
+          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(At, 'Unknown button variant or size.');
+        end if;
+
+        case Settings.Width of
+          when L.Extent.Fixed(const Distance: L.Measure):
+            discard Rules.CheckMeasure(Distance, Profile, At + '/width');
+          else
+        end case;
       when E.Element.IconAction(
         const Id: string,
         const Icon: string,
@@ -94,6 +119,31 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         then
           Rules.Reject(At, 'Unknown icon button variant or size.');
         end if;
+      when E.Element.CopyAction(const Id: string, const Value: string, _, _):
+        Rules.CheckText(Value, Identify(Id, Location + '/copyButton') + '/text');
+      when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
+        for Index: int := 0 to Children.Length - 1 do
+          const Child: E.Element<TMsg> := Children[Index];
+          const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
+          case Child of
+            when E.Element.Action(
+              _,
+              _,
+              _,
+              _,
+              _
+            ), E.Element.ButtonAction(_, _, _, _), E.Element.IconAction(
+              _,
+              _,
+              _,
+              _,
+              _
+            ), E.Element.CopyAction(_, _, _, _):
+              Visit(Child, At);
+            else
+              Rules.Reject(At, 'A button group accepts only buttons and icon buttons.');
+          end case;
+        end for;
       when E.Element.Toggle(const Id: string, const Label: string, _, _, _):
         Rules.CheckText(Label, Identify(Id, Location + '/checkbox'));
       when E.Element.Editor(

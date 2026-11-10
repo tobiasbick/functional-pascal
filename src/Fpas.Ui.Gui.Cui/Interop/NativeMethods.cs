@@ -136,10 +136,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Text(nint context, string text, nint options);
 
-    [LibraryImport(Library, EntryPoint = "cui_button_ex", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial byte Button(nint context, string label, nint options);
-
     [LibraryImport(Library, EntryPoint = "fpas_cui_list_item", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int ListItem(nint context, string label, int selected);

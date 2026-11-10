@@ -48,10 +48,26 @@ const NoteLines: array of string := [
 
 const Notes: string := Sys.String.Join(new string(#10, 1), NoteLines);
 
+// Independent formatting actions in the button-group preview.
+public type TextFormat = enum: byte
+  // Draw text in bold.
+  Bold = 1;
+  // Draw text in italics.
+  Italic = 2;
+  // Draw an underline.
+  Underline = 4;
+end enum;
+
 public type Model = record
   public Active: Page := Page.Buttons;
   public Appearance: Preset := Preset.Dark;
   public Presses: int := 0;
+  // Model-owned busy state for the button preview.
+  public ButtonLoading: bool := false;
+  // Model-owned selected button appearance.
+  public ButtonSelected: bool := false;
+  // Enabled formatting actions from the button-group preview.
+  public Formats: int := 0;
   public Checked: bool := false;
   public Text: string := '';
   public TextPosition: Ed.EditorPosition := new Ed.EditorPosition();
@@ -85,6 +101,9 @@ public type Msg = variant
   ChangeTheme(Value: Preset);
   Press;
   ResetPresses;
+  SetButtonLoading(Value: bool);
+  ToggleButton;
+  ToggleFormat(Style: TextFormat);
   Check(Value: bool);
   Edit(Value: Ed.TextEdit);
   MoveText(Position: Ed.EditorPosition);
@@ -195,6 +214,15 @@ begin
     end with;
     when Msg.ResetPresses: State with
       Presses := 0;
+    end with;
+    when Msg.SetButtonLoading(const Value: bool): State with
+      ButtonLoading := Value;
+    end with;
+    when Msg.ToggleButton: State with
+      ButtonSelected := not State.ButtonSelected;
+    end with;
+    when Msg.ToggleFormat(const Style: TextFormat): State with
+      Formats := State.Formats xor cast<int>(Style);
     end with;
     when Msg.Check(const Value: bool): State with
       Checked := Value;

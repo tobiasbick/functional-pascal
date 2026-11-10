@@ -170,6 +170,20 @@ begin
   Check(HasText(Session, 'Count: 1'), 'Literal label or duplicate activation.');
   Click(Session, 'checked');
   Check(Control(Session, 'checked').Value = 'True', 'Controlled checkbox.');
+  Click(Session, 'format-bold');
+  Click(Session, 'format-italic');
+  Check(
+    Control(
+      Session,
+      'format-bold'
+    ).Value = 'true' and Control(Session, 'format-italic').Value = 'true'
+    and Control(Session, 'format-underline').Value = '',
+    'Joined buttons must retain independent actions and selection.'
+  );
+  Check(
+    Control(Session, 'copy-install').Enabled,
+    'The gallery must present its native copy button.'
+  );
   Click(Session, 'theme');
   Check((Session.Snapshot().Theme.Appearance = Themes.Mode.Dark), 'Theme selection.');
   Click(Session, 'navigation', 'editors');

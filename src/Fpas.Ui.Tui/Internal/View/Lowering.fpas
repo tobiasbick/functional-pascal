@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -87,10 +87,13 @@ end function;
 // - `Prepared`: Terminal-profile preflight result.
 // - `Theme`: Current terminal theme.
 // - `Storage`: Host-owned editor viewport state.
+// - `Clipboard`: Host-owned copy feedback and clipboard operations.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
-public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Storage: C.Dictionary<string, Editors.Entry>): E.Element<TMsg>;
+public function Prepare<TMsg>(
+  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Storage: C.Dictionary<string, Editors.Entry>; Clipboard: CopyWidget.State
+): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
     const Values: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
@@ -114,12 +117,19 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         const Enabled: bool,
         const Variant: UiStyle.ButtonVariant
       ):
-        return E.Element<TMsg>.Action(
+        return Button.Lower<TMsg>(
           Id,
+          Text,
           Message,
-          Enabled,
-          new E.ActionView(Text, Variant := Variant)
+          new B.Options(Variant := Variant, Enabled := Enabled)
         );
+      when Ui.Element.ButtonAction(
+        const Id: string,
+        const Text: string,
+        const Message: TMsg,
+        const Settings: B.Options
+      ):
+        return Button.Lower<TMsg>(Id, Text, Message, Settings);
       when Ui.Element.Toggle(
         const Id: string,
         const Text: string,
@@ -156,6 +166,13 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         const Settings: Icons.Options
       ):
         return IconButton.Lower<TMsg>(Id, Tooltip, Message, Settings);
+      when Ui.Element.CopyAction(
+        const Id: string,
+        const Text: string,
+        const OnCopied: Sys.Func<TMsg>?,
+        const Enabled: bool
+      ):
+        return CopyWidget.Lower<TMsg>(Id, Text, OnCopied, Enabled, Clipboard, Theme.Colors.Success);
       when Ui.Element.ActionList(
         const Id: string,
         const Items: array of Ch.ListItem<TMsg>,
@@ -262,6 +279,8 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         );
       when Ui.Element.Progress(const Percent: int):
         return E.Element<TMsg>.Gauge(Percent);
+      when Ui.Element.ButtonGroup(const Items: array of Ui.Element<TMsg>):
+        return Group.Lower<TMsg>(Children(Items, Colors, true), Theme, Colors);
       when Ui.Element.Stack(
         const Items: array of Ui.Element<TMsg>,
         const Horizontal: bool,

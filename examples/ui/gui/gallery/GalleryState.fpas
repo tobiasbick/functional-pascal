@@ -4,6 +4,16 @@ uses
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L,
   System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
+// Independent formatting actions in the button-group preview.
+public type TextFormat = enum: byte
+  // Draw text in bold.
+  Bold = 1;
+  // Draw text in italics.
+  Italic = 2;
+  // Draw an underline.
+  Underline = 4;
+end enum;
+
 // Retained gallery state, independent of viewport and theme.
 public type Model = record
   // Navigation key.
@@ -12,6 +22,12 @@ public type Model = record
   public Dark: bool := false;
   // Counter value.
   public Count: int := 0;
+  // Model-owned busy state for the button preview.
+  public ButtonLoading: bool := false;
+  // Model-owned selected button appearance.
+  public ButtonSelected: bool := false;
+  // Enabled formatting actions from the button-group preview.
+  public Formats: int := 0;
   // Controlled checkbox.
   public Checked: bool := false;
   // Single-line document.
@@ -41,6 +57,9 @@ public type Msg = variant
   Navigate(Page: string);
   Theme;
   Increment;
+  SetButtonLoading(Value: bool);
+  ToggleButton;
+  ToggleFormat(Style: TextFormat);
   Check(Value: bool);
   Edit(Value: Ed.TextEdit);
   Move(Value: Ed.EditorPosition);
@@ -92,6 +111,18 @@ begin
     when Msg.Increment:
       Next := Current with
         Count := Current.Count + 1;
+      end with;
+    when Msg.SetButtonLoading(const Value: bool):
+      Next := Current with
+        ButtonLoading := Value;
+      end with;
+    when Msg.ToggleButton:
+      Next := Current with
+        ButtonSelected := not Current.ButtonSelected;
+      end with;
+    when Msg.ToggleFormat(const Style: TextFormat):
+      Next := Current with
+        Formats := Current.Formats xor cast<int>(Style);
       end with;
     when Msg.Check(const Value: bool):
       Next := Current with

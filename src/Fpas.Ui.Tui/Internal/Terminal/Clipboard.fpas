@@ -1,0 +1,18 @@
+unit Fpas.Ui.Tui.Internal.Terminal.Clipboard;
+
+uses System as Sys, System.Text as Text;
+
+// Encodes a terminal clipboard write as an OSC 52 request.
+//
+// ## Parameters
+// - `Value`: Validated clipboard text.
+// ## Returns
+// The clipboard selection and UTF-8 payload encoded for the terminal.
+public function Sequence(Value: string): string;
+begin
+  const Escape: string := new string(#27, 1);
+  return Escape + ']52;c;' + Sys.Convert.ToBase64String(
+    Text.Encoding.UTF8.GetBytes(Value)
+  ) + Escape + '\';
+end function;
+end unit;

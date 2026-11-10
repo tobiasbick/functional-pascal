@@ -1,6 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 // A declarative view for a host to prepare and present.
 //
@@ -13,8 +13,14 @@ public type Element<TMsg> = variant
   Separator(Title: string);
   // Activate a named action with the supplied message.
   Action(Id: string; Text: string; Message: TMsg; Enabled: bool; Variant: S.ButtonVariant);
+  // Activate a button with model-owned presentation and input settings.
+  ButtonAction(Id: string; Text: string; Message: TMsg; Settings: B.Options);
   // Activate a named icon button with a stable identity and model-owned settings.
   IconAction(Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Icons.Options);
+  // Submit literal text to the clipboard and optionally propose a message.
+  CopyAction(Id: string; Text: string; OnCopied: Sys.Func<TMsg>?; Enabled: bool);
+  // Join adjacent buttons under a shared outline.
+  ButtonGroup(Children: array of Element<TMsg>);
   // Toggle a model-owned boolean through OnChange.
   Toggle(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool);
   // Propose text edits and selection movements for the supplied document.

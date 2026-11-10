@@ -10,7 +10,12 @@ an entry with Enter or Space. At less than 600 logical units wide, the
 **Components** menu icon opens the sidebar in a left drawer. Selecting a page closes
 the drawer. Escape, its close button, and clicking the backdrop also dismiss it.
 Controls demonstrate
-button variants, disabled states, checkboxes and progress. Editors support
+all six CUI button variants, sizes, leading and trailing icons, selected and
+disabled states, fixed and full widths, checkboxes and progress. Save changes
+enters the model-owned loading state. Reset loading enables it again. Hover
+over Save changes to see its tooltip and shortcut hint. The button group
+shows independent Bold, Italic and Underline selections in one frame. The
+copy button puts the displayed command on the clipboard. Editors support
 Unicode documents and selection. Collections show actions, keyed selection,
 tables, tabs and an empty list. Layout shows fixed/fill sizing, borders, semantic
 roles and controlled scrolling. Graphics uses owned RGBA pixels and vector
@@ -19,7 +24,8 @@ modal; the increment button remains usable while work runs. Escape dismisses
 the modal and restores focus. Switch theme and resize without resetting state.
 
 `GalleryState.fpas` owns transitions and effects, `GalleryView.fpas` navigation
-and responsive composition, and `Previews.fpas` the widget inventory. Control IDs
+and responsive composition, `Buttons.fpas` the scrollable button examples,
+and `Previews.fpas` the remaining widget inventory. Control IDs
 are stable; collection keys belong to their containing ID.
 
 Managed source publication uses the normal [FPAS publish modes](../../../../docs/build/publishing.md).

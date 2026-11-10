@@ -2,43 +2,8 @@ unit Fpas.Ui.Gui.Internal.Controls;
 
 uses
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Cui.Text as NativeText, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S,
+  Fpas.Ui.Gui.Cui.Text as NativeText, Fpas.Ui.Editors as Ed,
   Fpas.Ui.Graphics as G, System as Sys;
-
-// Draws a model-controlled action.
-//
-// ## Type parameters
-// - `TMsg`: Message type.
-//
-// ## Parameters
-// - `State`: Drawing context.
-// - `Id`: Stable ID.
-// - `Label`: Literal label.
-// - `Message`: Activation message.
-// - `Enabled`: Input permission.
-// - `Variant`: Semantic variant.
-public procedure Button<TMsg>(
-  State: C.State<TMsg>; Id: string; Label: string; Message: TMsg;
-  Enabled: bool; Variant: S.ButtonVariant
-);
-begin
-  const Allowed: bool := Enabled and State.AcceptInput;
-  const Key: string := C.Token('button', Id);
-  const Events: int := State.Window.Control(
-    Key,
-    Label,
-    0,
-    Allowed,
-    false,
-    cast<int>(Variant),
-    C.WantsFocus<TMsg>(State, Id, Key, Allowed)
-  );
-  if (Events and 1) <> 0 and Allowed then
-    State.Messages.Add(Message);
-  end if;
-
-  C.Track<TMsg>(State, new App.Control(Id, Label, 'button', new Cui.CuiRectangle(), Allowed));
-end procedure;
 
 // Draws a model-controlled checkbox.
 //

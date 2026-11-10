@@ -30,7 +30,10 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Widget or option | Portable | Terminal | Graphical |
 | --- | --- | --- | --- |
 | Text and titled or plain divider | Yes | Yes | Yes |
-| Button variants and controlled checkbox | Yes | Yes | Yes |
+| Button variants, sizes, icons, busy state and width | Yes | Yes | Yes |
+| Button group with a shared outline | Yes | Yes | Yes |
+| Copy button with transient feedback | Yes | Yes | Yes |
+| Controlled checkbox | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Controlled text input and multiline editor | Yes | Yes | Yes |
 | Action list, selection list, text table and tabs | Yes | Yes | Yes |
@@ -160,6 +163,39 @@ restores prior focus if available. GUI uses CUI's slide transition. TUI
 draws the sheet directly in cells and supports Page Up and Page Down for
 the body when the focused control leaves those keys available.
 
+## Button
+
+`Fpas.Ui.Buttons.Button` takes a stable ID, a literal label, an activation
+message and optional `Buttons.Options`. The default uses CUI's secondary
+appearance. Options select the variant, control size, leading and trailing
+icons, disabled and busy states, selected appearance, foreground color,
+tooltip and shortcut hint. `Width` uses `Layout.Extent.Content`, `Fill` or
+`Fixed` with an explicit measure. It always describes horizontal width,
+including inside columns.
+
+Tab focuses an enabled button. Click, Enter or Space proposes its message.
+Loading keeps the label and focus, shows a spinner in GUI or an ellipsis in
+TUI, and suppresses activation. Label and icon changes keep the same identity.
+Applications bind the hinted shortcut separately.
+
+GUI uses the CUI icon font. Set `TerminalIcon` and `TerminalIconRight` for
+cell-based equivalents, or leave them empty to show just the label. Small and
+medium buttons occupy one terminal row. Large buttons use two rows and wider
+padding. TUI shows the tooltip and shortcut on the last row while hovered.
+The existing `Elements.Button` constructor uses the same host implementations.
+
+## Button group
+
+`Fpas.Ui.ButtonGroups.ButtonGroup` takes direct button elements in display
+order, including icon and copy buttons. It puts them in one horizontal frame with a
+divider between each pair. Default buttons use the ghost appearance inside
+the group. Explicit variants and each button's own state and message still
+apply. The group has no focus stop of its own. Tab visits enabled members
+in order, and click, Enter or Space activates the individual member.
+
+GUI draws the native CUI group. TUI uses a cell outline and reserves one
+column for each divider.
+
 ## Icon button
 
 `Fpas.Ui.IconButtons.IconButton` takes a stable ID, a CUI font glyph, a
@@ -173,6 +209,18 @@ A busy button keeps focus and suppresses activation. Changing the glyph or
 tooltip preserves the button's identity. GUI draws the glyph with CUI. TUI
 uses the supplied terminal glyph or the tooltip text, shows an ellipsis while
 busy, and puts the hover hint on the last terminal row.
+
+## Copy button
+
+`Fpas.Ui.CopyButtons.CopyButton` takes a stable ID and literal clipboard
+text. Tab focuses the button. Click, Enter or Space submits the text and
+shows a check mark for 1.6 seconds without moving focus. An optional
+`OnCopied` factory supplies a message after the host submits the request.
+
+GUI uses CUI's platform clipboard provider. TUI sends the text as an OSC 52
+write to the clipboard of the connected terminal. The terminal must support
+and allow this operation. TUI feedback confirms that the request was sent.
+Headless TUI sessions display the button disabled when no provider is attached.
 
 ## Text editing and scrolling
 

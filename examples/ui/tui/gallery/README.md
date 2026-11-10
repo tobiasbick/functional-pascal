@@ -27,7 +27,7 @@ Escape hint.
 
 | Page | Try it |
 | --- | --- |
-| Buttons | Increment with the primary button or clear the count with the destructive button. Compare focus and hover with the disabled button and the active theme choice. |
+| Buttons | Increment or reset the count. Toggle Bold, Italic and Underline in the button group. Copy the displayed command in a terminal that permits OSC 52. Scroll through all six CUI variants, sizes, terminal icons, selected state and width examples. Save changes enters the busy state, and Reset loading enables it again. Hover over Save changes for the tooltip and shortcut hint. |
 | Checkbox | Toggle an option and inspect a disabled checked option. |
 | Text input | Check the placeholder in different themes. Type or paste text, then clear the field to see it again. |
 | Lists | Select a row with the mouse or arrows and open it with Enter. Cedar cannot be opened. Scroll through the rows or toggle the empty state. |

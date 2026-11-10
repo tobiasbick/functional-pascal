@@ -5,6 +5,47 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+    int writes;
+    bool exact;
+} copy_probe;
+
+static const char copy_text[] = "\xce\xbb\ntext";
+
+static void record_copy(void *user, const char *text) {
+    copy_probe *probe = user;
+    probe->writes++;
+    probe->exact = probe->exact && strcmp(text, copy_text) == 0;
+}
+
+/* Drives the real clipboard callback without opening the user's clipboard. */
+static bool check_copy_button(cui_ctx *ui) {
+    copy_probe probe = { .exact = true };
+    const cui_platform_iface platform = { .user = &probe, .set_clipboard = record_copy };
+    const int64_t times[] = { 0, 20, 21, 1500, 1621, 3100, 3101 };
+    const int expected[] = { 4, 5, 6, 7, 6, 4, 4 };
+    unsigned int identity = 0;
+    bool passed = true;
+    cui_set_platform(ui, &platform);
+    for (int frame = 0; frame < 7; frame++) {
+        cui_begin_frame(ui, 1.0f / 60.0f);
+        if (frame == 1 || frame == 3 || frame == 6) {
+            const cui_key key = frame == 3 ? CUI_KEY_SPACE : CUI_KEY_ENTER;
+            cui_input_key(ui, key, true, 0);
+            cui_input_key(ui, key, false, 0);
+        }
+        const int events = fpas_cui_copy_button(ui, "###copy-fixture", copy_text, frame != 6, frame == 0, times[frame]);
+        const int node = fpas_cui_last_node(ui);
+        const unsigned int key = fpas_cui_node_key(ui, node);
+        if (frame == 0) identity = key;
+        if (events != expected[frame] || !key || key != identity || fpas_cui_focused(ui, node) != (frame != 6))
+            passed = false;
+        cui_end_frame(ui);
+    }
+    cui_set_platform(ui, NULL);
+    return passed && probe.writes == 2 && probe.exact;
+}
+
 /* Returns success only when the linked CUI implementation produces a drawn view. */
 int main(void) {
     const int width = 320, height = 160;
@@ -24,6 +65,10 @@ int main(void) {
     }
     cui_set_viewport(ui, (float)width, (float)height, 1);
     cui_set_reduced_motion(ui, true);
+    if (!check_copy_button(ui)) {
+        fprintf(stderr, "Copy button did not preserve clipboard content, focus or confirmation timing.\n");
+        goto cleanup;
+    }
     char text[64] = "";
     int anchor = 0, caret = 0;
     bool focused = false;

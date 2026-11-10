@@ -1,17 +1,14 @@
 unit Fpas.Ui.Tui.Internal.Layout.Equivalence;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System.Collections.Generic as Generic;
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin
   case Left of
-    when Tree.Binding.Invoke(const Action: Actions.Direct<TMsg>):
+    when Tree.Binding.Invoke(const Action: Actions.IActivatable<TMsg>):
       case Right of
-        when Tree.Binding.Invoke(const Other: Actions.Direct<TMsg>):
-          return Action.Busy = Other.Busy and Generic.EqualityComparer<TMsg>.Default.Equals(
-            Action.Message,
-            Other.Message
-          );
+        when Tree.Binding.Invoke(const Other: Actions.IActivatable<TMsg>):
+          return Sys.Object.Equals(Action, Other);
         else
           return false;
       end case;
@@ -123,7 +120,7 @@ begin
     if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
       or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.FocusReturn <> B.FocusReturn
       or A.Variant <> B.Variant or A.ButtonStyle <> B.ButtonStyle or A.ArrowFocus <> B.ArrowFocus
-      or A.Hint <> B.Hint or A.Enabled <>
+      or A.Hint <> B.Hint or A.Foreground <> B.Foreground or A.Enabled <>
       B.Enabled
       or not SameBinding<TMsg>(A.Action, B.Action)
     then

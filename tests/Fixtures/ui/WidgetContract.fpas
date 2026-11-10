@@ -2,7 +2,8 @@ program WidgetContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Editors as Ed, Fpas.Ui.Buttons as Buttons, Fpas.Ui.ButtonGroups as Groups,
+  Fpas.Ui.CopyButtons as Copy, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
   System as Sys, System.Console as Console;
 
 type Msg = variant
@@ -152,6 +153,57 @@ end procedure;
 
 procedure CheckValidation();
 begin
+  Rejects(
+    Copy.CopyButton<Msg>('copy', new string(Sys.Char.MinValue, 1)),
+    V.Target.Portable, 'copyButton[copy]/text', 'embedded zero'
+  );
+  Rejects(
+    Groups.ButtonGroup<Msg>(E.Text<Msg>('Invalid member')), V.Target.Portable,
+    'buttonGroup[0]', 'only buttons and icon buttons'
+  );
+  Rejects(
+    Groups.ButtonGroup<Msg>(
+      Buttons.Button<Msg>('same', 'Bold', Msg.Clicked),
+      E.Button<Msg>('same', 'Italic', Msg.Clicked)
+    ),
+    V.Target.Portable, 'buttonGroup[1]/button[same]', 'Duplicate ID same'
+  );
+  Rejects(
+    Buttons.Button<Msg>(
+      'size',
+      'Button',
+      Msg.Clicked,
+      new Buttons.Options(ControlSize := cast<Buttons.Size>(99))
+    ),
+    V.Target.Portable, 'button[size]', 'Unknown button variant or size'
+  );
+  Rejects(
+    Buttons.Button<Msg>(
+      'icon',
+      'Button',
+      Msg.Clicked,
+      new Buttons.Options(IconRight := new string(Sys.Char.MinValue, 1))
+    ),
+    V.Target.Portable, 'button[icon]/iconRight', 'embedded zero'
+  );
+  Rejects(
+    Buttons.Button<Msg>(
+      'width',
+      'Button',
+      Msg.Clicked,
+      new Buttons.Options(Width := L.Extent.Fixed(L.Measure.Logical(-1)))
+    ),
+    V.Target.Portable, 'button[width]/width', 'nonnegative'
+  );
+  Rejects(
+    Buttons.Button<Msg>(
+      'width',
+      'Button',
+      Msg.Clicked,
+      new Buttons.Options(Width := L.Extent.Fixed(L.Measure.Cells(8)))
+    ),
+    V.Target.Graphical, 'button[width]/width', 'Cell units require the terminal profile'
+  );
   const Duplicate: E.Element<Msg> := E.Overlay(
     'modal', E.Button<Msg>('save', 'Save', Msg.Clicked),
     E.CachedSubview<int, Msg>(

@@ -8,6 +8,9 @@ uses
   Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar,
   Fpas.Ui.Sheets as Sheets,
   Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet,
+  Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button,
+  Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup,
+  Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton,
   Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton,
   Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys,
   System.Collections.Generic as Generic;
@@ -190,7 +193,20 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool,
         const Variant: S.ButtonVariant
       ):
-        Widgets.Button<TMsg>(Current, Id, Label, Message, Enabled, Variant);
+        Button.Draw<TMsg>(
+          Current,
+          Id,
+          Label,
+          Message,
+          new B.Options(Variant := Variant, Enabled := Enabled)
+        );
+      when E.Element.ButtonAction(
+        const Id: string,
+        const Label: string,
+        const Message: TMsg,
+        const Settings: B.Options
+      ):
+        Button.Draw<TMsg>(Current, Id, Label, Message, Settings);
       when E.Element.Toggle(
         const Id: string,
         const Label: string,
@@ -225,6 +241,13 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: Icons.Options
       ):
         IconButton.Draw<TMsg>(Current, Id, Icon, Tooltip, Message, Settings);
+      when E.Element.CopyAction(
+        const Id: string,
+        const Text: string,
+        const OnCopied: Sys.Func<TMsg>?,
+        const Enabled: bool
+      ):
+        CopyButton.Draw<TMsg>(Current, Id, Text, OnCopied, Enabled);
       when E.Element.ActionList(
         const Id: string,
         const Items: array of Ch.ListItem<TMsg>,
@@ -287,6 +310,8 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Choices.Table<TMsg>(Current, Id, Columns, Rows, Selected, Select, Activate, Enabled);
       when E.Element.Progress(const Percent: int):
         Current.Window.Progress(Percent);
+      when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
+        ButtonGroup.Draw<TMsg>(Current, Children, Visit);
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Row: bool,

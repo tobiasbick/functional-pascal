@@ -1,0 +1,34 @@
+unit GuiGallery.ButtonGroup;
+
+uses
+  GuiGallery.State as State, Fpas.Ui.Buttons as B, Fpas.Ui.ButtonGroups as Groups,
+  Fpas.Ui.Elements as E, System as Sys;
+
+function FormatButton(
+  Model: State.Model; Id: string; Label: string; Style: State.TextFormat; Icon: int
+): E.Element<State.Msg>;
+begin
+  return B.Button<State.Msg>(
+    Id, Label, State.Msg.ToggleFormat(Style),
+    new B.Options(
+      Icon := Sys.Char.ConvertFromUtf32(Icon),
+      Selected := (Model.Formats and cast<int>(Style)) <> 0
+    )
+  );
+end function;
+
+// Displays three independently selectable buttons inside one outline.
+//
+// ## Parameters
+// - `Model`: Current formatting choices.
+// ## Returns
+// The gallery's formatting group.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Groups.ButtonGroup<State.Msg>(
+    FormatButton(Model, 'format-bold', 'Bold', State.TextFormat.Bold, $E05D),
+    FormatButton(Model, 'format-italic', 'Italic', State.TextFormat.Italic, $E0FB),
+    FormatButton(Model, 'format-underline', 'Underline', State.TextFormat.Underline, $E19A)
+  );
+end function;
+end unit;

@@ -2,6 +2,11 @@
 
 int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
                     int enabled, int selected, int variant, int focus) {
+    if (kind != 1 && kind != 2) {
+        int activated = fpas_cui_button(ui, id, text, variant, CUI_SIZE_MD, enabled, 0, selected, focus,
+                                        NULL, NULL, NULL, NULL, 0, -1, 0);
+        return activated | (selected ? 2 : 0);
+    }
     cui_id key = cui_make_id(ui, id);
     if (kind == 1) key ^= 0xC0EC0001u;
     if (kind == 2) key ^= 0x115E0008u;
@@ -9,21 +14,15 @@ int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
     if (focus && enabled) ui->focus_next_request = key;
     cui_push_disabled(ui, !enabled);
     bool activated = false, value = selected != 0;
-    cui_color color = CUI_C(ui, FOREGROUND);
     if (kind == 1) {
         activated = cui_checkbox_ex(ui, id, &value, NULL);
-    } else if (kind == 2) {
+    } else {
         const cui_list_item_opts options = { .selected = value };
         activated = cui_list_item_ex(ui, id, &options);
-    } else {
-        cui_button_variant native_variant = fpas_button_variant(variant);
-        const cui_button_opts options = { .variant = native_variant, .selected = value || variant == 3 };
-        color = cui__button_colors(ui, native_variant == CUI_BUTTON_DEFAULT ? CUI_BUTTON_SECONDARY : native_variant, options.selected).fg;
-        activated = cui_button_ex(ui, id, &options);
     }
     cui_pop_disabled(ui);
     int node = fpas_find(ui, key);
-    if (node >= 0) fpas_literal(ui, node, text, color);
+    if (node >= 0) fpas_literal(ui, node, text, CUI_C(ui, FOREGROUND));
     return (activated ? 1 : 0) | (value ? 2 : 0);
 }
 

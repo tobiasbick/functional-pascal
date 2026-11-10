@@ -130,13 +130,23 @@ icon option and omits the glyph while showing labels and badges.
 
 ### Actions and selection
 
-- [ ] Button (`cui_button`)
+- [x] Button (`cui_button`). Both galleries exercise the shared
+  [button API][fpas-button] with six CUI variants, three sizes, icons on
+  either side, busy and disabled input, selection, foreground color,
+  tooltip and shortcut hint, and fixed or full width. TUI uses terminal
+  glyphs, a static busy mark, and one- or two-row button sizes.
 - [x] Icon button (`cui_icon_button`). Both galleries use the shared
   [icon button][fpas-icon-button] to open the compact drawer. The button
   supports a tooltip, shortcut hint, size, style, selected state, and
   disabled and busy states. TUI uses an explicit glyph or the tooltip text.
-- [ ] Button group (`cui_button_group`)
-- [ ] Copy button (`cui_copy_button`)
+- [x] Button group (`cui_button_group`). Both galleries use the shared
+  [button group][fpas-button-group] for independent formatting actions. GUI
+  uses CUI's connected buttons and TUI draws a shared cell outline with
+  dividers. Each enabled member retains its own focus stop and message.
+- [x] Copy button (`cui_copy_button`). Both galleries copy their displayed
+  command with the shared [copy button][fpas-copy-button]. The confirmation
+  lasts 1.6 seconds and keeps the same focus identity. GUI uses CUI's clipboard
+  provider and TUI sends OSC 52 to a terminal that allows clipboard writes.
 - [ ] Hold-to-confirm button (`cui_hold_button`)
 - [ ] Split button (`cui_split_button`)
 - [ ] Confirm button (`cui_confirm_button`)
@@ -405,6 +415,9 @@ Verify thresholds, points, labels, and label collision handling with those demos
 [sidebar]: ../../src/Fpas.Ui/README.md#sidebar-navigation
 [fpas-sheet]: ../../src/Fpas.Ui/README.md#sheet-and-drawer
 [fpas-icon-button]: ../../src/Fpas.Ui/README.md#icon-button
+[fpas-button]: ../../src/Fpas.Ui/README.md#button
+[fpas-button-group]: ../../src/Fpas.Ui/README.md#button-group
+[fpas-copy-button]: ../../src/Fpas.Ui/README.md#copy-button
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
 [portable]: ../../tests/Fixtures/gui-host/PortableContract.fpas
 [tui-contract]: ../../tests/Fixtures/tui/CuiContract.fpas

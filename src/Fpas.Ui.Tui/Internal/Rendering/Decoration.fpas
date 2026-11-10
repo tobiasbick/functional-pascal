@@ -60,9 +60,11 @@ begin
       else Theme.Focus
       end if
     end if;
-  const Style: T.Style := if Control.ButtonStyle then Buttons.Resolve(
-      Theme, Control.Variant, Control.Enabled, Focused, not Focused
-    ) ?? Standard
+  const Style: T.Style := if Control.ButtonStyle then Buttons.WithForeground(
+      Theme,
+      Buttons.Resolve(Theme, Control.Variant, Control.Enabled, Focused, not Focused) ?? Standard,
+      Control.Foreground
+    )
     else Standard
     end if;
   const ShowsPlaceholder: bool := case Control.Action of

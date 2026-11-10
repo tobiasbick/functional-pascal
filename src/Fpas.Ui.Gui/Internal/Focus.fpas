@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,8 +17,18 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
-    when E.Element.Action(const Id: string, _, _, const Enabled: bool, _):
+    when E.Element.Action(
+      const Id: string,
+      _,
+      _,
+      const Enabled: bool,
+      _
+    ), E.Element.CopyAction(const Id: string, _, _, const Enabled: bool):
       if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ButtonAction(const Id: string, _, _, const Settings: B.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
     when E.Element.IconAction(const Id: string, _, _, _, const Settings: Icons.Options):
@@ -111,7 +121,11 @@ begin
           end if;
         end for;
       end if;
-    when E.Element.Stack(const Children: array of E.Element<TMsg>, _, _):
+    when E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
       for Child: E.Element<TMsg> in Children do
         const Found: string? := First<TMsg>(Child, Prepared, Preferred);
         if Found <> null then

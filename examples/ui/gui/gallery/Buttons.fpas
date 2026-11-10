@@ -1,0 +1,133 @@
+unit GuiGallery.Buttons;
+
+uses
+  GuiGallery.State as State, GuiGallery.ButtonGroup as Group, GuiGallery.CopyButton as Copy, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, System as Sys;
+
+function Sample(Id: string; Label: string; Variant: S.ButtonVariant; Size: B.Size := B.Size.Medium): E.Element<State.Msg>;
+begin
+  return B.Button<State.Msg>(
+    Id,
+    Label,
+    State.Msg.Increment,
+    new B.Options(Variant := Variant, ControlSize := Size)
+  );
+end function;
+
+// Builds the CUI button preview with model-owned busy and selected states.
+//
+// ## Parameters
+// - `Model`: Current gallery model.
+// ## Returns
+// The scrollable button examples.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Gap: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
+  return E.ScrollView<State.Msg>(
+    'buttons-scroll', E.Column<State.Msg>(
+      Gap,
+      E.Text<State.Msg>('Count: ' + Model.Count.ToString()),
+      E.Row<State.Msg>(
+        Gap,
+        Sample('increment', 'Increment ## literal label', S.ButtonVariant.Primary),
+        B.Button<State.Msg>(
+          'destructive',
+          'Reset',
+          State.Msg.Increment,
+          new B.Options(Variant := S.ButtonVariant.Destructive)
+        ),
+        B.Button<State.Msg>(
+          'disabled',
+          'Disabled',
+          State.Msg.Increment,
+          new B.Options(Enabled := false, Variant := S.ButtonVariant.Primary)
+        )
+      ),
+      E.Checkbox<State.Msg>(
+        'checked',
+        'Model-owned checkbox',
+        Model.Checked,
+        function(Value: bool): State.Msg => State.Msg.Check(Value)
+      ),
+      E.ProgressBar<State.Msg>(Model.Count mod 101),
+      E.Text<State.Msg>('Button group'),
+      Group.View(Model),
+      E.Text<State.Msg>('Copy button'),
+      Copy.View(),
+      E.Text<State.Msg>('Variants'),
+      E.Row<State.Msg>(
+        Gap, Sample('primary', 'Primary', S.ButtonVariant.Primary),
+        Sample('secondary', 'Secondary', S.ButtonVariant.Secondary),
+        Sample('outline', 'Outline', S.ButtonVariant.Outline)
+      ),
+      E.Row<State.Msg>(
+        Gap, Sample('ghost', 'Ghost', S.ButtonVariant.Ghost),
+        Sample('danger', 'Danger', S.ButtonVariant.Destructive),
+        Sample('link', 'Link', S.ButtonVariant.Link)
+      ),
+      B.Button<State.Msg>(
+        'active',
+        'Active',
+        State.Msg.Increment,
+        new B.Options(Variant := S.ButtonVariant.Active)
+      ),
+      E.Text<State.Msg>('Sizes and icons'),
+      E.Row<State.Msg>(
+        Gap, Sample('small', 'Small', S.ButtonVariant.Secondary, B.Size.Small),
+        Sample('medium', 'Medium', S.ButtonVariant.Secondary),
+        Sample('large', 'Large', S.ButtonVariant.Secondary, B.Size.Large)
+      ),
+      E.Row<State.Msg>(
+        Gap,
+        B.Button<State.Msg>(
+          'new-project', 'New project', State.Msg.Increment,
+          new B.Options(
+            Icon := Sys.Char.ConvertFromUtf32($E13D),
+            TerminalIcon := '+',
+            Variant := S.ButtonVariant.Primary
+          )
+        ),
+        B.Button<State.Msg>(
+          'continue', 'Continue', State.Msg.Increment,
+          new B.Options(
+            IconRight := Sys.Char.ConvertFromUtf32($E049),
+            TerminalIconRight := '→',
+            Variant := S.ButtonVariant.Outline
+          )
+        )
+      ),
+      E.Text<State.Msg>('Loading, selection and width'),
+      E.Row<State.Msg>(
+        Gap,
+        B.Button<State.Msg>(
+          'save',
+          if Model.ButtonLoading then 'Saving' else 'Save changes' end if,
+          State.Msg.SetButtonLoading(true),
+          new B.Options(
+            Loading := Model.ButtonLoading,
+            Variant := S.ButtonVariant.Primary,
+            Icon := Sys.Char.ConvertFromUtf32($E06C),
+            TerminalIcon := '✓',
+            Tooltip := 'Save changes',
+            Shortcut := 'Ctrl S',
+            Width := L.Extent.Fixed(L.Measure.Logical(192))
+          )
+        ),
+        B.Button<State.Msg>('finish-save', 'Reset loading', State.Msg.SetButtonLoading(false))
+      ),
+      B.Button<State.Msg>(
+        'selected', 'Selected', State.Msg.ToggleButton,
+        new B.Options(
+          Variant := S.ButtonVariant.Ghost, Selected := Model.ButtonSelected,
+          Icon := Sys.Char.ConvertFromUtf32($E06C), TerminalIcon := '✓',
+          Color := if Model.ButtonSelected then new G.Color(40, 150, 100) else null end if
+        )
+      ),
+      B.Button<State.Msg>(
+        'full-width', 'Full width', State.Msg.Increment,
+        new B.Options(Width := L.Extent.Fill, Variant := S.ButtonVariant.Outline)
+      )
+    )
+  );
+end function;
+end unit;

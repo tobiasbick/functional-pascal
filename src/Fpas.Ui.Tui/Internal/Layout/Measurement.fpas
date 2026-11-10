@@ -82,7 +82,10 @@ begin
         Rule.Minimum,
         Rule.Maximum
       );
-    when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+    when E.Element.Decorated(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>):
       return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
@@ -167,6 +170,22 @@ end function;
 // Constraints with a resolved minimum content size.
 public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E.Flex;
 begin
+  if Horizontal then
+    case Node of
+      when E.Element.Action(_, _, _, const View: E.ActionView):
+        const Width: int? := View.FixedWidth;
+        if Width <> null then
+          return new E.Flex(Basis := Width.Value, Minimum := Width.Value, Maximum := Width.Value);
+        end if;
+
+        if View.FillWidth then
+          return new E.Flex(Grow := 1);
+        end if;
+      when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+        return AllocationRule<TMsg>(Child, Horizontal);
+      else
+    end case;
+  end if;
   const Rule: E.Flex := FlexRule<TMsg>(Node);
   if Rule.Basis >= 0 then
     return Rule;
@@ -196,8 +215,12 @@ end function;
 public function CanStretch<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Explicit: bool := false): bool;
 begin
   case Node of
-    when E.Element.Action(_, _, _, _), E.Element.Toggle(_, _, _, _, _):
+    when E.Element.Action(_, _, _, const View: E.ActionView):
+      return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
+    when E.Element.Toggle(_, _, _, _, _):
       return Horizontal and Explicit;
+    when E.Element.ButtonGroup(_):
+      return false;
     when E.Element.Gauge(_), E.Element.DocumentEditor(_, _, _, _, _, _, _):
       return Horizontal;
     when E.Element.Custom(_, _, _, const Binding: E.CanvasBinding<TMsg>):
@@ -298,8 +321,11 @@ begin
     when E.Element.Toggle(_, const Caption: string, _, _, _):
       return if Horizontal then G.Measure(Caption) + 4 else 1 end if;
     when E.Element.Action(_, _, _, const View: E.ActionView):
-      return if Horizontal then Sys.Math.Max(View.MinimumWidth, G.Measure(View.Caption) + 2)
-        else 1
+      return if Horizontal then View.FixedWidth ?? Sys.Math.Max(
+          View.MinimumWidth,
+          G.Measure(View.Caption) + 2 * View.Padding
+        )
+        else View.Height
         end if;
     when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
       if not Horizontal then
@@ -374,7 +400,7 @@ begin
       _
     ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
       _, const Child: E.Element<TMsg>, _, _, _
-    ), E.Element.Desktop(
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.Desktop(
       const Child: E.Element<TMsg>,
       _,
       _

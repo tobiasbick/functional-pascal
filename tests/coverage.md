@@ -150,6 +150,24 @@ checks activation and busy/disabled input. The terminal CUI fixture checks
 the busy state, Space activation and the displayed shortcut hint. Both
 compact galleries open their drawer through an icon button.
 
+The CUI terminal fixture covers button loading, literal labels, leading and
+trailing terminal glyphs, focus colors, shortcut hints, disabled activation,
+and horizontal width inside rows and columns. The native button test checks
+stable identity, all three CUI sizes, fixed width and busy input. Shared
+preflight rejects invalid button sizes, text and width measures.
+
+The native button-group case checks adjacent bounds and standalone styling
+after the group closes. Both GUI gallery renderers exercise independent
+format toggles. The CUI terminal fixture checks the shared frame, cell
+dividers, disabled-member Tab traversal and individual activation. Shared
+preflight rejects non-button children and duplicate member IDs.
+
+The native link-and-render fixture drives the copy button against an isolated
+clipboard callback, including repeated copy, confirmation expiry and retained
+focus. The terminal CUI contract checks the encoded OSC 52 payload, notification,
+stable geometry and idle expiry. Both gallery renderer checks present the
+native copy button without writing to the desktop clipboard.
+
 The terminal CUI fixture checks proportional shrinkage, bounded and fractional
 growth, fixed overflow, logical dimensions on each axis, inherited styles and
 alpha compositing against the containing surface.

@@ -1,25 +1,6 @@
 unit Gallery.Previews;
 
-uses Gallery.State as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as Themes, System.Collections.Generic as Generic;
-
-function Buttons(State: G.Model): E.Element<G.Msg>;
-begin
-  return E.Column<G.Msg>(
-    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
-    E.Text<G.Msg>('Presses: ' + State.Presses.ToString()),
-    E.Row<G.Msg>(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
-      E.Button<G.Msg>('button-press', 'Press me', G.Msg.Press, Variant := S.ButtonVariant.Primary),
-      E.Button<G.Msg>(
-        'button-reset',
-        'Reset',
-        G.Msg.ResetPresses,
-        Variant := S.ButtonVariant.Destructive
-      ),
-      E.Button<G.Msg>('button-disabled', 'Disabled', G.Msg.Press, false, S.ButtonVariant.Primary)
-    )
-  );
-end function;
+uses Gallery.Buttons as ButtonPreview, Gallery.State as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as Themes, System.Collections.Generic as Generic;
 
 function Checkboxes(State: G.Model): E.Element<G.Msg>;
 begin
@@ -414,7 +395,7 @@ end function;
 public function Body(State: G.Model; Colors: Themes.Theme): E.Element<G.Msg>;
 begin
   return case State.Active of
-    when G.Page.Buttons: Buttons(State);
+    when G.Page.Buttons: ButtonPreview.View(State);
     when G.Page.Checkbox: Checkboxes(State);
     when G.Page.TextInput: Editor(State);
     when G.Page.Lists: Lists(State);

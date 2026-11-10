@@ -2,6 +2,33 @@
 #define FPAS_CUI_H
 
 #include <cui.h>
+#include "host_widgets.h"
+
+/** Presents the completed current frame without waiting for more input.
+ * @param app Live UI-thread application with a frame open.
+ * @return Nonzero when a nonempty framebuffer was presented. */
+CUI_API int fpas_cui_present(cui_app *app);
+
+/** Pumps a frame, optionally keeping a close-requested window alive for cleanup.
+ * @param app The owned application.
+ * @param defer_close Nonzero to return a final drawable frame after close.
+ * @return Zero on close, one for a frame, two for a deferred close request. */
+CUI_API int fpas_cui_frame(cui_app *app, int defer_close);
+
+/** Reads the current frame's last widget node.
+ * @param ui Current UI-thread context.
+ * @return The frame-local node index. */
+CUI_API int fpas_cui_last_node(cui_ctx *ui);
+
+/** Reads finalized layout for a tracked node.
+ * @param ui Current UI-thread context after presentation.
+ * @param node A node from that frame.
+ * @return Its logical rectangle, or an empty rectangle for an invalid node. */
+CUI_API cui_rect fpas_cui_node_rect(cui_ctx *ui, int node);
+
+/** Makes the last widget fill the available horizontal extent.
+ * @param ui Current UI-thread context inside a vertical layout. */
+CUI_API void fpas_cui_fill_last_width(cui_ctx *ui);
 
 /** Finishes deferred paint without presenting before resource and window destruction.
  * @param app Live UI-thread application. Destroy it without opening or presenting another frame. */
@@ -39,9 +66,10 @@ CUI_API void fpas_cui_move_pointer(cui_ctx *ui, float x, float y);
  * @param document_version Nonzero token that changes on document replacement.
  * @param anchor Input and output byte offset of the selection anchor, at a UTF-8 scalar boundary.
  * @param caret Input and output byte offset of the caret, at a UTF-8 scalar boundary.
+ * @param placeholder Borrowed hint copied into frame-owned memory.
  * @return CUI text-input event flags. */
 CUI_API int fpas_cui_text_edit(cui_ctx *ui, const char *id, char *buffer, size_t capacity, float height,
-                               int64_t document_version, int *anchor, int *caret);
+                               int64_t document_version, int *anchor, int *caret, const char *placeholder);
 
 /** Begins a scroll area. Close it with cui_scroll_end.
  * @param ui Current UI-thread context.

@@ -12,6 +12,20 @@
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
     <None Include="../Fixtures/gui/*" Link="Fixtures/gui/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Gui/**/*.fpas;../../src/Fpas.Gui/*.fpasproj"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Gui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Mvu/**/*.fpas;../../src/Fpas.Mvu/*.fpasproj"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Mvu/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/*.fpasproj"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/gui/counter/*.fpas;../../examples/gui/counter/*.fpasproj"
+          Link="Fixtures/host/examples/gui/counter/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/gui/gallery/*.fpas;../../examples/gui/gallery/*.fpasproj"
+          Link="Fixtures/host/examples/gui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasCuiProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />

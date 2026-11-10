@@ -10,6 +10,8 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | [Mandelbrot](mandelbrot/README.md) | Numeric calculations, casts, loops, and console rendering |
 | [Mandelbrot Explorer](tui/mandelbrot/README.md) | Interactive RGB cell canvas, keyboard and mouse, and cancellable parallel rendering |
 | [TUI Widget Gallery](tui/gallery/README.md) | Interactive widget previews, themes, and headless control |
+| [GUI counter](gui/counter/README.md) | Shared MVU transitions and declarative widgets in a native GUI window |
+| [GUI widget gallery](gui/gallery/README.md) | Graphical widgets, themes, responsive layout, controlled editing, effects and modal focus |
 | [Units](units/README.md) | Program and companion units with explicit imports |
 | [Read a file](read-file/README.md) | StreamReader, exceptions, and deterministic disposal |
 | [Directory inventory](directory-inventory/README.md) | Arguments, files, collections, static LINQ calls, and captured state |

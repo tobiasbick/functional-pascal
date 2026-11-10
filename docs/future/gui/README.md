@@ -16,6 +16,10 @@ x64 and Ubuntu x64 under WSL 2. The TUI uses the [shared MVU core](../../../src/
 for transitions, message delivery and background effects. The [shared widget
 library](../../../src/Fpas.Ui/README.md) provides the declarative tree, typed
 extensions and validation that the two adapters will use.
+The [GUI host](../../../src/Fpas.Gui/README.md) implements the graphical widget
+profile, responsive views, focus/modal rules and shared effects with responsive
+shutdown. The counter and gallery exercise that application path. Windows host
+acceptance, TUI alignment and final verification are tracked below.
 
 ## Execution order
 
@@ -61,7 +65,7 @@ same widget constructors for both hosts. GUI and terminal extensions are explici
   the start; ordinary single-file publishing can embed/extract the shared library.
 - Keep terminal-only applications independent of CUI and native GUI tooling.
 - Provide an interactive FPAS GUI widget gallery under `examples/gui/gallery/`,
-  comparable to the TUI gallery; its scope belongs to the [GUI host plan](gui-host.md#widget-gallery-example).
+  comparable to the TUI gallery; its scope belongs to the [gallery reference](../../../examples/gui/gallery/README.md).
 - Upstream security corrections are outside this implementation plan by user
   decision. They are not tasks or completion gates for these stages.
 - macOS, other architectures, direct Wayland support, accessibility implementation

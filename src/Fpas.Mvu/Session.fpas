@@ -63,6 +63,28 @@ type Entry<TMsg, TInput> = union
   Background(Id: string; Version: long; Value: TMsg);
 end union;
 
+procedure Notify(Wake: Sys.Action?);
+begin
+  case Wake of
+    when is Sys.Action as Callback:
+      Callback.Invoke();
+    else
+  end case;
+end procedure;
+
+async function WriteBackground<TMsg, TInput>(
+  Queue: Channels.Channel<Entry<TMsg, TInput>>;
+  Wake: Sys.Action?; Id: string; Version: long; Message: TMsg;
+  Cancellation: Threads.CancellationToken
+): Tasks.Task;
+begin
+  await Queue.Writer.WriteAsync(
+    Entry<TMsg, TInput>.Background(Id, Version, Message),
+    Cancellation
+  ).ConfigureAwait(false);
+  Notify(Wake);
+end function;
+
 /// Creates a manually driven session without a view or window system.
 /// <typeparam name="TModel">The application's model type.</typeparam>
 /// <typeparam name="TMsg">The application's message type.</typeparam>
@@ -71,10 +93,11 @@ end union;
 /// <param name="Update">The transition to run on the owner for each applied message.</param>
 /// <param name="NotifyHost">Receives focus and close requests on the owner.</param>
 /// <param name="Capacity">Positive bound for the shared mailbox.</param>
+/// <param name="Wake">Optional nonthrowing producer-thread notification after admission.</param>
 /// <returns>The session. Serialize model reads, steps and close on the owner.</returns>
 public function Start<TModel, TMsg, TInput>(
   InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
-  NotifyHost: procedure(App.HostRequest); Capacity: int
+  NotifyHost: procedure(App.HostRequest); Capacity: int; Wake: Sys.Action? := null
 ): Runtime<TModel, TMsg, TInput>;
 requires Capacity > 0;
   function Model(): TModel;
@@ -94,16 +117,23 @@ requires Capacity > 0;
 
   function TryEnqueue(Item: Entry<TMsg, TInput>): Admission;
   begin
+    var Result: Admission := Admission.Closed;
     Threads.Monitor.Enter(Gate);
     try
-      if Cleanup <> null then
-        return Admission.Closed;
+      if Cleanup = null then
+        Result := if Queue.Writer.TryWrite(Item) then Admission.Queued else Admission.Full end if;
       end if;
-
-      return if Queue.Writer.TryWrite(Item) then Admission.Queued else Admission.Full end if;
     finally
       Threads.Monitor.Exit(Gate);
     end try;
+
+    case Result of
+      when Admission.Queued:
+        Notify(Wake);
+      else
+    end case;
+
+    return Result;
   end function;
 
   function Send(Input: TInput): Admission;
@@ -212,10 +242,14 @@ begin
     Capacity
   );
   const Workers: Effects.State<TMsg> := Effects.Create<TMsg>(
-    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => Queue.Writer.WriteAsync(
-      Entry<TMsg, TInput>.Background(Id, Version, Message),
+    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => WriteBackground<TMsg, TInput>(
+      Queue,
+      Wake,
+      Id,
+      Version,
+      Message,
       Cancellation
-    ).AsTask()
+    )
   );
   var Current: TModel := InitialModel;
   var Cleanup: Tasks.Task? := null;

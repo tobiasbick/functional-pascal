@@ -1,0 +1,84 @@
+unit Fpas.Gui.Internal.Context;
+
+uses
+  Fpas.Gui.Application as App, Fpas.Gui.Cui as Cui, Fpas.Ui.Elements as E,
+  Fpas.Ui.Validation as V, System as Sys, System.Text as Text, System.Collections.Generic as C;
+
+/// State shared by recursive drawing without application updates.
+/// <typeparam name="TMsg">Message type.</typeparam>
+public type State<TMsg> = record
+  /// Owner window.
+  public Window: Cui.CuiWindow;
+  /// Retained native-facing resources.
+  public Resources: Cui.CuiHostResources;
+  /// Graphically validated tree and subviews.
+  public Prepared: V.Prepared<TMsg>;
+  /// Proposed messages.
+  public Messages: C.List<TMsg>;
+  /// Displayed labels.
+  public Labels: C.List<string>;
+  /// Semantic control descriptors.
+  public Controls: C.List<App.Control>;
+  /// Source or exact-native focus requests.
+  public Focus: C.Queue<string>;
+  /// Open modal IDs and focus to restore.
+  public Modals: C.Dictionary<string, string>;
+  /// Modal IDs visited in this frame.
+  public SeenModals: C.HashSet<string>;
+  /// The preceding successfully presented controls.
+  public Previous: array of App.Control;
+  /// Whether this traversal may emit user messages.
+  public AcceptInput: bool;
+  /// Whether the host accepts any application input in this frame.
+  public Interactive: bool;
+  /// The sole modal scope permitted to accept input.
+  public ActiveModal: string?;
+end record;
+
+/// Encodes an unambiguous native/tracking identity.
+/// <param name="Role">Control role.</param>
+/// <param name="Id">Application ID.</param>
+/// <param name="Key">Optional item key.</param>
+/// <returns>A stable identity independent of visible labels.</returns>
+public function Token(Role: string; Id: string; Key: string := ''): string;
+begin
+  return Role + '/' + Sys.Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(Id)) + '/' +
+    Sys.Convert.ToBase64String(Text.Encoding.UTF8.GetBytes(Key));
+end function;
+
+/// Consumes a matching request before drawing a focusable control.
+/// <typeparam name="TMsg">Message type.</typeparam>
+/// <param name="State">Frame context.</param>
+/// <param name="Id">Application control ID.</param>
+/// <param name="Native">Exact tracking identity.</param>
+/// <param name="Enabled">Focus permission.</param>
+/// <param name="Preferred">Whether an application group request chooses this item.</param>
+/// <returns>Whether to ask CUI for focus.</returns>
+public function WantsFocus<TMsg>(State: State<TMsg>; Id: string; Native: string; Enabled: bool; Preferred: bool := true): bool;
+begin
+  if not Enabled or not State.AcceptInput or State.Focus.Count = 0 then
+    return false;
+  end if;
+  const Request: string := State.Focus.Peek();
+  if Request = 'app:' + Id and not Preferred then
+    return false;
+  end if;
+
+  if Request <> 'app:' + Id and Request <> 'native:' + Native then
+    return false;
+  end if;
+
+  discard State.Focus.Dequeue();
+  return true;
+end function;
+
+/// Registers a widget for finalized geometry and inspection.
+/// <typeparam name="TMsg">Message type.</typeparam>
+/// <param name="State">Frame context.</param>
+/// <param name="Control">Its semantic descriptor.</param>
+public procedure Track<TMsg>(State: State<TMsg>; Control: App.Control);
+begin
+  State.Window.TrackLastControl(Token(Control.Role, Control.Id, Control.Key));
+  State.Controls.Add(Control);
+end procedure;
+end unit;

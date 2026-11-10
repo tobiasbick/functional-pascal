@@ -1,0 +1,416 @@
+program GalleryContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Gui.Application as App,
+  Fpas.Gui.Internal.Session as Host, Fpas.Gui.Cui as Cui, Fpas.Mvu.Application as Mvu,
+  Fpas.Mvu.Session as Runtime, Fpas.Ui.Editors as Ed, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, System as Sys,
+  System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks,
+  System.Diagnostics as Diagnostics;
+
+var Action: int := 0;
+var Target: Cui.CuiRectangle := new Cui.CuiRectangle();
+var Key: int := 0;
+var Typed: string := '';
+var RejectEdits: bool := false;
+var Changes: int := 0;
+
+const BodyEntered: Threads.ManualResetEventSlim := new Threads.ManualResetEventSlim(false);
+const BodyExit: Threads.ManualResetEventSlim := new Threads.ManualResetEventSlim(false);
+const CancelEntered: Threads.ManualResetEventSlim := new Threads.ManualResetEventSlim(false);
+const CancelExit: Threads.ManualResetEventSlim := new Threads.ManualResetEventSlim(false);
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function HasText(Session: App.Session<State.Msg>; Expected: string): bool;
+begin
+  for Text: string in Session.Snapshot().Text do
+    if Text = Expected then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+function Control(Session: App.Session<State.Msg>; Id: string; Item: string := ''): App.Control;
+begin
+  for Entry: App.Control in Session.Snapshot().Controls do
+    if Entry.Id = Id and Entry.Key = Item then
+      return Entry;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id + '/' + Item);
+end function;
+
+procedure Advance(Session: App.Session<State.Msg>);
+begin
+  Check(Session.Step(), 'Unexpected close.');
+end procedure;
+
+procedure Click(Session: App.Session<State.Msg>; Id: string; Item: string := '');
+begin
+  Target := Control(Session, Id, Item).Bounds;
+  Check(Target.Width > 0 and Target.Height > 0, 'Empty click target: ' + Id);
+  Action := 1;
+  Advance(Session);
+  Action := 2;
+  Advance(Session);
+  Action := 3;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+end procedure;
+
+async function Gated(Post: function(State.Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
+begin
+  using const Registration: Threads.CancellationTokenRegistration := Cancellation.Register(
+    procedure() begin
+      CancelEntered.Set();
+      CancelExit.Wait();
+    end procedure
+  );
+  BodyEntered.Set();
+  BodyExit.Wait();
+  await Post(State.Msg.Done).ConfigureAwait(false);
+end function;
+
+function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+begin
+  Changes := Changes + 1;
+  case Message of
+    when State.Msg.Focus(const Id: string):
+      return new Mvu.Transition<State.Model, State.Msg>(
+        Model,
+        [Mvu.Focus<State.Msg>('missing'), Mvu.Focus<State.Msg>(Id)]
+      );
+    when State.Msg.Edit(_):
+      if RejectEdits then
+        return new Mvu.Transition<State.Model, State.Msg>(Model, []);
+      end if;
+    when State.Msg.Start:
+      return new Mvu.Transition<State.Model, State.Msg>(
+        Model with
+          Status := 'Working';
+        end with,
+        [
+          Mvu.StartBackground<State.Msg>(
+            'gallery-work',
+            Gated,
+            function(Error: Sys.Exception): State.Msg => State.Msg.Failed(Error.Message)
+          )
+        ]
+      );
+    else
+  end case;
+
+  return State.Update(Model, Message);
+end function;
+
+function FallbackView(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+begin
+  const Tree: E.Element<State.Msg> := View.Build(Model, Viewport);
+  case Tree of
+    when E.Element.Modal(
+      const Id: string,
+      const Base: E.Element<State.Msg>,
+      const Content: E.Element<State.Msg>,
+      _,
+      const Dismiss: Sys.Func<State.Msg>?
+    ):
+      return E.Overlay<State.Msg>(Id, Base, Content, 'missing', Dismiss);
+    else
+      return Tree;
+  end case;
+end function;
+
+procedure Widgets(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Input();
+  begin
+    if Action >= 1 and Action <= 3 then
+      Window.MovePointer(Target.X + Target.Width / 2, Target.Y + Target.Height / 2);
+      if Action = 2 then
+        Window.SetLeftButton(true);
+      end if;
+
+      if Action = 3 then
+        Window.SetLeftButton(false);
+      end if;
+    elsif Action = 4 then
+      Window.TypeText(Typed);
+    elsif Action = 5 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+    end if;
+  end procedure;
+begin
+  Changes := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Gallery contract', 1000, 760, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: App.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), Update, FallbackView, Window, 1, Input,
+    ThemeFor := function(Model: State.Model): bool => Model.Dark
+  );
+  Advance(Session);
+  Click(Session, 'increment');
+  Check(HasText(Session, 'Count: 1'), 'Literal label or duplicate activation.');
+  Click(Session, 'checked');
+  Check(Control(Session, 'checked').Value = 'True', 'Controlled checkbox.');
+  Click(Session, 'theme');
+  Check(Session.Snapshot().Dark, 'Theme selection.');
+  discard Session.Post(State.Msg.Navigate('editors'));
+  Advance(Session);
+  Check(Session.Snapshot().Editors = 3, 'Editor ownership.');
+  discard Session.Post(State.Msg.Focus('document'));
+  Advance(Session);
+  Check(Control(Session, 'document').Focused, 'Last focus request did not win.');
+  Click(Session, 'text');
+  Typed := 'Ω';
+  Action := 4;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(Control(Session, 'text').Value.Contains('Ω'), 'UTF-8 edit proposal.');
+  const Replacement: string := 'replacement 👋';
+  discard Session.Post(State.Msg.Edit(new Ed.TextEdit(Replacement, new Ed.EditorPosition(0, 0))));
+  Advance(Session);
+  Check(Control(Session, 'text').Value = Replacement, 'Document replacement.');
+  RejectEdits := true;
+  const BeforeReject: int := Changes;
+  Typed := 'X';
+  Action := 4;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Advance(Session);
+  RejectEdits := false;
+  Check(
+    Control(Session, 'text').Value = Replacement and Changes = BeforeReject + 1,
+    'Rejected controlled edit leaked into native state.'
+  );
+  discard Session.Post(State.Msg.Navigate('collections'));
+  Advance(Session);
+  Check(Session.Snapshot().Editors = 0, 'Removed editor buffers retained.');
+  Click(Session, 'selection', 'alpha');
+  Key := 10;
+  Action := 5;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(
+    Control(Session, 'selection', 'beta').Value = 'True',
+    'Arrow selection or disabled-item skip.'
+  );
+  const BeforeActivation: int := Changes;
+  Key := 2;
+  Action := 5;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Check(Changes = BeforeActivation, 'CanActivate=false emitted an activation.');
+  discard Session.Post(State.Msg.Tab('off'));
+  Advance(Session);
+  Check(
+    HasText(Session, 'Tab: one') and Control(Session, 'tabs', 'one').Value = 'True',
+    'Disabled active tab did not fall back.'
+  );
+  Click(Session, 'tabs', 'two');
+  Check(HasText(Session, 'Tab: two'), 'Controlled tabs.');
+  Click(Session, 'table', 'alpha');
+  Check(Control(Session, 'table', 'alpha').Value = 'True', 'Table selection.');
+  Click(Session, 'table', 'disabled');
+  Check(Control(Session, 'table', 'alpha').Value = 'True', 'Disabled table row changed selection.');
+  discard Session.Post(State.Msg.Navigate('graphics'));
+  Advance(Session);
+  Check(
+    Session.Snapshot().Images = 1 and Control(
+      Session,
+      'canvas'
+    ).Bounds.Height > 100 and Control(Session, 'pixels').Bounds.Height > 30,
+    'Graphics ownership.'
+  );
+  Window.CapturePng(Capture);
+  discard Session.Post(State.Msg.Navigate('layout'));
+  Advance(Session);
+  Check(Session.Snapshot().Images = 0, 'Removed texture retained.');
+  discard Session.Post(State.Msg.Navigate('effects'));
+  Advance(Session);
+  Click(Session, 'modal-open');
+  Check(
+    Control(Session, 'modal-close').Focused and not Control(Session, 'modal-open').Enabled,
+    'Modal focus or base admission.'
+  );
+  Key := 3;
+  Action := 5;
+  Advance(Session);
+  Action := 0;
+  Advance(Session);
+  Advance(Session);
+  Check(Control(Session, 'modal-open').Focused, 'Modal focus restoration.');
+  Window.Resize(520, 900);
+  for I: int := 0 to 59 do
+    Advance(Session);
+    if Session.Snapshot().Size.Width = 520 then
+      break;
+    end if;
+  end for;
+
+  Check(Session.Snapshot().Dark and HasText(Session, 'Count: 1'), 'Responsive view reset state.');
+end procedure;
+
+procedure ResponsiveCleanup(Renderer: Cui.CuiRenderer; CloseWhileWorking: bool);
+  procedure Input();
+  begin
+    if Action >= 1 and Action <= 3 then
+      Window.MovePointer(Target.X + Target.Width / 2, Target.Y + Target.Height / 2);
+      if Action = 2 then
+        Window.SetLeftButton(true);
+      end if;
+
+      if Action = 3 then
+        Window.SetLeftButton(false);
+      end if;
+    end if;
+  end procedure;
+begin
+  BodyEntered.Reset();
+  BodyExit.Reset();
+  CancelEntered.Reset();
+  CancelExit.Reset();
+  Action := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Responsive cleanup', 1000, 760, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: App.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Page := 'effects'),
+    Update,
+    View.Build,
+    Window,
+    2,
+    Input
+  );
+  try
+    Advance(Session);
+    Click(Session, 'start');
+    Check(BodyEntered.Wait(5000), 'Worker did not start.');
+    Click(Session, 'responsive-increment');
+    Check(HasText(Session, 'Count: 1'), 'Worker blocked native input/presentation.');
+    if CloseWhileWorking then
+      const Before: long := Session.Snapshot().Id;
+      Window.RequestClose();
+      Advance(Session);
+      Check(CancelEntered.Wait(5000), 'Close did not cancel.');
+      Check(
+        not Session.IsOpen() and Session.Snapshot().Id > Before and Window.TryWake(),
+        'Close did not repaint while cleanup was pending.'
+      );
+    else
+      Click(Session, 'cancel');
+      Check(CancelEntered.Wait(5000), 'Cancellation callback did not start.');
+      Click(Session, 'responsive-increment');
+      Check(HasText(Session, 'Count: 2'), 'Cancellation blocked native input/presentation.');
+    end if;
+  finally
+    BodyExit.Set();
+    CancelExit.Set();
+  end try;
+
+  if CloseWhileWorking then
+    while Session.Step() do
+    end while;
+
+    Check(not Window.TryWake(), 'Cleanup did not release the native window.');
+  else
+    for I: int := 0 to 9 do
+      Advance(Session);
+    end for;
+
+    Check(HasText(Session, 'Status: Cancelled'), 'A cancelled result reached Update.');
+  end if;
+end procedure;
+
+async function Delayed(Post: function(State.Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
+begin
+  await Tasks.Task.Delay(250, Cancellation).ConfigureAwait(false);
+  await Post(State.Msg.Done).ConfigureAwait(false);
+end function;
+
+function IdleUpdate(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+begin
+  case Message of
+    when State.Msg.Start:
+      return new Mvu.Transition<State.Model, State.Msg>(
+        Model,
+        [
+          Mvu.StartBackground<State.Msg>(
+            'idle',
+            Delayed,
+            function(Error: Sys.Exception): State.Msg => State.Msg.Failed(Error.Message)
+          )
+        ]
+      );
+    else
+      return State.Update(Model, Message);
+  end case;
+end function;
+
+procedure IdleCompletion(Renderer: Cui.CuiRenderer);
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Idle completion', 1000, 760, Renderer);
+  Window.SetReducedMotion(true);
+  using const Session: App.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Page := 'effects'),
+    IdleUpdate,
+    View.Build,
+    Window,
+    1
+  );
+  Advance(Session);
+  discard Session.Post(State.Msg.Start);
+  Advance(Session);
+  const Deadline: Threads.Thread := new Threads.Thread(
+    procedure() begin
+      Threads.Thread.Sleep(5000);
+      discard Window.TryWake();
+    end procedure
+  );
+  Deadline.IsBackground := true;
+  Deadline.Start();
+  const Elapsed: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+  var Frames: int := 0;
+  while not HasText(Session, 'Status: Completed') and Frames < 100 do
+    Advance(Session);
+    Frames := Frames + 1;
+  end while;
+
+  Check(HasText(Session, 'Status: Completed'), 'Idle completion did not reach Update.');
+  Check(
+    Elapsed.ElapsedMilliseconds < 4000L,
+    'Completion needed the watchdog to wake an idle host.'
+  );
+end procedure;
+
+procedure Run(Arguments: array of string);
+requires Arguments.Length = 3;
+begin
+  const Renderer: Cui.CuiRenderer := if Arguments[
+      1
+    ] = 'software' then Cui.CuiRenderer.Software
+    else Cui.CuiRenderer.OpenGl
+    end if;
+  Widgets(Renderer, Arguments[2]);
+  ResponsiveCleanup(Renderer, false);
+  ResponsiveCleanup(Renderer, true);
+  IdleCompletion(Renderer);
+  Console.WriteLine('GUI gallery verified: ' + Arguments[1]);
+end procedure;
+
+begin
+  Run(Sys.Environment.GetCommandLineArgs());
+end;
+end program;

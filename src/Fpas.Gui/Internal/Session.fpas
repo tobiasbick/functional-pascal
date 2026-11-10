@@ -1,0 +1,394 @@
+unit Fpas.Gui.Internal.Session;
+
+uses
+  Fpas.Gui.Application as App, Fpas.Gui.Cui as Cui, Fpas.Gui.Internal.Presentation as P,
+  Fpas.Gui.Internal.Context as C, Fpas.Gui.Internal.Focus as F, Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, System as Sys,
+  System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+
+function Viewport(Size: Cui.CuiSize): L.Viewport;
+begin
+  return new L.Viewport(
+    if Size.Width < 600 then L.SizeClass.Compact
+      elsif Size.Width < 1200 then L.SizeClass.Regular
+      else L.SizeClass.Expanded
+      end if,
+    if Size.Height < 400 then L.SizeClass.Compact
+      elsif Size.Height < 900 then L.SizeClass.Regular
+      else L.SizeClass.Expanded
+      end if
+  );
+end function;
+
+/// Takes ownership of a native window and drives shared MVU transitions on its creating thread.
+/// <typeparam name="TModel">Application model.</typeparam>
+/// <typeparam name="TMsg">Typed messages.</typeparam>
+/// <param name="InitialModel">Initial state.</param>
+/// <param name="Update">Shared transition and effect commands.</param>
+/// <param name="View">Declarative view with responsive size classes.</param>
+/// <param name="Window">New owned window.</param>
+/// <param name="Capacity">Positive mailbox capacity.</param>
+/// <param name="BeforeDraw">Owner input injection for integration fixtures.</param>
+/// <param name="Dark">Initial theme.</param>
+/// <param name="ThemeFor">Optional model-owned theme selector.</param>
+/// <returns>The manually driven session.</returns>
+public function Start<TModel, TMsg>(
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): E.Element<TMsg>; Window: Cui.CuiWindow; Capacity: int;
+  BeforeDraw: Sys.Action? := null; Dark: bool := false; ThemeFor: Sys.Func<TModel, bool>? := null
+): App.Session<TMsg>;
+requires Capacity > 0;
+  procedure CheckOwner();
+  begin
+    if Sys.Environment.CurrentManagedThreadId <> Owner then
+      raise new Sys.InvalidOperationException(
+        'Drive and dispose the GUI session on its creating thread.'
+      );
+    end if;
+  end procedure;
+
+  procedure BeginClose();
+  begin
+    if Cleanup = null then
+      const Completion: Tasks.Task := Core.Close();
+      Cleanup := Completion;
+      Pending.Clear();
+      Focus.Clear();
+      Window.WakeWhenCompleted(Completion);
+      discard Window.TryWake();
+    end if;
+  end procedure;
+
+  procedure Finish();
+  begin
+    const Completion: Tasks.Task? := Cleanup;
+    if Completion = null then
+      return;
+    end if;
+
+    try
+      Completion.GetAwaiter().GetResult();
+    finally
+      Released := true;
+      Window.SetResizeRenderer(null);
+      try
+        Resources.Dispose();
+      finally
+        Window.Dispose();
+      end try;
+    end try;
+  end procedure;
+
+  function Snapshot(): App.Frame;
+  begin
+    CheckOwner();
+    const Last: App.Frame? := Published;
+    if Last = null then
+      raise new Sys.InvalidOperationException('No GUI frame has been presented.');
+    end if;
+
+    return Last with
+      Text := cast<array of string>(Last.Text.Clone());
+      Controls := cast<array of App.Control>(Last.Controls.Clone());
+    end with;
+  end function;
+
+  function Software(): bool;
+  begin
+    CheckOwner();
+    return Window.IsSoftware;
+  end function;
+
+  function Context(Candidate: V.Prepared<TMsg>; Accept: bool): C.State<TMsg>;
+  begin
+    const Last: App.Frame? := Published;
+    const Modal: string? := F.TopModal<TMsg>(Candidate.Tree, Candidate);
+    return new C.State<TMsg>(
+      Window,
+      Resources,
+      Candidate,
+      new Generic.List<TMsg>(),
+      new Generic.List<string>(),
+      new Generic.List<App.Control>(),
+      Focus,
+      Modals,
+      new Generic.HashSet<string>(),
+      if Last = null then [] else Last.Controls end if,
+      Accept and Modal = null,
+      Accept,
+      Modal
+    );
+  end function;
+
+  procedure ResizeDraw();
+  begin
+    const Cached: V.Prepared<TMsg>? := Prepared;
+    if Cached = null then
+      return;
+    end if;
+
+    Resources.BeginFrame();
+    P.Draw<TMsg>(Context(Cached, false));
+    Resources.EndFrame();
+  end procedure;
+
+  procedure Paint(Candidate: V.Prepared<TMsg>; Accept: bool; Size: Cui.CuiSize);
+  begin
+    Resources.BeginFrame();
+    const State: C.State<TMsg> := Context(Candidate, Accept);
+    P.Draw<TMsg>(State);
+    Focus.Clear();
+    Window.Present();
+    Resources.EndFrame();
+    for Index: int := 0 to State.Controls.Count - 1 do
+      const Control: App.Control := State.Controls[Index];
+      const Token: string := C.Token(Control.Role, Control.Id, Control.Key);
+      State.Controls[Index] := Control with
+        Bounds := Window.GetControlRectangle(Token);
+        Focused := Window.ControlFocused(Token);
+        Hovered := Window.ControlHovered(Token);
+      end with;
+      if Control.Role = 'scroll' then
+        var Offset: float := 0;
+        var Maximum: float := 0;
+        Window.ScrollMetrics(Token, out Offset, out Maximum);
+        State.Controls[Index] := State.Controls[Index] with
+          Value := Offset.ToString();
+        end with;
+      end if;
+    end for;
+
+    FrameId := FrameId + 1L;
+    Published := new App.Frame(
+      FrameId, Size, State.Labels.ToArray(), State.Controls.ToArray(),
+      Resources.EditorCount, Resources.ImageCount, CurrentDark
+    );
+    for Message: TMsg in State.Messages do
+      Pending.Enqueue(Message);
+    end for;
+
+    for Id: string in new Generic.List<string>(Modals.Keys) do
+      if not State.SeenModals.Contains(Id) then
+        const Restore: string := Modals[Id];
+        discard Modals.Remove(Id);
+        if Accept then
+          var Target: string? := null;
+          for Control: App.Control in State.Controls do
+            const Token: string := C.Token(Control.Role, Control.Id, Control.Key);
+            if Control.Enabled and Control.Role <> 'scroll' and (Target = null or Token =
+              Restore)
+            then
+              Target := Token;
+            end if;
+          end for;
+
+          if Target <> null then
+            Focus.Enqueue('native:' + Target);
+            discard Window.TryWake();
+          end if;
+        end if;
+      end if;
+    end for;
+
+    if Pending.Count > 0 then
+      discard Window.TryWake();
+    end if;
+  end procedure;
+
+  procedure ClosingFrame();
+  begin
+    if not Window.NextFrame() then
+      return;
+    end if;
+    const Cached: V.Prepared<TMsg>? := Prepared;
+    try
+      if Cached <> null and not BrokenView then
+        Paint(Cached, false, Window.Size);
+      else
+        Window.Text('Closing…');
+        Window.Present();
+      end if;
+    catch Error: Sys.Exception do
+      BrokenView := true;
+      Window.DiscardFrame();
+    end try;
+  end procedure;
+
+  procedure Stop();
+  begin
+    if Released then
+      return;
+    end if;
+
+    BeginClose();
+    const Completion: Tasks.Task? := Cleanup;
+    if Completion <> null then
+      while not Completion.IsCompleted do
+        ClosingFrame();
+      end while;
+    end if;
+
+    Finish();
+  end procedure;
+
+  procedure Release();
+  begin
+    CheckOwner();
+    if Driving then
+      raise new Sys.InvalidOperationException('Do not dispose a GUI session from its callbacks.');
+    end if;
+
+    Stop();
+  end procedure;
+
+  function Step(): bool;
+  begin
+    CheckOwner();
+    if Released then
+      return false;
+    end if;
+
+    if Driving then
+      raise new Sys.InvalidOperationException('GUI Step cannot be reentered.');
+    end if;
+
+    Driving := true;
+    try
+      var Consumed: int := 0;
+      while Core.IsOpen() and Consumed < Capacity do
+        if Pending.Count > 0 then
+          case Core.Post(Pending.Peek()) of
+            when Runtime.Admission.Queued:
+              discard Pending.Dequeue();
+            else
+          end case;
+        end if;
+
+        if Core.QueueCount() = 0 then
+          break;
+        end if;
+
+        case Core.Advance() of
+          when Runtime.Step.Updated:
+            Dirty := true;
+          else
+        end case;
+
+        Consumed := Consumed + 1;
+      end while;
+
+      if not Core.IsOpen() then
+        BeginClose();
+      end if;
+      const Completion: Tasks.Task? := Cleanup;
+      if Completion <> null and Completion.IsCompleted then
+        Finish();
+        return false;
+      end if;
+
+      if Dirty or Pending.Count > 0 or Core.QueueCount() > 0 then
+        discard Window.TryWake();
+      end if;
+
+      if not Window.NextFrame() then
+        Stop();
+        return false;
+      end if;
+
+      if Window.CloseRequested then
+        BeginClose();
+      end if;
+      const AfterPump: Tasks.Task? := Cleanup;
+      if AfterPump <> null and AfterPump.IsCompleted then
+        Window.DiscardFrame();
+        Finish();
+        return false;
+      end if;
+      const Size: Cui.CuiSize := Window.Size;
+      if Size.Width <> PreviousSize.Width or Size.Height <> PreviousSize.Height then
+        Dirty := true;
+      end if;
+      var Candidate: V.Prepared<TMsg>? := Prepared;
+      if Cleanup = null and (Dirty or Candidate = null) then
+        const Model: TModel := Core.Model();
+        case ThemeFor of
+          when is Sys.Func<TModel, bool> as Theme:
+            CurrentDark := Theme.Invoke(Model);
+          else
+        end case;
+
+        Window.SetDarkTheme(CurrentDark);
+        Candidate := V.Prepare<TMsg>(View(Model, Viewport(Size)), V.Target.Graphical, Prepared);
+        P.Check<TMsg>(Candidate);
+      end if;
+
+      if Candidate = null then
+        raise new Sys.InvalidOperationException('No prepared GUI view.');
+      end if;
+
+      case BeforeDraw of
+        when is Sys.Action as Inject:
+          Inject.Invoke();
+        else
+      end case;
+
+      Paint(Candidate, Cleanup = null and Pending.Count = 0, Size);
+      Prepared := Candidate;
+      PreviousSize := Size;
+      Dirty := false;
+      return true;
+    catch Error: Sys.Exception do
+      try
+        if not Released then
+          Window.DiscardFrame();
+          Stop();
+        end if;
+      catch CleanupError: Sys.Exception do
+        raise new Sys.AggregateException(
+          'GUI execution and cleanup failed.',
+          [Error, CleanupError]
+        );
+      end try;
+
+      raise;
+    finally
+      Driving := false;
+    end try;
+  end function;
+begin
+  const Owner: int := Sys.Environment.CurrentManagedThreadId;
+  var Released: bool := false;
+  var Driving: bool := false;
+  var Dirty: bool := true;
+  var BrokenView: bool := false;
+  var CurrentDark: bool := Dark;
+  var FrameId: long := 0L;
+  var Published: App.Frame? := null;
+  var Prepared: V.Prepared<TMsg>? := null;
+  var PreviousSize: Cui.CuiSize := new Cui.CuiSize();
+  var Cleanup: Tasks.Task? := null;
+  const Pending: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
+  const Focus: Generic.Queue<string> := new Generic.Queue<string>();
+  const Modals: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
+  const Resources: Cui.CuiHostResources := new Cui.CuiHostResources(Window);
+  const Core: Runtime.Runtime<TModel, TMsg, bool> := Runtime.Start<TModel, TMsg, bool>(
+    InitialModel, Update,
+    procedure(Request: Mvu.HostRequest) begin
+      case Request of
+        when Mvu.HostRequest.Focus(const Id: string):
+          Focus.Clear();
+          Focus.Enqueue('app:' + Id);
+        else
+      end case;
+    end procedure, Capacity,
+    procedure() begin
+      discard Window.TryWake();
+    end procedure
+  );
+  Window.DeferClose := true;
+  Window.SetDarkTheme(Dark);
+  Window.SetResizeRenderer(ResizeDraw);
+  return App.Session<TMsg>.Create(Step, Core.Post, Snapshot, Core.IsOpen, Software, Release);
+end function;
+end unit;

@@ -39,6 +39,21 @@ Debug/Release acceptance runs the same contracts without platform skips.
 
 ## Native GUI
 
+`GuiHostTests` builds the public FPAS counter, gallery and `Fpas.Gui` through a fresh SDK.
+It checks native activation, disabled buttons, deferred transitions, first-frame
+geometry, column stretch/padding, view and subview reuse, resize, detached
+snapshots, worker posting, thread ownership, bounded admission, native/application
+close and failure cleanup with software and OpenGL rendering.
+The gallery contract also checks controlled Unicode edits and rejected proposals,
+checkbox/selection/table/tab input, theme/resize state, modal focus restoration,
+resource removal, idle completion and window repaint/input while worker bodies
+and cancellation callbacks are held at gates. Native close stays responsive
+until both gates finish. `CuiHostLayoutTests` covers basis/grow/shrink/bounds,
+intrinsic canvas size/pixels and controlled End/wheel input with either scrollbar
+setting. `CuiHostResourceTests` checks native texture accounting across removal,
+replacement and repeated sessions, and normalized Unicode selection offsets.
+`CuiPresentationTests` checks explicit presentation and frame-local control tracking.
+
 `Fpas.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
 software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
 The window tests check nested row and column geometry and route text input

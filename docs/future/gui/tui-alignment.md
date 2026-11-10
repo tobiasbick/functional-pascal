@@ -1,7 +1,7 @@
 # TUI alignment
 
 Depends on [shared widget contracts](../../../src/Fpas.Ui/README.md), the [MVU core](../../../src/Fpas.Mvu/README.md)
-and the [GUI host](gui-host.md). Adapt `Fpas.Tui` to the common contracts while
+and the [GUI host](../../../src/Fpas.Gui/README.md). Adapt `Fpas.Tui` to the common contracts while
 retaining its terminal renderer and supported behavior.
 
 ## Migration

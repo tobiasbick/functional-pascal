@@ -1,0 +1,450 @@
+unit Fpas.Gui.Internal.Presentation;
+
+uses
+  Fpas.Gui.Application as App, Fpas.Gui.Cui as Cui, Fpas.Gui.Internal.Context as C,
+  Fpas.Gui.Internal.Controls as Widgets, Fpas.Gui.Internal.Collections as Choices,
+  Fpas.Gui.Internal.Sizing as Size, Fpas.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as Ch,
+  Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys,
+  System.Collections.Generic as Generic;
+
+/// Checks native-specific layout limits before issuing widget calls.
+/// <typeparam name="TMsg">Message type.</typeparam>
+/// <param name="Prepared">Graphically validated tree and cached subviews.</param>
+public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
+  procedure Visit(Node: E.Element<TMsg>);
+  begin
+    case Node of
+      when E.Element.Stack(const Children: array of E.Element<TMsg>, _, const Settings: L.Flow):
+        discard Size.Spacing(Settings.Gap);
+        discard Size.Spacing(Settings.Padding);
+        for Child: E.Element<TMsg> in Children do
+          Visit(Child);
+        end for;
+      when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):
+        case Settings.Basis of
+          when L.Extent.Fixed(const Distance: L.Measure):
+            discard Size.Measure(Distance);
+          else
+        end case;
+
+        case Settings.Minimum of
+          when is L.Measure as Distance:
+            discard Size.Measure(Distance);
+          else
+        end case;
+
+        case Settings.Maximum of
+          when is L.Measure as Distance:
+            discard Size.Measure(Distance);
+          else
+        end case;
+
+        Visit(Child);
+      when E.Element.Styled(const Child: E.Element<TMsg>, _):
+        Visit(Child);
+      when E.Element.Framed(const Child: E.Element<TMsg>, _):
+        Visit(Child);
+      when E.Element.Scroll(
+        _,
+        const Child: E.Element<TMsg>,
+        const Position: L.ScrollPosition?,
+        _,
+        _
+      ):
+        case Position of
+          when L.ScrollPosition.Offset(const Distance: L.Measure):
+            discard Size.Measure(Distance);
+          else
+        end case;
+
+        Visit(Child);
+      when E.Element.Modal(_, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _):
+        Visit(Base);
+        Visit(Content);
+      when E.Element.TabSet(_, _, _, _, const Panel: E.Element<TMsg>?, _):
+        if Panel <> null then
+          Visit(Panel);
+        end if;
+      when E.Element.TableView(_, const Columns: array of Ch.TableColumn, _, _, _, _, _):
+        for Column: Ch.TableColumn in Columns do
+          case Column.Sizing.Basis of
+            when L.Extent.Fixed(const Distance: L.Measure):
+              discard Size.Measure(Distance);
+            else
+          end case;
+
+          case Column.Sizing.Minimum of
+            when is L.Measure as Distance:
+              discard Size.Measure(Distance);
+            else
+          end case;
+
+          case Column.Sizing.Maximum of
+            when is L.Measure as Distance:
+              discard Size.Measure(Distance);
+            else
+          end case;
+        end for;
+      when E.Element.GraphicCanvas(_, _, _, const Operations: array of G.Paint):
+        for Operation: G.Paint in Operations do
+          case Operation of
+            when G.Paint.FillRect(
+              const X: double,
+              const Y: double,
+              const W: double,
+              const H: double,
+              _
+            ):
+              if not float.IsFinite(
+                cast<float>(X)
+              ) or not float.IsFinite(
+                cast<float>(Y)
+              ) or not float.IsFinite(cast<float>(W)) or not float.IsFinite(cast<float>(H))
+              then
+                raise new Sys.NotSupportedException(
+                  'Canvas coordinates exceed native float range.'
+                );
+              end if;
+            when G.Paint.Line(
+              const X: double,
+              const Y: double,
+              const X2: double,
+              const Y2: double,
+              const Thickness: double,
+              _
+            ):
+              if not float.IsFinite(
+                cast<float>(X)
+              ) or not float.IsFinite(
+                cast<float>(Y)
+              ) or not float.IsFinite(
+                cast<float>(X2)
+              ) or not float.IsFinite(
+                cast<float>(Y2)
+              ) or not float.IsFinite(cast<float>(Thickness)) or cast<float>(Thickness) <= 0
+              then
+                raise new Sys.NotSupportedException(
+                  'Canvas coordinates exceed native float range.'
+                );
+              end if;
+          end case;
+        end for;
+      when E.Element.Deferred(const Id: string, _):
+        Visit(Prepared.Subviews[Id].Tree);
+      else
+    end case;
+  end procedure;
+begin
+  Visit(Prepared.Tree);
+end procedure;
+
+/// Draws a prepared tree and gathers messages without running Update or effects.
+/// <typeparam name="TMsg">Message type.</typeparam>
+/// <param name="State">Frame context and retained resources.</param>
+public procedure Draw<TMsg>(State: C.State<TMsg>);
+  procedure Visit(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
+      when E.Element.Label(const Value: string):
+        Current.Window.Text(Value);
+        Current.Labels.Add(Value);
+      when E.Element.Separator(const Title: string):
+        Current.Window.BeginGroup(false, 0, 4, 0, false);
+        if Title <> '' then
+          Current.Window.Text(Title);
+          Current.Labels.Add(Title);
+        end if;
+
+        Current.Window.Separator();
+        Current.Window.EndGroup();
+      when E.Element.Action(
+        const Id: string,
+        const Label: string,
+        const Message: TMsg,
+        const Enabled: bool,
+        const Variant: S.ButtonVariant
+      ):
+        Widgets.Button<TMsg>(Current, Id, Label, Message, Enabled, Variant);
+      when E.Element.Toggle(
+        const Id: string,
+        const Label: string,
+        const Checked: bool,
+        const OnChange: function(bool): TMsg,
+        const Enabled: bool
+      ):
+        Widgets.Checkbox<TMsg>(Current, Id, Label, Checked, OnChange, Enabled);
+      when E.Element.Editor(
+        const Id: string,
+        const Text: string,
+        const Position: Ed.EditorPosition,
+        const Edit: function(Ed.TextEdit): TMsg,
+        const Navigate: function(Ed.EditorPosition): TMsg,
+        const Placeholder: string,
+        const Enabled: bool,
+        const MultipleLines: bool
+      ):
+        Widgets.Editor<TMsg>(
+          Current,
+          Id,
+          Text,
+          Position,
+          Edit,
+          Navigate,
+          Enabled,
+          MultipleLines,
+          Placeholder
+        );
+      when E.Element.ActionList(
+        const Id: string,
+        const Items: array of Ch.ListItem<TMsg>,
+        const Enabled: bool
+      ):
+        Choices.Actions<TMsg>(Current, Id, Items, Enabled);
+      when E.Element.Selectable(
+        const Id: string,
+        const Items: array of Ch.SelectionItem,
+        const Selected: string?,
+        const Select: function(string): TMsg,
+        const Activate: Sys.Func<string, TMsg>?,
+        const Enabled: bool
+      ):
+        Choices.Select<TMsg>(Current, Id, Items, Selected, Select, Activate, Enabled);
+      when E.Element.TabSet(
+        const Id: string,
+        const Items: array of Ch.TabItem,
+        const Active: string?,
+        const Select: function(string): TMsg,
+        const Panel: E.Element<TMsg>?,
+        const Enabled: bool
+      ):
+        const Tabs: Generic.List<Ch.SelectionItem> := new Generic.List<Ch.SelectionItem>();
+        var Selected: string? := null;
+        for Item: Ch.TabItem in Items do
+          Tabs.Add(new Ch.SelectionItem(Item.Key, Item.Label, Item.Enabled));
+          if Selected = null and Item.Enabled then
+            Selected := Item.Key;
+          end if;
+
+          if Item.Key = Active and Item.Enabled then
+            Selected := Item.Key;
+          end if;
+        end for;
+
+        Current.Window.BeginGroup(false, 0, 8, 0, false);
+        Choices.Select<TMsg>(Current, Id, Tabs.ToArray(), Selected, Select, null, Enabled, true);
+        if Panel <> null then
+          Visit(Panel, Current, false, L.Alignment.Stretch);
+        end if;
+
+        Current.Window.EndGroup();
+      when E.Element.TableView(
+        const Id: string,
+        const Columns: array of Ch.TableColumn,
+        const Rows: array of Ch.TableRow,
+        const Selected: string?,
+        const Select: function(string): TMsg,
+        const Activate: Sys.Func<string, TMsg>?,
+        const Enabled: bool
+      ):
+        Choices.Table<TMsg>(Current, Id, Columns, Rows, Selected, Select, Activate, Enabled);
+      when E.Element.Progress(const Percent: int):
+        Current.Window.Progress(Percent);
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Row: bool,
+        const Settings: L.Flow
+      ):
+        Current.Window.BeginGroup(
+          Row,
+          Size.Spacing(Settings.Padding),
+          Size.Spacing(Settings.Gap),
+          cast<int>(Settings.Align),
+          false
+        );
+        for Child: E.Element<TMsg> in Children do
+          Visit(Child, Current, Row, Settings.Align);
+        end for;
+
+        Current.Window.EndGroup();
+      when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):
+        Visit(Child, Current, Horizontal, Align);
+        Size.Apply(Current.Window, Settings, Horizontal, Align);
+        return;
+      when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
+        Visit(Child, Current, Horizontal, Align);
+        Current.Window.StyleLast(cast<int>(Role));
+        return;
+      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+        Current.Window.BeginGroup(false, 8, 8, 0, true);
+        if Title <> '' then
+          Current.Window.Text(Title);
+          Current.Labels.Add(Title);
+        end if;
+
+        Visit(Child, Current, false, L.Alignment.Stretch);
+        Current.Window.EndGroup();
+      when E.Element.Scroll(
+        const Id: string,
+        const Child: E.Element<TMsg>,
+        const Position: L.ScrollPosition?,
+        const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
+        const Bar: bool
+      ):
+        const Token: string := C.Token('scroll', Id);
+        var Before: float := 0;
+        var Maximum: float := 0;
+        Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
+        var Mode: int := -1;
+        var Offset: float := 0;
+        case Position of
+          when L.ScrollPosition.Start:
+            Mode := 0;
+          when L.ScrollPosition.End:
+            Mode := 1;
+          when L.ScrollPosition.Offset(const Distance: L.Measure):
+            Mode := 0;
+            Offset := Size.Measure(Distance);
+          else
+        end case;
+
+        Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
+        Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
+        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput);
+        Visit(Child, Current, false, L.Alignment.Stretch);
+        Current.Window.EndScroll();
+        var After: float := 0;
+        Current.Window.ScrollState(Token, -1, 0, out After, out Maximum);
+        if Current.AcceptInput and After <> Before then
+          case Scroll of
+            when is Sys.Func<L.ScrollChange, TMsg> as Changed:
+              const Units: L.Measure := L.Measure.Logical(cast<int>(After));
+              Current.Messages.Add(
+                Changed.Invoke(
+                  new L.ScrollChange(
+                    L.ScrollPosition.Offset(Units),
+                    Units,
+                    L.Measure.Logical(cast<int>(Maximum))
+                  )
+                )
+              );
+            else
+          end case;
+        end if;
+
+        C.Track<TMsg>(
+          Current,
+          new App.Control(
+            Id,
+            '',
+            'scroll',
+            new Cui.CuiRectangle(),
+            Current.AcceptInput,
+            Value := After.ToString()
+          )
+        );
+      when E.Element.Modal(
+        const Id: string,
+        const Base: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Initial: string?,
+        const Dismiss: Sys.Func<TMsg>?
+      ):
+        Visit(
+          Base, Current with
+            AcceptInput := false;
+          end with, Horizontal, Align
+        );
+        discard Current.SeenModals.Add(Id);
+        if not Current.Modals.ContainsKey(Id) then
+          var Restore: string := '';
+          for Control: App.Control in Current.Previous do
+            if Control.Focused then
+              Restore := C.Token(Control.Role, Control.Id, Control.Key);
+            end if;
+          end for;
+
+          Current.Modals.Add(Id, Restore);
+          var Explicit: string? := null;
+          if Current.Focus.Count > 0 and Current.Focus.Peek().StartsWith(
+            'app:',
+            Sys.StringComparison.Ordinal
+          )
+          then
+            Explicit := Focus.First<TMsg>(
+              Content,
+              Current.Prepared,
+              Current.Focus.Peek().Substring(4)
+            );
+          end if;
+
+          Current.Focus.Clear();
+          const First: string? := Focus.First<TMsg>(Content, Current.Prepared);
+          const Requested: string? := if Initial = null then null
+            else Focus.First<TMsg>(
+              Content,
+              Current.Prepared,
+              Initial
+            )
+            end if;
+          if Explicit <> null then
+            Current.Focus.Enqueue('app:' + Explicit);
+          elsif Requested <> null then
+            Current.Focus.Enqueue('app:' + Requested);
+          elsif First <> null then
+            Current.Focus.Enqueue('app:' + First);
+          end if;
+        end if;
+        const ModalInput: bool := Current.Interactive and Current.ActiveModal = Id;
+        if ModalInput and Current.Window.KeyPressed(3) then
+          case Dismiss of
+            when is Sys.Func<TMsg> as Close:
+              Current.Messages.Add(Close.Invoke());
+            else
+          end case;
+        end if;
+
+        if Current.Window.Modal(C.Token('modal', Id), true) then
+          Visit(
+            Content, Current with
+              AcceptInput := ModalInput;
+            end with, false, L.Alignment.Stretch
+          );
+          Current.Window.EndDialog();
+        end if;
+      when E.Element.Deferred(const Id: string, _):
+        Visit(Current.Prepared.Subviews[Id].Tree, Current, Horizontal, Align);
+        return;
+      when E.Element.GraphicImage(
+        const Id: string,
+        const Data: G.Pixels,
+        const Width: int,
+        const Height: int
+      ):
+        Current.Window.Image(
+          Current.Resources.Image(C.Token('image', Id), Data.Width, Data.Height, Data.Rgba),
+          Width,
+          Height
+        );
+        C.Track<TMsg>(Current, new App.Control(Id, '', 'image', new Cui.CuiRectangle(), false));
+      when E.Element.GraphicCanvas(
+        const Id: string,
+        const Width: int,
+        const Height: int,
+        const Operations: array of G.Paint
+      ):
+        Widgets.Canvas<TMsg>(Current, Id, Width, Height, Operations);
+      else
+        raise new Sys.InvalidOperationException('An invalid target widget reached GUI drawing.');
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+begin
+  State.Window.BeginHostView();
+  State.Window.BeginGroup(false, 0, 0, 0, false);
+  Visit(State.Prepared.Tree, State, false, L.Alignment.Stretch);
+  State.Window.EndGroup();
+  State.Window.SizeLast(false, 1, 0, 0, -1, 1, 0);
+end procedure;
+end unit;

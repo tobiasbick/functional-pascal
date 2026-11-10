@@ -9,7 +9,7 @@ public sealed class CuiTextBuffer
     private static long nextDocumentVersion;
     private CuiTextSelection selection;
 
-    internal byte[] Bytes { get; }
+    internal byte[] Bytes { get; private set; }
     internal long DocumentVersion { get; private set; }
     internal (int Anchor, int Caret) ByteSelection { get; private set; }
 
@@ -28,6 +28,14 @@ public sealed class CuiTextBuffer
 
     /// <summary>Gets the byte capacity including the terminating zero.</summary>
     public int Capacity => Bytes.Length;
+
+    internal void Grow(int capacity)
+    {
+        if (capacity <= Bytes.Length) return;
+        var replacement = new byte[capacity];
+        Bytes.CopyTo(replacement, 0);
+        Bytes = replacement;
+    }
 
     /// <summary>Gets or sets the directional selection at UTF-16 grapheme boundaries.</summary>
     public CuiTextSelection Selection

@@ -110,6 +110,11 @@ src/
     Interop/
     Text/
     native/
+  Fpas.Gui/
+    Application.fpas
+    Internal/
+  Fpas.Mvu/
+  Fpas.Ui/
 sdk/
   Fpas.NET.Sdk/
     Fpas.NET.Sdk.csproj
@@ -180,6 +185,9 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
 | `Fpas.Gui.Cui` | Low-level CUI binding, UI-thread native lifetime, UTF-8 editing buffers and native build integration |
+| `Fpas.Gui` | FPAS owner loop adapting shared MVU transitions and validated widget trees to CUI |
+| `Fpas.Mvu` | FPAS model/mailbox runtime and background-effect lifetime shared by UI hosts |
+| `Fpas.Ui` | Host-independent FPAS widget data, cached subviews and validation profiles |
 | `Fpas.Compiler.Tests` | C# xUnit unit tests for compiler components and their observable rules |
 | `Fpas.IntegrationTests` | C# xUnit tests for the actual compiler executable, generated programs, .NET interop, and complete MSBuild builds |
 | `Fpas.Gui.Cui.Tests` | Native GUI/interop tests and the packaged-SDK FPAS GUI fixture |

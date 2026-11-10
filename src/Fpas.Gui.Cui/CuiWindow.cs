@@ -10,8 +10,8 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Table, Scroll, Dialog }
-    private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0);
+    private enum Layout { Column, Row, Table, Scroll, Dialog, Group }
+    private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0, int Node = -1);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
     private readonly nint context;
@@ -83,10 +83,18 @@ public sealed partial class CuiWindow : IDisposable
         CheckOpen();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before beginning another frame.");
         bool presented = inFrame;
-        inFrame = NativeMethods.Frame(app) != 0;
+        int result = NativeMethods.Pump(app, DeferClose ? 1 : 0);
+        CloseRequested |= result == 2;
+        inFrame = result != 0;
         hasPresentedFrame |= presented;
-        if (inFrame) AdvanceImageFrame();
+        if (inFrame) { trackedNodes.Clear(); flexNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); AdvanceImageFrame(); }
         else CloseWakeTarget();
+        if (resizeFailure is { } failure)
+        {
+            resizeFailure = null;
+            SetResizeRenderer(null);
+            failure.Throw();
+        }
         return inFrame;
     }
 
@@ -96,6 +104,22 @@ public sealed partial class CuiWindow : IDisposable
     {
         lock (wakeLock)
             return wakeTarget != 0 && NativeMethods.PostWake(wakeTarget) != 0;
+    }
+
+    /// <summary>Presents the current view without waiting for native input and closes its frame.</summary>
+    public void Present()
+    {
+        CheckFrame();
+        if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before presenting.");
+        ResolveHostLayout();
+        int presented;
+        try { presented = NativeMethods.Present(app); }
+        finally { inFrame = false; }
+        if (presented == 0) throw new InvalidOperationException("CUI could not present the current view.");
+        hasPresentedFrame = true;
+        foreach (string id in controlKeys.Keys.Where(id => !trackedNodes.ContainsKey(id)).ToArray()) ForgetControl(id);
+        foreach (string id in modalKeys.Keys.Where(id => !usedModals.Contains(id)).ToArray())
+        { NativeMethods.Forget(context, modalKeys[id]); modalKeys.Remove(id); }
     }
 
     /// <summary>Enables or disables CUI motion reduction.</summary>
@@ -149,8 +173,9 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Closes the innermost layout when it is a scroll container.</summary>
     public void EndScroll()
     {
-        RequireLayout(Layout.Scroll);
-        NativeMethods.EndScroll(context);
+        var scope = RequireLayout(Layout.Scroll);
+        if (scope.Node >= 0) NativeMethods.GroupEnd(context, scope.Node);
+        else NativeMethods.EndScroll(context);
         layouts.RemoveAt(layouts.Count - 1);
     }
 
@@ -213,11 +238,14 @@ public sealed partial class CuiWindow : IDisposable
 
     /// <summary>Adds a button and reports activation.</summary>
     /// <param name="label">CUI label including its stable identity suffix.</param>
+    /// <param name="enabled">Whether the control accepts pointer and keyboard input.</param>
     /// <returns>Whether the button was activated.</returns>
-    public bool Button(string label)
+    public bool Button(string label, bool enabled = true)
     {
         CheckFrame(); Utf8.Validate(label, nameof(label));
-        return NativeMethods.Button(context, label, 0) != 0;
+        NativeMethods.PushDisabled(context, enabled ? (byte)0 : (byte)1);
+        try { return NativeMethods.Button(context, label, 0) != 0; }
+        finally { NativeMethods.PopDisabled(context); }
     }
 
     /// <summary>Draws a list item with a host-owned selection state and reports activation.</summary>
@@ -316,7 +344,7 @@ public sealed partial class CuiWindow : IDisposable
         return DrawTextEditor(id, value, height);
     }
 
-    private unsafe CuiTextInputEvents DrawTextEditor(string id, CuiTextBuffer value, float height)
+    private unsafe CuiTextInputEvents DrawTextEditor(string id, CuiTextBuffer value, float height, string placeholder = "")
     {
         CheckFrame(); Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
@@ -325,7 +353,7 @@ public sealed partial class CuiWindow : IDisposable
         CuiTextInputEvents events;
         fixed (byte* buffer = value.Bytes)
             events = (CuiTextInputEvents)NativeMethods.TextEdit(context, id, buffer, (nuint)value.Capacity,
-                height, value.DocumentVersion, ref anchor, ref caret);
+                height, value.DocumentVersion, ref anchor, ref caret, placeholder);
         value.ReadNativeSelection(anchor, caret, (events & CuiTextInputEvents.Changed) != 0);
         return events;
     }
@@ -356,7 +384,7 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="path">Unicode output filename in an existing directory.</param>
     public void CapturePng(string path)
     {
-        CheckFrame(); Utf8.Validate(path, nameof(path));
+        CheckOpen(); Utf8.Validate(path, nameof(path));
         ArgumentException.ThrowIfNullOrEmpty(path);
         if (layouts.Count != 0 || !hasPresentedFrame)
             throw new InvalidOperationException("Capture needs closed layouts and a previously presented frame.");
@@ -372,7 +400,11 @@ public sealed partial class CuiWindow : IDisposable
         if (app == 0) return;
         CheckOpen();
         CloseWakeTarget();
+        SetResizeRenderer(null);
         ReleaseImages();
+        trackedNodes.Clear();
+        controlKeys.Clear();
+        modalKeys.Clear();
         NativeMethods.Destroy(app);
         if (usesOpenGl) openGlWindow = false;
         app = 0;
@@ -411,8 +443,9 @@ public sealed partial class CuiWindow : IDisposable
 
     private void EndLayout(Layout expected)
     {
-        RequireLayout(expected);
-        NativeMethods.EndBox(context);
+        var scope = RequireLayout(expected);
+        if (scope.Node >= 0) NativeMethods.GroupEnd(context, scope.Node);
+        else NativeMethods.EndBox(context);
         layouts.RemoveAt(layouts.Count - 1);
     }
 

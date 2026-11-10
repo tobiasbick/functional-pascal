@@ -26,6 +26,10 @@ resulting message in that turn. `WaitForWork` and `WaitForSpace` signal possible
 progress. Retry admission after a capacity signal, since another producer can
 take the space first.
 
+An optional nonthrowing `Wake` callback runs on the producer after successful
+admission, including background results. Native hosts can wake their owner loop
+without polling or mutating UI state from a worker.
+
 ## Background effects
 
 `StartBackground` runs the entire effect body on a worker, including the work
@@ -53,3 +57,5 @@ callbacks must finish cooperatively for shutdown to complete.
 The [terminal host](../Fpas.Tui/README.md) uses this runtime for interactive
 and headless sessions. The [effect contract](../../tests/Fixtures/tui/EffectContract.fpas)
 drives the same update function directly and through the terminal adapter.
+The [GUI host](../Fpas.Gui/README.md) also uses this runtime for shared commands,
+native event wakeup and responsive asynchronous cleanup.

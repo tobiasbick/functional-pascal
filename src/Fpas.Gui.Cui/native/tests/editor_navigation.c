@@ -17,7 +17,7 @@ static int draw_editor(cui_ctx *ui, document *doc, cui_key key, int mods) {
         cui_input_key(ui, key, false, mods);
     }
     int events = fpas_cui_text_edit(ui, editor_id, doc->text, sizeof doc->text, 96,
-                                    doc->version, &doc->anchor, &doc->caret);
+                                    doc->version, &doc->anchor, &doc->caret, "");
     cui_end_frame(ui);
     return events;
 }

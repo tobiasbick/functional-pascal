@@ -46,7 +46,7 @@ int main(void) {
             cui_input_key(ui, CUI_KEY_ENTER, false, 0);
             cui_input_text(ui, "CUI");
         }
-        int editor_events = fpas_cui_text_edit(ui, "editor", text, sizeof text, 96, 1, &anchor, &caret);
+        int editor_events = fpas_cui_text_edit(ui, "editor", text, sizeof text, 96, 1, &anchor, &caret, "");
         if (editor_events & CUI_FOCUSED) focused = true;
         if (frame == 1) enter_events = editor_events;
         if (fpas_cui_table_begin(ui, "smoke-table", (const char *const[]){ "Status" }, 1)) {

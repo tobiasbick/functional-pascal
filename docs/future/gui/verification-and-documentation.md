@@ -16,7 +16,7 @@ whole application path and makes it usable outside the repository.
   Inspect the native result as well as its exit code.
 - [ ] Cover button, checkbox, UTF-8 editing, focus, modal interaction, scrolling,
   background completion, cancellation and shutdown through the public FPAS host.
-- [ ] Use the [FPAS GUI gallery](gui-host.md#widget-gallery-example) as a real
+- [ ] Use the [FPAS GUI gallery](../../../examples/gui/gallery/README.md) as a real
   application consumer. Check bounded navigation/interaction scenarios and
   screenshots under Xvfb on Linux and on Windows, with both renderers.
 - [ ] Publish and launch the gallery in NativeAOT and managed single-file modes

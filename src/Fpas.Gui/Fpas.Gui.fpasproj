@@ -1,0 +1,12 @@
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fpas.Mvu/Fpas.Mvu.fpasproj" />
+    <ProjectReference Include="../Fpas.Ui/Fpas.Ui.fpasproj" />
+    <ProjectReference Include="../Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,80 @@
+unit Fpas.Gui.Internal.Sizing;
+
+uses Fpas.Ui.Layout as L, Fpas.Gui.Cui as Cui, System as Sys;
+
+/// Resolves a graphical measure and rejects terminal distances.
+/// <param name="Value">Explicit target distance.</param>
+/// <returns>Logical units.</returns>
+public function Measure(Value: L.Measure): float;
+begin
+  case Value of
+    when L.Measure.Logical(const Units: int):
+      return cast<float>(Units);
+    else
+      raise new Sys.NotSupportedException('GUI layout requires logical units.');
+  end case;
+end function;
+
+/// Resolves semantic theme spacing.
+/// <param name="Value">Semantic or explicit spacing.</param>
+/// <returns>Logical distance.</returns>
+public function Spacing(Value: L.Spacing): float;
+begin
+  case Value of
+    when L.Spacing.None:
+      return 0;
+    when L.Spacing.Tight:
+      return 4;
+    when L.Spacing.Normal:
+      return 8;
+    when L.Spacing.Loose:
+      return 16;
+    when L.Spacing.Fixed(const Distance: L.Measure):
+      return Measure(Distance);
+  end case;
+end function;
+
+/// Applies shared flex sizing after drawing one child.
+/// <param name="Window">Owner drawing context.</param>
+/// <param name="Value">Main-axis constraints.</param>
+/// <param name="Horizontal">Parent axis.</param>
+/// <param name="Align">Parent cross-axis alignment.</param>
+public procedure Apply(Window: Cui.CuiWindow; Value: L.Flex; Horizontal: bool; Align: L.Alignment);
+begin
+  var Kind: int := 0;
+  var Basis: float := 0;
+  var Minimum: float := 0;
+  var Maximum: float := -1;
+  case Value.Basis of
+    when L.Extent.Fixed(const Distance: L.Measure):
+      Kind := 2;
+      Basis := Measure(Distance);
+    when L.Extent.Fill:
+      Kind := 1;
+    else
+  end case;
+
+  case Value.Minimum of
+    when is L.Measure as Distance:
+      Minimum := Measure(Distance);
+    else
+  end case;
+
+  case Value.Maximum of
+    when is L.Measure as Distance:
+      Maximum := Measure(Distance);
+    else
+  end case;
+
+  Window.SizeLast(
+    Horizontal,
+    Kind,
+    Basis,
+    Minimum,
+    Maximum,
+    Value.Grow,
+    cast<int>(Align),
+    Value.Shrink
+  );
+end procedure;
+end unit;

@@ -25,6 +25,34 @@ void fpas_cui_finish_frame_for_destroy(cui_app *app) {
     app->in_frame = false;
 }
 
+int fpas_cui_present(cui_app *app) {
+    cui__app_render(app);
+    const cui_draw_data *draw = cui_get_draw_data(app->ui);
+    return draw->width_px > 0 && draw->height_px > 0 &&
+        (app->gl != NULL || app->sw_pixels != NULL);
+}
+
+int fpas_cui_frame(cui_app *app, int defer_close) {
+    if (cui_app_frame(app)) return 1;
+    if (!defer_close) return 0;
+    app->running = true;
+    cui__app_begin(app);
+    return 2;
+}
+
+int fpas_cui_last_node(cui_ctx *ui) { return ui->last_node; }
+
+cui_rect fpas_cui_node_rect(cui_ctx *ui, int node) {
+    return node >= 0 && node < ui->node_count ? ui->nodes[node].rect : (cui_rect){0};
+}
+
+void fpas_cui_fill_last_width(cui_ctx *ui) {
+    if (ui->last_node < 0 || ui->last_node >= ui->node_count) return;
+    cui_node *node = &ui->nodes[ui->last_node];
+    node->w = CUI_FILL;
+    node->self_align = CUI_ALIGN_STRETCH;
+}
+
 void fpas_cui_set_resize_renderer(cui_app *app, void (*render)(cui_ctx *, void *), void *user) {
     app->frame_cb = render;
     app->frame_user = render ? user : NULL;

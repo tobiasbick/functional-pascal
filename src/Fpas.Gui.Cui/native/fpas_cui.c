@@ -20,3 +20,5 @@
 #include "controls.c"
 #include "image.c"
 #include "text_edit.c"
+#include "host_widgets.c"
+#include "host_layout.c"

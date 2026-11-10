@@ -24,6 +24,38 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial byte Frame(nint app);
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_frame")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int Pump(nint app, int deferClose);
+
+    [LibraryImport(Library, EntryPoint = "cui_app_quit")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Quit(nint app);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_present")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int Present(nint app);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_last_node")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int LastNode(nint context);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_node_rect")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial CuiRectangle NodeRectangle(nint context, int node);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_fill_last_width")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void FillLastWidth(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_push_disabled")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void PushDisabled(nint context, byte disabled);
+
+    [LibraryImport(Library, EntryPoint = "cui_pop_disabled")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void PopDisabled(nint context);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_wake_open")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial nint OpenWakeTarget(nint app);
@@ -140,7 +172,7 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_text_edit", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int TextEdit(nint context, string id, byte* buffer, nuint capacity,
-        float height, long documentVersion, ref int anchor, ref int caret);
+        float height, long documentVersion, ref int anchor, ref int caret, string placeholder);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_image_create")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

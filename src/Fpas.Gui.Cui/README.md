@@ -2,7 +2,7 @@
 
 Low-level .NET 10 binding for the pinned [CUI dependency](../../third-party/cui/UPSTREAM.md).
 It supports the FPAS GUI host and interop fixtures. The application-facing
-MVU/declarative GUI library is tracked in the [GUI plans](../../docs/future/gui/README.md).
+MVU/declarative GUI library is [Fpas.Gui](../Fpas.Gui/README.md).
 
 ## Available binding
 
@@ -67,6 +67,22 @@ MVU/declarative GUI library is tracked in the [GUI plans](../../docs/future/gui/
   closed layouts, and ends the current render frame even when writing fails.
 - Native calls use source-generated interop, explicit C conventions, one-byte
   native booleans and blittable geometry types. Pointers remain internal.
+- `Present` closes and presents a completed frame without waiting for more
+  input. Track controls with `TrackLastControl` while drawing and use
+  `GetControlRectangle` after presentation for finalized geometry. Tracking
+  expires when the next frame begins. `CapturePng` can capture that presented
+  frame as well as an open completed view. `RequestClose` asks the next native
+  frame pump to stop. Buttons accept an enabled flag for native input gating;
+  `FillLastWidth` applies horizontal fill to a widget in a vertical layout.
+- Host primitives separate literal labels from identity, reconcile shared flex
+  constraints after content measurement, and expose focus/hover, controlled
+  editors, scrolling, modal scopes and frame-copied canvases. `CuiHostResources`
+  owns declarative editor/image lifetimes. These support the single FPAS MVU
+  application path rather than defining a second application API.
+- `DeferClose` keeps the native pump alive during asynchronous cleanup and
+  exposes `CloseRequested`. `WakeWhenCompleted` wakes it when cleanup finishes.
+  `SetResizeRenderer` roots a cached-view callback until detachment; exceptions
+  are captured across the unmanaged boundary and rethrown once by `NextFrame`.
 
 ## Source build and verification
 

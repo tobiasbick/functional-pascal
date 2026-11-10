@@ -59,7 +59,7 @@ int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
 
 int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed) {
     const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
-        .pad = padding, .gap = gap, .align = (cui_align)(align == 0 ? CUI_ALIGN_STRETCH : align),
+        .pad = padding, .gap = gap, .align = (cui_align)align,
         .border = framed ? 1 : 0, .clip = true };
     cui_box_begin(ui, &options);
     return cui__current(ui);
@@ -75,19 +75,27 @@ void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float b
                         float minimum, float maximum, float grow, int align) {
     cui_node *n = &ui->nodes[node];
     if (maximum < 0) maximum = 1e20f;
-    (void)grow;
-    /* Content retains intrinsic dimensions of leaf widgets such as images/canvases.
-       Shared grow/fill allocation runs after native measurement. */
-    if (horizontal) { if (kind == 2) n->w = CUI_PX(basis); n->min_w = minimum; n->max_w = maximum; }
-    else { if (kind == 2) n->h = CUI_PX(basis); n->min_h = minimum; n->max_h = maximum; }
-    n->self_align = align == 0 ? CUI_ALIGN_STRETCH : align;
-    if (align == 0) {
+    /* Preserve intrinsic fixed leaf sizes for content; all other sizes use CUI directly. */
+    if (horizontal) {
+        if (kind == 2) n->w = CUI_PX(basis);
+        else if (kind == 1 || grow > 0) n->w = CUI_GROW(grow > 0 ? grow : 1);
+        n->min_w = minimum; n->max_w = maximum;
+    } else {
+        if (kind == 2) n->h = CUI_PX(basis);
+        else if (kind == 1 || grow > 0) n->h = CUI_GROW(grow > 0 ? grow : 1);
+        n->min_h = minimum; n->max_h = maximum;
+    }
+    if (align != CUI_ALIGN_DEFAULT) n->self_align = align;
+    if (align == CUI_ALIGN_STRETCH) {
         if (horizontal && n->h.kind != CUI_SIZE_FIXED) n->h = CUI_FILL;
         if (!horizontal && n->w.kind != CUI_SIZE_FIXED) n->w = CUI_FILL;
     }
 }
 
+void fpas_cui_preferred_width(cui_ctx *ui, int node, float width) { ui->nodes[node].pref_hint = width; }
+
 void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
+    if (role == 0) return;
     cui_color color = role == 3 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
         role == 4 ? CUI_C(ui, ACCENT) : role == 5 ? CUI_C(ui, TEXT_SECONDARY) : CUI_C(ui, FOREGROUND);
     int label = (ui->nodes[node].flags & CUI_NF_TEXT) ? node : fpas_label_node(ui, node);

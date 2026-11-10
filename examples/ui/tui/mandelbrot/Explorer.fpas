@@ -1,9 +1,8 @@
 unit Mandelbrot.Explorer;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Tui.Themes as Themes, Mandelbrot.Model as M, Mandelbrot.Palette as P, Mandelbrot.Render as R, System as Sys, System.Globalization as Globalization, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Styles as S, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Mandelbrot.Model as M, Mandelbrot.Palette as P, Mandelbrot.Render as R, System as Sys, System.Globalization as Globalization, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 const RenderId: string := 'mandelbrot';
-const Colors: Themes.Theme := Themes.Dark();
 
 function Render(State: M.State; Gate: Threads.SemaphoreSlim): Mvu.Command<M.Message>;
   async function Work(Post: function(M.Message): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
@@ -154,8 +153,7 @@ begin
     E.Size<M.Message>(
       E.ProgressBar<M.Message>(Percent),
       new L.Flex(
-        Basis := L.Extent.Fixed(L.Measure.Cells(14)),
-        Grow := 1,
+        Basis := L.Extent.Fill, Minimum := L.Measure.Cells(14),
         Maximum := L.Measure.Cells(32)
       )
     )
@@ -171,12 +169,12 @@ begin
     else if Data.Ready then 'ready' else 'rendering' end if
     end if;
   return E.Column<M.Message>(
-    E.CellStyled<M.Message>(
+    E.Styled<M.Message>(
       E.Text<M.Message>(
         'center=(' + Camera.X.ToString('F4', Culture) + ', ' +
         Camera.Y.ToString('F4', Culture) + ')  ' + P.Name(Camera.Palette) + '  ' + Status
       ),
-      if Data.Failure = '' then Colors.Heading else Colors.Error end if
+      if Data.Failure = '' then S.Role.Heading else S.Role.Error end if
     ),
     Meter('Iterations', Camera.Iterations.ToString(), Camera.Iterations * 100 div 2048),
     Meter('Zoom', Zoom.ToString('F2', Culture) + 'x', cast<int>(Sys.Math.Min(Zoom, 100.0)))
@@ -186,7 +184,7 @@ end function;
 function Help(): E.Element<M.Message>;
 begin
   return Views.Layer<M.Message>(
-    'help', E.CellStyled<M.Message>(
+    'help', E.Styled<M.Message>(
       E.Border<M.Message>(
         E.Column<M.Message>(
           new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(1))),
@@ -195,14 +193,14 @@ begin
           E.Text<M.Message>('Page Up / Down · change iterations'),
           E.Text<M.Message>('1 / 2 / 3 · change color palette'),
           E.Text<M.Message>('R or middle click · reset'),
-          E.CellStyled<M.Message>(
+          E.Styled<M.Message>(
             E.Button<M.Message>('close-help', 'Esc Close', M.Message.ToggleHelp),
-            Colors.Primary
+            S.Role.Primary
           )
         ),
         'Controls'
       ),
-      Colors.Panel
+      S.Role.Panel
     ), [], InitialFocus := 'close-help', OnDismiss := function(): M.Message => M.Message.ToggleHelp
   );
 end function;
@@ -247,8 +245,8 @@ const Shortcuts: array of InputKeys.ShortcutBinding<M.Message> := [
   InputKeys.CharacterShortcut<M.Message>('R', M.Message.Reset)
 ];
 
-const Footer: E.Element<M.Message> := E.CellStyled<M.Message>(
-  E.Text<M.Message>('Arrows pan   +/- zoom   1/2/3 palette   H help   Esc quit'), Colors.Muted
+const Footer: E.Element<M.Message> := E.Styled<M.Message>(
+  E.Text<M.Message>('Arrows pan   +/- zoom   1/2/3 palette   H help   Esc quit'), S.Role.Muted
 );
 
 public function View(State: M.State): E.Element<M.Message>;

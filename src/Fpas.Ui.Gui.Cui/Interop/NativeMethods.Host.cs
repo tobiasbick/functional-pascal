@@ -25,7 +25,7 @@ internal static partial class NativeMethods
     internal static partial void ScrollLayout(nint context, int node, int mode, float offset);
     [LibraryImport(Library, EntryPoint = "fpas_cui_resolve_layout")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void ResolveLayout(nint context, CuiWindow.FlexNode* nodes, int count);
+    internal static partial void ResolveLayout(nint context);
     [LibraryImport(Library, EntryPoint = "fpas_cui_set_resize_renderer")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void ResizeRenderer(nint app, delegate* unmanaged[Cdecl]<nint, nint, void> callback, nint user);
@@ -59,6 +59,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_size")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void NodeSize(nint context, int node, int horizontal, int kind, float basis, float minimum, float maximum, float grow, int align);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_preferred_width")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void PreferredWidth(nint context, int node, float width);
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_role")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void NodeRole(nint context, int node, int role);
@@ -80,9 +83,12 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_canvas", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void Canvas(nint context, string id, float width, float height, CuiPaint* items, int count);
-    [LibraryImport(Library, EntryPoint = "cui_set_theme")]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_theme")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void SetTheme(nint context, int theme);
+    internal static unsafe partial void SetTheme(nint context, int dark, int accent, uint* colors);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_theme_read")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial void ReadTheme(nint context, uint* colors);
     [LibraryImport(Library, EntryPoint = "cui_key_pressed")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial byte KeyPressed(nint context, int key);

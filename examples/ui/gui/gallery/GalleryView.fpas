@@ -39,7 +39,7 @@ begin
       new L.Flow(Gap := L.Spacing.Loose),
       E.Size<State.Msg>(
         Navigation,
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(190)), Shrink := 0)
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(190)))
       ),
       E.Size<State.Msg>(Content, new L.Flex(Basis := L.Extent.Fill))
     )

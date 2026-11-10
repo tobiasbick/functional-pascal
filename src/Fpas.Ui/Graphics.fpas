@@ -1,6 +1,6 @@
 unit Fpas.Ui.Graphics;
 
-// Straight-alpha color for graphical image and canvas work.
+// Straight-alpha color for shared themes, images and graphical canvas work.
 public type Color = record
   // Red channel.
   public Red: byte;

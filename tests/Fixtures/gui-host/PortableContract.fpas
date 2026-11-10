@@ -1,7 +1,7 @@
 program PortableContract;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G,
   Fpas.Ui.Editors as Ed, Fpas.Ui.TerminalExtensions.Input as Keys,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
@@ -311,7 +311,126 @@ begin
   return Sys.String.Join('|', Trace);
 end function;
 
+procedure CheckThemesAndAllocation();
+  function PaletteFor(State: int): Themes.Theme;
+  begin
+    const Accent: Themes.Accent := cast<Themes.Accent>(State mod 8);
+    if State = 17 then
+      const Base: Themes.Theme := Themes.Dark(Accent);
+      return Base with
+        Colors := Base.Colors with
+          Background := new G.Color($10, $20, $30);
+          Foreground := new G.Color($D0, $E0, $F0);
+          Accent := new G.Color($80, $30, $A0);
+        end with;
+      end with;
+    end if;
+
+    return if State < 8 then Themes.Light(Accent) else Themes.Dark(Accent) end if;
+  end function;
+  function Advance(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+  function SharedView(State: int; Viewport: L.Viewport): E.Element<int>;
+  begin
+    return E.Row<int>(
+      E.Size<int>(
+        E.Button<int>('a', 'A', State + 1),
+        if State < 16 then new L.Flex(Grow := 1)
+          else new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(80)))
+          end if
+      ),
+      E.Size<int>(E.Button<int>('b', 'B', State + 1), new L.Flex(Grow := 3))
+    );
+  end function;
 begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Shared layout and themes',
+    400,
+    240,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  using const Graphical: Gui.Session<int> := Host.Start<int, int>(
+    0, Advance, SharedView, Window, 64, ThemeFor := PaletteFor
+  );
+  using const Terminal: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+    0, Advance, SharedView, 40, 24, PaletteFor
+  );
+  Check(new Themes.Theme() = Themes.Light(), 'Default theme differs from CUI neutral light.');
+  Check(
+    Themes.Rgb(new G.Color(255, 0, 0, 128), new G.Color(255, 255, 255)) = $FF7F7F,
+    'Palette alpha composition differs.'
+  );
+  for Index: int := 0 to 17 do
+    if Index > 0 then
+      discard Graphical.Post(Index);
+      discard Terminal.Send(Tui.Input.Activate('a'));
+      discard Terminal.Step();
+    end if;
+
+    Check(Graphical.Step(), 'Shared view closed.');
+    const Theme: Themes.Theme := PaletteFor(Index);
+    const Expected: array of uint := Themes.Rgba(Theme);
+    const Actual: array of uint := Window.ReadTheme();
+    for Token: int := 0 to Expected.Length - 1 do
+      Check(Expected[Token] = Actual[Token], 'Native CUI palette differs from the shared theme.');
+    end for;
+
+    Check(Graphical.Snapshot().Theme = Theme, 'GUI snapshot lost its shared theme.');
+    Check(
+      Terminal.Snapshot().Cells[0].Colors.Background = Themes.Rgb(
+        Theme.Colors.Background,
+        Theme.Colors.Background
+      ),
+      'Terminal background differs from the shared theme.'
+    );
+    for Control: Gui.Control in Graphical.Snapshot().Controls do
+      const Width: int := if Index < 16 then (if Control.Id = 'a' then 100 else 300 end if)
+        else (if Control.Id = 'a' then 80 else 320 end if)
+        end if;
+      Check(Control.Bounds.Width = Width, 'Native shared sizing differs.');
+    end for;
+
+    for Control: Tui.ControlSnapshot in Terminal.Snapshot().Controls do
+      Check(
+        Control.Width = (if Control.Id = 'a' then 10 else 30 end if),
+        'Terminal weighted growth differs.'
+      );
+    end for;
+  end for;
+
+  const InvalidWindow: Cui.CuiWindow := new Cui.CuiWindow(
+    'Invalid theme',
+    100,
+    100,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  var Rejected: bool := false;
+  try
+    using const Invalid: Gui.Session<int> := Host.Start<int, int>(
+      0, Advance, SharedView, InvalidWindow, 64,
+      Theme := new Themes.Theme(Colors := new Themes.Palette(Background := new G.Color(0, 0, 0, 0)))
+    );
+  catch Error: Sys.Exception do
+    Rejected := true;
+  end try;
+  var Released: bool := false;
+  try
+    discard InvalidWindow.IsSoftware;
+  catch Error: Sys.ObjectDisposedException do
+    Released := true;
+  finally
+    InvalidWindow.Dispose();
+  end try;
+
+  Check(Rejected and Released, 'Rejected initial themes must release the owned native window.');
+end procedure;
+
+begin
+  CheckThemesAndAllocation();
   const Terminal: string := TerminalTrace();
   const Graphical: string := GraphicalTrace();
   Check(Terminal = Graphical, 'Portable message mismatch: ' + Terminal + ' / ' + Graphical);

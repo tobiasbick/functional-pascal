@@ -48,8 +48,9 @@ The gallery contract also checks controlled Unicode edits and rejected proposals
 checkbox/selection/table/tab input, theme/resize state, modal focus restoration,
 resource removal, idle completion and window repaint/input while worker bodies
 and cancellation callbacks are held at gates. Native close stays responsive
-until both gates finish. `CuiHostLayoutTests` covers basis/grow/shrink/bounds,
-intrinsic canvas size/pixels and controlled End/wheel input with either scrollbar
+until both gates finish. `CuiHostLayoutTests` covers CUI weighted growth from
+zero, frozen bounds, fixed extents, shrinkable content hints, intrinsic canvas
+size/pixels and controlled End/wheel input with either scrollbar
 setting. `CuiHostResourceTests` checks native texture accounting across removal,
 replacement and repeated sessions, and normalized Unicode selection offsets.
 `CuiPresentationTests` checks explicit presentation and frame-local control tracking.
@@ -127,8 +128,14 @@ malformed tables, invalid selections and split graphemes.
 Both hosts use the same [Fpas.Ui](../src/Fpas.Ui/README.md) tree. GuiHostTests
 compiles a portable view with the same model/update callbacks for both hosts
 and compares checkbox, editor, selection, tab and modal messages, values,
-focus commands and background-result delivery. The terminal host retains its
-cell layout and renderer.
+focus commands and background-result delivery. It also runs the same view and
+ThemeFor callback through both hosts, verifies all light/dark accent palettes
+by native readback, custom palettes, logical fixed sizing and normalized growth.
+The terminal host retains its cell renderer and CUI-compatible allocation.
+
+The terminal CUI fixture checks proportional shrinkage, bounded and fractional
+growth, fixed overflow, logical dimensions on each axis, inherited styles and
+alpha compositing against the containing surface.
 
 The shared terminal fixture checks disabled collection focus, deferred checkbox
 mapping, Space/Enter activation, disabled-row navigation, rejected controlled
@@ -137,7 +144,7 @@ preflight diagnostics before drawing. TerminalBoundaryTests compiles and runs
 the terminal libraries with an unavailable GUI build command, no CUI files,
 and checks that their assembly references contain no GUI dependency.
 
-`HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Ui.Tui/README.md), including
+`HeadlessTuiTests` and `TuiGalleryTests` exercise the [TUI host](../src/Fpas.Ui.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
 of a worker failure on a later step, and joining cancelled workers before exit.
 The effect fixture drives the same update function in the TUI and directly

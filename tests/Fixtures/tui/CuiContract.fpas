@@ -1,0 +1,173 @@
+program CuiContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Graphics as G, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Choices,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
+  Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Tables as Tables,
+  System as Sys, System.Console as Console;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Sizes(Preferred: array of int; Rules: array of Tree.Flex; Available: int; Expected: array of int);
+begin
+  const Actual: array of int := F.Allocate(Preferred, Rules, Available);
+  Check(Actual.Length = Expected.Length, 'Allocation length.');
+  for Index: int := 0 to Actual.Length - 1 do
+    Check(
+      Actual[Index] = Expected[Index],
+      'Allocation at ' + Index.ToString() + ': ' + Actual[Index].ToString()
+    );
+  end for;
+end procedure;
+
+procedure Allocation();
+begin
+  Sizes([100, 100], [new Tree.Flex(Grow := 1), new Tree.Flex(Grow := 3)], 400, [100, 300]);
+  Sizes(
+    [100, 100],
+    [new Tree.Flex(Grow := 1, Maximum := 80), new Tree.Flex(Grow := 3)],
+    400,
+    [80, 320]
+  );
+  Sizes([300, 300], [new Tree.Flex(Basis := 300), new Tree.Flex(Basis := 300)], 400, [300, 300]);
+  Sizes([100, 100], [new Tree.Flex(Basis := 100), new Tree.Flex(Grow := 3)], 400, [100, 300]);
+  Sizes([300, 100], [new Tree.Flex(Minimum := 100), new Tree.Flex()], 200, [167, 33]);
+  Sizes(
+    [1, 1, 1],
+    [new Tree.Flex(Grow := 1), new Tree.Flex(Grow := 1), new Tree.Flex(Grow := 1)],
+    10,
+    [3, 4, 3]
+  );
+  Sizes(
+    [1, 1],
+    [new Tree.Flex(Grow := 1, Minimum := 7), new Tree.Flex(Grow := 1, Minimum := 7)],
+    10,
+    [7, 7]
+  );
+  Sizes(
+    [1, 1],
+    [new Tree.Flex(Grow := int.MaxValue), new Tree.Flex(Grow := int.MaxValue)],
+    7,
+    [4, 3]
+  );
+end procedure;
+
+function Update(State: int; Message: int): Mvu.Transition<int, int>;
+begin
+  return new Mvu.Transition<int, int>(Message, []);
+end function;
+
+procedure TableContent();
+begin
+  const Columns: array of Tree.TableColumn := [
+    new Tree.TableColumn('A', new Tree.Flex()),
+    new Tree.TableColumn('B', new Tree.Flex(Grow := 1, Minimum := 2))
+  ];
+  const Rows: array of Choices.TableRow := [new Choices.TableRow('row', ['Longer world', 'x'])];
+  const Wide: array of int := Tables.Widths(Columns, Rows, 20);
+  Check(Wide[0] = 12 and Wide[1] = 3, 'Content sizing must include table body cells.');
+  const Narrow: array of int := Tables.Widths(Columns, Rows, 12);
+  Check(
+    Narrow[0] = 6 and Narrow[1] = 2,
+    'Column minimums must retain the longest word and explicit bounds.'
+  );
+end procedure;
+
+procedure SemanticColors();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Styled<int>(
+      E.Column<int>(
+        E.Styled<int>(E.Text<int>('x'), Styles.Role.Primary),
+        E.Styled<int>(E.Text<int>('y'), Styles.Role.Default)
+      ), Styles.Role.Panel
+    );
+  end function;
+begin
+  const Base: Themes.Theme := Themes.Dark(Themes.Accent.Green);
+  const Theme: Themes.Theme := Base with
+    Colors := Base.Colors with
+      Background := new G.Color($10, $20, $30);
+      Surface := new G.Color($40, $50, $60);
+      Foreground := new G.Color($D0, $E0, $F0);
+      Accent := new G.Color(255, 0, 0, 128);
+    end with;
+  end with;
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+    0,
+    Update,
+    View,
+    8,
+    2,
+    Theme
+  );
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(
+    Frame.Cells[0].Colors.Foreground = $A02830 and Frame.Cells[0].Colors.Background = $405060,
+    'A semantic foreground must composite over its enclosing surface.'
+  );
+  Check(
+    Frame.Cells[8].Colors.Foreground = $D0E0F0 and Frame.Cells[8].Colors.Background = $405060,
+    'Default style must inherit its enclosing surface.'
+  );
+end procedure;
+
+procedure LogicalDistances();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      new L.Flow(
+        Gap := L.Spacing.Fixed(L.Measure.Logical(16)),
+        Padding := L.Spacing.Fixed(L.Measure.Logical(16))
+      ),
+      E.Size<int>(
+        E.Button<int>('a', 'A', 1),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
+      ),
+      E.Size<int>(
+        E.Button<int>('b', 'B', 2),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(16)))
+      )
+    );
+  end function;
+begin
+  discard V.Prepare<int>(View(0), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 12, 10);
+  const Controls: array of Tui.ControlSnapshot := Session.Snapshot().Controls;
+  Check(
+    Controls[0].Column = 2 and Controls[0].Row = 1 and Controls[0].Height = 2,
+    'Logical padding and vertical fixed size.'
+  );
+  Check(
+    Controls[1].Column = 2 and Controls[1].Row = 4 and Controls[1].Height = 1,
+    'Logical main-axis gap.'
+  );
+  var Rejected: bool := false;
+  try
+    discard V.Prepare<int>(
+      E.Size<int>(
+        E.Text<int>('x'),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)), Grow := 1)
+      ), V.Target.Portable
+    );
+  catch Error: Sys.ArgumentException do
+    Rejected := Error.Message.Contains('Fixed extents cannot grow');
+  end try;
+
+  Check(Rejected, 'Fixed and growing sizes must not be combined.');
+end procedure;
+
+begin
+  Allocation();
+  TableContent();
+  SemanticColors();
+  LogicalDistances();
+  Console.WriteLine('CUI terminal contracts verified');
+end;
+end program;

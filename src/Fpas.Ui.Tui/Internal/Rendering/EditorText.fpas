@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.EditorText;
 
-uses Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as View, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Hosting.Editing as Edit, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as View, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Hosting.Editing as Edit, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Draw(Operations: Generic.List<D.Operation>; Document: View.Document; Style: T.Style; Theme: Th.Theme);
 begin

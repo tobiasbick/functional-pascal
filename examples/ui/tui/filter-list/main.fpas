@@ -1,6 +1,6 @@
 program FilterList;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Themes as TerminalThemes, System as Sys, System.Collections.Generic as Generic, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Collections.Generic as Generic, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Preset = enum: byte
   Light;
@@ -47,25 +47,20 @@ end record;
 
 const Names: array of string := ['Amber', 'Birch', 'Cedar', 'Hidden'];
 
-function ColorsFor(State: Model): TerminalThemes.Theme;
+function ThemeFor(State: Model): TerminalThemes.Theme;
 begin
   case State.Appearance of
     when Preset.Light:
       return TerminalThemes.Light();
     when Preset.Green:
-      return TerminalThemes.Green();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Green);
     when Preset.Blue:
-      return TerminalThemes.Blue();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Blue);
     when Preset.Amber:
-      return TerminalThemes.Amber();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Amber);
     else
       return TerminalThemes.Dark();
   end case;
-end function;
-
-function ThemeFor(State: Model): TerminalThemes.Theme;
-begin
-  return ColorsFor(State);
 end function;
 
 async function RefreshItems(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
@@ -175,26 +170,25 @@ begin
     end if;
 end function;
 
-function Status(State: Model; Colors: TerminalThemes.Theme): E.Element<Msg>;
+function Status(State: Model): E.Element<Msg>;
 begin
   if State.Failure <> '' then
-    return E.CellStyled<Msg>(E.Text<Msg>('Refresh failed · ' + State.Failure), Colors.Error);
+    return E.Styled<Msg>(E.Text<Msg>('Refresh failed · ' + State.Failure), S.Role.Error);
   end if;
   const Label: string := if State.Refreshing then 'Refreshing'
     else if State.Progress = 100 then 'Up to date' else 'Ready' end if
     end if;
   return E.Row<Msg>(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
-    E.CellStyled<Msg>(E.Text<Msg>(Label), Colors.Muted),
+    E.Styled<Msg>(E.Text<Msg>(Label), S.Role.Muted),
     E.Size<Msg>(
       E.ProgressBar<Msg>(State.Progress),
       new L.Flex(
-        Basis := L.Extent.Fixed(L.Measure.Cells(18)),
-        Grow := 1,
+        Basis := L.Extent.Fill, Minimum := L.Measure.Cells(18),
         Maximum := L.Measure.Cells(24)
       )
     ),
-    E.CellStyled<Msg>(E.Text<Msg>(State.Progress.ToString() + '%'), Colors.Muted)
+    E.Styled<Msg>(E.Text<Msg>(State.Progress.ToString() + '%'), S.Role.Muted)
   );
 end function;
 
@@ -214,16 +208,16 @@ begin
   return Msg.ScrollOptions(Change.Position);
 end function;
 
-function Options(State: Model; Colors: TerminalThemes.Theme): E.Element<Msg>;
+function Options(State: Model): E.Element<Msg>;
 begin
   const Settings: E.Element<Msg> := E.Column<Msg>(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
     E.Text<Msg>('Choose which entries appear in the results.'),
-    E.CellStyled<Msg>(
+    E.Styled<Msg>(
       E.Checkbox<Msg>(
         'show-hidden', 'Show hidden', State.ShowHidden,
         function(Value: bool): Msg => Msg.ShowHidden(Value)
-      ), Colors.Secondary
+      ), S.Role.Secondary
     ),
     E.Column<Msg>(
       E.Text<Msg>('Theme · ' + State.Appearance.ToString()),
@@ -250,8 +244,8 @@ begin
     E.Button<Msg>('reset', 'Ctrl+R Reset', Msg.ResetOptions, Variant := S.ButtonVariant.Secondary),
     E.Button<Msg>('close', 'Esc Done', Msg.CloseOptions, Variant := S.ButtonVariant.Primary)
   );
-  const Content: E.Element<Msg> := E.CellStyled<Msg>(
-    Views.Panel<Msg>(Body, Footer, 'Options', Padding := 1), Colors.Panel
+  const Content: E.Element<Msg> := E.Styled<Msg>(
+    Views.Panel<Msg>(Body, Footer, 'Options', Padding := 1), S.Role.Panel
   );
   return Views.Layer<Msg>(
     'options-overlay',
@@ -265,7 +259,6 @@ end function;
 
 function View(State: Model): E.Element<Msg>;
 begin
-  const Colors: TerminalThemes.Theme := ColorsFor(State);
   const Deps: ListDeps := new ListDeps(State.Filter, State.Selected, State.ShowHidden);
   var Count: int := 0;
   for Name: string in Names do
@@ -279,9 +272,9 @@ begin
     BuildList,
     SameList
   );
-  const Footer: E.Element<Msg> := if State.Options then E.CellStyled<Msg>(
+  const Footer: E.Element<Msg> := if State.Options then E.Styled<Msg>(
       E.Text<Msg>('Options open · Esc to close'),
-      Colors.Muted
+      S.Role.Muted
     )
     else E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
@@ -303,17 +296,17 @@ begin
     E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
       E.Size<Msg>(
-        E.CellStyled<Msg>(E.Text<Msg>('Filter list'), Colors.Heading),
+        E.Styled<Msg>(E.Text<Msg>('Filter list'), S.Role.Heading),
         new L.Flex(Grow := 1)
       ),
-      E.CellStyled<Msg>(
+      E.Styled<Msg>(
         E.Text<Msg>(Count.ToString() + (if Count = 1 then ' match' else ' matches' end if)),
-        Colors.Muted
+        S.Role.Muted
       )
     ),
     E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
-      E.CellStyled<Msg>(E.Text<Msg>('Search'), Colors.Muted),
+      E.Styled<Msg>(E.Text<Msg>('Search'), S.Role.Muted),
       E.Size<Msg>(
         E.TextInput<Msg>(
           'filter',
@@ -327,27 +320,27 @@ begin
       )
     ),
     E.Size<Msg>(
-      E.CellStyled<Msg>(
+      E.Styled<Msg>(
         E.Border<Msg>(
           E.Column<Msg>(
             new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(1))),
             E.Size<Msg>(Results, new L.Flex(Grow := 1))
           ),
           'Results'
-        ), Colors.Panel
+        ), S.Role.Panel
       ),
       new L.Flex(
-        Basis := L.Extent.Fixed(L.Measure.Cells(6)),
+        Basis := L.Extent.Fill,
         Minimum := L.Measure.Cells(3),
         Grow := 1
       )
     ),
-    Status(State, Colors),
+    Status(State),
     Footer
   );
 
   const Layers: array of E.Element<Msg> := if State.Options then [
-      Options(State, Colors)
+      Options(State)
     ]
     else []
     end if;
@@ -378,7 +371,11 @@ begin
   discard Session.Send(App.Input.Activate(Control));
   discard Session.Step();
   const Frame: App.Frame := Session.Snapshot();
-  if Frame.Cells[0].Colors.Background <> Expected.Text.Background then
+  if Frame.Cells[0].Colors.Background <> TerminalThemes.Rgb(
+    Expected.Colors.Background,
+    Expected.Colors.Background
+  )
+  then
     raise new Sys.InvalidOperationException(
       'The palette was not applied to the current frame: ' + Control
     );
@@ -429,9 +426,9 @@ begin
   discard Session.Step();
   discard RequireControl(Session.Snapshot(), 'show-hidden', true);
   CheckPalette(Session, 'theme-light', TerminalThemes.Light());
-  CheckPalette(Session, 'theme-green', TerminalThemes.Green());
-  CheckPalette(Session, 'theme-blue', TerminalThemes.Blue());
-  CheckPalette(Session, 'theme-amber', TerminalThemes.Amber());
+  CheckPalette(Session, 'theme-green', TerminalThemes.Dark(TerminalThemes.Accent.Green));
+  CheckPalette(Session, 'theme-blue', TerminalThemes.Dark(TerminalThemes.Accent.Blue));
+  CheckPalette(Session, 'theme-amber', TerminalThemes.Dark(TerminalThemes.Accent.Amber));
   CheckPalette(Session, 'theme-dark', TerminalThemes.Dark());
   discard Session.Send(App.Input.KeyPress(InputKeys.Key.Escape, InputKeys.KeyModifiers.None));
   discard Session.Step();

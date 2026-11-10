@@ -52,10 +52,6 @@ begin
 
       Amount := Cells;
     when L.Measure.Logical(const Units: int):
-      if Profile <> V.Target.Graphical then
-        Reject(Location, 'Logical units require the graphical profile.');
-      end if;
-
       Amount := Units;
   end case;
 
@@ -66,7 +62,7 @@ begin
   return Amount;
 end function;
 
-// Checks size units, ordered bounds and nonnegative allocation weights.
+// Checks size units, ordered bounds and nonnegative CUI growth weights.
 //
 // ## Parameters
 // - `Settings`: Size constraints.
@@ -74,13 +70,16 @@ end function;
 // - `Location`: Diagnostic location.
 public procedure CheckFlex(Settings: L.Flex; Profile: V.Target; Location: string);
 begin
-  if Settings.Grow < 0 or Settings.Shrink < 0 then
-    Reject(Location, 'Growth and shrinkage weights must be nonnegative.');
+  if Settings.Grow < 0 then
+    Reject(Location, 'Growth weights must be nonnegative.');
   end if;
 
   case Settings.Basis of
     when L.Extent.Fixed(const Value: L.Measure):
       discard CheckMeasure(Value, Profile, Location + '/basis');
+      if Settings.Grow <> 0 then
+        Reject(Location, 'Fixed extents cannot grow. Use fill for weighted allocation.');
+      end if;
     else
   end case;
   const Min: L.Measure? := Settings.Minimum;

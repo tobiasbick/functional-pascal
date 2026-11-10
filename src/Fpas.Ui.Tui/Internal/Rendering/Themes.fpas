@@ -1,0 +1,151 @@
+unit Fpas.Ui.Tui.Internal.Rendering.Themes;
+
+uses Fpas.Ui.Terminal as T, Fpas.Ui.Themes as Shared, Fpas.Ui.Graphics as G;
+
+// Terminal colors for one semantic button variant.
+public type ButtonAppearance = record
+  // Colors without focus or hover.
+  public Normal: T.Style;
+  // Keyboard-focus colors.
+  public Focused: T.Style;
+  // Pointer-hover colors.
+  public Hovered: T.Style;
+end record;
+
+// Semantic button variants and disabled colors.
+public type ButtonStyles = record
+  // Ordinary action colors.
+  public Default: ButtonAppearance;
+  // Supporting action colors.
+  public Secondary: ButtonAppearance;
+  // Main action colors.
+  public Primary: ButtonAppearance;
+  // Selected action colors.
+  public Active: ButtonAppearance;
+  // Discard-action colors.
+  public Destructive: ButtonAppearance;
+  // Disabled control colors.
+  public Disabled: T.Style;
+end record;
+
+// Terminal border, editor, selection and progress colors.
+public type WidgetStyles = record
+  // 24-bit border foreground.
+  public BorderColor: int;
+  // Editor body colors.
+  public Field: T.Style;
+  // Focused editor colors.
+  public FocusedField: T.Style;
+  // Selected row colors.
+  public Selected: T.Style;
+  // 24-bit filled progress foreground.
+  public ProgressFillColor: int;
+  // 24-bit empty progress foreground.
+  public ProgressTrackColor: int;
+end record;
+
+// Resolved terminal rendering attributes derived exclusively from a shared theme.
+public type Theme = record
+  // Semantic colors retained for context-sensitive compositing.
+  public Colors: Shared.Palette;
+  // Default text and surface colors.
+  public Text: T.Style;
+  // Keyboard-focus colors.
+  public Focus: T.Style;
+  // Pointer-hover colors.
+  public Hover: T.Style;
+  // Caret colors.
+  public Caret: T.Style;
+  // Border, editor, selection and progress attributes.
+  public Widgets: WidgetStyles;
+  // Placeholder foreground.
+  public PlaceholderColor: int;
+  // Semantic action states.
+  public Buttons: ButtonStyles;
+end record;
+
+// Composites a semantic straight-alpha color onto an opaque terminal surface.
+//
+// ## Parameters
+// - `Value`: Foreground color.
+// - `Background`: Opaque RGB backdrop.
+//
+// ## Returns
+// A terminal 24-bit RGB color.
+public function Rgb(Value: G.Color; Background: int): int;
+  function Channel(Foreground: byte; Back: int): int;
+  begin
+    return (cast<int>(Foreground) * cast<int>(Value.Alpha) + Back * (255 - cast<int>(Value.Alpha)) +
+      127) div 255;
+  end function;
+begin
+  return (Channel(Value.Red, (Background shr 16) and 255) shl 16)
+    or (Channel(
+    Value.Green,
+    (Background shr 8) and 255
+  ) shl 8) or Channel(Value.Blue, Background and 255);
+end function;
+
+// Resolves the shared CUI palette into terminal rendering attributes.
+//
+// ## Parameters
+// - `Value`: Shared immutable application theme with an opaque background.
+//
+// ## Returns
+// Derived terminal colors; applications configure only the shared theme.
+public function Resolve(Value: Shared.Theme): Theme;
+requires cast<int>(Value.Appearance) >= 0 and cast<int>(Value.Appearance) <= 1;
+requires cast<int>(Value.AccentFamily) >= 0 and cast<int>(Value.AccentFamily) <= 7;
+requires Value.Colors.Background.Alpha = 255;
+begin
+  const C: Shared.Palette := Value.Colors;
+  const Canvas: int := Rgb(C.Background, 0);
+  const Surface: int := Rgb(C.Surface, Canvas);
+  const Accent: int := Rgb(C.Accent, Surface);
+  const Text: int := Rgb(C.Foreground, Canvas);
+  const AccentText: int := Rgb(C.AccentForeground, Accent);
+  const HoverColor: int := Rgb(C.Hover, Surface);
+  const ErrorColor: int := Rgb(C.Danger, Canvas);
+  const Focus: T.Style := new T.Style(AccentText, Accent);
+  const Primary: T.Style := if Value.AccentFamily = Shared.Accent.Neutral then new T.Style(
+      Rgb(C.ControlGlyph, Rgb(C.ControlOn, Surface)),
+      Rgb(C.ControlOn, Surface)
+    )
+    else Focus
+    end if;
+  const Hover: T.Style := new T.Style(Text, HoverColor);
+  const Secondary: T.Style := new T.Style(Text, Rgb(C.SurfaceMuted, Surface));
+  const Selected: T.Style := new T.Style(Rgb(C.Foreground, Surface), Rgb(C.AccentSubtle, Surface));
+  const Error: T.Style := new T.Style(ErrorColor, Canvas);
+  return new Theme(
+    Colors := C,
+    Text := new T.Style(Text, Canvas), Focus := Focus, Hover := Hover, Caret := Focus,
+    Widgets := new WidgetStyles(
+      BorderColor := Rgb(C.Border, Surface), Field := new T.Style(Text, Surface),
+      FocusedField := new T.Style(Text, Surface), Selected := Selected,
+      ProgressFillColor := Accent, ProgressTrackColor := Rgb(C.ControlTrack, Surface)
+    ),
+    PlaceholderColor := Rgb(C.TextMuted, Canvas),
+    Buttons := new ButtonStyles(
+      Default := new ButtonAppearance(Secondary, Focus, Hover),
+      Secondary := new ButtonAppearance(Secondary, Focus, Hover),
+      Primary := new ButtonAppearance(
+        Primary,
+        new T.Style(Accent, AccentText),
+        new T.Style(Accent, HoverColor)
+      ),
+      Active := new ButtonAppearance(
+        Selected,
+        new T.Style(Selected.Background, Selected.Foreground),
+        new T.Style(Selected.Foreground, HoverColor)
+      ),
+      Destructive := new ButtonAppearance(
+        new T.Style(Canvas, ErrorColor),
+        Error,
+        new T.Style(ErrorColor, HoverColor)
+      ),
+      Disabled := new T.Style(Rgb(C.TextMuted, Canvas), Surface)
+    )
+  );
+end function;
+end unit;

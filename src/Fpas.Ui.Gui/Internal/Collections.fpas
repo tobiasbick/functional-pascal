@@ -202,6 +202,15 @@ public procedure Table<TMsg>(
   State: C.State<TMsg>; Id: string; Columns: array of Ch.TableColumn; Rows: array of Ch.TableRow;
   Selected: string?; OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Enabled: bool
 );
+  function MinimumWord(Text: string): float;
+  begin
+    var Width: float := 0;
+    for Word: string in Text.Split(new char[0], Sys.StringSplitOptions.RemoveEmptyEntries) do
+      Width := Sys.Math.Max(Width, State.Window.MeasureText(Word));
+    end for;
+
+    return Width;
+  end function;
 begin
   const Keys: Generic.List<string> := new Generic.List<string>();
   const Permissions: array of bool := new bool[Rows.Length];
@@ -217,19 +226,33 @@ begin
     end if;
   end for;
   const Sizes: Generic.List<L.Flex> := new Generic.List<L.Flex>();
+  const ContentWidths: array of float := new float[Columns.Length];
   for I: int := 0 to Columns.Length - 1 do
     var Settings: L.Flex := Columns[I].Sizing;
     case Settings.Basis of
-      when L.Extent.Content:
+      when L.Extent.Fixed(_):
+      else
         var Width: float := State.Window.MeasureText(Columns[I].Header);
+        var Minimum: float := MinimumWord(Columns[I].Header);
         for Row: Ch.TableRow in Rows do
           Width := Sys.Math.Max(Width, State.Window.MeasureText(Row.Cells[I]));
+          Minimum := Sys.Math.Max(Minimum, MinimumWord(Row.Cells[I]));
         end for;
 
+        ContentWidths[I] := Width;
+        const LowerBound: L.Measure? := Settings.Minimum;
+        const UpperBound: L.Measure? := Settings.Maximum;
+        const Lower: float := if LowerBound = null then 0 else Size.Measure(LowerBound) end if;
+        const Upper: float := if UpperBound = null then float.MaxValue
+          else Size.Measure(
+            UpperBound
+          )
+          end if;
         Settings := Settings with
-          Basis := L.Extent.Fixed(L.Measure.Logical(cast<int>(Sys.Math.Ceiling(Width))));
+          Minimum := L.Measure.Logical(
+            cast<int>(Sys.Math.Ceiling(Sys.Math.Clamp(Minimum, Lower, Upper)))
+          );
         end with;
-      else
     end case;
 
     Sizes.Add(Settings);
@@ -239,6 +262,7 @@ begin
   State.Window.BeginGroup(true, 12, 8, 0, false);
   for I: int := 0 to Columns.Length - 1 do
     State.Window.Text(Columns[I].Header);
+    State.Window.PreferLastWidth(ContentWidths[I]);
     Size.Apply(State.Window, Sizes[I], true, L.Alignment.Stretch);
   end for;
 
@@ -255,6 +279,7 @@ begin
     );
     for I: int := 0 to Row.Cells.Length - 1 do
       State.Window.Text(Row.Cells[I]);
+      State.Window.PreferLastWidth(ContentWidths[I]);
       Size.Apply(State.Window, Sizes[I], true, L.Alignment.Stretch);
     end for;
 

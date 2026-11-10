@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Tables;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 const Gutter: int := 4;
 
@@ -14,30 +14,84 @@ begin
   return Values.ToArray();
 end function;
 
-function HeaderWidth(Column: E.TableColumn): int;
+function MinimumWord(Text: string): int;
 begin
-  return G.Measure(G.SingleLine(Column.Header));
+  var Width: int := 0;
+  for Word: string in Text.Split(new char[0], Sys.StringSplitOptions.RemoveEmptyEntries) do
+    Width := Sys.Math.Max(Width, G.Measure(Word));
+  end for;
+
+  return Width;
 end function;
 
-public function Preferred(Columns: array of E.TableColumn): int;
+function ColumnRule(Columns: array of E.TableColumn; Rows: array of Ch.TableRow; Index: int): E.Flex;
+begin
+  const Rule: E.Flex := Columns[Index].Sizing;
+  if Rule.Basis >= 0 then
+    return Rule;
+  end if;
+  var Minimum: int := MinimumWord(Columns[Index].Header);
+  for Row: Ch.TableRow in Rows do
+    Minimum := Sys.Math.Max(Minimum, MinimumWord(Row.Cells[Index]));
+  end for;
+
+  return Rule with
+    Minimum := Sys.Math.Clamp(Minimum, Rule.Minimum, Rule.Maximum);
+  end with;
+end function;
+
+function ContentWidth(Columns: array of E.TableColumn; Rows: array of Ch.TableRow; Index: int): int;
+begin
+  var Width: int := G.Measure(G.SingleLine(Columns[Index].Header));
+  for Row: Ch.TableRow in Rows do
+    Width := Sys.Math.Max(Width, G.Measure(G.SingleLine(Row.Cells[Index])));
+  end for;
+
+  return Width;
+end function;
+
+// Measures table content, including body cells, before main-axis allocation.
+//
+// ## Parameters
+// - `Columns`: Validated column headers and constraints.
+// - `Rows`: Validated body rows.
+//
+// ## Returns
+// Preferred terminal width, including selection gutter and separators.
+public function Preferred(Columns: array of E.TableColumn; Rows: array of Ch.TableRow): int;
 begin
   var Width: int := Gutter + Columns.Length - 1;
-  for Column: E.TableColumn in Columns do
-    const Rule: E.Flex := Column.Sizing;
-    const Basis: int := if Rule.Basis < 0 then HeaderWidth(Column) else Rule.Basis end if;
+  for Index: int := 0 to Columns.Length - 1 do
+    const Rule: E.Flex := Columns[Index].Sizing;
+    const Basis: int := if Rule.Basis < 0 then ContentWidth(
+        Columns,
+        Rows,
+        Index
+      )
+      else Rule.Basis
+      end if;
     Width := Width + Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
   end for;
 
   return Width;
 end function;
 
-public function Widths(Columns: array of E.TableColumn; Available: int): array of int;
+// Allocates table columns under the shared CUI rules.
+//
+// ## Parameters
+// - `Columns`: Validated column constraints.
+// - `Rows`: Validated body rows used for content measurement.
+// - `Available`: Visible table width in cells.
+//
+// ## Returns
+// One allocated width per column.
+public function Widths(Columns: array of E.TableColumn; Rows: array of Ch.TableRow; Available: int): array of int;
 begin
   const Bases: array of int := new int[Columns.Length];
   const Rules: Generic.List<E.Flex> := new Generic.List<E.Flex>(Columns.Length);
   for Index: int := 0 to Columns.Length - 1 do
-    Bases[Index] := HeaderWidth(Columns[Index]);
-    Rules.Add(Columns[Index].Sizing);
+    Bases[Index] := ContentWidth(Columns, Rows, Index);
+    Rules.Add(ColumnRule(Columns, Rows, Index));
   end for;
 
   return F.Allocate(

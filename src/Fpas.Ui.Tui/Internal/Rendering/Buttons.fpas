@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Buttons;
 
-uses Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
 
 public function Resolve(
   Theme: Th.Theme; Variant: UiStyle.ButtonVariant; Enabled: bool;
@@ -8,7 +8,7 @@ public function Resolve(
 ): T.Style?;
 begin
   const Styles: Th.ButtonStyles? := Theme.Buttons;
-  if Styles = null or Variant = UiStyle.ButtonVariant.Default then
+  if Styles = null then
     return null;
   end if;
 
@@ -20,6 +20,7 @@ begin
     when UiStyle.ButtonVariant.Primary: Styles.Primary;
     when UiStyle.ButtonVariant.Active: Styles.Active;
     when UiStyle.ButtonVariant.Destructive: Styles.Destructive;
+    when UiStyle.ButtonVariant.Default: Styles.Default;
     else Styles.Secondary;
   end case;
   return if Focused then Appearance.Focused
@@ -32,7 +33,7 @@ public procedure Paint(
   Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool
 );
 begin
-  const Color: T.Style? := Resolve(Theme, Variant, Enabled);
+  const Color: T.Style? := if IsButton then Resolve(Theme, Variant, Enabled) else null end if;
   if Color <> null then
     D.Fill(Operations, Clip, Color);
   end if;

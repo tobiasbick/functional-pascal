@@ -12,18 +12,18 @@ public type Flex = record
   public Maximum: int := int.MaxValue;
   // Share of extra cells.
   public Grow: int := 0;
-  // Share of a cell deficit.
-  public Shrink: int := 1;
 end record;
 
 // Resolved stack spacing in terminal cells.
 public type Flow = record
   // Main-axis gap.
   public Gap: int := 0;
-  // Inset on every side.
-  public Padding: int := 0;
+  // Left and right inset.
+  public PaddingX: int := 0;
+  // Top and bottom inset.
+  public PaddingY: int := 0;
   // Shared cross-axis alignment.
-  public Align: L.Alignment := L.Alignment.Stretch;
+  public Align: L.Alignment := L.Alignment.Default;
 end record;
 
 // Cell-canvas geometry and input used by terminal routing.

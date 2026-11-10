@@ -7,14 +7,207 @@ begin
   case Node of
     when E.Element.Sized(_, const Rule: E.Flex):
       return Rule;
+    when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+      return FlexRule<TMsg>(Child);
     else
       return new E.Flex();
   end case;
 end function;
 
+// Resolves CUI minimum-content bounds using terminal text metrics.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+//
+// ## Parameters
+// - `Node`: Resolved terminal subtree.
+// - `Horizontal`: Whether to measure width instead of height.
+// - `ParentHorizontal`: Main axis of the enclosing stack; defaults to the measured axis.
+//
+// ## Returns
+// The subtree's minimum content extent in cells.
+public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
+begin
+  case Node of
+    when E.Element.Label(const Value: string):
+      if not Horizontal then
+        return if Value = '' then 0 else G.LineCount(Value, -1) end if;
+      end if;
+      var Width: int := 0;
+      for Word: string in Value.Split(new char[0], Sys.StringSplitOptions.RemoveEmptyEntries) do
+        Width := Sys.Math.Max(Width, G.Measure(Word));
+      end for;
+
+      return Width;
+    when E.Element.DocumentEditor(_, _, _, _, _, _, _):
+      return if Horizontal then 4 else 1 end if;
+    when E.Element.StatusLine(_, _):
+      return 1;
+    when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
+      return if Horizontal then Sys.Math.Min(
+          4,
+          Intrinsic<TMsg>(Node, true)
+        )
+        else Sys.Math.Min(1, Items.Length)
+        end if;
+    when E.Element.Selectable(_, const Items: array of Ch.SelectionItem, _, _, _):
+      return if Horizontal then Sys.Math.Min(
+          4,
+          Intrinsic<TMsg>(Node, true)
+        )
+        else Sys.Math.Min(1, Items.Length)
+        end if;
+    when E.Element.TableView(
+      _,
+      const Columns: array of E.TableColumn,
+      const Rows: array of Ch.TableRow,
+      _,
+      _,
+      _
+    ):
+      return if Horizontal then Sys.Math.Min(
+          Tables.Preferred(Columns, Rows),
+          4 + Columns.Length * 3
+        )
+        else 1 + Sys.Math.Min(1, Rows.Length)
+        end if;
+    when E.Element.Sized(const Child: E.Element<TMsg>, const Rule: E.Flex):
+      const Content: int := Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
+      if Horizontal <> (ParentHorizontal ?? Horizontal) then
+        return Content;
+      end if;
+
+      return Sys.Math.Clamp(
+        if Rule.Basis >= 0 then Rule.Basis else Content end if,
+        Rule.Minimum,
+        Rule.Maximum
+      );
+    when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+      return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
+    when E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      const Axis: bool,
+      const Flow: E.Flow
+    ):
+      var Span: int := 0;
+      for Child: E.Element<TMsg> in Children do
+        const Size: int := Minimum<TMsg>(Child, Horizontal, Axis);
+        Span := if Axis = Horizontal then Span + Size else Sys.Math.Max(Span, Size) end if;
+      end for;
+
+      return Span + 2 * (if Horizontal then Flow.PaddingX
+        else Flow.PaddingY
+        end if) + (if Axis = Horizontal then Sys.Math.Max(
+          0,
+          Children.Length - 1
+        ) * Flow.Gap
+        else 0
+        end if);
+    when E.Element.Scrollable(_, _, _), E.Element.ControlledScroll(_, _, _, _, _):
+      return 0;
+    when E.Element.Framed(const Child: E.Element<TMsg>, _):
+      return Minimum<TMsg>(Child, Horizontal, false) + 2;
+    when E.Element.Desktop(const Child: E.Element<TMsg>, _, _), E.Element.Layer(
+      _,
+      _,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ):
+      return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
+    when E.Element.Panel(
+      const Body: E.Element<TMsg>,
+      const Footer: E.Element<TMsg>,
+      _,
+      const Padding: byte
+    ):
+      const A: int := Minimum<TMsg>(Body, Horizontal, false);
+      const B: int := Minimum<TMsg>(Footer, Horizontal, false);
+      return (if Horizontal then Sys.Math.Max(
+          A,
+          B
+        )
+        else A + B
+        end if) + 2 * (cast<int>(Padding) + 1);
+    when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
+      const Body: int := if Panel = null then 0 else Minimum<TMsg>(Panel, Horizontal, false) end if;
+      return if Horizontal then Sys.Math.Max(Sys.Math.Min(3, Tabs.Preferred(Items)), Body)
+        else Body + (if Items.Length > 0 then 1 else 0 end if)
+        end if;
+    else
+      return Intrinsic<TMsg>(Node, Horizontal);
+  end case;
+end function;
+
+// Combines explicit bounds with CUI minimum-content sizing for one axis.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+//
+// ## Parameters
+// - `Node`: Resolved terminal subtree.
+// - `Horizontal`: Parent main axis.
+//
+// ## Returns
+// Constraints with a resolved minimum content size.
+public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E.Flex;
+begin
+  const Rule: E.Flex := FlexRule<TMsg>(Node);
+  if Rule.Basis >= 0 then
+    return Rule;
+  end if;
+
+  return Rule with
+    Minimum := Sys.Math.Min(
+      Rule.Maximum,
+      Sys.Math.Max(Rule.Minimum, Minimum<TMsg>(Node, Horizontal))
+    );
+  end with;
+end function;
+
+// Reports whether a node can stretch across its parent's axis.
+// Intrinsically sized controls retain CUI's natural extent by default.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+//
+// ## Parameters
+// - `Node`: Resolved terminal subtree.
+// - `Horizontal`: Whether the cross axis is horizontal.
+// - `Explicit`: Whether the caller explicitly requested stretching.
+//
+// ## Returns
+// True when the node can fill this cross-axis extent.
+public function CanStretch<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Explicit: bool := false): bool;
+begin
+  case Node of
+    when E.Element.Action(_, _, _, _, _, _, _), E.Element.Toggle(_, _, _, _, _):
+      return Horizontal and Explicit;
+    when E.Element.Gauge(_), E.Element.DocumentEditor(_, _, _, _, _, _, _):
+      return Horizontal;
+    when E.Element.Custom(_, _, _, const Binding: E.CanvasBinding<TMsg>):
+      return case Binding of
+        when E.CanvasBinding.Responsive(_, _): true;
+        else false;
+      end case;
+    when E.Element.Sized(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.Decorated(const Child: E.Element<TMsg>, _):
+      return CanStretch<TMsg>(Child, Horizontal, Explicit);
+    else
+      return true;
+  end case;
+end function;
+
 public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
 begin
-  return if Align = L.Alignment.Stretch then Available
+  return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch<TMsg>(
+      Node,
+      true
+    ) then Available
     else Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
     end if;
 end function;
@@ -23,13 +216,13 @@ function WrappedStackHeight<TMsg>(
   Children: array of E.Element<TMsg>; Axis: bool; Rule: E.Flow; Columns: int
 ): int;
 begin
-  const Width: int := Sys.Math.Max(0, Columns - 2 * Rule.Padding);
+  const Width: int := Sys.Math.Max(0, Columns - 2 * Rule.PaddingX);
   const Gaps: int := Sys.Math.Max(0, Children.Length - 1) * Rule.Gap;
   if Axis then
     const Preferred: array of int := new int[Children.Length];
     const Rules: array of E.Flex := Sys.Array.ConvertAll<E.Element<TMsg>, E.Flex>(
       Children,
-      FlexRule<TMsg>
+      function(Child: E.Element<TMsg>): E.Flex => AllocationRule<TMsg>(Child, true)
     );
     for Index: int := 0 to Children.Length - 1 do
       Preferred[Index] := Intrinsic<TMsg>(Children[Index], true);
@@ -42,10 +235,10 @@ begin
       end if;
     end for;
 
-    return Height + 2 * Rule.Padding;
+    return Height + 2 * Rule.PaddingY;
   end if;
 
-  var Height: int := 2 * Rule.Padding + Gaps;
+  var Height: int := 2 * Rule.PaddingY + Gaps;
   for Child: E.Element<TMsg> in Children do
     const ChildWidth: int := CrossWidth<TMsg>(Child, Width, Rule.Align);
     Height := Height + F.PreferredSize(
@@ -128,7 +321,7 @@ begin
       _,
       _
     ):
-      return if Horizontal then Tables.Preferred(Columns) else Rows.Length + 1 end if;
+      return if Horizontal then Tables.Preferred(Columns, Rows) else Rows.Length + 1 end if;
     when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
       const Body: int := if Panel = null then 0
         else Intrinsic<TMsg>(
@@ -154,7 +347,9 @@ begin
         Size := if Axis = Horizontal then Size + Span else Sys.Math.Max(Size, Span) end if;
       end for;
 
-      return Size + 2 * Rule.Padding + (if Axis = Horizontal then Sys.Math.Max(
+      return Size + 2 * (if Horizontal then Rule.PaddingX
+        else Rule.PaddingY
+        end if) + (if Axis = Horizontal then Sys.Math.Max(
           0,
           Children.Length - 1
         ) * Rule.Gap

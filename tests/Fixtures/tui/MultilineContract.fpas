@@ -1,6 +1,6 @@
 program MultilineContract;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.Editors as Editors, Fpas.Ui.Tui.Themes as Themes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.Editors as Editors, Fpas.Ui.Themes as Themes, System as Sys, System.Console as Console;
 
 type Model = record
   public Text: string := '';
@@ -90,7 +90,7 @@ begin
   ExpectLines(Session, 'A', '界', 'C', 'D', 'E');
   const End: App.Frame := Session.Snapshot();
   if End.Lines[0].TrimEnd() <> 'C' or End.Lines[2].TrimEnd() <> 'E'
-    or End.Cells[17].Colors.Background <> $8CE2C1 or End.Lines[3].TrimEnd() <> 'Edits 1'
+    or End.Cells[17].Colors.Background <> $BEBEBE or End.Lines[3].TrimEnd() <> 'Edits 1'
   then
     raise new Sys.InvalidOperationException('Paste must keep the new caret visible and edit once.');
   end if;
@@ -128,7 +128,7 @@ begin
   Turn(Session, App.Input.TextInput('0123456789'));
   Turn(Session, App.Input.Resize(4, 4));
   const Narrow: App.Frame := Session.Snapshot();
-  if Narrow.Lines[2] <> '789 ' or Narrow.Cells[11].Colors.Background <> $8CE2C1 then
+  if Narrow.Lines[2] <> '789 ' or Narrow.Cells[11].Colors.Background <> $BEBEBE then
     raise new Sys.InvalidOperationException(
       'The caret must remain visible on a long line after resize.'
     );

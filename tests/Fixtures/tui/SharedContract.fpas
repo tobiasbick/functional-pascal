@@ -252,10 +252,9 @@ begin
     'Duplicate shortcut'
   );
   Rejected(E.Canvas<int>('gui', 5, 5, []), V.Target.Terminal, 'gui');
-  Rejected(
+  discard V.Prepare<int>(
     E.Size<int>(E.Text<int>('units'), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(4)))),
-    V.Target.Terminal,
-    'Logical units'
+    V.Target.Portable
   );
   Rejected(
     E.Element<int>.TerminalFixedCanvas('fixed', 0, 1, Draw, new T.CanvasEvents<int>()),
@@ -315,7 +314,7 @@ begin
   Check(
     Frame.Cells[
       2
-    ].Text = ' ' and Frame.Cells[3].Text = 'c' and Frame.Cells[7].Colors.Background = 16777215,
+    ].Text = ' ' and Frame.Cells[3].Text = 'c' and Frame.Cells[7].Colors.Background = $353535,
     'Single-line text and caret used different cell viewports.'
   );
   Turn(Session, App.Input.Click(4, 0));

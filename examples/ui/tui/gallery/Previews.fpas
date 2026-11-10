@@ -1,6 +1,6 @@
 unit Gallery.Previews;
 
-uses Gallery.State as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Themes as Themes, System.Collections.Generic as Generic;
+uses Gallery.State as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as Themes, System.Collections.Generic as Generic;
 
 function Buttons(State: G.Model): E.Element<G.Msg>;
 begin
@@ -96,8 +96,7 @@ begin
         function(Key: string): G.Msg => G.Msg.OpenItem(Key)
       ),
       new L.Flex(
-        Basis := L.Extent.Fixed(L.Measure.Cells(3)),
-        Grow := 1,
+        Basis := L.Extent.Fill, Minimum := L.Measure.Cells(3),
         Maximum := L.Measure.Cells(6)
       )
     )
@@ -145,7 +144,7 @@ begin
   );
 end function;
 
-function Layout(Colors: Themes.Theme): E.Element<G.Msg>;
+function Layout(): E.Element<G.Msg>;
 begin
   return E.Column<G.Msg>(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
@@ -154,11 +153,11 @@ begin
     E.Row<G.Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
       E.Size<G.Msg>(
-        E.CellStyled<G.Msg>(E.Text<G.Msg>('Fixed'), Colors.Secondary),
+        E.Styled<G.Msg>(E.Text<G.Msg>('Fixed'), S.Role.Secondary),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(8)))
       ),
       E.Size<G.Msg>(
-        E.CellStyled<G.Msg>(E.Text<G.Msg>('Fills the rest'), Colors.Primary),
+        E.Styled<G.Msg>(E.Text<G.Msg>('Fills the rest'), S.Role.Primary),
         new L.Flex(Grow := 1)
       )
     ),
@@ -222,8 +221,14 @@ function Canvas(State: G.Model; Colors: Themes.Theme): E.Element<G.Msg>;
     return if (Column div 4 + Row div 2) mod 2 = 0 then Tile else Other end if;
   end function;
 begin
-  const Tile: T.Cell := new T.Cell(' ', Colors.Primary);
-  const Other: T.Cell := new T.Cell(' ', Colors.Secondary);
+  const Tile: T.Cell := new T.Cell(
+    ' ',
+    new T.Style(Background := Themes.Rgb(Colors.Colors.Accent, Colors.Colors.Background))
+  );
+  const Other: T.Cell := new T.Cell(
+    ' ',
+    new T.Style(Background := Themes.Rgb(Colors.Colors.SurfaceMuted, Colors.Colors.Background))
+  );
   return E.Column<G.Msg>(
     E.Text<G.Msg>('Canvas: ' + State.Columns.ToString() + ' × ' + State.Rows.ToString()),
     E.Size<G.Msg>(
@@ -295,7 +300,7 @@ const WorldColumns: array of Ch.TableColumn := [
   new Ch.TableColumn(
     'World',
     new L.Flex(
-      Basis := L.Extent.Fixed(L.Measure.Cells(12)),
+      Basis := L.Extent.Fill,
       Minimum := L.Measure.Cells(5),
       Grow := 1
     )
@@ -341,8 +346,7 @@ begin
         function(Key: string): G.Msg => G.Msg.OpenWorld(Key)
       ),
       new L.Flex(
-        Basis := L.Extent.Fixed(L.Measure.Cells(3)),
-        Grow := 1,
+        Basis := L.Extent.Fill, Minimum := L.Measure.Cells(3),
         Maximum := L.Measure.Cells(7)
       )
     ),
@@ -394,11 +398,19 @@ begin
         EditDocument,
         NavigateDocument
       ),
-      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(1)), Grow := 1)
+      new L.Flex(Basis := L.Extent.Fill, Minimum := L.Measure.Cells(1))
     )
   );
 end function;
 
+// Builds the active widget preview.
+//
+// ## Parameters
+// - `State`: Gallery model.
+// - `Colors`: Shared theme used by the explicit cell-canvas sample.
+//
+// ## Returns
+// The selected declarative preview.
 public function Body(State: G.Model; Colors: Themes.Theme): E.Element<G.Msg>;
 begin
   return case State.Active of
@@ -407,7 +419,7 @@ begin
     when G.Page.TextInput: Editor(State);
     when G.Page.Lists: Lists(State);
     when G.Page.Progress: Progress(State);
-    when G.Page.Layout: Layout(Colors);
+    when G.Page.Layout: Layout();
     when G.Page.Scrolling: Scrolling(State);
     when G.Page.Canvas: Canvas(State, Colors);
     when G.Page.Tabs: Settings(State);
@@ -432,7 +444,14 @@ begin
   return G.Msg.ScrollOverlay(Change.Position);
 end function;
 
-public function Overlay(State: G.Model; Colors: Themes.Theme): E.Element<G.Msg>;
+// Builds the modal preview with its pinned footer and scrollable body.
+//
+// ## Parameters
+// - `State`: Gallery model containing modal visibility and scroll position.
+//
+// ## Returns
+// The controlled terminal overlay.
+public function Overlay(State: G.Model): E.Element<G.Msg>;
 begin
   const Instructions: E.Element<G.Msg> := E.Column<G.Msg>(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
@@ -448,7 +467,7 @@ begin
   );
   return Views.Layer<G.Msg>(
     'sample-overlay',
-    E.CellStyled<G.Msg>(
+    E.Styled<G.Msg>(
       Views.Panel<G.Msg>(
         Body,
         E.Button<G.Msg>(
@@ -460,7 +479,7 @@ begin
         'Modal overlay',
         Padding := 1
       ),
-      Colors.Panel
+      S.Role.Panel
     ),
     [],
     InitialFocus := 'overlay-close',

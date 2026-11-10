@@ -10,8 +10,10 @@ transitions and [Fpas.Ui](../Fpas.Ui/README.md) declarative views. Start with th
 exposes the same host as `Session<TMsg>` for manual owner loops. Both take an
 initial model, Update, View and Options. View receives the model and
 `Layout.Viewport`; it returns `Elements.Element<TMsg>`. Options select title,
-logical size, renderer, mailbox capacity and initial light/dark theme. An optional
-`ThemeFor` function makes the theme model-owned.
+logical size, renderer, mailbox capacity and shared Theme. An optional
+`ThemeFor(Model): Fpas.Ui.Themes.Theme` function makes the theme model-owned.
+Use the same theme and callback with TUI. CUI palettes, accent families and
+customization are described in [shared themes](../Fpas.Ui/README.md#shared-themes).
 
 Create, Step, inspect and dispose a session on one thread. Step presents a frame
 and waits for native input when idle. Post admits messages from concurrent
@@ -40,7 +42,7 @@ The host implements the graphical profile in the [shared widget reference](../Fp
 - Keyed action/selection lists, tab panels and text tables with column constraints.
   Arrows skip disabled choices; Enter/double-click activation respects CanActivate.
 - Percentage progress, rows/columns, content/fill/fixed sizing, bounds, weighted
-  growth/shrinkage, alignment, borders and semantic style roles.
+  growth, automatic content shrinkage, alignment, borders and semantic style roles.
 - Vertical clipped scrolling with an optional scrollbar, controlled Start/End/Offset
   and typed user proposals. End follows content growth; layout does not emit input.
 - Modal overlays with exclusive input/focus, initial focus (first enabled fallback),

@@ -23,30 +23,31 @@ public sealed class CuiHostLayoutTests
         uint[] pixels = PngAssertions.ReadPixels(capture, 400, 240);
         Assert.Equal(0xff0000ffu, pixels[((int)bounds.Y + 10) * 400 + (int)bounds.X + 10]);
     }
-    /// <summary>Preserves basis, growth caps and explicit shrink weights.</summary>
+    /// <summary>Uses CUI weighted growth from zero, frozen bounds and nonshrinking fixed extents.</summary>
     /// <param name="renderer">Renderer whose native layout is exercised.</param>
     [GuiTheory]
     [InlineData(CuiRenderer.Software)]
     [InlineData(CuiRenderer.OpenGl)]
-    public void SharedFlexPreservesBasisBoundsAndShrinkWeights(CuiRenderer renderer)
+    public void HostSizingUsesCuiGrowthBoundsAndFixedExtents(CuiRenderer renderer)
     {
         using var window = new CuiWindow("Shared flex", 400, 240, renderer, continuous: true);
         Assert.True(window.NextFrame());
         window.BeginGroup(false, 0, 0, 0, false);
-        Row("grow", 100, 100, 1, 3, -1, 1, 1);
-        Row("cap", 100, 100, 1, 3, 130, 1, 1);
-        Row("shrink", 300, 300, 0, 0, -1, 0, 2);
+        Row("grow", 1, 0, 1, 0, 1, 3, -1);
+        Row("cap", 1, 0, 1, 0, 1, 3, 80);
+        Row("mixed", 2, 100, 1, 0, 0, 1, -1);
+        Row("fixed", 2, 300, 2, 300, 0, 0, -1);
         window.EndGroup(); window.SizeLast(false, 1, 0, 0, -1, 1, 0);
         window.Present();
-        Check("grow", 150, 250); Check("cap", 130, 270); Check("shrink", 300, 100);
+        Check("grow", 100, 300); Check("cap", 80, 320); Check("mixed", 100, 300); Check("fixed", 300, 300);
 
-        void Row(string id, float a, float b, float growA, float growB, float cap, float shrinkA, float shrinkB)
+        void Row(string id, int kindA, float a, int kindB, float b, float growA, float growB, float cap)
         {
             window.BeginGroup(true, 0, 0, 0, false);
             window.Control(id + "a", "A", 0, true, false, 0, false);
-            window.SizeLast(true, 2, a, 0, cap, growA, 0, shrinkA); window.TrackLastControl(id + "a");
+            window.SizeLast(true, kindA, a, 0, cap, growA, 0); window.TrackLastControl(id + "a");
             window.Control(id + "b", "B", 0, true, false, 0, false);
-            window.SizeLast(true, 2, b, 0, -1, growB, 0, shrinkB); window.TrackLastControl(id + "b");
+            window.SizeLast(true, kindB, b, 0, -1, growB, 0); window.TrackLastControl(id + "b");
             window.EndGroup(); window.SizeLast(false, 2, 50, 0, -1, 0, 0);
         }
         void Check(string id, float a, float b)
@@ -54,6 +55,26 @@ public sealed class CuiHostLayoutTests
             Assert.Equal(a, window.GetControlRectangle(id + "a").Width, precision: 1);
             Assert.Equal(b, window.GetControlRectangle(id + "b").Width, precision: 1);
         }
+    }
+
+    /// <summary>Content hints share native shrinkage while a fixed sibling retains its width.</summary>
+    [GuiFact]
+    public void PreferredContentShrinksBesideFixedSibling()
+    {
+        using var window = new CuiWindow("Content sizing", 400, 240, CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        window.BeginGroup(true, 0, 0, 0, false);
+        window.Text("A"); window.PreferLastWidth(300); window.TrackLastControl("a");
+        window.SizeLast(true, 0, 0, 0, -1, 0, 0);
+        window.Text("B"); window.PreferLastWidth(100); window.TrackLastControl("b");
+        window.SizeLast(true, 0, 0, 0, -1, 0, 0);
+        window.Text("Fixed"); window.TrackLastControl("fixed"); window.SizeLast(true, 2, 200, 0, -1, 0, 0);
+        window.EndGroup(); window.SizeLast(false, 1, 0, 0, -1, 1, 4);
+        window.Present();
+        float a = window.GetControlRectangle("a").Width, b = window.GetControlRectangle("b").Width;
+        Assert.Equal(200, a + b, precision: 1);
+        Assert.True(a < 300 && b < 100 && a > b);
+        Assert.Equal(200, window.GetControlRectangle("fixed").Width);
     }
 
     /// <summary>Reconciles End against current-frame content and routes wheel input without a scrollbar.</summary>
@@ -74,7 +95,7 @@ public sealed class CuiHostLayoutTests
             window.BeginViewport("scroll", scrollbar);
             window.BeginGroup(false, 0, 0, 0, false);
             for (int line = 0; line < (frame == 0 ? 30 : 40); line++)
-            { window.Text("Scrollable line"); window.SizeLast(false, 0, 0, 0, -1, 0, 0, 0); }
+            { window.Text("Scrollable line"); window.SizeLast(false, 0, 0, 0, -1, 0, 0); }
             window.EndGroup(); window.SizeLast(false, 0, 0, 0, -1, 0, 0);
             window.EndScroll(); window.TrackLastControl("scroll"); window.SizeLast(false, 2, 100, 0, -1, 0, 0);
             window.EndGroup(); window.SizeLast(false, 1, 0, 0, -1, 1, 0);

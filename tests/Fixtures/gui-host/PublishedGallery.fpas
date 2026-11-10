@@ -2,7 +2,7 @@ program PublishedGallery;
 
 uses
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Session as Mvu,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Session as Mvu, Fpas.Ui.Themes as Themes,
   System as Sys, System.Console as Console, System.Text as Text, System.Diagnostics as Diagnostics;
 
 procedure Check(Value: bool; Reason: string);
@@ -50,7 +50,9 @@ begin
   return Gui.Start<State.Model, State.Msg>(
     new State.Model(), State.Update, View.Build,
     new Gui.Options(Title := Title, Width := Width, Height := Height, Renderer := Renderer),
-    function(Model: State.Model): bool => Model.Dark
+    function(Model: State.Model): Themes.Theme => if Model.Dark then Themes.Dark()
+      else Themes.Light()
+      end if
   );
 end function;
 
@@ -77,7 +79,10 @@ begin
       HasText(
         Session,
         'Count: 1'
-      ) and Control(Session, 'checked').Value = 'True' and Session.Snapshot().Dark,
+      ) and Control(
+        Session,
+        'checked'
+      ).Value = 'True' and (Session.Snapshot().Theme.Appearance = Themes.Mode.Dark),
       'Controlled model or theme.'
     );
     Send(Session, State.Msg.Navigate('editors'));
@@ -132,7 +137,10 @@ begin
         'Removed resource accounting.'
       );
       Check(
-        Control(Session, 'text').Value = Replacement and Session.Snapshot().Dark,
+        Control(
+          Session,
+          'text'
+        ).Value = Replacement and (Session.Snapshot().Theme.Appearance = Themes.Mode.Dark),
         'Navigation reset model state.'
       );
     end for;
@@ -201,7 +209,8 @@ begin
     const Frame: Gui.Frame := Session.Snapshot();
     Console.WriteLine(
       'FRAME ' + Frame.Id.ToString() + ' ' + cast<int>(Frame.Size.Width).ToString() + ' ' +
-      cast<int>(Frame.Size.Height).ToString() + ' ' + Frame.Dark.ToString()
+      cast<int>(Frame.Size.Height).ToString() + ' ' + (Frame.Theme.Appearance =
+        Themes.Mode.Dark).ToString()
     );
     for Label: string in Frame.Text do
       Console.WriteLine('TEXT ' + Encoded(Label));

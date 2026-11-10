@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, System.Collections.Generic as Generic;
+uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -60,9 +60,11 @@ begin
       else Theme.Focus
       end if
     end if;
-  const Style: T.Style := Buttons.Resolve(
-    Theme, Control.Variant, Control.Enabled, Focused, not Focused
-  ) ?? Standard;
+  const Style: T.Style := if Control.Role = 'button' then Buttons.Resolve(
+      Theme, Control.Variant, Control.Enabled, Focused, not Focused
+    ) ?? Standard
+    else Standard
+    end if;
   const ShowsPlaceholder: bool := case Control.Action of
     when A.Binding.Multiline(
       const View: EditorView.Viewport<TMsg>

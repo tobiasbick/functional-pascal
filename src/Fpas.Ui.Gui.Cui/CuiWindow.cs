@@ -87,7 +87,7 @@ public sealed partial class CuiWindow : IDisposable
         CloseRequested |= result == 2;
         inFrame = result != 0;
         hasPresentedFrame |= presented;
-        if (inFrame) { trackedNodes.Clear(); flexNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); AdvanceImageFrame(); }
+        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); AdvanceImageFrame(); }
         else CloseWakeTarget();
         if (resizeFailure is { } failure)
         {

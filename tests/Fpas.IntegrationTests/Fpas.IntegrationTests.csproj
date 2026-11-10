@@ -35,6 +35,7 @@
     <None Include="../../examples/ui/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/SharedContract.fpas" Link="Fixtures/tui/shared.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CanvasInputContract.fpas" Link="Fixtures/tui/canvas-input.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TabsContract.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TableContract.fpas" Link="Fixtures/tui/table.fpas" CopyToOutputDirectory="PreserveNewest" />

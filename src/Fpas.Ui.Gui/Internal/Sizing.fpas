@@ -42,7 +42,7 @@ begin
   end case;
 end function;
 
-// Applies shared flex sizing after drawing one child.
+// Applies CUI sizing directly after drawing one child.
 //
 // ## Parameters
 // - `Window`: Owner drawing context.
@@ -83,8 +83,7 @@ begin
     Minimum,
     Maximum,
     Value.Grow,
-    cast<int>(Align),
-    Value.Shrink
+    cast<int>(Align)
   );
 end procedure;
 end unit;

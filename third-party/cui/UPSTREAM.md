@@ -3,8 +3,8 @@
 | Property | Value |
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
-| Release | [v1.3.0](https://github.com/yappologistic/CUI/releases/tag/v1.3.0) |
-| Commit | `f70a1d3d095cafd67814b23bdd82c2dfba28efe0` |
+| Release | [v1.3.1](https://github.com/yappologistic/CUI/releases/tag/v1.3.1) |
+| Commit | `e8688b8fd85c7b07afbddbac5fc748a905c12be0` |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -14,8 +14,8 @@ source tree.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `07f2be6fec062fc5a44fe4cec430f27282151a04bf5f8f4715de50bd7b9098c6` |
-| `cui.h` | `81431e25aa4d2373777d1e6510a6f5d95f33e7c4e1a679841048539d418b7840` |
+| `cui.c` | `6665f60ae2330b6166a4de9c0755dfef7fe1f2b8d2a624222a016dc5e8cfdd35` |
+| `cui.h` | `96c3fabaa5c72145fcf10aa319f93f7d608d005a1f9a510ac73f5e9336c2eae8` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -50,4 +50,11 @@ single-file and NativeAOT application distributions.
    the tagged sources. Copy the assets without changing their bytes.
 4. Refresh the version, commit and digests. Use the tagged sources to check
    whether the license inventory or notice files need updating.
-5. Run the native, binding and FPAS-consumer checks.
+5. Check the semantic palettes exported by CUI's theme builder against
+   [`ThemePalettes.fpas`](../../src/Fpas.Ui/Internal/ThemePalettes.fpas) and the
+   neutral-light defaults in [`Themes.fpas`](../../src/Fpas.Ui/Themes.fpas).
+   These values supply both hosts without adding native dependencies to TUI.
+   Keep token and accent order aligned with the header; the native bridge
+   checks the token count at compile time.
+6. Run the native, binding and FPAS-consumer checks, including shared-theme
+   and layout parity in `GuiHostTests` and the terminal CUI contract fixture.

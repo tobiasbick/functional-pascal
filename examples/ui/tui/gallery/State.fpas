@@ -1,6 +1,6 @@
 unit Gallery.State;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Themes as TerminalThemes, System as Sys;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as TerminalThemes, System as Sys;
 
 public type Page = enum: byte
   Buttons;
@@ -135,11 +135,11 @@ begin
     when Preset.Light:
       return TerminalThemes.Light();
     when Preset.Green:
-      return TerminalThemes.Green();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Green);
     when Preset.Blue:
-      return TerminalThemes.Blue();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Blue);
     when Preset.Amber:
-      return TerminalThemes.Amber();
+      return TerminalThemes.Dark(TerminalThemes.Accent.Amber);
     else
       return TerminalThemes.Dark();
   end case;

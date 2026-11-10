@@ -76,7 +76,7 @@ begin
   end if;
 
   return E.Column<Msg>(
-    new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal),
+    new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal, Align := L.Alignment.Stretch),
     E.Text<Msg>('Count: ' + Model.ToString()),
     E.Button<Msg>('increment', 'Add ' + Model.ToString(), Msg.Increment),
     E.Button<Msg>('disabled', 'Disabled', Msg.Increment, false),

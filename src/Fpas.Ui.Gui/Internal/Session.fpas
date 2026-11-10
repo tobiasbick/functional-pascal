@@ -3,7 +3,7 @@ unit Fpas.Ui.Gui.Internal.Session;
 uses
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P,
   Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime,
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, System as Sys,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys,
   System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 function Viewport(Size: Cui.CuiSize): L.Viewport;
@@ -33,7 +33,7 @@ end function;
 // - `Window`: New owned window.
 // - `Capacity`: Positive mailbox capacity.
 // - `BeforeDraw`: Owner input injection for integration fixtures.
-// - `Dark`: Initial theme.
+// - `Theme`: Initial shared theme.
 // - `ThemeFor`: Optional model-owned theme selector.
 //
 // ## Returns
@@ -42,7 +42,7 @@ public function Start<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): E.Element<TMsg>; Window: Cui.CuiWindow; Capacity: int;
-  BeforeDraw: Sys.Action? := null; Dark: bool := false; ThemeFor: Sys.Func<TModel, bool>? := null
+  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
 ): App.Session<TMsg>;
 requires Capacity > 0;
   procedure CheckOwner();
@@ -178,7 +178,7 @@ requires Capacity > 0;
     FrameId := FrameId + 1L;
     Published := new App.Frame(
       FrameId, Size, State.Labels.ToArray(), State.Controls.ToArray(),
-      Resources.EditorCount, Resources.ImageCount, CurrentDark
+      Resources.EditorCount, Resources.ImageCount, CurrentTheme
     );
     for Message: TMsg in State.Messages do
       Pending.Enqueue(Message);
@@ -329,12 +329,16 @@ requires Capacity > 0;
       if Cleanup = null and (Dirty or Candidate = null) then
         const Model: TModel := Core.Model();
         case ThemeFor of
-          when is Sys.Func<TModel, bool> as Theme:
-            CurrentDark := Theme.Invoke(Model);
+          when is Sys.Func<TModel, Themes.Theme> as SelectTheme:
+            CurrentTheme := SelectTheme.Invoke(Model);
           else
         end case;
 
-        Window.SetDarkTheme(CurrentDark);
+        Window.SetTheme(
+          CurrentTheme.Appearance = Themes.Mode.Dark,
+          cast<int>(CurrentTheme.AccentFamily),
+          Themes.Rgba(CurrentTheme)
+        );
         Candidate := V.Prepare<TMsg>(View(Model, Viewport(Size)), V.Target.Graphical, Prepared);
         P.Check<TMsg>(Candidate);
       end if;
@@ -378,7 +382,7 @@ begin
   var Driving: bool := false;
   var Dirty: bool := true;
   var BrokenView: bool := false;
-  var CurrentDark: bool := Dark;
+  var CurrentTheme: Themes.Theme := Theme ?? new Themes.Theme();
   var FrameId: long := 0L;
   var Published: App.Frame? := null;
   var Prepared: V.Prepared<TMsg>? := null;
@@ -403,16 +407,19 @@ begin
     end procedure
   );
   Window.DeferClose := true;
-  Window.SetDarkTheme(Dark);
-  Window.SetResizeRenderer(ResizeDraw);
-  return App.Session<TMsg>.Create(
-    Step,
-    Core.Post,
-    Snapshot,
-    Core.IsOpen,
-    Software,
-    Release,
-    Capture
-  );
+  try
+    Window.SetTheme(
+      CurrentTheme.Appearance = Themes.Mode.Dark,
+      cast<int>(CurrentTheme.AccentFamily),
+      Themes.Rgba(CurrentTheme)
+    );
+    Window.SetResizeRenderer(ResizeDraw);
+    return App.Session<TMsg>.Create(
+      Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture
+    );
+  catch Error: Sys.Exception do
+    Stop();
+    raise;
+  end try;
 end function;
 end unit;

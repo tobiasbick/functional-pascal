@@ -39,6 +39,11 @@ CUI_API void fpas_cui_group_end(cui_ctx *ui, int node);
  * @param grow Extra-space weight.
  * @param align Cross-axis placement. */
 CUI_API void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float basis, float minimum, float maximum, float grow, int align);
+/** Supplies an intrinsic width shared by the cells of a content-sized table column.
+ * @param ui Owner context.
+ * @param node Current frame node.
+ * @param width Nonnegative logical preferred width. */
+CUI_API void fpas_cui_preferred_width(cui_ctx *ui, int node, float width);
 /** Applies a semantic theme role.
  * @param ui Owner context.
  * @param node Frame-local node.
@@ -118,13 +123,19 @@ CUI_API void fpas_cui_host_begin(cui_ctx *ui);
  * @return Frame-local row node, closed with group_end. */
 CUI_API int fpas_cui_choice_row(cui_ctx *ui, const char *id, int enabled, int selected, int focus, int *events);
 
-/** Per-node shared main-axis constraints, valid only in the current frame. */
-typedef struct { int node, horizontal, kind; float basis, minimum, maximum, grow, shrink; } fpas_flex;
-/** Resolves shared growth/shrinkage after native content measurement.
+/** Resolves native layout for current-frame scroll reconciliation.
+ * @param ui Owner context. */
+CUI_API void fpas_cui_resolve_layout(cui_ctx *ui);
+/** Applies a shared palette atomically, without interpolating terminal-invisible states.
  * @param ui Owner context.
- * @param items Borrowed frame-local constraints.
- * @param count Number of constraints; zero only recomputes native layout. */
-CUI_API void fpas_cui_resolve_layout(cui_ctx *ui, const fpas_flex *items, int count);
+ * @param dark Nonzero for dark appearance.
+ * @param accent Validated CUI accent family ordinal.
+ * @param colors Packed RGBA bytes in semantic token order, excluding NONE. */
+CUI_API void fpas_cui_theme(cui_ctx *ui, int dark, int accent, const uint32_t *colors);
+/** Copies the active semantic palette, excluding NONE, as packed RGBA bytes.
+ * @param ui Owner context.
+ * @param colors Receives CUI_TOKEN_COUNT - 1 colors. */
+CUI_API void fpas_cui_theme_read(cui_ctx *ui, uint32_t *colors);
 /** Begins a vertical viewport.
  * @param ui Owner context.
  * @param id Borrowed native identity.

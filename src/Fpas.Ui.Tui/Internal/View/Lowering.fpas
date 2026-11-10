@@ -1,21 +1,23 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Resolves an explicit terminal distance.
 //
 // ## Parameters
-// - `Value`: Validated cell measure.
+// - `Value`: Validated cell or portable logical measure.
+// - `Horizontal`: Whether the distance is measured in columns rather than rows.
 //
 // ## Returns
 // Cell count.
-public function Cells(Value: L.Measure): int;
+public function Cells(Value: L.Measure; Horizontal: bool := true): int;
 begin
   case Value of
     when L.Measure.Cells(const Count: int):
       return Count;
-    else
-      raise new Sys.ArgumentException('Terminal layout requires cell units.');
+    when L.Measure.Logical(const Units: int):
+      const Scale: int := if Horizontal then 8 else 16 end if;
+      return cast<int>((cast<long>(Units) + Scale - 1L) div Scale);
   end case;
 end function;
 
@@ -23,16 +25,17 @@ end function;
 //
 // ## Parameters
 // - `Value`: Validated shared rule.
+// - `Horizontal`: Parent main axis.
 //
 // ## Returns
 // Cell allocation constraints.
-public function Flex(Value: L.Flex): E.Flex;
+public function Flex(Value: L.Flex; Horizontal: bool := true): E.Flex;
 begin
   var Basis: int := -1;
   var Grow: int := Value.Grow;
   case Value.Basis of
     when L.Extent.Fixed(const Distance: L.Measure):
-      Basis := Cells(Distance);
+      Basis := Cells(Distance, Horizontal);
     when L.Extent.Fill:
       Grow := Sys.Math.Max(1, Grow);
     else
@@ -40,12 +43,12 @@ begin
   const Minimum: L.Measure? := Value.Minimum;
   const Maximum: L.Measure? := Value.Maximum;
   return new E.Flex(
-    Basis, if Minimum = null then 0 else Cells(Minimum) end if,
-    if Maximum = null then int.MaxValue else Cells(Maximum) end if, Grow, Value.Shrink
+    Basis, if Minimum = null then 0 else Cells(Minimum, Horizontal) end if,
+    if Maximum = null then int.MaxValue else Cells(Maximum, Horizontal) end if, Grow
   );
 end function;
 
-function Spacing(Value: L.Spacing): int;
+function Spacing(Value: L.Spacing; Horizontal: bool): int;
 begin
   case Value of
     when L.Spacing.None:
@@ -55,23 +58,35 @@ begin
     when L.Spacing.Normal:
       return 1;
     when L.Spacing.Loose:
-      return 2;
+      return if Horizontal then 2 else 1 end if;
     when L.Spacing.Fixed(const Distance: L.Measure):
-      return Cells(Distance);
+      return Cells(Distance, Horizontal);
   end case;
 end function;
 
-function Role(Theme: Th.Theme; Value: UiStyle.Role): T.Style;
+function Role(Theme: Th.Theme; Value: UiStyle.Role; Inherited: T.Style): T.Style;
 begin
-  return case Value of
-    when UiStyle.Role.Heading: Theme.Heading;
-    when UiStyle.Role.Panel: Theme.Panel;
-    when UiStyle.Role.Muted: Theme.Muted;
-    when UiStyle.Role.Primary: Theme.Primary;
-    when UiStyle.Role.Secondary: Theme.Secondary;
-    when UiStyle.Role.Error: Theme.Error;
-    else Theme.Text;
-  end case;
+  const Backdrop: int := Inherited.Background ?? Theme.Text.Background ?? 0;
+  if Value = UiStyle.Role.Default then
+    return new T.Style();
+  end if;
+
+  if Value = UiStyle.Role.Panel then
+    const Surface: int := Th.Rgb(Theme.Colors.Surface, Backdrop);
+    return new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+  end if;
+
+  return new T.Style(
+    Foreground := Th.Rgb(
+      case Value of
+        when UiStyle.Role.Muted: Theme.Colors.TextMuted;
+        when UiStyle.Role.Primary: Theme.Colors.Accent;
+        when UiStyle.Role.Secondary: Theme.Colors.TextSecondary;
+        when UiStyle.Role.Error: Theme.Colors.Danger;
+        else Theme.Colors.Foreground;
+      end case, Backdrop
+    )
+  );
 end function;
 
 function Merge(Parent: T.Style; Child: T.Style): T.Style;
@@ -95,16 +110,16 @@ end function;
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Storage: C.Dictionary<string, Editors.Entry>): E.Element<TMsg>;
-  function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style): array of E.Element<TMsg>;
+  function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
     const Values: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
     for Item: Ui.Element<TMsg> in Items do
-      Values.Add(Visit(Item, Colors));
+      Values.Add(Visit(Item, Colors, Horizontal));
     end for;
 
     return Values.ToArray();
   end function;
-  function Visit(Node: Ui.Element<TMsg>; Colors: T.Style): E.Element<TMsg>;
+  function Visit(Node: Ui.Element<TMsg>; Colors: T.Style; ParentHorizontal: bool := false): E.Element<TMsg>;
   begin
     case Node of
       when Ui.Element.Label(const Text: string):
@@ -252,18 +267,26 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         const Flow: L.Flow
       ):
         return E.Element<TMsg>.Stack(
-          Children(Items, Colors),
+          Children(Items, Colors, Horizontal),
           Horizontal,
-          new E.Flow(Spacing(Flow.Gap), Spacing(Flow.Padding), Flow.Align)
+          new E.Flow(
+            Spacing(Flow.Gap, Horizontal),
+            Spacing(Flow.Padding, true),
+            Spacing(Flow.Padding, false),
+            Flow.Align
+          )
         );
       when Ui.Element.Sized(const Child: Ui.Element<TMsg>, const Rule: L.Flex):
-        return E.Element<TMsg>.Sized(Visit(Child, Colors), Flex(Rule));
+        return E.Element<TMsg>.Sized(
+          Visit(Child, Colors, ParentHorizontal),
+          Flex(Rule, ParentHorizontal)
+        );
       when Ui.Element.Styled(const Child: Ui.Element<TMsg>, const Value: UiStyle.Role):
-        const Next: T.Style := Merge(Colors, Role(Theme, Value));
-        return E.Element<TMsg>.Decorated(Visit(Child, Next), Next);
+        const Next: T.Style := Merge(Colors, Role(Theme, Value, Colors));
+        return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.TerminalStyle(const Child: Ui.Element<TMsg>, const Value: T.Style):
         const Next: T.Style := Merge(Colors, Value);
-        return E.Element<TMsg>.Decorated(Visit(Child, Next), Next);
+        return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
       when Ui.Element.Scroll(
@@ -280,7 +303,7 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
               when L.ScrollPosition.End:
                 Native := E.ScrollPosition.End;
               when L.ScrollPosition.Offset(const Distance: L.Measure):
-                Native := E.ScrollPosition.Offset(Cells(Distance));
+                Native := E.ScrollPosition.Offset(Cells(Distance, false));
               else
             end case;
 
@@ -302,7 +325,7 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
         const Dismiss: Sys.Func<TMsg>?
       ):
         return E.Element<TMsg>.Desktop(
-          Visit(Base, Colors),
+          Visit(Base, Colors, ParentHorizontal),
           [
             E.Element<TMsg>.Layer(
               Id,
@@ -317,9 +340,9 @@ public function Prepare<TMsg>(Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Stora
           []
         );
       when Ui.Element.Deferred(const Id: string, _):
-        return Visit(Prepared.Subviews[Id].Tree, Colors);
+        return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);
       when Ui.Element.TerminalViewport(const Id: string, _):
-        return Visit(Prepared.Subviews[Id].Tree, Colors);
+        return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);
       when Ui.Element.TerminalCanvas(
         const Id: string,
         const Draw: function(int, int): T.Cell,

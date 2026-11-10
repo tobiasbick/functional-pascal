@@ -4,7 +4,7 @@ uses
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Editors as Ed, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, System as Sys,
+  Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys,
   System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks,
   System.Diagnostics as Diagnostics;
 
@@ -155,7 +155,9 @@ begin
   Window.SetReducedMotion(true);
   using const Session: App.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(), Update, FallbackView, Window, 1, Input,
-    ThemeFor := function(Model: State.Model): bool => Model.Dark
+    ThemeFor := function(Model: State.Model): Themes.Theme => if Model.Dark then Themes.Dark()
+      else Themes.Light()
+      end if
   );
   Advance(Session);
   Click(Session, 'increment');
@@ -163,7 +165,7 @@ begin
   Click(Session, 'checked');
   Check(Control(Session, 'checked').Value = 'True', 'Controlled checkbox.');
   Click(Session, 'theme');
-  Check(Session.Snapshot().Dark, 'Theme selection.');
+  Check((Session.Snapshot().Theme.Appearance = Themes.Mode.Dark), 'Theme selection.');
   discard Session.Post(State.Msg.Navigate('editors'));
   Advance(Session);
   Check(Session.Snapshot().Editors = 3, 'Editor ownership.');
@@ -261,7 +263,10 @@ begin
     end if;
   end for;
 
-  Check(Session.Snapshot().Dark and HasText(Session, 'Count: 1'), 'Responsive view reset state.');
+  Check(
+    (Session.Snapshot().Theme.Appearance = Themes.Mode.Dark) and HasText(Session, 'Count: 1'),
+    'Responsive view reset state.'
+  );
 end procedure;
 
 procedure ResponsiveCleanup(Renderer: Cui.CuiRenderer; CloseWhileWorking: bool);

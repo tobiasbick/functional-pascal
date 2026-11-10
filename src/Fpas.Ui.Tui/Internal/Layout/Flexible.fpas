@@ -28,9 +28,7 @@ end function;
 
 public function PreferredSize(Intrinsic: int; Rule: E.Flex): int;
 begin
-  if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0
-    or Rule.Shrink < 0
-  then
+  if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0 then
     raise new Sys.ArgumentException('Invalid flex size rule.');
   end if;
 
@@ -38,56 +36,98 @@ begin
   return Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
 end function;
 
+// CUI allocation: growing children share space from zero; fixed sizes never shrink.
+// Content children shrink in proportion to their reducible extent.
+//
+// ## Parameters
+// - `Preferred`: Intrinsic cell extents in traversal order.
+// - `Settings`: Resolved constraints, one per extent.
+// - `Available`: Nonnegative main-axis budget after gaps and padding.
+//
+// ## Returns
+// Sizes rounded at shared boundaries; unsatisfied minimums may overflow the budget.
 public function Allocate(Preferred: array of int; Settings: array of E.Flex; Available: int): array of int;
 begin
-  const Sizes: array of int := new int[Preferred.Length];
-  var Total: long := 0L;
+  const Sizes: array of double := new double[Preferred.Length];
+  const Frozen: array of bool := new bool[Preferred.Length];
+  var Used: double := 0;
+  var Weight: double := 0;
   for Index: int := 0 to Sizes.Length - 1 do
-    Sizes[Index] := PreferredSize(Preferred[Index], Settings[Index]);
-    Total := Total + cast<long>(Sizes[Index]);
+    const Rule: E.Flex := Settings[Index];
+    if Rule.Basis < 0 and Rule.Grow > 0 then
+      Weight := Weight + Rule.Grow;
+    else
+      Sizes[Index] := PreferredSize(Preferred[Index], Rule);
+      Used := Used + Sizes[Index];
+    end if;
   end for;
 
-  const Growing: bool := Total < cast<long>(Available);
-  var Remaining: long := Sys.Math.Abs(cast<long>(Available) - Total);
-  while Remaining > 0L do
-    var Weight: long := 0L;
-    for Index: int := 0 to Sizes.Length - 1 do
-      const Rule: E.Flex := Settings[Index];
-      if Growing and Sizes[Index] < Rule.Maximum then
-        Weight := Weight + cast<long>(Rule.Grow);
-      else
-        if not Growing and Sizes[Index] > Rule.Minimum then
-          Weight := Weight + cast<long>(Rule.Shrink);
-        end if;
-      end if;
-    end for;
-
-    if Weight = 0L then
+  var Remaining: double := Sys.Math.Max(0, cast<double>(Available) - Used);
+  for Pass: int := 0 to Sizes.Length do
+    if Weight <= 0 then
       break;
     end if;
-    const Budget: long := Remaining;
+    const Unit: double := Remaining / Weight;
+    var Changed: bool := false;
     for Index: int := 0 to Sizes.Length - 1 do
       const Rule: E.Flex := Settings[Index];
-      const Factor: int := if Growing then Rule.Grow else Rule.Shrink end if;
-      const Room: int := if Growing then Rule.Maximum - Sizes[
-          Index
-        ]
-        else Sizes[Index] - Rule.Minimum
+      if Rule.Basis < 0 and Rule.Grow > 0 and not Frozen[Index] then
+        const Desired: double := Unit * Rule.Grow;
+        Sizes[Index] := Sys.Math.Clamp(
+          Desired,
+          cast<double>(Rule.Minimum),
+          cast<double>(Rule.Maximum)
+        );
+        if Sizes[Index] <> Desired then
+          Frozen[Index] := true;
+          Remaining := Sys.Math.Max(0, Remaining - Sizes[Index]);
+          Weight := Weight - Rule.Grow;
+          Changed := true;
         end if;
-      if Factor > 0 and Room > 0 and Remaining > 0L then
-        const Share: long := cast<long>(cast<double>(Budget) * cast<double>(Factor) /
-          cast<double>(Weight));
-        const Change: int := cast<int>(Sys.Math.Min(
-          cast<long>(Room),
-          Sys.Math.Min(Remaining, Sys.Math.Max(1L, Share))
-        ));
-        Sizes[Index] := if Growing then Sizes[Index] + Change else Sizes[Index] - Change end if;
-        Remaining := Remaining - cast<long>(Change);
       end if;
     end for;
-  end while;
 
-  return Sizes;
+    if not Changed then
+      break;
+    end if;
+  end for;
+
+  Used := 0;
+  var Reducible: double := 0;
+  for Index: int := 0 to Sizes.Length - 1 do
+    Used := Used + Sizes[Index];
+    if Settings[Index].Basis < 0 then
+      Reducible := Reducible + Sys.Math.Max(0, Sizes[Index] - Settings[Index].Minimum);
+    end if;
+  end for;
+
+  if Used > Available and Reducible > 0 then
+    const Ratio: double := Sys.Math.Min(1, (Used - Available) / Reducible);
+    for Index: int := 0 to Sizes.Length - 1 do
+      if Settings[Index].Basis < 0 then
+        Sizes[Index] := Sizes[Index] - Sys.Math.Max(
+          0,
+          Sizes[Index] - Settings[Index].Minimum
+        ) * Ratio;
+      end if;
+    end for;
+  end if;
+
+  // Round shared boundaries, preserving the total instead of rounding each child separately.
+  const Result: array of int := new int[Sizes.Length];
+  var Boundary: double := 0;
+  var Previous: long := 0L;
+  for Index: int := 0 to Sizes.Length - 1 do
+    Boundary := Boundary + Sizes[Index];
+    const Edge: long := cast<long>(Sys.Math.Round(Boundary, Sys.MidpointRounding.AwayFromZero));
+    Result[Index] := cast<int>(Sys.Math.Min(
+      cast<long>(int.MaxValue),
+      Sys.Math.Max(0L, Edge - Previous)
+    ));
+    Previous := Edge;
+  end for;
+
+  return Result;
 end function;
 
 public type AllocationMemo = record
@@ -112,7 +152,7 @@ begin
       Rule.Minimum
     ).Append('/').Append(
       Rule.Maximum
-    ).Append('/').Append(Rule.Grow).Append('/').Append(Rule.Shrink);
+    ).Append('/').Append(Rule.Grow);
   end for;
   const Key: string := Signature.ToString();
   const Index: int := Next.Count;

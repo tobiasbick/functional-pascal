@@ -1,10 +1,10 @@
 unit Fpas.Ui.Layout;
 
-// An explicit distance in the target host's coordinate system.
+// A portable logical distance or an explicit terminal cell distance.
 public type Measure = union
   // A whole number of terminal cells.
   Cells(Value: int);
-  // A distance in GUI logical units.
+  // A portable CUI logical distance. The terminal maps 8 units per column and 16 per row.
   Logical(Value: int);
 end union;
 
@@ -26,25 +26,26 @@ public type Flex = record
   public Minimum: Measure? := null;
   // An optional upper bound in explicit units.
   public Maximum: Measure? := null;
-  // A nonnegative share of extra space. Fill uses at least one.
+  // CUI growth weight, allocated from zero. Fill uses at least one.
+  // Fixed extents cannot grow; content with a positive weight becomes growing.
   public Grow: int := 0;
-  // A nonnegative share of any required reduction.
-  public Shrink: int := 1;
 end record;
 
 // Cross-axis placement inside a stack.
 public type Alignment = enum: byte
-  // Fill the available cross-axis extent.
-  Stretch;
+  // CUI defaults: columns stretch, rows center; intrinsic controls keep their size.
+  Default;
   // Place against the leading edge.
   Start;
   // Center within the available extent.
   Center;
   // Place against the trailing edge.
   End;
+  // Fill the available cross-axis extent.
+  Stretch;
 end enum;
 
-// Spacing resolved by a host theme or supplied in explicit units.
+// CUI spacing levels adapted to the host, or an explicit distance.
 public type Spacing = union
   // Zero space.
   None;
@@ -65,7 +66,7 @@ public type Flow = record
   // The inset on each edge of the stack.
   public Padding: Spacing := Spacing.None;
   // The placement of children on the cross axis.
-  public Align: Alignment := Alignment.Stretch;
+  public Align: Alignment := Alignment.Default;
 end record;
 
 // An application-facing size class for responsive views.

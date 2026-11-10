@@ -51,7 +51,12 @@ Start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
 Options select title, logical width/height, renderer and mailbox capacity.
 The host validates the whole active view before drawing. Explicit GUI sizing
-uses `Layout.Measure.Logical`; semantic sizing and spacing remain portable.
+uses portable `Layout.Measure.Logical`; the terminal adapter translates those
+distances to cells. Layout follows the [shared CUI rules](../../../src/Fpas.Ui/README.md#layout-and-style).
+Both hosts accept `Fpas.Ui.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
+and the same `ThemeFor(Model)` callback. Set a fixed theme with `Gui.Options.Theme`.
+Palette customization and terminal approximations are described in
+[shared themes](../../../src/Fpas.Ui/README.md#shared-themes).
 
 For larger applications, use feature slices and cached subviews as described in
 the [MVU scaling guidance](../../../src/Fpas.Ui.Mvu/README.md#larger-applications).

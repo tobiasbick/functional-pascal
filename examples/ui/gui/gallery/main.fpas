@@ -1,12 +1,14 @@
 program GuiWidgetGallery;
 
-uses GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Themes as Themes, GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui;
 
 begin
   Gui.Run<State.Model, State.Msg>(
     new State.Model(), State.Update, View.Build,
     new Gui.Options(Title := 'FPAS widget gallery', Width := 1000, Height := 760),
-    function(Model: State.Model): bool => Model.Dark
+    function(Model: State.Model): Themes.Theme => if Model.Dark then Themes.Dark()
+      else Themes.Light()
+      end if
   );
 end;
 end program;

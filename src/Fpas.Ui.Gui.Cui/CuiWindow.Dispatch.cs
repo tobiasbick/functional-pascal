@@ -41,7 +41,6 @@ public sealed partial class CuiWindow
         {
             window.inFrame = true;
             window.trackedNodes.Clear();
-            window.flexNodes.Clear();
             window.scrollRequests.Clear(); window.scrollNodes.Clear();
             window.usedModals.Clear();
             window.AdvanceImageFrame();

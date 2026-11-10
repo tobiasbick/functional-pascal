@@ -1,6 +1,6 @@
 program HeadlessContract;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Tui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Status as Status, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Status as Status, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
 type Msg = union
   Start;
@@ -398,7 +398,7 @@ begin
   );
   const Full: App.Frame := Session.Snapshot();
   if Full.Lines[0] <> '──────────' or Full.Lines[1] <> '─ 界e z ──'
-    or Full.Cells[0].Colors.Foreground <> $5A748F or Full.Controls.Length <> 1
+    or Full.Cells[0].Colors.Foreground <> $2B2B2B or Full.Controls.Length <> 1
   then
     raise new Sys.InvalidOperationException('Unexpected divider layout, style or control list.');
   end if;
@@ -443,9 +443,18 @@ procedure CheckLiveTheme();
 
   function ThemeFor(State: bool): TerminalThemes.Theme;
   begin
-    const Background: int := if State then $39566C else $102030 end if;
+    const Background: G.Color := if State then new G.Color(
+        $39,
+        $56,
+        $6C
+      )
+      else new G.Color($10, $20, $30)
+      end if;
     return new TerminalThemes.Theme(
-      Text := new T.Style(Foreground := $D0E2F5, Background := Background)
+      Colors := new TerminalThemes.Palette(
+        Foreground := new G.Color($D0, $E2, $F5),
+        Background := Background
+      )
     );
   end function;
 

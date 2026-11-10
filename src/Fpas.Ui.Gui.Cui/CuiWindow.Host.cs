@@ -75,13 +75,13 @@ public sealed partial class CuiWindow
     /// <param name="horizontal">Whether its main axis is horizontal.</param>
     /// <param name="padding">Logical inset.</param>
     /// <param name="gap">Logical separation.</param>
-    /// <param name="alignment">Stretch=0, start=1, center=2, end=3.</param>
+    /// <param name="alignment">Default=0, start=1, center=2, end=3, stretch=4.</param>
     /// <param name="framed">Whether to draw a border.</param>
     public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed)
     {
         CheckLayoutOptions(padding, gap);
         ArgumentOutOfRangeException.ThrowIfNegative(alignment);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 3);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 4);
         int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment, framed ? 1 : 0);
         layouts.Add(new(Layout.Group, Node: node));
     }
@@ -102,18 +102,24 @@ public sealed partial class CuiWindow
     /// <param name="maximum">Maximum extent or -1.</param>
     /// <param name="grow">Growth weight.</param>
     /// <param name="alignment">Cross-axis placement.</param>
-    /// <param name="shrink">Nonnegative reduction weight.</param>
-    public void SizeLast(bool horizontal, int kind, float basis, float minimum, float maximum, float grow, int alignment, float shrink = 1)
+    public void SizeLast(bool horizontal, int kind, float basis, float minimum, float maximum, float grow, int alignment)
     {
         CheckFrame();
         if (!float.IsFinite(basis) || basis < 0 || !float.IsFinite(minimum) || minimum < 0 ||
             !float.IsFinite(maximum) || maximum < -1 || maximum >= 0 && maximum < minimum ||
-            !float.IsFinite(grow) || grow < 0 || !float.IsFinite(shrink) || shrink < 0 || kind is < 0 or > 2 || alignment is < 0 or > 3)
+            !float.IsFinite(grow) || grow < 0 || kind is < 0 or > 2 || kind == 2 && grow != 0 || alignment is < 0 or > 4)
             throw new ArgumentOutOfRangeException(nameof(basis), "Invalid shared layout constraints.");
         int node = NativeMethods.LastNode(context);
-        flexNodes[node] = new FlexNode { Node = node, Horizontal = horizontal ? 1 : 0, Kind = kind, Basis = basis,
-            Minimum = minimum, Maximum = maximum, Grow = grow, Shrink = shrink };
-        NativeMethods.NodeSize(context, node, horizontal ? 1 : 0, kind, basis, minimum, maximum, 0, alignment);
+        NativeMethods.NodeSize(context, node, horizontal ? 1 : 0, kind, basis, minimum, maximum, grow, alignment);
+    }
+
+    /// <summary>Supplies a preferred content width while retaining native shrink behavior.</summary>
+    /// <param name="width">Nonnegative finite logical extent, usually shared across table rows.</param>
+    public void PreferLastWidth(float width)
+    {
+        CheckFrame();
+        if (!float.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width));
+        NativeMethods.PreferredWidth(context, NativeMethods.LastNode(context), width);
     }
 
     /// <summary>Applies a semantic theme role to the last widget.</summary>
@@ -220,9 +226,28 @@ public sealed partial class CuiWindow
         fixed (CuiPaint* items = operations) NativeMethods.Canvas(context, Stable(id), width, height, items, operations.Length);
     }
 
-    /// <summary>Selects a native light or dark theme.</summary>
-    /// <param name="dark">Whether to use dark colors.</param>
-    public void SetDarkTheme(bool dark) { CheckOpen(); NativeMethods.SetTheme(context, dark ? 1 : 0); }
+    /// <summary>Applies the shared theme's semantic palette atomically.</summary>
+    /// <param name="dark">Whether to use dark typography and elevation defaults.</param>
+    /// <param name="accent">CUI accent family: neutral=0 through rose=7.</param>
+    /// <param name="colors">Exactly 34 packed RGBA colors in CUI semantic token order.</param>
+    public unsafe void SetTheme(bool dark, int accent, uint[] colors)
+    {
+        CheckOpen(); ArgumentNullException.ThrowIfNull(colors);
+        ArgumentOutOfRangeException.ThrowIfNegative(accent);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(accent, 7);
+        if (colors.Length != 34) throw new ArgumentException("Expected 34 CUI semantic colors.", nameof(colors));
+        fixed (uint* values = colors) NativeMethods.SetTheme(context, dark ? 1 : 0, accent, values);
+    }
+
+    /// <summary>Copies the active palette in the same semantic order accepted by SetTheme.</summary>
+    /// <returns>34 packed RGBA colors detached from native storage.</returns>
+    public unsafe uint[] ReadTheme()
+    {
+        CheckOpen();
+        var colors = new uint[34];
+        fixed (uint* values = colors) NativeMethods.ReadTheme(context, values);
+        return colors;
+    }
 
     /// <summary>Reads a native key press during a frame.</summary>
     /// <param name="key">Native key ordinal, tab=1, enter=2, escape=3, space=6, arrows=7..10.</param>

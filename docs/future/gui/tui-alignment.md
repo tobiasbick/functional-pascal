@@ -7,7 +7,7 @@ shared-view checks are listed in the [acceptance map](../../../tests/coverage.md
 
 Phase 7 requires native Windows x64 acceptance in addition to Linux validation.
 
-- [ ] Run HeadlessTuiTests, TerminalModeTests, TerminalBoundaryTests,
+- [ ] Run HeadlessTuiTests, TuiGalleryTests, TerminalModeTests, TerminalBoundaryTests,
   WidgetContractTests and the TUI/gallery/Mandelbrot DAP scenarios on Windows.
   Verify terminal input modes are restored after both success and failure.
 - [ ] Run GuiHostTests with software and OpenGL rendering on Windows. Its portable

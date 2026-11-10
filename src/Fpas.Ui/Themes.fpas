@@ -1,0 +1,217 @@
+unit Fpas.Ui.Themes;
+
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Internal.ThemePalettes as Palettes;
+
+// Base appearance shared by graphical and terminal hosts.
+public type Mode = enum
+  // Light surfaces and corresponding foreground contrast.
+  Light;
+  // Dark surfaces and corresponding foreground contrast.
+  Dark;
+end enum;
+
+// Accent families supplied by the vendored CUI theme.
+public type Accent = enum
+  // Neutral accent colors.
+  Neutral;
+  // Violet accent colors.
+  Violet;
+  // Blue accent colors.
+  Blue;
+  // Green accent colors.
+  Green;
+  // Amber accent colors.
+  Amber;
+  // Orange accent colors.
+  Orange;
+  // Coral accent colors.
+  Coral;
+  // Rose accent colors.
+  Rose;
+end enum;
+
+// CUI semantic straight-alpha colors, shared by both hosts.
+// Treat a palette as immutable while a host retains its theme.
+public type Palette = record
+  // background color.
+  public Background: G.Color := new G.Color(255, 255, 255, 255);
+  // surface color.
+  public Surface: G.Color := new G.Color(255, 255, 255, 255);
+  // surface raised color.
+  public SurfaceRaised: G.Color := new G.Color(255, 255, 255, 255);
+  // surface muted color.
+  public SurfaceMuted: G.Color := new G.Color(248, 248, 248, 255);
+  // foreground color.
+  public Foreground: G.Color := new G.Color(11, 11, 11, 255);
+  // text secondary color.
+  public TextSecondary: G.Color := new G.Color(88, 88, 88, 255);
+  // text muted color.
+  public TextMuted: G.Color := new G.Color(118, 118, 118, 255);
+  // border color.
+  public Border: G.Color := new G.Color(227, 227, 227, 255);
+  // border subtle color.
+  public BorderSubtle: G.Color := new G.Color(240, 240, 240, 255);
+  // border strong color.
+  public BorderStrong: G.Color := new G.Color(148, 148, 148, 255);
+  // accent color.
+  public Accent: G.Color := new G.Color(53, 53, 53, 255);
+  // accent strong color.
+  public AccentStrong: G.Color := new G.Color(31, 31, 31, 255);
+  // accent subtle color.
+  public AccentSubtle: G.Color := new G.Color(53, 53, 53, 26);
+  // accent foreground color.
+  public AccentForeground: G.Color := new G.Color(255, 255, 255, 255);
+  // success color.
+  public Success: G.Color := new G.Color(0, 119, 77, 255);
+  // warning color.
+  public Warning: G.Color := new G.Color(159, 98, 2, 255);
+  // danger color.
+  public Danger: G.Color := new G.Color(201, 48, 45, 255);
+  // info color.
+  public Info: G.Color := new G.Color(19, 109, 158, 255);
+  // control on color.
+  public ControlOn: G.Color := new G.Color(29, 29, 29, 255);
+  // control glyph color.
+  public ControlGlyph: G.Color := new G.Color(255, 255, 255, 255);
+  // control track color.
+  public ControlTrack: G.Color := new G.Color(220, 220, 220, 255);
+  // control track hover color.
+  public ControlTrackHover: G.Color := new G.Color(209, 209, 209, 255);
+  // control thumb color.
+  public ControlThumb: G.Color := new G.Color(255, 255, 255, 255);
+  // control thumb on color.
+  public ControlThumbOn: G.Color := new G.Color(255, 255, 255, 255);
+  // hover color.
+  public Hover: G.Color := new G.Color(11, 11, 11, 13);
+  // active color.
+  public Active: G.Color := new G.Color(11, 11, 11, 19);
+  // scrim color.
+  public Scrim: G.Color := new G.Color(10, 10, 12, 82);
+  // focus ring color.
+  public FocusRing: G.Color := new G.Color(31, 125, 207, 230);
+  // series1 color.
+  public Series1: G.Color := new G.Color(42, 120, 214, 255);
+  // series2 color.
+  public Series2: G.Color := new G.Color(235, 104, 52, 255);
+  // series3 color.
+  public Series3: G.Color := new G.Color(27, 175, 122, 255);
+  // series4 color.
+  public Series4: G.Color := new G.Color(98, 80, 214, 255);
+  // series5 color.
+  public Series5: G.Color := new G.Color(237, 161, 0, 255);
+  // series6 color.
+  public Series6: G.Color := new G.Color(232, 123, 164, 255);
+end record;
+
+// One theme contract for GUI and TUI. Terminal hosts composite alpha over surfaces.
+public type Theme = record
+  // Base appearance for native typography and elevation.
+  public Appearance: Mode := Mode.Light;
+  // Accent behavior used by CUI control states; factories select its palette.
+  public AccentFamily: Accent := Accent.Neutral;
+  // Semantic colors with an opaque Background; defaults to CUI neutral light.
+  public Colors: Palette := new Palette();
+end record;
+
+// Creates CUI's light palette with the selected accent.
+//
+// ## Parameters
+// - `Color`: Accent family.
+//
+// ## Returns
+// A theme accepted by either UI host.
+public function Light(Color: Accent := Accent.Neutral): Theme;
+requires cast<int>(Color) >= 0 and cast<int>(Color) <= 7;
+begin
+  return new Theme(Mode.Light, Color, Palettes.Create(false, cast<int>(Color)));
+end function;
+
+// Creates CUI's dark palette with the selected accent.
+//
+// ## Parameters
+// - `Color`: Accent family.
+//
+// ## Returns
+// A theme accepted by either UI host.
+public function Dark(Color: Accent := Accent.Neutral): Theme;
+requires cast<int>(Color) >= 0 and cast<int>(Color) <= 7;
+begin
+  return new Theme(Mode.Dark, Color, Palettes.Create(true, cast<int>(Color)));
+end function;
+
+// Composites a palette color onto an opaque background for explicit cell drawing.
+//
+// ## Parameters
+// - `Value`: Straight-alpha color.
+// - `Background`: Opaque backdrop from the same palette.
+//
+// ## Returns
+// A 24-bit RGB value suitable for a terminal style.
+public function Rgb(Value: G.Color; Background: G.Color): int;
+requires Background.Alpha = 255;
+  function Channel(Foreground: byte; Back: byte): int;
+  begin
+    return (cast<int>(Foreground) * cast<int>(Value.Alpha) + cast<int>(Back) * (255 -
+      cast<int>(Value.Alpha)) + 127) div 255;
+  end function;
+begin
+  return (Channel(Value.Red, Background.Red) shl 16)
+    or (Channel(Value.Green, Background.Green) shl 8) or Channel(Value.Blue, Background.Blue);
+end function;
+
+// Copies semantic colors in CUI token order as packed RGBA bytes.
+//
+// ## Parameters
+// - `Value`: Theme to marshal.
+//
+// ## Returns
+// A detached array, excluding CUI's reserved zero token.
+public function Rgba(Value: Theme): array of uint;
+requires cast<int>(Value.Appearance) >= 0 and cast<int>(Value.Appearance) <= 1;
+requires cast<int>(Value.AccentFamily) >= 0 and cast<int>(Value.AccentFamily) <= 7;
+requires Value.Colors.Background.Alpha = 255;
+  function Pack(Color: G.Color): uint;
+  begin
+    return cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+      or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24);
+  end function;
+begin
+  const C: Palette := Value.Colors;
+  return [
+    Pack(C.Background),
+    Pack(C.Surface),
+    Pack(C.SurfaceRaised),
+    Pack(C.SurfaceMuted),
+    Pack(C.Foreground),
+    Pack(C.TextSecondary),
+    Pack(C.TextMuted),
+    Pack(C.Border),
+    Pack(C.BorderSubtle),
+    Pack(C.BorderStrong),
+    Pack(C.Accent),
+    Pack(C.AccentStrong),
+    Pack(C.AccentSubtle),
+    Pack(C.AccentForeground),
+    Pack(C.Success),
+    Pack(C.Warning),
+    Pack(C.Danger),
+    Pack(C.Info),
+    Pack(C.ControlOn),
+    Pack(C.ControlGlyph),
+    Pack(C.ControlTrack),
+    Pack(C.ControlTrackHover),
+    Pack(C.ControlThumb),
+    Pack(C.ControlThumbOn),
+    Pack(C.Hover),
+    Pack(C.Active),
+    Pack(C.Scrim),
+    Pack(C.FocusRing),
+    Pack(C.Series1),
+    Pack(C.Series2),
+    Pack(C.Series3),
+    Pack(C.Series4),
+    Pack(C.Series5),
+    Pack(C.Series6)
+  ];
+end function;
+end unit;

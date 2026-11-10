@@ -35,10 +35,10 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Action list, selection list, text table and tabs | Yes | Yes | Yes |
 | Percentage progress | Yes | Yes | Yes |
 | Rows, columns, borders and modal overlays | Yes | Yes | Yes |
-| Content/fill, growth/shrinkage, alignment and semantic spacing | Yes | Yes | Yes |
+| CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
 | Fixed basis, bounds, spacing and scroll offsets in cells | | Yes | |
-| Fixed basis, bounds, spacing and scroll offsets in logical units | | | Yes |
+| Fixed basis, bounds, spacing and scroll offsets in logical units | Yes | Yes | Yes |
 | Semantic style roles and typed cached subviews | Yes | Yes | Yes |
 | `CellStyled` colors and `CellCanvas` drawing/input | | Yes | |
 | Terminal screens/layers, pinned panels, status hints, exact viewport and fixed canvas | | Yes | |
@@ -46,13 +46,45 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 
 ## Layout and style
 
-Content basis uses the host's measured extent. Fill uses the available extent
-with a grow weight of at least one. Grow and shrink weights distribute
-remaining space or required reductions along the main axis, subject to bounds.
-Alignment places a child on the cross axis. Stacks and scroll views clip
-overflow to their allocated bounds. Each theme resolves the semantic gap and
-padding levels for its host. Explicit fixed measurements use `Measure.Cells`
-or `Measure.Logical` in their corresponding target profile.
+Layout follows the supported subset of CUI's box rules. Content uses the host's
+measured extent. Fill and positive Grow weights share the remaining space from
+zero, freezing children that reach their minimum or maximum. Fixed sizes never
+grow or shrink. Content children shrink proportionally toward their minimum
+content size; bounds can leave overflow, which the host clips.
+
+Default alignment stretches columns and centers rows on their cross axis.
+Intrinsic controls such as buttons keep their natural size. Explicit Start,
+Center, End and Stretch select another placement. Rows, columns, sizing,
+spacing, borders and scrolling form the shared layout subset; CUI's grid and
+wrapped-row APIs are not exposed by this contract.
+
+Use `Measure.Logical` for portable fixed sizes, bounds, spacing and scroll
+requests. GUI uses CUI logical points. TUI maps 8 logical units to a column and
+16 to a row, rounding positive distances upward; weighted allocations round
+shared boundaries so no cells are lost. `Measure.Cells` is an explicit terminal
+extension. Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
+units and adapts to the host's resolution.
+
+## Shared themes
+
+Both hosts accept `Fpas.Ui.Themes.Theme`. `Themes.Light(Themes.Accent.Blue)`
+and `Themes.Dark(Themes.Accent.Blue)` select CUI palettes; omit the accent for
+neutral. The accent families are Neutral, Violet, Blue, Green, Amber, Orange,
+Coral and Rose. A default Theme is neutral light.
+
+The shared Palette contains CUI's semantic straight-alpha colors. Customize it
+with a record update on Theme.Colors, preserving an opaque Background. Keep
+themes and colors unchanged while retained by a host. GUI applies this palette
+to native CUI, including its accent behavior. TUI derives widget, focus,
+selection, disabled and error colors from the same tokens and composites alpha
+against the containing surface. Typography, round corners, shadows and animation
+are native GUI presentation; terminal cells approximate the relevant states.
+TUI requires no native CUI or graphical dependencies.
+
+Pass the same `ThemeFor(Model): Themes.Theme` callback to either host. Fixed
+themes go in GUI Options.Theme or the TUI Theme argument. Prefer Styled and
+button variants over explicit terminal colors. Explicit cell canvases can
+convert a palette color with Themes.Rgb(Color, OpaqueBackground).
 
 `Layout.Viewport` expresses width and height independently as compact, regular
 or expanded. The host maps its measurements to these classes. Applications

@@ -34,14 +34,16 @@ otherwise; height classes use 20 and 35 rows. Resize changes the view and
 layout in the same turn without an application message.
 
 Portable views use semantic spacing, roles, content/fill extents and allocation
-weights. Explicit terminal distances use `Measure.Cells`, for example
+weights under the [shared CUI rules](../Fpas.Ui/README.md#layout-and-style).
+Portable fixed distances use `Measure.Logical`: 8 units per column and 16 per
+row, rounded upward. Explicit terminal distances use `Measure.Cells`, for example
 `new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(20)))`.
-Semantic spacing resolves to 0 cells for none, 1 for tight/normal and 2 for
-loose. Cell layout, Unicode widths, clipping, allocation, painted-row and output
+Semantic spacing resolves to 0 cells for none, 1 for tight/normal, and 2 columns
+or 1 row for loose. Cell layout, Unicode widths, clipping, allocation, painted-row and output
 reuse remain native to the terminal host.
 
 The host calls `Validation.Prepare` with Target.Terminal on the entire shared
-tree before drawing. Graphical extensions, logical units, invalid options,
+tree before drawing. Graphical extensions, invalid options,
 duplicate identities and invalid selections produce a diagnostic naming the
 control or path. Cached subviews reuse typed dependencies; only a successfully
 presented tree becomes the next cache. Updated callbacks take effect even when
@@ -112,11 +114,12 @@ the active scope and hide least important complete hints as width shrinks.
 
 ## Themes and examples
 
-Fpas.Ui.Tui.Themes.Light/Dark/Green/Blue/Amber return a terminal Theme. Shared
-style roles resolve its Text, Heading, Panel, Muted, Primary, Secondary and
-Error colors. Button variants select normal, focused, hovered and disabled
-colors. Pass a fixed Theme or ThemeFor(Model) to the host. Cached subviews
-include any theme values on which their construction depends.
+Use `Fpas.Ui.Themes.Light/Dark`, optionally with a CUI Accent, just as in GUI.
+Both hosts accept the same Theme and ThemeFor(Model) callback. The terminal
+derives semantic styles and button states from its shared palette; there is no
+separate terminal palette API. See [shared themes](../Fpas.Ui/README.md#shared-themes)
+for customization and alpha compositing. Cached subviews include any theme
+values on which their construction depends.
 
 See the [filter list](../../examples/ui/tui/filter-list/README.md),
 [gallery](../../examples/ui/tui/gallery/README.md) and

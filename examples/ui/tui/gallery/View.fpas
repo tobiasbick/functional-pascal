@@ -1,6 +1,6 @@
 unit Gallery.View;
 
-uses Gallery.State as G, Gallery.Previews as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Tui.Themes as Themes, Fpas.Ui.Tui.Status as Status, System.Collections.Generic as Generic;
+uses Gallery.State as G, Gallery.Previews as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as Themes, Fpas.Ui.Tui.Status as Status, System.Collections.Generic as Generic;
 
 function Pages(Active: G.Page): E.Element<G.Msg>;
 begin
@@ -102,7 +102,7 @@ end function;
 function Build(State: G.Model; Viewport: T.Viewport): E.Element<G.Msg>;
 begin
   const Colors: Themes.Theme := G.Colors(State.Appearance);
-  const Overlays: array of E.Element<G.Msg> := if State.Overlay then [P.Overlay(State, Colors)]
+  const Overlays: array of E.Element<G.Msg> := if State.Overlay then [P.Overlay(State)]
     else []
     end if;
   if Viewport.Columns < 32 or Viewport.Rows < 12 then
@@ -110,7 +110,7 @@ begin
       else ' Ctrl+Q quits.'
       end if;
     return Views.Screen<G.Msg>(
-      E.CellStyled<G.Msg>(E.Text<G.Msg>('Resize to 32 × 12.' + Help), Colors.Heading),
+      E.Styled<G.Msg>(E.Text<G.Msg>('Resize to 32 × 12.' + Help), S.Role.Heading),
       Overlays, Keys
     );
   end if;
@@ -118,14 +118,14 @@ begin
   const Compact: bool := Viewport.Columns < 42;
   const Dimensions: string := Viewport.Columns.ToString() + ' × ' + Viewport.Rows.ToString();
   const Heading: string := if Compact then 'Gallery' else 'FPAS  /  Widget Gallery' end if;
-  const Preview: E.Element<G.Msg> := E.CellStyled<G.Msg>(
+  const Preview: E.Element<G.Msg> := E.Styled<G.Msg>(
     E.Border<G.Msg>(
       E.Column<G.Msg>(
         new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Cells(if Compact then 0 else 1 end if))),
         E.Size<G.Msg>(P.Body(State, Colors), new L.Flex(Grow := 1))
       ), G.Title(State.Active)
     ),
-    Colors.Panel
+    S.Role.Panel
   );
   const Body: E.Element<G.Msg> := if Compact then Preview
     else E.Row<G.Msg>(
@@ -134,14 +134,14 @@ begin
         Pages(State.Active),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(17)), Minimum := L.Measure.Cells(11))
       ),
-      E.Size<G.Msg>(Preview, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(0)), Grow := 1))
+      E.Size<G.Msg>(Preview, new L.Flex(Basis := L.Extent.Fill))
     )
     end if;
-  const Line: E.Element<G.Msg> := E.CellStyled<G.Msg>(StatusLine(State, Compact), Colors.Muted);
+  const Line: E.Element<G.Msg> := E.Styled<G.Msg>(StatusLine(State, Compact), S.Role.Muted);
   const Footer: E.Element<G.Msg> := if Compact then E.Row<G.Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
       PageButtons(),
-      E.Size<G.Msg>(Line, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(0)), Grow := 1))
+      E.Size<G.Msg>(Line, new L.Flex(Basis := L.Extent.Fill))
     )
     else Line
     end if;
@@ -151,8 +151,8 @@ begin
         Padding := L.Spacing.Fixed(L.Measure.Cells(1)),
         Gap := L.Spacing.Fixed(L.Measure.Cells(if Compact then 0 else 1 end if))
       ),
-      E.CellStyled<G.Msg>(E.Text<G.Msg>(Heading + '   ' + Dimensions), Colors.Heading),
-      E.Size<G.Msg>(Body, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(4)), Grow := 1)),
+      E.Styled<G.Msg>(E.Text<G.Msg>(Heading + '   ' + Dimensions), S.Role.Heading),
+      E.Size<G.Msg>(Body, new L.Flex(Basis := L.Extent.Fill, Minimum := L.Measure.Cells(4))),
       ThemeBar(State.Appearance, Viewport.Columns),
       Footer
     ),

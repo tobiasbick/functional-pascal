@@ -3,7 +3,7 @@ unit Fpas.Ui.Gui.Application;
 uses
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Editors as Ed, System as Sys;
+  Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as Themes, System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record
@@ -18,7 +18,7 @@ public type Options = record
   // Positive mailbox capacity.
   public Capacity: int := 128;
   // Initial native theme, unless selected from the model.
-  public Dark: bool := false;
+  public Theme: Themes.Theme := new Themes.Theme();
 end record;
 
 // A detached description of a presented graphical control.
@@ -59,8 +59,8 @@ public type Frame = record
   public Editors: int := 0;
   // Retained image resources after this frame.
   public Images: int := 0;
-  // Model-selected native theme.
-  public Dark: bool := false;
+  // Model-selected shared theme.
+  public Theme: Themes.Theme := new Themes.Theme();
 end record;
 
 // A manually driven GUI session. Drive and dispose it on its creating thread.
@@ -174,7 +174,7 @@ end record;
 // - `Update`: Handles one message after the preceding frame.
 // - `View`: Builds the declarative view for the current model.
 // - `Settings`: Window and mailbox configuration.
-// - `ThemeFor`: Optional model-owned dark-theme selector.
+// - `ThemeFor`: Optional model-owned shared theme selector.
 //
 // ## Returns
 // The owned session; its first Step presents the initial model.
@@ -182,7 +182,7 @@ public function Start<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, bool>? := null
+  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
 ): Session<TMsg>;
 requires Settings.Width > 0;
 requires Settings.Height > 0;
@@ -193,7 +193,7 @@ begin
     Update,
     View,
     new Cui.CuiWindow(Settings.Title, Settings.Width, Settings.Height, Settings.Renderer),
-    Settings.Capacity, null, Settings.Dark, ThemeFor
+    Settings.Capacity, null, Settings.Theme, ThemeFor
   );
 end function;
 
@@ -208,12 +208,12 @@ end function;
 // - `Update`: The shared MVU transition.
 // - `View`: The shared declarative view.
 // - `Settings`: Window and mailbox configuration.
-// - `ThemeFor`: Optional model-owned dark-theme selector.
+// - `ThemeFor`: Optional model-owned shared theme selector.
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, bool>? := null
+  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
 );
 requires Settings.Width > 0;
 requires Settings.Height > 0;

@@ -392,6 +392,7 @@ public sealed partial class CuiWindow : IDisposable
         ReleaseImages();
         trackedNodes.Clear();
         controlKeys.Clear();
+        splitPopups.Clear();
         modalKeys.Clear();
         NativeMethods.Destroy(app);
         if (usesOpenGl) openGlWindow = false;

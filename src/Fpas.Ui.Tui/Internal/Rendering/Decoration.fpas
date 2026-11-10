@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -79,9 +79,21 @@ begin
     )
     else Style
     end if;
+  const Filled: int := Bounds.Width * Control.HoldProgress div 100;
+  const FillStyle: T.Style := if Filled > 0 then Hold.FillStyle(
+      Style,
+      Theme.Text.Background ?? 0
+    )
+    else Style
+    end if;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
-      Mark(X, Y, if Y = Bounds.Y and X >= Bounds.X + 2 then HintStyle else Style end if);
+      Mark(
+        X, Y, if X < Bounds.X + Filled then FillStyle
+          elsif Y = Bounds.Y and X >= Bounds.X + 2 then HintStyle
+          else Style
+          end if
+      );
     end for;
   end for;
 

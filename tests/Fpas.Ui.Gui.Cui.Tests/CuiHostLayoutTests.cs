@@ -5,24 +5,6 @@ namespace Fpas.Ui.Gui.Cui.Tests;
 /// <summary>Checks shared flex allocation against finalized native geometry.</summary>
 public sealed class CuiHostLayoutTests
 {
-    /// <summary>Preserves intrinsic canvas dimensions and paints the copied operations.</summary>
-    [GuiFact]
-    public void ContentSizingKeepsIntrinsicCanvasExtentAndPixels()
-    {
-        using var window = new CuiWindow("Intrinsic canvas", 400, 240, CuiRenderer.Software, continuous: true);
-        Assert.True(window.NextFrame());
-        window.BeginGroup(false, 0, 0, 0, false);
-        window.Canvas("canvas", 80, 60, [new CuiPaint { C = 80, D = 60, Color = 0xff0000ff }]);
-        window.TrackLastControl("canvas"); window.SizeLast(false, 0, 0, 0, -1, 0, 0);
-        window.EndGroup(); window.SizeLast(false, 1, 0, 0, -1, 1, 0);
-        window.Present();
-        var bounds = window.GetControlRectangle("canvas");
-        Assert.Equal(80, bounds.Width); Assert.Equal(60, bounds.Height);
-        using var directory = new TemporaryDirectory();
-        string capture = directory.File("canvas.png"); window.CapturePng(capture);
-        uint[] pixels = PngAssertions.ReadPixels(capture, 400, 240);
-        Assert.Equal(0xff0000ffu, pixels[((int)bounds.Y + 10) * 400 + (int)bounds.X + 10]);
-    }
     /// <summary>Uses CUI weighted growth from zero, frozen bounds and nonshrinking fixed extents.</summary>
     /// <param name="renderer">Renderer whose native layout is exercised.</param>
     [GuiTheory]

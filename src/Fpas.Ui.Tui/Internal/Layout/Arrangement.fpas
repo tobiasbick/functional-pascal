@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Layout.Overlays as Overlays, Fpas.Ui.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Layout.Overlays as Overlays, Fpas.Ui.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -65,7 +65,8 @@ public function Arrange<TMsg>(
     Id: string; Label: string; Role: string; Value: string;
     Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
-    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null
+    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null;
+    HoldMilliseconds: int := 0; HoldProgress: int := 0
   );
   begin
     AddControl(
@@ -83,7 +84,9 @@ public function Arrange<TMsg>(
         ButtonStyle,
         ArrowFocus,
         Hint,
-        Foreground
+        Foreground,
+        HoldMilliseconds,
+        HoldProgress
       )
     );
   end procedure;
@@ -126,9 +129,21 @@ public function Arrange<TMsg>(
         );
         const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(Handler);
         Register(
-          Id, View.Name ?? View.Caption, View.Role, View.Value, Clip, ScopeId, Enabled, Action,
-          View.Variant, ButtonStyle := true, ArrowFocus := View.ArrowFocus, Hint := View.Hint,
-          Foreground := View.Foreground
+          Id,
+          View.Name ?? View.Caption,
+          View.Role,
+          View.Value,
+          Clip,
+          ScopeId,
+          Enabled,
+          Action,
+          View.Variant,
+          ButtonStyle := true,
+          ArrowFocus := View.ArrowFocus,
+          Hint := View.Hint,
+          Foreground := View.Foreground,
+          HoldMilliseconds := View.HoldMilliseconds,
+          HoldProgress := View.HoldProgress
         );
       when E.Element.Toggle(
         const Id: string,
@@ -307,6 +322,27 @@ public function Arrange<TMsg>(
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
       when E.Element.ButtonGroup(const Body: E.Element<TMsg>):
         Visit(Body, Group.Bounds<TMsg>(Body, Area), Clip, ScopeId, Style);
+      when E.Element.PopupAnchor(
+        const Trigger: E.Element<TMsg>, const Id: string, const Content: E.Element<TMsg>,
+        const Initial: string, const Close: procedure()
+      ):
+        const Before: int := Controls.Count;
+        Visit(Trigger, Area, Clip, ScopeId, Style);
+        for Index: int := Before to Controls.Count - 1 do
+          const Part: A.Control<TMsg> := Controls[Index];
+          if Part.Id = Id then
+            Popup := new SplitWidget.Pending<TMsg>(
+              Id, ScopeId,
+              new F.Rect(
+                Clip.X,
+                Part.Bounds.Y,
+                Part.Bounds.X + Part.Bounds.Width - Clip.X,
+                Part.Bounds.Height
+              ),
+              Content, Initial, Close
+            );
+          end if;
+        end for;
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
         D.Border(Operations, Area, Clip, Title, Style, Widgets);
         Visit(
@@ -489,11 +525,43 @@ begin
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
+  var Popup: SplitWidget.Pending<TMsg>? := null;
   var FocusReturn: string := '';
   var WrapText: bool := false;
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
+  const Pending: SplitWidget.Pending<TMsg>? := Popup;
+  if Pending <> null and Pending.Parent = (if Active = null then '' else Active.Id end if) then
+    const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
+    const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+    const Width: int := Sys.Math.Max(23, M.Intrinsic<TMsg>(Pending.Content, true));
+    const Height: int := Sys.Math.Min(26, M.Intrinsic<TMsg>(Pending.Content, false, Width));
+    const Bounds: array of F.Rect := SplitWidget.Place(
+      Operations,
+      Screen,
+      Pending.Anchor,
+      Width,
+      Height,
+      Colors,
+      Theme
+    );
+    const PreviousScope: A.Scope<TMsg>? := if Previous = null then null else Previous.Active end if;
+    if PreviousScope = null or PreviousScope.Id <> Pending.Id then
+      Scroll[Pending.Id] := 0;
+    end if;
+
+    Active := new A.Scope<TMsg>(
+      Pending.Id, Pending.Initial, null, [], Bounds[0], Dismiss := Pending.Close
+    );
+    Visit(
+      E.Element<TMsg>.Scrollable(Pending.Id, Pending.Content, false),
+      Bounds[1],
+      Bounds[1],
+      Pending.Id,
+      Colors
+    );
+  end if;
   const PreviousRows: array of D.PaintedRow := if Previous = null then []
     else Previous.Painted
     end if;

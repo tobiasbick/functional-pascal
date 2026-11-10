@@ -17,7 +17,7 @@ begin
       E.Text<State.Msg>(Command),
       Copy.CopyButton<State.Msg>('copy-install', Command)
     ),
-    S.Role.Panel
+    S.Role.MutedPanel
   );
 end function;
 end unit;

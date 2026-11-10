@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -26,6 +26,18 @@ begin
     ), E.Element.CopyAction(const Id: string, _, _, const Enabled: bool):
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
+      end if;
+    when E.Element.HoldAction(const Id: string, _, _, const Settings: Holds.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SplitAction(const Id: string, _, _, _, const Settings: Split.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        elsif Preferred = Split.MenuId(Id) then
+          return Preferred;
+        end if;
       end if;
     when E.Element.ButtonAction(const Id: string, _, _, const Settings: B.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then

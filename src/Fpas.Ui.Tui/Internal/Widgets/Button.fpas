@@ -14,9 +14,10 @@ uses
 // - `Label`: Literal visible label.
 // - `Message`: Proposed activation message.
 // - `Settings`: Model-owned input and appearance options.
+// - `Role`: Inspection role for this action or its owning composite widget.
 // ## Returns
 // A terminal action retaining the original label for inspection.
-public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: B.Options): E.Element<TMsg>;
+public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: B.Options; Role: string := 'button'): E.Element<TMsg>;
 begin
   const Leading: string := if Settings.Loading then '…'
     else G.SingleLine(
@@ -46,7 +47,7 @@ begin
   const Large: bool := Settings.ControlSize = B.Size.Large;
   return E.Element<TMsg>.Action(
     Id, new A.Direct<TMsg>(Message, Settings.Loading), Settings.Enabled, new E.ActionView(
-      Caption, Name := Label, Variant := Variant,
+      Caption, Name := Label, Role := Role, Variant := Variant,
       Value := if Settings.Loading then 'loading'
         elsif Settings.Selected then 'true'
         else ''

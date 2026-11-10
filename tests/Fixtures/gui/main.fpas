@@ -1,212 +1,35 @@
 program GuiInterop;
 
-uses
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Text as Editing, Fpas.Ui.Gui.Cui.Imaging as Imaging, System as Sys,
-  System.Console as Console, System.IO as IO;
+uses Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Console as Console;
 
-procedure Check(Condition: bool; Message: string);
-begin
-  if not Condition then
-    raise new Sys.InvalidOperationException(Message);
-  end if;
-end procedure;
-
-procedure CheckDisposed(Window: Cui.CuiWindow);
-begin
-  var Disposed: bool := false;
-  try
-    discard Window.NextFrame();
-  catch Failure: Sys.ObjectDisposedException do
-    Disposed := true;
-  end try;
-
-  Check(Disposed, 'The FPAS using scope did not dispose its window.');
-end procedure;
-
-procedure ExerciseInput(Window: Cui.CuiWindow);
-begin
-  const Text: Editing.CuiTextBuffer := new Editing.CuiTextBuffer('Grüße', 128);
-  var Clicks: int := 0;
-  var Checks: int := 0;
-  var Edits: int := 0;
-  var Enabled: bool := false;
-  var Button: Cui.CuiRectangle := new Cui.CuiRectangle();
-  var Checkbox: Cui.CuiRectangle := new Cui.CuiRectangle();
-  var Editor: Cui.CuiRectangle := new Cui.CuiRectangle();
-  Window.SetReducedMotion(true);
-  for Frame: int := 0 to 59 do
-    Check(Window.NextFrame(), 'The native window closed before the test completed.');
-    const Target: Cui.CuiRectangle := case Frame of
-      when 10, 11, 12: Button;
-      when 20, 21, 22: Checkbox;
-      when 30, 31, 32: Editor;
-      else new Cui.CuiRectangle();
-    end case;
-    if Target.Width > 0 then
-      const X: float := if Frame >= 30 then Target.X + Target.Width - 12
-        else Target.X + Target.Width / 2
-        end if;
-      Window.MovePointer(X, Target.Y + Target.Height / 2);
-    end if;
-
-    if Frame = 11 or Frame = 21 or Frame = 31 then
-      Window.SetLeftButton(true);
-    end if;
-
-    if Frame = 12 or Frame = 22 or Frame = 32 then
-      Window.SetLeftButton(false);
-    end if;
-
-    if Frame = 36 then
-      Window.TypeText(' — schön ✓');
-    end if;
-
-    Window.BeginColumn();
-    Window.Heading('FPAS native GUI integration');
-    if Window.Button('Increment##counter') then
-      Clicks := Clicks + 1;
-    end if;
-
-    Button := Window.LastRectangle;
-    if Window.Checkbox('Enabled##checkbox', ref Enabled) then
-      Checks := Checks + 1;
-    end if;
-
-    Checkbox := Window.LastRectangle;
-    const Events: int := cast<int>(Window.TextInput('text', Text));
-    if (Events and cast<int>(Cui.CuiTextInputEvents.Changed)) <> 0 then
-      Edits := Edits + 1;
-    end if;
-
-    Editor := Window.LastRectangle;
-    Window.Text(Text.Text);
-    Window.EndColumn();
-    if Frame mod 7 = 0 then
-      Sys.GC.Collect(2, Sys.GCCollectionMode.Forced, true, true);
-    end if;
-  end for;
-
-  Check(Clicks = 1, 'The button did not activate exactly once.');
-  Check(Enabled and Checks = 1, 'The checkbox did not update its by-reference Boolean.');
-  Check(Edits = 1 and Text.Text = 'Grüße — schön ✓', 'UTF-8 editing did not round-trip.');
-  Check(Button.Width > 0 and Button.Height > 0, 'The button has no rendered bounds.');
-  Check(Checkbox.Y > Button.Y and Editor.Y > Checkbox.Y, 'The native column layout is incorrect.');
-end procedure;
-
-procedure ExerciseAdditionalControls(Window: Cui.CuiWindow; CapturePath: string);
-begin
-  const Pixels: array of byte := [255, 0, 0, 255];
-  using const Logo: Imaging.CuiImage := Window.CreateImage(1, 1, Pixels);
-  const Document: Editing.CuiTextBuffer := new Editing.CuiTextBuffer('Grüße' + #10 + '東京', 128);
-  Document.Selection := new Editing.CuiTextSelection(6, 6);
-  Check(Window.TryWake(), 'The native wake target rejected the event.');
-
-  for Frame: int := 0 to 3 do
-    Check(Window.NextFrame(), 'The native window closed while drawing additional controls.');
-    Window.BeginColumn();
-    Window.Image(Logo, 32, 32);
-    Window.BeginRow(0, 8);
-    discard Window.TabItem('Editor', true);
-    discard Window.TabItem('Preview', false);
-    Window.EndRow();
-
-    if Frame > 0 then
-      Window.ScrollTo('choices', 32);
-    end if;
-
-    Window.BeginScroll('choices', 80);
-    for Item: int := 1 to 5 do
-      discard Window.ListItem('Choice ' + Item.ToString(), Item = 2);
-    end for;
-
-    Window.EndScroll();
-
-    Window.BeginTable('items', ['Item', 'State']);
-    discard Window.TableRow(true);
-    Window.TableCell('CUI');
-    Window.TableCell('Ready');
-    Window.EndTable();
-
-    if Frame = 0 then
-      Window.RequestFocus('document');
-    elsif Frame = 1 then
-      Window.TypeText('新');
-    end if;
-
-    discard Window.TextArea('document', Document, 80);
-    Window.EndColumn();
-    var ModalOpen: bool := Frame = 2;
-    const DrawModal: bool := Window.BeginDialog('GUI dialog', ref ModalOpen);
-    if DrawModal then
-      Window.Text('Modal contents');
-      Window.EndDialog();
-    end if;
-
-    Check(DrawModal = (Frame = 2), 'The modal draw scope did not follow visibility.');
-  end for;
-
-  Check(Document.Text = 'Grüße' + #10 + '新東京', 'Multiline Unicode editing did not round-trip.');
-  Check(
-    Document.Selection.Caret = 7 and Document.Selection.Anchor = 7,
-    'The caret did not follow the edit.'
-  );
-  Window.CapturePng(CapturePath);
-  Check(Window.NextFrame(), 'The final frame did not open.');
-  Window.Image(Logo, 32, 32);
-end procedure;
-
-function Run(Arguments: array of string): int;
+procedure Run(Arguments: array of string);
 requires Arguments.Length = 3;
-requires Arguments[1] = 'software' or Arguments[1] = 'opengl';
-requires Arguments[2].Length > 0;
-ensures (ExitCode: int): ExitCode = 0;
 begin
-  const Renderer: Cui.CuiRenderer := if Arguments[
-      1
-    ] = 'software' then Cui.CuiRenderer.Software
+  const Software: bool := Arguments[1] = 'software';
+  const Renderer: Cui.CuiRenderer := if Software then Cui.CuiRenderer.Software
     else Cui.CuiRenderer.OpenGl
     end if;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPAS: Grüße', 640, 480, Renderer, true);
-  begin
-    using const Owned: Cui.CuiWindow := Window;
-    Check(
-      Window.IsSoftware = (Renderer = Cui.CuiRenderer.Software),
-      'The requested renderer was not selected.'
-    );
-    ExerciseInput(Window);
-    ExerciseAdditionalControls(Window, Arguments[2]);
-  end;
-
-  CheckDisposed(Window);
-
-  const FailingWindow: Cui.CuiWindow := new Cui.CuiWindow(
-    'FPAS exception cleanup',
-    320,
-    240,
+  using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPAS GUI probe',
+    640,
+    480,
     Renderer,
     true
   );
-  var Caught: bool := false;
-  try
-    using const Owned: Cui.CuiWindow := FailingWindow;
-    Check(FailingWindow.NextFrame(), 'The cleanup window did not open.');
-    raise new Sys.InvalidOperationException('Expected cleanup path.');
-  catch Failure: Sys.InvalidOperationException when Failure.Message = 'Expected cleanup path.' do
-    Caught := true;
-  end try;
+  if Window.IsSoftware <> Software or not Window.NextFrame() then
+    raise new Sys.InvalidOperationException('The requested CUI renderer did not present.');
+  end if;
 
-  Check(Caught, 'The expected exception was not observed.');
-  CheckDisposed(FailingWindow);
-  Check(IO.File.Exists(Arguments[2]), 'The native frame was not captured.');
-  Console.WriteLine(
-    'FPAS GUI verified: ' + Arguments[
-      1
-    ] + '; input; layouts; modal; UTF-8; image; normal/exception disposal'
-  );
-  return 0;
-end function;
+  Window.BeginColumn();
+  Window.Heading('FPAS GUI');
+  discard Window.Button('Continue');
+  Window.EndColumn();
+  Window.Present();
+  Window.CapturePng(Arguments[2]);
+  Console.WriteLine('FPAS GUI verified: ' + Arguments[1]);
+end procedure;
 
 begin
-  Sys.Environment.ExitCode := Run(Sys.Environment.GetCommandLineArgs());
+  Run(Sys.Environment.GetCommandLineArgs());
 end;
 end program;

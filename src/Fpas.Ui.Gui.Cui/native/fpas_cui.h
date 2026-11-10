@@ -9,6 +9,8 @@
 #include "widgets/sheet.h"
 #include "widgets/icon_button.h"
 #include "widgets/copy_button.h"
+#include "widgets/hold_button.h"
+#include "widgets/split_button.h"
 
 /** Presents the completed current frame without waiting for more input.
  * @param app Live UI-thread application with a frame open.

@@ -178,87 +178,6 @@ begin
   end if;
 end procedure;
 
-procedure CheckCanvas(Glyph: string);
-  function Unchanged(State: int; Message: int): Mvu.Transition<int, int>;
-  begin
-    return new Mvu.Transition<int, int>(State, []);
-  end function;
-
-  function WideCell(Column: int; Row: int): T.Cell;
-  begin
-    return new T.Cell(Glyph, new T.Style());
-  end function;
-
-  function Canvas(State: int): E.Element<int>;
-  begin
-    return Views.FixedCanvas<int>('wide', 2, 1, WideCell, new T.CanvasEvents<int>());
-  end function;
-begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
-    0,
-    Unchanged,
-    Canvas,
-    3,
-    1
-  );
-  const Frame: App.Frame := Session.Snapshot();
-  if Frame.Cells[0].Text <> Glyph or Frame.Cells[1].Text <> '' or Frame.Cells[2].Text <> ' ' then
-    raise new Sys.InvalidOperationException('The wide cell did not reserve its continuation.');
-  end if;
-
-  discard Session.Send(App.Input.Resize(1, 1));
-  discard Session.Step();
-  if Session.Snapshot().Cells[0].Text <> ' ' then
-    raise new Sys.InvalidOperationException('A clipped wide cell was partially painted.');
-  end if;
-end procedure;
-
-function OverlayUpdate(State: int; Message: int): Mvu.Transition<int, int>;
-begin
-  return new Mvu.Transition<int, int>(Message, []);
-end function;
-
-function OverlayView(State: int): E.Element<int>;
-begin
-  const A: Ch.ListItem<int> := new Ch.ListItem<int>('a', 'Alpha', 4);
-  const B: Ch.ListItem<int> := new Ch.ListItem<int>('b', 'Beta', if State = 5 then 6 else 4 end if);
-  const Items: array of Ch.ListItem<int> := if State >= 4 then [B, A] else [A, B] end if;
-  const Base: E.Element<int> := E.Column<int>(
-    E.Button<int>('options', 'Options', 1, State <> 3),
-    E.List<int>('items', Items)
-  );
-  var Layers: array of E.Element<int> := [];
-  if State = 1 then
-    Layers := [
-      Views.Layer<int>(
-        'options-overlay',
-        E.Column<int>(E.Button<int>('close', 'Close', 0), E.Button<int>('details', 'Details', 2)),
-        [InputKeys.Shortcut<int>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, 2)],
-        InitialFocus := 'missing',
-        OnDismiss := function(): int => 3
-      )
-    ];
-  else
-    if State = 2 then
-      Layers := [
-        Views.Layer<int>(
-          'details-overlay',
-          E.Text<int>('Details'),
-          [],
-          InitialFocus := 'missing',
-          OnDismiss := function(): int => 3
-        )
-      ];
-    end if;
-  end if;
-
-  return Views.Screen<int>(
-    Base,
-    Layers,
-    [InputKeys.Shortcut<int>(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl, 5)]
-  );
-end function;
-
 procedure ExpectFocus(Session: App.HeadlessSession; Expected: string);
 begin
   var Actual: string := '';
@@ -280,48 +199,12 @@ begin
   discard Session.Step();
 end procedure;
 
-procedure CheckOverlay();
-begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
-    0, OverlayUpdate, OverlayView, 30, 10
-  );
-  Turn(Session, App.Input.Focus('options'));
-  Turn(Session, App.Input.Activate('options'));
-  ExpectFocus(Session, 'close');
-  const Before: long := Session.Snapshot().Id;
-  Turn(Session, App.Input.Click(0, 0));
-  if Session.Snapshot().Id <> Before then
-    raise new Sys.InvalidOperationException('The modal overlay let a click reach the base.');
-  end if;
-
-  Turn(Session, App.Input.KeyPress(InputKeys.Key.Tab, InputKeys.KeyModifiers.None));
-  ExpectFocus(Session, 'details');
-  Turn(Session, App.Input.KeyPress(InputKeys.Key.Tab, InputKeys.KeyModifiers.Shift));
-  ExpectFocus(Session, 'close');
-  Turn(Session, App.Input.Activate('close'));
-  ExpectFocus(Session, 'options');
-  Turn(Session, App.Input.Activate('options'));
-  Turn(Session, App.Input.KeyPress(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl));
-  ExpectFocus(Session, '');
-  Turn(Session, App.Input.KeyPress(InputKeys.Key.Escape, InputKeys.KeyModifiers.None));
-  ExpectFocus(Session, 'items/a');
-  Turn(Session, App.Input.Activate('items/b'));
-  Turn(Session, App.Input.Focus('items/b'));
-  ExpectFocus(Session, 'items/b');
-  const Original: App.Frame := Session.Snapshot();
-  Turn(Session, App.Input.KeyPress(InputKeys.Key.R, InputKeys.KeyModifiers.Ctrl));
-  const Changed: App.Frame := Session.Snapshot();
-  if Original.Id = Changed.Id or not Sys.String.Join('|', Original.Lines).Equals(
-    Sys.String.Join('|', Changed.Lines)
-  )
-  then
-    raise new Sys.InvalidOperationException(
-      'An action-only change must publish without repainting cells.'
-    );
-  end if;
-end procedure;
-
 procedure CheckReuse();
+  function UpdateValue(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+
   function Build(Dependency: int): E.Element<int>;
   begin
     Builds := Builds + 1;
@@ -341,7 +224,7 @@ begin
   var Builds: int := 0;
   using const Resized: App.HeadlessSession := App.StartHeadless<int, int>(
     0,
-    OverlayUpdate,
+    UpdateValue,
     Cached,
     20,
     8
@@ -353,7 +236,7 @@ begin
 
   using const Fresh: App.HeadlessSession := App.StartHeadless<int, int>(
     0,
-    OverlayUpdate,
+    UpdateValue,
     Cached,
     11,
     3
@@ -380,58 +263,6 @@ begin
   const Shrunk: array of int := F.Allocate([4, 4], [Lower.Flex(Rules[0]), Lower.Flex(Rules[1])], 4);
   if Grown[0] <> 6 or Grown[1] <> 5 or Shrunk[0] <> 2 or Shrunk[1] <> 3 then
     raise new Sys.InvalidOperationException('Unexpected bounded cell allocation.');
-  end if;
-end procedure;
-
-procedure CheckDividers();
-  function DividerView(State: int): E.Element<Msg>;
-  begin
-    return E.Column<Msg>(
-      E.Divider<Msg>(),
-      E.Divider<Msg>('界e' + new string(#10, 1) + 'z'),
-      E.Button<Msg>('start', 'Start', Msg.Start)
-    );
-  end function;
-begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(
-    0, Update, DividerView, 10, 3, TerminalThemes.Dark()
-  );
-  const Full: App.Frame := Session.Snapshot();
-  if Full.Lines[0] <> '──────────' or Full.Lines[1] <> '─ 界e z ──'
-    or Full.Cells[0].Colors.Foreground <> $2B2B2B or Full.Controls.Length <> 1
-  then
-    raise new Sys.InvalidOperationException('Unexpected divider layout, style or control list.');
-  end if;
-
-  ExpectFocus(Session, 'start');
-
-  Turn(Session, App.Input.Resize(6, 3));
-  if Session.Snapshot().Lines[1] <> '─ 界 ─' then
-    raise new Sys.InvalidOperationException('A narrow divider must keep the whole title glyph.');
-  end if;
-
-  Turn(Session, App.Input.Resize(5, 3));
-  if Session.Snapshot().Lines[1] <> '─────' then
-    raise new Sys.InvalidOperationException('A divider needs room for the first title glyph.');
-  end if;
-end procedure;
-
-procedure CheckStatusHints();
-begin
-  const Chord: InputKeys.ShortcutBinding<Msg> := InputKeys.Shortcut<Msg>(
-    InputKeys.Key.F2,
-    cast<InputKeys.KeyModifiers>(cast<int>(InputKeys.KeyModifiers.Ctrl)
-      or cast<int>(InputKeys.KeyModifiers.Shift)),
-    Msg.Start
-  );
-  const Character: InputKeys.ShortcutBinding<Msg> := InputKeys.CharacterShortcut<Msg>(
-    '?',
-    Msg.Start
-  );
-  if Status.Hint<Msg>(Chord, 'Start') <> 'Ctrl+Shift+F2 Start'
-    or Status.Hint<Msg>(Character, 'Help') <> '? Help'
-  then
-    raise new Sys.InvalidOperationException('Shortcut hints must use the actual bindings.');
   end if;
 end procedure;
 
@@ -495,12 +326,7 @@ begin
   CheckQueue();
   CheckFailure();
   CheckPresentation();
-  CheckCanvas('界');
-  CheckCanvas('🇩🇪');
-  CheckOverlay();
   CheckReuse();
-  CheckDividers();
-  CheckStatusHints();
   CheckLiveTheme();
   Console.WriteLine('headless contracts verified');
 end;

@@ -1,12 +1,14 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
   public Id: long;
   // The raw event to route against the presented layout.
   public Event: App.Input;
+  // Monotonic arrival time before owner-thread processing.
+  public ReceivedAt: long;
   // The control pipe's acknowledgement when the event came from a debugger.
   public Acknowledgement: Tasks.Task?;
 end record;
@@ -66,7 +68,7 @@ public function Start<TModel, TMsg>(
     Threads.Monitor.Enter(Gate);
     try
       const Id: long := InputId + 1L;
-      case Core.Send(new PendingInput(Id, Event, Acknowledgement)) of
+      case Core.Send(new PendingInput(Id, Event, Sys.Environment.TickCount64, Acknowledgement)) of
         when Runtime.Admission.Queued:
           InputId := Id;
           return App.Admission.Queued(Id);
@@ -214,7 +216,8 @@ public function Start<TModel, TMsg>(
         if Viewport.Rows < 20 then L.SizeClass.Compact
           elsif Viewport.Rows < 35 then L.SizeClass.Regular
           else L.SizeClass.Expanded
-          end if
+          end if,
+        Viewport.Columns * 8, Viewport.Rows * 16
       );
       const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
         View(Core.Model(), Size),
@@ -226,12 +229,19 @@ public function Start<TModel, TMsg>(
         Candidate,
         Theme,
         EditorPositions,
-        CopyFeedback
+        CopyFeedback,
+        HoldFeedback,
+        SplitMenus
       );
       Phase := 'layout_or_drawing';
       const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
         Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
       );
+      const ActiveMenu: A.Scope<TMsg>? := Native.Active;
+      if SplitMenus.Id() <> '' and (ActiveMenu = null or ActiveMenu.Id <> SplitMenus.Id()) then
+        SplitMenus.Close();
+      end if;
+
       return Native with
         Prepared := Candidate;
       end with;
@@ -321,7 +331,7 @@ public function Start<TModel, TMsg>(
     end try;
   end procedure;
 
-  procedure Route(Event: App.Input);
+  procedure Route(Entry: PendingInput);
   begin
     const Layout: A.Layout<TMsg>? := Current;
     const Routing: I.State<TMsg>? := Interaction;
@@ -329,11 +339,15 @@ public function Start<TModel, TMsg>(
       return;
     end if;
 
-    case Event of
+    case Entry.Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
+        HoldFeedback.Cancel();
         Viewport := new V.Dimensions(NewColumns, NewRows);
+      when App.Input.Pointer(_, _, _), App.Input.ButtonPointer(_, _, _, _):
+        I.Dispatch<TMsg>(Routing, Layout, Entry.Event, Entry.ReceivedAt);
       else
-        I.Dispatch<TMsg>(Routing, Layout, Event);
+        HoldFeedback.Cancel();
+        I.Dispatch<TMsg>(Routing, Layout, Entry.Event, Entry.ReceivedAt);
     end case;
   end procedure;
 
@@ -368,8 +382,12 @@ public function Start<TModel, TMsg>(
       Phase := 'update';
       case Core.Advance() of
         when Runtime.Step.Idle:
-          if Core.IsOpen() and CopyFeedback.Expire() then
-            Paint();
+          if Core.IsOpen() then
+            const CopyChanged: bool := CopyFeedback.Expire();
+            const HoldChanged: bool := HoldFeedback.Refresh();
+            if CopyChanged or HoldChanged then
+              Paint();
+            end if;
           end if;
 
           return App.StepResult.Idle;
@@ -382,7 +400,7 @@ public function Start<TModel, TMsg>(
 
           Processing := Entry.Id;
           const Before: long := FrameId;
-          Route(Entry.Event);
+          Route(Entry);
           if Core.IsOpen() then
             Paint();
           end if;
@@ -427,6 +445,8 @@ begin
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
   const EditorPositions: Generic.Dictionary<string, Editors.Entry> := new Generic.Dictionary<string, Editors.Entry>();
   const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
+  const HoldFeedback: Hold.State := Hold.Create();
+  const SplitMenus: SplitWidget.State := SplitWidget.Create();
   var PendingFocus: string? := null;
   var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
@@ -446,7 +466,7 @@ begin
       end case;
     end procedure, 64
   );
-  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
+  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets, HoldFeedback);
   CheckSize(Columns, Rows);
   try
     Paint();

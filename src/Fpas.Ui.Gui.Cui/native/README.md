@@ -25,6 +25,11 @@ from copy to check. The vendored CUI helper changes the key at that point
 and loses keyboard focus. The adapter submits text through CUI's clipboard
 provider and expires the confirmation on the host's monotonic clock.
 
+`widgets/split_button.c` uses CUI's composite and popup with literal captions
+and keyed inspection. The adapter lets Enter reach the menu before the
+focused chevron can toggle it closed. It releases the popup when its control
+disappears from the view.
+
 The image adapter verifies OpenGL storage after upload. CUI copies pixel data
 during the upload and queues the texture handle for frame rendering. Callers
 keep that texture alive while CUI can still render the frame.

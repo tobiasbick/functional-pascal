@@ -39,186 +39,55 @@ Debug/Release acceptance runs the same contracts without platform skips.
 
 ## Native GUI
 
-`GuiHostTests` builds the public FPAS counter, gallery and `Fpas.Ui.Gui` through a fresh SDK.
-It checks native activation, disabled buttons, deferred transitions, first-frame
-geometry, column stretch/padding, view and subview reuse, resize, detached
-snapshots, worker posting, thread ownership, bounded admission, native/application
-close and failure cleanup with software and OpenGL rendering.
-The gallery contract also checks controlled Unicode edits and rejected proposals,
-checkbox/selection/table/tab input, theme/resize state, modal focus restoration,
-resource removal, idle completion and window repaint/input while worker bodies
-and cancellation callbacks are held at gates. Native close stays responsive
-until both gates finish. `CuiHostLayoutTests` covers CUI weighted growth from
-zero, frozen bounds, fixed extents, shrinkable content hints, intrinsic canvas
-size/pixels and controlled End/wheel input with either scrollbar
-setting. `CuiHostResourceTests` checks native texture accounting across removal,
-replacement and repeated sessions, and normalized Unicode selection offsets.
-`CuiPresentationTests` checks explicit presentation and frame-local control tracking.
+`GuiHostTests` builds the real GUI gallery with a fresh SDK and runs the
+gallery contract under software and OpenGL. It checks the desktop sidebar,
+the drawer at 740 logical points, the button examples, independent formatting
+choices, the copy control, and modal sheet focus. Native keyboard input drives
+the split button's main action, menu highlight, selection, Escape and focus
+return. It captures the Buttons page and the open split menu.
 
-`Fpas.Ui.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
-software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
-The window tests check nested row and column geometry and route text input
-between editors using programmatic focus and a non-ASCII control ID.
-The text area test checks its requested height and edits a multiline Unicode
-buffer before moving focus to a single-line field in the same frame.
-`CuiTextEditingTests` checks that reported selections and the next edit respect
-grapheme boundaries, and that a replacement document uses the supplied selection.
-`CuiContainerTests` checks that a scroll offset moves content within a fixed
-viewport and that a modal dialog intercepts outside clicks and reports dismissal.
-`CuiImageTests` checks rendered pixels when replacing a queued image in the same
-frame. It also verifies window and UI-thread ownership and teardown with a live image.
-The texture lifetime case counts actual software-renderer allocations and
-releases across replacements, rejected uploads and repeated window teardown.
-The selection tests activate list items, table rows and tabs. They compare
-captured backgrounds before the click, while the host keeps the old selection
-and after the host applies the new selection. The table case also exercises UTF-8
-column titles and text cells.
-`CuiWakeupTests` waits for a noncontinuous window to go idle, posts a wakeup from
-a worker and checks that the window rejects new wakeups after disposal. Native
-CTest cases link the control adapters through both library variants and check
-line breaks, multiline keyboard navigation and undo isolation across document
-replacements. The Win32 case exercises live-resize callback registration and
-detachment.
-`FpasProjectTests` builds the internal `Fixtures/gui` project with a fresh local
-FPAS SDK and the solution-built CLR binding. It verifies project-reference native
-asset/notices delivery, execution from another working directory, button and
-checkbox interaction, multiline Unicode edits, layout, dialogs, image pixels
-and FPAS `using` cleanup on normal and exceptional exits. Both renderers must
-actually be selected.
-The opt-in publishing case restores the GUI package through a C# project
-reference and checks missing or unsupported RID diagnostics. It publishes and
-signs all five modes into the same owned directory. It verifies both renderers,
-the CUI asset and notice hashes, stale file cleanup and signature rejection
-after CUI library or notice tampering. Single-file and Native AOT run with only
-the executable present. The case verifies the extracted CUI file for single-file
-and checks that Native AOT neither imports nor extracts CUI.
+`GuiPublishingTests` uses the same gallery contract from a package-only
+consumer. It checks all five delivery modes, the bundled or transitive CUI
+assets, extraction for single-file, and static linking for Native AOT. The
+Linux X11 case sends native pointer, resize, Escape and window-close events
+to the gallery. Run GUI tests under Xvfb on headless Linux. Window tests skip
+on Linux without `DISPLAY`.
 
-Run the GUI suite under Xvfb on headless Linux; see the
-[binding reference](../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
-Window cases are skipped on Linux without `DISPLAY`. Encoding tests still run.
+The native suite also checks renderer and frame ownership, capture, weighted
+layout, scroll offsets, and native wakeup. The link-and-render test drives
+the copy button against a local clipboard callback, including repeated
+activation, confirmation expiry and retained focus. It also checks the native
+split button's distinct focus stops, menu selection and disabled input. The Win32 resize test
+checks live-resize callback registration and detachment.
 
-`GuiPublishingTests` packages Fpas.Ui.Mvu, Fpas.Ui and Fpas.Ui.Gui with a fresh SDK and
-the matching native binding. A package-only consumer runs the real gallery in
-all five delivery modes under software and OpenGL. It checks Unicode selection,
-controlled widgets, modal focus, scrolling, theme state, background completion
-and cancellation, resource removal and repeated public-session teardown.
-NativeAOT and single-file run from an executable-only directory without .NET
-host search. The test checks extraction and uses `dumpbin` on Windows and
-`readelf` on Linux to inspect native imports. On Windows it also checks for a
-C runtime conflict during NativeAOT linking. Capture checks cover the public
-owner-thread PNG operation and preserve the session on failure.
-
-The Linux X11 case uses XTest to send pointer input, Ctrl+A and typing, native
-resize, modal Escape and WM_DELETE_WINDOW close. Windows desktop acceptance
-drives the single-file and NativeAOT gallery with Win32 pointer and keyboard
-events, including Unicode input and modal Escape. Dragging the native window
-border preserves model and theme state. During shutdown, the window repaints
-the cached view while the worker and cancellation callback are held at gates,
-rejects the late result and closes after both gates are released. The other
-GUI input tests inject events through CUI. Native texture accounting and
-editor/image counts verify resource release across window sessions.
-
-## Shared widget contracts
-
-`WidgetContractTests` compiles [Fpas.Ui](../src/Fpas.Ui/README.md) as a
-standalone FPAS library and prepares one view under all three profiles.
-It checks typed cache reuse, invalidation and removal, and path-qualified
-diagnostics for incompatible units or extensions, duplicate IDs and keys,
-malformed tables, invalid selections and split graphemes.
+`FpasProjectTests` exercises project-reference delivery, native asset and
+notice copying, execution from a separate directory, and package publishing
+and signing. The probe presents a button through both renderers.
 
 ## Terminal UI
 
-Both hosts use the same [Fpas.Ui](../src/Fpas.Ui/README.md) tree. GuiHostTests
-compiles a portable view with the same model/update callbacks for both hosts
-and compares checkbox, editor, selection, tab and modal messages, values,
-focus commands and background-result delivery. It also runs the same view and
-ThemeFor callback through both hosts, verifies all light/dark accent palettes
-by native readback, custom palettes, logical fixed sizing and normalized growth.
-The terminal host retains its cell renderer and CUI-compatible allocation.
-The portable fixture also exercises sidebar focus and keyboard activation in
-both hosts. The native gallery changes pages by clicking its sidebar, and the
-shared preflight fixture checks duplicate keys across sections, unknown active
-keys and conflicts with generated focus IDs.
+`TuiGalleryTests` drives the real gallery over the headless control pipe at
+desktop and drawer sizes. It checks the approved pages, top-aligned sidebar,
+keyboard selection, busy and disabled buttons, the formatting group, the copy
+control, drawer dismissal, and sheet focus restoration. The Actions page checks
+split-button messages, keyboard menu navigation, outside dismissal, modal input
+and focus restoration. The gallery DAP test
+checks copy feedback through terminal input, resizes the private terminal with
+a sheet open, and dismisses the sheet with Enter.
 
-The compact gallery scenarios check sheet dismissal and focus restoration,
-blocked base input, and sidebar selection in both hosts. The packaged GUI
-consumer opens a sheet in each delivery mode. The terminal CUI fixture checks
-all four sheet edges and scrolls the body beneath the pinned header.
+The TUI gallery also checks hold progress, pointer cancellation, and exactly
+one confirmation on release. A release queued before the deadline stays
+early even if processed after it. The native link-and-render test checks
+short and complete holds through CUI keyboard and pointer input.
 
-The native icon-button case changes the icon and tooltip while focused and
-checks activation and busy/disabled input. The terminal CUI fixture checks
-the busy state, Space activation and the displayed shortcut hint. Both
-compact galleries open their drawer through an icon button.
+The terminal CUI fixture checks the four sheet edges, pinned header, button
+options and focus, button-group traversal, OSC 52 copy data, shared theme
+colors, and cell allocation. `TerminalBoundaryTests` builds it without GUI
+assets and checks the generated assembly references.
 
-The CUI terminal fixture covers button loading, literal labels, leading and
-trailing terminal glyphs, focus colors, shortcut hints, disabled activation,
-and horizontal width inside rows and columns. The native button test checks
-stable identity, all three CUI sizes, fixed width and busy input. Shared
-preflight rejects invalid button sizes, text and width measures.
-
-The native button-group case checks adjacent bounds and standalone styling
-after the group closes. Both GUI gallery renderers exercise independent
-format toggles. The CUI terminal fixture checks the shared frame, cell
-dividers, disabled-member Tab traversal and individual activation. Shared
-preflight rejects non-button children and duplicate member IDs.
-
-The native link-and-render fixture drives the copy button against an isolated
-clipboard callback, including repeated copy, confirmation expiry and retained
-focus. The terminal CUI contract checks the encoded OSC 52 payload, notification,
-stable geometry and idle expiry. Both gallery renderer checks present the
-native copy button without writing to the desktop clipboard.
-
-The terminal CUI fixture checks proportional shrinkage, bounded and fractional
-growth, fixed overflow, logical dimensions on each axis, inherited styles and
-alpha compositing against the containing surface.
-
-The shared terminal fixture checks disabled collection focus, deferred checkbox
-mapping, Space/Enter activation, disabled-row navigation, rejected controlled
-edits, host-owned scrollbar options, fresh routing with reused frames and
-preflight diagnostics before drawing. TerminalBoundaryTests compiles and runs
-the terminal libraries with an unavailable GUI build command, no CUI files,
-and checks that their assembly references contain no GUI dependency.
-
-`HeadlessTuiTests` and `TuiGalleryTests` exercise the [TUI host](../src/Fpas.Ui.Tui/README.md), including
-frame updates, queue ordering, stale results after replacing an effect, delivery
-of a worker failure on a later step, and joining cancelled workers before exit.
-The effect fixture drives the same update function in the TUI and directly
-through [Fpas.Ui.Mvu](../src/Fpas.Ui.Mvu/README.md). It holds a worker before its first
-await and holds cancellation callbacks during replacement and explicit cancel,
-then checks that another button can still update the TUI. It also checks
-release of a blocked writer and observes callback completion and failure at
-shutdown.
-It also checks initial and resized viewports in the gallery, canvas size
-notifications and the priority of typed characters in a focused editor.
-The gallery verifies that an empty text field shows its placeholder after
-focus and theme changes and after clearing a pasted value.
-The headless fixture checks themed dividers, title clipping at a wide glyph
-and initial focus on the adjacent button.
-Status line coverage checks formatting from shortcut bindings, complete
-hints at narrow widths and the switch to the overlay's Escape hint.
-The gallery checks themed button variants, disabled, hovered and focused
-appearance, live palette changes and activation of the destructive variant.
-The multiline fixture checks grapheme-safe deletion, newline normalization,
-caret visibility on resize and navigation without an edit message. The
-gallery DAP test restores a document's model-owned selection, follows its caret
-after a document switch and pastes several lines through the private terminal.
-The gallery DAP test resizes the private terminal across the layout threshold
-with a modal overlay open and closes it with Enter through the terminal.
-The headless gallery checks the overlay caps, body scrolling and the
-footer-only layout on a short terminal. The Mandelbrot DAP test drives
-the actual explorer with terminal keyboard and mouse input, then resizes
-the terminal and checks the new RGB image.
-The widget gallery runs through the headless control pipe and in a private
-debug terminal. Its tests check that focus and activation are independent,
-that an update can focus a newly displayed control, and that closing the
-overlay restores focus after a resize. They also check selection after
-changing themes. The tab checks cover keyboard and mouse selection,
-disabled and missing keys, narrow terminals, and focus when a panel
-is removed. The table checks cover fixed headers, resizing columns,
-row activation, and clipping wide glyphs at column edges.
-`TerminalModeTests` reads Win32 input and output modes or Linux termios state
-before, during and after an interactive run in a private terminal. It checks
-exact restoration after both normal exit and a native output failure.
+`HeadlessTuiTests` checks frame updates, bounded input, cached views, and
+effect completion, cancellation and cleanup. `TerminalModeTests` checks
+restoration of native terminal modes after exit and output failure.
 
 ## Language and metadata
 

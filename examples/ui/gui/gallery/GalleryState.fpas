@@ -1,10 +1,20 @@
 unit GuiGallery.State;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L,
-  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes;
 
-// Independent formatting actions in the button-group preview.
+// Pages from the CUI gallery with accepted FPAS previews.
+public type Page = enum: byte
+  // Gallery introduction.
+  Overview;
+  // Buttons and their related actions.
+  Buttons;
+  // The model-controlled sheet.
+  Overlays;
+  // Related actions from the extended gallery.
+  Actions;
+end enum;
+
+// Independent actions in the button group.
 public type TextFormat = enum: byte
   // Draw text in bold.
   Bold = 1;
@@ -14,197 +24,97 @@ public type TextFormat = enum: byte
   Underline = 4;
 end enum;
 
-// Retained gallery state, independent of viewport and theme.
+// Retained gallery and preview state.
 public type Model = record
-  // Navigation key.
-  public Page: string := 'controls';
-  // Native color theme.
+  // Active navigation destination.
+  public Active: Page := Page.Overview;
+  // Whether the gallery uses the dark palette.
   public Dark: bool := false;
-  // Counter value.
-  public Count: int := 0;
-  // Model-owned busy state for the button preview.
+  // Whether the save action is busy.
   public ButtonLoading: bool := false;
-  // Model-owned selected button appearance.
-  public ButtonSelected: bool := false;
-  // Enabled formatting actions from the button-group preview.
+  // Active formatting actions.
   public Formats: int := 0;
-  // Controlled checkbox.
-  public Checked: bool := false;
-  // Single-line document.
-  public Text: string := 'Pascal λ 👋';
-  // Single-line selection.
-  public Position: Ed.EditorPosition := new Ed.EditorPosition();
-  // Multiline document.
-  public Document: string := 'First line';
-  // Multiline selection.
-  public DocumentPosition: Ed.EditorPosition := new Ed.EditorPosition();
-  // Collection selection.
-  public Selected: string? := 'alpha';
-  // Active tab.
-  public Tab: string? := 'one';
-  // Overlay visibility.
-  public Modal: bool := false;
-  // Compact navigation sheet visibility.
+  // Completed holds shown by the gallery preview.
+  public HoldCount: int := 0;
+  // Last action from either split button.
+  public SplitResult: string := '';
+  // Whether the compact navigation drawer is open.
   public Drawer: bool := false;
-  // Background operation status.
-  public Status: string := 'Ready';
-  // Controlled scroll request.
-  public Scroll: L.ScrollPosition := L.ScrollPosition.Start;
+  // Whether the sheet preview is open.
+  public Sheet: bool := false;
 end record;
 
-// All application and preview messages.
+// Actions available to the gallery.
 public type Msg = variant
-  Navigate(Page: string);
+  // Select a navigation destination.
+  Show(Value: Page);
+  // Switch the gallery's palette.
   Theme;
-  Increment;
+  // Activate a button that has no retained effect.
+  Preview;
+  // Change the save action's busy state.
   SetButtonLoading(Value: bool);
-  ToggleButton;
+  // Toggle one formatting action.
   ToggleFormat(Style: TextFormat);
-  Check(Value: bool);
-  Edit(Value: Ed.TextEdit);
-  Move(Value: Ed.EditorPosition);
-  EditDocument(Value: Ed.TextEdit);
-  MoveDocument(Value: Ed.EditorPosition);
-  Select(Key: string);
-  Activate(Key: string);
-  Tab(Key: string);
-  Open;
-  Close;
+  // Record one completed hold.
+  ConfirmHold;
+  // Record a primary or menu action.
+  SplitChoice(Value: string);
+  // Open or close the compact navigation drawer.
   SetDrawer(Open: bool);
-  Start;
-  Cancel;
-  Done;
-  Failed(Text: string);
-  Scroll(Value: L.ScrollChange);
-  Focus(Id: string);
-  Quit;
+  // Open or close the sheet preview.
+  SetSheet(Open: bool);
 end variant;
 
-async function Work(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
-begin
-  await Tasks.Task.Delay(1200, Cancellation).ConfigureAwait(false);
-  await Post(Msg.Done).ConfigureAwait(false);
-end function;
-
-// Applies one message and returns declarative effects.
+// Resolves the palette for the current gallery appearance.
 //
 // ## Parameters
-// - `Current`: Previous model.
-// - `Message`: Typed input.
-//
+// - `State`: Current gallery model.
 // ## Returns
-// Next model and commands.
-public function Update(Current: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+// The light or dark CUI palette.
+public function ThemeFor(State: Model): Themes.Theme;
 begin
-  var Next: Model := Current;
-  var Commands: array of Mvu.Command<Msg> := [];
-  case Message of
-    when Msg.Navigate(const Page: string):
-      Next := Current with
-        Page := Page;
-        Drawer := false;
-      end with;
-    when Msg.Theme:
-      Next := Current with
-        Dark := not Current.Dark;
-      end with;
-    when Msg.Increment:
-      Next := Current with
-        Count := Current.Count + 1;
-      end with;
-    when Msg.SetButtonLoading(const Value: bool):
-      Next := Current with
-        ButtonLoading := Value;
-      end with;
-    when Msg.ToggleButton:
-      Next := Current with
-        ButtonSelected := not Current.ButtonSelected;
-      end with;
-    when Msg.ToggleFormat(const Style: TextFormat):
-      Next := Current with
-        Formats := Current.Formats xor cast<int>(Style);
-      end with;
-    when Msg.Check(const Value: bool):
-      Next := Current with
-        Checked := Value;
-      end with;
-    when Msg.Edit(const Value: Ed.TextEdit):
-      Next := Current with
-        Text := Value.Text;
-        Position := Value.Position;
-      end with;
-    when Msg.Move(const Value: Ed.EditorPosition):
-      Next := Current with
-        Position := Value;
-      end with;
-    when Msg.EditDocument(const Value: Ed.TextEdit):
-      Next := Current with
-        Document := Value.Text;
-        DocumentPosition := Value.Position;
-      end with;
-    when Msg.MoveDocument(const Value: Ed.EditorPosition):
-      Next := Current with
-        DocumentPosition := Value;
-      end with;
-    when Msg.Select(const Key: string):
-      Next := Current with
-        Selected := Key;
-      end with;
-    when Msg.Activate(const Key: string):
-      Next := Current with
-        Status := 'Activated: ' + Key;
-      end with;
-    when Msg.Tab(const Key: string):
-      Next := Current with
-        Tab := Key;
-      end with;
-    when Msg.Open:
-      Next := Current with
-        Modal := true;
-        Drawer := false;
-      end with;
-    when Msg.Close:
-      Next := Current with
-        Modal := false;
-      end with;
-    when Msg.SetDrawer(const Open: bool):
-      Next := Current with
-        Drawer := Open;
-      end with;
-    when Msg.Start:
-      Next := Current with
-        Status := 'Working';
-      end with;
-      Commands := [
-        Mvu.StartBackground<Msg>(
-          'gallery-work',
-          Work,
-          function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
-        )
-      ];
-    when Msg.Cancel:
-      Next := Current with
-        Status := 'Cancelled';
-      end with;
-      Commands := [Mvu.CancelBackground<Msg>('gallery-work')];
-    when Msg.Done:
-      Next := Current with
-        Status := 'Completed';
-      end with;
-    when Msg.Failed(const Text: string):
-      Next := Current with
-        Status := Text;
-      end with;
-    when Msg.Scroll(const Value: L.ScrollChange):
-      Next := Current with
-        Scroll := Value.Position;
-      end with;
-    when Msg.Focus(const Id: string):
-      Commands := [Mvu.Focus<Msg>(Id)];
-    when Msg.Quit:
-      Commands := [Mvu.Exit<Msg>()];
-  end case;
+  return if State.Dark then Themes.Dark() else Themes.Light() end if;
+end function;
 
-  return new Mvu.Transition<Model, Msg>(Next, Commands);
+// Applies a gallery action.
+//
+// ## Parameters
+// - `State`: Current gallery model.
+// - `Message`: Action to apply.
+// ## Returns
+// The next model and any host commands.
+public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Show(const Value: Page): State with
+      Active := Value;
+      Drawer := false;
+      Sheet := false;
+    end with;
+    when Msg.Theme: State with
+      Dark := not State.Dark;
+    end with;
+    when Msg.SetButtonLoading(const Value: bool): State with
+      ButtonLoading := Value;
+    end with;
+    when Msg.ToggleFormat(const Style: TextFormat): State with
+      Formats := State.Formats xor cast<int>(Style);
+    end with;
+    when Msg.SplitChoice(const Value: string): State with
+      SplitResult := Value;
+    end with;
+    when Msg.ConfirmHold: State with
+      HoldCount := State.HoldCount + 1;
+    end with;
+    when Msg.SetDrawer(const Open: bool): State with
+      Drawer := Open;
+    end with;
+    when Msg.SetSheet(const Open: bool): State with
+      Sheet := Open;
+    end with;
+    when Msg.Preview: State;
+  end case;
+  return new Mvu.Transition<Model, Msg>(Next, []);
 end function;
 end unit;

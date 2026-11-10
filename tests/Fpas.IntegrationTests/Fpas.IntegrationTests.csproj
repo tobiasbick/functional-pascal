@@ -29,17 +29,9 @@
     <None Include="../../src/Fpas.Ui.Tui/**/*.fpas" Exclude="../../src/Fpas.Ui.Tui/bin/**/*;../../src/Fpas.Ui.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui/**/*.fpas" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/ui/WidgetContract.fpas" Link="Fixtures/ui/WidgetContract.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/ui/tui/filter-list/main.fpas" Link="Fixtures/tui/example.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/ui/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/SharedContract.fpas" Link="Fixtures/tui/shared.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/CanvasInputContract.fpas" Link="Fixtures/tui/canvas-input.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/TabsContract.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/TableContract.fpas" Link="Fixtures/tui/table.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/MultilineContract.fpas" Link="Fixtures/tui/multiline.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/basics/units/**/*.fpas;../../examples/basics/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
@@ -64,7 +56,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/ui/lib" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

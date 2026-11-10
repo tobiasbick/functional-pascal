@@ -16,7 +16,8 @@ begin
     if Size.Height < 400 then L.SizeClass.Compact
       elsif Size.Height < 900 then L.SizeClass.Regular
       else L.SizeClass.Expanded
-      end if
+      end if,
+    cast<int>(Size.Width), cast<int>(Size.Height)
   );
 end function;
 

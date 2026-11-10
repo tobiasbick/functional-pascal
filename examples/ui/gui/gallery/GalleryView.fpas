@@ -1,101 +1,219 @@
 unit GuiGallery.View;
 
 uses
-  GuiGallery.State as State, GuiGallery.Previews as Preview, Fpas.Ui.Elements as E,
+  GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.SplitButton as SplitButton, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
-  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, System as Sys;
+  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, System as Sys;
 
-function Destination(Key: string; Label: string; Icon: int): N.Item<State.Msg>;
+const SidebarWidth: int := 240;
+const DrawerBreakpoint: int := 760;
+
+function Gap(Units: int): L.Spacing;
 begin
+  return L.Spacing.Fixed(L.Measure.Logical(Units));
+end function;
+
+function Fixed(Units: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Units)));
+end function;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Space(Units: int): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(E.Column<State.Msg>(), Fixed(Units));
+end function;
+
+function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
+begin
+  const Label: string := Page.ToString();
   return new N.Item<State.Msg>(
-    Key,
+    Label.ToLowerInvariant(),
     Label,
-    State.Msg.Navigate(Key),
+    State.Msg.Show(Page),
     Icon := Sys.Char.ConvertFromUtf32(Icon)
   );
 end function;
 
-// Builds responsive navigation, the active preview and the model-owned overlay.
+function Navigation(Page: State.Page): E.Element<State.Msg>;
+begin
+  return N.Sidebar<State.Msg>(
+    'navigation',
+    [
+      new N.Section<State.Msg>(
+        'Components', [
+          Destination(State.Page.Overview, $E1C1), Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Overlays, $E529)
+        ]
+      ),
+      new N.Section<State.Msg>('Extended', [Destination(State.Page.Actions, $E09A)])
+    ],
+    Page.ToString().ToLowerInvariant()
+  );
+end function;
+
+function ThemeButton(Model: State.Model): E.Element<State.Msg>;
+begin
+  return B.Button<State.Msg>(
+    'theme',
+    if Model.Dark then 'Light' else 'Dark' end if,
+    State.Msg.Theme
+  );
+end function;
+
+function Sidebar(Model: State.Model; Pages: E.Element<State.Msg>): E.Element<State.Msg>;
+begin
+  return E.Styled<State.Msg>(
+    E.Column<State.Msg>(
+      new L.Flow(Padding := Gap(12), Gap := Gap(2), Align := L.Alignment.Stretch),
+      E.Column<State.Msg>(
+        new L.Flow(Padding := Gap(8)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('FPas CUI'), S.Role.Heading)
+      ),
+      Space(11),
+      E.Size<State.Msg>(
+        E.ScrollView<State.Msg>('navigation-scroll', Pages, ShowScrollbar := false),
+        Fill
+      ),
+      E.Column<State.Msg>(new L.Flow(Padding := Gap(8)), ThemeButton(Model))
+    ),
+    S.Role.MutedPanel
+  );
+end function;
+
+function Preview(Model: State.Model; Wide: bool): E.Element<State.Msg>;
+begin
+  case Model.Active of
+    when State.Page.Overview:
+      return E.Column<State.Msg>(
+        new L.Flow(Gap := Gap(14)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('Components for C'), S.Role.PageTitle),
+        E.Styled<State.Msg>(
+          E.Text<State.Msg>('Explore the CUI components available in Functional Pascal.'),
+          S.Role.Secondary
+        ),
+        B.Button<State.Msg>(
+          'browse', 'Browse components', State.Msg.Show(State.Page.Buttons),
+          new B.Options(
+            Variant := S.ButtonVariant.Primary,
+            IconRight := Sys.Char.ConvertFromUtf32($E049)
+          )
+        )
+      );
+    when State.Page.Actions:
+      return SplitButton.View(Model);
+    when State.Page.Buttons:
+      return Buttons.View(Model, Wide);
+    when State.Page.Overlays:
+      return E.Column<State.Msg>(
+        new L.Flow(Gap := Gap(8)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('Sheet'), S.Role.Heading),
+        E.Styled<State.Msg>(
+          E.Text<State.Msg>('Esc or a click outside closes it. Focus stays inside.'),
+          S.Role.Secondary
+        ),
+        E.Styled<State.Msg>(
+          E.Row<State.Msg>(
+            new L.Flow(Padding := Gap(16)),
+            B.Button<State.Msg>(
+              'sheet-open', 'Open sheet', State.Msg.SetSheet(true),
+              new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
+            )
+          ),
+          S.Role.OutlinedPanel
+        )
+      );
+    else
+      raise new Sys.InvalidOperationException('Unknown gallery page.');
+  end case;
+end function;
+
+function Content(Model: State.Model; Compact: bool; Inset: int; Wide: bool): E.Element<State.Msg>;
+begin
+  const PreviewContent: E.Element<State.Msg> := Preview(Model, Wide);
+  const Gaps: L.Flow := new L.Flow(Gap := Gap(20));
+  const Titled: E.Element<State.Msg> := if Model.Active = State.Page.Overview then PreviewContent
+    else E.Column<State.Msg>(
+      Gaps,
+      E.Column<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(Model.Active.ToString()), S.Role.PageTitle),
+        Space(8)
+      ),
+      PreviewContent
+    )
+    end if;
+  const Header: E.Element<State.Msg> := E.Row<State.Msg>(
+    new L.Flow(Gap := Gap(8), Align := L.Alignment.Center),
+    Icons.IconButton<State.Msg>(
+      'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', State.Msg.SetDrawer(true)
+    ),
+    E.Text<State.Msg>('FPas CUI')
+  );
+  var Page: E.Element<State.Msg> := Titled;
+  if Compact then
+    Page := E.Column<State.Msg>(Gaps, Header, Titled);
+  end if;
+
+  return E.ScrollView<State.Msg>(
+    'main-' + Model.Active.ToString().ToLowerInvariant(),
+    E.Row<State.Msg>(
+      new L.Flow(Align := L.Alignment.Start),
+      Space(Inset),
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(
+          Space(if Compact then 12 else 36 end if),
+          Page,
+          Space(64)
+        ),
+        Fill
+      ),
+      Space(Inset)
+    )
+  );
+end function;
+
+// Builds the graphical gallery with CUI's sidebar, centered content and drawer.
 //
 // ## Parameters
-// - `Model`: Retained application state.
-// - `Viewport`: Current portable size classes.
-//
+// - `Model`: Retained gallery state.
+// - `Viewport`: Measured window size and responsive classes.
 // ## Returns
 // The complete gallery view.
 public function Build(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
 begin
-  const Navigation: E.Element<State.Msg> := N.Sidebar<State.Msg>(
-    'navigation', [
-      new N.Section<State.Msg>(
-        'Components', [
-          Destination('controls', 'Controls', $E1B4),
-          Destination('editors', 'Editors', $E198),
-          Destination('collections', 'Collections', $E0AD)
-        ]
-      ),
-      new N.Section<State.Msg>(
-        'Extended', [
-          Destination('layout', 'Layout and scrolling', $E1C1),
-          Destination('graphics', 'Images and canvas', $E0F6),
-          Destination('effects', 'Effects and modal', $E529)
-        ]
-      )
-    ],
-    Model.Page
-  );
-  const Content: E.Element<State.Msg> := Preview.View(Model);
-  const Compact: bool := Viewport.Width = L.SizeClass.Compact;
-  const Body: E.Element<State.Msg> := if Compact then Content
-    else E.Row<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Loose),
-      E.Size<State.Msg>(
-        E.ScrollView<State.Msg>('navigation-scroll', Navigation),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(190)))
-      ),
-      E.Size<State.Msg>(Content, new L.Flex(Basis := L.Extent.Fill))
-    )
+  const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then 600
+    else 1240
     end if;
-  const Actions: E.Element<State.Msg> := E.Row<State.Msg>(
-    new L.Flow(Gap := L.Spacing.Normal),
-    E.Button<State.Msg>('theme', 'Switch theme', State.Msg.Theme),
-    E.Button<State.Msg>('quit', 'Close', State.Msg.Quit)
+  const Compact: bool := Width < DrawerBreakpoint;
+  const Available: int := if Compact then Width else Width - SidebarWidth - 1 end if;
+  const Inset: int := (if Compact then 16 else 40 end if) + Sys.Math.Max(
+    0,
+    (Available - 920) div 2
   );
-  const Header: E.Element<State.Msg> := if Compact then E.Row<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Normal),
-      Icons.IconButton<State.Msg>(
-        'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', State.Msg.SetDrawer(true)
-      ),
-      Actions
-    )
-    else Actions
-    end if;
-  const Page: E.Element<State.Msg> := E.Column<State.Msg>(
-    new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal),
-    E.Styled<State.Msg>(E.Text<State.Msg>('FPAS graphical widget gallery'), S.Role.Heading),
-    Header,
-    E.Size<State.Msg>(Body, new L.Flex(Basis := L.Extent.Fill))
-  );
-  const Base: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
-      'drawer', Page, Navigation, Model.Drawer,
-      new Sheets.Options('Components', Edge := Sheets.Side.Left, Size := 280),
+  const Pages: E.Element<State.Msg> := Navigation(Model.Active);
+  const Main: E.Element<State.Msg> := Content(Model, Compact, Inset, Available - 2 * Inset >= 600);
+  const Body: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
+      'drawer',
+      Main,
+      E.Column<State.Msg>(new L.Flow(Gap := Gap(8)), Pages, ThemeButton(Model)),
+      Model.Drawer,
+      new Sheets.Options('FPas CUI', Edge := Sheets.Side.Left, Size := 280),
       State.Msg.SetDrawer(false)
     )
-    else Page
+    else E.Size<State.Msg>(
+      E.Row<State.Msg>(
+        new L.Flow(Align := L.Alignment.Stretch),
+        E.Size<State.Msg>(Sidebar(Model, Pages), Fixed(SidebarWidth)),
+        E.Size<State.Msg>(E.Styled<State.Msg>(E.Column<State.Msg>(), S.Role.Divider), Fixed(1)),
+        E.Size<State.Msg>(Main, Fill)
+      ),
+      Fill
+    )
     end if;
-  if not Model.Modal then
-    return Base;
-  end if;
-
-  return E.Overlay<State.Msg>(
-    'dialog', Base,
-    E.Column<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Normal),
-      E.Text<State.Msg>('Model-owned modal'),
-      E.Text<State.Msg>('Escape or Close restores the previous focus.'),
-      E.Button<State.Msg>('modal-close', 'Close modal', State.Msg.Close)
-    ),
-    'modal-close', function(): State.Msg => State.Msg.Close
+  return Sheets.Sheet<State.Msg>(
+    'sheet', Body, E.Text<State.Msg>('Choose what we tell you about.'),
+    Model.Sheet, new Sheets.Options('Notifications'), State.Msg.SetSheet(false)
   );
 end function;
 end unit;

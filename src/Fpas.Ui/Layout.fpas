@@ -85,6 +85,10 @@ public type Viewport = record
   public Width: SizeClass;
   // The size class for available height.
   public Height: SizeClass;
+  // Measured width in portable logical units, when known.
+  public LogicalWidth: int? := null;
+  // Measured height in portable logical units, when known.
+  public LogicalHeight: int? := null;
 end record;
 
 // A model-owned vertical scroll request.

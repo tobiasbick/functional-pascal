@@ -95,14 +95,9 @@ CUI. NativeAOT publication needs the .NET platform's native toolchain.
 See the [GUI handbook](../../docs/pascal/libraries/gui.md) for the application path,
 publishing modes and platform limits.
 
-GuiHostTests builds all three FPAS libraries, the counter and gallery through a
-fresh SDK, then exercises CUI input and semantic snapshots under both renderers.
-Coverage includes model reconciliation, cache/resize/theme, focus/modal restoration,
-background completion, gated worker/cancellation responsiveness, closing redraws,
-owner enforcement, failure cleanup and resource removal. CuiHostLayoutTests checks
-basis/grow/shrink/bounds; CuiHostResourceTests uses native texture accounting across
-replacement and repeated sessions. GuiPublishingTests restores the complete GUI
-through packages and exercises the gallery in all five publish modes, including
-executable-only NativeAOT and single-file delivery. The
-[coverage map](../../tests/coverage.md#native-gui) describes the separate OS
-input checks on Windows and Linux.
+GuiHostTests builds the FPAS libraries and the gallery through a fresh SDK,
+then checks the gallery's navigation, button examples, theme and modal sheet
+with software and OpenGL. CuiHostLayoutTests checks native allocation and
+scroll geometry. GuiPublishingTests runs the gallery from a package-only
+consumer in all five publish modes, including executable-only NativeAOT and
+single-file delivery. See the [coverage map](../../tests/coverage.md#native-gui).

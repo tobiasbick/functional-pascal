@@ -21,11 +21,6 @@
     <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/*.fpasproj;../../src/Fpas.Ui/README.md"
           Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
           Link="Fixtures/host/src/Fpas.Ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Tui/**/*.fpas;../../src/Fpas.Ui.Tui/*.fpasproj"
-          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
-          Link="Fixtures/host/src/Fpas.Ui.Tui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/ui/gui/counter/*.fpas;../../examples/ui/gui/counter/*.fpasproj"
-          Link="Fixtures/host/examples/ui/gui/counter/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/*.fpas;../../examples/ui/gui/gallery/*.fpasproj"
           Link="Fixtures/host/examples/ui/gui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
@@ -37,6 +32,5 @@
   </ItemGroup>
   <Target Name="RemoveStaleHostFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
     <RemoveDir Directories="$(OutputPath)Fixtures/host/examples" />
-    <RemoveDir Directories="$(OutputPath)Fixtures/host/src/Fpas.Ui.Tui" />
   </Target>
 </Project>

@@ -1,6 +1,8 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton,
+  Fpas.Ui.HoldButtons as Holds,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
   Fpas.Ui.Gui.Internal.Controls as Widgets, Fpas.Ui.Gui.Internal.Collections as Choices,
   Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
@@ -11,6 +13,7 @@ uses
   Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button,
   Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup,
   Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton,
+  Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton,
   Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton,
   Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys,
   System.Collections.Generic as Generic;
@@ -248,6 +251,18 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool
       ):
         CopyButton.Draw<TMsg>(Current, Id, Text, OnCopied, Enabled);
+      when E.Element.HoldAction(
+        const Id: string,
+        const Label: string,
+        const Message: TMsg,
+        const Settings: Holds.Options
+      ):
+        HoldButton.Draw<TMsg>(Current, Id, Label, Message, Settings);
+      when E.Element.SplitAction(
+        const Id: string, const Label: string, const Message: TMsg,
+        const Items: array of Split.Item<TMsg>, const Settings: Split.Options
+      ):
+        SplitButton.Draw<TMsg>(Current, Id, Label, Message, Items, Settings);
       when E.Element.ActionList(
         const Id: string,
         const Items: array of Ch.ListItem<TMsg>,

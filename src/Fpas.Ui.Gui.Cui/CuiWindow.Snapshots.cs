@@ -35,9 +35,14 @@ public sealed partial class CuiWindow
     public void TrackLastControl(string id)
     {
         CheckFrame();
+        TrackControl(id, NativeMethods.LastNode(context));
+    }
+
+    private void TrackControl(string id, int node)
+    {
         ArgumentException.ThrowIfNullOrEmpty(id);
-        trackedNodes.Add(id, NativeMethods.LastNode(context));
-        uint key = NativeMethods.NodeKey(context, trackedNodes[id]);
+        trackedNodes.Add(id, node);
+        uint key = NativeMethods.NodeKey(context, node);
         if (controlKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
         controlKeys[id] = key;
     }
@@ -47,6 +52,7 @@ public sealed partial class CuiWindow
     public void ForgetControl(string id)
     {
         CheckOpen();
+        ForgetSplitButton(id);
         if (controlKeys.Remove(id, out uint key)) NativeMethods.Forget(context, key);
     }
 

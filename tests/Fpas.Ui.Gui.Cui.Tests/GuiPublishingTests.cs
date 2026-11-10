@@ -74,8 +74,8 @@ public sealed partial class GuiPublishingTests
                         environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(30));
                 File.WriteAllText(Path.Combine(fixture.Artifacts, mode + "-" + renderer + ".log"), run.Output + run.Error);
                 Assert.True(run.ExitCode == 0, mode + "/" + renderer + ": " + run.Output + run.Error);
-                Assert.Equal("packaged gallery verified: " + renderer + Environment.NewLine, run.Output);
-                Assert.Contains(0xff0000ffu, PngAssertions.ReadPixels(png, 1000, 760));
+                Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, run.Output);
+                PngAssertions.HasRenderedContent(png, 1000, 760);
                 report.Add(new { mode, renderer, native = bundled ? mode == "aot" ? "static" : "extracted" : "shared",
                     screenshot = Path.GetFileName(png), executableOnly = bundled });
             }

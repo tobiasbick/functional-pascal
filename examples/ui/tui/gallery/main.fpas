@@ -1,4 +1,4 @@
-program WidgetGallery;
+program TuiWidgetGallery;
 
 uses Gallery.State as G, Gallery.View as Views, Fpas.Ui.Tui.Application as App, System as Sys, System.Threading as Threads;
 

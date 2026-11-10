@@ -93,9 +93,9 @@ button variants over explicit terminal colors. Explicit cell canvases can
 convert a palette color with Themes.Rgb(Color, OpaqueBackground).
 
 `Layout.Viewport` expresses width and height independently as compact, regular
-or expanded. The host maps its measurements to these classes. Applications
-that depend on exact rows, cells or GUI dimensions can choose separate views
-with the same model and update function. `TerminalExtensions.Views.Viewport`
+or expanded. The host also supplies `LogicalWidth` and `LogicalHeight` when it
+knows the measured size. The terminal maps a column to 8 logical units and a row
+to 16. `TerminalExtensions.Views.Viewport`
 resolves a terminal subtree from exact `Terminal.Viewport` columns and rows.
 The terminal host supplies this context to Prepare before any drawing.
 
@@ -187,11 +187,11 @@ The existing `Elements.Button` constructor uses the same host implementations.
 ## Button group
 
 `Fpas.Ui.ButtonGroups.ButtonGroup` takes direct button elements in display
-order, including icon and copy buttons. It puts them in one horizontal frame with a
+order, including icon, copy and hold buttons. It puts them in one horizontal frame with a
 divider between each pair. Default buttons use the ghost appearance inside
 the group. Explicit variants and each button's own state and message still
 apply. The group has no focus stop of its own. Tab visits enabled members
-in order, and click, Enter or Space activates the individual member.
+in order. Each member keeps its own activation gesture.
 
 GUI draws the native CUI group. TUI uses a cell outline and reserves one
 column for each divider.
@@ -221,6 +221,39 @@ GUI uses CUI's platform clipboard provider. TUI sends the text as an OSC 52
 write to the clipboard of the connected terminal. The terminal must support
 and allow this operation. TUI feedback confirms that the request was sent.
 Headless TUI sessions display the button disabled when no provider is attached.
+
+## Hold to confirm
+
+`Fpas.Ui.HoldButtons.HoldButton` takes a stable ID, a literal caption and a
+message. Its options select a positive duration in milliseconds, the variant,
+enabled state and optional GUI and terminal icons. The default is 1,200 ms
+and the destructive variant.
+
+GUI uses CUI's fill animation and proposes the message once when a mouse,
+Space or Enter hold completes. TUI fills the button in cells and confirms on
+left-button release over the same control after the required duration. Moving
+off the control or releasing early cancels the hold. Terminal key input does
+not carry key release, so a tap, repeated key presses or a synthetic click
+cannot confirm this action.
+
+## Split button
+
+`Fpas.Ui.SplitButtons.SplitButton` takes a stable main-action ID, a literal
+caption, its message and a nonempty array of keyed menu items. Each item has
+a caption, message and optional GUI and terminal icons. Options set the
+button variant, size, main icon and enabled state. Primary is the default.
+
+Tab visits the main action and the chevron separately. Click, Enter or Space
+activates the focused half. Down on the chevron opens the menu. Up and Down
+move through its actions, Enter chooses, and Escape or an outside click
+dismisses it. Closing returns keyboard focus to the trigger. The host owns
+menu visibility, and choosing an item proposes its message once.
+
+Use `SplitButtons.MenuId(Id)` to request chevron focus and
+`SplitButtons.ItemId(Id, Key)` to inspect an item. GUI draws CUI's native
+popup. TUI places a cell menu against the trailing edge of the split button
+and confines input to it while open. Long terminal menus support wheel and
+Page Up/Page Down scrolling.
 
 ## Text editing and scrolling
 

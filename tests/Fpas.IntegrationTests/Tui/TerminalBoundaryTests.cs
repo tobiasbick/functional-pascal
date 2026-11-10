@@ -10,7 +10,7 @@ public sealed class TerminalBoundaryTests
     public async Task Terminal_libraries_build_and_execute_without_GUI_assets_or_toolchain()
     {
         using var target = new Debuggee("terminal-boundary");
-        await TuiFixture.Compile(target, "shared.fpas");
+        await TuiFixture.Compile(target, "cui.fpas");
         foreach (var file in new[] { "Fpas.Ui.Tui.dll", "Fpas.Ui.dll", "Fpas.Ui.Mvu.dll", "Fpas.Processes.dll" })
         {
             using var stream = File.OpenRead(target.FilePath(file));
@@ -23,6 +23,6 @@ public sealed class TerminalBoundaryTests
         }
         Assert.DoesNotContain(Directory.GetFiles(target.DirectoryPath, "*", SearchOption.AllDirectories),
             path => Path.GetFileName(path).Contains("cui", StringComparison.OrdinalIgnoreCase));
-        Assert.Equal("shared terminal contracts verified\n", await target.Run());
+        Assert.Equal("CUI terminal contracts verified\n", await target.Run());
     }
 }

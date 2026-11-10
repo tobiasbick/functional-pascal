@@ -1,0 +1,195 @@
+unit Fpas.Ui.Tui.Internal.Widgets.SplitButton;
+
+uses
+  Fpas.Ui.SplitButtons as Split, Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Button as Button,
+  Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  System as Sys, System.Collections.Generic as C;
+
+// Owns the one open split-button menu in a terminal session.
+public type State = record
+  // Current menu ID, or an empty string.
+  public Id: function(): string;
+  // Toggles the requested menu and closes any previous one.
+  public Toggle: procedure(string);
+  // Closes the current menu.
+  public Close: procedure();
+end record;
+
+// Creates session-owned menu visibility.
+//
+// ## Returns
+// A closed menu tracker.
+public function Create(): State;
+  procedure Toggle(Id: string);
+  begin
+    Current := if Current = Id then '' else Id end if;
+  end procedure;
+begin
+  var Current: string := '';
+  return new State(
+    function(): string => Current, Toggle, procedure() begin
+      Current := '';
+    end procedure
+  );
+end function;
+
+type Trigger<TMsg> = record implements A.IActivatable<TMsg>
+  public Id: string;
+  public Menus: State;
+
+  public function Activate(): A.Result<TMsg>;
+  begin
+    self.Menus.Toggle(self.Id);
+    return A.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+type Choice<TMsg> = record implements A.IActivatable<TMsg>
+  public Message: TMsg;
+  public Close: procedure();
+
+  public function Activate(): A.Result<TMsg>;
+  begin
+    self.Close();
+    return A.Result<TMsg>.Send(self.Message);
+  end function;
+end record;
+
+// Lowers the two focus stops and their host-owned popup.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Main action identity.
+// - `Label`: Main caption.
+// - `Message`: Main action message.
+// - `Items`: Ordered keyed menu actions.
+// - `Settings`: Shared appearance and input options.
+// - `Menus`: Session's popup tracker.
+// - `Theme`: Resolved terminal theme.
+// - `Style`: Inherited cell colors.
+// ## Returns
+// Joined button halves and an anchored popup when open.
+public function Lower<TMsg>(
+  Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>;
+  Settings: Split.Options; Menus: State; Theme: Th.Theme; Style: T.Style
+): E.Element<TMsg>;
+begin
+  const Menu: string := Split.MenuId(Id);
+  if not Settings.Enabled and Menus.Id() = Menu then
+    Menus.Close();
+  end if;
+  const Variant: S.ButtonVariant := if Settings.Variant =
+      S.ButtonVariant.Default then S.ButtonVariant.Primary
+    else Settings.Variant
+    end if;
+  const Main: E.Element<TMsg> := Button.Lower<TMsg>(
+    Id, Label, Message,
+    new B.Options(
+      Variant := Variant, ControlSize := Settings.ControlSize,
+      Icon := Settings.Icon, TerminalIcon := Settings.TerminalIcon, Enabled := Settings.Enabled
+    ), 'split-button'
+  );
+  const Arrow: E.Element<TMsg> := E.Element<TMsg>.Action(
+    Menu, new Trigger<TMsg>(Menu, Menus), Settings.Enabled,
+    new E.ActionView(
+      '⌄', Name := 'More options', Role := 'split-menu',
+      Value := if Menus.Id() = Menu then 'true' else 'false' end if,
+      Variant := Variant, ArrowFocus := false,
+      Height := if Settings.ControlSize = B.Size.Large then 2 else 1 end if,
+      Hint := 'More options'
+    )
+  );
+  const Joined: E.Element<TMsg> := Group.Lower<TMsg>([Main, Arrow], Theme, Style);
+  if Menus.Id() <> Menu then
+    return Joined;
+  end if;
+
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  for Item: Split.Item<TMsg> in Items do
+    Rows.Add(
+      E.Element<TMsg>.Action(
+        Split.ItemId(Id, Item.Key), new Choice<TMsg>(Item.Message, Menus.Close), true,
+        new E.ActionView(
+          if Item.TerminalIcon = '' then Item.Label
+            else Item.TerminalIcon + ' ' + Item.Label
+            end if,
+          Name := Item.Label, Role := 'menu-item', Variant := S.ButtonVariant.Ghost,
+          ArrowFocus := true, FillWidth := true
+        )
+      )
+    );
+  end for;
+
+  return E.Element<TMsg>.PopupAnchor(
+    Joined, Menu, E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow()),
+    Split.ItemId(Id, Items[0].Key), Menus.Close
+  );
+end function;
+
+// Defers a popup until the base and any enclosing sheet have been laid out.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Pending<TMsg> = record
+  // Popup scope and trigger ID.
+  public Id: string;
+  // Scope containing the trigger.
+  public Parent: string;
+  // Trigger anchor in viewport cells.
+  public Anchor: F.Rect;
+  // Lowered menu rows.
+  public Content: E.Element<TMsg>;
+  // Initial menu focus.
+  public Initial: string;
+  // Host-owned close action.
+  public Close: procedure();
+end record;
+
+// Fits a trailing-edge popup below or above its trigger and paints its frame.
+//
+// ## Parameters
+// - `Operations`: Paint operations after the base view.
+// - `Screen`: Terminal viewport.
+// - `Anchor`: Trigger bounds.
+// - `Width`: Preferred menu width.
+// - `Height`: Preferred menu height.
+// - `Colors`: Popup surface colors.
+// - `Theme`: Current semantic theme.
+// ## Returns
+// Whole menu panel and its inner content area.
+public function Place(
+  Operations: C.List<D.Operation>; Screen: F.Rect; Anchor: F.Rect;
+  Width: int; Height: int; Colors: T.Style; Theme: Th.Theme
+): array of F.Rect;
+begin
+  const Across: int := Sys.Math.Min(Screen.Width, Sys.Math.Max(Anchor.Width, Width + 2));
+  const Below: int := Sys.Math.Max(0, Screen.Y + Screen.Height - Anchor.Y - Anchor.Height);
+  const Above: int := Sys.Math.Max(0, Anchor.Y - Screen.Y);
+  const Down: bool := Below >= Height + 2 or Below >= Above;
+  const Rows: int := Sys.Math.Min(
+    Height + 2,
+    Sys.Math.Max(1, if Down then Below else Above end if)
+  );
+  const X: int := Sys.Math.Clamp(
+    Anchor.X + Anchor.Width - Across,
+    Screen.X,
+    Screen.X + Screen.Width - Across
+  );
+  const Y: int := Sys.Math.Clamp(
+    if Down then Anchor.Y + Anchor.Height else Anchor.Y - Rows end if,
+    Screen.Y, Screen.Y + Screen.Height - Rows
+  );
+  const Panel: F.Rect := new F.Rect(X, Y, Across, Rows);
+  const Edge: int := if Across >= 4 and Rows >= 3 then 1 else 0 end if;
+  D.Fill(Operations, Panel, Colors);
+  if Edge = 1 then
+    D.Border(Operations, Panel, Panel, '', Colors, Theme.Widgets);
+  end if;
+
+  return [Panel, new F.Rect(X + Edge, Y + Edge, Across - 2 * Edge, Rows - 2 * Edge)];
+end function;
+end unit;

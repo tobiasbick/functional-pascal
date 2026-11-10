@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Controls.Selection as SelectionOps, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Hosting.TabNavigation as TabKeys, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Hosting.ListNavigation as Lists, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, Fpas.Ui.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Ui.Tui.Internal.Hosting.MultilineEditor as Multi, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Controls.Selection as SelectionOps, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Hosting.TabNavigation as TabKeys, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Hosting.ListNavigation as Lists, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, Fpas.Ui.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Ui.Tui.Internal.Hosting.MultilineEditor as Multi, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -10,13 +10,14 @@ public type State<TMsg> = record
   public SetFocus: procedure(A.Layout<TMsg>, string);
   public Activate: procedure(A.Layout<TMsg>, string);
   public Click: procedure(A.Layout<TMsg>, K.MouseButton, int, int);
-  public Pointer: procedure(A.Layout<TMsg>, K.PointerKind, K.MouseButton, int, int);
+  // Routes a pointer event and its admission timestamp.
+  public Pointer: procedure(A.Layout<TMsg>, K.PointerKind, K.MouseButton, int, int, long);
   public Scroll: procedure(A.Layout<TMsg>, int, int, int);
   public Key: procedure(A.Layout<TMsg>, K.Key, K.KeyModifiers);
   public Insert: procedure(A.Layout<TMsg>, string, bool);
 end record;
 
-public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dictionary<string, int>): State<TMsg>;
+public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dictionary<string, int>; HoldTracking: Hold.State): State<TMsg>;
   function ActiveId(Layout: A.Layout<TMsg>): string;
   begin
     const Active: A.Scope<TMsg>? := Layout.Active;
@@ -40,8 +41,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
   end procedure;
 
-  function Invoke(Control: A.Control<TMsg>): bool;
+  function Invoke(Control: A.Control<TMsg>; ConfirmedHold: bool := false): bool;
   begin
+    if Control.HoldMilliseconds > 0 and not ConfirmedHold then
+      return true;
+    end if;
+
     const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
     if Handler = null then
       return false;
@@ -59,7 +64,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   procedure ReconcileFocus(Layout: A.Layout<TMsg>; Previous: A.Layout<TMsg>?);
   begin
     const Scope: string := ActiveId(Layout);
+    const HeldId: string := HoldTracking.ActiveId();
+    if HeldId <> '' then
+      const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, HeldId);
+      const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, HeldId);
+      if Target = null or Before = null or not Eligible(Target, Scope)
+        or Target.Bounds <> Before.Bounds or Target.HoldMilliseconds <> Before.HoldMilliseconds
+      then
+        HoldTracking.Cancel();
+      end if;
+    end if;
+
     if Scope <> FocusScope then
+      HoldTracking.Cancel();
       Captured := '';
       MiddleCaptured := '';
       CapturedScrim := false;
@@ -169,6 +186,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   function Dismiss(Modal: A.Scope<TMsg>?): bool;
   begin
     if Modal <> null then
+      case Modal.Dismiss of
+        when is Sys.Action as Close:
+          Close.Invoke();
+          return true;
+        else
+      end case;
+
       case Modal.Escape of
         when is Sys.Func<TMsg> as Callback:
           Apply(Callback.Invoke());
@@ -217,10 +241,14 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end case;
   end procedure;
 
-  procedure Point(Layout: A.Layout<TMsg>; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
+  procedure Point(Layout: A.Layout<TMsg>; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int; ReceivedAt: long);
   begin
     const Target: A.Control<TMsg>? := Hit(Layout, Column, Row);
     Hover := if Target = null then '' else Target.Id end if;
+    if HoldTracking.ActiveId() <> Hover then
+      HoldTracking.Cancel();
+    end if;
+
     case Kind of
       when K.PointerKind.Press:
         if Button = K.MouseButton.Left then
@@ -229,11 +257,25 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           if Captured <> '' then
             Focus := Captured;
           end if;
+
+          HoldTracking.Cancel();
+          if Target <> null and Target.HoldMilliseconds > 0 then
+            HoldTracking.Press(Target.Id, Target.HoldMilliseconds, ReceivedAt);
+          end if;
         else
           MiddleCaptured := Hover;
         end if;
       when K.PointerKind.Release:
         if Button = K.MouseButton.Left then
+          if Target <> null and Target.HoldMilliseconds > 0
+            and HoldTracking.Release(Target.Id, Target.HoldMilliseconds, ReceivedAt)
+          then
+            Captured := '';
+            discard Invoke(Target, true);
+            return;
+          end if;
+
+          HoldTracking.Cancel();
           const WasScrim: bool := CapturedScrim;
           CapturedScrim := false;
           if WasScrim and OnScrim(Layout, Column, Row) then
@@ -295,6 +337,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Control <> null then
+      if Control.Role = 'split-menu' and Key = K.Key.Down and Modifiers = K.KeyModifiers.None then
+        discard Invoke(Control);
+        return;
+      end if;
+
       if Key = K.Key.Enter and Modifiers = K.KeyModifiers.None and Invoke(Control) then
         return;
       end if;
@@ -462,7 +509,16 @@ begin
   );
 end function;
 
-public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
+// Routes an admitted input against the currently presented layout.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Routing`: Session's input router.
+// - `Layout`: Presented controls and modal scope.
+// - `Event`: Input to route.
+// - `ReceivedAt`: Monotonic time at admission, in milliseconds.
+public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input; ReceivedAt: long);
 begin
   case Event of
     when App.Input.Focus(const Id: string):
@@ -474,14 +530,14 @@ begin
     when App.Input.ButtonClick(const Button: K.MouseButton, const Column: int, const Row: int):
       Routing.Click(Layout, Button, Column, Row);
     when App.Input.Pointer(const Kind: K.PointerKind, const Column: int, const Row: int):
-      Routing.Pointer(Layout, Kind, K.MouseButton.Left, Column, Row);
+      Routing.Pointer(Layout, Kind, K.MouseButton.Left, Column, Row, ReceivedAt);
     when App.Input.ButtonPointer(
       const Kind: K.PointerKind,
       const Button: K.MouseButton,
       const Column: int,
       const Row: int
     ):
-      Routing.Pointer(Layout, Kind, Button, Column, Row);
+      Routing.Pointer(Layout, Kind, Button, Column, Row, ReceivedAt);
     when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
       Routing.Scroll(Layout, Column, Row, Delta);
     when App.Input.KeyPress(const Key: K.Key, const Modifiers: K.KeyModifiers):

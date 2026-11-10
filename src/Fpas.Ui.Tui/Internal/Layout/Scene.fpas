@@ -31,6 +31,10 @@ public type Control<TMsg> = record
   public Hint: string := '';
   // Optional foreground retained when the control is focused or hovered.
   public Foreground: G.Color? := null;
+  // Positive duration for an action that requires a pointer hold.
+  public HoldMilliseconds: int := 0;
+  // Filled percentage of an active hold.
+  public HoldProgress: int := 0;
 end record;
 
 public type Scope<TMsg> = record
@@ -42,6 +46,8 @@ public type Scope<TMsg> = record
   public Panel: F.Rect? := null;
   // Focus target after Escape has left an editor, if the layer supports it.
   public ExitEditFocus: string := '';
+  // Optional host-owned dismissal for transient widget menus.
+  public Dismiss: Sys.Action? := null;
 end record;
 
 public type ScrollRegion = record

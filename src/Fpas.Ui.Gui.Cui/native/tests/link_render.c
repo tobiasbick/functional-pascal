@@ -46,6 +46,70 @@ static bool check_copy_button(cui_ctx *ui) {
     return passed && probe.writes == 2 && probe.exact;
 }
 
+static int hold_frames(cui_ctx *ui, int frames, bool enabled, bool focus) {
+    int confirmations = 0;
+    for (int frame = 0; frame < frames; ++frame) {
+        cui_begin_frame(ui, 0.04f);
+        confirmations += fpas_cui_hold_button(ui, "###hold-fixture", "Hold ## literally", NULL,
+                                              120, 4, enabled, focus && frame == 0);
+        cui_end_frame(ui);
+    }
+    return confirmations;
+}
+
+static bool check_hold_button(cui_ctx *ui) {
+    if (hold_frames(ui, 1, true, true) != 0) return false;
+    cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+    if (hold_frames(ui, 1, true, false) != 0) return false;
+    cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+    if (hold_frames(ui, 4, true, false) != 0) return false;
+
+    cui_input_key(ui, CUI_KEY_SPACE, true, 0);
+    if (hold_frames(ui, 8, true, false) != 1) return false;
+    if (hold_frames(ui, 8, true, false) != 0) return false;
+    cui_input_key(ui, CUI_KEY_SPACE, false, 0);
+    if (hold_frames(ui, 4, true, false) != 0) return false;
+
+    const cui_rect bounds = cui_last_rect(ui);
+    cui_input_mouse_move(ui, bounds.x + bounds.w / 2, bounds.y + bounds.h / 2);
+    if (hold_frames(ui, 1, true, false) != 0) return false;
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    if (hold_frames(ui, 8, true, false) != 1) return false;
+    if (hold_frames(ui, 8, false, false) != 0) return false;
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    return hold_frames(ui, 1, true, false) == 0;
+}
+
+static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open, int *highlighted) {
+    const char *labels[] = { "Save ## draft", "Save and publish", "Schedule..." };
+    const char *icons[] = { "", "", "" };
+    int nodes[5];
+    unsigned int popup_key;
+    if (key >= 0) cui_input_key(ui, (cui_key)key, true, 0);
+    cui_begin_frame(ui, 1.0f / 60.0f);
+    const int choice = fpas_cui_split_button(ui, "###split-fixture", "Save ## literal", "",
+        labels, icons, 3, 1, 0, enabled, focus, nodes, open, highlighted, &popup_key);
+    const bool tracked = nodes[0] >= 0 && nodes[1] >= 0 && (!*open || nodes[2] >= 0);
+    cui_end_frame(ui);
+    if (key >= 0) cui_input_key(ui, (cui_key)key, false, 0);
+    return tracked ? choice : -99;
+}
+
+static bool check_split_button(cui_ctx *ui) {
+    int open, highlighted;
+    if (split_frame(ui, 1, -1, true, &open, &highlighted) != -1 || open) return false;
+    if (split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 0) return false;
+    if (split_frame(ui, 2, -1, true, &open, &highlighted) != -1) return false;
+    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open) return false;
+    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 0) return false;
+    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 1) return false;
+    if (split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 2 || open) return false;
+    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open) return false;
+    if (split_frame(ui, 0, CUI_KEY_ESCAPE, true, &open, &highlighted) != -1 || open) return false;
+    if (split_frame(ui, 0, CUI_KEY_ENTER, false, &open, &highlighted) != -1 || open) return false;
+    return split_frame(ui, 0, CUI_KEY_DOWN, false, &open, &highlighted) == -1 && !open;
+}
+
 /* Returns success only when the linked CUI implementation produces a drawn view. */
 int main(void) {
     const int width = 320, height = 160;
@@ -69,53 +133,22 @@ int main(void) {
         fprintf(stderr, "Copy button did not preserve clipboard content, focus or confirmation timing.\n");
         goto cleanup;
     }
-    char text[64] = "";
-    int anchor = 0, caret = 0;
-    bool focused = false;
-    int enter_events = 0;
-    for (int frame = 0; frame < 3; frame++) {
-        cui_begin_frame(ui, 1.0f / 60.0f);
-        fpas_cui_scroll_begin(ui, "smoke-scroll", 160, 0);
-        fpas_cui_column_begin(ui, 12, 8);
-        fpas_cui_row_begin(ui, 0, 4);
-        cui_heading(ui, "FPAS native CUI", 2);
-        (void)fpas_cui_list_item(ui, "Selected", 1);
-        (void)fpas_cui_tab_item(ui, "Tab", 1);
-        cui_box_end(ui);
-        if (frame == 0) {
-            fpas_cui_request_focus(ui, "editor");
-            cui_input_text(ui, "FPAS");
-        }
-        if (frame == 1) {
-            cui_input_key(ui, CUI_KEY_ENTER, true, 0);
-            cui_input_key(ui, CUI_KEY_ENTER, false, 0);
-            cui_input_text(ui, "CUI");
-        }
-        int editor_events = fpas_cui_text_edit(ui, "editor", text, sizeof text, 96, 1, &anchor, &caret, "");
-        if (editor_events & CUI_FOCUSED) focused = true;
-        if (frame == 1) enter_events = editor_events;
-        if (fpas_cui_table_begin(ui, "smoke-table", (const char *const[]){ "Status" }, 1)) {
-            (void)fpas_cui_table_row(ui, 1);
-            cui_table_cell_text(ui, "Linked successfully");
-            cui_table_end(ui);
-        }
-        int open = 1;
-        if (frame == 2 && fpas_cui_dialog_begin(ui, "CUI dialog", &open)) {
-            cui_text(ui, "Modal contents");
-            cui_dialog_end(ui);
-        }
-        cui_box_end(ui);
-        cui_scroll_end(ui);
-        cui_end_frame(ui);
-    }
-    if (!focused) {
-        fprintf(stderr, "The requested control did not gain focus.\n");
+    if (!check_hold_button(ui)) {
+        fprintf(stderr, "Hold button did not require a continuous press or fired more than once.\n");
         goto cleanup;
     }
-    if (!(enter_events & CUI_CHANGED) || (enter_events & CUI_SUBMITTED) || strcmp(text, "FPAS\nCUI") != 0) {
-        fprintf(stderr, "Enter did not insert a line break in the text area.\n");
+    if (!check_split_button(ui)) {
+        fprintf(stderr, "Split button did not route its main action and keyboard menu independently.\n");
         goto cleanup;
     }
+    cui_begin_frame(ui, 1.0f / 60.0f);
+    fpas_cui_scroll_begin(ui, "smoke-scroll", 160, 0);
+    fpas_cui_column_begin(ui, 12, 8);
+    cui_heading(ui, "FPAS native CUI", 2);
+    (void)cui_button(ui, "Continue");
+    cui_box_end(ui);
+    cui_scroll_end(ui);
+    cui_end_frame(ui);
     const cui_draw_data *draw = cui_get_draw_data(ui);
     if (!draw || draw->width_px != width || draw->height_px != height ||
         draw->vertex_count <= 0 || draw->index_count <= 0 || draw->command_count <= 0) {

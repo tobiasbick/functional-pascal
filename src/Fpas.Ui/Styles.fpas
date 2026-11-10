@@ -16,6 +16,14 @@ public type Role = enum: byte
   Secondary;
   // An error state.
   Error;
+  // A muted surface for navigation and secondary content.
+  MutedPanel;
+  // The heading of the current page.
+  PageTitle;
+  // A line separating adjacent regions.
+  Divider;
+  // An outlined surface around a related group of controls.
+  OutlinedPanel;
 end enum;
 
 // The role of a button within the application.

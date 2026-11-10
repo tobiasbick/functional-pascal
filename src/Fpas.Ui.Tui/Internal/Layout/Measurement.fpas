@@ -85,7 +85,13 @@ begin
     when E.Element.Decorated(
       const Child: E.Element<TMsg>,
       _
-    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>):
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.PopupAnchor(
+      const Child: E.Element<TMsg>,
+      _,
+      _,
+      _,
+      _
+    ):
       return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
@@ -219,7 +225,7 @@ begin
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
     when E.Element.Toggle(_, _, _, _, _):
       return Horizontal and Explicit;
-    when E.Element.ButtonGroup(_):
+    when E.Element.ButtonGroup(_), E.Element.PopupAnchor(_, _, _, _, _):
       return false;
     when E.Element.Gauge(_), E.Element.DocumentEditor(_, _, _, _, _, _, _):
       return Horizontal;
@@ -400,7 +406,9 @@ begin
       _
     ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
       _, const Child: E.Element<TMsg>, _, _, _
-    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.Desktop(
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.PopupAnchor(
+      const Child: E.Element<TMsg>, _, _, _, _
+    ), E.Element.Desktop(
       const Child: E.Element<TMsg>,
       _,
       _

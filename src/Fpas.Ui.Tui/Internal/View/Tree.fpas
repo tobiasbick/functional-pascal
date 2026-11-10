@@ -83,6 +83,10 @@ public type ActionView = record
   public Foreground: Color.Color? := null;
   // The surrounding group supplies the outline.
   public Joined: bool := false;
+  // Positive duration for an action that requires a pointer hold.
+  public HoldMilliseconds: int := 0;
+  // Filled percentage of an active hold.
+  public HoldProgress: int := 0;
 end record;
 
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
@@ -135,6 +139,8 @@ public type Element<TMsg> = variant
   Framed(Child: Element<TMsg>; Title: string);
   // Fit a framed row of joined actions to its content.
   ButtonGroup(Body: Element<TMsg>);
+  // A content-sized trigger with an open popup rendered above the base view.
+  PopupAnchor(Trigger: Element<TMsg>; Id: string; Content: Element<TMsg>; Initial: string; Close: procedure());
   // Scroll content using host-owned offsets.
   Scrollable(Id: string; Child: Element<TMsg>; ShowScrollbar: bool);
   // Resolve model-owned scrolling and keep its original shared mapper.

@@ -1,38 +1,26 @@
-# GUI widget gallery
+# FPas CUI GUI gallery
 
-The FPAS application uses `Fpas.Ui.Gui.Application` with the shared MVU and widget
-contracts. Build or run `GuiWidgetGallery.fpasproj` with `dotnet build` or
-`dotnet run --project`. Native source prerequisites are listed in the
-[CUI build reference](../../../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
+Build and run `GuiWidgetGallery.fpasproj` after the
+[local SDK bootstrap](../../../../docs/build/development.md#build-an-fpas-application).
+The [CUI build reference](../../../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites)
+lists the native prerequisites.
 
-Choose a page in the grouped sidebar with the pointer, or use Tab and activate
-an entry with Enter or Space. At less than 600 logical units wide, the
-**Components** menu icon opens the sidebar in a left drawer. Selecting a page closes
-the drawer. Escape, its close button, and clicking the backdrop also dismiss it.
-Controls demonstrate
-all six CUI button variants, sizes, leading and trailing icons, selected and
-disabled states, fixed and full widths, checkboxes and progress. Save changes
-enters the model-owned loading state. Reset loading enables it again. Hover
-over Save changes to see its tooltip and shortcut hint. The button group
-shows independent Bold, Italic and Underline selections in one frame. The
-copy button puts the displayed command on the clipboard. Editors support
-Unicode documents and selection. Collections show actions, keyed selection,
-tables, tabs and an empty list. Layout shows fixed/fill sizing, borders, semantic
-roles and controlled scrolling. Graphics uses owned RGBA pixels and vector
-operations. Effects demonstrates asynchronous completion, cancellation and a
-modal; the increment button remains usable while work runs. Escape dismisses
-the modal and restores focus. Switch theme and resize without resetting state.
+The gallery follows CUI's desktop composition with a full-height 240-point sidebar,
+a centered content column, and a left drawer below 760 logical points. It shows
+the Overview, Buttons, Overlays, and Actions pages with the widgets checked in the
+[CUI inventory](../../../../docs/future/cui-gaps.md).
 
-`GalleryState.fpas` owns transitions and effects, `GalleryView.fpas` navigation
-and responsive composition, `Buttons.fpas` the scrollable button examples,
-and `Previews.fpas` the remaining widget inventory. Control IDs
-are stable; collection keys belong to their containing ID.
+- **Buttons** shows the variants, sizes, icons, and input states. Save changes
+  shows the busy state, and Reset enables it again. The formatting group toggles
+  three independent actions. The copy button copies the displayed command.
+  Hold to delete demonstrates confirmation without deleting anything.
+- **Overlays** opens the right-hand Notifications sheet. Escape, the close button,
+  and clicking the backdrop dismiss it.
+- **Actions** shows the primary Save and outline Export split buttons. Their
+  main and menu actions update the inline result, as in the CUI gallery.
+- The sidebar changes pages. At narrow widths, open it with the **Components**
+  icon. Selecting a page dismisses the drawer.
 
-Managed source publication uses the normal [FPAS publish modes](../../../../docs/build/publishing.md).
-For application publication, reference the Fpas.Ui.Gui package from the matching
-distribution feed. Its transitive CUI package supplies prebuilt shared and static
-libraries. NativeAOT links CUI into the executable; managed single-file delivery
-extracts the bundled native library. GuiPublishingTests exercises the complete
-gallery in all five modes with both renderers, controlled values, theme,
-selection, images, effects and repeated cleanup.
-A headless Linux run needs a virtual display such as Xvfb.
+The GUI gallery contract runs this view with both native renderers and captures
+the Buttons page and the open Split button menu. It drives the split buttons
+with native keyboard input. The same contract also drives the package-only consumer.

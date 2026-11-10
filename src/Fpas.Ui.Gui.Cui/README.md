@@ -20,6 +20,10 @@ MVU/declarative GUI library is [Fpas.Ui.Gui](../Fpas.Ui.Gui/README.md).
 - `ListItem` draws the selection state passed by the host and reports whether
   the item was activated. The host chooses the selection for subsequent frames.
   Give items distinct `###id` suffixes when they can have the same label.
+- `SplitButton` draws the native main action, chevron and popup. It accepts
+  literal captions separately from stable identities and tracks the visible
+  halves and menu items. Its result distinguishes the main action from a
+  menu choice and reports the popup visibility and highlight.
 - `TabItem` uses the same selection contract for tab buttons in a horizontal row.
   The host supplies each tab's highlight and chooses the view to draw below it.
 - `BeginTable` copies the UTF-8 column titles into the native frame. `TableRow`
@@ -122,17 +126,10 @@ The tests cover encoding limits and Unicode positions without a display.
 Native window cases require a display and are skipped only when `DISPLAY` is
 absent on Linux. The test project sets `CUI_SCALE=1` for its test host and
 fixture processes so the expected PNG pixel dimensions are independent of the
-desktop scale. The cases exercise actual shared-library loading,
-software/OpenGL rendering, returned events and compacting managed collections,
-thread ownership, nested layout, focus transfer, document replacement, grapheme
-boundaries after edits and controlled selection in lists, tables and tabs. They
-also cover scroll geometry, modal click routing and dismissal, image replacement
-and ownership, idle wakeup during shutdown, resize capture to Unicode filenames
-and capture-failure recovery. The tests inject input through CUI's public API.
-OS keyboard and pointer delivery are separate checks.
-The texture lifetime test counts native software-renderer allocations and
-releases during image replacement and repeated window teardown. It injects a
-recoverable allocation failure through the renderer interface.
+desktop scale. The cases exercise shared-library loading, software and OpenGL
+rendering, native button input, thread ownership, nested layout, scroll geometry,
+idle wakeup, resize capture and capture-failure recovery. The tests inject input
+through CUI's public API. OS keyboard and pointer delivery are separate checks.
 Keep Xvfb's `-noreset` option: the suite repeatedly closes its last window and
 immediately opens another, which must not race with a display-server reset.
 
@@ -173,14 +170,9 @@ using a freshly packaged FPAS SDK, an isolated package cache and a normal CLR
 project reference to the solution-built binding. It does not rebuild the native
 module or change its restore assets while tests use it.
 
-The FPAS program exercises button activation, by-reference checkbox updates,
-UTF-8 editing under compacting collections, layout scopes, dialogs and images.
-It checks `using` disposal on normal exit and exception unwinding. Each renderer
-must produce a PNG with the expected image color. The harness also verifies native
-library/license delivery and launches from a separate working directory without
-library-search overrides. The fixture and managed window tests pass on Windows
-x64 and on Ubuntu x64 under WSL 2 with Xvfb. Both runs exercise the CUI software
-and OpenGL renderers. The WSL run uses software OpenGL.
+The FPAS probe presents a button through each renderer and captures a PNG. The
+harness verifies native library and license delivery and launches from a separate
+working directory without library-search overrides.
 
 ### Packaged publishing fixture
 

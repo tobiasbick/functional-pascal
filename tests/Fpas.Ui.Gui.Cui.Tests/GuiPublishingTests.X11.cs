@@ -34,29 +34,26 @@ public sealed partial class GuiPublishingTests
         {
             await Read(_ => true);
             using var input = new X11Input(title);
-            await Click("increment");
-            await Read(frame => frame.Text.Contains("Count: 1"));
+            await Click("browse");
+            await Read(frame => frame.Has("save"));
+            await Click("format-bold");
+            await Read(frame => frame.Find("format-bold").Value == "true");
             await Click("theme");
             await Read(frame => frame.Dark);
-            await Click("navigation", "editors");
-            await Read(frame => frame.Has("text"));
-            await Click("text");
-            await Key("Control_L", true); await Key("a", true); await Key("a", false); await Key("Control_L", false);
-            await Key("z", true); await Key("z", false);
-            await Read(frame => frame.Find("text").Value == "z");
             input.Resize(520, 900);
-            await Read(frame => frame.Width == 520 && frame.Height == 900 && frame.Dark && frame.Find("text").Value == "z");
+            await Read(frame => frame.Width == 520 && frame.Height == 900 && frame.Dark &&
+                frame.Find("format-bold").Value == "true");
             await Click("drawer-open");
             await Read(frame => frame.Controls.Any(control =>
-                control.Id == "navigation" && control.Key == "effects" && control.X >= 28));
-            await Click("navigation", "effects");
-            await Read(frame => frame.Has("modal-open"));
+                control.Id == "navigation" && control.Key == "overlays"));
+            await Click("navigation", "overlays");
+            await Read(frame => frame.Has("sheet-open"));
             // CUI retains the input-blocking scrim while the drawer slides out.
             await Task.Delay(TimeSpan.FromMilliseconds(500), token);
-            await Click("modal-open");
-            await Read(frame => frame.Has("modal-close") && frame.Find("modal-close").Focused);
+            await Click("sheet-open");
+            await Read(frame => frame.Has("sheet/close") && frame.Find("sheet/close").Focused);
             await Key("Escape", true); await Key("Escape", false);
-            await Read(frame => !frame.Has("modal-close") && frame.Find("modal-open").Focused);
+            await Read(frame => !frame.Has("sheet/close") && frame.Find("sheet-open").Focused);
             input.Close();
             await process.WaitForExitAsync(token);
             Assert.Equal(0, process.ExitCode);

@@ -17,8 +17,11 @@ Use this inventory to rebuild the [CUI gallery][gallery] in FPAS. Check each
 widget against its upstream demo and API. Accept it once the API and behavior
 are covered, it is shown in both FPAS galleries, and any TUI omission is
 documented. A checkbox stays open even if FPAS already has an implementation.
-The sections group related work and leave implementation order to the gallery
-work.
+Show only checked widgets in the galleries and use those galleries as the
+acceptance tests for their visible pages and interactions. Follow the native
+gallery's composition, spacing, and examples in the GUI. Adapt the same pages
+to the terminal's cell geometry and input. The sections group related work
+and leave implementation order to the gallery work.
 
 ### Widget source layout
 
@@ -57,10 +60,9 @@ overrides, and a model-driven `ThemeFor` callback. GUI passes the palette to
 native CUI. TUI derives its widget and focus styles from the same tokens and
 composites alpha over the cell background. CUI's
 [theme implementation][theme-source] is byte-identical to the vendored tag's
-source at the catalog revision. The [portable contract][portable]
-checks both modes and all accents, native palette transfer, a custom palette,
-and terminal background colors. The [TUI contract][tui-contract] also checks
-semantic foregrounds and alpha composition.
+source at the catalog revision. The [GUI gallery contract][gui-gallery-test]
+checks theme switching with the native host. The [TUI contract][tui-contract]
+checks semantic foregrounds, backgrounds and alpha composition.
 
 That covers the shared palette required by the gallery. CUI also exposes
 typography, control sizing, corner radii, shadows, reduced motion, and
@@ -76,9 +78,9 @@ It covers rows and columns, content/fill/fixed sizing, weighted growth,
 shrinkage, size bounds, cross-axis alignment, gaps, padding, borders, and
 vertical scrolling. GUI uses CUI logical points. TUI converts 8 logical units
 to one column and 16 to one row. Both hosts expose responsive size classes.
-The [portable contract][portable] checks weighted and fixed allocations in
-both hosts. The [TUI contract][tui-contract] covers shrinkage, rounding, and
-logical distances in cells.
+The [native layout tests][gui-layout-test] check weighted and fixed allocations.
+The [TUI contract][tui-contract] covers shrinkage, rounding, and logical
+distances in cells.
 
 The [CUI layout reference][layout] and [native gallery][gallery] also use
 features outside that shared subset. Open layout work is tracked below.
@@ -105,9 +107,8 @@ icon option and omits the glyph while showing labels and badges.
   display, cell width, truncation, clipping, redraws, and alignment in Windows
   Terminal and at least one Linux terminal. The current
   [grapheme width code][glyphs] handles common wide characters, flags, and emoji
-  presentation selectors with heuristics. The [headless test][tui-headless]
-  checks two-cell allocation and clipping for a flag emoji. Verify the actual
-  terminal widths before choosing emoji defaults. See
+  presentation selectors with heuristics. Verify the actual terminal widths
+  before choosing emoji defaults. See
   [Unicode emoji presentation][emoji] and [East Asian Width][width].
 
 ## Widget inventory
@@ -130,11 +131,11 @@ icon option and omits the glyph while showing labels and badges.
 
 ### Actions and selection
 
-- [x] Button (`cui_button`). Both galleries exercise the shared
-  [button API][fpas-button] with six CUI variants, three sizes, icons on
-  either side, busy and disabled input, selection, foreground color,
-  tooltip and shortcut hint, and fixed or full width. TUI uses terminal
-  glyphs, a static busy mark, and one- or two-row button sizes.
+- [x] Button (`cui_button`). Both galleries show the six CUI variants,
+  three sizes, leading and trailing icons, and busy, disabled and selected
+  states through the shared [button API][fpas-button]. The widget contract
+  also covers color, hints, and width. TUI uses terminal glyphs, a static
+  busy mark, and one- or two-row button sizes.
 - [x] Icon button (`cui_icon_button`). Both galleries use the shared
   [icon button][fpas-icon-button] to open the compact drawer. The button
   supports a tooltip, shortcut hint, size, style, selected state, and
@@ -147,8 +148,18 @@ icon option and omits the glyph while showing labels and badges.
   command with the shared [copy button][fpas-copy-button]. The confirmation
   lasts 1.6 seconds and keeps the same focus identity. GUI uses CUI's clipboard
   provider and TUI sends OSC 52 to a terminal that allows clipboard writes.
-- [ ] Hold-to-confirm button (`cui_hold_button`)
-- [ ] Split button (`cui_split_button`)
+- [x] Hold-to-confirm button (`cui_hold_button`). Both galleries demonstrate
+  the [shared hold button][fpas-hold-button] with the default 1.2-second fill.
+  GUI confirms once at completion via pointer, Space or Enter. TUI uses the
+  same duration and confirms on left-button release over the control. The
+  terminal input path has no key release events for a keyboard hold.
+- [x] Split button (`cui_split_button`). The Actions page in both galleries
+  uses the [shared split button][fpas-split-button] for Save and Export.
+  Main action and chevron have separate focus stops. The menu supports keyed
+  messages, item icons, keyboard selection, dismissal and focus return. TUI
+  uses a fitted cell popup and scrolls long menus with the wheel or page keys.
+  The native adapter handles Enter on a keyboard-opened menu while the
+  [upstream keyboard-selection fix][cui-split-fix] is pending.
 - [ ] Confirm button (`cui_confirm_button`)
 - [ ] Status button (`cui_status_button`)
 - [ ] Theme switcher (`cui_theme_switcher`)
@@ -209,9 +220,10 @@ icon option and omits the glyph while showing labels and badges.
   use [`Fpas.Ui.Navigation.Sidebar`][sidebar]. The shared API covers sections,
   stable keys, model-owned active selection, badges, disabled entries, and
   focus independent of selection. The GUI uses native CUI rows and a gliding
-  highlight. The terminal uses cell styles. The Windows tests cover gallery
-  navigation in Software and OpenGL and compare the activation trace across
-  the two hosts. Terminal icons are tracked under the icon experiment.
+  highlight. The terminal uses cell styles and top-aligns the navigation
+  in a full-height sidebar. The [GUI][gui-gallery-test] and
+  [TUI][tui-gallery-test] gallery tests check the visible destinations and
+  the responsive drawer. Terminal icons are tracked under the icon experiment.
 - [ ] Tabs (`cui_tabs`)
 - [ ] Breadcrumb (`cui_breadcrumb`)
 - [ ] Pagination (`cui_pagination`)
@@ -418,7 +430,11 @@ Verify thresholds, points, labels, and label collision handling with those demos
 [fpas-button]: ../../src/Fpas.Ui/README.md#button
 [fpas-button-group]: ../../src/Fpas.Ui/README.md#button-group
 [fpas-copy-button]: ../../src/Fpas.Ui/README.md#copy-button
+[fpas-hold-button]: ../../src/Fpas.Ui/README.md#hold-to-confirm
+[fpas-split-button]: ../../src/Fpas.Ui/README.md#split-button
+[cui-split-fix]: https://github.com/yappologistic/CUI/pull/26
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
-[portable]: ../../tests/Fixtures/gui-host/PortableContract.fpas
+[gui-gallery-test]: ../../tests/Fixtures/gui-host/PublishedGallery.fpas
+[gui-layout-test]: ../../tests/Fpas.Ui.Gui.Cui.Tests/CuiHostLayoutTests.cs
+[tui-gallery-test]: ../../tests/Fpas.IntegrationTests/Tui/TuiGalleryTests.cs
 [tui-contract]: ../../tests/Fixtures/tui/CuiContract.fpas
-[tui-headless]: ../../tests/Fixtures/tui/HeadlessContract.fpas

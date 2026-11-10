@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -121,6 +121,23 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
       when E.Element.CopyAction(const Id: string, const Value: string, _, _):
         Rules.CheckText(Value, Identify(Id, Location + '/copyButton') + '/text');
+      when E.Element.HoldAction(
+        const Id: string,
+        const Label: string,
+        _,
+        const Settings: Holds.Options
+      ):
+        const At: string := Identify(Id, Location + '/holdButton');
+        Rules.CheckText(Label, At);
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
+        if Settings.DurationMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
+          or not Sys.Enum.IsDefined<S.ButtonVariant>(
+          Settings.Variant
+        )
+        then
+          Rules.Reject(At, 'A hold button needs a positive duration and a CUI button variant.');
+        end if;
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
@@ -138,11 +155,40 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
               _,
               _,
               _
-            ), E.Element.CopyAction(_, _, _, _):
+            ), E.Element.CopyAction(_, _, _, _), E.Element.HoldAction(_, _, _, _):
               Visit(Child, At);
             else
-              Rules.Reject(At, 'A button group accepts only buttons and icon buttons.');
+              Rules.Reject(At, 'A button group accepts only button actions.');
           end case;
+        end for;
+      when E.Element.SplitAction(
+        const Id: string,
+        const Label: string,
+        _,
+        const Items: array of Split.Item<TMsg>,
+        const Settings: Split.Options
+      ):
+        const At: string := Identify(Id, Location + '/splitButton');
+        Rules.CheckText(Label, At);
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
+        discard Identify(Split.MenuId(Id), At + '/menu');
+        if Items.Length = 0 or Settings.Variant = S.ButtonVariant.Active
+          or not Sys.Enum.IsDefined<S.ButtonVariant>(
+          Settings.Variant
+        ) or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(At, 'A split button needs menu items, a CUI variant and a known size.');
+        end if;
+
+        for Item: Split.Item<TMsg> in Items do
+          if Sys.String.IsNullOrWhiteSpace(Item.Key) then
+            Rules.Reject(At, 'Menu item keys must be nonempty.');
+          end if;
+          const Entry: string := Identify(Split.ItemId(Id, Item.Key), At + '/item');
+          Rules.CheckText(Item.Label, Entry + '/label');
+          Rules.CheckText(Item.Icon, Entry + '/icon');
+          Rules.CheckText(Item.TerminalIcon, Entry + '/terminalIcon');
         end for;
       when E.Element.Toggle(const Id: string, const Label: string, _, _, _):
         Rules.CheckText(Label, Identify(Id, Location + '/checkbox'));

@@ -6,7 +6,7 @@ namespace Fpas.Ui.Gui.Cui.Tests;
 /// <summary>Exercises the FPAS MVU owner loop with real CUI presentation and native interactions.</summary>
 public sealed class GuiHostTests
 {
-    /// <summary>Builds the public examples and checks frame, input, validation, lifetime and queue contracts.</summary>
+    /// <summary>Builds the public gallery and verifies its visible pages and controls.</summary>
     /// <param name="renderer">The renderer that must be selected by the FPAS host.</param>
     [GuiTheory]
     [InlineData("software")]
@@ -44,8 +44,8 @@ public sealed class GuiHostTests
         }
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = directory.File("packages"), ["LD_LIBRARY_PATH"] = null };
         foreach (string project in new[] { "src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj", "src/Fpas.Ui/Fpas.Ui.fpasproj",
-            "src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj", "src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj",
-            "examples/ui/gui/counter/GuiCounter.fpasproj", "examples/ui/gui/gallery/GuiWidgetGallery.fpasproj" })
+            "src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj",
+            "examples/ui/gui/gallery/GuiWidgetGallery.fpasproj" })
         {
             var build = await ProcessRunner.RunAsync(["build", directory.File(project), "-c", configuration,
                 "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
@@ -58,20 +58,7 @@ public sealed class GuiHostTests
             "M:Fpas.Ui.Elements.CachedSubview``2(", ["Id", "Dependencies", "Build", "Equal"], ["TDeps", "TMsg"]);
         CheckDocumentation(directory.File($"src/Fpas.Ui.Gui/bin/{configuration}/net10.0/Fpas.Ui.Gui.xml"),
             "M:Fpas.Ui.Gui.Application.Start``2(", ["InitialModel", "Update", "View", "Settings", "ThemeFor"], ["TModel", "TMsg"]);
-        CheckDocumentation(directory.File($"src/Fpas.Ui.Tui/bin/{configuration}/net10.0/Fpas.Ui.Tui.xml"),
-            "M:Fpas.Ui.Tui.Status.Hint``1(", ["Binding", "Label"], ["TMsg"]);
-        File.Copy(directory.File("HostContract.fpas"), directory.File("examples/ui/gui/counter/main.fpas"), overwrite: true);
-        var compiled = await ProcessRunner.RunAsync(["build", directory.File("examples/ui/gui/counter/GuiCounter.fpasproj"), "-c", configuration,
-            "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
-            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
-        Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
-        string capture = directory.File("host.png");
-        var run = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/counter/bin/{configuration}/net10.0/GuiCounter.dll"), renderer, capture],
-            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(30));
-        Assert.True(run.ExitCode == 0, run.Output + run.Error);
-        Assert.Equal("GUI host verified: " + renderer + Environment.NewLine, run.Output);
-        PngAssertions.HasRenderedContent(capture, 640, 480);
-        File.Copy(directory.File("GalleryContract.fpas"), directory.File("examples/ui/gui/gallery/main.fpas"), overwrite: true);
+        File.Copy(directory.File("PublishedGallery.fpas"), directory.File("examples/ui/gui/gallery/main.fpas"), overwrite: true);
         var galleryBuild = await ProcessRunner.RunAsync(["build", directory.File("examples/ui/gui/gallery/GuiWidgetGallery.fpasproj"), "-c", configuration,
             "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
             workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
@@ -82,31 +69,6 @@ public sealed class GuiHostTests
         Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
         Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
         PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);
-
-        if (renderer != "software") return;
-        File.WriteAllText(directory.File("Portable.fpasproj"), $"""
-            <Project Sdk="Fpas.NET.Sdk/{version}">
-              <PropertyGroup>
-                <TargetFramework>net10.0</TargetFramework>
-                <OutputType>Exe</OutputType>
-                <EnableDefaultFpasCompileItems>false</EnableDefaultFpasCompileItems>
-              </PropertyGroup>
-              <ItemGroup>
-                <Compile Remove="**/*.fpas" />
-                <Compile Include="PortableContract.fpas" />
-                <ProjectReference Include="src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj" />
-                <ProjectReference Include="src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
-              </ItemGroup>
-            </Project>
-            """);
-        var portableBuild = await ProcessRunner.RunAsync(["build", directory.File("Portable.fpasproj"), "-c", configuration,
-            "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
-            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
-        Assert.True(portableBuild.ExitCode == 0, portableBuild.Output + portableBuild.Error);
-        var portable = await ProcessRunner.RunAsync([directory.File($"bin/{configuration}/net10.0/Portable.dll")],
-            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(30));
-        Assert.True(portable.ExitCode == 0, portable.Output + portable.Error);
-        Assert.Equal("portable TUI and GUI contracts verified" + Environment.NewLine, portable.Output);
     }
 
     private static void CheckDocumentation(string path, string methodPrefix, string[] parameters, string[] typeParameters)

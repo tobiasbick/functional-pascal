@@ -66,6 +66,8 @@ for the task.
 
 ## Before every commit
 
+- Format every new or changed `.fpas` file with `fpas fmt` and verify it with
+  `fpas fmt --check` before committing.
 - Inspect the exact staged changes, file names and full contents of every file
   being committed for secrets, credentials, personal data and machine-specific
   information. Include API/private keys, tokens, passwords, personal contact

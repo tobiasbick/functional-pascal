@@ -6,10 +6,10 @@ Use the SDK's default build parallelism unless the user requests a limit.
 
 The solution includes the CUI binding and its tests. Building it also requires
 CMake 3.20 or newer, a C99 compiler and the platform development libraries listed
-in the [native build reference](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+in the [native build reference](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
 GUI tests need a display; on headless Linux, run them under Xvfb with software
 OpenGL support. Without `DISPLAY`, window tests are skipped; text-buffer tests
-still run. See the [GUI test reference](../../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
+still run. See the [GUI test reference](../../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
 
 The GUI suite's Linux OS-input test also requires `libXtst.so.6` and the XTest
 extension. Set `FPAS_TEST_GUI_AOT=1` to include both native publishing matrices.
@@ -140,7 +140,7 @@ to inspect the deployed server, then explicitly restore the consumer before
 connecting a client. See the [language-server contract](../pascal/tools/language-server.md).
 
 Distribution builds require the .NET 10 SDK and the
-[CUI native toolchain](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+[CUI native toolchain](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
 The delivered compiler contains its runtime. Copy `fpas.exe` on Windows x64 or
 `fpas` on Linux x64 with glibc. It uses compressed,
 untrimmed single-file deployment because the complete protocol dependency graph
@@ -163,9 +163,9 @@ delivered executable; the SDK verifies its compiler hash before compilation.
 After running dist, restore/build an application:
 
 ```sh
-dotnet restore examples/hello/Hello.fpasproj
-fpas build examples/hello/Hello.fpasproj --no-restore
-fpas run examples/hello/Hello.fpasproj --no-build
+dotnet restore examples/basics/hello/Hello.fpasproj
+fpas build examples/basics/hello/Hello.fpasproj --no-restore
+fpas run examples/basics/hello/Hello.fpasproj --no-build
 ```
 
 The current SDK supports net10.0/AnyCPU and managed libraries/executables. It
@@ -199,7 +199,7 @@ layout `<dotnet-install>/packs/Microsoft.NETCore.App.Ref/<version>/ref/net10.0`.
 Compile and execute one source:
 
 ```sh
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
 dotnet .temp-data/hello/Hello.dll
 ```
 

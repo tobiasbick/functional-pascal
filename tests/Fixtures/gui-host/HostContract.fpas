@@ -1,8 +1,8 @@
 program HostContract;
 
 uses
-  Fpas.Gui.Application as App, Fpas.Gui.Internal.Session as Host, Fpas.Gui.Cui as Cui,
-  Fpas.Mvu.Application as Mvu, Fpas.Mvu.Session as Runtime, Fpas.Ui.Elements as E,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G, System as Sys, System.Console as Console, System.Threading as Threads;
 
 type Msg = union

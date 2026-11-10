@@ -29,12 +29,12 @@ CTestTestfile.cmake
 install_manifest.txt
 compile_commands.json
 cmake-build-*/
-/src/Fpas.Gui.Cui/native/build*/
-/src/Fpas.Gui.Cui/native/Testing/
-/src/Fpas.Gui.Cui/native/Makefile
-/src/Fpas.Gui.Cui/native/build*.ninja
-/src/Fpas.Gui.Cui/native/.ninja_*
-/src/Fpas.Gui.Cui/native/fpas_cui_smoke
+/src/Fpas.Ui.Gui.Cui/native/build*/
+/src/Fpas.Ui.Gui.Cui/native/Testing/
+/src/Fpas.Ui.Gui.Cui/native/Makefile
+/src/Fpas.Ui.Gui.Cui/native/build*.ninja
+/src/Fpas.Ui.Gui.Cui/native/.ninja_*
+/src/Fpas.Ui.Gui.Cui/native/fpas_cui_smoke
 
 # Test and coverage output
 [Tt]est[Rr]esults/

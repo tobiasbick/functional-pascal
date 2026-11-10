@@ -22,10 +22,10 @@ public sealed partial class LocalDeploymentTests
         var xml = XDocument.Load(sdkProject); xml.Root!.Element("PropertyGroup")!.Element("Version")!.Value = version; xml.Save(sdkProject);
         var packages = directory.File("packages");
         var sdkCache = Path.Combine(packages, "fpas.net.sdk", version);
-        var guiCache = Path.Combine(packages, "fpas.gui.cui", version);
+        var guiCache = Path.Combine(packages, "fpas.ui.gui.cui", version);
         var otherVersion = Path.Combine(packages, "fpas.net.sdk", "0.0.0-preserve");
         Directory.CreateDirectory(otherVersion); File.WriteAllText(Path.Combine(otherVersion, "keep"), "other SDK version");
-        var otherGuiVersion = Path.Combine(packages, "fpas.gui.cui", "0.0.0-preserve");
+        var otherGuiVersion = Path.Combine(packages, "fpas.ui.gui.cui", "0.0.0-preserve");
         Directory.CreateDirectory(otherGuiVersion); File.WriteAllText(Path.Combine(otherGuiVersion, "keep"), "other GUI version");
         var unrelated = Path.Combine(packages, "unrelated", "1.0.0");
         Directory.CreateDirectory(unrelated); File.WriteAllText(Path.Combine(unrelated, "keep"), "other package");
@@ -58,7 +58,7 @@ public sealed partial class LocalDeploymentTests
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             if (run == 0) Assert.Single(Directory.GetFileSystemEntries(delivery));
             Assert.True(File.Exists(Path.Combine(checkout, "sdk", "feed", $"Fpas.NET.Sdk.{version}.nupkg")));
-            var guiPackage = Path.Combine(checkout, "sdk", "feed", $"Fpas.Gui.Cui.{version}.nupkg");
+            var guiPackage = Path.Combine(checkout, "sdk", "feed", $"Fpas.Ui.Gui.Cui.{version}.nupkg");
             Assert.True(File.Exists(guiPackage));
             Assert.False(Directory.Exists(sdkCache));
             Assert.False(Directory.Exists(guiCache));

@@ -19,7 +19,7 @@ internal sealed class EnvironmentCommand
 
           fpas env --json
 
-          fpas env --directory examples/mandelbrot --json
+          fpas env --directory examples/numerics/mandelbrot --json
 
         """);
 

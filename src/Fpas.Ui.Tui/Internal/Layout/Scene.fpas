@@ -1,0 +1,92 @@
+unit Fpas.Ui.Tui.Internal.Layout.Scene;
+
+uses Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+
+public type Binding<TMsg> = union
+  Invoke(Action: Actions.Direct<TMsg>);
+  Toggle(Action: Actions.Toggle<TMsg>);
+  Multiline(View: EditorView.Viewport<TMsg>);
+  SelectList(List: S.Viewport<TMsg>);
+  SelectTab(Bar: Tabs.Header<TMsg>);
+  Scroll(View: V.Viewport<TMsg>);
+  Canvas(Column: int; Row: int; Events: T.CanvasEvents<TMsg>);
+end union;
+
+public type Control<TMsg> = record
+  public Id: string;
+  public Label: string;
+  public Role: string;
+  public Value: string;
+  public Bounds: F.Rect;
+  public Scope: string;
+  public FocusReturn: string;
+  public Enabled: bool;
+  public Action: Binding<TMsg>;
+  public Variant: UiStyle.ButtonVariant;
+end record;
+
+public type Scope<TMsg> = record
+  public Id: string;
+  public Initial: string;
+  public Escape: Sys.Func<TMsg>?;
+  public Shortcuts: array of K.ShortcutBinding<TMsg>;
+end record;
+
+public type ScrollRegion = record
+  public Id: string;
+  public Scope: string;
+  public Bounds: F.Rect;
+  public Maximum: int;
+  public Controlled: bool := false;
+end record;
+
+public type Layout<TMsg> = record
+  public Lines: array of string;
+  public Cells: array of T.Cell;
+  public Controls: array of Control<TMsg>;
+  public Active: Scope<TMsg>?;
+  public GlobalKeys: array of K.ShortcutBinding<TMsg>;
+  public Regions: array of ScrollRegion;
+  public Painted: array of D.PaintedRow;
+  public Allocations: array of F.AllocationMemo;
+  // Last successful shared preflight/cache, retained by the owner.
+  public Prepared: Validation.Prepared<TMsg>? := null;
+end record;
+
+public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;
+begin
+  if Layout <> null then
+    for Control: Control<TMsg> in Layout.Controls do
+      if Control.Id = Id then
+        return Control;
+      end if;
+    end for;
+  end if;
+
+  return null;
+end function;
+
+public function Activatable<TMsg>(Action: Binding<TMsg>): Actions.IActivatable<TMsg>?;
+begin
+  case Action of
+    when Binding.Invoke(const Direct: Actions.Direct<TMsg>):
+      return Direct;
+    when Binding.Toggle(const Checkbox: Actions.Toggle<TMsg>):
+      return Checkbox;
+    when Binding.SelectList(const List: S.Viewport<TMsg>):
+      return List;
+    else
+      return null;
+  end case;
+end function;
+
+public function CanvasBounds<TMsg>(Layout: Layout<TMsg>?; Id: string): F.Rect;
+begin
+  const Control: Control<TMsg>? := FindControl<TMsg>(Layout, Id);
+  if Control <> null and Control.Role = 'canvas' then
+    return Control.Bounds;
+  end if;
+
+  return new F.Rect(0, 0, 0, 0);
+end function;
+end unit;

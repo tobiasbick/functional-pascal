@@ -58,6 +58,14 @@ that engineering choice is separate from source syntax.
 | Using / exception handling | CLR protected regions, handlers, filters, and cleanup |
 | Requires / ensures | Callee entry/exit Boolean checks and ordinary CLR exceptions |
 
+UI library identities share the `Fpas.Ui` prefix. `Fpas.Ui` owns widget contracts,
+`Fpas.Ui.Mvu` owns model transitions and effects, `Fpas.Ui.Gui` and `Fpas.Ui.Tui`
+own their hosts, and `Fpas.Ui.Gui.Cui` owns the native binding. Project, assembly
+and package names follow these identities. FPAS units use the mapping above;
+for example, `Fpas.Ui.Mvu.Application` is the static unit container in namespace
+`Fpas.Ui.Mvu`. Namespace nesting does not introduce assembly dependencies: the
+MVU runtime is independent of widgets and the TUI has no GUI/CUI dependency.
+
 The same container rule applies to a qualified program name. Visibility is checked
 at both source and metadata boundaries. Public nested types in accessible
 containers are available to C# and other .NET consumers using ordinary nested

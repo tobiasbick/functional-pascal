@@ -24,15 +24,15 @@
     <ProjectReference Include="../../src/Fpas.Workspaces/Fpas.Workspaces.csproj" />
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
-    <None Include="../../examples/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/mandelbrot/main.fpas;../../examples/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Tui/**/*.fpas" Exclude="../../src/Fpas.Tui/bin/**/*;../../src/Fpas.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Mvu/**/*.fpas" Exclude="../../src/Fpas.Mvu/bin/**/*;../../src/Fpas.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/basics/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/numerics/mandelbrot/main.fpas;../../examples/numerics/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Tui/**/*.fpas" Exclude="../../src/Fpas.Ui.Tui/bin/**/*;../../src/Fpas.Ui.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui/**/*.fpas" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/ui/WidgetContract.fpas" Link="Fixtures/ui/WidgetContract.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/tui/filter-list/main.fpas" Link="Fixtures/tui/example.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/tui/filter-list/main.fpas" Link="Fixtures/tui/example.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/SharedContract.fpas" Link="Fixtures/tui/shared.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CanvasInputContract.fpas" Link="Fixtures/tui/canvas-input.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -41,20 +41,20 @@
     <None Include="../Fixtures/tui/MultilineContract.fpas" Link="Fixtures/tui/multiline.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/units/**/*.fpas;../../examples/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/read-file/*.fpas;../../examples/read-file/*.fpasproj;../../examples/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/directory-inventory/*.fpas;../../examples/directory-inventory/*.fpasproj" Link="Fixtures/directory-inventory/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/inventory-model/*.fpas;../../examples/inventory-model/*.fpasproj" Link="Fixtures/inventory-model/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/game-actions/*.fpas;../../examples/game-actions/*.fpasproj" Link="Fixtures/game-actions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/generic-pipeline/*.fpas;../../examples/generic-pipeline/*.fpasproj" Link="Fixtures/generic-pipeline/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/generic-tree/*.fpas;../../examples/generic-tree/*.fpasproj" Link="Fixtures/generic-tree/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/data-domains/*.fpas;../../examples/data-domains/*.fpasproj" Link="Fixtures/data-domains/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/shared-state/*.fpas;../../examples/shared-state/*.fpasproj" Link="Fixtures/shared-state/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/local-functions/*.fpas;../../examples/local-functions/*.fpasproj" Link="Fixtures/local-functions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/loops/*.fpas;../../examples/loops/*.fpasproj" Link="Fixtures/loops/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/events/*.fpas;../../examples/events/*.fpasproj" Link="Fixtures/events/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/type-inspection/*.fpas;../../examples/type-inspection/*.fpasproj" Link="Fixtures/type-inspection/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/attributes/*.fpas;../../examples/attributes/*.fpasproj" Link="Fixtures/attributes/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/basics/units/**/*.fpas;../../examples/basics/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/io/read-file/*.fpas;../../examples/io/read-file/*.fpasproj;../../examples/io/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/io/directory-inventory/*.fpas;../../examples/io/directory-inventory/*.fpasproj" Link="Fixtures/directory-inventory/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/types/inventory-model/*.fpas;../../examples/types/inventory-model/*.fpasproj" Link="Fixtures/inventory-model/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/types/game-actions/*.fpas;../../examples/types/game-actions/*.fpasproj" Link="Fixtures/game-actions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/functions/generic-pipeline/*.fpas;../../examples/functions/generic-pipeline/*.fpasproj" Link="Fixtures/generic-pipeline/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/types/generic-tree/*.fpas;../../examples/types/generic-tree/*.fpasproj" Link="Fixtures/generic-tree/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/types/data-domains/*.fpas;../../examples/types/data-domains/*.fpasproj" Link="Fixtures/data-domains/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/basics/shared-state/*.fpas;../../examples/basics/shared-state/*.fpasproj" Link="Fixtures/shared-state/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/functions/local-functions/*.fpas;../../examples/functions/local-functions/*.fpasproj" Link="Fixtures/local-functions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/basics/loops/*.fpas;../../examples/basics/loops/*.fpasproj" Link="Fixtures/loops/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/interop/events/*.fpas;../../examples/interop/events/*.fpasproj" Link="Fixtures/events/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/interop/type-inspection/*.fpas;../../examples/interop/type-inspection/*.fpasproj" Link="Fixtures/type-inspection/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/interop/attributes/*.fpas;../../examples/interop/attributes/*.fpasproj" Link="Fixtures/attributes/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/msbuild/**/*" Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/testing/*.fpas" Link="Fixtures/testing/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />

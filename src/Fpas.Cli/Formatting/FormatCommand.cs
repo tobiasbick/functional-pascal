@@ -26,13 +26,13 @@ internal sealed class FormatCommand
         Exit codes: 0 success/help, 1 failure/deadline, 2 check changes/invalid arguments, 130 cancellation.
 
         Examples:
-          fpas fmt examples/hello/main.fpas
+          fpas fmt examples/basics/hello/main.fpas
 
           fpas fmt --check --list examples
 
-          fpas fmt --stdout examples/hello/main.fpas
+          fpas fmt --stdout examples/basics/hello/main.fpas
 
-          fpas fmt --check examples/hello/Hello.fpasproj --report json
+          fpas fmt --check examples/basics/hello/Hello.fpasproj --report json
         """);
 
     internal FormatCommand()

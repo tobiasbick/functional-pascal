@@ -1,8 +1,8 @@
 program PublishedGallery;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Gui.Application as Gui,
-  Fpas.Gui.Cui as Cui, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L, Fpas.Mvu.Session as Mvu,
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Editors as Ed, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Session as Mvu,
   System as Sys, System.Console as Console, System.Text as Text, System.Diagnostics as Diagnostics;
 
 procedure Check(Value: bool; Reason: string);

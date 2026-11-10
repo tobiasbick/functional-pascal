@@ -20,7 +20,7 @@ collection's enumerable view and disposes an acquired disposable enumerator on
 all exits; modification may invalidate it. The compiler does not insert a snapshot.
 
 Extension methods are called in static form. The
-[directory inventory example](../../../examples/directory-inventory/README.md)
+[directory inventory example](../../../examples/io/directory-inventory/README.md)
 uses actual LINQ Where/Select with captured state. The
 [array/collection example](../language/types/arrays.md#example) demonstrates
 aliasing, List, Dictionary, and initialized out arguments.

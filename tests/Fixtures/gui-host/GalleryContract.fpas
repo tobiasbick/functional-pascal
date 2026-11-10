@@ -1,9 +1,9 @@
 program GalleryContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Gui.Application as App,
-  Fpas.Gui.Internal.Session as Host, Fpas.Gui.Cui as Cui, Fpas.Mvu.Application as Mvu,
-  Fpas.Mvu.Session as Runtime, Fpas.Ui.Editors as Ed, Fpas.Ui.Elements as E,
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Editors as Ed, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, System as Sys,
   System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks,
   System.Diagnostics as Diagnostics;

@@ -1,6 +1,6 @@
 <Project>
   <ItemGroup Condition="'$(FpasCuiDistributionRid)' != ''">
-    <ProjectReference Include="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" ReferenceOutputAssembly="false"
+    <ProjectReference Include="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" ReferenceOutputAssembly="false"
                       AdditionalProperties="FpasCuiSkipSourceBuild=true" />
   </ItemGroup>
 
@@ -28,7 +28,7 @@
 
   <Target Name="BuildFpasGuiDistributionAssets" BeforeTargets="BeforeBuild" DependsOnTargets="ResolveFpasGuiDistributionInputs"
           Condition="'$(FpasCuiDistributionRid)' != '' and '$(DesignTimeBuild)' != 'true'">
-    <MSBuild Projects="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" Targets="BuildFpasCuiNative"
+    <MSBuild Projects="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" Targets="BuildFpasCuiNative"
              Properties="FpasCuiNativeRid=$(FpasCuiDistributionRid);FpasCuiNativeLinkage=%(_FpasCuiLinkage.Identity);FpasCuiNativeBuildDirectory=$(_FpasCuiRoot)%(_FpasCuiLinkage.Identity)" />
   </Target>
 
@@ -45,7 +45,7 @@
 
   <Target Name="PackFpasGuiBinding" AfterTargets="Pack" DependsOnTargets="ResolveFpasGuiDistributionInputs"
           Condition="'$(FpasCuiDistributionRid)' != ''">
-    <MSBuild Projects="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" Targets="Pack"
+    <MSBuild Projects="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" Targets="Pack"
              Properties="Configuration=$(Configuration);NoBuild=true;FpasCuiSkipSourceBuild=true;FpasCuiPackageAssetRoot=$(_FpasCuiRoot);PackageVersion=$(PackageVersion);PackageOutputPath=$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(PackageOutputPath)'))" />
   </Target>
 </Project>

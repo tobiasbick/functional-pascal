@@ -9,7 +9,7 @@ packages or download tools. Missing components remain visible in the report.
 ```sh
 fpas env
 fpas env --json
-fpas env --directory examples/mandelbrot --json
+fpas env --directory examples/numerics/mandelbrot --json
 ```
 
 Without `--json`, output is an English summary. JSON owns stdout and contains one

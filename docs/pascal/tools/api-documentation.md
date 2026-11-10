@@ -5,9 +5,9 @@ or solution context. It uses the evaluated reference assemblies and package
 versions, including APIs the FPAS source has not used yet.
 
 ```sh
-fpas doc examples/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
-fpas doc examples/hello/Hello.fpasproj --name System.Console.WriteLine --report json
-fpas doc examples/hello/Hello.fpasproj --name System.Collections.Generic.List --limit 50 --report json
+fpas doc examples/numerics/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
+fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
+fpas doc examples/basics/hello/Hello.fpasproj --name System.Collections.Generic.List --limit 50 --report json
 ```
 
 ## Names and scope

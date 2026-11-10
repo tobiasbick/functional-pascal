@@ -1,8 +1,8 @@
 # Desktop GUI platform acceptance
 
 The implemented application path is described in the [GUI handbook](../../pascal/libraries/gui.md),
-[GUI host](../../../src/Fpas.Gui/README.md), [shared widgets](../../../src/Fpas.Ui/README.md)
-and [terminal host](../../../src/Fpas.Tui/README.md). The
+[GUI host](../../../src/Fpas.Ui.Gui/README.md), [shared widgets](../../../src/Fpas.Ui/README.md)
+and [terminal host](../../../src/Fpas.Ui.Tui/README.md). The
 [acceptance map](../../../tests/coverage.md#native-gui) identifies automated checks.
 
 The remaining platform is native Windows x64. Keep the phases separate so each
@@ -19,7 +19,7 @@ and the .NET NativeAOT toolchain. Run the public counter and gallery with softwa
 and OpenGL rendering. Store screenshots, logs and temporary publish outputs under
 ignored `.temp-data`; keep the owning references focused on current contracts.
 
-CUI security corrections are outside this implementation by user decision.
+For upstream CUI findings, follow the [contribution policy](../../../AGENTS.md#cui-contributions).
 Direct Wayland, macOS, other architectures, accessibility implementation and full
 platform IME/complex-script support are outside the initial contract.
 

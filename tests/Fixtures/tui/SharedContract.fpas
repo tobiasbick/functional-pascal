@@ -1,6 +1,6 @@
 program SharedContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.TerminalExtensions.Input as Keys, System as Sys, System.Console as Console;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.TerminalExtensions.Input as Keys, System as Sys, System.Console as Console;
 
 var Callbacks: int := 0;
 var Updates: int := 0;

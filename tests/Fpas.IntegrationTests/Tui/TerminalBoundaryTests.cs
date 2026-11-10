@@ -11,7 +11,7 @@ public sealed class TerminalBoundaryTests
     {
         using var target = new Debuggee("terminal-boundary");
         await TuiFixture.Compile(target, "shared.fpas");
-        foreach (var file in new[] { "Fpas.Tui.dll", "Fpas.Ui.dll", "Fpas.Mvu.dll", "Fpas.Processes.dll" })
+        foreach (var file in new[] { "Fpas.Ui.Tui.dll", "Fpas.Ui.dll", "Fpas.Ui.Mvu.dll", "Fpas.Processes.dll" })
         {
             using var stream = File.OpenRead(target.FilePath(file));
             using var pe = new PEReader(stream);

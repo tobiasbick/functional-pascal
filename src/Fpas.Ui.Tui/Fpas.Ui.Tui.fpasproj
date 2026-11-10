@@ -1,0 +1,24 @@
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fpas.Ui.Tui</PackageId>
+    <Version>0.1.0-dev</Version>
+    <Description>Functional Pascal terminal UI library for .NET.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeTuiRuntime</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" />
+    <ProjectReference Include="../Fpas.Ui/Fpas.Ui.fpasproj" />
+    <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" PrivateAssets="all" />
+    <None Update="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <Target Name="IncludeTuiRuntime">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(TargetDir)Fpas.Processes.dll" />
+    </ItemGroup>
+  </Target>
+</Project>

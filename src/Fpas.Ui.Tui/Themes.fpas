@@ -1,0 +1,230 @@
+unit Fpas.Ui.Tui.Themes;
+
+uses Fpas.Ui.Terminal as T;
+
+// Terminal colors for one semantic button variant.
+public type ButtonAppearance = record
+  // Colors without focus or hover.
+  public Normal: T.Style;
+  // Keyboard-focus colors.
+  public Focused: T.Style;
+  // Pointer-hover colors.
+  public Hovered: T.Style;
+end record;
+
+// Semantic button variants and disabled colors.
+public type ButtonStyles = record
+  // Supporting action colors.
+  public Secondary: ButtonAppearance;
+  // Main action colors.
+  public Primary: ButtonAppearance;
+  // Selected action colors.
+  public Active: ButtonAppearance;
+  // Discard-action colors.
+  public Destructive: ButtonAppearance;
+  // Disabled control colors.
+  public Disabled: T.Style;
+end record;
+
+// Terminal border, editor, selection and progress colors.
+public type WidgetStyles = record
+  // 24-bit border foreground.
+  public BorderColor: int;
+  // Editor body colors.
+  public Field: T.Style;
+  // Focused editor colors.
+  public FocusedField: T.Style;
+  // Selected row colors.
+  public Selected: T.Style;
+  // 24-bit filled progress foreground.
+  public ProgressFillColor: int;
+  // 24-bit empty progress foreground.
+  public ProgressTrackColor: int;
+end record;
+
+// Resolves shared style roles and terminal interaction colors.
+public type Theme = record
+  // Default text and surface colors.
+  public Text: T.Style := new T.Style();
+  // Default keyboard-focus colors.
+  public Focus: T.Style := new T.Style(Foreground := 16777215, Background := 2445729);
+  // Default pointer-hover colors.
+  public Hover: T.Style := new T.Style(Foreground := 16777215, Background := 3355443);
+  // Caret and selection colors.
+  public Caret: T.Style := new T.Style(Foreground := 0, Background := 16777215);
+  // Optional terminal widget overrides.
+  public Widgets: WidgetStyles? := null;
+  // 24-bit placeholder foreground; -1 inherits the field color.
+  public PlaceholderColor: int := -1;
+  // Optional semantic button overrides.
+  public Buttons: ButtonStyles? := null;
+  // Heading role colors.
+  public Heading: T.Style := new T.Style();
+  // Panel role colors.
+  public Panel: T.Style := new T.Style();
+  // Muted role colors.
+  public Muted: T.Style := new T.Style();
+  // Main action colors.
+  public Primary: T.Style := new T.Style();
+  // Supporting action colors.
+  public Secondary: T.Style := new T.Style();
+  // Error role colors.
+  public Error: T.Style := new T.Style();
+end record;
+
+type Swatches = record
+  public Canvas: int;
+  // Panel role colors.
+  public Panel: int;
+  // Default text and surface colors.
+  public Text: int;
+  // Heading role colors.
+  public Heading: int;
+  // Muted role colors.
+  public Muted: int;
+  public Accent: int;
+  public AccentText: int;
+  // Default pointer-hover colors.
+  public Hover: int;
+  public Border: int;
+  // Editor body colors.
+  public Field: int;
+  // Focused editor colors.
+  public FocusedField: int;
+  public Selection: int;
+  public SelectionText: int;
+  public Track: int;
+  // Supporting action colors.
+  public Secondary: int;
+  // Error role colors.
+  public Error: int;
+end record;
+
+function Create(Colors: Swatches): Theme;
+begin
+  const Focus: T.Style := new T.Style(Colors.AccentText, Colors.Accent);
+  const Hover: T.Style := new T.Style(Colors.Text, Colors.Hover);
+  const Secondary: T.Style := new T.Style(Colors.Text, Colors.Secondary);
+  const Selected: T.Style := new T.Style(Colors.SelectionText, Colors.Selection);
+  const Error: T.Style := new T.Style(Colors.Error, Colors.Canvas);
+  const Theme: Theme := new Theme(
+    Text := new T.Style(Colors.Text, Colors.Canvas),
+    Focus := Focus,
+    Hover := Hover,
+    Caret := Focus,
+    Widgets := new WidgetStyles(
+      BorderColor := Colors.Border,
+      Field := new T.Style(Colors.Text, Colors.Field),
+      FocusedField := new T.Style(Colors.Text, Colors.FocusedField),
+      Selected := Selected,
+      ProgressFillColor := Colors.Accent,
+      ProgressTrackColor := Colors.Track
+    ),
+    PlaceholderColor := Colors.Muted,
+    Buttons := new ButtonStyles(
+      Secondary := new ButtonAppearance(Secondary, Focus, Hover),
+      Primary := new ButtonAppearance(
+        Focus,
+        new T.Style(Colors.Accent, Colors.AccentText),
+        new T.Style(Colors.Accent, Colors.Hover)
+      ),
+      Active := new ButtonAppearance(
+        Selected,
+        new T.Style(Colors.Selection, Colors.SelectionText),
+        new T.Style(Colors.SelectionText, Colors.Hover)
+      ),
+      Destructive := new ButtonAppearance(
+        new T.Style(Colors.Canvas, Colors.Error), Error, new T.Style(Colors.Error, Colors.Hover)
+      ),
+      Disabled := new T.Style(Colors.Muted, Colors.Panel)
+    )
+  );
+  return Theme with
+    Heading := new T.Style(Colors.Heading, Colors.Canvas);
+    Panel := new T.Style(Colors.Text, Colors.Panel);
+    Muted := new T.Style(Colors.Muted, Colors.Canvas);
+    Primary := Focus;
+    Secondary := Secondary;
+    Error := Error;
+  end with;
+end function;
+
+const LightTheme: Theme := Create(
+  new Swatches(
+    Canvas := $F3F6FA, Panel := $FFFFFF, Text := $213247, Heading := $142134,
+    Muted := $53657A, Accent := $176854, AccentText := $FFFFFF, Hover := $DBE8F2,
+    Border := $71849A, Field := $EAF0F6, FocusedField := $DCEDE7,
+    Selection := $CFE8DE, SelectionText := $164C3F, Track := $788DA2,
+    Secondary := $E3EBF4, Error := $A62B2B
+  )
+);
+
+const DarkTheme: Theme := Create(
+  new Swatches(
+    Canvas := $141C28, Panel := $1B2736, Text := $E4EDF7, Heading := $F5F8FC,
+    Muted := $A2B5C9, Accent := $8CE2C1, AccentText := $10251F, Hover := $34475A,
+    Border := $5A748F, Field := $202E3E, FocusedField := $203B40,
+    Selection := $2C454B, SelectionText := $BAF1D8, Track := $56708A,
+    Secondary := $29394C, Error := $FFABAA
+  )
+);
+
+const GreenTheme: Theme := Create(
+  new Swatches(
+    Canvas := $101A15, Panel := $18261D, Text := $DDF3E1, Heading := $EEFFF2,
+    Muted := $A4BAA7, Accent := $A6E36F, AccentText := $142512, Hover := $314733,
+    Border := $5E8063, Field := $203024, FocusedField := $304A36,
+    Selection := $354B2C, SelectionText := $D2F5AC, Track := $62795A,
+    Secondary := $293C2C, Error := $FFABA2
+  )
+);
+
+const BlueTheme: Theme := Create(
+  new Swatches(
+    Canvas := $121B32, Panel := $1B2844, Text := $E2EAFB, Heading := $F2F6FF,
+    Muted := $A3B5D3, Accent := $9BC6FF, AccentText := $14254A, Hover := $364D77,
+    Border := $647DAA, Field := $223151, FocusedField := $2A416A,
+    Selection := $334D78, SelectionText := $D4E6FF, Track := $5A739C,
+    Secondary := $2B3B5E, Error := $FFB1B9
+  )
+);
+
+const AmberTheme: Theme := Create(
+  new Swatches(
+    Canvas := $1B1209, Panel := $2A1C0E, Text := $FFE2B3, Heading := $FFF0D4,
+    Muted := $CAA66E, Accent := $FFB84D, AccentText := $2A1704, Hover := $4B3219,
+    Border := $936939, Field := $332311, FocusedField := $493218,
+    Selection := $593A16, SelectionText := $FFDC91, Track := $906840,
+    Secondary := $3C2A17, Error := $FFAAA0
+  )
+);
+
+public function Light(): Theme;
+begin
+  return LightTheme;
+end function;
+
+public function Dark(): Theme;
+begin
+  return DarkTheme;
+end function;
+
+public function Green(): Theme;
+begin
+  return GreenTheme;
+end function;
+
+public function Blue(): Theme;
+begin
+  return BlueTheme;
+end function;
+
+// Provides warm amber accents on dark brown surfaces.
+//
+// ## Returns
+// The built-in Amber palette with its widget and button styles.
+public function Amber(): Theme;
+begin
+  return AmberTheme;
+end function;
+end unit;

@@ -1,6 +1,6 @@
 program TabsContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
 
 function Update(State: int; Message: int): Mvu.Transition<int, int>;
 begin

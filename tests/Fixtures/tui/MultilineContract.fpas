@@ -1,6 +1,6 @@
 program MultilineContract;
 
-uses Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.Editors as Editors, Fpas.Tui.Themes as Themes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.Editors as Editors, Fpas.Ui.Tui.Themes as Themes, System as Sys, System.Console as Console;
 
 type Model = record
   public Text: string := '';

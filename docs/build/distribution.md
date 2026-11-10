@@ -75,7 +75,7 @@ Application outputs use the [publishing contract](publishing.md).
 ## Native CUI assets
 
 Distribution builds compile CUI from the pinned upstream sources using the
-[native build prerequisites](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+[native build prerequisites](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
 The embedded SDK package carries the native files for the distribution's RID.
 
 | SDK package path | `win-x64` | `linux-x64` |
@@ -85,29 +85,29 @@ The embedded SDK package carries the native files for the distribution's RID.
 | `tools/gui/licenses/` | Six CUI and bundled-component notices | Same notices |
 
 The scripts set `FpasCuiDistributionRid` for both the SDK build and pack. Packing
-also creates `Fpas.Gui.Cui.<version>.nupkg` with the managed binding, the same
+also creates `Fpas.Ui.Gui.Cui.<version>.nupkg` with the managed binding, the same
 native files and transitive build targets. Supply this package alongside the SDK
 in the local feed for GUI projects. Use separate feeds for distributions built
 for different RIDs at the same version. The compiler and terminal programs have
 no CUI runtime dependency. Ordinary compiler and SDK development builds can
-omit the distribution property. See the [packaged binding](../../src/Fpas.Gui.Cui/README.md#packaged-binding)
+omit the distribution property. See the [packaged binding](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-binding)
 for project references and RID selection.
 
-The application-facing Fpas.Gui package depends on Fpas.Mvu, Fpas.Ui and the
-matching Fpas.Gui.Cui package. Package the three FPAS library projects from the
+The application-facing Fpas.Ui.Gui package depends on Fpas.Ui.Mvu, Fpas.Ui and the
+matching Fpas.Ui.Gui.Cui package. Package the three FPAS library projects from the
 same compiler build into that feed after preparing its local SDK:
 
 ```sh
-dotnet pack src/Fpas.Mvu/Fpas.Mvu.fpasproj -c Release -o artifacts/feed
+dotnet pack src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj -c Release -o artifacts/feed
 dotnet pack src/Fpas.Ui/Fpas.Ui.fpasproj -c Release -o artifacts/feed
-dotnet pack src/Fpas.Gui/Fpas.Gui.fpasproj -c Release -o artifacts/feed
+dotnet pack src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj -c Release -o artifacts/feed
 ```
 
 Set PackageVersion consistently when creating a versioned release. The
-[GUI publishing acceptance](../../tests/Fpas.Gui.Cui.Tests/GuiPublishingTests.cs)
-builds a fresh feed with these packages and consumes Fpas.Gui without source
-references or native GUI build tools. Terminal-only applications use Fpas.Tui,
-Fpas.Ui and Fpas.Mvu independently of that native binding.
+[GUI publishing acceptance](../../tests/Fpas.Ui.Gui.Cui.Tests/GuiPublishingTests.cs)
+builds a fresh feed with these packages and consumes Fpas.Ui.Gui without source
+references or native GUI build tools. Terminal-only applications use Fpas.Ui.Tui,
+Fpas.Ui and Fpas.Ui.Mvu independently of that native binding.
 
 ## Extraction and ownership
 

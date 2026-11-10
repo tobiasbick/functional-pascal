@@ -1,6 +1,6 @@
 program TableContract;
 
-uses Fpas.Ui.Validation as V, Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
+uses Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, System as Sys, System.Console as Console;
 
 const Columns: array of Ch.TableColumn := [
   new Ch.TableColumn(

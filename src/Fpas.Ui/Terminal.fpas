@@ -2,40 +2,42 @@ unit Fpas.Ui.Terminal;
 
 uses System as Sys;
 
-/// Exact dimensions for an explicitly terminal-specific responsive subtree.
+// Exact dimensions for an explicitly terminal-specific responsive subtree.
 public type Viewport = record
-  /// Available terminal columns.
+  // Available terminal columns.
   public Columns: int;
-  /// Available terminal rows.
+  // Available terminal rows.
   public Rows: int;
 end record;
 
-/// Optional terminal color overrides using 24-bit RGB values.
+// Optional terminal color overrides using 24-bit RGB values.
 public type Style = record
-  /// The foreground color or null to inherit.
+  // The foreground color or null to inherit.
   public Foreground: int? := null;
-  /// The background color or null to inherit.
+  // The background color or null to inherit.
   public Background: int? := null;
 end record;
 
-/// One styled glyph for a terminal canvas.
+// One styled glyph for a terminal canvas.
 public type Cell = record
-  /// The glyph or text fragment to paint.
+  // The glyph or text fragment to paint.
   public Text: string;
-  /// The cell's color overrides.
+  // The cell's color overrides.
   public Colors: Style;
 end record;
 
-/// Converts cell-canvas input into application messages.
-/// <typeparam name="TMsg">The application message type.</typeparam>
+// Converts cell-canvas input into application messages.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
 public type CanvasEvents<TMsg> = record
-  /// Receives visible columns and rows when they change.
+  // Receives visible columns and rows when they change.
   public OnResize: Sys.Func<int, int, TMsg>? := null;
-  /// Receives zero-based column and row for a primary click.
+  // Receives zero-based column and row for a primary click.
   public OnClick: Sys.Func<int, int, TMsg>? := null;
-  /// Receives zero-based column and row for a middle click.
+  // Receives zero-based column and row for a middle click.
   public OnMiddleClick: Sys.Func<int, int, TMsg>? := null;
-  /// Receives column, row and signed wheel delta. Negative scrolls up.
+  // Receives column, row and signed wheel delta. Negative scrolls up.
   public OnScroll: Sys.Func<int, int, int, TMsg>? := null;
 end record;
 end unit;

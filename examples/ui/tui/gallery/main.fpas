@@ -1,0 +1,26 @@
+program WidgetGallery;
+
+uses Gallery.State as G, Gallery.View as Views, Fpas.Ui.Tui.Application as App, System as Sys, System.Threading as Threads;
+
+begin
+  const Initial: G.Model := new G.Model();
+  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
+  if Sys.Array.IndexOf<string>(Arguments, '--headless-control') >= 0 then
+    if Sys.String.IsNullOrEmpty(
+      Sys.Environment.GetEnvironmentVariable('FPAS_TUI_CONTROL_PIPE')
+    )
+    then
+      raise new Sys.InvalidOperationException('Set FPAS_TUI_CONTROL_PIPE for headless control.');
+    end if;
+
+    using const Session: App.HeadlessSession := App.StartHeadless<G.Model, G.Msg>(
+      Initial, G.Update, Views.View, 80, 24, G.ThemeFor
+    );
+    while Session.IsOpen() do
+      Threads.Thread.Sleep(20);
+    end while;
+  else
+    App.Run<G.Model, G.Msg>(Initial, G.Update, Views.View, G.ThemeFor);
+  end if;
+end;
+end program;

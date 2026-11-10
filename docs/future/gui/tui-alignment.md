@@ -1,8 +1,8 @@
 # TUI platform acceptance
 
-The current terminal contract is in [Fpas.Tui](../../../src/Fpas.Tui/README.md),
+The current terminal contract is in [Fpas.Ui.Tui](../../../src/Fpas.Ui.Tui/README.md),
 using [Fpas.Ui](../../../src/Fpas.Ui/README.md) views and
-[Fpas.Mvu](../../../src/Fpas.Mvu/README.md) transitions. Automated ownership and
+[Fpas.Ui.Mvu](../../../src/Fpas.Ui.Mvu/README.md) transitions. Automated ownership and
 shared-view checks are listed in the [acceptance map](../../../tests/coverage.md#terminal-ui).
 
 Phase 7 requires native Windows x64 acceptance in addition to Linux validation.

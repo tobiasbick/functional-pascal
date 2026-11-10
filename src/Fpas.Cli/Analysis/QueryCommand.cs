@@ -26,7 +26,7 @@ internal sealed class QueryCommand
 
             Return one JSON document. Preparation may restore packages and build dependencies.
 
-            Run these examples from examples/mandelbrot.
+            Run these examples from examples/numerics/mandelbrot.
 
             Examples:
               {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 5 --column 10")}
@@ -82,7 +82,7 @@ internal sealed class QueryCommand
     internal Command Command { get; } = new("query", """
         Query checked FPAS declarations, types, references and source.
         Uses explicit on-disk context and exact source positions; queries return JSON only.
-        Run these examples from examples/mandelbrot.
+        Run these examples from examples/numerics/mandelbrot.
 
         Examples:
           fpas query definition Mandelbrot.fpasproj --file main.fpas --line 5 --column 10

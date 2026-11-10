@@ -2,92 +2,96 @@ unit Fpas.Ui.Elements;
 
 uses Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
-/// A declarative view for a host to prepare and present.
-/// <typeparam name="TMsg">The application message type.</typeparam>
+// A declarative view for a host to prepare and present.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
 public type Element<TMsg> = union
-  /// Display text.
+  // Display text.
   Label(Text: string);
-  /// Separate adjacent content, with an optional caption.
+  // Separate adjacent content, with an optional caption.
   Separator(Title: string);
-  /// Activate a named action with the supplied message.
+  // Activate a named action with the supplied message.
   Action(Id: string; Text: string; Message: TMsg; Enabled: bool; Variant: S.ButtonVariant);
-  /// Toggle a model-owned boolean through OnChange.
+  // Toggle a model-owned boolean through OnChange.
   Toggle(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool);
-  /// Propose text edits and selection movements for the supplied document.
+  // Propose text edits and selection movements for the supplied document.
   Editor(
     Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg;
     OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string; Enabled: bool; MultipleLines: bool
   );
-  /// Display keyed independent actions.
+  // Display keyed independent actions.
   ActionList(Id: string; Items: array of C.ListItem<TMsg>; Enabled: bool);
-  /// Select or activate a keyed item.
+  // Select or activate a keyed item.
   Selectable(
     Id: string; Items: array of C.SelectionItem; SelectedKey: string?;
     OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Enabled: bool
   );
-  /// Display a tab set and the resolved active panel.
+  // Display a tab set and the resolved active panel.
   TabSet(
     Id: string; Items: array of C.TabItem; ActiveKey: string?; OnSelect: function(string): TMsg;
     Panel: Element<TMsg>?; Enabled: bool
   );
-  /// Select or activate a keyed row of text cells.
+  // Select or activate a keyed row of text cells.
   TableView(
     Id: string; Columns: array of C.TableColumn; Rows: array of C.TableRow; SelectedKey: string?;
     OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Enabled: bool
   );
-  /// Display determinate progress as a percentage.
+  // Display determinate progress as a percentage.
   Progress(Percent: int);
-  /// Lay children out along one axis in order.
+  // Lay children out along one axis in order.
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
-  /// Adjust the allocation of one child.
+  // Adjust the allocation of one child.
   Sized(Child: Element<TMsg>; Settings: L.Flex);
-  /// Apply the host theme's semantic role to one child.
+  // Apply the host theme's semantic role to one child.
   Styled(Child: Element<TMsg>; Role: S.Role);
-  /// Frame one child with an optional title.
+  // Frame one child with an optional title.
   Framed(Child: Element<TMsg>; Title: string);
-  /// Clip one child to a vertical viewport with optional model-controlled scrolling.
+  // Clip one child to a vertical viewport with optional model-controlled scrolling.
   Scroll(
     Id: string; Child: Element<TMsg>; Position: L.ScrollPosition?;
     OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool
   );
-  /// Place a modal above a base view. An absent dismissal callback leaves Escape unbound.
+  // Place a modal above a base view. An absent dismissal callback leaves Escape unbound.
   Modal(
     Id: string; Base: Element<TMsg>; Content: Element<TMsg>; InitialFocus: string?;
     OnDismiss: Sys.Func<TMsg>?
   );
-  /// Resolve a typed cached subtree by comparing its dependencies.
+  // Resolve a typed cached subtree by comparing its dependencies.
   Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
-  /// Apply terminal-specific RGB styling to a subtree.
+  // Apply terminal-specific RGB styling to a subtree.
   TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
-  /// Draw a terminal canvas and route input in cells.
+  // Draw a terminal canvas and route input in cells.
   TerminalCanvas(Id: string; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
-  /// Display a terminal status message and priority-ordered hints.
+  // Display a terminal status message and priority-ordered hints.
   TerminalStatus(Message: string; Hints: array of string);
-  /// Compose terminal content, floating layers and scoped shortcuts.
+  // Compose terminal content, floating layers and scoped shortcuts.
   TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
-  /// A terminal floating layer with optional modal focus and explicit percentage limits.
+  // A terminal floating layer with optional modal focus and explicit percentage limits.
   TerminalLayer(
     Id: string; Content: Element<TMsg>; InitialFocus: string?; OnDismiss: Sys.Func<TMsg>?;
     Shortcuts: array of Keys.ShortcutBinding<TMsg>; Limits: Keys.OverlayLimits?; Modal: bool
   );
-  /// A terminal overlay body with a pinned footer.
+  // A terminal overlay body with a pinned footer.
   TerminalPanel(Body: Element<TMsg>; Footer: Element<TMsg>; Title: string; Padding: byte);
-  /// A terminal canvas with an explicit cell extent.
+  // A terminal canvas with an explicit cell extent.
   TerminalFixedCanvas(Id: string; Columns: int; Rows: int; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
-  /// Resolve a terminal-specific subtree using exact cell dimensions.
+  // Resolve a terminal-specific subtree using exact cell dimensions.
   TerminalViewport(Id: string; Build: function(T.Viewport): Element<TMsg>);
-  /// Display pixels with the supplied width and height in GUI logical units.
+  // Display pixels with the supplied width and height in GUI logical units.
   GraphicImage(Id: string; Data: G.Pixels; Width: int; Height: int);
-  /// Paint drawing operations in a clipped GUI logical viewport.
+  // Paint drawing operations in a clipped GUI logical viewport.
   GraphicCanvas(Id: string; Width: int; Height: int; Operations: array of G.Paint);
 end union;
 
-/// A host-owned cache entry for one typed subview.
-/// <typeparam name="TMsg">The application message type.</typeparam>
+// A host-owned cache entry for one typed subview.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
 public type CacheEntry<TMsg> = record
-  /// The captured dependency value, boxed with its original type.
+  // The captured dependency value, boxed with its original type.
   public Dependencies: Sys.Object;
-  /// The view built for those dependencies.
+  // The view built for those dependencies.
   public Tree: Element<TMsg>;
 end record;
 
@@ -95,288 +99,438 @@ type DependencyBox<TDeps> = record
   public Value: TDeps;
 end record;
 
-/// Displays a text label.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Text">The visible text.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a text label.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Text`: The visible text.
+//
+// ## Returns
+// The declarative widget.
 public function Text<TMsg>(Text: string): Element<TMsg>;
 begin
   return Element<TMsg>.Label(Text);
 end function;
 
-/// Separates adjacent content.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Title">The optional separator caption.</param>
-/// <returns>The declarative widget.</returns>
+// Separates adjacent content.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Title`: The optional separator caption.
+//
+// ## Returns
+// The declarative widget.
 public function Divider<TMsg>(Title: string := ''): Element<TMsg>;
 begin
   return Element<TMsg>.Separator(Title);
 end function;
 
-/// Creates an action button.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable control ID.</param>
-/// <param name="Text">The visible label.</param>
-/// <param name="Message">The message to send on activation.</param>
-/// <param name="Enabled">Whether the button accepts input.</param>
-/// <param name="Variant">The button's semantic role.</param>
-/// <returns>The declarative widget.</returns>
+// Creates an action button.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable control ID.
+// - `Text`: The visible label.
+// - `Message`: The message to send on activation.
+// - `Enabled`: Whether the button accepts input.
+// - `Variant`: The button's semantic role.
+//
+// ## Returns
+// The declarative widget.
 public function Button<TMsg>(Id: string; Text: string; Message: TMsg; Enabled: bool := true; Variant: S.ButtonVariant := S.ButtonVariant.Default): Element<TMsg>;
 begin
   return Element<TMsg>.Action(Id, Text, Message, Enabled, Variant);
 end function;
 
-/// Displays a controlled boolean.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable control ID.</param>
-/// <param name="Text">The visible label.</param>
-/// <param name="Checked">The current model value.</param>
-/// <param name="OnChange">Maps the proposed boolean to a message.</param>
-/// <param name="Enabled">Whether the checkbox accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a controlled boolean.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable control ID.
+// - `Text`: The visible label.
+// - `Checked`: The current model value.
+// - `OnChange`: Maps the proposed boolean to a message.
+// - `Enabled`: Whether the checkbox accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function Checkbox<TMsg>(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Toggle(Id, Text, Checked, OnChange, Enabled);
 end function;
 
-/// Displays a controlled single-line field.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable editor ID.</param>
-/// <param name="Text">The model-owned document.</param>
-/// <param name="Position">The model-owned caret and anchor.</param>
-/// <param name="OnEdit">Maps a proposed replacement document and position to a message.</param>
-/// <param name="OnNavigate">Maps a selection movement without an edit to a message.</param>
-/// <param name="Placeholder">The hint shown for an empty document.</param>
-/// <param name="Enabled">Whether the editor accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a controlled single-line field.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable editor ID.
+// - `Text`: The model-owned document.
+// - `Position`: The model-owned caret and anchor.
+// - `OnEdit`: Maps a proposed replacement document and position to a message.
+// - `OnNavigate`: Maps a selection movement without an edit to a message.
+// - `Placeholder`: The hint shown for an empty document.
+// - `Enabled`: Whether the editor accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function TextInput<TMsg>(Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg; OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string := ''; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Editor(Id, Text, Position, OnEdit, OnNavigate, Placeholder, Enabled, false);
 end function;
 
-/// Displays a controlled multiline document.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable editor ID.</param>
-/// <param name="Text">The model-owned document.</param>
-/// <param name="Position">The model-owned caret and anchor.</param>
-/// <param name="OnEdit">Maps a proposed replacement document and position to a message.</param>
-/// <param name="OnNavigate">Maps a selection movement without an edit to a message.</param>
-/// <param name="Placeholder">The hint shown for an empty document.</param>
-/// <param name="Enabled">Whether the editor accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a controlled multiline document.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable editor ID.
+// - `Text`: The model-owned document.
+// - `Position`: The model-owned caret and anchor.
+// - `OnEdit`: Maps a proposed replacement document and position to a message.
+// - `OnNavigate`: Maps a selection movement without an edit to a message.
+// - `Placeholder`: The hint shown for an empty document.
+// - `Enabled`: Whether the editor accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function Multiline<TMsg>(Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg; OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string := ''; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Editor(Id, Text, Position, OnEdit, OnNavigate, Placeholder, Enabled, true);
 end function;
 
-/// Displays keyed independent actions.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable list ID.</param>
-/// <param name="Items">The actions in display order.</param>
-/// <param name="Enabled">Whether the list accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays keyed independent actions.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable list ID.
+// - `Items`: The actions in display order.
+// - `Enabled`: Whether the list accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function List<TMsg>(Id: string; Items: array of C.ListItem<TMsg>; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.ActionList(Id, Items, Enabled);
 end function;
 
-/// Displays a list with model-owned selection.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable list ID.</param>
-/// <param name="Items">The choices in display order.</param>
-/// <param name="SelectedKey">The selected key or null for no selection.</param>
-/// <param name="OnSelect">Maps the requested key to a message.</param>
-/// <param name="OnActivate">Optionally maps activation of the selected item to a message.</param>
-/// <param name="Enabled">Whether the list accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a list with model-owned selection.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable list ID.
+// - `Items`: The choices in display order.
+// - `SelectedKey`: The selected key or null for no selection.
+// - `OnSelect`: Maps the requested key to a message.
+// - `OnActivate`: Optionally maps activation of the selected item to a message.
+// - `Enabled`: Whether the list accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function SelectionList<TMsg>(Id: string; Items: array of C.SelectionItem; SelectedKey: string?; OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>? := null; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Selectable(Id, Items, SelectedKey, OnSelect, OnActivate, Enabled);
 end function;
 
-/// Displays a table with keyed rows and model-owned selection.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable table ID.</param>
-/// <param name="Columns">The headers in column order.</param>
-/// <param name="Rows">The rows in display order.</param>
-/// <param name="SelectedKey">The selected row key or null.</param>
-/// <param name="OnSelect">Maps a requested row key to a message.</param>
-/// <param name="OnActivate">Optionally maps activation of the selected row to a message.</param>
-/// <param name="Enabled">Whether the table accepts input.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a table with keyed rows and model-owned selection.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable table ID.
+// - `Columns`: The headers in column order.
+// - `Rows`: The rows in display order.
+// - `SelectedKey`: The selected row key or null.
+// - `OnSelect`: Maps a requested row key to a message.
+// - `OnActivate`: Optionally maps activation of the selected row to a message.
+// - `Enabled`: Whether the table accepts input.
+//
+// ## Returns
+// The declarative widget.
 public function Table<TMsg>(Id: string; Columns: array of C.TableColumn; Rows: array of C.TableRow; SelectedKey: string?; OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>? := null; Enabled: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.TableView(Id, Columns, Rows, SelectedKey, OnSelect, OnActivate, Enabled);
 end function;
 
-/// Displays determinate progress.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Percent">The percentage to clamp to 0 through 100.</param>
-/// <returns>The declarative widget.</returns>
+// Displays determinate progress.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Percent`: The percentage to clamp to 0 through 100.
+//
+// ## Returns
+// The declarative widget.
 public function ProgressBar<TMsg>(Percent: int): Element<TMsg>;
 begin
   return Element<TMsg>.Progress(Sys.Math.Clamp(Percent, 0, 100));
 end function;
 
-/// Arranges children horizontally with default spacing.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Children">The children in display order.</param>
-/// <returns>The declarative widget.</returns>
+// Arranges children horizontally with default spacing.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Children`: The children in display order.
+//
+// ## Returns
+// The declarative widget.
 public function Row<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.Stack(Children, true, new L.Flow());
 end function;
 
-/// Arranges children horizontally with explicit spacing and alignment.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Settings">The stack's spacing and alignment.</param>
-/// <param name="Children">The children in display order.</param>
-/// <returns>The declarative widget.</returns>
+// Arranges children horizontally with explicit spacing and alignment.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Settings`: The stack's spacing and alignment.
+// - `Children`: The children in display order.
+//
+// ## Returns
+// The declarative widget.
 public function Row<TMsg>(Settings: L.Flow; params Children: array of Element<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.Stack(Children, true, Settings);
 end function;
 
-/// Arranges children vertically with default spacing.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Children">The children in display order.</param>
-/// <returns>The declarative widget.</returns>
+// Arranges children vertically with default spacing.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Children`: The children in display order.
+//
+// ## Returns
+// The declarative widget.
 public function Column<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.Stack(Children, false, new L.Flow());
 end function;
 
-/// Arranges children vertically with explicit spacing and alignment.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Settings">The stack's spacing and alignment.</param>
-/// <param name="Children">The children in display order.</param>
-/// <returns>The declarative widget.</returns>
+// Arranges children vertically with explicit spacing and alignment.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Settings`: The stack's spacing and alignment.
+// - `Children`: The children in display order.
+//
+// ## Returns
+// The declarative widget.
 public function Column<TMsg>(Settings: L.Flow; params Children: array of Element<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.Stack(Children, false, Settings);
 end function;
 
-/// Sets the sizing behavior of a child.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Child">The subtree to allocate.</param>
-/// <param name="Settings">The basis, constraints and weights.</param>
-/// <returns>The declarative widget.</returns>
+// Sets the sizing behavior of a child.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Child`: The subtree to allocate.
+// - `Settings`: The basis, constraints and weights.
+//
+// ## Returns
+// The declarative widget.
 public function Size<TMsg>(Child: Element<TMsg>; Settings: L.Flex): Element<TMsg>;
 begin
   return Element<TMsg>.Sized(Child, Settings);
 end function;
 
-/// Applies a semantic style role.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Child">The subtree to style.</param>
-/// <param name="Role">The role resolved by the current host theme.</param>
-/// <returns>The declarative widget.</returns>
+// Applies a semantic style role.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Child`: The subtree to style.
+// - `Role`: The role resolved by the current host theme.
+//
+// ## Returns
+// The declarative widget.
 public function Styled<TMsg>(Child: Element<TMsg>; Role: S.Role): Element<TMsg>;
 begin
   return Element<TMsg>.Styled(Child, Role);
 end function;
 
-/// Frames a child.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Child">The enclosed view.</param>
-/// <param name="Title">The optional title.</param>
-/// <returns>The declarative widget.</returns>
+// Frames a child.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Child`: The enclosed view.
+// - `Title`: The optional title.
+//
+// ## Returns
+// The declarative widget.
 public function Border<TMsg>(Child: Element<TMsg>; Title: string := ''): Element<TMsg>;
 begin
   return Element<TMsg>.Framed(Child, Title);
 end function;
 
-/// Displays a vertical viewport whose offset belongs to the host.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable viewport ID.</param>
-/// <param name="Child">The scrollable content.</param>
-/// <param name="ShowScrollbar">Whether to show an overflow indicator.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a vertical viewport whose offset belongs to the host.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable viewport ID.
+// - `Child`: The scrollable content.
+// - `ShowScrollbar`: Whether to show an overflow indicator.
+//
+// ## Returns
+// The declarative widget.
 public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar);
 end function;
 
-/// Displays a vertical viewport whose position belongs to the model.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable viewport ID.</param>
-/// <param name="Child">The scrollable content.</param>
-/// <param name="Position">The model's requested position.</param>
-/// <param name="OnScroll">Maps a user scroll request and resolution to a message.</param>
-/// <param name="ShowScrollbar">Whether to show an overflow indicator.</param>
-/// <returns>The declarative widget.</returns>
+// Displays a vertical viewport whose position belongs to the model.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable viewport ID.
+// - `Child`: The scrollable content.
+// - `Position`: The model's requested position.
+// - `OnScroll`: Maps a user scroll request and resolution to a message.
+// - `ShowScrollbar`: Whether to show an overflow indicator.
+//
+// ## Returns
+// The declarative widget.
 public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true): Element<TMsg>;
 begin
   return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar);
 end function;
 
-/// Shows modal content above a base view.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable modal ID.</param>
-/// <param name="Base">The underlying content.</param>
-/// <param name="Content">The active focus scope.</param>
-/// <param name="InitialFocus">A preferred focus target in the modal.</param>
-/// <param name="OnDismiss">Optionally maps an Escape dismissal request to a message.</param>
-/// <returns>The declarative widget.</returns>
+// Shows modal content above a base view.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable modal ID.
+// - `Base`: The underlying content.
+// - `Content`: The active focus scope.
+// - `InitialFocus`: A preferred focus target in the modal.
+// - `OnDismiss`: Optionally maps an Escape dismissal request to a message.
+//
+// ## Returns
+// The declarative widget.
 public function Overlay<TMsg>(Id: string; Base: Element<TMsg>; Content: Element<TMsg>; InitialFocus: string? := null; OnDismiss: Sys.Func<TMsg>? := null): Element<TMsg>;
 begin
   return Element<TMsg>.Modal(Id, Base, Content, InitialFocus, OnDismiss);
 end function;
 
-/// Applies terminal-specific RGB colors.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Child">The subtree to style.</param>
-/// <param name="Colors">The terminal color overrides.</param>
-/// <returns>The declarative widget.</returns>
+// Applies terminal-specific RGB colors.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Child`: The subtree to style.
+// - `Colors`: The terminal color overrides.
+//
+// ## Returns
+// The declarative widget.
 public function CellStyled<TMsg>(Child: Element<TMsg>; Colors: T.Style): Element<TMsg>;
 begin
   return Element<TMsg>.TerminalStyle(Child, Colors);
 end function;
 
-/// Creates a responsive terminal canvas.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable canvas ID.</param>
-/// <param name="Draw">Receives column and row relative to the canvas origin.</param>
-/// <param name="Events">Optional input and resize message callbacks.</param>
-/// <returns>The declarative widget.</returns>
+// Creates a responsive terminal canvas.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable canvas ID.
+// - `Draw`: Receives column and row relative to the canvas origin.
+// - `Events`: Optional input and resize message callbacks.
+//
+// ## Returns
+// The declarative widget.
 public function CellCanvas<TMsg>(Id: string; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.TerminalCanvas(Id, Draw, Events);
 end function;
 
-/// Creates a graphical image node.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable image ID.</param>
-/// <param name="Data">The tightly packed RGBA source pixels.</param>
-/// <param name="Width">The displayed width in GUI logical units.</param>
-/// <param name="Height">The displayed height in GUI logical units.</param>
-/// <returns>The declarative widget.</returns>
+// Creates a graphical image node.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable image ID.
+// - `Data`: The tightly packed RGBA source pixels.
+// - `Width`: The displayed width in GUI logical units.
+// - `Height`: The displayed height in GUI logical units.
+//
+// ## Returns
+// The declarative widget.
 public function Image<TMsg>(Id: string; Data: G.Pixels; Width: int; Height: int): Element<TMsg>;
 begin
   return Element<TMsg>.GraphicImage(Id, Data, Width, Height);
 end function;
 
-/// Creates a graphical vector canvas.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable canvas ID.</param>
-/// <param name="Width">The clipped width in GUI logical units.</param>
-/// <param name="Height">The clipped height in GUI logical units.</param>
-/// <param name="Operations">The drawing commands in paint order.</param>
-/// <returns>The declarative widget.</returns>
+// Creates a graphical vector canvas.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable canvas ID.
+// - `Width`: The clipped width in GUI logical units.
+// - `Height`: The clipped height in GUI logical units.
+// - `Operations`: The drawing commands in paint order.
+//
+// ## Returns
+// The declarative widget.
 public function Canvas<TMsg>(Id: string; Width: int; Height: int; Operations: array of G.Paint): Element<TMsg>;
 begin
   return Element<TMsg>.GraphicCanvas(Id, Width, Height, Operations);
 end function;
 
-/// Displays tabs and constructs only the effective active panel.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable tab set ID.</param>
-/// <param name="Items">The tabs in display order.</param>
-/// <param name="ActiveKey">The requested key or null to use the first enabled tab.</param>
-/// <param name="OnSelect">Maps a requested key to a message.</param>
-/// <param name="Content">Builds the panel for the effective active key.</param>
-/// <param name="Enabled">Whether the tab set accepts input.</param>
-/// <returns>The tabs and their active panel.</returns>
+// Displays tabs and constructs only the effective active panel.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable tab set ID.
+// - `Items`: The tabs in display order.
+// - `ActiveKey`: The requested key or null to use the first enabled tab.
+// - `OnSelect`: Maps a requested key to a message.
+// - `Content`: Builds the panel for the effective active key.
+// - `Enabled`: Whether the tab set accepts input.
+//
+// ## Returns
+// The tabs and their active panel.
 public function Tabs<TMsg>(
   Id: string; Items: array of C.TabItem; ActiveKey: string?; OnSelect: function(string): TMsg;
   Content: function(string): Element<TMsg>; Enabled: bool := true
@@ -407,14 +561,20 @@ begin
   return Element<TMsg>.TabSet(Id, Items, Selected, OnSelect, Panel, Enabled);
 end function;
 
-/// Reuses a subtree while its typed dependencies compare equal.
-/// <typeparam name="TDeps">The type of dependencies captured for the view.</typeparam>
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Id">The stable subview ID.</param>
-/// <param name="Dependencies">Every input that can affect the subtree.</param>
-/// <param name="Build">Builds the subtree from its dependencies.</param>
-/// <param name="Equal">Compares old and current dependencies.</param>
-/// <returns>The deferred subtree.</returns>
+// Reuses a subtree while its typed dependencies compare equal.
+//
+// ## Type parameters
+// - `TDeps`: The type of dependencies captured for the view.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable subview ID.
+// - `Dependencies`: Every input that can affect the subtree.
+// - `Build`: Builds the subtree from its dependencies.
+// - `Equal`: Compares old and current dependencies.
+//
+// ## Returns
+// The deferred subtree.
 public function CachedSubview<TDeps, TMsg>(
   Id: string; Dependencies: TDeps; Build: function(TDeps): Element<TMsg>; Equal: function(TDeps, TDeps): bool
 ): Element<TMsg>;

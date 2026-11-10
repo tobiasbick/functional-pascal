@@ -1,0 +1,72 @@
+unit GuiGallery.View;
+
+uses
+  GuiGallery.State as State, GuiGallery.Previews as Preview, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Styles as S;
+
+// Builds responsive navigation, the active preview and the model-owned overlay.
+//
+// ## Parameters
+// - `Model`: Retained application state.
+// - `Viewport`: Current portable size classes.
+//
+// ## Returns
+// The complete gallery view.
+public function Build(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+begin
+  const Navigation: E.Element<State.Msg> := E.SelectionList<State.Msg>(
+    'navigation', [
+      new C.SelectionItem('controls', 'Controls'),
+      new C.SelectionItem('editors', 'Editors'),
+      new C.SelectionItem('collections', 'Collections'),
+      new C.SelectionItem('layout', 'Layout and scrolling'),
+      new C.SelectionItem(
+        'graphics',
+        'Images and canvas'
+      ),
+      new C.SelectionItem('effects', 'Effects and modal')
+    ],
+    Model.Page, function(Key: string): State.Msg => State.Msg.Navigate(Key)
+  );
+  const Content: E.Element<State.Msg> := Preview.View(Model);
+  const Body: E.Element<State.Msg> := if Viewport.Width =
+      L.SizeClass.Compact then E.Column<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      Navigation,
+      Content
+    )
+    else E.Row<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Loose),
+      E.Size<State.Msg>(
+        Navigation,
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(190)), Shrink := 0)
+      ),
+      E.Size<State.Msg>(Content, new L.Flex(Basis := L.Extent.Fill))
+    )
+    end if;
+  const Base: E.Element<State.Msg> := E.Column<State.Msg>(
+    new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal),
+    E.Styled<State.Msg>(E.Text<State.Msg>('FPAS graphical widget gallery'), S.Role.Heading),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      E.Button<State.Msg>('theme', 'Switch theme', State.Msg.Theme),
+      E.Button<State.Msg>('quit', 'Close', State.Msg.Quit)
+    ),
+    Body
+  );
+  if not Model.Modal then
+    return Base;
+  end if;
+
+  return E.Overlay<State.Msg>(
+    'dialog', Base,
+    E.Column<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      E.Text<State.Msg>('Model-owned modal'),
+      E.Text<State.Msg>('Escape or Close restores the previous focus.'),
+      E.Button<State.Msg>('modal-close', 'Close modal', State.Msg.Close)
+    ),
+    'modal-close', function(): State.Msg => State.Msg.Close
+  );
+end function;
+end unit;

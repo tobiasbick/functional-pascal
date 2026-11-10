@@ -17,7 +17,7 @@ const Copy: function(int): int := Identity<int>;
 
 Inference applies to free FPAS routines, instance/static record methods, imported
 FPAS routines, and supported CLR generic methods. Explicit calls remain valid.
-The [pipeline](../../../../examples/generic-pipeline/README.md) uses Compose(Double,
+The [pipeline](../../../../examples/functions/generic-pipeline/README.md) uses Compose(Double,
 Label) and Map(Items, Format); a method group for generic Identity keeps its
 explicit arguments.
 

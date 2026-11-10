@@ -4,17 +4,21 @@ uses Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.U
 
 const StrictUtf8: Sys.Text.UTF8Encoding := new Sys.Text.UTF8Encoding(false, true);
 
-/// Raises a diagnostic for a rejected view option.
-/// <param name="Location">Tree path or control identity.</param>
-/// <param name="Message">Violated contract.</param>
+// Raises a diagnostic for a rejected view option.
+//
+// ## Parameters
+// - `Location`: Tree path or control identity.
+// - `Message`: Violated contract.
 public procedure Reject(Location: string; Message: string);
 begin
   raise new Sys.ArgumentException(Location + ' — ' + Message);
 end procedure;
 
-/// Checks that text can be passed to either host without truncation or invalid encoding.
-/// <param name="Value">Text to validate.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks that text can be passed to either host without truncation or invalid encoding.
+//
+// ## Parameters
+// - `Value`: Text to validate.
+// - `Location`: Diagnostic location.
 public procedure CheckText(Value: string; Location: string);
 begin
   if Value.Contains(Sys.Char.MinValue) then
@@ -28,11 +32,15 @@ begin
   end try;
 end procedure;
 
-/// Checks explicit units and a nonnegative distance.
-/// <param name="Value">Explicit distance.</param>
-/// <param name="Profile">Receiving host profile.</param>
-/// <param name="Location">Diagnostic location.</param>
-/// <returns>The validated distance in its declared units.</returns>
+// Checks explicit units and a nonnegative distance.
+//
+// ## Parameters
+// - `Value`: Explicit distance.
+// - `Profile`: Receiving host profile.
+// - `Location`: Diagnostic location.
+//
+// ## Returns
+// The validated distance in its declared units.
 public function CheckMeasure(Value: L.Measure; Profile: V.Target; Location: string): int;
 begin
   var Amount: int := 0;
@@ -58,10 +66,12 @@ begin
   return Amount;
 end function;
 
-/// Checks size units, ordered bounds and nonnegative allocation weights.
-/// <param name="Settings">Size constraints.</param>
-/// <param name="Profile">Receiving host profile.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks size units, ordered bounds and nonnegative allocation weights.
+//
+// ## Parameters
+// - `Settings`: Size constraints.
+// - `Profile`: Receiving host profile.
+// - `Location`: Diagnostic location.
 public procedure CheckFlex(Settings: L.Flex; Profile: V.Target; Location: string);
 begin
   if Settings.Grow < 0 or Settings.Shrink < 0 then
@@ -94,10 +104,12 @@ begin
   end if;
 end procedure;
 
-/// Checks the units of explicit spacing.
-/// <param name="Value">Semantic or explicit spacing.</param>
-/// <param name="Profile">Receiving host profile.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks the units of explicit spacing.
+//
+// ## Parameters
+// - `Value`: Semantic or explicit spacing.
+// - `Profile`: Receiving host profile.
+// - `Location`: Diagnostic location.
 public procedure CheckSpacing(Value: L.Spacing; Profile: V.Target; Location: string);
 begin
   case Value of
@@ -107,10 +119,12 @@ begin
   end case;
 end procedure;
 
-/// Adds a valid collection-local identity and rejects duplicates.
-/// <param name="Keys">Previously visited keys.</param>
-/// <param name="Key">Item identity.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Adds a valid collection-local identity and rejects duplicates.
+//
+// ## Parameters
+// - `Keys`: Previously visited keys.
+// - `Key`: Item identity.
+// - `Location`: Diagnostic location.
 public procedure CheckKey(Keys: Generic.HashSet<string>; Key: string; Location: string);
 begin
   if Sys.String.IsNullOrWhiteSpace(Key) then
@@ -123,10 +137,12 @@ begin
   end if;
 end procedure;
 
-/// Checks that a supplied selection refers to an item in the collection.
-/// <param name="Keys">Permitted item identities.</param>
-/// <param name="Key">Requested selection, or null.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks that a supplied selection refers to an item in the collection.
+//
+// ## Parameters
+// - `Keys`: Permitted item identities.
+// - `Key`: Requested selection, or null.
+// - `Location`: Diagnostic location.
 public procedure CheckSelected(Keys: Generic.HashSet<string>; Key: string?; Location: string);
 begin
   if Key <> null and not Keys.Contains(Key) then
@@ -134,11 +150,13 @@ begin
   end if;
 end procedure;
 
-/// Checks normalized text and directional grapheme-boundary selection.
-/// <param name="Value">Model-owned text.</param>
-/// <param name="Position">Model-owned selection.</param>
-/// <param name="MultipleLines">Whether LF line breaks are permitted.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks normalized text and directional grapheme-boundary selection.
+//
+// ## Parameters
+// - `Value`: Model-owned text.
+// - `Position`: Model-owned selection.
+// - `MultipleLines`: Whether LF line breaks are permitted.
+// - `Location`: Diagnostic location.
 public procedure CheckEditor(Value: string; Position: Ed.EditorPosition; MultipleLines: bool; Location: string);
 begin
   CheckText(Value, Location);
@@ -158,10 +176,12 @@ begin
   end if;
 end procedure;
 
-/// Rejects a backend extension on an incompatible target.
-/// <param name="Profile">Receiving host profile.</param>
-/// <param name="Required">Extension owner.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Rejects a backend extension on an incompatible target.
+//
+// ## Parameters
+// - `Profile`: Receiving host profile.
+// - `Required`: Extension owner.
+// - `Location`: Diagnostic location.
 public procedure RequireProfile(Profile: V.Target; Required: V.Target; Location: string);
 begin
   if Profile <> Required then
@@ -169,9 +189,11 @@ begin
   end if;
 end procedure;
 
-/// Checks a terminal color override.
-/// <param name="Value">24-bit RGB value, or null to inherit.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks a terminal color override.
+//
+// ## Parameters
+// - `Value`: 24-bit RGB value, or null to inherit.
+// - `Location`: Diagnostic location.
 public procedure CheckColor(Value: int?; Location: string);
 begin
   if Value <> null and (Value < 0 or Value > 16777215) then
@@ -179,10 +201,12 @@ begin
   end if;
 end procedure;
 
-/// Checks a positive logical drawing extent.
-/// <param name="Width">Logical width.</param>
-/// <param name="Height">Logical height.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks a positive logical drawing extent.
+//
+// ## Parameters
+// - `Width`: Logical width.
+// - `Height`: Logical height.
+// - `Location`: Diagnostic location.
 public procedure CheckViewport(Width: int; Height: int; Location: string);
 begin
   if Width <= 0 or Height <= 0 then
@@ -190,9 +214,11 @@ begin
   end if;
 end procedure;
 
-/// Checks finite vector geometry and positive extents or strokes.
-/// <param name="Paint">Drawing operation.</param>
-/// <param name="Location">Diagnostic location.</param>
+// Checks finite vector geometry and positive extents or strokes.
+//
+// ## Parameters
+// - `Paint`: Drawing operation.
+// - `Location`: Diagnostic location.
 public procedure CheckPaint(Paint: G.Paint; Location: string);
 begin
   case Paint of

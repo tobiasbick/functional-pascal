@@ -16,8 +16,8 @@ module identities must match. Debugging does not build or restore a project.
 Use `fpas env --json` to inspect packaged debugger/runtime requirements.
 
 ```sh
-fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
-  --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
+fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
+  --cwd examples/numerics/mandelbrot --break main.fpas:13 --print Iteration
 fpas debug --protocol dap
 ```
 

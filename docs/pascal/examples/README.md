@@ -28,8 +28,8 @@ independent examples are separate compilations.
 | Valid domain defaults and checked construction | [Subranges](../language/types/subranges.md#example) |
 | Private factories, defaults, and global state | [Record members](../language/types/record-members.md) |
 | Multiple sources | [Units and imports](../program-structure/imports.md#two-file-use) |
-| Shared MVU desktop widgets and effects | [GUI counter](../../../examples/gui/counter/README.md) and [gallery](../../../examples/gui/gallery/README.md) |
-| Terminal widgets and native cell drawing | [TUI gallery](../../../examples/tui/gallery/README.md) and [Mandelbrot explorer](../../../examples/tui/mandelbrot/README.md) |
+| Shared MVU desktop widgets and effects | [GUI counter](../../../examples/ui/gui/counter/README.md) and [gallery](../../../examples/ui/gui/gallery/README.md) |
+| Terminal widgets and native cell drawing | [TUI gallery](../../../examples/ui/tui/gallery/README.md) and [Mandelbrot explorer](../../../examples/ui/tui/mandelbrot/README.md) |
 
 The [agent reference](../agents/README.md) provides additional assertion-based
 programs. The repository's [examples directory](../../../examples/README.md)

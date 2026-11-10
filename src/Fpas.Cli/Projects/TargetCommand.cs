@@ -17,7 +17,7 @@ internal sealed class TargetCommand
         Uses the evaluated target path and mapped configuration. Does not restore or compile.
 
         Examples:
-          fpas target examples/hello/Hello.fpasproj
+          fpas target examples/basics/hello/Hello.fpasproj
 
           fpas target App.slnx --configuration Release --project Host/Host.csproj
         """);

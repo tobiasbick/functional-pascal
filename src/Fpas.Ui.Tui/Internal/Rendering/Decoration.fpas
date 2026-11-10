@@ -1,0 +1,132 @@
+unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
+
+uses Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, System.Collections.Generic as Generic;
+
+public procedure Apply<TMsg>(
+  Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
+  Theme: Th.Theme; Focused: bool
+);
+  procedure Mark(Column: int; Row: int; Style: T.Style);
+  begin
+    if Control.Bounds.Contains(Column, Row) then
+      const Index: int := Row * Columns + Column;
+      Cells[Index] := new T.Cell(Cells[Index].Text, Style);
+    end if;
+  end procedure;
+begin
+  if Control.Role = 'canvas' then
+    return;
+  end if;
+  const Bounds: F.Rect := Control.Bounds;
+  case Control.Action of
+    when A.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+      if Focused then
+        for Index: int := 0 to Bar.Targets.Length - 1 do
+          if Bar.Targets[Index] = Bar.Active then
+            Mark(Bounds.X + Index, Bounds.Y, Theme.Focus);
+          end if;
+        end for;
+      end if;
+
+      return;
+    when A.Binding.SelectList(const List: S.Viewport<TMsg>):
+      if Focused then
+        const Offset: int := List.Selected - List.First;
+        if Offset >= 0 and Offset < Bounds.Height then
+          for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
+            Mark(X, Bounds.Y + Offset, Theme.Focus);
+          end for;
+        else
+          Mark(Bounds.X, Bounds.Y, Theme.Focus);
+        end if;
+      end if;
+
+      return;
+    when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+      if Focused then
+        Mark(
+          if View.Bar then Bounds.X + Bounds.Width - 1 else Bounds.X end if,
+          Bounds.Y,
+          Theme.Focus
+        );
+      end if;
+
+      return;
+    else
+  end case;
+  const Widgets: Th.WidgetStyles? := Theme.Widgets;
+  const Standard: T.Style := if not Focused then Theme.Hover
+    else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
+      else Theme.Focus
+      end if
+    end if;
+  const Style: T.Style := Buttons.Resolve(
+    Theme, Control.Variant, Control.Enabled, Focused, not Focused
+  ) ?? Standard;
+  const ShowsPlaceholder: bool := case Control.Action of
+    when A.Binding.Multiline(
+      const View: EditorView.Viewport<TMsg>
+    ): View.Document.Text = '' and not View.MultipleLines;
+    else false;
+  end case;
+  const HintStyle: T.Style := if ShowsPlaceholder then D.PlaceholderStyle(
+      Style,
+      Theme
+    )
+    else Style
+    end if;
+  for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
+    for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
+      Mark(X, Y, if Y = Bounds.Y and X >= Bounds.X + 2 then HintStyle else Style end if);
+    end for;
+  end for;
+
+  if Focused then
+    case Control.Action of
+      when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+        EditorText.MarkSelection(View.Document, Theme, Mark);
+      else
+    end case;
+  end if;
+end procedure;
+
+public function Capture<TMsg>(
+  Layout: A.Layout<TMsg>; Columns: int; Theme: Th.Theme; Focus: string; Hover: string; Scope: string
+): array of App.ControlSnapshot;
+begin
+  const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>(
+    Layout.Controls.Length
+  );
+  for Control: A.Control<TMsg> in Layout.Controls do
+    const Focused: bool := Control.Id = Focus;
+    const Hovered: bool := Control.Id = Hover;
+    Controls.Add(
+      new App.ControlSnapshot(
+        Control.Id,
+        Control.Label,
+        Control.Role,
+        Control.Value,
+        Control.Bounds.X,
+        Control.Bounds.Y,
+        Control.Bounds.Width,
+        Control.Bounds.Height,
+        Focused,
+        Hovered,
+        Control.Enabled and Control.Scope = Scope,
+        case Control.Action of
+          when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>): new Ed.EditorPosition(
+            View.Document.Position.Caret,
+            View.Document.Position.Anchor
+          );
+          else null;
+        end case
+      )
+    );
+    if Focused or Hovered then
+      Apply<TMsg>(Layout.Cells, Columns, Control, Theme, Focused);
+    end if;
+  end for;
+
+  return Controls.ToArray();
+end function;
+end unit;

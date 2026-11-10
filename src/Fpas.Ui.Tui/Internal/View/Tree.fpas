@@ -1,0 +1,126 @@
+unit Fpas.Ui.Tui.Internal.View.Tree;
+
+uses Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Choices as C, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, System as Sys;
+
+// Resolved cell allocation data consumed only by terminal layout.
+public type Flex = record
+  // Intrinsic basis when -1, otherwise an explicit cell extent.
+  public Basis: int := -1;
+  // Lower cell bound.
+  public Minimum: int := 0;
+  // Upper cell bound.
+  public Maximum: int := int.MaxValue;
+  // Share of extra cells.
+  public Grow: int := 0;
+  // Share of a cell deficit.
+  public Shrink: int := 1;
+end record;
+
+// Resolved stack spacing in terminal cells.
+public type Flow = record
+  // Main-axis gap.
+  public Gap: int := 0;
+  // Inset on every side.
+  public Padding: int := 0;
+  // Shared cross-axis alignment.
+  public Align: L.Alignment := L.Alignment.Stretch;
+end record;
+
+// Cell-canvas geometry and input used by terminal routing.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type CanvasBinding<TMsg> = union
+  // Use the declared extent and supplied stable ID and event mappers.
+  Fixed(Id: string; Events: T.CanvasEvents<TMsg>);
+  // Use the visible allocation and report resize through the supplied events.
+  Responsive(Id: string; Events: T.CanvasEvents<TMsg>);
+end union;
+
+// A table header with resolved horizontal cell constraints.
+public type TableColumn = record
+  // Visible heading.
+  public Header: string;
+  // Cell allocation settings.
+  public Sizing: Flex;
+end record;
+
+// A resolved request in terminal row units.
+public type ScrollPosition = union
+  // Request the supplied top row.
+  Offset(Row: int);
+  // Follow the final row as content grows.
+  End;
+end union;
+
+// Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
+// This is backend storage, not a second application widget API.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Element<TMsg> = union
+  // Paint literal text.
+  Label(Value: string);
+  // Paint a titled or plain cell rule.
+  Separator(Title: string);
+  // Paint terminal status and priority-ordered hints.
+  StatusLine(Message: string; Hints: array of string);
+  // Paint and route a direct action with semantic button styling.
+  Action(
+    Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string;
+    Variant: UiStyle.ButtonVariant
+  );
+  // Paint controlled text with host-owned cell viewport state and shared event mapping.
+  DocumentEditor(
+    Id: string; Text: string; Position: Editors.EditorPosition; Events: Editors.IEvents<TMsg>;
+    Placeholder: string; Enabled: bool; MultipleLines: bool
+  );
+  // Propose inversion of the model value only on activation.
+  Toggle(Id: string; Caption: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool);
+  // Paint shared action items as terminal focus stops.
+  Choices(Id: string; Items: array of C.ListItem<TMsg>);
+  // Paint shared selection items in a native scrolling viewport.
+  Selectable(
+    Id: string; Items: array of C.SelectionItem; SelectedKey: string;
+    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?
+  );
+  // Paint a native tab header with the prepared active panel.
+  TabSet(
+    Id: string; Items: array of C.TabItem; Active: int;
+    OnSelect: function(string): TMsg; Panel: Element<TMsg>?
+  );
+  // Paint a header and keyed shared rows with resolved column widths.
+  TableView(
+    Id: string; Columns: array of TableColumn; Rows: array of C.TableRow; SelectedKey: string;
+    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?
+  );
+  // Paint a validated percentage.
+  Gauge(Percent: int);
+  // Arrange children using resolved cell spacing.
+  Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: Flow);
+  // Constrain a child using resolved cell sizing.
+  Sized(Child: Element<TMsg>; Settings: Flex);
+  // Apply inherited, resolved terminal colors.
+  Decorated(Child: Element<TMsg>; Settings: T.Style);
+  // Surround a child with a cell border.
+  Framed(Child: Element<TMsg>; Title: string);
+  // Scroll content using host-owned offsets.
+  Scrollable(Id: string; Child: Element<TMsg>; ShowScrollbar: bool);
+  // Resolve model-owned scrolling and keep its original shared mapper.
+  ControlledScroll(
+    Id: string; Child: Element<TMsg>; Position: ScrollPosition;
+    OnScroll: Sys.Func<L.ScrollChange, TMsg>; ShowScrollbar: bool
+  );
+  // Paint cell data and register the corresponding native input geometry.
+  Custom(Columns: int; Rows: int; Draw: function(int, int): T.Cell; Input: CanvasBinding<TMsg>);
+  // Paint base content followed by layers and install base-scope shortcuts.
+  Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of K.ShortcutBinding<TMsg>);
+  // Reserve the footer and shrink terminal decoration as necessary.
+  Panel(Body: Element<TMsg>; Footer: Element<TMsg>; Title: string; Padding: byte);
+  // Place a centered terminal layer with optional modal focus ownership.
+  Layer(
+    Id: string; Modal: bool; InitialFocus: string; OnEscape: Sys.Func<TMsg>?; Content: Element<TMsg>;
+    Shortcuts: array of K.ShortcutBinding<TMsg>; Limits: K.OverlayLimits?
+  );
+end union;
+end unit;

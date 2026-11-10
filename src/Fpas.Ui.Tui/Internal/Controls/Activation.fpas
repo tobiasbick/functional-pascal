@@ -1,0 +1,40 @@
+unit Fpas.Ui.Tui.Internal.Controls.Activation;
+
+public type Result<TMsg> = union
+  NoAction;
+  Send(Message: TMsg);
+end union;
+
+public type IActivatable<TMsg> = protocol
+  function Activate(): Result<TMsg>;
+end protocol;
+
+public type Direct<TMsg> = record implements IActivatable<TMsg>
+  public Message: TMsg;
+
+  public function Activate(): Result<TMsg>;
+  begin
+    return Result<TMsg>.Send(self.Message);
+  end function;
+end record;
+
+// Defers a checkbox mapper until actual activation.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Toggle<TMsg> = record implements IActivatable<TMsg>
+  // Current model value.
+  public Checked: bool;
+  // Typed user-change mapper.
+  public Change: function(bool): TMsg;
+
+  // Proposes the inverted model value exactly once.
+  //
+  // ## Returns
+  // The mapped message.
+  public function Activate(): Result<TMsg>;
+  begin
+    return Result<TMsg>.Send(self.Change(not self.Checked));
+  end function;
+end record;
+end unit;

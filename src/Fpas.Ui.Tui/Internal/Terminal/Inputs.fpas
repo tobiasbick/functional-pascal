@@ -1,0 +1,53 @@
+unit Fpas.Ui.Tui.Internal.Terminal.Inputs;
+
+uses Fpas.Ui.Tui.Application as App, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Processes.Terminal as Terminal, System as Sys;
+
+public function Translate(Event: Terminal.TerminalInput): App.Input?;
+begin
+  const Button: K.MouseButton := if Event.Button = 'middle' then K.MouseButton.Middle
+    else K.MouseButton.Left
+    end if;
+  case Event.Kind of
+    when 'focus':
+      return App.Input.Focus(Event.Text);
+    when 'activate':
+      return App.Input.Activate(Event.Text);
+    when 'resize':
+      return App.Input.Resize(Event.Column, Event.Row);
+    when 'text':
+      return App.Input.TextInput(Event.Text);
+    when 'character':
+      return App.Input.Character(Event.Text);
+    when 'paste':
+      return App.Input.Paste(Event.Text);
+    when 'click':
+      if Event.Button = 'left' or Event.Button = 'middle' then
+        return App.Input.ButtonClick(Button, Event.Column, Event.Row);
+      end if;
+
+      return null;
+    when 'move':
+      return App.Input.Pointer(K.PointerKind.Move, Event.Column, Event.Row);
+    when 'press', 'release':
+      if Event.Button = 'left' or Event.Button = 'middle' then
+        const Kind: K.PointerKind := if Event.Kind = 'press' then K.PointerKind.Press
+          else K.PointerKind.Release
+          end if;
+        return App.Input.ButtonPointer(Kind, Button, Event.Column, Event.Row);
+      end if;
+
+      return null;
+    when 'scroll':
+      return App.Input.Scroll(Event.Column, Event.Row, Event.Delta);
+    when 'key':
+      var Key: K.Key := K.Key.Unknown;
+      if Sys.Enum.TryParse<K.Key>(Event.Key, out Key) then
+        return App.Input.KeyPress(Key, cast<K.KeyModifiers>(Event.Modifiers));
+      end if;
+
+      return null;
+    else
+      return null;
+  end case;
+end function;
+end unit;

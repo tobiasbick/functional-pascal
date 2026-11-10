@@ -39,7 +39,7 @@ Debug/Release acceptance runs the same contracts without platform skips.
 
 ## Native GUI
 
-`GuiHostTests` builds the public FPAS counter, gallery and `Fpas.Gui` through a fresh SDK.
+`GuiHostTests` builds the public FPAS counter, gallery and `Fpas.Ui.Gui` through a fresh SDK.
 It checks native activation, disabled buttons, deferred transitions, first-frame
 geometry, column stretch/padding, view and subview reuse, resize, detached
 snapshots, worker posting, thread ownership, bounded admission, native/application
@@ -54,7 +54,7 @@ setting. `CuiHostResourceTests` checks native texture accounting across removal,
 replacement and repeated sessions, and normalized Unicode selection offsets.
 `CuiPresentationTests` checks explicit presentation and frame-local control tracking.
 
-`Fpas.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
+`Fpas.Ui.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
 software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
 The window tests check nested row and column geometry and route text input
 between editors using programmatic focus and a non-ASCII control ID.
@@ -93,10 +93,10 @@ the executable present. The case verifies the extracted CUI file for single-file
 and checks that Native AOT neither imports nor extracts CUI.
 
 Run the GUI suite under Xvfb on headless Linux; see the
-[binding reference](../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
+[binding reference](../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
 Window cases are skipped on Linux without `DISPLAY`. Encoding tests still run.
 
-`GuiPublishingTests` packages Fpas.Mvu, Fpas.Ui and Fpas.Gui with a fresh SDK and
+`GuiPublishingTests` packages Fpas.Ui.Mvu, Fpas.Ui and Fpas.Ui.Gui with a fresh SDK and
 the matching native binding. A package-only consumer runs the real gallery in
 all five delivery modes under software and OpenGL. It checks Unicode selection,
 controlled widgets, modal focus, scrolling, theme state, background completion
@@ -137,11 +137,11 @@ preflight diagnostics before drawing. TerminalBoundaryTests compiles and runs
 the terminal libraries with an unavailable GUI build command, no CUI files,
 and checks that their assembly references contain no GUI dependency.
 
-`HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
+`HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Ui.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
 of a worker failure on a later step, and joining cancelled workers before exit.
 The effect fixture drives the same update function in the TUI and directly
-through [Fpas.Mvu](../src/Fpas.Mvu/README.md). It holds a worker before its first
+through [Fpas.Ui.Mvu](../src/Fpas.Ui.Mvu/README.md). It holds a worker before its first
 await and holds cancellation callbacks during replacement and explicit cancel,
 then checks that another button can still update the TUI. It also checks
 release of a blocked writer and observes callback completion and failure at

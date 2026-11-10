@@ -25,7 +25,7 @@ and [JSON schemas](../tools/report-schemas.md) for the corresponding CLI contrac
 | Run or verify VS Code project, test and debug workflows | [VS Code extension guide](../../../src/VSCode/README.md#project-test-and-debug-workflows) |
 | Preview and apply checked editor refactorings | [Refactoring reference](../tools/refactoring.md#vs-code-refactorings) |
 | Decide which tests prove a behavior | [Test overview](../../../tests/README.md) and [acceptance map](../../../tests/coverage.md) |
-| Build a GUI with shared MVU/widgets | [GUI guide](../libraries/gui.md), [host](../../../src/Fpas.Gui/README.md) and [gallery](../../../examples/gui/gallery/README.md) |
+| Build a GUI with shared MVU/widgets | [GUI guide](../libraries/gui.md), [host](../../../src/Fpas.Ui.Gui/README.md) and [gallery](../../../examples/ui/gui/gallery/README.md) |
 | Distinguish implemented work, missing baseline work, and proposals | [Language scope](../getting-started/overview.md#initial-language-scope) and [language gaps](../../future/language-gaps.md) |
 | Update this reference or add examples | [Maintenance](maintenance.md) |
 

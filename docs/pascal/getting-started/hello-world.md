@@ -17,7 +17,7 @@ Save sources as UTF-8 .fpas files. The entry block ends with end;, then end prog
 closes the declaration. Keywords and identifiers are case-sensitive.
 
 To run a project, follow the [local SDK workflow](../../build/development.md#build-an-fpas-application).
-The repository's examples/hello project contains the required .fpasproj file.
+The repository's examples/basics/hello project contains the required .fpasproj file.
 Its built DLL runs with dotnet. A standalone source can also be compiled through
 the [direct compiler](../program-structure/cli.md).
 

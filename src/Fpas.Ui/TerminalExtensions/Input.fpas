@@ -2,183 +2,197 @@ unit Fpas.Ui.TerminalExtensions.Input;
 
 uses System as Sys;
 
-/// Named terminal key independent of terminal escape encoding.
+// Named terminal key independent of terminal escape encoding.
 public type Key = enum: byte
-  /// The Unknown key.
+  // The Unknown key.
   Unknown;
-  /// The Enter key.
+  // The Enter key.
   Enter;
-  /// The Escape key.
+  // The Escape key.
   Escape;
-  /// The Tab key.
+  // The Tab key.
   Tab;
-  /// The Backspace key.
+  // The Backspace key.
   Backspace;
-  /// The Delete key.
+  // The Delete key.
   Delete;
-  /// The Left key.
+  // The Left key.
   Left;
-  /// The Right key.
+  // The Right key.
   Right;
-  /// The Up key.
+  // The Up key.
   Up;
-  /// The Down key.
+  // The Down key.
   Down;
-  /// The Home key.
+  // The Home key.
   Home;
-  /// The End key.
+  // The End key.
   End;
-  /// The Insert key.
+  // The Insert key.
   Insert;
-  /// The PageUp key.
+  // The PageUp key.
   PageUp;
-  /// The PageDown key.
+  // The PageDown key.
   PageDown;
-  /// The F1 key.
+  // The F1 key.
   F1;
-  /// The F2 key.
+  // The F2 key.
   F2;
-  /// The F3 key.
+  // The F3 key.
   F3;
-  /// The F4 key.
+  // The F4 key.
   F4;
-  /// The F5 key.
+  // The F5 key.
   F5;
-  /// The F6 key.
+  // The F6 key.
   F6;
-  /// The F7 key.
+  // The F7 key.
   F7;
-  /// The F8 key.
+  // The F8 key.
   F8;
-  /// The F9 key.
+  // The F9 key.
   F9;
-  /// The F10 key.
+  // The F10 key.
   F10;
-  /// The F11 key.
+  // The F11 key.
   F11;
-  /// The F12 key.
+  // The F12 key.
   F12;
-  /// The A key.
+  // The A key.
   A;
-  /// The B key.
+  // The B key.
   B;
-  /// The C key.
+  // The C key.
   C;
-  /// The D key.
+  // The D key.
   D;
-  /// The E key.
+  // The E key.
   E;
-  /// The F key.
+  // The F key.
   F;
-  /// The G key.
+  // The G key.
   G;
-  /// The H key.
+  // The H key.
   H;
-  /// The I key.
+  // The I key.
   I;
-  /// The J key.
+  // The J key.
   J;
-  /// The K key.
+  // The K key.
   K;
-  /// The L key.
+  // The L key.
   L;
-  /// The M key.
+  // The M key.
   M;
-  /// The N key.
+  // The N key.
   N;
-  /// The O key.
+  // The O key.
   O;
-  /// The P key.
+  // The P key.
   P;
-  /// The Q key.
+  // The Q key.
   Q;
-  /// The R key.
+  // The R key.
   R;
-  /// The S key.
+  // The S key.
   S;
-  /// The T key.
+  // The T key.
   T;
-  /// The U key.
+  // The U key.
   U;
-  /// The V key.
+  // The V key.
   V;
-  /// The W key.
+  // The W key.
   W;
-  /// The X key.
+  // The X key.
   X;
-  /// The Y key.
+  // The Y key.
   Y;
-  /// The Z key.
+  // The Z key.
   Z;
 end enum;
 
-/// Combinable terminal modifier flags.
+// Combinable terminal modifier flags.
 public type KeyModifiers = enum: byte
-  /// No modifiers.
+  // No modifiers.
   None = 0;
-  /// Shift modifier.
+  // Shift modifier.
   Shift = 1;
-  /// Alt modifier.
+  // Alt modifier.
   Alt = 2;
-  /// Control modifier.
+  // Control modifier.
   Ctrl = 4;
 end enum;
 
-/// Terminal pointer transition.
+// Terminal pointer transition.
 public type PointerKind = enum: byte
-  /// Pointer movement.
+  // Pointer movement.
   Move;
-  /// Button press.
+  // Button press.
   Press;
-  /// Button release.
+  // Button release.
   Release;
 end enum;
 
-/// Supported terminal click button.
+// Supported terminal click button.
 public type MouseButton = enum: byte
-  /// The Left key.
+  // The Left key.
   Left;
-  /// Middle pointer button.
+  // Middle pointer button.
   Middle;
 end enum;
 
-/// A typed scoped terminal shortcut.
-/// <typeparam name="TMsg">Application message type.</typeparam>
+// A typed scoped terminal shortcut.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
 public type ShortcutBinding<TMsg> = record
-  /// Named key when Character is empty.
+  // Named key when Character is empty.
   public PressedKey: Key;
-  /// Required key modifiers.
+  // Required key modifiers.
   public Modifiers: KeyModifiers;
-  /// Message to dispatch after a matching input.
+  // Message to dispatch after a matching input.
   public Message: TMsg;
-  /// Exact printable scalar, or empty for a named key.
+  // Exact printable scalar, or empty for a named key.
   public Character: string := '';
 end record;
 
-/// Percentage limits for a centered terminal layer.
+// Percentage limits for a centered terminal layer.
 public type OverlayLimits = record
-  /// Maximum percentage of available columns, in 1..100.
+  // Maximum percentage of available columns, in 1..100.
   public MaxWidthPercent: int := 100;
-  /// Maximum percentage of available rows, in 1..100.
+  // Maximum percentage of available rows, in 1..100.
   public MaxHeightPercent: int := 100;
 end record;
 
-/// Binds a named key and modifier combination in one terminal scope.
-/// <typeparam name="TMsg">Application message type.</typeparam>
-/// <param name="PressedKey">Named key.</param>
-/// <param name="Modifiers">Required modifiers.</param>
-/// <param name="Message">Message dispatched when input matches.</param>
-/// <returns>A shortcut for a screen or modal layer.</returns>
+// Binds a named key and modifier combination in one terminal scope.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+//
+// ## Parameters
+// - `PressedKey`: Named key.
+// - `Modifiers`: Required modifiers.
+// - `Message`: Message dispatched when input matches.
+//
+// ## Returns
+// A shortcut for a screen or modal layer.
 public function Shortcut<TMsg>(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding<TMsg>;
 begin
   return new ShortcutBinding<TMsg>(PressedKey, Modifiers, Message);
 end function;
 
-/// Binds a typed character when the focused control does not accept text.
-/// <typeparam name="TMsg">Application message type.</typeparam>
-/// <param name="Character">Exactly one printable Unicode scalar.</param>
-/// <param name="Message">Message dispatched when the character matches.</param>
-/// <returns>A character shortcut for one terminal scope.</returns>
+// Binds a typed character when the focused control does not accept text.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+//
+// ## Parameters
+// - `Character`: Exactly one printable Unicode scalar.
+// - `Message`: Message dispatched when the character matches.
+//
+// ## Returns
+// A character shortcut for one terminal scope.
 public function CharacterShortcut<TMsg>(Character: string; Message: TMsg): ShortcutBinding<TMsg>;
 begin
   var Rune: Sys.Text.Rune := new Sys.Text.Rune(0);

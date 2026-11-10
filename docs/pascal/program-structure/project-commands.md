@@ -47,7 +47,7 @@ that operation. Unrelated files are preserved.
 ## Build
 
 ```sh
-fpas build examples/hello/Hello.fpasproj
+fpas build examples/basics/hello/Hello.fpasproj
 fpas build Demo/Demo.slnx --configuration Release --report json
 ```
 
@@ -75,7 +75,7 @@ preserves prior compiler outputs.
 ## Run
 
 ```sh
-fpas run examples/hello/Hello.fpasproj --no-build -- first --second
+fpas run examples/basics/hello/Hello.fpasproj --no-build -- first --second
 fpas run Demo/Demo.slnx --project Hello/Hello.fpasproj --configuration Release
 fpas run Hello/bin/Debug/net10.0/Hello.dll -- argument
 ```
@@ -171,8 +171,8 @@ clean preserves unrelated files. Failures, output
 limits and cancellation follow build's project report and exit contract below.
 
 ```sh
-fpas restore examples/hello/Hello.fpasproj --report json
-fpas clean examples/hello/Hello.fpasproj --configuration Release --report json
+fpas restore examples/basics/hello/Hello.fpasproj --report json
+fpas clean examples/basics/hello/Hello.fpasproj --configuration Release --report json
 ```
 
 These commands support `--report json`: one stdout document for success or

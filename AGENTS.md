@@ -15,6 +15,8 @@ for the task.
 - On every code change, review affected files for size, cohesion, directory
   placement, and namespaces. Split or reorganize them as needed in the same change.
 - Write all code comments in English.
+- In FPAS, use `//` comments and Markdown sections for API documentation.
+  Do not use C#-style `///` comments or source XML documentation tags.
 - Document every public declaration in source, including types, routines, and
   members. Explain its purpose and document each parameter, type parameter, and
   return value where applicable. Documentation for private declarations is
@@ -53,6 +55,14 @@ for the task.
   their owning references.
 - When replacing a build under the same `Fpas.NET.Sdk` version, evict that
   version from the target NuGet cache. Use isolated caches for concurrent tests.
+
+## CUI contributions
+
+- Support upstream CUI. When finding a defect or missing capability, establish
+  whether it belongs to CUI or the FPAS integration and explain its impact.
+- For confirmed upstream findings, ask the user whether to open a CUI issue and
+  whether to prepare and contribute a fix. Obtain explicit approval before
+  publishing an upstream issue or pull request.
 
 ## Before every commit
 

@@ -1,7 +1,7 @@
 program GuiInterop;
 
 uses
-  Fpas.Gui.Cui as Cui, Fpas.Gui.Cui.Text as Editing, Fpas.Gui.Cui.Imaging as Imaging, System as Sys,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Text as Editing, Fpas.Ui.Gui.Cui.Imaging as Imaging, System as Sys,
   System.Console as Console, System.IO as IO;
 
 procedure Check(Condition: bool; Message: string);

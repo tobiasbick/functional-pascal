@@ -15,8 +15,8 @@ public sealed partial class LocalDeploymentTests
         string archive = windows ? "fpas_cui.lib" : "libfpas_cui.a";
         using var contents = ZipFile.OpenRead(package);
         using var binding = ZipFile.OpenRead(guiPackage);
-        Assert.NotNull(binding.GetEntry("lib/net10.0/Fpas.Gui.Cui.dll"));
-        Assert.NotNull(binding.GetEntry("buildTransitive/Fpas.Gui.Cui.targets"));
+        Assert.NotNull(binding.GetEntry("lib/net10.0/Fpas.Ui.Gui.Cui.dll"));
+        Assert.NotNull(binding.GetEntry("buildTransitive/Fpas.Ui.Gui.Cui.targets"));
         var unpacked = Path.GetDirectoryName(package)!;
         var library = Path.Combine(unpacked, shared);
         var sharedEntry = contents.GetEntry($"tools/gui/runtimes/{rid}/native/{shared}");

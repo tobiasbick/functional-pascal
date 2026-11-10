@@ -1,0 +1,469 @@
+unit Fpas.Ui.Tui.Internal.Hosting.Session;
+
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type PendingInput = record
+  // The input receipt ID exposed by the terminal host.
+  public Id: long;
+  // The raw event to route against the presented layout.
+  public Event: App.Input;
+  // The control pipe's acknowledgement when the event came from a debugger.
+  public Acknowledgement: Tasks.Task?;
+end record;
+
+procedure CheckSize(Columns: int; Rows: int);
+begin
+  if Columns < 1 or Columns > 500 or Rows < 1 or Rows > 300 then
+    raise new Sys.ArgumentOutOfRangeException(
+      'Terminal size must fit 1..500 columns and 1..300 rows.'
+    );
+  end if;
+end procedure;
+
+// Starts a terminal host around the shared MVU runtime.
+//
+// ## Type parameters
+// - `TModel`: The application's model type.
+// - `TMsg`: The application's message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before the first view.
+// - `Update`: The application transition.
+// - `View`: Builds elements for the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `Present`: Publishes a successfully rendered frame.
+// - `Manual`: Allows stepping through the control pipe.
+// - `ThemeFor`: Selects the theme for the current model.
+//
+// ## Returns
+// The host session.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+  Present: procedure(App.Frame); Manual: bool;
+  ThemeFor: function(TModel): Th.Theme
+): App.HeadlessSession;
+  function Close(): Tasks.Task;
+  begin
+    Threads.Monitor.Enter(StepGate);
+    try
+      return Core.Close();
+    finally
+      Threads.Monitor.Exit(StepGate);
+    end try;
+  end function;
+
+  function Enqueue(Event: App.Input; Acknowledgement: Tasks.Task?): App.Admission;
+  begin
+    case Event of
+      when App.Input.Resize(const NewColumns: int, const NewRows: int):
+        CheckSize(NewColumns, NewRows);
+      else
+    end case;
+
+    Threads.Monitor.Enter(Gate);
+    try
+      const Id: long := InputId + 1L;
+      case Core.Send(new PendingInput(Id, Event, Acknowledgement)) of
+        when Runtime.Admission.Queued:
+          InputId := Id;
+          return App.Admission.Queued(Id);
+        when Runtime.Admission.Full:
+          return App.Admission.QueueFull;
+        when Runtime.Admission.Closed:
+          return App.Admission.Closed;
+      end case;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function Send(Event: App.Input): App.Admission;
+  begin
+    return Enqueue(Event, null);
+  end function;
+
+  function ReadFrame(): App.Frame;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      const Value: App.Frame? := Published;
+      if Value = null then
+        raise new Sys.InvalidOperationException('No complete frame.');
+      end if;
+
+      return new App.Frame(
+        Value.Id,
+        Value.Columns,
+        Value.Rows,
+        cast<array of string>(Value.Lines.Clone()),
+        cast<array of T.Cell>(Value.Cells.Clone()),
+        cast<array of App.ControlSnapshot>(Value.Controls.Clone())
+      );
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function FindOutcome(Id: long): App.StepResult?;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      if Outcomes.ContainsKey(Id) then
+        return Outcomes[Id];
+      end if;
+
+      return null;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  async function Wait(Id: long; Timeout: Sys.TimeSpan): Tasks.Task<App.StepResult?>;
+  begin
+    const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+    while true do
+      const Outcome: App.StepResult? := FindOutcome(Id);
+      if Outcome <> null then
+        return Outcome;
+      end if;
+
+      if Clock.Elapsed >= Timeout then
+        return null;
+      end if;
+
+      await Tasks.Task.Delay(5);
+    end while;
+  end function;
+
+  function SendControl(Event: Terminal.TerminalInput): Terminal.TuiControlReply;
+  begin
+    const Normalized: App.Input? := Inputs.Translate(Event);
+    if Normalized = null then
+      return new Terminal.TuiControlReply('invalid_input');
+    end if;
+    const Receipt: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    case Enqueue(Normalized, Receipt.Task) of
+      when App.Admission.Queued(const Id: long):
+        return new Terminal.TuiControlReply('queued', Id, Acknowledgement := Receipt);
+      when App.Admission.QueueFull:
+        return new Terminal.TuiControlReply('QueueFull');
+      when App.Admission.Closed:
+        return new Terminal.TuiControlReply('closed');
+    end case;
+  end function;
+
+  function Describe(Outcome: App.StepResult): Terminal.TuiControlReply;
+  begin
+    case Outcome of
+      when App.StepResult.Processed(const Id: long, const Complete: long, const Published: bool):
+        return new Terminal.TuiControlReply(
+          if Published then 'presented' else 'unchanged' end if,
+          Id,
+          Complete
+        );
+      when App.StepResult.EffectProcessed(const Complete: long):
+        return new Terminal.TuiControlReply('processed', 0L, Complete);
+      when App.StepResult.Failed(
+        const Id: long,
+        const Complete: long,
+        const Stage: string,
+        const Reason: string
+      ):
+        return new Terminal.TuiControlReply('failed', Id, Complete, Stage, Reason);
+      when App.StepResult.Idle:
+        return new Terminal.TuiControlReply('idle');
+    end case;
+  end function;
+
+  async function WaitControl(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply>;
+  begin
+    const Outcome: App.StepResult? := await Wait(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
+    return if Outcome = null then new Terminal.TuiControlReply(
+        'timeout'
+      )
+      else Describe(Outcome)
+      end if;
+  end function;
+
+  procedure DisposeSession();
+  begin
+    try
+      Close().GetAwaiter().GetResult();
+    finally
+      const Observer: Terminal.TuiControlConnection? := Connection;
+      if Observer <> null then
+        Observer.Dispose();
+      end if;
+    end try;
+  end procedure;
+
+  procedure Paint();
+    function Arrange(Theme: Th.Theme; Previous: A.Layout<TMsg>?): A.Layout<TMsg>;
+    begin
+      Phase := 'view';
+      const Size: L.Viewport := new L.Viewport(
+        if Viewport.Columns < 60 then L.SizeClass.Compact
+          elsif Viewport.Columns < 100 then L.SizeClass.Regular
+          else L.SizeClass.Expanded
+          end if,
+        if Viewport.Rows < 20 then L.SizeClass.Compact
+          elsif Viewport.Rows < 35 then L.SizeClass.Regular
+          else L.SizeClass.Expanded
+          end if
+      );
+      const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
+        View(Core.Model(), Size),
+        Validation.Target.Terminal,
+        if Previous = null then null else Previous.Prepared end if,
+        new T.Viewport(Viewport.Columns, Viewport.Rows)
+      );
+      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme, EditorPositions);
+      Phase := 'layout_or_drawing';
+      const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+        Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
+      );
+      return Native with
+        Prepared := Candidate;
+      end with;
+    end function;
+  begin
+    const Routing: I.State<TMsg>? := Interaction;
+    if Routing = null then
+      raise new Sys.InvalidOperationException('Missing interaction state.');
+    end if;
+
+    Phase := 'view';
+    var Theme: Th.Theme := ThemeFor(Core.Model());
+    var Layout: A.Layout<TMsg> := Arrange(Theme, Current);
+    var Previous: A.Layout<TMsg>? := Current;
+    for Pass: int := 1 to 16 do
+      Phase := 'update';
+      if not V.Notify<TMsg>(Previous, Layout, Core.Dispatch) then
+        break;
+      end if;
+
+      if not Core.IsOpen() then
+        if Published <> null then
+          return;
+        end if;
+
+        break;
+      end if;
+
+      if Pass = 16 then
+        raise new Sys.InvalidOperationException('Canvas resize updates did not converge.');
+      end if;
+
+      Previous := Layout;
+      Phase := 'view';
+      Theme := ThemeFor(Core.Model());
+      Layout := Arrange(Theme, Previous);
+    end for;
+
+    Phase := 'layout_or_drawing';
+    Routing.Reconcile(Layout, Current);
+    const Target: string? := PendingFocus;
+    PendingFocus := null;
+    if Target <> null then
+      Routing.SetFocus(Layout, Target);
+    end if;
+    const Focus: string := Routing.FocusId();
+    const Hover: string := Routing.HoverId();
+    const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
+      Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId()
+    );
+    const Prior: App.Frame? := Published;
+    const Before: A.Layout<TMsg>? := Current;
+    if Prior <> null and Before <> null and Prior.Columns = Viewport.Columns and Prior.Rows =
+      Viewport.Rows
+      and LastFocus = Focus and LastHover = Hover
+      and Q.Equivalent<TMsg>(Before, Layout)
+    then
+      Current := Layout;
+      return;
+    end if;
+    const Value: App.Frame := new App.Frame(
+      FrameId + 1L,
+      Viewport.Columns,
+      Viewport.Rows,
+      Layout.Lines,
+      Layout.Cells,
+      Controls
+    );
+    Phase := 'presentation';
+    Present(Value);
+    const Observer: Terminal.TuiControlConnection? := Connection;
+    if Observer <> null then
+      Observer.Publish(Value);
+    end if;
+
+    Threads.Monitor.Enter(Gate);
+    try
+      FrameId := Value.Id;
+      Published := Value;
+      Current := Layout;
+      LastFocus := Focus;
+      LastHover := Hover;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end procedure;
+
+  procedure Route(Event: App.Input);
+  begin
+    const Layout: A.Layout<TMsg>? := Current;
+    const Routing: I.State<TMsg>? := Interaction;
+    if Layout = null or Routing = null then
+      return;
+    end if;
+
+    case Event of
+      when App.Input.Resize(const NewColumns: int, const NewRows: int):
+        Viewport := new V.Dimensions(NewColumns, NewRows);
+      else
+        I.Dispatch<TMsg>(Routing, Layout, Event);
+    end case;
+  end procedure;
+
+  function Step(): App.StepResult;
+    function Report(Outcome: App.StepResult): App.StepResult;
+    begin
+      const Observer: Terminal.TuiControlConnection? := Connection;
+      if Observer <> null then
+        Observer.PublishOutcome(Describe(Outcome), Core.QueueCount(), Core.PendingEffects());
+      end if;
+
+      return Outcome;
+    end function;
+
+    procedure Remember(Id: long; Outcome: App.StepResult);
+    begin
+      Threads.Monitor.Enter(Gate);
+      try
+        Outcomes[Id] := Outcome;
+        OutcomeOrder.Enqueue(Id);
+        if OutcomeOrder.Count > 256 then
+          discard Outcomes.Remove(OutcomeOrder.Dequeue());
+        end if;
+      finally
+        Threads.Monitor.Exit(Gate);
+      end try;
+    end procedure;
+  begin
+    var Processing: long := 0L;
+    Threads.Monitor.Enter(StepGate);
+    try
+      Phase := 'update';
+      case Core.Advance() of
+        when Runtime.Step.Idle:
+          return App.StepResult.Idle;
+        when Runtime.Step.Input(const Entry: PendingInput):
+          // A breakpoint in Update can stop every thread in the debuggee.
+          const Receipt: Tasks.Task? := Entry.Acknowledgement;
+          if Receipt <> null then
+            Receipt.GetAwaiter().GetResult();
+          end if;
+
+          Processing := Entry.Id;
+          const Before: long := FrameId;
+          Route(Entry.Event);
+          if Core.IsOpen() then
+            Paint();
+          end if;
+          const Outcome: App.StepResult := App.StepResult.Processed(
+            Processing,
+            FrameId,
+            FrameId <> Before
+          );
+          Remember(Processing, Outcome);
+          return Report(Outcome);
+        when Runtime.Step.Updated:
+          if Core.IsOpen() then
+            Paint();
+          end if;
+
+          return Report(App.StepResult.EffectProcessed(FrameId));
+        when Runtime.Step.Stale:
+          return Report(App.StepResult.EffectProcessed(FrameId));
+      end case;
+    catch Error: Sys.Exception do
+      discard Core.Close();
+      const Failure: App.StepResult := App.StepResult.Failed(
+        Processing,
+        FrameId,
+        Phase,
+        Error.Message
+      );
+      if Processing > 0L then
+        Remember(Processing, Failure);
+      end if;
+
+      return Report(Failure);
+    finally
+      Threads.Monitor.Exit(StepGate);
+    end try;
+  end function;
+begin
+  const Gate: Sys.Object := new Sys.Object();
+  const StepGate: Sys.Object := new Sys.Object();
+  const Outcomes: Generic.Dictionary<long, App.StepResult> := new Generic.Dictionary<long, App.StepResult>();
+  const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
+  const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const EditorPositions: Generic.Dictionary<string, Editors.Entry> := new Generic.Dictionary<string, Editors.Entry>();
+  var PendingFocus: string? := null;
+  var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
+  var Current: A.Layout<TMsg>? := null;
+  var Published: App.Frame? := null;
+  var FrameId: long := 0L;
+  var InputId: long := 0L;
+  var Phase: string := 'startup';
+  var LastFocus: string := '';
+  var LastHover: string := '';
+  var Connection: Terminal.TuiControlConnection? := null;
+  const Core: Runtime.Runtime<TModel, TMsg, PendingInput> := Runtime.Start<TModel, TMsg, PendingInput>(
+    InitialModel, Update, procedure(Request: Mvu.HostRequest) begin
+      case Request of
+        when Mvu.HostRequest.Focus(const Id: string):
+          PendingFocus := Id;
+        when Mvu.HostRequest.Close:
+      end case;
+    end procedure, 64
+  );
+  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
+  CheckSize(Columns, Rows);
+  try
+    Paint();
+    if Core.IsOpen() then
+      Connection := Terminal.TuiControlConnection.Open(
+        SendControl,
+        function(): Sys.Object => ReadFrame(),
+        function(): Terminal.TuiControlReply => Describe(Step()),
+        WaitControl,
+        Core.WaitForWork,
+        Core.WaitForSpace,
+        Manual
+      );
+    end if;
+  catch Error: Sys.Exception do
+    try
+      DisposeSession();
+    catch Cleanup: Sys.Exception do
+      raise new Sys.AggregateException('TUI startup and cleanup failed.', [Error, Cleanup]);
+    end try;
+
+    raise;
+  end try;
+  const Observer: Terminal.TuiControlConnection? := Connection;
+  if Observer <> null then
+    Observer.Publish(ReadFrame());
+  end if;
+
+  return App.HeadlessSession.Create(
+    Send, Step, ReadFrame, Wait, Core.WaitForWork, Core.IsOpen, Close, DisposeSession
+  );
+end function;
+end unit;

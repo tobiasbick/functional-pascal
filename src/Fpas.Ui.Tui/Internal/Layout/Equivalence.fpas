@@ -1,0 +1,136 @@
+unit Fpas.Ui.Tui.Internal.Layout.Equivalence;
+
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System.Collections.Generic as Generic;
+
+function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
+begin
+  case Left of
+    when Tree.Binding.Invoke(const Action: Actions.Direct<TMsg>):
+      case Right of
+        when Tree.Binding.Invoke(const Other: Actions.Direct<TMsg>):
+          return Generic.EqualityComparer<TMsg>.Default.Equals(Action.Message, Other.Message);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Toggle(const Value: Actions.Toggle<TMsg>):
+      case Right of
+        when Tree.Binding.Toggle(const Other: Actions.Toggle<TMsg>):
+          return Value.Checked = Other.Checked;
+        else
+          return false;
+      end case;
+    when Tree.Binding.SelectList(const List: S.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.SelectList(const Other: S.Viewport<TMsg>):
+          return S.Equivalent<TMsg>(List, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.Multiline(const Other: EditorView.Viewport<TMsg>):
+          return EditorView.Equivalent<TMsg>(View, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):
+          return V.Equivalent<TMsg>(View, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+      case Right of
+        when Tree.Binding.SelectTab(const Other: Tabs.Header<TMsg>):
+          return Tabs.Equivalent<TMsg>(Bar, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Canvas(
+      const Column: int,
+      const Row: int,
+      const Events: T.CanvasEvents<TMsg>
+    ):
+      case Right of
+        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: T.CanvasEvents<TMsg>):
+          return X = Column and Y = Row and Events = Other;
+        else
+          return false;
+      end case;
+  end case;
+end function;
+
+function SameKeys<TMsg>(Left: array of K.ShortcutBinding<TMsg>; Right: array of K.ShortcutBinding<TMsg>): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index] <> Right[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function SameScope<TMsg>(Left: Tree.Scope<TMsg>?; Right: Tree.Scope<TMsg>?): bool;
+begin
+  if Left = null then
+    return Right = null;
+  end if;
+
+  if Right = null or Left.Id <> Right.Id or Left.Initial <> Right.Initial or not SameKeys<TMsg>(
+    Left.Shortcuts,
+    Right.Shortcuts
+  )
+  then
+    return false;
+  end if;
+
+  return true;
+end function;
+
+public function Equivalent<TMsg>(Left: Tree.Layout<TMsg>; Right: Tree.Layout<TMsg>): bool;
+begin
+  // Callback identity is not presentation state. The host always installs the new routing tree.
+  if Left.Cells.Length <> Right.Cells.Length or Left.Controls.Length <> Right.Controls.Length
+    or Left.Regions.Length <> Right.Regions.Length
+    or not SameScope<TMsg>(
+    Left.Active,
+    Right.Active
+  ) or not SameKeys<TMsg>(Left.GlobalKeys, Right.GlobalKeys)
+  then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Cells.Length - 1 do
+    if Left.Cells[Index] <> Right.Cells[Index] then
+      return false;
+    end if;
+  end for;
+
+  for Index: int := 0 to Left.Controls.Length - 1 do
+    const A: Tree.Control<TMsg> := Left.Controls[Index];
+    const B: Tree.Control<TMsg> := Right.Controls[Index];
+    if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
+      or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.FocusReturn <> B.FocusReturn
+      or A.Variant <> B.Variant or A.Enabled <>
+      B.Enabled
+      or not SameBinding<TMsg>(A.Action, B.Action)
+    then
+      return false;
+    end if;
+  end for;
+
+  for Index: int := 0 to Left.Regions.Length - 1 do
+    if Left.Regions[Index] <> Right.Regions[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+end unit;

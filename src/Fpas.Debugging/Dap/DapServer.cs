@@ -90,7 +90,12 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
             }
             else if (Volatile.Read(ref closeRequest) != 0) throw new DebugException("invalid_state", "The adapter is shutting down.");
             if (command is not ("cancel" or "disconnect" or "terminate" or "pause" or "fpasTuiWait" or "fpasTuiSend"))
-            { await operations.WaitAsync(request.Token); held = true; }
+            {
+                await operations.WaitAsync(request.Token); held = true;
+                // Shutdown can begin while this request waits for the operation slot.
+                if (Volatile.Read(ref closeRequest) != 0) request.Cancel();
+                request.Token.ThrowIfCancellationRequested();
+            }
             var body = await Execute(command, args, request.Token);
             if (command is "disconnect" or "terminate")
                 await Task.WhenAll(tasks.Where(item => item.Key != id).Select(item => item.Value)).WaitAsync(request.Token);

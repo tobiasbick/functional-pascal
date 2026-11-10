@@ -37,7 +37,7 @@ internal sealed class CompileCommand
         Exit codes: 0 success/help, 1 compilation or I/O failure, 2 invalid arguments.
 
         Examples:
-          fpas compile examples/hello/main.fpas --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory>
+          fpas compile examples/basics/hello/main.fpas --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory>
 
           fpas compile - --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory> --diagnostics json
 

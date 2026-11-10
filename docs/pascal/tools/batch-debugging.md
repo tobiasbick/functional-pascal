@@ -14,10 +14,10 @@ After the [local SDK setup](../../build/development.md#build-an-fpas-application
 run this example from the repository root.
 
 ```sh
-fpas build examples/mandelbrot/Mandelbrot.fpasproj
-fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
-  --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
-fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll --timeout 10 -- first "two words"
+fpas build examples/numerics/mandelbrot/Mandelbrot.fpasproj
+fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
+  --cwd examples/numerics/mandelbrot --break main.fpas:13 --print Iteration
+fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll --timeout 10 -- first "two words"
 ```
 
 The default protocol is `batch`. Relative DLL and explicit `--cwd` paths resolve

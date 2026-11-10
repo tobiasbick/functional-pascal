@@ -4,7 +4,7 @@ Declare a routine's named helpers after its constraints and contracts, before
 its outer `begin`. This placement also applies to block-bodied anonymous
 routines. A helper in an inner block, branch, loop, or the program entry block
 is declared inside that scope. See the
-[local-functions project](../../../../examples/local-functions/README.md) for a
+[local-functions project](../../../../examples/functions/local-functions/README.md) for a
 recursive helper and an escaping counter delegate.
 
 ```pascal fragment context=declarations

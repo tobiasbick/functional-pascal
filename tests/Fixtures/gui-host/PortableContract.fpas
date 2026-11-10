@@ -3,8 +3,8 @@ program PortableContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C,
   Fpas.Ui.Editors as Ed, Fpas.Ui.TerminalExtensions.Input as Keys,
-  Fpas.Mvu.Application as Mvu, Fpas.Tui.Application as Tui,
-  Fpas.Gui.Application as Gui, Fpas.Gui.Internal.Session as Host, Fpas.Gui.Cui as Cui,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
   System as Sys, System.Collections.Generic as Generic, System.Console as Console,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 

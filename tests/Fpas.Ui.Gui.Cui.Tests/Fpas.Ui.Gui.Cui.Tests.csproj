@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)gui.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <ProjectReference Include="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
+    <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
+    <Using Include="Xunit" />
+    <None Include="../Fixtures/gui/*" Link="Fixtures/gui/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/*.fpasproj;../../src/Fpas.Ui.Gui/README.md"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Ui.Gui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/*.fpasproj;../../src/Fpas.Ui.Mvu/README.md"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Ui.Mvu/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/*.fpasproj;../../src/Fpas.Ui/README.md"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Tui/**/*.fpas;../../src/Fpas.Ui.Tui/*.fpasproj"
+          Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
+          Link="Fixtures/host/src/Fpas.Ui.Tui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/gui/counter/*.fpas;../../examples/ui/gui/counter/*.fpasproj"
+          Link="Fixtures/host/examples/ui/gui/counter/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/gui/gallery/*.fpas;../../examples/ui/gui/gallery/*.fpasproj"
+          Link="Fixtures/host/examples/ui/gui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/pascal/libraries/gui.md" Link="Fixtures/GuiHandbook.md" CopyToOutputDirectory="PreserveNewest" />
+    <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
+    <AssemblyMetadata Include="FpasCuiProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
+    <AssemblyMetadata Include="FpasProcessesProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Processes/Fpas.Processes.csproj" />
+    <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
+  </ItemGroup>
+  <Target Name="RemoveStaleHostFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
+    <RemoveDir Directories="$(OutputPath)Fixtures/host/examples" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/host/src/Fpas.Ui.Tui" />
+  </Target>
+</Project>

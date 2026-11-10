@@ -36,7 +36,7 @@ executables run independently of compiler, sources and feed. PDBs are optional
 for execution; retain them for debugging. Project-requested content files can
 remain separate and must also be copied. Directory modes need all runtime files.
 
-For applications using the [packaged CUI binding](../../src/Fpas.Gui.Cui/README.md#packaged-binding),
+For applications using the [packaged CUI binding](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-binding),
 directory modes include the shared CUI library beside the application. Single-file
 publication bundles it for native extraction. Use the binding package for
 Native AOT so its transitive targets link CUI statically.
@@ -134,13 +134,13 @@ reuse, independent RSA signature verification and incremental re-signing,
 public/delay signing, pinned CMS certificates and tampering controls for FPAS and
 C# hosts.
 
-The [packaged GUI fixture](../../src/Fpas.Gui.Cui/README.md#packaged-publishing-fixture)
+The [packaged GUI fixture](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-publishing-fixture)
 publishes and signs all five modes with the CUI binding referenced transitively.
 It runs both renderers on Windows and Linux and verifies native asset placement,
 extraction and static linking.
 
-The [public GUI host](../../src/Fpas.Gui/README.md) is consumed through the
-Fpas.Gui package, which brings its MVU/widget libraries and the native binding
+The [public GUI host](../../src/Fpas.Ui.Gui/README.md) is consumed through the
+Fpas.Ui.Gui package, which brings its MVU/widget libraries and the native binding
 transitively. GuiPublishingTests publishes the full FPAS gallery in all five
 modes and checks controlled state, background completion/cancellation, resource
 removal and repeated owner-thread teardown. Its single-file and NativeAOT cases

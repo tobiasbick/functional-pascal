@@ -25,9 +25,9 @@ internal sealed class DocCommand
         Exit codes: 0 success/not found/help, 1 analysis/setup/deadline failure, 2 arguments, 130 cancellation.
 
         Examples:
-          fpas doc examples/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
+          fpas doc examples/numerics/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
 
-          fpas doc examples/hello/Hello.fpasproj --name System.Console.WriteLine --report json
+          fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
 
           fpas doc Example.slnx --name System.Collections.Generic.List --limit 50 --report json
         """);

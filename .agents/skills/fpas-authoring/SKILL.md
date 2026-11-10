@@ -21,6 +21,7 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 | Tasks, await, cancellation, and shared state | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
 | Actual .NET APIs, events, attributes, and public signatures | [Interop](../../../docs/pascal/agents/interop.md) |
 | Compiler commands and API/runtime inspection | [Tools](../../../docs/pascal/agents/tools.md) |
+| Source comments and API documentation | [Comment rules and Markdown sections](../../../docs/pascal/language/basics/comments.md) |
 | Regression selection and controlled fixtures | [Tests](../../../tests/README.md) and [coverage](../../../tests/coverage.md) |
 
 ## Source workflow
@@ -33,6 +34,9 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 3. Keep case-sensitive names, lowercase keywords, explicit types, and named
    terminators. Consume returned values or use discard. Use CLR nullability and
    exceptions; define application unions for domain outcomes.
+   Document FPAS declarations with adjacent `//` Markdown comments. Use the
+   documented sections for parameters and returns; `///` and XML tags are not
+   source documentation markup.
 4. Compile through the current CLR toolchain using the
    [development workflow](../../../docs/build/development.md). Use `fpas compile`
    for explicit sources and the SDK for projects. Format changed sources with

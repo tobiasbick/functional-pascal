@@ -72,7 +72,7 @@ samples as a starting protocol; keep the same counts in a comparison.
 dotnet "$workload" bench cpu 10000 2 7 "$run/execution-cpu.csv" cpu-Release local
 dotnet "$workload" bench alloc 512 2 7 "$run/execution-alloc.csv" alloc-Release local
 dotnet "$measure" --output "$run/startup.csv" --label jit-Release --boundary startup --contains verified:noop -- "$dotnet" "$workload" noop
-dotnet "$measure" --output "$run/compiler.csv" --label compiler-Release --boundary compiler --contains Wrote -- "$dotnet" "$compiler" compile examples/hello/main.fpas --reference-dir "$refs" --output "$run/Compiled.dll" --debug portable --optimize
+dotnet "$measure" --output "$run/compiler.csv" --label compiler-Release --boundary compiler --contains Wrote -- "$dotnet" "$compiler" compile examples/basics/hello/main.fpas --reference-dir "$refs" --output "$run/Compiled.dll" --debug portable --optimize
 dotnet "$measure" --output "$run/sdk-incremental.csv" --label sdk-incremental-Release --boundary sdk-build -- "$dotnet" build apps/diagnostics/Workload/Workload.fpasproj -c Release --no-restore --disable-build-servers -nr:false -p:UseSharedCompilation=false
 dotnet "$measure" --output "$run/sdk-rebuild.csv" --label sdk-rebuild-Release --boundary sdk-build -- "$dotnet" build apps/diagnostics/Workload/Workload.fpasproj -c Release --no-restore --disable-build-servers -nr:false -p:UseSharedCompilation=false -t:Rebuild
 dotnet "$workload" cpu 1

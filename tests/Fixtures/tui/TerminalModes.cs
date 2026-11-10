@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Fpas.Tui;
+using Fpas.Ui.Tui;
 using Fpas.Ui;
 using Microsoft.Win32.SafeHandles;
-using Mvu = Fpas.Mvu.Application;
+using Mvu = Fpas.Ui.Mvu.Application;
 
 var fail = args[0] == "failure";
 using var terminal = new NativeTerminal();

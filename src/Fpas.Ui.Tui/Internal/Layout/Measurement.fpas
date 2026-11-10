@@ -1,0 +1,214 @@
+unit Fpas.Ui.Tui.Internal.Layout.Measurement;
+
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Choices as Ch, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+
+public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
+begin
+  case Node of
+    when E.Element.Sized(_, const Rule: E.Flex):
+      return Rule;
+    else
+      return new E.Flex();
+  end case;
+end function;
+
+public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
+begin
+  return if Align = L.Alignment.Stretch then Available
+    else Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
+    end if;
+end function;
+
+function WrappedStackHeight<TMsg>(
+  Children: array of E.Element<TMsg>; Axis: bool; Rule: E.Flow; Columns: int
+): int;
+begin
+  const Width: int := Sys.Math.Max(0, Columns - 2 * Rule.Padding);
+  const Gaps: int := Sys.Math.Max(0, Children.Length - 1) * Rule.Gap;
+  if Axis then
+    const Preferred: array of int := new int[Children.Length];
+    const Rules: array of E.Flex := Sys.Array.ConvertAll<E.Element<TMsg>, E.Flex>(
+      Children,
+      FlexRule<TMsg>
+    );
+    for Index: int := 0 to Children.Length - 1 do
+      Preferred[Index] := Intrinsic<TMsg>(Children[Index], true);
+    end for;
+    const Widths: array of int := F.Allocate(Preferred, Rules, Sys.Math.Max(0, Width - Gaps));
+    var Height: int := 0;
+    for Index: int := 0 to Children.Length - 1 do
+      if Widths[Index] > 0 then
+        Height := Sys.Math.Max(Height, Intrinsic<TMsg>(Children[Index], false, Widths[Index]));
+      end if;
+    end for;
+
+    return Height + 2 * Rule.Padding;
+  end if;
+
+  var Height: int := 2 * Rule.Padding + Gaps;
+  for Child: E.Element<TMsg> in Children do
+    const ChildWidth: int := CrossWidth<TMsg>(Child, Width, Rule.Align);
+    Height := Height + F.PreferredSize(
+      Intrinsic<TMsg>(Child, false, ChildWidth),
+      FlexRule<TMsg>(Child)
+    );
+  end for;
+
+  return Height;
+end function;
+
+public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
+begin
+  case Node of
+    when E.Element.Label(const Value: string):
+      if Horizontal then
+        return G.LineWidth(Value);
+      end if;
+
+      return G.LineCount(Value, Columns);
+    when E.Element.Separator(const Title: string):
+      return if Horizontal and Title <> '' then G.Measure(G.SingleLine(Title)) + 4 else 1 end if;
+    when E.Element.StatusLine(const Message: string, const Hints: array of string):
+      return if Horizontal then Status.PreferredWidth(Message, Hints) else 1 end if;
+    when E.Element.DocumentEditor(
+      _,
+      const Value: string,
+      _,
+      _,
+      const Placeholder: string,
+      _,
+      const MultipleLines: bool
+    ):
+      return if MultipleLines then (if Horizontal then 24
+          else 5
+          end if)
+        else (if Horizontal then Sys.Math.Max(
+            12,
+            Sys.Math.Max(G.Measure(Value), G.Measure(G.SingleLine(Placeholder))) + 2
+          )
+          else 1
+          end if)
+        end if;
+    when E.Element.Toggle(_, const Caption: string, _, _, _):
+      return if Horizontal then G.Measure(Caption) + 4 else 1 end if;
+    when E.Element.Action(_, const Caption: string, _, _, const Role: string, _, _):
+      return if Horizontal then G.Measure(
+          Caption
+        ) + (if Role = 'button' then 2 else 0 end if)
+        else 1
+        end if;
+    when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
+      if not Horizontal then
+        return Items.Length;
+      end if;
+      var Width: int := 0;
+      for Item: Ch.ListItem<TMsg> in Items do
+        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + 2);
+      end for;
+
+      return Width;
+    when E.Element.Selectable(_, const Items: array of Ch.SelectionItem, _, _, _):
+      if not Horizontal then
+        return Items.Length;
+      end if;
+      var Width: int := 0;
+      for Item: Ch.SelectionItem in Items do
+        const Prefix: int := if Item.CanActivate then 2 else 6 end if;
+        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + Prefix);
+      end for;
+
+      return Width;
+    when E.Element.Gauge(_):
+      return if Horizontal then 12 else 1 end if;
+    when E.Element.TableView(
+      _,
+      const Columns: array of E.TableColumn,
+      const Rows: array of Ch.TableRow,
+      _,
+      _,
+      _
+    ):
+      return if Horizontal then Tables.Preferred(Columns) else Rows.Length + 1 end if;
+    when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
+      const Body: int := if Panel = null then 0
+        else Intrinsic<TMsg>(
+          Panel,
+          Horizontal,
+          Columns
+        )
+        end if;
+      return if Horizontal then Sys.Math.Max(Tabs.Preferred(Items), Body)
+        else Body + (if Items.Length > 0 then 1 else 0 end if)
+        end if;
+    when E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      const Axis: bool,
+      const Rule: E.Flow
+    ):
+      if not Horizontal and Columns >= 0 then
+        return WrappedStackHeight<TMsg>(Children, Axis, Rule, Columns);
+      end if;
+      var Size: int := 0;
+      for Child: E.Element<TMsg> in Children do
+        const Span: int := Intrinsic<TMsg>(Child, Horizontal);
+        Size := if Axis = Horizontal then Size + Span else Sys.Math.Max(Size, Span) end if;
+      end for;
+
+      return Size + 2 * Rule.Padding + (if Axis = Horizontal then Sys.Math.Max(
+          0,
+          Children.Length - 1
+        ) * Rule.Gap
+        else 0
+        end if);
+    when E.Element.Sized(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.Decorated(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
+      _, const Child: E.Element<TMsg>, _, _, _
+    ), E.Element.Desktop(
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Layer(
+      _,
+      _,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ):
+      return Intrinsic<TMsg>(Child, Horizontal, Columns);
+    when E.Element.Panel(
+      const Body: E.Element<TMsg>,
+      const Footer: E.Element<TMsg>,
+      const Title: string,
+      const Padding: byte
+    ):
+      const Inset: int := 2 * (cast<int>(Padding) + 1);
+      if Horizontal then
+        return Sys.Math.Max(
+          G.Measure(Title),
+          Sys.Math.Max(Intrinsic<TMsg>(Body, true), Intrinsic<TMsg>(Footer, true))
+        ) + Inset;
+      end if;
+
+      const Inner: int := if Columns < 0 then -1 else Sys.Math.Max(1, Columns - Inset) end if;
+      return Intrinsic<TMsg>(Body, false, Inner) + Intrinsic<TMsg>(Footer, false) + Inset;
+    when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+      return Sys.Math.Max(
+        Intrinsic<TMsg>(
+          Child,
+          Horizontal,
+          if Columns < 0 then -1 else Sys.Math.Max(0, Columns - 2) end if
+        ),
+        if Horizontal then G.Measure(Title) else 0 end if
+      ) + 2;
+    when E.Element.Custom(const Columns: int, const Rows: int, _, _):
+      return if Horizontal then Columns else Rows end if;
+  end case;
+end function;
+end unit;

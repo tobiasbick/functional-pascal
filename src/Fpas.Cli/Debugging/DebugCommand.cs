@@ -34,7 +34,7 @@ internal sealed class DebugCommand
             Examples:
               fpas debug artifacts/Mandelbrot.dll --break main.fpas:13 --print Iteration
 
-              fpas debug artifacts/Mandelbrot.dll --cwd examples/mandelbrot --timeout 10 -- first "two words"
+              fpas debug artifacts/Mandelbrot.dll --cwd examples/numerics/mandelbrot --timeout 10 -- first "two words"
 
               fpas debug --protocol dap
 

@@ -41,12 +41,12 @@ JSON reports. Formatting is syntax-only and needs no assembly references.
 
 ## Check a project or solution
 
-`fpas check examples/mandelbrot/Mandelbrot.fpasproj` validates evaluated on-disk sources without
+`fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj` validates evaluated on-disk sources without
 publishing its own DLL, PDB, runtime configuration or XML documentation.
 Use an explicit `.fpasproj` or `.slnx`; source-level imports do not select projects.
 The selected SDK/compiler must match the CLI, and support the analysis targets.
 
-`fpas check examples/units/Units.fpasproj --configuration Release --diagnostics json` produces one
+`fpas check examples/basics/units/Units.fpasproj --configuration Release --diagnostics json` produces one
 JSON document with project states (`checked`, `invalid`, `blocked`), diagnostics,
 coverage, snapshot identity and preparation side effects. Independent projects
 are checked even if another project fails.
@@ -77,12 +77,12 @@ to 4 MiB.
 Use an explicit context and source position:
 
 ```sh
-fpas check examples/units/Units.fpasproj
-fpas query definition examples/units/Units.fpasproj --file examples/units/main.fpas --line 6 --column 29
-fpas query type examples/units/Units.fpasproj --file examples/units/main.fpas --line 7 --column 21
-fpas query refs examples/units/Units.fpasproj --file examples/units/lib/calculations.fpas --line 8 --column 17 --limit 100
-fpas query find examples/units/Units.fpasproj --name SumTo --match exact --kind routine
-fpas query inspect examples/units/Units.fpasproj --file examples/units/lib/calculations.fpas --line 8 --column 17 --limit 20
+fpas check examples/basics/units/Units.fpasproj
+fpas query definition examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 6 --column 29
+fpas query type examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 7 --column 21
+fpas query refs examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 8 --column 17 --limit 100
+fpas query find examples/basics/units/Units.fpasproj --name SumTo --match exact --kind routine
+fpas query inspect examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 8 --column 17 --limit 20
 ```
 
 Query output is one JSON document, including argument/setup failures. Its status
@@ -188,7 +188,7 @@ outer 4 MiB response limit still applies.
 
 Use `query callees` for outgoing operations from a selected callable and
 `query callers` for incoming source sites in the explicit checked context.
-Run these examples from `examples/mandelbrot`:
+Run these examples from `examples/numerics/mandelbrot`:
 
 ```sh
 fpas query callees Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
@@ -299,14 +299,14 @@ when the compiler is invoked directly through `dotnet`.
 Help and parser messages use English independently of the host locale. Parent
 help lists short command summaries, separated by blank lines; each command owns
 its detailed help and examples. Example invocations also have a blank line
-between them. The Mandelbrot query examples run from `examples/mandelbrot`.
+between them. The Mandelbrot query examples run from `examples/numerics/mandelbrot`.
 
 For standalone compilation, set FPAS_REFERENCE_DIR to the installed net10.0
 reference assembly directory as described by the
 [development workflow](../../build/development.md#direct-compiler-invocation).
 
 ```sh
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
 dotnet .temp-data/hello/Hello.dll
 ```
 

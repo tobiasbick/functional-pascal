@@ -41,7 +41,7 @@ internal sealed class ExecutionCommand
             Exit codes preserve the program result; host failures use 1, arguments 2, cancellation 130.
 
             Examples:
-              fpas run examples/hello/Hello.fpasproj -- first --second
+              fpas run examples/basics/hello/Hello.fpasproj -- first --second
 
               fpas run App.slnx --project App/App.fpasproj --configuration Release
             """ : """
@@ -49,7 +49,7 @@ internal sealed class ExecutionCommand
             Restore is enabled unless --no-restore is selected. Output uses the project settings.
 
             Examples:
-              fpas build examples/hello/Hello.fpasproj
+              fpas build examples/basics/hello/Hello.fpasproj
 
               fpas build App.slnx --configuration Release --report json
             """);

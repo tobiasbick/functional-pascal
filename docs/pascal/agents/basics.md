@@ -23,6 +23,14 @@ quotes each become LF. Spaces and tabs inside the literal are preserved.
 Only `//` starts a comment. Whitespace and comments do not
 replace required statement terminators.
 
+Attach API documentation as standalone `//` lines immediately before a
+declaration, before its attributes/modifiers, with no blank source line between.
+Use Markdown headings `## Parameters`, `## Type parameters`, `## Returns` and
+`## Remarks`; parameter entries use ``- `Name`: Description``. A `//`-only line
+separates paragraphs without detaching the documentation. `///` adds a literal
+slash; XML tags such as `<param>` remain text. Standard .NET XML is compiler
+output. See the [rules and complete example](../language/basics/comments.md).
+
 ## Operators and decisions
 
 Arithmetic follows CLR/C# numeric promotion: short plus short produces int,

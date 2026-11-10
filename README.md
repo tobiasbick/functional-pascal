@@ -58,8 +58,8 @@ building the example. See the [SDK cache instructions](docs/build/development.md
 Build and run the checked-in example.
 
 ```sh
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll build examples/hello/Hello.fpasproj
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll run examples/hello/Hello.fpasproj --no-build
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll build examples/basics/hello/Hello.fpasproj
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll run examples/basics/hello/Hello.fpasproj --no-build
 ```
 
 It prints `Hello from FPAS`. The
@@ -273,11 +273,11 @@ end program;
 
 ### Mandelbrot and .NET API Examples
 
-The [Mandelbrot project](examples/mandelbrot/README.md) renders a console image
+The [Mandelbrot project](examples/numerics/mandelbrot/README.md) renders a console image
 using numeric calculations and loops. Other executable projects cover
-[files](examples/read-file/README.md), [LINQ and collections](examples/directory-inventory/README.md),
-[records](examples/inventory-model/README.md), [generic unions](examples/generic-tree/README.md),
-[events](examples/events/README.md), and [JSON attributes](examples/attributes/README.md).
+[files](examples/io/read-file/README.md), [LINQ and collections](examples/io/directory-inventory/README.md),
+[records](examples/types/inventory-model/README.md), [generic unions](examples/types/generic-tree/README.md),
+[events](examples/interop/events/README.md), and [JSON attributes](examples/interop/attributes/README.md).
 
 ### Tests
 
@@ -307,7 +307,7 @@ Use ProjectReference for FPAS/C# dependencies and PackageReference for .NET
 libraries. Imports resolve names after those references exist. Mixed `.slnx`
 solutions build through ordinary MSBuild project edges. See
 [units](docs/pascal/program-structure/units.md), [projects](docs/pascal/program-structure/projects.md),
-and the [multi-source example](examples/units/README.md).
+and the [multi-source example](examples/basics/units/README.md).
 
 ## Documentation
 

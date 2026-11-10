@@ -49,23 +49,23 @@ internal static class CliApplication
 
               fpas debug --help
 
-              fpas check examples/mandelbrot/Mandelbrot.fpasproj
+              fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj
 
               fpas query --help
 
               fpas init project Hello --name Hello
 
-              fpas build examples/hello/Hello.fpasproj
+              fpas build examples/basics/hello/Hello.fpasproj
 
-              fpas run examples/hello/Hello.fpasproj
+              fpas run examples/basics/hello/Hello.fpasproj
 
-              fpas target examples/hello/Hello.fpasproj
+              fpas target examples/basics/hello/Hello.fpasproj
 
               fpas fmt --check examples
 
               fpas test Tests/Tests.fpasproj
 
-              fpas doc examples/hello/Hello.fpasproj --name System.Console.WriteLine
+              fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine
 
               fpas refactor --help
 

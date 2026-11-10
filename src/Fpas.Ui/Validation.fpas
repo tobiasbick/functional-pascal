@@ -2,32 +2,40 @@ unit Fpas.Ui.Validation;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
-/// The capability profile to check before a host presents a view.
+// The capability profile to check before a host presents a view.
 public type Target = enum: byte
-  /// Accepts only widgets and options shared by both hosts.
+  // Accepts only widgets and options shared by both hosts.
   Portable;
-  /// Allows cell units and terminal extension nodes.
+  // Allows cell units and terminal extension nodes.
   Terminal;
-  /// Allows logical units and graphical extension nodes.
+  // Allows logical units and graphical extension nodes.
   Graphical;
 end enum;
 
-/// A validated view and its resolved subtrees.
-/// <typeparam name="TMsg">The application message type.</typeparam>
+// A validated view and its resolved subtrees.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
 public type Prepared<TMsg> = record
-  /// The root view. Deferred nodes reference Subviews by ID.
+  // The root view. Deferred nodes reference Subviews by ID.
   public Tree: E.Element<TMsg>;
-  /// The resolved subtrees for this view, including nested deferred nodes.
+  // The resolved subtrees for this view, including nested deferred nodes.
   public Subviews: Generic.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>;
 end record;
 
-/// Validates the entire view and resolves deferred subtrees before presentation.
-/// <typeparam name="TMsg">The application message type.</typeparam>
-/// <param name="Tree">The view to check, including all modal layers.</param>
-/// <param name="Profile">The capabilities of the target.</param>
-/// <param name="Previous">The last successfully presented view, if available.</param>
-/// <param name="TerminalSize">Exact dimensions required by terminal viewport subtrees.</param>
-/// <returns>The view and the cache entries that its presenter should use.</returns>
+// Validates the entire view and resolves deferred subtrees before presentation.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Tree`: The view to check, including all modal layers.
+// - `Profile`: The capabilities of the target.
+// - `Previous`: The last successfully presented view, if available.
+// - `TerminalSize`: Exact dimensions required by terminal viewport subtrees.
+//
+// ## Returns
+// The view and the cache entries that its presenter should use.
 public function Prepare<TMsg>(
   Tree: E.Element<TMsg>; Profile: Target; Previous: Prepared<TMsg>? := null; TerminalSize: T.Viewport? := null
 ): Prepared<TMsg>;

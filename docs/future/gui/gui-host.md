@@ -1,8 +1,8 @@
 # GUI host platform acceptance
 
-The implemented host contract is in [Fpas.Gui](../../../src/Fpas.Gui/README.md).
-The [counter](../../../examples/gui/counter/README.md) and
-[widget gallery](../../../examples/gui/gallery/README.md) use the public MVU and
+The implemented host contract is in [Fpas.Ui.Gui](../../../src/Fpas.Ui.Gui/README.md).
+The [counter](../../../examples/ui/gui/counter/README.md) and
+[widget gallery](../../../examples/ui/gui/gallery/README.md) use the public MVU and
 shared-widget application path.
 
 Phase 6 still requires native Windows x64 evidence. A Linux/Xvfb run cannot

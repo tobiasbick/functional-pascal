@@ -2,12 +2,18 @@ unit Fpas.Ui.TerminalExtensions.Views;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, System as Sys;
 
-/// Composes terminal content, layers and application shortcuts.
-/// <typeparam name="TMsg">Message type.</typeparam>
-/// <param name="Content">Base content.</param>
-/// <param name="Layers">Floating layers in paint order.</param>
-/// <param name="Shortcuts">Base-scope shortcuts.</param>
-/// <returns>A terminal-only screen.</returns>
+// Composes terminal content, layers and application shortcuts.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Content`: Base content.
+// - `Layers`: Floating layers in paint order.
+// - `Shortcuts`: Base-scope shortcuts.
+//
+// ## Returns
+// A terminal-only screen.
 public function Screen<TMsg>(
   Content: E.Element<TMsg>; Layers: array of E.Element<TMsg>;
   Shortcuts: array of K.ShortcutBinding<TMsg>
@@ -16,16 +22,22 @@ begin
   return E.Element<TMsg>.TerminalScreen(Content, Layers, Shortcuts);
 end function;
 
-/// Places a terminal layer with scoped shortcuts and optional modal focus.
-/// <typeparam name="TMsg">Message type.</typeparam>
-/// <param name="Id">Stable layer ID.</param>
-/// <param name="Content">Layer content.</param>
-/// <param name="InitialFocus">Initial control, or the first eligible control.</param>
-/// <param name="OnDismiss">Optional Escape mapper.</param>
-/// <param name="Shortcuts">Layer-scope shortcuts.</param>
-/// <param name="Limits">Optional percentage limits.</param>
-/// <param name="Modal">Whether the layer owns input.</param>
-/// <returns>A terminal-only layer. Portable modals use Elements.Overlay.</returns>
+// Places a terminal layer with scoped shortcuts and optional modal focus.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Id`: Stable layer ID.
+// - `Content`: Layer content.
+// - `InitialFocus`: Initial control, or the first eligible control.
+// - `OnDismiss`: Optional Escape mapper.
+// - `Shortcuts`: Layer-scope shortcuts.
+// - `Limits`: Optional percentage limits.
+// - `Modal`: Whether the layer owns input.
+//
+// ## Returns
+// A terminal-only layer. Portable modals use Elements.Overlay.
 public function Layer<TMsg>(
   Id: string; Content: E.Element<TMsg>; Shortcuts: array of K.ShortcutBinding<TMsg>; InitialFocus: string? := null;
   OnDismiss: Sys.Func<TMsg>? := null;
@@ -43,26 +55,38 @@ begin
   );
 end function;
 
-/// Frames a terminal overlay body and pins its footer.
-/// <typeparam name="TMsg">Message type.</typeparam>
-/// <param name="Body">Possibly scrollable body.</param>
-/// <param name="Footer">Pinned footer.</param>
-/// <param name="Title">Frame title.</param>
-/// <param name="Padding">Preferred cell inset.</param>
-/// <returns>A terminal-only panel.</returns>
+// Frames a terminal overlay body and pins its footer.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Body`: Possibly scrollable body.
+// - `Footer`: Pinned footer.
+// - `Title`: Frame title.
+// - `Padding`: Preferred cell inset.
+//
+// ## Returns
+// A terminal-only panel.
 public function Panel<TMsg>(Body: E.Element<TMsg>; Footer: E.Element<TMsg>; Title: string := ''; Padding: byte := 0): E.Element<TMsg>;
 begin
   return E.Element<TMsg>.TerminalPanel(Body, Footer, Title, Padding);
 end function;
 
-/// Displays a fixed-size terminal canvas. Responsive canvases use Elements.CellCanvas.
-/// <typeparam name="TMsg">Message type.</typeparam>
-/// <param name="Id">Stable canvas ID.</param>
-/// <param name="Columns">Positive cell width.</param>
-/// <param name="Rows">Positive cell height.</param>
-/// <param name="Draw">Cell renderer.</param>
-/// <param name="Events">Input and visibility mappers.</param>
-/// <returns>A terminal-only canvas.</returns>
+// Displays a fixed-size terminal canvas. Responsive canvases use Elements.CellCanvas.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Id`: Stable canvas ID.
+// - `Columns`: Positive cell width.
+// - `Rows`: Positive cell height.
+// - `Draw`: Cell renderer.
+// - `Events`: Input and visibility mappers.
+//
+// ## Returns
+// A terminal-only canvas.
 public function FixedCanvas<TMsg>(
   Id: string; Columns: int; Rows: int; Draw: function(int, int): T.Cell;
   Events: T.CanvasEvents<TMsg>
@@ -73,11 +97,17 @@ begin
   return E.Element<TMsg>.TerminalFixedCanvas(Id, Columns, Rows, Draw, Events);
 end function;
 
-/// Builds a terminal-specific responsive subtree from exact dimensions.
-/// <typeparam name="TMsg">Message type.</typeparam>
-/// <param name="Id">Stable responsive-subtree ID.</param>
-/// <param name="Build">Builds the subtree from available terminal dimensions.</param>
-/// <returns>A terminal-only node, resolved and checked during preflight.</returns>
+// Builds a terminal-specific responsive subtree from exact dimensions.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Id`: Stable responsive-subtree ID.
+// - `Build`: Builds the subtree from available terminal dimensions.
+//
+// ## Returns
+// A terminal-only node, resolved and checked during preflight.
 public function Viewport<TMsg>(Id: string; Build: function(T.Viewport): E.Element<TMsg>): E.Element<TMsg>;
 begin
   return E.Element<TMsg>.TerminalViewport(Id, Build);

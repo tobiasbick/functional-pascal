@@ -37,7 +37,11 @@ public sealed partial class DapDebuggerTests
         var requests = Enumerable.Range(0, requestCount).Select(_ => client.Request("threads")).ToArray();
         await Task.Delay(100);
         await client.Success("terminate");
-        foreach (var request in requests) Assert.False((await request).GetProperty("success").GetBoolean());
+        foreach (var request in requests)
+        {
+            var response = await request;
+            Assert.False(response.GetProperty("success").GetBoolean(), response.GetRawText());
+        }
         await client.End(); Gone(target); Gone(worker);
     }
 

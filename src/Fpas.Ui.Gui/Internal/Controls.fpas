@@ -1,0 +1,209 @@
+unit Fpas.Ui.Gui.Internal.Controls;
+
+uses
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Cui.Text as NativeText, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S,
+  Fpas.Ui.Graphics as G, System as Sys;
+
+// Draws a model-controlled action.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `State`: Drawing context.
+// - `Id`: Stable ID.
+// - `Label`: Literal label.
+// - `Message`: Activation message.
+// - `Enabled`: Input permission.
+// - `Variant`: Semantic variant.
+public procedure Button<TMsg>(
+  State: C.State<TMsg>; Id: string; Label: string; Message: TMsg;
+  Enabled: bool; Variant: S.ButtonVariant
+);
+begin
+  const Allowed: bool := Enabled and State.AcceptInput;
+  const Key: string := C.Token('button', Id);
+  const Events: int := State.Window.Control(
+    Key,
+    Label,
+    0,
+    Allowed,
+    false,
+    cast<int>(Variant),
+    C.WantsFocus<TMsg>(State, Id, Key, Allowed)
+  );
+  if (Events and 1) <> 0 and Allowed then
+    State.Messages.Add(Message);
+  end if;
+
+  C.Track<TMsg>(State, new App.Control(Id, Label, 'button', new Cui.CuiRectangle(), Allowed));
+end procedure;
+
+// Draws a model-controlled checkbox.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `State`: Drawing context.
+// - `Id`: Stable ID.
+// - `Label`: Literal label.
+// - `Checked`: Model value.
+// - `OnChange`: Value-to-message mapper.
+// - `Enabled`: Input permission.
+public procedure Checkbox<TMsg>(
+  State: C.State<TMsg>; Id: string; Label: string; Checked: bool;
+  OnChange: function(bool): TMsg; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and State.AcceptInput;
+  const Key: string := C.Token('checkbox', Id);
+  const Events: int := State.Window.Control(
+    Key,
+    Label,
+    1,
+    Allowed,
+    Checked,
+    0,
+    C.WantsFocus<TMsg>(State, Id, Key, Allowed)
+  );
+  const Value: bool := (Events and 2) <> 0;
+  if (Events and 1) <> 0 and Allowed then
+    State.Messages.Add(OnChange(Value));
+  end if;
+
+  C.Track<TMsg>(
+    State,
+    new App.Control(
+      Id,
+      Label,
+      'checkbox',
+      new Cui.CuiRectangle(),
+      Allowed,
+      Value := Value.ToString()
+    )
+  );
+end procedure;
+
+// Draws an authoritative document and proposes edits/navigation separately.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `State`: Drawing context.
+// - `Id`: Stable ID.
+// - `Text`: Model document.
+// - `Position`: Model selection.
+// - `OnEdit`: Document mapper.
+// - `OnNavigate`: Selection mapper.
+// - `Enabled`: Input permission.
+// - `MultipleLines`: Editor kind.
+// - `Placeholder`: Empty-document hint.
+public procedure Editor<TMsg>(
+  State: C.State<TMsg>; Id: string; Text: string; Position: Ed.EditorPosition;
+  OnEdit: function(Ed.TextEdit): TMsg; OnNavigate: function(Ed.EditorPosition): TMsg; Enabled: bool; MultipleLines: bool; Placeholder: string
+);
+begin
+  const Key: string := C.Token('editor', Id);
+  const Allowed: bool := Enabled and State.AcceptInput;
+  const Buffer: NativeText.CuiTextBuffer := State.Resources.Editor(
+    Key, Text,
+    new NativeText.CuiTextSelection(Position.Anchor, Position.Caret), MultipleLines
+  );
+  const Events: Cui.CuiTextInputEvents := State.Window.Editor(
+    Key,
+    Buffer,
+    MultipleLines,
+    Allowed,
+    C.WantsFocus<TMsg>(State, Id, Key, Allowed),
+    Placeholder
+  );
+  if (cast<int>(Events) and 1) <> 0 then
+    Cui.CuiHostResources.NormalizeEditor(Buffer, MultipleLines);
+  end if;
+  const Document: string := Buffer.Text;
+  const Selection: NativeText.CuiTextSelection := Buffer.Selection;
+  const Next: Ed.EditorPosition := new Ed.EditorPosition(Selection.Caret, Selection.Anchor);
+  if Allowed then
+    if Document <> Text then
+      State.Messages.Add(OnEdit(new Ed.TextEdit(Document, Next)));
+    elsif Next.Caret <> Position.Caret or Next.Anchor <> Position.Anchor then
+      State.Messages.Add(OnNavigate(Next));
+    end if;
+  end if;
+
+  C.Track<TMsg>(
+    State,
+    new App.Control(
+      Id,
+      '',
+      'editor',
+      new Cui.CuiRectangle(),
+      Allowed,
+      Value := Document,
+      Position := Next
+    )
+  );
+end procedure;
+
+function Color(Value: G.Color): uint;
+begin
+  return cast<uint>(Value.Red) or (cast<uint>(Value.Green) shl 8) or (cast<uint>(Value.Blue) shl
+    16) or (cast<uint>(Value.Alpha) shl 24);
+end function;
+
+// Copies vector operations into the native frame.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `State`: Drawing context.
+// - `Id`: Canvas ID.
+// - `Width`: Logical width.
+// - `Height`: Logical height.
+// - `Operations`: Immutable drawing descriptions.
+public procedure Canvas<TMsg>(State: C.State<TMsg>; Id: string; Width: int; Height: int; Operations: array of G.Paint);
+begin
+  const Items: array of Cui.CuiPaint := new Cui.CuiPaint[Operations.Length];
+  for Index: int := 0 to Items.Length - 1 do
+    var Item: Cui.CuiPaint := new Cui.CuiPaint();
+    case Operations[Index] of
+      when G.Paint.FillRect(
+        const X: double,
+        const Y: double,
+        const W: double,
+        const H: double,
+        const Paint: G.Color
+      ):
+        Item.A := cast<float>(X);
+        Item.B := cast<float>(Y);
+        Item.C := cast<float>(W);
+        Item.D := cast<float>(H);
+        Item.Color := Color(Paint);
+      when G.Paint.Line(
+        const X: double,
+        const Y: double,
+        const X2: double,
+        const Y2: double,
+        const Thickness: double,
+        const Paint: G.Color
+      ):
+        Item.Kind := 1;
+        Item.A := cast<float>(X);
+        Item.B := cast<float>(Y);
+        Item.C := cast<float>(X2);
+        Item.D := cast<float>(Y2);
+        Item.Thickness := cast<float>(Thickness);
+        Item.Color := Color(Paint);
+    end case;
+
+    Items[Index] := Item;
+  end for;
+
+  State.Window.Canvas(C.Token('canvas', Id), Width, Height, Items);
+  C.Track<TMsg>(State, new App.Control(Id, '', 'canvas', new Cui.CuiRectangle(), false));
+end procedure;
+end unit;

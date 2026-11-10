@@ -1,0 +1,561 @@
+unit Fpas.Ui.Tui.Application;
+
+uses Fpas.Ui.Editors as Ed, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Tui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Hosting.Session as Host, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// An event to route against the current terminal view.
+public type Input = union
+  // Request focus by control ID.
+  Focus(Id: string);
+  // Activate the control with the supplied ID.
+  Activate(Id: string);
+  // Change the viewport to the supplied size in cells.
+  Resize(Columns: int; Rows: int);
+  // Press a named key with the supplied modifiers.
+  KeyPress(Key: K.Key; Modifiers: K.KeyModifiers);
+  // Route one typed character.
+  Character(Text: string);
+  // Insert text into the focused editor.
+  TextInput(Text: string);
+  // Paste text into the focused editor.
+  Paste(Text: string);
+  // Click the primary button at the supplied cell.
+  Click(Column: int; Row: int);
+  // Click the supplied mouse button at the supplied cell.
+  ButtonClick(Button: K.MouseButton; Column: int; Row: int);
+  // Route a pointer event at the supplied cell.
+  Pointer(Kind: K.PointerKind; Column: int; Row: int);
+  // Route a pointer event with a button at the supplied cell.
+  ButtonPointer(Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
+  // Scroll at the supplied cell. Negative deltas scroll up.
+  Scroll(Column: int; Row: int; Delta: int);
+end union;
+
+// The visible state of a control in a published frame.
+public type ControlSnapshot = record
+  // Stable control ID.
+  public Id: string;
+  // Visible label.
+  public Label: string;
+  // Control role used by inspection clients.
+  public Role: string;
+  // Current value as text.
+  public Value: string;
+  // Left cell coordinate.
+  public Column: int;
+  // Top cell coordinate.
+  public Row: int;
+  // Visible width in cells.
+  public Width: int;
+  // Visible height in cells.
+  public Height: int;
+  // Whether the control has keyboard focus.
+  public Focused: bool;
+  // Whether the pointer is over the control.
+  public Hovered: bool;
+  // Whether the control accepts interaction.
+  public Enabled: bool;
+  // Directional UTF-16 editor selection, or null for other controls.
+  public Position: Ed.EditorPosition? := null;
+end record;
+
+// A detached snapshot of a successfully presented terminal view.
+public type Frame = record
+  // Session-local frame ID.
+  public Id: long;
+  // Width in cells.
+  public Columns: int;
+  // Height in cells.
+  public Rows: int;
+  // Rows as plain text.
+  public Lines: array of string;
+  // Styled cells in row order.
+  public Cells: array of T.Cell;
+  // Visible control descriptors.
+  public Controls: array of ControlSnapshot;
+end record;
+
+// The result of attempting to enqueue an input event.
+public type Admission = union
+  // The event entered the queue with the supplied receipt ID.
+  Queued(Id: long);
+  // The session can accept more input after capacity becomes available.
+  QueueFull;
+  // The session has ended admission.
+  Closed;
+end union;
+
+// The result of processing one queue entry.
+public type StepResult = union
+  // The session has no work to process.
+  Idle;
+  // The input was processed, with the current frame ID and publication status.
+  Processed(InputId: long; FrameId: long; Published: bool);
+  // An effect result was consumed, with the current frame ID.
+  EffectProcessed(FrameId: long);
+  // Processing failed at the given stage. Input ID zero means no input receipt.
+  Failed(InputId: long; FrameId: long; Stage: string; Reason: string);
+end union;
+
+// The manually driven terminal host and its published frames.
+public type HeadlessSession = record implements Sys.IDisposable
+  SendInput: function(Input): Admission;
+  Process: function(): StepResult;
+  ReadFrame: function(): Frame;
+  ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
+  ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>;
+  Status: function(): bool;
+  BeginClose: function(): Tasks.Task;
+  Release: procedure();
+
+  // Wraps the operations of a headless host.
+  //
+  // ## Parameters
+  // - `SendInput`: Admits a raw terminal event.
+  // - `Process`: Processes one queued item.
+  // - `ReadFrame`: Reads the last successfully presented frame.
+  // - `ReadOutcome`: Waits for an input receipt with a timeout.
+  // - `ReadReady`: Waits for possible work or closure.
+  // - `Status`: Reports whether the host still accepts work.
+  // - `BeginClose`: Stops admission and returns the cleanup task.
+  // - `Release`: Joins cleanup and releases the host.
+  //
+  // ## Returns
+  // The headless session.
+  public static function Create(
+    SendInput: function(Input): Admission; Process: function(): StepResult;
+    ReadFrame: function(): Frame; ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
+    ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>; Status: function(): bool;
+    BeginClose: function(): Tasks.Task; Release: procedure()
+  ): HeadlessSession;
+  begin
+    return new HeadlessSession(
+      SendInput,
+      Process,
+      ReadFrame,
+      ReadOutcome,
+      ReadReady,
+      Status,
+      BeginClose,
+      Release
+    );
+  end function;
+
+  // Attempts to enqueue an input event.
+  //
+  // ## Parameters
+  // - `Event`: The raw input event.
+  //
+  // ## Returns
+  // The admission result and receipt ID on success.
+  public function Send(Event: Input): Admission;
+  begin
+    return self.SendInput(Event);
+  end function;
+
+  // Processes one entry from the queue and returns its outcome.
+  public function Step(): StepResult;
+  begin
+    return self.Process();
+  end function;
+
+  // Returns a detached copy of the latest published frame.
+  public function Snapshot(): Frame;
+  begin
+    return self.ReadFrame();
+  end function;
+
+  // Observes the outcome of an admitted input without advancing the host.
+  //
+  // ## Parameters
+  // - `InputId`: The receipt ID returned by Send.
+  // - `Timeout`: How long to wait for processing.
+  //
+  // ## Returns
+  // The outcome, or null when it is unavailable.
+  public function Wait(InputId: long; Timeout: Sys.TimeSpan): Tasks.Task<StepResult?>;
+  begin
+    return self.ReadOutcome(InputId, Timeout);
+  end function;
+
+  // Waits for possible work or closure.
+  //
+  // ## Parameters
+  // - `Cancellation`: The token that can cancel the wait.
+  //
+  // ## Returns
+  // Whether the queue may contain an entry.
+  public function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    return self.ReadReady(Cancellation);
+  end function;
+
+  // Reports whether the host still admits input.
+  public function IsOpen(): bool;
+  begin
+    return self.Status();
+  end function;
+
+  // Stops admitting input and starts cancellation.
+  //
+  // ## Returns
+  // The completion of the session's worker and callback cleanup.
+  public function CloseAsync(): Tasks.Task;
+  begin
+    return self.BeginClose();
+  end function;
+
+  // Joins outstanding cleanup and releases the host connection.
+  public procedure Dispose();
+  begin
+    self.Release();
+  end procedure;
+end record;
+
+// Publishes the initial frame and returns a manually stepped session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `Theme`: The fixed theme.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
+  );
+end function;
+
+// Resolves the theme from the current model before laying out each frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `ThemeFor`: Selects the theme for the current model.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): Th.Theme
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update,
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    Columns, Rows, ThemeFor
+  );
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `Theme`: The fixed theme.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
+  );
+end function;
+
+// Gives the view the initial dimensions and the dimensions of each processed resize.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `ThemeFor`: Selects the theme for the current model.
+//
+// ## Returns
+// The session with its initial frame published.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+  ThemeFor: function(TModel): Th.Theme
+): HeadlessSession;
+  procedure Present(Value: Frame);
+  begin
+  end procedure;
+begin
+  return Host.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Columns,
+    Rows,
+    Present,
+    true,
+    ThemeFor
+  );
+end function;
+
+// Runs the application on the current terminal and restores terminal modes on exit.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+end procedure;
+
+function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of T.Cell);
+  procedure WriteOutput(Value: string);
+  begin
+    Device.Write(Value);
+  end procedure;
+begin
+  return P.Create(WriteOutput);
+end function;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Theme`: The fixed theme.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>; Theme: Th.Theme
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+end procedure;
+
+// Resolves the theme from the current model before drawing each terminal frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `ThemeFor`: Selects the theme for the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+);
+begin
+  Run<TModel, TMsg>(
+    InitialModel,
+    Update,
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    ThemeFor
+  );
+end procedure;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+end procedure;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Theme`: The fixed theme.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Theme: Th.Theme
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+end procedure;
+
+// Gives the view portable size classes before laying out each frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `ThemeFor`: Selects the theme for the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+);
+  procedure Present(Value: Frame);
+  begin
+    Write(Value.Columns, Value.Rows, Value.Cells);
+  end procedure;
+begin
+  using const Device: Terminal.ConsoleTerminal := new Terminal.ConsoleTerminal();
+  const Write: procedure(int, int, array of T.Cell) := TerminalWriter(Device);
+  const Session: HeadlessSession := Host.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Device.Columns,
+    Device.Rows,
+    Present,
+    false,
+    ThemeFor
+  );
+  try
+    var Pending: Input? := null;
+    while Session.IsOpen() do
+      const Result: StepResult := Session.Step();
+      case Result of
+        when StepResult.Failed(_, _, const Stage: string, const Reason: string):
+          raise new Sys.InvalidOperationException('TUI ' + Stage + ' failed: ' + Reason);
+        else
+      end case;
+
+      if not Session.IsOpen() then
+        break;
+      end if;
+
+      if Pending = null then
+        const Delay: int := case Result of
+          when StepResult.Idle: 20;
+          else 0;
+        end case;
+        const Event: Terminal.TerminalInput? := Device.Poll(Delay);
+        case Event of
+          when is Terminal.TerminalInput as Value:
+            Pending := Inputs.Translate(Value);
+          else
+        end case;
+      end if;
+      const Event: Input? := Pending;
+      if Event <> null then
+        case Session.Send(Event) of
+          when Admission.Queued(_), Admission.Closed:
+            Pending := null;
+          when Admission.QueueFull:
+        end case;
+      end if;
+    end while;
+  catch Failure: Sys.Exception do
+    try
+      Session.Dispose();
+    catch Cleanup: Sys.Exception do
+      raise new Sys.AggregateException(Failure.Message + ' Cleanup failed.', [Failure, Cleanup]);
+    end try;
+
+    raise;
+  end try;
+
+  Session.Dispose();
+end procedure;
+end unit;

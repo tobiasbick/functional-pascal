@@ -1,6 +1,6 @@
 # GUI distribution Windows acceptance
 
-The [handbook](../../pascal/libraries/gui.md), [host reference](../../../src/Fpas.Gui/README.md),
+The [handbook](../../pascal/libraries/gui.md), [host reference](../../../src/Fpas.Ui.Gui/README.md),
 [publishing reference](../../build/publishing.md) and
 [acceptance map](../../../tests/coverage.md#native-gui) describe the implemented
 application and its checks. Phase 8 still requires native Windows x64 evidence.
@@ -9,7 +9,7 @@ application and its checks. Phase 8 still requires native Windows x64 evidence.
 
 - [ ] Build Debug and Release using the Windows native toolchain. Run compiler,
   SDK/documentation, GUI/shared-widget and TUI regressions for those configurations.
-- [ ] Set `FPAS_TEST_GUI_AOT=1` and run the complete Fpas.Gui.Cui.Tests suite
+- [ ] Set `FPAS_TEST_GUI_AOT=1` and run the complete Fpas.Ui.Gui.Cui.Tests suite
   with software and OpenGL rendering. Retain screenshots and logs using
   `FPAS_GUI_TEST_ARTIFACTS` under `.temp-data`.
 - [ ] Run both publishing matrices: the signed binding fixture and the public

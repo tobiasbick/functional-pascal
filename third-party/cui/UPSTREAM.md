@@ -17,7 +17,7 @@ source tree.
 | `cui.c` | `07f2be6fec062fc5a44fe4cec430f27282151a04bf5f8f4715de50bd7b9098c6` |
 | `cui.h` | `81431e25aa4d2373777d1e6510a6f5d95f33e7c4e1a679841048539d418b7840` |
 
-Project-owned integration belongs under `src/Fpas.Gui.Cui/`, with the C bridge
+Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
 from the unmodified upstream sources here.
 

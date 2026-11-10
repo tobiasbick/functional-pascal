@@ -18,7 +18,7 @@ internal sealed class MaintenanceCommand
     {
         Command = new(name, $"Run the SDK's {name} operation for an explicit project or solution.\n" +
             "MSBuild owns the affected files and package resolution. No directory is recursively removed by FPAS.\n\n" +
-            $"Examples:\n  fpas {name} examples/hello/Hello.fpasproj --report json\n\n  fpas {name} App.slnx --configuration Release\n");
+            $"Examples:\n  fpas {name} examples/basics/hello/Hello.fpasproj --report json\n\n  fpas {name} App.slnx --configuration Release\n");
         report.AcceptOnlyFromAmong("json"); ContextCommandOptions.Range(timeout, 1, 3600);
         Command.Arguments.Add(context);
         foreach (var option in new Option[] { configuration, report, timeout }) Command.Options.Add(option);

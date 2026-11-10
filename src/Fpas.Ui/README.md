@@ -2,7 +2,7 @@
 
 Fpas.Ui defines the declarative view used by the GUI and TUI adapters.
 It is an FPAS library with ordinary .NET 10 records, unions and
-delegates. It can be used with [Fpas.Mvu](../Fpas.Mvu/README.md) and has no
+delegates. It can be used with [Fpas.Ui.Mvu](../Fpas.Ui.Mvu/README.md) and has no
 dependency on a host, renderer or CUI.
 
 ## Building a view
@@ -24,8 +24,8 @@ them. Replace changed data on a subsequent view.
 
 `Fpas.Ui.Validation.Prepare` checks the following profiles. The table defines
 the contract accepted by the validator. The host references describe rendering
-and input support. [GUI adapter](../Fpas.Gui/README.md),
-[TUI adapter](../Fpas.Tui/README.md).
+and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
+[TUI adapter](../Fpas.Ui.Tui/README.md).
 
 | Widget or option | Portable | Terminal | Graphical |
 | --- | --- | --- | --- |

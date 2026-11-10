@@ -8,10 +8,10 @@ There are no style configuration files or alternate styles.
 ## Command
 
 ```sh
-fpas fmt examples/hello/main.fpas
+fpas fmt examples/basics/hello/main.fpas
 fpas fmt --check --list examples
-fpas fmt --stdout examples/hello/main.fpas
-fpas fmt --check examples/hello/Hello.fpasproj --report json
+fpas fmt --stdout examples/basics/hello/main.fpas
+fpas fmt --check examples/basics/hello/Hello.fpasproj --report json
 fpas fmt --check Example.slnx --configuration Release
 ```
 

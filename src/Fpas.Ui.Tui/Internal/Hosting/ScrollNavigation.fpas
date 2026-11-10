@@ -1,0 +1,60 @@
+unit Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation;
+
+uses Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, System as Sys;
+
+procedure Notify<TMsg>(View: V.Viewport<TMsg>; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
+begin
+  case View.OnScroll of
+    when is Sys.Func<L.ScrollChange, TMsg> as Callback:
+      Apply(
+        Callback.Invoke(
+          new L.ScrollChange(Position, L.Measure.Cells(Offset), L.Measure.Cells(View.Maximum))
+        )
+      );
+    else
+  end case;
+end procedure;
+
+public procedure Move<TMsg>(View: V.Viewport<TMsg>; Delta: int; Apply: procedure(TMsg));
+begin
+  const Offset: int := cast<int>(Sys.Math.Clamp(
+    cast<long>(View.Offset) + cast<long>(Delta),
+    0L,
+    cast<long>(View.Maximum)
+  ));
+  if Offset <> View.Offset then
+    Notify<TMsg>(View, L.ScrollPosition.Offset(L.Measure.Cells(Offset)), Offset, Apply);
+  end if;
+end procedure;
+
+public function Key<TMsg>(
+  View: V.Viewport<TMsg>; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)
+): bool;
+begin
+
+  if Modifiers <> K.KeyModifiers.None then
+    return false;
+  end if;
+
+  case Pressed of
+    when K.Key.Up:
+      Move<TMsg>(View, -1, Apply);
+    when K.Key.Down:
+      Move<TMsg>(View, 1, Apply);
+    when K.Key.PageUp:
+      Move<TMsg>(View, -View.Rows, Apply);
+    when K.Key.PageDown:
+      Move<TMsg>(View, View.Rows, Apply);
+    when K.Key.Home:
+      Move<TMsg>(View, -View.Offset, Apply);
+    when K.Key.End:
+      if not View.Following then
+        Notify<TMsg>(View, L.ScrollPosition.End, View.Maximum, Apply);
+      end if;
+    else
+      return false;
+  end case;
+
+  return true;
+end function;
+end unit;

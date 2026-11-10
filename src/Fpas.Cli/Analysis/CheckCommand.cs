@@ -20,9 +20,9 @@ internal sealed class CheckCommand
         Exit codes: 0 success/help, 1 analysis/setup failure, 2 invalid arguments, 130 cancellation.
 
         Examples:
-          fpas check examples/mandelbrot/Mandelbrot.fpasproj
+          fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj
 
-          fpas check examples/mandelbrot/Mandelbrot.fpasproj --configuration Release --diagnostics json
+          fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj --configuration Release --diagnostics json
 
           fpas check Example.fpasproj --fix --dry-run --diagnostics json
 

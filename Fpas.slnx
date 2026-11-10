@@ -10,7 +10,7 @@
     <Project Path="src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" />
     <Project Path="src/Fpas.Core/Fpas.Core.csproj" />
     <Project Path="src/Fpas.Debugging/Fpas.Debugging.csproj" />
-    <Project Path="src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" />
+    <Project Path="src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
   </Folder>
   <Folder Name="/sdk/">
     <Project Path="sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
@@ -18,6 +18,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Fpas.Compiler.Tests/Fpas.Compiler.Tests.csproj" />
     <Project Path="tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj" />
-    <Project Path="tests/Fpas.Gui.Cui.Tests/Fpas.Gui.Cui.Tests.csproj" />
+    <Project Path="tests/Fpas.Ui.Gui.Cui.Tests/Fpas.Ui.Gui.Cui.Tests.csproj" />
   </Folder>
 </Solution>

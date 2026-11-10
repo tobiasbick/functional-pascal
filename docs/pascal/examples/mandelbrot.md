@@ -43,9 +43,9 @@ end;
 end program;
 ```
 
-The [standalone project](../../../examples/mandelbrot/README.md) runs the same
+The [standalone project](../../../examples/numerics/mandelbrot/README.md) runs the same
 program. Its MSBuild integration test verifies every pixel against a .NET
-Complex calculation. The [Mandelbrot Explorer](../../../examples/tui/mandelbrot/README.md)
+Complex calculation. The [Mandelbrot Explorer](../../../examples/ui/tui/mandelbrot/README.md)
 adds interactive pan, zoom, and color palettes in a fullscreen terminal.
 
 ## See also

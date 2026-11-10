@@ -105,16 +105,17 @@ src/
     Incremental/
   Fpas.Core/
     Fpas.Core.csproj
-  Fpas.Gui.Cui/
+  Fpas.Ui.Gui.Cui/
     Build/
     Interop/
     Text/
     native/
-  Fpas.Gui/
+  Fpas.Ui.Gui/
     Application.fpas
     Internal/
-  Fpas.Mvu/
+  Fpas.Ui.Mvu/
   Fpas.Ui/
+  Fpas.Ui.Tui/
 sdk/
   Fpas.NET.Sdk/
     Fpas.NET.Sdk.csproj
@@ -149,10 +150,19 @@ tests/
     Editing/
     Refactoring/
     Toolchain/
-  Fpas.Gui.Cui.Tests/
+  Fpas.Ui.Gui.Cui.Tests/
   Fixtures/
 examples/
   README.md
+  basics/
+  types/
+  functions/
+  interop/
+  io/
+  numerics/
+  ui/
+    gui/
+    tui/
 apps/
   README.md
 third-party/
@@ -184,14 +194,14 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
-| `Fpas.Gui.Cui` | Low-level CUI binding, UI-thread native lifetime, UTF-8 editing buffers and native build integration |
-| `Fpas.Gui` | FPAS owner loop adapting shared MVU transitions and validated widget trees to CUI |
-| `Fpas.Mvu` | FPAS model/mailbox runtime and background-effect lifetime shared by UI hosts |
+| `Fpas.Ui.Gui.Cui` | Low-level CUI binding, UI-thread native lifetime, UTF-8 editing buffers and native build integration |
+| `Fpas.Ui.Gui` | FPAS owner loop adapting shared MVU transitions and validated widget trees to CUI |
+| `Fpas.Ui.Mvu` | FPAS model/mailbox runtime and background-effect lifetime shared by UI hosts |
 | `Fpas.Ui` | Host-independent FPAS widget data, cached subviews and validation profiles |
-| `Fpas.Tui` | FPAS terminal owner loop, shared-widget adapter, native cell layout and rendering; depends on MVU and Ui without CUI |
+| `Fpas.Ui.Tui` | FPAS terminal owner loop, shared-widget adapter, native cell layout and rendering; depends on MVU and Ui without CUI |
 | `Fpas.Compiler.Tests` | C# xUnit unit tests for compiler components and their observable rules |
 | `Fpas.IntegrationTests` | C# xUnit tests for the actual compiler executable, generated programs, .NET interop, and complete MSBuild builds |
-| `Fpas.Gui.Cui.Tests` | Native GUI/interop tests and the packaged-SDK FPAS GUI fixture |
+| `Fpas.Ui.Gui.Cui.Tests` | Native GUI/interop tests and the packaged-SDK FPAS GUI fixture |
 
 Use folders and namespaces within Fpas.Compiler for Syntax, Binding, Lowering,
 and Emission. Split a compiler component into another project when independent
@@ -240,9 +250,13 @@ src, sdk, and tests without introducing separate solutions for each component.
   account for those inputs without creating a dependency cycle.
 - Generated FPAS assemblies reference Fpas.Core only for the language support
   they need. Fpas.Core has no dependency on compiler or MSBuild implementation.
-- Fpas.Gui.Cui owns the native CUI dependency without referencing the compiler,
+- Fpas.Ui.Gui.Cui owns the native CUI dependency without referencing the compiler,
   CLI or TUI. GUI consumers opt in through CLR references. Unmodified upstream
   source and notices live under `third-party/cui/`.
+- The UI family uses the `Fpas.Ui` namespace prefix with matching project,
+  assembly and package names. `Fpas.Ui.Mvu` and the shared `Fpas.Ui` widget
+  library remain independent assemblies. Both hosts reference them; only
+  `Fpas.Ui.Gui` references `Fpas.Ui.Gui.Cui`.
 - Tests reference the component under test or invoke the actual built toolchain.
   Compiler components do not depend on tests, examples, or applications.
 
@@ -310,7 +324,7 @@ Complete [Markdown programs](../pascal/examples/README.md) and the compact
 [agent reference](../pascal/agents/README.md) are compiled directly from their
 documentation and executed by integration tests. Companion units use explicit
 project labels. Hello builds through its `.fpasproj` or the direct compiler.
-The [Units example](../../examples/units/README.md) compiles a program and two
+The [Units example](../../examples/basics/units/README.md) compiles a program and two
 units into one assembly. The [doc-examples application](../../apps/doc-examples/)
 checks Markdown sources and explicit contexts and supplies compiled assemblies
 to behavior tests.

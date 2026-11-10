@@ -1,15 +1,15 @@
 # Desktop GUI with shared MVU widgets
 
-Use `Fpas.Gui` for a native desktop window. Its model, messages, update function
-and declarative view use the same [MVU](../../../src/Fpas.Mvu/README.md) and
+Use `Fpas.Ui.Gui` for a native desktop window. Its model, messages, update function
+and declarative view use the same [MVU](../../../src/Fpas.Ui.Mvu/README.md) and
 [widget contracts](../../../src/Fpas.Ui/README.md) as the
-[terminal host](../../../src/Fpas.Tui/README.md). Terminal cell extensions and
+[terminal host](../../../src/Fpas.Ui.Tui/README.md). Terminal cell extensions and
 GUI images/canvases are explicit capabilities; a portable view uses neither.
 
 ## Project and examples
 
-Reference the `Fpas.Gui` package from the feed containing the FPAS libraries for
-your runtime identifier. It brings `Fpas.Mvu`, `Fpas.Ui` and `Fpas.Gui.Cui`
+Reference the `Fpas.Ui.Gui` package from the feed containing the FPAS libraries for
+your runtime identifier. It brings `Fpas.Ui.Mvu`, `Fpas.Ui` and `Fpas.Ui.Gui.Cui`
 transitively. Use the same release of the libraries and SDK.
 
 ```xml
@@ -19,14 +19,14 @@ transitively. Use the same release of the libraries and SDK.
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fpas.Gui" Version="0.1.0-dev" />
+    <PackageReference Include="Fpas.Ui.Gui" Version="0.1.0-dev" />
   </ItemGroup>
 </Project>
 ```
 
-The [counter program](../../../examples/gui/counter/main.fpas) is a complete
+The [counter program](../../../examples/ui/gui/counter/main.fpas) is a complete
 example of controlled inputs, background work and a modal. The
-[gallery](../../../examples/gui/gallery/README.md) demonstrates every supported
+[gallery](../../../examples/ui/gui/gallery/README.md) demonstrates every supported
 widget, layout, image/canvas, theme switching and responsive navigation.
 Their checked-in projects use source references for repository development;
 application packages deliver the managed libraries, native assets and notices.
@@ -52,6 +52,10 @@ Start the owner loop with
 Options select title, logical width/height, renderer and mailbox capacity.
 The host validates the whole active view before drawing. Explicit GUI sizing
 uses `Layout.Measure.Logical`; semantic sizing and spacing remain portable.
+
+For larger applications, use feature slices and cached subviews as described in
+the [MVU scaling guidance](../../../src/Fpas.Ui.Mvu/README.md#larger-applications).
+Subview caching does not skip all host processing or virtualize large collections.
 
 ## Work and cleanup
 
@@ -87,8 +91,8 @@ The initial targets are Windows x64 and Linux x64. Linux uses X11, including
 XWayland where available, and needs an accessible display. Headless validation
 uses Xvfb. CUI provides software and OpenGL renderers; Auto can fall back to
 software. Graphics drivers and OS window libraries remain runtime dependencies.
-See [native prerequisites](../../../src/Fpas.Gui.Cui/native/README.md#prerequisites)
-for source builds and [host behavior](../../../src/Fpas.Gui/README.md) for details.
+See [native prerequisites](../../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites)
+for source builds and [host behavior](../../../src/Fpas.Ui.Gui/README.md) for details.
 
 Direct Wayland, other RIDs, screen-reader accessibility and complete platform
 IME/complex-script behavior are outside the supported contract. Unicode text
@@ -99,7 +103,7 @@ uses software for additional windows on that thread.
 ## See also
 
 - [Shared widgets and capability profiles](../../../src/Fpas.Ui/README.md)
-- [GUI host lifecycle and inspection](../../../src/Fpas.Gui/README.md)
-- [GUI counter](../../../examples/gui/counter/README.md) and [gallery](../../../examples/gui/gallery/README.md)
+- [GUI host lifecycle and inspection](../../../src/Fpas.Ui.Gui/README.md)
+- [GUI counter](../../../examples/ui/gui/counter/README.md) and [gallery](../../../examples/ui/gui/gallery/README.md)
 - [Native assets and local distribution feed](../../build/distribution.md#native-cui-assets)
-- [Terminal widget gallery](../../../examples/tui/gallery/README.md)
+- [Terminal widget gallery](../../../examples/ui/tui/gallery/README.md)

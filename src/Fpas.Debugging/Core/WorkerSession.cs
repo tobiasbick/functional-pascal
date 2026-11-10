@@ -111,7 +111,7 @@ internal sealed partial class WorkerSession : IAsyncDisposable
 
     internal async Task<DebugSnapshot> Resume(long stopId, string kind)
     {
-        if (kind is not ("continue" or "into" or "over" or "out")) throw new DebugException("invalid_argument", "Unknown resume kind.");
+        if (kind is not ("continue" or "into" or "over" or "out" or "detach")) throw new DebugException("invalid_argument", "Unknown resume kind.");
         await execution.WaitAsync(lifetime.Token);
         try
         {
@@ -119,7 +119,15 @@ internal sealed partial class WorkerSession : IAsyncDisposable
             {
                 CheckStop(stopId); var selected = native!;
                 void Running() => Publish(snapshot with { State = "running", StopId = null, Reason = null, HitBreakpoints = null });
-                try { if (kind != "continue") selected.Step(kind, Running); else selected.Continue(Running); }
+                try
+                {
+                    switch (kind)
+                    {
+                        case "continue": selected.Continue(Running); break;
+                        case "detach": selected.DetachAtUnhandledException(Running); break;
+                        default: selected.Step(kind, Running); break;
+                    }
+                }
                 catch (DebugException exception) when (exception.Code is "unavailable" or "ambiguous_caller" or "limit_exceeded"
                     && selected.IsStopped && snapshot.State == "stopped") { throw; }
                 catch (Exception exception) { Failed(exception); throw; }

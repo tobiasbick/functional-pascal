@@ -22,6 +22,24 @@ internal sealed partial class CoreClrSession
         }
     }
 
+    internal void DetachAtUnhandledException(Action prepared)
+    {
+        lock (gate)
+        {
+            if (stoppedException != "unhandled")
+                throw new DebugException("unavailable", "Detaching requires an unhandled exception stop.");
+
+            var controller = process!;
+            prepared();
+            ReleaseStop();
+            NativeObject.Check(controller.Call(9));
+            process = null;
+            controller.Dispose();
+            // Detach resumes the target and ends managed callbacks. The process handle still owns the exit wait.
+            events.Writer.TryComplete();
+        }
+    }
+
     internal DebugExceptionInfo ExceptionInfo()
     {
         lock (gate)

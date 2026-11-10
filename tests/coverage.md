@@ -102,18 +102,21 @@ the matching native binding. A package-only consumer runs the real gallery in
 all five delivery modes under software and OpenGL. It checks Unicode selection,
 controlled widgets, modal focus, scrolling, theme state, background completion
 and cancellation, resource removal and repeated public-session teardown.
-NativeAOT/single-file run from an executable-only directory without .NET host
-search; the test checks extraction and ELF imports on Linux. Capture checks
-cover the public owner-thread PNG operation and preserve the session on failure.
+NativeAOT and single-file run from an executable-only directory without .NET
+host search. The test checks extraction and uses `dumpbin` on Windows and
+`readelf` on Linux to inspect native imports. On Windows it also checks for a
+C runtime conflict during NativeAOT linking. Capture checks cover the public
+owner-thread PNG operation and preserve the session on failure.
 
-The separate Linux X11 case drives actual X server events through XTest:
-pointer/button input, Ctrl+A and typing, native resize, modal Escape and
-WM_DELETE_WINDOW close. It checks published model values, selection of the
-responsive layout, focus and theme preservation. Other GUI input tests inject
-directly through CUI; they are not evidence of OS event delivery. Native texture
-accounting and editor/image counts establish owned-resource cleanup; process
-working set is not the acceptance criterion. Windows platform evidence remains
-in the [GUI plan](../docs/future/gui/verification-and-documentation.md).
+The Linux X11 case uses XTest to send pointer input, Ctrl+A and typing, native
+resize, modal Escape and WM_DELETE_WINDOW close. Windows desktop acceptance
+drives the single-file and NativeAOT gallery with Win32 pointer and keyboard
+events, including Unicode input and modal Escape. Dragging the native window
+border preserves model and theme state. During shutdown, the window repaints
+the cached view while the worker and cancellation callback are held at gates,
+rejects the late result and closes after both gates are released. The other
+GUI input tests inject events through CUI. Native texture accounting and
+editor/image counts verify resource release across window sessions.
 
 ## Shared widget contracts
 

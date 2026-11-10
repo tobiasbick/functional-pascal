@@ -18,6 +18,11 @@ if(NOT EXISTS "${FPAS_CUI_UPSTREAM_DIR}/cui.c" OR NOT EXISTS "${FPAS_CUI_UPSTREA
     message(FATAL_ERROR "Missing vendored cui.c or cui.h in third-party/cui/upstream")
 endif()
 
+if(MSVC AND NOT BUILD_SHARED_LIBS)
+    # Match the Windows NativeAOT runtime in both Debug and Release.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+endif()
+
 add_library(cui fpas_cui.c wakeup.c)
 add_library(fpas::cui ALIAS cui)
 target_include_directories(cui PUBLIC "${FPAS_CUI_UPSTREAM_DIR}")

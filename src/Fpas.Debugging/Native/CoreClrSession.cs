@@ -195,7 +195,7 @@ internal sealed partial class CoreClrSession : IAsyncDisposable
 
     internal async Task<(int Code, int? Signal)> ExitStatus(CancellationToken token)
     {
-        await exited.Task.WaitAsync(token);
+        if (process is not null) await WaitForExit(token);
         if (broker is not null)
         {
             var status = await broker.ExitStatus(token);
@@ -219,12 +219,17 @@ internal sealed partial class CoreClrSession : IAsyncDisposable
 
     private void ResumeProcess()
     {
+        ReleaseStop();
+        NativeObject.Check(process!.Call(4, 0));
+    }
+
+    private void ReleaseStop()
+    {
         if (stoppedThread is null) throw new InvalidOperationException("The target is not stopped.");
         atEntry = false;
         stoppedException = null;
         ReleaseBreakpointFrame();
         ReleaseFrames(); stoppedThread.Dispose(); stoppedThread = null;
-        NativeObject.Check(process!.Call(4, 0));
     }
 
     public ValueTask DisposeAsync()

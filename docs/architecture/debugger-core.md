@@ -62,6 +62,9 @@ target's OS parent. It creates the suspended target and collects `waitpid` exit
 status independently of DBI. The worker attaches through dbgshim. This preserves
 actual nonzero exits and signals even when a managed observer cannot recover
 exit status after native reaping. Windows observes its retained process handle.
+For run failure reports on Windows, the worker detaches after saving the
+unhandled exception. This lets the original process finish with its crash exit
+code and keeps the process handle available until that exit is observed.
 
 ## Bounds and shutdown
 

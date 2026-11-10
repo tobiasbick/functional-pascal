@@ -93,14 +93,13 @@ See the [GUI handbook](../../docs/pascal/libraries/gui.md) for the application p
 publishing modes and platform limits.
 
 GuiHostTests builds all three FPAS libraries, the counter and gallery through a
-fresh SDK, then exercises native input and semantic snapshots under both renderers.
+fresh SDK, then exercises CUI input and semantic snapshots under both renderers.
 Coverage includes model reconciliation, cache/resize/theme, focus/modal restoration,
 background completion, gated worker/cancellation responsiveness, closing redraws,
 owner enforcement, failure cleanup and resource removal. CuiHostLayoutTests checks
 basis/grow/shrink/bounds; CuiHostResourceTests uses native texture accounting across
-replacement and repeated sessions. Platform acceptance is tracked in the
-[host plan](../../docs/future/gui/gui-host.md). GuiPublishingTests restores the
-complete GUI through packages and exercises the gallery in all five publish
-modes, including executable-only NativeAOT/single-file delivery. Its Linux X11
-case sends OS keyboard, pointer, resize and close events; the other input cases
-inject directly into CUI.
+replacement and repeated sessions. GuiPublishingTests restores the complete GUI
+through packages and exercises the gallery in all five publish modes, including
+executable-only NativeAOT and single-file delivery. The
+[coverage map](../../tests/coverage.md#native-gui) describes the separate OS
+input checks on Windows and Linux.

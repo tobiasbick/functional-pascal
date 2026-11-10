@@ -56,6 +56,8 @@ public sealed partial class GuiPublishingTests
             string imports = "";
             if (mode == "aot")
             {
+                if (OperatingSystem.IsWindows())
+                    Assert.DoesNotContain("LNK4098", File.ReadAllText(Path.Combine(fixture.Artifacts, "publish-aot.log")));
                 imports = await NativeDependencies.Read(program);
                 File.WriteAllText(Path.Combine(fixture.Artifacts, "aot-imports.txt"), imports);
                 Assert.DoesNotContain("fpas_cui", imports, StringComparison.OrdinalIgnoreCase);

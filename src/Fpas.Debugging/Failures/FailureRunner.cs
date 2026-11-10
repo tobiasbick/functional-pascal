@@ -57,7 +57,8 @@ internal static class FailureRunner
                     // Persist while the original stop still exists, before target execution resumes.
                     await file.Save(report);
                 }
-                await host.Resume(stopped.StopId!.Value, "continue", token);
+                // Windows can report a successful exit when CoreCLR continues an unhandled exception under the debugger.
+                await host.Resume(stopped.StopId!.Value, OperatingSystem.IsWindows() ? "detach" : "continue", token);
             }
         }
         catch (DebugException failure) { throw new IOException($"{failure.Code}: {failure.Message}", failure); }

@@ -75,7 +75,8 @@ nm --defined-only .temp-data/gui-native/linux-x64/Release/static/libfpas_cui.a
 
 Shared builds export the `cui_*` API and FPAS bridge while keeping internal symbols hidden.
 Static builds omit shared-library import/export definitions and use position
-independent code for final NativeAOT linking. Both use the same sources.
+independent code for final NativeAOT linking. MSVC builds the static archive
+with `/MT` in both configurations to match the Windows NativeAOT runtime.
 
 The [managed project](../README.md) invokes this build through MSBuild.
 Redistributing either library requires its accompanying upstream license notices.

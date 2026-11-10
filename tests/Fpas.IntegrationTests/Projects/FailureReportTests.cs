@@ -39,7 +39,7 @@ public sealed class FailureReportTests
         var baseline = await Run(program, "Grüße 😀\n");
         Assert.NotEqual(0, baseline.ExitCode);
         File.Delete(program.FilePath("runs.txt"));
-        var path = program.FilePath("reports/failure.json");
+        var path = program.FilePath(Path.Combine("reports", "failure.json"));
         var result = await Run(program, "Grüße 😀\n", ["--failure-report", path, .. json ? new[] { "--report", "json" } : []]);
         Assert.True(result.ExitCode == baseline.ExitCode, result.Output + result.Error);
         Assert.Equal("x", File.ReadAllText(program.FilePath("runs.txt")));

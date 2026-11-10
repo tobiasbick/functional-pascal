@@ -52,8 +52,8 @@ Capturing a reference does not copy the object. Mutable captures need ordinary
 
 Use Identity<T>, Box<T>, and explicit calls such as Identity<int>(7). Routine
 calls can infer arguments from supplied argument types, not only an expected
-return type. Generic method groups require explicit arguments. Union constructor
-inference also uses the expected union type. Binding annotations remain mandatory.
+return type. Generic method groups require explicit arguments. Variant constructor
+inference also uses the expected variant type. Binding annotations remain mandatory.
 
 Where clauses follow a routine's header, or a type declaration's equals sign.
 Use real CLR requirements: class, class?, struct, base/interface constraints,

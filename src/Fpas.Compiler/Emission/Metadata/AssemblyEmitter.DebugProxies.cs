@@ -13,7 +13,7 @@ internal sealed partial class AssemblyEmitter
     {
         foreach (var record in layout.Records)
         {
-            if (record.Attributes.Concat(record.UnionCase?.Owner.Attributes ?? []).Any(attribute => AttributeIs(attribute, ProxyAttribute))) continue;
+            if (record.Attributes.Concat(record.VariantCase?.Owner.Attributes ?? []).Any(attribute => AttributeIs(attribute, ProxyAttribute))) continue;
             genericTypeContext = record.GenericParameters.Count == 0 ? null : record.GenericParameters;
             var proxy = metadata.AddTypeDefinition(TypeAttributes.NestedPrivate | TypeAttributes.Sealed,
                 default, metadata.GetOrAddString("<DebugView>"), objectType,
@@ -55,7 +55,7 @@ internal sealed partial class AssemblyEmitter
                 if (firstProperty.IsNil) firstProperty = property;
                 AddSourceAttributes(property, payload.Attributes.Where(attribute => AttributeIs(attribute, "System.Diagnostics.DebuggerBrowsableAttribute")).ToArray());
             }
-            if (record.UnionCase is not null)
+            if (record.VariantCase is not null)
             {
                 var tag = record.Method(record.Methods.Single(candidate => candidate.Generated == GeneratedMethodKind.Tag));
                 var property = EmitDebuggerProperty("Tag", TypeSymbol.Int32, tag, receiver, bodies, parameterCount, runtime);
@@ -63,7 +63,7 @@ internal sealed partial class AssemblyEmitter
             }
             if (!firstProperty.IsNil) metadata.AddPropertyMap(proxy, firstProperty);
 
-            var parent = record.UnionCase is { } member ? member.Owner.Name + Arity(member.Owner.GenericParameters.Count) + "+" + record.Name :
+            var parent = record.VariantCase is { } member ? member.Owner.Name + Arity(member.Owner.GenericParameters.Count) + "+" + record.Name :
                 record.Name + Arity(record.GenericParameters.Count);
             var name = record.Owner.Syntax.Name.Text + "+" + parent + "+<DebugView>, " + sourceAssemblyName;
             AddDebugAttribute(layout.RecordTypes[record], ProxyAttribute, TypeSymbol.String, blob => blob.WriteSerializedString(name));

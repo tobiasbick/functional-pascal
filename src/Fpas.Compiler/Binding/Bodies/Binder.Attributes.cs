@@ -80,8 +80,8 @@ internal sealed partial class Binder
             foreach (var field in record.Fields)
                 field.Attributes = binder.BindPropertyAttributes(field.Syntax.Attributes, field.Type, field.Syntax.Name.Position);
         }
-        foreach (var union in unit.Unions.Values)
-            union.Attributes = Context(union.GenericParameters).BindAttributes(union.Syntax.Attributes, AttributeTargets.Class);
+        foreach (var variant in unit.Variants.Values)
+            variant.Attributes = Context(variant.GenericParameters).BindAttributes(variant.Syntax.Attributes, AttributeTargets.Class);
         foreach (var contract in unit.Interfaces.Values)
         {
             var binder = Context(contract.GenericParameters);

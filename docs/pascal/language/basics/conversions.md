@@ -5,7 +5,7 @@ Numeric casts are checked unless enclosed by `unchecked`. An incompatible
 reference cast throws `InvalidCastException`; it is not an optional conversion.
 `Value is T` tests runtime type compatibility, yielding false for null.
 `typeof(T)` produces `System.Type`. Casts do not parse strings or translate
-application-defined union values into nullable values.
+application-defined variant values into nullable values.
 Compiler-defined casts wrap/unwrap [distinct types and subranges](../types/data-domains.md).
 Subrange bounds remain checked inside unchecked expressions.
 

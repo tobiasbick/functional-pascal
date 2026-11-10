@@ -1,7 +1,7 @@
 # Exhaustiveness and reachability
 
-- Language unions require exhaustive coverage in both
-  statement and expression forms. Coverage descends into nested union patterns.
+- Language variants require exhaustive coverage in both
+  statement and expression forms. Coverage descends into nested variant patterns.
 - `bool` requires true and false, or a fallback.
 - Integer, string, and CLR enum selectors require an unguarded catch-all pattern
   or `else`. Enum metadata does not rule out unnamed runtime values.
@@ -11,7 +11,7 @@
   patterns are errors, and an annotation on a whole-value binding names the
   subrange type, not its primitive base.
 - Reference-type matching must account for null when the selector is nullable
-  and otherwise requires a fallback unless it is a closed language union.
+  and otherwise requires a fallback unless it is a closed language variant.
 - Guards do not prove coverage. Unreachable arms and duplicate constant patterns
   are errors. A catch-all after already exhaustive cases is unreachable.
 

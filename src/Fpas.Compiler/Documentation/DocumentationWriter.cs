@@ -57,12 +57,12 @@ internal sealed class DocumentationWriter
                 Add(unit.Source, property.Syntax.Documentation, contract.IsPublic ? "P:" + owner + "." + property.Syntax.Name.Text : null, [], [], false);
             foreach (var method in contract.Methods.Where(method => method.Declaration is not null)) Routine(unit, method, contract.IsPublic);
         }
-        foreach (var union in unit.Unions.Values)
+        foreach (var variant in unit.Variants.Values)
         {
-            var owner = DocumentationIds.Definition(union.Type);
-            Add(unit.Source, union.Syntax.Documentation, union.IsPublic ? "T:" + owner : null, [], union.Syntax.TypeParameters ?? [], false);
-            foreach (var member in union.Cases)
-                Add(unit.Source, member.Syntax.Documentation, !union.IsPublic ? null : member.Syntax.Fields.Count == 0 ? "P:" + owner + "." + member.Syntax.Name.Text :
+            var owner = DocumentationIds.Definition(variant.Type);
+            Add(unit.Source, variant.Syntax.Documentation, variant.IsPublic ? "T:" + owner : null, [], variant.Syntax.TypeParameters ?? [], false);
+            foreach (var member in variant.Cases)
+                Add(unit.Source, member.Syntax.Documentation, !variant.IsPublic ? null : member.Syntax.Fields.Count == 0 ? "P:" + owner + "." + member.Syntax.Name.Text :
                     DocumentationIds.Method(name, member.Factory), member.Syntax.Fields.Select(field => field.Name).ToArray(), [], false, parametersAllowed: member.Syntax.Fields.Count != 0);
         }
     }

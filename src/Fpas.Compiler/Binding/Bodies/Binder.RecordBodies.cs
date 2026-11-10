@@ -22,7 +22,7 @@ internal sealed partial class Binder
             if (field.Copy is not null) Body(field.Copy, [Return(new BoundNew(record.Type, record.Method(record.Constructor), record.Fields.Select(other =>
                 other == field ? (BoundExpression)Parameter(field.Copy!, 0) : new BoundRecordField(other, self)).ToArray()))]);
         }
-        if (record.UnionCase is { } unionCase) Body(Method(GeneratedMethodKind.Tag), [Return(new BoundInteger(unionCase.Tag))]);
+        if (record.VariantCase is { } variantCase) Body(Method(GeneratedMethodKind.Tag), [Return(new BoundInteger(variantCase.Tag))]);
         var typed = Method(GeneratedMethodKind.EqualsTyped);
         var other = Parameter(typed, 0);
         var equality = new List<BoundStatement> { When(Same(self, other), new BoundBoolean(true)), When(new BoundNullTest(other, true), new BoundBoolean(false)) };
@@ -42,7 +42,7 @@ internal sealed partial class Binder
         var hashType = references.Symbol(references.Required("System.HashCode"));
         var accumulator = new LocalSymbol("<hash>", hashType, 0, true);
         var hashBody = new List<BoundStatement> { new BoundBinding(accumulator, new BoundNew(hashType, null, [])) };
-        if (record.UnionCase is { } member)
+        if (record.VariantCase is { } member)
         {
             var addTag = references.FindMethod(hashType, "Add", [TypeSymbol.Int32], 0, source, false, methodArguments: new([TypeSymbol.Int32]));
             hashBody.Add(new BoundExpressionStatement(new BoundCall(addTag, [new BoundInteger(member.Tag)], new BoundLocal(accumulator)), false));

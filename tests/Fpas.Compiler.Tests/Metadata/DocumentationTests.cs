@@ -50,7 +50,7 @@ public sealed class DocumentationTests
             "T:Domains.Direction", "T:Domains.Id", "T:Domains.Port" }, members.Select(member => (string)member.Attribute("name")!));
     }
     [Fact]
-    public void Public_XML_uses_CLR_ids_for_overloads_generics_arrays_byrefs_properties_and_union_factories()
+    public void Public_XML_uses_CLR_ids_for_overloads_generics_arrays_byrefs_properties_and_variant_factories()
     {
         const string source = """
             // Public API container.
@@ -76,14 +76,14 @@ public sealed class DocumentationTests
               begin Previous := Item; return Other; end function;
             end record;
             // Optional result.
-            public type Outcome<T> = union
+            public type Outcome<T> = variant
               // Empty result.
               None;
               // Present result.
               // ## Parameters
               // - `Value`: Payload.
               Some(Value: T);
-            end union;
+            end variant;
             // Integer overload.
             public function Read(Value: int): int; begin return Value; end function;
             // Generic overload.

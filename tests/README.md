@@ -219,7 +219,7 @@ of uninitialized types, literal/runtime fields and expired static-value paths.
 `CaptureInspectionTests` covers source/raw captures, marked mutable cells,
 ordinary/async receivers and lexical shadowing. Compiler metadata tests check
 the emitted storage contract independently of the debugger reader.
-`SourceProjectionTests` checks record/union/domain source and raw views, decoded
+`SourceProjectionTests` checks record/variant/domain source and raw views, decoded
 range extrema/defaults and isolation of malformed optional presentation metadata.
 `ExpressionInspectionTests` checks passive FPAS operations, exact scalar rules,
 short-circuit type checking, stored indexes, AST/read bounds and expired frames.

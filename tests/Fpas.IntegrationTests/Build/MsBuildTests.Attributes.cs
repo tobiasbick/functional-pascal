@@ -89,7 +89,7 @@ public sealed partial class MsBuildTests
               [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.AggressiveInlining)]
               public function Read(): T; begin return self.Value; end function;
             end record;
-            [Sys.SerializableAttribute] [S.SingleAttribute(1)] public type Outcome<T> = union Empty; Value(Data: T); end union;
+            [Sys.SerializableAttribute] [S.SingleAttribute(1)] public type Outcome<T> = variant Empty; Value(Data: T); end variant;
             [S.SingleAttribute(2)] public type Id = distinct long;
             [S.SingleAttribute(3)] public type Percent = int range 0..100;
             [S.SingleAttribute(4)] public type Name = distinct string;

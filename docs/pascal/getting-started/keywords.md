@@ -7,7 +7,7 @@ Keywords use lowercase spelling and are case-sensitive. Prefix a keyword with
 async await begin break case catch const continue discard distinct div do downto else
 elsif end ensures enum false finally for function if implements in is mod new not null
 of or out params private procedure program public raise range record ref repeat return
-requires shl shr static subscribe then to true try type union unit unsubscribe until uses using var
+requires shl shr static subscribe then to true try type variant unit unsubscribe until uses using var
 when where while with and xor
 ```
 

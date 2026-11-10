@@ -53,8 +53,8 @@ internal sealed partial class Binder
             if (owner == TypeSymbol.Unsupported) return;
             probe.Reached = true;
             if (owner.Kind == TypeKind.Array) probe.Add(new("Length", "property", "Length: int"));
-            if (target is not null && references.UnionInfo(owner) is { } union)
-                foreach (var item in union.Cases) AddMethod(probe, item.Factory, item.Name);
+            if (target is not null && references.VariantInfo(owner) is { } variant)
+                foreach (var item in variant.Cases) AddMethod(probe, item.Factory, item.Name);
             foreach (var key in references.EditorMemberNames(owner).Distinct(StringComparer.Ordinal).Where(probe.Accepts))
             {
                 source.CheckCancellation();

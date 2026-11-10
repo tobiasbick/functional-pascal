@@ -21,6 +21,10 @@ for (const [line, token, expected] of [
   ['program Demo;', 'program', 'keyword.other.fpas'],
   ['Program Demo;', 'Program', 'source.fpas'],
   ['type Source = protocol', 'protocol', 'keyword.other.fpas'],
+  ['type Outcome = variant', 'variant', 'keyword.other.fpas'],
+  ['end variant;', 'variant', 'keyword.other.fpas'],
+  ['const @variant: int := 1;', '@variant', 'variable.other.escaped.fpas'],
+  ['const union: int := 1;', 'union', 'source.fpas'],
   ['const interface: int := 1;', 'interface', 'source.fpas'],
   ['const @end: int := #65;', '@end', 'variable.other.escaped.fpas'],
   ['const @end: int := #65;', '#65', 'constant.character.fpas'],
@@ -48,5 +52,8 @@ const configuration = JSON.parse(await readFile(new URL('../language-configurati
 const increaseIndent = new RegExp(configuration.indentationRules.increaseIndentPattern);
 assert.match('type Source = protocol', increaseIndent);
 assert.match('protocol extends Base, Sys.IDisposable // inherited', increaseIndent);
+assert.match('type Outcome = variant // outcomes', increaseIndent);
+assert.doesNotMatch('end variant;', increaseIndent);
+assert.doesNotMatch('type Outcome = union', increaseIndent);
 assert.doesNotMatch('end protocol;', increaseIndent);
 console.log('TextMate tokenization passed for CLR syntax and multiline strings.');

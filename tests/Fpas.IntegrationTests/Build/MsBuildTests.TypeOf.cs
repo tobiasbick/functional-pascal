@@ -43,7 +43,7 @@ public sealed partial class MsBuildTests
             public type Percent = int range 0..100;
             public type Direction = enum North; South; end enum;
             public type Model<T> = record public Value: T; end record;
-            public type Tree<T> = union Empty; Leaf(Value: T); end union;
+            public type Tree<T> = variant Empty; Leaf(Value: T); end variant;
             public function Touch(): int; begin return Initialized; end function;
             end unit;
             """);

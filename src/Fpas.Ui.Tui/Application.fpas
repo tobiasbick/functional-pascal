@@ -3,7 +3,7 @@ unit Fpas.Ui.Tui.Application;
 uses Fpas.Ui.Editors as Ed, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Hosting.Session as Host, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 // An event to route against the current terminal view.
-public type Input = union
+public type Input = variant
   // Request focus by control ID.
   Focus(Id: string);
   // Activate the control with the supplied ID.
@@ -28,7 +28,7 @@ public type Input = union
   ButtonPointer(Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
   // Scroll at the supplied cell. Negative deltas scroll up.
   Scroll(Column: int; Row: int; Delta: int);
-end union;
+end variant;
 
 // The visible state of a control in a published frame.
 public type ControlSnapshot = record
@@ -75,17 +75,17 @@ public type Frame = record
 end record;
 
 // The result of attempting to enqueue an input event.
-public type Admission = union
+public type Admission = variant
   // The event entered the queue with the supplied receipt ID.
   Queued(Id: long);
   // The session can accept more input after capacity becomes available.
   QueueFull;
   // The session has ended admission.
   Closed;
-end union;
+end variant;
 
 // The result of processing one queue entry.
-public type StepResult = union
+public type StepResult = variant
   // The session has no work to process.
   Idle;
   // The input was processed, with the current frame ID and publication status.
@@ -94,7 +94,7 @@ public type StepResult = union
   EffectProcessed(FrameId: long);
   // Processing failed at the given stage. Input ID zero means no input receipt.
   Failed(InputId: long; FrameId: long; Stage: string; Reason: string);
-end union;
+end variant;
 
 // The manually driven terminal host and its published frames.
 public type HeadlessSession = record implements Sys.IDisposable

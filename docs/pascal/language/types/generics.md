@@ -1,11 +1,11 @@
 # Generic data types
 
-Records, unions, and protocols can declare CLR type parameters, such as Box<T> or Tree<T>.
+Records, variants, and protocols can declare CLR type parameters, such as Box<T> or Tree<T>.
 Use angle brackets consistently in declarations, type annotations, and explicit
 construction. These source types are invariant: Box<string> does not convert to
 Box<object>. Recursive references still need finite constructed values.
 
-Constraints follow the type declaration's equals sign and precede `record`, `union`, or `protocol`.
+Constraints follow the type declaration's equals sign and precede `record`, `variant`, or `protocol`.
 They are checked at construction, in field/signature types, and when forwarding
 parameters. A method may introduce its own type parameters without redeclaring an
 enclosing parameter. Defaults must type-check for every valid instantiation.
@@ -16,10 +16,10 @@ forward-declared record with required fields cannot accidentally satisfy new().
 Type parameters cannot shadow enclosing parameters, source types, imports,
 predefined types, self, or args. Public constraints cannot expose private types.
 
-Record construction keeps explicit owner arguments. Union factories can infer
+Record construction keeps explicit owner arguments. Variant factories can infer
 arguments from payloads and expected types; a fieldless generic case needs an
 expected owner type. Value bindings still require their own annotations.
-Matching substitutes the selected union's arguments before checking payloads
+Matching substitutes the selected variant's arguments before checking payloads
 and coverage. Public metadata preserves those CLR types across assembly boundaries.
 
 ## Example
@@ -34,11 +34,11 @@ type Direction = enum : byte
   South = 1;
 end enum;
 
-type Tree<T> = union
+type Tree<T> = variant
   Empty;
   Leaf(Value: T);
   Branch(Left: Tree<T>; Right: Tree<T>);
-end union;
+end variant;
 
 function Compare<T>(Left: T; Right: T): int;
 where T: Sys.IComparable<T>;
@@ -74,7 +74,7 @@ end;
 end program;
 ```
 
-Nullable int, an application-defined union, and a CLR enum are distinct types.
+Nullable int, an application-defined variant, and a CLR enum are distinct types.
 A cast can construct an unnamed enum value, which is why the final case requires
 a fallback. Tree is an ordinary generic domain type, not an implicit library type.
 

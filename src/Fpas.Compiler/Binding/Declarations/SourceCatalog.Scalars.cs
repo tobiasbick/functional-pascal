@@ -13,7 +13,7 @@ internal sealed partial class SourceCatalog
     {
         foreach (var unit in Units)
         {
-            var names = unit.Syntax.Records.Select(type => type.Name.Text).Concat(unit.Syntax.Unions.Select(type => type.Name.Text))
+            var names = unit.Syntax.Records.Select(type => type.Name.Text).Concat(unit.Syntax.Variants.Select(type => type.Name.Text))
                 .Concat((unit.Syntax.Interfaces ?? []).Select(type => type.Name.Text))
                 .Concat(unit.Syntax.Imports.Select(import => import.Alias.Text)).ToHashSet(StringComparer.Ordinal);
             void Name(Token name)
@@ -98,7 +98,7 @@ internal sealed partial class SourceCatalog
     private void ValidateAliases(ReferenceCatalog references)
     {
         if (Units.SelectMany(unit => unit.Aliases.Values).Any(alias => alias.Syntax.IsPublic)) references.Required("Fpas.Core.AliasAttribute");
-        static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false &&
+        static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Variant?.IsPublic != false &&
             (type.Element is null || Visible(type.Element)) && type.TypeArguments.All(Visible);
         foreach (var alias in Units.SelectMany(unit => unit.Aliases.Values))
         {

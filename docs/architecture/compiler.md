@@ -33,7 +33,7 @@ when deciding actual parameterless-constructor eligibility.
 Overload resolution and [type inference](../pascal/language/functions/type-inference.md)
 finish before emission. Unsupported metadata gets a diagnostic identifying the
 member and excluded signature, never an erased object call or dynamic fallback.
-Generated aggregate metadata is validated before an imported record, union,
+Generated aggregate metadata is validated before an imported record, variant,
 domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapping.md).
 
 ## Compiler API and output
@@ -212,7 +212,7 @@ real blobs or supported CLR flags without executing referenced constructors.
 
 Return paths, loops, [closures](closures.md), and
 [async cleanup](async-and-cleanup.md) share typed control-flow and storage rules.
-Record/union helpers, domain encoding, public alias markers, and cross-assembly
+Record/variant helpers, domain encoding, public alias markers, and cross-assembly
 validation follow their owning mapping contract rather than a second type model.
 
 ## Publication boundary

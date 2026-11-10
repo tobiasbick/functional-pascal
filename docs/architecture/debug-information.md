@@ -98,8 +98,8 @@ FPAS emits standard CLR debugger metadata:
 | Metadata | FPAS behavior |
 | --- | --- |
 | DebuggableAttribute | Portable debug output disables JIT optimization and enables tracking unless Optimize is selected. Optimized output can retain its PDB. |
-| DebuggerDisplayAttribute | Records and union cases display source field labels/values; distinct and subrange domains display their decoded Value; closure environments display their captures. |
-| DebuggerTypeProxyAttribute | Private, typed record/case views expose source properties and the union Tag. Generic views retain the original type arguments and constraints. |
+| DebuggerDisplayAttribute | Records and variant cases display source field labels/values; distinct and subrange domains display their decoded Value; closure environments display their captures. |
+| DebuggerTypeProxyAttribute | Private, typed record/case views expose source properties and the variant Tag. Generic views retain the original type arguments and constraints. |
 | DebuggerBrowsableAttribute(Never) | Backing fields, encoded domain storage, proxy receivers and async bookkeeping are hidden from the ordinary expansion. Proxied objects also offer the debugger's raw view. |
 | CompilerGeneratedAttribute | Generated types, fields and helper methods are identified explicitly. Capture fields remain expandable. |
 | DebuggerNonUserCodeAttribute / DebuggerStepThroughAttribute | Generated accessors, comparison/copy/factory helpers and domain methods are skipped during normal stepping. Source routines and field-default expressions retain their source debugging. |
@@ -107,7 +107,7 @@ FPAS emits standard CLR debugger metadata:
 
 Async kickoff methods carry AsyncStateMachineAttribute and DebuggerStepThrough;
 MoveNext retains its source sequence points and is not hidden/non-user code.
-Source-provided display/proxy attributes take precedence. A source union display
+Source-provided display/proxy attributes take precedence. A source variant display
 is also attached to its case types; generated proxies preserve property-level
 DebuggerBrowsable settings. Display/proxy evaluation follows the debugger's
 normal evaluation policy.

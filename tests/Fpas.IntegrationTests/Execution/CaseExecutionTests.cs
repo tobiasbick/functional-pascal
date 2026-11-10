@@ -28,7 +28,7 @@ public sealed class CaseExecutionTests
     public Task Named_factory_arguments_selector_and_guards_have_single_evaluation() => ProgramExecution.Output("""
         program Evaluation;
         uses System.Console as Console;
-        type Pair = union Make(X: int; Y: int); end union;
+        type Pair = variant Make(X: int; Y: int); end variant;
         function Mark(N: int): int; begin Console.WriteLine(N); return N; end function;
         function Select(): Pair; begin Console.WriteLine('selector'); return Pair.Make(2, 1); end function;
         function Guard(): bool; begin Console.WriteLine('guard'); return false; end function;

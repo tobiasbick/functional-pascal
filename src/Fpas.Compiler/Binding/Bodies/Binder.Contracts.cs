@@ -82,10 +82,10 @@ internal sealed partial class Binder
         if (references.RecordInfo(method.Owner) is { } record)
             return record.Fields.Any(field => SameGetter(field.Getter, method));
         var owner = method.Owner;
-        var union = owner.Record?.UnionCase is { } member ? member.Owner.Type with { Arguments = owner.Arguments } : null;
-        if (union is null && owner.Definition?.DeclaringType is { } parent)
-            union = references.Symbol(parent) with { Arguments = owner.Arguments };
-        return union is not null && references.UnionInfo(union)?.Cases.SelectMany(item => item.Fields).Any(field => SameGetter(field.Getter, method)) == true;
+        var variant = owner.Record?.VariantCase is { } member ? member.Owner.Type with { Arguments = owner.Arguments } : null;
+        if (variant is null && owner.Definition?.DeclaringType is { } parent)
+            variant = references.Symbol(parent) with { Arguments = owner.Arguments };
+        return variant is not null && references.VariantInfo(variant)?.Cases.SelectMany(item => item.Fields).Any(field => SameGetter(field.Getter, method)) == true;
     }
 
     private static bool SameGetter(ImportedMethod left, ImportedMethod right)

@@ -17,7 +17,7 @@ program plus optional units; libraries contain units only. ProjectReference and
 PackageReference work in mixed C#/FPAS solutions. Portable PDBs and optional XML
 documentation propagate through ordinary output/reference copying. Embedded
 resources and IDE integration remain outside the supported build scope.
-Records, unions, domains, and public aliases use Fpas.Core metadata attributes.
+Records, variants, domains, and public aliases use Fpas.Core metadata attributes.
 The SDK supplies and copies its matching Core assembly. See the
 [CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.
 

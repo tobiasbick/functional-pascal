@@ -12,7 +12,7 @@ internal sealed partial class SourceCatalog
             foreach (var syntax in unit.Syntax.Interfaces ?? [])
             {
                 if (TypeFacts.PredefinedName(syntax.Name.Text) || unit.HasType(syntax.Name.Text) ||
-                    unit.Syntax.Records.Any(type => type.Name.Text == syntax.Name.Text) || unit.Syntax.Unions.Any(type => type.Name.Text == syntax.Name.Text) ||
+                    unit.Syntax.Records.Any(type => type.Name.Text == syntax.Name.Text) || unit.Syntax.Variants.Any(type => type.Name.Text == syntax.Name.Text) ||
                     unit.Syntax.Imports.Any(import => import.Alias.Text == syntax.Name.Text))
                     throw unit.Source.Error("FP3029", $"Duplicate or conflicting interface '{syntax.Name.Text}'.", syntax.Name.Position);
                 unit.Interfaces.Add(syntax.Name.Text, new(unit, syntax));

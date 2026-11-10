@@ -97,7 +97,7 @@ internal sealed partial class AssemblyEmitter
             }
         }
 
-        EmitUnions(program, bodyEncoder, ref parameterCount, objectType);
+        EmitVariants(program, bodyEncoder, ref parameterCount, objectType);
         EmitRecords(program, bodyEncoder, ref parameterCount, objectType);
         EmitInterfaces(program.Runtime, ref parameterCount);
         EmitClosures(program, bodyEncoder, ref parameterCount, objectType);

@@ -77,7 +77,7 @@ public type Model = record
   public Draft: Document := new Document('Draft idea');
 end record;
 
-public type Msg = union
+public type Msg = variant
   Show(Value: Page);
   MovePage(Direction: int);
   ChangeTheme(Value: Preset);
@@ -107,7 +107,7 @@ public type Msg = union
   EditDocument(Change: Ed.TextEdit);
   NavigateDocument(Position: Ed.EditorPosition);
   Quit;
-end union;
+end variant;
 
 public function Title(Value: Page): string;
 begin

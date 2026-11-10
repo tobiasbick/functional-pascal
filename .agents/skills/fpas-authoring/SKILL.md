@@ -16,7 +16,7 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 | --- | --- |
 | Bindings, expressions, loops, arrays, and strings | [Basics](../../../docs/pascal/agents/basics.md) |
 | Routines, managed parameters, delegates, captures, and contracts | [Functions](../../../docs/pascal/agents/functions.md) |
-| Records, unions, domains, generics, units, and globals | [Types and units](../../../docs/pascal/agents/types.md) |
+| Records, variants, domains, generics, units, and globals | [Types and units](../../../docs/pascal/agents/types.md) |
 | Matching, nullable flow, exceptions, and resource cleanup | [Patterns and resources](../../../docs/pascal/agents/patterns-errors.md) |
 | Tasks, await, cancellation, and shared state | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
 | Actual .NET APIs, events, attributes, and public signatures | [Interop](../../../docs/pascal/agents/interop.md) |
@@ -33,7 +33,7 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
    Use supported .NET APIs through explicit aliases.
 3. Keep case-sensitive names, lowercase keywords, explicit types, and named
    terminators. Consume returned values or use discard. Use CLR nullability and
-   exceptions; define application unions for domain outcomes.
+   exceptions; define application variants for domain outcomes.
    Document FPAS declarations with adjacent `//` Markdown comments. Use the
    documented sections for parameters and returns; `///` and XML tags are not
    source documentation markup.

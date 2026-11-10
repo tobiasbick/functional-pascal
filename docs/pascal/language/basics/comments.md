@@ -30,7 +30,7 @@ Comments have no effect on execution, types, overload resolution, or contracts.
 
 A contiguous block of standalone `//` lines immediately before a declaration is
 that declaration's Markdown documentation. The rule includes program/unit
-headers, types, routines, record members, union cases, enum cases, and value
+headers, types, routines, record members, variant cases, enum cases, and value
 bindings. A declaration's leading attributes and visibility/async/static modifiers
 belong to that declaration: place its documentation before the first of them.
 Comments within the attribute/modifier sequence are ordinary comments.
@@ -148,7 +148,7 @@ CLR identities. Private/local declarations and transparent aliases retain their
 source documentation but have no entries in the public sidecar. A documented unit
 or program header maps to its container type. Public types use `T:`, routines
 `M:`, record fields represented as properties `P:`, and global/CLR enum fields
-`F:`. A union case documents its public factory method or fieldless-case property;
+`F:`. A variant case documents its public factory method or fieldless-case property;
 its payload labels serve as factory parameters. Compiler-generated helpers,
 constructors, and case classes receive no invented copies of source comments.
 
@@ -181,7 +181,7 @@ Tests cover comment termination at supported newlines and EOF, string contents,
 inline comments, blank-line detachment, attribute attachment, Markdown extraction,
 structured sections, escaped/case-sensitive names, generic parameters, and warnings.
 Exported XML is parsed and matched to emitted metadata, including overloads,
-generic types, properties, unions, arrays, and byrefs. SDK tests exercise XML
+generic types, properties, variants, arrays, and byrefs. SDK tests exercise XML
 escaping, deterministic output, generation on/off, incremental changes, Clean,
 and propagation to a C# reference through MSBuild.
 The [coverage map](../../../../tests/coverage.md#language-and-metadata) identifies

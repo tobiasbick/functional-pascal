@@ -12,7 +12,7 @@ internal sealed partial class ReferenceCatalog
     internal RecordInfo? RecordInfo(TypeSymbol type)
     {
         type = type.NonNullable;
-        if (type.Record is { } record) return record.UnionCase is null ? SourceRecordInfo(type) : null;
+        if (type.Record is { } record) return record.VariantCase is null ? SourceRecordInfo(type) : null;
         if (type.Kind != TypeKind.Named) return null;
         if (records.TryGetValue(type, out var cached)) return cached;
         var definition = Definition(type);

@@ -50,7 +50,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var routines = new List<RoutineSyntax>();
         var records = new List<RecordSyntax>();
         var interfaces = new List<InterfaceSyntax>();
-        var unions = new List<UnionSyntax>();
+        var variants = new List<VariantSyntax>();
         var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
         var globals = new List<GlobalSyntax>();
         string? previousGroup = null;
@@ -88,8 +88,8 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var probe = new Parser(source, tokens) { position = declaration + 1 };
                 probe.Identifier();
                 probe.ReadTypeParameters(); probe.Expect("="); probe.ReadConstraints();
-                var union = probe.At("union"); var record = probe.At("record"); var protocol = probe.At("protocol");
-                if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+                var variant = probe.At("variant"); var record = probe.At("record"); var protocol = probe.At("protocol");
+                if (variant) variants.Add(ReadVariant(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (record) records.Add(ReadRecord(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (protocol) interfaces.Add(ReadInterface(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else ReadScalarDeclaration(isProgram, aliases, scalars, attributes, declarationDocumentation);
@@ -116,7 +116,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
         container.Info.End = LastEnd;
-        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals, interfaces)
+        return new(name, isProgram, imports, routines, statements, records, variants, isAsync, documentation, aliases, scalars, globals, interfaces)
             { Declarations = declarations };
     }
 

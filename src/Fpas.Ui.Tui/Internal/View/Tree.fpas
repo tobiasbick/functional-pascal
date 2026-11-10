@@ -30,12 +30,12 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type CanvasBinding<TMsg> = union
+public type CanvasBinding<TMsg> = variant
   // Use the declared extent and supplied stable ID and event mappers.
   Fixed(Id: string; Events: T.CanvasEvents<TMsg>);
   // Use the visible allocation and report resize through the supplied events.
   Responsive(Id: string; Events: T.CanvasEvents<TMsg>);
-end union;
+end variant;
 
 // A table header with resolved horizontal cell constraints.
 public type TableColumn = record
@@ -46,19 +46,19 @@ public type TableColumn = record
 end record;
 
 // A resolved request in terminal row units.
-public type ScrollPosition = union
+public type ScrollPosition = variant
   // Request the supplied top row.
   Offset(Row: int);
   // Follow the final row as content grows.
   End;
-end union;
+end variant;
 
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Element<TMsg> = union
+public type Element<TMsg> = variant
   // Paint literal text.
   Label(Value: string);
   // Paint a titled or plain cell rule.
@@ -122,5 +122,5 @@ public type Element<TMsg> = union
     Id: string; Modal: bool; InitialFocus: string; OnEscape: Sys.Func<TMsg>?; Content: Element<TMsg>;
     Shortcuts: array of K.ShortcutBinding<TMsg>; Limits: K.OverlayLimits?
   );
-end union;
+end variant;
 end unit;

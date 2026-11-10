@@ -29,17 +29,17 @@ internal sealed partial class SourceCatalog
                     ClrTypeImport closed => closed.Type,
                     ClrImport imported => references.Symbol(imported.Type),
                     RecordImport record => record.Record.Type,
-                    UnionImport union => union.Union.Type,
+                    VariantImport variant => variant.Variant.Type,
                     InterfaceImport contract => contract.Interface.Type,
                     _ => TypeSymbol.Unsupported
                 };
                 if (owner.Definition is { } definition && definition.Definition.GetGenericParameters().Count != owner.TypeArguments.Count ||
-                    target is RecordImport { Record.GenericParameters.Count: > 0 } or UnionImport { Union.GenericParameters.Count: > 0 } or InterfaceImport { Interface.GenericParameters.Count: > 0 })
+                    target is RecordImport { Record.GenericParameters.Count: > 0 } or VariantImport { Variant.GenericParameters.Count: > 0 } or InterfaceImport { Interface.GenericParameters.Count: > 0 })
                     throw unit.Source.Error("FP3026", "An enclosing generic type requires explicit type arguments.", segments[index - 1].Name.Position);
-                if (owner.Union is { } unionOwner)
+                if (owner.Variant is { } variantOwner)
                 {
-                    if (arguments is not null) throw unit.Source.Error("FP3018", "A union case type inherits its enclosing type arguments.", segment.Name.Position);
-                    target = new ClrTypeImport(SourceCaseType(unionOwner, segment.Name.Text, segment.Name.Position, unit.Source).Type with { Arguments = owner.Arguments });
+                    if (arguments is not null) throw unit.Source.Error("FP3018", "A variant case type inherits its enclosing type arguments.", segment.Name.Position);
+                    target = new ClrTypeImport(SourceCaseType(variantOwner, segment.Name.Text, segment.Name.Position, unit.Source).Type with { Arguments = owner.Arguments });
                 }
                 else if (owner.Definition is not null)
                 {
@@ -60,7 +60,7 @@ internal sealed partial class SourceCatalog
         TypeSymbol ConstructTarget(ImportTarget selected, IReadOnlyList<TypeSymbol> arguments, int position) => selected switch
         {
             RecordImport own => references.ConstructSource(own.Record.Type, arguments, unit.Source, position, validate),
-            UnionImport own => references.ConstructSource(own.Union.Type, arguments, unit.Source, position, validate),
+            VariantImport own => references.ConstructSource(own.Variant.Type, arguments, unit.Source, position, validate),
             InterfaceImport own => references.ConstructSource(own.Interface.Type, arguments, unit.Source, position, validate),
             ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, arguments, unit.Source, position, validate),
             ClrImport imported => references.Construct(imported.Type, arguments, unit.Source, position, validate),

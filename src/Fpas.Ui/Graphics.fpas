@@ -23,10 +23,10 @@ public type Pixels = record
 end record;
 
 // A drawing operation in canvas-relative GUI logical units.
-public type Paint = union
+public type Paint = variant
   // Fill a rectangle at the given origin with the supplied extent and color.
   FillRect(X: double; Y: double; Width: double; Height: double; Color: Color);
   // Draw a line between two points with the supplied thickness and color.
   Line(X1: double; Y1: double; X2: double; Y2: double; Thickness: double; Color: Color);
-end union;
+end variant;
 end unit;

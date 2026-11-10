@@ -14,7 +14,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         unit Numerics.Api;
         uses System as S;
         public type Box<T> = record public Value: T; end record;
-        public type Choice = union Empty; Value(Item: int); end union;
+        public type Choice = variant Empty; Value(Item: int); end variant;
         public type IValue = protocol Value: int; function Read(): int; end protocol;
         public type Sample = record implements IValue
           public Value: int;

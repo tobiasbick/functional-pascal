@@ -1,10 +1,10 @@
 # Generic tree
 
-This example maps a recursive Tree<int> to Tree<string>, matches all union cases,
+This example maps a recursive Tree<int> to Tree<string>, matches all variant cases,
 and stores its rendering in an immutable Summary<string> record. The record has a
 computed closure, a default label, and a with update that preserves its other fields.
 All bindings, payloads, routine parameters, and results have explicit types.
-Map/Count calls infer their arguments, and union constructors infer from payloads
+Map/Count calls infer their arguments, and variant constructors infer from payloads
 and the expected type.
 
 After the [local SDK bootstrap](../../../docs/build/development.md#build-an-fpas-application):

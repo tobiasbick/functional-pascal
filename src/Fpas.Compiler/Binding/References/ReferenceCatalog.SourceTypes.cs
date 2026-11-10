@@ -7,7 +7,7 @@ namespace Fpas.Compiler.Binding.References;
 internal sealed partial class ReferenceCatalog
 {
     internal static IReadOnlyList<GenericParameterSymbol> SourceParameters(TypeSymbol type)
-        => type.Interface?.GenericParameters ?? type.Record?.GenericParameters ?? type.Union?.GenericParameters ?? type.Closure?.GenericParameters ?? [];
+        => type.Interface?.GenericParameters ?? type.Record?.GenericParameters ?? type.Variant?.GenericParameters ?? type.Closure?.GenericParameters ?? [];
 
     internal ImportedField RecordField(RecordFieldSymbol field, TypeSymbol owner) => new(owner, "<" + field.Name + ">k__BackingField",
         field.Type, false, true, SignatureType: SourceSignature(field.Type, SourceParameters(owner)));
@@ -31,14 +31,14 @@ internal sealed partial class ReferenceCatalog
             Method(field.Getter), Method(field.Copy), field.Default is null ? null : Method(field.Default))).ToArray(), Method(info.Constructor), info.CanConstruct);
     }
 
-    internal UnionInfo SourceUnionInfo(TypeSymbol type)
+    internal VariantInfo SourceVariantInfo(TypeSymbol type)
     {
-        var union = type.Union!;
-        return new(type, union.Cases.Select(member =>
+        var variant = type.Variant!;
+        return new(type, variant.Cases.Select(member =>
         {
             var representation = member.Representation.Type with { Arguments = type.Arguments };
-            return new UnionCaseInfo(member.Syntax.Name.Text, member.Tag, representation, InstantiateSource(member.Factory, type, null),
-                member.Representation.Fields.Select(field => new UnionPayload(field.Name, SubstituteSource(field.Type, union.GenericParameters, type.TypeArguments),
+            return new VariantCaseInfo(member.Syntax.Name.Text, member.Tag, representation, InstantiateSource(member.Factory, type, null),
+                member.Representation.Fields.Select(field => new VariantPayload(field.Name, SubstituteSource(field.Type, variant.GenericParameters, type.TypeArguments),
                     InstantiateSource(field.Getter, representation, null))).ToArray());
         }).ToArray());
     }

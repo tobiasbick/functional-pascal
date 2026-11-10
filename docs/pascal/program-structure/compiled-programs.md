@@ -32,7 +32,7 @@ Leaving a function does not synchronously reclaim every referenced object.
 Use [resource declarations](../language/error-handling/README.md) for scheduled
 IDisposable/IAsyncDisposable cleanup of external resources.
 
-Language records/unions/domains retain their documented nominal CLR identities.
+Language records/variants/domains retain their documented nominal CLR identities.
 Fpas.Core supplies checked metadata contracts needed for language types and
 aliases; it is not an implicit source namespace. The SDK supplies and deploys its
 matching support assembly. Standalone deployment must include required external

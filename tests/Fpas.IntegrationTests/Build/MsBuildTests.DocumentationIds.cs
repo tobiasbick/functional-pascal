@@ -56,12 +56,12 @@ public sealed partial class MsBuildTests
               begin previous := item; return other; end function;
             end record;
             // Outcome.
-            public type Outcome<T> = union
+            public type Outcome<T> = variant
               // Empty.
               None;
               // Present.
               Some(value: T);
-            end union;
+            end variant;
             // Read.
             public function Read(value: int): int; begin return value; end function;
             // Read.

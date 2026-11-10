@@ -26,7 +26,7 @@ public sealed class DebuggerAttributeTests
     }
 
     [Fact]
-    public void Typed_generic_and_union_proxies_read_live_source_properties_and_preserve_display_overrides()
+    public void Typed_generic_and_variant_proxies_read_live_source_properties_and_preserve_display_overrides()
     {
         var program = Compile("""
             unit Demo.Views;
@@ -37,13 +37,13 @@ public sealed class DebuggerAttributeTests
               [D.DebuggerBrowsableAttribute(D.DebuggerBrowsableState.Never)] public Secret: int;
               public Visible: int;
             end record;
-            public type Outcome<T> = union Success(Value: T); Missing; end union;
+            public type Outcome<T> = variant Success(Value: T); Missing; end variant;
             [D.DebuggerDisplayAttribute('custom')]
             [D.DebuggerTypeProxyAttribute(typeof(string))]
             public type Custom = record public Value: int; end record;
             [D.DebuggerDisplayAttribute('choice')]
             [D.DebuggerDisplayAttribute('alternative')]
-            public type CustomUnion = union Present; end union;
+            public type CustomVariant = variant Present; end variant;
             public type Id = distinct long;
             public type Port = ushort range 100..200;
             end unit;
@@ -84,7 +84,7 @@ public sealed class DebuggerAttributeTests
             Assert.Equal("custom", Assert.Single(custom.GetCustomAttributes<DebuggerDisplayAttribute>()).Value);
             Assert.Equal(typeof(string).AssemblyQualifiedName, Assert.Single(custom.GetCustomAttributes<DebuggerTypeProxyAttribute>()).ProxyTypeName);
             Assert.Null(custom.GetNestedType("<DebugView>", BindingFlags.NonPublic));
-            Assert.Equal(["choice", "alternative"], assembly.GetType("Demo.Views+CustomUnion+PresentCase")!
+            Assert.Equal(["choice", "alternative"], assembly.GetType("Demo.Views+CustomVariant+PresentCase")!
                 .GetCustomAttributes<DebuggerDisplayAttribute>(inherit: false).Select(attribute => attribute.Value));
             Assert.Equal("Id({Value})", assembly.GetType("Demo.Views+Id")!.GetCustomAttribute<DebuggerDisplayAttribute>()!.Value);
             var port = assembly.GetType("Demo.Views+Port")!;

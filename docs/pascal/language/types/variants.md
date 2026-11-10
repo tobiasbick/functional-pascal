@@ -1,44 +1,44 @@
-# Discriminated unions
+# Variants
 
-A union defines a closed set of named cases with optional immutable payloads.
+A variant defines a closed set of named cases with optional immutable payloads.
 
 ```pascal fragment context=declarations id=shape
-public type Shape = union
+public type Shape = variant
   Dot;
   Circle(Radius: double);
   Rectangle(Width: double; Height: double);
-end union;
+end variant;
 ```
 
 Construct values with `Shape.Dot`, `Shape.Circle(2.0)`, or
 `Shape.Rectangle(Width := 3.0, Height := 4.0)`. A fieldless case has no parentheses.
 Payload fields are immutable. Case names and payload labels are case-sensitive.
 
-A union is a closed nominal reference type with compiler-generated case
-representations. It is **not** `System.Enum`. Generic unions use ordinary type
+A variant is a closed nominal reference type with compiler-generated case
+representations. It is **not** `System.Enum`. Generic variants use ordinary type
 parameters. `Tree<T>` may recursively refer to `Tree<T>` because CLR references
 break the storage cycle. All paths to constructing finite values must still
-follow the declared constructors; null is not a union case.
+follow the declared constructors; null is not a variant case.
 
-Generic unions are declared by applications or imported from libraries like
+Generic variants are declared by applications or imported from libraries like
 other types. For example:
 
 ```pascal fragment context=declarations
-type Tree<T> = union
+type Tree<T> = variant
   Empty;
   Leaf(Value: T);
   Branch(Left: Tree<T>; Right: Tree<T>);
-end union;
+end variant;
 ```
 
-Constructors select the uninstantiated union owner, for example `Tree.Leaf(1)`.
+Constructors select the uninstantiated variant owner, for example `Tree.Leaf(1)`.
 Type arguments are inferred from payloads and expected type. A fieldless generic
 case requires expected type, such as `const Empty: Tree<int> := Tree.Empty;`.
-Constructor inference must resolve exactly one union type; arbitrary class static
+Constructor inference must resolve exactly one variant type; arbitrary class static
 methods do not gain this shorthand. Value declarations still require explicit
 types even when a constructor supplies enough information to infer its arguments.
 
-Union equality compares the case and its fields using the record field rules.
+Variant equality compares the case and its fields using the record field rules.
 [Control flow](../control-flow/README.md) specifies exhaustive matching.
 
 ## Example
@@ -53,10 +53,10 @@ type Position = record
   public Y: int;
 end record;
 
-type MoveOutcome = union
+type MoveOutcome = variant
   Moved(NewPosition: Position);
   Blocked(Reason: string);
-end union;
+end variant;
 
 function Move(Current: Position; DX: int; DY: int): MoveOutcome;
 begin
@@ -82,7 +82,7 @@ end;
 end program;
 ```
 
-Both cases are normal gameplay outcomes. The union is declared by this application
+Both cases are normal gameplay outcomes. The variant is declared by this application
 and handled explicitly. It does not throw, unwind, or return early on its own.
 Arithmetic overflow still throws an ordinary CLR OverflowException.
 

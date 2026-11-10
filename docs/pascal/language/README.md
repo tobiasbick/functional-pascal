@@ -7,7 +7,7 @@ Core language rules, organized by the task or construct being learned.
 | [Basics](basics/README.md) | Lexical rules, types, bindings, operators, and conversions |
 | [Control flow](control-flow/README.md) | If expressions/statements and typed loops |
 | [Functions](functions/README.md) | Routines, parameter modes, callables, constraints, and contracts |
-| [Types](types/README.md) | Records, unions, enums, arrays, domains, aliases, and nullability |
+| [Types](types/README.md) | Records, variants, enums, arrays, domains, aliases, and nullability |
 | [Pattern matching](pattern-matching/README.md) | Case syntax, guards, payloads, and exhaustive coverage |
 | [Errors and resources](error-handling/README.md) | Absence, domain outcomes, exceptions, and disposal |
 | [Concurrency](concurrency/README.md) | Async functions/programs, await, and .NET coordination |

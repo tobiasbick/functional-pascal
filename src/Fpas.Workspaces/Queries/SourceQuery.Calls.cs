@@ -81,7 +81,7 @@ public sealed partial class SourceQuery
                 var occurrence = snapshot.OccurrenceAt(position.Span.Path, offset);
                 if (occurrence is null) return Missing("no_symbol");
                 var symbol = snapshot.Symbol(occurrence.Symbol);
-                if (symbol.Kind is not ("routine" or "property" or "union_case")) return Missing("not_callable_target");
+                if (symbol.Kind is not ("routine" or "property" or "variant_case")) return Missing("not_callable_target");
                 definition = Definition(project, symbol); position = position with { Span = occurrence.Span };
             }
             var owner = definition.Project ?? project;

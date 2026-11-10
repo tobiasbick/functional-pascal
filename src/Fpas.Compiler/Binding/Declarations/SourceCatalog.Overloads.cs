@@ -23,7 +23,7 @@ internal sealed partial class SourceCatalog
             if (type.NullableValue) return "Nullable<" + TypeKey(type.NonNullable) + ">";
             if (type.IsParameter) return (method.GenericParameters.Contains(type.Parameter!) ? "!!" : "!") + type.Parameter!.Index;
             if (type.Kind == TypeKind.Array) return TypeKey(type.Element!) + "[" + new string(',', type.Rank - 1) + "]";
-            var name = type.Interface is { } contract ? contract.Owner.Syntax.Name.Text + "." + contract.Name : type.Record is { } record ? record.Owner.Syntax.Name.Text + "." + record.Name : type.Union is { } union ? union.Owner.Syntax.Name.Text + "." + union.Name : type.Definition?.FullName ?? type.Kind.ToString();
+            var name = type.Interface is { } contract ? contract.Owner.Syntax.Name.Text + "." + contract.Name : type.Record is { } record ? record.Owner.Syntax.Name.Text + "." + record.Name : type.Variant is { } variant ? variant.Owner.Syntax.Name.Text + "." + variant.Name : type.Definition?.FullName ?? type.Kind.ToString();
             return name + (type.Arguments is null ? "" : "<" + string.Join(',', type.Arguments.Select(TypeKey)) + ">");
         }
         return method.GenericParameters.Count + ":" + string.Join(';', method.Parameters.Select(parameter => (parameter.ByRef ? "&" : "") + TypeKey(parameter.Type)));

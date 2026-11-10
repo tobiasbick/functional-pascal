@@ -16,8 +16,8 @@ internal static class ReferenceRequirements
             foreach (var record in unit.Records)
             {
                 record.Owner.Source.CheckCancellation();
-                if (record.UnionCase is not null) references.Required("Fpas.Core.UnionCaseAttribute");
-                if (record.UnionCase is null && record.Fields.Count != 0) references.Required("Fpas.Core.RecordFieldAttribute");
+                if (record.VariantCase is not null) references.Required("Fpas.Core.VariantCaseAttribute");
+                if (record.VariantCase is null && record.Fields.Count != 0) references.Required("Fpas.Core.RecordFieldAttribute");
             }
             if (unit.Scalars.Any(scalar => scalar.Syntax.Category != ScalarCategory.Enum))
                 references.Required("System.Collections.Generic.EqualityComparer`1");

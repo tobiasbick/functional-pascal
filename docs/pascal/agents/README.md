@@ -47,7 +47,7 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
   `end program;`. A unit ends with `end unit;`.
 - Parameters use semicolons; arguments use commas. Consume function results or
   write `discard Call();`. Spell `ref`, `out`, and `in` in both declarations and calls.
-- Construct records with `new Point(X := 1, Y := 2)`. Unions have qualified cases
+- Construct records with `new Point(X := 1, Y := 2)`. Variants have qualified cases
   and exhaustive matching. Use CLR nullability and exceptions for absence/failure.
 - Tasks and cancellation use ordinary .NET APIs. Resources use `using const` or
   `await using const`; cleanup runs when the enclosing lexical scope exits.
@@ -57,7 +57,7 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Task | Read |
 | --- | --- |
 | Values, arithmetic, branches, loops, arrays, and strings | [Basics](basics.md) |
-| Records, domains, unions, generics, units, and global state | [Types and units](types.md) |
+| Records, domains, variants, generics, units, and global state | [Types and units](types.md) |
 | Routines, parameters, delegates, closures, inference, and contracts | [Functions](functions.md) |
 | Matching, nullability, exceptions, and resource lifetime | [Patterns, errors, and resources](patterns-errors.md) |
 | .NET APIs, interfaces, events, attributes, and CLR representation | [Interop](interop.md) |

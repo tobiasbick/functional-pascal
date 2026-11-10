@@ -193,9 +193,9 @@ public sealed class FormatterTests
     }
 
     [Fact]
-    public void Union_payload_lists_retain_formal_parameter_line_groups()
+    public void Variant_payload_lists_retain_formal_parameter_line_groups()
     {
-        var output = Format("unit Shapes;type Shape=union Point(\nX:int;\nY:int\n);end union;end unit;");
+        var output = Format("unit Shapes;type Shape=variant Point(\nX:int;\nY:int\n);end variant;end unit;");
         Assert.Contains("  Point(\n    X: int;\n    Y: int\n  );", output);
     }
 

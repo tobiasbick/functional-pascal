@@ -30,7 +30,7 @@ Control transfers out of `finally` are forbidden. If cleanup throws during
 another exception, ordinary CLR exception replacement rules apply.
 
 Use standard exception types and catch at the boundary that can meaningfully
-handle the failure. There is no `panic` primitive, automatic exception-to-union
+handle the failure. There is no `panic` primitive, automatic exception-to-variant
 conversion, or language-defined error wrapper.
 
 False `requires`/`ensures` conditions throw System.InvalidOperationException.

@@ -2,7 +2,7 @@
 
 The local SDK builds net10.0/AnyCPU multi-source programs/libraries and mixed
 C#/FPAS solutions with direct CIL output, portable PDBs, and optional XML API
-documentation. Public records, unions, domains, and generics cross project
+documentation. Public records, variants, domains, and generics cross project
 boundaries. Use the [development workflow](development.md#build-an-fpas-application)
 for bootstrap commands and [build acceptance](../../tests/coverage.md#build-acceptance)
 for verification and explicit scope limits.

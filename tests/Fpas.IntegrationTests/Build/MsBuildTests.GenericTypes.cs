@@ -18,7 +18,7 @@ public sealed partial class MsBuildTests
     }
 
     [Fact]
-    public async Task Generic_records_and_unions_preserve_their_contract_across_CSharp_and_Fpas_assemblies()
+    public async Task Generic_records_and_variants_preserve_their_contract_across_CSharp_and_Fpas_assemblies()
     {
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Models.fpas"), """
@@ -39,7 +39,7 @@ public sealed partial class MsBuildTests
               public Value: T := new T();
               public function Read(): function(): T; begin return function(): T => self.Value; end function;
             end record;
-            public type Tree<T> = union Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end union;
+            public type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
             public type Pair<T> = where T: Sys.IComparable<T>;
             record
               public Left: T; public Right: T;
@@ -89,8 +89,8 @@ public sealed partial class MsBuildTests
             if (missing.Value != null || missing.Label != null || Consumer.Missing<int>(42).Value != 42) throw new Exception("Nullable value metadata");
             if (Consumer.Compare(1, 2) >= 0 || new Models.Pair<string>("a", "b").Read()() >= 0) throw new Exception("Constraints in closures");
             var tree = Consumer.Build("text");
-            if (Consumer.Count(tree) != 1 || tree is not Models.Tree<string>.BranchCase branch || branch.Left is not Models.Tree<string>.LeafCase { Value: "text" }) throw new Exception("Union payload/matching");
-            if (Models.Tree<int>.Leaf(42) != Models.Tree<int>.Leaf(42) || Models.Tree<int>.Empty == Models.Tree<int>.Leaf(42)) throw new Exception("Union equality");
+            if (Consumer.Count(tree) != 1 || tree is not Models.Tree<string>.BranchCase branch || branch.Left is not Models.Tree<string>.LeafCase { Value: "text" }) throw new Exception("Variant payload/matching");
+            if (Models.Tree<int>.Leaf(42) != Models.Tree<int>.Leaf(42) || Models.Tree<int>.Empty == Models.Tree<int>.Leaf(42)) throw new Exception("Variant equality");
             if (Consumer.Count(Models.Tree<int>.Empty) != 0) throw new Exception("Fieldless generic case");
             if (Consumer.Create<List<int>>().Read()().Count != 0) throw new Exception("Constructor constraint in default/closure");
             if (!typeof(Models.Box<>).IsGenericTypeDefinition || typeof(Models.Tree<>.LeafCase).GetGenericArguments().Length != 1) throw new Exception("CLR type definitions");

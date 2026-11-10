@@ -16,10 +16,10 @@ internal sealed partial class AssemblyEmitter
         foreach (var record in layout.Records)
         {
             genericTypeContext = record.GenericParameters.Count == 0 ? null : record.GenericParameters;
-            var name = record.Name + (record.UnionCase is null && record.GenericParameters.Count != 0 ? "`" + record.GenericParameters.Count : "");
-            var typeFlags = SourceTypeFlags(record.Attributes) | (record.UnionCase is { } serializableCase ? SourceTypeFlags(serializableCase.Owner.Attributes) : 0);
-            var type = metadata.AddTypeDefinition(typeFlags | TypeAttributes.Sealed | (record.IsPublic || record.UnionCase is not null ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
-                default, metadata.GetOrAddString(name), record.UnionCase is { } member ? TypeHandle(member.Owner.Type) : objectType, MetadataTokens.FieldDefinitionHandle(fieldCount + 1), layout.SourceMethods[record.Constructor]);
+            var name = record.Name + (record.VariantCase is null && record.GenericParameters.Count != 0 ? "`" + record.GenericParameters.Count : "");
+            var typeFlags = SourceTypeFlags(record.Attributes) | (record.VariantCase is { } serializableCase ? SourceTypeFlags(serializableCase.Owner.Attributes) : 0);
+            var type = metadata.AddTypeDefinition(typeFlags | TypeAttributes.Sealed | (record.IsPublic || record.VariantCase is not null ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
+                default, metadata.GetOrAddString(name), record.VariantCase is { } member ? TypeHandle(member.Owner.Type) : objectType, MetadataTokens.FieldDefinitionHandle(fieldCount + 1), layout.SourceMethods[record.Constructor]);
             RegisterGenerics(type, record.GenericParameters, genericTypeContext);
             metadata.AddNestedType(type, layout.RecordOwners[record]);
             AddNullabilityContext(type, program.Runtime);
@@ -29,7 +29,7 @@ internal sealed partial class AssemblyEmitter
             metadata.AddInterfaceImplementation(type, TypeHandle(equatable));
             foreach (var contract in record.Interfaces.Where(contract => contract.Erased != equatable.Erased))
                 metadata.AddInterfaceImplementation(type, TypeHandle(contract));
-            if (record.UnionCase is { } unionCase) AddUnionCaseAttribute(type, unionCase);
+            if (record.VariantCase is { } variantCase) AddVariantCaseAttribute(type, variantCase);
             else AddRecordAttribute(type);
             foreach (var field in record.Fields)
             {
@@ -45,7 +45,7 @@ internal sealed partial class AssemblyEmitter
             {
                 var firstParameter = AddParameters(method, ref parameterCount, program.Runtime);
                 var attributes = MethodAttributes.HideBySig | (method.IsPublic ? MethodAttributes.Public : MethodAttributes.Private);
-                if (record.UnionCase is not null && method.Generated == GeneratedMethodKind.Constructor) attributes = attributes & ~MethodAttributes.MemberAccessMask | MethodAttributes.Assembly;
+                if (record.VariantCase is not null && method.Generated == GeneratedMethodKind.Constructor) attributes = attributes & ~MethodAttributes.MemberAccessMask | MethodAttributes.Assembly;
                 if (!method.IsInstance) attributes |= MethodAttributes.Static;
                 if (method.Generated is GeneratedMethodKind.Constructor) attributes |= MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
                 if (method.Generated is GeneratedMethodKind.Getter or GeneratedMethodKind.Equality or GeneratedMethodKind.Inequality or GeneratedMethodKind.Tag) attributes |= MethodAttributes.SpecialName;
@@ -78,10 +78,10 @@ internal sealed partial class AssemblyEmitter
                 if (firstProperty.IsNil) firstProperty = property;
                 metadata.AddMethodSemantics(property, MethodSemanticsAttributes.Getter, layout.SourceMethods[field.Getter]);
                 if (NullableFlags(field.Type).Contains((byte)2)) AddNullableAnnotation(property, program.Runtime, field.Type);
-                if (record.UnionCase is null) AddRecordFieldAttribute(property, field, index);
+                if (record.VariantCase is null) AddRecordFieldAttribute(property, field, index);
                 AddSourceAttributes(property, field.Attributes);
             }
-            if (record.UnionCase is not null)
+            if (record.VariantCase is not null)
             {
                 var tag = AddReadOnlyProperty("Tag", TypeSymbol.Int32, true, layout.SourceMethods[record.Methods.Single(method => method.Generated == GeneratedMethodKind.Tag)], program.Runtime);
                 if (firstProperty.IsNil) firstProperty = tag;
@@ -95,7 +95,7 @@ internal sealed partial class AssemblyEmitter
     {
         var il = new InstructionEncoder(new BlobBuilder());
         il.LoadArgument(0);
-        il.Call(Reference(record.UnionCase is { } member ? member.Owner.Import(member.Owner.Method(GeneratedMethodKind.Constructor)) : new ImportedMethod(TypeSymbol.Object, ".ctor", TypeSymbol.Void, [], false)));
+        il.Call(Reference(record.VariantCase is { } member ? member.Owner.Import(member.Owner.Method(GeneratedMethodKind.Constructor)) : new ImportedMethod(TypeSymbol.Object, ".ctor", TypeSymbol.Void, [], false)));
         for (var index = 0; index < record.Fields.Count; index++)
         {
             il.LoadArgument(0); il.LoadArgument(index + 1);

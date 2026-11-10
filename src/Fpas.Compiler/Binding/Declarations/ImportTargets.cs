@@ -11,5 +11,5 @@ internal sealed record ClrImport(ImportedType Type) : ImportTarget;
 internal sealed record ClrTypeImport(TypeSymbol Type) : ImportTarget;
 
 internal sealed record RecordImport(RecordSymbol Record) : ImportTarget;
-internal sealed record UnionImport(UnionSymbol Union) : ImportTarget;
+internal sealed record VariantImport(VariantSymbol Variant) : ImportTarget;
 internal sealed record InterfaceImport(InterfaceSymbol Interface) : ImportTarget;

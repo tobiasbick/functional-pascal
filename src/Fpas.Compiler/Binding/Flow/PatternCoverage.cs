@@ -9,7 +9,7 @@ namespace Fpas.Compiler.Binding.Flow;
 // preserve correlations, so nested cases are checked without enumerating values.
 internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.SourceText source, int position)
 {
-    private sealed record Constructor(UnionCaseInfo? Case, object? Constant, TypeSymbol? ActualType, BigInteger? Lower = null, BigInteger? Upper = null, bool IsNull = false, bool IsOther = false)
+    private sealed record Constructor(VariantCaseInfo? Case, object? Constant, TypeSymbol? ActualType, BigInteger? Lower = null, BigInteger? Upper = null, bool IsNull = false, bool IsOther = false)
     {
         internal IReadOnlyList<TypeSymbol> Fields => Case?.Fields.Select(payload => payload.Type).ToArray() ?? [];
     }
@@ -47,9 +47,9 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
         if (type.IsNullable || type == TypeSymbol.Null) yield return new(null, null, null, IsNull: true);
         if (type == TypeSymbol.Null) yield break;
         type = type.NonNullable;
-        if (references.UnionInfo(type) is { } union)
+        if (references.VariantInfo(type) is { } variant)
         {
-            foreach (var member in union.Cases) yield return new(member, null, member.Type);
+            foreach (var member in variant.Cases) yield return new(member, null, member.Type);
             yield break;
         }
         if (type == TypeSymbol.Boolean)

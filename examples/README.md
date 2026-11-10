@@ -19,8 +19,8 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | --- | --- |
 | [Data domains](types/data-domains/README.md) | Aliases, decimal, CLR enums, distinct values, and checked ranges |
 | [Inventory model](types/inventory-model/README.md) | Records, defaults, private state, equality, and copy updates |
-| [Game actions](types/game-actions/README.md) | Application unions and exhaustive payload matching |
-| [Generic tree](types/generic-tree/README.md) | Recursive generic unions, inference, and cross-unit use |
+| [Game actions](types/game-actions/README.md) | Application variants and exhaustive payload matching |
+| [Generic tree](types/generic-tree/README.md) | Recursive generic variants, inference, and cross-unit use |
 
 ## Functions
 

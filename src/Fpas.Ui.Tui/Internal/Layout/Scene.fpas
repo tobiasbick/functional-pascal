@@ -2,7 +2,7 @@ unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
 uses Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
-public type Binding<TMsg> = union
+public type Binding<TMsg> = variant
   Invoke(Action: Actions.Direct<TMsg>);
   Toggle(Action: Actions.Toggle<TMsg>);
   Multiline(View: EditorView.Viewport<TMsg>);
@@ -10,7 +10,7 @@ public type Binding<TMsg> = union
   SelectTab(Bar: Tabs.Header<TMsg>);
   Scroll(View: V.Viewport<TMsg>);
   Canvas(Column: int; Row: int; Events: T.CanvasEvents<TMsg>);
-end union;
+end variant;
 
 public type Control<TMsg> = record
   public Id: string;

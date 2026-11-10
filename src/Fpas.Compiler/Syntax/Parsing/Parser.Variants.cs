@@ -2,7 +2,7 @@ namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser
 {
-    private UnionSyntax ReadUnion(bool isProgram)
+    private VariantSyntax ReadVariant(bool isProgram)
     {
         var start = Current.Position;
         var documentation = Current.Documentation;
@@ -11,10 +11,10 @@ internal sealed partial class Parser
         if (At("public") || At("private")) position++;
         Expect("type"); var name = Identifier();
         using var declaration = Declaration(name, start, visible ? "public" : "private", documentation);
-        declaration.Info.Kind = "union";
+        declaration.Info.Kind = "variant";
         var parameters = ReadTypeParameters();
-        Expect("="); var constraints = ReadConstraints(); Expect("union");
-        var cases = new List<UnionCaseSyntax>();
+        Expect("="); var constraints = ReadConstraints(); Expect("variant");
+        var cases = new List<VariantCaseSyntax>();
         var bodyStart = Current.Position;
         var bodyIndex = position;
         while (!At("end"))
@@ -23,7 +23,7 @@ internal sealed partial class Parser
             var caseDocumentation = Current.Documentation;
             var label = Identifier(); IReadOnlyList<ParameterSyntax> fields = [];
             using var caseDeclaration = Declaration(label, label.Position, "public", caseDocumentation);
-            caseDeclaration.Info.Kind = "union_case";
+            caseDeclaration.Info.Kind = "variant_case";
             if (At("("))
             {
                 fields = ReadList("(", ")", ";", () =>
@@ -37,7 +37,7 @@ internal sealed partial class Parser
         }
         layout?.Body(bodyIndex, position);
         declaration.Body(bodyStart, Current.Position);
-        Expect("end"); Expect("union"); Expect(";");
+        Expect("end"); Expect("variant"); Expect(";");
         return new(name, visible, cases, parameters, constraints, documentation);
     }
 

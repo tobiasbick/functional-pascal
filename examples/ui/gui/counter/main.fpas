@@ -20,7 +20,7 @@ type Model = record
   public Modal: bool := false;
 end record;
 
-type Msg = union
+type Msg = variant
   Increment;
   Check(Value: bool);
   Edit(Value: Ed.TextEdit);
@@ -32,7 +32,7 @@ type Msg = union
   Open;
   Close;
   Quit;
-end union;
+end variant;
 
 async function Work(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
 begin

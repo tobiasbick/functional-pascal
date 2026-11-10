@@ -2,7 +2,7 @@
 
 ## Design decisions
 
-- Free functions, procedures, immutable records, and discriminated unions are the
+- Free functions, procedures, immutable records, and discriminated variants are the
   primary abstractions. Effects are allowed; functions are not implicitly pure.
 - Distinct scalars and checked integral subranges express named data domains.
   Records support defaults, private members, and static factories/methods.
@@ -28,11 +28,11 @@
 - Consume CLR classes, structs, interfaces, properties, delegates, and events
   directly from referenced assemblies; namespaces are imported explicitly.
 - Preserve precise static typing, checked integral arithmetic by default, and
-  exhaustive matching of language-defined unions.
+  exhaustive matching of language-defined variants.
 - `requires` and `ensures` express preconditions and postconditions, checked in
   every build and enforced through ordinary CLR exceptions.
 - Use CLR exceptions for failures and CLR nullability for absent values.
-  Application-specific unions describe domain outcomes. There is no implicit
+  Application-specific variants describe domain outcomes. There is no implicit
   Option/Result prelude or failure-propagation operator.
 - Declare resources with `using const` or `await using const`, without a separate
   block closer; cleanup runs at the end of the enclosing lexical scope.
@@ -42,7 +42,7 @@
 ## Initial language scope
 
 The baseline includes functions and closures, contracts, CLR generics, records,
-distinct types, subranges, unions, global values, exceptions, disposal, delegates,
+distinct types, subranges, variants, global values, exceptions, disposal, delegates,
 events, protocol declarations, interface implementation, and asynchronous methods.
 It supports ordinary managed .NET APIs.
 

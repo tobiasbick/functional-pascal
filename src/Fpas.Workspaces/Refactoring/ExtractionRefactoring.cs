@@ -73,7 +73,7 @@ public static partial class CheckedRefactoring
         if (alias is not null) name = IdentifierFacts.Spell(alias.AliasName) + name[alias.TargetName.Length..];
         else if (snapshot.Symbols.FirstOrDefault(symbol => symbol.Context?.QualifiedName == name &&
             symbol.Declaration is { } declaration && Paths.Equals(declaration.Path, path) &&
-            symbol.Kind is "record" or "interface" or "union" or "domain" or "enum") is { } own)
+            symbol.Kind is "record" or "interface" or "variant" or "domain" or "enum") is { } own)
             name = IdentifierFacts.Spell(own.Name);
         var args = type.Arguments.Select(Spell).ToArray();
         if (!name.Contains('`')) return name.Replace('+', '.') + Arguments(args) + nullable;

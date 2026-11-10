@@ -5,7 +5,7 @@ namespace Fpas.IntegrationTests.Build;
 public sealed partial class MsBuildTests
 {
     [Fact]
-    public async Task Inference_handles_imported_overloads_constraints_variance_and_FPAS_union_metadata()
+    public async Task Inference_handles_imported_overloads_constraints_variance_and_FPAS_variant_metadata()
     {
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Shared/InferenceApi.cs"), """
@@ -40,9 +40,9 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/InferenceLibrary.fpas"), """
             unit Demo.InferenceLibrary;
-            public type Tree<T> = union Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end union;
-            public type RefChoice<T> = where T: class; union Empty; Value(Item: T); end union;
-            public type MaybeValue<T> = where T: struct; union Empty; Value(Item: T?); end union;
+            public type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
+            public type RefChoice<T> = where T: class; variant Empty; Value(Item: T); end variant;
+            public type MaybeValue<T> = where T: struct; variant Empty; Value(Item: T?); end variant;
             public function Identity<T>(Value: T): T; begin return Value; end function;
             public function Count<T>(Value: Tree<T>): int;
             begin return case Value of when Tree.Empty: 0; when Tree.Leaf(_): 1; when Tree.Branch(const L: Tree<T>, const R: Tree<T>): Count(L) + Count(R); end case; end function;

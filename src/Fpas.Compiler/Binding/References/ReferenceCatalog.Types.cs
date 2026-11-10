@@ -121,8 +121,8 @@ internal sealed partial class ReferenceCatalog
             yield break;
         }
         if (type.Kind == TypeKind.Scalar) { yield return type; type = Parents(type).First(); }
-        if (type.Kind == TypeKind.Record) { yield return type; type = type.Record!.UnionCase is { } member ? member.Owner.Type with { Arguments = type.Arguments } : TypeSymbol.Object; }
-        if (type.Kind == TypeKind.Union) { yield return type; type = TypeSymbol.Object; }
+        if (type.Kind == TypeKind.Record) { yield return type; type = type.Record!.VariantCase is { } member ? member.Owner.Type with { Arguments = type.Arguments } : TypeSymbol.Object; }
+        if (type.Kind == TypeKind.Variant) { yield return type; type = TypeSymbol.Object; }
         if (type.Kind == TypeKind.Array) type = Symbol(Required("System.Array"));
         var pending = new Queue<TypeSymbol>();
         var visited = new HashSet<TypeSymbol>();

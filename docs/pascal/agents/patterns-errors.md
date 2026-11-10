@@ -1,12 +1,12 @@
 # Matching, absence, errors, and resources
 
-Read this when handling union cases, nullable values, exceptions, or cleanup.
+Read this when handling variant cases, nullable values, exceptions, or cleanup.
 
 ## Patterns and coverage
 
-A union has named cases, with optional immutable payloads. Construct with
+A variant has named cases, with optional immutable payloads. Construct with
 Outcome.Ready(42) or fieldless Outcome.Missing. A generic case may infer its owner
-arguments from payloads and expected type. Null is not an implicit union case.
+arguments from payloads and expected type. Null is not an implicit variant case.
 
 Case statements/expressions evaluate their selector once and try arms in source
 order, without fallthrough. Bind payloads explicitly: when Outcome.Ready(const
@@ -17,7 +17,7 @@ comma-separated alternatives are supported; alternatives must bind the same
 names/types. A guard follows the pattern, as in when Outcome.Ready(const N: int)
 if N > 0:.
 
-Unions require exhaustive nested coverage, and bool needs true/false or a
+Variants require exhaustive nested coverage, and bool needs true/false or a
 fallback. Integer/string/CLR-enum selectors require a catch-all or else; CLR enum
 metadata cannot exclude unnamed values. A subrange can prove complete interval
 coverage with constant/range patterns. Guards never prove coverage. Duplicate,
@@ -52,7 +52,7 @@ lexical catch body, preserving the original stack. Catch clauses are ordered,
 may use when filters, and can omit the binding with catch do. A throwing filter
 counts as false. Finally executes on normal/exceptional exits; control cannot
 transfer out of it. An exception from cleanup replaces an earlier exception
-according to CLR rules. Application unions model normal domain outcomes, without
+according to CLR rules. Application variants model normal domain outcomes, without
 implicit exception conversion or an Option/Result prelude.
 
 ## Resource lifetime
@@ -75,10 +75,10 @@ program AgentPatterns;
 
 uses System as Sys, System.IO as IO, System.Console as Console;
 
-type Outcome = union
+type Outcome = variant
   Ready(Value: int);
   Missing;
-end union;
+end variant;
 
 begin
   const Result: Outcome := Outcome.Ready(4);

@@ -10,23 +10,23 @@ namespace Fpas.Compiler.Emission.Metadata;
 
 internal sealed partial class AssemblyEmitter
 {
-    private void EmitUnions(BoundCompilation program, MethodBodyStreamEncoder bodies, ref int parameterCount, TypeReferenceHandle objectType)
+    private void EmitVariants(BoundCompilation program, MethodBodyStreamEncoder bodies, ref int parameterCount, TypeReferenceHandle objectType)
     {
-        foreach (var union in layout.Unions)
+        foreach (var variant in layout.Variants)
         {
-            genericTypeContext = union.GenericParameters.Count == 0 ? null : union.GenericParameters;
-            var type = metadata.AddTypeDefinition(SourceTypeFlags(union.Attributes) | TypeAttributes.Abstract | (union.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
-                default, metadata.GetOrAddString(union.Name + (union.GenericParameters.Count == 0 ? "" : "`" + union.GenericParameters.Count)), objectType, MetadataTokens.FieldDefinitionHandle(metadata.GetRowCount(TableIndex.Field) + 1), layout.SourceMethods[union.Method(GeneratedMethodKind.Constructor)]);
-            RegisterGenerics(type, union.GenericParameters, genericTypeContext);
-            metadata.AddNestedType(type, layout.UnionOwners[union]);
+            genericTypeContext = variant.GenericParameters.Count == 0 ? null : variant.GenericParameters;
+            var type = metadata.AddTypeDefinition(SourceTypeFlags(variant.Attributes) | TypeAttributes.Abstract | (variant.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
+                default, metadata.GetOrAddString(variant.Name + (variant.GenericParameters.Count == 0 ? "" : "`" + variant.GenericParameters.Count)), objectType, MetadataTokens.FieldDefinitionHandle(metadata.GetRowCount(TableIndex.Field) + 1), layout.SourceMethods[variant.Method(GeneratedMethodKind.Constructor)]);
+            RegisterGenerics(type, variant.GenericParameters, genericTypeContext);
+            metadata.AddNestedType(type, layout.VariantOwners[variant]);
             AddNullabilityContext(type, program.Runtime);
-            AddSourceAttributes(type, union.Attributes);
-            var equatable = catalog.Symbol(catalog.Required("System.IEquatable`1")) with { Arguments = new([union.Type]) };
+            AddSourceAttributes(type, variant.Attributes);
+            var equatable = catalog.Symbol(catalog.Required("System.IEquatable`1")) with { Arguments = new([variant.Type]) };
             metadata.AddInterfaceImplementation(type, TypeHandle(equatable));
-            var marker = catalog.Symbol(catalog.Required("Fpas.Core.UnionAttribute"));
+            var marker = catalog.Symbol(catalog.Required("Fpas.Core.VariantAttribute"));
             var value = new BlobBuilder(); value.WriteUInt16(1); value.WriteInt32(1); value.WriteUInt16(0);
             metadata.AddCustomAttribute(type, Reference(new ImportedMethod(marker, ".ctor", TypeSymbol.Void, [TypeSymbol.Int32], false)), metadata.GetOrAddBlob(value));
-            foreach (var method in union.Methods)
+            foreach (var method in variant.Methods)
             {
                 var firstParameter = AddParameters(method, ref parameterCount, program.Runtime);
                 var attributes = MethodAttributes.HideBySig | (method.IsPublic ? MethodAttributes.Public : MethodAttributes.FamANDAssem);
@@ -46,15 +46,15 @@ internal sealed partial class AssemblyEmitter
                         il.Call(Reference(new ImportedMethod(TypeSymbol.Object, ".ctor", TypeSymbol.Void, [], false))); il.OpCode(ILOpCode.Ret);
                         offset = bodies.AddMethodBody(il, maxStack: 1);
                     }
-                    else offset = EmitBody(union.Bodies[method], bodies);
+                    else offset = EmitBody(variant.Bodies[method], bodies);
                 }
                 var methodHandle = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(method.Name),
                     MethodSignature(method.Result, method.Parameters.Select(parameter => parameter.Type).ToArray(), method.IsInstance), offset, firstParameter);
                 AddGeneratedMethod(methodHandle);
             }
-            var firstProperty = AddReadOnlyProperty("Tag", TypeSymbol.Int32, true, layout.SourceMethods[union.Method(GeneratedMethodKind.Tag)], program.Runtime);
-            foreach (var member in union.Cases.Where(member => member.Syntax.Fields.Count == 0))
-                AddReadOnlyProperty(member.Syntax.Name.Text, union.Type, false, layout.SourceMethods[member.Factory], program.Runtime);
+            var firstProperty = AddReadOnlyProperty("Tag", TypeSymbol.Int32, true, layout.SourceMethods[variant.Method(GeneratedMethodKind.Tag)], program.Runtime);
+            foreach (var member in variant.Cases.Where(member => member.Syntax.Fields.Count == 0))
+                AddReadOnlyProperty(member.Syntax.Name.Text, variant.Type, false, layout.SourceMethods[member.Factory], program.Runtime);
             metadata.AddPropertyMap(type, firstProperty);
         }
         genericTypeContext = null;
@@ -70,9 +70,9 @@ internal sealed partial class AssemblyEmitter
         return property;
     }
 
-    private void AddUnionCaseAttribute(TypeDefinitionHandle type, UnionCaseSymbol member)
+    private void AddVariantCaseAttribute(TypeDefinitionHandle type, VariantCaseSymbol member)
     {
-        var marker = catalog.Symbol(catalog.Required("Fpas.Core.UnionCaseAttribute"));
+        var marker = catalog.Symbol(catalog.Required("Fpas.Core.VariantCaseAttribute"));
         var constructor = new ImportedMethod(marker, ".ctor", TypeSymbol.Void, [TypeSymbol.Int32, TypeSymbol.String, TypeSymbol.String, TypeSymbol.Array(TypeSymbol.String)], false);
         var value = new BlobBuilder(); value.WriteUInt16(1); value.WriteInt32(member.Tag);
         value.WriteSerializedString(member.Syntax.Name.Text); value.WriteSerializedString(member.Factory.Name);

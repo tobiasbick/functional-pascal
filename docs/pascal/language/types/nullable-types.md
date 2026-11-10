@@ -15,9 +15,9 @@
 - A foreign overloaded equality operator can define its own null behavior and
   does not establish non-nullness. A runtime `Value is T` check can validate a
   nullable reference independently of such an operator. Generated FPAS record/
-  union equality retains its compiler-defined null-check behavior.
+  variant equality retains its compiler-defined null-check behavior.
 - Use a null branch, `??`, or explicit validation to obtain a non-null value.
-  There is no null-forgiving `!` operator or implicit conversion to a union.
+  There is no null-forgiving `!` operator or implicit conversion to a variant.
 
 `null` cannot initialize a non-null reference or non-nullable value type.
 Unconstrained generic parameters cannot be suffixed with `?`; use an appropriate

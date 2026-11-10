@@ -16,7 +16,7 @@ internal sealed partial class Parser
         var parameters = ReadTypeParameters();
         Expect("=");
         var constraints = ReadConstraints();
-        if (!At("record")) throw source.Error("FP2003", "This compiler currently supports record and union type declarations.", Current.Position);
+        if (!At("record")) throw source.Error("FP2003", "This compiler currently supports record and variant type declarations.", Current.Position);
         position++;
         var interfaces = new List<TypeSyntax>();
         if (At("implements"))

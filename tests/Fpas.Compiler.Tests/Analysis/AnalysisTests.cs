@@ -106,7 +106,7 @@ public sealed class AnalysisTests
 
     [Theory]
     [InlineData("public type Point = record X: int; end record;")]
-    [InlineData("public type Choice = union Empty; Value(Item: int); end union;")]
+    [InlineData("public type Choice = variant Empty; Value(Item: int); end variant;")]
     [InlineData("public type Id = distinct long;")]
     [InlineData("public type Number = long;")]
     public void Missing_support_metadata_is_diagnosed_before_emission(string declaration)

@@ -24,7 +24,7 @@ introduces no binding. Compiler-provided `self` and `args` have the fixed types
 defined by their enclosing record and program.
 
 The declared type supplies context to empty array literals, `null`, and generic
-union constructors. Expression typing, overload resolution, and generic argument
+variant constructors. Expression typing, overload resolution, and generic argument
 inference still operate; they never remove a declaration's type requirement.
 
 `const` means an immutable **binding**, not necessarily a compile-time constant.

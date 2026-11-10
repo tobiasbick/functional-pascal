@@ -18,7 +18,7 @@ end function;
 Generic arguments use `<...>` in declarations, types, and calls:
 `Identity<int>(42)`. Calls may infer routine type arguments from supplied argument
 types. Expected result type alone does not infer routine type arguments. See
-[type inference](type-inference.md) for overload evidence and contextual unions.
+[type inference](type-inference.md) for overload evidence and contextual variants.
 Namespace-qualified and nested CLR generics are supported. Put each type's own
 arguments on its name segment, for example `N.Outer<string>.Inner<int>`. An inner
 type that introduces no parameters still inherits the enclosing arguments, as in
@@ -115,7 +115,7 @@ the compiler does not infer one from its call sites. Runtime `is T`, explicit bo
 and generic null/coalescing checks retain CLR behavior. Generic resources and
 enumerables use constrained interface calls and normal cleanup. Specific case
 patterns on an otherwise unknown T can be expressed after boxing to object?;
-the compiler does not infer a union/constant domain for T from its call sites.
+the compiler does not infer a variant/constant domain for T from its call sites.
 
 ## See also
 

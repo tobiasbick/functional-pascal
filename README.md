@@ -15,14 +15,14 @@ sources directly to CIL and CLR assemblies, running through the .NET host.
 
 ## Features
 
-- **Function-first** — Free functions and procedures are the primary building blocks, with immutable records and discriminated unions for data.
+- **Function-first** — Free functions and procedures are the primary building blocks, with immutable records and variants for data.
 - **Explicit binding mutability** — `const` prevents rebinding; `var` permits assignment. Referenced .NET objects and array elements retain their own mutability. Managed `ref`, `out`, and `in` modes make caller-storage access explicit.
-- **Pattern matching** — Exhaustive `case` statements and expressions with union payloads, nested patterns, guards, and CLR type tests.
+- **Pattern matching** — Exhaustive `case` statements and expressions with variant payloads, nested patterns, guards, and CLR type tests.
 - **First-class functions** — Typed lambdas, named routines, and lexical helpers become ordinary CLR delegates. Mutable captures share storage; closures can outlive their declaring call.
 - **Contracts** — `requires` and `ensures` check routine entry and successful exit in Debug and Release, including delegates, interfaces, and C# callers.
-- **Generics** — Records, unions, and routines use CLR type parameters, `<...>` arguments, `where` constraints, and local call/union-constructor inference.
+- **Generics** — Records, variants, and routines use CLR type parameters, `<...>` arguments, `where` constraints, and local call/variant-constructor inference.
 - **Subranges and distinct types** — Checked integral bounds and nominal scalar identities, including valid CLR default values for subranges.
-- **CLR nullability and exceptions** — `T?`, validation, coalescing, `try`/`catch`/`finally`, and stack-preserving rethrow. Application unions model domain outcomes.
+- **CLR nullability and exceptions** — `T?`, validation, coalescing, `try`/`catch`/`finally`, and stack-preserving rethrow. Application variants model domain outcomes.
 - **Resource lifetime** — `using const` and `await using const` dispose resources when the enclosing scope exits, including exceptional exits.
 - **Async and concurrency** — Task-based functions, lambdas, and programs; supported Task/ValueTask awaits, cancellation tokens, channels, and coordination through actual .NET APIs.
 - **.NET interoperability** — Consume referenced classes, structs, interfaces, properties, indexers, delegates, events, and attributes. A `protocol` declares a CLR interface with generic methods, inheritance, and getter-only properties. Records can implement protocols and imported CLR interfaces.
@@ -162,7 +162,7 @@ end program;
 
 ### Pattern Matching
 
-Use a closed union for exhaustive domain alternatives. CLR enums can also contain
+Use a closed variant for exhaustive domain alternatives. CLR enums can also contain
 unnamed values and require a fallback when matched.
 
 ```pascal
@@ -170,11 +170,11 @@ program PatternMatching;
 
 uses System.Console as Console;
 
-type Light = union
+type Light = variant
   Red;
   Yellow;
   Green;
-end union;
+end variant;
 
 function TrafficAdvice(Value: Light): string;
 begin
@@ -217,7 +217,7 @@ end program;
 
 ### Optional Values
 
-Use CLR nullability for absence and application unions for domain outcomes.
+Use CLR nullability for absence and application variants for domain outcomes.
 There is no implicit Option/Result prelude.
 
 ```pascal
@@ -276,7 +276,7 @@ end program;
 The [Mandelbrot project](examples/numerics/mandelbrot/README.md) renders a console image
 using numeric calculations and loops. Other executable projects cover
 [files](examples/io/read-file/README.md), [LINQ and collections](examples/io/directory-inventory/README.md),
-[records](examples/types/inventory-model/README.md), [generic unions](examples/types/generic-tree/README.md),
+[records](examples/types/inventory-model/README.md), [generic variants](examples/types/generic-tree/README.md),
 [events](examples/interop/events/README.md), and [JSON attributes](examples/interop/attributes/README.md).
 
 ### Tests

@@ -52,7 +52,7 @@ internal sealed partial class Binder
             case CaseExpressionSyntax match: return BindCaseExpression(match, check, expected);
             case TypeTestSyntax test: return BindTypeTest(test);
             case WithSyntax updated: return BindWith(updated, check);
-            case NamedArgumentSyntax named: throw source.Error("FP3022", "Named arguments are currently supported only for records and union cases.", named.Position);
+            case NamedArgumentSyntax named: throw source.Error("FP3022", "Named arguments are currently supported only for records and variant cases.", named.Position);
             case NewSyntax creation:
                 var created = BindType(creation.Type);
                 if (references.ScalarInfo(created) is { Category: not ScalarCategory.Enum } domain) return DomainNew(domain, creation, check);
@@ -64,7 +64,7 @@ internal sealed partial class Binder
                     var activator = references.Symbol(references.Required("System.Activator"));
                     return new BoundCall(references.FindMethod(activator, "CreateInstance", [], creation.Position, source, methodArguments: new([created])), []);
                 }
-                if (created.Kind == TypeKind.Union || created.IsNullable || created.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Abstract) == true)
+                if (created.Kind == TypeKind.Variant || created.IsNullable || created.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Abstract) == true)
                     throw source.Error("FP3005", "Cannot instantiate a nullable, abstract, or static type.", creation.Position);
                 var constructors = references.Methods(created, ".ctor", false);
                 if (created.IsValue && creation.Arguments.Count == 0 && !constructors.Any(method => method.Parameters.Count == 0)) return new BoundNew(created, null, []);
@@ -136,7 +136,7 @@ internal sealed partial class Binder
         if (BindClrOperator(op, [left, right], syntax.Position, check, lifted) is { } call)
         {
             operatorCalls[syntax] = call.Method.ConstrainedType is null &&
-                (references.RecordInfo(call.Method.Owner) is not null || references.UnionInfo(call.Method.Owner) is not null);
+                (references.RecordInfo(call.Method.Owner) is not null || references.VariantInfo(call.Method.Owner) is not null);
             return call;
         }
         if (op == "??")

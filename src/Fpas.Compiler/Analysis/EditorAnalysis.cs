@@ -65,7 +65,7 @@ public static class EditorAnalysis
                     {
                         foreach (var alias in owner.Syntax.Imports)
                             probe.Add(new(alias.Alias.Text, "type", alias.Target.Text));
-                        foreach (var candidate in owner.Records.Keys.Concat(owner.Interfaces.Keys).Concat(owner.Unions.Keys).Concat(owner.Scalars.Keys).Concat(owner.Aliases.Keys))
+                        foreach (var candidate in owner.Records.Keys.Concat(owner.Interfaces.Keys).Concat(owner.Variants.Keys).Concat(owner.Scalars.Keys).Concat(owner.Aliases.Keys))
                             probe.Add(new(candidate, "type", candidate));
                     }
                 }

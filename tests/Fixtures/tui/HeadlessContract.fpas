@@ -2,12 +2,12 @@ program HeadlessContract;
 
 uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Status as Status, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
-type Msg = union
+type Msg = variant
   Start;
   Cancel;
   Progress;
   Fail;
-end union;
+end variant;
 
 const Posted: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>();
 

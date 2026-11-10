@@ -56,10 +56,10 @@ internal sealed partial class AssemblyEmitter
 
     private void AddRecordDebugDisplay(TypeDefinitionHandle type, RecordSymbol record)
     {
-        var inherited = record.UnionCase?.Owner.Attributes.Where(attribute => AttributeIs(attribute, DisplayAttribute)).ToArray() ?? [];
+        var inherited = record.VariantCase?.Owner.Attributes.Where(attribute => AttributeIs(attribute, DisplayAttribute)).ToArray() ?? [];
         if (inherited.Length != 0 && !record.Attributes.Any(attribute => AttributeIs(attribute, DisplayAttribute)))
             AddSourceAttributes(type, inherited);
         else
-            AddDebuggerDisplay(type, (record.UnionCase?.Syntax.Name.Text ?? record.Name) + "(" + string.Join(", ", record.Fields.Select(field => field.Name + " = {" + field.Name + "}")) + ")", record.Attributes);
+            AddDebuggerDisplay(type, (record.VariantCase?.Syntax.Name.Text ?? record.Name) + "(" + string.Join(", ", record.Fields.Select(field => field.Name + " = {" + field.Name + "}")) + ")", record.Attributes);
     }
 }

@@ -15,10 +15,10 @@ public sealed class GenericTypeTests
     [InlineData("type Box<T> = where T: class; record public Value: T := null; end record;", "", "FP3013")]
     [InlineData("type Box<T> = record public function F<T>(X: T): T; begin return X; end function; end record;", "", "FP3026")]
     [InlineData("type Box<T> = record public function F<U>(X: U): U; where T: class; begin return X; end function; end record;", "", "FP3026")]
-    [InlineData("type Tree<T> = union Empty; Leaf(Value: T); end union;", "discard Tree.Empty;", "FP3026")]
-    [InlineData("type Tree<T> = union Empty; Leaf(Value: T); end union;", "discard Tree.Leaf(null);", "FP3026")]
-    [InlineData("type Tree<T> = where T: class; union Empty; Leaf(Value: T); end union;", "discard Tree<int>.Leaf(1);", "FP3018")]
-    [InlineData("type Tree<T> = union Empty; Leaf(Value: T); end union;", "const X: Tree<int> := Tree<int>.Leaf(1); discard case X of when Tree.Leaf(const V: string): 0; when Tree.Empty: 1; end case;", "FP3024")]
+    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Empty;", "FP3026")]
+    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Leaf(null);", "FP3026")]
+    [InlineData("type Tree<T> = where T: class; variant Empty; Leaf(Value: T); end variant;", "discard Tree<int>.Leaf(1);", "FP3018")]
+    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "const X: Tree<int> := Tree<int>.Leaf(1); discard case X of when Tree.Leaf(const V: string): 0; when Tree.Empty: 1; end case;", "FP3024")]
     [InlineData("type Box<T> = where T: class; record public Value: T; end record; function F<U>(Value: U): Box<U>; begin return new Box<U>(Value); end function;", "", "FP3018")]
     [InlineData("type Box<T> = record public Value: T; end record;", "const A: Box<int> := new Box<int>(1); const B: Box<string> := A;", "FP3002")]
     [InlineData("type Box<T> = record public Value: T; end record;", "const A: Box<string> := new Box<string>('a'); const B: Box<object> := A;", "FP3002")]
@@ -31,10 +31,10 @@ public sealed class GenericTypeTests
 
     [Theory]
     [InlineData("public type Box<T> = where T: Hidden; record Value: T; end record;")]
-    [InlineData("public type Choice<T> = where T: Hidden; union Item(Value: T); end union;")]
+    [InlineData("public type Choice<T> = where T: Hidden; variant Item(Value: T); end variant;")]
     public void Public_type_constraints_cannot_expose_private_types(string declaration)
     {
-        var result = TestCompilation.Compile("unit Example; type Hidden = union Empty; end union; " + declaration + " end unit;", CompilationTarget.Library);
+        var result = TestCompilation.Compile("unit Example; type Hidden = variant Empty; end variant; " + declaration + " end unit;", CompilationTarget.Library);
         Assert.Equal("FP3021", Assert.Single(result.Diagnostics).Code);
     }
 }

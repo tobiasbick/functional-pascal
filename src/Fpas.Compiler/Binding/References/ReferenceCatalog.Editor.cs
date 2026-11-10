@@ -23,9 +23,9 @@ internal sealed partial class ReferenceCatalog
             {
                 foreach (var name in record.UserMethods.Keys.Concat(record.Fields.Select(field => field.Name))) yield return name;
             }
-            else if (type.Union is { } union)
+            else if (type.Variant is { } variant)
             {
-                foreach (var name in union.Methods.Select(method => method.Name).Concat(union.Cases.Select(item => item.Syntax.Name.Text))) yield return name;
+                foreach (var name in variant.Methods.Select(method => method.Name).Concat(variant.Cases.Select(item => item.Syntax.Name.Text))) yield return name;
             }
             else if (type.Interface is { } contract)
             {

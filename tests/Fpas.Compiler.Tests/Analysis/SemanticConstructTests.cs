@@ -6,13 +6,13 @@ namespace Fpas.Compiler.Tests.Analysis;
 public sealed class SemanticConstructTests
 {
     [Fact]
-    public void Records_unions_generics_aliases_and_named_labels_resolve_to_their_declarations()
+    public void Records_variants_generics_aliases_and_named_labels_resolve_to_their_declarations()
     {
         const string source = """
             program Data;
             type Number = int;
             type Point = record public X: Number; end record;
-            type Choice = union None; Some(Value: int); end union;
+            type Choice = variant None; Some(Value: int); end variant;
             function Identity<T>(Value: T): T; begin return Value; end function;
             begin
               const P: Point := new Point(X := Identity<int>(21));
@@ -31,7 +31,7 @@ public sealed class SemanticConstructTests
             Assert.Equal(field.Id, Select(snapshot, source, marker).Id);
         var alias = Assert.Single(snapshot.Symbols, symbol => symbol.Name == "Number");
         Assert.Equal(alias.Id, Select(snapshot, source, "Number; end record").Id);
-        var some = Assert.Single(snapshot.Symbols, symbol => symbol.Kind == "union_case" && symbol.Name == "Some");
+        var some = Assert.Single(snapshot.Symbols, symbol => symbol.Kind == "variant_case" && symbol.Name == "Some");
         Assert.Equal(some.Id, Select(snapshot, source, "Some(Value := Q").Id);
         Assert.Equal(some.Id, Select(snapshot, source, "Some(Value := const").Id);
         var item = Assert.Single(snapshot.Symbols, symbol => symbol.Name == "Item");
@@ -107,11 +107,11 @@ public sealed class SemanticConstructTests
     }
 
     [Fact]
-    public void Inferred_union_owners_delegate_properties_and_managed_storage_keep_exact_checked_types()
+    public void Inferred_variant_owners_delegate_properties_and_managed_storage_keep_exact_checked_types()
     {
         const string source = """
             program ExactTypes;
-            type Choice<T> = union None; Some(Value: T); end union;
+            type Choice<T> = variant None; Some(Value: T); end variant;
             type Holder = record public Callback: function(int): int; end record;
             procedure Keep(in Value: string?); begin end procedure;
             begin
@@ -125,7 +125,7 @@ public sealed class SemanticConstructTests
             """;
         var snapshot = SemanticAnalysis.Analyze(source);
         var owner = TypeAt(snapshot, source, "Choice.Some");
-        Assert.Equal("union", owner.Kind); Assert.Equal("int", snapshot.Types.Single(type => type.Id == Assert.Single(owner.Arguments)).Display);
+        Assert.Equal("variant", owner.Kind); Assert.Equal("int", snapshot.Types.Single(type => type.Id == Assert.Single(owner.Arguments)).Display);
         var callback = Assert.Single(snapshot.Symbols, symbol => symbol.Kind == "property" && symbol.Name == "Callback");
         Assert.Equal(callback.Id, Select(snapshot, source, "Callback(42)").Id);
         Assert.True(TypeAt(snapshot, source, "Text);").Nullable);

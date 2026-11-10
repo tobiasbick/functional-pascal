@@ -246,12 +246,12 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Prefix array types, nullable and jagged shapes, UTF-16, indexers, enumeration | CollectionsDiagnosticsTests | CollectionsExecutionTests, MsBuildTests.Collections/NestedTypes |
 | Delegates, shared captures, callbacks, method groups | CallableDiagnosticsTests, CallableMetadataTests | CallableExecutionTests, MsBuildTests.Callables |
 | Records, private members by default, defaults/copy helpers, equality, imported metadata | RecordTests, RecordMetadataTests | RecordExecutionTests, MsBuildTests.Records |
-| Unions, payload patterns, guards, coverage, imported cases | UnionTests, CaseCoverageTests, UnionMetadataTests | UnionExecutionTests, CaseExecutionTests, MsBuildTests.Unions |
+| Variants, payload patterns, guards, coverage, imported cases | VariantTests, CaseCoverageTests, VariantMetadataTests | VariantExecutionTests, CaseExecutionTests, MsBuildTests.Variants |
 | Generic constraints, closures, type/method parameter identity | GenericRoutineTests, GenericRoutineMetadataTests, GenericTypeTests, GenericTypeMetadataTests | GenericRoutineExecutionTests, GenericTypeExecutionTests, MsBuildTests.GenericRoutines/GenericTypes |
 | Nested CLR type paths, enclosing arguments, constraints and identities | | MsBuildTests.NestedTypes |
 | Constrained generic operators, checked dispatch, static members/defaults | GenericRoutineTests | MsBuildTests.GenericMath, LanguageSpecificationTests |
 | Complete record/interface graph before field and alias constraints | GenericTypeTests, ScalarDiagnosticsTests | MsBuildTests.Baseline |
-| Inference, variance, contextual arrays/unions, overload evidence | InferenceTests | InferenceExecutionTests, MsBuildTests.Inference |
+| Inference, variance, contextual arrays/variants, overload evidence | InferenceTests | InferenceExecutionTests, MsBuildTests.Inference |
 | Contracts, ref/out/in, optional/params/named calls | ContractDiagnosticsTests, ParameterDiagnosticsTests | ContractExecutionTests, ParameterExecutionTests, MsBuildTests.ContractsAndParameters/ParameterDiagnostics |
 | Source overloads and CLR interface implementation/defaults | OverloadAndInterfaceDiagnosticsTests | OverloadExecutionTests, MsBuildTests.Overloads/Interfaces |
 | Source interface declarations, inheritance, constraints, metadata and XML IDs | SourceInterfaceTests | MsBuildTests.SourceInterfaces, LanguageSpecificationTests (InterfaceSources) |
@@ -269,7 +269,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Own debugger raw stored objects, generic identities, boxed values, actual array bounds, cycles and bounded stale references | — | CompoundInspectionTests (Windows/WSL, Debug/Release) |
 | Own debugger static fields, generic/thread context, metadata literals and passive uninitialized types | — | StaticInspectionTests (Windows/WSL, Debug/Release) |
 | Source capture metadata, marked cells, ordinary/async closures, lexical initialization and shadowing | CaptureStorageMetadataTests | CaptureInspectionTests (Windows/WSL, Debug/Release) |
-| Passive record/union/domain source views, exact decoded/default ranges and independent invalid presentation | — | SourceProjectionTests (Windows/WSL, Debug/Release) |
+| Passive record/variant/domain source views, exact decoded/default ranges and independent invalid presentation | — | SourceProjectionTests (Windows/WSL, Debug/Release) |
 | Passive FPAS expressions, scalar promotion, stored indexes, short-circuit type checks, resource bounds and expired frames | — | ExpressionInspectionTests (Windows/WSL, Debug/Release) |
 | Content-derived module IDs for reference-driven emission, deterministic identical output and real preflight/file replacement | — | ModuleContentIdentityTests (Windows/WSL, Debug/Release) |
 | Batch/DAP exact scalar and expression-failure parity at the same source stop | — | FrontendParityTests (Windows/WSL, Debug/Release) |
@@ -351,8 +351,8 @@ modes, natural crash/nonzero exits, handled exceptions, storage/symbol rejection
 before side effects, and deadline cleanup.
 
 Aggregate checks cover constructor/default order, private state, copy helpers,
-equality/hash behavior, recursive generic unions, and corrupted versioned
-contracts. Union coverage has an independent truth-table oracle. Scalar-domain
+equality/hash behavior, recursive generic variants, and corrupted versioned
+contracts. Variant coverage has an independent truth-table oracle. Scalar-domain
 tests check full-width offsets, valid defaults, checked bounds, nullable
 conversions, and identity. Global tests cover parallel first access, forward/cyclic
 reads, cached initializer failures, readonly storage, and type tokens avoiding
@@ -505,7 +505,7 @@ hosts in the same solution for Debug/Release. It restores FSharp.Core from the
 installed SDK's explicit offline package source into an isolated package directory
 and verifies execution with transitive assets in each host output.
 Examples build through their actual projects, including units, file/collection
-tasks, records/unions, generic pipelines/trees, and lexical helpers.
+tasks, records/variants, generic pipelines/trees, and lexical helpers.
 
 Incremental checks edit/add/remove sources and references, change compiler/task
 assets/options, and delete/corrupt requested outputs. They verify no-change skips,

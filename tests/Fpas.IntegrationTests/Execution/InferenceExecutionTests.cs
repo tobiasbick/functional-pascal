@@ -45,11 +45,11 @@ public sealed class InferenceExecutionTests
         """, "42", "text", "True", "1", "2", "True", "recursive", "7", "method", "2", "0", "True", "True", "True", "text", "9", "1", "True");
 
     [Fact]
-    public Task Union_payloads_expected_types_and_sibling_payloads_determine_type_arguments() => ProgramExecution.Output("""
+    public Task Variant_payloads_expected_types_and_sibling_payloads_determine_type_arguments() => ProgramExecution.Output("""
         program Inference;
         uses System.Console as Console;
-        type Tree<T> = union Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end union;
-        type Choice<A, B> = union First(Value: A); Second(Value: B); end union;
+        type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
+        type Choice<A, B> = variant First(Value: A); Second(Value: B); end variant;
         function Count<T>(Value: Tree<T>): int;
         begin return case Value of when Tree.Empty: 0; when Tree.Leaf(_): 1; when Tree.Branch(const L: Tree<T>, const R: Tree<T>): Count(L) + Count(R); end case; end function;
         function Wrap<T>(Value: T): Tree<T>; begin return Tree.Leaf(Value); end function;
@@ -76,7 +76,7 @@ public sealed class InferenceExecutionTests
     public Task Inferred_named_payloads_evaluate_once_in_written_order() => ProgramExecution.Output("""
         program Evaluation;
         uses System.Console as Console;
-        type Pair<T> = union Both(Left: T; Right: T); end union;
+        type Pair<T> = variant Both(Left: T; Right: T); end variant;
         function Trace<T>(Label: string; Value: T): T;
         begin Console.WriteLine(Label); return Value; end function;
         begin

@@ -109,7 +109,7 @@ public sealed class SourceProjectionTests
     }
 
     [Fact]
-    public async Task Fpas_records_union_cases_and_domains_have_passive_source_and_raw_views()
+    public async Task Fpas_records_variant_cases_and_domains_have_passive_source_and_raw_views()
     {
         using var program = new Debuggee("own-source-values");
         var source = """
@@ -117,7 +117,7 @@ public sealed class SourceProjectionTests
             uses System.Console as Console;
             type Point = record public X: int; public Label: string; end record;
             type Envelope<T> = record public Value: T; end record;
-            type Choice<T> = union Missing; Found(Value: T); end union;
+            type Choice<T> = variant Missing; Found(Value: T); end variant;
             type UserId = distinct ulong;
             type Amount = distinct decimal;
             type Label = distinct string;
@@ -156,7 +156,7 @@ public sealed class SourceProjectionTests
         var raw = await Children(position, "raw"); Assert.Equal(new[] { "<X>k__BackingField", "<Label>k__BackingField" }, raw.Items.Select(item => item.Name));
         var wrapped = Assert.Single((await Children(Binding("Wrapped"))).Items); Assert.Equal("domain", wrapped.Kind);
         Assert.Equal("18446744073709551615", Assert.Single((await Children(wrapped)).Items).Scalar);
-        var selected = Binding("Selected"); Assert.Equal("union", selected.Kind); Assert.Equal("Found", selected.Scalar);
+        var selected = Binding("Selected"); Assert.Equal("variant", selected.Kind); Assert.Equal("Found", selected.Scalar);
         var payload = await Children(selected); Assert.Equal("1", Assert.Single(payload.Items, item => item.Name == "Tag").Scalar);
         Assert.Equal("42", Assert.Single(payload.Items, item => item.Name == "Value").Scalar);
         var missing = Binding("Missing"); Assert.Equal(0, missing.Children); Assert.Equal(1, missing.SourceChildren);

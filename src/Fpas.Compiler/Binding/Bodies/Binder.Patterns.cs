@@ -44,15 +44,15 @@ internal sealed partial class Binder
                 ExpressionSyntax path = new NameExpressionSyntax(named.Name.Parts[0]);
                 foreach (var part in named.Name.Parts.Skip(1)) path = new MemberSyntax(path, part);
                 var selected = PatternOwner(path, type);
-                var info = references.UnionInfo(selected);
+                var info = references.VariantInfo(selected);
                 if (info is null)
                 {
-                    if (named.Fields is not null) throw source.Error("FP3024", "Payload patterns require a declared union case.", named.Position);
+                    if (named.Fields is not null) throw source.Error("FP3024", "Payload patterns require a declared variant case.", named.Position);
                     return BindConstantPattern(path, type);
                 }
                 var item = info.Cases.SingleOrDefault(item => item.Name == named.Name.Parts[^1].Text)
-                    ?? throw source.Error("FP3024", "Unknown union case in pattern.", named.Position);
-                if (!references.CanAssign(item.Type, type.NonNullable)) throw source.Error("FP3024", "The union case cannot match this selector type.", named.Position);
+                    ?? throw source.Error("FP3024", "Unknown variant case in pattern.", named.Position);
+                if (!references.CanAssign(item.Type, type.NonNullable)) throw source.Error("FP3024", "The variant case cannot match this selector type.", named.Position);
                 if (item.Fields.Count == 0 ? named.Fields is not null : named.Fields is null || named.Fields.Count != item.Fields.Count)
                     throw source.Error("FP3024", "A pattern must name every payload, using _ for ignored values; fieldless cases have no parentheses.", named.Position);
                 catalog.Analysis?.ResolvedMethod(source, named.Name.Parts[^1], item.Factory);

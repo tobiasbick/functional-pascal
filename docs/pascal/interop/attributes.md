@@ -22,7 +22,7 @@ way to author CLR attribute subclasses.
 
 | Source declaration | Emitted attribute target |
 | --- | --- |
-| Record or union | Its CLR class definition |
+| Record or variant | Its CLR class definition |
 | Interface | Its CLR interface definition |
 | Enum | Its CLR enum definition |
 | Distinct scalar or subrange | Its actual wrapper class/struct definition |
@@ -34,7 +34,7 @@ way to author CLR attribute subclasses.
 
 Public/private accessibility does not change the target mapping. Transparent
 aliases and globals are not attribute targets in this baseline. Unit/program
-headers, enum/union cases, lambdas, parameters, returns, assemblies, and explicit
+headers, enum/variant cases, lambdas, parameters, returns, assemblies, and explicit
 backing-field targets have no source attribute syntax.
 
 Read AttributeUsage from actual reference metadata, including inherited usage.
@@ -92,7 +92,7 @@ comments within the modifier sequence do not replace them. PE/PDB output remains
 deterministic and independent of XML generation.
 
 SerializableAttribute maps to the CLR Serializable type flag rather than an
-ordinary CustomAttribute row. On a union it also marks the generated case types.
+ordinary CustomAttribute row. On a variant it also marks the generated case types.
 MethodImplAttribute maps supported inlining, optimization, and synchronization
 options to the declared method's implementation flags. Its code type remains
 managed IL; on async methods these flags apply to the kickoff method.

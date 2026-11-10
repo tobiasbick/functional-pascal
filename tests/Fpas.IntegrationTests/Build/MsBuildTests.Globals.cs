@@ -47,7 +47,7 @@ public sealed partial class MsBuildTests
               public Count: long := Count;
               public function Read(): long; begin return Count; end function;
             end record;
-            public type Outcome = union None; Some(Value: int); end union;
+            public type Outcome = variant None; Some(Value: int); end variant;
             public type Mode = enum Idle; Ready; end enum;
             public type Port = ushort range 1..65535;
             public var Choice: Outcome := Outcome.Some(42);

@@ -34,7 +34,7 @@ Users of those packages do not download CUI or build its C sources.
 
 ## Model, update and view
 
-Keep application state in an immutable record. Define a message union for user
+Keep application state in an immutable record. Define a message variant for user
 actions and completed work. Update has type
 `function(Model, Msg): Mvu.Transition<Model, Msg>` and returns the next model
 plus commands. View has type

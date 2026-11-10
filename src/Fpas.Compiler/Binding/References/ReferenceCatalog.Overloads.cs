@@ -12,7 +12,7 @@ internal sealed partial class ReferenceCatalog
             var lv = Variable(l, left); var rv = Variable(r, right);
             if (lv || rv) return lv == rv ? 0 : lv ? -1 : 1;
             if (l.Kind == TypeKind.Array && r.Kind == TypeKind.Array && l.Rank == r.Rank) return Compare(l.Element!, r.Element!);
-            if (l.Definition != r.Definition || l.Record != r.Record || l.Union != r.Union || l.TypeArguments.Count != r.TypeArguments.Count) return 0;
+            if (l.Definition != r.Definition || l.Record != r.Record || l.Variant != r.Variant || l.TypeArguments.Count != r.TypeArguments.Count) return 0;
             var nested = l.TypeArguments.Select((type, index) => Compare(type, r.TypeArguments[index])).ToArray();
             return nested.Any(value => value < 0) ? -1 : nested.Any(value => value > 0) ? 1 : 0;
         }

@@ -7,10 +7,10 @@ internal sealed partial class SourceCatalog
     {
         foreach (var unit in Units)
         {
-            foreach (var union in unit.Unions.Values)
+            foreach (var variant in unit.Variants.Values)
             {
-                union.GenericParameters = CreateTypeParameters(unit, union.Syntax.TypeParameters, []);
-                foreach (var member in union.Cases) member.Representation.GenericParameters = union.GenericParameters;
+                variant.GenericParameters = CreateTypeParameters(unit, variant.Syntax.TypeParameters, []);
+                foreach (var member in variant.Cases) member.Representation.GenericParameters = variant.GenericParameters;
             }
             foreach (var record in unit.Records.Values)
                 record.GenericParameters = CreateTypeParameters(unit, record.Syntax.TypeParameters, []);
@@ -19,8 +19,8 @@ internal sealed partial class SourceCatalog
         }
         foreach (var unit in Units)
         {
-            foreach (var union in unit.Unions.Values)
-                BindTypeParameterConstraints(unit, union.Syntax.Name, union.GenericParameters, union.Syntax.Constraints, references, validate: false);
+            foreach (var variant in unit.Variants.Values)
+                BindTypeParameterConstraints(unit, variant.Syntax.Name, variant.GenericParameters, variant.Syntax.Constraints, references, validate: false);
             foreach (var record in unit.Records.Values)
                 BindTypeParameterConstraints(unit, record.Syntax.Name, record.GenericParameters, record.Syntax.Constraints, references, validate: false);
             foreach (var contract in unit.Interfaces.Values)
@@ -32,7 +32,7 @@ internal sealed partial class SourceCatalog
     {
         foreach (var unit in Units)
         {
-            foreach (var union in unit.Unions.Values) ValidateTypeParameters(unit, union.Syntax.Name, union.GenericParameters, references);
+            foreach (var variant in unit.Variants.Values) ValidateTypeParameters(unit, variant.Syntax.Name, variant.GenericParameters, references);
             foreach (var record in unit.Records.Values) ValidateTypeParameters(unit, record.Syntax.Name, record.GenericParameters, references);
             foreach (var contract in unit.Interfaces.Values) ValidateTypeParameters(unit, contract.Syntax.Name, contract.GenericParameters, references);
         }

@@ -104,7 +104,7 @@ public sealed partial class MsBuildTests
               begin return new ItemBox(self); end function;
             end record;
             public type Link<T> = where T: Sys.IComparable<T>;
-            union Empty; Next(Value: Box<T>); end union;
+            variant Empty; Next(Value: Box<T>); end variant;
             public function Build(): ItemBox;
             begin
               const Entry: Item := new Item(42);

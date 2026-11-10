@@ -19,7 +19,7 @@ internal sealed partial class SemanticRecorder
     {
         if (type.Parameter is { } parameter) return Entry(parameter, "type_parameter", parameter.Name);
         if (type.Record is { } record) return Entry(record, "record", record.Name);
-        if (type.Union is { } union) return Entry(union, "union", union.Name);
+        if (type.Variant is { } variant) return Entry(variant, "variant", variant.Name);
         if (type.Interface is { } contract) return Entry(contract, "interface", contract.Name);
         if (type.Scalar is { } scalar) return Entry(scalar, "domain", scalar.Name);
         if (type.Container is { } container) return Entry(container, "container", container.Syntax.Name.Text);
@@ -30,7 +30,7 @@ internal sealed partial class SemanticRecorder
     private TypeSymbol? ImportedType(ImportTarget target) => target switch
     {
         ClrImport imported => references.Symbol(imported.Type), ClrTypeImport imported => imported.Type,
-        RecordImport imported => imported.Record.Type, UnionImport imported => imported.Union.Type, InterfaceImport imported => imported.Interface.Type,
+        RecordImport imported => imported.Record.Type, VariantImport imported => imported.Variant.Type, InterfaceImport imported => imported.Interface.Type,
         _ => null
     };
 
@@ -54,7 +54,7 @@ internal sealed partial class SemanticRecorder
     private SymbolEntry Prefix(string name, ImportTarget target)
     {
         var type = ImportedType(target);
-        var source = type?.Record?.Owner ?? type?.Union?.Owner ?? type?.Interface?.Owner ?? type?.Scalar?.Owner;
+        var source = type?.Record?.Owner ?? type?.Variant?.Owner ?? type?.Interface?.Owner ?? type?.Scalar?.Owner;
         if (source is not null && source.Syntax.Name.Text == name) return TypeSymbolEntry(source.ContainerType);
         for (var parent = type?.Definition?.DeclaringType; parent is not null; parent = parent.DeclaringType)
             if (System.Text.RegularExpressions.Regex.Replace(parent.FullName.Replace('+', '.'), @"`\d+", "") == name)

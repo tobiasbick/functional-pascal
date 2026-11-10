@@ -14,7 +14,7 @@ internal sealed class RecordSymbol(SourceUnit owner, RecordSyntax syntax)
     internal RecordSyntax Syntax { get; } = syntax;
     internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
-    internal UnionCaseSymbol? UnionCase { get; set; }
+    internal VariantCaseSymbol? VariantCase { get; set; }
     internal bool IsPublic => Syntax.IsPublic;
     internal IReadOnlyList<GenericParameterSymbol> GenericParameters { get; set; } = [];
     internal TypeSymbol Type => new(TypeKind.Record, Record: this, Arguments: GenericParameters.Count == 0 ? null : new(GenericParameters.Select(parameter => parameter.Type)));
@@ -34,7 +34,7 @@ internal sealed class RecordFieldSymbol(RecordFieldSyntax syntax, TypeSymbol typ
     internal RecordFieldSyntax Syntax { get; } = syntax;
     internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
-    internal UnionCaseSymbol? UnionCase { get; set; }
+    internal VariantCaseSymbol? VariantCase { get; set; }
     internal TypeSymbol Type { get; } = type;
     internal RoutineSymbol Getter { get; set; } = null!;
     internal RoutineSymbol? Copy { get; set; }

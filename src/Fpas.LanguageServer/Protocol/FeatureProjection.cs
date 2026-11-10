@@ -50,8 +50,8 @@ internal static class FeatureProjection
         Kind = match.Kind switch
         {
             "container" => SymbolKind.Namespace, "record" => SymbolKind.Class, "interface" => SymbolKind.Interface,
-            "union" or "domain" => SymbolKind.Enum, "routine" => SymbolKind.Function, "property" => SymbolKind.Property,
-            "union_case" or "enum_member" => SymbolKind.EnumMember, "type_parameter" => SymbolKind.TypeParameter, _ => SymbolKind.Variable
+            "variant" or "domain" => SymbolKind.Enum, "routine" => SymbolKind.Function, "property" => SymbolKind.Property,
+            "variant_case" or "enum_member" => SymbolKind.EnumMember, "type_parameter" => SymbolKind.TypeParameter, _ => SymbolKind.Variable
         }
     };
 }

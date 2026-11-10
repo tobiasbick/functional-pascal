@@ -6,7 +6,7 @@ uses Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.S
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type Element<TMsg> = union
+public type Element<TMsg> = variant
   // Display text.
   Label(Text: string);
   // Separate adjacent content, with an optional caption.
@@ -82,7 +82,7 @@ public type Element<TMsg> = union
   GraphicImage(Id: string; Data: G.Pixels; Width: int; Height: int);
   // Paint drawing operations in a clipped GUI logical viewport.
   GraphicCanvas(Id: string; Width: int; Height: int; Operations: array of G.Paint);
-end union;
+end variant;
 
 // A host-owned cache entry for one typed subview.
 //

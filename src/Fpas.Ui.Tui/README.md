@@ -2,7 +2,7 @@
 
 Terminal host for [Fpas.Ui](../Fpas.Ui/README.md) views and
 [Fpas.Ui.Mvu](../Fpas.Ui.Mvu/README.md) transitions and effects. These are ordinary
-.NET 10 records, unions and delegates for FPAS, C# and F# callers. Terminal-only
+.NET 10 records, variants and delegates for FPAS, C# and F# callers. Terminal-only
 applications require no GUI binding, CUI assets or native GUI build tools.
 
 ## Application lifecycle

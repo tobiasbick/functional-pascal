@@ -3,18 +3,18 @@ unit Fpas.Ui.Mvu.Application;
 uses System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 // A request for the host that owns the input, view and presentation.
-public type HostRequest = union
+public type HostRequest = variant
   // Ask the host to finish the session.
   Close;
   // Ask the host to focus the control with the supplied stable ID.
   Focus(Id: string);
-end union;
+end variant;
 
 // Work requested by an update.
 //
 // ## Type parameters
 // - `TMsg`: The application's message type.
-public type Command<TMsg> = union
+public type Command<TMsg> = variant
   // Start work under Id. Work receives a post function and cancellation token.
   // OnFailure maps an exception from the work into an application message.
   Start(
@@ -25,7 +25,7 @@ public type Command<TMsg> = union
   Cancel(Id: string);
   // Forward a request to the host.
   Host(Request: HostRequest);
-end union;
+end variant;
 
 // The result of handling one application message.
 //

@@ -23,7 +23,7 @@ internal sealed partial class Binder
         // Boolean short-circuit expressions bind the right operand with facts from the left.
         if (types[0] == TypeSymbol.Boolean && op is "and" or "or") return null;
         return Bind(owners.Where(type => type.Kind == TypeKind.Named ||
-            comparison && type.Kind is TypeKind.Record or TypeKind.Union).ToArray(), constrained: false);
+            comparison && type.Kind is TypeKind.Record or TypeKind.Variant).ToArray(), constrained: false);
 
         BoundCall? Bind(TypeSymbol[] candidates, bool constrained)
         {

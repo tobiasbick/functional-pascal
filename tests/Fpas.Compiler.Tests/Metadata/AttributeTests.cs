@@ -17,7 +17,7 @@ public sealed class AttributeTests
     [InlineData("[Sys.ObsoleteAttribute('one' + #10 + 'two')] procedure P(); begin end procedure;")]
     [InlineData("[Sys.ObsoleteAttribute('old', DiagnosticId := 'TEST001', UrlFormat := 'https://example.com/{0}')] procedure P(); begin end procedure;")]
     [InlineData("type R<T> = record [Sys.ObsoleteAttribute('old')] public static function Get(): int; begin return 1; end function; end record;")]
-    [InlineData("[Sys.ObsoleteAttribute('old')] type U<T> = union Empty; Value(Data: T); end union;")]
+    [InlineData("[Sys.ObsoleteAttribute('old')] type U<T> = variant Empty; Value(Data: T); end variant;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Id = distinct int;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Name = distinct string;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Percent = int range 0..100;")]

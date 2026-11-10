@@ -100,10 +100,10 @@ internal sealed partial class AssemblyEmitter
                 return (element.Name + "[" + new string(',', current.Rank - 1) + "]", element.Assembly);
             }
             var name = current.Interface is { } contract ? contract.Owner.Syntax.Name.Text + "+" + contract.Name + Arity(contract.GenericParameters.Count) : current.Record is { } record ? record.Owner.Syntax.Name.Text + "+" +
-                (record.UnionCase is { } member ? member.Owner.Name + Arity(member.Owner.GenericParameters.Count) + "+" + record.Name : record.Name + Arity(record.GenericParameters.Count)) :
-                current.Union is { } union ? union.Owner.Syntax.Name.Text + "+" + union.Name + Arity(union.GenericParameters.Count) :
+                (record.VariantCase is { } member ? member.Owner.Name + Arity(member.Owner.GenericParameters.Count) + "+" + record.Name : record.Name + Arity(record.GenericParameters.Count)) :
+                current.Variant is { } variant ? variant.Owner.Syntax.Name.Text + "+" + variant.Name + Arity(variant.GenericParameters.Count) :
                 current.Scalar is { } scalar ? scalar.Owner.Syntax.Name.Text + "+" + scalar.Name : catalog.Definition(current).FullName;
-            var assembly = current.Interface is not null || current.Record is not null || current.Union is not null || current.Scalar is not null ? sourceAssemblyName : catalog.Definition(current).Assembly.Identity.Name;
+            var assembly = current.Interface is not null || current.Record is not null || current.Variant is not null || current.Scalar is not null ? sourceAssemblyName : catalog.Definition(current).Assembly.Identity.Name;
             if (current.Arguments is { Count: > 0 }) name += "[[" + string.Join("],[", current.Arguments.Select(AttributeTypeName)) + "]]";
             return (name, assembly);
         }

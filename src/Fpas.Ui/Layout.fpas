@@ -1,22 +1,22 @@
 unit Fpas.Ui.Layout;
 
 // A portable logical distance or an explicit terminal cell distance.
-public type Measure = union
+public type Measure = variant
   // A whole number of terminal cells.
   Cells(Value: int);
   // A portable CUI logical distance. The terminal maps 8 units per column and 16 per row.
   Logical(Value: int);
-end union;
+end variant;
 
 // The preferred extent of a child along its parent's main axis.
-public type Extent = union
+public type Extent = variant
   // Measure the child's content.
   Content;
   // Use the available space, sharing it with other growing children.
   Fill;
   // Start from an explicit backend distance.
   Fixed(Value: Measure);
-end union;
+end variant;
 
 // Main-axis constraints and allocation weights.
 public type Flex = record
@@ -46,7 +46,7 @@ public type Alignment = enum: byte
 end enum;
 
 // CUI spacing levels adapted to the host, or an explicit distance.
-public type Spacing = union
+public type Spacing = variant
   // Zero space.
   None;
   // The host's compact separation.
@@ -57,7 +57,7 @@ public type Spacing = union
   Loose;
   // An explicit gap or padding.
   Fixed(Value: Measure);
-end union;
+end variant;
 
 // Layout settings shared by rows and columns.
 public type Flow = record
@@ -88,14 +88,14 @@ public type Viewport = record
 end record;
 
 // A model-owned vertical scroll request.
-public type ScrollPosition = union
+public type ScrollPosition = variant
   // Keep the view at the start.
   Start;
   // Keep the view at the end as content grows.
   End;
   // Request an explicit offset to clamp to the available range.
   Offset(Value: Measure);
-end union;
+end variant;
 
 // The request and resolution reported when the user scrolls.
 public type ScrollChange = record

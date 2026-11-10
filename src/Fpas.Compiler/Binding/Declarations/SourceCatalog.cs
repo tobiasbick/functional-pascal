@@ -11,8 +11,8 @@ internal sealed class SourceUnit(SourceText source, CompilationUnitSyntax syntax
 {
     internal SourceText Source { get; } = source;
     internal CompilationUnitSyntax Syntax { get; } = syntax;
-    internal Dictionary<string, UnionSymbol> Unions { get; } = new(StringComparer.Ordinal);
-    internal IEnumerable<RecordSymbol> RecordTypes => Records.Values.Concat(Unions.Values.SelectMany(union => union.Cases).Select(member => member.Representation));
+    internal Dictionary<string, VariantSymbol> Variants { get; } = new(StringComparer.Ordinal);
+    internal IEnumerable<RecordSymbol> RecordTypes => Records.Values.Concat(Variants.Values.SelectMany(variant => variant.Cases).Select(member => member.Representation));
     internal Dictionary<string, RecordSymbol> Records { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, InterfaceSymbol> Interfaces { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, List<RoutineSymbol>> Routines { get; } = new(StringComparer.Ordinal);
@@ -21,7 +21,7 @@ internal sealed class SourceUnit(SourceText source, CompilationUnitSyntax syntax
     internal Dictionary<string, GlobalSymbol> Globals { get; } = new(StringComparer.Ordinal);
     internal TypeSymbol ContainerType => new(TypeKind.Container, Container: this);
     internal RoutineSymbol? Initializer { get; set; }
-    internal bool HasType(string name) => Records.ContainsKey(name) || Interfaces.ContainsKey(name) || Unions.ContainsKey(name) || Scalars.ContainsKey(name) || Aliases.ContainsKey(name);
+    internal bool HasType(string name) => Records.ContainsKey(name) || Interfaces.ContainsKey(name) || Variants.ContainsKey(name) || Scalars.ContainsKey(name) || Aliases.ContainsKey(name);
     internal RoutineSymbol? EntryPoint { get; set; }
 }
 
@@ -48,9 +48,9 @@ internal sealed partial class SourceCatalog
         }
         catalog.DeclareScalarNames();
         catalog.DeclareInterfaceNames();
-        catalog.DeclareUnions(references);
+        catalog.DeclareVariants(references);
         catalog.DeclareRecords(references);
-        CompleteUnions(catalog.Units);
+        CompleteVariants(catalog.Units);
         catalog.DeclareGlobals(references);
         foreach (var unit in catalog.Units)
         {
@@ -91,10 +91,10 @@ internal sealed partial class SourceCatalog
                 }
                 if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && ResolveScalarPath(owner, name[(owner.Syntax.Name.Text.Length + 1)..], null, references, source, position) is { } scalar)
                     return scalar;
-                if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && owner.Unions.TryGetValue(name[(owner.Syntax.Name.Text.Length + 1)..], out var union))
+                if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && owner.Variants.TryGetValue(name[(owner.Syntax.Name.Text.Length + 1)..], out var variant))
                 {
-                    if (!union.IsPublic) throw source.Error("FP3023", $"Union '{union.Name}' is private to its unit.", position);
-                    return new UnionImport(union);
+                    if (!variant.IsPublic) throw source.Error("FP3023", $"Variant '{variant.Name}' is private to its unit.", position);
+                    return new VariantImport(variant);
                 }
                 if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && owner.Records.TryGetValue(name[(owner.Syntax.Name.Text.Length + 1)..], out var record))
                 {
@@ -112,9 +112,9 @@ internal sealed partial class SourceCatalog
     internal ImportTarget ResolvePath(IReadOnlyList<string> parts, SourceUnit unit, ReferenceCatalog references, int position, int arity = 0, bool allowOpenGeneric = false)
     {
         if (parts.Count == 1 && ResolveScalarPath(unit, parts[0], unit, references, unit.Source, position) is { } ownScalar) return ownScalar;
-        if (parts.Count == 2 && unit.Unions.TryGetValue(parts[0], out var containingUnion))
-            return SourceCaseType(containingUnion, parts[1], position, unit.Source);
-        if (parts.Count == 1 && unit.Unions.TryGetValue(parts[0], out var ownUnion)) return new UnionImport(ownUnion);
+        if (parts.Count == 2 && unit.Variants.TryGetValue(parts[0], out var containingVariant))
+            return SourceCaseType(containingVariant, parts[1], position, unit.Source);
+        if (parts.Count == 1 && unit.Variants.TryGetValue(parts[0], out var ownVariant)) return new VariantImport(ownVariant);
         if (parts.Count == 1 && unit.Records.TryGetValue(parts[0], out var ownRecord)) return new RecordImport(ownRecord);
         if (parts.Count == 1 && unit.Interfaces.TryGetValue(parts[0], out var ownInterface)) return new InterfaceImport(ownInterface);
         var import = unit.Syntax.Imports.FirstOrDefault(candidate => candidate.Alias.Text == parts[0]);
@@ -132,22 +132,22 @@ internal sealed partial class SourceCatalog
             if (!contract.IsPublic && interfaceUnit.Unit != unit) throw unit.Source.Error("FP3029", "The interface is private to its unit.", position);
             return new InterfaceImport(contract);
         }
-        if (target is SourceImport caseOwner && parts.Count == 3 && caseOwner.Unit.Unions.TryGetValue(parts[1], out var caseUnion))
+        if (target is SourceImport caseOwner && parts.Count == 3 && caseOwner.Unit.Variants.TryGetValue(parts[1], out var caseVariant))
         {
-            if (!caseUnion.IsPublic && caseOwner.Unit != unit) throw unit.Source.Error("FP3023", "The union is private to its unit.", position);
-            return SourceCaseType(caseUnion, parts[2], position, unit.Source);
+            if (!caseVariant.IsPublic && caseOwner.Unit != unit) throw unit.Source.Error("FP3023", "The variant is private to its unit.", position);
+            return SourceCaseType(caseVariant, parts[2], position, unit.Source);
         }
-        if (target is SourceImport sourceUnion && parts.Count == 2 && sourceUnion.Unit.Unions.TryGetValue(parts[1], out var union))
+        if (target is SourceImport sourceVariant && parts.Count == 2 && sourceVariant.Unit.Variants.TryGetValue(parts[1], out var variant))
         {
-            if (!union.IsPublic && sourceUnion.Unit != unit) throw unit.Source.Error("FP3023", $"Union '{union.Name}' is private to its unit.", position);
-            return new UnionImport(union);
+            if (!variant.IsPublic && sourceVariant.Unit != unit) throw unit.Source.Error("FP3023", $"Variant '{variant.Name}' is private to its unit.", position);
+            return new VariantImport(variant);
         }
         if (target is SourceImport sourceUnit && parts.Count == 2 && sourceUnit.Unit.Records.TryGetValue(parts[1], out var record))
         {
             if (!record.IsPublic && sourceUnit.Unit != unit) throw unit.Source.Error("FP3021", $"Record '{record.Name}' is private to its unit.", position);
             return new RecordImport(record);
         }
-        if (target is UnionImport unionType && parts.Count == 2) return SourceCaseType(unionType.Union, parts[1], position, unit.Source);
+        if (target is VariantImport variantType && parts.Count == 2) return SourceCaseType(variantType.Variant, parts[1], position, unit.Source);
         if (target is ClrImport clr)
         {
             if (parts.Count == 2 && arity == 0 && references.Alias(references.Symbol(clr.Type), parts[1]) is { } alias)
@@ -170,9 +170,9 @@ internal sealed partial class SourceCatalog
         throw unit.Source.Error("FP3005", "Unsupported nested type path.", position);
     }
 
-    private static ClrTypeImport SourceCaseType(UnionSymbol union, string name, int position, SourceText source)
-        => new(union.Cases.FirstOrDefault(member => member.Representation.Name == name)?.Representation.Type
-            ?? throw source.Error("FP3005", $"Unknown generated case type '{union.Name}.{name}'.", position));
+    private static ClrTypeImport SourceCaseType(VariantSymbol variant, string name, int position, SourceText source)
+        => new(variant.Cases.FirstOrDefault(member => member.Representation.Name == name)?.Representation.Type
+            ?? throw source.Error("FP3005", $"Unknown generated case type '{variant.Name}.{name}'.", position));
 
     internal TypeSymbol ResolveType(TypeSyntax syntax, SourceUnit unit, ReferenceCatalog references, IReadOnlyDictionary<string, GenericParameterSymbol>? generic = null, bool validate = true)
     {
@@ -212,7 +212,7 @@ internal sealed partial class SourceCatalog
                 type = target switch
                 {
                     RecordImport own => references.ConstructSource(own.Record.Type, [], unit.Source, syntax.Position, validate),
-                    UnionImport own => references.ConstructSource(own.Union.Type, [], unit.Source, syntax.Position, validate),
+                    VariantImport own => references.ConstructSource(own.Variant.Type, [], unit.Source, syntax.Position, validate),
                     InterfaceImport own => references.ConstructSource(own.Interface.Type, [], unit.Source, syntax.Position, validate),
                     ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, [], unit.Source, syntax.Position, validate),
                     ClrTypeImport own => own.Type,

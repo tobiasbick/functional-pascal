@@ -54,9 +54,9 @@ internal sealed partial class SemanticRecorder
                 Store(span, location, "delegate_invoke", null, null, MethodMetadata(invocation.Method), "delegate", "runtime_delegate_target", Signature(invocation.Method),
                     invocation.Method.Owner, invocation.Method.Result, new(receiverSpan, receiverSymbol, Type(invocation.Method.Owner)));
             }
-            else Add(invocation.Method, UnionFactory(invocation.Method) ? "construct" : "invoke");
+            else Add(invocation.Method, VariantFactory(invocation.Method) ? "construct" : "invoke");
         }
-        else if (value is BoundProperty { Property.Getter: { } factoryGetter } && syntax is MemberSyntax && UnionFactory(factoryGetter)) Add(factoryGetter, "construct");
+        else if (value is BoundProperty { Property.Getter: { } factoryGetter } && syntax is MemberSyntax && VariantFactory(factoryGetter)) Add(factoryGetter, "construct");
         else if (value is BoundProperty property && syntax is NameExpressionSyntax or MemberSyntax or IndexSyntax)
         {
             var accessor = role == "write" ? property.Property.Setter : property.Property.Getter;
@@ -71,7 +71,7 @@ internal sealed partial class SemanticRecorder
                 Add(accessor, role == "write" ? "property_set" : "property_get", Property(accessor));
             }
         }
-        else if (value is BoundCall factory && syntax is NameExpressionSyntax or MemberSyntax && UnionFactory(factory.Method)) Add(factory.Method, "construct");
+        else if (value is BoundCall factory && syntax is NameExpressionSyntax or MemberSyntax && VariantFactory(factory.Method)) Add(factory.Method, "construct");
         if (syntax is BinarySyntax or UnarySyntax)
         {
             foreach (var method in Operators(bound))
@@ -105,8 +105,8 @@ internal sealed partial class SemanticRecorder
         foreach (var child in BoundTree.Children(expression)) foreach (var method in Operators(child)) yield return method;
     }
 
-    private bool UnionFactory(ImportedMethod method) => method.SourceMethod?.Generated == GeneratedMethodKind.Factory ||
-        references.UnionInfo(method.Owner)?.Cases.Any(member => member.Factory.Name == method.Name) == true;
+    private bool VariantFactory(ImportedMethod method) => method.SourceMethod?.Generated == GeneratedMethodKind.Factory ||
+        references.VariantInfo(method.Owner)?.Cases.Any(member => member.Factory.Name == method.Name) == true;
 
     private bool Storage(ImportedMethod method)
     {
@@ -114,10 +114,10 @@ internal sealed partial class SemanticRecorder
         var record = references.RecordInfo(method.Owner);
         if (record is not null && (record.Fields.Any(field => field.Getter.Name == method.Name) || method.Name is "Equals" or "GetHashCode" or "op_Equality" or "op_Inequality" || method.Name.StartsWith("<With:", StringComparison.Ordinal) || method.Name.StartsWith("<Default:", StringComparison.Ordinal))) return true;
         if (references.ScalarInfo(method.Owner) is not null && (method.Name == "get_Value" || method.Name.StartsWith("op_", StringComparison.Ordinal))) return true;
-        if (method.Owner.Definition?.DeclaringType is { } parent && references.UnionInfo(references.Symbol(parent) with { Arguments = method.Owner.Arguments }) is { } union &&
-            union.Cases.Any(member => member.Type == method.Owner && (member.Fields.Any(field => field.Getter.Name == method.Name) ||
+        if (method.Owner.Definition?.DeclaringType is { } parent && references.VariantInfo(references.Symbol(parent) with { Arguments = method.Owner.Arguments }) is { } variant &&
+            variant.Cases.Any(member => member.Type == method.Owner && (member.Fields.Any(field => field.Getter.Name == method.Name) ||
                 method.Name is "get_Tag" or "Equals" or "GetHashCode" or "op_Equality" or "op_Inequality"))) return true;
-        return references.UnionInfo(method.Owner) is not null && method.Name is "Equals" or "GetHashCode" or "op_Equality" or "op_Inequality" or "get_Tag";
+        return references.VariantInfo(method.Owner) is not null && method.Name is "Equals" or "GetHashCode" or "op_Equality" or "op_Inequality" or "get_Tag";
     }
 
     private void Store(SourceSpan span, SourceSpan? anchor, string kind, SymbolEntry? target, string? targetBody,

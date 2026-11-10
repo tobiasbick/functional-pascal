@@ -10,7 +10,7 @@ type Preset = enum: byte
   Amber;
 end enum;
 
-type Msg = union
+type Msg = variant
   FilterChanged(Value: Ed.TextEdit);
   FilterMoved(Position: Ed.EditorPosition);
   SelectItem(Id: string);
@@ -24,7 +24,7 @@ type Msg = union
   ProgressChanged(Value: int);
   RefreshFailed(Reason: string);
   Quit;
-end union;
+end variant;
 
 type ListDeps = record
   public Filter: string;

@@ -2,7 +2,7 @@
 
 A function-first Pascal language with selected Ada conventions, compiling
 directly to CLR assemblies, portable debug information, and .NET metadata.
-Functions, immutable records, and discriminated unions are its primary
+Functions, immutable records, and variants are its primary
 abstractions. The CLR provides managed memory and task infrastructure.
 
 This handbook describes the language and its supported .NET workflows. Known
@@ -17,7 +17,7 @@ baseline omissions and deferred extensions are tracked in
 - Explicit types on every binding, parameter, result, field, and pattern binding.
 - Case-sensitive names and lowercase keywords, preserving actual CLR identities.
 - Pascal blocks and named terminators, with ordinary .NET APIs and reference behavior.
-- Executable contracts, exhaustive union matching, and explicit resource cleanup.
+- Executable contracts, exhaustive variant matching, and explicit resource cleanup.
 
 ## Documentation areas
 
@@ -43,7 +43,7 @@ topics relevant to their task. For a progressive introduction:
 2. [Basics](language/basics/README.md): values, bindings, operators, and conversions.
 3. [Control flow](language/control-flow/README.md): branches and typed loops.
 4. [Functions](language/functions/README.md): calls, delegates, generics, and contracts.
-5. [Types](language/types/README.md): records, unions, domains, arrays, and nullability.
+5. [Types](language/types/README.md): records, variants, domains, arrays, and nullability.
 6. [Pattern matching](language/pattern-matching/README.md): payloads, guards, and coverage.
 7. [Errors and resources](language/error-handling/README.md): exceptions and disposal.
 8. [Concurrency](language/concurrency/README.md): tasks, await, and cancellation.

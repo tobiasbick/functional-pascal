@@ -10,8 +10,8 @@ public sealed partial class SourceQuery
 {
     public static IReadOnlyList<string> DeclarationKinds { get; } = Array.AsReadOnly(new[]
     {
-        "container", "record", "interface", "union", "domain", "alias", "routine", "property", "global",
-        "union_case", "enum_member", "parameter", "type_parameter", "local"
+        "container", "record", "interface", "variant", "domain", "alias", "routine", "property", "global",
+        "variant_case", "enum_member", "parameter", "type_parameter", "local"
     });
 
     public static void Validate(NameSearch search)

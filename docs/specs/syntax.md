@@ -46,7 +46,7 @@ var_declaration = "var", identifier, ":", type, ":=", expression, ";" ;
 
 type_declaration = "type", identifier, [type_parameters], "=", {constraint},
                    (type | distinct_type | subrange_type |
-                    record_body | union_body | enum_body | protocol_body), ";" ;
+                    record_body | variant_body | enum_body | protocol_body), ";" ;
 distinct_type   = "distinct", named_type ;
 subrange_type   = named_type, "range", expression, "..", expression ;
 type_parameters = "<", identifier, {",", identifier}, ">" ;
@@ -76,8 +76,8 @@ record_body     = "record", ["implements", named_type, {",", named_type}],
 record_member   = {attribute}, [visibility],
                   (identifier, ":", type, [":=", expression], ";" |
                    ["static"], (function_declaration | procedure_declaration)) ;
-union_body      = "union", union_case, {union_case}, "end", "union" ;
-union_case      = identifier, ["(", field_parameters, ")"], ";" ;
+variant_body      = "variant", variant_case, {variant_case}, "end", "variant" ;
+variant_case      = identifier, ["(", field_parameters, ")"], ";" ;
 field_parameters = field_parameter, {";", field_parameter} ;
 field_parameter = identifier, ":", type ;
 enum_body       = "enum", [":", named_type], enum_case, {enum_case},
@@ -103,7 +103,7 @@ parameter       = ["ref" | "out" | "in" | "params"], identifier, ":", type,
 attribute       = "[", named_type, ["(", [arguments], ")"], "]" ;
 ```
 
-Empty unions/enums, nullable-byref types, invalid array ranks, unsupported generic
+Empty variants/enums, nullable-byref types, invalid array ranks, unsupported generic
 combinations, and misplaced attributes are rejected by semantic rules even if a
 shape production accepts them. Protocol members are public abstract instance
 signatures and getter-only properties. They cannot have bodies or contracts.

@@ -78,7 +78,7 @@ internal sealed partial class ServerSession
 
     private static int SymbolKind(string kind) => kind switch
     {
-        "container" => 3, "record" => 23, "interface" => 11, "union" or "domain" => 10,
-        "routine" => 12, "property" => 7, "union_case" or "enum_member" => 22, "constant" => 14, _ => 13
+        "container" => 3, "record" => 23, "interface" => 11, "variant" or "domain" => 10,
+        "routine" => 12, "property" => 7, "variant_case" or "enum_member" => 22, "constant" => 14, _ => 13
     };
 }

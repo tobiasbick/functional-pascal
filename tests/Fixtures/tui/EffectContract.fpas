@@ -2,7 +2,7 @@ program EffectContract;
 
 uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
-type Msg = union
+type Msg = variant
   StartOriginal;
   Replace;
   StartFailure;
@@ -12,7 +12,7 @@ type Msg = union
   Touch;
   Changed(Value: string);
   Quit;
-end union;
+end variant;
 
 const Deadline: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5);
 const BodyStarted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(

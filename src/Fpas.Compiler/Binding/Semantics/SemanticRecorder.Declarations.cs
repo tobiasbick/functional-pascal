@@ -15,7 +15,7 @@ internal sealed partial class SemanticRecorder
             token.ThrowIfCancellationRequested();
             var source = unit.Source;
             foreach (var record in unit.RecordTypes) GenericParameters(record.GenericParameters, record.Syntax.TypeParameters ?? [], source, "!");
-            foreach (var union in unit.Unions.Values) GenericParameters(union.GenericParameters, union.Syntax.TypeParameters ?? [], source, "!");
+            foreach (var variant in unit.Variants.Values) GenericParameters(variant.GenericParameters, variant.Syntax.TypeParameters ?? [], source, "!");
             foreach (var contract in unit.Interfaces.Values) GenericParameters(contract.GenericParameters, contract.Syntax.TypeParameters, source, "!");
             Declare(unit, "container", unit.Syntax.Name.Text, source, unit.Syntax.Name.Parts[^1], metadata: TypeMetadata(unit.ContainerType));
             foreach (var method in unit.Routines.Values.SelectMany(group => group)) Routine(method, source, unit.ContainerType);
@@ -45,13 +45,13 @@ internal sealed partial class SemanticRecorder
                 }
                 foreach (var method in contract.Methods.Where(method => method.Declaration is not null)) Routine(method, source, contract.Type);
             }
-            foreach (var union in unit.Unions.Values)
+            foreach (var variant in unit.Variants.Values)
             {
-                Declare(union, "union", union.Name, source, union.Syntax.Name, union.Type, TypeMetadata(union.Type));
-                foreach (var item in union.Cases)
+                Declare(variant, "variant", variant.Name, source, variant.Syntax.Name, variant.Type, TypeMetadata(variant.Type));
+                foreach (var item in variant.Cases)
                 {
-                    Declare(item, "union_case", item.Syntax.Name.Text, source, item.Syntax.Name, union.Type,
-                        MethodMetadata(ReferenceCatalog.SourceMethod(item.Factory, union.Type)));
+                    Declare(item, "variant_case", item.Syntax.Name.Text, source, item.Syntax.Name, variant.Type,
+                        MethodMetadata(ReferenceCatalog.SourceMethod(item.Factory, variant.Type)));
                     symbols[item.Factory] = symbols[item];
                     symbols[item.Representation] = symbols[item];
                     Export(TypeMetadata(item.Representation.Type), symbols[item]);

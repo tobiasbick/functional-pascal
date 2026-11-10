@@ -76,7 +76,7 @@ internal sealed partial class ModuleSymbols
     internal bool SourceReceiver(uint token)
     {
         var method = Metadata.GetMethodDefinition((MethodDefinitionHandle)MetadataTokens.Handle((int)token));
-        try { return Shape((uint)MetadataTokens.GetToken(method.GetDeclaringType()))?.Kind is "record" or "union"; }
+        try { return Shape((uint)MetadataTokens.GetToken(method.GetDeclaringType()))?.Kind is "record" or "variant"; }
         catch (Exception exception) when (exception is BadImageFormatException or DebugException) { return false; }
     }
 

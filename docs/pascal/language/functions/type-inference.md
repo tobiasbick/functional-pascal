@@ -47,38 +47,38 @@ a nongeneric member, or the more specific generic parameter structure where
 applicable. Ambiguous candidates remain an error. A target result never selects
 an overload and there is no dynamic/reflection fallback.
 
-## Union constructors and expected types
+## Variant constructors and expected types
 
-The uninstantiated name of a generic union supports case construction:
+The uninstantiated name of a generic variant supports case construction:
 
 ```pascal fragment context=declarations
-type Tree<T> = union
+type Tree<T> = variant
   Empty;
   Leaf(Value: T);
   Branch(Left: Tree<T>; Right: Tree<T>);
-end union;
+end variant;
 
 const Leaf: Tree<int> := Tree.Leaf(42);
 const Empty: Tree<int> := Tree.Empty;
 const Branch: Tree<int> := Tree.Branch(Tree.Empty, Tree.Leaf(7));
 ```
 
-Payload types and a matching expected union type supply evidence. Bindings,
+Payload types and a matching expected variant type supply evidence. Bindings,
 returns, closed routine parameters, record fields, and typed array elements can
 supply that expected type. A fieldless case, or a parameter absent from a case's
 payloads, requires enough expected context. Other payloads can establish the type
 for a sibling Tree.Empty. This also works through an imported unit/container and
-through checked union metadata from another FPAS project.
+through checked variant metadata from another FPAS project.
 
-The expected union instantiation is exact. Tree.Leaf(1) can initialize Tree<double>
+The expected variant instantiation is exact. Tree.Leaf(1) can initialize Tree<double>
 by converting the payload to double. It cannot silently change a Tree<int>
-destination to Tree<string>. Null is never a union case. Named payloads keep their
+destination to Tree<string>. Null is never a variant case. Named payloads keep their
 labels, and arguments execute once in written order even when their labels reorder
 the constructor's parameter slots.
 
-The owner must identify one generic union definition. Ambiguous imported generic
+The owner must identify one generic variant definition. Ambiguous imported generic
 arities require explicit arguments. The shorthand applies only to actual FPAS
-unions validated through their metadata contract. Records and ordinary CLR
+variants validated through their metadata contract. Records and ordinary CLR
 generic classes still require arguments on type references, new expressions, and
 static type receivers. Tree<int>.Leaf(42) and Tree<int>.Empty remain available;
 type arguments belong on the owner, not on the nongeneric case factory.

@@ -18,7 +18,7 @@ type Model = record
   public Completed: bool := false;
 end record;
 
-type Msg = union
+type Msg = variant
   Toggle(Value: bool);
   Select(Key: string);
   Tab(Key: string);
@@ -28,7 +28,7 @@ type Msg = union
   Focus(Id: string);
   Done;
   Failed(Reason: string);
-end union;
+end variant;
 
 const Trace: Generic.List<string> := new Generic.List<string>();
 

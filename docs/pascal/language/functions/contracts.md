@@ -118,7 +118,7 @@ The initial language restricts contract expressions to a checkable subset:
 - Literals, compile-time constants, and bindings available in the condition scope.
 - Built-in scalar operators/conversions/comparisons, null/type tests, Boolean
   short-circuiting, coalescing, and conditional expressions.
-- Reads of language-record fields and language-union payloads selected by a
+- Reads of language-record fields and language-variant payloads selected by a
   pattern, array elements, string indexes, vector/string Length, and the standard
   Nullable<T> HasValue/Value members. Ordinary null/bounds checks still apply.
 - Compiler-defined domain unwrapping, Value reads, and scalar-domain comparisons
@@ -127,7 +127,7 @@ The initial language restricts contract expressions to a checkable subset:
 
 Method/delegate calls, constructors, lambdas, record updates, arbitrary CLR
 property/indexer getters, user-defined operators/conversions, and generated
-record/union equality are not allowed. Their execution may have effects through
+record/variant equality are not allowed. Their execution may have effects through
 foreign code. Assignment, await, subscriptions, ref/out calls, and control-transfer
 statements are also forbidden. This restriction requires no global purity
 inference or handwritten catalog of pure library methods.

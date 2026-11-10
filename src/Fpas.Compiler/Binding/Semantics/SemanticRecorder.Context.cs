@@ -38,10 +38,10 @@ internal sealed partial class SemanticRecorder
                 token.ThrowIfCancellationRequested();
                 if (!byPosition.TryGetValue(child.Name.Position, out var symbol) || symbol.Kind == "local") continue;
                 if (position != name.Offset && byPosition[position].Kind == "routine" && symbol.Kind is not ("parameter" or "type_parameter")) continue;
-                if (position == name.Offset && entry.Kind is not ("container" or "record" or "interface" or "union" or "union_case" or "domain") && symbol.Kind is not ("parameter" or "type_parameter")) continue;
+                if (position == name.Offset && entry.Kind is not ("container" or "record" or "interface" or "variant" or "variant_case" or "domain") && symbol.Kind is not ("parameter" or "type_parameter")) continue;
                 Add(child);
                 if (symbol.Type is not null) roots.Add(symbol.Type);
-                if (symbol.Kind is "routine" or "union_case") pending.Push(child.Name.Position);
+                if (symbol.Kind is "routine" or "variant_case") pending.Push(child.Name.Position);
             }
         var doc = declaration.Documentation;
         return new(owner, string.Join('.', names), declaration.Accessibility, document.Span(declaration.Start, declaration.End - declaration.Start),

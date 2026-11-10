@@ -13,7 +13,7 @@ take precedence over enclosing static scopes. Recognized FPAS instance receivers
 use `self`. Source scopes follow the original async kickoff or closure owner;
 they do not substitute the state machine's bookkeeping for source globals.
 
-Member access reads source-mapped record/union/domain fields or ordinary stored
+Member access reads source-mapped record/variant/domain fields or ordinary stored
 CLR fields. A domain's Value uses the decoded primitive source view. Custom
 property getters report `requires_execution`. Unresolved fields have no fallback
 through a managed evaluator. Raw compiler backing names remain an inspection

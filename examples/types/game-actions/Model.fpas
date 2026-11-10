@@ -5,12 +5,12 @@ public type Position = record
   public Y: int;
 end record;
 
-public type ActionOutcome = union
+public type ActionOutcome = variant
   Moved(Position: Position);
   Blocked(Reason: string);
   ItemFound(Name: string; At: Position);
   Stayed;
-end union;
+end variant;
 
 public function AttemptMove(Current: Position; DeltaX: int): ActionOutcome;
 begin

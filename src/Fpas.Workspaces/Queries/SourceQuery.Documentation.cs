@@ -22,7 +22,7 @@ public sealed partial class SourceQuery
         }
         Collect(new(search.Name, search.Match, kinds, search.Project));
         if (search.Match == "exact")
-            foreach (var owner in matches.Values.Where(item => item.Kind is "container" or "record" or "interface" or "union" or "domain").ToArray())
+            foreach (var owner in matches.Values.Where(item => item.Kind is "container" or "record" or "interface" or "variant" or "domain").ToArray())
                 Collect(new(owner.QualifiedName + ".", "prefix", kinds, owner.Project), member => projects[member.Project].Snapshot.Symbol(member.Symbol).Context?.Owner == owner.Symbol);
         foreach (var match in matches.Values)
         {

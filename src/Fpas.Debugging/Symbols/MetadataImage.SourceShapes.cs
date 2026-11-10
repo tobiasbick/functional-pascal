@@ -21,22 +21,22 @@ internal partial class MetadataImage
             if (lower is null != (upper is null) || lower?.Length > 128 || upper?.Length > 128) throw new BadImageFormatException("Invalid FPAS domain bounds.");
             return new("domain", [new("Value", BackingField(token, "<Value>"))], primitive, lower, upper);
         }
-        if (Contract(attributes, "UnionCaseAttribute", [0x20, 4, 1, 8, 14, 14, 0x1d, 14]) is { } union)
+        if (Contract(attributes, "VariantCaseAttribute", [0x20, 4, 1, 8, 14, 14, 0x1d, 14]) is { } variant)
         {
             var parent = definition.GetDeclaringType();
-            if (parent.IsNil || Contract(Metadata.GetTypeDefinition(parent).GetCustomAttributes(), "UnionAttribute", [0x20, 1, 1, 8]) is not { } marker
-                || marker.ReadInt32() != 1) throw new BadImageFormatException("Invalid FPAS union owner.");
+            if (parent.IsNil || Contract(Metadata.GetTypeDefinition(parent).GetCustomAttributes(), "VariantAttribute", [0x20, 1, 1, 8]) is not { } marker
+                || marker.ReadInt32() != 1) throw new BadImageFormatException("Invalid FPAS variant owner.");
             ContractEnd(ref marker);
-            var tag = union.ReadInt32(); var name = ContractName(ref union); var factory = ContractName(ref union); var count = union.ReadInt32();
-            if (tag < 0 || count is < 0 or > 4096 || factory != (count == 0 ? "get_" + name : name)) throw new BadImageFormatException("Invalid FPAS union case.");
+            var tag = variant.ReadInt32(); var name = ContractName(ref variant); var factory = ContractName(ref variant); var count = variant.ReadInt32();
+            if (tag < 0 || count is < 0 or > 4096 || factory != (count == 0 ? "get_" + name : name)) throw new BadImageFormatException("Invalid FPAS variant case.");
             var members = new List<SourceMember>(); var names = new HashSet<string>(StringComparer.Ordinal);
             for (var index = 0; index < count; index++)
             {
-                var label = ContractName(ref union);
-                if (!names.Add(label)) throw new BadImageFormatException("Duplicate FPAS union field.");
+                var label = ContractName(ref variant);
+                if (!names.Add(label)) throw new BadImageFormatException("Duplicate FPAS variant field.");
                 members.Add(new(label, BackingField(token, "<" + label + ">k__BackingField")));
             }
-            ContractEnd(ref union); return new("union", members.ToArray(), Tag: tag, Case: name);
+            ContractEnd(ref variant); return new("variant", members.ToArray(), Tag: tag, Case: name);
         }
         if (Contract(attributes, "RecordAttribute", [0x20, 1, 1, 8]) is not { } record) return null;
         if (record.ReadInt32() != 1) throw new BadImageFormatException("Unsupported FPAS record version.");

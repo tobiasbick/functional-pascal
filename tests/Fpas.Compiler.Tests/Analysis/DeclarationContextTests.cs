@@ -15,7 +15,7 @@ public sealed class DeclarationContextTests
             type Key = distinct int;
             type Code = enum One; Two = 2; end enum;
             type IValue = protocol Name: string; function Read(Value: int): int; end protocol;
-            type Choice = union None; Some(Item: int); end union;
+            type Choice = variant None; Some(Item: int); end variant;
             var Global: int := 1;
             begin
               for Index: int := 1 to 1 do discard Index; end for;

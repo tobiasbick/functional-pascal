@@ -1,10 +1,10 @@
 unit Trees;
 
-public type Tree<T> = union
+public type Tree<T> = variant
   Empty;
   Leaf(Value: T);
   Branch(Left: Tree<T>; Right: Tree<T>);
-end union;
+end variant;
 
 public type Summary<T> = record
   public Value: T;

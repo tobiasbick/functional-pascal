@@ -17,14 +17,14 @@ internal sealed partial class SemanticRecorder
         {
             TypeKind.Parameter or TypeKind.TypeParameter or TypeKind.MethodParameter => "parameter",
             TypeKind.Array => "array", TypeKind.ByRef => "byref", TypeKind.Null => "null", TypeKind.Void => "void",
-            TypeKind.Record => "record", TypeKind.Union => "union", TypeKind.Scalar => "domain", TypeKind.Interface => "interface",
+            TypeKind.Record => "record", TypeKind.Variant => "variant", TypeKind.Scalar => "domain", TypeKind.Interface => "interface",
             TypeKind.Unsupported => "unresolved", _ => "named"
         };
         if (type.Kind == TypeKind.Named)
         {
             if (references.ScalarInfo(type) is { } scalar) kind = scalar.Category == Syntax.ScalarCategory.Enum ? "enum" : "domain";
             else if (references.RecordInfo(type) is not null) kind = "record";
-            else if (references.UnionInfo(type) is not null) kind = "union";
+            else if (references.VariantInfo(type) is not null) kind = "variant";
             else if (type.IsInterface) kind = "interface";
             else if (type.Definition?.IsEnum == true) kind = "enum";
         }

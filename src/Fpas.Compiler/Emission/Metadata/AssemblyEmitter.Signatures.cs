@@ -22,7 +22,7 @@ internal sealed partial class AssemblyEmitter
         type = type.Erased;
         if (type.Container is { } container) return layout.Containers[container.Syntax.Name.Text];
         if (type.Scalar is { } scalar && !type.NullableValue) return layout.ScalarTypes[scalar];
-        if (type.Kind == TypeKind.Union && type.Arguments is not { Count: > 0 }) return layout.UnionTypes[type.Union!];
+        if (type.Kind == TypeKind.Variant && type.Arguments is not { Count: > 0 }) return layout.VariantTypes[type.Variant!];
         if (type.Kind == TypeKind.Record && type.Arguments is not { Count: > 0 }) return layout.RecordTypes[type.Record!];
         if (type.Kind == TypeKind.Interface && type.Arguments is not { Count: > 0 }) return layout.InterfaceTypes[type.Interface!];
         if (type.Kind == TypeKind.Generated && type.Closure!.GenericParameters.Count == 0) return layout.ClosureTypes[type.Closure];
@@ -136,7 +136,7 @@ internal sealed partial class AssemblyEmitter
         }
         if (type.Arguments is { Count: > 0 })
         {
-            EntityHandle definition = type.Interface is { } contract ? layout.InterfaceTypes[contract] : type.Record is { } record ? layout.RecordTypes[record] : type.Union is { } union ? layout.UnionTypes[union] : type.Machine is { } machine ? layout.AsyncTypes[machine] : DefinitionHandle(type.Definition!);
+            EntityHandle definition = type.Interface is { } contract ? layout.InterfaceTypes[contract] : type.Record is { } record ? layout.RecordTypes[record] : type.Variant is { } variant ? layout.VariantTypes[variant] : type.Machine is { } machine ? layout.AsyncTypes[machine] : DefinitionHandle(type.Definition!);
             var arguments = encoder.GenericInstantiation(definition, type.Arguments.Count, type.IsValue);
             foreach (var argument in type.Arguments) EncodeType(arguments.AddArgument(), argument);
             return;
@@ -173,7 +173,7 @@ internal sealed partial class AssemblyEmitter
             case TypeKind.MethodParameter: encoder.GenericMethodTypeParameter(type.ParameterIndex); break;
             case TypeKind.NativeInt: encoder.IntPtr(); break;
             case TypeKind.Generated:
-            case TypeKind.Union:
+            case TypeKind.Variant:
             case TypeKind.Record: encoder.Type(TypeHandle(type), isValueType: false); break;
             case TypeKind.Interface: encoder.Type(TypeHandle(type), isValueType: false); break;
             case TypeKind.Async: encoder.Type(TypeHandle(type), isValueType: false); break;

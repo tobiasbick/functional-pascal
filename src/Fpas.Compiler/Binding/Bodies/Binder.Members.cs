@@ -61,8 +61,8 @@ internal sealed partial class Binder
     private BoundExpression BindMember(MemberSyntax member, bool writing = false, TypeSymbol? expected = null, bool check = true)
     {
         var target = StaticTarget(member.Receiver, allowOpenGeneric: true);
-        if (!writing && OpenUnionTarget(target) is { } open && open.Info.Cases.Any(item => item.Name == member.Name.Text))
-            return InferUnion(open, member.Name.Text, null, expected, check, member.Position);
+        if (!writing && OpenVariantTarget(target) is { } open && open.Info.Cases.Any(item => item.Name == member.Name.Text))
+            return InferVariant(open, member.Name.Text, null, expected, check, member.Position);
         if (target is SourceImport imported)
         {
             if (imported.Unit.Globals.TryGetValue(member.Name.Text, out var global)) return GlobalValue(global, member.Position, writing);

@@ -170,7 +170,7 @@ documentation says `no_documentation`. External metadata says `metadata_only`
 without a guessed source span. Inspect never decompiles or executes user code.
 
 Related declarations cover one hop of the declared surface (parameters/results,
-constraints, alias/domain targets, interfaces, fields, union payloads and member
+constraints, alias/domain targets, interfaces, fields, variant payloads and member
 signatures for selected types/containers). Generic substitutions remain in type
 descriptors. Types found only in implementation locals/calls and recursive
 expansion of related members are excluded.
@@ -221,7 +221,7 @@ locations and snapshot-local IDs, without invented declaration names.
 | Kind | Meaning |
 | --- | --- |
 | `invoke` | Explicit call with its selected overload and checked signature. |
-| `construct` | Explicit construction or union case creation, retaining the logical type/case and actual operation where available. |
+| `construct` | Explicit construction or variant case creation, retaining the logical type/case and actual operation where available. |
 | `property_get`, `property_set` | CLR property/indexer accessor, retaining its exact method identity. |
 | `event_add`, `event_remove` | Selected subscription accessor. |
 | `operator` | Bound imported operator, including constrained calls. |

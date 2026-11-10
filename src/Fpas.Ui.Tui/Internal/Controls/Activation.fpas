@@ -1,9 +1,9 @@
 unit Fpas.Ui.Tui.Internal.Controls.Activation;
 
-public type Result<TMsg> = union
+public type Result<TMsg> = variant
   NoAction;
   Send(Message: TMsg);
-end union;
+end variant;
 
 public type IActivatable<TMsg> = protocol
   function Activate(): Result<TMsg>;

@@ -24,8 +24,8 @@ Names are case-sensitive. Renaming to the existing name produces an empty plan.
 For program/unit names, selection renames the last component; files and project
 names are not renamed.
 
-Supported source declarations include containers, records, interfaces, unions,
-domains, aliases/import aliases, routines, fields/properties, globals, union cases,
+Supported source declarations include containers, records, interfaces, variants,
+domains, aliases/import aliases, routines, fields/properties, globals, variant cases,
 enum members, parameters/type parameters, and local/pattern bindings. Selecting
 a routine renames its resolved overload and callable references. Connected source
 interface members and their implementations form a rename family. A family that

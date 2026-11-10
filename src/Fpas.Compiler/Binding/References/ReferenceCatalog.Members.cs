@@ -44,10 +44,10 @@ internal sealed partial class ReferenceCatalog
                     if (signatures.Add("0:" + string.Join(';', method.Parameters.Select(parameter => parameter.Erased)))) result.Add(method);
                 continue;
             }
-            if (type.Union is { } union)
+            if (type.Variant is { } variant)
             {
                 if (methodArguments is null)
-                    foreach (var method in union.Methods.Where(method => method.IsPublic && method.Name == name && !method.IsInstance == isStatic))
+                    foreach (var method in variant.Methods.Where(method => method.IsPublic && method.Name == name && !method.IsInstance == isStatic))
                     {
                         var imported = InstantiateSource(method, type, null);
                         if (signatures.Add("0:" + string.Join(';', imported.DelegateParameters.Select(parameter => parameter.Erased)))) result.Add(imported);
@@ -149,10 +149,10 @@ internal sealed partial class ReferenceCatalog
                 }
                 continue;
             }
-            if (type.Union is { } union)
+            if (type.Variant is { } variant)
             {
-                if (!isStatic && name == "Tag") return new(TypeSymbol.Int32, InstantiateSource(union.Method(GeneratedMethodKind.Tag), type, null), null);
-                var member = SourceUnionInfo(type).Cases.FirstOrDefault(member => member.Name == name && member.Fields.Count == 0);
+                if (!isStatic && name == "Tag") return new(TypeSymbol.Int32, InstantiateSource(variant.Method(GeneratedMethodKind.Tag), type, null), null);
+                var member = SourceVariantInfo(type).Cases.FirstOrDefault(member => member.Name == name && member.Fields.Count == 0);
                 if (isStatic && member is not null) return new(type, member.Factory, null);
                 continue;
             }
@@ -201,7 +201,7 @@ internal sealed partial class ReferenceCatalog
                 }
                 continue;
             }
-            if (type.Record is not null || type.Union is not null || type.Interface is not null) continue;
+            if (type.Record is not null || type.Variant is not null || type.Interface is not null) continue;
             var definition = Definition(type);
             foreach (var handle in definition.Definition.GetFields())
             {

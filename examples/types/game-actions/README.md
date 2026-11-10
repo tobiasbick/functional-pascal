@@ -1,6 +1,6 @@
 # Game actions
 
-This executable data-model example combines immutable records and unions. A move
+This executable data-model example combines immutable records and variants. A move
 produces Moved(Position), Blocked(Reason), or ItemFound(Name, At). Stayed is a
 fieldless case. Describe uses an exhaustive case expression with explicitly
 typed payload bindings, including named payload patterns.
@@ -26,6 +26,6 @@ Found key at 2,0
 Stayed
 ```
 
-See [unions and matching](../../../docs/pascal/language/types/unions.md) for
+See [variants and matching](../../../docs/pascal/language/types/variants.md) for
 supported patterns, CLR representation, and remaining limits. This example is a
 small simulation and does not build the separate dungeon game repository.

@@ -91,9 +91,15 @@ public sealed partial class DapDebuggerTests
             ["inputId"] = theme.GetProperty("inputId").GetInt64()
         })).GetProperty("status").GetString());
         var themed = (await client.Success("fpasTuiSnapshot", new() { ["cells"] = true })).GetProperty("frame");
-        Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("colors").GetProperty("background").GetInt32());
-        Assert.Contains(themed.GetProperty("controls").EnumerateArray(), control =>
-            control.GetProperty("id").GetString() == "theme-blue" && control.GetProperty("focused").GetBoolean());
+        Assert.Equal(0x121212, themed.GetProperty("cells")[0].GetProperty("colors").GetProperty("background").GetInt32());
+        var selectedTheme = Assert.Single(themed.GetProperty("controls").EnumerateArray(), control =>
+            control.GetProperty("id").GetString() == "theme-blue");
+        Assert.True(selectedTheme.GetProperty("focused").GetBoolean());
+        var themeCell = selectedTheme.GetProperty("row").GetInt32() * themed.GetProperty("columns").GetInt32()
+            + selectedTheme.GetProperty("column").GetInt32();
+        var themeColors = themed.GetProperty("cells")[themeCell].GetProperty("colors");
+        Assert.Equal(0x142847, themeColors.GetProperty("foreground").GetInt32());
+        Assert.Equal(0xF2F2F2, themeColors.GetProperty("background").GetInt32());
         await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "key", ["key"] = "Escape" } });
         await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "activate", ["control"] = "quit" } });
         Assert.Equal(0, (await client.Event("exited")).GetProperty("exitCode").GetInt32());

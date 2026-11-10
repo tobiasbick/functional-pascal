@@ -21,9 +21,9 @@ Supported patterns:
 | --- | --- |
 | `42`, `'ready'`, `true`, `null`, `Direction.North` | Constant match |
 | `0..9` | Inclusive integral constant range |
-| `Shape.Circle(const Radius: double)` | Union case and typed immutable payload binding |
-| `Shape.Rectangle(Height := const H: double, Width := const W: double)` | Named union payloads |
-| `Tree.Leaf(Tree.Leaf(const Value: int))` | Nested union pattern for `Tree<Tree<int>>` |
+| `Shape.Circle(const Radius: double)` | Variant case and typed immutable payload binding |
+| `Shape.Rectangle(Height := const H: double, Width := const W: double)` | Named variant payloads |
+| `Tree.Leaf(Tree.Leaf(const Value: int))` | Nested variant pattern for `Tree<Tree<int>>` |
 | `_` | Any value |
 | `const Value: T` | Any value of the selected static type T, with a new immutable binding |
 | `is Sys.Exception as Failure` | CLR type test and non-null binding |

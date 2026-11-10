@@ -63,8 +63,8 @@ internal sealed partial class ReferenceCatalog
         if (type.IsValue) return true;
         if (type.Kind == TypeKind.Scalar) return false;
         if (type.IsParameter) return type.Parameter!.HasConstructor;
-        if (type.Record is { } record) return record.UnionCase is null && record.Fields.Count == 0;
-        if (type.Kind == TypeKind.Union) return false;
+        if (type.Record is { } record) return record.VariantCase is null && record.Fields.Count == 0;
+        if (type.Kind == TypeKind.Variant) return false;
         if (type.IsInterface) return false;
         return !Definition(type).Definition.Attributes.HasFlag(TypeAttributes.Abstract) && Methods(type, ".ctor", false).Any(constructor => constructor.Parameters.Count == 0);
     }
@@ -77,7 +77,7 @@ internal sealed partial class ReferenceCatalog
         foreach (var argument in type.TypeArguments) if (argument != type) ValidateGenericType(argument, source, position);
         if (type.Definition is not null && !ConstraintsSatisfied(type, type.Definition.Definition.GetGenericParameters(), type.TypeArguments, null))
             throw source.Error("FP3018", "A constructed constraint type violates CLR generic constraints.", position);
-        if (type.Kind is TypeKind.Record or TypeKind.Union or TypeKind.Interface && !ValidSourceArguments(SourceParameters(type), type.TypeArguments))
+        if (type.Kind is TypeKind.Record or TypeKind.Variant or TypeKind.Interface && !ValidSourceArguments(SourceParameters(type), type.TypeArguments))
             throw source.Error("FP3018", "A constructed source type violates generic constraints.", position);
     }
 

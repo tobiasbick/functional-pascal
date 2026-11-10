@@ -50,10 +50,10 @@ public sealed class GenericTypeExecutionTests
         """, "42", "42!", "42");
 
     [Fact]
-    public Task Recursive_generic_unions_preserve_payload_types_exhaustive_matching_and_equality() => ProgramExecution.Output("""
+    public Task Recursive_generic_variants_preserve_payload_types_exhaustive_matching_and_equality() => ProgramExecution.Output("""
         program Trees;
         uses System.Console as Console;
-        type Tree<T> = union Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end union;
+        type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
         function Count<T>(Value: Tree<T>): int;
         begin
           return case Value of

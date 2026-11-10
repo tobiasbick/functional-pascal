@@ -16,7 +16,7 @@ internal sealed partial class ServerSession
         {
             var selection = Selection(parameters);
             var target = query.Execute("definition", selection, cancellationToken: token).Definition;
-            if (target is { Origin: "source", Project: not null, Symbol.Kind: "routine" or "property" or "union_case", Symbol.Declaration: not null })
+            if (target is { Origin: "source", Project: not null, Symbol.Kind: "routine" or "property" or "variant_case", Symbol.Declaration: not null })
                 return new[] { CallItem(snapshot, target.Project, target, null) };
             return Array.Empty<object>();
         }

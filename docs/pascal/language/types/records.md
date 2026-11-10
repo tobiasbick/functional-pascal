@@ -87,11 +87,11 @@ type Point = record
   public Y: double;
 end record;
 
-type Shape = union
+type Shape = variant
   Dot;
   Circle(Radius: double);
   Rectangle(Width: double; Height: double);
-end union;
+end variant;
 
 function Area(Value: Shape): double;
 begin

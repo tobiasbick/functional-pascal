@@ -67,12 +67,12 @@ internal sealed partial class ReferenceCatalog
             yield return type.IsValue ? Symbol(Required("System.ValueType")) : TypeSymbol.Object;
             yield break;
         }
-        if (type.Kind is TypeKind.Record or TypeKind.Union)
+        if (type.Kind is TypeKind.Record or TypeKind.Variant)
         {
             if (type.Record is { } record)
                 foreach (var contract in record.Interfaces)
                     yield return SubstituteSource(contract, record.GenericParameters, type.TypeArguments);
-            yield return type.Record?.UnionCase is { } member ? member.Owner.Type with { Arguments = type.Arguments } : TypeSymbol.Object;
+            yield return type.Record?.VariantCase is { } member ? member.Owner.Type with { Arguments = type.Arguments } : TypeSymbol.Object;
             yield return Symbol(Required("System.IEquatable`1")) with { Arguments = new([type.NonNullable]) };
             yield break;
         }

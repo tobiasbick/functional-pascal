@@ -8,9 +8,9 @@ namespace Fpas.Compiler.Emission;
 
 internal sealed class AssemblyLayout
 {
-    internal IReadOnlyList<UnionSymbol> Unions { get; }
-    internal Dictionary<UnionSymbol, TypeDefinitionHandle> UnionTypes { get; } = [];
-    internal Dictionary<UnionSymbol, TypeDefinitionHandle> UnionOwners { get; } = [];
+    internal IReadOnlyList<VariantSymbol> Variants { get; }
+    internal Dictionary<VariantSymbol, TypeDefinitionHandle> VariantTypes { get; } = [];
+    internal Dictionary<VariantSymbol, TypeDefinitionHandle> VariantOwners { get; } = [];
     internal Dictionary<RecordSymbol, TypeDefinitionHandle> RecordTypes { get; } = [];
     internal Dictionary<RecordSymbol, TypeDefinitionHandle> RecordOwners { get; } = [];
     internal Dictionary<RoutineSymbol, MethodDefinitionHandle> SourceMethods { get; } = [];
@@ -39,7 +39,7 @@ internal sealed class AssemblyLayout
     internal AssemblyLayout(BoundCompilation program, IReadOnlyDictionary<BoundRoutine, AsyncPlan> asyncPlans)
     {
         Closures = program.Units.SelectMany(unit => unit.Closures).OrderBy(closure => closure.Id).ToArray();
-        Unions = program.Units.SelectMany(unit => unit.Unions).ToArray();
+        Variants = program.Units.SelectMany(unit => unit.Variants).ToArray();
         Records = program.Units.SelectMany(unit => unit.Records).ToArray();
         Interfaces = program.Units.SelectMany(unit => unit.Interfaces).ToArray();
         var method = 1;
@@ -51,10 +51,10 @@ internal sealed class AssemblyLayout
             method += unit.Aliases.Count;
         }
         var type = program.Units.Count + 2;
-        foreach (var union in Unions)
+        foreach (var variant in Variants)
         {
-            UnionTypes.Add(union, MetadataTokens.TypeDefinitionHandle(type++));
-            foreach (var routine in union.Methods) SourceMethods.Add(routine, MetadataTokens.MethodDefinitionHandle(method++));
+            VariantTypes.Add(variant, MetadataTokens.TypeDefinitionHandle(type++));
+            foreach (var routine in variant.Methods) SourceMethods.Add(routine, MetadataTokens.MethodDefinitionHandle(method++));
         }
         foreach (var record in Records)
         {
@@ -64,8 +64,8 @@ internal sealed class AssemblyLayout
         for (var index = 0; index < program.Units.Count; index++)
         {
             var owner = MetadataTokens.TypeDefinitionHandle(index + 2);
-            foreach (var union in program.Units[index].Unions) UnionOwners.Add(union, owner);
-            foreach (var record in program.Units[index].Records) RecordOwners.Add(record, record.UnionCase is { } member ? UnionTypes[member.Owner] : owner);
+            foreach (var variant in program.Units[index].Variants) VariantOwners.Add(variant, owner);
+            foreach (var record in program.Units[index].Records) RecordOwners.Add(record, record.VariantCase is { } member ? VariantTypes[member.Owner] : owner);
             foreach (var contract in program.Units[index].Interfaces) InterfaceOwners.Add(contract, owner);
             foreach (var closure in program.Units[index].Closures) ClosureOwners.Add(closure, closure.RecordContext is { } context ? RecordTypes[context] : owner);
         }

@@ -14,7 +14,7 @@ internal sealed class Lexer(SourceText source, List<SourceComment>? comments = n
         ("array async await begin break case catch const continue discard distinct div do downto else " +
          "elsif end ensures enum extends false finally for function if implements in is mod new not null " +
          "of or out params private procedure program protocol public raise range record ref repeat return " +
-         "requires shl shr static subscribe then to true try type union unit unsubscribe until using var " +
+         "requires shl shr static subscribe then to true try type variant unit unsubscribe until using var " +
          "when where while with and xor as uses class struct cast typeof unchecked").Split(' '), StringComparer.Ordinal);
 
     private int position;

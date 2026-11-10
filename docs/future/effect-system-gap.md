@@ -29,10 +29,10 @@ compile-and-run workflow in `doc-examples`. Keep process ownership with
 
 - Represent a deferred operation as a generic record. Store a callable that
   accepts a typed environment and a `CancellationToken` and returns
-  `Task<Result<A, E>>`. `Run` invokes the callable. The result is an FPAS union
+  `Task<Result<A, E>>`. `Run` invokes the callable. The result is an FPAS variant
   with cases for success and expected failure. The pilot uses current syntax.
 - Start with `Map`, `AndThen`, and `Run`. Use a concrete environment record and
-  a named error union for the workflow. FPAS generic inference works with the
+  a named error variant for the workflow. FPAS generic inference works with the
   types supplied by callers. When steps use different error or environment
   types, map the errors or project the environment explicitly.
   [Generic inference](../pascal/language/functions/type-inference.md)

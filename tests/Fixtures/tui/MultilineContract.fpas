@@ -8,10 +8,10 @@ type Model = record
   public Edits: int := 0;
 end record;
 
-type Msg = union
+type Msg = variant
   Edit(Change: Editors.TextEdit);
   Navigate(Position: Editors.EditorPosition);
-end union;
+end variant;
 
 function Edited(Change: Editors.TextEdit): Msg;
 begin

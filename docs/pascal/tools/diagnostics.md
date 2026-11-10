@@ -150,7 +150,7 @@ reported problems and check again to reach later phases.
 | FP3013 / FP3015–FP3017 | Nullable safety / property accessors, disposal, or exception-flow errors |
 | FP3018 / FP3019 | Generic constraint failure / unsupported or unresolved callable signature |
 | FP3021 / FP3022 | Invalid record declaration or visibility / invalid record construction or update |
-| FP3023–FP3025 | Invalid union declaration, pattern, or coverage/unreachable case arm |
+| FP3023–FP3025 | Invalid variant declaration, pattern, or coverage/unreachable case arm |
 | FP3026 | Invalid/unsupported source generic declaration or explicit type-argument arity |
 | FP3027 / FP3028 | Invalid contract / parameter modes, defaults, storage, or out flow |
 | FP3029 / FP3030 | Invalid record interface implementation / async or await reference-lifetime error |

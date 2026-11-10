@@ -18,7 +18,7 @@ public sealed partial class MsBuildTests
     }
 
     [Fact]
-    public async Task Unions_are_consumable_from_CSharp_and_matched_by_a_second_FPAS_project()
+    public async Task Variants_are_consumable_from_CSharp_and_matched_by_a_second_FPAS_project()
     {
         using var project = sdk.CreateProject(); Directory.CreateDirectory(project.File("Models"));
         File.WriteAllText(project.File("Models/Models.fpasproj"), $"""
@@ -26,13 +26,13 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Models/Models.fpas"), """
             unit Demo.Models;
-            public type Outcome = union
+            public type Outcome = variant
               Wait;
               Move(X: int; Y: int);
               Block(Reason: string?);
               Pair(First: Outcome; Second: Outcome);
               get_Data(Value: int);
-            end union;
+            end variant;
             end unit;
             """);
         var path = project.File("Game/Game.fpasproj"); var xml = XDocument.Load(path);
@@ -69,18 +69,18 @@ public sealed partial class MsBuildTests
             if (!Bridge.IsMissing(null) || Bridge.IsMissing(first) || first == null || Models.Outcome.Wait != Models.Outcome.Wait) throw new Exception("Null/fieldless equality");
             if (Bridge.Describe(Models.Outcome.get_Data(7)) != "7" || typeof(Models.Outcome).GetMethod("get_Data")!.IsSpecialName) throw new Exception("Factory naming");
             var root = typeof(Models.Outcome); var concrete = typeof(Models.Outcome.MoveCase);
-            if (!root.IsAbstract || !concrete.IsSealed || concrete.BaseType != root || root.GetProperty("Tag")!.CanWrite) throw new Exception("Union representation");
+            if (!root.IsAbstract || !concrete.IsSealed || concrete.BaseType != root || root.GetProperty("Tag")!.CanWrite) throw new Exception("Variant representation");
             if (!root.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single().IsFamilyAndAssembly || concrete.GetConstructors().Length != 0) throw new Exception("Closed construction");
-            var marker = root.GetCustomAttributes(false).Single(attribute => attribute.GetType().FullName == "Fpas.Core.UnionAttribute");
+            var marker = root.GetCustomAttributes(false).Single(attribute => attribute.GetType().FullName == "Fpas.Core.VariantAttribute");
             if ((int)marker.GetType().GetProperty("Version")!.GetValue(marker)! != 1) throw new Exception("Marker version");
-            var member = concrete.GetCustomAttributes(false).Single(attribute => attribute.GetType().FullName == "Fpas.Core.UnionCaseAttribute");
+            var member = concrete.GetCustomAttributes(false).Single(attribute => attribute.GetType().FullName == "Fpas.Core.VariantCaseAttribute");
             if (!((string[])member.GetType().GetProperty("PayloadNames")!.GetValue(member)!).SequenceEqual(new[] { "X", "Y" })) throw new Exception("Payload metadata");
-            Console.WriteLine("CLR unions verified");
+            Console.WriteLine("CLR variants verified");
             """);
         var build = await sdk.Run(project, "build", "Host/Host.csproj", "-p:TreatWarningsAsErrors=true");
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var run = await sdk.Run(project, "Host/bin/Debug/net10.0/Host.dll");
-        Assert.True(run.ExitCode == 0, run.Output + run.Error); Assert.Equal("CLR unions verified" + Environment.NewLine, run.Output);
+        Assert.True(run.ExitCode == 0, run.Output + run.Error); Assert.Equal("CLR variants verified" + Environment.NewLine, run.Output);
         File.WriteAllText(project.File("Host/Rogue.cs"), """
             public sealed class Rogue : Demo.Models.Outcome
             {

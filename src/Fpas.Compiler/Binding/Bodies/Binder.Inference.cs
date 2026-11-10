@@ -9,20 +9,20 @@ namespace Fpas.Compiler.Binding.Bodies;
 
 internal sealed partial class Binder
 {
-    private OpenUnionInfo? OpenUnionTarget(ImportTarget? target) => target is UnionImport or ClrImport
-        ? references.OpenUnion(ImportedValueType(target, unit.Syntax.Name.Position, allowOpen: true)) : null;
+    private OpenVariantInfo? OpenVariantTarget(ImportTarget? target) => target is VariantImport or ClrImport
+        ? references.OpenVariant(ImportedValueType(target, unit.Syntax.Name.Position, allowOpen: true)) : null;
 
     private bool NeedsInferenceContext(ExpressionSyntax expression)
     {
         if (expression is ParenthesizedSyntax wrapped) return NeedsInferenceContext(wrapped.Expression);
         if (expression is ArrayLiteralSyntax array) return array.Elements.Count == 0 || array.Elements.All(NeedsInferenceContext);
-        if (expression is MemberSyntax member && OpenUnionTarget(StaticTarget(member.Receiver, allowOpenGeneric: true)) is { } open)
+        if (expression is MemberSyntax member && OpenVariantTarget(StaticTarget(member.Receiver, allowOpenGeneric: true)) is { } open)
             return open.Info.Cases.Any(item => item.Name == member.Name.Text && item.Fields.Count == 0);
-        if (expression is CallSyntax { Target: MemberSyntax factory } call && OpenUnionTarget(StaticTarget(factory.Receiver, allowOpenGeneric: true)) is { } union)
+        if (expression is CallSyntax { Target: MemberSyntax factory } call && OpenVariantTarget(StaticTarget(factory.Receiver, allowOpenGeneric: true)) is { } variant)
         {
-            var item = union.Info.Cases.FirstOrDefault(item => item.Name == factory.Name.Text);
+            var item = variant.Info.Cases.FirstOrDefault(item => item.Name == factory.Name.Text);
             return item is not null && (call.Arguments.All(argument => argument is LiteralSyntax { Token.Text: "null" } || NeedsInferenceContext(argument)) ||
-                union.Variables.Any(variable => !item.Fields.Any(field => new TypeInference(references, [variable]).ContainsVariable(field.Type))));
+                variant.Variables.Any(variable => !item.Fields.Any(field => new TypeInference(references, [variable]).ContainsVariable(field.Type))));
         }
         if (expression is ConditionalSyntax conditional) return conditional.Arms.All(arm => NeedsInferenceContext(arm.Value)) && NeedsInferenceContext(conditional.Else);
         return false;
@@ -72,10 +72,10 @@ internal sealed partial class Binder
         if (syntax is ConditionalSyntax conditional) return conditional.Arms.All(arm => AcceptsDeferred(arm.Value, target)) && AcceptsDeferred(conditional.Else, target);
         var member = syntax is CallSyntax { Target: MemberSyntax factory } ? factory : syntax as MemberSyntax;
         if (member is null) return false;
-        var open = OpenUnionTarget(StaticTarget(member.Receiver, allowOpenGeneric: true));
-        return open is not null && SameUnionOwner(open.Info.Type, target);
+        var open = OpenVariantTarget(StaticTarget(member.Receiver, allowOpenGeneric: true));
+        return open is not null && SameVariantOwner(open.Info.Type, target);
     }
 
-    private static bool SameUnionOwner(TypeSymbol owner, TypeSymbol expected)
-        => owner.Union is not null ? owner.Union == expected.Union : owner.Definition is not null && owner.Definition == expected.Definition;
+    private static bool SameVariantOwner(TypeSymbol owner, TypeSymbol expected)
+        => owner.Variant is not null ? owner.Variant == expected.Variant : owner.Definition is not null && owner.Definition == expected.Definition;
 }

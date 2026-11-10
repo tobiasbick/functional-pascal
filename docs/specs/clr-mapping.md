@@ -16,7 +16,7 @@ UTF-8 FPAS sources + supplied assembly/reference metadata
   -> syntax trees
   -> binding, overload resolution, generic constraints, nullable flow
   -> typed representation
-  -> lowering (closures, unions, contracts, async methods, cleanup)
+  -> lowering (closures, variants, contracts, async methods, cleanup)
   -> CIL + metadata + portable PDB + optional XML documentation
   -> managed assembly and normal .NET host files
   -> CLR execution
@@ -44,7 +44,7 @@ that engineering choice is separate from source syntax.
 | Top-level const / var | Static readonly / mutable static field on the container |
 | Language record | Sealed class with read-only properties and an all-fields constructor |
 | Record instance / static method | Instance method with self / static method without self |
-| Language union | Public abstract closed-in-source base class with generated sealed case classes |
+| Language variant | Public abstract closed-in-source base class with generated sealed case classes |
 | CLR enum | Enum type and chosen integral underlying type |
 | Vector / rectangular / jagged array | Actual corresponding CLR array type |
 | Callable shorthand | Matching Func/Action delegate type |
@@ -105,7 +105,7 @@ including omitted rectangular bounds, are rejected as unsupported during import
 rather than silently rewritten. These signature bounds do not constrain an
 array instance's runtime lower bounds.
 
-## Records and unions
+## Records and variants
 
 Record properties use their exact source field names and public/private visibility;
 constructor parameters use the same names and declaration order. Fields remain
@@ -186,11 +186,11 @@ constants for defaults, constant patterns, scalar bounds, or contract conditions
 No extra global-state scheduler, automatic synchronization, or
 cross-task ownership checks are generated.
 
-For unions, emit a `private protected` (CLR FamilyAndAssembly) base constructor,
+For variants, emit a `private protected` (CLR FamilyAndAssembly) base constructor,
 no externally accessible inheritance hook, an
 integral read-only Tag property, and nested sealed case classes named
 `<CaseName>Case`. A payload case exposes a static factory named CaseName on the
-generic/non-generic union owner. A fieldless case exposes a static property with
+generic/non-generic variant owner. A fieldless case exposes a static property with
 that name. Case payload properties preserve source labels. Tag values follow
 declaration order and are an assembly implementation detail, not a storage schema.
 
@@ -198,21 +198,21 @@ For example, Shape.Circle(2.0) calls Shape.Circle(double) and produces a
 Shape.CircleCase value. Generated symbols participate in collision checks: a
 source case/payload name must not collide with reserved generated members such
 as Tag, Equals, GetHashCode, or a generated case type name in the same CLR scope.
-Union base equality compares case plus payload and handles null consistently.
-The base implements IEquatable<Union> and declares abstract Equals(object?),
+Variant base equality compares case plus payload and handles null consistently.
+The base implements IEquatable<Variant> and declares abstract Equals(object?),
 GetHashCode, and get_Tag slots; sealed cases implement them. Case constructors
 are assembly-internal; callers construct through factories/properties.
 
 Cross-assembly matching needs checked case metadata. Emit a compiler-recognizable
-union/case annotation from Fpas.Core so consumers do not guess union membership
+variant/case annotation from Fpas.Core so consumers do not guess variant membership
 from arbitrary .NET subclasses. Imported ordinary CLR hierarchies are open for
 pattern-coverage purposes. Generic constraints and nullable metadata must also
 survive public signatures.
 
-The union metadata ABI is version 1 for both generic and nongeneric definitions:
+The variant metadata ABI is version 1 for both generic and nongeneric definitions:
 
-- Fpas.Core.UnionAttribute(int version) marks the abstract union class with 1.
-- Fpas.Core.UnionCaseAttribute(int tag, string name, string factory,
+- Fpas.Core.VariantAttribute(int version) marks the abstract variant class with 1.
+- Fpas.Core.VariantCaseAttribute(int tag, string name, string factory,
   string[] payloadNames) marks every nested case class. Payload labels are in
   declaration order. A payload case names its static factory; a fieldless case
   names its static getter, get_CaseName, associated with the CaseName property.
@@ -223,7 +223,7 @@ signatures/parameter names, readonly payload properties/backing fields, nullable
 annotations, and unique contiguous tags. Case types have no RecordAttribute;
 record with updates do not apply to them. An unknown/incompatible metadata
 contract is an error, not a guessed set of subclasses. See
-[union semantics](../pascal/language/types/unions.md).
+[variant semantics](../pascal/language/types/variants.md).
 
 ## Source interfaces
 
@@ -253,15 +253,15 @@ See [interface semantics](../pascal/interop/interfaces.md).
 
 ## Generic data types
 
-Generic records/unions use ordinary invariant CLR type parameters and constraints.
+Generic records/variants use ordinary invariant CLR type parameters and constraints.
 The nested type name includes its introduced arity, for example ``Box`1`` and ``Tree`1``.
-Generated cases are nested in their union, inherit its generic parameters and
-constraints, and derive from the corresponding constructed union. A case adds no
+Generated cases are nested in their variant, inherit its generic parameters and
+constraints, and derive from the corresponding constructed variant. A case adds no
 new parameters or name arity: C# names Tree<T>.LeafCase, not LeafCase<T>.
 Its metadata GenericParam table still contains the inherited parameters.
 
 Fields and member signatures retain type parameters (!n), including constructor,
-copy/default helpers, equality, and union factories. A constructed owner is a
+copy/default helpers, equality, and variant factories. A constructed owner is a
 TypeSpec, and calls/field access use MemberRefs whose signatures retain !n rather
 than substituting the call site's concrete types. Generic methods additionally
 use their own !!n slots and MethodSpec instantiations. Combined closure environments
@@ -269,7 +269,7 @@ renumber enclosing type and method parameters into their own !n slots; constrain
 are re-emitted with the same translation. Nested closure name arity counts only
 parameters introduced beyond its containing record.
 
-The existing version-1 record/union attributes need no additional fields for
+Version-1 record/variant attributes need no additional fields for
 generics. Readers substitute the actual owner arguments when checking all
 property/helper/factory signatures and case bases, retaining nullable annotations.
 They verify matching generic arity and all existing readonly/accessibility rules.
@@ -388,7 +388,7 @@ emission remains byte-identical. See
 Generated debug presentation uses standard .NET DebuggerDisplay,
 DebuggerTypeProxy, DebuggerBrowsable and generated-code/stepping attributes.
 Record/case proxies are private nested `<DebugView>` types with typed getters;
-they preserve generic arguments and do not change the record/union metadata ABI.
+they preserve generic arguments and do not change the record/variant metadata ABI.
 Private backing fields are hidden from ordinary debugger expansion. Domains
 display their decoded Value. Source-authored debugger display/proxy annotations
 override the generated defaults. These attributes are not FPAS reflection
@@ -396,7 +396,7 @@ markers and do not require an F# runtime. See
 [debug information](../architecture/debug-information.md#debugger-attributes-and-value-views)
 for the emitted attributes and stepping boundaries.
 
-The own debugger's passive source views read the versioned record, union-case
+The own debugger's passive source views read the versioned record, variant-case
 and domain metadata and actual stored fields. They do not invoke generated
 proxies, getters, Tag, display attributes or user methods. Raw field expansion
 remains available independently of an optional source-presentation error. See
@@ -404,9 +404,9 @@ the [debugger value contract](../architecture/debugger-core.md#passive-stored-va
 
 ## Small language support library
 
-`Fpas.Core` contains union, record-default, and data-domain metadata annotations,
+`Fpas.Core` contains variant, record-default, and data-domain metadata annotations,
 and only helpers required by emitted language constructs. It does not supply an
-implicit type prelude or require Option/Result implementations. Record/union
+implicit type prelude or require Option/Result implementations. Record/variant
 representation code may be synthesized per assembly. Closure lowering uses normal
 CLR objects;
 async lowering uses .NET async builders and task types.

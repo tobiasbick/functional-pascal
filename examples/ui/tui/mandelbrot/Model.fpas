@@ -44,7 +44,7 @@ public type State = record
   public Failure: string := '';
 end record;
 
-public type Message = union
+public type Message = variant
   Resize(Columns: int; Rows: int);
   Pan(X: int; Y: int);
   Center(Column: int; Row: int);
@@ -56,5 +56,5 @@ public type Message = union
   Exit;
   Rendered(Image: array of T.Cell);
   Failed(Reason: string);
-end union;
+end variant;
 end unit;

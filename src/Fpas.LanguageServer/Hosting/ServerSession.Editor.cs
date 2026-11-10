@@ -90,9 +90,9 @@ internal sealed partial class ServerSession
             if (span.Offset < end || span.Length == 0) continue;
             var kind = item.Kind switch
             {
-                "container" or "alias" => "namespace", "record" => "struct", "union" or "domain" => "enum",
+                "container" or "alias" => "namespace", "record" => "struct", "variant" or "domain" => "enum",
                 "interface" => "interface", "type" => "type", "type_parameter" => "typeParameter",
-                "parameter" => "parameter", "field" or "property" => "property", "enum_member" or "union_case" => "enumMember",
+                "parameter" => "parameter", "field" or "property" => "property", "enum_member" or "variant_case" => "enumMember",
                 "routine" => "function", "method" => "method", "event" => "event", _ => "variable"
             };
             var type = Array.IndexOf(semanticTypes, kind);

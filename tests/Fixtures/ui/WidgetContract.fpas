@@ -5,14 +5,14 @@ uses
   Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
   System as Sys, System.Console as Console;
 
-type Msg = union
+type Msg = variant
   Clicked;
   Toggled(Value: bool);
   Selected(Key: string);
   Edited(Edit: Ed.TextEdit);
   Navigated(Position: Ed.EditorPosition);
   Scrolled(Change: L.ScrollChange);
-end union;
+end variant;
 
 var Builds: int := 0;
 var TabBuilds: int := 0;

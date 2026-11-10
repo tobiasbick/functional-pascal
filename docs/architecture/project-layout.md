@@ -4,7 +4,7 @@ The C# projects and xUnit projects are grouped in one primary `Fpas.slnx` soluti
 Compiler and CLI follow the [direct compilation pipeline](compiler.md).
 Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 [mixed-project MSBuild builds](../../tests/coverage.md#build-acceptance).
-Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
+Fpas.Core supplies record/variant metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
 Fpas.Deployment owns file-based access to embedded distribution assets, their
 content-addressed cache beside the executable, and shared CMS delivery signatures.
@@ -170,7 +170,7 @@ third-party/
 docs/
 ```
 
-All listed projects exist. Fpas.Core contains the versioned record/union metadata
+All listed projects exist. Fpas.Core contains the versioned record/variant metadata
 attributes; further metadata/helpers belong there only when an emitted feature
 requires them. Common C#
 settings live in Directory.Build.props; Directory.Packages.props pins the shared
@@ -179,7 +179,7 @@ xUnit/test dependencies. global.json selects a stable .NET 10 SDK.
 The SDK packaging project includes props/targets, compiler/CLI and Core assets,
 the task, and README. The [local bootstrap](../build/development.md#build-an-fpas-application)
 packs it into sdk/feed before restoring FPAS consumers. No SDK package is publicly
-published. The SDK resolves and copies its matching Fpas.Core assembly for records and unions.
+published. The SDK resolves and copies its matching Fpas.Core assembly for records and variants.
 
 ## Project responsibilities
 

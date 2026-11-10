@@ -10,13 +10,13 @@ Name CLR types, model immutable data, and express checked domains and absence.
 | [Records](records.md) | Constructors, defaults, private fields, methods, and equality |
 | [Record updates](record-update.md) | Shallow copies with preserved fields |
 | [Record members example](record-members.md) | Defaults, private factories, contracts, and shared state |
-| [Unions](unions.md) | Closed cases, payloads, recursion, and domain outcomes |
+| [Variants](variants.md) | Closed cases, payloads, recursion, and domain outcomes |
 | [CLR enums](enums.md) | Integral constants, aliases, casts, and unnamed values |
 | [Arrays and collections](arrays.md) | Vectors, rectangles, jagged arrays, strings, and collection behavior |
 | [Data domains](data-domains.md) | Nominal CLR identities and library boundaries |
 | [Distinct types](distinct-types.md) | Explicit scalar wrapping/unwrapping |
 | [Subranges](subranges.md) | Bounds, checked construction, and valid defaults |
-| [Generic data types](generics.md) | Records/unions with real CLR parameters |
+| [Generic data types](generics.md) | Records/variants with real CLR parameters |
 
 ## See also
 

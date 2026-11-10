@@ -15,7 +15,7 @@ internal sealed record TypeSyntax(IReadOnlyList<TypeSegmentSyntax> Segments, boo
 }
 
 internal sealed record CompilationUnitSyntax(NameSyntax Name, bool IsProgram, IReadOnlyList<ImportSyntax> Imports,
-    IReadOnlyList<RoutineSyntax> Routines, IReadOnlyList<StatementSyntax> Statements, IReadOnlyList<RecordSyntax> Records, IReadOnlyList<UnionSyntax> Unions, bool IsAsync = false, DocumentationComment? Documentation = null,
+    IReadOnlyList<RoutineSyntax> Routines, IReadOnlyList<StatementSyntax> Statements, IReadOnlyList<RecordSyntax> Records, IReadOnlyList<VariantSyntax> Variants, bool IsAsync = false, DocumentationComment? Documentation = null,
     IReadOnlyList<AliasSyntax>? Aliases = null, IReadOnlyList<ScalarSyntax>? Scalars = null, IReadOnlyList<GlobalSyntax>? Globals = null, IReadOnlyList<InterfaceSyntax>? Interfaces = null)
 {
     internal IReadOnlyDictionary<int, DeclarationSyntax> Declarations { get; init; } = new Dictionary<int, DeclarationSyntax>();

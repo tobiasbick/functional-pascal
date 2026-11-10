@@ -1,13 +1,13 @@
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 
-public sealed class UnionExecutionTests
+public sealed class VariantExecutionTests
 {
     [Fact]
     public Task Generated_case_types_support_CLR_type_tests_and_payload_access() => ProgramExecution.Output("""
         program CaseTypes;
         uses System.Console as Console;
-        type Result = union Success(Value: int); Missing; end union;
+        type Result = variant Success(Value: int); Missing; end variant;
         begin
           const Value: Result := Result.Success(42);
           Console.WriteLine(Value is Result.SuccessCase);
@@ -17,14 +17,14 @@ public sealed class UnionExecutionTests
         """, "True", "42");
 
     [Fact]
-    public Task Union_factories_equality_hashing_and_payload_patterns_execute() => ProgramExecution.Output("""
+    public Task Variant_factories_equality_hashing_and_payload_patterns_execute() => ProgramExecution.Output("""
         program Actions;
         uses System.Console as Console, System.Collections.Generic as Collections;
-        type Outcome = union
+        type Outcome = variant
           Idle;
           Moved(X: int; Y: int);
           Blocked(Reason: string);
-        end union;
+        end variant;
         function Describe(Value: Outcome): string;
         begin
           return case Value of
@@ -55,7 +55,7 @@ public sealed class UnionExecutionTests
     public Task Nested_patterns_guards_alternatives_and_arm_closures_execute_in_order() => ProgramExecution.Output("""
         program Patterns;
         uses System.Console as Console;
-        type Tree = union Empty; Leaf(Value: int); Branch(Left: Tree; Right: Tree); end union;
+        type Tree = variant Empty; Leaf(Value: int); Branch(Left: Tree; Right: Tree); end variant;
         function Read(Value: Tree): function(): int;
         begin
           return case Value of

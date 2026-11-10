@@ -39,10 +39,10 @@ result. Its default, including in a new array, is the lower bound. Separate
 domain declarations retain separate identities even when their bounds match.
 
 An enum is a real CLR enum with an integral base and named constants; unnamed
-underlying values remain possible. Use a union for cases with payloads; see
-[patterns](patterns-errors.md). Records/unions may be recursive through references
+underlying values remain possible. Use a variant for cases with payloads; see
+[patterns](patterns-errors.md). Records/variants may be recursive through references
 and generic: Box<T>, Tree<T>, or Dictionary<string, int>. Type arguments uniformly
-use angle brackets. Source records/unions are invariant. Constraints use where
+use angle brackets. Source records/variants are invariant. Constraints use where
 clauses; [functions](functions.md) explains them and inference.
 
 ```pascal

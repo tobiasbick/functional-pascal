@@ -15,7 +15,7 @@ internal sealed partial class SemanticRecorder
     private MetadataIdentity Metadata(TypeSymbol owner, string kind, string name, int arity = 0, IEnumerable<string>? parameters = null, string? result = null)
     {
         var definition = owner.Definition;
-        if (definition is null && owner.Container is null && owner.Record is null && owner.Union is null && owner.Scalar is null && owner.Interface is null)
+        if (definition is null && owner.Container is null && owner.Record is null && owner.Variant is null && owner.Scalar is null && owner.Interface is null)
             definition = references.Definition(owner.NonNullable);
         var assembly = definition?.Assembly.Identity;
         return new(assembly?.Name ?? assemblyName, assembly?.Version.ToString() ?? "1.0.0.0", assembly?.Culture ?? "",
@@ -24,7 +24,7 @@ internal sealed partial class SemanticRecorder
     }
 
     private MetadataIdentity TypeMetadata(TypeSymbol type) => Metadata(type, "type", TypeName(type),
-        type.Definition?.Definition.GetGenericParameters().Count ?? type.Record?.GenericParameters.Count ?? type.Union?.GenericParameters.Count ?? type.Interface?.GenericParameters.Count ?? 0);
+        type.Definition?.Definition.GetGenericParameters().Count ?? type.Record?.GenericParameters.Count ?? type.Variant?.GenericParameters.Count ?? type.Interface?.GenericParameters.Count ?? 0);
 
     private MetadataIdentity MethodMetadata(ImportedMethod method)
     {
@@ -39,9 +39,9 @@ internal sealed partial class SemanticRecorder
         if (type.Definition is not null) return type.Definition.FullName;
         string Arity(int count) => count == 0 ? "" : "`" + count.ToString(System.Globalization.CultureInfo.InvariantCulture);
         if (type.Container is { } container) return container.Syntax.Name.Text;
-        if (type.Record is { } record) return record.UnionCase is { } member
+        if (type.Record is { } record) return record.VariantCase is { } member
             ? TypeName(member.Owner.Type) + "+" + record.Name : record.Owner.Syntax.Name.Text + "+" + record.Name + Arity(record.GenericParameters.Count);
-        if (type.Union is { } union) return union.Owner.Syntax.Name.Text + "+" + union.Name + Arity(union.GenericParameters.Count);
+        if (type.Variant is { } variant) return variant.Owner.Syntax.Name.Text + "+" + variant.Name + Arity(variant.GenericParameters.Count);
         if (type.Interface is { } contract) return contract.Owner.Syntax.Name.Text + "+" + contract.Name + Arity(contract.GenericParameters.Count);
         if (type.Scalar is { } scalar) return scalar.Owner.Syntax.Name.Text + "+" + scalar.Name;
         return references.Definition(type.NonNullable).FullName;

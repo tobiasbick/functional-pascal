@@ -24,7 +24,7 @@ public sealed class InferenceTests
     {
         var result = TestCompilation.Compile("""
             program Example;
-            type Tree<T> = union Empty; Leaf(Value: T); end union;
+            type Tree<T> = variant Empty; Leaf(Value: T); end variant;
             function Id<T>(Value: T): T; begin return Value; end function;
             function Create<T>(): T; where T: new(); begin return new T(); end function;
             function Choose<T>(Left: T; Right: T): T; begin return Left; end function;
@@ -39,7 +39,7 @@ public sealed class InferenceTests
     {
         var result = TestCompilation.Compile("""
             program Example;
-            type Choice<A, B> = union First(Value: A); Second(Value: B); end union;
+            type Choice<A, B> = variant First(Value: A); Second(Value: B); end variant;
             function Mutate(Action: procedure()): int; begin Action(); return 1; end function;
             function Read<A, B>(Left: Choice<A, B>; Length: int; Right: Choice<A, B>): int; begin return Length; end function;
             begin

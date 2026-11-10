@@ -30,8 +30,8 @@ The [coverage map](../tests/coverage.md) identifies the owning test files.
 | Overloads, inference, named/optional/params arguments, exact ref/out/in storage and readonly defensive copies | SourceCatalog.Routines, Binder.Arguments/Inference, ReferenceCatalog | GenericRoutineTests, InferenceTests, ParameterDiagnosticsTests, MsBuildTests.Inference/ContractsAndParameters |
 | Delegates, local helpers before routine bodies, lexical recursion, shared captures, generic environments and capture initialization | Parser.Callables, Binder.Callables/NestedRoutines, closure emission | CallableDiagnosticsTests, NestedRoutineTests, CallableExecutionTests, MsBuildTests.Callables/NestedRoutines |
 | Records, private members by default, immutable properties, defaults, constructor visibility, shallow updates and field equality | Parser.Records, SourceCatalog.Records, Binder.Records, record emission | RecordTests, RecordMetadataTests, RecordExecutionTests, MsBuildTests.Records |
-| Closed generic records/unions, constraints and complete interface declarations before field/signature validation | SourceCatalog.TypeGenerics/Interfaces/Scalars, ReferenceCatalog.SourceGenerics | GenericTypeTests, ScalarDiagnosticsTests, MsBuildTests.GenericTypes/Baseline |
-| Union constructors and contextual inference, immutable payloads, typed/nested/range patterns and exhaustive coverage | Binder.Unions/Patterns, PatternCoverage, union metadata | UnionTests, CaseCoverageTests, UnionMetadataTests, MsBuildTests.Unions/Inference |
+| Closed generic records/variants, constraints and complete interface declarations before field/signature validation | SourceCatalog.TypeGenerics/Interfaces/Scalars, ReferenceCatalog.SourceGenerics | GenericTypeTests, ScalarDiagnosticsTests, MsBuildTests.GenericTypes/Baseline |
+| Variant constructors and contextual inference, immutable payloads, typed/nested/range patterns and exhaustive coverage | Binder.Variants/Patterns, PatternCoverage, variant metadata | VariantTests, CaseCoverageTests, VariantMetadataTests, MsBuildTests.Variants/Inference |
 | Imported CLR inheritance/members, real struct storage, interface implementation/defaults and unsupported signatures | ReferenceCatalog, Binder.Members, member emission | InteropDiagnosticsTests, OverloadAndInterfaceDiagnosticsTests, MsBuildTests.Interop/Interfaces/SignatureLimits |
 | Imported CLR operators, overload selection, checked dispatch, lifted results and operand order | Binder.Operators, ReferenceCatalog.Members, call emission | MsBuildTests.ImportedOperators, LanguageSpecificationTests (TimeAndDuration) |
 | Nested generic CLR paths and operators/static members through constrained interfaces | SourceCatalog.TypePaths, Binder.Operators, constrained CIL calls | MsBuildTests.NestedTypes/GenericMath |
@@ -82,7 +82,7 @@ targets resolve without prematurely checking an incomplete graph; their complete
 constructed constraints are validated before body binding. Constructor checks
 still use all declared fields, so a forward record with required fields cannot
 satisfy new(). MsBuildTests.Baseline executes recursive fields, an alias, a
-constrained union, and instance interface dispatch from a real C# host.
+constrained variant, and instance interface dispatch from a real C# host.
 ScalarDiagnosticsTests separately rejects an unused invalid constructed alias;
 the existing GenericTypeTests retain the forward-constructor negative control.
 

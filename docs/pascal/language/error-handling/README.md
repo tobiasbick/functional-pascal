@@ -1,11 +1,11 @@
 # Errors and resources
 
-Use CLR nullability for absence, application unions for normal domain outcomes,
+Use CLR nullability for absence, application variants for normal domain outcomes,
 and CLR exceptions for failures. Resources have explicit lexical cleanup.
 
 | Topic | Description |
 | --- | --- |
-| [Absence and domain outcomes](absence-and-outcomes.md) | Nullable values, Try APIs, and application unions |
+| [Absence and domain outcomes](absence-and-outcomes.md) | Nullable values, Try APIs, and application variants |
 | [Exceptions](exceptions.md) | Raise, ordered catches, filters, rethrow, and finally |
 | [Synchronous disposal](resources.md) | Using const, reverse order, scopes, and failed cleanup |
 | [Asynchronous disposal](async-disposal.md) | Await using const and completion before scope exit |
@@ -14,6 +14,6 @@ and CLR exceptions for failures. Resources have explicit lexical cleanup.
 ## See also
 
 - [Nullable types](../types/nullable-types.md)
-- [Unions](../types/unions.md)
+- [Variants](../types/variants.md)
 - [Async execution](../concurrency/README.md)
 - [Files and streams](../../libraries/files-and-streams.md)

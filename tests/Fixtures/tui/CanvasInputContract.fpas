@@ -10,12 +10,12 @@ type State = record
   public Rows: int := 0;
 end record;
 
-type Msg = union
+type Msg = variant
   Resized(Columns: int; Rows: int);
   Edited(Value: Ed.TextEdit);
   Navigated(Position: Ed.EditorPosition);
   Shortcut;
-end union;
+end variant;
 
 function Update(Model: State; Message: Msg): Mvu.Transition<State, Msg>;
 begin

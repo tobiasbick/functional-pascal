@@ -43,18 +43,18 @@ internal sealed partial class Binder
                 }
                 return CallRoutine(AccessibleSource(imported.Unit, member.Name.Text, member.Position), call.Arguments, typeArguments, check, call.Position);
             }
-            if (OpenUnionTarget(selected) is { } open)
+            if (OpenVariantTarget(selected) is { } open)
             {
-                if (typeArguments is not null) throw source.Error("FP3026", "Union type arguments belong on the owner, not the case factory.", call.Position);
-                return InferUnion(open, member.Name.Text, call.Arguments, expected, check, call.Position);
+                if (typeArguments is not null) throw source.Error("FP3026", "Variant type arguments belong on the owner, not the case factory.", call.Position);
+                return InferVariant(open, member.Name.Text, call.Arguments, expected, check, call.Position);
             }
             BoundExpression? receiver = null;
             var owner = selected is null ? (receiver = Receiver(member.Receiver, check)).Type : ImportedValueType(selected, member.Position);
             if (owner == TypeSymbol.Unsupported) throw source.Error("FP3001", "A method needs a type or value receiver.", member.Position);
-            if (references.UnionInfo(owner)?.Cases.FirstOrDefault(item => item.Name == member.Name.Text) is { } unionCase && receiver is null)
+            if (references.VariantInfo(owner)?.Cases.FirstOrDefault(item => item.Name == member.Name.Text) is { } variantCase && receiver is null)
             {
-                if (typeArguments is not null) throw source.Error("FP3026", "Union type arguments belong on the owner, not the case factory.", call.Position);
-                return BindUnionFactory(unionCase, call.Arguments, check, call.Position);
+                if (typeArguments is not null) throw source.Error("FP3026", "Variant type arguments belong on the owner, not the case factory.", call.Position);
+                return BindVariantFactory(variantCase, call.Arguments, check, call.Position);
             }
             CheckRecordMember(owner, member.Name.Text, false, member.Position);
             RejectEventValue(owner, member.Name.Text, member.Name.Position);

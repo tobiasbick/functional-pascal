@@ -26,7 +26,7 @@ public sealed class CaseCoverageTests
                 covered |= pattern.Values;
                 arms.Add($"when {pattern.Text}: return {index};");
             }
-            var result = TestCompilation.Compile("program TruthTable; type Pair = union Make(Left: bool; Right: bool); end union; function Read(P: Pair): int; begin case P of " +
+            var result = TestCompilation.Compile("program TruthTable; type Pair = variant Make(Left: bool; Right: bool); end variant; function Read(P: Pair): int; begin case P of " +
                 string.Join(' ', arms) + " end case; end function; begin end; end program;");
             Assert.True(result.Success == (!unreachable && covered == 15), $"Selection {selection}: {string.Join(';', result.Diagnostics)}");
         }

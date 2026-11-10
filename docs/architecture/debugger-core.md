@@ -163,7 +163,7 @@ captures from compiler StrongBox cells, including hoisted async locals and
 async closure receivers. Source names survive generated-field suffixes.
 Cells expose their current stored Value. An unmarked user StrongBox remains an
 ordinary object. Raw frame pages retain closure receivers and actual cells.
-Recognized FPAS record/union instance frames expose their receiver as `self`,
+Recognized FPAS record/variant instance frames expose their receiver as `self`,
 including the stored receiver of an executing async method. Raw frames retain
 CLR names. Invalid optional receiver metadata falls back to `this` with a
 separate source error on the value, preserving raw inspection and the stop.
@@ -208,9 +208,9 @@ loaded type names report ambiguity. Explicit type discovery examines at most
 65536 metadata types; type names have at most 64 nesting levels and 8192 UTF-16
 code units. Static fields use the ordinary binding/page/reference bounds.
 
-Source value expansion uses the versioned Fpas.Core record, union-case and
+Source value expansion uses the versioned Fpas.Core record, variant-case and
 domain contracts. Records expose source field order/names from stored backing
-fields. Union cases expose their metadata tag and payload without calling Tag
+fields. Variant cases expose their metadata tag and payload without calling Tag
 or a proxy, including cases with no payload. Domains expose stored primitive
 values; subranges decode their unsigned offset against the declared lower bound
 with the primitive's exact width. Decimal scale, strings, characters and the full
@@ -391,7 +391,7 @@ types, getter/initializer sentinels and stale static-object paths.
 hoisted cells, raw storage, user StrongBox objects and source-name shadowing
 before, during and after an inner declaration. `CaptureStorageMetadataTests`
 independently checks the emitted storage format and deterministic output.
-`SourceProjectionTests` checks generic records, empty/payload union cases, nested
+`SourceProjectionTests` checks generic records, empty/payload variant cases, nested
 domains, decoded/default subranges, exact extreme values and raw views. A foreign
 CLR object with an invalid presentation marker proves that the source error
 does not hide valid raw storage or change the stopped context.

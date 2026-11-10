@@ -13,7 +13,7 @@ internal sealed partial class SourceCatalog
         {
             foreach (var syntax in unit.Syntax.Records)
             {
-                if (TypeFacts.PredefinedName(syntax.Name.Text) || unit.Unions.ContainsKey(syntax.Name.Text) || unit.Syntax.Imports.Any(import => import.Alias.Text == syntax.Name.Text) || !unit.Records.TryAdd(syntax.Name.Text, new(unit, syntax)))
+                if (TypeFacts.PredefinedName(syntax.Name.Text) || unit.Variants.ContainsKey(syntax.Name.Text) || unit.Syntax.Imports.Any(import => import.Alias.Text == syntax.Name.Text) || !unit.Records.TryAdd(syntax.Name.Text, new(unit, syntax)))
                     throw unit.Source.Error("FP3021", $"Duplicate or conflicting record '{syntax.Name.Text}'.", syntax.Name.Position);
             }
         }
@@ -40,12 +40,12 @@ internal sealed partial class SourceCatalog
                 if (!names.Add(field.Name.Text) || !names.Add("get_" + field.Name.Text))
                     throw unit.Source.Error("FP3021", $"Record field '{field.Name.Text}' collides with another member.", field.Name.Position);
             }
-            var canConstruct = record.UnionCase is null && record.Fields.All(field => field.Syntax.IsPublic);
+            var canConstruct = record.VariantCase is null && record.Fields.All(field => field.Syntax.IsPublic);
             Add(record, ".ctor", TypeSymbol.Void, record.Fields.Select(field => (field.Name, field.Type)), canConstruct, true, GeneratedMethodKind.Constructor);
             foreach (var field in record.Fields)
             {
                 field.Getter = Add(record, "get_" + field.Name, field.Type, [], field.Syntax.IsPublic, true, GeneratedMethodKind.Getter);
-                if (record.UnionCase is null) field.Copy = Add(record, "<With:" + field.Name + ">", record.Type, [("Value", field.Type)], field.Syntax.IsPublic, true, GeneratedMethodKind.Copy);
+                if (record.VariantCase is null) field.Copy = Add(record, "<With:" + field.Name + ">", record.Type, [("Value", field.Type)], field.Syntax.IsPublic, true, GeneratedMethodKind.Copy);
                 if (field.Syntax.Default is not null)
                     field.Default = Add(record, "<Default:" + field.Name + ">", field.Type, [], canConstruct, false, GeneratedMethodKind.Default);
             }
@@ -62,7 +62,7 @@ internal sealed partial class SourceCatalog
                 record.Methods.Add(symbol);
                 AddOverload(record.UserMethods, symbol, unit.Source, method.Name.Position);
             }
-            if (record.UnionCase is not null)
+            if (record.VariantCase is not null)
             {
                 Add(record, "get_Tag", TypeSymbol.Int32, [], true, true, GeneratedMethodKind.Tag);
                 continue;
@@ -83,7 +83,7 @@ internal sealed partial class SourceCatalog
 
     private void ValidateRecordVisibility()
     {
-        static bool Visible(TypeSymbol type) => type.Interface?.IsPublic != false && type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
+        static bool Visible(TypeSymbol type) => type.Interface?.IsPublic != false && type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Variant?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
         void Check(SourceUnit unit, RoutineSymbol method, int position)
         {
             if (method.IsPublic && (!Visible(method.Result) || method.Parameters.Any(parameter => !Visible(parameter.Type)) || method.GenericParameters.SelectMany(parameter => parameter.Constraints).Any(type => !Visible(type))))
@@ -102,10 +102,10 @@ internal sealed partial class SourceCatalog
                 CheckConstraints(unit, contract.GenericParameters, contract.Syntax.Name.Position);
                 foreach (var method in contract.Methods) Check(unit, method, contract.Syntax.Name.Position);
             }
-            foreach (var union in unit.Unions.Values.Where(union => union.IsPublic))
+            foreach (var variant in unit.Variants.Values.Where(variant => variant.IsPublic))
             {
-                CheckConstraints(unit, union.GenericParameters, union.Syntax.Name.Position);
-                foreach (var method in union.Methods) Check(unit, method, union.Syntax.Name.Position);
+                CheckConstraints(unit, variant.GenericParameters, variant.Syntax.Name.Position);
+                foreach (var method in variant.Methods) Check(unit, method, variant.Syntax.Name.Position);
             }
             foreach (var global in unit.Globals.Values.Where(global => global.Syntax.IsPublic))
                 if (!Visible(global.Type)) throw unit.Source.Error("FP3032", "A public global cannot expose private types.", global.Syntax.Binding.Name.Position);

@@ -88,7 +88,7 @@ requests.
 ## Passive values and expressions
 
 Scopes separate source locals/arguments, statics and raw CLR storage. The source
-view exposes supported records, unions, domains, captures and resumed async locals
+view exposes supported records, variants, domains, captures and resumed async locals
 through stored metadata/fields. Cycles and unavailable or optimized-out values
 are explicit. Expansion, hover and watch never execute getters, constructors,
 methods, static initializers, ToString or debugger proxy/display code.

@@ -5,20 +5,20 @@ uses
   System.Threading as Threads, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
 
 // The outcome of posting to the session mailbox.
-public type Admission = union
+public type Admission = variant
   // The item entered the FIFO.
   Queued;
   // The mailbox is open but at capacity.
   Full;
   // The session no longer admits items.
   Closed;
-end union;
+end variant;
 
 // The outcome of advancing the session by at most one mailbox item.
 //
 // ## Type parameters
 // - `TInput`: The host's raw input type.
-public type Step<TInput> = union
+public type Step<TInput> = variant
   // The mailbox has no work for the owner.
   Idle;
   // The owner must route the supplied host input.
@@ -27,7 +27,7 @@ public type Step<TInput> = union
   Updated;
   // A superseded effect's result was discarded.
   Stale;
-end union;
+end variant;
 
 // Owns one model, mailbox and group of effects.
 //
@@ -60,12 +60,12 @@ public type Runtime<TModel, TMsg, TInput> = record
   public Close: function(): Tasks.Task;
 end record;
 
-type Entry<TMsg, TInput> = union
+type Entry<TMsg, TInput> = variant
   Empty;
   Input(Value: TInput);
   Message(Value: TMsg);
   Background(Id: string; Version: long; Value: TMsg);
-end union;
+end variant;
 
 procedure Notify(Wake: Sys.Action?);
 begin

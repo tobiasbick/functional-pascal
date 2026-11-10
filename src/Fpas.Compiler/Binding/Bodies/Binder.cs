@@ -37,10 +37,10 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             BindIndependent(routines[routine.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, routine)), routine.Statements, routine.Name.Position, routine.Contracts);
         if (unit.EntryPoint is { } entry)
             BindIndependent(entry, program.Statements, program.Name.Position);
-        foreach (var union in unit.Unions.Values) BindUnion(union);
+        foreach (var variant in unit.Variants.Values) BindVariant(variant);
         foreach (var record in unit.RecordTypes) BindRecord(record);
         BindTypeAttributes();
-        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray(), unit.Interfaces.Values.ToArray());
+        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Variants.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray(), unit.Interfaces.Values.ToArray());
 
         void BindIndependent(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null)
         {

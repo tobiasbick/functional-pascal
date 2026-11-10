@@ -20,7 +20,7 @@ internal sealed partial class ReferenceCatalog
                     declarations.Add((type, null));
                 continue;
             }
-            if (type.Union is not null || type.Interface is not null || type.Kind == TypeKind.Scalar) continue;
+            if (type.Variant is not null || type.Interface is not null || type.Kind == TypeKind.Scalar) continue;
             var definition = Definition(type); var reader = definition.Assembly.Reader;
             var found = false;
             foreach (var handle in definition.Definition.GetEvents())

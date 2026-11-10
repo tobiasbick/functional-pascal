@@ -8,30 +8,30 @@ namespace Fpas.Compiler.Binding.Bodies;
 
 internal sealed partial class Binder
 {
-    private BoundExpression InferUnion(OpenUnionInfo open, string name, IReadOnlyList<ExpressionSyntax>? arguments, TypeSymbol? expected, bool check, int position)
+    private BoundExpression InferVariant(OpenVariantInfo open, string name, IReadOnlyList<ExpressionSyntax>? arguments, TypeSymbol? expected, bool check, int position)
     {
         var member = open.Info.Cases.FirstOrDefault(item => item.Name == name)
-            ?? throw source.Error("FP3023", "Unknown case on a generic union owner.", position);
+            ?? throw source.Error("FP3023", "Unknown case on a generic variant owner.", position);
         if (arguments is null ? member.Fields.Count != 0 : member.Fields.Count == 0)
             throw source.Error("FP3023", "Payload cases require arguments; fieldless cases have no parentheses.", position);
         var inference = new TypeInference(references, open.Variables);
-        if (expected is not null && SameUnionOwner(open.Info.Type, expected) && expected.TypeArguments.Count == open.Variables.Count)
+        if (expected is not null && SameVariantOwner(open.Info.Type, expected) && expected.TypeArguments.Count == open.Variables.Count)
             inference.Add(open.Info.Type, expected.NonNullable, InferenceBound.Exact);
         var supplied = DataArguments(arguments ?? [], member.Fields.Select(field => field.Name).ToArray(), position);
         var syntax = supplied.Select(argument => argument.Value).ToArray();
         var parameters = supplied.Select(argument => member.Fields[argument.Slot].Type).ToArray();
         var bound = BindInferenceValues(syntax, check, out var argumentFacts, parameters, inference);
         for (var index = 0; index < bound.Length; index++) if (bound[index] is { } value) inference.Add(parameters[index], value);
-        var inferred = inference.Fix() ?? throw source.Error("FP3026", "Cannot infer a unique union instantiation from its payloads and expected type; specify the owner type arguments.", position);
-        var owner = references.CloseUnion(open, inferred, source, position);
-        var closed = references.UnionInfo(owner)!.Cases.Single(item => item.Name == name);
+        var inferred = inference.Fix() ?? throw source.Error("FP3026", "Cannot infer a unique variant instantiation from its payloads and expected type; specify the owner type arguments.", position);
+        var owner = references.CloseVariant(open, inferred, source, position);
+        var closed = references.VariantInfo(owner)!.Cases.Single(item => item.Name == name);
         if (arguments is null)
         {
             ForgetCapturedFacts();
             return new BoundCall(closed.Factory, []);
         }
         var values = BindDeferredArguments(syntax, bound, supplied.Select(argument => closed.Fields[argument.Slot].Type).ToArray(), check, argumentFacts);
-        return BindUnionFactory(closed, arguments, check, position, values);
+        return BindVariantFactory(closed, arguments, check, position, values);
     }
 
     private IReadOnlyList<(int Slot, ExpressionSyntax Value)> DataArguments(IReadOnlyList<ExpressionSyntax> arguments, IReadOnlyList<string> names, int position)

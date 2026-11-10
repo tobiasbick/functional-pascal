@@ -46,7 +46,7 @@ logical chain.
 
 `=` and `<>` use primitive equality or an applicable CLR equality operator.
 Strings compare ordinal contents; arrays use reference identity. Generated
-record/union equality is described in [types](../types/README.md). Other reference types
+record/variant equality is described in [types](../types/README.md). Other reference types
 without an applicable equality operator use reference identity, not an implicit
 call to virtual `Equals`. Ordering requires an applicable primitive/operator rule.
 

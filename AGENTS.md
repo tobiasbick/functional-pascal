@@ -60,6 +60,8 @@ for the task.
 
 - Support upstream CUI. When finding a defect or missing capability, establish
   whether it belongs to CUI or the FPAS integration and explain its impact.
+- Read the [CUI contribution review notes](docs/cui-contributions.md) before
+  changing CUI interaction or layout code or preparing an upstream CUI PR.
 - Before drafting a CUI contribution, read the current upstream
   [issue form](https://github.com/yappologistic/CUI/tree/master/.github/ISSUE_TEMPLATE)
   or [pull request template](https://github.com/yappologistic/CUI/blob/master/.github/pull_request_template.md).

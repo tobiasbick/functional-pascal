@@ -15,7 +15,7 @@ The interactive host restores terminal modes on normal exit and failure.
 ## Views, layout and validation
 
 Views use the shared Element tree. Supported widgets are buttons, icon buttons,
-button groups, copy/hold/confirm/status/split buttons, theme selectors/toggles,
+button groups, segmented controls, dropdown menus, copy/hold/confirm/status/split buttons, theme selectors/toggles,
 sidebar navigation and sheets. Text, rows/columns, sizing, borders, styles,
 cached subviews and scrolling provide their composition foundations.
 
@@ -35,6 +35,13 @@ Tab/Shift+Tab traverse enabled controls in the active scope. Enter and typed
 Space activate the focused action. Theme segments use Left/Right without
 wrapping. Split menus support arrows, Enter, Escape, wheel and page keys.
 The model owns accepted state changes; rendering never calls change mappers.
+
+Dropdown and split buttons share the session's popup foundation. Menu sections
+and separators are not focus stops; disabled commands reject input. TUI opens
+on the first enabled command and skips disabled rows during navigation.
+Icons, display-only shortcut hints, check marks and danger colors have cell
+equivalents. Preferred placement and logical width fit to the viewport;
+an icon-only trigger keeps its caption when no terminal glyph is supplied.
 
 Pointer input uses cell coordinates. Disabled and covered controls reject input.
 Disabling cancels pending pointer capture. Hold-to-confirm requires a continuous

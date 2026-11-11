@@ -1,8 +1,38 @@
 namespace Fpas.Ui.Gui.Cui.Tests;
 
-/// <summary>Checks the native segment primitive shared by appearance controls.</summary>
+/// <summary>Checks native segments shared by public selectors and appearance controls.</summary>
 public sealed class CuiSegmentedTests
 {
+    /// <summary>Literal hash captions retain native layout/focus, and absent glyphs reserve no icon space.</summary>
+    [GuiTheory]
+    [InlineData(CuiRenderer.Software)]
+    [InlineData(CuiRenderer.OpenGl)]
+    public void LiteralCaptionsAndEmptyIconsKeepTheirNativeIdentity(CuiRenderer renderer)
+    {
+        using var window = new CuiWindow("Literal segments", 720, 320, renderer, continuous: true);
+        window.SetReducedMotion(true);
+        Draw(["Day", "Week"], null);
+        float textWidth = window.GetControlRectangle("group").Width;
+        Draw(["Day", "Week"], ["", ""]);
+        Assert.Equal(textWidth, window.GetControlRectangle("group").Width);
+        Draw(["##Literal caption with enough width", "Week"], ["", ""], focus: 1);
+        Assert.True(window.GetControlRectangle("first").Width > 200);
+        Assert.True(window.ControlFocused("first"));
+        Draw(["Renamed ### literally", "Week"], null);
+        Assert.True(window.ControlFocused("first"));
+
+        void Draw(string[] labels, string[]? icons, int focus = 0)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.BeginColumn();
+            Assert.Equal(-1, window.Segmented("literal", labels, icons, 0, 0, false, true, focus,
+                ["group", "first", "second"]));
+            window.EndColumn();
+            window.Present();
+        }
+    }
+
     /// <summary>Uses native text/fill sizing, removes vanished focus stops and preserves the palette.</summary>
     [GuiTheory]
     [InlineData(CuiRenderer.Software)]

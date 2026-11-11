@@ -53,12 +53,12 @@ begin
     when E.Element.Decorated(
       const Child: E.Element<TMsg>,
       _
-    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.PopupAnchor(
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>, _), E.Element.PopupAnchor(
       const Child: E.Element<TMsg>,
       _,
       _,
       _,
-      _
+      _, _, _
     ):
       return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
     when E.Element.Stack(
@@ -128,6 +128,10 @@ begin
         end if;
       when E.Element.Decorated(const Child: E.Element<TMsg>, _):
         return AllocationRule<TMsg>(Child, Horizontal);
+      when E.Element.ButtonGroup(_, const FullWidth: bool):
+        if FullWidth then
+          return new E.Flex(Grow := 1);
+        end if;
       else
     end case;
   end if;
@@ -162,7 +166,9 @@ begin
   case Node of
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
-    when E.Element.ButtonGroup(_), E.Element.PopupAnchor(_, _, _, _, _):
+    when E.Element.ButtonGroup(_, const FullWidth: bool):
+      return Horizontal and FullWidth;
+    when E.Element.PopupAnchor(_, _, _, _, _, _, _):
       return false;
     when E.Element.Sized(
       const Child: E.Element<TMsg>,
@@ -270,8 +276,8 @@ begin
       _
     ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
       _, const Child: E.Element<TMsg>, _, _, _
-    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>), E.Element.PopupAnchor(
-      const Child: E.Element<TMsg>, _, _, _, _
+    ), E.Element.ButtonGroup(const Child: E.Element<TMsg>, _), E.Element.PopupAnchor(
+      const Child: E.Element<TMsg>, _, _, _, _, _, _
     ), E.Element.Desktop(
       const Child: E.Element<TMsg>,
       _,

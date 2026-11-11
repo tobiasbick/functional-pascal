@@ -122,9 +122,9 @@ public sealed partial class CuiWindow
     public void ScrollMetrics(string id, out float offset, out float maximum)
     { CheckOpen(); NativeMethods.ScrollMetrics(context, trackedNodes[id], out offset, out maximum); }
 
-    private void TrackModal(string id)
+    private void TrackModal(string id, uint? ownedKey = null)
     {
-        uint key = NativeMethods.ModalKey(context);
+        uint key = ownedKey ?? NativeMethods.ModalKey(context);
         if (modalKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
         modalKeys[id] = key;
         usedModals.Add(id);

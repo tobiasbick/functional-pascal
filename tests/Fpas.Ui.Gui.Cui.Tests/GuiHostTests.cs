@@ -59,6 +59,9 @@ public sealed class GuiHostTests
         CheckDocumentation(directory.File($"src/Fpas.Ui.Gui/bin/{configuration}/net10.0/Fpas.Ui.Gui.xml"),
             "M:Fpas.Ui.Gui.Application.Start``2(", ["InitialModel", "Update", "View", "Settings", "ThemeFor"], ["TModel", "TMsg"]);
         File.Copy(directory.File("PublishedGallery.fpas"), directory.File("examples/ui/gui/gallery/main.fpas"), overwrite: true);
+        foreach (string helper in Directory.GetFiles(directory.Path, "*.fpas"))
+            if (Path.GetFileName(helper) != "PublishedGallery.fpas")
+                File.Copy(helper, directory.File("examples/ui/gui/gallery/" + Path.GetFileName(helper)));
         var galleryBuild = await ProcessRunner.RunAsync(["build", directory.File("examples/ui/gui/gallery/GuiWidgetGallery.fpasproj"), "-c", configuration,
             "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
             workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));

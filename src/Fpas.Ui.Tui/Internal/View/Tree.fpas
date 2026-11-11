@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Menus as Menus, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Resolved cell allocation data consumed only by terminal layout.
 public type Flex = record
@@ -70,6 +70,8 @@ public type ActionView = record
   public HoldProgress: int := 0;
   // Optional state-specific normal, focus and hover colors; disabled colors remain host-owned.
   public Appearance: Th.ButtonAppearance? := null;
+  // Center captions in explicit or filled widths; false keeps leading padding.
+  public Center: bool := true;
 end record;
 
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
@@ -93,9 +95,9 @@ public type Element<TMsg> = variant
   // Surround a child with a cell border.
   Framed(Child: Element<TMsg>; Title: string);
   // Fit a framed row of joined actions to its content.
-  ButtonGroup(Body: Element<TMsg>);
+  ButtonGroup(Body: Element<TMsg>; FullWidth: bool);
   // A content-sized trigger with an open popup rendered above the base view.
-  PopupAnchor(Trigger: Element<TMsg>; Id: string; Content: Element<TMsg>; Initial: string; Close: procedure());
+  PopupAnchor(Trigger: Element<TMsg>; Id: string; Content: Element<TMsg>; Initial: string; Close: procedure(); Position: Menus.Placement; Width: int);
   // Scroll content using host-owned offsets.
   Scrollable(Id: string; Child: Element<TMsg>; ShowScrollbar: bool);
   // Resolve model-owned scrolling and keep its original shared mapper.

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -57,6 +57,22 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
   procedure CheckNode(Node: E.Element<TMsg>; Location: string);
   begin
     case Node of
+      when E.Element.Contextual(
+        const Id: string,
+        const Child: E.Element<TMsg>,
+        const Entries: array of Menus.Entry<TMsg>,
+        _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/contextMenu');
+        MenuRules.Check<TMsg>(Id, 'Context menu', Entries, null, Location, Identify);
+        Visit(Child, Location + '/target');
+      when E.Element.Dropdown(
+        const Id: string,
+        const Label: string,
+        const Entries: array of Menus.Entry<TMsg>,
+        const Settings: Menus.Options
+      ):
+        MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.Label(const Value: string):
         Rules.CheckText(Value, Location + '/text');
       when E.Element.Separator(const Title: string):
@@ -171,6 +187,38 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         then
           Rules.Reject(At, 'A status button needs a valid work state, button variant and size.');
         end if;
+      when E.Element.Segments(
+        const Id: string,
+        const Items: array of Segmented.Item,
+        const Selected: int,
+        _,
+        const Settings: Segmented.Options
+      ):
+        const At: string := Identify(Id, Location + '/segmented');
+        if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
+          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(
+            At,
+            'A segmented control needs one through 32 choices, a selected index and a valid size.'
+          );
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: Segmented.Item := Items[Index];
+          discard Identify(Segmented.ItemId(Id, Index), At + '/item');
+          Rules.CheckText(Item.Label, At + '/label');
+          Rules.CheckText(Item.Icon, At + '/icon');
+          Rules.CheckText(Item.TerminalIcon, At + '/terminalIcon');
+          if Item.Label = '' or Item.Label.Contains(#10) or Item.Label.Contains(#13)
+            or (Item.IconOnly and Item.Icon = '')
+          then
+            Rules.Reject(
+              At,
+              'A segment needs a single-line accessible label; icon-only choices also need an icon.'
+            );
+          end if;
+        end for;
       when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
         const At: string := Identify(Id, Location + '/themeToggle');
         if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then

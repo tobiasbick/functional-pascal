@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -85,7 +85,7 @@ public function Arrange<TMsg>(
           Enabled,
           View.MinimumWidth,
           View.Padding,
-          View.FixedWidth <> null or View.FillWidth,
+          View.Center and (View.FixedWidth <> null or View.FillWidth),
           View.Foreground,
           View.Joined,
           View.Appearance
@@ -123,18 +123,28 @@ public function Arrange<TMsg>(
         const Flow: E.Flow
       ):
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
-      when E.Element.ButtonGroup(const Body: E.Element<TMsg>):
-        Visit(Body, Group.Bounds<TMsg>(Body, Area), Clip, ScopeId, Style);
+      when E.Element.ButtonGroup(const Body: E.Element<TMsg>, const FullWidth: bool):
+        Visit(Body, Group.Bounds<TMsg>(Body, Area, FullWidth), Clip, ScopeId, Style);
       when E.Element.PopupAnchor(
-        const Trigger: E.Element<TMsg>, const Id: string, const Content: E.Element<TMsg>,
-        const Initial: string, const Close: procedure()
+        const Trigger: E.Element<TMsg>,
+        const Id: string,
+        const Content: E.Element<TMsg>,
+        const Initial: string,
+        const Close: procedure(),
+        const Position: Menus.Placement,
+        const Width: int
       ):
         const Before: int := Controls.Count;
-        Visit(Trigger, Area, Clip, ScopeId, Style);
+        const TriggerWidth: int := Sys.Math.Min(Area.Width, M.Intrinsic<TMsg>(Trigger, true));
+        const TriggerArea: F.Rect := new F.Rect(
+          Area.X, Area.Y, TriggerWidth,
+          Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Trigger, false, TriggerWidth))
+        );
+        Visit(Trigger, TriggerArea, Clip, ScopeId, Style);
         for Index: int := Before to Controls.Count - 1 do
           const Part: A.Control<TMsg> := Controls[Index];
           if Part.Id = Id then
-            Popup := new SplitWidget.Pending<TMsg>(
+            Popup := new MenuWidget.Pending<TMsg>(
               Id, ScopeId,
               new F.Rect(
                 Clip.X,
@@ -142,7 +152,7 @@ public function Arrange<TMsg>(
                 Part.Bounds.X + Part.Bounds.Width - Clip.X,
                 Part.Bounds.Height
               ),
-              Content, Initial, Close
+              Content, Initial, Close, Position, Width
             );
           end if;
         end for;
@@ -263,26 +273,28 @@ begin
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
-  var Popup: SplitWidget.Pending<TMsg>? := null;
+  var Popup: MenuWidget.Pending<TMsg>? := null;
   var FocusReturn: string := '';
   var WrapText: bool := false;
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
-  const Pending: SplitWidget.Pending<TMsg>? := Popup;
+  const Pending: MenuWidget.Pending<TMsg>? := Popup;
   if Pending <> null and Pending.Parent = (if Active = null then '' else Active.Id end if) then
     const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
     const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
-    const Width: int := Sys.Math.Max(23, M.Intrinsic<TMsg>(Pending.Content, true));
+    const Width: int := Sys.Math.Max(21, M.Intrinsic<TMsg>(Pending.Content, true));
     const Height: int := Sys.Math.Min(26, M.Intrinsic<TMsg>(Pending.Content, false, Width));
-    const Bounds: array of F.Rect := SplitWidget.Place(
+    const Bounds: array of F.Rect := MenuWidget.Place(
       Operations,
       Screen,
       Pending.Anchor,
       Width,
       Height,
       Colors,
-      Theme
+      Theme,
+      Pending.Position,
+      Pending.Width
     );
     const PreviousScope: A.Scope<TMsg>? := if Previous = null then null else Previous.Active end if;
     if PreviousScope = null or PreviousScope.Id <> Pending.Id then

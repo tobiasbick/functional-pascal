@@ -1,6 +1,9 @@
 program PublishedGallery;
 
 uses
+  GalleryContextContract as ContextContract,
+  GalleryDropdownContract as DropdownContract,
+  GallerySegmentedContract as SegmentedContract,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Session as Mvu, Fpas.Ui.Themes as Themes,
@@ -406,6 +409,9 @@ begin
   VerifyDrawer(Renderer);
   VerifySplit(Renderer, Capture);
   VerifySnapshotReentry(Renderer);
+  SegmentedContract.Verify(Renderer, Capture);
+  DropdownContract.Verify(Renderer, Capture);
+  ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(
     'GUI gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then 'software'
       else 'opengl'

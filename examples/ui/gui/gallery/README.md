@@ -14,8 +14,16 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   shows the busy state, and Reset enables it again. The formatting group toggles
   three independent actions. The copy button copies the displayed command.
   Hold to delete demonstrates confirmation without deleting anything.
+  Segmented control reproduces CUI's List/Board/Timeline icon choices and its
+  small Day/Week/Month/Year selector, with independent model-owned selections.
+  Dropdown menu clones CUI's Options and icon-only More actions examples,
+  including section captions, separators, icons, shortcut hints and a danger
+  action. Commands only update preview state; they do not modify a project.
 - **Overlays** opens the right-hand Notifications sheet. Escape, the close button,
   and clicking the backdrop dismiss it.
+  The context-menu area opens CUI's Cut/Copy/Paste/Delete menu on right click.
+  Its commands only update preview state. Arrow keys and Enter choose a command;
+  Escape and outside clicks dismiss it.
 - **Actions** shows the primary Save and outline Export split buttons. Their
   main and menu actions update the inline result, as in the CUI gallery.
   Delete project demonstrates two-step confirmation with a harmless counter.

@@ -1,0 +1,115 @@
+unit GallerySegmentedContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Mvu.Session as Mvu, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+begin
+  for Value: Gui.Control in Session.Snapshot().Controls do
+    if Value.Id = Id and Value.Key = Key then
+      return Value;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing segment: ' + Id + '/' + Key);
+end function;
+
+// Checks the upstream Buttons examples through the packaged public GUI host.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the full-gallery screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    return if Focus = '' then Next
+      else new App.Transition<State.Model, State.Msg>(
+        Next.Model,
+        [App.Focus<State.Msg>(Focus)]
+      )
+      end if;
+  end function;
+  procedure Inject();
+  begin
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    Pending := Value;
+    Check(Session.Step(), 'The segment frame closed.');
+    Check(Session.Step(), 'The selection update closed.');
+  end procedure;
+begin
+  var Focus: string := '';
+  var Pending: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI segmented gallery',
+    1240,
+    1100,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Buttons),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Check(Session.Step(), 'The segment gallery did not present.');
+  Check(Control(Session, 'view').Bounds.Height = 36, 'Medium segments must retain CUI height.');
+  Check(Control(Session, 'range').Bounds.Height = 30, 'Small segments must retain CUI height.');
+  Check(
+    Control(
+      Session,
+      'view',
+      '0'
+    ).Text = 'List' and Control(Session, 'view', '2').Text = 'Timeline',
+    'Upstream labels are missing.'
+  );
+  Focus := 'view/0';
+  discard Session.Post(State.Msg.Preview);
+  Check(Session.Step(), 'Focus request failed.');
+  Focus := '';
+  Check(Control(Session, 'view', '0').Focused, 'A segment focus request was lost.');
+  Key(Session, 8);
+  Check(
+    Control(Session, 'view', '1').Focused and Control(Session, 'view', '1').Value = 'true',
+    'Right must select Board.'
+  );
+  Key(Session, 8);
+  Key(Session, 8);
+  Check(
+    Control(Session, 'view', '2').Focused and Control(Session, 'view').Value = '2',
+    'Right must stop at Timeline.'
+  );
+  Key(Session, 7);
+  Focus := 'range/0';
+  discard Session.Post(State.Msg.Preview);
+  Check(Session.Step(), 'Range focus request failed.');
+  Focus := '';
+  Key(Session, 8);
+  Check(
+    Control(Session, 'range', '1').Value = 'true' and Control(Session, 'view', '1').Value = 'true',
+    'Independent model choices must persist.'
+  );
+  Session.CapturePng(Capture + '.segmented.png');
+end procedure;
+end unit;

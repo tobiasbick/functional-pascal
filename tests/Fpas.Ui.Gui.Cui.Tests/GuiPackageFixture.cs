@@ -75,6 +75,9 @@ internal sealed class GuiPackageFixture : IDisposable
         foreach (string file in Directory.GetFiles(Path.Combine(inputs, "examples", "ui", "gui", "gallery"), "*.fpas"))
             if (Path.GetFileName(file) != "main.fpas") System.IO.File.Copy(file, File("consumer/" + Path.GetFileName(file)));
         System.IO.File.Copy(Path.Combine(inputs, "PublishedGallery.fpas"), File("consumer/main.fpas"));
+        foreach (string file in Directory.GetFiles(inputs, "*.fpas"))
+            if (Path.GetFileName(file) != "PublishedGallery.fpas")
+                System.IO.File.Copy(file, File("consumer/" + Path.GetFileName(file)));
         string handbook = System.IO.File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "GuiHandbook.md"));
         var sample = Regex.Match(handbook, @"```xml\s*\n(?<project>.*?)```", RegexOptions.Singleline);
         Assert.True(sample.Success, "The GUI handbook must contain its complete project.");

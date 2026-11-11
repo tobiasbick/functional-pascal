@@ -4,8 +4,8 @@
 /** Draws CUI's native segmented primitive without changing the host palette.
  * @param ui Current UI-thread context.
  * @param id Stable group identity.
- * @param labels Native CUI labels; empty text produces an icon-only segment.
- * @param icons Borrowed glyphs, or NULL for text segments.
+ * @param labels Literal captions; empty text produces an icon-only segment.
+ * @param icons Borrowed glyphs, empty entries or NULL for text segments.
  * @param count Number of segments, from one to 32.
  * @param selected Model-owned ordinal in the available range.
  * @param size CUI control size.

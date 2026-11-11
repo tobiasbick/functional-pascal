@@ -242,6 +242,10 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="down">Whether the button is pressed.</param>
     public void SetLeftButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 0, down ? (byte)1 : (byte)0); }
 
+    /// <summary>Injects the right pointer button through CUI's input API.</summary>
+    /// <param name="down">Whether the button is pressed.</param>
+    public void SetRightButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 1, down ? (byte)1 : (byte)0); }
+
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
     /// <param name="path">Unicode output filename in an existing directory.</param>
     public void CapturePng(string path)

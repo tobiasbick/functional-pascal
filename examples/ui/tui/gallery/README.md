@@ -16,6 +16,13 @@ pages and shows the widgets checked in the [CUI inventory](../../../../docs/futu
   and hold to confirm. Copy uses OSC 52 in terminals that allow clipboard writes.
   To confirm a hold, keep the left mouse button down until the fill reaches
   the end, then release over the same button.
+  Segmented control shows the same List/Board/Timeline and Day/Week/Month/Year
+  choices as CUI, using joined cells and explicit terminal glyphs. Arrows select
+  without wrapping; Tab moves focus without selecting.
+  Dropdown menu shows the same Options and More actions commands, with section
+  captions, separators, shortcut hints, terminal glyphs and a danger color.
+  Down opens, Up/Down navigate and Enter chooses. Escape or an outside click
+  closes without a command; previews never modify a project.
 - **Overlays** opens the Notifications sheet.
 - **Actions** shows Save and Export split buttons with anchored menus and an
   inline result. Tab focuses each half. Down opens the chevron's menu, Up and

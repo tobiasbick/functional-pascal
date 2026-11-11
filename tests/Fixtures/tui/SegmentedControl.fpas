@@ -1,0 +1,267 @@
+program SegmentedControlContract;
+
+uses
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.SegmentedControls as S, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
+  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Console as Console,
+  System.Collections.Generic as Lists;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+type Model = record
+  // Accepted choice position.
+  public Selected: int := 0;
+  // Whether proposals update the model.
+  public Accept: bool := true;
+  // Input permission for the selector.
+  public Enabled: bool := true;
+  // Whether the group fills its allocation.
+  public Full: bool := false;
+  // Whether to use two-row terminal choices.
+  public Large: bool := false;
+end record;
+
+type Msg = variant
+  // Propose a choice.
+  Choose(Value: int);
+  // Toggle acceptance of proposals.
+  Accept;
+  // Toggle input permission.
+  Enabled;
+  // Toggle horizontal filling.
+  Fill;
+  // Toggle large controls.
+  Large;
+end variant;
+
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Choose(const Value: int): State with
+      Selected := if State.Accept then Value else State.Selected end if;
+    end with;
+    when Msg.Accept: State with
+      Accept := not State.Accept;
+    end with;
+    when Msg.Enabled: State with
+      Enabled := not State.Enabled;
+    end with;
+    when Msg.Fill: State with
+      Full := not State.Full;
+    end with;
+    when Msg.Large: State with
+      Large := not State.Large;
+    end with;
+  end case;
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+function Control(Session: Tui.HeadlessSession; Id: string): Tui.ControlSnapshot;
+begin
+  for Item: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when Tui.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Behavior();
+  function Choose(Index: int): Msg;
+  begin
+    Calls := Calls + 1;
+    return Msg.Choose(Index);
+  end function;
+  function View(State: Model): E.Element<Msg>;
+  begin
+    return E.Column<Msg>(
+      S.SegmentedControl<Msg>(
+        'choice', [new S.Item('List'), new S.Item('Board'), new S.Item('Timeline')],
+        State.Selected, Choose, new S.Options(
+          Enabled := State.Enabled, FullWidth := State.Full,
+          ControlSize := if State.Large then B.Size.Large else B.Size.Medium end if
+        )
+      ),
+      B.Button<Msg>('accept', 'Accept', Msg.Accept),
+      B.Button<Msg>('enabled', 'Enabled', Msg.Enabled),
+      B.Button<Msg>('fill', 'Fill', Msg.Fill),
+      B.Button<Msg>('large', 'Large', Msg.Large)
+    );
+  end function;
+begin
+  var Calls: int := 0;
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    50,
+    20
+  );
+  Check(
+    Calls = 0 and Control(Session, 'choice/0').Value = 'true',
+    'Drawing must not propose changes.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Tab, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'choice/1').Focused and Calls = 0,
+    'Tab must move focus without selecting.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(Control(Session, 'choice/1').Value = 'true' and Calls = 1, 'Enter must propose once.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Right, K.KeyModifiers.None));
+  Send(Session, Tui.Input.KeyPress(K.Key.Right, K.KeyModifiers.None));
+  Send(Session, Tui.Input.Character(' '));
+  Check(
+    Control(Session, 'choice/2').Focused and Calls = 2,
+    'Arrows must not wrap or repropose a selected item.'
+  );
+  Send(Session, Tui.Input.Activate('accept'));
+  Send(Session, Tui.Input.Focus('choice/2'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Left, K.KeyModifiers.None));
+  Check(
+    Control(
+      Session,
+      'choice/1'
+    ).Focused and Control(Session, 'choice/2').Value = 'true' and Calls = 3,
+    'The model may reject a selection while focus moves.'
+  );
+  Send(Session, Tui.Input.Activate('accept'));
+  const First: Tui.ControlSnapshot := Control(Session, 'choice/0');
+  Send(Session, Tui.Input.Click(First.Column + 1, First.Row));
+  Check(Control(Session, 'choice/0').Value = 'true', 'Pointer selection must use the same mapper.');
+  Send(Session, Tui.Input.Activate('enabled'));
+  const Before: int := Calls;
+  Send(Session, Tui.Input.Activate('choice/1'));
+  Send(Session, Tui.Input.Click(First.Column + 1, First.Row));
+  Check(
+    not Control(Session, 'choice/0').Enabled and Calls = Before,
+    'Disabled segments must reject all activation.'
+  );
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('fill'));
+  const Left: Tui.ControlSnapshot := Control(Session, 'choice/0');
+  const Middle: Tui.ControlSnapshot := Control(Session, 'choice/1');
+  const Right: Tui.ControlSnapshot := Control(Session, 'choice/2');
+  Check(
+    Left.Column = 1 and Right.Column + Right.Width = 49,
+    'Full-width segments must use the whole inner allocation.'
+  );
+  Check(
+    Sys.Math.Abs(Left.Width - Middle.Width) <= 1 and Sys.Math.Abs(Right.Width - Middle.Width) <= 1,
+    'Full-width segments must have equal shares.'
+  );
+  Send(Session, Tui.Input.Activate('large'));
+  Check(Control(Session, 'choice/0').Height = 2, 'Large terminal segments need two rows.');
+end procedure;
+
+procedure WidthInRow();
+  function View(State: Model): E.Element<Msg>;
+  begin
+    return E.Row<Msg>(
+      S.SegmentedControl<Msg>(
+        'inline', [new S.Item('One'), new S.Item('Two')], State.Selected, Msg.Choose,
+        new S.Options(FullWidth := true)
+      ),
+      E.Size<Msg>(E.Text<Msg>('Side'), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(10))))
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    50,
+    8
+  );
+  const Last: Tui.ControlSnapshot := Control(Session, 'inline/1');
+  Check(
+    Last.Column + Last.Width = 39,
+    'A full-width selector must fill the remaining row allocation.'
+  );
+end procedure;
+
+procedure FreshRouting();
+  function Update(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      S.SegmentedControl<int>(
+        'fresh', [new S.Item('One'), new S.Item('Two'), new S.Item('Three')],
+        State div 2, function(Index: int): int => if State = 0 then 2 else 4 end if
+      ),
+      B.Button<int>('change-routing', 'Change routing', 1)
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 40, 10);
+  const Frame: long := Session.Snapshot().Id;
+  Send(Session, Tui.Input.Activate('change-routing'));
+  Check(Session.Snapshot().Id = Frame, 'New callbacks alone must not publish a frame.');
+  Send(Session, Tui.Input.Activate('fresh/1'));
+  Check(Control(Session, 'fresh/2').Value = 'true', 'Unchanged frames must install fresh routing.');
+end procedure;
+
+procedure Validation();
+  procedure Rejected(Items: array of S.Item; Selected: int; Settings: S.Options);
+  begin
+    var Failed: bool := false;
+    try
+      discard V.Prepare<Msg>(
+        S.SegmentedControl<Msg>('choice', Items, Selected, Msg.Choose, Settings),
+        V.Target.Terminal
+      );
+    catch Error: Sys.ArgumentException do
+      Failed := true;
+    end try;
+
+    Check(Failed, 'Invalid segment options must fail before presentation.');
+  end procedure;
+begin
+  Rejected([], 0, new S.Options());
+  Rejected([new S.Item('One')], -1, new S.Options());
+  Rejected([new S.Item('One')], 1, new S.Options());
+  Rejected([new S.Item('')], 0, new S.Options());
+  Rejected([new S.Item('Two' + #10 + 'lines')], 0, new S.Options());
+  Rejected([new S.Item('Icon', IconOnly := true)], 0, new S.Options());
+  Rejected([new S.Item('One')], 0, new S.Options(ControlSize := cast<B.Size>(7)));
+  const Items: Lists.List<S.Item> := new Lists.List<S.Item>();
+  for Index: int := 0 to 31 do
+    Items.Add(new S.Item(Index.ToString()));
+  end for;
+
+  discard V.Prepare<Msg>(
+    S.SegmentedControl<Msg>('choice', Items.ToArray(), 31, Msg.Choose),
+    V.Target.Terminal
+  );
+  Items.Add(new S.Item('Too many'));
+  Rejected(Items.ToArray(), 0, new S.Options());
+end procedure;
+
+begin
+  Behavior();
+  WidthInRow();
+  FreshRouting();
+  Validation();
+  Console.WriteLine('Segmented control contracts verified');
+end;
+end program;

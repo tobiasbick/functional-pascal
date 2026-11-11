@@ -1,0 +1,33 @@
+unit Gallery.SegmentedControl;
+
+uses
+  Gallery.State as State, Fpas.Ui.SegmentedControls as S, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+// Adapts the upstream view and date-range segments to terminal cells.
+//
+// ## Parameters
+// - `Model`: Current model-owned selection indices.
+// ## Returns
+// The same choices and messages as the native GUI gallery.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    S.SegmentedControl<State.Msg>(
+      'view', [
+        new S.Item('List', Sys.Char.ConvertFromUtf32($E106), '≡'),
+        new S.Item('Board', Sys.Char.ConvertFromUtf32($E1C1), '▦'),
+        new S.Item('Timeline', Sys.Char.ConvertFromUtf32($E1F5), '↶')
+      ], Model.SegmentedView, State.Msg.SetSegmentedView
+    ),
+    S.SegmentedControl<State.Msg>(
+      'range', [
+        new S.Item('Day'), new S.Item('Week'),
+        new S.Item('Month'), new S.Item('Year')
+      ], Model.SegmentedRange, State.Msg.SetSegmentedRange,
+      new S.Options(ControlSize := B.Size.Small)
+    )
+  );
+end function;
+end unit;

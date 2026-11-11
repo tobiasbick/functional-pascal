@@ -33,4 +33,5 @@
 #include "widgets/status_button.c"
 #include "widgets/segmented.c"
 #include "widgets/split_button.c"
+#include "widgets/menu.c"
 #include "host_theme.c"

@@ -34,6 +34,12 @@ public type Model = record
   public SystemAppearance: Themes.Mode := Themes.Mode.Light;
   // Whether the save action is busy.
   public ButtonLoading: bool := false;
+  // Selected position in the view segment demo.
+  public SegmentedView: int := 0;
+  // Selected position in the compact date-range demo.
+  public SegmentedRange: int := 0;
+  // Last harmless dropdown command; previews do not alter files or projects.
+  public MenuResult: string := '';
   // Active formatting actions.
   public Formats: int := 0;
   // Completed holds shown by the gallery preview.
@@ -66,6 +72,12 @@ public type Msg = variant
   Preview;
   // Change the save action's busy state.
   SetButtonLoading(Value: bool);
+  // Select List, Board or Timeline.
+  SetSegmentedView(Value: int);
+  // Select Day, Week, Month or Year.
+  SetSegmentedRange(Value: int);
+  // Record a dropdown command without performing external actions.
+  MenuChoice(Value: string);
   // Toggle one formatting action.
   ToggleFormat(Style: TextFormat);
   // Record one completed hold.
@@ -130,6 +142,15 @@ begin
     end with;
     when Msg.SetButtonLoading(const Value: bool): State with
       ButtonLoading := Value;
+    end with;
+    when Msg.SetSegmentedView(const Value: int): State with
+      SegmentedView := Value;
+    end with;
+    when Msg.MenuChoice(const Value: string): State with
+      MenuResult := Value;
+    end with;
+    when Msg.SetSegmentedRange(const Value: int): State with
+      SegmentedRange := Value;
     end with;
     when Msg.ToggleFormat(const Style: TextFormat): State with
       Formats := State.Formats xor cast<int>(Style);

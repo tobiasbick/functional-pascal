@@ -1,0 +1,105 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Menu;
+
+uses Fpas.Ui.Menus as M, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists;
+
+// Shares native menu conversion, dispatch and inspection between dropdowns and context menus.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current frame, input permission and message queue.
+// - `Id`: Trigger identity.
+// - `Label`: Accessible name; dropdowns also use it as caption and tooltip.
+// - `Entries`: Ordered native menu content.
+// - `Settings`: Dropdown options, or null to attach to the previous native component.
+// - `Enabled`: Whether this menu accepts input.
+public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Entries: array of M.Entry<TMsg>; Settings: M.Options?; Enabled: bool);
+begin
+  const Accept: bool := Enabled and State.AcceptInput;
+  const Role: string := if Settings = null then 'context-menu' else 'menu' end if;
+  const Token: string := C.Token(Role, Id);
+  const Rows: Lists.List<Cui.CuiMenuEntry> := new Lists.List<Cui.CuiMenuEntry>();
+  const Tokens: Lists.List<string> := new Lists.List<string>();
+  Tokens.Add(Token);
+  for Entry: M.Entry<TMsg> in Entries do
+    case Entry of
+      when M.Entry.Action(const Item: M.Item<TMsg>):
+        Rows.Add(
+          new Cui.CuiMenuEntry(
+            Cui.CuiMenuEntryKind.Action,
+            Item.Key,
+            Item.Label,
+            Item.Icon,
+            Item.Shortcut,
+            Item.Enabled,
+            Item.Danger,
+            Item.Checked
+          )
+        );
+        Tokens.Add(C.Token('menu-item', M.ItemId(Id, Item.Key)));
+      when M.Entry.Label(const Text: string):
+        Rows.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Label, '', Text));
+        Tokens.Add('');
+      when M.Entry.Separator:
+        Rows.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Separator, '', ''));
+        Tokens.Add('');
+    end case;
+  end for;
+  const Result: Cui.CuiMenuResult := if Settings = null then State.Window.ContextMenu(
+      Token, Rows.ToArray(), Accept, if State.PaintingClosed then null else Tokens.ToArray() end if
+    )
+    else State.Window.Menu(
+      Token,
+      Label,
+      Settings.Icon,
+      Rows.ToArray(),
+      cast<int>(Settings.Variant),
+      cast<int>(Settings.Position),
+      Settings.Width,
+      Settings.IconOnly,
+      Accept,
+      C.WantsFocus<TMsg>(State, Id, Token, Accept),
+      if State.PaintingClosed then null else Tokens.ToArray() end if
+    )
+    end if;
+  if Result.Choice >= 0 then
+    case Entries[Result.Choice] of
+      when M.Entry.Action(const Item: M.Item<TMsg>):
+        State.Messages.Add(Item.Message);
+      else
+    end case;
+  end if;
+
+  if State.PaintingClosed then
+    return;
+  end if;
+
+  State.Controls.Add(
+    new App.Control(
+      Id,
+      Label,
+      Role,
+      new Cui.CuiRectangle(),
+      Accept,
+      Value := if Result.Open then 'true' else 'false' end if
+    )
+  );
+  if Result.Open then
+    for Index: int := 0 to Entries.Length - 1 do
+      case Entries[Index] of
+        when M.Entry.Action(const Item: M.Item<TMsg>):
+          State.Controls.Add(
+            new App.Control(
+              M.ItemId(Id, Item.Key),
+              Item.Label,
+              'menu-item',
+              new Cui.CuiRectangle(),
+              Accept and Item.Enabled,
+              Value := if Index = Result.Highlighted then 'true' else 'false' end if
+            )
+          );
+        else
+      end case;
+    end for;
+  end if;
+end procedure;
+end unit;

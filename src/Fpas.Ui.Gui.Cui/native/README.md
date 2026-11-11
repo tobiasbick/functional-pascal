@@ -30,6 +30,12 @@ icons. Theme toggle uses `widgets/icon_button.c`, which calls CUI's native
 icon-button primitive with an identity independent of its glyph and tooltip.
 Both propose appearances without mutating the model-owned palette.
 
+The same segment binding draws general FPAS selectors. Empty icon entries map
+to native null glyphs. Captions containing `##` use native text slots and content
+measurement to keep literal text independent of CUI's label-ID syntax. The
+native segment test compares adapter and direct-CUI pixels for every size,
+with and without icons and full-width allocation.
+
 `widgets/copy_button.c` delegates drawing, clipboard submission and confirmation
 timing to CUI's native copy button. The adapter supplies input permissions,
 focus requests and confirmation state for the managed host.
@@ -37,6 +43,19 @@ focus requests and confirmation state for the managed host.
 `widgets/split_button.c` uses CUI's composite and popup with literal captions
 and keyed inspection. CUI handles keyboard selection. The adapter releases the
 popup when its control disappears from the view.
+
+`widgets/menu.c` calls CUI's menu begin/item/label/separator
+primitives and exposes keyed commands, input permission, inspection and literal
+captions. CUI owns rendering, placement and navigation. The native menu test
+compares its open-popup pixels with direct CUI calls for text/icon triggers,
+automatic/explicit width and above/below placement.
+
+The same adapter uses `cui_context_menu_begin/end` for context menus attached to
+the last component. Anonymous target roots get a native identity and hit
+registration; CUI owns hit testing, pointer positioning, rendering and input.
+Context-popup ownership is separate from the target's widget state. Context
+menus use the same command conversion, rows, inspection and retirement paths
+as dropdowns. The pixel test also compares a context popup with direct CUI.
 
 `control_state.c` owns native companion-state and popup retirement. A single
 forget operation retires a removed control; changing a control's kind retires

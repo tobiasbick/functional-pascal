@@ -96,6 +96,30 @@ public sealed class TuiGalleryTests
             await Point("release", column, row);
             Assert.Contains("Confirmed: 1", Screen(await Request("snapshot")));
 
+            Assert.Equal("presented", await Turn(new()
+                { ["kind"] = "scroll", ["column"] = 100, ["row"] = 30, ["delta"] = 100 }));
+            await Choose("view/1");
+            Assert.Equal("true", Control(await Request("snapshot"), "view/1").GetProperty("value").GetString());
+            await Focus("range/0");
+            await Key("Right");
+            var segments = await Request("snapshot");
+            Assert.Equal("true", Control(segments, "range/1").GetProperty("value").GetString());
+            Assert.Equal("true", Control(segments, "view/1").GetProperty("value").GetString());
+
+            await Focus("options");
+            Assert.Equal("presented", await Key("Down"));
+            var dropdown = await Request("snapshot");
+            Assert.True(Control(dropdown, "options/rename").GetProperty("focused").GetBoolean());
+            Assert.Contains("Project", Screen(dropdown));
+            Assert.Contains("Ctrl D", Screen(dropdown));
+            await Key("Down");
+            await Key("Enter");
+            Assert.Equal("false", Control(await Request("snapshot"), "options").GetProperty("value").GetString());
+            await Focus("more-actions");
+            await Key("Down");
+            Assert.True(Control(await Request("snapshot"), "more-actions/archive").GetProperty("focused").GetBoolean());
+            await Key("Escape");
+
             await Choose("pages/actions");
             await Choose("split-save");
             Assert.Contains("Saved", Screen(await Request("snapshot")));
@@ -181,7 +205,7 @@ public sealed class TuiGalleryTests
             Assert.Equal("light", Control(toggled, "theme-toggle").GetProperty("value").GetString());
             await Key("Enter");
             Assert.Equal("true", Control(await Request("snapshot"), "theme/dark").GetProperty("value").GetString());
-            await Choose("theme/dark");
+            Assert.Equal("unchanged", await Turn(new() { ["kind"] = "activate", ["control"] = "theme/dark" }));
             await Choose("pages/buttons");
 
             await Resize(40, 17);

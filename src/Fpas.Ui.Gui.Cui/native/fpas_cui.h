@@ -14,6 +14,7 @@
 #include "widgets/status_button.h"
 #include "widgets/segmented.h"
 #include "widgets/split_button.h"
+#include "widgets/menu.h"
 
 /** Presents the completed current frame without waiting for more input.
  * @param app Live UI-thread application with a frame open.

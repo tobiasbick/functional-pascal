@@ -1,0 +1,135 @@
+unit GalleryDropdownContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+begin
+  for Value: Gui.Control in Session.Snapshot().Controls do
+    if Value.Id = Id then
+      return Value;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing menu control: ' + Id);
+end function;
+
+// Checks both original dropdown examples through the packaged public gallery.
+// ## Parameters
+// - `Renderer`: Native renderer to verify.
+// - `Capture`: Prefix for the open-menu gallery screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    Result := Next.Model.MenuResult;
+    return if Focus = '' then Next
+      else new App.Transition<State.Model, State.Msg>(
+        Next.Model,
+        [App.Focus<State.Msg>(Focus)]
+      )
+      end if;
+  end function;
+  procedure Inject();
+  begin
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    Pending := Value;
+    Check(Session.Step(), 'Menu key frame closed.');
+    Check(Session.Step(), 'Menu transition frame closed.');
+  end procedure;
+  procedure FocusMenu(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Focus := Id;
+    discard Session.Post(State.Msg.Preview);
+    Check(Session.Step(), 'Menu focus request failed.');
+    Focus := '';
+    Check(Control(Session, Id).Focused, 'Menu trigger did not receive focus.');
+  end procedure;
+begin
+  var Focus: string := '';
+  var Pending: int := 0;
+  var Result: string := '';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI dropdown gallery',
+    1240,
+    1400,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Buttons),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Check(Session.Step(), 'Dropdown gallery did not present.');
+  Check(Control(Session, 'options').Text = 'Options', 'The native Options example is missing.');
+  Check(
+    Control(Session, 'more-actions').Text = 'More actions',
+    'The native icon-only example needs its accessible name.'
+  );
+  Check(
+    Control(Session, 'more-actions').Bounds.Width = 36,
+    'The compact menu trigger must stay square.'
+  );
+  FocusMenu(Session, 'options');
+  Key(Session, 10);
+  Check(
+    Control(Session, 'options').Value = 'true' and Result = '',
+    'Down must open without running a command.'
+  );
+  Check(
+    Control(
+      Session,
+      'options/rename'
+    ).Text = 'Rename' and Control(Session, 'options/delete').Text = 'Delete',
+    'Native menu commands are missing.'
+  );
+  Key(Session, 10);
+  Key(Session, 10);
+  Key(Session, 2);
+  Check(
+    Result = 'Duplicate' and Control(Session, 'options').Value = 'false',
+    'Native selection must send the chosen message and close.'
+  );
+  Check(Control(Session, 'options').Focused, 'Selection must retain trigger focus.');
+  Key(Session, 10);
+  Key(Session, 3);
+  Check(
+    Result = 'Duplicate' and Control(Session, 'options').Value = 'false',
+    'Escape must dismiss without a message.'
+  );
+  FocusMenu(Session, 'more-actions');
+  Key(Session, 10);
+  Check(
+    Control(
+      Session,
+      'more-actions/archive'
+    ).Text = 'Archive' and Control(Session, 'more-actions/export').Text = 'Export',
+    'The icon-only example must open the original commands.'
+  );
+  Key(Session, 3);
+  FocusMenu(Session, 'options');
+  Key(Session, 10);
+  Session.CapturePng(Capture + '.dropdown.png');
+end procedure;
+end unit;

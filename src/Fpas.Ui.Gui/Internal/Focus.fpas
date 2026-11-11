@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -37,6 +37,25 @@ begin
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
+    when E.Element.Segments(
+      const Id: string,
+      const Items: array of Segmented.Item,
+      const Selected: int,
+      _,
+      const Settings: Segmented.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return Segmented.ItemId(Id, Selected);
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Segmented.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
     when E.Element.ThemeChoice(const Id: string, _, _, const Settings: ThemeSwitchers.Options):
       if Settings.Enabled then
         for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
@@ -45,6 +64,10 @@ begin
             return Item;
           end if;
         end for;
+      end if;
+    when E.Element.Dropdown(const Id: string, _, _, const Settings: Menus.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
       end if;
     when E.Element.SplitAction(const Id: string, _, _, _, const Settings: Split.Options):
       if Settings.Enabled then
@@ -89,6 +112,8 @@ begin
           return Found;
         end if;
       end for;
+    when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
+      return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Sized(const Child: E.Element<TMsg>, _):
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Styled(const Child: E.Element<TMsg>, _):
@@ -151,7 +176,12 @@ begin
       end for;
 
       return Found;
-    when E.Element.Sized(const Child: E.Element<TMsg>, _):
+    when E.Element.Contextual(
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Sized(const Child: E.Element<TMsg>, _):
       return TopModal<TMsg>(Child, Prepared);
     when E.Element.Styled(const Child: E.Element<TMsg>, _):
       return TopModal<TMsg>(Child, Prepared);

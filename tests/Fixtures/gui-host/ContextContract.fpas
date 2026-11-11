@@ -1,0 +1,170 @@
+unit GalleryContextContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Validation as V, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing context menu control: ' + Id);
+end function;
+
+procedure Validation();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target);
+  begin
+    var Rejected: bool := false;
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Rejected := true;
+    end try;
+
+    Check(Rejected, 'Invalid or non-graphical context menus must fail before presentation.');
+  end procedure;
+begin
+  const Entries: array of M.Entry<int> := [M.Entry<int>.Action(new M.Item<int>('copy', 'Copy', 1))];
+  const Node: E.Element<int> := M.ContextMenu<int>(
+    'context',
+    B.Button<int>('target', 'Target', 0),
+    Entries
+  );
+  discard V.Prepare<int>(Node, V.Target.Graphical);
+  Reject(Node, V.Target.Terminal);
+  Reject(Node, V.Target.Portable);
+  Reject(
+    M.ContextMenu<int>('context', B.Button<int>('context/copy', 'Collision', 0), Entries),
+    V.Target.Graphical
+  );
+  Reject(
+    M.ContextMenu<int>('context', E.Text<int>('Target'), [Entries[0], Entries[0]]),
+    V.Target.Graphical
+  );
+end procedure;
+
+// Verifies the GUI gallery's native context menu and captures its open state.
+// ## Parameters
+// - `Renderer`: Native renderer to verify.
+// - `Capture`: Prefix for the context-menu gallery screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    Last := Next.Model.MenuResult;
+    return Next;
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Right >= 0 then
+      Window.SetRightButton(Right = 1);
+      Right := -1;
+    end if;
+
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    Check(Session.Step(), 'The context menu frame closed.');
+  end procedure;
+  procedure Open(Session: Gui.Session<State.Msg>; Area: Cui.CuiRectangle);
+  begin
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+    Right := 1;
+    Step(Session);
+    Right := 0;
+    Step(Session);
+    Check(Control(Session, 'context').Value = 'true', 'Right click must open CUI at the pointer.');
+  end procedure;
+  procedure Key(Session: Gui.Session<State.Msg>; Code: int);
+  begin
+    Pending := Code;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  Validation();
+  var Last: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Right: int := -1;
+  var Left: int := -1;
+  var Pending: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI context gallery',
+    1240,
+    900,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays),
+    Update, View.Build, Window, 256, Inject, ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  const Area: Cui.CuiRectangle := Control(Session, 'context').Bounds;
+  Check(Area.Width > 0 and Area.Height > 0, 'The gallery needs a real context target.');
+  Open(Session, Area);
+  Check(
+    Control(
+      Session,
+      'context/copy'
+    ).Text = 'Copy' and Control(Session, 'context/delete').Text = 'Delete',
+    'Native context commands are missing.'
+  );
+  Key(Session, 10);
+  Key(Session, 10);
+  Key(Session, 2);
+  Check(
+    Last = 'Copy' and Control(Session, 'context').Value = 'false',
+    'Choosing must dispatch once and close.'
+  );
+  Check(
+    Sys.Object.Equals(Control(Session, 'context').Bounds, Area),
+    'Attaching a context menu must preserve target geometry.'
+  );
+  Open(Session, Area);
+  Key(Session, 3);
+  Check(
+    Last = 'Copy' and Control(Session, 'context').Value = 'false',
+    'Escape must close without a command.'
+  );
+  Open(Session, Area);
+  X := 5.0F;
+  Y := 5.0F;
+  Left := 1;
+  Step(Session);
+  Left := 0;
+  Step(Session);
+  Check(
+    Control(Session, 'context').Value = 'false' and Last = 'Copy',
+    'An outside click must close without a command.'
+  );
+  Open(Session, Area);
+  Session.CapturePng(Capture + '.context.png');
+end procedure;
+end unit;

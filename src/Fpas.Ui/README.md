@@ -15,7 +15,7 @@ model remain authoritative until an update supplies new values.
 
 Keep interactive control IDs, modal IDs and cached subview IDs nonempty,
 unique throughout the view, and stable between frames. Treat strings as
-case-sensitive. Sidebar and split-menu keys are unique within their own group.
+case-sensitive. Sidebar, dropdown and split-menu keys are unique within their own group.
 An item key can repeat in another group. Keep view records,
 arrays and callbacks unchanged for as long as the host retains
 them. Replace changed data on a subsequent view.
@@ -32,6 +32,9 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Text and titled or plain divider | Yes | Yes | Yes |
 | Button variants, sizes, icons, busy state and width | Yes | Yes | Yes |
 | Button group with a shared outline | Yes | Yes | Yes |
+| Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
+| Context menu attached to a component | | | Yes |
+| Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
@@ -184,6 +187,28 @@ in order. Each member keeps its own activation gesture.
 GUI draws the native CUI group. TUI uses a cell outline and reserves one
 column for each divider.
 
+## Segmented control
+
+`Fpas.Ui.SegmentedControls.SegmentedControl` takes a stable group ID, one through
+32 `Item` choices, a model-owned selected index and an `OnChange` mapper. Array
+positions define identity, as in CUI; update the selected index together with
+any changes to the choices. Labels are literal and provide accessible names.
+Items can supply CUI icons and explicit terminal equivalents; `IconOnly` hides
+the GUI caption while the terminal keeps the readable label.
+
+`Options` selects the three native control sizes, full-width allocation and
+input permission. Full-width choices share the horizontal allocation equally.
+Tab visits each choice without changing selection. Left/Right move focus and
+propose the adjacent choice without wrapping. Pointer, Enter and Space propose
+a focused choice; activating the selected choice proposes nothing. The model
+may reject a proposal. Use `ItemId(Id, Index)` for individual focus requests.
+
+GUI delegates layout, drawing and animation to CUI's segmented primitive. TUI
+uses joined cell buttons with the same model and input contract; large segments
+occupy two rows and the other sizes one. The theme switcher reuses these terminal
+segments with named appearance choices. Both galleries clone the upstream view
+and compact range examples on the Buttons page.
+
 ## Icon button
 
 `Fpas.Ui.IconButtons.IconButton` takes a stable ID, a CUI font glyph, a
@@ -321,6 +346,59 @@ Use `SplitButtons.MenuId(Id)` to request chevron focus and
 popup. TUI places a cell menu against the trailing edge of the split button
 and confines input to it while open. Long terminal menus support wheel and
 Page Up/Page Down scrolling.
+
+## Dropdown menu
+
+`Fpas.Ui.Menus.Menu` takes a trigger ID, a literal caption, ordered `Entry`
+content and optional `Options`. Use `Entry.Action(new Item<TMsg>(Key, Label,
+Message, ...))` for commands, `Entry.Label(Text)` for section captions and
+`Entry.Separator` for rules. Command keys define identity independently of
+caption and position; `Menus.ItemId(Id, Key)` returns the inspection identity.
+
+Commands can have a native icon, a terminal equivalent, a shortcut hint,
+input permission, a danger color and a model-owned check mark. Shortcut hints
+are display-only; bind application shortcuts through the ordinary input API.
+Choosing a checked command still sends its message; Update owns any change
+to its checked state. Noninteractive rows never send messages.
+
+Options select the native trigger variant, icon-only presentation, preferred
+placement and logical popup width. Zero width uses content sizing with CUI's
+180-unit minimum. GUI uses CUI's menu primitives for layout, paint, input,
+animation and visibility. The caption remains the accessible name and tooltip
+for an icon-only trigger; the native ellipsis is its default icon.
+
+Down, Enter or pointer activation opens the focused trigger. Native CUI owns
+the GUI highlight; Up/Down move it and Enter chooses. Escape, an outside click
+or a choice closes the menu. Disabling or removing the trigger retires its
+open popup. Empty dynamic menus can still be dismissed. TUI shares the
+split-button popup foundation, starts on the first enabled command, skips
+disabled commands and decorations during focus navigation, and uses cell
+geometry for placement, width, clipping and scrolling. It keeps a readable
+trigger caption when no terminal icon is supplied. Both galleries show
+the original Options and More actions examples; their commands are harmless
+model updates.
+
+## Context menu
+
+`Fpas.Ui.Menus.ContextMenu(Id, Target, Entries, Enabled)` attaches CUI's context
+menu to the target's native root component. It returns that same target with
+its layout, actions and state intact. `Entries` uses the dropdown's `Item` and
+`Entry` types, including icons, shortcut hints, checked/disabled commands,
+danger colors, section captions and separators. `Menus.ItemId` also applies.
+
+CUI opens the menu at the pointer on right press, handles its native placement,
+Up/Down and Enter, and closes it after selection, Escape or an outside click.
+Opening requires a pointer. Interactive descendants retain their own hit areas;
+attach a menu to the component that should receive the right click. Static
+compositions can provide a whole right-click area. The wrapper adds no visual
+container, positioning engine or application-owned open state. Disabling or
+removing the menu closes its popup without retiring the target's widget state.
+
+Snapshots use `context-menu` for the target area and `menu-item` for open
+commands. The target value reports whether the popup accepts input. Context
+menus require the graphical profile; terminal and portable preflight reject
+them. The GUI gallery's Overlays page shows Cut, Copy, Paste and Delete as
+harmless preview messages.
 
 ## Scrolling
 

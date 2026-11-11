@@ -23,6 +23,9 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Buttons, icon buttons and connected button groups.
 - Copy, hold, confirmation, status and split buttons.
 - Theme switcher and sun/moon toggle with model-owned palette updates.
+- Segmented controls with labels/icons, native sizes and full-width allocation.
+- Dropdown menus with native triggers, command states, hints, labels and separators.
+- Context menus attached to existing target components, using the same menu entries.
 - Sidebar navigation and edge sheets/drawers.
 - Text, separators, rows/columns, sizing, borders, semantic styles and scrolling
   as the foundations needed to compose these widgets.

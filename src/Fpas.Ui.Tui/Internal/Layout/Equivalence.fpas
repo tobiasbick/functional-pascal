@@ -1,14 +1,14 @@
 unit Fpas.Ui.Tui.Internal.Layout.Equivalence;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, System as Sys;
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin
   case Left of
-    when Tree.Binding.Invoke(const Action: Actions.IActivatable<TMsg>):
+    when Tree.Binding.Invoke(_):
       case Right of
-        when Tree.Binding.Invoke(const Other: Actions.IActivatable<TMsg>):
-          return Sys.Object.Equals(Action, Other);
+        when Tree.Binding.Invoke(_):
+          return true;
         else
           return false;
       end case;

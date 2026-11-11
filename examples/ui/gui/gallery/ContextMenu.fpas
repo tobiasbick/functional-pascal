@@ -1,0 +1,72 @@
+unit GuiGallery.ContextMenu;
+
+uses GuiGallery.State as State, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+// Shows the native Overlays gallery's right-click area and context commands.
+// ## Returns
+// A muted target with Cut, Copy, Paste and Delete; commands only update preview state.
+public function View(): E.Element<State.Msg>;
+begin
+  const Target: E.Element<State.Msg> := E.Styled<State.Msg>(
+    E.Column<State.Msg>(
+      new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(28)), Align := L.Alignment.Center),
+      E.Styled<State.Msg>(E.Text<State.Msg>('Right click this area'), S.Role.Secondary)
+    ), S.Role.MutedPanel
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
+    E.Styled<State.Msg>(E.Text<State.Msg>('Popover and context menu'), S.Role.Heading),
+    E.Styled<State.Msg>(
+      E.Column<State.Msg>(
+        new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(24))),
+        M.ContextMenu<State.Msg>(
+          'context', Target, [
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'cut',
+                'Cut',
+                State.Msg.MenuChoice('Cut'),
+                Icon($E14E),
+                Shortcut := 'Ctrl X'
+              )
+            ),
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'copy',
+                'Copy',
+                State.Msg.MenuChoice('Copy'),
+                Icon($E09E),
+                Shortcut := 'Ctrl C'
+              )
+            ),
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'paste',
+                'Paste',
+                State.Msg.MenuChoice('Paste'),
+                Icon($E085),
+                Shortcut := 'Ctrl V'
+              )
+            ),
+            M.Entry<State.Msg>.Separator,
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'delete',
+                'Delete',
+                State.Msg.MenuChoice('Delete'),
+                Icon($E18E),
+                Danger := true
+              )
+            )
+          ]
+        )
+      ), S.Role.OutlinedPanel
+    )
+  );
+end function;
+end unit;

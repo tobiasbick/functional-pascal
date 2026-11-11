@@ -1,6 +1,8 @@
 unit GuiGallery.Buttons;
 
 uses
+  GuiGallery.DropdownMenu as Dropdown,
+  GuiGallery.SegmentedControl as Segmented,
   GuiGallery.State as State, GuiGallery.ButtonGroup as Group, GuiGallery.CopyButton as Copy, GuiGallery.HoldButton as Hold,
   Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as I, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
@@ -209,7 +211,11 @@ begin
       'Groups, copy and hold to confirm',
       'Hold the button until it fills to confirm a destructive action.'
     ),
-    Panel(GroupAndCopy)
+    Panel(GroupAndCopy),
+    Section('Segmented control', 'A highlight glides to the selected option.'),
+    Panel(Segmented.View(Model)),
+    Section('Dropdown menu'),
+    Panel(Dropdown.View())
   );
 end function;
 end unit;

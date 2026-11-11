@@ -6,8 +6,8 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws native CUI segments and returns a model proposal.</summary>
     /// <param name="id">Stable group identity.</param>
-    /// <param name="labels">One through 32 native CUI labels, with empty text for icon-only segments.</param>
-    /// <param name="icons">One glyph per segment, or null for text-only segments.</param>
+    /// <param name="labels">One through 32 literal labels, with empty text for icon-only segments.</param>
+    /// <param name="icons">One glyph per segment, empty for no glyph, or null for text-only segments.</param>
     /// <param name="selected">Model-owned selected ordinal.</param>
     /// <param name="size">Medium, small or large CUI control size.</param>
     /// <param name="fullWidth">Whether the segments fill their allocation.</param>

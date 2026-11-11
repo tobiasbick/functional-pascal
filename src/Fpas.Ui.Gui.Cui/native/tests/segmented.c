@@ -1,6 +1,7 @@
-/* Checks native choices, keyboard focus and preservation of the model palette. */
+/* Checks native segment pixels, keyboard focus and preservation of the model palette. */
 #include "../fpas_cui.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int frame(cui_ctx *ui, int selected, int key, int enabled, int focus, bool with_system, int *nodes) {
@@ -47,6 +48,47 @@ static bool verify(cui_ctx *ui) {
     return memcmp(before, after, sizeof before) == 0 && cui_get_theme_mode(ui) == CUI_THEME_DARK;
 }
 
+static bool pixel_parity(int size, bool full_width, bool with_icons) {
+    const int width = 640, height = 120;
+    const size_t bytes = (size_t)width * height * 4;
+    unsigned char *expected = calloc(1, bytes), *actual = calloc(1, bytes);
+    if (!expected || !actual) { free(expected); free(actual); return false; }
+    bool valid = true;
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        if (!renderer) { valid = false; break; }
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
+        cui_ctx *ui = cui_create(&settings);
+        if (!ui) { cui_sw_destroy(renderer); valid = false; break; }
+        cui_set_viewport(ui, width, height, 1);
+        cui_set_reduced_motion(ui, true);
+        const char *labels[] = { "List", "Board", "Timeline" };
+        const char *icons[] = { CUI_ICON_LIST, CUI_ICON_LAYOUT_DASHBOARD, CUI_ICON_HISTORY };
+        for (int frame_number = 0; frame_number < 3; ++frame_number) {
+            cui_begin_frame(ui, 0.04f);
+            cui_column(ui, .width = CUI_FILL, .pad = 24) {
+                int selected = 1;
+                if (pass) {
+                    int nodes[4];
+                    fpas_cui_segmented(ui, "parity", labels, with_icons ? icons : NULL,
+                        3, selected, size, full_width, 1, 0, nodes);
+                } else {
+                    const cui_segmented_opts options = { .size = (cui_control_size)size,
+                        .full_width = full_width, .icons = with_icons ? icons : NULL };
+                    cui_segmented_ex(ui, "parity", labels, 3, &selected, &options);
+                }
+            }
+            cui_end_frame(ui);
+            cui_sw_render(renderer, cui_get_draw_data(ui), pass ? actual : expected,
+                width, height, width * 4, CUI_SW_RGBA);
+        }
+        cui_destroy(ui); cui_sw_destroy(renderer);
+    }
+    valid = valid && memcmp(expected, actual, bytes) == 0;
+    free(expected); free(actual);
+    return valid;
+}
+
 int main(void) {
     cui_sw_renderer *renderer = cui_sw_create();
     if (!renderer) return 1;
@@ -55,8 +97,12 @@ int main(void) {
     if (!ui) { cui_sw_destroy(renderer); return 1; }
     cui_set_viewport(ui, 640, 480, 1);
     cui_set_reduced_motion(ui, true);
-    const bool passed = verify(ui);
+    bool passed = verify(ui);
+    for (int size = CUI_SIZE_MD; size <= CUI_SIZE_LG; ++size)
+        for (int fill = 0; fill < 2; ++fill)
+            for (int icons = 0; icons < 2; ++icons)
+                passed = pixel_parity(size, fill != 0, icons != 0) && passed;
     cui_destroy(ui); cui_sw_destroy(renderer);
-    if (!passed) fprintf(stderr, "Theme selection changed the palette, lost focus or ignored controlled input.\n");
+    if (!passed) fprintf(stderr, "Segments changed native pixels or palette, lost focus or ignored controlled input.\n");
     return passed ? 0 : 1;
 }

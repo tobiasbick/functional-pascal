@@ -1,6 +1,7 @@
 unit GuiGallery.View;
 
 uses
+  GuiGallery.ContextMenu as ContextMenu,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
@@ -122,7 +123,8 @@ begin
             )
           ),
           S.Role.OutlinedPanel
-        )
+        ),
+        ContextMenu.View()
       );
     else
       raise new Sys.InvalidOperationException('Unknown gallery page.');

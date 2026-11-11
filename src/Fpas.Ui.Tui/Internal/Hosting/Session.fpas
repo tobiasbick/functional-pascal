@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -230,7 +230,7 @@ public function Start<TModel, TMsg>(
         Theme,
         CopyFeedback,
         HoldFeedback,
-        SplitMenus,
+        Menus,
         Confirmations
       );
       Phase := 'layout_or_drawing';
@@ -243,7 +243,7 @@ public function Start<TModel, TMsg>(
           Theme,
           CopyFeedback,
           HoldFeedback,
-          SplitMenus,
+          Menus,
           Confirmations
         );
         Native := Arrangement.Arrange<TMsg>(
@@ -256,8 +256,8 @@ public function Start<TModel, TMsg>(
         );
       end if;
       const ActiveMenu: A.Scope<TMsg>? := Native.Active;
-      if SplitMenus.Id() <> '' and (ActiveMenu = null or ActiveMenu.Id <> SplitMenus.Id()) then
-        SplitMenus.Close();
+      if Menus.Id() <> '' and (ActiveMenu = null or ActiveMenu.Id <> Menus.Id()) then
+        Menus.Close();
       end if;
 
       return Native with
@@ -452,7 +452,7 @@ begin
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
   const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
   const HoldFeedback: Hold.State := Hold.Create();
-  const SplitMenus: SplitWidget.State := SplitWidget.Create();
+  const Menus: MenuWidget.State := MenuWidget.Create();
   const Confirmations: Confirm.State := Confirm.Create();
   var PendingFocus: string? := null;
   var Viewport: T.Viewport := new T.Viewport(Columns, Rows);

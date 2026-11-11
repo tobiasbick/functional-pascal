@@ -1,0 +1,326 @@
+program DropdownMenuContract;
+
+uses
+  Fpas.Ui.Menus as M, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Styles as S, System as Sys, System.Console as Console, System.Collections.Generic as Lists;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Tui.HeadlessSession; Id: string): Tui.ControlSnapshot;
+begin
+  for Item: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when Tui.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+function Entries(): array of M.Entry<int>;
+begin
+  return [
+    M.Entry<int>.Label('Project'),
+    M.Entry<int>.Action(new M.Item<int>('rename', 'Rename ## literally', 1, Shortcut := 'F2')),
+    M.Entry<int>.Separator,
+    M.Entry<int>.Action(new M.Item<int>('disabled', 'Disabled', 2, Enabled := false)),
+    M.Entry<int>.Action(new M.Item<int>('delete', 'Delete', 3, Danger := true, Checked := true))
+  ];
+end function;
+
+procedure Behavior();
+  function Update(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    Last := Message;
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      M.Menu<int>('options', 'Options', Entries()),
+      M.Menu<int>(
+        'more',
+        'More actions',
+        [M.Entry<int>.Action(new M.Item<int>('export', 'Export', 4))],
+        new M.Options(IconOnly := true)
+      ),
+      Split.SplitButton<int>('split', 'Save', 5, [new Split.Item<int>('draft', 'Draft', 6)]),
+      B.Button<int>('disable', 'Disable', 7),
+      M.Menu<int>('disabled-menu', 'Disabled menu', Entries(), new M.Options(Enabled := false))
+    );
+  end function;
+begin
+  var Last: int := 0;
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 70, 24);
+  Send(Session, Tui.Input.Focus('disabled-menu'));
+  Send(Session, Tui.Input.Activate('disabled-menu'));
+  Check(
+    Control(Session, 'disabled-menu').Value = 'false' and Last = 0,
+    'Disabled menus cannot open.'
+  );
+  Send(Session, Tui.Input.Focus('options'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'options/rename').Focused and Last = 0,
+    'Down opens without invoking a command.'
+  );
+  Check(not Control(Session, 'options/disabled').Enabled, 'Disabled commands stay noninteractive.');
+  const Frame: Tui.Frame := Session.Snapshot();
+  const Rename: Tui.ControlSnapshot := Control(Session, 'options/rename');
+  const Delete: Tui.ControlSnapshot := Control(Session, 'options/delete');
+  Check(
+    Frame.Cells[Delete.Row * Frame.Columns + Delete.Column + 1].Text = 'D',
+    'Menu commands must align at their leading padding.'
+  );
+  const Header: int := (Rename.Row - 1) * Frame.Columns + Rename.Column;
+  Check(
+    Frame.Cells[Header].Colors.Background = Frame.Cells[
+      Header + Rename.Width - 1
+    ].Colors.Background,
+    'Section captions must retain the popup backdrop.'
+  );
+  Check(
+    Sys.String.Join(
+      #10,
+      Session.Snapshot().Lines
+    ).Contains('F2') and Sys.String.Join(#10, Session.Snapshot().Lines).Contains('✓'),
+    'Hints and check marks must render.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.F2, K.KeyModifiers.None));
+  Check(
+    Last = 0 and Control(Session, 'options').Value = 'true',
+    'Shortcut hints do not install key bindings.'
+  );
+  const Disabled: Tui.ControlSnapshot := Control(Session, 'options/disabled');
+  Send(Session, Tui.Input.Click(Disabled.Column, Disabled.Row));
+  Send(Session, Tui.Input.Activate('options/disabled'));
+  Check(
+    Last = 0 and Control(Session, 'options').Value = 'true',
+    'Disabled items reject pointer and direct activation.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'options/delete').Focused,
+    'Navigation skips decorations and disabled commands.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(
+    Last = 3 and Control(
+      Session,
+      'options'
+    ).Value = 'false' and Control(Session, 'options').Focused,
+    'Choosing closes and restores trigger focus.'
+  );
+  Send(Session, Tui.Input.Activate('options'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
+  Check(
+    Last = 3 and Control(Session, 'options').Value = 'false',
+    'Escape dismisses without a command.'
+  );
+  Send(Session, Tui.Input.Activate('more'));
+  Check(
+    Control(Session, 'more/export').Focused,
+    'An icon-only trigger uses the same menu contract.'
+  );
+  Send(Session, Tui.Input.Click(69, 23));
+  Check(
+    Control(Session, 'more').Value = 'false' and Last = 3,
+    'An outside click dismisses without a command.'
+  );
+  Send(Session, Tui.Input.Activate('options'));
+  Send(Session, Tui.Input.Activate('more'));
+  Check(Control(Session, 'options').Value = 'true', 'The active popup blocks background triggers.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
+  Send(Session, Tui.Input.Focus('split/menu'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(Control(Session, 'split/menu/draft').Focused, 'Split buttons use the shared popup.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(Last = 6, 'Split commands retain their stable keys and messages.');
+end procedure;
+
+procedure Placement();
+  function Update(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return M.Menu<int>('fit', 'Options', Entries(), Settings);
+  end function;
+begin
+  var Settings: M.Options := new M.Options(Width := 320.0F);
+  for Index: int := 0 to 9 do
+    Settings := Settings with
+      Position := cast<M.Placement>(Index);
+    end with;
+    using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+      0,
+      Update,
+      View,
+      50,
+      12
+    );
+    Send(Session, Tui.Input.Activate('fit'));
+    const Item: Tui.ControlSnapshot := Control(Session, 'fit/rename');
+    Check(
+      Item.Column >= 0 and Item.Row >= 0 and Item.Column + Item.Width <= 50 and Item.Row +
+        Item.Height <= 12,
+      'Placements must fit the viewport.'
+    );
+    Check(
+      Item.Width = 38,
+      'The explicit 320-unit popup must use 40 terminal columns including its border.'
+    );
+  end for;
+end procedure;
+
+procedure Dynamic();
+  function Update(State: bool; Message: int): Mvu.Transition<bool, int>;
+  begin
+    return new Mvu.Transition<bool, int>(not State, []);
+  end function;
+  function View(Removed: bool): E.Element<int>;
+  begin
+    return if not Visible then E.Text<int>('No menu')
+      else M.Menu<int>(
+        'dynamic',
+        'Dynamic',
+        if Removed then [] else Entries() end if,
+        new M.Options(Enabled := Enabled)
+      )
+      end if;
+  end function;
+begin
+  var Visible: bool := true;
+  var Enabled: bool := true;
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<bool, int>(
+    false,
+    Update,
+    View,
+    50,
+    12
+  );
+  Send(Session, Tui.Input.Activate('dynamic'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Send(Session, Tui.Input.Activate('dynamic'));
+  Check(Control(Session, 'dynamic').Value = 'true', 'An empty dynamic menu remains dismissible.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
+  Check(Control(Session, 'dynamic').Focused, 'An empty menu restores trigger focus.');
+  Send(Session, Tui.Input.Activate('dynamic'));
+  Enabled := false;
+  Send(Session, Tui.Input.Resize(51, 12));
+  Enabled := true;
+  Send(Session, Tui.Input.Resize(50, 12));
+  Check(Control(Session, 'dynamic').Value = 'false', 'Re-enabling must not restore an open popup.');
+  Send(Session, Tui.Input.Activate('dynamic'));
+  Visible := false;
+  Send(Session, Tui.Input.Resize(51, 12));
+  Visible := true;
+  Send(Session, Tui.Input.Resize(50, 12));
+  Check(Control(Session, 'dynamic').Value = 'false', 'Removed menus must retire their visibility.');
+end procedure;
+
+procedure Scrolling();
+  function Update(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(Message, []);
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return M.Menu<int>('long', 'Long menu', Rows.ToArray());
+  end function;
+begin
+  const Rows: Lists.List<M.Entry<int>> := new Lists.List<M.Entry<int>>();
+  for Index: int := 0 to 49 do
+    Rows.Add(
+      M.Entry<int>.Action(
+        new M.Item<int>('row-' + Index.ToString(), 'Command ' + Index.ToString(), Index)
+      )
+    );
+  end for;
+
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 50, 16);
+  Send(Session, Tui.Input.Activate('long'));
+  Send(Session, Tui.Input.Scroll(4, 5, 20));
+  Check(Control(Session, 'long/row-20').Row >= 0, 'Wheel scrolling must expose later commands.');
+  Send(Session, Tui.Input.KeyPress(K.Key.PageDown, K.KeyModifiers.None));
+  Check(Control(Session, 'long/row-33').Row >= 0, 'Page keys must scroll long menus.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
+  Check(Control(Session, 'long').Focused, 'A scrolled menu must restore trigger focus.');
+end procedure;
+
+procedure Validation();
+  procedure Rejected(Node: E.Element<int>);
+  begin
+    var Failed: bool := false;
+    try
+      discard V.Prepare<int>(Node, V.Target.Portable);
+    catch Error: Sys.ArgumentException do
+      Failed := true;
+    end try;
+
+    Check(Failed, 'Invalid menus must fail before presentation.');
+  end procedure;
+begin
+  Rejected(M.Menu<int>('invalid', '', Entries()));
+  Rejected(
+    M.Menu<int>('invalid', 'Menu', Entries(), new M.Options(Variant := S.ButtonVariant.Active))
+  );
+  Rejected(
+    M.Menu<int>('invalid', 'Menu', Entries(), new M.Options(Position := cast<M.Placement>(10)))
+  );
+  Rejected(M.Menu<int>('invalid', 'Menu', Entries(), new M.Options(Width := Sys.Single.NaN)));
+  Rejected(M.Menu<int>('invalid', 'Menu', Entries(), new M.Options(Width := -1.0F)));
+  Rejected(
+    M.Menu<int>('invalid', 'Menu', [M.Entry<int>.Action(new M.Item<int>('', 'Missing key', 1))])
+  );
+  Rejected(
+    M.Menu<int>(
+      'invalid',
+      'Menu',
+      [
+        M.Entry<int>.Action(new M.Item<int>('same', 'First', 1)),
+        M.Entry<int>.Action(new M.Item<int>('same', 'Second', 2))
+      ]
+    )
+  );
+  Rejected(
+    M.Menu<int>(
+      'invalid',
+      'Menu',
+      [M.Entry<int>.Action(new M.Item<int>('line', 'Two' + #10 + 'lines', 1))]
+    )
+  );
+  Rejected(
+    E.Column<int>(
+      M.Menu<int>('menu', 'Menu', Entries()),
+      B.Button<int>('menu/rename', 'Collision', 1)
+    )
+  );
+end procedure;
+
+begin
+  Validation();
+  Behavior();
+  Placement();
+  Dynamic();
+  Scrolling();
+  Console.WriteLine('Dropdown menu contracts verified');
+end;
+end program;

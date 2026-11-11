@@ -338,7 +338,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         end case;
       end if;
 
-      if Control.Role = 'split-menu' and Key = K.Key.Down and Modifiers = K.KeyModifiers.None then
+      if (Control.Role = 'split-menu' or Control.Role = 'menu') and Key = K.Key.Down and Modifiers =
+        K.KeyModifiers.None
+      then
         discard Invoke(Control);
         return;
       end if;

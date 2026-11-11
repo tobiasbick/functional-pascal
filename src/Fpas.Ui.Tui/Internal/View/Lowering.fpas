@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Tui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.StatusButton as StatusWidget, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as ConfirmWidget, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.HoldButton as HoldWidget, Fpas.Ui.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.StatusButton as StatusWidget, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as ConfirmWidget, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.HoldButton as HoldWidget, Fpas.Ui.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -96,14 +96,14 @@ end function;
 // - `Theme`: Current terminal theme.
 // - `Clipboard`: Host-owned copy feedback and clipboard operations.
 // - `HoldTracking`: Owner session's active pointer hold.
-// - `Menus`: Owner session's split-button popup state.
+// - `Menus`: Owner session's command-menu popup state.
 // - `Confirmations`: Owner session's confirmation windows.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(
   Prepared: V.Prepared<TMsg>; Theme: Th.Theme;
-  Clipboard: CopyWidget.State; HoldTracking: HoldWidget.State; Menus: SplitWidget.State;
+  Clipboard: CopyWidget.State; HoldTracking: HoldWidget.State; Menus: Popup.State;
   Confirmations: ConfirmWidget.State
 ): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
@@ -171,6 +171,20 @@ public function Prepare<TMsg>(
         const Change: function(Themes.Mode): TMsg, const Enabled: bool
       ):
         return ThemeToggle.Lower<TMsg>(Id, Appearance, Change, Enabled);
+      when Ui.Element.Segments(
+        const Id: string, const Items: array of Segmented.Item, const Selected: int,
+        const Change: function(int): TMsg, const Settings: Segmented.Options
+      ):
+        return SegmentedWidget.Lower<TMsg>(
+          Id,
+          Items,
+          Selected,
+          Change,
+          Settings,
+          Theme,
+          Colors,
+          []
+        );
       when Ui.Element.ThemeChoice(
         const Id: string,
         const Selected: ThemeSwitchers.Selection,
@@ -178,6 +192,15 @@ public function Prepare<TMsg>(
         const Settings: ThemeSwitchers.Options
       ):
         return ThemeSwitcher.Lower<TMsg>(Id, Selected, Change, Settings, Theme, Colors);
+      when Ui.Element.Contextual(_, _, _, _):
+        raise new Sys.NotSupportedException('Context menus require the graphical profile.');
+      when Ui.Element.Dropdown(
+        const Id: string,
+        const Label: string,
+        const Entries: array of M.Entry<TMsg>,
+        const Settings: M.Options
+      ):
+        return DropdownMenu.Lower<TMsg>(Id, Label, Entries, Settings, Menus, Theme);
       when Ui.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options

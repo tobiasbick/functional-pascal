@@ -1,6 +1,8 @@
 unit Gallery.Buttons;
 
 uses
+  Gallery.DropdownMenu as Dropdown,
+  Gallery.SegmentedControl as Segmented,
   Gallery.State as State, Gallery.ButtonGroup as Group, Gallery.CopyButton as Copy, Gallery.HoldButton as Hold,
   Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as I, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
@@ -188,7 +190,15 @@ begin
     Heading('States'),
     Panel(States),
     Heading('Groups, copy and hold to confirm'),
-    Panel(GroupAndCopy)
+    Panel(GroupAndCopy),
+    Heading('Segmented control'),
+    E.Styled<State.Msg>(
+      E.Text<State.Msg>('A highlight glides to the selected option.'),
+      S.Role.Secondary
+    ),
+    Panel(Segmented.View(Model)),
+    Heading('Dropdown menu'),
+    Panel(Dropdown.View())
   );
 end function;
 end unit;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 // A declarative view for a host to prepare and present.
 //
@@ -27,10 +27,16 @@ public type Element<TMsg> = variant
   ThemeChoice(Id: string; Selected: ThemeSwitchers.Selection; OnChange: function(ThemeSwitchers.Selection): TMsg; Settings: ThemeSwitchers.Options);
   // Propose the opposite concrete light/dark appearance through a compact action.
   ThemeFlip(Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool);
+  // Select one positional choice through native CUI segments or terminal cells.
+  Segments(Id: string; Items: array of Segmented.Item; Selected: int; OnChange: function(int): TMsg; Settings: Segmented.Options);
   // A main action and a host-owned popup of related actions.
   SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>; Settings: Split.Options);
   // Join adjacent buttons under a shared outline.
   ButtonGroup(Children: array of Element<TMsg>);
+  // Open a native command menu from one trigger.
+  Dropdown(Id: string; Label: string; Entries: array of Menus.Entry<TMsg>; Settings: Menus.Options);
+  // Attach CUI's GUI-only right-click menu to a target component.
+  Contextual(Id: string; Target: Element<TMsg>; Entries: array of Menus.Entry<TMsg>; Enabled: bool);
   // Display grouped destinations with a single model-owned active key.
   Sidebar(Id: string; Sections: array of N.Section<TMsg>; ActiveKey: string?; Enabled: bool);
   // Lay children out along one axis in order.
@@ -268,7 +274,7 @@ begin
   return Element<TMsg>.TerminalStyle(Child, Colors);
 end function;
 
-// Reuses a subtree while its typed dependencies compare equal.
+// Reuses Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, a subtree while its typed dependencies compare equal.
 //
 // ## Type parameters
 // - `TDeps`: The type of dependencies captured for the view.

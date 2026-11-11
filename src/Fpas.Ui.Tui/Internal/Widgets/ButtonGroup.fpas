@@ -10,9 +10,10 @@ uses Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree 
 // - `Children`: Validated, lowered buttons in focus order.
 // - `Theme`: Current palette for the internal dividers.
 // - `Style`: Colors inherited from the containing view.
+// - `FullWidth`: Fill the horizontal allocation with equally weighted members.
 // ## Returns
 // A framed terminal row retaining each button's input binding.
-public function Lower<TMsg>(Children: array of E.Element<TMsg>; Theme: Th.Theme; Style: T.Style): E.Element<TMsg>;
+public function Lower<TMsg>(Children: array of E.Element<TMsg>; Theme: Th.Theme; Style: T.Style; FullWidth: bool := false): E.Element<TMsg>;
 begin
   const Flow: E.Flow := new E.Flow();
   if Children.Length = 0 then
@@ -52,14 +53,15 @@ begin
             S.ButtonVariant.Default then S.ButtonVariant.Ghost
           else View.Variant
           end if;
+        const Member: E.Element<TMsg> := E.Element<TMsg>.Action(
+          Id, Handler, Enabled, View with
+            Variant := Variant;
+            ArrowFocus := false;
+            Joined := true;
+          end with
+        );
         Row.Add(
-          E.Element<TMsg>.Action(
-            Id, Handler, Enabled, View with
-              Variant := Variant;
-              ArrowFocus := false;
-              Joined := true;
-            end with
-          )
+          if FullWidth then E.Element<TMsg>.Sized(Member, new E.Flex(Grow := 1)) else Member end if
         );
       else
         raise new Sys.InvalidOperationException('A lowered button group member must be an action.');
@@ -67,7 +69,7 @@ begin
   end for;
 
   return E.Element<TMsg>.ButtonGroup(
-    E.Element<TMsg>.Framed(E.Element<TMsg>.Stack(Row.ToArray(), true, Flow), '')
+    E.Element<TMsg>.Framed(E.Element<TMsg>.Stack(Row.ToArray(), true, Flow), ''), FullWidth
   );
 end function;
 
@@ -78,11 +80,17 @@ end function;
 // ## Parameters
 // - `Body`: The framed row.
 // - `Area`: Available terminal cells.
+// - `FullWidth`: Whether to fill the horizontal allocation.
 // ## Returns
 // The fitted group rectangle.
-public function Bounds<TMsg>(Body: E.Element<TMsg>; Area: F.Rect): F.Rect;
+public function Bounds<TMsg>(Body: E.Element<TMsg>; Area: F.Rect; FullWidth: bool): F.Rect;
 begin
-  const Width: int := Sys.Math.Min(Area.Width, M.Intrinsic<TMsg>(Body, true));
+  const Width: int := if FullWidth then Area.Width
+    else Sys.Math.Min(
+      Area.Width,
+      M.Intrinsic<TMsg>(Body, true)
+    )
+    end if;
   const Height: int := Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Body, false, Width));
   return new F.Rect(Area.X, Area.Y, Width, Height);
 end function;

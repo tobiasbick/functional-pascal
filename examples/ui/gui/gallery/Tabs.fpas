@@ -1,0 +1,45 @@
+unit GuiGallery.Tabs;
+
+uses
+  GuiGallery.State as State, GuiGallery.Sections as G, Fpas.Ui.Tabs as T,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// Builds the original underline and icon pill tabs.
+//
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// Both tab strips and the selected underline tab's content.
+public function Rows(Model: State.Model): array of E.Element<State.Msg>;
+begin
+  const Underline: array of T.Item := [
+    new T.Item('Overview'), new T.Item('Analytics'), new T.Item('Reports'), new T.Item('Settings')
+  ];
+  const Pills: array of T.Item := [
+    new T.Item('Account', Sys.Char.ConvertFromUtf32($E19F)),
+    new T.Item('Password', Sys.Char.ConvertFromUtf32($E10B)),
+    new T.Item('Billing', Sys.Char.ConvertFromUtf32($E0AA))
+  ];
+  return [
+    T.Tabs<State.Msg>('tabs', Underline, Model.ActiveTab, State.Msg.SetTab),
+    E.Column<State.Msg>(
+      G.Space(4),
+      E.Column<State.Msg>(
+        new L.Flow(Gap := G.Points(6)),
+        E.Styled<State.Msg>(E.Text<State.Msg>(Underline[Model.ActiveTab].Label), S.Role.Label),
+        E.Styled<State.Msg>(
+          E.Text<State.Msg>(
+            'Tabs switch between views of the same thing. Content changes in place.'
+          ),
+          S.Role.Secondary
+        )
+      ),
+      G.Space(4)
+    ),
+    T.Tabs<State.Msg>(
+      'pill-tabs', Pills, Model.ActivePillTab, State.Msg.SetPillTab,
+      new T.Options(Appearance := T.Variant.Pill)
+    )
+  ];
+end function;
+end unit;

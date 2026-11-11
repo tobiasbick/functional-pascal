@@ -1,7 +1,12 @@
 unit GuiGallery.View;
 
 uses
+  GuiGallery.Selection as Selection,
+  GuiGallery.Navigation as NavPage,
   GuiGallery.ContextMenu as ContextMenu,
+  GuiGallery.Toast as Toast,
+  GuiGallery.Tooltip as Tooltip,
+  GuiGallery.ConfirmPopover as ConfirmPopover,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
@@ -46,10 +51,14 @@ begin
       new N.Section<State.Msg>(
         'Components', [
           Destination(State.Page.Overview, $E1C1), Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Selection, $E29A), Destination(State.Page.Navigation, $E09B),
           Destination(State.Page.Overlays, $E529)
         ]
       ),
-      new N.Section<State.Msg>('Extended', [Destination(State.Page.Actions, $E09A)])
+      new N.Section<State.Msg>(
+        'Extended',
+        [Destination(State.Page.Actions, $E09A), Destination(State.Page.Disclosure, $E529)]
+      )
     ],
     Page.ToString().ToLowerInvariant()
   );
@@ -83,7 +92,7 @@ begin
   );
 end function;
 
-function Preview(Model: State.Model; Wide: bool): E.Element<State.Msg>;
+function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
 begin
   case Model.Active of
     when State.Page.Overview:
@@ -103,11 +112,17 @@ begin
         )
       );
     when State.Page.Actions:
-      return Actions.View(Model, Wide);
+      return Actions.View(Model, Width >= 600);
     when State.Page.Buttons:
-      return Buttons.View(Model, Wide);
+      return Buttons.View(Model, Width >= 600);
+    when State.Page.Selection:
+      return Selection.View(Model, Width >= 536);
+    when State.Page.Navigation:
+      return NavPage.View(Model);
+    when State.Page.Disclosure:
+      return ConfirmPopover.View(Model);
     when State.Page.Overlays:
-      return E.Column<State.Msg>(
+      const Earlier: E.Element<State.Msg> := E.Column<State.Msg>(
         new L.Flow(Gap := Gap(8)),
         E.Styled<State.Msg>(E.Text<State.Msg>('Sheet'), S.Role.Heading),
         E.Styled<State.Msg>(
@@ -124,16 +139,19 @@ begin
           ),
           S.Role.OutlinedPanel
         ),
-        ContextMenu.View()
+        ContextMenu.View(Model)
+      );
+      return E.Column<State.Msg>(
+        new L.Flow(Gap := Gap(20)), Earlier, Toast.View(), Tooltip.View()
       );
     else
       raise new Sys.InvalidOperationException('Unknown gallery page.');
   end case;
 end function;
 
-function Content(Model: State.Model; Compact: bool; Inset: int; Wide: bool): E.Element<State.Msg>;
+function Content(Model: State.Model; Compact: bool; Inset: int; Width: int): E.Element<State.Msg>;
 begin
-  const PreviewContent: E.Element<State.Msg> := Preview(Model, Wide);
+  const PreviewContent: E.Element<State.Msg> := Preview(Model, Width);
   const Gaps: L.Flow := new L.Flow(Gap := Gap(20));
   const Titled: E.Element<State.Msg> := if Model.Active = State.Page.Overview then PreviewContent
     else E.Column<State.Msg>(
@@ -194,7 +212,7 @@ begin
     (Available - 920) div 2
   );
   const Pages: E.Element<State.Msg> := Navigation(Model.Active);
-  const Main: E.Element<State.Msg> := Content(Model, Compact, Inset, Available - 2 * Inset >= 600);
+  const Main: E.Element<State.Msg> := Content(Model, Compact, Inset, Available - 2 * Inset);
   const Body: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
       'drawer',
       Main,

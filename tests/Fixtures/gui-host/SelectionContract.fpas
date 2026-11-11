@@ -1,0 +1,344 @@
+unit GallerySelectionContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, Fpas.Ui.Checkboxes as Checkboxes, Fpas.Ui.Switches as Switches,
+  Fpas.Ui.RadioButtons as Radio, Fpas.Ui.RadioGroups as Radios, Fpas.Ui.Elements as E,
+  Fpas.Ui.RadioCards as Cards, Fpas.Ui.Sliders as S, Fpas.Ui.RangeSliders as R,
+  Fpas.Ui.Chips as Chips, Fpas.Ui.Ratings as Ratings, Fpas.Ui.Layout as L,
+  Fpas.Ui.Validation as V, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id and Item.Key = Key then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing selection control: ' + Id);
+end function;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    var Rejected: bool := false;
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Rejected := Error.Message.Contains(Reason);
+    end try;
+
+    Check(Rejected, 'Expected selection preflight failure: ' + Reason);
+  end procedure;
+begin
+  const Items: array of Radios.Item := [new Radios.Item('First'), new Radios.Item('Second')];
+  const Places: array of Cards.Item := [new Cards.Item('First'), new Cards.Item('Second')];
+  const Nodes: array of E.Element<int> := [
+    Checkboxes.Checkbox<int>('check', 'Check', true, function(Value: bool): int => 1),
+    Switches.Switch<int>('switch', 'Switch', false, function(Value: bool): int => 2),
+    Radio.RadioButton<int>('radio', 'Radio', false, function(): int => 3),
+    Radios.RadioGroup<int>('group', Items, -1, function(Value: int): int => Value),
+    Cards.RadioCards<int>('cards', Places, -1, function(Value: int): int => Value),
+    S.Slider<int>('slider', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4),
+    R.RangeSlider<int>(
+      'range',
+      'Range',
+      new R.Interval(0.0F, 1.0F),
+      0.0F,
+      1.0F,
+      function(Value: R.Interval): int => 5
+    ),
+    Chips.Chip<int>('chip', 'Chip', false, function(Value: bool): int => 6),
+    Ratings.Rating<int>('rating', 'Rating', 0, function(Value: int): int => Value),
+    E.Row<int>(new L.Flow(Wrap := true), E.Text<int>('Wrap'))
+  ];
+  for Node: E.Element<int> in Nodes do
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+    Reject(Node, V.Target.Terminal, 'Graphical profile');
+    Reject(Node, V.Target.Portable, 'Graphical profile');
+  end for;
+
+  Reject(
+    Radios.RadioGroup<int>('invalid', Items, 2, function(Value: int): int => Value),
+    V.Target.Graphical, 'selected index'
+  );
+  Reject(
+    S.Slider<int>('invalid', 'Slider', 0.0F, 0.0F, 0.0F, function(Value: float): int => 4),
+    V.Target.Graphical, 'finite increasing bounds'
+  );
+  Reject(
+    R.RangeSlider<int>(
+      'invalid',
+      'Range',
+      new R.Interval(1.0F, 0.0F),
+      0.0F,
+      1.0F,
+      function(Value: R.Interval): int => 5
+    ),
+    V.Target.Graphical, 'ordered endpoints'
+  );
+  Reject(
+    Ratings.Rating<int>('invalid', 'Rating', 6, function(Value: int): int => Value),
+    V.Target.Graphical, 'value within that range'
+  );
+  Reject(
+    E.Column<int>(new L.Flow(Wrap := true), E.Text<int>('Invalid')),
+    V.Target.Graphical, 'Wrapping requires a row'
+  );
+end procedure;
+
+// Exercises the Selection page through CUI input and captures its desktop layout.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the full-page screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.SetSaveFrequency(_):
+        RadioChanges := RadioChanges + 1;
+      when State.Msg.Preview:
+        PreviewCalls := PreviewCalls + 1;
+      else
+    end case;
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    return if Focus = '' then Next
+      else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+      end if;
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    Check(Session.Step(), 'The Selection gallery closed.');
+  end procedure;
+  procedure Press(Session: Gui.Session<State.Msg>; Area: Cui.CuiRectangle; Fraction: float);
+  begin
+    X := Area.X + Area.Width * Fraction;
+    Y := Area.Y + Area.Height / 2;
+    Button := 1;
+    Step(Session);
+  end procedure;
+  procedure Release(Session: Gui.Session<State.Msg>);
+  begin
+    Button := 0;
+    Step(Session);
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
+  begin
+    Press(Session, Control(Session, Id, Key).Bounds, 0.5F);
+    Release(Session);
+  end procedure;
+  procedure FocusControl(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Focus := Id;
+    discard Session.Post(State.Msg.Preview);
+    Step(Session);
+    Focus := '';
+  end procedure;
+begin
+  Validate();
+  var Focus: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Pending: int := 0;
+  var RadioChanges: int := 0;
+  var PreviewCalls: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Selection',
+    1100,
+    1360,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Selection), Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  const Newsletter: Gui.Control := Control(Session, 'newsletter');
+  const Wifi: Gui.Control := Control(Session, 'wifi');
+  Check(
+    Newsletter.Value = 'true' and Wifi.Value = 'true',
+    'The native defaults are checked and on.'
+  );
+  Check(
+    Newsletter.Bounds.X < Wifi.Bounds.X,
+    'The desktop checkbox and switch cards should share a row.'
+  );
+  Check(
+    Control(Session, 'save-frequency/1').Value = 'true',
+    'The default radio choice is Every 5 minutes.'
+  );
+  Check(
+    Control(Session, 'places', '1').Value = 'true'
+    and Control(Session, 'volume').Value = '64' and Control(Session, 'brightness').Value = '40'
+    and Control(Session, 'price-range').Value = '20 – 75',
+    'Selection must show the native card and slider defaults.'
+  );
+  const Design: Gui.Control := Control(Session, 'category-design');
+  const Finance: Gui.Control := Control(Session, 'category-finance');
+  Check(
+    Design.Value = 'true' and Control(Session, 'category-marketing').Value = 'true'
+    and Finance.Value = 'false' and Control(Session, 'rating').Value = '4',
+    'The original chip defaults and four-star rating must be shown.'
+  );
+  Check(Design.Bounds.Y = Finance.Bounds.Y, 'The six chips fit in one row at desktop width.');
+  Session.CapturePng(Capture + '.selection.png');
+
+  Click(Session, 'newsletter');
+  Check(
+    Control(Session, 'newsletter').Value = 'false',
+    'Clicking the checkbox caption must toggle it.'
+  );
+  Click(Session, 'disabled-option');
+  Check(
+    PreviewCalls = 0 and not Control(Session, 'disabled-option').Enabled,
+    'A disabled checkbox must ignore clicks.'
+  );
+
+  FocusControl(Session, 'bluetooth');
+  Check(Control(Session, 'bluetooth').Focused, 'The switch lost its requested keyboard focus.');
+  Pending := 6;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'bluetooth').Value = 'true' and Control(Session, 'wifi').Value = 'true',
+    'Space must change the focused switch independently.'
+  );
+
+  Click(Session, 'save-frequency/0');
+  Check(
+    RadioChanges = 1 and Control(Session, 'save-frequency/0').Value = 'true'
+    and Control(Session, 'save-frequency/1').Value = 'false',
+    'Choosing Every change must clear the previous radio selection.'
+  );
+  Click(Session, 'save-frequency/0');
+  Check(RadioChanges = 1, 'Activating the selected radio must propose nothing.');
+
+  Click(Session, 'places', '0');
+  Check(
+    Control(Session, 'places', '0').Value = 'true',
+    'Clicking the card must select This computer.'
+  );
+  FocusControl(Session, 'places');
+  Check(
+    Control(Session, 'places', '0').Focused,
+    'Focusing the group must focus its selected card.'
+  );
+  Pending := 8;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'places', '1').Value = 'true' and Control(Session, 'places', '1').Focused,
+    'Right must move both selection and focus by one card.'
+  );
+
+  discard Session.Post(State.Msg.SetBrightness(43.0F));
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'brightness').Value = '43',
+    'Painting a stepped slider must preserve the model value.'
+  );
+  FocusControl(Session, 'brightness');
+  Check(Control(Session, 'brightness').Focused, 'The brightness track must accept focus.');
+  Pending := 8;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'brightness').Value = '50',
+    'Right must adjust brightness using its ten-point step.'
+  );
+
+  const Track: Cui.CuiRectangle := Control(Session, 'price-range').Bounds;
+  Press(Session, Track, 1.0F / Track.Width);
+  Step(Session);
+  Check(
+    Control(Session, 'price-range').Value = '0 – 75',
+    'Pressing the left end must move the lower price.'
+  );
+  X := Track.X + Track.Width - 1;
+  Step(Session);
+  Release(Session);
+  Check(
+    Control(Session, 'price-range').Value = '75 – 75',
+    'A dragged endpoint cannot cross the other endpoint.'
+  );
+  Press(Session, Track, 1.0F - 1.0F / Track.Width);
+  Release(Session);
+  Check(
+    Control(Session, 'price-range').Value = '75 – 100',
+    'Pressing the right end must move the upper price.'
+  );
+
+  Click(Session, 'category-engineering');
+  Check(
+    Control(Session, 'category-engineering').Value = 'true'
+    and Control(Session, 'category-design').Value = 'true',
+    'Clicking a chip must change only its selection.'
+  );
+  FocusControl(Session, 'category-engineering');
+  Check(Control(Session, 'category-engineering').Focused, 'A chip must accept keyboard focus.');
+  Pending := 6;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'category-engineering').Value = 'false',
+    'Space must toggle the focused chip.'
+  );
+
+  Click(Session, 'rating');
+  Check(
+    Control(Session, 'rating').Value = '3',
+    'Clicking the middle star must set a three-star rating.'
+  );
+  Click(Session, 'rating');
+  Check(
+    Control(Session, 'rating').Value = '0',
+    'Clicking the selected star again must clear the rating.'
+  );
+
+  Window.Resize(520, 760);
+  for Attempt: int := 1 to 4 do
+    Step(Session);
+  end for;
+  const NarrowCheck: Cui.CuiRectangle := Control(Session, 'newsletter').Bounds;
+  const NarrowSwitch: Cui.CuiRectangle := Control(Session, 'wifi').Bounds;
+  Check(
+    NarrowCheck.X = NarrowSwitch.X and NarrowCheck.Y < NarrowSwitch.Y,
+    'The compact checkbox and switch cards should stack.'
+  );
+  Check(
+    Control(Session, 'category-design').Bounds.Y < Control(Session, 'category-finance').Bounds.Y,
+    'At compact width, the last chip must wrap below the first.'
+  );
+end procedure;
+end unit;

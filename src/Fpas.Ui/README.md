@@ -34,13 +34,17 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Button group with a shared outline | Yes | Yes | Yes |
 | Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
 | Context menu attached to a component | | | Yes |
+| Popover and confirmation popover anchored to a button | | | Yes |
+| Tooltip attached to a single control | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
+| Tabs, breadcrumb, pagination and stepper | | | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
+| Selection chips, whole-star ratings and wrapping rows | | | Yes |
 | CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
 | Fixed basis, bounds, spacing and scroll offsets in cells | | Yes | |
@@ -59,8 +63,9 @@ content size; bounds can leave overflow, which the host clips.
 Default alignment stretches columns and centers rows on their cross axis.
 Intrinsic controls such as buttons keep their natural size. Explicit Start,
 Center, End and Stretch select another placement. Rows, columns, sizing,
-spacing, borders and scrolling form the shared layout subset; CUI's grid and
-wrapped-row APIs are not exposed by this contract.
+spacing, borders and scrolling form the shared layout subset. A graphical row
+can opt into native line wrapping with `Flow.Wrap`. The graphical
+`Role.Label` uses the weight and line metrics of `cui_label`.
 
 Use `Measure.Logical` for portable fixed sizes, bounds, spacing and scroll
 requests. GUI uses CUI logical points. TUI maps 8 logical units to a column and
@@ -208,6 +213,113 @@ uses joined cell buttons with the same model and input contract; large segments
 occupy two rows and the other sizes one. The theme switcher reuses these terminal
 segments with named appearance choices. Both galleries clone the upstream view
 and compact range examples on the Buttons page.
+
+## Toggle group
+
+`Fpas.Ui.ToggleGroups.ToggleGroup` takes a stable group ID, one through 32
+positional items, one model-owned selection flag per item, and an `OnChange`
+mapper. Independent groups toggle each item separately. Exclusive groups
+require one selected item and propose a replacement selection when another
+item is activated. Each proposal contains a fresh array of flags.
+
+`Options` sets the control size, selection mode, icon-only presentation and
+input permission. Items with glyphs use their labels as tooltips in icon-only
+mode. Use `ItemId(Id, Index)` to focus an item, or the group ID to focus the
+first item. Pointer, Enter and Space activate an item. Tab and the horizontal
+arrow keys move focus. Right can skip intermediate items in CUI v1.4.0.
+See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md).
+
+Toggle groups require the graphical profile. CUI draws and handles both
+groups on the GUI gallery's Actions page.
+
+## Checkbox, switch and radio controls
+
+`Fpas.Ui.Checkboxes.Checkbox` and `Fpas.Ui.Switches.Switch` take a stable
+ID, a literal label, a model-owned Boolean and an `OnChange` mapper. The
+whole row accepts pointer input. Tab focuses enabled rows, and Space or
+Enter proposes the opposite value. Both controls accept secondary
+`Description` text. A checked checkbox can use `Indeterminate` to show a
+dash.
+
+`Fpas.Ui.RadioButtons.RadioButton` proposes selecting an unselected row
+through its `OnSelect` mapper. `Fpas.Ui.RadioGroups.RadioGroup` arranges
+native radio rows in a column. Its model owns a selected index, or `-1`
+before a choice is made. Each item can have a description and its own
+input permission. Activating the selected item proposes no change. Use
+`RadioGroups.ItemId(Id, Index)` to focus or inspect a specific row.
+
+These controls require the graphical profile. The GUI gallery's Selection
+page shows the original notification checkboxes, connectivity switches
+and save-frequency radio group.
+
+## Radio cards
+
+`Fpas.Ui.RadioCards.RadioCards` takes a stable ID, choices with a title
+and optional description, icon and badge, a model-owned index, and an
+`OnChange` mapper. Use `-1` for an empty selection. CUI arranges the cards
+in a grid that reduces the column count as space runs out. `Options.Columns`
+sets the maximum when it is positive. Click, Enter or Space selects a card.
+Arrow keys move focus and selection together. Focus a particular card with
+`RadioCards.ItemId(Id, Index)` or focus the group to reach the selected card.
+
+## Slider and range slider
+
+`Fpas.Ui.Sliders.Slider` proposes a single model-owned value using pointer
+input or the keyboard. A positive `Step` snaps changes to an increment.
+A zero step allows continuous dragging. Arrows adjust the value, Shift
+accelerates the adjustment, and Home and End move toward the bounds.
+`ShowValue`, `DecimalPlaces` and `Percent` control the value caption.
+
+`Fpas.Ui.RangeSliders.RangeSlider` takes a model-owned `Interval` with two
+ordered endpoints. The native range track moves the nearest endpoint on
+press and keeps the two endpoints ordered during a drag. It accepts Tab
+focus, and the pinned CUI version adjusts endpoints through pointer input.
+Both sliders use finite, increasing bounds and values within those bounds.
+Radio cards and both sliders require the graphical profile.
+
+## Chip and rating
+
+`Fpas.Ui.Chips.Chip` takes a stable ID, literal caption, model-owned Boolean
+and an `OnChange` mapper. Click, Enter or Space proposes toggling the chip.
+The optional icon appears when unselected, and CUI draws its check mark when
+selected. Use a wrapping row for groups of independent chips.
+
+`Fpas.Ui.Ratings.Rating` takes a stable ID, a name for inspection, a
+model-owned whole-star value and an `OnChange` mapper. It defaults to five
+stars and accepts a maximum from one through sixteen. Clicking a star
+proposes its number, and clicking the selected star proposes zero. CUI
+operates the rating by pointer. Both widgets require the graphical profile.
+
+## Tabs, breadcrumb and pagination
+
+`Fpas.Ui.Tabs.Tabs` takes a stable ID, up to 32 positional tabs, a model-owned
+zero-based selection and an `OnChange` mapper. Native tabs support underline
+or pill indicators, optional icons and full-width allocation. Click or use
+Left and Right to change selection. CUI scrolls an overflowing strip
+horizontally. The application chooses the selected tab's content in its view.
+Use `Tabs.ItemId(Id, Index)` to focus a particular tab.
+
+`Fpas.Ui.Breadcrumbs.Breadcrumb` takes a stable trail ID, literal captions
+and an `OnNavigate` mapper. Activating an ancestor proposes its zero-based
+position. The last caption names the current location. Positional IDs
+allow repeated captions. Use `Breadcrumbs.ItemId(Id, Index)` to focus an
+ancestor.
+
+`Fpas.Ui.Paginations.Pagination` takes a stable pager ID, a zero-based
+selected page, a positive page count and an `OnChange` mapper. CUI displays
+one-based numbers and chooses which page buttons and ellipses fit.
+Previous and Next are disabled at the corresponding bounds. Tab focuses
+enabled breadcrumb links and page buttons, and Enter or Space activates
+them. These three controls require the graphical profile.
+
+## Stepper
+
+`Fpas.Ui.Steppers.Stepper` takes a stable ID, a nonempty sequence of literal
+captions and a model-owned zero-based step index. CUI marks the preceding steps
+complete. Pass the number of steps to mark the whole sequence complete. When
+space is tight, CUI keeps the current caption and shows the other step markers.
+The stepper is a read-only graphical display. Use separate controls to change
+the model's progress.
 
 ## Icon button
 
@@ -399,6 +511,36 @@ commands. The target value reports whether the popup accepts input. Context
 menus require the graphical profile; terminal and portable preflight reject
 them. The GUI gallery's Overlays page shows Cut, Copy, Paste and Delete as
 harmless preview messages.
+
+## Popover and confirmation popover
+
+`Fpas.Ui.Popovers.Popover<TMsg>(Id, Trigger, Content, Open, OnDismiss, Settings)`
+attaches a nonmodal native panel to a button. The trigger keeps its layout
+and activation message. Use that message to toggle `Open` in the model. Escape
+and a press outside propose `OnDismiss`. Actions in `Content` can close the
+panel through their own updates. CUI fits the panel to the viewport around
+the requested placement. Width, padding and gap use logical points.
+
+`Fpas.Ui.ConfirmPopovers.ConfirmPopover<TMsg>` asks a question at the trigger
+and draws CUI's affirmative and cancel buttons. The model opens the question
+in response to the trigger. Confirm proposes `OnConfirm`. Cancel, Escape
+and a press outside propose `OnDismiss`. Close the question in the update for
+either outcome. The question opens with focus on its affirmative action and
+requires a separate activation. Both popovers require the Graphical profile.
+
+## Tooltip
+
+`Fpas.Ui.Tooltips.Tooltip<TMsg>(Target, Text, Shortcut)` attaches native
+pointer help to one button, checkbox, switch, radio button, chip or slider.
+The target retains its layout, focus and activation. The optional shortcut
+appears as a key hint. Bind the gesture separately in the application.
+
+CUI shows a tooltip after about 550 ms of hover. Moving directly between
+tooltipped controls shows the new hint immediately while the tooltip is
+warm. The caption and shortcut must fit in 255 UTF-8 bytes together,
+including six separator bytes when a shortcut is supplied. The caption
+must be nonblank and cannot contain the separator `  ·  `. This wrapper
+requires the Graphical profile.
 
 ## Scrolling
 

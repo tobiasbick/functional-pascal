@@ -1,0 +1,35 @@
+unit Fpas.Ui.Gui.Internal.Widgets.RadioGroup;
+
+uses
+  Fpas.Ui.RadioGroups as R, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Widgets.RadioButton as Radio;
+
+// Arranges native radio rows in a CUI column and proposes one selection.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Group identity.
+// - `Items`: Validated positional choices.
+// - `Selected`: Current model-owned choice.
+// - `OnChange`: Maps a different choice to a message.
+// - `Enabled`: Group input permission.
+// - `Gap`: Distance between rows.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of R.Item; Selected: int;
+  OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing
+);
+begin
+  Frame.Window.BeginGroup(false, 0, Size.Spacing(Gap), cast<int>(L.Alignment.Default), false);
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: R.Item := Items[Index];
+    Radio.Draw<TMsg>(
+      Frame, R.ItemId(Id, Index), Item.Label, Index = Selected,
+      function(): TMsg => OnChange(Index), Item.Description, Enabled and Item.Enabled
+    );
+  end for;
+
+  Frame.Window.EndGroup();
+end procedure;
+end unit;

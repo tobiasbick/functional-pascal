@@ -1,0 +1,79 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Toast;
+
+uses
+  Fpas.Ui.Gui.Toasts as T, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Context as C, System as Sys, System.Collections.Generic as Lists;
+
+// Submits queued notifications once, inside the accepted view's native frame.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Window`: Current owner window.
+// - `Pending`: Requests emitted by model updates, in order.
+// - `Active`: Application data retained by native handle.
+public procedure Submit<TMsg>(
+  Window: Cui.CuiWindow; Pending: Lists.Queue<T.Request<TMsg>>;
+  Active: Lists.Dictionary<int, T.Request<TMsg>>
+);
+begin
+  while Pending.Count > 0 do
+    const Request: T.Request<TMsg> := Pending.Dequeue();
+    const Options: T.Options := Request.Settings;
+    const Handle: int := Window.Toast(
+      Request.Title, Options.Description, cast<int>(Options.Appearance), Options.Duration,
+      Options.ActionLabel, Options.ShowTimer
+    );
+    Active.Add(Handle, Request);
+  end while;
+end procedure;
+
+// Publishes finalized native toast geometry and delivers pending action messages.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Completed GUI frame awaiting publication.
+// - `Active`: Application data retained by native handle.
+public procedure Collect<TMsg>(Frame: C.State<TMsg>; Active: Lists.Dictionary<int, T.Request<TMsg>>);
+  procedure Track(Id: string; Text: string; Role: string; Part: Cui.CuiToastPart?; Enabled: bool);
+  begin
+    case Part of
+      when is Cui.CuiToastPart as Visible:
+        Frame.Controls.Add(
+          new App.Control(
+            Id,
+            Text,
+            Role,
+            Visible.Bounds,
+            Enabled,
+            Focused := Visible.Focused,
+            Hovered := Visible.Hovered
+          )
+        );
+      else
+    end case;
+  end procedure;
+begin
+  for Handle: int in new Lists.List<int>(Active.Keys) do
+    const Request: T.Request<TMsg> := Active[Handle];
+    const Current: Cui.CuiToastFrame := Frame.Window.PollToast(Handle);
+    if not Current.Active then
+      discard Active.Remove(Handle);
+    end if;
+
+    if Current.Invoked then
+      case Request.OnAction of
+        when is Sys.Func<TMsg> as OnAction:
+          Frame.Messages.Add(OnAction.Invoke());
+        else
+      end case;
+    end if;
+
+    const Id: string := 'toast-' + Handle.ToString();
+    Track(Id, Request.Title, 'toast', Current.Card, false);
+    Track(Id + '/action', Request.Settings.ActionLabel, 'toast-action', Current.Action, true);
+    Track(Id + '/dismiss', 'Dismiss notification', 'toast-dismiss', Current.Dismiss, true);
+  end for;
+end procedure;
+end unit;

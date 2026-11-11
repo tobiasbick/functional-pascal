@@ -1,0 +1,45 @@
+unit GuiGallery.Selection;
+
+uses
+  GuiGallery.State as State, GuiGallery.Checkbox as Checkbox, GuiGallery.Switch as Switch,
+  GuiGallery.RadioGroup as RadioGroup, GuiGallery.RadioCards as RadioCards,
+  GuiGallery.Slider as Slider, GuiGallery.RangeSlider as RangeSlider,
+  GuiGallery.Chip as Chip, GuiGallery.Rating as Rating, GuiGallery.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds the accepted controls in CUI's Selection page order.
+//
+// ## Parameters
+// - `Model`: Current controlled values.
+// - `Wide`: Whether two 260-point columns fit with the native gap.
+// ## Returns
+// The complete Selection page.
+public function View(Model: State.Model; Wide: bool): E.Element<State.Msg>;
+begin
+  const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12));
+  const Checkboxes: E.Element<State.Msg> := E.Column<State.Msg>(
+    SectionFlow, G.Heading('Checkbox'), G.Card(14, Checkbox.Rows(Model))
+  );
+  const Switches: E.Element<State.Msg> := E.Column<State.Msg>(
+    SectionFlow, G.Heading('Switch'), G.Card(14, Switch.Rows(Model))
+  );
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    if Wide then E.Row<State.Msg>(
+        new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start),
+        E.Size<State.Msg>(Checkboxes, Fill), E.Size<State.Msg>(Switches, Fill)
+      )
+      else E.Column<State.Msg>(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
+      end if,
+    G.Heading('Radio group'),
+    G.Card(12, [RadioGroup.View(Model)]),
+    G.Heading('Radio cards', 'For choices that need a sentence of explanation.'),
+    RadioCards.View(Model),
+    G.Heading('Sliders', 'Drag past either end: the track stretches like rubber.'),
+    G.Card(20, [Slider.Volume(Model), Slider.Brightness(Model), RangeSlider.View(Model)]),
+    G.Heading('Chips and rating'),
+    G.Card(16, [Chip.View(Model), Rating.View(Model)])
+  );
+end function;
+end unit;

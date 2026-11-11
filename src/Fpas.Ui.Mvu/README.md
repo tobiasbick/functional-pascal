@@ -11,6 +11,8 @@ model, an `Update` function, a host request handler and a mailbox capacity.
 The host owns input routing, the view and presentation. `Focus` and `Exit`
 produce host requests, so the host resolves control IDs and manages its own
 resources.
+Host-specific libraries can issue `HostRequest.Extension` with a typed
+payload. The receiving host defines and validates the supported payloads.
 
 Drive `Advance`, `Dispatch`, model reads, effect diagnostics and `Close` on
 one owner. Keep `Update` and the host request handler short. The handler

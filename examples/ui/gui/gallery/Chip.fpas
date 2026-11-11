@@ -1,0 +1,26 @@
+unit GuiGallery.Chip;
+
+uses GuiGallery.State as State, Fpas.Ui.Chips as Chips, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds the original independent category chips in a wrapping row.
+//
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The native chips in gallery order.
+public function View(Model: State.Model): E.Element<State.Msg>;
+  function Category(Label: string; Mask: int): E.Element<State.Msg>;
+  begin
+    return Chips.Chip<State.Msg>(
+      'category-' + Label.ToLowerInvariant(), Label, (Model.SelectedChips and Mask) <> 0,
+      function(Selected: bool): State.Msg => State.Msg.SetChip(Mask, Selected)
+    );
+  end function;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
+    Category('Design', 1), Category('Engineering', 2), Category('Marketing', 4),
+    Category('Sales', 8), Category('Support', 16), Category('Finance', 32)
+  );
+end function;
+end unit;

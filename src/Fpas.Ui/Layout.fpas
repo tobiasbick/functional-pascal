@@ -67,6 +67,8 @@ public type Flow = record
   public Padding: Spacing := Spacing.None;
   // The placement of children on the cross axis.
   public Align: Alignment := Alignment.Default;
+  // Whether a graphical row continues on another line when its children do not fit.
+  public Wrap: bool := false;
 end record;
 
 // An application-facing size class for responsive views.

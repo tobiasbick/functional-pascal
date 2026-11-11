@@ -1,9 +1,9 @@
 #include "fpas_cui.h"
 
-int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed) {
+int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap) {
     const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
         .pad = padding, .gap = gap, .align = (cui_align)align,
-        .border = framed ? 1 : 0, .clip = true };
+        .border = framed ? 1 : 0, .clip = !wrap, .wrap = wrap != 0 };
     cui_box_begin(ui, &options);
     return cui__current(ui);
 }
@@ -57,6 +57,10 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].font_size = cui__fs(ui, size);
             ui->nodes[label].font = size >= 26 ? CUI_FONT_DISPLAY : CUI_FONT_MEDIUM;
             ui->nodes[label].line_height = size >= 26 ? 1.15f : 1.3f;
+        } else if (role == 11) {
+            ui->nodes[label].font = CUI_FONT_MEDIUM;
+            ui->nodes[label].font_size = cui__fs(ui, ui->theme.text_body);
+            ui->nodes[label].line_height = 1.35f;
         }
     }
     for (int child = n->first; child >= 0; child = ui->nodes[child].next)

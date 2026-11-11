@@ -19,13 +19,36 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   Dropdown menu clones CUI's Options and icon-only More actions examples,
   including section captions, separators, icons, shortcut hints and a danger
   action. Commands only update preview state; they do not modify a project.
+- **Selection** shows native notification checkboxes, connectivity switches
+  and the exclusive save-frequency radio group. The checkbox and switch
+  cards share a row when both fit and stack at narrower widths. Radio cards
+  offer three save destinations with Team server selected. Sliders show
+  continuous Volume, Brightness in ten-point steps and a draggable Price range.
+  The six category chips wrap on narrow screens. Design and Marketing start
+  selected. The five-star rating starts at four stars and clears when the
+  selected star is clicked again.
+- **Navigation** shows underline tabs with model-selected content and pill
+  tabs with icons. The breadcrumb shows the activated ancestor in a toast.
+  The twelve-page pager keeps the current page, first page and
+  last page visible on narrow screens. The stepper starts at Workspace and
+  follows the Back and Next buttons. Finish shows an “All set” toast.
 - **Overlays** opens the right-hand Notifications sheet. Escape, the close button,
   and clicking the backdrop dismiss it.
   The context-menu area opens CUI's Cut/Copy/Paste/Delete menu on right click.
   Its commands only update preview state. Arrow keys and Enter choose a command;
   Escape and outside clicks dismiss it.
+  The Filters button opens a native popover with two checkboxes, a score slider,
+  and Apply. The values are shared with the matching gallery controls.
+  The Toasts section includes success, failure and update notifications and
+  an Archive a message example with a timed Undo action.
+  The Tooltips section reproduces the six CUI toolbar buttons, with formatting
+  shortcuts shown as key hints on hover.
+- **Disclosure** asks for confirmation before showing the simulated branch
+  deletion result. It uses the original danger action and Cancel button.
 - **Actions** shows the primary Save and outline Export split buttons. Their
   main and menu actions update the inline result, as in the CUI gallery.
+  The Toggle group section shows independent formatting icons and exclusive
+  text alignment, with the original Bold and Left defaults.
   Delete project demonstrates two-step confirmation with a harmless counter.
   Activate twice within three seconds; Escape or a click outside cancels.
   Save changes shows inline work feedback. Complete, Fail and Reset select its
@@ -40,7 +63,7 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   updates the model and its shared palette.
 
 The GUI gallery contract runs this view with both native renderers and captures
-the Buttons page, the open Split button menu, inline work feedback and the
-appearance controls. It drives split, confirmation, status and theme actions
-with native keyboard input.
+the Buttons, Selection and Actions pages, the open Split button menu, inline work
+feedback and the appearance controls. It drives the Actions widgets with
+native pointer and keyboard input.
 The same contract also drives the package-only consumer.

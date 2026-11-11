@@ -3,6 +3,19 @@ typedef struct { cui_id first, second, popup; } fpas_owned_state;
 
 static cui_id fpas_owner_key(cui_id key) { return key ^ 0x46504153u; }
 
+/* Positional groups share CUI's index hash and 32-item focus range. */
+static void fpas_indexed_focus(cui_ctx *ui, cui_id group, int count, int focus) {
+    for (int index = count; index < 32; ++index) {
+        const cui_id key = cui__hash(&index, sizeof index, group);
+        if (ui->focus == key) ui->focus = 0;
+        if (ui->active == key) ui->active = 0;
+    }
+    if (focus) {
+        const int index = focus - 1;
+        ui->focus_next_request = cui__hash(&index, sizeof index, group);
+    }
+}
+
 static void fpas_forget_state(cui_ctx *ui, cui_id key) {
     if (!key) return;
     if (ui->focus == key) ui->focus = 0;

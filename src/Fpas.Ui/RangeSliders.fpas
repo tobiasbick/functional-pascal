@@ -1,0 +1,35 @@
+unit Fpas.Ui.RangeSliders;
+
+uses Fpas.Ui.Elements as E;
+
+// The ordered, model-owned endpoints of a graphical range slider.
+public type Interval = record
+  // Lower selected value.
+  public Lower: float;
+  // Upper selected value.
+  public Upper: float;
+end record;
+
+// Creates a native CUI slider with two pointer-adjustable endpoints.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Ordered endpoints within the inclusive bounds.
+// - `Minimum`: Finite lower bound.
+// - `Maximum`: Finite upper bound greater than Minimum.
+// - `OnChange`: Maps changed endpoints to one message.
+// - `Enabled`: Whether the range accepts input.
+// ## Returns
+// A graphical slider with a model-owned interval.
+public function RangeSlider<TMsg>(
+  Id: string; Label: string; Value: Interval; Minimum: float; Maximum: float;
+  OnChange: function(Interval): TMsg; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RangeSliderAction(Id, Label, Value, Minimum, Maximum, OnChange, Enabled);
+end function;
+end unit;

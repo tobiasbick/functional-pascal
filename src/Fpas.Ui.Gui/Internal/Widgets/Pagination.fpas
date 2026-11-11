@@ -1,0 +1,79 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pagination;
+
+uses
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, System as Sys;
+
+const PreviousPage: int := -1;
+const NextPage: int := -2;
+const NoFocus: int := -3;
+
+// Draws CUI's pager and tracks the buttons chosen by native layout.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable pager identity.
+// - `Page`: Current zero-based index.
+// - `Count`: Positive page count.
+// - `OnChange`: Maps a proposed page to a message.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Page: int; Count: int; OnChange: function(int): TMsg; Enabled: bool
+);
+  function Token(Index: int): string;
+  begin
+    return C.Token('page', Id, Index.ToString());
+  end function;
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  var Focus: int := NoFocus;
+  if C.WantsFocus<TMsg>(Frame, Id, Token(Page), Allowed) then
+    Focus := Page;
+  elsif Allowed and Frame.Focus.Count > 0 then
+    for Prior: App.Control in Frame.Previous do
+      if Prior.Id = Id and Prior.Role = 'page' then
+        const Index: int := Sys.Int32.Parse(Prior.Key);
+        if Index < Count and C.WantsFocus<TMsg>(Frame, Id, Token(Index), Allowed, false) then
+          Focus := Index;
+          break;
+        end if;
+      end if;
+    end for;
+  end if;
+
+  var Parts: array of int := [];
+  const Proposal: int := Frame.Window.Pagination(
+    C.Token('pagination', Id), Page, Count, Allowed, Focus,
+    if Frame.PaintingClosed then null else Token end if, out Parts
+  );
+  if Proposal >= 0 then
+    Frame.Messages.Add(OnChange(Proposal));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, 'Pagination', 'pagination', new Cui.CuiRectangle(), false, Value := Page.ToString()
+    )
+  );
+  for Index: int in Parts do
+    const Label: string := if Index = PreviousPage then 'Previous page'
+      elsif Index = NextPage then 'Next page'
+      else (Index + 1).ToString()
+      end if;
+    const CanSelect: bool := Allowed and (Index <> PreviousPage or Page > 0)
+      and (Index <> NextPage or Page < Count - 1);
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Label, 'page', new Cui.CuiRectangle(), CanSelect,
+        Key := Index.ToString(), Value := if Index = Page then 'true' else 'false' end if
+      )
+    );
+  end for;
+end procedure;
+end unit;

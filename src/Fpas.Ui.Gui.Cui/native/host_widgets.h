@@ -3,15 +3,16 @@
 
 /** One copied canvas operation: rectangle or line, logical coordinates and packed RGBA. */
 
-/** Opens a clipped layout group; scalar parameters select axis, spacing, alignment and border.
+/** Opens a layout group using native CUI.
  * @param ui Owner context.
  * @param horizontal Row when nonzero.
  * @param padding Logical inset.
  * @param gap Logical separation.
  * @param align Shared alignment ordinal.
  * @param framed Border permission.
+ * @param wrap Wrap a row onto additional lines and allow focus rings past its edge.
  * @return Frame-local node. */
-CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed);
+CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap);
 /** Closes a group and restores its inspection identity.
  * @param ui Owner context.
  * @param node Frame-local group. */

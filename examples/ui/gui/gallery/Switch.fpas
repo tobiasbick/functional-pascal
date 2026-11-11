@@ -1,0 +1,22 @@
+unit GuiGallery.Switch;
+
+uses GuiGallery.State as State, Fpas.Ui.Switches as S, Fpas.Ui.Elements as E;
+
+// Builds the three switches from the native Selection page.
+//
+// ## Parameters
+// - `Model`: Current radio settings.
+// ## Returns
+// The Wi-Fi, Bluetooth and airplane-mode rows.
+public function Rows(Model: State.Model): array of E.Element<State.Msg>;
+begin
+  return [
+    S.Switch<State.Msg>('wifi', 'Wi-Fi', Model.Wifi, State.Msg.SetWifi),
+    S.Switch<State.Msg>('bluetooth', 'Bluetooth', Model.Bluetooth, State.Msg.SetBluetooth),
+    S.Switch<State.Msg>(
+      'airplane', 'Airplane mode', Model.Airplane, State.Msg.SetAirplane,
+      Description := 'Turns off all radios.'
+    )
+  ];
+end function;
+end unit;

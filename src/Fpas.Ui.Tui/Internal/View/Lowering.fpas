@@ -194,6 +194,57 @@ public function Prepare<TMsg>(
         return ThemeSwitcher.Lower<TMsg>(Id, Selected, Change, Settings, Theme, Colors);
       when Ui.Element.Contextual(_, _, _, _):
         raise new Sys.NotSupportedException('Context menus require the graphical profile.');
+      when Ui.Element.Hinted(_, _, _):
+        raise new Sys.NotSupportedException('Tooltip requires the graphical profile.');
+      when Ui.Element.Popover(_, _, _, _, _, _), Ui.Element.ConfirmPopover(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException('Popovers require the graphical profile.');
+      when Ui.Element.Toggles(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Toggle groups require the graphical profile.');
+      when Ui.Element.CheckboxAction(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.SwitchAction(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.RadioAction(_, _, _, _, _, _), Ui.Element.Radios(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Checkboxes, switches and radio controls require the graphical profile.'
+        );
+      when Ui.Element.Cards(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Radio cards require the graphical profile.');
+      when Ui.Element.SliderAction(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.RangeSliderAction(_, _, _, _, _, _, _):
+        raise new Sys.NotSupportedException('Sliders require the graphical profile.');
+      when Ui.Element.ChipAction(_, _, _, _, _, _), Ui.Element.RatingAction(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException('Chip and rating require the graphical profile.');
+      when Ui.Element.TabStrip(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.BreadcrumbTrail(_, _, _, _), Ui.Element.PaginationAction(_, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Tabs, breadcrumb and pagination require the graphical profile.'
+        );
+      when Ui.Element.StepProgress(_, _, _):
+        raise new Sys.NotSupportedException('Stepper requires the graphical profile.');
       when Ui.Element.Dropdown(
         const Id: string,
         const Label: string,

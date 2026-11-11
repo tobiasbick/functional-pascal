@@ -1,0 +1,193 @@
+unit GalleryToggleGroupContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, Fpas.Ui.ToggleGroups as Toggles,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id and Item.Key = Key then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing toggle: ' + Id + '/' + Key);
+end function;
+
+procedure Validate();
+  function Change(Flags: array of bool): int;
+  begin
+    return Flags.Length;
+  end function;
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    var Rejected: bool := false;
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Rejected := Error.Message.Contains(Reason);
+    end try;
+
+    Check(Rejected, 'Expected toggle group preflight failure: ' + Reason);
+  end procedure;
+begin
+  const Items: array of Toggles.Item := [new Toggles.Item('Left'), new Toggles.Item('Right')];
+  const Exclusive: Toggles.Options := new Toggles.Options(Exclusive := true);
+  const Valid: E.Element<int> := Toggles.ToggleGroup<int>(
+    'align',
+    Items,
+    [true, false],
+    Change,
+    Exclusive
+  );
+  discard V.Prepare<int>(Valid, V.Target.Graphical);
+  Reject(Valid, V.Target.Terminal, 'Graphical profile');
+  Reject(Valid, V.Target.Portable, 'Graphical profile');
+  Reject(
+    Toggles.ToggleGroup<int>('align', Items, [true], Change, Exclusive),
+    V.Target.Graphical, 'one flag per choice'
+  );
+  Reject(
+    Toggles.ToggleGroup<int>('align', Items, [false, false], Change, Exclusive),
+    V.Target.Graphical, 'exactly one selected item'
+  );
+  Reject(
+    Toggles.ToggleGroup<int>('align', Items, [true, true], Change, Exclusive),
+    V.Target.Graphical, 'exactly one selected item'
+  );
+end procedure;
+
+// Exercises the two native Actions examples and saves the full page.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the Actions screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.SetToggleAlignment(_):
+        Proposals := Proposals + 1;
+        if RejectAlignment then
+          return new App.Transition<State.Model, State.Msg>(Model, []);
+        end if;
+      else
+    end case;
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    return if Focus = '' then Next
+      else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+      end if;
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    Check(Session.Step(), 'The toggle group gallery closed.');
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Key: string);
+  begin
+    const Area: Cui.CuiRectangle := Control(Session, Id, Key).Bounds;
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+  end procedure;
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    Pending := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  Validate();
+  var Focus: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Pending: int := 0;
+  var Proposals: int := 0;
+  var RejectAlignment: bool := true;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Actions', 1000, 760, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  const Bold: Gui.Control := Control(Session, 'action-format', '0');
+  Check(
+    Bold.Text = 'Bold' and Bold.Bounds.Width = Bold.Bounds.Height,
+    'The icon-only item lost its label or native square layout.'
+  );
+  Check(Bold.Value = 'true', 'Bold is initially selected.');
+  Check(Control(Session, 'action-align', '0').Value = 'true', 'Left is initially selected.');
+  Session.CapturePng(Capture + '.actions.png');
+
+  Click(Session, 'action-format', '1');
+  Check(
+    Control(Session, 'action-format', '0').Value = 'true'
+    and Control(Session, 'action-format', '1').Value = 'true',
+    'Clicking Italic must preserve Bold.'
+  );
+  Focus := Toggles.ItemId('action-format', 2);
+  discard Session.Post(State.Msg.Preview);
+  Step(Session);
+  Focus := '';
+  Check(Control(Session, 'action-format', '2').Focused, 'An item focus request was lost.');
+  Key(Session, 7);
+  Check(
+    Control(Session, 'action-format', '1').Focused,
+    'Left must move focus without changing a toggle.'
+  );
+  Key(Session, 6);
+  Check(
+    Control(Session, 'action-format', '0').Value = 'true'
+    and Control(Session, 'action-format', '1').Value = 'false',
+    'Space must turn off Italic without clearing Bold.'
+  );
+
+  Click(Session, 'action-align', '0');
+  Check(Proposals = 0, 'Activating the selected alignment must be a no-op.');
+  Click(Session, 'action-align', '1');
+  Check(
+    Proposals = 1 and Control(Session, 'action-align', '0').Value = 'true'
+    and Control(Session, 'action-align', '1').Value = 'false',
+    'A rejected alignment proposal must preserve the model selection.'
+  );
+  RejectAlignment := false;
+  Key(Session, 2);
+  Check(
+    Proposals = 2 and Control(Session, 'action-align', '0').Value = 'false'
+    and Control(Session, 'action-align', '1').Value = 'true'
+    and Control(Session, 'action-align', '2').Value = 'false',
+    'Enter must select only Center.'
+  );
+end procedure;
+end unit;

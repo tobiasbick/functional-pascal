@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -66,6 +66,40 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/contextMenu');
         MenuRules.Check<TMsg>(Id, 'Context menu', Entries, null, Location, Identify);
         Visit(Child, Location + '/target');
+      when E.Element.Hinted(
+        const Child: E.Element<TMsg>,
+        const Caption: string,
+        const Shortcut: string
+      ):
+        const At: string := Location + '/tooltip';
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Visit(Child, At + '/target');
+        TooltipRules.Check<TMsg>(Child, Caption, Shortcut, Subviews, At);
+      when E.Element.Popover(
+        const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _,
+        const Settings: Popovers.Options
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/popover');
+        const At: string := Identify(Id, Location + '/popover');
+        PopupRules.CheckPanel(Settings, At);
+        PopupRules.CheckTrigger<TMsg>(Trigger, At);
+        Visit(Trigger, At + '/trigger');
+        Visit(Content, At + '/content');
+      when E.Element.ConfirmPopover(
+        const Id: string,
+        const Trigger: E.Element<TMsg>,
+        _,
+        const Settings: ConfirmPopovers.Options,
+        _,
+        _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/confirmPopover');
+        const At: string := Identify(Id, Location + '/confirmPopover');
+        discard Identify(ConfirmPopovers.CancelId(Id), At + '/cancel');
+        discard Identify(ConfirmPopovers.ConfirmId(Id), At + '/confirm');
+        PopupRules.CheckQuestion(Settings, At);
+        PopupRules.CheckTrigger<TMsg>(Trigger, At);
+        Visit(Trigger, At + '/trigger');
       when E.Element.Dropdown(
         const Id: string,
         const Label: string,
@@ -75,6 +109,110 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.Label(const Value: string):
         Rules.CheckText(Value, Location + '/text');
+      when E.Element.CheckboxAction(
+        const Id: string,
+        const Label: string,
+        _,
+        _,
+        const Description: string,
+        _,
+        _
+      ), E.Element.SwitchAction(
+        const Id: string,
+        const Label: string,
+        _,
+        _,
+        const Description: string,
+        _
+      ), E.Element.RadioAction(
+        const Id: string,
+        const Label: string,
+        _,
+        _,
+        const Description: string,
+        _
+      ):
+        SelectionRules.CheckRow(Id, Label, Description, Profile, Location + '/selection', Identify);
+      when E.Element.Radios(
+        const Id: string,
+        const Items: array of RadioGroups.Item,
+        const Selected: int,
+        _,
+        _,
+        const Gap: L.Spacing
+      ):
+        SelectionRules.CheckGroup(Id, Items, Selected, Gap, Profile, Location, Identify);
+      when E.Element.Cards(
+        const Id: string,
+        const Items: array of RadioCards.Item,
+        const Selected: int,
+        _,
+        const Settings: RadioCards.Options
+      ):
+        SelectionRules.CheckCards(
+          Id,
+          Items,
+          Selected,
+          Settings.Columns,
+          Profile,
+          Location,
+          Identify
+        );
+      when E.Element.SliderAction(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, _, const Settings: Sliders.Options
+      ):
+        const At: string := Identify(Id, Location + '/slider');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+        SliderRules.CheckOptions(Settings, Maximum - Minimum, At);
+      when E.Element.RangeSliderAction(
+        const Id: string, const Label: string, const Value: RangeSliders.Interval,
+        const Minimum: float, const Maximum: float, _, _
+      ):
+        const At: string := Identify(Id, Location + '/rangeSlider');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
+      when E.Element.ChipAction(const Id: string, const Label: string, _, _, const Icon: string, _):
+        SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/chip', Identify);
+        Rules.CheckText(Icon, Location + '/chip/icon');
+      when E.Element.RatingAction(
+        const Id: string,
+        const Label: string,
+        const Value: int,
+        _,
+        const Maximum: int,
+        _
+      ):
+        SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/rating', Identify);
+        if Maximum < 1 or Maximum > 16 or Value < 0 or Value > Maximum then
+          Rules.Reject(
+            Location + '/rating',
+            'Rating needs one through sixteen stars and a value within that range or zero.'
+          );
+        end if;
+      when E.Element.TabStrip(
+        const Id: string,
+        const Items: array of Tabs.Item,
+        const Selected: int,
+        _,
+        const Settings: Tabs.Options
+      ):
+        NavigationRules.CheckTabs(Id, Items, Selected, Settings, Profile, Location, Identify);
+      when E.Element.BreadcrumbTrail(const Id: string, const Items: array of string, _, _):
+        NavigationRules.CheckBreadcrumb(Id, Items, Profile, Location, Identify);
+      when E.Element.PaginationAction(const Id: string, const Page: int, const Count: int, _, _):
+        const At: string := Identify(Id, Location + '/pagination');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Count < 1 or Page < 0 or Page >= Count then
+          Rules.Reject(At, 'Pagination needs a positive page count and a valid page index.');
+        end if;
+      when E.Element.StepProgress(
+        const Id: string,
+        const Steps: array of string,
+        const Current: int
+      ):
+        NavigationRules.CheckStepper(Steps, Current, Profile, Identify(Id, Location + '/stepper'));
       when E.Element.Separator(const Title: string):
         Rules.CheckText(Title, Location + '/divider');
       when E.Element.ButtonAction(
@@ -219,6 +357,16 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             );
           end if;
         end for;
+      when E.Element.Toggles(
+        const Id: string, const Items: array of ToggleGroups.Item,
+        const Selected: array of bool, _, const Settings: ToggleGroups.Options
+      ):
+        const At: string := Identify(Id, Location + '/toggleGroup');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ToggleGroupRules.Check(Items, Selected, Settings, At);
+        for Index: int := 0 to Items.Length - 1 do
+          discard Identify(ToggleGroups.ItemId(Id, Index), At + '/item');
+        end for;
       when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
         const At: string := Identify(Id, Location + '/themeToggle');
         if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then
@@ -247,34 +395,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
-          case Child of
-            when E.Element.ButtonAction(_, _, _, _), E.Element.IconAction(
-              _,
-              _,
-              _,
-              _,
-              _
-            ), E.Element.CopyAction(
-              _,
-              _,
-              _,
-              _
-            ), E.Element.HoldAction(
-              _,
-              _,
-              _,
-              _
-            ), E.Element.ConfirmAction(_, _, _, _), E.Element.StatusAction(
-              _,
-              _,
-              _,
-              _,
-              _
-            ):
-              Visit(Child, At);
-            else
-              Rules.Reject(At, 'A button group accepts only button actions.');
-          end case;
+          if not TooltipRules.IsButton<TMsg>(Child) then
+            Rules.Reject(At, 'A button group accepts only button actions.');
+          end if;
+
+          Visit(Child, At);
         end for;
       when E.Element.SplitAction(
         const Id: string,
@@ -331,6 +456,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Flow: L.Flow
       ):
         const At: string := Location + (if Horizontal then '/row' else '/column' end if);
+        if Flow.Wrap then
+          Rules.RequireProfile(Profile, Target.Graphical, At);
+          if not Horizontal then
+            Rules.Reject(At, 'Wrapping requires a row.');
+          end if;
+        end if;
+
         if not Sys.Enum.IsDefined<L.Alignment>(Flow.Align) then
           Rules.Reject(At, 'Unknown cross-axis alignment.');
         end if;
@@ -346,6 +478,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
         if not Sys.Enum.IsDefined<S.Role>(Role) then
           Rules.Reject(Location + '/style', 'Unknown semantic style role.');
+        end if;
+
+        if Role = S.Role.Label then
+          Rules.RequireProfile(Profile, Target.Graphical, Location + '/style');
         end if;
 
         Visit(Child, Location + '/style');

@@ -1,0 +1,287 @@
+unit GalleryNavigationContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Elements as E, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs,
+  Fpas.Ui.Paginations as Paginations, Fpas.Ui.Steppers as Steppers, Fpas.Ui.Validation as V, System as Sys;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+begin
+  var Rejected: bool := false;
+  try
+    discard V.Prepare<int>(Node, Profile);
+  catch Error: Sys.ArgumentException do
+    Rejected := Error.Message.Contains(Reason);
+  end try;
+
+  Check(Rejected, 'Expected navigation preflight failure: ' + Reason);
+end procedure;
+
+procedure Validate();
+begin
+  const Nodes: array of E.Element<int> := [
+    Tabs.Tabs<int>('tabs', [new Tabs.Item('First')], 0, function(Value: int): int => Value),
+    Breadcrumbs.Breadcrumb<int>('trail', ['Root', 'Current'], function(Value: int): int => Value),
+    Paginations.Pagination<int>('pager', 0, 12, function(Value: int): int => Value),
+    Steppers.Stepper<int>('stepper', ['First', 'Second'], 2)
+  ];
+  for Node: E.Element<int> in Nodes do
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+    Reject(Node, V.Target.Portable, 'Graphical profile');
+    Reject(Node, V.Target.Terminal, 'Graphical profile');
+  end for;
+
+  Reject(
+    Paginations.Pagination<int>('invalid', 12, 12, function(Value: int): int => Value),
+    V.Target.Graphical, 'valid page index'
+  );
+  Reject(
+    Steppers.Stepper<int>('invalid', ['Only'], 2),
+    V.Target.Graphical,
+    'between zero and the step count'
+  );
+end procedure;
+
+// Exercises the Navigation page and captures it through the requested renderer.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Base path for the gallery screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    return if Focus = '' then Next
+      else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+      end if;
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  procedure Exercise(Session: Gui.Session<State.Msg>);
+    procedure Step();
+    begin
+      Check(Session.Step(), 'The Navigation gallery closed.');
+    end procedure;
+    function Find(Id: string; Key: string): Gui.Control?;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Id = Id and Item.Key = Key then
+          return Item;
+        end if;
+      end for;
+
+      return null;
+    end function;
+    function Control(Id: string; Key: string := ''): Gui.Control;
+    begin
+      const Item: Gui.Control? := Find(Id, Key);
+      if Item = null then
+        raise new Sys.InvalidOperationException('Missing control: ' + Id + '/' + Key);
+      end if;
+
+      return Item;
+    end function;
+    function HasText(Value: string): bool;
+    begin
+      for Item: string in Session.Snapshot().Text do
+        if Item = Value then
+          return true;
+        end if;
+      end for;
+
+      return false;
+    end function;
+    function Notification(Title: string): Gui.Control?;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Role = 'toast' and Item.Text = Title then
+          return Item;
+        end if;
+      end for;
+
+      return null;
+    end function;
+    procedure Click(Id: string; Key: string := '');
+    begin
+      const Area: Cui.CuiRectangle := Control(Id, Key).Bounds;
+      X := Area.X + Area.Width / 2;
+      Y := Area.Y + Area.Height / 2;
+      Button := 1;
+      Step();
+      Button := 0;
+      Step();
+      X := -1.0F;
+      Y := -1.0F;
+      Step();
+    end procedure;
+    procedure FocusControl(Id: string);
+    begin
+      Focus := Id;
+      discard Session.Post(State.Msg.Preview);
+      Step();
+      Focus := '';
+    end procedure;
+    procedure Dismiss(Title: string);
+    begin
+      const Item: Gui.Control? := Notification(Title);
+      if Item = null then
+        raise new Sys.InvalidOperationException('Missing toast: ' + Title);
+      end if;
+
+      Click(Item.Id + '/dismiss');
+      Check(Notification(Title) = null, 'The close button must dismiss the toast.');
+    end procedure;
+    procedure Key(Code: int);
+    begin
+      Pending := Code;
+      Step();
+      Step();
+    end procedure;
+  begin
+    Step();
+    Click('navigation', 'navigation');
+    Step();
+    Check(
+      Control('tabs', '0').Value = 'true' and Control('pill-tabs', '0').Value = 'true'
+      and Control('pages', '0').Value = 'true' and not Control('pages', '-1').Enabled,
+      'The original navigation defaults must select Overview, Account and page one.'
+    );
+    Check(
+      Control('workflow-steps').Value = '1' and Control('workflow-steps').Text = 'Workspace',
+      'The workflow starts at Workspace.'
+    );
+    Session.CapturePng(Capture + '.navigation.png');
+
+    FocusControl('tabs');
+    Check(Control('tabs', '0').Focused, 'Focusing a strip should reach its selected tab.');
+    Key(8);
+    Check(
+      Control('tabs', '1').Focused and Control('tabs', '1').Value = 'true' and HasText('Analytics'),
+      'Right should select Analytics and update its content.'
+    );
+    Click('pill-tabs', '2');
+    Check(
+      Control('pill-tabs', '2').Value = 'true' and Control('tabs', '1').Value = 'true',
+      'The pill tabs must change independently.'
+    );
+
+    Check(not Control('breadcrumbs', '3').Enabled, 'The current location should be informational.');
+    Click('breadcrumbs', '3');
+    Check(Notification('Settings') = null, 'The current breadcrumb must ignore clicks.');
+    FocusControl('breadcrumbs/1');
+    Check(Control('breadcrumbs', '1').Focused, 'An ancestor must accept a focus request.');
+    Key(2);
+    Check(Notification('Projects') <> null, 'Enter must show the focused ancestor as a toast.');
+    Dismiss('Projects');
+
+    Click('pages', '-2');
+    Check(Control('pages').Value = '1', 'Next must advance by one page.');
+    Check(Control('pages', '-2').Focused, 'Next must retain its native focus after advancing.');
+    Key(2);
+    Check(Control('pages').Value = '2', 'Enter must activate the focused Next button.');
+    FocusControl('pages');
+    Check(Control('pages', '2').Focused, 'Focusing the pager should reach its current page.');
+    Click('pages', '11');
+    Check(
+      Control('pages').Value = '11' and not Control('pages', '-2').Enabled,
+      'The last numbered button must select page twelve and disable Next.'
+    );
+    Click('pages', '-1');
+    Check(Control('pages').Value = '10', 'Previous must go back one page.');
+
+    Click('workflow-steps');
+    Check(
+      not Control('workflow-steps').Enabled and Control('workflow-steps').Value = '1',
+      'The stepper displays progress without accepting clicks.'
+    );
+    Click('step-back');
+    Check(
+      Control('workflow-steps').Value = '0' and not Control('step-back').Enabled,
+      'Back must stop at the first step.'
+    );
+    for Expected: int := 1 to 3 do
+      Click('step-next');
+      Check(
+        Control('workflow-steps').Value = Expected.ToString(),
+        'Next must advance exactly one step.'
+      );
+    end for;
+
+    Check(
+      Control('step-next').Text = 'Finish' and Control('step-next').Focused,
+      'The final step must relabel Next to Finish while keeping focus.'
+    );
+    Key(2);
+    Check(
+      Notification('All set') <> null and Control('workflow-steps').Value = '3',
+      'Finish must show a toast on the final step.'
+    );
+    Click('step-back');
+    Check(
+      Notification('All set') <> null and Control('workflow-steps').Text = 'Invite team',
+      'Going back must change the step while the toast stays visible.'
+    );
+    Dismiss('All set');
+
+    discard Session.Post(State.Msg.SetPageIndex(5));
+    Window.Resize(360, 900);
+    for Attempt: int := 1 to 4 do
+      Step();
+    end for;
+
+    Check(
+      Control('pages', '0').Enabled and Control('pages', '5').Value = 'true'
+      and Control(
+        'pages',
+        '11'
+      ).Enabled and Find('pages', '4') = null and Find('pages', '6') = null,
+      'Compact pagination must keep the first, current and last numbered buttons.'
+    );
+    const Stepper: Cui.CuiRectangle := Control('workflow-steps').Bounds;
+    Check(
+      Stepper.Width > 0 and Stepper.X + Stepper.Width <= Window.Size.Width,
+      'The native stepper must remain inside the compact window.'
+    );
+    Session.CapturePng(Capture + '.navigation-compact.png');
+  end procedure;
+begin
+  Validate();
+  var Focus: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Pending: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Navigation',
+    1000,
+    900,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), Update, View.Build, Window, 256, Inject, ThemeFor := State.ThemeFor
+  );
+  Exercise(Session);
+end procedure;
+end unit;

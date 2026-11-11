@@ -1,0 +1,63 @@
+unit Fpas.Ui.ConfirmPopovers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Menus as M;
+
+// Captions and placement of a native confirmation popover.
+public type Options = record
+  // Question shown above the actions.
+  public Title: string;
+  // Optional text explaining what the action does.
+  public Description: string := '';
+  // Caption of the affirmative action.
+  public ConfirmLabel: string := 'Confirm';
+  // Caption of the cancel action.
+  public CancelLabel: string := 'Cancel';
+  // Draw the affirmative action in the danger variant.
+  public Danger: bool := false;
+  // Preferred position relative to the trigger.
+  public Position: M.Placement := M.Placement.BottomStart;
+end record;
+
+// Asks for a second activation in a native panel anchored to a button.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable panel identity.
+// - `Trigger`: Button whose activation opens the panel.
+// - `Open`: Whether the model opens the question.
+// - `Settings`: Captions and appearance.
+// - `OnConfirm`: Proposed affirmative action. The update also closes the panel.
+// - `OnDismiss`: Proposed cancellation on Cancel, Escape or a press outside.
+// ## Returns
+// A graphical view with the trigger's original layout.
+public function ConfirmPopover<TMsg>(
+  Id: string; Trigger: E.Element<TMsg>; Open: bool; Settings: Options; OnConfirm: TMsg; OnDismiss: TMsg
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ConfirmPopover(Id, Trigger, Open, Settings, OnConfirm, OnDismiss);
+end function;
+
+// Returns the stable ID of the built-in affirmative button.
+//
+// ## Parameters
+// - `Id`: Panel identity.
+// ## Returns
+// The control ID used for snapshots.
+public function ConfirmId(Id: string): string;
+begin
+  return Id + '/confirm';
+end function;
+
+// Returns the stable ID of the built-in cancel button.
+//
+// ## Parameters
+// - `Id`: Panel identity.
+// ## Returns
+// The control ID used for snapshots.
+public function CancelId(Id: string): string;
+begin
+  return Id + '/cancel';
+end function;
+end unit;

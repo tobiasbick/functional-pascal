@@ -1,6 +1,8 @@
 unit GuiGallery.State;
 
-uses Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes, Fpas.Ui.StatusButtons as Work;
+uses
+  Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes,
+  Fpas.Ui.StatusButtons as Work, Fpas.Ui.RangeSliders as R, Fpas.Ui.Gui.Toasts as Toasts;
 
 // Pages from the CUI gallery with accepted FPAS previews.
 public type Page = enum: byte
@@ -8,10 +10,16 @@ public type Page = enum: byte
   Overview;
   // Buttons and their related actions.
   Buttons;
-  // The model-controlled sheet.
+  // Native selection controls and sliders.
+  Selection;
+  // Native tabs, breadcrumb, pagination and stepper.
+  Navigation;
+  // The sheet, popover, context menu and native toasts.
   Overlays;
   // Related actions from the extended gallery.
   Actions;
+  // Native disclosure examples.
+  Disclosure;
 end enum;
 
 // Independent actions in the button group.
@@ -38,10 +46,48 @@ public type Model = record
   public SegmentedView: int := 0;
   // Selected position in the compact date-range demo.
   public SegmentedRange: int := 0;
+  // Email notifications preference.
+  public Newsletter: bool := true;
+  // Partner offers preference.
+  public Marketing: bool := false;
+  // Wi-Fi switch value.
+  public Wifi: bool := true;
+  // Bluetooth switch value.
+  public Bluetooth: bool := false;
+  // Airplane-mode switch value.
+  public Airplane: bool := false;
+  // Selected save-frequency example.
+  public SaveFrequency: int := 1;
+  // Selected destination in the radio cards.
+  public SavePlace: int := 1;
+  // Current volume on the continuous slider.
+  public Volume: float := 64.0F;
+  // Current brightness on the stepped slider.
+  public Brightness: float := 40.0F;
+  // Lower price bound in the range slider.
+  public PriceLower: float := 20.0F;
+  // Upper price bound in the range slider.
+  public PriceUpper: float := 75.0F;
+  // Independent category chips, with Design and Marketing selected initially.
+  public SelectedChips: int := 5;
+  // Current whole-star rating.
+  public Stars: int := 4;
+  // Selected underline tab on the Navigation page.
+  public ActiveTab: int := 0;
+  // Selected pill tab on the Navigation page.
+  public ActivePillTab: int := 0;
+  // Current zero-based page in the pagination example.
+  public PageIndex: int := 0;
+  // Current zero-based step, starting at Workspace.
+  public ActiveStep: int := 1;
   // Last harmless dropdown command; previews do not alter files or projects.
   public MenuResult: string := '';
   // Active formatting actions.
   public Formats: int := 0;
+  // Independent formatting flags on the Actions page, with Bold selected initially.
+  public ToggleFormats: (array of bool)? := null;
+  // Exclusive alignment flags on the Actions page, with Left selected initially.
+  public ToggleAlignment: (array of bool)? := null;
   // Completed holds shown by the gallery preview.
   public HoldCount: int := 0;
   // Completed two-step confirmations; the preview deletes no data.
@@ -56,6 +102,12 @@ public type Model = record
   public Drawer: bool := false;
   // Whether the sheet preview is open.
   public Sheet: bool := false;
+  // Whether the Filters panel is open.
+  public Filters: bool := false;
+  // Whether the branch confirmation is open.
+  public BranchQuestion: bool := false;
+  // Whether the harmless confirmation preview has completed.
+  public BranchDeleted: bool := false;
 end record;
 
 // Actions available to the gallery.
@@ -74,10 +126,56 @@ public type Msg = variant
   SetSegmentedView(Value: int);
   // Select Day, Week, Month or Year.
   SetSegmentedRange(Value: int);
+  // Set the email notifications preference.
+  SetNewsletter(Value: bool);
+  // Set the partner offers preference.
+  SetMarketing(Value: bool);
+  // Set the Wi-Fi switch.
+  SetWifi(Value: bool);
+  // Set the Bluetooth switch.
+  SetBluetooth(Value: bool);
+  // Set the airplane-mode switch.
+  SetAirplane(Value: bool);
+  // Select a save frequency.
+  SetSaveFrequency(Value: int);
+  // Select the save destination.
+  SetPlace(Value: int);
+  // Adjust the volume.
+  SetVolume(Value: float);
+  // Adjust the brightness.
+  SetBrightness(Value: float);
+  // Adjust both price bounds as one interval.
+  SetPrice(Value: R.Interval);
+  // Set one category's selected flag.
+  SetChip(Mask: int; Selected: bool);
+  // Accept a whole-star rating.
+  SetRating(Value: int);
+  // Choose a tab in the underline strip.
+  SetTab(Value: int);
+  // Choose a tab in the pill strip.
+  SetPillTab(Value: int);
+  // Notify the user which breadcrumb ancestor was activated.
+  SelectAncestor(Label: string);
+  // Accept a page in the pagination example.
+  SetPageIndex(Value: int);
+  // Move to another step in the preview.
+  SetStep(Value: int);
+  // Show the completion feedback from the final step.
+  FinishSteps;
+  // Show one of the passive toast examples.
+  Notify(Title: string; Settings: Toasts.Options);
+  // Preview archiving a message and offer an Undo action.
+  ArchiveMessage;
+  // Handle the timed toast's Undo action.
+  UndoArchive;
   // Record a dropdown command without performing external actions.
   MenuChoice(Value: string);
   // Toggle one formatting action.
   ToggleFormat(Style: TextFormat);
+  // Accept the formatting group's changed flags.
+  SetToggleFormats(Value: array of bool);
+  // Accept the alignment group's changed flags.
+  SetToggleAlignment(Value: array of bool);
   // Record one completed hold.
   ConfirmHold;
   // Record one completed two-step confirmation.
@@ -92,6 +190,12 @@ public type Msg = variant
   SetDrawer(Open: bool);
   // Open or close the sheet preview.
   SetSheet(Open: bool);
+  // Open or close the Filters panel.
+  SetFilters(Open: bool);
+  // Open or cancel the branch confirmation.
+  SetBranchQuestion(Open: bool);
+  // Record confirmation without changing a repository.
+  PreviewBranchDeletion;
 end variant;
 
 // Resolves the palette for the current gallery appearance.
@@ -124,6 +228,8 @@ begin
       Active := Value;
       Drawer := false;
       Sheet := false;
+      Filters := false;
+      BranchQuestion := false;
     end with;
     when Msg.SetAppearance(const Value: Switchers.Selection): State with
       Appearance := Value;
@@ -143,8 +249,69 @@ begin
     when Msg.SetSegmentedRange(const Value: int): State with
       SegmentedRange := Value;
     end with;
+    when Msg.SetNewsletter(const Value: bool): State with
+      Newsletter := Value;
+    end with;
+    when Msg.SetMarketing(const Value: bool): State with
+      Marketing := Value;
+    end with;
+    when Msg.SetWifi(const Value: bool): State with
+      Wifi := Value;
+    end with;
+    when Msg.SetBluetooth(const Value: bool): State with
+      Bluetooth := Value;
+    end with;
+    when Msg.SetAirplane(const Value: bool): State with
+      Airplane := Value;
+    end with;
+    when Msg.SetSaveFrequency(const Value: int): State with
+      SaveFrequency := Value;
+    end with;
+    when Msg.SetPlace(const Value: int): State with
+      SavePlace := Value;
+    end with;
+    when Msg.SetVolume(const Value: float): State with
+      Volume := Value;
+    end with;
+    when Msg.SetBrightness(const Value: float): State with
+      Brightness := Value;
+    end with;
+    when Msg.SetPrice(const Value: R.Interval): State with
+      PriceLower := Value.Lower;
+      PriceUpper := Value.Upper;
+    end with;
+    when Msg.SetChip(const Mask: int, const Selected: bool): State with
+      SelectedChips := if Selected then State.SelectedChips or Mask
+        else State.SelectedChips and not Mask
+        end if;
+    end with;
+    when Msg.SetRating(const Value: int): State with
+      Stars := Value;
+    end with;
+    when Msg.SetTab(const Value: int): State with
+      ActiveTab := Value;
+    end with;
+    when Msg.SetPillTab(const Value: int): State with
+      ActivePillTab := Value;
+    end with;
+    when Msg.SetPageIndex(const Value: int): State with
+      PageIndex := Value;
+    end with;
+    when Msg.SetStep(const Value: int): State with
+      ActiveStep := Value;
+    end with;
+    when Msg.SelectAncestor(_), Msg.FinishSteps, Msg.Notify(
+      _,
+      _
+    ), Msg.ArchiveMessage, Msg.UndoArchive: State;
     when Msg.ToggleFormat(const Style: TextFormat): State with
       Formats := State.Formats xor cast<int>(Style);
+    end with;
+    when Msg.SetToggleFormats(const Value: array of bool): State with
+      ToggleFormats := Value;
+    end with;
+    when Msg.SetToggleAlignment(const Value: array of bool): State with
+      ToggleAlignment := Value;
     end with;
     when Msg.SplitChoice(const Value: string): State with
       SplitResult := Value;
@@ -170,8 +337,38 @@ begin
     when Msg.SetSheet(const Open: bool): State with
       Sheet := Open;
     end with;
+    when Msg.SetFilters(const Open: bool): State with
+      Filters := Open;
+    end with;
+    when Msg.SetBranchQuestion(const Open: bool): State with
+      BranchQuestion := Open;
+    end with;
+    when Msg.PreviewBranchDeletion: State with
+      BranchQuestion := false;
+      BranchDeleted := true;
+    end with;
     when Msg.Preview: State;
   end case;
-  return new Mvu.Transition<Model, Msg>(Next, []);
+  const Commands: array of Mvu.Command<Msg> := case Message of
+    when Msg.SelectAncestor(const Label: string): [Toasts.Show<Msg>(Label)];
+    when Msg.FinishSteps: [
+      Toasts.Show<Msg>('All set', new Toasts.Options(Appearance := Toasts.Tone.Success))
+    ];
+    when Msg.Notify(
+      const Title: string,
+      const Settings: Toasts.Options
+    ): [Toasts.Show<Msg>(Title, Settings)];
+    when Msg.ArchiveMessage: [
+      Toasts.Show<Msg>(
+        'Message archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
+        function(): Msg => Msg.UndoArchive
+      )
+    ];
+    when Msg.UndoArchive: [
+      Toasts.Show<Msg>('Message restored', new Toasts.Options(Appearance := Toasts.Tone.Success))
+    ];
+    else [];
+  end case;
+  return new Mvu.Transition<Model, Msg>(Next, Commands);
 end function;
 end unit;

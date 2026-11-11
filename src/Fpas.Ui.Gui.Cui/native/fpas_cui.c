@@ -16,6 +16,10 @@
 #pragma warning(pop)
 #endif
 
+static void fpas_toast_tick(cui_ctx *ui);
+static void fpas_tooltip_init(cui_ctx *ui);
+static void fpas_tooltip_tick(cui_ctx *ui);
+
 #include "bridge.c"
 #include "controls.c"
 #include "widget_nodes.c"
@@ -32,6 +36,23 @@
 #include "widgets/confirm_button.c"
 #include "widgets/status_button.c"
 #include "widgets/segmented.c"
+#include "widgets/toggle_group.c"
+#include "widgets/checkbox.c"
+#include "widgets/switch.c"
+#include "widgets/radio_button.c"
+#include "widgets/radio_cards.c"
+#include "widgets/slider.c"
+#include "widgets/range_slider.c"
+#include "widgets/chip.c"
+#include "widgets/rating.c"
+#include "widgets/tabs.c"
+#include "widgets/breadcrumb.c"
+#include "widgets/pagination.c"
+#include "widgets/stepper.c"
+#include "widgets/toast.c"
+#include "widgets/tooltip.c"
+#include "widgets/popover.c"
+#include "widgets/confirm_popover.c"
 #include "widgets/split_button.c"
 #include "widgets/menu.c"
 #include "host_theme.c"

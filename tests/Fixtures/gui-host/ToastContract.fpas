@@ -1,0 +1,203 @@
+unit GalleryToastContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Toasts as Toasts,
+  System as Sys, System.Diagnostics as Diagnostics, System.Threading as Threads;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Card(Session: Gui.Session<State.Msg>; Title: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Role = 'toast' and Item.Text = Title then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing toast: ' + Title);
+end function;
+
+function Count(Session: Gui.Session<State.Msg>; Title: string): int;
+begin
+  var Result: int := 0;
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Role = 'toast' and Item.Text = Title then
+      Result := Result + 1;
+    end if;
+  end for;
+
+  return Result;
+end function;
+
+procedure Step(Session: Gui.Session<State.Msg>);
+begin
+  Check(Session.Step(), 'The toast gallery closed.');
+end procedure;
+
+procedure VerifyIdle(Renderer: Cui.CuiRenderer);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI idle toast', 1000, 760, Renderer);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  discard Session.Post(State.Msg.Notify('Idle notice', new Toasts.Options(Duration := 1.2F)));
+  Step(Session);
+  const Initial: Gui.Control := Card(Session, 'Idle notice');
+  X := Initial.Bounds.X + Initial.Bounds.Width / 2;
+  Y := Initial.Bounds.Y + Initial.Bounds.Height / 2;
+  discard Window.TryWake();
+  Step(Session);
+  for Attempt: int := 1 to 9 do
+    Threads.Thread.Sleep(150);
+    discard Window.TryWake();
+    Step(Session);
+  end for;
+
+  Check(
+    Find(Session, Initial.Id) <> null,
+    'Hovering must pause the toast beyond its original lifetime.'
+  );
+
+  X := -1.0F;
+  Y := -1.0F;
+  const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+  discard Window.TryWake();
+  repeat
+    Step(Session);
+  until Find(Session, Initial.Id) = null or Time.Elapsed.TotalSeconds >= 2.8;
+
+  Check(
+    Find(Session, Initial.Id) = null and Time.Elapsed.TotalSeconds < 2.8,
+    'A toast must expire while the native event loop is idle after the pointer leaves.'
+  );
+end procedure;
+
+procedure VerifyExamples(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+  procedure Point(Area: Cui.CuiRectangle);
+  begin
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Item: Gui.Control? := Find(Session, Id);
+    if Item = null then
+      raise new Sys.InvalidOperationException('Missing control: ' + Id);
+    end if;
+
+    Point(Item.Bounds);
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Toasts', 1000, 760, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  Click(Session, 'toast-save-profile');
+  const Saved: Gui.Control := Card(Session, 'Changes saved');
+  const Trigger: Gui.Control? := Find(Session, 'toast-save-profile');
+  Check(
+    Trigger <> null and Trigger.Focused,
+    'A newly queued toast must leave focus on its trigger.'
+  );
+  Step(Session);
+  Step(Session);
+  Check(
+    Count(Session, 'Changes saved') = 1 and Card(Session, 'Changes saved').Id = Saved.Id,
+    'Ordinary repaints must not enqueue another notification.'
+  );
+  Click(Session, 'toast-upload');
+  const Failed: Gui.Control := Card(Session, 'Upload failed');
+  Click(Session, 'toast-archive');
+  Step(Session);
+  Step(Session);
+  const Archived: Gui.Control := Card(Session, 'Message archived');
+  Check(
+    Find(Session, Failed.Id) <> null and Find(Session, Archived.Id + '/action') <> null,
+    'The older toast must remain in the stack behind the timed Undo toast.'
+  );
+  Check(Find(Session, Failed.Id + '/dismiss') = null, 'The collapsed stack hides older buttons.');
+  Session.CapturePng(Capture + '.toasts.png');
+  Point(Archived.Bounds);
+  Step(Session);
+  Check(
+    Find(Session, Failed.Id + '/dismiss') <> null,
+    'Hovering must expand the older toast controls.'
+  );
+
+  Click(Session, Archived.Id + '/action');
+  Check(
+    Find(Session, Archived.Id) = null and Count(Session, 'Message restored') = 1,
+    'Undo must dismiss the archive toast and deliver its typed application message.'
+  );
+  Step(Session);
+  Check(Count(Session, 'Message restored') = 1, 'Undo must be delivered exactly once.');
+  Click(Session, 'toast-update');
+  const Available: Gui.Control := Card(Session, 'Update available');
+  Point(Available.Bounds);
+  Button := 1;
+  Step(Session);
+  X := X + Available.Bounds.Width / 2;
+  Step(Session);
+  Button := 0;
+  Step(Session);
+  Check(Find(Session, Available.Id) = null, 'Swiping right must dismiss the toast.');
+end procedure;
+
+// Exercises native stacking, timed Undo, dismissal, hover pause and idle expiry.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Base path for the overlay screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  VerifyExamples(Renderer, Capture);
+  VerifyIdle(Renderer);
+end procedure;
+end unit;

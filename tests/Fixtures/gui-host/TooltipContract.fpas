@@ -1,0 +1,131 @@
+unit GalleryTooltipContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E, Fpas.Ui.Tooltips as T, Fpas.Ui.Validation as V,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System as Sys, System.Diagnostics as Diagnostics;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+begin
+  try
+    discard V.Prepare<int>(Node, Profile);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Reason), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Tooltip preflight accepted an invalid view.');
+end procedure;
+
+// Verifies native tooltip timing, placement and input on the actual gallery.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the tooltip gallery screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Preview:
+        Presses := Presses + 1;
+      else
+    end case;
+
+    return State.Update(Model, Message);
+  end function;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    Check(Session.Step(), 'The tooltip gallery closed.');
+  end procedure;
+  procedure Point(Area: Cui.CuiRectangle);
+  begin
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+    discard Window.TryWake();
+  end procedure;
+begin
+  const Tip: E.Element<int> := T.Tooltip<int>(B.Button<int>('anchor', 'Anchor', 1), 'Hint');
+  Reject(Tip, V.Target.Terminal, 'Graphical profile');
+  Reject(Tip, V.Target.Portable, 'Graphical profile');
+  Reject(T.Tooltip<int>(E.Text<int>('Label'), 'Hint'), V.Target.Graphical, 'interactive target');
+
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Presses: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI tooltip gallery', 1000, 840, Renderer);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays), Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  const Bold: Gui.Control? := Find(Session, 'tooltip-bold');
+  const Italic: Gui.Control? := Find(Session, 'tooltip-italic');
+  if Bold = null or Italic = null then
+    raise new Sys.InvalidOperationException('The tooltip toolbar must contain Bold and Italic.');
+  end if;
+
+  Point(Bold.Bounds);
+  const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+  Step(Session);
+  Check(Find(Session, 'native-tooltip') = null, 'A cold tooltip must wait after pointer entry.');
+  repeat
+    Step(Session);
+  until Find(Session, 'native-tooltip') <> null or Time.Elapsed.TotalSeconds >= 1.4;
+
+  const Visible: Gui.Control? := Find(Session, 'native-tooltip');
+  Check(
+    Visible <> null and Visible.Text = 'Bold  ·  Ctrl B'
+    and Visible.Bounds.Y + Visible.Bounds.Height <= Bold.Bounds.Y
+    and not Visible.Focused and Time.Elapsed.TotalSeconds >= 0.45 and Time.Elapsed.TotalSeconds <
+      1.4,
+    'A cold tooltip must open above its anchor while the host is idle.'
+  );
+  Session.CapturePng(Capture + '.tooltips.png');
+
+  Point(Italic.Bounds);
+  Step(Session);
+  const Warm: Gui.Control? := Find(Session, 'native-tooltip');
+  Check(
+    Warm <> null and Warm.Text = 'Italic  ·  Ctrl I',
+    'A nearby tooltip must open on warm handoff.'
+  );
+  Button := 1;
+  discard Window.TryWake();
+  Step(Session);
+  Check(Find(Session, 'native-tooltip') = null, 'Pressing the anchor must dismiss its hint.');
+  Button := 0;
+  discard Window.TryWake();
+  Step(Session);
+  Step(Session);
+  Check(Presses = 1, 'The wrapped button must still deliver its normal activation.');
+end procedure;
+end unit;

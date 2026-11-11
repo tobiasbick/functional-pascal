@@ -1,0 +1,70 @@
+unit Fpas.Ui.Gui.Toasts;
+
+uses Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+// Native CUI toast appearance.
+public type Tone = enum: byte
+  // A neutral notification.
+  Neutral;
+  // An informational notification.
+  Info;
+  // A completed action.
+  Success;
+  // A condition requiring attention.
+  Warning;
+  // An error or destructive action.
+  Danger;
+end enum;
+
+// Presentation and lifetime of one native toast.
+public type Options = record
+  // Optional secondary text, up to 191 UTF-8 bytes.
+  public Description: string := '';
+  // Native icon and accent.
+  public Appearance: Tone := Tone.Neutral;
+  // Seconds until dismissal, zero for CUI's default, or negative to keep it open.
+  public Duration: float := 0.0F;
+  // Optional action caption, up to 47 UTF-8 bytes and without CUI's ## label delimiter.
+  public ActionLabel: string := '';
+  // Show the time remaining as a draining line.
+  public ShowTimer: bool := false;
+end record;
+
+// A one-shot notification request understood by the graphical host.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request<TMsg> = record
+  // Literal title, up to 127 UTF-8 bytes.
+  public Title: string;
+  // Native appearance, duration and action caption.
+  public Settings: Options;
+  // Optional factory called once if the action is activated.
+  public OnAction: Sys.Func<TMsg>? := null;
+end record;
+
+// Queues a native toast when the graphical host applies the returned command.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Title`: Nonblank literal title, up to 127 UTF-8 bytes.
+// - `Settings`: Optional description, tone, lifetime and action caption.
+// - `OnAction`: Optional message factory, supplied together with an action caption.
+// ## Returns
+// A graphical host command that shows one notification.
+public function Show<TMsg>(
+  Title: string; Settings: Options? := null; OnAction: Sys.Func<TMsg>? := null
+): Mvu.Command<TMsg>;
+requires Title <> '';
+begin
+  const Resolved: Options := Settings ?? new Options();
+  if (Resolved.ActionLabel = '') <> (OnAction = null) then
+    raise new Sys.ArgumentException('Supply both an action caption and an action message factory.');
+  end if;
+
+  return Mvu.Command<TMsg>.Host(
+    Mvu.HostRequest.Extension(new Request<TMsg>(Title, Resolved, OnAction))
+  );
+end function;
+end unit;

@@ -1,6 +1,7 @@
 unit GuiGallery.Actions;
 
 uses
+  GuiGallery.ToggleGroup as ToggleGroup,
   GuiGallery.ThemeSwitcher as Theme,
   GuiGallery.State as State, GuiGallery.SplitButton as Split, GuiGallery.ConfirmButton as Confirm,
   GuiGallery.StatusButton as Status, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
@@ -11,12 +12,13 @@ uses
 // - `Model`: Current gallery state.
 // - `Wide`: Whether the previews fit alongside each other.
 // ## Returns
-// Split buttons, morphing feedback and model-owned appearance controls.
+// Split buttons, toggle groups, morphing feedback and appearance controls.
 public function View(Model: State.Model; Wide: bool): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(28))),
     Split.View(Model),
+    ToggleGroup.View(Model, Wide),
     E.Column<State.Msg>(
       E.Styled<State.Msg>(E.Text<State.Msg>('Morphing buttons'), S.Role.Heading),
       E.Styled<State.Msg>(

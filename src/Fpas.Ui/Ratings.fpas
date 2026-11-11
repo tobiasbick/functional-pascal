@@ -1,0 +1,26 @@
+unit Fpas.Ui.Ratings;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a native pointer-operated rating. Clicking the selected star clears it.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Name for control inspection.
+// - `Value`: Model-owned rating from zero through Maximum.
+// - `OnChange`: Maps a proposed rating to a message.
+// - `Maximum`: Number of stars, from one through sixteen.
+// - `Enabled`: Whether the stars accept input.
+// ## Returns
+// The whole-star rating for the graphical profile.
+public function Rating<TMsg>(
+  Id: string; Label: string; Value: int; OnChange: function(int): TMsg;
+  Maximum: int := 5; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RatingAction(Id, Label, Value, OnChange, Maximum, Enabled);
+end function;
+end unit;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 // A declarative view for a host to prepare and present.
 //
@@ -29,14 +29,51 @@ public type Element<TMsg> = variant
   ThemeFlip(Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool);
   // Select one positional choice through native CUI segments or terminal cells.
   Segments(Id: string; Items: array of Segmented.Item; Selected: int; OnChange: function(int): TMsg; Settings: Segmented.Options);
+  // Propose independent or exclusive changes through a native CUI toggle group.
+  Toggles(
+    Id: string; Items: array of ToggleGroups.Item; Selected: array of bool;
+    OnChange: function(array of bool): TMsg; Settings: ToggleGroups.Options
+  );
   // A main action and a host-owned popup of related actions.
   SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>; Settings: Split.Options);
+  // Propose a changed checkbox value through native CUI.
+  CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool);
+  // Propose a changed switch value through native CUI.
+  SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool);
+  // Propose selecting one native CUI radio row.
+  RadioAction(Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg; Description: string; Enabled: bool);
+  // Select one of the native radio rows in positional order.
+  Radios(Id: string; Items: array of RadioGroups.Item; Selected: int; OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing);
+  // Select one card through the native CUI grid.
+  Cards(Id: string; Items: array of RadioCards.Item; Selected: int; OnChange: function(int): TMsg; Settings: RadioCards.Options);
+  // Propose one adjusted native slider value.
+  SliderAction(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Sliders.Options);
+  // Propose both endpoints of a native range slider in one message.
+  RangeSliderAction(Id: string; Label: string; Value: RangeSliders.Interval; Minimum: float; Maximum: float; OnChange: function(RangeSliders.Interval): TMsg; Enabled: bool);
+  // Toggle an independent graphical selection.
+  ChipAction(Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg; Icon: string; Enabled: bool);
+  // Select a graphical whole-star rating.
+  RatingAction(Id: string; Label: string; Value: int; OnChange: function(int): TMsg; Maximum: int; Enabled: bool);
+  // Select a tab in a native graphical strip.
+  TabStrip(Id: string; Items: array of Tabs.Item; Selected: int; OnChange: function(int): TMsg; Settings: Tabs.Options);
+  // Navigate to an ancestor in a graphical breadcrumb trail.
+  BreadcrumbTrail(Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool);
+  // Select a page in a native graphical pager.
+  PaginationAction(Id: string; Page: int; PageCount: int; OnChange: function(int): TMsg; Enabled: bool);
+  // Display model-owned progress through a graphical sequence of steps.
+  StepProgress(Id: string; Steps: array of string; Current: int);
   // Join adjacent buttons under a shared outline.
   ButtonGroup(Children: array of Element<TMsg>);
   // Open a native command menu from one trigger.
   Dropdown(Id: string; Label: string; Entries: array of Menus.Entry<TMsg>; Settings: Menus.Options);
   // Attach CUI's GUI-only right-click menu to a target component.
   Contextual(Id: string; Target: Element<TMsg>; Entries: array of Menus.Entry<TMsg>; Enabled: bool);
+  // Attach graphical hover help to one interactive control.
+  Hinted(Target: Element<TMsg>; Text: string; Shortcut: string);
+  // Attach a model-controlled floating view to a button.
+  Popover(Id: string; Trigger: Element<TMsg>; Content: Element<TMsg>; Open: bool; OnDismiss: TMsg; Settings: Popovers.Options);
+  // Ask for confirmation at an existing button.
+  ConfirmPopover(Id: string; Trigger: Element<TMsg>; Open: bool; Settings: ConfirmPopovers.Options; OnConfirm: TMsg; OnDismiss: TMsg);
   // Display grouped destinations with a single model-owned active key.
   Sidebar(Id: string; Sections: array of N.Section<TMsg>; ActiveKey: string?; Enabled: bool);
   // Lay children out along one axis in order.

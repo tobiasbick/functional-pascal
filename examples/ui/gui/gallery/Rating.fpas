@@ -1,0 +1,15 @@
+unit GuiGallery.Rating;
+
+uses GuiGallery.State as State, Fpas.Ui.Ratings as R, Fpas.Ui.Elements as E;
+
+// Builds the five-star example on the native Selection page.
+//
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The native rating.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return R.Rating<State.Msg>('rating', 'Rating', Model.Stars, State.Msg.SetRating);
+end function;
+end unit;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
-uses Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Stepper as Stepper, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Rating as Rating, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.RangeSlider as RangeSlider, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.RadioGroup as RadioGroup, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys, System.Collections.Generic as Generic;
 
 // Checks native-specific layout limits before issuing widget calls.
 //
@@ -41,6 +41,20 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         Visit(Child);
       when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
         Visit(Child);
+      when E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
+        Visit(Child);
+      when E.Element.Popover(
+        _,
+        const Trigger: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        _,
+        _,
+        _
+      ):
+        Visit(Trigger);
+        Visit(Content);
+      when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
+        Visit(Trigger);
       when E.Element.Styled(const Child: E.Element<TMsg>, _):
         Visit(Child);
       when E.Element.Framed(const Child: E.Element<TMsg>, _):
@@ -86,14 +100,15 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Current.Window.Text(Value);
         Current.Labels.Add(Value);
       when E.Element.Separator(const Title: string):
-        Current.Window.BeginGroup(false, 0, 4, 0, false);
-        if Title <> '' then
+        if Title = '' then
+          Current.Window.Separator();
+        else
+          Current.Window.BeginGroup(false, 0, 4, 0, false);
           Current.Window.Text(Title);
           Current.Labels.Add(Title);
+          Current.Window.Separator();
+          Current.Window.EndGroup();
         end if;
-
-        Current.Window.Separator();
-        Current.Window.EndGroup();
       when E.Element.ButtonAction(
         const Id: string,
         const Label: string,
@@ -145,6 +160,33 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(int): TMsg, const Settings: Segmented.Options
       ):
         SegmentedWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+      when E.Element.TabStrip(
+        const Id: string, const Items: array of Tabs.Item, const Selected: int,
+        const Change: function(int): TMsg, const Settings: Tabs.Options
+      ):
+        TabsWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+      when E.Element.BreadcrumbTrail(
+        const Id: string,
+        const Items: array of string,
+        const Navigate: function(int): TMsg,
+        const Enabled: bool
+      ):
+        Breadcrumb.Draw<TMsg>(Current, Id, Items, Navigate, Enabled);
+      when E.Element.PaginationAction(
+        const Id: string,
+        const Page: int,
+        const Count: int,
+        const Change: function(int): TMsg,
+        const Enabled: bool
+      ):
+        Pagination.Draw<TMsg>(Current, Id, Page, Count, Change, Enabled);
+      when E.Element.StepProgress(const Id: string, const Steps: array of string, const Index: int):
+        Stepper.Draw<TMsg>(Current, Id, Steps, Index);
+      when E.Element.Toggles(
+        const Id: string, const Items: array of ToggleGroups.Item, const Selected: array of bool,
+        const Change: function(array of bool): TMsg, const Settings: ToggleGroups.Options
+      ):
+        ToggleGroup.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
       when E.Element.ThemeChoice(
         const Id: string,
         const Selected: ThemeSwitchers.Selection,
@@ -152,6 +194,74 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: ThemeSwitchers.Options
       ):
         ThemeSwitcher.Draw<TMsg>(Current, Id, Selected, Change, Settings);
+      when E.Element.CheckboxAction(
+        const Id: string,
+        const Label: string,
+        const Checked: bool,
+        const Change: function(bool): TMsg,
+        const Description: string,
+        const Enabled: bool,
+        const Indeterminate: bool
+      ):
+        Checkbox.Draw<TMsg>(
+          Current,
+          Id,
+          Label,
+          Checked,
+          Change,
+          Description,
+          Enabled,
+          Indeterminate
+        );
+      when E.Element.SwitchAction(
+        const Id: string, const Label: string, const On: bool, const Change: function(bool): TMsg,
+        const Description: string, const Enabled: bool
+      ):
+        Switch.Draw<TMsg>(Current, Id, Label, On, Change, Description, Enabled);
+      when E.Element.RadioAction(
+        const Id: string, const Label: string, const Selected: bool, const Select: function(): TMsg,
+        const Description: string, const Enabled: bool
+      ):
+        RadioButton.Draw<TMsg>(Current, Id, Label, Selected, Select, Description, Enabled);
+      when E.Element.Radios(
+        const Id: string, const Items: array of RadioGroups.Item, const Selected: int,
+        const Change: function(int): TMsg, const Enabled: bool, const Gap: L.Spacing
+      ):
+        RadioGroup.Draw<TMsg>(Current, Id, Items, Selected, Change, Enabled, Gap);
+      when E.Element.Cards(
+        const Id: string, const Items: array of RadioCards.Item, const Selected: int,
+        const Change: function(int): TMsg, const Settings: RadioCards.Options
+      ):
+        RadioCardsWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+      when E.Element.SliderAction(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, const Change: function(float): TMsg, const Settings: Sliders.Options
+      ):
+        Slider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+      when E.Element.RangeSliderAction(
+        const Id: string,
+        const Label: string,
+        const Value: RangeSliders.Interval,
+        const Minimum: float,
+        const Maximum: float,
+        const Change: function(RangeSliders.Interval): TMsg,
+        const Enabled: bool
+      ):
+        RangeSlider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Enabled);
+      when E.Element.ChipAction(
+        const Id: string,
+        const Label: string,
+        const Selected: bool,
+        const Change: function(bool): TMsg,
+        const Icon: string,
+        const Enabled: bool
+      ):
+        Chip.Draw<TMsg>(Current, Id, Label, Selected, Change, Icon, Enabled);
+      when E.Element.RatingAction(
+        const Id: string, const Label: string, const Value: int, const Change: function(int): TMsg,
+        const Maximum: int, const Enabled: bool
+      ):
+        Rating.Draw<TMsg>(Current, Id, Label, Value, Change, Maximum, Enabled);
       when E.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options
@@ -165,6 +275,48 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       ):
         Visit(Child, Current, Horizontal, Align);
         ContextMenu.Draw<TMsg>(Current, Id, Entries, Enabled);
+        return;
+      when E.Element.Hinted(
+        const Child: E.Element<TMsg>,
+        const Caption: string,
+        const Shortcut: string
+      ):
+        Visit(Child, Current, Horizontal, Align);
+        TooltipWidget.Attach<TMsg>(Current, Caption, Shortcut);
+        return;
+      when E.Element.Popover(
+        const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options
+      ):
+        PopoverWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Trigger,
+          Content,
+          Open,
+          Dismiss,
+          Settings,
+          Horizontal,
+          Align,
+          Visit
+        );
+        return;
+      when E.Element.ConfirmPopover(
+        const Id: string, const Trigger: E.Element<TMsg>, const Open: bool,
+        const Settings: ConfirmPopovers.Options, const Confirm: TMsg, const Dismiss: TMsg
+      ):
+        ConfirmPopoverWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Trigger,
+          Open,
+          Settings,
+          Confirm,
+          Dismiss,
+          Horizontal,
+          Align,
+          Visit
+        );
         return;
       when E.Element.Dropdown(
         const Id: string,
@@ -192,7 +344,8 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Size.Spacing(Settings.Padding),
           Size.Spacing(Settings.Gap),
           cast<int>(Settings.Align),
-          false
+          false,
+          Settings.Wrap
         );
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, Row, Settings.Align);

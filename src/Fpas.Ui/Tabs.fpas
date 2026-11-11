@@ -1,0 +1,65 @@
+unit Fpas.Ui.Tabs;
+
+uses Fpas.Ui.Elements as E;
+
+// One tab in stable positional order.
+public type Item = record
+  // Literal tab caption.
+  public Label: string;
+  // Optional CUI icon glyph.
+  public Icon: string := '';
+end record;
+
+// Native tab-strip appearance.
+public type Variant = enum: byte
+  // An animated underline on a baseline.
+  Underline;
+  // An animated highlight behind the tab.
+  Pill;
+end enum;
+
+// Native tab-strip settings.
+public type Options = record
+  // Underline or pill indicator.
+  public Appearance: Variant := Variant.Underline;
+  // Distribute the tabs across the available width.
+  public FullWidth: bool := false;
+  // Whether the strip accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Creates a model-controlled graphical tab strip.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable strip identity.
+// - `Items`: One through 32 positional tabs.
+// - `Selected`: Model-owned zero-based selection.
+// - `OnChange`: Maps a proposed index to a message.
+// - `Settings`: Native appearance, width and input permission.
+// ## Returns
+// A tab strip that leaves the choice of content to the view.
+public function Tabs<TMsg>(
+  Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
+  Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TabStrip(Id, Items, Selected, OnChange, Settings ?? new Options());
+end function;
+
+// Returns the focus identity of a tab.
+//
+// ## Parameters
+// - `Id`: Strip identity.
+// - `Index`: Zero-based tab position.
+// ## Returns
+// The strip identity followed by the positional suffix.
+public function ItemId(Id: string; Index: int): string;
+requires Id <> '';
+requires Index >= 0;
+begin
+  return Id + '/' + Index.ToString();
+end function;
+end unit;

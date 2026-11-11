@@ -1,0 +1,40 @@
+unit GuiGallery.Stepper;
+
+uses
+  GuiGallery.State as State, GuiGallery.Sections as G, Fpas.Ui.Steppers as Steppers,
+  Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  System as Sys;
+
+// Builds the original workflow preview and its Back and Next or Finish buttons.
+//
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The native progress display and navigation buttons.
+public function Rows(Model: State.Model): array of E.Element<State.Msg>;
+begin
+  const Steps: array of string := ['Account', 'Workspace', 'Invite team', 'Done'];
+  const Last: bool := Model.ActiveStep = Steps.Length - 1;
+  const Progress: E.Element<State.Msg> := Steppers.Stepper<State.Msg>(
+    'workflow-steps',
+    Steps,
+    Model.ActiveStep
+  );
+  const Buttons: E.Element<State.Msg> := E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(8), Wrap := true),
+    B.Button<State.Msg>(
+      'step-back', 'Back', State.Msg.SetStep(Sys.Math.Max(0, Model.ActiveStep - 1)),
+      new B.Options(Enabled := Model.ActiveStep > 0)
+    ),
+    B.Button<State.Msg>(
+      'step-next', if Last then 'Finish' else 'Next' end if,
+      if Last then State.Msg.FinishSteps else State.Msg.SetStep(Model.ActiveStep + 1) end if,
+      new B.Options(
+        Variant := S.ButtonVariant.Primary,
+        IconRight := Sys.Char.ConvertFromUtf32($E049)
+      )
+    )
+  );
+  return [Progress, Buttons];
+end function;
+end unit;

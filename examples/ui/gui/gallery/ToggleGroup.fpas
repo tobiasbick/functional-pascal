@@ -1,0 +1,47 @@
+unit GuiGallery.ToggleGroup;
+
+uses
+  GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.ToggleGroups as T, System as Sys;
+
+// Shows CUI's icon formatting group and exclusive alignment group.
+//
+// ## Parameters
+// - `Model`: Current selections for both groups.
+// - `Wide`: Whether both groups fit on the same row.
+// ## Returns
+// The Toggle group section of the native Actions page.
+public function View(Model: State.Model; Wide: bool): E.Element<State.Msg>;
+begin
+  const Formats: E.Element<State.Msg> := T.ToggleGroup<State.Msg>(
+    'action-format', [
+      new T.Item('Bold', Sys.Char.ConvertFromUtf32($E05D)),
+      new T.Item('Italic', Sys.Char.ConvertFromUtf32($E0FB)),
+      new T.Item('Underline', Sys.Char.ConvertFromUtf32($E19A)),
+      new T.Item('Code', Sys.Char.ConvertFromUtf32($E093))
+    ], Model.ToggleFormats ?? [true, false, false, false], State.Msg.SetToggleFormats,
+    new T.Options(IconOnly := true)
+  );
+  const Alignment: E.Element<State.Msg> := T.ToggleGroup<State.Msg>(
+    'action-align', [
+      new T.Item('Left', Sys.Char.ConvertFromUtf32($E185)),
+      new T.Item('Center', Sys.Char.ConvertFromUtf32($E106)),
+      new T.Item('Right', Sys.Char.ConvertFromUtf32($E115))
+    ], Model.ToggleAlignment ?? [true, false, false], State.Msg.SetToggleAlignment,
+    new T.Options(Exclusive := true)
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    E.Styled<State.Msg>(E.Text<State.Msg>('Toggle group'), S.Role.Heading),
+    E.Styled<State.Msg>(
+      E.Text<State.Msg>('Independent toggles for toolbars, or exclusive like radio buttons.'),
+      S.Role.Secondary
+    ),
+    if Wide then E.Row<State.Msg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))), Formats, Alignment
+      )
+      else E.Column<State.Msg>(Formats, Alignment)
+      end if
+  );
+end function;
+end unit;

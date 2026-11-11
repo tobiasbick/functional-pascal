@@ -1,0 +1,44 @@
+unit Fpas.Ui.Internal.ToggleGroupRules;
+
+uses Fpas.Ui.ToggleGroups as Toggles, Fpas.Ui.Buttons as B, Fpas.Ui.Internal.Rules as Rules, System as Sys;
+
+// Checks native limits, captions and the controlled selection before presentation.
+//
+// ## Parameters
+// - `Items`: Positional choices.
+// - `Selected`: Model-owned selection flags.
+// - `Settings`: Native size and selection mode.
+// - `Location`: Group identity or view path for diagnostics.
+public procedure Check(Items: array of Toggles.Item; Selected: array of bool; Settings: Toggles.Options; Location: string);
+begin
+  if Items.Length < 1 or Items.Length > 32 or Selected.Length <> Items.Length
+    or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+  then
+    Rules.Reject(
+      Location,
+      'A toggle group needs one through 32 choices, one flag per choice and a valid size.'
+    );
+  end if;
+
+  if Settings.Exclusive then
+    var Count: int := 0;
+    for Value: bool in Selected do
+      if Value then
+        Count := Count + 1;
+      end if;
+    end for;
+
+    if Count <> 1 then
+      Rules.Reject(Location, 'An exclusive toggle group needs exactly one selected item.');
+    end if;
+  end if;
+
+  for Item: Toggles.Item in Items do
+    Rules.CheckText(Item.Label, Location + '/label');
+    Rules.CheckText(Item.Icon, Location + '/icon');
+    if Item.Label = '' or Item.Label.Contains(#10) or Item.Label.Contains(#13) then
+      Rules.Reject(Location, 'A toggle needs a single-line accessible label.');
+    end if;
+  end for;
+end procedure;
+end unit;

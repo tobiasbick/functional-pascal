@@ -1,0 +1,33 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Rating;
+
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C;
+
+// Presents CUI's pointer-operated stars and forwards a proposed whole-star value.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable identity.
+// - `Label`: Name for control inspection.
+// - `Value`: Model-owned rating.
+// - `OnChange`: Maps the proposed rating to a message.
+// - `Maximum`: Number of stars.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Value: int;
+  OnChange: function(int): TMsg; Maximum: int; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Proposal: int := Frame.Window.Rating(C.Token('rating', Id), Value, Maximum, Allowed);
+  if Proposal >= 0 then
+    Frame.Messages.Add(OnChange(Proposal));
+  end if;
+
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, Label, 'rating', new Cui.CuiRectangle(), Allowed, Value := Value.ToString())
+  );
+end procedure;
+end unit;

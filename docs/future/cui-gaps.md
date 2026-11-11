@@ -111,17 +111,18 @@ vertical scrolling. GUI uses CUI logical points. TUI converts 8 logical units
 to one column and 16 to one row. Both hosts expose responsive size classes.
 The [native layout tests][gui-layout-test] check weighted and fixed allocations.
 The [TUI contract][tui-contract] covers shrinkage, rounding, and logical
-distances in cells.
+distances in cells. Graphical rows also support native wrapping via
+`Flow.Wrap`, exercised by the chips in the [GUI gallery][gui-gallery-test].
 
 The [CUI layout reference][layout] and [native gallery][gallery] also use
 features outside that shared subset. The following layout work targets the GUI;
 terminal equivalents are deferred.
 
 - [ ] Responsive grid with a maximum column count and minimum column width.
-- [ ] Wrapping rows and main-axis justification, including space between children.
+- [ ] Main-axis justification, including space between children.
 - [ ] Stack layout with layered children, per-axis sizing including percentages,
   and per-edge padding.
-- [ ] Flexible spacer, fixed gap, and orientation-aware separator parity.
+- [ ] Flexible spacer and fixed gap parity.
 - [ ] Horizontal scrolling in the shared FPAS API and CUI-equivalent viewport
   control. The low-level native scroll binding supports both axes; shared
   `ScrollView` is vertical. Virtual list and split view have separate entries.
@@ -137,6 +138,9 @@ blame, time histograms, and the choices inside open time and color pickers.
 The picker fields support keyboard opening and dismissal; their internal
 choices have no keyboard focus. Describe and test the pinned release's input
 behavior in each GUI widget's contract.
+
+See [CUI upstream bugs](cui-upstream-bugs.md) for the toggle group's
+Right-arrow reproduction and pending upstream fix.
 
 ### Terminal icon experiment (deferred)
 
@@ -208,14 +212,27 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   CUI; Buttons contains the upstream view and compact date-range examples.
   TUI: implemented; joined cell segments, explicit glyphs or labels, Tab and
   non-wrapping Left/Right selection, with the model owning acceptance.
-- [ ] Toggle group (`cui_toggle_group`)
-- [ ] Checkbox (`cui_checkbox`)
-- [ ] Switch (`cui_switch`)
-- [ ] Radio button (`cui_radio`)
-- [ ] Radio group (`cui_radio_group`)
-- [ ] Radio cards (`cui_radio_cards`)
-- [ ] Chip (`cui_chip`)
-- [ ] Rating (`cui_rating`)
+- [x] Toggle group (`cui_toggle_group`): [API][fpas-toggle-group]. The GUI
+  Actions page shows the original independent formatting and exclusive
+  alignment examples. TUI: deferred; graphical profile required.
+- [x] Checkbox (`cui_checkbox`): [API][fpas-selection]. Selection shows the
+  original notification and disabled examples. TUI: graphical profile required.
+- [x] Switch (`cui_switch`): [API][fpas-selection]. Selection shows Wi-Fi,
+  Bluetooth and airplane mode. TUI: graphical profile required.
+- [x] Radio button (`cui_radio`): [API][fpas-selection]. The native rows
+  accept a controlled value, caption and description. TUI: graphical profile required.
+- [x] Radio group (`cui_radio_group`): [API][fpas-selection]. Selection
+  composes native radio rows for the original save-frequency choices.
+  TUI: graphical profile required.
+- [x] Radio cards (`cui_radio_cards`): [API][fpas-radio-cards]. Selection shows
+  the original save destinations and tests pointer selection and arrow-key focus.
+  TUI: graphical profile required.
+- [x] Chip (`cui_chip`): [API][fpas-chips-rating]. Selection exercises six
+  independent chips with pointer and keyboard input and native row wrapping.
+  TUI: graphical profile required.
+- [x] Rating (`cui_rating`): [API][fpas-chips-rating]. Selection shows five
+  stars, starting at four, and tests clicking a star to select or clear it.
+  TUI: graphical profile required.
 - [ ] Control tile (`cui_control_tile`)
 
 ### Inputs and pickers
@@ -242,8 +259,12 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 - [ ] Wheel picker (`cui_wheel_picker`)
 - [ ] Color picker (`cui_color_picker`)
 - [ ] Emoji picker (`cui_emoji_picker`)
-- [ ] Slider (`cui_slider`)
-- [ ] Range slider (`cui_range_slider`)
+- [x] Slider (`cui_slider`): [API][fpas-sliders]. Selection shows continuous
+  Volume and stepped Brightness with percentage display and keyboard adjustment.
+  TUI: graphical profile required.
+- [x] Range slider (`cui_range_slider`): [API][fpas-sliders]. Selection shows
+  Price range and tests dragging both endpoints. Pinned CUI adjusts by pointer.
+  TUI: graphical profile required.
 - [ ] Ruler slider (`cui_ruler_slider`)
 - [ ] Histogram slider (`cui_histogram_slider`)
 - [ ] Knob (`cui_knob`)
@@ -259,10 +280,18 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   TUI: implemented; top-aligned cell rows, labels and badges. Icons are omitted.
   [GUI][gui-gallery-test] and [TUI][tui-gallery-test] gallery tests
   cover destinations and the responsive drawer.
-- [ ] Tabs (`cui_tabs`)
-- [ ] Breadcrumb (`cui_breadcrumb`)
-- [ ] Pagination (`cui_pagination`)
-- [ ] Stepper (`cui_stepper`)
+- [x] Tabs (`cui_tabs`): [API][fpas-navigation-controls]. Navigation shows the
+  original underline and icon pill strips with model-selected content.
+  TUI: graphical profile required.
+- [x] Breadcrumb (`cui_breadcrumb`): [API][fpas-navigation-controls]. Navigation
+  exercises ancestor activation and shows the selected caption in a native toast.
+  TUI: graphical profile required.
+- [x] Pagination (`cui_pagination`): [API][fpas-navigation-controls]. Navigation
+  checks the original twelve-page pager, page boundaries and compact layout.
+  TUI: graphical profile required.
+- [x] Stepper (`cui_stepper`): [API][fpas-stepper]. Navigation shows the native
+  workflow in desktop and compact layouts and exercises Back, Next and Finish.
+  Finish shows the native completion toast. TUI: graphical profile required.
 - [ ] Table of contents and anchors (`cui_toc`, `cui_toc_anchor`)
 - [ ] Dock and dock items (`cui_dock`, `cui_dock_item`, `cui_dock_separator`)
 - [ ] Bottom tab bar (`cui_tab_bar`)
@@ -284,22 +313,34 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   native CUI menus to existing target components and shares dropdown commands,
   conversion and inspection. The Overlays gallery shows Cut/Copy/Paste/Delete.
   TUI: deferred; graphical profile required.
-- [ ] Popover (`cui_popover`)
-- [ ] Tooltip (`cui_tooltip`)
+- [x] Popover (`cui_popover`): [API][fpas-popovers]. Overlays shows the
+  original Filters panel. Windows Software and OpenGL cover placement, input,
+  retained values and dismissal. TUI: deferred; graphical profile required.
+- [x] Tooltip (`cui_tooltip`): [API][fpas-tooltip]. Overlays reproduces the
+  original icon toolbar and its shortcut hints. Windows Software and OpenGL
+  cover cold hover, warm handoff and anchor input. TUI: deferred; graphical
+  profile required.
 - [ ] Dialog and action footer (`cui_dialog`, `cui_dialog_footer`)
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
 - [ ] Command palette (`cui_command_palette`)
 - [ ] Accordion (`cui_accordion`)
 - [ ] Hover card (`cui_hover_card`)
-- [ ] Confirm popover (`cui_confirm_popover`)
+- [x] Confirm popover (`cui_confirm_popover`): [API][fpas-popovers].
+  Disclosure shows the original Delete branch question. Windows Software and
+  OpenGL cover separate open and confirm actions and cancellation. TUI:
+  deferred; graphical profile required.
 - [ ] Expandable text (`cui_expandable_text`)
 - [ ] Expandable card (`cui_expandable_card`)
 - [ ] Guided tour (`cui_tour`)
 
 ### Feedback and progress
 
-- [ ] Toast, including timed undo toast (`cui_toast`, `cui_toast_action_clicked`)
+- [x] Toast, including timed undo toast (`cui_toast`, `cui_toast_action_clicked`):
+  [API][fpas-toast]. Overlays shows the four native examples and a timed Undo.
+  Navigation uses toasts for breadcrumb activation and Finish. The gallery
+  checks stacking, hover pause, expiry, dismissal and action delivery.
+  TUI: graphical host command required.
 - [ ] Alert (`cui_alert`)
 - [ ] Progress bar (`cui_progress`)
 - [ ] Meter (`cui_meter`)
@@ -479,6 +520,14 @@ track that native build option with the GUI RTL layout work.
 [fpas-button]: ../../src/Fpas.Ui/README.md#button
 [fpas-button-group]: ../../src/Fpas.Ui/README.md#button-group
 [fpas-segmented]: ../../src/Fpas.Ui/README.md#segmented-control
+[fpas-toggle-group]: ../../src/Fpas.Ui/README.md#toggle-group
+[fpas-selection]: ../../src/Fpas.Ui/README.md#checkbox-switch-and-radio-controls
+[fpas-radio-cards]: ../../src/Fpas.Ui/README.md#radio-cards
+[fpas-sliders]: ../../src/Fpas.Ui/README.md#slider-and-range-slider
+[fpas-chips-rating]: ../../src/Fpas.Ui/README.md#chip-and-rating
+[fpas-navigation-controls]: ../../src/Fpas.Ui/README.md#tabs-breadcrumb-and-pagination
+[fpas-stepper]: ../../src/Fpas.Ui/README.md#stepper
+[fpas-toast]: ../../src/Fpas.Ui.Gui/README.md#toasts
 [fpas-copy-button]: ../../src/Fpas.Ui/README.md#copy-button
 [fpas-hold-button]: ../../src/Fpas.Ui/README.md#hold-to-confirm
 [fpas-confirm-button]: ../../src/Fpas.Ui/README.md#confirm-button
@@ -488,6 +537,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-split-button]: ../../src/Fpas.Ui/README.md#split-button
 [fpas-menu]: ../../src/Fpas.Ui/README.md#dropdown-menu
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
+[fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
+[fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
 [gui-gallery-test]: ../../tests/Fixtures/gui-host/PublishedGallery.fpas
 [gui-layout-test]: ../../tests/Fpas.Ui.Gui.Cui.Tests/CuiHostLayoutTests.cs

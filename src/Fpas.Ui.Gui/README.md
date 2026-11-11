@@ -24,10 +24,19 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Copy, hold, confirmation, status and split buttons.
 - Theme switcher and sun/moon toggle with model-owned palette updates.
 - Segmented controls with labels/icons, native sizes and full-width allocation.
+- Toggle groups with independent or exclusive selection, labels and icon tooltips.
+- Checkbox, switch and radio rows with descriptions and controlled selection.
+- Responsive radio cards with icons, descriptions and badges.
+- Continuous and stepped sliders, and a range slider with two draggable endpoints.
+- Selection chips and whole-star ratings.
 - Dropdown menus with native triggers, command states, hints, labels and separators.
 - Context menus attached to existing target components, using the same menu entries.
+- Anchored popovers with model-owned visibility and native confirmation questions.
+- Native hover tooltips with optional shortcut key hints.
 - Sidebar navigation and edge sheets/drawers.
-- Text, separators, rows/columns, sizing, borders, semantic styles and scrolling
+- Underline and pill tabs, breadcrumb links, responsive pagination and steppers.
+- Native toasts with stacking, hover pause and an optional timed action.
+- Text, separators, wrapping rows, columns, sizing, borders, semantic styles and scrolling
   as the foundations needed to compose these widgets.
 
 Visible labels and stable IDs are separate, including literal ## text. Disabled
@@ -38,6 +47,29 @@ the host maps proposals to messages without applying application updates itself.
 Prepare validates the active view before drawing. GUI distances use logical
 units; terminal-specific elements and cell distances are rejected. View records,
 arrays and callbacks remain unchanged while retained by the host.
+
+A visible native tooltip appears in `Snapshot().Controls` with role `tooltip`
+and its finalized bounds. The underlying control retains its own identity.
+
+## Toasts
+
+Return `Fpas.Ui.Gui.Toasts.Show<TMsg>` as a command from an update. Each
+command queues one native notification after the model is committed.
+`Options` sets the description, tone, duration, action caption and draining
+timer. CUI defaults to four seconds, or six seconds with the timer line.
+A negative duration keeps the toast until dismissal. Hovering expands the
+stack and pauses the countdown. Close or swipe right to dismiss it.
+
+Supply an action caption and an `OnAction` message factory together.
+The host invokes the factory once after the native action is activated.
+The action can be reached by Tab and activated by Enter or Space.
+Toasts leave the current focus in place when they appear. The
+`Snapshot().Controls` list includes visible cards and buttons.
+The terminal host rejects this graphical command.
+
+Title, description and action caption are limited to 127, 191 and 47 UTF-8
+bytes respectively. The native action caption reserves `##` as a label
+delimiter.
 
 ## Invalidation and inspection
 

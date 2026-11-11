@@ -1,0 +1,66 @@
+unit GuiGallery.Sections;
+
+uses GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Creates logical spacing matching the CUI gallery.
+//
+// ## Parameters
+// - `Amount`: Distance in logical points.
+// ## Returns
+// The corresponding fixed spacing.
+public function Points(Amount: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Amount));
+end function;
+
+// Creates vertical space in a gallery column.
+//
+// ## Parameters
+// - `Amount`: Height in logical points.
+// ## Returns
+// An empty element with the requested height.
+public function Space(Amount: int): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(
+    E.Column<State.Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Amount)))
+  );
+end function;
+
+// Builds a CUI gallery section heading with its top inset.
+//
+// ## Parameters
+// - `Title`: Heading caption.
+// - `Description`: Optional secondary text.
+// ## Returns
+// The padded title block.
+public function Heading(Title: string; Description: string := ''): E.Element<State.Msg>;
+begin
+  const Label: E.Element<State.Msg> := E.Styled<State.Msg>(
+    E.Text<State.Msg>(Title),
+    S.Role.Heading
+  );
+  const TitleBlock: E.Element<State.Msg> := if Description = '' then Label
+    else E.Column<State.Msg>(
+      new L.Flow(Gap := Points(4)),
+      Label,
+      E.Styled<State.Msg>(E.Text<State.Msg>(Description), S.Role.Secondary)
+    )
+    end if;
+  return E.Column<State.Msg>(Space(18), TitleBlock);
+end function;
+
+// Builds the outlined card used by the native gallery.
+//
+// ## Parameters
+// - `RowGap`: Distance in logical points between children.
+// - `Children`: Card content in display order.
+// ## Returns
+// The card with the original 24-point inset.
+public function Card(RowGap: int; Children: array of E.Element<State.Msg>): E.Element<State.Msg>;
+begin
+  return E.Styled<State.Msg>(
+    E.Column<State.Msg>(new L.Flow(Padding := Points(24), Gap := Points(RowGap)), Children),
+    S.Role.OutlinedPanel
+  );
+end function;
+end unit;

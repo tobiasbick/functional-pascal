@@ -470,6 +470,8 @@ begin
         when Mvu.HostRequest.Focus(const Id: string):
           PendingFocus := Id;
         when Mvu.HostRequest.Close:
+        when Mvu.HostRequest.Extension(_):
+          raise new Sys.NotSupportedException('This host request requires the graphical profile.');
       end case;
     end procedure, 64
   );

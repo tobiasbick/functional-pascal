@@ -1,0 +1,26 @@
+unit Fpas.Ui.Chips;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a native selection chip with a model-owned Boolean.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Selected`: Current selection.
+// - `OnChange`: Maps the proposed selection to a message.
+// - `Icon`: Optional CUI glyph for the unselected state.
+// - `Enabled`: Whether the chip accepts input.
+// ## Returns
+// The chip for the graphical profile.
+public function Chip<TMsg>(
+  Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg;
+  Icon: string := ''; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ChipAction(Id, Label, Selected, OnChange, Icon, Enabled);
+end function;
+end unit;

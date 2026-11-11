@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -51,6 +51,127 @@ begin
 
         for Index: int := 0 to Items.Length - 1 do
           const Item: string := Segmented.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.Toggles(
+      const Id: string,
+      const Items: array of ToggleGroups.Item,
+      _,
+      _,
+      const Settings: ToggleGroups.Options
+    ):
+      if Settings.Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := ToggleGroups.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item or (Preferred = Id and Index = 0) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.TabStrip(
+      const Id: string,
+      const Items: array of Tabs.Item,
+      const Selected: int,
+      _,
+      const Settings: Tabs.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return Tabs.ItemId(Id, Selected);
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Tabs.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.BreadcrumbTrail(
+      const Id: string,
+      const Items: array of string,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 2 do
+          const Item: string := Breadcrumbs.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item or (Preferred = Id and Index = 0) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.PaginationAction(const Id: string, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.CheckboxAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool,
+      _
+    ), E.Element.SwitchAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool
+    ), E.Element.RadioAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool
+    ), E.Element.ChipAction(const Id: string, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Radios(
+      const Id: string,
+      const Items: array of RadioGroups.Item,
+      _,
+      _,
+      const Enabled: bool,
+      _
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := RadioGroups.ItemId(Id, Index);
+          if Items[Index].Enabled and (Preferred = null or Preferred = Item) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.SliderAction(const Id: string, _, _, _, _, _, const Settings: Sliders.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RangeSliderAction(const Id: string, _, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Cards(
+      const Id: string,
+      const Items: array of RadioCards.Item,
+      const Selected: int,
+      _,
+      const Settings: RadioCards.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return RadioCards.ItemId(Id, Sys.Math.Max(0, Selected));
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := RadioCards.ItemId(Id, Index);
           if Preferred = null or Preferred = Item then
             return Item;
           end if;
@@ -112,8 +233,29 @@ begin
           return Found;
         end if;
       end for;
-    when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
+    when E.Element.Contextual(
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
       return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Popover(
+      _,
+      const Trigger: E.Element<TMsg>,
+      const Content: E.Element<TMsg>,
+      const Open: bool,
+      _,
+      _
+    ):
+      const Found: string? := First<TMsg>(Trigger, Prepared, Preferred);
+      if Found <> null or not Open then
+        return Found;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
+      return First<TMsg>(Trigger, Prepared, Preferred);
     when E.Element.Sized(const Child: E.Element<TMsg>, _):
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Styled(const Child: E.Element<TMsg>, _):
@@ -181,8 +323,16 @@ begin
       const Child: E.Element<TMsg>,
       _,
       _
-    ), E.Element.Sized(const Child: E.Element<TMsg>, _):
+    ), E.Element.Sized(const Child: E.Element<TMsg>, _), E.Element.Hinted(
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ):
       return TopModal<TMsg>(Child, Prepared);
+    when E.Element.Popover(_, _, const Content: E.Element<TMsg>, const Open: bool, _, _):
+      if Open then
+        return TopModal<TMsg>(Content, Prepared);
+      end if;
     when E.Element.Styled(const Child: E.Element<TMsg>, _):
       return TopModal<TMsg>(Child, Prepared);
     when E.Element.Framed(const Child: E.Element<TMsg>, _):

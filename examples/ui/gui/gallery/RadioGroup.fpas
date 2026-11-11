@@ -1,0 +1,22 @@
+unit GuiGallery.RadioGroup;
+
+uses GuiGallery.State as State, Fpas.Ui.RadioGroups as R, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds the native Selection page's save-frequency choices.
+//
+// ## Parameters
+// - `Model`: Current save frequency.
+// ## Returns
+// The exclusive radio rows with their original descriptions.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return R.RadioGroup<State.Msg>(
+    'save-frequency', [
+      new R.Item('Every change', 'Save as you type. Uses the most disk.'),
+      new R.Item('Every 5 minutes', 'A good balance for most projects.'),
+      new R.Item('Only when I save', 'Nothing is written until you press Ctrl S.')
+    ], Model.SaveFrequency, State.Msg.SetSaveFrequency,
+    Gap := L.Spacing.Fixed(L.Measure.Logical(12))
+  );
+end function;
+end unit;

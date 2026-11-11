@@ -16,7 +16,9 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
         .title = title, .width = width, .height = height,
         .renderer = (cui_renderer_kind)renderer, .continuous = continuous != 0
     };
-    return cui_app_create(&options);
+    cui_app *app = cui_app_create(&options);
+    if (app) fpas_tooltip_init(app->ui);
+    return app;
 }
 
 void fpas_cui_finish_frame_for_destroy(cui_app *app) {
@@ -26,6 +28,8 @@ void fpas_cui_finish_frame_for_destroy(cui_app *app) {
 }
 
 int fpas_cui_present(cui_app *app) {
+    fpas_toast_tick(app->ui);
+    fpas_tooltip_tick(app->ui);
     cui__app_render(app);
     const cui_draw_data *draw = cui_get_draw_data(app->ui);
     return draw->width_px > 0 && draw->height_px > 0 &&
@@ -33,6 +37,8 @@ int fpas_cui_present(cui_app *app) {
 }
 
 int fpas_cui_frame(cui_app *app, int defer_close) {
+    fpas_toast_tick(app->ui);
+    fpas_tooltip_tick(app->ui);
     if (cui_app_frame(app)) return 1;
     if (!defer_close) return 0;
     app->running = true;

@@ -1,0 +1,28 @@
+unit GuiGallery.Checkbox;
+
+uses GuiGallery.State as State, Fpas.Ui.Checkboxes as C, Fpas.Ui.Elements as E;
+
+// Builds the three checkboxes from the native Selection page.
+//
+// ## Parameters
+// - `Model`: Current notification choices.
+// ## Returns
+// The independent notification rows and disabled example.
+public function Rows(Model: State.Model): array of E.Element<State.Msg>;
+begin
+  return [
+    C.Checkbox<State.Msg>(
+      'newsletter', 'Email notifications', Model.Newsletter, State.Msg.SetNewsletter,
+      Description := 'Product news, at most once a month.'
+    ),
+    C.Checkbox<State.Msg>(
+      'marketing', 'Marketing', Model.Marketing, State.Msg.SetMarketing,
+      Description := 'Offers from our partners.'
+    ),
+    C.Checkbox<State.Msg>(
+      'disabled-option', 'Disabled option', false,
+      function(Value: bool): State.Msg => State.Msg.Preview, Enabled := false
+    )
+  ];
+end function;
+end unit;

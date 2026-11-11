@@ -12,16 +12,7 @@ int fpas_cui_segmented(cui_ctx *ui, const char *id, const char *const *labels,
         glyphs[index] = icons && icons[index] && icons[index][0] ? icons[index] : NULL;
         literal |= quoted;
     }
-    /* Removed segments no longer reach CUI's disabled/input handling. */
-    for (int index = count; index < 32; ++index) {
-        const cui_id key = cui__hash(&index, sizeof index, group);
-        if (ui->focus == key) ui->focus = 0;
-        if (ui->active == key) ui->active = 0;
-    }
-    if (enabled && focus) {
-        const int index = focus - 1;
-        ui->focus_next_request = cui__hash(&index, sizeof index, group);
-    }
+    fpas_indexed_focus(ui, group, count, enabled ? focus : 0);
     const cui_segmented_opts options = {
         .icons = glyphs, .size = (cui_control_size)size, .full_width = full_width != 0
     };

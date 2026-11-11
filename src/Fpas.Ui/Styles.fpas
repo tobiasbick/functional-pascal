@@ -24,6 +24,8 @@ public type Role = enum: byte
   Divider;
   // An outlined surface around a related group of controls.
   OutlinedPanel;
+  // A graphical CUI label with medium weight and native body-size metrics.
+  Label;
 end enum;
 
 // The role of a button within the application.

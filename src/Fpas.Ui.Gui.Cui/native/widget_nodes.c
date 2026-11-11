@@ -27,6 +27,12 @@ static int fpas_label_node(cui_ctx *ui, int node) {
 }
 
 /* Retain the upstream widget's interaction/paint but supply literal text separately from identity. */
+static void fpas_text(cui_ctx *ui, int node, const char *text) {
+    const int length = (int)strlen(text);
+    ui->nodes[node].text = cui__frame_strdup(ui, text, length);
+    ui->nodes[node].text_len = length;
+}
+
 static void fpas_literal(cui_ctx *ui, int node, const char *text, cui_color color) {
     int label = fpas_label_node(ui, node);
     if (label < 0) {
@@ -34,8 +40,7 @@ static void fpas_literal(cui_ctx *ui, int node, const char *text, cui_color colo
         label = cui__text_node(ui, text, -1, CUI_FONT_MEDIUM, cui__fs(ui, ui->theme.text_body), color, false);
         cui__close(ui);
     } else {
-        ui->nodes[label].text = cui__frame_strdup(ui, text, (int)strlen(text));
-        ui->nodes[label].text_len = (int)strlen(text);
+        fpas_text(ui, label, text);
     }
     ui->last_node = node;
     ui->last_id = ui->nodes[node].id;

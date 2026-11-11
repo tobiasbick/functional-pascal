@@ -44,7 +44,29 @@ gallery contract under software and OpenGL. It checks the desktop sidebar,
 the drawer at 740 logical points, the button examples, independent formatting
 choices, the copy control, and modal sheet focus. Native keyboard input drives
 the split button's main action, menu highlight, selection, Escape and focus
-return. It captures the Buttons page and the open split menu.
+return. The Actions page also exercises both toggle group modes, including
+focus, model rejection and repeated activation of the selected alignment.
+The Selection page checks native checkbox, switch and radio input, the
+graphical preflight boundary and the two-column and stacked layouts. It also
+checks pointer and keyboard selection in the radio cards, stepped slider
+input, preservation of a model value between steps, and dragging both range
+endpoints. The last section checks chip wrapping, independent pointer and
+keyboard toggles, and selecting and clearing a rating. Navigation checks
+independent tab selections, ancestor activation and the informational final
+breadcrumb, keyboard page selection, page boundaries and the compact pager.
+It also exercises Back, Next and Finish around the read-only stepper. The
+contract captures the Buttons, Selection, Navigation and Actions pages, the
+compact Navigation layout and the open split menu.
+The Overlays contract captures the native toast stack and checks hover
+expansion, exactly-once Undo, dismissal and expiry in an idle event loop.
+Navigation exercises the breadcrumb and Finish toast commands.
+The Tooltips toolbar checks graphical preflight, delayed hover in the idle
+event loop, immediate handoff to a neighboring icon, and dismissal without
+interfering with button activation. The capture shows the native shortcut keys.
+The Filters example checks placement, keyboard activation, Escape, outside
+dismissal and retained values after reopening. Disclosure checks that Enter
+opens the question without confirming, Cancel and Escape close it, and the
+affirmative button dispatches once. Both open popovers are captured.
 
 `GuiPublishingTests` uses the same gallery contract from a package-only
 consumer. It checks all five delivery modes, the bundled or transitive CUI
@@ -58,7 +80,8 @@ layout, scroll offsets, and native wakeup. The link-and-render test drives
 the copy button against a local clipboard callback, including repeated
 activation, confirmation expiry and retained focus. It also checks the native
 split button's distinct focus stops, menu selection and disabled input. The Win32 resize test
-checks live-resize callback registration and detachment.
+checks live-resize callback registration and detachment. The toggle group
+binding checks literal captions and the 32nd selection flag.
 
 `FpasProjectTests` exercises project-reference delivery, native asset and
 notice copying, execution from a separate directory, and package publishing

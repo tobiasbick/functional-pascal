@@ -1,0 +1,48 @@
+unit Fpas.Ui.Gui.Internal.Widgets.RangeSlider;
+
+uses
+  Fpas.Ui.RangeSliders as R, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, System.Globalization as Culture;
+
+// Presents CUI's two-endpoint track and forwards pointer proposals.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Model-owned interval.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `OnChange`: Maps changed endpoints to a message.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Value: R.Interval; Minimum: float; Maximum: float;
+  OnChange: function(R.Interval): TMsg; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('range-slider', Id);
+  var Lower: float := Value.Lower;
+  var Upper: float := Value.Upper;
+  if Frame.Window.RangeSlider(
+    Token, Label, Value.Lower, Value.Upper, Minimum, Maximum, Allowed,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
+    if Frame.PaintingClosed then null else Token end if, out Lower, out Upper
+  )
+  then
+    Frame.Messages.Add(OnChange(new R.Interval(Lower, Upper)));
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Label, 'range-slider', new Cui.CuiRectangle(), Allowed,
+        Value := Value.Lower.ToString(Culture.CultureInfo.InvariantCulture) + ' – ' +
+          Value.Upper.ToString(Culture.CultureInfo.InvariantCulture)
+      )
+    );
+  end if;
+end procedure;
+end unit;

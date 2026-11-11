@@ -40,7 +40,7 @@ internal static partial class NativeMethods
     internal static partial void Forget(nint context, uint key);
     [LibraryImport(Library, EntryPoint = "fpas_cui_group_begin")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int GroupBegin(nint context, int horizontal, float padding, float gap, int align, int framed);
+    internal static partial int GroupBegin(nint context, int horizontal, float padding, float gap, int align, int framed, int wrap);
     [LibraryImport(Library, EntryPoint = "fpas_cui_group_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void GroupEnd(nint context, int node);

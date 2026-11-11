@@ -72,6 +72,22 @@ public sealed class GuiHostTests
         Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
         Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
         PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);
+        string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
+        foreach (var (page, width, height) in new[]
+        {
+            ("actions", 1000, 760), ("selection", 1100, 1360),
+            ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
+            ("tooltips", 1000, 840), ("popover", 1000, 900), ("confirm-popover", 1000, 900)
+        })
+        {
+            string pageCapture = galleryCapture + "." + page + ".png";
+            PngAssertions.HasRenderedContent(pageCapture, width, height);
+            if (!string.IsNullOrWhiteSpace(artifacts))
+            {
+                string target = Directory.CreateDirectory(Path.Combine(artifacts, "host-gallery", renderer)).FullName;
+                File.Copy(pageCapture, Path.Combine(target, page + ".png"), overwrite: true);
+            }
+        }
     }
 
     private static void CheckDocumentation(string path, string methodPrefix, string[] parameters, string[] typeParameters)

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Session;
 
-uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Gui.Internal.Widgets.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 function Viewport(Size: Cui.CuiSize): L.Viewport;
 begin
@@ -58,6 +58,8 @@ requires Capacity > 0;
       Cleanup := Completion;
       Pending.Clear();
       Focus.Clear();
+      PendingToasts.Clear();
+      ActiveToasts.Clear();
       Window.WakeWhenCompleted(Completion);
       discard Window.TryWake();
     end if;
@@ -166,6 +168,11 @@ requires Capacity > 0;
         end with;
       end if;
     end for;
+
+    Tooltip.Collect<TMsg>(State);
+    if ActiveToasts.Count > 0 then
+      Toast.Collect<TMsg>(State, ActiveToasts);
+    end if;
 
     FrameId := FrameId + 1L;
     Published := new App.Frame(
@@ -345,6 +352,7 @@ requires Capacity > 0;
         else
       end case;
 
+      Toast.Submit<TMsg>(Window, PendingToasts, ActiveToasts);
       Paint(Candidate, Cleanup = null and Pending.Count = 0, Size);
       Prepared := Candidate;
       PreviousSize := Size;
@@ -382,6 +390,8 @@ begin
   var Cleanup: Tasks.Task? := null;
   const Pending: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
   const Focus: Generic.Queue<string> := new Generic.Queue<string>();
+  const PendingToasts: Generic.Queue<Toasts.Request<TMsg>> := new Generic.Queue<Toasts.Request<TMsg>>();
+  const ActiveToasts: Generic.Dictionary<int, Toasts.Request<TMsg>> := new Generic.Dictionary<int, Toasts.Request<TMsg>>();
   const Modals: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
   const Core: Runtime.Runtime<TModel, TMsg, bool> := Runtime.Start<TModel, TMsg, bool>(
     InitialModel, Update,
@@ -390,6 +400,13 @@ begin
         when Mvu.HostRequest.Focus(const Id: string):
           Focus.Clear();
           Focus.Enqueue('app:' + Id);
+        when Mvu.HostRequest.Extension(const Value: Sys.Object):
+          case Value of
+            when is Toasts.Request<TMsg> as Notification:
+              PendingToasts.Enqueue(Notification);
+            else
+              raise new Sys.NotSupportedException('Unknown graphical host request.');
+          end case;
         else
       end case;
     end procedure, Capacity,

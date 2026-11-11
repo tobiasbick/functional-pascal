@@ -1,0 +1,48 @@
+unit Fpas.Ui.Internal.SliderRules;
+
+uses Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.Sliders as S, System as Sys;
+
+// Checks finite ordered bounds and endpoints before calling the native slider.
+//
+// ## Parameters
+// - `Label`: Required literal caption.
+// - `Lower`: Lower selected endpoint.
+// - `Upper`: Upper selected endpoint, equal to Lower for a scalar slider.
+// - `Minimum`: Lower bound.
+// - `Maximum`: Upper bound.
+// - `Location`: Control path for diagnostics.
+public procedure Check(Label: string; Lower: float; Upper: float; Minimum: float; Maximum: float; Location: string);
+begin
+  Rules.CheckText(Label, Location + '/label');
+  if Sys.String.IsNullOrWhiteSpace(Label) then
+    Rules.Reject(Location, 'A slider needs an accessible label.');
+  end if;
+
+  if not Sys.Single.IsFinite(Minimum) or not Sys.Single.IsFinite(Maximum)
+    or not Sys.Single.IsFinite(Maximum - Minimum) or Minimum >= Maximum
+    or not Sys.Single.IsFinite(Lower) or not Sys.Single.IsFinite(Upper)
+    or Lower < Minimum or Upper > Maximum or Lower > Upper
+  then
+    Rules.Reject(
+      Location,
+      'A slider needs finite ordered endpoints within finite increasing bounds.'
+    );
+  end if;
+end procedure;
+
+// Checks the scalar slider's increment and display precision.
+//
+// ## Parameters
+// - `Settings`: Model-owned step and display options.
+// - `Span`: Validated distance between the bounds.
+// - `Location`: Control path for diagnostics.
+public procedure CheckOptions(Settings: S.Options; Span: float; Location: string);
+begin
+  if not Sys.Single.IsFinite(Settings.Step) or Settings.Step < 0.0F
+    or (Settings.Step > 0.0F and not Sys.Single.IsFinite(Span / Settings.Step))
+    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
+  then
+    Rules.Reject(Location, 'A slider needs a finite step and zero through six decimal places.');
+  end if;
+end procedure;
+end unit;

@@ -1,0 +1,61 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Popover;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Popovers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  System.Collections.Generic as Lists;
+
+// Draws a native panel after its in-flow trigger.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Panel identity.
+// - `Trigger`: Native anchor button.
+// - `Content`: Floating view.
+// - `Open`: Model-owned visibility.
+// - `Dismiss`: Proposed dismissal.
+// - `Settings`: Placement and spacing.
+// - `Horizontal`: Axis containing the trigger.
+// - `Align`: Alignment of the trigger.
+// - `Visit`: Host traversal for the trigger and content.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>;
+  Open: bool; Dismiss: TMsg; Settings: P.Options; Horizontal: bool; Align: L.Alignment;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  Visit(Trigger, Frame, Horizontal, Align);
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  const ContainsModal: bool := Frame.Interactive and Frame.ActiveModal <> null
+    and F.TopModal<TMsg>(Content, Frame.Prepared) = Frame.ActiveModal;
+  const Result: int := Frame.Window.BeginPopover(
+    C.Token('popover', Id), cast<int>(Settings.Position), cast<float>(Settings.Width),
+    cast<float>(Settings.Padding), cast<float>(Settings.Gap),
+    Open and (Frame.AcceptInput or ContainsModal), Frame.AcceptInput
+  );
+  if (Result and 2) <> 0 then
+    Frame.Messages.Add(Dismiss);
+  end if;
+
+  if (Result and 1) = 0 then
+    return;
+  end if;
+
+  const Visible: bool := (Result and 4) <> 0;
+  if Visible then
+    Frame.Controls.Add(new App.Control(Id, '', 'popover', new Cui.CuiRectangle(), false));
+  end if;
+  const Inside: C.State<TMsg> := Frame with
+    AcceptInput := Frame.AcceptInput and Visible;
+    PaintingClosed := not Visible;
+    Labels := if Visible then Frame.Labels else new Lists.List<string>() end if;
+  end with;
+  Visit(Content, Inside, false, L.Alignment.Default);
+  Frame.Window.EndPopover();
+end procedure;
+end unit;

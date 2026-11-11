@@ -1,0 +1,208 @@
+unit GalleryPopoverContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Validation as V, Fpas.Ui.Popovers as P, Fpas.Ui.ConfirmPopovers as Q, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E, System as Sys;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Popover preflight accepted an invalid view.');
+  end procedure;
+begin
+  const Trigger: E.Element<int> := B.Button<int>('trigger', 'Open', 1);
+  const Text: E.Element<int> := E.Text<int>('Panel');
+  Reject(P.Popover<int>('panel', Trigger, Text, false, 0), V.Target.Terminal, 'Graphical profile');
+  Reject(
+    Q.ConfirmPopover<int>('panel', Trigger, false, new Q.Options('Continue?'), 1, 0),
+    V.Target.Portable, 'Graphical profile'
+  );
+  Reject(P.Popover<int>('panel', Text, Text, false, 0), V.Target.Graphical, 'button trigger');
+end procedure;
+
+// Verifies native popover placement, input and cancellation in the real gallery.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the two popover gallery captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Pending <> 0 then
+      Window.SetKey(Pending, true);
+      Window.SetKey(Pending, false);
+      Pending := 0;
+    end if;
+  end procedure;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.PreviewBranchDeletion:
+        Confirmations := Confirmations + 1;
+      when State.Msg.Preview:
+        const Target: string := if Model.Active = State.Page.Overlays then 'filters-active'
+          else 'branch-trigger'
+          end if;
+        return new App.Transition<State.Model, State.Msg>(
+          Model,
+          [App.Focus<State.Msg>(Target)]
+        );
+      else
+    end case;
+
+    return State.Update(Model, Message);
+  end function;
+  procedure Exercise(Session: Gui.Session<State.Msg>);
+    function Find(Id: string): Gui.Control?;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Id = Id then
+          return Item;
+        end if;
+      end for;
+
+      return null;
+    end function;
+    function Control(Id: string): Gui.Control;
+    begin
+      const Item: Gui.Control? := Find(Id);
+      if Item = null then
+        raise new Sys.InvalidOperationException('Missing popover control ' + Id);
+      end if;
+
+      return Item;
+    end function;
+    procedure Step();
+    begin
+      Check(Session.Step(), 'The popover gallery closed.');
+    end procedure;
+    procedure Key(Code: int);
+    begin
+      Pending := Code;
+      Step();
+      Step();
+    end procedure;
+    procedure Click();
+    begin
+      Button := 1;
+      Step();
+      Button := 0;
+      Step();
+      Step();
+    end procedure;
+    procedure Select(Id: string);
+    begin
+      const Area: Cui.CuiRectangle := Control(Id).Bounds;
+      X := Area.X + Area.Width / 2;
+      Y := Area.Y + Area.Height / 2;
+      Click();
+    end procedure;
+  begin
+    Step();
+    const Anchor: Cui.CuiRectangle := Control('filters-trigger').Bounds;
+    Select('filters-trigger');
+    const Panel: Cui.CuiRectangle := Control('filters').Bounds;
+    Check(
+      Panel.X = Anchor.X and Panel.Y >= Anchor.Y + Anchor.Height and Panel.Width = 280,
+      'The filter panel must fit below the trigger at its requested width.'
+    );
+    Session.CapturePng(Capture + '.popover.png');
+    discard Session.Post(State.Msg.Preview);
+    Step();
+    Check(Control('filters-active').Focused, 'The focus command must enter the open popover.');
+    Key(6);
+    Check(
+      Control('filters-active').Value = 'false',
+      'The checkbox must receive its native activation.'
+    );
+    Key(3);
+    Check(
+      Find('filters') = null and Control('filters-trigger').Focused,
+      'Escape must close and return focus.'
+    );
+
+    Select('filters-trigger');
+    Check(
+      Control('filters-active').Value = 'false',
+      'Reopening must retain the model filter value.'
+    );
+    Select('filters-apply');
+    Check(Find('filters') = null, 'Apply must close the panel through the application update.');
+    Select('filters-trigger');
+    X := 5.0F;
+    Y := 5.0F;
+    Click();
+    Check(Find('filters') = null, 'A press outside must close the nonmodal panel.');
+
+    discard Session.Post(State.Msg.Show(State.Page.Disclosure));
+    Step();
+    discard Session.Post(State.Msg.Preview);
+    Step();
+    Check(Control('branch-trigger').Focused, 'The branch trigger must accept focus.');
+    Key(2);
+    Check(
+      Confirmations = 0 and Control('branch-question/confirm').Focused,
+      'Opening with Enter must focus the native action without answering the question.'
+    );
+    Select('branch-question/cancel');
+    Check(
+      Confirmations = 0 and Find('branch-question') = null,
+      'Cancel must close without confirming.'
+    );
+    Select('branch-trigger');
+    Session.CapturePng(Capture + '.confirm-popover.png');
+    Key(3);
+    Check(
+      Confirmations = 0 and Find('branch-question') = null,
+      'Escape must cancel without confirming.'
+    );
+    Select('branch-trigger');
+    Key(2);
+    Check(
+      Confirmations = 1 and Find('branch-question') = null,
+      'The affirmative action must dispatch exactly once.'
+    );
+  end procedure;
+begin
+  Validate();
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Pending: int := 0;
+  var Confirmations: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI popovers', 1000, 900, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Exercise(Session);
+end procedure;
+end unit;

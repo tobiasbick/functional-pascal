@@ -1,16 +1,18 @@
 unit GuiGallery.ContextMenu;
 
-uses GuiGallery.State as State, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses GuiGallery.Popover as Filter, GuiGallery.State as State, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 function Icon(Code: int): string;
 begin
   return Sys.Char.ConvertFromUtf32(Code);
 end function;
 
-// Shows the native Overlays gallery's right-click area and context commands.
+// Shows the Filters panel and the native right-click area.
+// ## Parameters
+// - `Model`: Filter values and visibility.
 // ## Returns
 // A muted target with Cut, Copy, Paste and Delete; commands only update preview state.
-public function View(): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   const Target: E.Element<State.Msg> := E.Styled<State.Msg>(
     E.Column<State.Msg>(
@@ -23,7 +25,14 @@ begin
     E.Styled<State.Msg>(E.Text<State.Msg>('Popover and context menu'), S.Role.Heading),
     E.Styled<State.Msg>(
       E.Column<State.Msg>(
-        new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(24))),
+        new L.Flow(
+          Padding := L.Spacing.Fixed(L.Measure.Logical(24)),
+          Gap := L.Spacing.Fixed(L.Measure.Logical(16))
+        ),
+        E.Row<State.Msg>(
+          new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
+          Filter.View(Model)
+        ),
         M.ContextMenu<State.Msg>(
           'context', Target, [
             M.Entry<State.Msg>.Action(

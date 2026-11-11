@@ -8,6 +8,8 @@ public type HostRequest = variant
   Close;
   // Ask the host to focus the control with the supplied stable ID.
   Focus(Id: string);
+  // Send a typed extension payload to the host that owns its implementation.
+  Extension(Value: Sys.Object);
 end variant;
 
 // Work requested by an update.

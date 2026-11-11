@@ -38,11 +38,23 @@ public sealed partial class CuiWindow
     /// <param name="alignment">Default=0, start=1, center=2, end=3, stretch=4.</param>
     /// <param name="framed">Whether to draw a border.</param>
     public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed)
+        => BeginGroup(horizontal, padding, gap, alignment, framed, false);
+
+    /// <summary>Opens a native host layout container with optional row wrapping.</summary>
+    /// <param name="horizontal">Whether its main axis is horizontal.</param>
+    /// <param name="padding">Logical inset.</param>
+    /// <param name="gap">Logical separation.</param>
+    /// <param name="alignment">Default=0, start=1, center=2, end=3, stretch=4.</param>
+    /// <param name="framed">Whether to draw a border.</param>
+    /// <param name="wrap">Whether a horizontal group continues on another line.</param>
+    public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed, bool wrap)
     {
         CheckLayoutOptions(padding, gap);
         ArgumentOutOfRangeException.ThrowIfNegative(alignment);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 4);
-        int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment, framed ? 1 : 0);
+        if (wrap && !horizontal) throw new ArgumentException("Wrapping requires a horizontal group.", nameof(wrap));
+        int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment,
+            framed ? 1 : 0, wrap ? 1 : 0);
         layouts.Add(new(Layout.Group, Node: node));
     }
 

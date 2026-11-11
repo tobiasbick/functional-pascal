@@ -10,6 +10,7 @@ public sealed partial class CuiWindow
     private Action? resizeRenderer;
     private GCHandle resizeRoot;
     private ExceptionDispatchInfo? resizeFailure;
+    private int resizeRenderVersion;
 
     /// <summary>Wakes the owner when asynchronous cleanup finishes, without retaining native pointers.</summary>
     /// <param name="completion">The cleanup to observe.</param>
@@ -39,6 +40,7 @@ public sealed partial class CuiWindow
         var window = (CuiWindow)GCHandle.FromIntPtr(user).Target!;
         try
         {
+            window.resizeRenderVersion++;
             window.inFrame = true;
             window.trackedNodes.Clear();
             window.scrollRequests.Clear(); window.scrollNodes.Clear();

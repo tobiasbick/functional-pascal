@@ -39,10 +39,10 @@ public sealed class HandbookTests
     public void Repository_documentation_links_and_anchors_resolve()
     {
         var repository = DocumentationLinks.Repository;
-        var paths = new[] { "docs", "examples", "apps", "integrations", "sdk", "tests", ".agents", ".claude" }
+        var paths = new[] { "docs", "examples", "apps", "integrations", "sdk", "src", "tests", "third-party", ".agents", ".claude" }
             .Where(directory => Directory.Exists(Path.Combine(repository, directory))).SelectMany(directory =>
             Directory.GetFiles(Path.Combine(repository, directory), "*.md", SearchOption.AllDirectories))
-            .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/').Any(part => part is "bin" or "obj"))
+            .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/').Any(part => part is "bin" or "obj" or "node_modules"))
             .Concat(new[] { "README.md", "CONTRIBUTING.md", "AGENTS.md" }.Select(path => Path.Combine(repository, path)));
         DocumentationLinks.Validate(paths);
     }

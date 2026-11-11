@@ -16,6 +16,8 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
     public static IEnumerable<object[]> Scenarios()
     {
         yield return ["program", Fence("pascal", Program), true, ""];
+        yield return ["adjacent-escaped-name", Fence("pascal", "program@end; begin end; end program;"), true, ""];
+        yield return ["joined-header", Fence("pascal", "programExample; begin end; end program;"), false, "Expected a complete"];
         yield return ["fragment", Fence(Body, "const Value: int := 7;"), true, ""];
         yield return ["expected-error", Fence(Body + " error=FP3002", "const Value: int := 'wrong';"), true, ""];
         yield return ["run", Fence(Body + " run stdout=empty", "if 6 * 7 <> 42 then raise new Sys.InvalidOperationException('wrong'); end if;"), true, ""];
@@ -57,6 +59,24 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         yield return ["unsupported-project", Fence("yaml project=demo file=fixture.yaml", "value: 1") + Fence("pascal", Program), false, "Unsupported project fence"];
         yield return ["stdout", Fence("pascal project=answer run stdout=expected.txt", "program Answer; uses System.Console as Console; begin Console.WriteLine(42); end; end program;") + Fence("text project=answer file=expected.txt", "42"), true, ""];
         yield return ["wrong-stdout", Fence("pascal project=answer run stdout=expected.txt", "program Answer; uses System.Console as Console; begin Console.WriteLine(7); end; end program;") + Fence("text project=answer file=expected.txt", "42"), false, "Execution did not satisfy"];
+    }
+
+    [Fact]
+    public async Task Headers_accept_compiler_trivia_and_escaped_qualified_names()
+    {
+        using var root = new TemporaryDirectory(); Prepare(root);
+        const string program = "\uFEFFasync // modifier\nprogram Demo // qualification\n . @end; begin end; end program;";
+        const string unit = "unit@end // qualification\n . @unit; end unit;";
+        File.WriteAllText(root.File("headers.md"), Fence("pascal project=demo", program) + Fence("pascal project=demo", unit));
+        var result = await checker.Run(root.Path, "--document", "headers.md", "--output", root.File("output"), "--json");
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        using var report = JsonDocument.Parse(result.Output);
+        var outcomes = report.RootElement.GetProperty("results").EnumerateArray().ToArray();
+        Assert.Equal(2, outcomes.Length);
+        Assert.Equal("Demo.end.dll", Path.GetFileName(outcomes[0].GetProperty("assembly").GetString()));
+        Assert.Equal("end.unit.dll", Path.GetFileName(outcomes[1].GetProperty("assembly").GetString()));
+        Assert.True(File.Exists(root.File("output/example-1/end.unit.fpas")));
+        Assert.True(File.Exists(root.File("output/example-2/Demo.end.fpas")));
     }
 
     [Fact]

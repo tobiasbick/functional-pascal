@@ -35,6 +35,31 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
     }
 
     [Fact]
+    public async Task Measurement_rejects_a_relative_executable_before_starting_it()
+    {
+        var host = TestEnvironment.DotnetHost;
+        if (!Path.IsPathFullyQualified(host))
+        {
+            var executable = OperatingSystem.IsWindows() && !Path.HasExtension(host) ? host + ".exe" : host;
+            host = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator)
+                .Select(directory => Path.GetFullPath(Path.Combine(directory, executable)))
+                .First(File.Exists);
+        }
+        var relativeHost = Path.Combine(".", Path.GetFileName(host));
+        var ready = Path.Combine(fixture.Reports, "relative-executable.ready");
+        var output = Path.Combine(fixture.Reports, "relative-executable.csv");
+        var result = await fixture.RunFrom(Path.GetDirectoryName(host)!, fixture.Measure,
+            "--output", output, "--label", "relative-executable", "--boundary", "startup",
+            "--warmup", "0", "--samples", "3", "--timeout", "1", "--", relativeHost,
+            fixture.Workload, "fault", ready, Path.Combine(fixture.Reports, "never.release"));
+
+        Assert.Equal(2, result.ExitCode);
+        Assert.Contains("Executable path must be absolute", result.Error, StringComparison.Ordinal);
+        Assert.False(File.Exists(ready));
+        Assert.False(File.Exists(output));
+    }
+
+    [Fact]
     public async Task Measurement_deadline_terminates_the_started_target_before_reporting_failure()
     {
         var ready = Path.Combine(fixture.Reports, "timeout.ready");

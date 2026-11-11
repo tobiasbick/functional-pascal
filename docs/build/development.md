@@ -222,9 +222,9 @@ boundaries. Language rules live in the [handbook](../pascal/README.md) and
 [CLR mapping](../specs/clr-mapping.md); dependency/build behavior follows
 [MSBuild](msbuild.md). Read the affected [architecture](../architecture/README.md)
 and [tests](../../tests/coverage.md) before changing or claiming support.
-[Language gaps](../future/language-gaps.md) separates missing
-baseline work from deferred extensions; record practical authoring limits in
-[dogfooding gaps](../future/dogfooding-gaps.md).
+[Language gaps](../future/language-gaps.md) separates missing baseline work from
+deferred extensions. Record an actual task-specific blocker under `docs/future/`
+with a reproducer, the exact API and expected behavior, and the fallback's limits.
 
 Use supported .NET debuggers/profilers for generated assemblies. Portable symbols
 provide source locations, locals, and closure/async metadata; see

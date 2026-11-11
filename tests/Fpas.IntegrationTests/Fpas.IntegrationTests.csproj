@@ -32,6 +32,7 @@
     <None Include="../../examples/ui/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/RenderingContract.fpas" Link="Fixtures/tui/rendering.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/ConfirmButton.fpas" Link="Fixtures/tui/confirm.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/StatusButton.fpas" Link="Fixtures/tui/status.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/ThemeSwitcher.fpas" Link="Fixtures/tui/theme-switcher.fpas" CopyToOutputDirectory="PreserveNewest" />

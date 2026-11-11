@@ -65,6 +65,8 @@ requests. GUI uses CUI logical points. TUI maps 8 logical units to a column and
 shared boundaries so no cells are lost. `Measure.Cells` is an explicit terminal
 extension. Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
 units and adapts to the host's resolution.
+When both minimum and maximum bounds are supplied, use the same measure kind
+for both: `Logical` or `Cells`.
 
 ## Shared themes
 

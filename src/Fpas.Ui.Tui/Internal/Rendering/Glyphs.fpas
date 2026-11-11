@@ -34,6 +34,7 @@ begin
     or (Code >= 44032 and Code <= 55203) or (Code >= 63744 and Code <= 64255)
     or (Code >= 65040 and Code <= 65376) or (Code >= 65504 and Code <= 65510)
     or (Code >= 127744 and Code <= 129791) or (Code >= 131072 and Code <= 196605)
+    or (Code >= 196608 and Code <= 262141)
     or Value.IndexOf(cast<char>(65039)) >= 0
   then
     return 2;

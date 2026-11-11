@@ -80,6 +80,11 @@ begin
   if Boundary <> 'startup' and Boundary <> 'compiler' and Boundary <> 'sdk-build' then
     raise new Sys.ArgumentException('Boundary must be startup, compiler or sdk-build');
   end if;
+
+  if not IO.Path.IsPathFullyQualified(Args[Index + 1]) then
+    raise new Sys.ArgumentException('Executable path must be absolute');
+  end if;
+
   const Executable: string := IO.Path.GetFullPath(Args[Index + 1]);
   const Arguments: Collections.List<string> := new Collections.List<string>();
   for Offset: int := Index + 2 to Args.Length - 1 do

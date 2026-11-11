@@ -82,6 +82,10 @@ requires Capacity > 0;
   function Snapshot(): App.Frame;
   begin
     CheckOwner();
+    if Driving then
+      raise new Sys.InvalidOperationException('Do not inspect a GUI session from its callbacks.');
+    end if;
+
     const Last: App.Frame? := Published;
     if Last = null then
       raise new Sys.InvalidOperationException('No GUI frame has been presented.');

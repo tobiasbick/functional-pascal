@@ -101,7 +101,11 @@ begin
       Resolved.Background ?? Style.Background
     )
     end if;
-  const Color: T.Style := WithForeground(Theme, Colors, Foreground);
+  const Color: T.Style := WithForeground(
+    Theme,
+    Colors,
+    if Enabled then Foreground else null end if
+  );
   if Resolved <> null then
     D.Fill(Operations, Clip, Color);
   end if;

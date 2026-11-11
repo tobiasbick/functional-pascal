@@ -5,6 +5,32 @@ namespace Fpas.Ui.Gui.Cui.Tests;
 /// <summary>Checks shared flex allocation against finalized native geometry.</summary>
 public sealed class CuiHostLayoutTests
 {
+    /// <summary>Implicit presentation resolves deferred scrolling and rejects invalid mutations atomically.</summary>
+    [GuiFact]
+    public void ImplicitPresentationResolvesScrollAndRejectsInvalidRequests()
+    {
+        using var window = new CuiWindow("Implicit scroll", 400, 240, CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        window.ScrollState("scroll", 1, 0, out _, out _);
+        window.BeginViewport("scroll", true);
+        window.BeginGroup(false, 0, 0, 0, false);
+        for (int line = 0; line < 30; line++) window.Text("Scrollable line");
+        window.EndGroup();
+        window.EndScroll();
+        window.SizeLast(false, 2, 100, 0, -1, 0, 0);
+        Assert.True(window.NextFrame());
+        window.ScrollState("scroll", -1, 0, out float current, out float maximum);
+        Assert.True(maximum > 0);
+        Assert.Equal(maximum, current, precision: 1);
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrollState("scroll", 2, 0, out _, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrollState("scroll", 0, float.NaN, out _, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrollState("scroll", 0, -1, out _, out _));
+        window.Present();
+        Assert.Throws<InvalidOperationException>(() => window.ScrollState("scroll", 0, 0, out _, out _));
+        window.ScrollState("scroll", -1, 0, out float after, out _);
+        Assert.Equal(current, after);
+    }
+
     /// <summary>Uses CUI weighted growth from zero, frozen bounds and nonshrinking fixed extents.</summary>
     /// <param name="renderer">Renderer whose native layout is exercised.</param>
     [GuiTheory]

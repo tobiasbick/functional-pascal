@@ -82,7 +82,12 @@ public sealed partial class CuiWindow : IDisposable
         CheckOpen();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before beginning another frame.");
         bool presented = inFrame;
+        if (presented) ResolveHostLayout();
+        var retiredControls = presented ? controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray() : null;
+        var retiredModals = presented ? modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray() : null;
+        int resizeVersion = resizeRenderVersion;
         int result = NativeMethods.Pump(app, DeferClose ? 1 : 0);
+        if (presented) RetireMissingControls(retiredControls!, retiredModals!, resizeVersion != resizeRenderVersion);
         CloseRequested |= result == 2;
         inFrame = result != 0;
         hasPresentedFrame |= presented;
@@ -116,9 +121,20 @@ public sealed partial class CuiWindow : IDisposable
         finally { inFrame = false; }
         if (presented == 0) throw new InvalidOperationException("CUI could not present the current view.");
         hasPresentedFrame = true;
-        foreach (string id in controlKeys.Keys.Where(id => !trackedNodes.ContainsKey(id)).ToArray()) ForgetControl(id);
-        foreach (string id in modalKeys.Keys.Where(id => !usedModals.Contains(id)).ToArray())
-        { NativeMethods.Forget(context, modalKeys[id]); modalKeys.Remove(id); }
+        RetireMissingControls(
+            controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray(),
+            modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray(), false);
+    }
+
+    private void RetireMissingControls(KeyValuePair<string, uint>[] controls, KeyValuePair<string, uint>[] modals,
+        bool renderedDuringPump)
+    {
+        foreach (var (id, key) in controls)
+            if ((!renderedDuringPump || !trackedNodes.ContainsKey(id)) && controlKeys.TryGetValue(id, out uint current) && current == key)
+                ForgetControl(id);
+        foreach (var (id, key) in modals)
+            if ((!renderedDuringPump || !usedModals.Contains(id)) && modalKeys.TryGetValue(id, out uint current) && current == key)
+            { NativeMethods.Forget(context, key); modalKeys.Remove(id); }
     }
 
     /// <summary>Enables or disables CUI motion reduction.</summary>

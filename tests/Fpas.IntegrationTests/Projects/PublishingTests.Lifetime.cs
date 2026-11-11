@@ -1,10 +1,52 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Xml.Linq;
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Projects;
 
 public sealed partial class PublishingTests
 {
+    [Theory]
+    [InlineData("file")]
+    [InlineData("directory")]
+    [InlineData("root")]
+    [InlineData("root-file")]
+    [InlineData("root-dangling")]
+    public async Task Publish_rejects_staged_links_before_secret_cleanup(string linkKind)
+    {
+        // Creating symbolic links on Windows can require developer mode or elevated privileges.
+        if (OperatingSystem.IsWindows()) return;
+        using var directory = new TemporaryDirectory(); var project = await Create(directory);
+        var destination = directory.File("output");
+        var first = await Cli(directory, "publish", project, "--output", destination, "--mode", "apphost", "--report", "json");
+        Assert.True(first.ExitCode == 0, first.Output + first.Error);
+        var before = Directory.GetFiles(destination).Order().Select(File.ReadAllBytes).ToArray();
+        Directory.CreateDirectory(directory.File("secret"));
+        using var rsa = new RSACryptoServiceProvider(2048);
+        var key = directory.File("secret/key.snk"); var keyBytes = rsa.ExportCspBlob(true); File.WriteAllBytes(key, keyBytes);
+        var target = linkKind switch
+        {
+            "file" or "root-file" => key,
+            "root-dangling" => directory.File("absent"),
+            _ => directory.File("secret")
+        };
+        var command = linkKind.StartsWith("root", StringComparison.Ordinal)
+            ? $"p='$(PublishDir)'; p=${{p%/}}; mv \"$p\" '{directory.File("displaced-stage")}'; ln -s '{target}' \"$p\""
+            : $"ln -s '{target}' '$(PublishDir)linked-secret'";
+        var xml = XDocument.Load(project);
+        xml.Root!.Add(new XElement("Target", new XAttribute("Name", "CreatePublishLink"), new XAttribute("AfterTargets", "Publish"),
+            new XElement("Exec", new XAttribute("Command", command))));
+        xml.Save(project);
+        var failed = await Cli(directory, "publish", project, "--output", destination, "--mode", "apphost", "--key-file", key, "--report", "json");
+        Assert.Equal(1, failed.ExitCode);
+        using var report = JsonDocument.Parse(failed.Output);
+        Assert.Contains("symbolic links", report.RootElement.GetProperty("error").GetProperty("message").GetString());
+        Assert.Equal(keyBytes, File.ReadAllBytes(key));
+        Assert.Equal(before, Directory.GetFiles(destination).Order().Select(File.ReadAllBytes).ToArray());
+        Assert.Empty(Directory.EnumerateFileSystemEntries(directory.Path, ".fpas-publish-*"));
+    }
+
     [Fact]
     public async Task Publish_timeout_reaps_owned_build_children_and_preserves_the_previous_delivery()
     {

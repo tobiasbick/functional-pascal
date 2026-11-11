@@ -4,9 +4,9 @@ Keywords use lowercase spelling and are case-sensitive. Prefix a keyword with
 @ when naming a foreign CLR member that uses the same spelling.
 
 ```text
-async await begin break case catch const continue discard distinct div do downto else
-elsif end ensures enum false finally for function if implements in is mod new not null
-of or out params private procedure program public raise range record ref repeat return
+array async await begin break case catch const continue discard distinct div do downto else
+elsif end ensures enum extends false finally for function if implements in is mod new not null
+of or out params private procedure program protocol public raise range record ref repeat return
 requires shl shr static subscribe then to true try type variant unit unsubscribe until uses using var
 when where while with and xor
 ```

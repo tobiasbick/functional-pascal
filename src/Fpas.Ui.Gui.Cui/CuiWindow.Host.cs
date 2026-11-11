@@ -96,8 +96,11 @@ public sealed partial class CuiWindow
     public void ScrollState(string id, int mode, float offset, out float current, out float maximum)
     {
         CheckOpen();
+        if (mode is < -1 or > 1) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (!float.IsFinite(offset) || offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
+        if (mode >= 0) CheckFrame();
         NativeMethods.ScrollState(context, Stable(id), mode, offset, out current, out maximum);
-        if (mode >= 0) { CheckFrame(); scrollRequests[id] = (mode, offset); }
+        if (mode >= 0) scrollRequests[id] = (mode, offset);
     }
 
     /// <summary>Opens a host-controlled scroll view.</summary>

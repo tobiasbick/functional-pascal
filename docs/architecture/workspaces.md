@@ -13,13 +13,14 @@ analysis. Execution does not require a successful FPAS semantic snapshot; a mixe
 solution can select a C#/F# host. Build and analysis retain their own output rules.
 
 Testing.TestDriver shares those solution mappings and owned processes. It
-evaluates IsTestProject/TargetFramework/TargetPath through MSBuild, discovers
-names through native VSTest artifacts and executes installed adapters through
-dotnet vstest on the evaluated assembly. TrxReport reads native XML cases,
-outcomes and run messages. Running that assembly directly preserves output paths
-that depend on the solution context. The CLI owns selection,
-deadlines and bounded reporting; it does not implement a test discovery engine,
-framework scheduler or assertion runtime. See [testing](../pascal/tools/testing.md).
+evaluates test project properties through MSBuild. For VSTest projects it
+discovers names through native artifacts and runs installed adapters with
+dotnet vstest on the evaluated assembly. For self-hosted Microsoft.Testing.Platform
+projects it invokes the evaluated application, reads its JSON discovery output
+and requests a TRX report. TrxReport reads native XML cases, outcomes and run
+messages from both paths. The CLI owns selection, deadlines and bounded reporting;
+it does not implement a test discovery engine, framework scheduler or assertion
+runtime. See [testing](../pascal/tools/testing.md).
 
 Documentation.DocumentationQuery reuses Find/Inspect and explicit semantic coverage for source declarations and
 reads public CLR metadata with System.Reflection.Metadata. It neither loads

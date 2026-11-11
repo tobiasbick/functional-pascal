@@ -71,7 +71,7 @@ events or an internal bound produce `incomplete`, `success=false` and exit 1.
 The requested top-method page alone is not an incomplete recording. Conversion
 runs in an owned private CLI worker so its non-cancellable library work is also
 subject to the command deadline. Intermediate converted files are removed after
-that worker and its descendants exit.
+that worker and its owned process-group or job members exit.
 
 ## Failure reports and dumps
 
@@ -145,10 +145,11 @@ Profile defaults to 120 seconds and dump inspection/collection to 30;
 
 Collectors, targets launched by a collector and decoder workers are owned as
 Windows jobs or Linux process groups. Cancellation/deadlines terminate and join
-them before a result is returned. Cleanup has a bounded grace period. Captured
-tool output is limited to 1 MiB; decoder/operation JSON to 4 MiB. Retain raw
-artifacts privately under `.temp-data/`, then remove the owning directory after
-all processes have exited.
+their members before a result is returned. On Linux, children that enter another
+process group or session are outside this ownership boundary. Cleanup has a
+bounded grace period. Captured tool output is limited to 1 MiB; decoder/operation
+JSON to 4 MiB. Retain raw artifacts privately under `.temp-data/`, then remove
+the owning directory after the owned processes have exited.
 
 ## See also
 

@@ -7,6 +7,10 @@ namespace Fpas.Processes;
 
 public enum ProcessStdio { Capture, Inherit, CaptureOutput }
 
+/// <summary>
+/// Owns a Windows job or a Linux process group and terminates its members on disposal.
+/// On Linux, descendants that enter another process group or session are outside this ownership boundary.
+/// </summary>
 public sealed class OwnedProcess : IAsyncDisposable
 {
     private readonly Process process;

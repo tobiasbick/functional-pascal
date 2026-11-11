@@ -55,7 +55,7 @@ that engineering choice is separate from source syntax.
 | Nullable reference | Reference type with nullable metadata annotations |
 | typeof(T) | Type token loaded with ldtoken and resolved by System.Type.GetTypeFromHandle |
 | Async routine | Task-returning method and compiler-generated async state machine |
-| Using / exception handling | CLR protected regions, handlers, filters, and cleanup |
+| Using / exception handling | CLR protected regions and cleanup; async state-machine handling preserves CLR filter ordering |
 | Requires / ensures | Callee entry/exit Boolean checks and ordinary CLR exceptions |
 
 UI library identities share the `Fpas.Ui` prefix. `Fpas.Ui` owns widget contracts,

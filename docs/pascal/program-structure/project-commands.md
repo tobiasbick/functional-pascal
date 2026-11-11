@@ -107,9 +107,10 @@ stdin/stdout/stderr, preserving piped input and terminal handles. JSON mode
 inherits stdin and captures program stdout/stderr as UTF-8 text under a shared
 1 MiB limit. Only the JSON document goes to protocol stdout. Programs own their
 stream encoding. Select UTF-8 explicitly when reading UTF-8 pipes through .NET
-Console APIs. An exceeded output limit is explicit. Each run owns its process
-group or job and terminates and joins remaining descendants when the main
-process exits, on cancellation or on a deadline.
+Console APIs. An exceeded output limit is explicit. Each run terminates and
+joins remaining members of its Linux process group or Windows job when the main
+process exits, on cancellation or on a deadline. On Linux, children that enter
+another process group or session are outside this ownership boundary.
 
 Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
 operation; zero disables the deadline. Cancellation remains available.

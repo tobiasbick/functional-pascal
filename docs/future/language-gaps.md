@@ -2,8 +2,9 @@
 
 Record confirmed omissions from the [baseline](../baseline-comparison.md) with
 their owning rule and reproducer. The proposals below are deferred extensions.
-Maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md); current
-toolchain procedures belong in the [development workflow](../build/development.md).
+Record concrete maintenance blockers in task-specific documents under
+`docs/future/`; current toolchain procedures belong in the
+[development workflow](../build/development.md).
 
 [Effects in FPAS](effect-system-gap.md) tracks the deferred library pilot and
 open questions about compiler-checked effects.

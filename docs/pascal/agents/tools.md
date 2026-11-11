@@ -178,6 +178,6 @@ Store performance output under .temp-data and distinguish measurements from
 language guarantees.
 
 Write repository maintenance helpers in FPAS when the supported CLR APIs suffice.
-If a concrete missing feature prevents this, document the practical limitation
-in [dogfooding gaps](../../future/dogfooding-gaps.md). Finish the agreed baseline
+If a concrete missing feature prevents this, document the blocker, reproducer,
+and required API in a task-specific document under `docs/future/`. Finish the agreed baseline
 before adding extensions; source syntax changes need the user's approval.

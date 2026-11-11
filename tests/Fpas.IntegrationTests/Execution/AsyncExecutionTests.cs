@@ -172,4 +172,60 @@ public sealed class AsyncExecutionTests
             end;
             end program;
             """, "7", "8", "requires", "ensures", "original");
+    [Fact]
+    public Task Filters_search_before_async_unwind_and_cleanup_failures_restart_search()
+        => ProgramExecution.Output("""
+            async program FilterOrdering;
+            uses System as Sys, System.Console as Console, System.IO as IO, System.Threading.Tasks as Tasks;
+
+            function Filter(State: array of int; Throwing: bool): bool;
+            begin
+              State[0] := State[0] + 1;
+              Console.WriteLine(State[1]);
+              if Throwing then raise new Sys.Exception('filter'); end if;
+              return true;
+            end function;
+
+            begin
+              const State: array of int := [0, 0];
+              const Stream: IO.MemoryStream := new IO.MemoryStream();
+              try
+                try
+                  await using const Owned: IO.MemoryStream := Stream;
+                  try
+                    await Tasks.Task.Delay(1);
+                    raise new Sys.Exception('body');
+                  finally
+                    await Tasks.Task.Delay(1);
+                    State[1] := 1;
+                    Console.WriteLine(Stream.CanRead);
+                  end try;
+                finally
+                  State[1] := 2;
+                end try;
+              catch Error: Sys.Exception when Filter(State, true) do
+                Console.WriteLine('wrong');
+              catch Error: Sys.Exception when Filter(State, false) do
+                Console.WriteLine(State[0]);
+                Console.WriteLine(State[1]);
+                Console.WriteLine(Stream.CanRead);
+                Console.WriteLine(Error.Message);
+              end try;
+
+              State[0] := 0; State[1] := 0;
+              try
+                try
+                  await Tasks.Task.Delay(1);
+                  raise new Sys.Exception('original');
+                finally
+                  State[1] := 1;
+                  raise new Sys.InvalidOperationException('cleanup');
+                end try;
+              catch Error: Sys.Exception when Filter(State, false) do
+                Console.WriteLine(State[0]);
+                Console.WriteLine(Error.Message);
+              end try;
+            end;
+            end program;
+            """, "0", "0", "True", "2", "2", "False", "body", "0", "1", "2", "cleanup");
 }

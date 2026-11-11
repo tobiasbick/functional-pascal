@@ -17,8 +17,8 @@ end try;
 ```
 
 Catch clauses are ordered. Their types must derive from `System.Exception`.
-`when` supplies a CLR exception filter; throwing from a filter counts as a false
-filter according to CLR behavior. `catch do` catches any ordinary managed
+`when` uses CLR exception-filter semantics; throwing from a filter counts as a
+false filter. `catch do` catches any ordinary managed
 exception without a binding. Unreachable catches are errors. A `try` statement
 requires a catch or finally clause, or both.
 

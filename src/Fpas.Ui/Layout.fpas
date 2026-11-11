@@ -22,9 +22,9 @@ end variant;
 public type Flex = record
   // The basis for allocation before distributing free space.
   public Basis: Extent := Extent.Content;
-  // An optional lower bound in explicit units.
+  // An optional lower bound in explicit units; both bounds must use the same units.
   public Minimum: Measure? := null;
-  // An optional upper bound in explicit units.
+  // An optional upper bound in explicit units; both bounds must use the same units.
   public Maximum: Measure? := null;
   // CUI growth weight, allocated from zero. Fill uses at least one.
   // Fixed extents cannot grow; content with a positive weight becomes growing.

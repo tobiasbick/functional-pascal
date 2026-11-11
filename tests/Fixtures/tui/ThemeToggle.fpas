@@ -3,7 +3,7 @@ program ThemeToggleContract;
 uses
   Fpas.Ui.Buttons as UiButtons, Fpas.Ui.ThemeToggles as Toggles, Fpas.Ui.Themes as Themes,
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
@@ -68,6 +68,59 @@ begin
       raise new Sys.InvalidOperationException(Reason);
     else
   end case;
+end procedure;
+
+procedure HoverBehavior();
+  function Advance(State: int; Message: int): Mvu.Transition<int, int>;
+  begin
+    return new Mvu.Transition<int, int>(State + 1, []);
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      E.Row<int>(
+        E.Text<int>(if State >= 3 then '            ' else '' end if),
+        UiButtons.Button<int>(
+          if State < 2 then 'first' else 'replacement' end if,
+          'Target', 0, new UiButtons.Options(Enabled := State <> 1, Tooltip := 'Target hint')
+        )
+      ),
+      UiButtons.Button<int>('next', 'Next', 0)
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Advance, View, 50, 8);
+  const Target: Tui.ControlSnapshot := Control(Session, 'first');
+  Send(Session, Tui.Input.Focus('next'));
+  const Cell: int := Target.Row * 50 + Target.Column;
+  const Normal: T.Style := Session.Snapshot().Cells[Cell].Colors;
+  Send(Session, Tui.Input.Pointer(K.PointerKind.Move, Target.Column, Target.Row));
+  Check(
+    Control(Session, 'first').Hovered and Session.Snapshot().Lines[7].Contains('Target hint')
+    and Session.Snapshot().Cells[Cell].Colors <> Normal,
+    'Pointer hover displays the hint.'
+  );
+  Send(Session, Tui.Input.Activate('next'));
+  Check(
+    not Control(
+      Session,
+      'first'
+    ).Hovered and not Session.Snapshot().Lines[7].Contains('Target hint'),
+    'Disabling the control clears hover and hint.'
+  );
+  Send(Session, Tui.Input.Activate('next'));
+  Check(
+    Control(Session, 'replacement').Hovered and Session.Snapshot().Lines[7].Contains('Target hint'),
+    'A replacement under the stationary pointer gains hover.'
+  );
+  Send(Session, Tui.Input.Activate('next'));
+  Check(
+    not Control(
+      Session,
+      'replacement'
+    ).Hovered and not Session.Snapshot().Lines[7].Contains('Target hint'),
+    'Moving the control clears hover and hint.'
+  );
 end procedure;
 
 procedure Behavior();
@@ -185,6 +238,7 @@ end procedure;
 
 begin
   Validation();
+  HoverBehavior();
   Behavior();
   Console.WriteLine('Theme toggle contracts verified');
 end;

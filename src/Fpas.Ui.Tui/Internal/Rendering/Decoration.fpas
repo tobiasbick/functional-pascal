@@ -40,7 +40,7 @@ begin
         not Focused,
         Control.Appearance
       ) ?? Standard,
-      Control.Foreground
+      if Control.Enabled then Control.Foreground else null end if
     )
     else Standard
     end if;

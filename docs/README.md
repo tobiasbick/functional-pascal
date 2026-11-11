@@ -21,7 +21,6 @@ workflow to work on the compiler/toolchain.
 | Project, dependency, diagnostic, incremental, and output contracts | [MSBuild specification](build/msbuild.md) |
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
-| Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Desktop GUI, shared widgets and terminal UI | [GUI handbook](pascal/libraries/gui.md), [terminal host](../src/Fpas.Ui.Tui/README.md) |
 | CUI gallery and widget parity across GUI and TUI | [CUI widget gaps](future/cui-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |

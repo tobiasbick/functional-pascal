@@ -63,7 +63,8 @@ and [reference maintenance](../../../docs/pascal/agents/maintenance.md).
 Debug/profile actual generated programs with supported .NET tools before writing
 variants; use [fpas-bench](../fpas-bench/SKILL.md) for authorized measurements.
 Write maintenance helpers in FPAS when supported CLR APIs suffice. Record concrete
-blockers in [dogfooding gaps](../../../docs/future/dogfooding-gaps.md).
+blockers in a task-specific document under `docs/future/`, including a reproducer
+and the required API.
 
 Internal designs may change. FPAS syntax changes require explicit user approval;
 deferred proposals do not supply that approval.

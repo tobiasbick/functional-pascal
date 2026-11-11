@@ -74,9 +74,10 @@ deadline or cancellation ends the affected session. Unsupported inspection or
 step preparation returns an operation error while preserving a valid stop.
 Shutdown first sends a stop request with an independent
 five-second grace, allowing native unregistration, target reaping and worker
-exit. A hung worker then receives owned process-tree termination. Concurrent
-failure cannot cancel that stop request's completion. Repeated stop/disposal
-joins the same cleanup operation.
+exit. A hung worker then receives termination of its Linux process group or
+Windows job. On Linux, children that enter another process group or session are
+outside this ownership boundary. Concurrent failure cannot cancel that stop
+request's completion. Repeated stop/disposal joins the same cleanup operation.
 
 Target stdin defaults to closed. A caller may supply at most 1 MiB of explicit
 bytes, written independently of control requests and output before EOF. Shutdown

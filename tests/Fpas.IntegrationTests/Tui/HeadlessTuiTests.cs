@@ -13,6 +13,7 @@ public sealed class HeadlessTuiTests
     [InlineData("headless.fpas", "headless contracts verified\n")]
     [InlineData("effects.fpas", "effect contracts verified\n")]
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
+    [InlineData("rendering.fpas", "Rendering contracts verified\n")]
     [InlineData("confirm.fpas", "Confirm button contracts verified\n")]
     [InlineData("status.fpas", "Status button contracts verified\n")]
     [InlineData("theme-switcher.fpas", "Theme switcher contracts verified\n")]

@@ -103,12 +103,39 @@ begin
   return new M.Source(Destination, Output.ToString(), Origins.ToArray());
 end function;
 
+// Recognizes a compilation-unit header using the compiler's identifier and trivia rules.
+//
+// ## Parameters
+// - `Source`: The complete source text to inspect.
+//
+// ## Returns
+// The matched kind and identifier components, or an unsuccessful match.
 public function Header(Source: string): R.Match;
 begin
+  const Trivia: string := '(?:\s|//[^\r\n]*(?:\r\n|\r|\n|$))';
+  const Identifier: string := '@?[A-Za-z_][A-Za-z_0-9]*';
   return R.Regex.Match(
     Source,
-    '\A(?:\s|//[^\n]*(?:\n|$))*(?:async )?(program|unit)\s+([A-Za-z_][A-Za-z_0-9.]*)\s*;'
+    '\A\uFEFF?' + Trivia + '*(?:async' + Trivia + '+)?(?<kind>program|unit)(?:' + Trivia +
+    '+|(?=@))(?<name>' + Identifier + ')(?:' + Trivia + '*\.' + Trivia + '*(?<name>' + Identifier +
+    '))*' + Trivia + '*;'
   );
+end function;
+
+function HeaderName(Header: R.Match): string;
+begin
+  const Name: Text.StringBuilder := new Text.StringBuilder();
+  const Parts: R.CaptureCollection := Header.Groups['name'].Captures;
+  for Index: int := 0 to Parts.Count - 1 do
+    const Value: string := Parts[Index].Value;
+    if Name.Length > 0 then
+      discard Name.Append('.');
+    end if;
+
+    discard Name.Append(if Value.StartsWith('@') then Value.Substring(1) else Value end if);
+  end for;
+
+  return Name.ToString();
 end function;
 
 procedure Write(Path: string; Source: string);
@@ -129,7 +156,7 @@ begin
     );
   end if;
 
-  const Library: bool := Declaration.Groups[1].Value = 'unit';
+  const Library: bool := Declaration.Groups['kind'].Value = 'unit';
   if Library and Item.Execute then
     raise new IO.InvalidDataException('A unit cannot have the run fence option');
   end if;
@@ -148,7 +175,7 @@ begin
       if FileName.Length = 0 and Companion.Language = 'pascal' then
         const OtherHeader: R.Match := Header(Companion.Source);
         if OtherHeader.Success then
-          FileName := OtherHeader.Groups[2].Value + '.fpas';
+          FileName := HeaderName(OtherHeader) + '.fpas';
         end if;
       end if;
 
@@ -172,7 +199,7 @@ begin
           raise new IO.InvalidDataException('Invalid Pascal companion');
         end if;
 
-        if OtherHeader.Groups[1].Value = 'unit' then
+        if OtherHeader.Groups['kind'].Value = 'unit' then
           Sources.Add(Other);
         elsif not Library then
           raise new IO.InvalidDataException('A project must contain exactly one program');
@@ -196,7 +223,7 @@ begin
         IO.Path.Combine(Directory, Short),
         Options
       );
-      if Header(Extra.Text).Groups[1].Value <> 'unit' then
+      if Header(Extra.Text).Groups['kind'].Value <> 'unit' then
         raise new IO.InvalidDataException('Context companions must be units');
       end if;
 
@@ -215,7 +242,7 @@ begin
 
   return new M.Prepared(
     Primary.Path,
-    IO.Path.Combine(Directory, Declaration.Groups[2].Value + '.dll'),
+    IO.Path.Combine(Directory, HeaderName(Declaration) + '.dll'),
     Library,
     Sources.ToArray(),
     Manifest

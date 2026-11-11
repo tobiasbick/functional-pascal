@@ -371,11 +371,41 @@ begin
   Session.CapturePng(Capture + '.theme-toggle.png');
 end procedure;
 
+procedure VerifySnapshotReentry(Renderer: Cui.CuiRenderer);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Current of
+      when is Gui.Session<State.Msg> as Session:
+        try
+          discard Session.Snapshot();
+        catch Error: Sys.InvalidOperationException do
+          Rejected := true;
+        end try;
+      else
+    end case;
+
+    return State.Update(Model, Message);
+  end function;
+begin
+  var Current: Gui.Session<State.Msg>? := null;
+  var Rejected: bool := false;
+  using const Session: Gui.Session<State.Msg> := Gui.Start<State.Model, State.Msg>(
+    new State.Model(), Update, View.Build,
+    new Gui.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer), State.ThemeFor
+  );
+  Current := Session;
+  Check(Session.Step(), 'The initial frame was not presented.');
+  discard Session.Snapshot();
+  Send(Session, State.Msg.Preview);
+  Check(Rejected, 'Snapshot must reject reentry from an update callback.');
+end procedure;
+
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   VerifyDesktop(Renderer, Capture);
   VerifyDrawer(Renderer);
   VerifySplit(Renderer, Capture);
+  VerifySnapshotReentry(Renderer);
   Console.WriteLine(
     'GUI gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then 'software'
       else 'opengl'

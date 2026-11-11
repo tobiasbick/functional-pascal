@@ -74,12 +74,13 @@ expectation, wrong exit code, early terminal closure, output limit, timeout or
 cleanup failure is an explicit failed report. Argument/schema errors exit 2;
 successful scripts exit 0, operational failures exit 1, cancellation exits 130.
 
-All exits stop and join owned descendants. The `exit` expectation checks natural
-completion before harness cleanup; a timeout cannot satisfy it. Windows owns a
-job and closes the private pseudo-console; Linux owns a controlling terminal and
-process group, adopts and reaps terminated descendants. Output is drained during
-cleanup, including after a successful natural exit. Cleanup has its own bounded
-grace period.
+All exits stop and join members of the Windows job or Linux process group. The
+`exit` expectation checks natural completion before harness cleanup; a timeout
+cannot satisfy it. Windows closes the private pseudo-console; Linux owns a
+controlling terminal and adopts and reaps terminated group members. Linux children
+that enter another process group or session are outside this ownership boundary.
+Output is drained during cleanup, including after a successful natural exit.
+Cleanup has its own bounded grace period.
 
 Supported native hosts are Windows x64 with ConPTY (Windows 10 1809+) and Linux
 x64/glibc, including WSL. Native session/spawn APIs are required; redirected

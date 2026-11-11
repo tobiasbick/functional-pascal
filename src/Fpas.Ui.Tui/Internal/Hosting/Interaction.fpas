@@ -109,6 +109,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       FocusScope := Scope;
     end if;
 
+    if PointerKnown then
+      const Target: A.Control<TMsg>? := Hit(Layout, PointerColumn, PointerRow);
+      Hover := if Target = null then '' else Target.Id end if;
+    end if;
+
     for Control: A.Control<TMsg> in Layout.Controls do
       if Eligible(Control, Scope) and Control.Id = Focus then
         return;
@@ -217,6 +222,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure ClickAt(Layout: A.Layout<TMsg>; Button: K.MouseButton; Column: int; Row: int);
   begin
+    PointerKnown := true;
+    PointerColumn := Column;
+    PointerRow := Row;
     if Button = K.MouseButton.Left and OnScrim(Layout, Column, Row) then
       discard Dismiss(Layout.Active);
       return;
@@ -236,6 +244,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure Point(Layout: A.Layout<TMsg>; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int; ReceivedAt: long);
   begin
+    PointerKnown := true;
+    PointerColumn := Column;
+    PointerRow := Row;
     const Target: A.Control<TMsg>? := Hit(Layout, Column, Row);
     Hover := if Target = null then '' else Target.Id end if;
     if HoldTracking.ActiveId() <> Hover then
@@ -395,6 +406,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
   begin
+    PointerKnown := true;
+    PointerColumn := Column;
+    PointerRow := Row;
     for Index: int := Layout.Regions.Length - 1 downto 0 do
       const Region: A.ScrollRegion := Layout.Regions[Index];
       if Region.Scope = FocusScope and Region.Bounds.Contains(Column, Row) then
@@ -448,6 +462,9 @@ begin
   const Saved: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
   var Focus: string := '';
   var Hover: string := '';
+  var PointerKnown: bool := false;
+  var PointerColumn: int := 0;
+  var PointerRow: int := 0;
   var Captured: string := '';
   var CapturedScrim: bool := false;
   var MiddleCaptured: string := '';

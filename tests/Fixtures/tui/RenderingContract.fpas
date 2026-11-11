@@ -1,0 +1,110 @@
+program RenderingContract;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: int; Message: int): Mvu.Transition<int, int>;
+begin
+  return new Mvu.Transition<int, int>(Message, []);
+end function;
+
+procedure WideIdeographs();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Text<int>(Sys.Char.ConvertFromUtf32($30000) + 'A');
+  end function;
+begin
+  Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($2FFFD)) = 2, 'Last plane-two wide boundary.');
+  Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($2FFFE)) = 1, 'Plane-two noncharacter boundary.');
+  Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($30000)) = 2, 'First plane-three wide boundary.');
+  Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFD)) = 2, 'Last plane-three wide boundary.');
+  Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFE)) = 1, 'Plane-three noncharacter boundary.');
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 4, 1);
+  const Cells: array of Terminal.Cell := Session.Snapshot().Cells;
+  Check(
+    Cells[0].Text = Sys.Char.ConvertFromUtf32($30000) and Cells[1].Text = ''
+    and Cells[2].Text = 'A', 'Wide ideograph must reserve a continuation cell.'
+  );
+  var Output: string := '';
+  const Present: procedure(int, int, array of Terminal.Cell) := Presentation.Create(
+    procedure(Value: string) begin
+      Output := Value;
+    end procedure
+  );
+  Present(4, 1, Cells);
+  const Next: array of Terminal.Cell := [Cells[0], Cells[1], Cells[2], Cells[3]];
+  Next[2] := new Terminal.Cell('B', Cells[2].Colors);
+  Present(4, 1, Next);
+  Check(
+    Output.Contains(new string(#27, 1) + '[1;3H') and Output.Contains('B'),
+    'Incremental presentation must address the cell after a wide ideograph.'
+  );
+end procedure;
+
+procedure DisabledForeground();
+  function View(State: int): E.Element<int>;
+  begin
+    return B.Button<int>(
+      'disabled', 'Disabled', 1,
+      new B.Options(Enabled := false, Color := new G.Color(255, 0, 0))
+    );
+  end function;
+begin
+  const Theme: Themes.Theme := Themes.Dark();
+  const Resolved: RenderThemes.Theme := RenderThemes.Resolve(Theme);
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+    0,
+    Update,
+    View,
+    20,
+    3,
+    Theme
+  );
+  const Frame: Tui.Frame := Session.Snapshot();
+  const Bounds: Tui.ControlSnapshot := Frame.Controls[0];
+  const Index: int := Bounds.Row * 20 + Bounds.Column + 1;
+  Check(
+    Frame.Cells[Index].Colors.Foreground = Resolved.Buttons.Disabled.Foreground,
+    'Disabled styling must override a custom foreground.'
+  );
+  discard Session.Send(Tui.Input.Pointer(Keys.PointerKind.Move, Bounds.Column, Bounds.Row));
+  discard Session.Step();
+  Check(
+    Session.Snapshot().Cells[Index].Colors.Foreground = Resolved.Buttons.Disabled.Foreground,
+    'A pointer over a disabled button must preserve disabled styling.'
+  );
+  const Control: Scene.Control<int> := new Scene.Control<int>(
+    'disabled',
+    'Disabled',
+    'button',
+    '',
+    new F.Rect(Bounds.Column, Bounds.Row, Bounds.Width, Bounds.Height),
+    '',
+    '',
+    false,
+    Scene.Binding<int>.Invoke(
+      new Activation.Direct<int>(1)
+    ),
+    Styles.ButtonVariant.Default,
+    ButtonStyle := true,
+    Foreground := new G.Color(255, 0, 0)
+  );
+  Decoration.Apply<int>(Frame.Cells, 20, Control, Resolved, false);
+  Check(
+    Frame.Cells[Index].Colors.Foreground = Resolved.Buttons.Disabled.Foreground,
+    'Disabled precedence must also hold during hover decoration.'
+  );
+end procedure;
+
+begin
+  WideIdeographs();
+  DisabledForeground();
+  Console.WriteLine('Rendering contracts verified');
+end;
+end program;

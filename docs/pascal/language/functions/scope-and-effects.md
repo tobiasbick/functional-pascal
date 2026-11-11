@@ -1,8 +1,8 @@
 # Scope, recursion, and effects
 
 Free declarations are private to their unit unless `public`. Record members are
-public within their record's accessibility unless explicitly private. Private
-members are accessible only from inside the record. A static method has no self
+private to their record unless marked `public`. Private members are accessible
+only from inside the record. A static method has no self
 and does not capture an instance. Static factories may construct private record
 state. Signatures are visible throughout their lexical declaration scope,
 permitting mutual recursion. Binding values

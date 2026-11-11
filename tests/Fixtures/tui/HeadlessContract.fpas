@@ -1,6 +1,6 @@
 program HeadlessContract;
 
-uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
 type Msg = variant
   Start;
@@ -141,6 +141,83 @@ begin
   if Session.Snapshot().Id <> Complete.Id then
     raise new Sys.InvalidOperationException('The complete frame was lost.');
   end if;
+end procedure;
+
+procedure CheckBounds(Minimum: L.Measure; Maximum: L.Measure; Horizontal: bool; Valid: bool; Mixed: bool);
+  function Bounded(): E.Element<bool>;
+  begin
+    const Child: E.Element<bool> := E.Size<bool>(
+      E.Text<bool>('bounded'),
+      new L.Flex(Minimum := Minimum, Maximum := Maximum)
+    );
+    return if Horizontal then E.Row<bool>(Child) else E.Column<bool>(Child) end if;
+  end function;
+
+  function UpdateBounds(State: bool; Message: bool): Mvu.Transition<bool, bool>;
+  begin
+    return new Mvu.Transition<bool, bool>(Message, []);
+  end function;
+
+  function ViewBounds(State: bool): E.Element<bool>;
+  begin
+    return if State then Bounded() else UiButtons.Button<bool>('change', 'Change', true) end if;
+  end function;
+begin
+  var Rejected: bool := false;
+  try
+    discard Validation.Prepare<bool>(Bounded(), Validation.Target.Terminal);
+  catch Error: Sys.ArgumentException do
+    Rejected := true;
+    if Mixed and not Error.Message.Contains('same measure units') then
+      raise new Sys.InvalidOperationException('Mixed bounds need a clear validation error.');
+    end if;
+  end try;
+
+  if Rejected = Valid then
+    raise new Sys.InvalidOperationException('Incorrect bound validation result.');
+  end if;
+
+  if not Valid then
+    using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+      false,
+      UpdateBounds,
+      ViewBounds,
+      20,
+      5
+    );
+    const Before: App.Frame := Session.Snapshot();
+    discard Send(Session, 'change');
+    case Session.Step() of
+      when App.StepResult.Failed(_, const FrameId: long, const Stage: string, const Reason: string):
+        if FrameId <> Before.Id or Stage <> 'view' or (Mixed and not Reason.Contains(
+          'same measure units'
+        ))
+        then
+          raise new Sys.InvalidOperationException(
+            'Invalid bounds did not fail in view validation.'
+          );
+        end if;
+      else
+        raise new Sys.InvalidOperationException('Invalid bounds did not fail the session step.');
+    end case;
+
+    if Session.Snapshot().Id <> Before.Id then
+      raise new Sys.InvalidOperationException('Invalid bounds replaced the previous frame.');
+    end if;
+  end if;
+end procedure;
+
+procedure CheckBoundUnits();
+begin
+  for Axis: int := 0 to 1 do
+    const Horizontal: bool := Axis = 0;
+    CheckBounds(L.Measure.Cells(2), L.Measure.Logical(8), Horizontal, false, true);
+    CheckBounds(L.Measure.Logical(8), L.Measure.Cells(2), Horizontal, false, true);
+    CheckBounds(L.Measure.Cells(1), L.Measure.Cells(2), Horizontal, true, false);
+    CheckBounds(L.Measure.Logical(8), L.Measure.Logical(16), Horizontal, true, false);
+    CheckBounds(L.Measure.Cells(2), L.Measure.Cells(1), Horizontal, false, false);
+    CheckBounds(L.Measure.Logical(16), L.Measure.Logical(8), Horizontal, false, false);
+  end for;
 end procedure;
 
 procedure CheckPresentation();
@@ -326,6 +403,7 @@ begin
   CheckCancellation();
   CheckQueue();
   CheckFailure();
+  CheckBoundUnits();
   CheckPresentation();
   CheckReuse();
   CheckLiveTheme();

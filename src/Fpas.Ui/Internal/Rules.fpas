@@ -84,6 +84,23 @@ begin
   end case;
   const Min: L.Measure? := Settings.Minimum;
   const Max: L.Measure? := Settings.Maximum;
+  if Min <> null and Max <> null then
+    case Min of
+      when L.Measure.Cells(_):
+        case Max of
+          when L.Measure.Logical(_):
+            Reject(Location, 'Minimum and maximum must use the same measure units.');
+          else
+        end case;
+      when L.Measure.Logical(_):
+        case Max of
+          when L.Measure.Cells(_):
+            Reject(Location, 'Minimum and maximum must use the same measure units.');
+          else
+        end case;
+      else
+    end case;
+  end if;
   const Minimum: int := if Min = null then 0
     else CheckMeasure(
       Min,

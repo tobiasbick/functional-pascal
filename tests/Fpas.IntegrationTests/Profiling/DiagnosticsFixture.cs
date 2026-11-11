@@ -52,6 +52,8 @@ public sealed class DiagnosticsFixture : IAsyncLifetime
 
     internal Task<ProcessResult> Run(params string[] arguments) => ProcessRunner.RunAsync(arguments, workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(3));
 
+    internal Task<ProcessResult> RunFrom(string cwd, params string[] arguments) => ProcessRunner.RunAsync(arguments, workingDirectory: cwd, timeLimit: TimeSpan.FromMinutes(3));
+
     internal async Task<ProcessResult> Tool(string name, string log, params string[] arguments)
     {
         var result = await ProcessRunner.RunAsync(["tool", "run", name, "--", .. arguments], workingDirectory: Repository, timeLimit: TimeSpan.FromMinutes(2));

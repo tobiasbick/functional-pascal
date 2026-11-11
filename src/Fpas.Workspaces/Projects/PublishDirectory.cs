@@ -37,11 +37,12 @@ public static class PublishDirectory
             }
             var built = await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, arguments, token, liveOutput: liveOutput);
             if (built.ExitCode != 0 || built.Truncated) return new(built, []);
+            var stagedFiles = CheckedFiles(stage, token);
             foreach (var secret in new[] { options.Certificate, options.KeyFile }.OfType<string>())
             {
                 var bytes = File.ReadAllBytes(secret);
-                foreach (var file in Directory.GetFiles(stage, "*", SearchOption.AllDirectories))
-                    if (new FileInfo(file).Length == bytes.Length && File.ReadAllBytes(file).AsSpan().SequenceEqual(bytes)) File.Delete(file);
+                foreach (var file in stagedFiles)
+                    if (File.Exists(file) && new FileInfo(file).Length == bytes.Length && File.ReadAllBytes(file).AsSpan().SequenceEqual(bytes)) File.Delete(file);
             }
             if (options.Certificate is not null)
             {
@@ -61,9 +62,20 @@ public static class PublishDirectory
         }
         finally
         {
-            if (Directory.Exists(stage)) Directory.Delete(stage, recursive: true);
+            DeleteStage(stage);
             if (committed && Directory.Exists(backup)) Directory.Delete(backup, recursive: true);
         }
+    }
+
+    private static void DeleteStage(string stage)
+    {
+        FileAttributes attributes;
+        try { attributes = File.GetAttributes(stage); }
+        catch (FileNotFoundException) { return; }
+        catch (DirectoryNotFoundException) { return; }
+        if ((attributes & FileAttributes.Directory) != 0)
+            Directory.Delete(stage, recursive: (attributes & FileAttributes.ReparsePoint) == 0);
+        else File.Delete(stage);
     }
 
     public static async Task Check(string destination, CancellationToken token)
@@ -84,6 +96,21 @@ public static class PublishDirectory
     private static async Task<PublishedFile[]> Inventory(string root, CancellationToken token)
     {
         var files = new List<PublishedFile>();
+        foreach (var path in CheckedFiles(root, token))
+        {
+            if (path == Path.Combine(root, Manifest)) continue;
+            await using var stream = File.OpenRead(path);
+            files.Add(new(Path.GetRelativePath(root, path).Replace('\\', '/'), stream.Length, Convert.ToHexString(await SHA256.HashDataAsync(stream, token))));
+        }
+        return files.OrderBy(file => file.Path, StringComparer.Ordinal).ToArray();
+    }
+
+    private static List<string> CheckedFiles(string root, CancellationToken token)
+    {
+        if ((File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Publish directories must not contain symbolic links.");
+        var files = new List<string>();
+        var count = 0;
         var pending = new Queue<string>(); pending.Enqueue(root);
         while (pending.TryDequeue(out var folder))
         {
@@ -93,15 +120,15 @@ public static class PublishDirectory
                 var attributes = File.GetAttributes(path);
                 if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Publish directories must not contain symbolic links.");
                 if ((attributes & FileAttributes.Directory) != 0) pending.Enqueue(path);
-                else if (path != Path.Combine(root, Manifest))
+                else
                 {
-                    if (files.Count >= 20_000) throw new IOException("Publish output exceeds 20000 files.");
-                    await using var stream = File.OpenRead(path);
-                    files.Add(new(Path.GetRelativePath(root, path).Replace('\\', '/'), stream.Length, Convert.ToHexString(await SHA256.HashDataAsync(stream, token))));
+                    if (path != Path.Combine(root, Manifest) && ++count > 20_000)
+                        throw new IOException("Publish output exceeds 20000 files.");
+                    files.Add(path);
                 }
             }
         }
-        return files.OrderBy(file => file.Path, StringComparer.Ordinal).ToArray();
+        return files;
     }
 }
 

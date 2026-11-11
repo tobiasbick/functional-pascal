@@ -8,7 +8,8 @@ namespace Fpas.Compiler.Lowering.Async;
 
 internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatalog references)
 {
-    private sealed record Context(int Exception, int Return, int Break = -1, int Continue = -1, LocalSymbol? Caught = null);
+    private sealed record Context(int Exception, int Return, int Break = -1, int Continue = -1, LocalSymbol? Caught = null,
+        Func<Func<int, int>, int>? Search = null);
     private readonly AsyncPlan plan = new(routine);
     private TypeSymbol ExceptionType => references.Symbol(references.Required("System.Exception"));
     private readonly SourceText source = routine.Source!;
@@ -25,7 +26,7 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
     {
         var failure = Block(new(0, 0), new AsyncFail());
         var completed = Block(new(failure, 0), new AsyncComplete());
-        var context = new Context(failure, completed);
+        var context = new Context(failure, completed, Search: unwind => unwind(failure));
         if (routine.Symbol.BodyResult != TypeSymbol.Void) plan.Result ??= Temporary(routine.Symbol.BodyResult, "<async-result>");
         var success = Contracts(routine.Ensures, completed, context);
         context = context with { Return = success };

@@ -27,6 +27,7 @@ static void fpas_forget_state(cui_ctx *ui, cui_id key) {
         cui_state_entry *entry = &ui->states[index];
         if (entry->id != key) { link = &entry->next; continue; }
         *link = entry->next;
+        if (ui->edit == entry->data) ui->edit = NULL;
         if (entry->dtor && entry->data) entry->dtor(ui, entry->data);
         cui__free(ui, entry->data);
         memset(entry, 0, sizeof *entry);

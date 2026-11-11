@@ -180,6 +180,15 @@ public sealed partial class CuiWindow
     public void SetKey(int key, bool down, int modifiers = 0)
     { CheckFrame(); NativeMethods.InputKey(context, key, down ? (byte)1 : (byte)0, modifiers); }
 
+    /// <summary>Supplies a committed text event to the native input queue.</summary>
+    /// <param name="text">Text to deliver to the focused editor in the current frame.</param>
+    public void InputText(string text)
+    {
+        CheckFrame();
+        Utf8.Validate(text, nameof(text));
+        NativeMethods.InputText(context, text);
+    }
+
     /// <summary>Injects wheel movement for integration tests.</summary>
     /// <param name="delta">Vertical movement in lines.</param>
     public void Wheel(float delta) { CheckFrame(); NativeMethods.InputScroll(context, 0, delta); }

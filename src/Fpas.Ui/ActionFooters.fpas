@@ -1,0 +1,17 @@
+unit Fpas.Ui.ActionFooters;
+
+uses Fpas.Ui.Elements as E;
+
+// Groups actions using CUI's right-aligned dialog footer.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Children`: Actions in display order.
+// ## Returns
+// A graphical row with the native footer inset and spacing.
+public function ActionFooter<TMsg>(params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+begin
+  return E.Element<TMsg>.ActionFooter(Children);
+end function;
+end unit;

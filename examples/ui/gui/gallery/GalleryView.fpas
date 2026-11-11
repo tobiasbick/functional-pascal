@@ -7,6 +7,8 @@ uses
   GuiGallery.Toast as Toast,
   GuiGallery.Tooltip as Tooltip,
   GuiGallery.ConfirmPopover as ConfirmPopover,
+  GuiGallery.TextField as TextField,
+  GuiGallery.Dialog as Dialog,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
@@ -32,12 +34,16 @@ begin
   return E.Size<State.Msg>(E.Column<State.Msg>(), Fixed(Units));
 end function;
 
+function PageTitle(Page: State.Page): string;
+begin
+  return if Page = State.Page.SmartInputs then 'Smart inputs' else Page.ToString() end if;
+end function;
+
 function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
 begin
-  const Label: string := Page.ToString();
   return new N.Item<State.Msg>(
-    Label.ToLowerInvariant(),
-    Label,
+    Page.ToString().ToLowerInvariant(),
+    PageTitle(Page),
     State.Msg.Show(Page),
     Icon := Sys.Char.ConvertFromUtf32(Icon)
   );
@@ -51,13 +57,17 @@ begin
       new N.Section<State.Msg>(
         'Components', [
           Destination(State.Page.Overview, $E1C1), Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Inputs, $E198),
           Destination(State.Page.Selection, $E29A), Destination(State.Page.Navigation, $E09B),
           Destination(State.Page.Overlays, $E529)
         ]
       ),
       new N.Section<State.Msg>(
         'Extended',
-        [Destination(State.Page.Actions, $E09A), Destination(State.Page.Disclosure, $E529)]
+        [
+          Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
+          Destination(State.Page.Disclosure, $E529)
+        ]
       )
     ],
     Page.ToString().ToLowerInvariant()
@@ -115,6 +125,10 @@ begin
       return Actions.View(Model, Width >= 600);
     when State.Page.Buttons:
       return Buttons.View(Model, Width >= 600);
+    when State.Page.Inputs:
+      return TextField.Inputs(Model, Width >= 584);
+    when State.Page.SmartInputs:
+      return TextField.Affixes(Model);
     when State.Page.Selection:
       return Selection.View(Model, Width >= 536);
     when State.Page.Navigation:
@@ -122,27 +136,12 @@ begin
     when State.Page.Disclosure:
       return ConfirmPopover.View(Model);
     when State.Page.Overlays:
-      const Earlier: E.Element<State.Msg> := E.Column<State.Msg>(
-        new L.Flow(Gap := Gap(8)),
-        E.Styled<State.Msg>(E.Text<State.Msg>('Sheet'), S.Role.Heading),
-        E.Styled<State.Msg>(
-          E.Text<State.Msg>('Esc or a click outside closes it. Focus stays inside.'),
-          S.Role.Secondary
-        ),
-        E.Styled<State.Msg>(
-          E.Row<State.Msg>(
-            new L.Flow(Padding := Gap(16)),
-            B.Button<State.Msg>(
-              'sheet-open', 'Open sheet', State.Msg.SetSheet(true),
-              new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
-            )
-          ),
-          S.Role.OutlinedPanel
-        ),
-        ContextMenu.View(Model)
-      );
       return E.Column<State.Msg>(
-        new L.Flow(Gap := Gap(20)), Earlier, Toast.View(), Tooltip.View()
+        new L.Flow(Gap := Gap(20)),
+        Dialog.Section(),
+        ContextMenu.View(Model),
+        Toast.View(),
+        Tooltip.View()
       );
     else
       raise new Sys.InvalidOperationException('Unknown gallery page.');
@@ -157,7 +156,7 @@ begin
     else E.Column<State.Msg>(
       Gaps,
       E.Column<State.Msg>(
-        E.Styled<State.Msg>(E.Text<State.Msg>(Model.Active.ToString()), S.Role.PageTitle),
+        E.Styled<State.Msg>(E.Text<State.Msg>(PageTitle(Model.Active)), S.Role.PageTitle),
         Space(8)
       ),
       PreviewContent
@@ -231,9 +230,10 @@ begin
       Fill
     )
     end if;
-  return Sheets.Sheet<State.Msg>(
+  const WithSheet: E.Element<State.Msg> := Sheets.Sheet<State.Msg>(
     'sheet', Body, E.Text<State.Msg>('Choose what we tell you about.'),
     Model.Sheet, new Sheets.Options('Notifications'), State.Msg.SetSheet(false)
   );
+  return Dialog.Wrap(Model, WithSheet);
 end function;
 end unit;

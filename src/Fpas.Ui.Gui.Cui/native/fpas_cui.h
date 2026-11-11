@@ -7,6 +7,8 @@
 #include "widgets/button_group.h"
 #include "widgets/sidebar.h"
 #include "widgets/sheet.h"
+#include "widgets/dialog.h"
+#include "widgets/action_footer.h"
 #include "widgets/icon_button.h"
 #include "widgets/copy_button.h"
 #include "widgets/hold_button.h"
@@ -30,6 +32,7 @@
 #include "widgets/tooltip.h"
 #include "widgets/popover.h"
 #include "widgets/confirm_popover.h"
+#include "widgets/text_field.h"
 #include "widgets/split_button.h"
 #include "widgets/menu.h"
 

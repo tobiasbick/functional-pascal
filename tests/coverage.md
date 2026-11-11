@@ -67,6 +67,14 @@ The Filters example checks placement, keyboard activation, Escape, outside
 dismissal and retained values after reopening. Disclosure checks that Enter
 opens the question without confirming, Cancel and Escape close it, and the
 affirmative button dispatches once. Both open popovers are captured.
+The Inputs and Smart inputs pages cover native Unicode editing, undo, model
+replacement, validation text, affixes and password masking in snapshots.
+The same host contract checks UTF-8 capacity, edit-before-submit ordering,
+the clear action, read-only editing and the disabled password reveal button.
+Edit profile checks centered dialog geometry, right-aligned footer spacing,
+focus return, consecutive Escape presses from a text field, Cancel, close,
+scrim dismissal and the Save changes toast. The dialog options case checks a
+narrow viewport, persistent dismissal and initial focus without a close button.
 
 `GuiPublishingTests` uses the same gallery contract from a package-only
 consumer. It checks all five delivery modes, the bundled or transitive CUI

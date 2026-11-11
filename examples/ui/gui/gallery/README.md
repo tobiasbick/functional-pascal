@@ -7,7 +7,7 @@ lists the native prerequisites.
 
 The gallery follows CUI's desktop composition with a full-height 240-point sidebar,
 a centered content column, and a left drawer below 760 logical points. It shows
-the Overview, Buttons, Overlays, and Actions pages with the widgets checked in the
+the accepted widget examples from the
 [CUI inventory](../../../../docs/future/cui-gaps.md).
 
 - **Buttons** shows the variants, sizes, icons, and input states. Save changes
@@ -19,6 +19,9 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   Dropdown menu clones CUI's Options and icon-only More actions examples,
   including section captions, separators, icons, shortcut hints and a danger
   action. Commands only update preview state; they do not modify a project.
+- **Inputs** shows Full name, Email and Password in the original responsive
+  text-field card. The email example uses a reserved example domain. Typing
+  a short password displays the validation error.
 - **Selection** shows native notification checkboxes, connectivity switches
   and the exclusive save-frequency radio group. The checkbox and switch
   cards share a row when both fit and stack at narrower widths. Radio cards
@@ -32,8 +35,11 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   The twelve-page pager keeps the current page, first page and
   last page visible on narrow screens. The stepper starts at Workspace and
   follows the Back and Next buttons. Finish shows an “All set” toast.
-- **Overlays** opens the right-hand Notifications sheet. Escape, the close button,
-  and clicking the backdrop dismiss it.
+- **Overlays** shows the original Edit profile dialog with Name, Email and
+  Public profile. The fields update shared preview values. Cancel closes the
+  dialog and Save changes also shows a success toast. The same card opens the
+  right-hand Notifications sheet. Escape, the close button and the scrim
+  dismiss both overlays.
   The context-menu area opens CUI's Cut/Copy/Paste/Delete menu on right click.
   Its commands only update preview state. Arrow keys and Enter choose a command;
   Escape and outside clicks dismiss it.
@@ -57,6 +63,8 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   Its source button explicitly simulates an application appearance-provider change.
   The adjacent sun/moon Theme toggle proposes an explicit opposite light/dark
   choice, including when System was selected, and retains focus after changing.
+- **Smart inputs** shows the original URL and weight fields with a prefix and
+  suffix. Edits change only the value inside the field.
 - The sidebar changes pages. At narrow widths, open it with the **Components**
   icon. Selecting a page dismisses the drawer.
   Theme segments use Tab, Left/Right, Enter, Space or the pointer; selection

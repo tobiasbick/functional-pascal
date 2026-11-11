@@ -1,0 +1,325 @@
+unit GalleryDialogContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Dialogs as D, Fpas.Ui.ActionFooters as F, Fpas.Ui.Validation as V,
+  Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Find<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control?;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function RequireControl<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control;
+begin
+  const Item: Gui.Control? := Find<TMsg>(Session, Id);
+  if Item = null then
+    raise new Sys.InvalidOperationException('Missing dialog control ' + Id);
+  end if;
+
+  return Item;
+end function;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<bool>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<bool>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Dialog preflight accepted an invalid view.');
+  end procedure;
+begin
+  const Base: E.Element<bool> := E.Text<bool>('Base');
+  const Footer: E.Element<bool> := F.ActionFooter<bool>(B.Button<bool>('done', 'Done', false));
+  Reject(Footer, V.Target.Terminal, 'Graphical profile');
+  Reject(
+    D.Dialog<bool>('dialog', Base, Footer, false, new D.Options('Dialog'), false),
+    V.Target.Portable, 'Graphical profile'
+  );
+  Reject(
+    D.Dialog<bool>(
+      'dialog', B.Button<bool>('done', 'Duplicate', false), Footer, false,
+      new D.Options('Dialog'), false
+    ), V.Target.Graphical, 'Duplicate ID'
+  );
+end procedure;
+
+procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if KeyCode <> 0 then
+      Window.SetKey(KeyCode, true, Modifiers);
+      Window.SetKey(KeyCode, false, Modifiers);
+      KeyCode := 0;
+    end if;
+
+    if Input <> '' then
+      Window.SetKey(0, false);
+      Window.InputText(Input);
+      Input := '';
+    end if;
+  end procedure;
+  procedure Exercise(Session: Gui.Session<State.Msg>);
+    procedure Step();
+    begin
+      Check(Session.Step(), 'The Edit profile gallery closed.');
+    end procedure;
+    function Control(Id: string): Gui.Control;
+    begin
+      return RequireControl<State.Msg>(Session, Id);
+    end function;
+    procedure Click();
+    begin
+      Button := 1;
+      Step();
+      Button := 0;
+      Step();
+      Step();
+    end procedure;
+    procedure Select(Id: string);
+    begin
+      const Area: Cui.CuiRectangle := Control(Id).Bounds;
+      X := Area.X + Area.Width / 2;
+      Y := Area.Y + Area.Height / 2;
+      Click();
+    end procedure;
+    function Notifications(): int;
+    begin
+      var Count: int := 0;
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Role = 'toast' and Item.Text = 'Profile updated' then
+          Count := Count + 1;
+        end if;
+      end for;
+
+      return Count;
+    end function;
+  begin
+    Step();
+    const Trigger: string := 'edit-profile-open';
+    const Dialog: string := 'edit-profile';
+    const Name: string := 'edit-profile-name';
+    const Cancel: string := 'edit-profile-cancel';
+    const Save: string := 'edit-profile-save';
+    Select(Trigger);
+    const Panel: Cui.CuiRectangle := Control(Dialog).Bounds;
+    const Left: Cui.CuiRectangle := Control(Cancel).Bounds;
+    const Right: Cui.CuiRectangle := Control(Save).Bounds;
+    Check(
+      Panel.Width = 440 and Sys.Math.Abs(Panel.X + Panel.Width / 2 - 500) < 1
+      and Sys.Math.Abs(Panel.Y + Panel.Height / 2 - 450) < 1, 'The native dialog must be centered.'
+    );
+    Check(
+      Left.Y = Right.Y and Sys.Math.Abs(Left.X + Left.Width + 8 - Right.X) < 1
+      and Sys.Math.Abs(Right.X + Right.Width + 24 - Panel.X - Panel.Width) < 1,
+      'The native footer must align its actions to the trailing edge with the original spacing.'
+    );
+    Check(
+      not Control(Trigger).Enabled and not Control('sheet-open').Enabled and Control(
+        D.CloseId(Dialog)
+      ).Focused,
+      'The dialog must take focus and disable background actions.'
+    );
+    Session.CapturePng(Capture + '.edit-profile.png');
+
+    Select(Name);
+    KeyCode := 15;
+    Modifiers := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+    Step();
+    Input := 'Gallery editor';
+    Step();
+    Step();
+    Check(Control(Name).Value = 'Gallery editor', 'The dialog must edit the shared profile name.');
+    KeyCode := 3;
+    Modifiers := 0;
+    Step();
+    Check(
+      Find<State.Msg>(Session, Dialog) <> null and not Control(Name).Focused,
+      'The first Escape must leave the text field.'
+    );
+    KeyCode := 3;
+    Step();
+    Step();
+    Step();
+    Check(
+      Find<State.Msg>(Session, Dialog) = null and Control(Trigger).Focused and Notifications() = 0,
+      'The next Escape must close the dialog and return focus to the trigger.'
+    );
+
+    Select(Trigger);
+    Check(
+      Control(Name).Value = 'Gallery editor',
+      'Reopening must show the retained gallery value.'
+    );
+    Select(Cancel);
+    Check(
+      Find<State.Msg>(Session, Dialog) = null and Notifications() = 0,
+      'Cancel must close without notifying.'
+    );
+    Select(Trigger);
+    Select(D.CloseId(Dialog));
+    Check(
+      Find<State.Msg>(Session, Dialog) = null,
+      'The native close button must dismiss the dialog.'
+    );
+    Select(Trigger);
+    X := 5.0F;
+    Y := 5.0F;
+    Click();
+    Check(Find<State.Msg>(Session, Dialog) = null, 'The native scrim must dismiss the dialog.');
+
+    Select(Trigger);
+    Select('edit-profile-public');
+    Check(
+      Control('edit-profile-public').Value = 'false',
+      'The native switch must update the shared model.'
+    );
+    Select(Save);
+    Step();
+    Check(
+      Find<State.Msg>(Session, Dialog) = null and Control(Trigger).Focused and Notifications() = 1,
+      'Save changes must close, restore focus and emit one success toast.'
+    );
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var KeyCode: int := 0;
+  var Modifiers: int := 0;
+  var Input: string := '';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Edit profile',
+    1000,
+    900,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Exercise(Session);
+end procedure;
+
+procedure VerifyPersistent(Renderer: Cui.CuiRenderer);
+  function Update(Open: bool; Message: bool): App.Transition<bool, bool>;
+  begin
+    return new App.Transition<bool, bool>(Message, []);
+  end function;
+  function Build(Open: bool; Viewport: L.Viewport): E.Element<bool>;
+  begin
+    return D.Dialog<bool>(
+      'persistent',
+      E.Text<bool>('Base'),
+      F.ActionFooter<bool>(B.Button<bool>('done', 'Done', false)),
+      Open,
+      new D.Options('Persistent', Persistent := true, CloseButton := false, InitialFocus := 'done'),
+      false
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Event = 1 then
+      Window.SetKey(3, true);
+      Window.SetKey(3, false);
+    elsif Event = 2 or Event = 3 then
+      Window.SetLeftButton(Event = 2);
+    end if;
+
+    Event := 0;
+  end procedure;
+  procedure Step(Session: Gui.Session<bool>);
+  begin
+    Check(Session.Step(), 'The persistent dialog fixture closed.');
+  end procedure;
+begin
+  var X: float := 5.0F;
+  var Y: float := 5.0F;
+  var Event: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI persistent dialog',
+    360,
+    480,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+    true,
+    Update,
+    Build,
+    Window,
+    32,
+    Inject
+  );
+  Step(Session);
+  const Panel: Cui.CuiRectangle := RequireControl<bool>(Session, 'persistent').Bounds;
+  Check(
+    Panel.Width = 328 and Find<bool>(Session, 'persistent/close') = null
+    and RequireControl<bool>(Session, 'done').Focused,
+    'The dialog must fit a narrow window and honor its focus and close options.'
+  );
+  Event := 1;
+  Step(Session);
+  Event := 2;
+  Step(Session);
+  Event := 3;
+  Step(Session);
+  Step(Session);
+  Check(
+    Find<bool>(Session, 'persistent') <> null,
+    'Escape and the scrim must leave a persistent dialog open.'
+  );
+  const Done: Cui.CuiRectangle := RequireControl<bool>(Session, 'done').Bounds;
+  X := Done.X + Done.Width / 2;
+  Y := Done.Y + Done.Height / 2;
+  Event := 2;
+  Step(Session);
+  Event := 3;
+  Step(Session);
+  Step(Session);
+  Check(
+    Find<bool>(Session, 'persistent') = null,
+    'A footer action must still close a persistent dialog through the model.'
+  );
+end procedure;
+
+// Exercises the real Edit profile example and native dialog options.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the open dialog screenshot.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  Validate();
+  VerifyProfile(Renderer, Capture);
+  VerifyPersistent(Renderer);
+end procedure;
+end unit;

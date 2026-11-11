@@ -462,3 +462,117 @@ consumes any Enter press in the frame in which the native question first opens.
 [CUI confirmation implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_disclosure.c)
 
 - [ ] Verify current upstream and add a regression for opening by keyboard.
+
+## The reveal button accepts clicks in a disabled password field
+
+Reproduced with direct CUI calls on Windows at
+`5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
+
+```c
+#include <cui.h>
+#include <stdint.h>
+#include <stdio.h>
+
+enum { width = 320, height = 100 };
+
+static uint64_t frame(cui_ctx *ui, cui_sw_renderer *sw) {
+    char value[16] = "sample";
+    cui_begin_frame(ui, 0.016f);
+    cui_input(ui, "field", value, sizeof value, .password = true, .disabled = true);
+    cui_end_frame(ui);
+    unsigned char pixels[width * height * 4];
+    cui_sw_render(sw, cui_get_draw_data(ui), pixels, width, height, width * 4, CUI_SW_RGBA);
+    uint64_t hash = 0;
+    for (int y = 4; y < 32; ++y)
+        for (int x = 12; x < 120; ++x)
+            for (int c = 0; c < 3; ++c)
+                hash = hash * 31 + pixels[4 * (y * width + x) + c];
+    return hash;
+}
+
+int main(void) {
+    cui_sw_renderer *sw = cui_sw_create();
+    cui_ctx *ui = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(sw) });
+    cui_set_viewport(ui, width, height, 1);
+    cui_set_reduced_motion(ui, true);
+    frame(ui, sw);
+    uint64_t masked = frame(ui, sw);
+    cui_rect field = cui_last_rect(ui);
+    cui_input_mouse_move(ui, field.x + field.w - 19, field.y + field.h / 2);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    frame(ui, sw);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    uint64_t released = frame(ui, sw);
+    uint64_t next = frame(ui, sw);
+    printf("Disabled field text changed on release: %d\n", released != masked);
+    printf("Disabled field text changed on next frame: %d\n", next != masked);
+    cui_destroy(ui);
+    cui_sw_destroy(sw);
+}
+```
+
+```text
+Disabled field text changed on release: 0
+Disabled field text changed on next frame: 1
+```
+
+The probe clicks the eye and compares only the field's text region. The
+editor honors `disabled`, but the reveal button is drawn after the editor's
+disabled scope ends. The click changes the reveal state and the next frame
+paints the unmasked value. The FPAS adapter disables the complete native field
+scope, including the eye. [CUI text field implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_textedit.c)
+
+- [ ] Verify current upstream and cover pointer and keyboard input on the
+  disabled reveal button.
+
+## A dialog can require three Escape presses after editing
+
+Reproduced with direct CUI calls on Windows at
+`5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
+
+```c
+#include <cui.h>
+#include <stdio.h>
+
+static void frame(cui_ctx *ui, bool *open, bool escape) {
+    char value[32] = "Example";
+    if (escape) {
+        cui_input_key(ui, CUI_KEY_ESCAPE, true, 0);
+        cui_input_key(ui, CUI_KEY_ESCAPE, false, 0);
+    }
+    cui_begin_frame(ui, 0.016f);
+    cui_dialog(ui, "Edit profile", open) {
+        cui_input(ui, "name", value, sizeof value, .autofocus = true);
+    }
+    cui_end_frame(ui);
+}
+
+int main(void) {
+    cui_sw_renderer *sw = cui_sw_create();
+    cui_ctx *ui = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(sw) });
+    cui_set_viewport(ui, 640, 480, 1);
+    cui_set_reduced_motion(ui, true);
+    bool open = true;
+    frame(ui, &open, false);
+    for (int press = 1; press <= 3; ++press) {
+        frame(ui, &open, true);
+        printf("Escape %d: open=%d, editor=%d\n", press, open, cui_wants_keyboard(ui));
+    }
+    cui_destroy(ui);
+    cui_sw_destroy(sw);
+}
+```
+
+```text
+Escape 1: open=1, editor=1
+Escape 2: open=1, editor=0
+Escape 3: open=0, editor=0
+```
+
+The first Escape drops the field's focus. The frame still records an active
+editor, so a second Escape arriving in the next frame is suppressed by the
+dialog. The FPAS text field adapter clears the edit marker when the editor
+loses focus. [CUI editor implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_textedit.c)
+
+- [ ] Verify current upstream and exercise consecutive Escape events without
+  an intervening idle frame.

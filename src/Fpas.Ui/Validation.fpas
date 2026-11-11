@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.TextFieldRules as FieldRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -57,6 +57,53 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
   procedure CheckNode(Node: E.Element<TMsg>; Location: string);
   begin
     case Node of
+      when E.Element.Dialog(
+        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        _, const Settings: Dialogs.Options, _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/dialog');
+        const At: string := Identify(Id, Location + '/dialog');
+        if Settings.CloseButton then
+          discard Identify(Dialogs.CloseId(Id), At + '/close');
+        end if;
+
+        Rules.CheckText(Settings.Title, At + '/title');
+        Rules.CheckText(Settings.Description, At + '/description');
+        const Initial: string? := Settings.InitialFocus;
+        if Initial <> null then
+          Rules.CheckText(Initial, At + '/initialFocus');
+        end if;
+
+        if Settings.Width <= 0 then
+          Rules.Reject(At, 'A dialog needs a positive width.');
+        end if;
+
+        Visit(Base, At + '/base');
+        Visit(Content, At + '/content');
+      when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+        const At: string := Location + '/actionFooter';
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], At + '[' + Index.ToString() + ']');
+        end for;
+      when E.Element.TextField(
+        const Id: string,
+        const Value: string,
+        _,
+        const Settings: TextFields.Options,
+        _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/textField');
+        const At: string := Identify(Id, Location + '/textField');
+        if Settings.Clearable then
+          discard Identify(TextFields.ClearId(Id), At + '/clear');
+        end if;
+
+        if Settings.Password then
+          discard Identify(TextFields.RevealId(Id), At + '/reveal');
+        end if;
+
+        FieldRules.Check(Value, Settings, At);
       when E.Element.Contextual(
         const Id: string,
         const Child: E.Element<TMsg>,

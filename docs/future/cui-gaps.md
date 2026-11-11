@@ -237,7 +237,11 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 ### Inputs and pickers
 
-- [ ] Text field, including password mode, prefix, and suffix (`cui_input`)
+- [x] Text field, including password mode, prefix, and suffix (`cui_input`):
+  [API][fpas-text-field]. Inputs shows the responsive text fields. Smart inputs
+  shows the original prefix and suffix examples. Windows Software and OpenGL
+  cover Unicode editing, submission, read-only input and password reveal.
+  TUI: deferred; graphical profile required.
 - [ ] Search field, including prefix and suffix (`cui_search`)
 - [ ] Text area, including prefix and suffix (`cui_textarea`)
 - [ ] Number field, including suffix (`cui_number`)
@@ -320,7 +324,11 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   original icon toolbar and its shortcut hints. Windows Software and OpenGL
   cover cold hover, warm handoff and anchor input. TUI: deferred; graphical
   profile required.
-- [ ] Dialog and action footer (`cui_dialog`, `cui_dialog_footer`)
+- [x] Dialog and action footer (`cui_dialog`, `cui_dialog_footer`):
+  [API][fpas-dialog]. Overlays shows the original Edit profile example.
+  Windows Software and OpenGL cover footer alignment, focus return, Escape,
+  scrim and close dismissal, and the Save changes toast. TUI: deferred;
+  graphical profile required.
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
 - [ ] Command palette (`cui_command_palette`)
@@ -538,6 +546,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-menu]: ../../src/Fpas.Ui/README.md#dropdown-menu
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
 [fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
+[fpas-text-field]: ../../src/Fpas.Ui/README.md#text-field
+[fpas-dialog]: ../../src/Fpas.Ui/README.md#dialog-and-action-footer
 [fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
 [gui-gallery-test]: ../../tests/Fixtures/gui-host/PublishedGallery.fpas

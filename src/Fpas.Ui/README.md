@@ -36,12 +36,14 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Context menu attached to a component | | | Yes |
 | Popover and confirmation popover anchored to a button | | | Yes |
 | Tooltip attached to a single control | | | Yes |
+| Single-line text fields with labels, validation, affixes and password reveal | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
 | Tabs, breadcrumb, pagination and stepper | | | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
+| Centered modal dialog and action footer | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
 | Selection chips, whole-star ratings and wrapping rows | | | Yes |
@@ -541,6 +543,45 @@ warm. The caption and shortcut must fit in 255 UTF-8 bytes together,
 including six separator bytes when a shortcut is supplied. The caption
 must be nonblank and cannot contain the separator `  ·  `. This wrapper
 requires the Graphical profile.
+
+## Dialog and action footer
+
+`Fpas.Ui.Dialogs.Dialog<TMsg>(Id, Base, Content, Open, Settings, OnDismiss)`
+presents a centered CUI modal above `Base`. The model controls `Open`.
+Keep `Content` available during the exit transition. The host disables the
+underlying view, moves focus into the dialog and restores focus on closure.
+`InitialFocus` can target an enabled control in the body or footer.
+
+CUI fits the requested width to the viewport. Escape, the native close
+button and a click on the scrim propose `OnDismiss`. A focused text field
+handles Escape before the dialog. `Persistent` suppresses Escape and scrim
+dismissal. Set `CloseButton` to false to hide the native close action.
+
+`Fpas.Ui.ActionFooters.ActionFooter<TMsg>(Children)` lays out the supplied
+actions in CUI's right-aligned row with an eight-point top inset and an
+eight-point gap. Cancel and Save can close a dialog through their ordinary
+application messages. Both elements require the Graphical profile.
+
+## Text field
+
+`Fpas.Ui.TextFields.TextField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+draws a CUI single-line editor. Set the caption, placeholder, leading icon,
+hint, error, prefix and suffix through `Options`. An error replaces the hint.
+The editable value excludes the prefix and suffix. Use shared layout options
+to size the field.
+
+CUI handles caret motion, selection, clipboard input and undo. The host
+delivers an edit before the optional Enter submission, which receives the
+same resulting text. An external replacement clears the old undo history
+and moves the caret to the end of the new value. Read-only fields retain
+focus and selection. Disabled fields block input to the editor and its
+buttons.
+
+Values are single lines bounded by `MaxUtf8Bytes`, excluding the terminator.
+The default is 255 bytes. Password fields support up to 341 bytes so CUI can
+measure the masked caret and selection. The native eye can reveal the value
+on screen. GUI snapshots omit password values even when revealed. This
+widget requires the Graphical profile.
 
 ## Scrolling
 

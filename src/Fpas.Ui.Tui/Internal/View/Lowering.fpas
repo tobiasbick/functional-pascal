@@ -196,6 +196,12 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException('Context menus require the graphical profile.');
       when Ui.Element.Hinted(_, _, _):
         raise new Sys.NotSupportedException('Tooltip requires the graphical profile.');
+      when Ui.Element.TextField(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Text fields require the graphical profile.');
+      when Ui.Element.Dialog(_, _, _, _, _, _), Ui.Element.ActionFooter(_):
+        raise new Sys.NotSupportedException(
+          'Dialogs and action footers require the graphical profile.'
+        );
       when Ui.Element.Popover(_, _, _, _, _, _), Ui.Element.ConfirmPopover(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Popovers require the graphical profile.');
       when Ui.Element.Toggles(_, _, _, _, _):

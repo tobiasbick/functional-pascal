@@ -31,7 +31,7 @@ public type State<TMsg> = record
   public Interactive: bool;
   // The sole modal scope permitted to accept input.
   public ActiveModal: string?;
-  // Draw a closing sheet without publishing its controls or opening nested layers.
+  // Draw a closing overlay without publishing its controls or opening nested layers.
   public PaintingClosed: bool := false;
 end record;
 

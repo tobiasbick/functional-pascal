@@ -33,7 +33,9 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Context menus attached to existing target components, using the same menu entries.
 - Anchored popovers with model-owned visibility and native confirmation questions.
 - Native hover tooltips with optional shortcut key hints.
+- Single-line text fields with native editing, validation text, affixes and password reveal.
 - Sidebar navigation and edge sheets/drawers.
+- Centered modal dialogs with native action footers and focus return.
 - Underline and pill tabs, breadcrumb links, responsive pagination and steppers.
 - Native toasts with stacking, hover pause and an optional timed action.
 - Text, separators, wrapping rows, columns, sizing, borders, semantic styles and scrolling

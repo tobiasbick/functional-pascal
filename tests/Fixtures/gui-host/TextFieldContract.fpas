@@ -1,0 +1,395 @@
+unit GalleryTextFieldContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Validation as V, Fpas.Ui.TextFields as F, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  System as Sys, System.Collections.Generic as Lists;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Control<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing text field control ' + Id);
+end function;
+
+function HasLabel(Session: Gui.Session<State.Msg>; Text: string): bool;
+begin
+  for Label: string in Session.Snapshot().Text do
+    if Label = Text then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<string>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<string>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Text field preflight accepted an invalid view.');
+  end procedure;
+begin
+  const Identity: function(string): string := function(Value: string): string => Value;
+  Reject(F.TextField<string>('field', '', Identity), V.Target.Terminal, 'Graphical profile');
+  Reject(
+    F.TextField<string>('field', 'é', Identity, new F.Options(MaxUtf8Bytes := 1)),
+    V.Target.Graphical, 'exceeds its UTF-8 capacity'
+  );
+  Reject(
+    F.TextField<string>('field', 'line' + Sys.Environment.NewLine, Identity),
+    V.Target.Graphical, 'single-line'
+  );
+end procedure;
+
+procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if KeyCode <> 0 then
+      Window.SetKey(KeyCode, true, Modifiers);
+      Window.SetKey(KeyCode, false, Modifiers);
+      KeyCode := 0;
+    end if;
+
+    if Input <> '' then
+      Window.SetKey(0, false);
+      Window.InputText(Input);
+      Input := '';
+    end if;
+  end procedure;
+  procedure Exercise(Session: Gui.Session<State.Msg>);
+    procedure Step();
+    begin
+      Check(Session.Step(), 'The text field gallery closed.');
+    end procedure;
+    procedure Key(Code: int; Mods: int := 0);
+    begin
+      KeyCode := Code;
+      Modifiers := Mods;
+      Step();
+      Step();
+    end procedure;
+    procedure TypeText(Value: string);
+    begin
+      Input := Value;
+      Step();
+      Step();
+    end procedure;
+    procedure Click(Id: string);
+    begin
+      const Area: Cui.CuiRectangle := Control<State.Msg>(Session, Id).Bounds;
+      X := Area.X + Area.Width / 2;
+      Y := Area.Y + Area.Height / 2;
+      Left := 1;
+      Step();
+      Left := 0;
+      Step();
+      Step();
+    end procedure;
+  begin
+    Step();
+    const Name: Gui.Control := Control<State.Msg>(Session, 'input-name');
+    const Email: Gui.Control := Control<State.Msg>(Session, 'input-email');
+    Check(
+      Name.Bounds.Y = Email.Bounds.Y and Email.Bounds.X > Name.Bounds.X
+      and Name.Bounds.Width = Email.Bounds.Width and HasLabel(
+        Session,
+        'We never share your email.'
+      ),
+      'The original text fields must use two columns with the email hint.'
+    );
+    Session.CapturePng(Capture + '.text-fields.png');
+
+    Click('input-name');
+    Key(15, Primary);
+    TypeText('Zoë 🐱');
+    Check(
+      Control<State.Msg>(Session, 'input-name').Value = 'Zoë 🐱',
+      'Typing must preserve UTF-8.'
+    );
+    Key(4);
+    Check(
+      Control<State.Msg>(Session, 'input-name').Value = 'Zoë ',
+      'Backspace must remove the complete code point.'
+    );
+    Key(40, Primary);
+    Check(
+      Control<State.Msg>(Session, 'input-name').Value = 'Zoë 🐱',
+      'Undo must restore the edited text.'
+    );
+    Key(15, Primary);
+    TypeText('x');
+    discard Session.Post(State.Msg.SetName('éZ'));
+    Step();
+    TypeText('!');
+    Check(
+      Control<State.Msg>(Session, 'input-name').Value = 'éZ!',
+      'A model replacement must reset stale UTF-8 offsets.'
+    );
+
+    Click('input-password');
+    TypeText('sample');
+    const Reveal: string := F.RevealId('input-password');
+    Check(
+      HasLabel(Session, 'Use 8 or more characters.')
+      and Control<State.Msg>(Session, 'input-password').Value = '',
+      'The password must report its error without exposing its value.'
+    );
+    Click(Reveal);
+    Check(
+      Control<State.Msg>(Session, Reveal).Text = 'Hide password'
+      and Control<State.Msg>(
+        Session,
+        'input-password'
+      ).Value = '' and not HasLabel(Session, 'sample'),
+      'Revealing the password must change the native action without exposing its value in the snapshot.'
+    );
+    Click(Reveal);
+    Check(
+      Control<State.Msg>(Session, Reveal).Text = 'Show password',
+      'The eye must mask the password again.'
+    );
+
+    discard Session.Post(State.Msg.Show(State.Page.SmartInputs));
+    Step();
+    Step();
+    Check(
+      Control<State.Msg>(Session, 'input-url').Bounds.Width = 260
+      and Control<State.Msg>(Session, 'input-weight').Bounds.Width = 120
+      and HasLabel(Session, 'https://') and HasLabel(Session, 'kg'),
+      'The original affixes and field widths must be visible.'
+    );
+    Session.CapturePng(Capture + '.text-affixes.png');
+    Click('input-url');
+    Key(15, Primary);
+    TypeText('example.com');
+    Check(
+      Control<State.Msg>(Session, 'input-url').Value = 'example.com',
+      'The displayed prefix must remain outside the value.'
+    );
+  end procedure;
+begin
+  const Primary: int := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var KeyCode: int := 0;
+  var Modifiers: int := 0;
+  var Input: string := '';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI text fields',
+    1000,
+    760,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Inputs),
+    State.Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Exercise(Session);
+end procedure;
+
+type Msg = variant
+  Edit(Value: string);
+  Submit(Value: string);
+  Focus;
+end variant;
+
+procedure VerifyOptions(Renderer: Cui.CuiRenderer);
+  function Update(Value: string; Message: Msg): App.Transition<string, Msg>;
+  begin
+    case Message of
+      when Msg.Edit(const Text: string):
+        Events.Add('edit:' + Text);
+        return new App.Transition<string, Msg>(Text, []);
+      when Msg.Submit(const Text: string):
+        Events.Add('submit:' + Text);
+      when Msg.Focus:
+        return new App.Transition<string, Msg>(Value, [App.Focus<Msg>('edit')]);
+    end case;
+
+    return new App.Transition<string, Msg>(Value, []);
+  end function;
+  function Build(Value: string; Viewport: L.Viewport): E.Element<Msg>;
+  begin
+    return E.Column<Msg>(
+      new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
+      F.TextField<Msg>(
+        'edit',
+        Value,
+        Msg.Edit,
+        new F.Options(Clearable := true, MaxUtf8Bytes := 5),
+        Msg.Submit
+      ),
+      F.TextField<Msg>('read-only', 'fixed', Msg.Edit, new F.Options(ReadOnly := true)),
+      F.TextField<Msg>(
+        'disabled',
+        'sample',
+        Msg.Edit,
+        new F.Options(Password := true, Enabled := false)
+      )
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Submit then
+      Window.SetKey(12, true);
+      Window.SetKey(12, false);
+      Window.InputText('é😀');
+      Window.SetKey(2, true);
+      Window.SetKey(2, false);
+      Submit := false;
+    end if;
+  end procedure;
+  procedure Exercise(Session: Gui.Session<Msg>);
+    procedure Step();
+    begin
+      Check(Session.Step(), 'The text field options fixture closed.');
+    end procedure;
+    procedure Click(Id: string);
+    begin
+      const Area: Cui.CuiRectangle := Control<Msg>(Session, Id).Bounds;
+      X := Area.X + Area.Width / 2;
+      Y := Area.Y + Area.Height / 2;
+      Left := 1;
+      Step();
+      Left := 0;
+      Step();
+      Step();
+    end procedure;
+  begin
+    discard Session.Post(Msg.Focus);
+    Step();
+    Check(
+      Control<Msg>(Session, 'edit').Focused,
+      'The host must focus the editor by its stable ID.'
+    );
+    Submit := true;
+    Step();
+    Step();
+    Check(
+      Events.Count = 2 and Events[0] = 'edit:abé' and Events[1] = 'submit:abé',
+      'Capacity must preserve UTF-8 and Enter must follow the edit with the same text.'
+    );
+    Click(F.ClearId('edit'));
+    Check(
+      Control<Msg>(Session, 'edit').Value = '' and Events.Count = 3 and Events[2] = 'edit:',
+      'The native clear action must update the model.'
+    );
+    Click('read-only');
+    Submit := true;
+    Step();
+    Step();
+    const ReadOnly: Gui.Control := Control<Msg>(Session, 'read-only');
+    Check(
+      ReadOnly.Focused and ReadOnly.Value = 'fixed' and Events.Count = 3,
+      'A read-only field must allow focus without editing.'
+    );
+    Click(F.RevealId('disabled'));
+    Check(
+      Control<Msg>(Session, F.RevealId('disabled')).Text = 'Show password'
+      and not Control<Msg>(Session, F.RevealId('disabled')).Enabled,
+      'A disabled password field must disable its reveal action.'
+    );
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Submit: bool := false;
+  const Events: Lists.List<string> := new Lists.List<string>();
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI text field options',
+    500,
+    260,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<Msg> := Host.Start<string, Msg>(
+    'ab',
+    Update,
+    Build,
+    Window,
+    32,
+    Inject
+  );
+  Exercise(Session);
+end procedure;
+
+procedure VerifyCompact(Renderer: Cui.CuiRenderer);
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI compact text fields',
+    360,
+    680,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Inputs),
+    State.Update,
+    View.Build,
+    Window,
+    32,
+    ThemeFor := State.ThemeFor
+  );
+  Check(Session.Step(), 'The compact text field gallery closed.');
+  const Name: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-name').Bounds;
+  const Email: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-email').Bounds;
+  Check(
+    Name.X = Email.X and Name.Width = Email.Width and Email.Y > Name.Y + Name.Height,
+    'The text fields must stack at compact widths.'
+  );
+end procedure;
+
+// Verifies text editing and presentation with the gallery's actual renderer.
+//
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  Validate();
+  VerifyGallery(Renderer, Capture);
+  VerifyOptions(Renderer);
+  VerifyCompact(Renderer);
+end procedure;
+end unit;

@@ -77,7 +77,8 @@ public sealed class GuiHostTests
         {
             ("actions", 1000, 760), ("selection", 1100, 1360),
             ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
-            ("tooltips", 1000, 840), ("popover", 1000, 900), ("confirm-popover", 1000, 900)
+            ("tooltips", 1000, 900), ("popover", 1000, 900), ("confirm-popover", 1000, 900),
+            ("text-fields", 1000, 760), ("text-affixes", 1000, 760), ("edit-profile", 1000, 900)
         })
         {
             string pageCapture = galleryCapture + "." + page + ".png";

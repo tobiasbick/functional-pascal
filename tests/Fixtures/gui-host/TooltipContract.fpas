@@ -80,7 +80,7 @@ begin
   var Y: float := -1.0F;
   var Button: int := -1;
   var Presses: int := 0;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI tooltip gallery', 1000, 840, Renderer);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI tooltip gallery', 1000, 900, Renderer);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Overlays), Update, View.Build, Window, 256, Inject,

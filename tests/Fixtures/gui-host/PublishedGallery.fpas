@@ -10,6 +10,8 @@ uses
   GalleryToastContract as ToastContract,
   GalleryTooltipContract as TooltipContract,
   GalleryPopoverContract as PopoverContract,
+  GalleryTextFieldContract as TextFieldContract,
+  GalleryDialogContract as DialogContract,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Session as Mvu, Fpas.Ui.Themes as Themes,
@@ -79,7 +81,7 @@ begin
     end if;
   end for;
 
-  Check(Pages = 7, 'Only the confirmed gallery destinations should be visible.');
+  Check(Pages = 9, 'Only the confirmed gallery destinations should be visible.');
   const Overview: Gui.Control := Control(Session, 'navigation', 'overview');
   const Buttons: Gui.Control := Control(Session, 'navigation', 'buttons');
   Check(
@@ -422,6 +424,8 @@ begin
   ToastContract.Verify(Renderer, Capture);
   TooltipContract.Verify(Renderer, Capture);
   PopoverContract.Verify(Renderer, Capture);
+  TextFieldContract.Verify(Renderer, Capture);
+  DialogContract.Verify(Renderer, Capture);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(

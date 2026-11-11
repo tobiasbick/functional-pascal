@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,6 +17,10 @@ uses Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCard
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.TextField(const Id: string, _, _, const Settings: TextFields.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
     when E.Element.CopyAction(const Id: string, _, _, const Enabled: bool):
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -226,7 +230,9 @@ begin
       const Children: array of E.Element<TMsg>,
       _,
       _
-    ), E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
+    ), E.Element.ButtonGroup(
+      const Children: array of E.Element<TMsg>
+    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
       for Child: E.Element<TMsg> in Children do
         const Found: string? := First<TMsg>(Child, Prepared, Preferred);
         if Found <> null then
@@ -251,6 +257,19 @@ begin
       const Found: string? := First<TMsg>(Trigger, Prepared, Preferred);
       if Found <> null or not Open then
         return Found;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.Dialog(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, const Settings: Dialogs.Options, _
+    ):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+      const Close: string := Dialogs.CloseId(Id);
+      if Settings.CloseButton and (Preferred = null or Preferred = Close) then
+        return Close;
       end if;
 
       return First<TMsg>(Content, Prepared, Preferred);
@@ -302,13 +321,20 @@ begin
     when E.Element.Sheet(
       const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
       const Open: bool, _, _
+    ), E.Element.Dialog(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, _, _
     ):
       if not Open then
         return TopModal<TMsg>(Base, Prepared);
       end if;
       const Inner: string? := TopModal<TMsg>(Content, Prepared);
       return if Inner = null then Id else Inner end if;
-    when E.Element.Stack(const Children: array of E.Element<TMsg>, _, _):
+    when E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
       var Found: string? := null;
       for Child: E.Element<TMsg> in Children do
         const Next: string? := TopModal<TMsg>(Child, Prepared);

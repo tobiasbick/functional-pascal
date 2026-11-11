@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.ConfirmButton;
 
-uses
-  Fpas.Ui.ConfirmButtons as Buttons, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C;
+uses Fpas.Ui.ConfirmButtons as Buttons, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C;
 
 // Draws native confirmation and proposes a message only after its second activation.
 //

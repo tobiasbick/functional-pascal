@@ -1,31 +1,5 @@
 #include "fpas_cui.h"
 
-int fpas_cui_control(cui_ctx *ui, const char *id, const char *text, int kind,
-                    int enabled, int selected, int variant, int focus) {
-    if (kind != 1 && kind != 2) {
-        int activated = fpas_cui_button(ui, id, text, variant, CUI_SIZE_MD, enabled, 0, selected, focus,
-                                        NULL, NULL, NULL, NULL, 0, -1, 0);
-        return activated | (selected ? 2 : 0);
-    }
-    cui_id key = cui_make_id(ui, id);
-    if (kind == 1) key ^= 0xC0EC0001u;
-    if (kind == 2) key ^= 0x115E0008u;
-    if (!enabled && ui->focus == key) ui->focus = 0;
-    if (focus && enabled) ui->focus_next_request = key;
-    cui_push_disabled(ui, !enabled);
-    bool activated = false, value = selected != 0;
-    if (kind == 1) {
-        activated = cui_checkbox_ex(ui, id, &value, NULL);
-    } else {
-        const cui_list_item_opts options = { .selected = value };
-        activated = cui_list_item_ex(ui, id, &options);
-    }
-    cui_pop_disabled(ui);
-    int node = fpas_find(ui, key);
-    if (node >= 0) fpas_literal(ui, node, text, CUI_C(ui, FOREGROUND));
-    return (activated ? 1 : 0) | (value ? 2 : 0);
-}
-
 int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed) {
     const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
         .pad = padding, .gap = gap, .align = (cui_align)align,
@@ -61,8 +35,6 @@ void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float b
     }
 }
 
-void fpas_cui_preferred_width(cui_ctx *ui, int node, float width) { ui->nodes[node].pref_hint = width; }
-
 void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
     if (role == 0) return;
     cui_node *n = &ui->nodes[node];
@@ -96,33 +68,6 @@ int fpas_cui_hovered(cui_ctx *ui, int node) { return node >= 0 && node < ui->nod
 
 unsigned int fpas_cui_node_key(cui_ctx *ui, int node) { return ui->nodes[node].id; }
 
-void fpas_cui_forget(cui_ctx *ui, unsigned int key) {
-    if (!key) return;
-    int bucket = (int)(key & (uint32_t)(ui->bucket_count - 1));
-    int *link = &ui->state_buckets[bucket];
-    while (*link >= 0) {
-        int index = *link;
-        cui_state_entry *entry = &ui->states[index];
-        if (entry->id != key) { link = &entry->next; continue; }
-        *link = entry->next;
-        if (ui->edit == entry->data) { ui->edit = NULL; ui->edit_prev = false; }
-        if (ui->focus == key) ui->focus = 0;
-        if (ui->active == key) ui->active = 0;
-        if (entry->dtor && entry->data) entry->dtor(ui, entry->data);
-        cui__free(ui, entry->data);
-        memset(entry, 0, sizeof *entry);
-        entry->next = ui->state_free;
-        ui->state_free = index;
-        return;
-    }
-}
-
-void fpas_cui_editor_options(cui_ctx *ui, const char *id, int enabled, int focus) {
-    if (!enabled && ui->focus == cui_make_id(ui, id)) ui->focus = 0;
-    if (focus && enabled) ui->focus_next_request = cui_make_id(ui, id);
-    cui_push_disabled(ui, !enabled);
-}
-
 void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, float *current, float *maximum) {
     cui_scroll_state *state = cui_state(ui, cui_make_id(ui, id), sizeof *state);
     *maximum = CUI_MAX(0, state->content_h - state->view_h);
@@ -133,46 +78,11 @@ void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, 
     }
 }
 
-int fpas_cui_modal_begin(cui_ctx *ui, const char *id, int open) {
-    bool visible = open != 0;
-    const cui_dialog_opts options = { .persistent = true, .no_close_button = true };
-    return cui_dialog_begin(ui, id, &visible, &options);
-}
-
 unsigned int fpas_cui_modal_key(cui_ctx *ui) { return ui->current_layer; }
 
-typedef struct { int count; const fpas_paint *items; } fpas_canvas;
-static void fpas_canvas_paint(cui_ctx *ui, cui_rect rect, void *user) {
-    const fpas_canvas *canvas = user;
-    cui_push_clip(ui, rect);
-    for (int i = 0; i < canvas->count; ++i) {
-        const fpas_paint *p = &canvas->items[i];
-        cui_color color = cui__rgba(p->color & 255, (p->color >> 8) & 255, (p->color >> 16) & 255, p->color >> 24);
-        if (p->kind == 0) cui_draw_rect(ui, (cui_rect){rect.x + p->a, rect.y + p->b, p->c, p->d}, CUI_CORNERS(0), color);
-        else cui_draw_line(ui, (cui_vec2){rect.x + p->a, rect.y + p->b}, (cui_vec2){rect.x + p->c, rect.y + p->d}, p->thickness, color);
-    }
-    cui_pop_clip(ui);
-}
-
-void fpas_cui_canvas(cui_ctx *ui, const char *id, float width, float height, const fpas_paint *items, int count) {
-    fpas_paint *copy = cui__frame_alloc(ui, sizeof *copy * (size_t)count);
-    if (count) memcpy(copy, items, sizeof *copy * (size_t)count);
-    const fpas_canvas canvas = { count, copy };
-    cui_canvas(ui, id, CUI_PX(width), CUI_PX(height), fpas_canvas_paint, &canvas, sizeof canvas);
-}
-
 int fpas_cui_focus_key(cui_ctx *ui, unsigned int key) { return key && ui->focus == key; }
-int fpas_cui_activate(cui_ctx *ui) { return cui_key_pressed(ui, CUI_KEY_ENTER) || ui->click_count >= 2; }
+
 void fpas_cui_host_begin(cui_ctx *ui) { ui->prev_modal_layer = 0; }
-int fpas_cui_choice_row(cui_ctx *ui, const char *id, int enabled, int selected, int focus, int *events) {
-    *events = fpas_cui_control(ui, id, "", 2, enabled, selected, 0, focus);
-    int node = ui->last_node;
-    cui_node *n = &ui->nodes[node];
-    n->first = n->last = -1; n->child_count = 0; n->dir = CUI_ROW;
-    n->gap = 8;
-    cui__open(ui, node);
-    return node;
-}
 
 static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
     (void)data;
@@ -214,8 +124,4 @@ void fpas_cui_scroll_metrics(cui_ctx *ui, int node, float *offset, float *maximu
     cui_scroll_state *state = cui_state(ui, ui->nodes[node].id, sizeof *state);
     *offset = state->ty;
     *maximum = CUI_MAX(0, state->content_h - state->view_h);
-}
-
-float fpas_cui_measure_text(cui_ctx *ui, const char *text) {
-    return cui__text_width(ui, CUI_FONT_MEDIUM, cui__fs(ui, ui->theme.text_body), text, (int)strlen(text), false);
 }

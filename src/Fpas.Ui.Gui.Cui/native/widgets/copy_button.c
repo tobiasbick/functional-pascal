@@ -14,5 +14,6 @@ int fpas_cui_copy_button(cui_ctx *ui, const char *id, const char *text, int enab
     cui_push_disabled(ui, !allowed);
     const bool clicked = cui_copy_button(ui, id, text);
     cui_pop_disabled(ui);
+    fpas_own(ui, ui->nodes[ui->last_node].id, feedback, 0, 0);
     return (clicked ? 1 : 0) | (recent ? 2 : 0) | (available ? 4 : 0);
 }

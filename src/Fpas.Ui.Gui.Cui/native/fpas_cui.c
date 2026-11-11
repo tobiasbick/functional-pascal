@@ -18,9 +18,8 @@
 
 #include "bridge.c"
 #include "controls.c"
-#include "image.c"
-#include "text_edit.c"
 #include "widget_nodes.c"
+#include "control_state.c"
 #include "widgets/button.c"
 #include "widgets/button_group.c"
 #include "host_widgets.c"
@@ -32,5 +31,6 @@
 #include "widgets/morph_button.c"
 #include "widgets/confirm_button.c"
 #include "widgets/status_button.c"
+#include "widgets/segmented.c"
 #include "widgets/split_button.c"
 #include "host_theme.c"

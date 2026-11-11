@@ -1,11 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.StatusButton;
 
-uses
-  Fpas.Ui.StatusButtons as B, Fpas.Ui.Internal.StatusButtons as Text,
-  Fpas.Ui.Buttons as Buttons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Buttons as Paint,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+uses Fpas.Ui.StatusButtons as B, Fpas.Ui.Internal.StatusButtons as Text, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Buttons as Paint, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
 
 function Feedback(State: B.Status; Variant: S.ButtonVariant; Theme: Th.Theme): Th.ButtonAppearance?;
 begin

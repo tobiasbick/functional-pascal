@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Sidebar;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Navigation as N;
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Navigation as N;
 
 // Draws a controlled sidebar through native CUI navigation controls.
 //

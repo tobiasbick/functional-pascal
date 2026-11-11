@@ -1,6 +1,6 @@
 program EffectContract;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   StartOriginal;
@@ -161,12 +161,14 @@ end function;
 function View(State: string): E.Element<Msg>;
 begin
   return E.Column<Msg>(
-    E.Text<Msg>(State), E.Button<Msg>('original', 'Original', Msg.StartOriginal),
-    E.Button<Msg>('replacement', 'Replacement', Msg.Replace),
-    E.Button<Msg>('failing', 'Failing', Msg.StartFailure),
-    E.Button<Msg>('until-exit', 'Until exit', Msg.StartUntilExit),
-    E.Button<Msg>('cancel', 'Cancel', Msg.Cancel), E.Button<Msg>('touch', 'Touch', Msg.Touch),
-    E.Button<Msg>('quit', 'Quit', Msg.Quit)
+    E.Text<Msg>(State),
+    UiButtons.Button<Msg>('original', 'Original', Msg.StartOriginal),
+    UiButtons.Button<Msg>('replacement', 'Replacement', Msg.Replace),
+    UiButtons.Button<Msg>('failing', 'Failing', Msg.StartFailure),
+    UiButtons.Button<Msg>('until-exit', 'Until exit', Msg.StartUntilExit),
+    UiButtons.Button<Msg>('cancel', 'Cancel', Msg.Cancel),
+    UiButtons.Button<Msg>('touch', 'Touch', Msg.Touch),
+    UiButtons.Button<Msg>('quit', 'Quit', Msg.Quit)
   );
 end function;
 

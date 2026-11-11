@@ -8,8 +8,8 @@ The solution includes the CUI binding and its tests. Building it also requires
 CMake 3.20 or newer, a C99 compiler and the platform development libraries listed
 in the [native build reference](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
 GUI tests need a display; on headless Linux, run them under Xvfb with software
-OpenGL support. Without `DISPLAY`, window tests are skipped; text-buffer tests
-still run. See the [GUI test reference](../../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
+OpenGL support. Without `DISPLAY`, window tests are skipped. Native tests that
+use no window still run through CTest. See the [GUI test reference](../../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
 Use Xvfb's `-noreset` option to keep the display available between short-lived
 GUI test processes.
 

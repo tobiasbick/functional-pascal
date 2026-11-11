@@ -27,37 +27,3 @@ void fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizo
     };
     cui_scroll_begin(ui, &options);
 }
-
-int fpas_cui_list_item(cui_ctx *ui, const char *label, int selected) {
-    const cui_list_item_opts options = { .selected = selected != 0 };
-    return cui_list_item_ex(ui, label, &options);
-}
-
-int fpas_cui_tab_item(cui_ctx *ui, const char *label, int selected) {
-    const cui_button_opts options = { .variant = CUI_BUTTON_GHOST, .selected = selected != 0 };
-    return cui_button_ex(ui, label, &options);
-}
-
-int fpas_cui_table_begin(cui_ctx *ui, const char *id, const char *const *titles, int count) {
-    if (count <= 0) return 0;
-    /* Keep descriptors and their strings valid while CUI retains the columns. */
-    cui_table_column *columns = cui__frame_alloc(ui, (size_t)count * sizeof *columns);
-    for (int index = 0; index < count; ++index)
-        columns[index].title = cui__frame_strdup(ui, titles[index], -1);
-    const cui_table_opts options = { .selectable = true };
-    return cui_table_begin_ex(ui, id, columns, count, &options);
-}
-
-int fpas_cui_table_row(cui_ctx *ui, int selected) {
-    if (!ui->building.table) return 0;
-    int activated = cui_table_row(ui, selected != 0);
-    ui->last_id = cui__node(ui, cui__current(ui))->id;
-    return activated;
-}
-
-int fpas_cui_dialog_begin(cui_ctx *ui, const char *title, int *open) {
-    bool visible = *open != 0;
-    bool draw = cui_dialog_begin(ui, title, &visible, NULL);
-    *open = visible;
-    return draw;
-}

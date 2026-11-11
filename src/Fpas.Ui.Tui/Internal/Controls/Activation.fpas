@@ -9,6 +9,17 @@ public type IActivatable<TMsg> = protocol
   function Activate(): Result<TMsg>;
 end protocol;
 
+// A composite action whose Left/Right keys move focus to a neighboring action.
+public type IArrowFocus = protocol
+  // Resolves an adjacent application focus identity without changing the model.
+  //
+  // ## Parameters
+  // - `Direction`: Minus one for Left or one for Right.
+  // ## Returns
+  // An adjacent identity, or null at a non-wrapping boundary.
+  function Neighbor(Direction: int): string?;
+end protocol;
+
 public type Direct<TMsg> = record implements IActivatable<TMsg>
   public Message: TMsg;
   // Whether activation is suspended while the widget is busy.
@@ -17,26 +28,6 @@ public type Direct<TMsg> = record implements IActivatable<TMsg>
   public function Activate(): Result<TMsg>;
   begin
     return if self.Busy then Result<TMsg>.NoAction else Result<TMsg>.Send(self.Message) end if;
-  end function;
-end record;
-
-// Defers a checkbox mapper until actual activation.
-//
-// ## Type parameters
-// - `TMsg`: Application message type.
-public type Toggle<TMsg> = record implements IActivatable<TMsg>
-  // Current model value.
-  public Checked: bool;
-  // Typed user-change mapper.
-  public Change: function(bool): TMsg;
-
-  // Proposes the inverted model value exactly once.
-  //
-  // ## Returns
-  // The mapped message.
-  public function Activate(): Result<TMsg>;
-  begin
-    return Result<TMsg>.Send(self.Change(not self.Checked));
   end function;
 end record;
 end unit;

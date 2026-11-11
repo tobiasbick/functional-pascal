@@ -35,34 +35,6 @@ begin
   end for;
 end procedure;
 
-public function PlaceholderStyle(Field: T.Style; Theme: Th.Theme): T.Style;
-begin
-  return if Theme.PlaceholderColor < 0 then Field
-    else new T.Style(Theme.PlaceholderColor, Field.Background)
-    end if;
-end function;
-
-public function SelectionStyle(Selected: bool; Style: T.Style; Widgets: Th.WidgetStyles?): T.Style;
-begin
-  return if Selected and Widgets <> null then Widgets.Selected else Style end if;
-end function;
-
-public procedure ListRow(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
-  Caption: string; Selected: bool; Style: T.Style; Widgets: Th.WidgetStyles?
-);
-begin
-  const Prefix: string := if Selected then if Widgets = null then '* ' else '▸ ' end if
-    else '  '
-    end if;
-  const Color: T.Style := SelectionStyle(Selected, Style, Widgets);
-  if Selected and Widgets <> null then
-    Fill(Operations, F.Intersect(Area, Clip), Color);
-  end if;
-
-  Operations.Add(new Operation(Prefix + Caption, Area, Clip, Color, false));
-end procedure;
-
 function BorderStyle(Style: T.Style; Widgets: Th.WidgetStyles?): T.Style;
 begin
   return if Widgets = null then Style
@@ -143,40 +115,6 @@ begin
   if Area.Height > 1 then
     const Bottom: string := if Rounded then '╰' + Span + '╯' else '+' + Span + '+' end if;
     Line(Bottom, Area.X, Area.Y + Area.Height - 1, Area.Width);
-  end if;
-end procedure;
-
-public procedure Progress(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Percent: int;
-  Style: T.Style; Widgets: Th.WidgetStyles?
-);
-begin
-  const Amount: int := Percent * Area.Width div 100;
-  if Widgets = null then
-    Operations.Add(
-      new Operation(
-        new string(#35, Amount) + new string(#45, Area.Width - Amount), Area, Clip, Style, false
-      )
-    );
-    return;
-  end if;
-
-  if Amount > 0 then
-    Operations.Add(
-      new Operation(
-        new string(#9473, Amount), new F.Rect(Area.X, Area.Y, Amount, 1), Clip,
-        new T.Style(Widgets.ProgressFillColor, Style.Background), false
-      )
-    );
-  end if;
-  const Left: int := Area.Width - Amount;
-  if Left > 0 then
-    Operations.Add(
-      new Operation(
-        new string(#9472, Left), new F.Rect(Area.X + Amount, Area.Y, Left, 1), Clip,
-        new T.Style(Widgets.ProgressTrackColor, Style.Background), false
-      )
-    );
   end if;
 end procedure;
 

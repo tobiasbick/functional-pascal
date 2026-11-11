@@ -1,10 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Session;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P,
-  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime,
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys,
-  System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 function Viewport(Size: Cui.CuiSize): L.Viewport;
 begin
@@ -79,11 +75,7 @@ requires Capacity > 0;
     finally
       Released := true;
       Window.SetResizeRenderer(null);
-      try
-        Resources.Dispose();
-      finally
-        Window.Dispose();
-      end try;
+      Window.Dispose();
     end try;
   end procedure;
 
@@ -123,7 +115,6 @@ requires Capacity > 0;
     const Modal: string? := F.TopModal<TMsg>(Candidate.Tree, Candidate);
     return new C.State<TMsg>(
       Window,
-      Resources,
       Candidate,
       new Generic.List<TMsg>(),
       new Generic.List<string>(),
@@ -145,19 +136,15 @@ requires Capacity > 0;
       return;
     end if;
 
-    Resources.BeginFrame();
     P.Draw<TMsg>(Context(Cached, false));
-    Resources.EndFrame();
   end procedure;
 
   procedure Paint(Candidate: V.Prepared<TMsg>; Accept: bool; Size: Cui.CuiSize);
   begin
-    Resources.BeginFrame();
     const State: C.State<TMsg> := Context(Candidate, Accept);
     P.Draw<TMsg>(State);
     Focus.Clear();
     Window.Present();
-    Resources.EndFrame();
     for Index: int := 0 to State.Controls.Count - 1 do
       const Control: App.Control := State.Controls[Index];
       const Token: string := C.Token(Control.Role, Control.Id, Control.Key);
@@ -179,7 +166,7 @@ requires Capacity > 0;
     FrameId := FrameId + 1L;
     Published := new App.Frame(
       FrameId, Size, State.Labels.ToArray(), State.Controls.ToArray(),
-      Resources.EditorCount, Resources.ImageCount, CurrentTheme
+      CurrentTheme
     );
     for Message: TMsg in State.Messages do
       Pending.Enqueue(Message);
@@ -392,7 +379,6 @@ begin
   const Pending: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
   const Focus: Generic.Queue<string> := new Generic.Queue<string>();
   const Modals: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
-  const Resources: Cui.CuiHostResources := new Cui.CuiHostResources(Window);
   const Core: Runtime.Runtime<TModel, TMsg, bool> := Runtime.Start<TModel, TMsg, bool>(
     InitialModel, Update,
     procedure(Request: Mvu.HostRequest) begin

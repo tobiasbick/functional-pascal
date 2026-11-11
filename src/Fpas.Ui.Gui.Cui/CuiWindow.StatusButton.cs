@@ -4,8 +4,6 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    private readonly HashSet<uint> statusButtons = [];
-
     /// <summary>Draws native inline work feedback with literal captions and stable focus.</summary>
     /// <param name="id">Identity independent of state and captions.</param>
     /// <param name="label">Literal idle caption.</param>
@@ -33,12 +31,6 @@ public sealed partial class CuiWindow
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         int activated = NativeMethods.StatusButton(context, Stable(id), label, status, busyLabel,
             successLabel, errorLabel, icon.Length == 0 ? null : icon, variant, size, enabled ? 1 : 0, focus ? 1 : 0);
-        statusButtons.Add(NativeMethods.NodeKey(context, NativeMethods.LastNode(context)));
         return activated != 0;
-    }
-
-    private void ForgetStatusButton(uint key)
-    {
-        if (statusButtons.Remove(key)) NativeMethods.Forget(context, key ^ 0x57A7u);
     }
 }

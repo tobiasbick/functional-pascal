@@ -1,8 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.CopyButton;
 
-uses
-  Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, System as Sys, System.Collections.Generic as C;
 
 // Clipboard and transient copy feedback owned by one terminal session.
 public type State = record

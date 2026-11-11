@@ -1,92 +1,33 @@
 # Fpas.Ui.Gui.Cui
 
 Low-level .NET 10 binding for the pinned [CUI dependency](../../third-party/cui/UPSTREAM.md).
-It supports the FPAS GUI host and interop fixtures. The application-facing
-MVU/declarative GUI library is [Fpas.Ui.Gui](../Fpas.Ui.Gui/README.md).
+It supports the FPAS GUI host and interop fixtures. Applications use the
+[Fpas.Ui.Gui](../Fpas.Ui.Gui/README.md) MVU/declarative host.
 
 ## Available binding
 
-- `CuiWindow` owns a native window/context. Create, use and dispose it on the
-  same UI thread. `TryWake` can run on a worker. It posts a platform event to
-  unblock an idle `NextFrame`. It returns false once `NextFrame` observes closure
-  or the owner disposes the window. Dispose releases the wake target before
-  destroying the window and is idempotent.
-- A UI thread can own one OpenGL CUI window at a time. A second window with
-  `CuiRenderer.Auto` uses software rendering. A second explicit OpenGL request
-  throws, so it cannot replace the current context of the first window.
-- `NextFrame` presents the preceding view and begins a new one. Close containers
-  in reverse opening order before presenting or capturing a frame. The binding
-  also provides headings, text, buttons and checkboxes.
-- `ListItem` draws the selection state passed by the host and reports whether
-  the item was activated. The host chooses the selection for subsequent frames.
-  Give items distinct `###id` suffixes when they can have the same label.
-- `SplitButton` draws the native main action, chevron and popup. It accepts
-  literal captions separately from stable identities and tracks the visible
-  halves and menu items. Its result distinguishes the main action from a
-  menu choice and reports the popup visibility and highlight.
-- `TabItem` uses the same selection contract for tab buttons in a horizontal row.
-  The host supplies each tab's highlight and chooses the view to draw below it.
-- `BeginTable` copies the UTF-8 column titles into the native frame. `TableRow`
-  starts a row, paints the supplied selection and reports activation. Add text
-  with `TableCell` in column order and finish with `EndTable`. CUI fills omitted
-  cells with empty cells.
-- `BeginScroll` and `EndScroll` wrap a full-width scroll container. Use a fixed
-  height in logical units or zero to fill the available height. CUI scrolls
-  overflowing content vertically, with horizontal scrolling available as an
-  option. To request a vertical offset, call `ScrollTo` before drawing the
-  container in a later frame. Use the same ID and ID scope.
-- `BeginDialog` takes a host-owned open flag and updates it on dismissal. Draw
-  the contents and call `EndDialog` whenever `BeginDialog` returns true. CUI can
-  still draw a closing animation after it clears the open flag. Use a `###id`
-  suffix to keep the dialog identity stable when the title changes.
-- `RequestFocus` takes a stable control ID during an open frame. CUI consumes
-  the request when it next draws a matching focusable control. Call it before
-  drawing the target. A later request replaces a pending one. Characters an
-  editor has handled stay with that editor if focus moves in the same frame.
-- `TextInput` provides single-line editing. `TextArea` wraps multiline text and
-  uses a positive logical height (96 by default). Enter submits a single-line
-  field and inserts a line break in a text area.
-- `CuiTextBuffer` owns bounded, zero-terminated UTF-8 text across frames. The
-  array is pinned during native editing calls; these widgets copy paint text
-  into CUI-owned frame memory. Keep one buffer per stable editor identity and
-  access it on the owning UI thread.
-- `Selection` stores the anchor and caret as UTF-16 offsets. Set it before
-  drawing an editor and read it after the call, including frames where only the
-  selection moved. CUI navigates wrapped lines with the arrow keys, Home and End.
-  The binding snaps reported code-point positions to grapheme boundaries in the
-  direction of movement and uses those positions on the next draw.
-- `SetText` replaces the document and moves the caret to the start. The overload
-  taking `CuiTextSelection` sets both together. The next draw clears the editor's
-  native undo history and scroll offsets. Invalid Unicode, embedded zeros,
-  oversized text or an invalid selection leave the current document intact.
-- `CreateImage` copies tightly packed RGBA8 pixels into a texture owned by the
-  window. `Image` draws it at an explicit size in logical units. Use and dispose
-  images on their owning UI thread. Disposal prevents new draws immediately and
-  releases the texture after the last frame that references it can no longer be
-  replayed. On window disposal, the binding finishes the open frame without
-  presenting it, releases its remaining textures and invalidates any image
-  objects the caller still holds before destroying the renderer.
-- `Size` reports the size observed by the native event loop. `Resize` requests
-  a change asynchronously. `CapturePng` requires an earlier presented frame and
-  closed layouts, and ends the current render frame even when writing fails.
-- Native calls use source-generated interop, explicit C conventions, one-byte
-  native booleans and blittable geometry types. Pointers remain internal.
-- `Present` closes and presents a completed frame without waiting for more
-  input. Track controls with `TrackLastControl` while drawing and use
-  `GetControlRectangle` after presentation for finalized geometry. Tracking
-  expires when the next frame begins. `CapturePng` can capture that presented
-  frame as well as an open completed view. `RequestClose` asks the next native
-  frame pump to stop. Buttons accept an enabled flag for native input gating;
-  `FillLastWidth` applies horizontal fill to a widget in a vertical layout.
-- Host primitives separate literal labels from identity, reconcile shared flex
-  constraints after content measurement, and expose focus/hover, controlled
-  editors, scrolling, modal scopes and frame-copied canvases. `CuiHostResources`
-  owns declarative editor/image lifetimes. These support the single FPAS MVU
-  application path rather than defining a second application API.
-- `DeferClose` keeps the native pump alive during asynchronous cleanup and
-  exposes `CloseRequested`. `WakeWhenCompleted` wakes it when cleanup finishes.
-  `SetResizeRenderer` roots a cached-view callback until detachment; exceptions
-  are captured across the unmanaged boundary and rethrown once by `NextFrame`.
+- CuiWindow owns a native context and window on its creating UI thread.
+  TryWake posts a platform event from workers; disposal releases the wake target
+  before destroying the window. An additional Auto window on an OpenGL-owning
+  thread uses software rendering; a second explicit OpenGL request is rejected.
+- NextFrame pumps events and begins a frame. Close layouts in reverse order;
+  Present completes the view and exposes finalized control rectangles.
+  CapturePng writes the presented view to an existing directory.
+- The binding exposes the accepted button family, theme selectors/toggles,
+  sidebar and sheet widgets. Stable identities are separate from literal labels.
+  Native interaction results become model proposals in the FPAS host.
+  Theme actions compose native segments and icon buttons without a separate
+  widget engine or palette mutation.
+- Text, headings, separators, box sizing, styles and scrolling are composition
+  foundations. The host supplies shared layout constraints to CUI.
+- TrackLastControl and composite tracking expose geometry, focus and hover.
+  ForgetControl releases retained state and owned popup/feedback state for
+  disappearing controls. Private state keys stay in the native bridge.
+- SetTheme/ReadTheme transfer the shared semantic palette. Reduced motion is
+  controlled independently of palette changes.
+- DeferClose, CloseRequested and WakeWhenCompleted support asynchronous cleanup.
+  SetResizeRenderer roots an owner-thread cached-view callback until detachment;
+  failures are surfaced after the native pump returns.
 
 ## Source build and verification
 

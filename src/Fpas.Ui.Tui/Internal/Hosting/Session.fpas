@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -228,7 +228,6 @@ public function Start<TModel, TMsg>(
       var Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
         Candidate,
         Theme,
-        EditorPositions,
         CopyFeedback,
         HoldFeedback,
         SplitMenus,
@@ -242,7 +241,6 @@ public function Start<TModel, TMsg>(
         Root := Lower.Prepare<TMsg>(
           Candidate,
           Theme,
-          EditorPositions,
           CopyFeedback,
           HoldFeedback,
           SplitMenus,
@@ -277,30 +275,6 @@ public function Start<TModel, TMsg>(
     Phase := 'view';
     var Theme: Th.Theme := Th.Resolve(ThemeFor(Core.Model()));
     var Layout: A.Layout<TMsg> := Arrange(Theme, Current);
-    var Previous: A.Layout<TMsg>? := Current;
-    for Pass: int := 1 to 16 do
-      Phase := 'update';
-      if not V.Notify<TMsg>(Previous, Layout, Core.Dispatch) then
-        break;
-      end if;
-
-      if not Core.IsOpen() then
-        if Published <> null then
-          return;
-        end if;
-
-        break;
-      end if;
-
-      if Pass = 16 then
-        raise new Sys.InvalidOperationException('Canvas resize updates did not converge.');
-      end if;
-
-      Previous := Layout;
-      Phase := 'view';
-      Theme := Th.Resolve(ThemeFor(Core.Model()));
-      Layout := Arrange(Theme, Previous);
-    end for;
 
     Phase := 'layout_or_drawing';
     Routing.Reconcile(Layout, Current);
@@ -374,7 +348,7 @@ public function Start<TModel, TMsg>(
     case Entry.Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
         HoldFeedback.Cancel();
-        Viewport := new V.Dimensions(NewColumns, NewRows);
+        Viewport := new T.Viewport(NewColumns, NewRows);
       when App.Input.Pointer(_, _, _), App.Input.ButtonPointer(_, _, _, _):
         I.Dispatch<TMsg>(Routing, Layout, Entry.Event, Entry.ReceivedAt);
       else
@@ -476,13 +450,12 @@ begin
   const Outcomes: Generic.Dictionary<long, App.StepResult> := new Generic.Dictionary<long, App.StepResult>();
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
-  const EditorPositions: Generic.Dictionary<string, Editors.Entry> := new Generic.Dictionary<string, Editors.Entry>();
   const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
   const HoldFeedback: Hold.State := Hold.Create();
   const SplitMenus: SplitWidget.State := SplitWidget.Create();
   const Confirmations: Confirm.State := Confirm.Create();
   var PendingFocus: string? := null;
-  var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
+  var Viewport: T.Viewport := new T.Viewport(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
   var Published: App.Frame? := null;
   var FrameId: long := 0L;

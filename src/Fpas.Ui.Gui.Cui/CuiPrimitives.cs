@@ -13,22 +13,6 @@ public enum CuiRenderer
     Software
 }
 
-/// <summary>Reports native text-input events from one frame.</summary>
-[Flags]
-public enum CuiTextInputEvents
-{
-    /// <summary>No input event occurred.</summary>
-    None = 0,
-    /// <summary>The editing buffer changed.</summary>
-    Changed = 1,
-    /// <summary>The user submitted the field.</summary>
-    Submitted = 2,
-    /// <summary>The field received focus.</summary>
-    Focused = 4,
-    /// <summary>The field lost focus.</summary>
-    Blurred = 8
-}
-
 /// <summary>A native widget rectangle in logical window units.</summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct CuiRectangle

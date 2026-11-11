@@ -11,22 +11,4 @@ public type Color = record
   // Alpha channel.
   public Alpha: byte := 255;
 end record;
-
-// Immutable-by-contract pixels in top-down row order.
-public type Pixels = record
-  // The positive width of the source image in pixels.
-  public Width: int;
-  // The positive height of the source image in pixels.
-  public Height: int;
-  // Four tightly packed red, green, blue and alpha bytes per pixel.
-  public Rgba: array of byte;
-end record;
-
-// A drawing operation in canvas-relative GUI logical units.
-public type Paint = variant
-  // Fill a rectangle at the given origin with the supplied extent and color.
-  FillRect(X: double; Y: double; Width: double; Height: double; Color: Color);
-  // Draw a line between two points with the supplied thickness and color.
-  Line(X1: double; Y1: double; X2: double; Y2: double; Thickness: double; Color: Color);
-end variant;
 end unit;

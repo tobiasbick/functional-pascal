@@ -1,0 +1,81 @@
+unit Fpas.Ui.Tui.Internal.Widgets.ThemeSwitcher;
+
+uses Fpas.Ui.ThemeSwitchers as S, Fpas.Ui.Internal.ThemeSwitchers as Parts, Fpas.Ui.Styles as Style, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, System.Collections.Generic as Lists;
+
+type Action<TMsg> = record implements A.IActivatable<TMsg>, A.IArrowFocus
+  // Owner selector identity.
+  public Id: string;
+  // This segment's choice.
+  public Choice: S.Selection;
+  // Model-owned selected choice.
+  public Selected: S.Selection;
+  // Whether System is present.
+  public WithSystem: bool;
+  // Mapper called only on a different user choice.
+  public Change: function(S.Selection): TMsg;
+
+  // Proposes a different selection, leaving the model in charge of accepting it.
+  //
+  // ## Returns
+  // A change message, or no action for the already selected segment.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return if self.Choice = self.Selected then A.Result<TMsg>.NoAction
+      else A.Result<TMsg>.Send(self.Change(self.Choice))
+      end if;
+  end function;
+
+  // Finds the neighboring focus stop using native CUI's non-wrapping arrows.
+  //
+  // ## Parameters
+  // - `Direction`: Minus one for Left or one for Right.
+  // ## Returns
+  // The neighboring segment ID, or null at a boundary.
+  public function Neighbor(Direction: int): string?;
+  begin
+    const Index: int := cast<int>(self.Choice) + Direction;
+    return if Index < 0 or Index >= (if self.WithSystem then 3 else 2 end if) then null
+      else S.ItemId(self.Id, cast<S.Selection>(Index))
+      end if;
+  end function;
+end record;
+
+// Resolves the selector to a joined row of controlled terminal choices.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Selected`: Model-owned choice.
+// - `OnChange`: Maps a different choice to a message.
+// - `Settings`: System availability and input permission.
+// - `Theme`: Current terminal palette.
+// - `Colors`: Inherited cell styling.
+// ## Returns
+// Two or three focusable text segments with shared input semantics.
+public function Lower<TMsg>(
+  Id: string; Selected: S.Selection; OnChange: function(S.Selection): TMsg;
+  Settings: S.Options; Theme: Th.Theme; Colors: T.Style
+): E.Element<TMsg>;
+begin
+  const Children: Lists.List<E.Element<TMsg>> := new Lists.List<E.Element<TMsg>>();
+  for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
+    const Choice: S.Selection := cast<S.Selection>(Index);
+    Children.Add(
+      E.Element<TMsg>.Action(
+        S.ItemId(Id, Choice), new Action<TMsg>(Id, Choice, Selected, Settings.WithSystem, OnChange),
+        Settings.Enabled, new E.ActionView(
+          Parts.Label(Choice), Role := 'theme-choice',
+          Value := if Choice = Selected then 'true' else 'false' end if,
+          Variant := if Choice = Selected then Style.ButtonVariant.Active
+            else Style.ButtonVariant.Ghost
+            end if,
+          ArrowFocus := false
+        )
+      )
+    );
+  end for;
+
+  return Group.Lower<TMsg>(Children.ToArray(), Theme, Colors);
+end function;
+end unit;

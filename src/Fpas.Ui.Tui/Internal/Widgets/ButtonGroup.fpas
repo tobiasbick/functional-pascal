@@ -1,10 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.ButtonGroup;
 
-uses
-  Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as A,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as A, System as Sys, System.Collections.Generic as C;
 
 // Joins resolved buttons in a content-sized row with one cell frame.
 //

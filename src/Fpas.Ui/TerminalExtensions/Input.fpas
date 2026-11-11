@@ -157,14 +157,6 @@ public type ShortcutBinding<TMsg> = record
   public Character: string := '';
 end record;
 
-// Percentage limits for a centered terminal layer.
-public type OverlayLimits = record
-  // Maximum percentage of available columns, in 1..100.
-  public MaxWidthPercent: int := 100;
-  // Maximum percentage of available rows, in 1..100.
-  public MaxHeightPercent: int := 100;
-end record;
-
 // Binds a named key and modifier combination in one terminal scope.
 //
 // ## Type parameters

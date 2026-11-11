@@ -31,6 +31,6 @@
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
   </ItemGroup>
   <Target Name="RemoveStaleHostFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/host/examples" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/host/examples;$(OutputPath)Fixtures/host/src" />
   </Target>
 </Project>

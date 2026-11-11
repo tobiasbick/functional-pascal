@@ -1,6 +1,6 @@
 unit Gallery.State;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes, Fpas.Ui.StatusButtons as Work;
+uses Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes, Fpas.Ui.StatusButtons as Work;
 
 // Pages from the CUI gallery with accepted FPAS previews.
 public type Page = enum: byte
@@ -28,8 +28,10 @@ end enum;
 public type Model = record
   // Active navigation destination.
   public Active: Page := Page.Overview;
-  // Whether the gallery uses the dark palette.
-  public Dark: bool := true;
+  // Appearance shared by both selectors and the light/dark toggle.
+  public Appearance: Switchers.Selection := Switchers.Selection.Dark;
+  // Application-supplied appearance used by the System demo choice.
+  public SystemAppearance: Themes.Mode := Themes.Mode.Light;
   // Whether the save action is busy.
   public ButtonLoading: bool := false;
   // Active formatting actions.
@@ -56,8 +58,10 @@ public type Msg = variant
   Show(Value: Page);
   // Move forward or backward between the gallery pages.
   MovePage(Direction: int);
-  // Switch the gallery's palette.
-  Theme;
+  // Propose an appearance from the header or preview selector.
+  SetAppearance(Value: Switchers.Selection);
+  // Simulate a change from the application's appearance provider.
+  SetSystemAppearance(Value: Themes.Mode);
   // Activate a button that has no retained effect.
   Preview;
   // Change the save action's busy state.
@@ -90,7 +94,12 @@ end variant;
 // The light or dark CUI palette.
 public function ThemeFor(State: Model): Themes.Theme;
 begin
-  return if State.Dark then Themes.Dark() else Themes.Light() end if;
+  return if Switchers.Resolve(
+      State.Appearance,
+      State.SystemAppearance
+    ) = Themes.Mode.Dark then Themes.Dark()
+    else Themes.Light()
+    end if;
 end function;
 
 // Applies a gallery action.
@@ -113,8 +122,11 @@ begin
       Drawer := false;
       Sheet := false;
     end with;
-    when Msg.Theme: State with
-      Dark := not State.Dark;
+    when Msg.SetAppearance(const Value: Switchers.Selection): State with
+      Appearance := Value;
+    end with;
+    when Msg.SetSystemAppearance(const Value: Themes.Mode): State with
+      SystemAppearance := Value;
     end with;
     when Msg.SetButtonLoading(const Value: bool): State with
       ButtonLoading := Value;

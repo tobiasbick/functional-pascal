@@ -27,9 +27,6 @@ public sealed partial class CuiWindow
     /// <summary>Requests native closure, observed by the next frame pump.</summary>
     public void RequestClose() { CheckOpen(); NativeMethods.Quit(app); }
 
-    /// <summary>Makes the last widget fill its vertical parent's available width.</summary>
-    public void FillLastWidth() { CheckFrame(); NativeMethods.FillLastWidth(context); }
-
     /// <summary>Records the last widget under a host identity for inspection after presentation.</summary>
     /// <param name="id">Nonempty key, unique within the current frame.</param>
     public void TrackLastControl(string id)
@@ -45,8 +42,6 @@ public sealed partial class CuiWindow
         uint key = NativeMethods.NodeKey(context, node);
         if (controlKeys.TryGetValue(id, out uint previous) && previous != key)
         {
-            ForgetConfirmButton(previous);
-            ForgetStatusButton(previous);
             NativeMethods.Forget(context, previous);
         }
         controlKeys[id] = key;
@@ -57,11 +52,8 @@ public sealed partial class CuiWindow
     public void ForgetControl(string id)
     {
         CheckOpen();
-        ForgetSplitButton(id);
         if (controlKeys.Remove(id, out uint key))
         {
-            ForgetConfirmButton(key);
-            ForgetStatusButton(key);
             NativeMethods.Forget(context, key);
         }
     }

@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.HoldButton;
 
-uses
-  Fpas.Ui.HoldButtons as H, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C;
+uses Fpas.Ui.HoldButtons as H, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C;
 
 // Draws the native hold action and proposes its message when it completes.
 //

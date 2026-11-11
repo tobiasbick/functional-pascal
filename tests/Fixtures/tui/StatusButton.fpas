@@ -89,15 +89,15 @@ begin
       )
       else E.Text<Msg>('Hidden')
       end if,
-    E.Button<Msg>('other', 'Other', Msg.Noop),
-    E.Button<Msg>('idle', 'Idle', Msg.SetState(Work.Status.Idle)),
-    E.Button<Msg>('busy', 'Busy', Msg.SetState(Work.Status.Busy)),
-    E.Button<Msg>('success', 'Success', Msg.SetState(Work.Status.Success)),
-    E.Button<Msg>('error', 'Error', Msg.SetState(Work.Status.Error)),
-    E.Button<Msg>('enabled', 'Toggle enabled', Msg.ToggleEnabled),
-    E.Button<Msg>('custom', 'Toggle captions', Msg.ToggleCustom),
-    E.Button<Msg>('rename', 'Rename', Msg.Rename),
-    E.Button<Msg>('visible', 'Toggle visible', Msg.ToggleVisible),
+    B.Button<Msg>('other', 'Other', Msg.Noop),
+    B.Button<Msg>('idle', 'Idle', Msg.SetState(Work.Status.Idle)),
+    B.Button<Msg>('busy', 'Busy', Msg.SetState(Work.Status.Busy)),
+    B.Button<Msg>('success', 'Success', Msg.SetState(Work.Status.Success)),
+    B.Button<Msg>('error', 'Error', Msg.SetState(Work.Status.Error)),
+    B.Button<Msg>('enabled', 'Toggle enabled', Msg.ToggleEnabled),
+    B.Button<Msg>('custom', 'Toggle captions', Msg.ToggleCustom),
+    B.Button<Msg>('rename', 'Rename', Msg.Rename),
+    B.Button<Msg>('visible', 'Toggle visible', Msg.ToggleVisible),
     E.Text<Msg>('Requests: ' + State.Count.ToString())
   );
 end function;

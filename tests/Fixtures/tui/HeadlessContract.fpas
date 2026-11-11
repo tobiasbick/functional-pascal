@@ -1,6 +1,6 @@
 program HeadlessContract;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Status as Status, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
 type Msg = variant
   Start;
@@ -43,8 +43,9 @@ begin
 
   return E.Column<Msg>(
     E.Text<Msg>(State.ToString()),
-    E.Button<Msg>('start', 'Start', Msg.Start), E.Button<Msg>('cancel', 'Cancel', Msg.Cancel),
-    E.Button<Msg>('fail', 'Fail', Msg.Fail)
+    UiButtons.Button<Msg>('start', 'Start', Msg.Start),
+    UiButtons.Button<Msg>('cancel', 'Cancel', Msg.Cancel),
+    UiButtons.Button<Msg>('fail', 'Fail', Msg.Fail)
   );
 end function;
 
@@ -208,7 +209,7 @@ procedure CheckReuse();
   function Build(Dependency: int): E.Element<int>;
   begin
     Builds := Builds + 1;
-    return E.Button<int>('stable', 'Stable', Dependency);
+    return UiButtons.Button<int>('stable', 'Stable', Dependency);
   end function;
 
   function Cached(State: int): E.Element<int>;
@@ -293,7 +294,7 @@ procedure CheckLiveTheme();
   begin
     return E.Column<bool>(
       E.CellStyled<bool>(
-        E.Button<bool>('theme', 'Change color', true),
+        UiButtons.Button<bool>('theme', 'Change color', true),
         new T.Style(Foreground := $E0ECF5)
       )
     );

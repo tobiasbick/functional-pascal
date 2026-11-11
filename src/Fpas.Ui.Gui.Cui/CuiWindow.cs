@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
-using Fpas.Ui.Gui.Cui.Text;
 
 namespace Fpas.Ui.Gui.Cui;
 
@@ -10,8 +9,8 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Table, Scroll, Dialog, Sheet, Group, ButtonGroup }
-    private readonly record struct LayoutScope(Layout Kind, int ColumnCount = 0, int CellsLeft = 0, int Node = -1);
+    private enum Layout { Column, Row, Scroll, Sheet, Group, ButtonGroup }
+    private readonly record struct LayoutScope(Layout Kind, int Node = -1);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
     private readonly nint context;
@@ -87,7 +86,7 @@ public sealed partial class CuiWindow : IDisposable
         CloseRequested |= result == 2;
         inFrame = result != 0;
         hasPresentedFrame |= presented;
-        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); AdvanceImageFrame(); }
+        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); }
         else CloseWakeTarget();
         if (resizeFailure is { } failure)
         {
@@ -191,35 +190,8 @@ public sealed partial class CuiWindow : IDisposable
         NativeMethods.ScrollTo(context, id, offset);
     }
 
-    /// <summary>Opens a native modal dialog scope when its contents need to be drawn.</summary>
-    /// <param name="title">Nonempty UTF-8 title. Use <c>###id</c> for an identity independent of the visible title.</param>
-    /// <param name="open">Visibility requested by the host. CUI sets it to false on dismissal.</param>
-    /// <returns>Whether to draw contents and call <see cref="EndDialog"/>, including during the closing animation.</returns>
-    public bool BeginDialog(string title, ref bool open)
-    {
-        CheckFrame();
-        Utf8.Validate(title, nameof(title));
-        ArgumentException.ThrowIfNullOrEmpty(title);
-        // CUI's native modal stacks hold eight scopes.
-        if (layouts.Count(static scope => scope.Kind is Layout.Dialog or Layout.Sheet) >= 8)
-            throw new InvalidOperationException("CUI supports up to eight nested dialog scopes.");
-        int visible = open ? 1 : 0;
-        bool draw = NativeMethods.BeginDialog(context, title, ref visible) != 0;
-        open = visible != 0;
-        if (draw) layouts.Add(new(Layout.Dialog));
-        return draw;
-    }
-
-    /// <summary>Closes the innermost layout when it is a dialog.</summary>
-    public void EndDialog()
-    {
-        RequireLayout(Layout.Dialog);
-        NativeMethods.EndDialog(context);
-        layouts.RemoveAt(layouts.Count - 1);
-    }
-
     /// <summary>Requests focus for a control when CUI next draws it as focusable.</summary>
-    /// <param name="id">Nonempty stable control identity, such as the ID passed to <see cref="TextInput"/>.</param>
+    /// <param name="id">Nonempty stable control identity.</param>
     public void RequestFocus(string id)
     {
         CheckFrame();
@@ -235,116 +207,6 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Adds text to the current frame.</summary>
     /// <param name="text">Valid Unicode display text.</param>
     public void Text(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.Text(context, text, 0); }
-
-    /// <summary>Draws a list item with a host-owned selection state and reports activation.</summary>
-    /// <param name="label">Visible UTF-8 label. Use <c>###id</c> to give the item a stable identity independent of its label.</param>
-    /// <param name="selected">Whether the host wants this item drawn as selected.</param>
-    /// <returns>Whether the item was activated in the current frame.</returns>
-    public bool ListItem(string label, bool selected)
-    {
-        CheckFrame(); Utf8.Validate(label, nameof(label));
-        return NativeMethods.ListItem(context, label, selected ? 1 : 0) != 0;
-    }
-
-    /// <summary>Draws a tab item, typically in a row, with a host-supplied selection state.</summary>
-    /// <param name="label">Visible UTF-8 label. Use <c>###id</c> for a stable identity independent of the label.</param>
-    /// <param name="selected">Whether the host wants this tab drawn as selected.</param>
-    /// <returns>Whether the tab was activated in the current frame.</returns>
-    public bool TabItem(string label, bool selected)
-    {
-        CheckFrame(); Utf8.Validate(label, nameof(label));
-        return NativeMethods.TabItem(context, label, selected ? 1 : 0) != 0;
-    }
-
-    /// <summary>Opens a selectable table in the current frame.</summary>
-    /// <param name="id">Nonempty stable table identity.</param>
-    /// <param name="columnTitles">One or more UTF-8 column titles, copied during the call.</param>
-    public void BeginTable(string id, string[] columnTitles)
-    {
-        CheckFrame();
-        Utf8.Validate(id, nameof(id));
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        ArgumentNullException.ThrowIfNull(columnTitles);
-        if (columnTitles.Length == 0) throw new ArgumentException("A table needs at least one column.", nameof(columnTitles));
-        foreach (string title in columnTitles) Utf8.Validate(title, nameof(columnTitles));
-        if (NativeMethods.BeginTable(context, id, columnTitles, columnTitles.Length) == 0)
-            throw new InvalidOperationException("CUI could not open the table.");
-        layouts.Add(new(Layout.Table, columnTitles.Length));
-    }
-
-    /// <summary>Begins the next row, closing the preceding row if present.</summary>
-    /// <param name="selected">Whether the host wants this row drawn as selected.</param>
-    /// <returns>Whether the row was activated in the current frame.</returns>
-    public bool TableRow(bool selected)
-    {
-        LayoutScope table = RequireLayout(Layout.Table);
-        bool activated = NativeMethods.TableRow(context, selected ? 1 : 0) != 0;
-        layouts[^1] = table with { CellsLeft = table.ColumnCount };
-        return activated;
-    }
-
-    /// <summary>Adds text to the next cell of the current table row.</summary>
-    /// <param name="text">Valid Unicode cell text.</param>
-    public void TableCell(string text)
-    {
-        LayoutScope table = RequireLayout(Layout.Table);
-        if (table.CellsLeft == 0) throw new InvalidOperationException("Open a table row with an available cell before adding text.");
-        Utf8.Validate(text, nameof(text));
-        NativeMethods.TableCell(context, text);
-        layouts[^1] = table with { CellsLeft = table.CellsLeft - 1 };
-    }
-
-    /// <summary>Closes the innermost table and its final row. CUI fills any omitted cells with empty cells.</summary>
-    public void EndTable()
-    {
-        RequireLayout(Layout.Table);
-        NativeMethods.EndTable(context);
-        layouts.RemoveAt(layouts.Count - 1);
-    }
-
-    /// <summary>Adds a checkbox and updates its controlled value.</summary>
-    /// <param name="label">CUI label including its stable identity suffix.</param>
-    /// <param name="value">Current value, replaced by an edited value.</param>
-    /// <returns>Whether the value changed.</returns>
-    public bool Checkbox(string label, ref bool value)
-    {
-        CheckFrame(); Utf8.Validate(label, nameof(label));
-        byte nativeValue = value ? (byte)1 : (byte)0;
-        bool changed = NativeMethods.Checkbox(context, label, ref nativeValue, 0) != 0;
-        value = nativeValue != 0;
-        return changed;
-    }
-
-    /// <summary>Adds a single-line text editor backed by an owned UTF-8 buffer.</summary>
-    /// <param name="id">Nonempty stable control identity.</param>
-    /// <param name="value">Buffer owned across frames by the host.</param>
-    /// <returns>Native change, submission and focus flags.</returns>
-    public CuiTextInputEvents TextInput(string id, CuiTextBuffer value) => DrawTextEditor(id, value, height: 0);
-
-    /// <summary>Adds a multiline text editor with word wrapping backed by an owned UTF-8 buffer.</summary>
-    /// <param name="id">Nonempty stable control identity.</param>
-    /// <param name="value">Buffer owned across frames by the host.</param>
-    /// <param name="height">Positive finite height in logical units.</param>
-    /// <returns>Native change, submission and focus flags.</returns>
-    public CuiTextInputEvents TextArea(string id, CuiTextBuffer value, float height = 96)
-    {
-        if (!float.IsFinite(height) || height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
-        return DrawTextEditor(id, value, height);
-    }
-
-    private unsafe CuiTextInputEvents DrawTextEditor(string id, CuiTextBuffer value, float height, string placeholder = "")
-    {
-        CheckFrame(); Utf8.Validate(id, nameof(id));
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        ArgumentNullException.ThrowIfNull(value);
-        var (anchor, caret) = value.ByteSelection;
-        CuiTextInputEvents events;
-        fixed (byte* buffer = value.Bytes)
-            events = (CuiTextInputEvents)NativeMethods.TextEdit(context, id, buffer, (nuint)value.Capacity,
-                height, value.DocumentVersion, ref anchor, ref caret, placeholder);
-        value.ReadNativeSelection(anchor, caret, (events & CuiTextInputEvents.Changed) != 0);
-        return events;
-    }
 
     /// <summary>Gets the most recent widget's rectangle from the latest native layout.</summary>
     public CuiRectangle LastRectangle { get { CheckFrame(); return NativeMethods.LastRectangle(context); } }
@@ -363,10 +225,6 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Injects the left pointer button through CUI's input API.</summary>
     /// <param name="down">Whether the button is pressed.</param>
     public void SetLeftButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 0, down ? (byte)1 : (byte)0); }
-
-    /// <summary>Injects text into the focused native editor.</summary>
-    /// <param name="text">Valid Unicode input without zero characters. CUI discards control characters.</param>
-    public void TypeText(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.TypeText(context, text); }
 
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
     /// <param name="path">Unicode output filename in an existing directory.</param>
@@ -389,10 +247,8 @@ public sealed partial class CuiWindow : IDisposable
         CheckOpen();
         CloseWakeTarget();
         SetResizeRenderer(null);
-        ReleaseImages();
         trackedNodes.Clear();
         controlKeys.Clear();
-        splitPopups.Clear();
         modalKeys.Clear();
         NativeMethods.Destroy(app);
         if (usesOpenGl) openGlWindow = false;

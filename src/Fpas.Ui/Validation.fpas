@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -61,18 +61,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Value, Location + '/text');
       when E.Element.Separator(const Title: string):
         Rules.CheckText(Title, Location + '/divider');
-      when E.Element.Action(
-        const Id: string,
-        const Label: string,
-        _,
-        _,
-        const Variant: S.ButtonVariant
-      ):
-        const At: string := Identify(Id, Location + '/button');
-        Rules.CheckText(Label, At);
-        if not Sys.Enum.IsDefined<S.ButtonVariant>(Variant) then
-          Rules.Reject(At, 'Unknown button variant.');
-        end if;
       when E.Element.ButtonAction(
         const Id: string,
         const Label: string,
@@ -183,18 +171,36 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         then
           Rules.Reject(At, 'A status button needs a valid work state, button variant and size.');
         end if;
+      when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
+        const At: string := Identify(Id, Location + '/themeToggle');
+        if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then
+          Rules.Reject(At, 'A theme toggle needs a concrete Light or Dark appearance.');
+        end if;
+      when E.Element.ThemeChoice(
+        const Id: string,
+        const Selected: ThemeSwitchers.Selection,
+        _,
+        const Settings: ThemeSwitchers.Options
+      ):
+        const At: string := Identify(Id, Location + '/themeSwitcher');
+        if not Sys.Enum.IsDefined<ThemeSwitchers.Selection>(Selected)
+          or (Selected = ThemeSwitchers.Selection.System and not Settings.WithSystem)
+        then
+          Rules.Reject(At, 'A theme selector needs an available Light, Dark or System choice.');
+        end if;
+
+        for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
+          discard Identify(
+            ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index)),
+            At + '/item'
+          );
+        end for;
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
           case Child of
-            when E.Element.Action(
-              _,
-              _,
-              _,
-              _,
-              _
-            ), E.Element.ButtonAction(_, _, _, _), E.Element.IconAction(
+            when E.Element.ButtonAction(_, _, _, _), E.Element.IconAction(
               _,
               _,
               _,
@@ -251,22 +257,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.CheckText(Item.Icon, Entry + '/icon');
           Rules.CheckText(Item.TerminalIcon, Entry + '/terminalIcon');
         end for;
-      when E.Element.Toggle(const Id: string, const Label: string, _, _, _):
-        Rules.CheckText(Label, Identify(Id, Location + '/checkbox'));
-      when E.Element.Editor(
-        const Id: string, const Value: string, const Position: Ed.EditorPosition, _, _,
-        const Placeholder: string, _, const MultipleLines: bool
-      ):
-        const At: string := Identify(Id, Location + '/editor');
-        Rules.CheckText(Placeholder, At + '/placeholder');
-        Rules.CheckEditor(Value, Position, MultipleLines, At);
-      when E.Element.ActionList(const Id: string, const Items: array of C.ListItem<TMsg>, _):
-        const At: string := Identify(Id, Location + '/list');
-        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
-        for Item: C.ListItem<TMsg> in Items do
-          Rules.CheckKey(Keys, Item.Key, At);
-          Rules.CheckText(Item.Text, At + '/' + Item.Key);
-        end for;
       when E.Element.Sidebar(
         const Id: string,
         const Sections: array of N.Section<TMsg>,
@@ -287,73 +277,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
 
         Rules.CheckSelected(Keys, Active, At);
-      when E.Element.Selectable(
-        const Id: string, const Items: array of C.SelectionItem, const Selected: string?, _, _, _
-      ):
-        const At: string := Identify(Id, Location + '/selection');
-        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
-        for Item: C.SelectionItem in Items do
-          Rules.CheckKey(Keys, Item.Key, At);
-          Rules.CheckText(Item.Text, At + '/' + Item.Key);
-        end for;
-
-        Rules.CheckSelected(Keys, Selected, At);
-      when E.Element.TabSet(
-        const Id: string, const Items: array of C.TabItem, const Selected: string?, _,
-        const Panel: E.Element<TMsg>?, _
-      ):
-        const At: string := Identify(Id, Location + '/tabs');
-        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
-        const Enabled: Generic.HashSet<string> := new Generic.HashSet<string>();
-        for Item: C.TabItem in Items do
-          Rules.CheckKey(Keys, Item.Key, At);
-          Rules.CheckText(Item.Label, At + '/' + Item.Key);
-          if Item.Enabled then
-            discard Enabled.Add(Item.Key);
-          end if;
-        end for;
-
-        if (Selected = null) <> (Panel = null) or (Selected = null and Enabled.Count > 0) then
-          Rules.Reject(At, 'A tab set with enabled tabs needs an active key and panel.');
-        end if;
-
-        Rules.CheckSelected(Enabled, Selected, At);
-        if Panel <> null then
-          Visit(Panel, At + '/panel');
-        end if;
-      when E.Element.TableView(
-        const Id: string, const Columns: array of C.TableColumn, const Rows: array of C.TableRow,
-        const Selected: string?, _, _, _
-      ):
-        const At: string := Identify(Id, Location + '/table');
-        if Columns.Length = 0 then
-          Rules.Reject(At, 'A table needs at least one column.');
-        end if;
-
-        for Index: int := 0 to Columns.Length - 1 do
-          const Column: C.TableColumn := Columns[Index];
-          const Path: string := At + '/column[' + Index.ToString() + ']';
-          Rules.CheckText(Column.Header, Path);
-          Rules.CheckFlex(Column.Sizing, Profile, Path);
-        end for;
-        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
-        for Row: C.TableRow in Rows do
-          Rules.CheckKey(Keys, Row.Key, At);
-          const Path: string := At + '/row[' + Row.Key + ']';
-          if Row.Cells.Length <> Columns.Length then
-            Rules.Reject(Path, 'Each row needs one cell per column.');
-          end if;
-
-          for Cell: string in Row.Cells do
-            Rules.CheckText(Cell, Path);
-          end for;
-        end for;
-
-        Rules.CheckSelected(Keys, Selected, At);
-      when E.Element.Progress(const Percent: int):
-        if Percent < 0 or Percent > 100 then
-          Rules.Reject(Location + '/progress', 'A percentage must be between 0 and 100.');
-        end if;
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Horizontal: bool,
@@ -399,17 +322,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Visit(Child, At);
-      when E.Element.Modal(
-        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
-        const InitialFocus: string?, _
-      ):
-        const At: string := Identify(Id, Location + '/modal');
-        if InitialFocus <> null then
-          Rules.CheckText(InitialFocus, At + '/initialFocus');
-        end if;
-
-        Visit(Base, At + '/base');
-        Visit(Content, At + '/content');
       when E.Element.Sheet(
         const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _,
         const Settings: Sheets.Options, _
@@ -448,14 +360,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckColor(Colors.Foreground, At);
         Rules.CheckColor(Colors.Background, At);
         Visit(Child, At);
-      when E.Element.TerminalCanvas(const Id: string, _, _):
-        Rules.RequireProfile(Profile, Target.Terminal, Identify(Id, Location + '/cellCanvas'));
-      when E.Element.TerminalStatus(const Message: string, const Hints: array of string):
-        Rules.RequireProfile(Profile, Target.Terminal, Location + '/status');
-        Rules.CheckText(Message, Location);
-        for Hint: string in Hints do
-          Rules.CheckText(Hint, Location);
-        end for;
       when E.Element.TerminalScreen(
         const Content: E.Element<TMsg>,
         const Layers: array of E.Element<TMsg>,
@@ -467,51 +371,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Layer: E.Element<TMsg> in Layers do
           Visit(Layer, Location + '/layer');
         end for;
-      when E.Element.TerminalLayer(
-        const Id: string,
-        const Content: E.Element<TMsg>,
-        const Initial: string?,
-        _,
-        const Shortcuts: array of K.ShortcutBinding<TMsg>,
-        const Limits: K.OverlayLimits?,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/layer');
-        Rules.RequireProfile(Profile, Target.Terminal, At);
-        if Initial <> null then
-          Rules.CheckText(Initial, At);
-        end if;
-
-        if Limits <> null and (Limits.MaxWidthPercent < 1 or Limits.MaxWidthPercent > 100
-          or Limits.MaxHeightPercent < 1 or Limits.MaxHeightPercent > 100)
-        then
-          Rules.Reject(At, 'Overlay percentages must be in 1..100.');
-        end if;
-
-        CheckShortcuts(Shortcuts, At);
-        Visit(Content, At);
-      when E.Element.TerminalPanel(
-        const Body: E.Element<TMsg>,
-        const Footer: E.Element<TMsg>,
-        const Title: string,
-        _
-      ):
-        Rules.RequireProfile(Profile, Target.Terminal, Location + '/panel');
-        Rules.CheckText(Title, Location);
-        Visit(Body, Location + '/body');
-        Visit(Footer, Location + '/footer');
-      when E.Element.TerminalFixedCanvas(
-        const Id: string,
-        const Columns: int,
-        const Rows: int,
-        _,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/cellCanvas');
-        Rules.RequireProfile(Profile, Target.Terminal, At);
-        if Columns < 1 or Rows < 1 then
-          Rules.Reject(At, 'A fixed cell canvas needs positive dimensions.');
-        end if;
       when E.Element.TerminalViewport(
         const Id: string,
         const Build: function(T.Viewport): E.Element<TMsg>
@@ -530,30 +389,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Content: E.Element<TMsg> := Build(Size);
         Subviews.Add(Id, new E.CacheEntry<TMsg>(Size, Content));
         Visit(Content, At);
-      when E.Element.GraphicImage(
-        const Id: string,
-        const Image: G.Pixels,
-        const Width: int,
-        const Height: int
-      ):
-        const At: string := Identify(Id, Location + '/image');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckViewport(Width, Height, At);
-        if Image.Width <= 0 or Image.Height <= 0 or Image.Rgba.Length mod 4 <> 0
-          or cast<long>(Image.Width) * cast<long>(Image.Height) <> cast<long>(Image.Rgba.Length div
-          4)
-        then
-          Rules.Reject(At, 'The image needs four tightly packed RGBA bytes per pixel.');
-        end if;
-      when E.Element.GraphicCanvas(
-        const Id: string, const Width: int, const Height: int, const Operations: array of G.Paint
-      ):
-        const At: string := Identify(Id, Location + '/canvas');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckViewport(Width, Height, At);
-        for Index: int := 0 to Operations.Length - 1 do
-          Rules.CheckPaint(Operations[Index], At + '[' + Index.ToString() + ']');
-        end for;
     end case;
   end procedure;
 

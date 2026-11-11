@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.IconButton;
 
-uses
-  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
 
 // Draws a native icon button and routes its activation.
 //

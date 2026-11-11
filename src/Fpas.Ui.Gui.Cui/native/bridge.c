@@ -46,13 +46,6 @@ cui_rect fpas_cui_node_rect(cui_ctx *ui, int node) {
     return node >= 0 && node < ui->node_count ? ui->nodes[node].rect : (cui_rect){0};
 }
 
-void fpas_cui_fill_last_width(cui_ctx *ui) {
-    if (ui->last_node < 0 || ui->last_node >= ui->node_count) return;
-    cui_node *node = &ui->nodes[ui->last_node];
-    node->w = CUI_FILL;
-    node->self_align = CUI_ALIGN_STRETCH;
-}
-
 void fpas_cui_set_resize_renderer(cui_app *app, void (*render)(cui_ctx *, void *), void *user) {
     app->frame_cb = render;
     app->frame_user = render ? user : NULL;

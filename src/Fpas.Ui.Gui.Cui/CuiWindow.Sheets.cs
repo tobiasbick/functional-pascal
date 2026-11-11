@@ -23,7 +23,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(description, nameof(description));
         if (side is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(side));
         if (!float.IsFinite(size) || size <= 0) throw new ArgumentOutOfRangeException(nameof(size));
-        if (layouts.Count(static scope => scope.Kind is Layout.Dialog or Layout.Sheet) >= 8)
+        if (layouts.Count(static scope => scope.Kind == Layout.Sheet) >= 8)
             throw new InvalidOperationException("CUI supports up to eight nested modal scopes.");
 
         int baseNode = NativeMethods.LastNode(context);

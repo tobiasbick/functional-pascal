@@ -26,9 +26,9 @@ public sealed class CuiHostLayoutTests
         void Row(string id, int kindA, float a, int kindB, float b, float growA, float growB, float cap)
         {
             window.BeginGroup(true, 0, 0, 0, false);
-            window.Control(id + "a", "A", 0, true, false, 0, false);
+            window.Button(id + "a", "A", 0, 0, true, false, false, false, "", "", "", "", false, -1, 0);
             window.SizeLast(true, kindA, a, 0, cap, growA, 0); window.TrackLastControl(id + "a");
-            window.Control(id + "b", "B", 0, true, false, 0, false);
+            window.Button(id + "b", "B", 0, 0, true, false, false, false, "", "", "", "", false, -1, 0);
             window.SizeLast(true, kindB, b, 0, -1, growB, 0); window.TrackLastControl(id + "b");
             window.EndGroup(); window.SizeLast(false, 2, 50, 0, -1, 0, 0);
         }
@@ -39,23 +39,23 @@ public sealed class CuiHostLayoutTests
         }
     }
 
-    /// <summary>Content hints share native shrinkage while a fixed sibling retains its width.</summary>
+    /// <summary>Native text measurements share shrinkage while a fixed sibling retains its width.</summary>
     [GuiFact]
-    public void PreferredContentShrinksBesideFixedSibling()
+    public void NativeContentShrinksBesideFixedSibling()
     {
         using var window = new CuiWindow("Content sizing", 400, 240, CuiRenderer.Software, continuous: true);
         Assert.True(window.NextFrame());
         window.BeginGroup(true, 0, 0, 0, false);
-        window.Text("A"); window.PreferLastWidth(300); window.TrackLastControl("a");
+        window.Text(string.Join(" ", Enumerable.Repeat("Wide", 12))); window.TrackLastControl("a");
         window.SizeLast(true, 0, 0, 0, -1, 0, 0);
-        window.Text("B"); window.PreferLastWidth(100); window.TrackLastControl("b");
+        window.Text(string.Join(" ", Enumerable.Repeat("Wide", 4))); window.TrackLastControl("b");
         window.SizeLast(true, 0, 0, 0, -1, 0, 0);
         window.Text("Fixed"); window.TrackLastControl("fixed"); window.SizeLast(true, 2, 200, 0, -1, 0, 0);
         window.EndGroup(); window.SizeLast(false, 1, 0, 0, -1, 1, 4);
         window.Present();
         float a = window.GetControlRectangle("a").Width, b = window.GetControlRectangle("b").Width;
         Assert.Equal(200, a + b, precision: 1);
-        Assert.True(a < 300 && b < 100 && a > b);
+        Assert.True(a > b && b > 0);
         Assert.Equal(200, window.GetControlRectangle("fixed").Width);
     }
 

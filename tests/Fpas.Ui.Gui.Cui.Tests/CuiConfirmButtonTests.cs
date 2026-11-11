@@ -43,6 +43,36 @@ public sealed class CuiConfirmButtonTests
         }
     }
 
+    /// <summary>Changing a control's kind retires companion state owned by its former kind.</summary>
+    [GuiFact]
+    public void ReusingIdentityForAnotherKindRetiresConfirmation()
+    {
+        using var window = new CuiWindow("Control replacement", 480, 320, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        Assert.False(Draw().Armed);
+        Assert.True(Draw(activate: true).Armed);
+        Draw(status: true);
+        Assert.False(Draw().Armed);
+        Assert.True(Draw(activate: true).Armed);
+
+        CuiConfirmButtonResult Draw(bool status = false, bool activate = false)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            if (activate) { window.SetKey(2, true); window.SetKey(2, false); }
+            window.BeginColumn();
+            var result = new CuiConfirmButtonResult(false, false);
+            if (status)
+                window.StatusButton("shared", "Save", 0, "Saving", "Saved", "Failed", "", 0, 0, true, false);
+            else
+                result = window.ConfirmButton("shared", "Delete", "Confirm", "", 3000, 2, 0, true, true);
+            window.TrackLastControl("shared");
+            window.EndColumn();
+            window.Present();
+            return result;
+        }
+    }
+
     /// <summary>Rejects invalid native options before entering CUI.</summary>
     [GuiFact]
     public void ConfirmationValidatesTimeoutVariantAndSize()

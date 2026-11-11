@@ -1,13 +1,6 @@
 program CuiContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes,
-  Fpas.Ui.Graphics as G, Fpas.Ui.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Choices,
-  Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.ButtonGroups as Groups, Fpas.Ui.IconButtons as Icons, Fpas.Ui.TerminalExtensions.Input as Keys,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
-  Fpas.Ui.CopyButtons as Copy, Fpas.Ui.Tui.Internal.Hosting.Session as Host, Fpas.Ui.Tui.Internal.Terminal.Clipboard as Clipboard,
-  Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Tables as Tables,
-  System as Sys, System.Console as Console, System.Threading as Threads, System.Collections.Generic as Generic;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.ButtonGroups as Groups, Fpas.Ui.IconButtons as Icons, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.CopyButtons as Copy, Fpas.Ui.Tui.Internal.Hosting.Session as Host, Fpas.Ui.Tui.Internal.Terminal.Clipboard as Clipboard, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console, System.Threading as Threads, System.Collections.Generic as Generic;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -65,22 +58,6 @@ begin
   return new Mvu.Transition<int, int>(Message, []);
 end function;
 
-procedure TableContent();
-begin
-  const Columns: array of Tree.TableColumn := [
-    new Tree.TableColumn('A', new Tree.Flex()),
-    new Tree.TableColumn('B', new Tree.Flex(Grow := 1, Minimum := 2))
-  ];
-  const Rows: array of Choices.TableRow := [new Choices.TableRow('row', ['Longer world', 'x'])];
-  const Wide: array of int := Tables.Widths(Columns, Rows, 20);
-  Check(Wide[0] = 12 and Wide[1] = 3, 'Content sizing must include table body cells.');
-  const Narrow: array of int := Tables.Widths(Columns, Rows, 12);
-  Check(
-    Narrow[0] = 6 and Narrow[1] = 2,
-    'Column minimums must retain the longest word and explicit bounds.'
-  );
-end procedure;
-
 procedure SemanticColors();
   function View(State: int): E.Element<int>;
   begin
@@ -129,11 +106,11 @@ procedure LogicalDistances();
         Padding := L.Spacing.Fixed(L.Measure.Logical(16))
       ),
       E.Size<int>(
-        E.Button<int>('a', 'A', 1),
+        B.Button<int>('a', 'A', 1),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
       ),
       E.Size<int>(
-        E.Button<int>('b', 'B', 2),
+        B.Button<int>('b', 'B', 2),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(16)))
       )
     );
@@ -169,8 +146,8 @@ procedure SheetPlacement();
 begin
   for Side: Sheets.Side in Sys.Enum.GetValues<Sheets.Side>() do
     const View: function(int): E.Element<int> := function(State: int): E.Element<int> => Sheets.Sheet<int>(
-      'sheet', E.Button<int>('under', 'Background', 5),
-      E.Column<int>(E.Button<int>('inside', 'Body', 2), E.Text<int>('Last line')),
+      'sheet', B.Button<int>('under', 'Background', 5),
+      E.Column<int>(B.Button<int>('inside', 'Body', 2), E.Text<int>('Last line')),
       State = 0, new Sheets.Options(
         'Header', Description := 'Detail', Edge := Side,
         Size := 64, InitialFocus := 'inside'
@@ -215,7 +192,7 @@ procedure IconAction();
   function View(State: int): E.Element<int>;
   begin
     return E.Column<int>(
-      E.Button<int>('ready', 'Finish loading', 1),
+      B.Button<int>('ready', 'Finish loading', 1),
       Icons.IconButton<int>(
         'icon', Sys.Char.ConvertFromUtf32($E115), 'Components', 2,
         new Icons.Options(
@@ -355,12 +332,11 @@ procedure JoinedButtons();
   begin
     return Groups.ButtonGroup<int>(
       B.Button<int>('bold', 'Bold', 1, new B.Options(Selected := State = 1)),
-      E.Button<int>(
+      B.Button<int>(
         'italic',
         'Italic',
         3,
-        Enabled := false,
-        Variant := Styles.ButtonVariant.Outline
+        new B.Options(Enabled := false, Variant := Styles.ButtonVariant.Outline)
       ),
       Icons.IconButton<int>(
         'underline', Sys.Char.ConvertFromUtf32($E19A), 'Underline', 2,
@@ -453,7 +429,6 @@ end procedure;
 
 begin
   Allocation();
-  TableContent();
   SemanticColors();
   LogicalDistances();
   SheetPlacement();

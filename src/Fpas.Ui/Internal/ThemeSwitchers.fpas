@@ -1,0 +1,44 @@
+unit Fpas.Ui.Internal.ThemeSwitchers;
+
+uses Fpas.Ui.ThemeSwitchers as Switchers, System as Sys;
+
+// Provides stable snapshot keys independent of presentation glyphs.
+//
+// ## Parameters
+// - `Choice`: Validated selector choice.
+// ## Returns
+// light, dark or system.
+public function Key(Choice: Switchers.Selection): string;
+begin
+  case Choice of
+    when Switchers.Selection.Light:
+      return 'light';
+    when Switchers.Selection.Dark:
+      return 'dark';
+    when Switchers.Selection.System:
+      return 'system';
+    else
+      raise new Sys.ArgumentOutOfRangeException('Choice');
+  end case;
+end function;
+
+// Provides accessible names for native icons and terminal segments.
+//
+// ## Parameters
+// - `Choice`: Validated selector choice.
+// ## Returns
+// Light, Dark or System.
+public function Label(Choice: Switchers.Selection): string;
+begin
+  case Choice of
+    when Switchers.Selection.Light:
+      return 'Light';
+    when Switchers.Selection.Dark:
+      return 'Dark';
+    when Switchers.Selection.System:
+      return 'System';
+    else
+      raise new Sys.ArgumentOutOfRangeException('Choice');
+  end case;
+end function;
+end unit;

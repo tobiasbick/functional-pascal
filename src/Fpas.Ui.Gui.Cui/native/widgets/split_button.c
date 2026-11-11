@@ -3,10 +3,9 @@
 int fpas_cui_split_button(cui_ctx *ui, const char *id, const char *label, const char *icon,
                           const char *const *labels, const char *const *icons, int count,
                           int variant, int size, int enabled, int focus, int *nodes,
-                          int *open, int *highlighted, unsigned int *popup_key) {
+                          int *open, int *highlighted) {
     const cui_id gid = cui_make_id(ui, id) ^ 0x5B17u;
     const cui_id pid = gid ^ 0x3E40u;
-    *popup_key = pid;
     const char *keyed_label = cui__frame_printf(ui, "x%s", id);
     if (enabled && focus) {
         cui_push_id(ui, keyed_label);
@@ -60,14 +59,6 @@ int fpas_cui_split_button(cui_ctx *ui, const char *id, const char *label, const 
     }
     ui->last_node = group;
     ui->last_id = gid;
+    fpas_own(ui, ui->nodes[nodes[0]].id, gid, pid ^ 0x4E4156u, pid);
     return enabled ? selected : -1;
-}
-
-void fpas_cui_split_button_forget(cui_ctx *ui, unsigned int popup_key) {
-    cui_popup *popup = cui__popup_get(ui, popup_key, false);
-    if (popup) {
-        popup->open = false;
-        memset(&popup->s, 0, sizeof popup->s);
-    }
-    fpas_cui_forget(ui, popup_key ^ 0x4E4156u);
 }

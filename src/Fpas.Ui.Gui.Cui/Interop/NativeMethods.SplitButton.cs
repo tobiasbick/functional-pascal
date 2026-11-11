@@ -11,9 +11,5 @@ internal static partial class NativeMethods
     internal static unsafe partial int SplitButton(nint context, string id, string label, string? icon,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
-        int count, int variant, int size, int enabled, int focus, int* nodes, out int open, out int highlighted, out uint popup);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_split_button_forget")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void ForgetSplitButton(nint context, uint popup);
+        int count, int variant, int size, int enabled, int focus, int* nodes, out int open, out int highlighted);
 }

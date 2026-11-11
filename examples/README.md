@@ -54,11 +54,8 @@ the local SDK first using the [development workflow](../docs/build/development.m
 
 | Example | Demonstrates |
 | --- | --- |
-| [GUI counter](ui/gui/counter/README.md) | Shared MVU transitions and declarative widgets in a native GUI window |
-| [GUI widget gallery](ui/gui/gallery/README.md) | Graphical widgets, themes, responsive layout, controlled editing, effects and modal focus |
-| [TUI filter list](ui/tui/filter-list/README.md) | Controlled filtering, selection, overlays and retained subviews |
+| [GUI widget gallery](ui/gui/gallery/README.md) | Accepted graphical widgets, themes, responsive layout and modal focus |
 | [TUI widget gallery](ui/tui/gallery/README.md) | Interactive widget previews, themes, and headless control |
-| [Mandelbrot Explorer](ui/tui/mandelbrot/README.md) | Interactive RGB cell canvas, keyboard and mouse, and cancellable parallel rendering |
 
 ## Related documentation
 

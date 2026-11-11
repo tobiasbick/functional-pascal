@@ -40,6 +40,7 @@ public sealed class TuiGalleryTests
                 pages.Select(item => item.GetProperty("id").GetString()));
             Assert.InRange(pages[0].GetProperty("row").GetInt32(), 0, 5);
             Assert.Equal("true", pages[0].GetProperty("value").GetString());
+            Assert.Equal("true", Control(wide, "theme/dark").GetProperty("value").GetString());
             Assert.Equal(pages[0].GetProperty("row").GetInt32() + 2, pages[2].GetProperty("row").GetInt32());
 
             Assert.Equal("presented", await Focus("pages/buttons"));
@@ -157,6 +158,30 @@ public sealed class TuiGalleryTests
             await Focus("status-save");
             await Key("Enter");
             Assert.Contains("Requests: 2", Screen(await Request("snapshot")));
+            await Choose("theme-preview/light");
+            var light = await Request("snapshot");
+            Assert.Equal("true", Control(light, "theme/light").GetProperty("value").GetString());
+            await Focus("theme-preview/light");
+            await Key("Right");
+            var dark = await Request("snapshot");
+            Assert.Equal("true", Control(dark, "theme/dark").GetProperty("value").GetString());
+            Assert.True(Control(dark, "theme-preview/dark").GetProperty("focused").GetBoolean());
+            await Key("Right");
+            await Key("Right");
+            var system = await Request("snapshot");
+            Assert.Equal("true", Control(system, "theme/system").GetProperty("value").GetString());
+            Assert.True(Control(system, "theme-preview/system").GetProperty("focused").GetBoolean());
+            await Choose("system-appearance");
+            Assert.Equal("true", Control(await Request("snapshot"), "theme-preview/system").GetProperty("value").GetString());
+            await Focus("theme-toggle");
+            await Key("Enter");
+            var toggled = await Request("snapshot");
+            Assert.Equal("true", Control(toggled, "theme-preview/light").GetProperty("value").GetString());
+            Assert.True(Control(toggled, "theme-toggle").GetProperty("focused").GetBoolean());
+            Assert.Equal("light", Control(toggled, "theme-toggle").GetProperty("value").GetString());
+            await Key("Enter");
+            Assert.Equal("true", Control(await Request("snapshot"), "theme/dark").GetProperty("value").GetString());
+            await Choose("theme/dark");
             await Choose("pages/buttons");
 
             await Resize(40, 17);
@@ -182,7 +207,7 @@ public sealed class TuiGalleryTests
             Assert.True(Control(await Request("snapshot"), "sheet-open").GetProperty("focused").GetBoolean());
 
             await Resize(134, 38);
-            await Choose("theme");
+            await Choose("theme/light");
             await Choose("pages/buttons");
             var restored = await Request("snapshot");
             Assert.Equal("true", Control(restored, "format-bold").GetProperty("value").GetString());

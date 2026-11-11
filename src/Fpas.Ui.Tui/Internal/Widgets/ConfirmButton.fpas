@@ -1,10 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.ConfirmButton;
 
-uses
-  Fpas.Ui.ConfirmButtons as Buttons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Application as App,
-  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.ConfirmButtons as Buttons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Application as App, Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Collections.Generic as C;
 
 type Entry = record
   // Monotonic time of the first activation.

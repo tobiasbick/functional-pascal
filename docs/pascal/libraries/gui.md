@@ -3,8 +3,8 @@
 Use `Fpas.Ui.Gui` for a native desktop window. Its model, messages, update function
 and declarative view use the same [MVU](../../../src/Fpas.Ui.Mvu/README.md) and
 [widget contracts](../../../src/Fpas.Ui/README.md) as the
-[terminal host](../../../src/Fpas.Ui.Tui/README.md). Terminal cell extensions and
-GUI images/canvases are explicit capabilities; a portable view uses neither.
+[terminal host](../../../src/Fpas.Ui.Tui/README.md). Terminal cell styling,
+shortcuts and exact viewport access are explicit terminal capabilities.
 
 ## Project and examples
 
@@ -24,11 +24,9 @@ transitively. Use the same release of the libraries and SDK.
 </Project>
 ```
 
-The [counter program](../../../examples/ui/gui/counter/main.fpas) is a complete
-example of controlled inputs, background work and a modal. The
-[gallery](../../../examples/ui/gui/gallery/README.md) demonstrates every supported
-widget, layout, image/canvas, theme switching and responsive navigation.
-Their checked-in projects use source references for repository development;
+The [gallery](../../../examples/ui/gui/gallery/README.md) demonstrates the
+accepted widgets, layout, theme switching and responsive navigation.
+Its checked-in project uses source references for repository development;
 application packages deliver the managed libraries, native assets and notices.
 Users of those packages do not download CUI or build its C sources.
 
@@ -39,13 +37,11 @@ actions and completed work. Update has type
 `function(Model, Msg): Mvu.Transition<Model, Msg>` and returns the next model
 plus commands. View has type
 `function(Model, Layout.Viewport): Elements.Element<Msg>` and builds widgets
-from that model using `Fpas.Ui.Elements`.
+from that model using the `Fpas.Ui` widget units.
 
 Control IDs stay stable and unique; item keys are local to their collection.
-Text, checkbox values, selection and tabs belong to the model. Editor messages
-carry text and a directional UTF-16 caret/anchor together. A separate navigation
-message changes only selection. Use LF in multiline text and valid grapheme
-boundaries. Rejecting a proposal leaves the model value authoritative.
+Theme selections, navigation, sheet visibility and action feedback belong to
+the model. Rejecting a proposal leaves the model value authoritative.
 
 Start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
@@ -77,7 +73,7 @@ releases native resources on the owner. Step, Snapshot and disposal must not be
 reentered from callbacks.
 
 Snapshot describes the last successful frame, including control bounds, values,
-selection, focus, theme and owned editor/image counts. `Session.CapturePng(Path)`
+focus and theme. `Session.CapturePng(Path)`
 saves the presented native frame outside Step on the owner thread. It requires
 an existing destination directory and a successful presentation; capture failure
 does not close the session. PNG dimensions are physical pixels and can differ
@@ -101,14 +97,14 @@ for source builds and [host behavior](../../../src/Fpas.Ui.Gui/README.md) for de
 
 Direct Wayland, other RIDs, screen-reader accessibility and complete platform
 IME/complex-script behavior are outside the supported contract. Unicode text
-and grapheme-safe model selections do not imply full bidirectional shaping or
-all desktop input methods. One UI thread can own one OpenGL CUI window; Auto
+does not imply full bidirectional shaping or all desktop input methods.
+One UI thread can own one OpenGL CUI window; Auto
 uses software for additional windows on that thread.
 
 ## See also
 
 - [Shared widgets and capability profiles](../../../src/Fpas.Ui/README.md)
 - [GUI host lifecycle and inspection](../../../src/Fpas.Ui.Gui/README.md)
-- [GUI counter](../../../examples/ui/gui/counter/README.md) and [gallery](../../../examples/ui/gui/gallery/README.md)
+- [GUI gallery](../../../examples/ui/gui/gallery/README.md)
 - [Native assets and local distribution feed](../../build/distribution.md#native-cui-assets)
 - [Terminal widget gallery](../../../examples/ui/tui/gallery/README.md)

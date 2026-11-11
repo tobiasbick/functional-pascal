@@ -15,9 +15,9 @@ model remain authoritative until an update supplies new values.
 
 Keep interactive control IDs, modal IDs and cached subview IDs nonempty,
 unique throughout the view, and stable between frames. Treat strings as
-case-sensitive. Item and row keys are unique within their own list, table or
-tab set. An item key can repeat in another collection. Keep view records,
-arrays, callbacks and image data unchanged for as long as the host retains
+case-sensitive. Sidebar and split-menu keys are unique within their own group.
+An item key can repeat in another group. Keep view records,
+arrays and callbacks unchanged for as long as the host retains
 them. Replace changed data on a subsequent view.
 
 ## Capability profiles
@@ -33,22 +33,17 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Button variants, sizes, icons, busy state and width | Yes | Yes | Yes |
 | Button group with a shared outline | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
-| Controlled checkbox | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
-| Controlled text input and multiline editor | Yes | Yes | Yes |
-| Action list, selection list, text table and tabs | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
-| Percentage progress | Yes | Yes | Yes |
-| Rows, columns, borders and modal overlays | Yes | Yes | Yes |
+| Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
+| Rows, columns and borders | Yes | Yes | Yes |
 | CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
 | Fixed basis, bounds, spacing and scroll offsets in cells | | Yes | |
 | Fixed basis, bounds, spacing and scroll offsets in logical units | Yes | Yes | Yes |
 | Semantic style roles and typed cached subviews | Yes | Yes | Yes |
-| `CellStyled` colors and `CellCanvas` drawing/input | | Yes | |
-| Terminal screens/layers, pinned panels, status hints, exact viewport and fixed canvas | | Yes | |
-| Packed RGBA image and logical-coordinate vector canvas | | | Yes |
+| `CellStyled` colors, screens, shortcuts and exact viewport | | Yes | |
 
 ## Layout and style
 
@@ -89,8 +84,8 @@ TUI requires no native CUI or graphical dependencies.
 
 Pass the same `ThemeFor(Model): Themes.Theme` callback to either host. Fixed
 themes go in GUI Options.Theme or the TUI Theme argument. Prefer Styled and
-button variants over explicit terminal colors. Explicit cell canvases can
-convert a palette color with Themes.Rgb(Color, OpaqueBackground).
+button variants over explicit terminal colors. Terminal styling can convert
+a palette color with Themes.Rgb(Color, OpaqueBackground).
 
 `Layout.Viewport` expresses width and height independently as compact, regular
 or expanded. The host also supplies `LogicalWidth` and `LogicalHeight` when it
@@ -111,17 +106,9 @@ presentation.
 ## Focus and activation
 
 Focus follows stable control identity. Tab and Shift+Tab traverse enabled
-focus stops in view order. Enter activates a focused action or the selected
-item of a collection that supports activation. Space also activates buttons
-and toggles checkboxes when a text editor does not own the keystroke. A
-disabled control receives no user action or keyboard focus.
-
-Selection lists and tables report key changes separately from activation.
-Arrow navigation skips disabled items. `CanActivate` permits an item to stay
-selectable while suppressing its activation. An enabled selection change
-proposes a new key once. The selected key may be null. Tabs use the requested
-key when enabled and otherwise use the first enabled tab. With no enabled
-tabs they show no panel. The fallback only affects presentation.
+focus stops in view order. Enter and typed Space activate the focused action.
+A disabled control receives no user action or keyboard focus. Theme selectors
+and split menus provide their own arrow-key navigation.
 
 The top modal owns focus and pointer input. It tries its initial focus ID,
 then the first enabled focus stop. Tab remains within the modal. Escape
@@ -182,7 +169,6 @@ GUI uses the CUI icon font. Set `TerminalIcon` and `TerminalIconRight` for
 cell-based equivalents, or leave them empty to show just the label. Small and
 medium buttons occupy one terminal row. Large buttons use two rows and wider
 padding. TUI shows the tooltip and shortcut on the last row while hovered.
-The existing `Elements.Button` constructor uses the same host implementations.
 
 ## Button group
 
@@ -271,6 +257,50 @@ static busy mark, check/error symbols and semantic success/danger colors, with
 distinct focus and hover styles. The galleries demonstrate model transitions
 using Complete, Fail and Reset buttons.
 
+## Theme switcher
+
+`Fpas.Ui.ThemeSwitchers.ThemeSwitcher` takes a stable group ID, a model-owned
+`Selection` (`Light`, `Dark`, `System`) and an `OnChange` mapper. Options select
+`WithSystem` (default false) and `Enabled` (default true). Selecting System while
+it is unavailable is a preflight error. The native selector uses CUI's small
+sun/moon/monitor segments; TUI uses a joined row of named text segments.
+
+Each segment is a focus stop. Tab/Shift+Tab move focus without selecting;
+Left/Right move and propose the neighboring choice without wrapping. Click,
+Enter or typed Space proposes the focused choice if it differs from the model.
+Preparing a view and activating the selected choice do not call the mapper.
+Disabled or modal-covered segments reject input and focus. Use
+`ThemeSwitchers.ItemId(Id, Choice)` for a segment focus request on either host.
+
+Apply the accepted choice through the existing `ThemeFor` callback. The widget
+does not replace the palette itself, including when the model rejects a proposal.
+`ThemeSwitchers.Resolve(Selected, SystemAppearance)` returns the concrete
+`Themes.Mode` for selecting a light/dark theme while preserving the application's
+accent and palette customization. Supply `SystemAppearance` from the application's
+appearance provider. As in CUI, the System segment itself does not detect OS or
+terminal settings. Provider changes update the resolved theme while System stays
+selected. The galleries include an explicitly simulated provider control.
+
+GUI snapshots include a non-interactive `theme-switcher` group with a
+`light`/`dark`/`system` value and keyed `theme-choice` segments. TUI segments use
+the IDs from `ItemId`. Segment values are `true` for the model's choice and
+`false` for the others; focus remains independent of selection.
+
+## Theme toggle
+
+`Fpas.Ui.ThemeToggles.ThemeToggle(Id, Appearance, OnChange, Enabled := true)`
+offers a compact light/dark action. Pass the model's concrete `Themes.Mode`;
+resolve a System selection with `ThemeSwitchers.Resolve` first. Activation
+proposes the opposite mode through `OnChange`. Preparing a view never calls
+the mapper. The application accepts or rejects the proposal in Update and
+applies its palette through `ThemeFor`, retaining custom colors and accents.
+
+GUI uses CUI's sun/moon icon button; TUI shows a sun/moon and a readable target
+caption. Both have the same stable identity, accessible target name, Enter,
+Space and pointer activation. Disabled and modal-covered actions reject input
+and focus. Snapshots use `theme-toggle` with the current `light`/`dark` value.
+The gallery's toggle replaces System with an explicit light/dark choice.
+
 ## Split button
 
 `Fpas.Ui.SplitButtons.SplitButton` takes a stable main-action ID, a literal
@@ -290,17 +320,7 @@ popup. TUI places a cell menu against the trailing edge of the split button
 and confines input to it while open. Long terminal menus support wheel and
 Page Up/Page Down scrolling.
 
-## Text editing and scrolling
-
-Both editor kinds take model-owned text and a directional `EditorPosition`.
-The caret and anchor are UTF-16 offsets at .NET grapheme boundaries, including
-the end of the string. Edits propose a replacement document and position.
-Selection-only changes use the navigation callback. Use LF for multiline
-breaks. When accepting input, normalize line breaks to LF for a multiline
-editor or spaces for a single-line editor before computing the proposed
-selection. The CUI adapter converts UTF-16 positions to UTF-8 byte offsets and
-maps native positions back to grapheme boundaries. Visual scroll offsets,
-preferred columns and text measurement belong to the host.
+## Scrolling
 
 A controlled scroll view clamps the requested position to the current range.
 `End` follows the end as content grows. User input proposes a new position
@@ -310,14 +330,9 @@ content changes recompute the visible offset without emitting messages.
 ## Host preflight
 
 Call `Validation.Prepare` with the host's profile before presenting any node.
-It validates the root, modal layers, the active tab panel and resolved cached
+It validates the root, sheet contents and resolved cached
 subtrees. It reports an `ArgumentException` with the control ID or tree path
-for incompatible units or extensions, invalid document positions, unknown
-selections, duplicate keys or IDs, and malformed options. Apply any additional
+for incompatible units or extensions, unavailable theme selections,
+duplicate keys or IDs, and malformed options. Apply any additional
 adapter-specific limits before drawing. Draw and input callbacks run at their
 respective stages after preflight.
-
-`CellCanvas` uses coordinates relative to the visible cell area. Image bytes
-and vector operations describe content, with image display size and vector
-coordinates in logical units. The host owns native textures and rendering
-resources.

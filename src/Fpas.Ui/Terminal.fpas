@@ -25,19 +25,4 @@ public type Cell = record
   // The cell's color overrides.
   public Colors: Style;
 end record;
-
-// Converts cell-canvas input into application messages.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-public type CanvasEvents<TMsg> = record
-  // Receives visible columns and rows when they change.
-  public OnResize: Sys.Func<int, int, TMsg>? := null;
-  // Receives zero-based column and row for a primary click.
-  public OnClick: Sys.Func<int, int, TMsg>? := null;
-  // Receives zero-based column and row for a middle click.
-  public OnMiddleClick: Sys.Func<int, int, TMsg>? := null;
-  // Receives column, row and signed wheel delta. Negative scrolls up.
-  public OnScroll: Sys.Func<int, int, int, TMsg>? := null;
-end record;
 end unit;

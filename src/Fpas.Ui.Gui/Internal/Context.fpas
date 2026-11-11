@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Context;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E,
-  Fpas.Ui.Validation as V, System as Sys, System.Text as Text, System.Collections.Generic as C;
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, System as Sys, System.Text as Text, System.Collections.Generic as C;
 
 // State shared by recursive drawing without application updates.
 //
@@ -11,8 +9,6 @@ uses
 public type State<TMsg> = record
   // Owner window.
   public Window: Cui.CuiWindow;
-  // Retained native-facing resources.
-  public Resources: Cui.CuiHostResources;
   // Graphically validated tree and subviews.
   public Prepared: V.Prepared<TMsg>;
   // Proposed messages.

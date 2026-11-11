@@ -10,8 +10,6 @@ public readonly record struct CuiSplitButtonResult(int Choice, bool Open, int Hi
 
 public sealed partial class CuiWindow
 {
-    private readonly Dictionary<string, uint> splitPopups = new(StringComparer.Ordinal);
-
     /// <summary>Draws a native split button and optionally registers its visible parts.</summary>
     /// <param name="id">Stable native identity.</param>
     /// <param name="label">Literal main action caption.</param>
@@ -47,25 +45,15 @@ public sealed partial class CuiWindow
 
         int[] nodes = new int[labels.Length + 2];
         int choice, open, highlighted;
-        uint popup;
         fixed (int* parts = nodes)
             choice = NativeMethods.SplitButton(context, Stable(id), label, icon.Length == 0 ? null : icon,
-                labels, icons, labels.Length, variant, size, enabled ? 1 : 0, focus, parts, out open, out highlighted, out popup);
+                labels, icons, labels.Length, variant, size, enabled ? 1 : 0, focus, parts, out open, out highlighted);
         if (trackingIds is not null)
         {
-            string main = trackingIds[0];
-            if (splitPopups.TryGetValue(main, out uint previous) && previous != popup)
-                NativeMethods.ForgetSplitButton(context, previous);
-            splitPopups[main] = popup;
             for (int index = 0; index < nodes.Length; index++)
                 if (nodes[index] >= 0) TrackControl(trackingIds[index], nodes[index]);
         }
 
         return new CuiSplitButtonResult(choice, open != 0, highlighted);
-    }
-
-    private void ForgetSplitButton(string trackingId)
-    {
-        if (splitPopups.Remove(trackingId, out uint popup)) NativeMethods.ForgetSplitButton(context, popup);
     }
 }

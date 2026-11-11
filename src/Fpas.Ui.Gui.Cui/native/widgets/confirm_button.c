@@ -6,8 +6,6 @@ int fpas_cui_confirm_button(cui_ctx *ui, const char *id, const char *label,
     cui__confirm_state *state = cui_state(ui, key ^ 0xC0F1u, sizeof *state);
     if (!enabled) {
         state->armed = false;
-        if (ui->focus == key) ui->focus = 0;
-        if (ui->active == key) ui->active = 0;
     }
     if (enabled && focus) ui->focus_next_request = key;
 
@@ -26,5 +24,6 @@ int fpas_cui_confirm_button(cui_ctx *ui, const char *id, const char *label,
     fpas_morph_captions(ui, "xy", captions);
     fpas_morph_end(ui, &state->m, saved, state->armed ? confirm_label : label,
         state->armed ? CUI_ICON_TRIANGLE_ALERT : icon, options.size);
+    fpas_own(ui, key, key ^ 0xC0F1u, 0, 0);
     return (enabled && confirmed ? 1 : 0) | (state->armed ? 2 : 0);
 }

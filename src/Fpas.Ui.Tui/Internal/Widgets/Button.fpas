@@ -1,9 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Button;
 
-uses
-  Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Controls.Activation as A;
 
 // Resolves a portable button into terminal presentation and input data.
 //

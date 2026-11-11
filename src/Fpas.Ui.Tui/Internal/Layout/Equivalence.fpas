@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Equivalence;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, System as Sys;
+uses Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, System as Sys;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin
@@ -12,49 +12,10 @@ begin
         else
           return false;
       end case;
-    when Tree.Binding.Toggle(const Value: Actions.Toggle<TMsg>):
-      case Right of
-        when Tree.Binding.Toggle(const Other: Actions.Toggle<TMsg>):
-          return Value.Checked = Other.Checked;
-        else
-          return false;
-      end case;
-    when Tree.Binding.SelectList(const List: S.Viewport<TMsg>):
-      case Right of
-        when Tree.Binding.SelectList(const Other: S.Viewport<TMsg>):
-          return S.Equivalent<TMsg>(List, Other);
-        else
-          return false;
-      end case;
-    when Tree.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
-      case Right of
-        when Tree.Binding.Multiline(const Other: EditorView.Viewport<TMsg>):
-          return EditorView.Equivalent<TMsg>(View, Other);
-        else
-          return false;
-      end case;
     when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
       case Right of
         when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):
           return V.Equivalent<TMsg>(View, Other);
-        else
-          return false;
-      end case;
-    when Tree.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
-      case Right of
-        when Tree.Binding.SelectTab(const Other: Tabs.Header<TMsg>):
-          return Tabs.Equivalent<TMsg>(Bar, Other);
-        else
-          return false;
-      end case;
-    when Tree.Binding.Canvas(
-      const Column: int,
-      const Row: int,
-      const Events: T.CanvasEvents<TMsg>
-    ):
-      case Right of
-        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: T.CanvasEvents<TMsg>):
-          return X = Column and Y = Row and Events = Other;
         else
           return false;
       end case;
@@ -83,7 +44,7 @@ begin
   end if;
 
   if Right = null or Left.Id <> Right.Id or Left.Initial <> Right.Initial
-    or Left.ExitEditFocus <> Right.ExitEditFocus or Left.Panel <>
+    or Left.Panel <>
     Right.Panel or not SameKeys<TMsg>(
     Left.Shortcuts,
     Right.Shortcuts

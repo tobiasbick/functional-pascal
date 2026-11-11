@@ -22,10 +22,17 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   Activate twice within three seconds; Escape or a click outside cancels.
   Save changes shows inline work feedback. Complete, Fail and Reset select its
   model-owned result; the status button itself accepts activation only while idle.
+  The Theme section uses the same light/dark/System switcher as the sidebar.
+  Its source button explicitly simulates an application appearance-provider change.
+  The adjacent sun/moon Theme toggle proposes an explicit opposite light/dark
+  choice, including when System was selected, and retains focus after changing.
 - The sidebar changes pages. At narrow widths, open it with the **Components**
   icon. Selecting a page dismisses the drawer.
+  Theme segments use Tab, Left/Right, Enter, Space or the pointer; selection
+  updates the model and its shared palette.
 
 The GUI gallery contract runs this view with both native renderers and captures
-the Buttons page, the open Split button menu and successful inline work feedback.
-It drives split, confirmation and status buttons with native keyboard input.
+the Buttons page, the open Split button menu, inline work feedback and the
+appearance controls. It drives split, confirmation, status and theme actions
+with native keyboard input.
 The same contract also drives the package-only consumer.

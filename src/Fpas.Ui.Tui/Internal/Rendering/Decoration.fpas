@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -14,34 +14,8 @@ public procedure Apply<TMsg>(
     end if;
   end procedure;
 begin
-  if Control.Role = 'canvas' then
-    return;
-  end if;
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
-    when A.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
-      if Focused then
-        for Index: int := 0 to Bar.Targets.Length - 1 do
-          if Bar.Targets[Index] = Bar.Active then
-            Mark(Bounds.X + Index, Bounds.Y, Theme.Focus);
-          end if;
-        end for;
-      end if;
-
-      return;
-    when A.Binding.SelectList(const List: S.Viewport<TMsg>):
-      if Focused then
-        const Offset: int := List.Selected - List.First;
-        if Offset >= 0 and Offset < Bounds.Height then
-          for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
-            Mark(X, Bounds.Y + Offset, Theme.Focus);
-          end for;
-        else
-          Mark(Bounds.X, Bounds.Y, Theme.Focus);
-        end if;
-      end if;
-
-      return;
     when A.Binding.Scroll(const View: V.Viewport<TMsg>):
       if Focused then
         Mark(
@@ -55,11 +29,7 @@ begin
     else
   end case;
   const Widgets: Th.WidgetStyles? := Theme.Widgets;
-  const Standard: T.Style := if not Focused then Theme.Hover
-    else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
-      else Theme.Focus
-      end if
-    end if;
+  const Standard: T.Style := if not Focused then Theme.Hover else Theme.Focus end if;
   const Style: T.Style := if Control.ButtonStyle then Buttons.WithForeground(
       Theme,
       Buttons.Resolve(
@@ -74,18 +44,6 @@ begin
     )
     else Standard
     end if;
-  const ShowsPlaceholder: bool := case Control.Action of
-    when A.Binding.Multiline(
-      const View: EditorView.Viewport<TMsg>
-    ): View.Document.Text = '' and not View.MultipleLines;
-    else false;
-  end case;
-  const HintStyle: T.Style := if ShowsPlaceholder then D.PlaceholderStyle(
-      Style,
-      Theme
-    )
-    else Style
-    end if;
   const Filled: int := Bounds.Width * Control.HoldProgress div 100;
   const FillStyle: T.Style := if Filled > 0 then Hold.FillStyle(
       Style,
@@ -97,20 +55,11 @@ begin
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
       Mark(
         X, Y, if X < Bounds.X + Filled then FillStyle
-          elsif Y = Bounds.Y and X >= Bounds.X + 2 then HintStyle
           else Style
           end if
       );
     end for;
   end for;
-
-  if Focused then
-    case Control.Action of
-      when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
-        EditorText.MarkSelection(View.Document, Theme, Mark);
-      else
-    end case;
-  end if;
 end procedure;
 
 public function Capture<TMsg>(
@@ -135,14 +84,7 @@ begin
         Control.Bounds.Height,
         Focused,
         Hovered,
-        Control.Enabled and Control.Scope = Scope,
-        case Control.Action of
-          when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>): new Ed.EditorPosition(
-            View.Document.Position.Caret,
-            View.Document.Position.Anchor
-          );
-          else null;
-        end case
+        Control.Enabled and Control.Scope = Scope
       )
     );
     if Focused or Hovered then

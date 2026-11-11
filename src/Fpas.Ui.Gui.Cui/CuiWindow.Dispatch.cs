@@ -43,7 +43,6 @@ public sealed partial class CuiWindow
             window.trackedNodes.Clear();
             window.scrollRequests.Clear(); window.scrollNodes.Clear();
             window.usedModals.Clear();
-            window.AdvanceImageFrame();
             window.resizeRenderer?.Invoke();
             if (window.layouts.Count != 0) throw new InvalidOperationException("Unbalanced live-resize view.");
             window.ResolveHostLayout();

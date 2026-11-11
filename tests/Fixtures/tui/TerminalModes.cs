@@ -37,7 +37,7 @@ Mvu.Transition<int, int> Update(int state, int message)
 }
 
 static Elements.Element<int> View(int state) =>
-    state == 0 ? Elements.Button<int>("advance", "terminal-ready", 1) : Elements.Text<int>("next frame");
+    state == 0 ? Buttons.Button<int>("advance", "terminal-ready", 1) : Elements.Text<int>("next frame");
 
 sealed record Modes(string Input, uint? Output);
 

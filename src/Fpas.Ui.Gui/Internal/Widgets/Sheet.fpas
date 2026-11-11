@@ -1,9 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Sheet;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
-  Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Sheets as Sheets, System.Collections.Generic as Generic;
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, System.Collections.Generic as Generic;
 
 // Draws a controlled native sheet over its base view.
 //

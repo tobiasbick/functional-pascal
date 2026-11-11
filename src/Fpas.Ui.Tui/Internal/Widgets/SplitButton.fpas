@@ -1,12 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.SplitButton;
 
-uses
-  Fpas.Ui.SplitButtons as Split, Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Controls.Activation as A,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Button as Button,
-  Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as C;
 
 // Owns the one open split-button menu in a terminal session.
 public type State = record

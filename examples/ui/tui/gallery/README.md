@@ -25,6 +25,12 @@ pages and shows the widgets checked in the [CUI inventory](../../../../docs/futu
   increments the harmless preview counter.
   Save changes shows inline work feedback with result colors. Complete, Fail
   and Reset drive the model; non-idle feedback retains focus and rejects activation.
+  The Theme section and navigation use the same light/dark/System switcher.
+  Tab moves focus, Left/Right select without wrapping, and Enter or Space
+  selects the focused segment. The source button simulates an application
+  appearance-provider change; System itself does not detect terminal settings.
+  The adjacent sun/moon Theme toggle shows its target and proposes an explicit
+  opposite light/dark choice, including when System was selected.
 
 Use the pointer or Tab and Enter to choose a page. Page Up and Page Down switch
 pages when the content viewport does not own the keys. Below 56 columns, use

@@ -1,11 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Sheet;
 
-uses
-  Fpas.Ui.Sheets as Sheets, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Sheets as Sheets, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as Generic;
 
 // Final placement of a sheet and its pinned close button and scrolling body.
 type SheetBounds = record
@@ -157,8 +152,7 @@ begin
   const Bounds: SheetBounds := PaintSheet(Operations, Screen, Settings, Size, Colors, Theme);
   const Close: string := Sheets.CloseId(Id);
   const Scope: A.Scope<TMsg> := new A.Scope<TMsg>(
-    Id, Settings.InitialFocus ?? Close, function(): TMsg => Dismiss, [], Bounds.Panel,
-    ExitEditFocus := Close
+    Id, Settings.InitialFocus ?? Close, function(): TMsg => Dismiss, [], Bounds.Panel
   );
   const Control: A.Control<TMsg> := new A.Control<TMsg>(
     Close, 'Close', 'button', '', Bounds.Close, Id, FocusReturn, true,

@@ -20,10 +20,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void FinishFrameForDestroy(nint app);
 
-    [LibraryImport(Library, EntryPoint = "cui_app_frame")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial byte Frame(nint app);
-
     [LibraryImport(Library, EntryPoint = "fpas_cui_frame")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int Pump(nint app, int deferClose);
@@ -43,10 +39,6 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_rect")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiRectangle NodeRectangle(nint context, int node);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_fill_last_width")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void FillLastWidth(nint context);
 
     [LibraryImport(Library, EntryPoint = "cui_push_disabled")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -116,14 +108,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollTo(nint context, string id, float offset);
 
-    [LibraryImport(Library, EntryPoint = "fpas_cui_dialog_begin", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int BeginDialog(nint context, string title, ref int open);
-
-    [LibraryImport(Library, EntryPoint = "cui_dialog_end")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void EndDialog(nint context);
-
     [LibraryImport(Library, EntryPoint = "fpas_cui_request_focus", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void RequestFocus(nint context, string id);
@@ -136,52 +120,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Text(nint context, string text, nint options);
 
-    [LibraryImport(Library, EntryPoint = "fpas_cui_list_item", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int ListItem(nint context, string label, int selected);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_tab_item", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int TabItem(nint context, string label, int selected);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_table_begin", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int BeginTable(nint context, string id,
-        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] titles, int count);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_table_row")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int TableRow(nint context, int selected);
-
-    [LibraryImport(Library, EntryPoint = "cui_table_cell_text", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void TableCell(nint context, string text);
-
-    [LibraryImport(Library, EntryPoint = "cui_table_end")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void EndTable(nint context);
-
-    [LibraryImport(Library, EntryPoint = "cui_checkbox_ex", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial byte Checkbox(nint context, string label, ref byte value, nint options);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_text_edit", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int TextEdit(nint context, string id, byte* buffer, nuint capacity,
-        float height, long documentVersion, ref int anchor, ref int caret, string placeholder);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_image_create")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial nuint CreateImage(nint app, int width, int height, byte* rgba);
-
-    [LibraryImport(Library, EntryPoint = "cui_image_destroy")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void DestroyImage(nint context, nuint texture);
-
-    [LibraryImport(Library, EntryPoint = "fpas_cui_image")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Image(nint context, nuint texture, float width, float height);
-
     [LibraryImport(Library, EntryPoint = "cui_last_rect")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiRectangle LastRectangle(nint context);
@@ -193,10 +131,6 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_input_mouse_button")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void LeftButton(nint context, int button, byte down);
-
-    [LibraryImport(Library, EntryPoint = "cui_input_text", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void TypeText(nint context, string text);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_capture", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

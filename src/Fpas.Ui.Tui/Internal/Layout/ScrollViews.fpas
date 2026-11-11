@@ -78,10 +78,10 @@ begin
   const Start: int := cast<int>(cast<long>(View.Offset) * cast<long>(View.Rows - Thumb) div
     cast<long>(View.Maximum));
   const TrackStyle: T.Style := if Widgets = null then Style
-    else new T.Style(Widgets.ProgressTrackColor, Style.Background)
+    else new T.Style(Widgets.ScrollTrackColor, Style.Background)
     end if;
   const ThumbStyle: T.Style := if Widgets = null then Style
-    else new T.Style(Widgets.ProgressFillColor, Style.Background)
+    else new T.Style(Widgets.ScrollThumbColor, Style.Background)
     end if;
   for Row: int := 0 to View.Rows - 1 do
     const BarCell: F.Rect := new F.Rect(Area.X + Area.Width - 1, Area.Y + Row, 1, 1);

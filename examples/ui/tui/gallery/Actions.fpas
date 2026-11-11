@@ -1,6 +1,7 @@
 unit Gallery.Actions;
 
 uses
+  Gallery.ThemeSwitcher as Theme,
   Gallery.State as State, Gallery.SplitButton as Split, Gallery.ConfirmButton as Confirm,
   Gallery.StatusButton as Status, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
@@ -10,7 +11,7 @@ uses
 // - `Model`: Current gallery state.
 // - `Wide`: Whether the previews fit alongside each other.
 // ## Returns
-// Split buttons and the two morphing feedback controls.
+// Split buttons, morphing feedback and model-owned appearance controls.
 public function View(Model: State.Model; Wide: bool): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
@@ -28,7 +29,8 @@ begin
         )
         else E.Column<State.Msg>(Confirm.View(Model), Status.View(Model))
         end if
-    )
+    ),
+    Theme.View(Model)
   );
 end function;
 end unit;

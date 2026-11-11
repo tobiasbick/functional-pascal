@@ -1,9 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Button;
 
-uses
-  Fpas.Ui.Buttons as B, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
-  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as S,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Buttons as B, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
 
 // Draws a native button and routes its activation.
 //

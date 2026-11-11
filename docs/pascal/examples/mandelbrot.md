@@ -45,8 +45,7 @@ end program;
 
 The [standalone project](../../../examples/numerics/mandelbrot/README.md) runs the same
 program. Its MSBuild integration test verifies every pixel against a .NET
-Complex calculation. The [Mandelbrot Explorer](../../../examples/ui/tui/mandelbrot/README.md)
-adds interactive pan, zoom, and color palettes in a fullscreen terminal.
+Complex calculation.
 
 ## See also
 

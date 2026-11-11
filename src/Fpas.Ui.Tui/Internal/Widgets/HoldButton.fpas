@@ -1,9 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.HoldButton;
 
-uses
-  Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys;
+uses Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys;
 
 // Tracks the terminal session's one active left-button hold.
 public type State = record

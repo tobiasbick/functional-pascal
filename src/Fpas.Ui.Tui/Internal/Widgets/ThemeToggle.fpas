@@ -1,0 +1,44 @@
+unit Fpas.Ui.Tui.Internal.Widgets.ThemeToggle;
+
+uses Fpas.Ui.Themes as Themes, Fpas.Ui.Internal.ThemeToggles as Parts, Fpas.Ui.Styles as S, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A;
+
+type Action<TMsg> = record implements A.IActivatable<TMsg>
+  // Concrete appearance captured by this prepared view.
+  public Appearance: Themes.Mode;
+  // Mapper invoked only by an accepted activation.
+  public Change: function(Themes.Mode): TMsg;
+
+  // Proposes the opposite appearance without modifying the model.
+  //
+  // ## Returns
+  // The mapped application message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return A.Result<TMsg>.Send(self.Change(Parts.Opposite(self.Appearance)));
+  end function;
+end record;
+
+// Resolves a light/dark action to a named, focusable terminal button.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable action identity.
+// - `Appearance`: Model-owned concrete light/dark appearance.
+// - `OnChange`: Maps an activation to a message.
+// - `Enabled`: Whether input and focus are permitted.
+// ## Returns
+// A compact sun/moon button with a readable target caption.
+public function Lower<TMsg>(Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool): E.Element<TMsg>;
+begin
+  const Label: string := Parts.Label(Appearance);
+  return E.Element<TMsg>.Action(
+    Id, new Action<TMsg>(Appearance, OnChange), Enabled,
+    new E.ActionView(
+      if Appearance = Themes.Mode.Dark then '☀ Light' else '☾ Dark' end if,
+      Name := Label, Role := 'theme-toggle', Value := Appearance.ToString().ToLowerInvariant(),
+      Variant := S.ButtonVariant.Ghost, ArrowFocus := false, Hint := Label
+    )
+  );
+end function;
+end unit;

@@ -34,6 +34,8 @@
     <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/ConfirmButton.fpas" Link="Fixtures/tui/confirm.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/StatusButton.fpas" Link="Fixtures/tui/status.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/ThemeSwitcher.fpas" Link="Fixtures/tui/theme-switcher.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/ThemeToggle.fpas" Link="Fixtures/tui/theme-toggle.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/basics/units/**/*.fpas;../../examples/basics/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

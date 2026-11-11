@@ -32,20 +32,14 @@ public type ButtonStyles = record
   public Disabled: T.Style;
 end record;
 
-// Terminal border, editor, selection and progress colors.
+// Terminal border and scrollbar colors.
 public type WidgetStyles = record
   // 24-bit border foreground.
   public BorderColor: int;
-  // Editor body colors.
-  public Field: T.Style;
-  // Focused editor colors.
-  public FocusedField: T.Style;
-  // Selected row colors.
-  public Selected: T.Style;
-  // 24-bit filled progress foreground.
-  public ProgressFillColor: int;
-  // 24-bit empty progress foreground.
-  public ProgressTrackColor: int;
+  // 24-bit scrollbar thumb foreground.
+  public ScrollThumbColor: int;
+  // 24-bit scrollbar track foreground.
+  public ScrollTrackColor: int;
 end record;
 
 // Resolved terminal rendering attributes derived exclusively from a shared theme.
@@ -58,12 +52,8 @@ public type Theme = record
   public Focus: T.Style;
   // Pointer-hover colors.
   public Hover: T.Style;
-  // Caret colors.
-  public Caret: T.Style;
-  // Border, editor, selection and progress attributes.
+  // Border and scrollbar attributes.
   public Widgets: WidgetStyles;
-  // Placeholder foreground.
-  public PlaceholderColor: int;
   // Semantic action states.
   public Buttons: ButtonStyles;
 end record;
@@ -123,13 +113,11 @@ begin
   const Error: T.Style := new T.Style(ErrorColor, Canvas);
   return new Theme(
     Colors := C,
-    Text := new T.Style(Text, Canvas), Focus := Focus, Hover := Hover, Caret := Focus,
+    Text := new T.Style(Text, Canvas), Focus := Focus, Hover := Hover,
     Widgets := new WidgetStyles(
-      BorderColor := Rgb(C.Border, Surface), Field := new T.Style(Text, Surface),
-      FocusedField := new T.Style(Text, Surface), Selected := Selected,
-      ProgressFillColor := Accent, ProgressTrackColor := Rgb(C.ControlTrack, Surface)
+      BorderColor := Rgb(C.Border, Surface),
+      ScrollThumbColor := Accent, ScrollTrackColor := Rgb(C.ControlTrack, Surface)
     ),
-    PlaceholderColor := Rgb(C.TextMuted, Canvas),
     Buttons := new ButtonStyles(
       Default := new ButtonAppearance(Secondary, Focus, Hover),
       Secondary := new ButtonAppearance(Secondary, Focus, Hover),

@@ -1,5 +1,4 @@
 using Fpas.Ui.Gui.Cui.Interop;
-using Fpas.Ui.Gui.Cui.Text;
 
 namespace Fpas.Ui.Gui.Cui;
 
@@ -7,10 +6,6 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws a native hairline separator in the current container.</summary>
     public void Separator() { CheckFrame(); NativeMethods.Separator(context); }
-    /// <summary>Measures literal text for shared table-column content sizing.</summary>
-    /// <param name="text">Strict Unicode text.</param>
-    /// <returns>Native logical width.</returns>
-    public float MeasureText(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); return NativeMethods.MeasureText(context, text); }
     private readonly Dictionary<string, (int Mode, float Offset)> scrollRequests = [];
     private readonly Dictionary<string, int> scrollNodes = [];
     private readonly Dictionary<string, uint> modalKeys = [];
@@ -29,46 +24,11 @@ public sealed partial class CuiWindow
     internal void RestoreControlFocus(string id)
     { CheckOpen(); NativeMethods.RequestFocus(context, Stable(id)); }
 
-    /// <summary>Reports Enter or double-click activation separately from selection.</summary>
-    public bool IsActivation { get { CheckFrame(); return NativeMethods.Activate(context) != 0; } }
-
-    /// <summary>Opens a selectable row whose cells are drawn by the caller.</summary>
-    /// <param name="id">Stable identity.</param>
-    /// <param name="enabled">Input permission.</param>
-    /// <param name="selected">Model selection.</param>
-    /// <param name="focus">Focus request.</param>
-    /// <returns>Native event bits.</returns>
-    public int BeginChoiceRow(string id, bool enabled, bool selected, bool focus)
-    {
-        CheckFrame();
-        int node = NativeMethods.ChoiceRow(context, Stable(id), enabled ? 1 : 0, selected ? 1 : 0, focus ? 1 : 0, out int events);
-        layouts.Add(new(Layout.Group, Node: node));
-        return events;
-    }
     private static string Stable(string id)
     {
         Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
         return "###" + Convert.ToBase64String(Utf8.Encoding.GetBytes(id));
-    }
-
-    /// <summary>Draws an adapter control with literal text and a separate stable identity.</summary>
-    /// <param name="id">Identity independent of label text.</param>
-    /// <param name="text">Literal visible label.</param>
-    /// <param name="kind">Button=0, checkbox=1, choice=2, tab=3.</param>
-    /// <param name="enabled">Whether input is accepted.</param>
-    /// <param name="selected">Controlled checked/selected value.</param>
-    /// <param name="variant">Shared semantic button variant.</param>
-    /// <param name="focus">Whether to request focus.</param>
-    /// <returns>Activation bit 1 and checked-value bit 2.</returns>
-    public int Control(string id, string text, int kind, bool enabled, bool selected, int variant, bool focus)
-    {
-        CheckFrame(); Utf8.Validate(text, nameof(text));
-        ArgumentOutOfRangeException.ThrowIfNegative(kind);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(kind, 3);
-        ArgumentOutOfRangeException.ThrowIfNegative(variant);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(variant, 7);
-        return NativeMethods.Control(context, Stable(id), text, kind, enabled ? 1 : 0, selected ? 1 : 0, variant, focus ? 1 : 0);
     }
 
     /// <summary>Opens a clipped host layout container.</summary>
@@ -113,36 +73,9 @@ public sealed partial class CuiWindow
         NativeMethods.NodeSize(context, node, horizontal ? 1 : 0, kind, basis, minimum, maximum, grow, alignment);
     }
 
-    /// <summary>Supplies a preferred content width while retaining native shrink behavior.</summary>
-    /// <param name="width">Nonnegative finite logical extent, usually shared across table rows.</param>
-    public void PreferLastWidth(float width)
-    {
-        CheckFrame();
-        if (!float.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width));
-        NativeMethods.PreferredWidth(context, NativeMethods.LastNode(context), width);
-    }
-
     /// <summary>Applies a semantic theme role to the last widget.</summary>
     /// <param name="role">Shared role ordinal.</param>
     public void StyleLast(int role) { CheckFrame(); NativeMethods.NodeRole(context, NativeMethods.LastNode(context), role); }
-
-    /// <summary>Draws a controlled editor with focus and disabled state.</summary>
-    /// <param name="id">Stable identity.</param>
-    /// <param name="buffer">Owned text and selection.</param>
-    /// <param name="multiline">Whether line breaks are accepted.</param>
-    /// <param name="enabled">Input permission.</param>
-    /// <param name="focus">Focus request.</param>
-    /// <param name="placeholder">Hint displayed for an empty document.</param>
-    /// <returns>Native editor events.</returns>
-    public CuiTextInputEvents Editor(string id, CuiTextBuffer buffer, bool multiline, bool enabled, bool focus, string placeholder = "")
-    {
-        CheckFrame();
-        Utf8.Validate(placeholder, nameof(placeholder));
-        string nativeId = Stable(id);
-        NativeMethods.EditorOptions(context, nativeId, enabled ? 1 : 0, focus ? 1 : 0);
-        try { return DrawTextEditor(nativeId, buffer, multiline ? 96 : 0, placeholder); }
-        finally { NativeMethods.PopDisabled(context); }
-    }
 
     /// <summary>Reads focus from a tracked node after presentation.</summary>
     /// <param name="id">Tracked identity.</param>
@@ -186,50 +119,12 @@ public sealed partial class CuiWindow
     public void ScrollMetrics(string id, out float offset, out float maximum)
     { CheckOpen(); NativeMethods.ScrollMetrics(context, trackedNodes[id], out offset, out maximum); }
 
-    /// <summary>Begins or closes a controlled modal. Close visible contents with EndDialog.</summary>
-    /// <param name="id">Stable modal identity.</param>
-    /// <param name="open">Model-owned visibility.</param>
-    /// <returns>Whether contents are open.</returns>
-    public bool Modal(string id, bool open)
-    {
-        CheckFrame();
-        bool visible = NativeMethods.ModalBegin(context, Stable(id), open ? 1 : 0) != 0;
-        if (visible)
-        {
-            TrackModal(id);
-            layouts.Add(new(Layout.Dialog));
-        }
-        return visible;
-    }
-
     private void TrackModal(string id)
     {
         uint key = NativeMethods.ModalKey(context);
         if (modalKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
         modalKeys[id] = key;
         usedModals.Add(id);
-    }
-
-    /// <summary>Draws a native progress meter.</summary>
-    /// <param name="percent">Percentage in 0..100.</param>
-    public void Progress(int percent) { CheckFrame(); NativeMethods.Progress(context, percent / 100f, 0); }
-
-    /// <summary>Copies drawing operations into native frame-owned memory.</summary>
-    /// <param name="id">Stable canvas identity.</param>
-    /// <param name="width">Logical width.</param>
-    /// <param name="height">Logical height.</param>
-    /// <param name="operations">Rectangle and line operations.</param>
-    public unsafe void Canvas(string id, float width, float height, CuiPaint[] operations)
-    {
-        CheckFrame(); ArgumentNullException.ThrowIfNull(operations);
-        if (!float.IsFinite(width) || width <= 0 || !float.IsFinite(height) || height <= 0)
-            throw new ArgumentOutOfRangeException(nameof(width));
-        foreach (var operation in operations)
-            if (operation.Kind is < 0 or > 1 || !float.IsFinite(operation.A) || !float.IsFinite(operation.B) ||
-                !float.IsFinite(operation.C) || !float.IsFinite(operation.D) || !float.IsFinite(operation.Thickness) ||
-                operation.Kind == 0 && (operation.C < 0 || operation.D < 0) || operation.Kind == 1 && operation.Thickness <= 0)
-                throw new ArgumentException("Invalid canvas operation.", nameof(operations));
-        fixed (CuiPaint* items = operations) NativeMethods.Canvas(context, Stable(id), width, height, items, operations.Length);
     }
 
     /// <summary>Applies the shared theme's semantic palette atomically.</summary>

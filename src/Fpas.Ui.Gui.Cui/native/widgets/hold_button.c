@@ -18,5 +18,6 @@ int fpas_cui_hold_button(cui_ctx *ui, const char *id, const char *label, const c
     const bool confirmed = cui_hold_button_ex(ui, *label ? cui__frame_printf(ui, "x%s", id) : id, &options);
     cui_pop_disabled(ui);
     if (*label) fpas_literal(ui, ui->last_node, label, CUI_C(ui, FOREGROUND));
+    fpas_own(ui, key, key ^ 0x401Du, 0, 0);
     return enabled && confirmed ? 1 : 0;
 }

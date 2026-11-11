@@ -6,14 +6,13 @@ links the platform libraries. `fpas_cui.c` includes the release's `cui.c` and
 the adapters that access its private types in the same translation unit.
 `bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
 [`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, text
-editing, lists, tables, tabs, scrolling, modal dialogs and images. The table
-adapter keeps column descriptors alive through the frame. Check the lifetime
-of borrowed strings and other inputs for each new adapter.
+buttons, navigation, sheets, scrolling and themes. Check the lifetime
+of borrowed strings and other inputs for each adapter.
 
-New widget adapters live in `widgets/` with one implementation and header per
-widget. `fpas_cui.c` includes their implementations after the shared helpers
-so the adapters can use the private CUI types. The managed bindings are partial
-files on `CuiWindow` and `NativeMethods`.
+Reuse native CUI primitives before adding adapters. Required adapters live in
+`widgets/`; `fpas_cui.c` includes them after the shared helpers to contain
+private CUI types within the native bridge. Managed bindings are partial files
+on `CuiWindow` and `NativeMethods`. Compositions need no additional C entry point.
 
 `widgets/button.c` passes the portable button options to CUI and replaces
 its label text after creating the native label slot. This keeps literal
@@ -25,6 +24,12 @@ animated faces to CUI. Their shared `widgets/morph_button.c` helper restores
 literal captions and measures their full width independently of CUI's label-ID
 syntax. Removed controls release the corresponding native animation state.
 
+`widgets/segmented.c` calls CUI's segment control and exposes its group and
+segment nodes. The managed theme switcher supplies CUI's sun/moon/monitor
+icons. Theme toggle uses `widgets/icon_button.c`, which calls CUI's native
+icon-button primitive with an identity independent of its glyph and tooltip.
+Both propose appearances without mutating the model-owned palette.
+
 `widgets/copy_button.c` delegates drawing, clipboard submission and confirmation
 timing to CUI's native copy button. The adapter supplies input permissions,
 focus requests and confirmation state for the managed host.
@@ -33,11 +38,12 @@ focus requests and confirmation state for the managed host.
 and keyed inspection. CUI handles keyboard selection. The adapter releases the
 popup when its control disappears from the view.
 
-The image adapter verifies OpenGL storage after upload. CUI copies pixel data
-during the upload and queues the texture handle for frame rendering. Callers
-keep that texture alive while CUI can still render the frame.
+`control_state.c` owns native companion-state and popup retirement. A single
+forget operation retires a removed control; changing a control's kind retires
+its former companion state. Managed code does not encode private state keys.
+
 `fpas_cui_finish_frame_for_destroy` completes deferred paint without presenting
-before the binding releases its textures and destroys the window. The software
+before the binding destroys the window. The software
 renderer aborts if its native allocator runs out of memory.
 
 The resize callback draws an open CUI frame on the UI thread. Its caller owns
@@ -51,7 +57,7 @@ The managed window serializes posting and release before it destroys the target 
 - Linux: X11 development headers/libraries and the usual C development tools.
 - Windows: MSVC with the Windows SDK, or a suitable MinGW toolchain.
 
-The native link, render and editor tests pass for the shared and static builds on
+The native link, render and widget tests cover the shared and static builds on
 Windows x64 with MSVC and Ubuntu x64 under WSL 2 with GCC. The
 [distribution reference](../../../docs/build/distribution.md#native-cui-assets)
 describes the prebuilt SDK assets and notices.
@@ -83,10 +89,9 @@ the outputs in the build directory's `Release/` subdirectory. Keep the shared
 import library and static archive in separate build directories.
 
 The optional smoke target is an independent C consumer linked through
-`fpas::cui`. It initializes the bundled fonts, checks that Enter inserts a line
-break in a text area and verifies software-rendered pixels. The editor test checks
-multiline keyboard navigation and undo isolation across document replacement.
-Both tests run without a display. On Windows, the live-resize test creates a
+`fpas::cui`. It initializes the bundled fonts, verifies software-rendered pixels,
+and checks copy, hold and split-button behavior. Dedicated tests cover confirm,
+status, segment and icon primitives. These tests run without a display. On Windows, the live-resize test creates a
 hidden window and verifies callback registration and detachment.
 
 For Linux ABI inspection, check public symbols in each output:

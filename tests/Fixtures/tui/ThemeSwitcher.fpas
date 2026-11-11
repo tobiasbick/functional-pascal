@@ -1,0 +1,305 @@
+program ThemeSwitcherContract;
+
+uses
+  Fpas.Ui.Buttons as UiButtons, Fpas.Ui.ThemeSwitchers as S, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as K,
+  System as Sys, System.Console as Console;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+type Model = record
+  // Model-owned primary selection.
+  public Selected: S.Selection := S.Selection.Light;
+  // A second independently controlled selector.
+  public Other: S.Selection := S.Selection.Dark;
+  // Number of user proposals from the primary selector.
+  public Count: int := 0;
+  // Whether the model accepts primary proposals.
+  public Accept: bool := true;
+  // Whether the primary selector accepts input and focus.
+  public Enabled: bool := true;
+  // Availability of the primary System segment.
+  public WithSystem: bool := true;
+  // Appearance supplied by the application's provider.
+  public Source: Themes.Mode := Themes.Mode.Light;
+end record;
+
+type Msg = variant
+  Choose(Value: S.Selection);
+  ChooseOther(Value: S.Selection);
+  ToggleAccept;
+  ToggleEnabled;
+  HideSystem;
+  Source(Value: Themes.Mode);
+end variant;
+
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Choose(const Value: S.Selection): State with
+      Selected := if State.Accept then Value else State.Selected end if;
+      Count := State.Count + 1;
+    end with;
+    when Msg.ChooseOther(const Value: S.Selection): State with
+      Other := Value;
+    end with;
+    when Msg.ToggleAccept: State with
+      Accept := not State.Accept;
+    end with;
+    when Msg.ToggleEnabled: State with
+      Enabled := not State.Enabled;
+    end with;
+    when Msg.HideSystem: State with
+      WithSystem := false;
+      Selected := S.Selection.Light;
+    end with;
+    when Msg.Source(const Value: Themes.Mode): State with
+      Source := Value;
+    end with;
+  end case;
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+function ThemeFor(State: Model): Themes.Theme;
+begin
+  const Mode: Themes.Mode := S.Resolve(State.Selected, State.Source);
+  const Theme: Themes.Theme := if Mode = Themes.Mode.Dark then Themes.Dark(Themes.Accent.Blue)
+    else Themes.Light(Themes.Accent.Blue)
+    end if;
+  return Theme with
+    Colors := Theme.Colors with
+      Background := if Mode = Themes.Mode.Dark then new G.Color(
+          12,
+          14,
+          16,
+          255
+        )
+        else new G.Color(240, 242, 244, 255)
+        end if;
+    end with;
+  end with;
+end function;
+
+function Control(Session: Tui.HeadlessSession; Id: string): Tui.ControlSnapshot;
+begin
+  for Item: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when Tui.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Background(Session: Tui.HeadlessSession; Dark: bool);
+begin
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(
+    Frame.Cells[
+      Frame.Cells.Length - 1
+    ].Colors.Background = (if Dark then $0C0E10 else $F0F2F4 end if),
+    'Only the accepted model/provider may replace the palette.'
+  );
+end procedure;
+
+procedure Behavior();
+  function Choose(Value: S.Selection): Msg;
+  begin
+    Calls := Calls + 1;
+    return Msg.Choose(Value);
+  end function;
+
+  function View(State: Model): E.Element<Msg>;
+  begin
+    return E.Column<Msg>(
+      S.ThemeSwitcher<Msg>(
+        'theme',
+        State.Selected,
+        Choose,
+        new S.Options(WithSystem := State.WithSystem, Enabled := State.Enabled)
+      ),
+      S.ThemeSwitcher<Msg>('other', State.Other, Msg.ChooseOther),
+      UiButtons.Button<Msg>('accept', 'Accept', Msg.ToggleAccept),
+      UiButtons.Button<Msg>('enabled', 'Enabled', Msg.ToggleEnabled),
+      UiButtons.Button<Msg>('hide', 'Hide System', Msg.HideSystem),
+      UiButtons.Button<Msg>('source-dark', 'Dark provider', Msg.Source(Themes.Mode.Dark)),
+      UiButtons.Button<Msg>('source-light', 'Light provider', Msg.Source(Themes.Mode.Light))
+    );
+  end function;
+begin
+  var Calls: int := 0;
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    50,
+    24,
+    ThemeFor
+  );
+  Check(
+    Calls = 0 and Control(Session, 'theme/light').Focused,
+    'Preparation must not invoke a change mapper.'
+  );
+  Check(
+    Control(
+      Session,
+      'theme/light'
+    ).Value = 'true' and Control(Session, 'other/dark').Value = 'true',
+    'Independent initial choices.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Tab, K.KeyModifiers.None));
+  Check(Control(Session, 'theme/dark').Focused and Calls = 0, 'Tab moves focus without selecting.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(Control(Session, 'theme/dark').Value = 'true' and Calls = 1, 'Enter proposes once.');
+  Background(Session, true);
+  Send(Session, Tui.Input.KeyPress(K.Key.Right, K.KeyModifiers.None));
+  Check(
+    Control(
+      Session,
+      'theme/system'
+    ).Focused and Control(Session, 'theme/system').Value = 'true' and Calls = 2,
+    'Right selects the neighboring System segment.'
+  );
+  Background(Session, false);
+  Send(Session, Tui.Input.KeyPress(K.Key.Right, K.KeyModifiers.None));
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Send(Session, Tui.Input.Character(' '));
+  Check(Calls = 2, 'Boundary arrows and already-selected activation propose nothing.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Left, K.KeyModifiers.None));
+  Send(Session, Tui.Input.KeyPress(K.Key.Left, K.KeyModifiers.None));
+  Send(Session, Tui.Input.KeyPress(K.Key.Left, K.KeyModifiers.None));
+  Check(
+    Calls = 4 and Control(Session, 'theme/light').Focused,
+    'Left does not wrap at the first segment.'
+  );
+  Send(Session, Tui.Input.Activate('accept'));
+  Send(Session, Tui.Input.KeyPress(K.Key.Right, K.KeyModifiers.None));
+  Check(
+    Calls = 5 and Control(
+      Session,
+      'theme/dark'
+    ).Focused and Control(Session, 'theme/light').Value = 'true',
+    'A rejected proposal moves focus but preserves controlled selection.'
+  );
+  Background(Session, false);
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(
+    Calls = 6 and Control(Session, 'theme/light').Value = 'true',
+    'Repeated proposals remain controlled.'
+  );
+  Send(Session, Tui.Input.Activate('accept'));
+  Send(Session, Tui.Input.Character(' '));
+  Check(
+    Calls = 7 and Control(Session, 'theme/dark').Value = 'true',
+    'Typed Space selects the focused segment.'
+  );
+  const System: Tui.ControlSnapshot := Control(Session, 'theme/system');
+  Send(Session, Tui.Input.Click(System.Column + 1, System.Row));
+  Check(
+    Calls = 8 and Control(Session, 'theme/system').Value = 'true',
+    'Pointer selection proposes exactly once.'
+  );
+  Send(Session, Tui.Input.Activate('source-dark'));
+  Background(Session, true);
+  Send(Session, Tui.Input.Activate('source-light'));
+  Background(Session, false);
+  Check(
+    Calls = 8 and Control(Session, 'theme/system').Value = 'true',
+    'Provider changes keep System selected without a new proposal.'
+  );
+  Send(Session, Tui.Input.Activate('other/light'));
+  Check(
+    Calls = 8 and Control(
+      Session,
+      'other/light'
+    ).Value = 'true' and Control(Session, 'theme/system').Value = 'true',
+    'Instances do not share selection.'
+  );
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('theme/light'));
+  Check(
+    Calls = 8 and not Control(Session, 'theme/light').Enabled,
+    'Disabled segments reject activation.'
+  );
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('theme/light'));
+  Check(Calls = 9, 'The enabled primary selector accepts a new choice.');
+  const Pressed: Tui.ControlSnapshot := Control(Session, 'theme/system');
+  Send(Session, Tui.Input.Pointer(K.PointerKind.Press, Pressed.Column + 1, Pressed.Row));
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Pointer(K.PointerKind.Release, Pressed.Column + 1, Pressed.Row));
+  Check(
+    Calls = 9 and Control(Session, 'theme/light').Value = 'true',
+    'Disabling cancels a pending pointer press even if the control is enabled again before release.'
+  );
+  Send(Session, Tui.Input.Focus('theme/system'));
+  Send(Session, Tui.Input.Activate('hide'));
+  Check(
+    Control(Session, 'theme/light').Value = 'true',
+    'Removing System accepts the model fallback.'
+  );
+  for Item: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    Check(Item.Id <> 'theme/system', 'The hidden System segment must disappear.');
+  end for;
+
+  Check(
+    S.Resolve(S.Selection.Light, Themes.Mode.Dark) = Themes.Mode.Light
+    and S.Resolve(S.Selection.Dark, Themes.Mode.Light) = Themes.Mode.Dark,
+    'Explicit choices ignore provider appearance.'
+  );
+end procedure;
+
+procedure Validation();
+begin
+  for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
+    for Kind: int := 0 to 2 do
+      const Node: E.Element<int> := if Kind = 0 then S.ThemeSwitcher<int>(
+          'bad',
+          cast<S.Selection>(99),
+          function(Value: S.Selection): int => 1
+        )
+        elsif Kind = 1 then S.ThemeSwitcher<int>(
+          'bad',
+          S.Selection.System,
+          function(Value: S.Selection): int => 1
+        )
+        else E.Column<int>(
+          S.ThemeSwitcher<int>('bad', S.Selection.Light, function(Value: S.Selection): int => 1),
+          UiButtons.Button<int>('bad/light', 'Collision', 0)
+        )
+        end if;
+      var Rejected: bool := false;
+      try
+        discard V.Prepare<int>(Node, Target);
+      catch Error: Sys.ArgumentException do
+        Rejected := true;
+      end try;
+
+      Check(Rejected, 'Invalid, unavailable and colliding choices must fail preflight.');
+    end for;
+  end for;
+end procedure;
+
+begin
+  Validation();
+  Behavior();
+  Console.WriteLine('Theme switcher contracts verified');
+end;
+end program;

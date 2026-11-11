@@ -1,6 +1,7 @@
 unit Gallery.View;
 
 uses
+  Fpas.Ui.ThemeSwitchers as Switchers,
   Gallery.State as G, Gallery.Buttons as Buttons, Gallery.Actions as Actions, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons,
   Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
@@ -36,9 +37,12 @@ begin
   );
 end function;
 
-function ThemeButton(State: G.Model): E.Element<G.Msg>;
+function ThemeControl(State: G.Model): E.Element<G.Msg>;
 begin
-  return B.Button<G.Msg>('theme', if State.Dark then 'Light' else 'Dark' end if, G.Msg.Theme);
+  return Switchers.ThemeSwitcher<G.Msg>(
+    'theme', State.Appearance, G.Msg.SetAppearance,
+    new Switchers.Options(WithSystem := true)
+  );
 end function;
 
 function Preview(State: G.Model; Wide: bool): E.Element<G.Msg>;
@@ -110,11 +114,11 @@ begin
             Padded,
             E.Styled<G.Msg>(E.Text<G.Msg>('FPas CUI'), S.Role.Heading),
             E.Size<G.Msg>(Pages, Fill),
-            ThemeButton(State)
+            ThemeControl(State)
           ),
           S.Role.MutedPanel
         ),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(24)))
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(28)))
       ),
       E.Size<G.Msg>(Content, Fill)
     )
@@ -132,7 +136,7 @@ begin
   const Main: E.Element<G.Msg> := if Compact then Sheets.Sheet<G.Msg>(
       'drawer',
       Page,
-      E.Column<G.Msg>(new L.Flow(Gap := L.Spacing.Normal), Pages, ThemeButton(State)),
+      E.Column<G.Msg>(new L.Flow(Gap := L.Spacing.Normal), Pages, ThemeControl(State)),
       State.Drawer,
       new Sheets.Options(
         'FPas CUI',

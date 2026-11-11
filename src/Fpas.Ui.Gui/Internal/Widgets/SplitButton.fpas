@@ -1,8 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Widgets.SplitButton;
 
-uses
-  Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists;
+uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists;
 
 // Draws CUI's split control and forwards the chosen action.
 //

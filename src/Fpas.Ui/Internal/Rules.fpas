@@ -1,6 +1,6 @@
 unit Fpas.Ui.Internal.Rules;
 
-uses Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Graphics as G, System as Sys, System.Text as Text, System.Collections.Generic as Generic;
+uses Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G, System as Sys, System.Text as Text, System.Collections.Generic as Generic;
 
 const StrictUtf8: Sys.Text.UTF8Encoding := new Sys.Text.UTF8Encoding(false, true);
 
@@ -149,32 +149,6 @@ begin
   end if;
 end procedure;
 
-// Checks normalized text and directional grapheme-boundary selection.
-//
-// ## Parameters
-// - `Value`: Model-owned text.
-// - `Position`: Model-owned selection.
-// - `MultipleLines`: Whether LF line breaks are permitted.
-// - `Location`: Diagnostic location.
-public procedure CheckEditor(Value: string; Position: Ed.EditorPosition; MultipleLines: bool; Location: string);
-begin
-  CheckText(Value, Location);
-  if Value.Contains(
-    cast<char>(13)
-  ) or Value.Contains(cast<char>(8232)) or Value.Contains(cast<char>(8233))
-  then
-    Reject(Location, 'Normalize document line breaks to LF before setting its selection.');
-  end if;
-
-  if not MultipleLines and Value.Contains(cast<char>(10)) then
-    Reject(Location, 'A single-line document contains a line break.');
-  end if;
-
-  if not Ed.ValidPosition(Value, Position) then
-    Reject(Location, 'Caret and anchor must be UTF-16 grapheme boundaries within the document.');
-  end if;
-end procedure;
-
 // Rejects a backend extension on an incompatible target.
 //
 // ## Parameters
@@ -211,37 +185,5 @@ begin
   if Width <= 0 or Height <= 0 then
     Reject(Location, 'The graphical viewport needs positive dimensions.');
   end if;
-end procedure;
-
-// Checks finite vector geometry and positive extents or strokes.
-//
-// ## Parameters
-// - `Paint`: Drawing operation.
-// - `Location`: Diagnostic location.
-public procedure CheckPaint(Paint: G.Paint; Location: string);
-begin
-  case Paint of
-    when G.Paint.FillRect(
-      const X: double, const Y: double, const Width: double, const Height: double, _
-    ):
-      if not (double.IsFinite(X) and double.IsFinite(Y) and double.IsFinite(Width)
-        and double.IsFinite(Height) and Width > 0.0 and Height > 0.0)
-      then
-        Reject(Location, 'A rectangle needs finite coordinates and positive extents.');
-      end if;
-    when G.Paint.Line(
-      const X1: double,
-      const Y1: double,
-      const X2: double,
-      const Y2: double,
-      const Thickness: double,
-      _
-    ):
-      if not (double.IsFinite(X1) and double.IsFinite(Y1) and double.IsFinite(X2)
-        and double.IsFinite(Y2) and double.IsFinite(Thickness) and Thickness > 0.0)
-      then
-        Reject(Location, 'A line needs finite coordinates and positive thickness.');
-      end if;
-  end case;
 end procedure;
 end unit;

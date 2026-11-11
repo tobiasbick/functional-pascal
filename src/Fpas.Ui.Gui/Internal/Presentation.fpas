@@ -1,24 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
-uses
-  Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton,
-  Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton,
-  Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton,
-  Fpas.Ui.HoldButtons as Holds,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
-  Fpas.Ui.Gui.Internal.Controls as Widgets, Fpas.Ui.Gui.Internal.Collections as Choices,
-  Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as Ch,
-  Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar,
-  Fpas.Ui.Sheets as Sheets,
-  Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet,
-  Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button,
-  Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup,
-  Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton,
-  Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton,
-  Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton,
-  Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys,
-  System.Collections.Generic as Generic;
+uses Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys, System.Collections.Generic as Generic;
 
 // Checks native-specific layout limits before issuing widget calls.
 //
@@ -75,90 +57,9 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end case;
 
         Visit(Child);
-      when E.Element.Modal(
-        _,
-        const Base: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
-        _,
-        _
-      ), E.Element.Sheet(
-        _,
-        const Base: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
-        _,
-        _,
-        _
-      ):
+      when E.Element.Sheet(_, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _, _):
         Visit(Base);
         Visit(Content);
-      when E.Element.TabSet(_, _, _, _, const Panel: E.Element<TMsg>?, _):
-        if Panel <> null then
-          Visit(Panel);
-        end if;
-      when E.Element.TableView(_, const Columns: array of Ch.TableColumn, _, _, _, _, _):
-        for Column: Ch.TableColumn in Columns do
-          case Column.Sizing.Basis of
-            when L.Extent.Fixed(const Distance: L.Measure):
-              discard Size.Measure(Distance);
-            else
-          end case;
-
-          case Column.Sizing.Minimum of
-            when is L.Measure as Distance:
-              discard Size.Measure(Distance);
-            else
-          end case;
-
-          case Column.Sizing.Maximum of
-            when is L.Measure as Distance:
-              discard Size.Measure(Distance);
-            else
-          end case;
-        end for;
-      when E.Element.GraphicCanvas(_, _, _, const Operations: array of G.Paint):
-        for Operation: G.Paint in Operations do
-          case Operation of
-            when G.Paint.FillRect(
-              const X: double,
-              const Y: double,
-              const W: double,
-              const H: double,
-              _
-            ):
-              if not float.IsFinite(
-                cast<float>(X)
-              ) or not float.IsFinite(
-                cast<float>(Y)
-              ) or not float.IsFinite(cast<float>(W)) or not float.IsFinite(cast<float>(H))
-              then
-                raise new Sys.NotSupportedException(
-                  'Canvas coordinates exceed native float range.'
-                );
-              end if;
-            when G.Paint.Line(
-              const X: double,
-              const Y: double,
-              const X2: double,
-              const Y2: double,
-              const Thickness: double,
-              _
-            ):
-              if not float.IsFinite(
-                cast<float>(X)
-              ) or not float.IsFinite(
-                cast<float>(Y)
-              ) or not float.IsFinite(
-                cast<float>(X2)
-              ) or not float.IsFinite(
-                cast<float>(Y2)
-              ) or not float.IsFinite(cast<float>(Thickness)) or cast<float>(Thickness) <= 0
-              then
-                raise new Sys.NotSupportedException(
-                  'Canvas coordinates exceed native float range.'
-                );
-              end if;
-          end case;
-        end for;
       when E.Element.Deferred(const Id: string, _):
         Visit(Prepared.Subviews[Id].Tree);
       else
@@ -191,20 +92,6 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
 
         Current.Window.Separator();
         Current.Window.EndGroup();
-      when E.Element.Action(
-        const Id: string,
-        const Label: string,
-        const Message: TMsg,
-        const Enabled: bool,
-        const Variant: S.ButtonVariant
-      ):
-        Button.Draw<TMsg>(
-          Current,
-          Id,
-          Label,
-          Message,
-          new B.Options(Variant := Variant, Enabled := Enabled)
-        );
       when E.Element.ButtonAction(
         const Id: string,
         const Label: string,
@@ -212,35 +99,6 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: B.Options
       ):
         Button.Draw<TMsg>(Current, Id, Label, Message, Settings);
-      when E.Element.Toggle(
-        const Id: string,
-        const Label: string,
-        const Checked: bool,
-        const OnChange: function(bool): TMsg,
-        const Enabled: bool
-      ):
-        Widgets.Checkbox<TMsg>(Current, Id, Label, Checked, OnChange, Enabled);
-      when E.Element.Editor(
-        const Id: string,
-        const Text: string,
-        const Position: Ed.EditorPosition,
-        const Edit: function(Ed.TextEdit): TMsg,
-        const Navigate: function(Ed.EditorPosition): TMsg,
-        const Placeholder: string,
-        const Enabled: bool,
-        const MultipleLines: bool
-      ):
-        Widgets.Editor<TMsg>(
-          Current,
-          Id,
-          Text,
-          Position,
-          Edit,
-          Navigate,
-          Enabled,
-          MultipleLines,
-          Placeholder
-        );
       when E.Element.IconAction(
         const Id: string, const Icon: string, const Tooltip: string, const Message: TMsg,
         const Settings: Icons.Options
@@ -275,17 +133,23 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: Status.Options
       ):
         StatusButton.Draw<TMsg>(Current, Id, Label, Value, Message, Settings);
+      when E.Element.ThemeFlip(
+        const Id: string, const Appearance: Themes.Mode,
+        const Change: function(Themes.Mode): TMsg, const Enabled: bool
+      ):
+        ThemeToggle.Draw<TMsg>(Current, Id, Appearance, Change, Enabled);
+      when E.Element.ThemeChoice(
+        const Id: string,
+        const Selected: ThemeSwitchers.Selection,
+        const Change: function(ThemeSwitchers.Selection): TMsg,
+        const Settings: ThemeSwitchers.Options
+      ):
+        ThemeSwitcher.Draw<TMsg>(Current, Id, Selected, Change, Settings);
       when E.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options
       ):
         SplitButton.Draw<TMsg>(Current, Id, Label, Message, Items, Settings);
-      when E.Element.ActionList(
-        const Id: string,
-        const Items: array of Ch.ListItem<TMsg>,
-        const Enabled: bool
-      ):
-        Choices.Actions<TMsg>(Current, Id, Items, Enabled);
       when E.Element.Sidebar(
         const Id: string,
         const Sections: array of N.Section<TMsg>,
@@ -293,55 +157,6 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool
       ):
         Sidebar.Draw<TMsg>(Current, Id, Sections, Active, Enabled);
-      when E.Element.Selectable(
-        const Id: string,
-        const Items: array of Ch.SelectionItem,
-        const Selected: string?,
-        const Select: function(string): TMsg,
-        const Activate: Sys.Func<string, TMsg>?,
-        const Enabled: bool
-      ):
-        Choices.Select<TMsg>(Current, Id, Items, Selected, Select, Activate, Enabled);
-      when E.Element.TabSet(
-        const Id: string,
-        const Items: array of Ch.TabItem,
-        const Active: string?,
-        const Select: function(string): TMsg,
-        const Panel: E.Element<TMsg>?,
-        const Enabled: bool
-      ):
-        const Tabs: Generic.List<Ch.SelectionItem> := new Generic.List<Ch.SelectionItem>();
-        var Selected: string? := null;
-        for Item: Ch.TabItem in Items do
-          Tabs.Add(new Ch.SelectionItem(Item.Key, Item.Label, Item.Enabled));
-          if Selected = null and Item.Enabled then
-            Selected := Item.Key;
-          end if;
-
-          if Item.Key = Active and Item.Enabled then
-            Selected := Item.Key;
-          end if;
-        end for;
-
-        Current.Window.BeginGroup(false, 0, 8, 0, false);
-        Choices.Select<TMsg>(Current, Id, Tabs.ToArray(), Selected, Select, null, Enabled, true);
-        if Panel <> null then
-          Visit(Panel, Current, false, L.Alignment.Stretch);
-        end if;
-
-        Current.Window.EndGroup();
-      when E.Element.TableView(
-        const Id: string,
-        const Columns: array of Ch.TableColumn,
-        const Rows: array of Ch.TableRow,
-        const Selected: string?,
-        const Select: function(string): TMsg,
-        const Activate: Sys.Func<string, TMsg>?,
-        const Enabled: bool
-      ):
-        Choices.Table<TMsg>(Current, Id, Columns, Rows, Selected, Select, Activate, Enabled);
-      when E.Element.Progress(const Percent: int):
-        Current.Window.Progress(Percent);
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
         ButtonGroup.Draw<TMsg>(Current, Children, Visit);
       when E.Element.Stack(
@@ -437,41 +252,6 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
             Value := After.ToString()
           )
         );
-      when E.Element.Modal(
-        const Id: string,
-        const Base: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
-        const Initial: string?,
-        const Dismiss: Sys.Func<TMsg>?
-      ):
-        if Current.PaintingClosed then
-          Visit(Base, Current, Horizontal, Align);
-          return;
-        end if;
-
-        Visit(
-          Base, Current with
-            AcceptInput := false;
-          end with, Horizontal, Align
-        );
-        Focus.Enter<TMsg>(Current, Id, Content, Initial);
-        const ModalInput: bool := Current.Interactive and Current.ActiveModal = Id;
-        if ModalInput and Current.Window.KeyPressed(3) then
-          case Dismiss of
-            when is Sys.Func<TMsg> as Close:
-              Current.Messages.Add(Close.Invoke());
-            else
-          end case;
-        end if;
-
-        if Current.Window.Modal(C.Token('modal', Id), true) then
-          Visit(
-            Content, Current with
-              AcceptInput := ModalInput;
-            end with, false, L.Alignment.Stretch
-          );
-          Current.Window.EndDialog();
-        end if;
       when E.Element.Sheet(
         const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
         const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
@@ -492,25 +272,6 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       when E.Element.Deferred(const Id: string, _):
         Visit(Current.Prepared.Subviews[Id].Tree, Current, Horizontal, Align);
         return;
-      when E.Element.GraphicImage(
-        const Id: string,
-        const Data: G.Pixels,
-        const Width: int,
-        const Height: int
-      ):
-        Current.Window.Image(
-          Current.Resources.Image(C.Token('image', Id), Data.Width, Data.Height, Data.Rgba),
-          Width,
-          Height
-        );
-        C.Track<TMsg>(Current, new App.Control(Id, '', 'image', new Cui.CuiRectangle(), false));
-      when E.Element.GraphicCanvas(
-        const Id: string,
-        const Width: int,
-        const Height: int,
-        const Operations: array of G.Paint
-      ):
-        Widgets.Canvas<TMsg>(Current, Id, Width, Height, Operations);
       else
         raise new Sys.InvalidOperationException('An invalid target widget reached GUI drawing.');
     end case;

@@ -5,7 +5,6 @@ int fpas_cui_button(cui_ctx *ui, const char *id, const char *text,
                     const char *icon, const char *icon_right, const char *tooltip, const char *shortcut,
                     int fill, float width, unsigned int rgba) {
     cui_id key = cui_make_id(ui, id);
-    if (!enabled && ui->focus == key) ui->focus = 0;
     if (enabled && focus) ui->focus_next_request = key;
     const cui_button_opts options = {
         .variant = fpas_button_variant(variant), .size = (cui_control_size)size,

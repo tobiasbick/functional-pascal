@@ -1,0 +1,59 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher;
+
+uses Fpas.Ui.ThemeSwitchers as S, Fpas.Ui.Internal.ThemeSwitchers as Parts, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists;
+
+// Draws the native selector and publishes controlled group/segment snapshots.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame context.
+// - `Id`: Stable selector group.
+// - `Selected`: Model-owned choice.
+// - `OnChange`: Maps a different user choice to a message.
+// - `Settings`: System availability and input permission.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Selected: S.Selection; OnChange: function(S.Selection): TMsg; Settings: S.Options);
+begin
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
+  const Count: int := if Settings.WithSystem then 3 else 2 end if;
+  const Token: string := C.Token('theme-switcher', Id);
+  const Tokens: Lists.List<string> := new Lists.List<string>();
+  Tokens.Add(Token);
+  var Focus: int := 0;
+  for Index: int := 0 to Count - 1 do
+    const Choice: S.Selection := cast<S.Selection>(Index);
+    const Part: string := C.Token('theme-choice', Id, Parts.Key(Choice));
+    Tokens.Add(Part);
+    if C.WantsFocus<TMsg>(Frame, S.ItemId(Id, Choice), Part, Enabled) then
+      Focus := Index + 1;
+    end if;
+  end for;
+  const Proposal: int := Frame.Window.ThemeSwitcher(
+    Token, cast<int>(Selected), Settings.WithSystem, Enabled,
+    Focus, if Frame.PaintingClosed then null else Tokens.ToArray() end if
+  );
+  if Proposal >= 0 then
+    Frame.Messages.Add(OnChange(cast<S.Selection>(Proposal)));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, 'Theme', 'theme-switcher', new Cui.CuiRectangle(), false,
+      Value := Parts.Key(Selected)
+    )
+  );
+  for Index: int := 0 to Count - 1 do
+    const Choice: S.Selection := cast<S.Selection>(Index);
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Parts.Label(Choice), 'theme-choice', new Cui.CuiRectangle(), Enabled,
+        Key := Parts.Key(Choice), Value := if Choice = Selected then 'true' else 'false' end if
+      )
+    );
+  end for;
+end procedure;
+end unit;

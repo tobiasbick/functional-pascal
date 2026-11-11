@@ -9,8 +9,6 @@ public readonly record struct CuiConfirmButtonResult(bool Confirmed, bool Armed)
 
 public sealed partial class CuiWindow
 {
-    private readonly HashSet<uint> confirmButtons = [];
-
     /// <summary>Draws CUI's two-step button with literal captions and a stable identity.</summary>
     /// <param name="id">Identity independent of both captions.</param>
     /// <param name="label">Literal resting caption.</param>
@@ -34,12 +32,6 @@ public sealed partial class CuiWindow
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         int events = NativeMethods.ConfirmButton(context, Stable(id), label, confirmLabel,
             icon.Length == 0 ? null : icon, timeoutMilliseconds, variant, size, enabled ? 1 : 0, focus ? 1 : 0);
-        confirmButtons.Add(NativeMethods.NodeKey(context, NativeMethods.LastNode(context)));
         return new((events & 1) != 0, (events & 2) != 0);
-    }
-
-    private void ForgetConfirmButton(uint key)
-    {
-        if (confirmButtons.Remove(key)) NativeMethods.Forget(context, key ^ 0xC0F1u);
     }
 }

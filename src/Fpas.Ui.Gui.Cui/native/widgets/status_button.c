@@ -5,10 +5,6 @@ int fpas_cui_status_button(cui_ctx *ui, const char *id, const char *label, int s
     int variant, int size, int enabled, int focus) {
     const cui_id key = cui_make_id(ui, id);
     cui__status_state *state = cui_state(ui, key ^ 0x57A7u, sizeof *state);
-    if (!enabled) {
-        if (ui->focus == key) ui->focus = 0;
-        if (ui->active == key) ui->active = 0;
-    }
     if (enabled && focus) ui->focus_next_request = key;
     const char *slots[] = { "a", "b", "c", "d" };
     const char *captions[] = { label, busy_label, success_label, error_label };
@@ -25,5 +21,6 @@ int fpas_cui_status_button(cui_ctx *ui, const char *id, const char *label, int s
     fpas_morph_captions(ui, "abcd", captions);
     fpas_morph_end(ui, &state->m, saved, captions[status], icons[status], options.size);
     if (!enabled) ui->nodes[ui->last_node].opacity *= CUI__DISABLED;
+    fpas_own(ui, key, key ^ 0x57A7u, 0, 0);
     return activated ? 1 : 0;
 }

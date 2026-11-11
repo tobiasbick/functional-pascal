@@ -1,9 +1,6 @@
 unit Fpas.Ui.Gui.Application;
 
-uses
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Editors as Ed, Fpas.Ui.Themes as Themes, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record
@@ -41,8 +38,6 @@ public type Control = record
   public Focused: bool := false;
   // Current native pointer hover.
   public Hovered: bool := false;
-  // Editor selection, when applicable.
-  public Position: Ed.EditorPosition? := null;
 end record;
 
 // The last successfully presented graphical view.
@@ -55,10 +50,6 @@ public type Frame = record
   public Text: array of string;
   // Detached control descriptors.
   public Controls: array of Control;
-  // Retained editor buffers after this frame.
-  public Editors: int := 0;
-  // Retained image resources after this frame.
-  public Images: int := 0;
   // Model-selected shared theme.
   public Theme: Themes.Theme := new Themes.Theme();
 end record;

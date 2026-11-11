@@ -2,7 +2,7 @@ program ConfirmButtonContract;
 
 uses
   Fpas.Ui.ConfirmButtons as Confirm, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Styles as Styles,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Sheets as Sheets,
   Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Tracking,
   Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as Keys,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.Console as Console,
@@ -118,16 +118,17 @@ begin
       )
       else E.Text<int>('Hidden')
       end if,
-    E.Button<int>('other', 'Other', 0), E.Button<int>('enabled', 'Toggle enabled', 2),
-    E.Button<int>('visible', 'Toggle visible', 3), E.Button<int>('modal', 'Toggle modal', 4),
-    E.Button<int>('rename', 'Rename', 5), E.Text<int>('Count: ' + State.Count.ToString())
+    Buttons.Button<int>('other', 'Other', 0),
+    Buttons.Button<int>('enabled', 'Toggle enabled', 2),
+    Buttons.Button<int>('visible', 'Toggle visible', 3),
+    Buttons.Button<int>('modal', 'Toggle modal', 4),
+    Buttons.Button<int>('rename', 'Rename', 5),
+    E.Text<int>('Count: ' + State.Count.ToString())
   );
-  return if State.Modal then E.Overlay<int>(
-      'dialog', Body, Confirm.ConfirmButton<int>('inside', 'Inside', 1),
-      'inside', function(): int => 4
-    )
-    else Body
-    end if;
+  return Sheets.Sheet<int>(
+    'confirmation', Body, Confirm.ConfirmButton<int>('inside', 'Inside', 1),
+    State.Modal, new Sheets.Options('Confirmation', InitialFocus := 'inside'), 4
+  );
 end function;
 
 function Control(Session: Tui.HeadlessSession; Id: string): Tui.ControlSnapshot;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Choices as Ch, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
@@ -39,38 +39,6 @@ begin
       end for;
 
       return Width;
-    when E.Element.DocumentEditor(_, _, _, _, _, _, _):
-      return if Horizontal then 4 else 1 end if;
-    when E.Element.StatusLine(_, _):
-      return 1;
-    when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
-      return if Horizontal then Sys.Math.Min(
-          4,
-          Intrinsic<TMsg>(Node, true)
-        )
-        else Sys.Math.Min(1, Items.Length)
-        end if;
-    when E.Element.Selectable(_, const Items: array of Ch.SelectionItem, _, _, _):
-      return if Horizontal then Sys.Math.Min(
-          4,
-          Intrinsic<TMsg>(Node, true)
-        )
-        else Sys.Math.Min(1, Items.Length)
-        end if;
-    when E.Element.TableView(
-      _,
-      const Columns: array of E.TableColumn,
-      const Rows: array of Ch.TableRow,
-      _,
-      _,
-      _
-    ):
-      return if Horizontal then Sys.Math.Min(
-          Tables.Preferred(Columns, Rows),
-          4 + Columns.Length * 3
-        )
-        else 1 + Sys.Math.Min(1, Rows.Length)
-        end if;
     when E.Element.Sized(const Child: E.Element<TMsg>, const Rule: E.Flex):
       const Content: int := Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
       if Horizontal <> (ParentHorizontal ?? Horizontal) then
@@ -129,35 +97,6 @@ begin
       return 0;
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return Minimum<TMsg>(Child, Horizontal, false) + 2;
-    when E.Element.Desktop(const Child: E.Element<TMsg>, _, _), E.Element.Layer(
-      _,
-      _,
-      _,
-      _,
-      const Child: E.Element<TMsg>,
-      _,
-      _
-    ):
-      return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
-    when E.Element.Panel(
-      const Body: E.Element<TMsg>,
-      const Footer: E.Element<TMsg>,
-      _,
-      const Padding: byte
-    ):
-      const A: int := Minimum<TMsg>(Body, Horizontal, false);
-      const B: int := Minimum<TMsg>(Footer, Horizontal, false);
-      return (if Horizontal then Sys.Math.Max(
-          A,
-          B
-        )
-        else A + B
-        end if) + 2 * (cast<int>(Padding) + 1);
-    when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
-      const Body: int := if Panel = null then 0 else Minimum<TMsg>(Panel, Horizontal, false) end if;
-      return if Horizontal then Sys.Math.Max(Sys.Math.Min(3, Tabs.Preferred(Items)), Body)
-        else Body + (if Items.Length > 0 then 1 else 0 end if)
-        end if;
     else
       return Intrinsic<TMsg>(Node, Horizontal);
   end case;
@@ -223,17 +162,8 @@ begin
   case Node of
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
-    when E.Element.Toggle(_, _, _, _, _):
-      return Horizontal and Explicit;
     when E.Element.ButtonGroup(_), E.Element.PopupAnchor(_, _, _, _, _):
       return false;
-    when E.Element.Gauge(_), E.Element.DocumentEditor(_, _, _, _, _, _, _):
-      return Horizontal;
-    when E.Element.Custom(_, _, _, const Binding: E.CanvasBinding<TMsg>):
-      return case Binding of
-        when E.CanvasBinding.Responsive(_, _): true;
-        else false;
-      end case;
     when E.Element.Sized(
       const Child: E.Element<TMsg>,
       _
@@ -303,78 +233,12 @@ begin
       return G.LineCount(Value, Columns);
     when E.Element.Separator(const Title: string):
       return if Horizontal and Title <> '' then G.Measure(G.SingleLine(Title)) + 4 else 1 end if;
-    when E.Element.StatusLine(const Message: string, const Hints: array of string):
-      return if Horizontal then Status.PreferredWidth(Message, Hints) else 1 end if;
-    when E.Element.DocumentEditor(
-      _,
-      const Value: string,
-      _,
-      _,
-      const Placeholder: string,
-      _,
-      const MultipleLines: bool
-    ):
-      return if MultipleLines then (if Horizontal then 24
-          else 5
-          end if)
-        else (if Horizontal then Sys.Math.Max(
-            12,
-            Sys.Math.Max(G.Measure(Value), G.Measure(G.SingleLine(Placeholder))) + 2
-          )
-          else 1
-          end if)
-        end if;
-    when E.Element.Toggle(_, const Caption: string, _, _, _):
-      return if Horizontal then G.Measure(Caption) + 4 else 1 end if;
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return if Horizontal then View.FixedWidth ?? Sys.Math.Max(
           View.MinimumWidth,
           G.Measure(View.Caption) + 2 * View.Padding
         )
         else View.Height
-        end if;
-    when E.Element.Choices(_, const Items: array of Ch.ListItem<TMsg>):
-      if not Horizontal then
-        return Items.Length;
-      end if;
-      var Width: int := 0;
-      for Item: Ch.ListItem<TMsg> in Items do
-        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + 2);
-      end for;
-
-      return Width;
-    when E.Element.Selectable(_, const Items: array of Ch.SelectionItem, _, _, _):
-      if not Horizontal then
-        return Items.Length;
-      end if;
-      var Width: int := 0;
-      for Item: Ch.SelectionItem in Items do
-        const Prefix: int := if Item.CanActivate then 2 else 6 end if;
-        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + Prefix);
-      end for;
-
-      return Width;
-    when E.Element.Gauge(_):
-      return if Horizontal then 12 else 1 end if;
-    when E.Element.TableView(
-      _,
-      const Columns: array of E.TableColumn,
-      const Rows: array of Ch.TableRow,
-      _,
-      _,
-      _
-    ):
-      return if Horizontal then Tables.Preferred(Columns, Rows) else Rows.Length + 1 end if;
-    when E.Element.TabSet(_, const Items: array of Ch.TabItem, _, _, const Panel: E.Element<TMsg>?):
-      const Body: int := if Panel = null then 0
-        else Intrinsic<TMsg>(
-          Panel,
-          Horizontal,
-          Columns
-        )
-        end if;
-      return if Horizontal then Sys.Math.Max(Tabs.Preferred(Items), Body)
-        else Body + (if Items.Length > 0 then 1 else 0 end if)
         end if;
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
@@ -412,34 +276,10 @@ begin
       const Child: E.Element<TMsg>,
       _,
       _
-    ), E.Element.Layer(
-      _,
-      _,
-      _,
-      _,
-      const Child: E.Element<TMsg>,
-      _,
-      _
     ):
       return Intrinsic<TMsg>(Child, Horizontal, Columns);
     when E.Element.EdgeSheet(_, _, _, _, _, _):
       return 0;
-    when E.Element.Panel(
-      const Body: E.Element<TMsg>,
-      const Footer: E.Element<TMsg>,
-      const Title: string,
-      const Padding: byte
-    ):
-      const Inset: int := 2 * (cast<int>(Padding) + 1);
-      if Horizontal then
-        return Sys.Math.Max(
-          G.Measure(Title),
-          Sys.Math.Max(Intrinsic<TMsg>(Body, true), Intrinsic<TMsg>(Footer, true))
-        ) + Inset;
-      end if;
-
-      const Inner: int := if Columns < 0 then -1 else Sys.Math.Max(1, Columns - Inset) end if;
-      return Intrinsic<TMsg>(Body, false, Inner) + Intrinsic<TMsg>(Footer, false) + Inset;
     when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
       return Sys.Math.Max(
         Intrinsic<TMsg>(
@@ -449,8 +289,6 @@ begin
         ),
         if Horizontal then G.Measure(Title) else 0 end if
       ) + 2;
-    when E.Element.Custom(const Columns: int, const Rows: int, _, _):
-      return if Horizontal then Columns else Rows end if;
   end case;
 end function;
 end unit;

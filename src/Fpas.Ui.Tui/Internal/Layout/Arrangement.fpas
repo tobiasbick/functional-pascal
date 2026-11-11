@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Choices as Ch, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Layout.Tables as Tables, Fpas.Ui.Tui.Internal.Layout.Overlays as Overlays, Fpas.Ui.Tui.Internal.Rendering.Canvases as Canvases, Fpas.Ui.Tui.Internal.Rendering.StatusLines as Status, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Rendering.EditorText as EditorText, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -12,43 +12,6 @@ public function Arrange<TMsg>(
       Operations.Add(new D.Operation(Value, Area, Clip, Style, Wrap));
     end if;
   end procedure;
-
-  function ArrangeRows(
-    Id: string; Role: string; Items: array of Ch.SelectionItem; Key: string; Bounds: F.Rect; ScopeId: string;
-    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?
-  ): S.Viewport<TMsg>;
-  begin
-    const Max: int := Sys.Math.Max(0, Items.Length - Bounds.Height);
-    const List: S.Viewport<TMsg> := S.Arrange<TMsg>(
-      Items, Key, Bounds.Height, Offset(Id, Max), OnSelect, OnActivate, PriorList(Id)
-    );
-    Scroll[Id] := List.First;
-    if Max > 0 then
-      Regions.Add(new A.ScrollRegion(Id, ScopeId, Bounds, Max));
-    end if;
-    const Action: A.Binding<TMsg> := A.Binding<TMsg>.SelectList(List);
-    var Enabled: bool := false;
-    for Item: Ch.SelectionItem in Items do
-      Enabled := Enabled or Item.Enabled;
-    end for;
-
-    Register(Id, Id, Role, List.Key(), Bounds, ScopeId, Enabled, Action);
-    return List;
-  end function;
-
-  function PriorList(Id: string): S.Viewport<TMsg>?;
-  begin
-    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Id);
-    if Control <> null then
-      case Control.Action of
-        when A.Binding.SelectList(const List: S.Viewport<TMsg>):
-          return List;
-        else
-      end case;
-    end if;
-
-    return null;
-  end function;
 
   procedure AddControl(Control: A.Control<TMsg>);
   begin
@@ -104,8 +67,6 @@ public function Arrange<TMsg>(
         Draw(Value, Area, Clip, Style, true);
       when E.Element.Separator(const Title: string):
         D.Divider(Operations, Area, Clip, Title, Style, Widgets);
-      when E.Element.StatusLine(const Message: string, const Hints: array of string):
-        Status.Draw(Operations, Area, Clip, Style, Message, Hints);
       when E.Element.Action(
         const Id: string,
         const Handler: Actions.IActivatable<TMsg>,
@@ -148,167 +109,6 @@ public function Arrange<TMsg>(
           HoldProgress := View.HoldProgress,
           Appearance := View.Appearance
         );
-      when E.Element.Toggle(
-        const Id: string,
-        const Caption: string,
-        const Checked: bool,
-        const Change: function(bool): TMsg,
-        const Enabled: bool
-      ):
-        const Label: string := (if Checked then '[x] ' else '[ ] ' end if) + Caption;
-        Buttons.Paint(
-          Operations,
-          Area,
-          Clip,
-          Style,
-          Theme,
-          Label,
-          false,
-          UiStyle.ButtonVariant.Default,
-          Enabled
-        );
-        Register(
-          Id,
-          Label,
-          'checkbox',
-          if Checked then 'true' else 'false' end if,
-          Clip,
-          ScopeId,
-          Enabled,
-          A.Binding<TMsg>.Toggle(new Actions.Toggle<TMsg>(Checked, Change)), ArrowFocus := true
-        );
-      when E.Element.DocumentEditor(
-        const Id: string,
-        const Text: string,
-        const Position: Editors.EditorPosition,
-        const Events: Editors.IEvents<TMsg>,
-        const Placeholder: string,
-        const Enabled: bool,
-        const MultipleLines: bool
-      ):
-        const Inner: F.Rect := if MultipleLines then Clip
-          else new F.Rect(
-            Clip.X + 2,
-            Clip.Y,
-            Sys.Math.Max(0, Clip.Width - 2),
-            1
-          )
-          end if;
-        const Document: EditorView.Document := EditorView.Arrange(Text, Inner, Position);
-        discard Events.Navigate(Document.Position);
-        if MultipleLines then
-          EditorText.Draw(Operations, Document, Style, Theme);
-        else
-          EditorText.DrawField(Operations, Document, Area, Clip, Placeholder, Style, Theme);
-        end if;
-        const View: EditorView.Viewport<TMsg> := new EditorView.Viewport<TMsg>(
-          Document,
-          Events,
-          MultipleLines
-        );
-        Register(Id, Id, 'textbox', Text, Clip, ScopeId, Enabled, A.Binding<TMsg>.Multiline(View));
-      when E.Element.Choices(const Id: string, const Items: array of Ch.ListItem<TMsg>):
-        const Max: int := Sys.Math.Max(0, Items.Length - Area.Height);
-        const First: int := Offset(Id, Max);
-        Regions.Add(new A.ScrollRegion(Id, ScopeId, Clip, Max));
-        for Index: int := First to Sys.Math.Min(Items.Length, First + Area.Height) - 1 do
-          const Item: Ch.ListItem<TMsg> := Items[Index];
-          const Line: F.Rect := new F.Rect(Area.X, Area.Y + Index - First, Area.Width, 1);
-          D.ListRow(Operations, Line, Clip, Item.Text, Item.Selected, Style, Widgets);
-          Register(
-            Id + '/' + Item.Key,
-            Item.Text,
-            'listitem',
-            if Item.Selected then 'true' else 'false' end if,
-            F.Intersect(Line, Clip),
-            ScopeId,
-            Item.Enabled,
-            A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Item.Message))
-          );
-        end for;
-      when E.Element.Selectable(
-        const Id: string, const Items: array of Ch.SelectionItem, const Key: string,
-        const OnSelect: function(string): TMsg, const OnActivate: Sys.Func<string, TMsg>?
-      ):
-        const List: S.Viewport<TMsg> := ArrangeRows(
-          Id,
-          'listbox',
-          Items,
-          Key,
-          Clip,
-          ScopeId,
-          OnSelect,
-          OnActivate
-        );
-        S.Draw<TMsg>(List, Operations, Clip, Style, Widgets);
-      when E.Element.TableView(
-        const Id: string,
-        const Columns: array of E.TableColumn,
-        const Rows: array of Ch.TableRow,
-        const Key: string,
-        const OnSelect: function(string): TMsg,
-        const OnActivate: Sys.Func<string, TMsg>?
-      ):
-        const Widths: array of int := Tables.Widths(Columns, Rows, Area.Width);
-        const Header: F.Rect := new F.Rect(Area.X, Area.Y, Area.Width, 1);
-        Tables.DrawHeader(Columns, Widths, Header, Clip, Style, Widgets, Operations);
-        const Body: F.Rect := F.Intersect(
-          new F.Rect(Area.X, Area.Y + 1, Area.Width, Area.Height - 1),
-          Clip
-        );
-        if Body.Height > 0 then
-          const List: S.Viewport<TMsg> := ArrangeRows(
-            Id, 'table', Tables.Items(Rows), Key, Body, ScopeId, OnSelect, OnActivate
-          );
-          Tables.DrawBody<TMsg>(Rows, Widths, List, Area, Body, Style, Widgets, Operations);
-        end if;
-      when E.Element.TabSet(
-        const Id: string, const Items: array of Ch.TabItem, const ActiveIndex: int,
-        const OnSelect: function(string): TMsg, const Panel: E.Element<TMsg>?
-      ):
-        if Items.Length = 0 then
-          return;
-        end if;
-        const Bar: F.Rect := new F.Rect(Area.X, Area.Y, Area.Width, 1);
-        const Visible: F.Rect := F.Intersect(Bar, Clip);
-        if Visible.Height > 0 then
-          const Header: Tabs.Header<TMsg> := Tabs.Draw<TMsg>(
-            Items,
-            ActiveIndex,
-            OnSelect,
-            Bar,
-            Visible,
-            Style,
-            Widgets,
-            Operations
-          );
-          const Action: A.Binding<TMsg> := A.Binding<TMsg>.SelectTab(Header);
-          Register(
-            Id,
-            Id,
-            'tablist',
-            Header.Key(),
-            Visible,
-            ScopeId,
-            ActiveIndex >= 0 and Items[ActiveIndex].Enabled,
-            Action
-          );
-        end if;
-
-        if Panel <> null then
-          const Parent: string := FocusReturn;
-          FocusReturn := Id;
-          Visit(
-            Panel,
-            new F.Rect(Area.X, Area.Y + 1, Area.Width, Area.Height - 1),
-            Clip,
-            ScopeId,
-            Style
-          );
-          FocusReturn := Parent;
-        end if;
-      when E.Element.Gauge(const Percent: int):
-        D.Progress(Operations, Area, Clip, Percent, Style, Widgets);
       when E.Element.Sized(const Child: E.Element<TMsg>, _):
         Visit(Child, Area, Clip, ScopeId, Style);
       when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: T.Style):
@@ -392,43 +192,6 @@ public function Arrange<TMsg>(
 
         VisitScrolled(Child, Layout.Content, Layout.Clip, ScopeId, Style);
         V.DrawBar<TMsg>(View, Operations, Area, Clip, Style, Widgets);
-      when E.Element.Custom(
-        const Width: int, const Height: int, const DrawCell: function(int, int): T.Cell,
-        const Action: E.CanvasBinding<TMsg>
-      ):
-        var CanvasArea: F.Rect := F.Intersect(Clip, new F.Rect(Area.X, Area.Y, Width, Height));
-        var OriginX: int := Area.X;
-        var OriginY: int := Area.Y;
-        case Action of
-          when E.CanvasBinding.Responsive(const Id: string, const Events: T.CanvasEvents<TMsg>):
-            CanvasArea := Clip;
-            OriginX := Clip.X;
-            OriginY := Clip.Y;
-            Register(
-              Id,
-              Id,
-              'canvas',
-              '',
-              Clip,
-              ScopeId,
-              true,
-              A.Binding<TMsg>.Canvas(OriginX, OriginY, Events)
-            );
-            if Events.OnResize <> null then
-              const Old: F.Rect := A.CanvasBounds<TMsg>(Previous, Id);
-              if Old.Width <> Clip.Width or Old.Height <> Clip.Height then
-                return;
-              end if;
-            end if;
-          when E.CanvasBinding.Fixed(const Id: string, const Events: T.CanvasEvents<TMsg>):
-            Register(
-              Id, Id, 'canvas', '', CanvasArea, ScopeId,
-              Events.OnClick <> null or Events.OnMiddleClick <> null or Events.OnScroll <> null,
-              A.Binding<TMsg>.Canvas(OriginX, OriginY, Events)
-            );
-        end case;
-
-        Canvases.Paint(DrawCell, OriginX, OriginY, CanvasArea, Style, Operations);
       when E.Element.Desktop(
         const Content: E.Element<TMsg>, const Layers: array of E.Element<TMsg>,
         const Keys: array of K.ShortcutBinding<TMsg>
@@ -441,34 +204,6 @@ public function Arrange<TMsg>(
         for Layer: E.Element<TMsg> in Layers do
           Visit(Layer, Area, Clip, ScopeId, Style);
         end for;
-      when E.Element.Panel(
-        const Body: E.Element<TMsg>,
-        const Footer: E.Element<TMsg>,
-        const Title: string,
-        const Padding: byte
-      ):
-        const Parts: Overlays.PanelBounds := Overlays.Partition<TMsg>(Area, Footer, Padding);
-        if Parts.Framed then
-          D.Border(Operations, Area, Clip, Title, Style, Widgets);
-        end if;
-
-        Visit(Body, Parts.Body, Clip, ScopeId, Style);
-        Visit(Footer, Parts.Footer, Clip, ScopeId, Style);
-      when E.Element.Layer(
-        const Id: string,
-        const Modal: bool,
-        const Initial: string,
-        const Escape: Sys.Func<TMsg>?,
-        const Content: E.Element<TMsg>,
-        const Keys: array of K.ShortcutBinding<TMsg>,
-        const Limits: K.OverlayLimits?
-      ):
-        if Modal then
-          Active := new A.Scope<TMsg>(Id, Initial, Escape, Keys);
-        end if;
-        const Bounds: F.Rect := Overlays.Place<TMsg>(Content, Clip, Limits);
-        D.Fill(Operations, Bounds, Style);
-        Visit(Content, Bounds, Bounds, if Modal then Id else ScopeId end if, Style);
       when E.Element.EdgeSheet(
         const Id: string, const Settings: Sheets.Options, const Size: int,
         const Content: E.Element<TMsg>, const Dismiss: TMsg, const Colors: T.Style

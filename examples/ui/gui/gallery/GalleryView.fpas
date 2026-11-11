@@ -1,6 +1,7 @@
 unit GuiGallery.View;
 
 uses
+  Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
   Fpas.Ui.IconButtons as Icons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, System as Sys;
@@ -53,12 +54,11 @@ begin
   );
 end function;
 
-function ThemeButton(Model: State.Model): E.Element<State.Msg>;
+function ThemeControl(Model: State.Model): E.Element<State.Msg>;
 begin
-  return B.Button<State.Msg>(
-    'theme',
-    if Model.Dark then 'Light' else 'Dark' end if,
-    State.Msg.Theme
+  return Switchers.ThemeSwitcher<State.Msg>(
+    'theme', Model.Appearance, State.Msg.SetAppearance,
+    new Switchers.Options(WithSystem := true)
   );
 end function;
 
@@ -76,7 +76,7 @@ begin
         E.ScrollView<State.Msg>('navigation-scroll', Pages, ShowScrollbar := false),
         Fill
       ),
-      E.Column<State.Msg>(new L.Flow(Padding := Gap(8)), ThemeButton(Model))
+      E.Column<State.Msg>(new L.Flow(Padding := Gap(8)), ThemeControl(Model))
     ),
     S.Role.MutedPanel
   );
@@ -196,7 +196,7 @@ begin
   const Body: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
       'drawer',
       Main,
-      E.Column<State.Msg>(new L.Flow(Gap := Gap(8)), Pages, ThemeButton(Model)),
+      E.Column<State.Msg>(new L.Flow(Gap := Gap(8)), Pages, ThemeControl(Model)),
       Model.Drawer,
       new Sheets.Options('FPas CUI', Edge := Sheets.Side.Left, Size := 280),
       State.Msg.SetDrawer(false)

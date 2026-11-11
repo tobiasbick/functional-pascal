@@ -2,106 +2,66 @@
 
 FPAS desktop adapter for CUI. Applications use [Fpas.Ui.Mvu](../Fpas.Ui.Mvu/README.md)
 transitions and [Fpas.Ui](../Fpas.Ui/README.md) declarative views. Start with the
-[counter](../../examples/ui/gui/counter/) or explore the [widget gallery](../../examples/ui/gui/gallery/).
+[GUI gallery](../../examples/ui/gui/gallery/README.md).
 
 ## Application lifecycle
 
-`Application.Run` owns a window until native or application close. `Start`
-exposes the same host as `Session<TMsg>` for manual owner loops. Both take an
-initial model, Update, View and Options. View receives the model and
-`Layout.Viewport`; it returns `Elements.Element<TMsg>`. Options select title,
-logical size, renderer, mailbox capacity and shared Theme. An optional
-`ThemeFor(Model): Fpas.Ui.Themes.Theme` function makes the theme model-owned.
-Use the same theme and callback with TUI. CUI palettes, accent families and
-customization are described in [shared themes](../Fpas.Ui/README.md#shared-themes).
+Use Run for the owner loop or Start with using const for explicit Step calls.
+Create, step, inspect and dispose sessions on their creating UI thread. Post
+admits typed messages from workers and reports Queued, Full or Closed.
+Options select title, logical width/height, renderer, mailbox capacity and theme.
 
-Create, Step, inspect and dispose a session on one thread. Step presents a frame
-and waits for native input when idle. Post admits messages from concurrent
-producers, returning the shared Queued/Full/Closed result. Admission and background
-completion wake the native event loop. Native input gathered while drawing is
-queued after presentation and applied on subsequent owner turns; a temporarily
-full mailbox retains those proposals for retry in order without blocking the
-window. While proposals are pending the host suppresses further native actions.
-
-The shared StartBackground, CancelBackground, Focus and Exit commands use the
-[MVU lifetime protocol](../Fpas.Ui.Mvu/README.md#cancellation-and-shutdown).
-Cancellation runs on workers. Closing rejects new messages, discards late results
-and continues pumping/painting the frozen view while workers and cancellation
-callbacks finish. Resources are released on the owner after cleanup completes.
-Disposal joins cleanup while continuing to pump; it is idempotent. Do not reenter
-Step or dispose a session from its callbacks. Failures close admission and clean
-up before propagating; snapshots retain the last successful presentation.
+Update and View run on the owner. Shared MVU commands start/cancel background
+work, request focus and exit. Close stops admission, cancels work and keeps
+pumping the frozen view until cleanup finishes. Dispose joins cleanup. Step,
+Snapshot and disposal must not be reentered from callbacks.
 
 ## Widgets and input
 
-The host implements the graphical profile in the [shared widget reference](../Fpas.Ui/README.md):
+The [shared reference](../Fpas.Ui/README.md) owns options and interaction contracts:
 
-- Literal text and separators; all button variants and controlled checkboxes.
-- [Two-step confirmation](../Fpas.Ui/README.md#confirm-button) with native CUI
-  countdown, cancellation and stable focus across both captions.
-- [Inline work feedback](../Fpas.Ui/README.md#status-button) with model-owned
-  states, native spinner/result faces and idle-only activation.
-- Single-line/multiline Unicode editing with model-owned text and directional
-  UTF-16 grapheme selections, distinct edit/navigation messages and placeholders.
-- Grouped sidebar navigation with native CUI icons and text badges, keyed action
-  and selection lists, tab panels and text tables with column constraints.
-  Arrows skip disabled choices; Enter/double-click activation respects CanActivate.
-- Percentage progress, rows/columns, content/fill/fixed sizing, bounds, weighted
-  growth, automatic content shrinkage, alignment, borders and semantic style roles.
-- Vertical clipped scrolling with an optional scrollbar, controlled Start/End/Offset
-  and typed user proposals. End follows content growth; layout does not emit input.
-- Modal overlays with exclusive input/focus, initial focus (first enabled fallback),
-  optional Escape dismissal and restoration of available prior focus.
-- [Edge sheets and drawers](../Fpas.Ui/README.md#sheet-and-drawer) with native
-  CUI slide transitions, a dimmed backdrop, and a scrolling body.
-- Owned packed RGBA images and clipped rectangle/line canvases in logical units.
+- Buttons, icon buttons and connected button groups.
+- Copy, hold, confirmation, status and split buttons.
+- Theme switcher and sun/moon toggle with model-owned palette updates.
+- Sidebar navigation and edge sheets/drawers.
+- Text, separators, rows/columns, sizing, borders, semantic styles and scrolling
+  as the foundations needed to compose these widgets.
 
-Visible labels do not encode identity, including literal `##`. Widget IDs and
-collection keys are separate, case-sensitive components. Disabled and covered
-controls accept no input or focus. Tab/Shift+Tab follow native enabled view order
-and stay within the top modal.
+Visible labels and stable IDs are separate, including literal ## text. Disabled
+and covered controls accept no input or focus. Tab/Shift+Tab traverse enabled
+controls within the active modal. Native CUI supplies rendering and interaction;
+the host maps proposals to messages without applying application updates itself.
 
-Prepare validates the entire active graphical tree before any drawing. Cells and
-terminal extensions are rejected with contextual diagnostics. Canvas values must
-also fit native floats. Immutable-by-contract records, arrays and image bytes must
-remain unchanged while retained by the host. Editor buffers, native control state
-and image objects are reconciled by stable identity and released when removed or
-replaced; native texture retirement respects frames still using them.
+Prepare validates the active view before drawing. GUI distances use logical
+units; terminal-specific elements and cell distances are rejected. View records,
+arrays and callbacks remain unchanged while retained by the host.
 
 ## Invalidation and inspection
 
-Application transitions and observed size changes rebuild the view. Ordinary
-repaints reuse its prepared tree and never restart effects. Typed subview caches
-advance only after successful presentation. Width classes are Compact below 600,
-Regular below 1200, then Expanded; height thresholds are 400 and 900 logical units.
-Theme changes preserve model state; include relevant theme dependencies in typed
-cached subviews. Platform live-resize callbacks draw only the cached tree without
-Update, View, commands or input proposals. Callback state stays rooted until
-detachment; managed failures surface after the native pump returns.
+Transitions and size changes rebuild the view. Ordinary repaints reuse its
+prepared tree and never restart effects. Typed caches advance after successful
+presentation. Width classes are Compact below 600, Regular below 1200, then
+Expanded; height thresholds are 400 and 900 logical units. Include relevant
+theme dependencies in cached subviews.
 
-Snapshot returns a detached last-successful frame: sequence, logical size, text,
-semantic control descriptors (ID, role, item key, value, editor position, enabled,
-focus, hover and finalized bounds), resource counts and theme. It is available on
-the owner after close/failure; reading before the first presentation throws.
-IsSoftware reports actual renderer selection, including fallback.
-CapturePng(Path) saves the last presented native frame on the owner outside Step.
-It requires a live window, a completed presentation and an existing destination
-directory. Capture failures leave the session usable.
+Platform live-resize callbacks draw the cached tree without Update, View,
+commands or input proposals. Callback state stays rooted until detachment;
+managed failures surface after the native pump returns.
+
+Snapshot returns the last successful frame: sequence, logical size, text, theme
+and detached control descriptors with ID, role, item key, value, enabled state,
+focus, hover and bounds. Reading before the first presentation throws.
+IsSoftware reports the actual renderer, including fallback.
+CapturePng saves the presented frame outside Step on the owner thread. It needs
+a live window, a successful presentation and an existing destination directory.
 
 ## Build and verification
 
-Build examples through the [local SDK workflow](../../docs/build/development.md#build-an-fpas-application).
-The source reference delivers CUI's shared library and notices. Applications can
-reference the Fpas.Ui.Gui package from the local distribution feed. Its dependencies
-deliver Fpas.Ui.Mvu, Fpas.Ui and the [binding package](../Fpas.Ui.Gui.Cui/README.md#packaged-binding)
-with prebuilt native assets and static NativeAOT linking. Consumers do not build
-CUI. NativeAOT publication needs the .NET platform's native toolchain.
-See the [GUI handbook](../../docs/pascal/libraries/gui.md) for the application path,
-publishing modes and platform limits.
+See [development](../../docs/build/development.md), the
+[native prerequisites](../Fpas.Ui.Gui.Cui/native/README.md#prerequisites) and the
+[binding verification](../Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
+The GUI gallery contract exercises both renderers and all five publish modes,
+including single-file and NativeAOT. Linux window tests require a display.
 
-GuiHostTests builds the FPAS libraries and the gallery through a fresh SDK,
-then checks the gallery's navigation, button examples, theme and modal sheet
-with software and OpenGL. CuiHostLayoutTests checks native allocation and
-scroll geometry. GuiPublishingTests runs the gallery from a package-only
-consumer in all five publish modes, including executable-only NativeAOT and
-single-file delivery. See the [coverage map](../../tests/coverage.md#native-gui).
+Only widgets checked in the [CUI inventory](../../docs/future/cui-gaps.md) are
+implemented. Future widgets are added through that inventory.

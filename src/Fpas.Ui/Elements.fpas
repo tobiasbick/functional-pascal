@@ -1,6 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 // A declarative view for a host to prepare and present.
 //
@@ -11,8 +11,6 @@ public type Element<TMsg> = variant
   Label(Text: string);
   // Separate adjacent content, with an optional caption.
   Separator(Title: string);
-  // Activate a named action with the supplied message.
-  Action(Id: string; Text: string; Message: TMsg; Enabled: bool; Variant: S.ButtonVariant);
   // Activate a button with model-owned presentation and input settings.
   ButtonAction(Id: string; Text: string; Message: TMsg; Settings: B.Options);
   // Activate a named icon button with a stable identity and model-owned settings.
@@ -25,38 +23,16 @@ public type Element<TMsg> = variant
   ConfirmAction(Id: string; Label: string; Message: TMsg; Settings: Confirms.Options);
   // Show model-owned work feedback and propose a message only while idle.
   StatusAction(Id: string; Label: string; State: Status.Status; Message: TMsg; Settings: Status.Options);
+  // Propose an appearance selection through a controlled segmented selector.
+  ThemeChoice(Id: string; Selected: ThemeSwitchers.Selection; OnChange: function(ThemeSwitchers.Selection): TMsg; Settings: ThemeSwitchers.Options);
+  // Propose the opposite concrete light/dark appearance through a compact action.
+  ThemeFlip(Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool);
   // A main action and a host-owned popup of related actions.
   SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>; Settings: Split.Options);
   // Join adjacent buttons under a shared outline.
   ButtonGroup(Children: array of Element<TMsg>);
-  // Toggle a model-owned boolean through OnChange.
-  Toggle(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool);
-  // Propose text edits and selection movements for the supplied document.
-  Editor(
-    Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg;
-    OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string; Enabled: bool; MultipleLines: bool
-  );
-  // Display keyed independent actions.
-  ActionList(Id: string; Items: array of C.ListItem<TMsg>; Enabled: bool);
   // Display grouped destinations with a single model-owned active key.
   Sidebar(Id: string; Sections: array of N.Section<TMsg>; ActiveKey: string?; Enabled: bool);
-  // Select or activate a keyed item.
-  Selectable(
-    Id: string; Items: array of C.SelectionItem; SelectedKey: string?;
-    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Enabled: bool
-  );
-  // Display a tab set and the resolved active panel.
-  TabSet(
-    Id: string; Items: array of C.TabItem; ActiveKey: string?; OnSelect: function(string): TMsg;
-    Panel: Element<TMsg>?; Enabled: bool
-  );
-  // Select or activate a keyed row of text cells.
-  TableView(
-    Id: string; Columns: array of C.TableColumn; Rows: array of C.TableRow; SelectedKey: string?;
-    OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>?; Enabled: bool
-  );
-  // Display determinate progress as a percentage.
-  Progress(Percent: int);
   // Lay children out along one axis in order.
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
   // Adjust the allocation of one child.
@@ -70,11 +46,6 @@ public type Element<TMsg> = variant
     Id: string; Child: Element<TMsg>; Position: L.ScrollPosition?;
     OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool
   );
-  // Place a modal above a base view. An absent dismissal callback leaves Escape unbound.
-  Modal(
-    Id: string; Base: Element<TMsg>; Content: Element<TMsg>; InitialFocus: string?;
-    OnDismiss: Sys.Func<TMsg>?
-  );
   // Place a controlled, scrollable modal at one viewport edge.
   Sheet(
     Id: string; Base: Element<TMsg>; Content: Element<TMsg>; Open: bool;
@@ -84,27 +55,10 @@ public type Element<TMsg> = variant
   Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
   // Apply terminal-specific RGB styling to a subtree.
   TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
-  // Draw a terminal canvas and route input in cells.
-  TerminalCanvas(Id: string; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
-  // Display a terminal status message and priority-ordered hints.
-  TerminalStatus(Message: string; Hints: array of string);
   // Compose terminal content, floating layers and scoped shortcuts.
   TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
-  // A terminal floating layer with optional modal focus and explicit percentage limits.
-  TerminalLayer(
-    Id: string; Content: Element<TMsg>; InitialFocus: string?; OnDismiss: Sys.Func<TMsg>?;
-    Shortcuts: array of Keys.ShortcutBinding<TMsg>; Limits: Keys.OverlayLimits?; Modal: bool
-  );
-  // A terminal overlay body with a pinned footer.
-  TerminalPanel(Body: Element<TMsg>; Footer: Element<TMsg>; Title: string; Padding: byte);
-  // A terminal canvas with an explicit cell extent.
-  TerminalFixedCanvas(Id: string; Columns: int; Rows: int; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>);
   // Resolve a terminal-specific subtree using exact cell dimensions.
   TerminalViewport(Id: string; Build: function(T.Viewport): Element<TMsg>);
-  // Display pixels with the supplied width and height in GUI logical units.
-  GraphicImage(Id: string; Data: G.Pixels; Width: int; Height: int);
-  // Paint drawing operations in a clipped GUI logical viewport.
-  GraphicCanvas(Id: string; Width: int; Height: int; Operations: array of G.Paint);
 end variant;
 
 // A host-owned cache entry for one typed subview.
@@ -150,159 +104,6 @@ end function;
 public function Divider<TMsg>(Title: string := ''): Element<TMsg>;
 begin
   return Element<TMsg>.Separator(Title);
-end function;
-
-// Creates an action button.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable control ID.
-// - `Text`: The visible label.
-// - `Message`: The message to send on activation.
-// - `Enabled`: Whether the button accepts input.
-// - `Variant`: The button's semantic role.
-//
-// ## Returns
-// The declarative widget.
-public function Button<TMsg>(Id: string; Text: string; Message: TMsg; Enabled: bool := true; Variant: S.ButtonVariant := S.ButtonVariant.Default): Element<TMsg>;
-begin
-  return Element<TMsg>.Action(Id, Text, Message, Enabled, Variant);
-end function;
-
-// Displays a controlled boolean.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable control ID.
-// - `Text`: The visible label.
-// - `Checked`: The current model value.
-// - `OnChange`: Maps the proposed boolean to a message.
-// - `Enabled`: Whether the checkbox accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function Checkbox<TMsg>(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.Toggle(Id, Text, Checked, OnChange, Enabled);
-end function;
-
-// Displays a controlled single-line field.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable editor ID.
-// - `Text`: The model-owned document.
-// - `Position`: The model-owned caret and anchor.
-// - `OnEdit`: Maps a proposed replacement document and position to a message.
-// - `OnNavigate`: Maps a selection movement without an edit to a message.
-// - `Placeholder`: The hint shown for an empty document.
-// - `Enabled`: Whether the editor accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function TextInput<TMsg>(Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg; OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string := ''; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.Editor(Id, Text, Position, OnEdit, OnNavigate, Placeholder, Enabled, false);
-end function;
-
-// Displays a controlled multiline document.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable editor ID.
-// - `Text`: The model-owned document.
-// - `Position`: The model-owned caret and anchor.
-// - `OnEdit`: Maps a proposed replacement document and position to a message.
-// - `OnNavigate`: Maps a selection movement without an edit to a message.
-// - `Placeholder`: The hint shown for an empty document.
-// - `Enabled`: Whether the editor accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function Multiline<TMsg>(Id: string; Text: string; Position: Ed.EditorPosition; OnEdit: function(Ed.TextEdit): TMsg; OnNavigate: function(Ed.EditorPosition): TMsg; Placeholder: string := ''; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.Editor(Id, Text, Position, OnEdit, OnNavigate, Placeholder, Enabled, true);
-end function;
-
-// Displays keyed independent actions.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable list ID.
-// - `Items`: The actions in display order.
-// - `Enabled`: Whether the list accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function List<TMsg>(Id: string; Items: array of C.ListItem<TMsg>; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.ActionList(Id, Items, Enabled);
-end function;
-
-// Displays a list with model-owned selection.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable list ID.
-// - `Items`: The choices in display order.
-// - `SelectedKey`: The selected key or null for no selection.
-// - `OnSelect`: Maps the requested key to a message.
-// - `OnActivate`: Optionally maps activation of the selected item to a message.
-// - `Enabled`: Whether the list accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function SelectionList<TMsg>(Id: string; Items: array of C.SelectionItem; SelectedKey: string?; OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>? := null; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.Selectable(Id, Items, SelectedKey, OnSelect, OnActivate, Enabled);
-end function;
-
-// Displays a table with keyed rows and model-owned selection.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable table ID.
-// - `Columns`: The headers in column order.
-// - `Rows`: The rows in display order.
-// - `SelectedKey`: The selected row key or null.
-// - `OnSelect`: Maps a requested row key to a message.
-// - `OnActivate`: Optionally maps activation of the selected row to a message.
-// - `Enabled`: Whether the table accepts input.
-//
-// ## Returns
-// The declarative widget.
-public function Table<TMsg>(Id: string; Columns: array of C.TableColumn; Rows: array of C.TableRow; SelectedKey: string?; OnSelect: function(string): TMsg; OnActivate: Sys.Func<string, TMsg>? := null; Enabled: bool := true): Element<TMsg>;
-begin
-  return Element<TMsg>.TableView(Id, Columns, Rows, SelectedKey, OnSelect, OnActivate, Enabled);
-end function;
-
-// Displays determinate progress.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Percent`: The percentage to clamp to 0 through 100.
-//
-// ## Returns
-// The declarative widget.
-public function ProgressBar<TMsg>(Percent: int): Element<TMsg>;
-begin
-  return Element<TMsg>.Progress(Sys.Math.Clamp(Percent, 0, 100));
 end function;
 
 // Arranges children horizontally with default spacing.
@@ -451,25 +252,6 @@ begin
   return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar);
 end function;
 
-// Shows modal content above a base view.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable modal ID.
-// - `Base`: The underlying content.
-// - `Content`: The active focus scope.
-// - `InitialFocus`: A preferred focus target in the modal.
-// - `OnDismiss`: Optionally maps an Escape dismissal request to a message.
-//
-// ## Returns
-// The declarative widget.
-public function Overlay<TMsg>(Id: string; Base: Element<TMsg>; Content: Element<TMsg>; InitialFocus: string? := null; OnDismiss: Sys.Func<TMsg>? := null): Element<TMsg>;
-begin
-  return Element<TMsg>.Modal(Id, Base, Content, InitialFocus, OnDismiss);
-end function;
-
 // Applies terminal-specific RGB colors.
 //
 // ## Type parameters
@@ -484,104 +266,6 @@ end function;
 public function CellStyled<TMsg>(Child: Element<TMsg>; Colors: T.Style): Element<TMsg>;
 begin
   return Element<TMsg>.TerminalStyle(Child, Colors);
-end function;
-
-// Creates a responsive terminal canvas.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable canvas ID.
-// - `Draw`: Receives column and row relative to the canvas origin.
-// - `Events`: Optional input and resize message callbacks.
-//
-// ## Returns
-// The declarative widget.
-public function CellCanvas<TMsg>(Id: string; Draw: function(int, int): T.Cell; Events: T.CanvasEvents<TMsg>): Element<TMsg>;
-begin
-  return Element<TMsg>.TerminalCanvas(Id, Draw, Events);
-end function;
-
-// Creates a graphical image node.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable image ID.
-// - `Data`: The tightly packed RGBA source pixels.
-// - `Width`: The displayed width in GUI logical units.
-// - `Height`: The displayed height in GUI logical units.
-//
-// ## Returns
-// The declarative widget.
-public function Image<TMsg>(Id: string; Data: G.Pixels; Width: int; Height: int): Element<TMsg>;
-begin
-  return Element<TMsg>.GraphicImage(Id, Data, Width, Height);
-end function;
-
-// Creates a graphical vector canvas.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable canvas ID.
-// - `Width`: The clipped width in GUI logical units.
-// - `Height`: The clipped height in GUI logical units.
-// - `Operations`: The drawing commands in paint order.
-//
-// ## Returns
-// The declarative widget.
-public function Canvas<TMsg>(Id: string; Width: int; Height: int; Operations: array of G.Paint): Element<TMsg>;
-begin
-  return Element<TMsg>.GraphicCanvas(Id, Width, Height, Operations);
-end function;
-
-// Displays tabs and constructs only the effective active panel.
-//
-// ## Type parameters
-// - `TMsg`: The application message type.
-//
-// ## Parameters
-// - `Id`: The stable tab set ID.
-// - `Items`: The tabs in display order.
-// - `ActiveKey`: The requested key or null to use the first enabled tab.
-// - `OnSelect`: Maps a requested key to a message.
-// - `Content`: Builds the panel for the effective active key.
-// - `Enabled`: Whether the tab set accepts input.
-//
-// ## Returns
-// The tabs and their active panel.
-public function Tabs<TMsg>(
-  Id: string; Items: array of C.TabItem; ActiveKey: string?; OnSelect: function(string): TMsg;
-  Content: function(string): Element<TMsg>; Enabled: bool := true
-): Element<TMsg>;
-begin
-  var First: string? := null;
-  var Active: string? := null;
-  var Found: bool := ActiveKey = null;
-  for Item: C.TabItem in Items do
-    if Item.Enabled and First = null then
-      First := Item.Key;
-    end if;
-
-    if Item.Key = ActiveKey then
-      Found := true;
-      if Item.Enabled then
-        Active := Item.Key;
-      end if;
-    end if;
-  end for;
-
-  if not Found and ActiveKey <> null then
-    raise new Sys.ArgumentException('Tabs [' + Id + '] has unknown active key ' + ActiveKey + '.');
-  end if;
-
-  const Selected: string? := Active ?? First;
-  const Panel: Element<TMsg>? := if Selected = null then null else Content(Selected) end if;
-  return Element<TMsg>.TabSet(Id, Items, Selected, OnSelect, Panel, Enabled);
 end function;
 
 // Reuses a subtree while its typed dependencies compare equal.

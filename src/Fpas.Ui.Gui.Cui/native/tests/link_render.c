@@ -77,6 +77,8 @@ static bool check_hold_button(cui_ctx *ui) {
     cui_input_key(ui, CUI_KEY_SPACE, true, 0);
     if (hold_frames(ui, 8, true, false) != 1) return false;
     if (hold_frames(ui, 8, true, false) != 0) return false;
+    fpas_cui_forget(ui, fpas_cui_node_key(ui, fpas_cui_last_node(ui)));
+    if (hold_frames(ui, 8, true, true) != 1) return false;
     cui_input_key(ui, CUI_KEY_SPACE, false, 0);
     if (hold_frames(ui, 4, true, false) != 0) return false;
 
@@ -90,15 +92,35 @@ static bool check_hold_button(cui_ctx *ui) {
     return hold_frames(ui, 1, true, false) == 0;
 }
 
+static bool check_copy_retirement(cui_ctx *ui) {
+    copy_probe probe = { .exact = true };
+    const cui_platform_iface platform = { .user = &probe, .set_clipboard = record_copy };
+    cui_set_platform(ui, &platform);
+    cui_begin_frame(ui, 0.04f);
+    fpas_cui_copy_button(ui, "###copy-retirement", copy_text, 1, 1);
+    cui_end_frame(ui);
+    cui_begin_frame(ui, 0.04f);
+    cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+    cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+    const int copied = fpas_cui_copy_button(ui, "###copy-retirement", copy_text, 1, 0);
+    const cui_id key = fpas_cui_node_key(ui, fpas_cui_last_node(ui));
+    cui_end_frame(ui);
+    fpas_cui_forget(ui, key);
+    cui_begin_frame(ui, 0.04f);
+    const int fresh = fpas_cui_copy_button(ui, "###copy-retirement", copy_text, 1, 0);
+    cui_end_frame(ui);
+    cui_set_platform(ui, NULL);
+    return (copied & 1) && fresh == 4 && probe.writes == 1 && probe.exact;
+}
+
 static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open, int *highlighted) {
     const char *labels[] = { "Save ## draft", "Save and publish", "Schedule..." };
     const char *icons[] = { "", "", "" };
     int nodes[5];
-    unsigned int popup_key;
     if (key >= 0) cui_input_key(ui, (cui_key)key, true, 0);
     cui_begin_frame(ui, 1.0f / 60.0f);
     const int choice = fpas_cui_split_button(ui, "###split-fixture", "Save ## literal", "",
-        labels, icons, 3, 1, 0, enabled, focus, nodes, open, highlighted, &popup_key);
+        labels, icons, 3, 1, 0, enabled, focus, nodes, open, highlighted);
     const bool tracked = nodes[0] >= 0 && nodes[1] >= 0 && (!*open || nodes[2] >= 0);
     cui_end_frame(ui);
     if (key >= 0) cui_input_key(ui, (cui_key)key, false, 0);
@@ -145,6 +167,10 @@ int main(void) {
     }
     if (!check_hold_button(ui)) {
         fprintf(stderr, "Hold button did not require a continuous press or fired more than once.\n");
+        goto cleanup;
+    }
+    if (!check_copy_retirement(ui)) {
+        fprintf(stderr, "Removing a copy button retained its confirmation state.\n");
         goto cleanup;
     }
     if (!check_split_button(ui)) {

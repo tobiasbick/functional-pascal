@@ -1,9 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Sidebar;
 
-uses
-  Fpas.Ui.Navigation as N, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Navigation as N, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, System.Collections.Generic as C;
 
 // Lowers the sidebar into terminal headings and direct actions.
 //

@@ -1,5 +1,22 @@
 # CUI widget gaps
 
+## Integration direction
+
+Keep the GUI as thin as possible. CUI owns widget rendering, layout, animation,
+input and interaction state. FPAS supplies the MVU model and messages; the
+binding handles ABI conversion, borrowed data, stable identities, lifetime and
+inspection. Compose existing CUI primitives before adding a native adapter.
+Do not build a second GUI widget or layout engine. Keep unavoidable knowledge
+of private CUI state and IDs inside the native bridge, not in C# or FPAS.
+
+The TUI renders cells independently. Reproduce the selected CUI behavior,
+layout rules and semantic theme tokens as closely as useful in a terminal.
+Share each supported widget's FPAS constructor, options, model semantics and
+messages with the GUI. Document cell geometry and input adaptations instead
+of introducing another way to program the same control.
+
+## Acceptance
+
 Every CUI widget is in scope for FPAS GUI. Assess TUI suitability separately
 for each widget; technical feasibility alone does not make a terminal version
 useful. Record `TUI: include` with its adaptation, or `TUI: GUI-only` with a
@@ -16,15 +33,17 @@ need no TUI placeholder or forced simulation.
 Breaking changes throughout the TUI are allowed, including its public API,
 rendering, input, layout, and examples. A complete TUI rewrite is allowed if
 that is the clearest way to support the widgets selected for the terminal.
-Prefer a shared contract where both hosts support a widget, with host-specific
-rendering and input handling.
+Use one canonical public constructor per widget, with host-specific rendering
+and input handling. Do not retain alternate legacy widget representations.
 
 Use this inventory to rebuild the [CUI gallery][gallery] in FPAS. Check each
 widget against its upstream demo and API. Accept it once its GUI API and behavior
 are covered, it is shown in the GUI gallery, and its individual TUI decision is
 recorded. An included TUI version also needs its own gallery example and tests;
-a justified GUI-only decision does not block acceptance. A checkbox stays open
-even if FPAS already has an implementation.
+a justified GUI-only decision does not block acceptance. Only checked widgets
+have public FPAS widget implementations. Text, layout and native primitives
+needed to compose accepted widgets remain foundations; using a primitive does
+not accept its standalone widget API.
 
 Show only checked widgets in the galleries and use those galleries as the
 acceptance tests for their visible pages and interactions. Follow the native
@@ -38,14 +57,14 @@ implementation order to the gallery work.
 Give each widget a dedicated source file for its FPAS interface and one
 implementation file in each supported host's `Internal/Widgets` directory. Match
 the unit name to its location, such as `Fpas.Ui.Gui.Internal.Widgets.Sheet`
-and `Fpas.Ui.Tui.Internal.Widgets.Sheet`. Keep the native CUI adapters in
-separate files under `src/Fpas.Ui.Gui.Cui/native/widgets` with matching
-managed interop partials. Shared dispatch, layout, focus and input stay
-with their host. Pass widget-specific settings and behavior through the
-widget's module. Share contracts for widgets used by both hosts; GUI-only
-widgets do not require a terminal implementation file.
+and `Fpas.Ui.Tui.Internal.Widgets.Sheet`. Add native code under
+`src/Fpas.Ui.Gui.Cui/native/widgets` and managed interop only when existing
+bindings cannot express the widget. A composition needs no dedicated C entry
+point: theme switcher and theme toggle use the segment and icon-button
+primitives. Shared dispatch, layout translation, focus and input stay with
+their host. GUI-only widgets need no terminal implementation file.
 
-## Reference and counting
+## Reference
 
 The catalog targets the [vendored CUI v1.4.0 release][vendor] at commit
 [`5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5`][revision]. Compare each component
@@ -54,9 +73,9 @@ with that release before binding it.
 The inventory combines the [core catalog][components], [extended
 catalog][more], [public header][header], and both parts of the native gallery
 ([core][gallery], [extended][gallery-more]). It splits catalog pages that
-describe multiple widgets, such as checkbox, switch, and radio. The 213 widget
-entries count options and companion calls with their widget. Renderer, window,
-font, and resource APIs are outside the widget count. Layout primitives,
+describe multiple widgets, such as checkbox, switch, and radio. Options and
+companion calls belong to their widget. Renderer, window,
+font, and resource APIs are outside this inventory. Layout primitives,
 axis formatting, and chart annotations are listed separately because the
 gallery also needs them.
 
@@ -75,9 +94,7 @@ GUI and TUI already share [`Fpas.Ui.Themes`][fpas-themes]. The contract has
 light and dark modes, eight CUI accents, semantic RGBA colors, custom palette
 overrides, and a model-driven `ThemeFor` callback. GUI passes the palette to
 native CUI. TUI derives its widget and focus styles from the same tokens and
-composites alpha over the cell background. CUI's
-[theme implementation][theme-source] is byte-identical to the vendored tag's
-source at the catalog revision. The [GUI gallery contract][gui-gallery-test]
+composites alpha over the cell background. The [GUI gallery contract][gui-gallery-test]
 checks theme switching with the native host. The [TUI contract][tui-contract]
 checks semantic foregrounds, backgrounds and alpha composition.
 
@@ -86,12 +103,15 @@ typography, control sizing, corner radii, shadows, reduced motion, and
 system-theme behavior in its [theming reference][theming]. The shared FPAS
 `Theme` contains appearance, accent, and colors. Track any additional theme
 properties with the gallery widget that needs them. Theme switcher and theme
-toggle are widgets and have their own open entries.
+toggle propose a model change through existing CUI primitives without changing
+the native palette themselves. System appearance is resolved by an application
+provider; there is no automatic OS or terminal theme detection.
 
 ### Layout compatibility
 
-Both hosts implement the [shared box-layout subset][fpas-layout] of CUI.
-It covers rows and columns, content/fill/fixed sizing, weighted growth,
+The GUI passes the [shared box-layout subset][fpas-layout] to CUI's native
+layout engine. The TUI reproduces those rules in cells. The subset covers
+rows and columns, content/fill/fixed sizing, weighted growth,
 shrinkage, size bounds, cross-axis alignment, gaps, padding, borders, and
 vertical scrolling. GUI uses CUI logical points. TUI converts 8 logical units
 to one column and 16 to one row. Both hosts expose responsive size classes.
@@ -107,8 +127,9 @@ features outside that shared subset. Open layout work is tracked below.
 - [ ] Stack layout with layered children, per-axis sizing including percentages,
   and per-edge padding.
 - [ ] Flexible spacer, fixed gap, and orientation-aware separator parity.
-- [ ] Horizontal scrolling and CUI-equivalent viewport control. Virtual list and
-  split view have separate widget entries.
+- [ ] Horizontal scrolling in the shared FPAS API and CUI-equivalent viewport
+  control. The low-level native scroll binding supports both axes; shared
+  `ScrollView` is vertical. Virtual list and split view have separate entries.
 - [ ] Reset the gallery content scroll position when selecting a different page.
 - [ ] Reading direction and logical start/end layout for right-to-left content.
 
@@ -126,8 +147,8 @@ remaining input limitation and cover it in the TUI gallery.
 ### Terminal icon experiment
 
 The [CUI icon set][icons] uses Lucide glyphs in a bundled font. FPAS currently
-passes the CUI glyph to the GUI sidebar. Its TUI sidebar accepts the shared
-icon option and omits the glyph while showing labels and badges.
+passes CUI glyphs to GUI widgets. TUI buttons use explicit terminal glyphs or
+text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 - [ ] Try a small semantic icon mapping to Unicode symbols and optional emoji
   for the TUI. Share the icon identifier across hosts and supply a text or
@@ -159,56 +180,37 @@ icon option and omits the glyph while showing labels and badges.
 
 ### Actions and selection
 
-- [x] Button (`cui_button`). Both galleries show the six CUI variants,
-  three sizes, leading and trailing icons, and busy, disabled and selected
-  states through the shared [button API][fpas-button]. The widget contract
-  also covers color, hints, and width. TUI: include; use terminal glyphs, a static
-  busy mark, and one- or two-row button sizes.
-- [x] Icon button (`cui_icon_button`). Both galleries use the shared
-  [icon button][fpas-icon-button] to open the compact drawer. The button
-  supports a tooltip, shortcut hint, size, style, selected state, and
-  disabled and busy states. TUI: include; use an explicit glyph or tooltip text.
-- [x] Button group (`cui_button_group`). Both galleries use the shared
-  [button group][fpas-button-group] for independent formatting actions. GUI
-  uses CUI's connected buttons. TUI: include; draw a shared cell outline with
-  dividers. Each enabled member retains its own focus stop and message.
-- [x] Copy button (`cui_copy_button`). Both galleries copy their displayed
-  command with the shared [copy button][fpas-copy-button]. The confirmation
-  lasts 1.6 seconds and keeps the same focus identity. GUI uses CUI's clipboard
-  provider. TUI: include; send OSC 52 to a terminal that allows clipboard writes.
-- [x] Hold-to-confirm button (`cui_hold_button`). Both galleries demonstrate
-  the [shared hold button][fpas-hold-button] with the default 1.2-second fill.
-  GUI confirms once at completion via pointer, Space or Enter. TUI: include; use
-  the same duration and confirm on left-button release over the control. The
-  terminal input path has no key release events for a keyboard hold.
-- [x] Split button (`cui_split_button`). The Actions page in both galleries
-  uses the [shared split button][fpas-split-button] for Save and Export.
-  Main action and chevron have separate focus stops. The menu supports keyed
-  messages, item icons, keyboard selection, dismissal and focus return.
-  TUI: include; use a fitted cell popup and scroll long menus with the wheel
-  or page keys.
-  CUI handles keyboard selection in the native popup.
-- [x] Confirm button (`cui_confirm_button`). Both galleries demonstrate the
-  [shared confirmation API][fpas-confirm-button] on the Actions page. First
-  activation arms; a second within the default three seconds proposes its
-  message once. Escape, an outside click, timeout, disabling, removal or modal
-  coverage cancels. Caption changes retain identity and focus. GUI uses native
-  CUI interaction, countdown and animated faces. TUI: include; show remaining
-  seconds in the caption and accept mouse, Enter or typed Space.
-- [x] Status button (`cui_status_button`). Both galleries demonstrate the
-  [shared status API][fpas-status-button] alongside confirmation on the Actions
-  page. The model owns idle, busy, success and error, including reset. Only idle
-  activation proposes a message; other states retain focus. Captions, idle icons,
-  size, variant and enabled state are supported. GUI uses CUI's native animated
-  faces, spinner and result icons. TUI: include; use a static busy mark, check/error
-  symbols and semantic status colors with distinct focus and hover styles.
-- [ ] Theme switcher (`cui_theme_switcher`)
-- [ ] Theme toggle (`cui_theme_toggle`)
+- [x] Button (`cui_button`): [API][fpas-button]. TUI: include; explicit terminal
+  glyphs, static busy mark, one- or two-row sizes.
+- [x] Icon button (`cui_icon_button`): [API][fpas-icon-button]. TUI: include;
+  explicit terminal glyph or tooltip text.
+- [x] Button group (`cui_button_group`): [API][fpas-button-group]. TUI: include;
+  connected cell outline and dividers, independent member focus and messages.
+- [x] Copy button (`cui_copy_button`): [API][fpas-copy-button]. GUI uses CUI's
+  clipboard provider. TUI: include; OSC 52 requires terminal clipboard permission.
+- [x] Hold-to-confirm button (`cui_hold_button`): [API][fpas-hold-button]. GUI
+  fires at completion through native pointer, Space or Enter holds. TUI: include;
+  confirm on pointer release after the same duration. Terminal input supplies no
+  key release events, so keyboard holds cannot be reproduced.
+- [x] Split button (`cui_split_button`): [API][fpas-split-button]. GUI delegates
+  popup navigation to CUI. TUI: include; fitted cell popup, wheel/page-key scrolling.
+- [x] Confirm button (`cui_confirm_button`): [API][fpas-confirm-button]. TUI:
+  include; remaining seconds replace animated countdown faces, with pointer,
+  Enter and typed Space activation.
+- [x] Status button (`cui_status_button`): [API][fpas-status-button]. TUI: include;
+  static busy mark, result symbols and semantic status colors replace animations.
+- [x] Theme switcher (`cui_theme_switcher`): [API][fpas-theme-switcher]. GUI
+  composes native segments. TUI: include; joined text segments preserve the
+  controlled selection, focus, keyboard and application-provider contract.
+- [x] Theme toggle (`cui_theme_toggle`): [API][fpas-theme-toggle]. GUI composes
+  the native icon button. TUI: include; target caption with sun/moon symbol.
 - [ ] Reactions (`cui_reactions`)
 - [ ] Speed dial (`cui_speed_dial`)
 - [ ] User menu (`cui_user_menu`)
 - [ ] Swipe actions (`cui_swipe_item_begin`)
-- [ ] Segmented control (`cui_segmented`)
+- [ ] Segmented control (`cui_segmented`). Native segments support the accepted
+  theme switcher; a standalone FPAS constructor, options and gallery acceptance
+  remain open. Assess the TUI version when implementing that API.
 - [ ] Toggle group (`cui_toggle_group`)
 - [ ] Checkbox (`cui_checkbox`)
 - [ ] Switch (`cui_switch`)
@@ -256,14 +258,10 @@ icon option and omits the glyph while showing labels and badges.
 
 ### Navigation and app chrome
 
-- [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`). Both galleries
-  use [`Fpas.Ui.Navigation.Sidebar`][sidebar]. The shared API covers sections,
-  stable keys, model-owned active selection, badges, disabled entries, and
-  focus independent of selection. The GUI uses native CUI rows and a gliding
-  highlight. TUI: include; use cell styles and top-align the navigation
-  in a full-height sidebar. The [GUI][gui-gallery-test] and
-  [TUI][tui-gallery-test] gallery tests check the visible destinations and
-  the responsive drawer. Terminal icons are tracked under the icon experiment.
+- [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`): [API][sidebar].
+  TUI: include; top-aligned cell rows, labels and badges. Icons remain an
+  experiment. [GUI][gui-gallery-test] and [TUI][tui-gallery-test] gallery tests
+  cover destinations and the responsive drawer.
 - [ ] Tabs (`cui_tabs`)
 - [ ] Breadcrumb (`cui_breadcrumb`)
 - [ ] Pagination (`cui_pagination`)
@@ -285,10 +283,8 @@ icon option and omits the glyph while showing labels and badges.
 - [ ] Popover (`cui_popover`)
 - [ ] Tooltip (`cui_tooltip`)
 - [ ] Dialog and action footer (`cui_dialog`, `cui_dialog_footer`)
-- [x] Sheet/Drawer (`cui_sheet`). Both galleries use the shared
-  [sheet widget][fpas-sheet] for sidebar navigation at narrow widths.
-  Four edges, the pinned header, scrolling, modal focus, and dismissal are
-  covered. GUI uses CUI's slide transition. TUI: include; use cell placement.
+- [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: include; cell placement
+  replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
 - [ ] Command palette (`cui_command_palette`)
 - [ ] Accordion (`cui_accordion`)
 - [ ] Hover card (`cui_hover_card`)
@@ -464,7 +460,6 @@ track that native build option and terminal rendering with the RTL layout work.
 [gallery]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/examples/gallery_ui.c
 [gallery-more]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/examples/gallery_more.c
 [theming]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/theming.md
-[theme-source]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_theme.c
 [layout]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/layout.md
 [icons]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/icons.md
 [app-id]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/getting-started.md#your-apps-name-and-icon-on-linux
@@ -483,6 +478,8 @@ track that native build option and terminal rendering with the RTL layout work.
 [fpas-hold-button]: ../../src/Fpas.Ui/README.md#hold-to-confirm
 [fpas-confirm-button]: ../../src/Fpas.Ui/README.md#confirm-button
 [fpas-status-button]: ../../src/Fpas.Ui/README.md#status-button
+[fpas-theme-switcher]: ../../src/Fpas.Ui/README.md#theme-switcher
+[fpas-theme-toggle]: ../../src/Fpas.Ui/README.md#theme-toggle
 [fpas-split-button]: ../../src/Fpas.Ui/README.md#split-button
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
 [gui-gallery-test]: ../../tests/Fixtures/gui-host/PublishedGallery.fpas

@@ -2,6 +2,9 @@
 
 ## Right skips toggles in a toggle group
 
+Upstream report [CUI #36](https://github.com/yappologistic/CUI/issues/36).
+Proposed fix in [CUI PR #46](https://github.com/yappologistic/CUI/pull/46).
+
 Reproduced with CUI v1.4.0 at `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5`
 on Windows with the software renderer. The program uses CUI directly.
 
@@ -49,10 +52,10 @@ item sees the same key press after acquiring focus. Tab and Left can reach the
 intermediate items. FPAS currently delegates navigation to CUI.
 [CUI implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_actions.c)
 
-- [ ] Submit an upstream PR with a keyboard regression test for a single Right
-  press. Check the current upstream code and issue list before submitting.
-
 ## Range slider takes focus without keyboard adjustment
+
+Upstream report [CUI #37](https://github.com/yappologistic/CUI/issues/37).
+Proposed fix in [CUI PR #47](https://github.com/yappologistic/CUI/pull/47).
 
 Reproduced on Windows with CUI v1.4.0 at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` using the software renderer and
@@ -102,10 +105,10 @@ Tab 2, Right: range 20..75, slider 41
 during a pointer drag. FPAS uses the native interaction.
 [CUI implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_controls.c)
 
-- [ ] Check current upstream behavior and decide on keyboard adjustment and a
-  visible focus indicator before preparing a PR.
-
 ## Breadcrumb links and numbered page buttons have invisible focus
+
+Upstream report [CUI #38](https://github.com/yappologistic/CUI/issues/38).
+Proposed fix in [CUI PR #48](https://github.com/yappologistic/CUI/pull/48).
 
 Reproduced with direct CUI calls on Windows using the software renderer in
 CUI v1.4.0 at `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5`.
@@ -177,10 +180,10 @@ Page button focus changes pixels: 0, Enter selects: 1
 uses the interaction's focus visibility to draw a cue. FPAS uses the native
 presentation. [CUI implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_controls.c)
 
-- [ ] Check current upstream behavior and prepare a keyboard focus indicator
-  with a rendering regression test.
-
 ## Pagination overflows an unnamed narrow parent
+
+Upstream report [CUI #39](https://github.com/yappologistic/CUI/issues/39).
+Proposed fix in [CUI PR #49](https://github.com/yappologistic/CUI/pull/49).
 
 Reproduced with direct CUI calls on Windows using CUI v1.4.0 at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5`. The viewport is 360 points
@@ -223,10 +226,10 @@ and select its wider layout. With a named box, CUI uses the parent's
 previous rectangle and selects the compact layout. FPAS gives unnamed
 pager parents a stable native ID. [CUI implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_controls.c)
 
-- [ ] Check whether upstream can use the available width for unnamed parents
-  and add coverage for the narrow gallery card.
-
 ## Steppers with the same first caption share their measured width
+
+Upstream report [CUI #40](https://github.com/yappologistic/CUI/issues/40).
+Proposed fix in [CUI PR #50](https://github.com/yappologistic/CUI/pull/50).
 
 Reproduced with direct CUI calls on Windows using CUI v1.4.0 at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` and the software renderer.
@@ -279,10 +282,10 @@ looks up its previous rectangle using the first caption. FPAS gives each
 stepper its own native ID scope so repeated captions can adapt independently.
 [CUI implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_controls.c)
 
-- [ ] Check current upstream behavior and add a regression case with two
-  steppers sharing a first caption.
-
 ## Toast timing can outlast the deadline or accept an expired action
+
+Upstream report [CUI #41](https://github.com/yappologistic/CUI/issues/41).
+Proposed fix in [CUI PR #51](https://github.com/yappologistic/CUI/pull/51).
 
 Reproduced with direct CUI calls on Windows at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
@@ -348,10 +351,10 @@ while the toast still has its exit animation. CUI still builds the button
 and reports activation. FPAS filters action events after the native
 deadline. [CUI toast implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_overlay.c)
 
-- [ ] Verify current upstream timing, preserve hover pause and cover
-  idle expiry and input during the exit animation in a later contribution.
-
 ## Tooltip delay varies with startup and idle frame timing
+
+Upstream report [CUI #42](https://github.com/yappologistic/CUI/issues/42).
+Proposed fix in [CUI PR #52](https://github.com/yappologistic/CUI/pull/52).
 
 Reproduced with direct CUI calls on Windows at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
@@ -412,10 +415,10 @@ frame. The FPAS bridge initializes the last-show time before the warm interval
 and requests shorter wake intervals while an interactive tooltip is pending.
 [CUI tooltip implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_overlay.c)
 
-- [ ] Verify both timing cases on current upstream and cover them with
-  regressions in a later contribution.
-
 ## Enter can open and immediately confirm a confirmation popover
+
+Upstream report [CUI #43](https://github.com/yappologistic/CUI/issues/43).
+Proposed fix in [CUI PR #53](https://github.com/yappologistic/CUI/pull/53).
 
 Reproduced with direct CUI calls on Windows at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
@@ -461,9 +464,10 @@ answers the question before it appears. FPAS opens through an MVU update and
 consumes any Enter press in the frame in which the native question first opens.
 [CUI confirmation implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_disclosure.c)
 
-- [ ] Verify current upstream and add a regression for opening by keyboard.
-
 ## The reveal button accepts clicks in a disabled password field
+
+Upstream report [CUI #44](https://github.com/yappologistic/CUI/issues/44).
+Proposed fix in [CUI PR #55](https://github.com/yappologistic/CUI/pull/55).
 
 Reproduced with direct CUI calls on Windows at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
@@ -522,10 +526,10 @@ disabled scope ends. The click changes the reveal state and the next frame
 paints the unmasked value. The FPAS adapter disables the complete native field
 scope, including the eye. [CUI text field implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_textedit.c)
 
-- [ ] Verify current upstream and cover pointer and keyboard input on the
-  disabled reveal button.
-
 ## A dialog can require three Escape presses after editing
+
+Upstream report [CUI #45](https://github.com/yappologistic/CUI/issues/45).
+Proposed fix in [CUI PR #54](https://github.com/yappologistic/CUI/pull/54).
 
 Reproduced with direct CUI calls on Windows at
 `5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5` (v1.4.0).
@@ -573,6 +577,3 @@ The first Escape drops the field's focus. The frame still records an active
 editor, so a second Escape arriving in the next frame is suppressed by the
 dialog. The FPAS text field adapter clears the edit marker when the editor
 loses focus. [CUI editor implementation](https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/src/cui_textedit.c)
-
-- [ ] Verify current upstream and exercise consecutive Escape events without
-  an intervening idle frame.

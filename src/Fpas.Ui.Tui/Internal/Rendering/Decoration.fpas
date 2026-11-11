@@ -62,7 +62,14 @@ begin
     end if;
   const Style: T.Style := if Control.ButtonStyle then Buttons.WithForeground(
       Theme,
-      Buttons.Resolve(Theme, Control.Variant, Control.Enabled, Focused, not Focused) ?? Standard,
+      Buttons.Resolve(
+        Theme,
+        Control.Variant,
+        Control.Enabled,
+        Focused,
+        not Focused,
+        Control.Appearance
+      ) ?? Standard,
       Control.Foreground
     )
     else Standard

@@ -236,6 +236,71 @@ begin
   Focus(Session, 'split-export');
   Key(Session, 6);
   Check(HasText(Session, 'Exported'), 'The outline split action did not update the gallery.');
+  Focus(Session, 'confirm-delete');
+  Key(Session, 2);
+  Check(
+    Control(Session, 'confirm-delete').Value = 'armed' and HasText(Session, 'Confirmed: 0'),
+    'First activation must arm without sending the destructive message.'
+  );
+  Check(Control(Session, 'confirm-delete').Focused, 'Confirmation must retain focus.');
+  Key(Session, 6);
+  Check(
+    Control(Session, 'confirm-delete').Value = '' and HasText(Session, 'Confirmed: 1'),
+    'Second activation must send exactly one confirmation message.'
+  );
+  Key(Session, 2);
+  Key(Session, 3);
+  Check(
+    Control(Session, 'confirm-delete').Value = '' and HasText(Session, 'Confirmed: 1'),
+    'Escape must disarm without sending a message.'
+  );
+  Key(Session, 2);
+  Send(Session, State.Msg.Show(State.Page.Overview));
+  Send(Session, State.Msg.Show(State.Page.Actions));
+  Check(
+    Control(Session, 'confirm-delete').Value = '',
+    'Navigation must retire removed confirmation state.'
+  );
+  Focus(Session, 'status-save');
+  Check(Control(Session, 'status-save').Value = 'idle', 'The status preview must begin idle.');
+  Key(Session, 2);
+  Check(
+    Control(Session, 'status-save').Value = 'busy' and HasText(Session, 'Requests: 1'),
+    'An idle activation must start one model-owned save.'
+  );
+  Check(Control(Session, 'status-save').Focused, 'Busy feedback must retain focus.');
+  Key(Session, 2);
+  Key(Session, 6);
+  Check(HasText(Session, 'Requests: 1'), 'Busy activation must not start another save.');
+  Focus(Session, 'status-success');
+  Key(Session, 2);
+  Check(
+    Control(
+      Session,
+      'status-save'
+    ).Value = 'success' and Control(Session, 'status-save').Text = 'Saved',
+    'The model must select the custom success caption.'
+  );
+  Session.CapturePng(Capture + '.status.png');
+  Focus(Session, 'status-save');
+  Key(Session, 2);
+  Check(HasText(Session, 'Requests: 1'), 'Success feedback must reject activation.');
+  Focus(Session, 'status-reset');
+  Key(Session, 2);
+  Focus(Session, 'status-save');
+  Key(Session, 6);
+  Check(
+    Control(Session, 'status-save').Value = 'busy' and HasText(Session, 'Requests: 2'),
+    'Only a model reset may re-enable the action.'
+  );
+  Focus(Session, 'status-error');
+  Key(Session, 2);
+  Focus(Session, 'status-save');
+  Key(Session, 6);
+  Check(
+    Control(Session, 'status-save').Value = 'error' and HasText(Session, 'Requests: 2'),
+    'Failure feedback must remain controlled and reject activation.'
+  );
 end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
@@ -257,7 +322,18 @@ end function;
 
 procedure Observe(Title: string; Capture: string);
 begin
-  using const Session: Gui.Session<State.Msg> := Open(Cui.CuiRenderer.Software, Title);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    Title,
+    1000,
+    760,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  // OS input targets stable geometry; animated scrolling can move it between events.
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), State.Update, View.Build, Window, 256, ThemeFor := State.ThemeFor
+  );
   while Session.Step() do
     const Frame: Gui.Frame := Session.Snapshot();
     Console.WriteLine(

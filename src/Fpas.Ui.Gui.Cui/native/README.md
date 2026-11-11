@@ -20,15 +20,18 @@ its label text after creating the native label slot. This keeps literal
 `##` text, leading and trailing icons, and loading spinners independent of
 the stable identity.
 
-`widgets/copy_button.c` keeps the icon face stable when the glyph switches
-from copy to check. The vendored CUI helper changes the key at that point
-and loses keyboard focus. The adapter submits text through CUI's clipboard
-provider and expires the confirmation on the host's monotonic clock.
+`widgets/confirm_button.c` and `widgets/status_button.c` delegate interaction and
+animated faces to CUI. Their shared `widgets/morph_button.c` helper restores
+literal captions and measures their full width independently of CUI's label-ID
+syntax. Removed controls release the corresponding native animation state.
+
+`widgets/copy_button.c` delegates drawing, clipboard submission and confirmation
+timing to CUI's native copy button. The adapter supplies input permissions,
+focus requests and confirmation state for the managed host.
 
 `widgets/split_button.c` uses CUI's composite and popup with literal captions
-and keyed inspection. The adapter lets Enter reach the menu before the
-focused chevron can toggle it closed. It releases the popup when its control
-disappears from the view.
+and keyed inspection. CUI handles keyboard selection. The adapter releases the
+popup when its control disappears from the view.
 
 The image adapter verifies OpenGL storage after upload. CUI copies pixel data
 during the upload and queues the texture handle for frame rendering. Callers

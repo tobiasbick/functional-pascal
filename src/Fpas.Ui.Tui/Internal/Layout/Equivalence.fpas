@@ -120,7 +120,8 @@ begin
     if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
       or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.FocusReturn <> B.FocusReturn
       or A.Variant <> B.Variant or A.ButtonStyle <> B.ButtonStyle or A.ArrowFocus <> B.ArrowFocus
-      or A.Hint <> B.Hint or A.Foreground <> B.Foreground or A.Enabled <>
+      or A.Hint <> B.Hint or A.Foreground <> B.Foreground or A.Appearance <> B.Appearance
+      or A.Enabled <>
       B.Enabled
       or not SameBinding<TMsg>(A.Action, B.Action)
     then

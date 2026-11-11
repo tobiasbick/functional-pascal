@@ -1,0 +1,69 @@
+unit Fpas.Ui.Tui.Internal.Widgets.StatusButton;
+
+uses
+  Fpas.Ui.StatusButtons as B, Fpas.Ui.Internal.StatusButtons as Text,
+  Fpas.Ui.Buttons as Buttons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Buttons as Paint,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+
+function Feedback(State: B.Status; Variant: S.ButtonVariant; Theme: Th.Theme): Th.ButtonAppearance?;
+begin
+  if State <> B.Status.Success and State <> B.Status.Error then
+    return null;
+  end if;
+  const Base: T.Style := Paint.Resolve(Theme, Variant, true) ?? Theme.Text;
+  const Back: int := Base.Background ?? Theme.Text.Background ?? 0;
+  const Tone: int := Th.Rgb(
+    if State = B.Status.Success then Theme.Colors.Success else Theme.Colors.Danger end if,
+    Back
+  );
+  const Filled: bool := Variant = S.ButtonVariant.Primary
+    or (State = B.Status.Error and Variant = S.ButtonVariant.Destructive);
+  const Normal: T.Style := if Filled then new T.Style(Theme.Text.Background, Tone)
+    else new T.Style(Tone, Base.Background)
+    end if;
+  return new Th.ButtonAppearance(
+    Normal, new T.Style(Normal.Background ?? Back, Normal.Foreground),
+    new T.Style(Tone, Th.Rgb(Theme.Colors.Hover, Back))
+  );
+end function;
+
+// Resolves model-controlled work feedback to a terminal button.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal resting caption.
+// - `State`: Model-owned work state.
+// - `Message`: Proposed only for idle activation.
+// - `Settings`: Feedback captions, appearance and input permission.
+// - `Theme`: Current semantic palette and focus styles.
+// ## Returns
+// A status button that retains focus while suppressing non-idle activation.
+public function Lower<TMsg>(Id: string; Label: string; State: B.Status; Message: TMsg; Settings: B.Options; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const Caption: string := Text.Caption(Label, State, Settings);
+  const Icon: string := case State of
+    when B.Status.Idle: Glyphs.SingleLine(Settings.TerminalIcon);
+    when B.Status.Busy: '…';
+    when B.Status.Success: '✓';
+    else '!';
+  end case;
+  const Variant: S.ButtonVariant := if Settings.Variant =
+      S.ButtonVariant.Default then S.ButtonVariant.Primary
+    else Settings.Variant
+    end if;
+  const Large: bool := Settings.ControlSize = Buttons.Size.Large;
+  return E.Element<TMsg>.Action(
+    Id, new A.Direct<TMsg>(Message, State <> B.Status.Idle), Settings.Enabled,
+    new E.ActionView(
+      (if Icon = '' then '' else Icon + ' ' end if) + Caption,
+      Name := Caption, Role := 'status-button', Value := Text.Value(State), Variant := Variant,
+      ArrowFocus := false, Padding := if Large then 2 else 1 end if,
+      Height := if Large then 2 else 1 end if, Appearance := Feedback(State, Variant, Theme)
+    )
+  );
+end function;
+end unit;

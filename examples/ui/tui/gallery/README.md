@@ -20,6 +20,11 @@ pages and shows the widgets checked in the [CUI inventory](../../../../docs/futu
 - **Actions** shows Save and Export split buttons with anchored menus and an
   inline result. Tab focuses each half. Down opens the chevron's menu, Up and
   Down select an item, Enter chooses, and Escape or an outside click closes it.
+  Delete project needs two activations within three seconds and shows the
+  remaining seconds. Escape or a click outside cancels; confirmation only
+  increments the harmless preview counter.
+  Save changes shows inline work feedback with result colors. Complete, Fail
+  and Reset drive the model; non-idle feedback retains focus and rejects activation.
 
 Use the pointer or Tab and Enter to choose a page. Page Up and Page Down switch
 pages when the content viewport does not own the keys. Below 56 columns, use

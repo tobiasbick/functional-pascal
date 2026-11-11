@@ -66,7 +66,7 @@ public function Arrange<TMsg>(
     Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
     ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null;
-    HoldMilliseconds: int := 0; HoldProgress: int := 0
+    HoldMilliseconds: int := 0; HoldProgress: int := 0; Appearance: Th.ButtonAppearance? := null
   );
   begin
     AddControl(
@@ -86,7 +86,8 @@ public function Arrange<TMsg>(
         Hint,
         Foreground,
         HoldMilliseconds,
-        HoldProgress
+        HoldProgress,
+        Appearance
       )
     );
   end procedure;
@@ -125,7 +126,8 @@ public function Arrange<TMsg>(
           View.Padding,
           View.FixedWidth <> null or View.FillWidth,
           View.Foreground,
-          View.Joined
+          View.Joined,
+          View.Appearance
         );
         const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(Handler);
         Register(
@@ -143,7 +145,8 @@ public function Arrange<TMsg>(
           Hint := View.Hint,
           Foreground := View.Foreground,
           HoldMilliseconds := View.HoldMilliseconds,
-          HoldProgress := View.HoldProgress
+          HoldProgress := View.HoldProgress,
+          Appearance := View.Appearance
         );
       when E.Element.Toggle(
         const Id: string,

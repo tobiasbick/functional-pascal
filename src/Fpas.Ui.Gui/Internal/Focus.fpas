@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
+uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -28,6 +28,14 @@ begin
         return Id;
       end if;
     when E.Element.HoldAction(const Id: string, _, _, const Settings: Holds.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ConfirmAction(const Id: string, _, _, const Settings: Confirms.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.StatusAction(const Id: string, _, _, _, const Settings: Status.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;

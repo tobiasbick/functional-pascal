@@ -28,13 +28,23 @@ static bool check_copy_button(cui_ctx *ui) {
     bool passed = true;
     cui_set_platform(ui, &platform);
     for (int frame = 0; frame < 7; frame++) {
+        if (frame > 0) {
+            int64_t remaining = times[frame] - times[frame - 1];
+            while (remaining > 0) {
+                const int64_t step = remaining > 100 ? 100 : remaining;
+                cui_begin_frame(ui, (float)step / 1000.0f);
+                fpas_cui_copy_button(ui, "###copy-fixture", copy_text, 1, 0);
+                cui_end_frame(ui);
+                remaining -= step;
+            }
+        }
         cui_begin_frame(ui, 1.0f / 60.0f);
         if (frame == 1 || frame == 3 || frame == 6) {
             const cui_key key = frame == 3 ? CUI_KEY_SPACE : CUI_KEY_ENTER;
             cui_input_key(ui, key, true, 0);
             cui_input_key(ui, key, false, 0);
         }
-        const int events = fpas_cui_copy_button(ui, "###copy-fixture", copy_text, frame != 6, frame == 0, times[frame]);
+        const int events = fpas_cui_copy_button(ui, "###copy-fixture", copy_text, frame != 6, frame == 0);
         const int node = fpas_cui_last_node(ui);
         const unsigned int key = fpas_cui_node_key(ui, node);
         if (frame == 0) identity = key;

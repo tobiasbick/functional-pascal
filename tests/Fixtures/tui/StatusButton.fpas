@@ -1,0 +1,305 @@
+program StatusButtonContract;
+
+uses
+  Fpas.Ui.StatusButtons as Work, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys,
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.Console as Console;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+type Model = record
+  // Work state presented by the model.
+  public State: Work.Status := Work.Status.Idle;
+  // Number of proposed work requests.
+  public Count: int := 0;
+  // Whether the status button accepts focus and input.
+  public Enabled: bool := true;
+  // Whether custom feedback captions are selected.
+  public Custom: bool := false;
+  // Whether the idle caption has changed.
+  public Renamed: bool := false;
+  // Whether the button is present.
+  public Visible: bool := true;
+  // Requested button variant.
+  public Variant: S.ButtonVariant := S.ButtonVariant.Primary;
+  // Requested button size.
+  public Size: B.Size := B.Size.Medium;
+end record;
+
+type Msg = variant
+  Start;
+  SetState(Value: Work.Status);
+  ToggleEnabled;
+  ToggleCustom;
+  Rename;
+  ToggleVisible;
+  Noop;
+end variant;
+
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Start: State with
+      State := Work.Status.Busy;
+      Count := State.Count + 1;
+    end with;
+    when Msg.SetState(const Value: Work.Status): State with
+      State := Value;
+    end with;
+    when Msg.ToggleEnabled: State with
+      Enabled := not State.Enabled;
+    end with;
+    when Msg.ToggleCustom: State with
+      Custom := not State.Custom;
+    end with;
+    when Msg.Rename: State with
+      Renamed := not State.Renamed;
+    end with;
+    when Msg.ToggleVisible: State with
+      Visible := not State.Visible;
+    end with;
+    when Msg.Noop: State;
+  end case;
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+function View(State: Model): E.Element<Msg>;
+begin
+  const Settings: Work.Options := new Work.Options(
+    BusyLabel := if State.Custom then 'Working ## literally' else null end if,
+    SuccessLabel := if State.Custom then 'Saved ### literally' else 'Done' end if,
+    ErrorLabel := if State.Custom then 'Failed ## literally' else 'Failed' end if,
+    Enabled := State.Enabled,
+    Variant := State.Variant,
+    ControlSize := State.Size,
+    TerminalIcon := '↓'
+  );
+  return E.Column<Msg>(
+    if State.Visible then Work.StatusButton<Msg>(
+        'status', if State.Renamed then 'Renamed ### literally'
+          else 'Save ## literally'
+          end if, State.State, Msg.Start, Settings
+      )
+      else E.Text<Msg>('Hidden')
+      end if,
+    E.Button<Msg>('other', 'Other', Msg.Noop),
+    E.Button<Msg>('idle', 'Idle', Msg.SetState(Work.Status.Idle)),
+    E.Button<Msg>('busy', 'Busy', Msg.SetState(Work.Status.Busy)),
+    E.Button<Msg>('success', 'Success', Msg.SetState(Work.Status.Success)),
+    E.Button<Msg>('error', 'Error', Msg.SetState(Work.Status.Error)),
+    E.Button<Msg>('enabled', 'Toggle enabled', Msg.ToggleEnabled),
+    E.Button<Msg>('custom', 'Toggle captions', Msg.ToggleCustom),
+    E.Button<Msg>('rename', 'Rename', Msg.Rename),
+    E.Button<Msg>('visible', 'Toggle visible', Msg.ToggleVisible),
+    E.Text<Msg>('Requests: ' + State.Count.ToString())
+  );
+end function;
+
+function Control(Session: Tui.HeadlessSession; Id: string := 'status'): Tui.ControlSnapshot;
+begin
+  for Item: Tui.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when Tui.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure CountIs(Session: Tui.HeadlessSession; Expected: int);
+begin
+  for Line: string in Session.Snapshot().Lines do
+    if Line.Trim() = 'Requests: ' + Expected.ToString() then
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Wrong request count.');
+end procedure;
+
+procedure Behavior();
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    70,
+    20
+  );
+  Check(Control(Session).Focused and Control(Session).Value = 'idle', 'Initial idle focus.');
+  Send(Session, Tui.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
+  CountIs(Session, 1);
+  Check(
+    Control(Session).Value = 'busy' and Control(Session).Label = 'Save ## literally…',
+    'Default busy caption.'
+  );
+  for State: string in ['busy', 'success', 'error'] do
+    Send(Session, Tui.Input.Activate(State));
+    Check(
+      Control(Session).Focused and Control(Session).Value = State and Control(Session).Enabled,
+      'State changes keep the same enabled focus stop.'
+    );
+    Send(Session, Tui.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
+    Send(Session, Tui.Input.Character(' '));
+    Send(Session, Tui.Input.Activate('status'));
+    const Target: Tui.ControlSnapshot := Control(Session);
+    Send(Session, Tui.Input.Click(Target.Column + 1, Target.Row));
+    CountIs(Session, 1);
+    Check(Control(Session).Value = State, 'Non-idle activation must not change work state.');
+    Send(Session, Tui.Input.KeyPress(Keys.Key.Tab, Keys.KeyModifiers.None));
+    Check(Control(Session, 'other').Focused, 'Tab can leave non-idle work feedback.');
+    Send(Session, Tui.Input.KeyPress(Keys.Key.Tab, Keys.KeyModifiers.Shift));
+    Check(Control(Session).Focused, 'Shift+Tab can return to non-idle work feedback.');
+  end for;
+
+  Send(Session, Tui.Input.Activate('custom'));
+  Check(Control(Session).Label = 'Failed ## literally', 'Custom error caption.');
+  Send(Session, Tui.Input.Activate('success'));
+  Check(Control(Session).Label = 'Saved ### literally', 'Custom success caption.');
+  Send(Session, Tui.Input.Activate('busy'));
+  Check(Control(Session).Label = 'Working ## literally', 'Custom busy caption.');
+  Send(Session, Tui.Input.Activate('rename'));
+  Check(
+    Control(Session).Focused and Control(Session).Value = 'busy',
+    'Rename preserves status and focus.'
+  );
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('status'));
+  Check(
+    not Control(Session).Enabled and not Control(Session).Focused,
+    'Disabled control rejects focus and input.'
+  );
+  CountIs(Session, 1);
+  Send(Session, Tui.Input.Activate('enabled'));
+  Send(Session, Tui.Input.Activate('visible'));
+  Send(Session, Tui.Input.Activate('visible'));
+  Check(Control(Session).Value = 'busy', 'Recreating the view preserves model-owned work status.');
+  Send(Session, Tui.Input.Focus('status'));
+  Send(Session, Tui.Input.Activate('idle'));
+  Check(Control(Session).Label = 'Renamed ### literally', 'Idle uses the changed literal caption.');
+  Send(Session, Tui.Input.Character(' '));
+  CountIs(Session, 2);
+  Send(Session, Tui.Input.Activate('idle'));
+  const Target: Tui.ControlSnapshot := Control(Session);
+  Send(Session, Tui.Input.Pointer(Keys.PointerKind.Press, Target.Column + 1, Target.Row));
+  Send(Session, Tui.Input.Pointer(Keys.PointerKind.Release, Target.Column + 1, Target.Row));
+  CountIs(Session, 3);
+end procedure;
+
+function Colors(Session: Tui.HeadlessSession): T.Style;
+begin
+  const Item: Tui.ControlSnapshot := Control(Session);
+  return Session.Snapshot().Cells[Item.Row * Session.Snapshot().Columns + Item.Column + 1].Colors;
+end function;
+
+procedure Presentation();
+begin
+  const Theme: Themes.Theme := Themes.Light();
+  for Variant: S.ButtonVariant in [
+    S.ButtonVariant.Primary,
+    S.ButtonVariant.Secondary,
+    S.ButtonVariant.Destructive,
+    S.ButtonVariant.Outline
+  ] do
+    for State: Work.Status in [Work.Status.Success, Work.Status.Error] do
+      using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+        new Model(State := State, Variant := Variant, Size := B.Size.Large),
+        Update,
+        View,
+        70,
+        20,
+        Theme
+      );
+      Check(Control(Session).Height = 2, 'Large status button uses two terminal rows.');
+      const Focused: T.Style := Colors(Session);
+      Send(Session, Tui.Input.Focus('other'));
+      const Normal: T.Style := Colors(Session);
+      const Tone: int := Themes.Rgb(
+        if State = Work.Status.Success then Theme.Colors.Success else Theme.Colors.Danger end if,
+        Theme.Colors.Background
+      );
+      Check(Focused <> Normal, 'Status colors must keep keyboard focus visible.');
+      if Variant = S.ButtonVariant.Primary or (Variant = S.ButtonVariant.Destructive and State =
+        Work.Status.Error)
+      then
+        Check(Normal.Background = Tone, 'Filled feedback uses the semantic status background.');
+      else
+        Check(
+          Normal.Foreground = Tone,
+          'Other variants retain their face and use the status foreground.'
+        );
+      end if;
+
+      Send(Session, Tui.Input.Activate('enabled'));
+      Check(Colors(Session) <> Normal, 'Disabled styling takes precedence over status colors.');
+    end for;
+  end for;
+
+  for Size: B.Size in [B.Size.Medium, B.Size.Small] do
+    using const Session: Tui.HeadlessSession := Tui.StartHeadless<Model, Msg>(
+      new Model(Size := Size),
+      Update,
+      View,
+      70,
+      20
+    );
+    Check(Control(Session).Height = 1, 'Small and medium fit one terminal row.');
+  end for;
+end procedure;
+
+procedure Validation();
+begin
+  for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
+    for Kind: int := 0 to 7 do
+      const State: Work.Status := if Kind = 0 then cast<Work.Status>(99)
+        else Work.Status.Idle
+        end if;
+      const Settings: Work.Options := case Kind of
+        when 1: new Work.Options(Variant := S.ButtonVariant.Active);
+        when 2: new Work.Options(Variant := cast<S.ButtonVariant>(99));
+        when 3: new Work.Options(ControlSize := cast<B.Size>(99));
+        when 4: new Work.Options(BusyLabel := 'Bad' + #0);
+        when 5: new Work.Options(SuccessLabel := 'Bad' + #0);
+        when 6: new Work.Options(ErrorLabel := 'Bad' + #0);
+        when 7: new Work.Options(TerminalIcon := 'Bad' + #0);
+        else new Work.Options();
+      end case;
+      var Rejected: bool := false;
+      try
+        discard V.Prepare<Msg>(
+          Work.StatusButton<Msg>('invalid', 'Save', State, Msg.Start, Settings),
+          Target
+        );
+      catch Error: Sys.ArgumentException do
+        Rejected := true;
+      end try;
+
+      Check(Rejected, 'Invalid status, style, size and literal captions must fail preflight.');
+    end for;
+  end for;
+end procedure;
+
+begin
+  Validation();
+  Behavior();
+  Presentation();
+  Console.WriteLine('Status button contracts verified');
+end;
+end program;

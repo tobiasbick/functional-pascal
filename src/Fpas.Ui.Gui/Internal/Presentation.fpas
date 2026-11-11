@@ -1,6 +1,8 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton,
+  Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton,
   Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton,
   Fpas.Ui.HoldButtons as Holds,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
@@ -258,6 +260,21 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: Holds.Options
       ):
         HoldButton.Draw<TMsg>(Current, Id, Label, Message, Settings);
+      when E.Element.ConfirmAction(
+        const Id: string,
+        const Label: string,
+        const Message: TMsg,
+        const Settings: Confirms.Options
+      ):
+        ConfirmButton.Draw<TMsg>(Current, Id, Label, Message, Settings);
+      when E.Element.StatusAction(
+        const Id: string,
+        const Label: string,
+        const Value: Status.Status,
+        const Message: TMsg,
+        const Settings: Status.Options
+      ):
+        StatusButton.Draw<TMsg>(Current, Id, Label, Value, Message, Settings);
       when E.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options

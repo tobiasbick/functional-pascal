@@ -1,6 +1,6 @@
 unit GuiGallery.State;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes, Fpas.Ui.StatusButtons as Work;
 
 // Pages from the CUI gallery with accepted FPAS previews.
 public type Page = enum: byte
@@ -36,6 +36,12 @@ public type Model = record
   public Formats: int := 0;
   // Completed holds shown by the gallery preview.
   public HoldCount: int := 0;
+  // Completed two-step confirmations; the preview deletes no data.
+  public DeleteCount: int := 0;
+  // Model-owned state of the inline save preview.
+  public SaveStatus: Work.Status := Work.Status.Idle;
+  // Save requests accepted while idle.
+  public SaveCount: int := 0;
   // Last action from either split button.
   public SplitResult: string := '';
   // Whether the compact navigation drawer is open.
@@ -58,6 +64,12 @@ public type Msg = variant
   ToggleFormat(Style: TextFormat);
   // Record one completed hold.
   ConfirmHold;
+  // Record one completed two-step confirmation.
+  ConfirmDelete;
+  // Start the inline save preview while idle.
+  StartSave;
+  // Complete, fail or reset the inline save preview.
+  SetSaveStatus(Value: Work.Status);
   // Record a primary or menu action.
   SplitChoice(Value: string);
   // Open or close the compact navigation drawer.
@@ -106,6 +118,18 @@ begin
     end with;
     when Msg.ConfirmHold: State with
       HoldCount := State.HoldCount + 1;
+    end with;
+    when Msg.ConfirmDelete: State with
+      DeleteCount := State.DeleteCount + 1;
+    end with;
+    when Msg.StartSave: if State.SaveStatus = Work.Status.Idle then State with
+        SaveStatus := Work.Status.Busy;
+        SaveCount := State.SaveCount + 1;
+      end with
+      else State
+      end if;
+    when Msg.SetSaveStatus(const Value: Work.Status): State with
+      SaveStatus := Value;
     end with;
     when Msg.SetDrawer(const Open: bool): State with
       Drawer := Open;

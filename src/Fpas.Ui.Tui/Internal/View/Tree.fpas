@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Choices as C, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Editors as Editors, Fpas.Ui.Choices as C, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Resolved cell allocation data consumed only by terminal layout.
 public type Flex = record
@@ -87,6 +87,8 @@ public type ActionView = record
   public HoldMilliseconds: int := 0;
   // Filled percentage of an active hold.
   public HoldProgress: int := 0;
+  // Optional state-specific normal, focus and hover colors; disabled colors remain host-owned.
+  public Appearance: Th.ButtonAppearance? := null;
 end record;
 
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.

@@ -10,6 +10,8 @@
 #include "widgets/icon_button.h"
 #include "widgets/copy_button.h"
 #include "widgets/hold_button.h"
+#include "widgets/confirm_button.h"
+#include "widgets/status_button.h"
 #include "widgets/split_button.h"
 
 /** Presents the completed current frame without waiting for more input.

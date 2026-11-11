@@ -7,5 +7,5 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_copy_button", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int CopyButton(nint context, string id, string text, int enabled, int focus, long now);
+    internal static partial int CopyButton(nint context, string id, string text, int enabled, int focus);
 }

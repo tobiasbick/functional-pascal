@@ -18,9 +18,14 @@ the Overview, Buttons, Overlays, and Actions pages with the widgets checked in t
   and clicking the backdrop dismiss it.
 - **Actions** shows the primary Save and outline Export split buttons. Their
   main and menu actions update the inline result, as in the CUI gallery.
+  Delete project demonstrates two-step confirmation with a harmless counter.
+  Activate twice within three seconds; Escape or a click outside cancels.
+  Save changes shows inline work feedback. Complete, Fail and Reset select its
+  model-owned result; the status button itself accepts activation only while idle.
 - The sidebar changes pages. At narrow widths, open it with the **Components**
   icon. Selecting a page dismisses the drawer.
 
 The GUI gallery contract runs this view with both native renderers and captures
-the Buttons page and the open Split button menu. It drives the split buttons
-with native keyboard input. The same contract also drives the package-only consumer.
+the Buttons page, the open Split button menu and successful inline work feedback.
+It drives split, confirmation and status buttons with native keyboard input.
+The same contract also drives the package-only consumer.

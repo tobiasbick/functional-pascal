@@ -62,6 +62,19 @@ public sealed partial class GuiPublishingTests
 
             async Task Click(string id, string key = "")
             {
+                for (int attempt = 0; ; attempt++)
+                {
+                    var target = latest!.Find(id, key);
+                    if (target.Y >= 0 && target.Y + target.Height <= latest.Height) break;
+                    Assert.True(attempt < 16, $"Control {id} remains outside the visible window.");
+                    long previous = latest.Id;
+                    input.Move(Math.Clamp(target.X + target.Width / 2, 1, latest.Width - 2), latest.Height / 2);
+                    await Read(frame => frame.Id > previous);
+                    int oldY = latest!.Find(id, key).Y;
+                    previous = latest.Id;
+                    for (int detent = 0; detent < 3; detent++) input.Scroll(down: oldY >= 0);
+                    await Read(frame => frame.Id > previous && frame.Find(id, key).Y != oldY);
+                }
                 var control = latest!.Find(id, key);
                 long before = latest.Id;
                 input.Move(control.X + control.Width / 2, control.Y + control.Height / 2);

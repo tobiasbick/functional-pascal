@@ -55,6 +55,16 @@ internal sealed class X11Input : IDisposable
         XFlush(display);
     }
 
+    /// <summary>Sends one real mouse-wheel detent at the current pointer position.</summary>
+    /// <param name="down">Whether to scroll down rather than up.</param>
+    internal void Scroll(bool down)
+    {
+        uint button = down ? 5u : 4u;
+        Assert.NotEqual(0, XTestFakeButtonEvent(display, button, true, 0));
+        Assert.NotEqual(0, XTestFakeButtonEvent(display, button, false, 0));
+        XFlush(display);
+    }
+
     internal void Key(string symbol, bool down)
     {
         uint code = XKeysymToKeycode(display, XStringToKeysym(symbol));

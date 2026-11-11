@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
-uses Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.SelectionLists as S, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Ui.Tui.Internal.Layout.EditorView as EditorView, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
 public type Binding<TMsg> = variant
   Invoke(Action: Actions.IActivatable<TMsg>);
@@ -35,6 +35,8 @@ public type Control<TMsg> = record
   public HoldMilliseconds: int := 0;
   // Filled percentage of an active hold.
   public HoldProgress: int := 0;
+  // Optional state-specific normal, focus and hover colors.
+  public Appearance: Th.ButtonAppearance? := null;
 end record;
 
 public type Scope<TMsg> = record

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -138,6 +138,51 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         then
           Rules.Reject(At, 'A hold button needs a positive duration and a CUI button variant.');
         end if;
+      when E.Element.ConfirmAction(
+        const Id: string,
+        const Label: string,
+        _,
+        const Settings: Confirms.Options
+      ):
+        const At: string := Identify(Id, Location + '/confirmButton');
+        Rules.CheckText(Label, At);
+        Rules.CheckText(Settings.ConfirmLabel, At + '/confirmLabel');
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
+        if Settings.TimeoutMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
+          or not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
+          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(
+            At,
+            'A confirm button needs a positive timeout and a valid button variant and size.'
+          );
+        end if;
+      when E.Element.StatusAction(
+        const Id: string,
+        const Label: string,
+        const State: Status.Status,
+        _,
+        const Settings: Status.Options
+      ):
+        const At: string := Identify(Id, Location + '/statusButton');
+        Rules.CheckText(Label, At);
+        Rules.CheckText(Settings.SuccessLabel, At + '/successLabel');
+        Rules.CheckText(Settings.ErrorLabel, At + '/errorLabel');
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
+        const Busy: string? := Settings.BusyLabel;
+        if Busy <> null then
+          Rules.CheckText(Busy, At + '/busyLabel');
+        end if;
+
+        if not Sys.Enum.IsDefined<Status.Status>(State)
+          or not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
+          or Settings.Variant = S.ButtonVariant.Active
+          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        then
+          Rules.Reject(At, 'A status button needs a valid work state, button variant and size.');
+        end if;
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
@@ -155,7 +200,23 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
               _,
               _,
               _
-            ), E.Element.CopyAction(_, _, _, _), E.Element.HoldAction(_, _, _, _):
+            ), E.Element.CopyAction(
+              _,
+              _,
+              _,
+              _
+            ), E.Element.HoldAction(
+              _,
+              _,
+              _,
+              _
+            ), E.Element.ConfirmAction(_, _, _, _), E.Element.StatusAction(
+              _,
+              _,
+              _,
+              _,
+              _
+            ):
               Visit(Child, At);
             else
               Rules.Reject(At, 'A button group accepts only button actions.');

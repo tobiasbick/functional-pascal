@@ -43,7 +43,12 @@ public sealed partial class CuiWindow
         ArgumentException.ThrowIfNullOrEmpty(id);
         trackedNodes.Add(id, node);
         uint key = NativeMethods.NodeKey(context, node);
-        if (controlKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
+        if (controlKeys.TryGetValue(id, out uint previous) && previous != key)
+        {
+            ForgetConfirmButton(previous);
+            ForgetStatusButton(previous);
+            NativeMethods.Forget(context, previous);
+        }
         controlKeys[id] = key;
     }
 
@@ -53,7 +58,12 @@ public sealed partial class CuiWindow
     {
         CheckOpen();
         ForgetSplitButton(id);
-        if (controlKeys.Remove(id, out uint key)) NativeMethods.Forget(context, key);
+        if (controlKeys.Remove(id, out uint key))
+        {
+            ForgetConfirmButton(key);
+            ForgetStatusButton(key);
+            NativeMethods.Forget(context, key);
+        }
     }
 
     /// <summary>Reads finalized geometry from the most recently presented or captured frame.</summary>

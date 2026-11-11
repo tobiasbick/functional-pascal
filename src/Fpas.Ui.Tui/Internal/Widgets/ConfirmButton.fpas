@@ -1,0 +1,254 @@
+unit Fpas.Ui.Tui.Internal.Widgets.ConfirmButton;
+
+uses
+  Fpas.Ui.ConfirmButtons as Buttons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S,
+  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Application as App,
+  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Collections.Generic as C;
+
+type Entry = record
+  // Monotonic time of the first activation.
+  public Started: long;
+  // Current confirmation interval in milliseconds.
+  public Timeout: int;
+  // Countdown value used by the last refresh.
+  public Shown: int;
+end record;
+
+// Confirmation windows owned by one terminal session.
+public type State = record
+  // Arms an idle control or consumes its second activation before expiry.
+  public Activate: function(string, int): bool;
+  // Updates a presented control's timeout and cancels disabled controls.
+  public Configure: procedure(string, int, bool);
+  // Seconds remaining, rounded upward; zero means disarmed or expired.
+  public Remaining: function(string): int;
+  // Disarms a control and reports whether it was armed.
+  public Cancel: function(string): bool;
+  // Takes a copy of the armed identities for cancellation and reconciliation.
+  public Ids: function(): array of string;
+  // Expires windows and reports a changed displayed countdown.
+  public Refresh: function(): bool;
+end record;
+
+// Creates confirmation state with a monotonic clock.
+//
+// ## Parameters
+// - `Clock`: Optional monotonic millisecond clock for deterministic hosts/tests.
+// ## Returns
+// Independent confirmation state for one session.
+public function Create(Clock: Sys.Func<long>? := null): State;
+  function Now(): long;
+  begin
+    case Clock of
+      when is Sys.Func<long> as Read:
+        return Read.Invoke();
+      else
+        return Sys.Environment.TickCount64;
+    end case;
+  end function;
+
+  function Remaining(Id: string): int;
+  begin
+    if not Entries.ContainsKey(Id) then
+      return 0;
+    end if;
+    const Value: Entry := Entries[Id];
+    const Left: long := cast<long>(Value.Timeout) - (Now() - Value.Started);
+    return cast<int>(Sys.Math.Max(0L, Left + 999L) div 1000L);
+  end function;
+
+  function Activate(Id: string; Timeout: int): bool;
+  begin
+    if Remaining(Id) > 0 then
+      discard Entries.Remove(Id);
+      return true;
+    end if;
+
+    Entries[Id] := new Entry(Now(), Timeout, cast<int>((cast<long>(Timeout) + 999L) div 1000L));
+    return false;
+  end function;
+
+  procedure Configure(Id: string; Timeout: int; Enabled: bool);
+  begin
+    if not Enabled then
+      discard Entries.Remove(Id);
+    else
+      if Entries.ContainsKey(Id) then
+        Entries[Id] := Entries[Id] with
+          Timeout := Timeout;
+        end with;
+      end if;
+    end if;
+  end procedure;
+
+  function Ids(): array of string;
+  begin
+    return new C.List<string>(Entries.Keys).ToArray();
+  end function;
+
+  function Refresh(): bool;
+  begin
+    var Changed: bool := false;
+    for Id: string in Ids() do
+      const Left: int := Remaining(Id);
+      const Value: Entry := Entries[Id];
+      Changed := Changed or Left <> Value.Shown;
+      if Left = 0 then
+        discard Entries.Remove(Id);
+      else
+        Entries[Id] := Value with
+          Shown := Left;
+        end with;
+      end if;
+    end for;
+
+    return Changed;
+  end function;
+begin
+  const Entries: C.Dictionary<string, Entry> := new C.Dictionary<string, Entry>(
+    Sys.StringComparer.Ordinal
+  );
+  return new State(
+    Activate,
+    Configure,
+    Remaining,
+    function(Id: string): bool => Entries.Remove(Id),
+    Ids,
+    Refresh
+  );
+end function;
+
+type Action<TMsg> = record implements A.IActivatable<TMsg>
+  // Stable control identity.
+  public Id: string;
+  // Message proposed on confirmation.
+  public Message: TMsg;
+  // Confirmation window in milliseconds.
+  public Timeout: int;
+  // Owner session's confirmation windows.
+  public Tracking: State;
+
+  // Arms the control or proposes its message on the second activation.
+  //
+  // ## Returns
+  // No action while arming, otherwise the confirmed message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return if self.Tracking.Activate(self.Id, self.Timeout) then A.Result<TMsg>.Send(self.Message)
+      else A.Result<TMsg>.NoAction
+      end if;
+  end function;
+end record;
+
+// Resolves a confirmation button to a terminal action with a seconds countdown.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity independent of captions.
+// - `Label`: Literal resting caption.
+// - `Message`: Message proposed on confirmation.
+// - `Settings`: Confirmation window and appearance.
+// - `Tracking`: Owner session's confirmation state.
+// ## Returns
+// A terminal button with the same identity in both states.
+public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Buttons.Options; Tracking: State): E.Element<TMsg>;
+begin
+  Tracking.Configure(Id, Settings.TimeoutMilliseconds, Settings.Enabled);
+  const Left: int := Tracking.Remaining(Id);
+  const Caption: string := if Left > 0 then Settings.ConfirmLabel + ' (' + Left.ToString() + 's)'
+    elsif Settings.TerminalIcon <> '' then Settings.TerminalIcon + ' ' + Label
+    else Label
+    end if;
+  return E.Element<TMsg>.Action(
+    Id, new Action<TMsg>(Id, Message, Settings.TimeoutMilliseconds, Tracking), Settings.Enabled,
+    new E.ActionView(
+      Caption, Name := if Left > 0 then Settings.ConfirmLabel else Label end if,
+      Role := 'confirm-button', Value := if Left > 0 then 'armed' else '' end if,
+      Variant := if Left > 0 then S.ButtonVariant.Destructive else Settings.Variant end if,
+      Height := if Settings.ControlSize = B.Size.Large then 2 else 1 end if, ArrowFocus := false,
+      Hint := if Left > 0 then 'Activate again to confirm; Escape cancels' else '' end if
+    )
+  );
+end function;
+
+// Disarms controls that disappeared, became disabled or left the active modal scope.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Tracking`: Owner session's confirmation state.
+// - `Layout`: Newly arranged terminal view.
+// ## Returns
+// Whether cancellation requires resolving the displayed captions again.
+public function Reconcile<TMsg>(Tracking: State; Layout: Scene.Layout<TMsg>): bool;
+begin
+  const Active: Scene.Scope<TMsg>? := Layout.Active;
+  const Scope: string := if Active = null then '' else Active.Id end if;
+  var Changed: bool := false;
+  for Id: string in Tracking.Ids() do
+    const Control: Scene.Control<TMsg>? := Scene.FindControl<TMsg>(Layout, Id);
+    if Control = null or not Control.Enabled or Control.Role <> 'confirm-button' or Control.Scope <>
+      Scope
+    then
+      Changed := Tracking.Cancel(Id) or Changed;
+    end if;
+  end for;
+
+  return Changed;
+end function;
+
+// Applies confirmation cancellation before normal input routing.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Tracking`: Owner session's confirmation state.
+// - `Layout`: Presented controls.
+// - `Event`: Admitted input.
+// - `Focus`: Currently focused control identity.
+// - `Hover`: Currently hovered control identity.
+// ## Returns
+// True when Escape cancelled confirmation and must not dismiss its parent.
+public function Handle<TMsg>(Tracking: State; Layout: Scene.Layout<TMsg>; Event: App.Input; Focus: string; Hover: string): bool;
+  procedure Outside(Column: int; Row: int);
+  begin
+    for Id: string in Tracking.Ids() do
+      const Control: Scene.Control<TMsg>? := Scene.FindControl<TMsg>(Layout, Id);
+      if Control = null or not Control.Bounds.Contains(Column, Row) then
+        discard Tracking.Cancel(Id);
+      end if;
+    end for;
+  end procedure;
+begin
+  case Event of
+    when App.Input.KeyPress(K.Key.Escape, _):
+      const Focused: bool := Tracking.Cancel(Focus);
+      const Hovered: bool := Tracking.Cancel(Hover);
+      return Focused or Hovered;
+    when App.Input.Click(const X: int, const Y: int), App.Input.Pointer(
+      K.PointerKind.Press,
+      const X: int,
+      const Y: int
+    ):
+      Outside(X, Y);
+    when App.Input.ButtonClick(
+      const Button: K.MouseButton,
+      const X: int,
+      const Y: int
+    ), App.Input.ButtonPointer(
+      K.PointerKind.Press,
+      const Button: K.MouseButton,
+      const X: int,
+      const Y: int
+    ):
+      if Button <> K.MouseButton.Middle then
+        Outside(X, Y);
+      end if;
+    else
+  end case;
+
+  return false;
+end function;
+end unit;

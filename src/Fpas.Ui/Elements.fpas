@@ -1,6 +1,6 @@
 unit Fpas.Ui.Elements;
 
-uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
 // A declarative view for a host to prepare and present.
 //
@@ -21,6 +21,10 @@ public type Element<TMsg> = variant
   CopyAction(Id: string; Text: string; OnCopied: Sys.Func<TMsg>?; Enabled: bool);
   // Propose a message after a deliberate hold.
   HoldAction(Id: string; Label: string; Message: TMsg; Settings: Holds.Options);
+  // Propose a message after two activations within a confirmation window.
+  ConfirmAction(Id: string; Label: string; Message: TMsg; Settings: Confirms.Options);
+  // Show model-owned work feedback and propose a message only while idle.
+  StatusAction(Id: string; Label: string; State: Status.Status; Message: TMsg; Settings: Status.Options);
   // A main action and a host-owned popup of related actions.
   SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>; Settings: Split.Options);
   // Join adjacent buttons under a shared outline.

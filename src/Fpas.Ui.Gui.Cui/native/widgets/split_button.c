@@ -29,14 +29,9 @@ int fpas_cui_split_button(cui_ctx *ui, const char *id, const char *label, const 
         .variant = fpas_button_variant(variant), .size = (cui_control_size)size,
         .icon = icon, .item_icons = glyphs, .disabled = !enabled
     };
-    /* Keep Enter on an open menu from activating CUI's focused chevron first. */
-    const bool menu_enter = enabled && popup && popup->open && ui->focus_visible &&
-        cui_key_pressed(ui, CUI_KEY_ENTER);
-    if (menu_enter) ui->focus_visible = false;
     cui_push_disabled(ui, !enabled);
     const int selected = cui_split_button_ex(ui, keyed_label, slots, count, &options);
     cui_pop_disabled(ui);
-    if (menu_enter) ui->focus_visible = true;
 
     const int group = ui->last_node;
     nodes[0] = ui->nodes[group].first;

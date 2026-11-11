@@ -236,6 +236,41 @@ off the control or releasing early cancels the hold. Terminal key input does
 not carry key release, so a tap, repeated key presses or a synthetic click
 cannot confirm this action.
 
+## Confirm button
+
+`Fpas.Ui.ConfirmButtons.ConfirmButton` takes a stable ID, a literal resting caption
+and the message proposed after confirmation. Options select the confirmation
+caption, positive timeout in milliseconds, resting variant, size, enabled state,
+and GUI/terminal icons. Defaults are `Click to confirm`, 3,000 ms, secondary and
+medium. The armed appearance is destructive.
+
+The first click, Enter or Space arms the button; a second activation within the
+window sends the message once. Escape while focused or hovered, a click outside,
+or timeout disarms it. Disabling, removing or covering it with a modal also
+cancels confirmation. Changing keyboard focus or captions alone keeps the
+pending confirmation. GUI uses native CUI animation and countdown; TUI appends
+the remaining seconds to the caption. Both retain the same focus identity.
+
+## Status button
+
+`Fpas.Ui.StatusButtons.StatusButton` takes a stable ID, a literal idle caption,
+the model's `Status` (`Idle`, `Busy`, `Success`, `Error`) and its action message.
+Options select feedback captions, idle icons, variant, size and enabled state.
+Defaults are primary/medium, the idle caption followed by `…` while busy,
+`Done` on success and `Failed` on error. An explicit empty busy caption stays empty.
+
+Click, Enter or Space proposes the message only while idle. Other work states
+remain focusable and reject activation. Disabling rejects both input and focus.
+The application owns every state change, including starting work and returning
+to idle; the widget has no automatic completion or reset timer. Recreating the
+view preserves the model-owned status. Captions and state changes keep the same
+identity. Snapshots use `status-button` and `idle`/`busy`/`success`/`error` values.
+
+GUI uses native CUI animated faces, a busy spinner and result icons. TUI uses a
+static busy mark, check/error symbols and semantic success/danger colors, with
+distinct focus and hover styles. The galleries demonstrate model transitions
+using Complete, Fail and Reset buttons.
+
 ## Split button
 
 `Fpas.Ui.SplitButtons.SplitButton` takes a stable main-action ID, a literal

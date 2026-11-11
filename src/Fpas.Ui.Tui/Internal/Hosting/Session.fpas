@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Themes as SharedThemes, Fpas.Ui.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Hosting.Viewports as V, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -225,18 +225,38 @@ public function Start<TModel, TMsg>(
         if Previous = null then null else Previous.Prepared end if,
         new T.Viewport(Viewport.Columns, Viewport.Rows)
       );
-      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
+      var Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
         Candidate,
         Theme,
         EditorPositions,
         CopyFeedback,
         HoldFeedback,
-        SplitMenus
+        SplitMenus,
+        Confirmations
       );
       Phase := 'layout_or_drawing';
-      const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+      var Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
         Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
       );
+      if Confirm.Reconcile<TMsg>(Confirmations, Native) then
+        Root := Lower.Prepare<TMsg>(
+          Candidate,
+          Theme,
+          EditorPositions,
+          CopyFeedback,
+          HoldFeedback,
+          SplitMenus,
+          Confirmations
+        );
+        Native := Arrangement.Arrange<TMsg>(
+          Root,
+          Viewport.Columns,
+          Viewport.Rows,
+          Previous,
+          ScrollOffsets,
+          Theme
+        );
+      end if;
       const ActiveMenu: A.Scope<TMsg>? := Native.Active;
       if SplitMenus.Id() <> '' and (ActiveMenu = null or ActiveMenu.Id <> SplitMenus.Id()) then
         SplitMenus.Close();
@@ -248,6 +268,7 @@ public function Start<TModel, TMsg>(
     end function;
   begin
     discard CopyFeedback.Expire();
+    discard Confirmations.Refresh();
     const Routing: I.State<TMsg>? := Interaction;
     if Routing = null then
       raise new Sys.InvalidOperationException('Missing interaction state.');
@@ -339,6 +360,17 @@ public function Start<TModel, TMsg>(
       return;
     end if;
 
+    if Confirm.Handle<TMsg>(
+      Confirmations,
+      Layout,
+      Entry.Event,
+      Routing.FocusId(),
+      Routing.HoverId()
+    )
+    then
+      return;
+    end if;
+
     case Entry.Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
         HoldFeedback.Cancel();
@@ -385,7 +417,8 @@ public function Start<TModel, TMsg>(
           if Core.IsOpen() then
             const CopyChanged: bool := CopyFeedback.Expire();
             const HoldChanged: bool := HoldFeedback.Refresh();
-            if CopyChanged or HoldChanged then
+            const ConfirmChanged: bool := Confirmations.Refresh();
+            if CopyChanged or HoldChanged or ConfirmChanged then
               Paint();
             end if;
           end if;
@@ -447,6 +480,7 @@ begin
   const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
   const HoldFeedback: Hold.State := Hold.Create();
   const SplitMenus: SplitWidget.State := SplitWidget.Create();
+  const Confirmations: Confirm.State := Confirm.Create();
   var PendingFocus: string? := null;
   var Viewport: V.Dimensions := new V.Dimensions(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;

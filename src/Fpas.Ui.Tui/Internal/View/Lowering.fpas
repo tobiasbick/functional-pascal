@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.HoldButton as HoldWidget, Fpas.Ui.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.StatusButton as StatusWidget, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as ConfirmWidget, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.SplitButton as SplitWidget, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.HoldButton as HoldWidget, Fpas.Ui.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Choices as Ch, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Editors as Ed, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.View.EditorState as Editors, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -98,12 +98,14 @@ end function;
 // - `Clipboard`: Host-owned copy feedback and clipboard operations.
 // - `HoldTracking`: Owner session's active pointer hold.
 // - `Menus`: Owner session's split-button popup state.
+// - `Confirmations`: Owner session's confirmation windows.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(
   Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Storage: C.Dictionary<string, Editors.Entry>;
-  Clipboard: CopyWidget.State; HoldTracking: HoldWidget.State; Menus: SplitWidget.State
+  Clipboard: CopyWidget.State; HoldTracking: HoldWidget.State; Menus: SplitWidget.State;
+  Confirmations: ConfirmWidget.State
 ): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
@@ -191,6 +193,21 @@ public function Prepare<TMsg>(
         const Settings: Holds.Options
       ):
         return HoldWidget.Lower<TMsg>(Id, Label, Message, Settings, HoldTracking);
+      when Ui.Element.ConfirmAction(
+        const Id: string,
+        const Label: string,
+        const Message: TMsg,
+        const Settings: Confirms.Options
+      ):
+        return ConfirmWidget.Lower<TMsg>(Id, Label, Message, Settings, Confirmations);
+      when Ui.Element.StatusAction(
+        const Id: string,
+        const Label: string,
+        const State: Status.Status,
+        const Message: TMsg,
+        const Settings: Status.Options
+      ):
+        return StatusWidget.Lower<TMsg>(Id, Label, State, Message, Settings, Theme);
       when Ui.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options

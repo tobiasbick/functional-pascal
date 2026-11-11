@@ -29,5 +29,8 @@
 #include "widgets/icon_button.c"
 #include "widgets/copy_button.c"
 #include "widgets/hold_button.c"
+#include "widgets/morph_button.c"
+#include "widgets/confirm_button.c"
+#include "widgets/status_button.c"
 #include "widgets/split_button.c"
 #include "host_theme.c"

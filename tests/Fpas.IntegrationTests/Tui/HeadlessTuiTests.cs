@@ -13,6 +13,8 @@ public sealed class HeadlessTuiTests
     [InlineData("headless.fpas", "headless contracts verified\n")]
     [InlineData("effects.fpas", "effect contracts verified\n")]
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
+    [InlineData("confirm.fpas", "Confirm button contracts verified\n")]
+    [InlineData("status.fpas", "Status button contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {
         using var program = new Debuggee("headless-tui");

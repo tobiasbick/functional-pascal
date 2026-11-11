@@ -1,7 +1,7 @@
 unit GuiGallery.View;
 
 uses
-  GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.SplitButton as SplitButton, Fpas.Ui.Elements as E,
+  GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets,
   Fpas.Ui.IconButtons as Icons, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, System as Sys;
 
@@ -102,7 +102,7 @@ begin
         )
       );
     when State.Page.Actions:
-      return SplitButton.View(Model);
+      return Actions.View(Model, Wide);
     when State.Page.Buttons:
       return Buttons.View(Model, Wide);
     when State.Page.Overlays:

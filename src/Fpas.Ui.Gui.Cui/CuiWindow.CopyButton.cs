@@ -4,8 +4,8 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Draws a copy button with a stable identity and native clipboard feedback.</summary>
-    /// <param name="id">Identity independent of the visible glyph.</param>
+    /// <summary>Draws CUI's native copy button and clipboard feedback.</summary>
+    /// <param name="id">Logical identity passed to the native widget.</param>
     /// <param name="text">Literal text sent to the clipboard provider on activation.</param>
     /// <param name="enabled">Whether the control accepts input.</param>
     /// <param name="focus">Whether to request keyboard focus.</param>
@@ -14,6 +14,6 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         Utf8.Validate(text, nameof(text));
-        return NativeMethods.CopyButton(context, Stable(id), text, enabled ? 1 : 0, focus ? 1 : 0, Environment.TickCount64);
+        return NativeMethods.CopyButton(context, Stable(id), text, enabled ? 1 : 0, focus ? 1 : 0);
     }
 }

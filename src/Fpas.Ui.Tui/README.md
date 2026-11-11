@@ -60,6 +60,11 @@ are errors. Empty/all-disabled tabs show no panel.
 
 Tab and Shift+Tab traverse enabled controls. Enter activates actions and
 eligible selected rows. A typed space also activates buttons and checkboxes.
+The [confirm button](../Fpas.Ui/README.md#confirm-button) needs two activations
+within its timeout, shows the remaining seconds, and cancels on Escape or an
+outside click.
+The [status button](../Fpas.Ui/README.md#status-button) keeps focus during work
+feedback, shows semantic result colors and accepts activation only while idle.
 The [shared sidebar](../Fpas.Ui/README.md#sidebar-navigation) uses the same
 destination keys and activation messages as the GUI. Tab moves between its
 items, and Enter or Space activates the focused item.

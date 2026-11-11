@@ -37,6 +37,10 @@ up before propagating; snapshots retain the last successful presentation.
 The host implements the graphical profile in the [shared widget reference](../Fpas.Ui/README.md):
 
 - Literal text and separators; all button variants and controlled checkboxes.
+- [Two-step confirmation](../Fpas.Ui/README.md#confirm-button) with native CUI
+  countdown, cancellation and stable focus across both captions.
+- [Inline work feedback](../Fpas.Ui/README.md#status-button) with model-owned
+  states, native spinner/result faces and idle-only activation.
 - Single-line/multiline Unicode editing with model-owned text and directional
   UTF-16 grapheme selections, distinct edit/navigation messages and placeholders.
 - Grouped sidebar navigation with native CUI icons and text badges, keyed action

@@ -1,0 +1,232 @@
+unit GalleryPickerFieldsContract;
+
+uses
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Selects as S,
+  Fpas.Ui.NumberFields as N, Fpas.Ui.Validation as V, Fpas.Ui.Elements as E, System as Sys;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+begin
+  const Found: Gui.Control? := Find(Session, Id);
+  if Found <> null then
+    return Found;
+  end if;
+
+  raise new Sys.InvalidOperationException('Missing picker ' + Id);
+end function;
+
+procedure Reject(Node: E.Element<string>; Target: V.Target; Expected: string);
+begin
+  try
+    discard V.Prepare<string>(Node, Target);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Expected), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Picker preflight accepted an invalid view.');
+end procedure;
+
+procedure Validate();
+begin
+  const Pick: function(int): string := function(Index: int): string => Index.ToString();
+  const Edit: function(double): string := function(Value: double): string => Value.ToString();
+  const Items: array of S.Item := [new S.Item('Canada')];
+  Reject(S.Select<string>('select', Items, 1, Pick), V.Target.Graphical, 'valid index');
+  Reject(S.Select<string>('select', Items, -1, Pick), V.Target.Terminal, 'Graphical profile');
+  Reject(
+    N.NumberField<string>('number', Sys.Double.NaN, 0.0, 99.0, Edit),
+    V.Target.Graphical,
+    'finite value'
+  );
+  Reject(
+    N.NumberField<string>('number', 3.0, 0.0, 99.0, Edit),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+end procedure;
+
+// Exercises native choice and number editing on the original Inputs page.
+//
+// ## Parameters
+// - `Renderer`: Windows renderer to exercise.
+// - `Capture`: Prefix for the gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Input <> '' then
+      Window.SetKey(0, false);
+      Window.InputText(Input);
+      Input := '';
+    end if;
+
+    if KeyCode <> 0 then
+      Window.SetKey(KeyCode, true, Mods);
+      Window.SetKey(KeyCode, false, Mods);
+      KeyCode := 0;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    Check(Session.Step(), 'The Pickers page closed.');
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := Control(Session, Id).Bounds;
+    Check(Box.Width > 0 and Box.Height > 0, 'The picker action must be visible: ' + Id);
+    X := Box.X + Box.Width / 2;
+    Y := Box.Y + Box.Height / 2;
+    Left := 1;
+    Step(Session);
+    Left := 0;
+    Step(Session);
+    Step(Session);
+  end procedure;
+  procedure TypeText(Session: Gui.Session<State.Msg>; Text: string);
+  begin
+    Input := Text;
+    Step(Session);
+    Step(Session);
+  end procedure;
+  procedure Key(Session: Gui.Session<State.Msg>; Code: int; Modifiers: int := 0);
+  begin
+    KeyCode := Code;
+    Mods := Modifiers;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  Validate();
+  const Primary: int := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Input: string := '';
+  var KeyCode: int := 0;
+  var Mods: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Pickers', 1000, 1200, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Inputs),
+    State.Update, View.Build, Window, 32, Inject, ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  const Country: Gui.Control := Control(Session, 'input-country');
+  const Language: Gui.Control := Control(Session, 'input-language');
+  const Seats: Gui.Control := Control(Session, 'input-seats');
+  Check(
+    Country.Value = 'Germany' and Language.Value = 'Pick a language' and Seats.Value = '3'
+    and Country.Bounds.Y = Language.Bounds.Y and Language.Bounds.X = Seats.Bounds.X
+    and Country.Bounds.Width = Language.Bounds.Width and Seats.Bounds.Y > Language.Bounds.Y,
+    'The original pickers must retain their positions and initial values.'
+  );
+  Session.CapturePng(Capture + '.pickers.png');
+
+  Click(Session, 'input-country');
+  Click(Session, S.OptionId('input-country', 4));
+  Check(
+    Control(Session, 'input-country').Value = 'Japan' and Control(Session, 'input-country').Focused
+    and Find(Session, S.OptionId('input-country', 4)) = null,
+    'Picking a country by mouse must close the popup and restore trigger focus.'
+  );
+  Key(Session, 6);
+  Check(Find(Session, S.OptionId('input-country', 4)) <> null, 'Space must open the plain select.');
+  Key(Session, 9);
+  Key(Session, 2);
+  Check(
+    Control(Session, 'input-country').Value = 'Iran',
+    'Up and Enter must select the previous country.'
+  );
+
+  Click(Session, 'input-language');
+  TypeText(Session, 'zzz');
+  Check(
+    Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'No results') >= 0
+    and Find(Session, S.OptionId('input-language', 8)) = null,
+    'Filtering with no match must hide all choices and show No results.'
+  );
+  Key(Session, 3);
+  Check(
+    Control(Session, 'input-language').Focused,
+    'Escape must return focus to the searchable trigger.'
+  );
+  Key(Session, 2);
+  TypeText(Session, 'ru');
+  Check(
+    Control(Session, S.OptionId('input-language', 8)).Text = 'Rust'
+    and Find(Session, S.OptionId('input-language', 6)) = null,
+    'Filtered choices must retain their original indices.'
+  );
+  Session.CapturePng(Capture + '.pickers-search.png');
+  Key(Session, 10);
+  Key(Session, 2);
+  Check(
+    Control(Session, 'input-language').Value = 'Rust' and Control(Session, 'input-language').Focused
+    and Find(Session, S.OptionId('input-language', 8)) = null,
+    'Keyboard selection must choose the filtered language and close the popup.'
+  );
+
+  Click(Session, N.IncreaseId('input-seats'));
+  Check(Control(Session, 'input-seats').Value = '4', 'Increase must apply the step.');
+  Click(Session, N.DecreaseId('input-seats'));
+  Check(Control(Session, 'input-seats').Value = '3', 'Decrease must apply the step.');
+  Click(Session, 'input-seats');
+  Key(Session, 9, 1);
+  Check(Control(Session, 'input-seats').Value = '13', 'Shift+Up must apply ten steps.');
+  Key(Session, 15, Primary);
+  TypeText(Session, '999');
+  Key(Session, 2);
+  Check(
+    Control(Session, 'input-seats').Value = '99'
+    and not Control(Session, N.IncreaseId('input-seats')).Enabled,
+    'Direct entry must clamp to the upper bound and disable Increase.'
+  );
+  Session.CapturePng(Capture + '.pickers-bound.png');
+  Key(Session, 15, Primary);
+  TypeText(Session, '42abc');
+  Key(Session, 2);
+  Check(
+    Control(Session, 'input-seats').Value = '99',
+    'A partial parse must not replace the model value.'
+  );
+  Key(Session, 15, Primary);
+  TypeText(Session, 'nan');
+  Key(Session, 2);
+  Check(
+    Control(Session, 'input-seats').Value = '99',
+    'Nonfinite input must preserve the last finite model value.'
+  );
+  discard Session.Post(State.Msg.SetSeats(7.0));
+  Step(Session);
+  TypeText(Session, '1');
+  Check(
+    Control(Session, 'input-seats').Value = '71',
+    'A model replacement must refresh a focused number draft.'
+  );
+end procedure;
+end unit;

@@ -1,100 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
-uses Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.Gui.Internal.Widgets.Dialog as DialogWidget, Fpas.Ui.Gui.Internal.Widgets.ActionFooter as ActionFooterWidget, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Gui.Internal.Widgets.TextField as TextFieldWidget, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Stepper as Stepper, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Rating as Rating, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.RangeSlider as RangeSlider, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.RadioGroup as RadioGroup, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, Fpas.Ui.Validation as V, System as Sys, System.Collections.Generic as Generic;
-
-// Checks native-specific layout limits before issuing widget calls.
-//
-// ## Type parameters
-// - `TMsg`: Message type.
-//
-// ## Parameters
-// - `Prepared`: Graphically validated tree and cached subviews.
-public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
-  procedure Visit(Node: E.Element<TMsg>);
-  begin
-    case Node of
-      when E.Element.Stack(const Children: array of E.Element<TMsg>, _, const Settings: L.Flow):
-        discard Size.Spacing(Settings.Gap);
-        discard Size.Spacing(Settings.Padding);
-        for Child: E.Element<TMsg> in Children do
-          Visit(Child);
-        end for;
-      when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):
-        case Settings.Basis of
-          when L.Extent.Fixed(const Distance: L.Measure):
-            discard Size.Measure(Distance);
-          else
-        end case;
-
-        case Settings.Minimum of
-          when is L.Measure as Distance:
-            discard Size.Measure(Distance);
-          else
-        end case;
-
-        case Settings.Maximum of
-          when is L.Measure as Distance:
-            discard Size.Measure(Distance);
-          else
-        end case;
-
-        Visit(Child);
-      when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
-        for Child: E.Element<TMsg> in Children do
-          Visit(Child);
-        end for;
-      when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
-        Visit(Child);
-      when E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
-        Visit(Child);
-      when E.Element.Popover(
-        _,
-        const Trigger: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
-        _,
-        _,
-        _
-      ):
-        Visit(Trigger);
-        Visit(Content);
-      when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
-        Visit(Trigger);
-      when E.Element.Styled(const Child: E.Element<TMsg>, _):
-        Visit(Child);
-      when E.Element.Framed(const Child: E.Element<TMsg>, _):
-        Visit(Child);
-      when E.Element.Scroll(
-        _,
-        const Child: E.Element<TMsg>,
-        const Position: L.ScrollPosition?,
-        _,
-        _
-      ):
-        case Position of
-          when L.ScrollPosition.Offset(const Distance: L.Measure):
-            discard Size.Measure(Distance);
-          else
-        end case;
-
-        Visit(Child);
-      when E.Element.Sheet(
-        _,
-        const Base: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
-        _,
-        _,
-        _
-      ), E.Element.Dialog(_, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _, _):
-        Visit(Base);
-        Visit(Content);
-      when E.Element.Deferred(const Id: string, _):
-        Visit(Prepared.Subviews[Id].Tree);
-      else
-    end case;
-  end procedure;
-begin
-  Visit(Prepared.Tree);
-end procedure;
+uses Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Gui.Internal.Widgets.Select as SelectWidget, Fpas.Ui.Gui.Internal.Widgets.NumberField as NumberWidget, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Gui.Internal.Widgets.TagInput as TagWidget, Fpas.Ui.Gui.Internal.Widgets.OneTimeCode as CodeWidget, Fpas.Ui.Gui.Internal.Widgets.PasswordStrength as StrengthWidget, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Gui.Internal.Widgets.SearchField as SearchFieldWidget, Fpas.Ui.Gui.Internal.Widgets.TextArea as TextAreaWidget, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.Gui.Internal.Widgets.Dialog as DialogWidget, Fpas.Ui.Gui.Internal.Widgets.ActionFooter as ActionFooterWidget, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Gui.Internal.Widgets.TextField as TextFieldWidget, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Stepper as Stepper, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Rating as Rating, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.RangeSlider as RangeSlider, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.RadioGroup as RadioGroup, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic;
 
 // Draws a prepared tree and gathers messages without running Update or effects.
 //
@@ -115,6 +21,40 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: TextFields.Options, const OnSubmit: Sys.Func<string, TMsg>?
       ):
         TextFieldWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+      when E.Element.SearchField(
+        const Id: string, const Value: string, const OnChange: function(string): TMsg,
+        const Settings: SearchFields.Options, const OnSubmit: Sys.Func<string, TMsg>?
+      ):
+        SearchFieldWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+      when E.Element.TextArea(
+        const Id: string, const Value: string, const OnChange: function(string): TMsg,
+        const Settings: TextAreas.Options, const OnSubmit: Sys.Func<string, TMsg>?
+      ):
+        TextAreaWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+      when E.Element.TagInput(
+        const Id: string,
+        const Tags: array of string,
+        const OnChange: function(array of string): TMsg,
+        const Settings: TagInputs.Options
+      ):
+        TagWidget.Draw<TMsg>(Current, Id, Tags, OnChange, Settings);
+      when E.Element.OneTimeCodeInput(
+        const Id: string, const Value: string, const OnChange: function(string): TMsg,
+        const Settings: OneTimeCodes.Options, const OnComplete: Sys.Func<string, TMsg>?
+      ):
+        CodeWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnComplete);
+      when E.Element.PasswordStrengthMeter(const Id: string, const Password: string):
+        StrengthWidget.Draw<TMsg>(Current, Id, Password);
+      when E.Element.SelectInput(
+        const Id: string, const Items: array of Selects.Item, const Selected: int,
+        const OnChange: function(int): TMsg, const Settings: Selects.Options
+      ):
+        SelectWidget.Draw<TMsg>(Current, Id, Items, Selected, OnChange, Settings);
+      when E.Element.NumberField(
+        const Id: string, const Value: double, const Minimum: double, const Maximum: double,
+        const OnChange: function(double): TMsg, const Settings: NumberFields.Options
+      ):
+        NumberWidget.Draw<TMsg>(Current, Id, Value, Minimum, Maximum, OnChange, Settings);
       when E.Element.Separator(const Title: string):
         if Title = '' then
           Current.Window.Separator();

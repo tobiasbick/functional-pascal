@@ -71,6 +71,19 @@ The Inputs and Smart inputs pages cover native Unicode editing, undo, model
 replacement, validation text, affixes and password masking in snapshots.
 The same host contract checks UTF-8 capacity, edit-before-submit ordering,
 the clear action, read-only editing and the disabled password reveal button.
+The complete Text fields card is captured at desktop and compact widths.
+The gallery checks Search's native clear action and focus restoration, LF
+insertion and visual-line movement in About, and wheel routing between the
+text area and its viewport. Enter in Search and Ctrl+Enter in the text area
+submit the edited values with their affixes excluded.
+The next Inputs card checks committing Unicode tags, keyboard and pointer
+removal, filtering and completing verification codes, and updating the
+password meter without exposing either password field in the snapshot.
+The native tag input boundary test covers a comma-delimited event that
+would otherwise exceed the configured count.
+Pickers exercises country selection by mouse and keyboard, language filtering
+and focus return, numeric step buttons and Shift+Up, bounds, invalid input,
+and replacement of a focused numeric draft.
 Edit profile checks centered dialog geometry, right-aligned footer spacing,
 focus return, consecutive Escape presses from a text field, Cancel, close,
 scrim dismissal and the Save changes toast. The dialog options case checks a

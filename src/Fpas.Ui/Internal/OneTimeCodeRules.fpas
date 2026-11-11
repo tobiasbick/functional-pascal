@@ -1,0 +1,25 @@
+unit Fpas.Ui.Internal.OneTimeCodeRules;
+
+uses Fpas.Ui.OneTimeCodes as O, Fpas.Ui.Internal.Rules as R, System as Sys;
+
+// Validates the native box count and the model code.
+//
+// ## Parameters
+// - `Value`: Current code.
+// - `Settings`: Presentation and box count.
+// - `At`: Diagnostic path.
+public procedure Check(Value: string; Settings: O.Options; At: string);
+begin
+  R.CheckText(Settings.Label, At + '/label');
+  R.CheckText(Value, At + '/value');
+  if Settings.Length < 1 or Settings.Length > 12 or Value.Length > Settings.Length then
+    R.Reject(At, 'One-time code input requires 1 to 12 boxes and a code that fits.');
+  end if;
+
+  for Ch: char in Value do
+    if not Sys.Char.IsAsciiLetterOrDigit(Ch) then
+      R.Reject(At, 'One-time codes require ASCII letters and digits.');
+    end if;
+  end for;
+end procedure;
+end unit;

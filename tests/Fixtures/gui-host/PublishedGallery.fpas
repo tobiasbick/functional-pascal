@@ -11,6 +11,9 @@ uses
   GalleryTooltipContract as TooltipContract,
   GalleryPopoverContract as PopoverContract,
   GalleryTextFieldContract as TextFieldContract,
+  GalleryTextAreaContract as TextAreaContract,
+  GalleryCredentialFieldsContract as CredentialFieldsContract,
+  GalleryPickerFieldsContract as PickerFieldsContract,
   GalleryDialogContract as DialogContract,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
@@ -425,6 +428,9 @@ begin
   TooltipContract.Verify(Renderer, Capture);
   PopoverContract.Verify(Renderer, Capture);
   TextFieldContract.Verify(Renderer, Capture);
+  TextAreaContract.Verify(Renderer);
+  CredentialFieldsContract.Verify(Renderer, Capture);
+  PickerFieldsContract.Verify(Renderer, Capture);
   DialogContract.Verify(Renderer, Capture);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);

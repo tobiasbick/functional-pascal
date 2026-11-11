@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Widgets.TextArea;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Editor as Editor,
+  Fpas.Ui.TextAreas as F, System as Sys;
+
+// Draws CUI's native text area with the model's current value.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable editor identity.
+// - `Value`: Model-owned text.
+// - `OnChange`: Maps a native edit to a message.
+// - `Settings`: Presentation, capacity and input options.
+// - `OnSubmit`: Optional Ctrl+Enter action.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: F.Options; OnSubmit: Sys.Func<string, TMsg>?
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('text-area', Id);
+  const Native: Cui.CuiEditorOptions := new Cui.CuiEditorOptions(
+    Settings.Label,
+    Settings.Placeholder,
+    Settings.Icon,
+    Settings.Hint,
+    Settings.Error,
+    Settings.Prefix,
+    Settings.Suffix,
+    cast<int>(Settings.ControlSize),
+    Settings.ReadOnly,
+    Settings.MaxUtf8Bytes
+  );
+  const Result: Cui.CuiTextFieldResult := Frame.Window.TextArea(
+    Token,
+    Value,
+    Native,
+    cast<float>(Settings.Height),
+    Settings.Clearable,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed,
+    C.Token('button', F.ClearId(Id))
+  );
+  Editor.Publish<TMsg>(
+    Frame, Id, 'text-area', Value, Result, OnChange, OnSubmit, Enabled,
+    Settings.Label, Settings.Hint, Settings.Error, Settings.Prefix, Settings.Suffix
+  );
+end procedure;
+end unit;

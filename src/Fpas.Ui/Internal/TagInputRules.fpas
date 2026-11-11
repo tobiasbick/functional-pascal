@@ -1,0 +1,39 @@
+unit Fpas.Ui.Internal.TagInputRules;
+
+uses Fpas.Ui.TagInputs as T, Fpas.Ui.Internal.Rules as R, System.Text as Text;
+
+// Validates ordered tags and their limits.
+//
+// ## Parameters
+// - `Tags`: Current tags.
+// - `Settings`: Presentation and limits.
+// - `At`: Diagnostic path.
+public procedure Check(Tags: array of string; Settings: T.Options; At: string);
+begin
+  R.CheckText(Settings.Label, At + '/label');
+  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  if Settings.MaxTags < 1 or Settings.MaxTags > 64 or Tags.Length > Settings.MaxTags then
+    R.Reject(At, 'Tag input requires a limit from 1 to 64 and at most that many tags.');
+  end if;
+
+  if Settings.MaxUtf8Bytes < 1 or Settings.MaxUtf8Bytes > 2047 then
+    R.Reject(At, 'Tag input requires a UTF-8 capacity from 1 to 2047.');
+  end if;
+
+  var Bytes: long := 0L;
+  for Tag: string in Tags do
+    R.CheckText(Tag, At + '/tag');
+    if Tag = '' or Tag.StartsWith(' ') or Tag.EndsWith(' ') or Tag.Contains(',')
+      or Tag.Contains(cast<char>(10)) or Tag.Contains(cast<char>(13))
+    then
+      R.Reject(At, 'Tags must be nonempty single lines without commas or surrounding spaces.');
+    end if;
+
+    Bytes := Bytes + Text.Encoding.UTF8.GetByteCount(Tag);
+  end for;
+
+  if Tags.Length > 0 and Bytes + 2L * (Tags.Length - 1) > Settings.MaxUtf8Bytes then
+    R.Reject(At, 'The tag list exceeds its UTF-8 capacity.');
+  end if;
+end procedure;
+end unit;

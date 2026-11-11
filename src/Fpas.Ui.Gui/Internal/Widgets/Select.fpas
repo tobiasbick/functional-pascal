@@ -1,0 +1,81 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Select;
+
+uses
+  Fpas.Ui.Selects as S, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Collections.Generic as Lists;
+
+// Draws the native select and publishes the rendered option rows.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable trigger identity.
+// - `Items`: Options in model order.
+// - `Selected`: Current index or minus one.
+// - `OnChange`: Maps a selected index to a message.
+// - `Settings`: Caption, search and input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of S.Item; Selected: int;
+  OnChange: function(int): TMsg; Settings: S.Options
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('select', Id);
+  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
+  for Item: S.Item in Items do
+    Labels.Add(Item.Label);
+    Icons.Add(Item.Icon);
+  end for;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
+    else function(Index: int): string => C.Token('select-option', S.OptionId(Id, Index))
+    end if;
+  const Result: Cui.CuiSelectResult := Frame.Window.Select(
+    Token,
+    Labels.ToArray(),
+    Icons.ToArray(),
+    Selected,
+    Settings.Label,
+    Settings.Placeholder,
+    Settings.Searchable,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    Track
+  );
+  if Enabled and Result.Selected <> Selected then
+    Frame.Messages.Add(OnChange(Result.Selected));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  if Settings.Label <> '' then
+    Frame.Labels.Add(Settings.Label);
+  end if;
+  const Caption: string := if Result.Selected >= 0 then Labels[Result.Selected]
+    elsif Settings.Placeholder <> '' then Settings.Placeholder
+    else 'Select'
+    end if;
+  Frame.Labels.Add(Caption);
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Settings.Label, 'select', new Cui.CuiRectangle(), Enabled, Value := Caption
+    )
+  );
+  if Result.Open and Result.VisibleOptions.Length = 0 then
+    Frame.Labels.Add('No results');
+  end if;
+
+  for Index: int in Result.VisibleOptions do
+    Frame.Labels.Add(Labels[Index]);
+    Frame.Controls.Add(
+      new App.Control(
+        S.OptionId(Id, Index), Labels[Index], 'select-option', new Cui.CuiRectangle(), Enabled,
+        Value := (Index = Result.Selected).ToString()
+      )
+    );
+  end for;
+end procedure;
+end unit;

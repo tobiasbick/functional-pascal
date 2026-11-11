@@ -8,6 +8,8 @@ uses
   GuiGallery.Tooltip as Tooltip,
   GuiGallery.ConfirmPopover as ConfirmPopover,
   GuiGallery.TextField as TextField,
+  GuiGallery.CredentialFields as Credentials,
+  GuiGallery.PickerFields as Pickers,
   GuiGallery.Dialog as Dialog,
   Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.Buttons as Buttons, GuiGallery.Actions as Actions, Fpas.Ui.Elements as E,
@@ -126,7 +128,12 @@ begin
     when State.Page.Buttons:
       return Buttons.View(Model, Width >= 600);
     when State.Page.Inputs:
-      return TextField.Inputs(Model, Width >= 584);
+      return E.Column<State.Msg>(
+        new L.Flow(Gap := Gap(20)),
+        TextField.Inputs(Model, Width >= 584),
+        Credentials.View(Model),
+        Pickers.View(Model, Width >= 584)
+      );
     when State.Page.SmartInputs:
       return TextField.Affixes(Model);
     when State.Page.Selection:

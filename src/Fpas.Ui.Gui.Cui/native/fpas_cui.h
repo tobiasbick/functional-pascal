@@ -33,6 +33,13 @@
 #include "widgets/popover.h"
 #include "widgets/confirm_popover.h"
 #include "widgets/text_field.h"
+#include "widgets/search_field.h"
+#include "widgets/text_area.h"
+#include "widgets/tag_input.h"
+#include "widgets/one_time_code.h"
+#include "widgets/password_strength.h"
+#include "widgets/select.h"
+#include "widgets/number_field.h"
 #include "widgets/split_button.h"
 #include "widgets/menu.h"
 

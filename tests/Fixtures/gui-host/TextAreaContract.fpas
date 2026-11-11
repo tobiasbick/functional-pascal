@@ -1,0 +1,184 @@
+unit GalleryTextAreaContract;
+
+uses
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, Fpas.Ui.TextAreas as A, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, System as Sys;
+
+type Msg = variant
+  Edit(Value: string);
+  Submit(Value: string);
+end variant;
+
+function Control(Session: Gui.Session<Msg>; Id: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing multiline fixture control ' + Id);
+end function;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+// Exercises native wheel routing inside a scroll view and multiline submission.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Update(Value: string; Message: Msg): App.Transition<string, Msg>;
+  begin
+    case Message of
+      when Msg.Edit(const Text: string):
+        return new App.Transition<string, Msg>(Text, []);
+      when Msg.Submit(const Text: string):
+        Submitted := Text;
+    end case;
+
+    return new App.Transition<string, Msg>(Value, []);
+  end function;
+  function Build(Value: string; Viewport: L.Viewport): E.Element<Msg>;
+  begin
+    return E.ScrollView<Msg>(
+      'viewport', E.Column<Msg>(
+        A.TextArea<Msg>(
+          'area', Value, Msg.Edit,
+          new A.Options(Height := 72, Prefix := 'Body:', Suffix := 'Markdown'), Msg.Submit
+        ),
+        E.Size<Msg>(E.Column<Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(400))))
+      )
+    );
+  end function;
+  procedure Inject();
+  begin
+    if Wheel <> 0 then
+      Window.Wheel(Wheel);
+      Wheel := 0;
+    end if;
+
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Marker then
+      Window.InputText('!');
+      Marker := false;
+    end if;
+
+    if Submit then
+      Window.SetKey(2, true, Primary);
+      Window.SetKey(2, false, Primary);
+      Submit := false;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<Msg>);
+  begin
+    Check(Session.Step(), 'The text area fixture closed.');
+  end procedure;
+begin
+  const Primary: int := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+  const Lines: array of string := [
+    'First',
+    'Second',
+    'Third',
+    'Fourth',
+    'Fifth',
+    'Sixth',
+    'Seventh',
+    'Eighth',
+    'Ninth',
+    'Tenth',
+    'Eleventh',
+    'Twelfth'
+  ];
+  const LineFeed: string := cast<char>(10).ToString();
+  var Initial: string := Lines[0];
+  for Index: int := 1 to Lines.Length - 1 do
+    Initial := Initial + LineFeed + Lines[Index];
+  end for;
+  var Submitted: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Wheel: float := 0;
+  var Left: int := -1;
+  var Marker: bool := false;
+  var Submit: bool := false;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI multiline editing',
+    420,
+    240,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<Msg> := Host.Start<string, Msg>(
+    Initial,
+    Update,
+    Build,
+    Window,
+    32,
+    Inject
+  );
+  Step(Session);
+  Step(Session);
+  const Box: Cui.CuiRectangle := Control(Session, 'area').Bounds;
+  const PageStart: string := Control(Session, 'viewport').Value;
+  X := Box.X + 60;
+  Y := Box.Y + 11;
+  Wheel := -2.0F;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'viewport').Value = PageStart,
+    'The textarea must receive the wheel before the enclosing viewport.'
+  );
+  Check(Control(Session, 'area').Hovered, 'The wheel point must be inside the text area.');
+  Left := 1;
+  Step(Session);
+  Left := 0;
+  Step(Session);
+  Marker := true;
+  Step(Session);
+  Step(Session);
+  const Edited: string := Control(Session, 'area').Value;
+  Check(
+    Edited.StartsWith(
+      'First' + cast<char>(10),
+      Sys.StringComparison.Ordinal
+    ) and Edited.Contains('!'),
+    'Clicking at the top after scrolling must edit a later line. Marker index ' +
+    Edited.IndexOf('!').ToString() + ', focused ' + Control(
+      Session,
+      'area'
+    ).Focused.ToString() + '.'
+  );
+  Submit := true;
+  Step(Session);
+  Step(Session);
+  Check(
+    Submitted = Edited and Control(Session, 'area').Value = Edited
+    and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Body:') >= 0
+    and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Markdown') >= 0,
+    'Ctrl+Enter must submit the text without a line break or the displayed affixes.'
+  );
+
+  Wheel := -100.0F;
+  Step(Session);
+  Wheel := -1.0F;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'viewport').Value <> PageStart,
+    'The outer viewport must receive the wheel at the end of the text area.'
+  );
+end procedure;
+end unit;

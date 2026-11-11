@@ -242,17 +242,20 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   shows the original prefix and suffix examples. Windows Software and OpenGL
   cover Unicode editing, submission, read-only input and password reveal.
   TUI: deferred; graphical profile required.
-- [ ] Search field, including prefix and suffix (`cui_search`)
-- [ ] Text area, including prefix and suffix (`cui_textarea`)
-- [ ] Number field, including suffix (`cui_number`)
+- [x] Search field, including prefix and suffix (`cui_search`):
+  [API][fpas-search-field]. Inputs shows the original project search beside
+  Password. Windows Software and OpenGL cover query editing, the native clear
+  button and focus restoration, and submission with displayed affixes.
+  TUI: deferred; graphical profile required.
+- [x] Text area, including prefix and suffix (`cui_textarea`):
+  [API][fpas-text-area]. Inputs shows the full-width About field with its hint.
+  Windows Software and OpenGL cover LF insertion, Unicode editing, visual-line
+  movement, Ctrl+Enter submission with displayed affixes, and wheel routing
+  inside an enclosing viewport. TUI: deferred; graphical profile required.
 - [ ] Inline edit (`cui_inline_edit`)
 - [ ] Scrub field (`cui_scrub`)
 - [ ] Money field (`cui_money_input`)
 - [ ] Shortcut recorder and shortcut label (`cui_shortcut_recorder`, `cui_shortcut_label`)
-- [ ] Tag input (`cui_tag_input`)
-- [ ] One-time code input (`cui_otp_input`)
-- [ ] Password strength meter (`cui_password_strength`)
-- [ ] Select, including the searchable combobox (`cui_select`)
 - [ ] Multi-select (`cui_multi_select`)
 - [ ] Calendar (`cui_calendar`)
 - [ ] Date picker (`cui_date_picker`)
@@ -547,6 +550,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
 [fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
 [fpas-text-field]: ../../src/Fpas.Ui/README.md#text-field
+[fpas-search-field]: ../../src/Fpas.Ui/README.md#search-field
+[fpas-text-area]: ../../src/Fpas.Ui/README.md#text-area
 [fpas-dialog]: ../../src/Fpas.Ui/README.md#dialog-and-action-footer
 [fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas

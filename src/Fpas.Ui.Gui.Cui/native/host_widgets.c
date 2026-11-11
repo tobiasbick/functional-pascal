@@ -86,7 +86,10 @@ unsigned int fpas_cui_modal_key(cui_ctx *ui) { return ui->current_layer; }
 
 int fpas_cui_focus_key(cui_ctx *ui, unsigned int key) { return key && ui->focus == key; }
 
-void fpas_cui_host_begin(cui_ctx *ui) { ui->prev_modal_layer = 0; }
+void fpas_cui_host_begin(cui_ctx *ui) {
+    ui->prev_modal_layer = 0;
+    fpas_route_text_area_wheel(ui);
+}
 
 static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
     (void)data;

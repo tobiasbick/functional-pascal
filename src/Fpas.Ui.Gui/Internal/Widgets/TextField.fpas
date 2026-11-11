@@ -1,7 +1,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.TextField;
 
 uses
-  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Editor as Editor,
   Fpas.Ui.TextFields as F, System as Sys;
 
 // Draws a native editor and delivers its edit before its optional submission.
@@ -33,46 +33,21 @@ begin
     Token, Value, Native, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed, C.Token('button', Clear), C.Token('button', Reveal)
   );
-  if Enabled and Result.Value <> Value then
-    Frame.Messages.Add(OnChange(Result.Value));
-  end if;
-
-  if Enabled and Result.Submitted then
-    case OnSubmit of
-      when is Sys.Func<string, TMsg> as Submit:
-        Frame.Messages.Add(Submit.Invoke(Result.Value));
-      else
-    end case;
-  end if;
-
-  if Frame.PaintingClosed then
-    return;
-  end if;
-
-  const Message: string := if Settings.Error <> '' then Settings.Error else Settings.Hint end if;
-  for Caption: string in [Settings.Label, Message, Settings.Prefix, Settings.Suffix] do
-    if Caption <> '' then
-      Frame.Labels.Add(Caption);
-    end if;
-  end for;
-
-  Frame.Controls.Add(
-    new App.Control(
-      Id, Settings.Label, 'text-field', new Cui.CuiRectangle(), Enabled,
-      Value := if Settings.Password then '' else Result.Value end if
-    )
+  Editor.Publish<TMsg>(
+    Frame,
+    Id,
+    'text-field',
+    Value,
+    Result,
+    OnChange,
+    OnSubmit,
+    Enabled,
+    Settings.Label,
+    Settings.Hint,
+    Settings.Error,
+    Settings.Prefix,
+    Settings.Suffix,
+    Settings.Password
   );
-  if Result.ClearVisible then
-    Frame.Controls.Add(new App.Control(Clear, 'Clear', 'button', new Cui.CuiRectangle(), Enabled));
-  end if;
-
-  if Result.RevealVisible then
-    Frame.Controls.Add(
-      new App.Control(
-        Reveal, if Result.Revealed then 'Hide password' else 'Show password' end if,
-        'button', new Cui.CuiRectangle(), Enabled, Value := Result.Revealed.ToString()
-      )
-    );
-  end if;
 end procedure;
 end unit;

@@ -1,0 +1,18 @@
+unit GuiGallery.SearchField;
+
+uses GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.SearchFields as Search;
+
+// Builds the search box alongside the password field in the Inputs card.
+//
+// ## Parameters
+// - `Model`: Current search query.
+// ## Returns
+// The original Search projects field.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Search.SearchField<State.Msg>(
+    'input-search', Model.SearchQuery, State.Msg.SetSearchQuery,
+    new Search.Options(Label := 'Search', Placeholder := 'Search projects', MaxUtf8Bytes := 63)
+  );
+end function;
+end unit;

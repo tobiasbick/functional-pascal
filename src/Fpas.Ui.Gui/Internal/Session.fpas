@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Session;
 
-uses Fpas.Ui.Gui.Internal.Widgets.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Gui.Internal.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Widgets.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation as P, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 function Viewport(Size: Cui.CuiSize): L.Viewport;
 begin
@@ -339,7 +339,7 @@ requires Capacity > 0;
           Themes.Rgba(CurrentTheme)
         );
         Candidate := V.Prepare<TMsg>(View(Model, Viewport(Size)), V.Target.Graphical, Prepared);
-        P.Check<TMsg>(Candidate);
+        LayoutValidation.Check<TMsg>(Candidate);
       end if;
 
       if Candidate = null then

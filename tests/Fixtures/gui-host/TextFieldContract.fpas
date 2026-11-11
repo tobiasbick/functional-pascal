@@ -1,6 +1,7 @@
 unit GalleryTextFieldContract;
 
 uses
+  Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas,
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
   Fpas.Ui.Validation as V, Fpas.Ui.TextFields as F, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
@@ -50,6 +51,17 @@ procedure Validate();
 begin
   const Identity: function(string): string := function(Value: string): string => Value;
   Reject(F.TextField<string>('field', '', Identity), V.Target.Terminal, 'Graphical profile');
+  Reject(
+    SearchFields.SearchField<string>('query', '', Identity),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+  Reject(TextAreas.TextArea<string>('about', '', Identity), V.Target.Portable, 'Graphical profile');
+  Reject(
+    TextAreas.TextArea<string>('about', 'line' + cast<char>(13), Identity),
+    V.Target.Graphical,
+    'LF line endings'
+  );
   Reject(
     F.TextField<string>('field', 'é', Identity, new F.Options(MaxUtf8Bytes := 1)),
     V.Target.Graphical, 'exceeds its UTF-8 capacity'
@@ -112,6 +124,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     end procedure;
   begin
     Step();
+    Step();
     const Name: Gui.Control := Control<State.Msg>(Session, 'input-name');
     const Email: Gui.Control := Control<State.Msg>(Session, 'input-email');
     Check(
@@ -123,6 +136,42 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
       'The original text fields must use two columns with the email hint.'
     );
     Session.CapturePng(Capture + '.text-fields.png');
+    const Query: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-search').Bounds;
+    const Password: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-password').Bounds;
+    const About: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-about').Bounds;
+    Check(
+      Query.Y = Password.Y and Query.X = Email.Bounds.X and About.X = Name.Bounds.X
+      and About.Width = Name.Bounds.Width + Email.Bounds.Width + 16 and About.Height = 96
+      and HasLabel(Session, 'Markdown is supported.'),
+      'The complete original card must place Search beside Password and About across both columns.'
+    );
+    Click('input-search');
+    TypeText('rain');
+    Check(
+      Control<State.Msg>(Session, 'input-search').Value = 'rain',
+      'Search must retain the edited query.'
+    );
+    Click(SearchFields.ClearId('input-search'));
+    Check(
+      Control<State.Msg>(
+        Session,
+        'input-search'
+      ).Value = '' and Control<State.Msg>(Session, 'input-search').Focused,
+      'The native search clear action must empty the query and return editor focus.'
+    );
+
+    Click('input-about');
+    Key(15, Primary);
+    TypeText('Alpha');
+    Key(2);
+    TypeText('Béta');
+    Key(9);
+    Key(12);
+    TypeText('!');
+    Check(
+      Control<State.Msg>(Session, 'input-about').Value = 'Alpha!' + cast<char>(10) + 'Béta',
+      'Enter must insert LF and Up and End must edit the previous visual line.'
+    );
 
     Click('input-name');
     Key(15, Primary);
@@ -258,6 +307,10 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
         'sample',
         Msg.Edit,
         new F.Options(Password := true, Enabled := false)
+      ),
+      SearchFields.SearchField<Msg>(
+        'query', Value, Msg.Edit,
+        new SearchFields.Options(Prefix := 'Projects:', Suffix := 'in scope'), Msg.Submit
       )
     );
   end function;
@@ -272,7 +325,7 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
     if Submit then
       Window.SetKey(12, true);
       Window.SetKey(12, false);
-      Window.InputText('é😀');
+      Window.InputText(SubmissionText);
       Window.SetKey(2, true);
       Window.SetKey(2, false);
       Submit := false;
@@ -328,12 +381,24 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
       and not Control<Msg>(Session, F.RevealId('disabled')).Enabled,
       'A disabled password field must disable its reveal action.'
     );
+    Click('query');
+    SubmissionText := 'éZ';
+    Submit := true;
+    Step();
+    Step();
+    Check(
+      Events.Count = 5 and Events[3] = 'edit:éZ' and Events[4] = 'submit:éZ'
+      and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Projects:') >= 0
+      and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'in scope') >= 0,
+      'Search must submit the edited query without its displayed affixes.'
+    );
   end procedure;
 begin
   var X: float := -1.0F;
   var Y: float := -1.0F;
   var Left: int := -1;
   var Submit: bool := false;
+  var SubmissionText: string := 'é😀';
   const Events: Lists.List<string> := new Lists.List<string>();
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI text field options',
@@ -354,12 +419,12 @@ begin
   Exercise(Session);
 end procedure;
 
-procedure VerifyCompact(Renderer: Cui.CuiRenderer);
+procedure VerifyCompact(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI compact text fields',
     360,
-    680,
+    760,
     Renderer,
     true
   );
@@ -372,12 +437,17 @@ begin
     ThemeFor := State.ThemeFor
   );
   Check(Session.Step(), 'The compact text field gallery closed.');
+  Check(Session.Step(), 'The compact text field layout did not settle.');
   const Name: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-name').Bounds;
   const Email: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-email').Bounds;
+  const Search: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-search').Bounds;
+  const About: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-about').Bounds;
   Check(
-    Name.X = Email.X and Name.Width = Email.Width and Email.Y > Name.Y + Name.Height,
+    Name.X = Email.X and Name.Width = Email.Width and Email.Y > Name.Y + Name.Height
+    and Search.X = About.X and Search.Width = About.Width and About.Y > Search.Y + Search.Height,
     'The text fields must stack at compact widths.'
   );
+  Session.CapturePng(Capture + '.text-fields-compact.png');
 end procedure;
 
 // Verifies text editing and presentation with the gallery's actual renderer.
@@ -390,6 +460,6 @@ begin
   Validate();
   VerifyGallery(Renderer, Capture);
   VerifyOptions(Renderer);
-  VerifyCompact(Renderer);
+  VerifyCompact(Renderer, Capture);
 end procedure;
 end unit;

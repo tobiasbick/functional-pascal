@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.TextFieldRules as FieldRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -93,17 +93,74 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: TextFields.Options,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/textField');
-        const At: string := Identify(Id, Location + '/textField');
-        if Settings.Clearable then
-          discard Identify(TextFields.ClearId(Id), At + '/clear');
-        end if;
-
-        if Settings.Password then
-          discard Identify(TextFields.RevealId(Id), At + '/reveal');
-        end if;
-
-        FieldRules.Check(Value, Settings, At);
+        EditorRules.CheckTextField(Id, Value, Settings, Profile, Location, Identify);
+      when E.Element.SearchField(
+        const Id: string,
+        const Value: string,
+        _,
+        const Settings: SearchFields.Options,
+        _
+      ):
+        EditorRules.CheckSearchField(Id, Value, Settings, Profile, Location, Identify);
+      when E.Element.TextArea(
+        const Id: string,
+        const Value: string,
+        _,
+        const Settings: TextAreas.Options,
+        _
+      ):
+        EditorRules.CheckTextArea(Id, Value, Settings, Profile, Location, Identify);
+      when E.Element.TagInput(
+        const Id: string,
+        const Tags: array of string,
+        _,
+        const Settings: TagInputs.Options
+      ):
+        const Path: string := Location + '/tagInput';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        TagRules.Check(Tags, Settings, At);
+        for Index: int := 0 to Tags.Length - 1 do
+          discard Identify(TagInputs.RemoveId(Id, Index), At + '/remove');
+        end for;
+      when E.Element.OneTimeCodeInput(
+        const Id: string,
+        const Value: string,
+        _,
+        const Settings: OneTimeCodes.Options,
+        _
+      ):
+        const Path: string := Location + '/oneTimeCode';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        CodeRules.Check(Value, Settings, Identify(Id, Path));
+      when E.Element.PasswordStrengthMeter(const Id: string, const Password: string):
+        const Path: string := Location + '/passwordStrength';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.CheckText(Password, Identify(Id, Path) + '/password');
+      when E.Element.SelectInput(
+        const Id: string,
+        const Items: array of Selects.Item,
+        const Selected: int,
+        _,
+        const Settings: Selects.Options
+      ):
+        const Path: string := Location + '/select';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        SelectRules.Check(Items, Selected, Settings, At);
+        for Index: int := 0 to Items.Length - 1 do
+          discard Identify(Selects.OptionId(Id, Index), At + '/option');
+        end for;
+      when E.Element.NumberField(
+        const Id: string, const Value: double, const Minimum: double, const Maximum: double, _,
+        const Settings: NumberFields.Options
+      ):
+        const Path: string := Location + '/numberField';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        NumberRules.Check(Value, Minimum, Maximum, Settings, At);
+        discard Identify(NumberFields.DecreaseId(Id), At + '/decrease');
+        discard Identify(NumberFields.IncreaseId(Id), At + '/increase');
       when E.Element.Contextual(
         const Id: string,
         const Child: E.Element<TMsg>,

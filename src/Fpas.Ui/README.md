@@ -37,6 +37,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Popover and confirmation popover anchored to a button | | | Yes |
 | Tooltip attached to a single control | | | Yes |
 | Single-line text fields with labels, validation, affixes and password reveal | | | Yes |
+| Search field and wrapping multiline text area with affixes | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
@@ -582,6 +583,74 @@ The default is 255 bytes. Password fields support up to 341 bytes so CUI can
 measure the masked caret and selection. The native eye can reveal the value
 on screen. GUI snapshots omit password values even when revealed. This
 widget requires the Graphical profile.
+
+## Search field
+
+`Fpas.Ui.SearchFields.SearchField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+uses CUI's search icon, placeholder and clear button. The query is a model-owned
+single line. The native clear button empties it and returns focus to the field.
+Enter can submit the current query. Options allow a custom icon, placeholder,
+validation text, prefix and suffix. The query excludes the displayed affixes.
+
+## Text area
+
+`Fpas.Ui.TextAreas.TextArea<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+uses CUI's wrapping editor for model text with LF line endings. Enter inserts
+LF. Ctrl+Enter submits the current text on Windows and Linux. Up and Down
+move between visual lines. The wheel scrolls the text area and then its
+enclosing viewport when the area reaches the end.
+
+`Height` is in logical points and defaults to 96. Zero uses the native default
+and a negative value fills the available height. The prefix and suffix
+remain outside the editable text. Both editors share the model reconciliation,
+submission ordering and UTF-8 capacity rules of the text field and require
+the Graphical profile.
+
+## Tag input
+
+`Fpas.Ui.TagInputs.TagInput<TMsg>(Id, Tags, OnChange, Settings)` uses an ordered
+array of model-owned tags. Enter or comma commits the draft. Backspace in
+an empty draft removes the last tag, and each chip has a native remove button.
+Tags are nonempty single lines without commas or surrounding ASCII spaces.
+The native field supports up to 64 tags and 2047 UTF-8 bytes, including the
+comma-space separators. Options can lower either limit. The remove buttons
+use `TagInputs.RemoveId(Id, Index)` in GUI snapshots.
+
+## One-time code input
+
+`Fpas.Ui.OneTimeCodes.OneTimeCodeInput<TMsg>(Id, Value, OnChange, Settings, OnComplete)`
+uses one to twelve native boxes for ASCII letters or digits. Typing appends,
+Backspace removes the last character, and paste replaces the code. When a
+user edit fills all boxes, the change message precedes the optional
+completion message. A GUI snapshot exposes only the number of entered
+characters.
+
+## Password strength meter
+
+`Fpas.Ui.PasswordStrengthMeters.PasswordStrengthMeter<TMsg>(Id, Password)`
+displays CUI's heuristic score from zero to four and its corresponding
+strength label. Its GUI snapshot contains the score and label. These three
+widgets require the Graphical profile.
+
+## Select
+
+`Fpas.Ui.Selects.Select<TMsg>(Id, Items, Selected, OnChange, Settings)` uses
+zero-based indices in model order. Use minus one for an unselected trigger.
+Items supply a literal caption and an optional glyph. Enable `Searchable`
+to filter the native popup. Choosing a row reports its original index and
+returns focus to the trigger. Escape dismisses the popup. Visible option
+rows use `Selects.OptionId(Id, Index)` in GUI snapshots.
+
+## Number field
+
+`Fpas.Ui.NumberFields.NumberField<TMsg>(Id, Value, Minimum, Maximum, OnChange, Settings)`
+uses a finite model-owned double within inclusive bounds. Type a complete
+finite number or adjust it with the native step buttons or arrow keys.
+Shift with an arrow applies ten steps. Input is clamped to the bounds and
+Enter or loss of focus displays the accepted value. `DecimalPlaces` sets
+display precision. `Suffix` adds unit text beside the editor. The buttons
+use `NumberFields.DecreaseId(Id)` and `NumberFields.IncreaseId(Id)` in GUI
+snapshots. Both widgets require the Graphical profile.
 
 ## Scrolling
 

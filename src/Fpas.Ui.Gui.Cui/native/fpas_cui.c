@@ -19,6 +19,8 @@
 static void fpas_toast_tick(cui_ctx *ui);
 static void fpas_tooltip_init(cui_ctx *ui);
 static void fpas_tooltip_tick(cui_ctx *ui);
+static void fpas_paint_text_area(cui_ctx *ui, cui_node *area, void *data);
+static void fpas_route_text_area_wheel(cui_ctx *ui);
 
 #include "bridge.c"
 #include "controls.c"
@@ -56,7 +58,15 @@ static void fpas_tooltip_tick(cui_ctx *ui);
 #include "widgets/tooltip.c"
 #include "widgets/popover.c"
 #include "widgets/confirm_popover.c"
+#include "widgets/text_editor.c"
 #include "widgets/text_field.c"
+#include "widgets/search_field.c"
+#include "widgets/text_area.c"
+#include "widgets/tag_input.c"
+#include "widgets/one_time_code.c"
+#include "widgets/password_strength.c"
+#include "widgets/select.c"
+#include "widgets/number_field.c"
 #include "widgets/split_button.c"
 #include "widgets/menu.c"
 #include "host_theme.c"

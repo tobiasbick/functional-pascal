@@ -1,0 +1,65 @@
+unit Fpas.Ui.Gui.Internal.Widgets.NumberField;
+
+uses
+  Fpas.Ui.NumberFields as N, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System.Globalization as Culture;
+
+// Draws the native number field and publishes bounded edits.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable editor identity.
+// - `Value`: Current model value.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `OnChange`: Maps an edit to a message.
+// - `Settings`: Caption, suffix, step and input options.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: double; Minimum: double; Maximum: double;
+  OnChange: function(double): TMsg; Settings: N.Options
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('number-field', Id);
+  const Decrease: string := N.DecreaseId(Id);
+  const Increase: string := N.IncreaseId(Id);
+  const Proposed: double := Frame.Window.NumberField(
+    Token, Value, Minimum, Maximum, Settings.Label, Settings.Suffix, Settings.Step,
+    Settings.DecimalPlaces, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    if Frame.PaintingClosed then null else C.Token('button', Decrease) end if,
+    C.Token('button', Increase)
+  );
+  if Enabled and Proposed <> Value then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  for Caption: string in [Settings.Label, Settings.Suffix] do
+    if Caption <> '' then
+      Frame.Labels.Add(Caption);
+    end if;
+  end for;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Settings.Label, 'number-field', new Cui.CuiRectangle(), Enabled,
+      Value := Proposed.ToString(Culture.CultureInfo.InvariantCulture)
+    )
+  );
+  Frame.Controls.Add(
+    new App.Control(
+      Decrease, 'Decrease', 'button', new Cui.CuiRectangle(), Enabled and Proposed > Minimum
+    )
+  );
+  Frame.Controls.Add(
+    new App.Control(
+      Increase, 'Increase', 'button', new Cui.CuiRectangle(), Enabled and Proposed < Maximum
+    )
+  );
+end procedure;
+end unit;

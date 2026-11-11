@@ -1,0 +1,62 @@
+unit Fpas.Ui.SearchFields;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B, System as Sys;
+
+// Native presentation and input options for a search field.
+public type Options = record
+  // Caption above the field.
+  public Label: string := '';
+  // Text displayed while empty. Empty uses CUI's Search placeholder.
+  public Placeholder: string := '';
+  // Optional leading CUI glyph. Empty uses the search icon.
+  public Icon: string := '';
+  // Supporting text below the field.
+  public Hint: string := '';
+  // Validation error that replaces the hint.
+  public Error: string := '';
+  // Muted text before the editable value.
+  public Prefix: string := '';
+  // Muted text after the editable value.
+  public Suffix: string := '';
+  // Allow focus and selection while preventing edits.
+  public ReadOnly: bool := false;
+  // Allow keyboard and pointer input.
+  public Enabled: bool := true;
+  // Native font size and field height.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Maximum value size in UTF-8 bytes, excluding the terminator.
+  public MaxUtf8Bytes: int := 255;
+end record;
+
+// Builds CUI's search editor with its native clear action.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable editor identity.
+// - `Value`: Model-owned single-line search query.
+// - `OnChange`: Maps a proposed edit to a message.
+// - `Settings`: Optional native search settings.
+// - `OnSubmit`: Optional Enter action receiving the value after the frame's edit.
+// ## Returns
+// A graphical search field.
+public function SearchField<TMsg>(
+  Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SearchField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
+end function;
+
+// Derives the identity of the native clear button.
+//
+// ## Parameters
+// - `Id`: Editor identity.
+// ## Returns
+// The snapshot ID of the clear button when visible.
+public function ClearId(Id: string): string;
+begin
+  return Id + '/clear';
+end function;
+end unit;

@@ -1,0 +1,76 @@
+unit Fpas.Ui.Gui.Internal.Editor;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.TextFields as F, System as Sys;
+
+// Routes edits and submissions, then publishes the native editor and its actions.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable editor identity.
+// - `Role`: Editor role used in snapshots and native tracking.
+// - `Value`: Model-owned text before native editing.
+// - `Result`: Proposed value and native affordances.
+// - `OnChange`: Maps a native edit to a message.
+// - `OnSubmit`: Optional submission action.
+// - `Enabled`: Whether the editor accepts input.
+// - `Label`: Caption above the editor.
+// - `Hint`: Supporting text below the editor.
+// - `Error`: Validation error that replaces the hint.
+// - `Prefix`: Muted text before the value.
+// - `Suffix`: Muted text after the value.
+// - `Password`: Whether the snapshot must omit the value.
+public procedure Publish<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Role: string; Value: string; Result: Cui.CuiTextFieldResult;
+  OnChange: function(string): TMsg; OnSubmit: Sys.Func<string, TMsg>?; Enabled: bool;
+  Label: string; Hint: string; Error: string; Prefix: string; Suffix: string; Password: bool := false
+);
+begin
+  if Enabled and Result.Value <> Value then
+    Frame.Messages.Add(OnChange(Result.Value));
+  end if;
+
+  if Enabled and Result.Submitted then
+    case OnSubmit of
+      when is Sys.Func<string, TMsg> as Submit:
+        Frame.Messages.Add(Submit.Invoke(Result.Value));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  const Message: string := if Error <> '' then Error else Hint end if;
+  for Caption: string in [Label, Message, Prefix, Suffix] do
+    if Caption <> '' then
+      Frame.Labels.Add(Caption);
+    end if;
+  end for;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Label, Role, new Cui.CuiRectangle(), Enabled,
+      Value := if Password then '' else Result.Value end if
+    )
+  );
+  if Result.ClearVisible then
+    Frame.Controls.Add(
+      new App.Control(F.ClearId(Id), 'Clear', 'button', new Cui.CuiRectangle(), Enabled)
+    );
+  end if;
+
+  if Result.RevealVisible then
+    Frame.Controls.Add(
+      new App.Control(
+        F.RevealId(Id), if Result.Revealed then 'Hide password' else 'Show password' end if,
+        'button', new Cui.CuiRectangle(), Enabled, Value := Result.Revealed.ToString()
+      )
+    );
+  end if;
+end procedure;
+end unit;

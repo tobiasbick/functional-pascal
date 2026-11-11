@@ -34,6 +34,9 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Anchored popovers with model-owned visibility and native confirmation questions.
 - Native hover tooltips with optional shortcut key hints.
 - Single-line text fields with native editing, validation text, affixes and password reveal.
+- Search fields with a native clear action and text areas with wrapping and wheel scrolling.
+- Tag inputs, one-time code boxes and native password strength meters.
+- Plain and searchable select lists and bounded number fields with native step buttons.
 - Sidebar navigation and edge sheets/drawers.
 - Centered modal dialogs with native action footers and focus return.
 - Underline and pill tabs, breadcrumb links, responsive pagination and steppers.

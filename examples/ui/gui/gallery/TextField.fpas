@@ -1,6 +1,7 @@
 unit GuiGallery.TextField;
 
 uses
+  GuiGallery.SearchField as Search, GuiGallery.TextArea as Area,
   GuiGallery.State as State, GuiGallery.Sections as G, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.TextFields as F, System as Sys, System.Text as Text;
 
@@ -37,16 +38,19 @@ begin
     )
   );
   const Flow: L.Flow := new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start);
+  const Query: E.Element<State.Msg> := Search.View(Model);
+  const About: E.Element<State.Msg> := Area.View(Model);
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const Fields: array of E.Element<State.Msg> := if Wide then [
       E.Row<State.Msg>(Flow, E.Size<State.Msg>(Name, Fill), E.Size<State.Msg>(Email, Fill)),
       E.Row<State.Msg>(
         Flow,
         E.Size<State.Msg>(Password, Fill),
-        E.Size<State.Msg>(E.Column<State.Msg>(), Fill)
-      )
+        E.Size<State.Msg>(Query, Fill)
+      ),
+      About
     ]
-    else [Name, Email, Password]
+    else [Name, Email, Password, Query, About]
     end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),

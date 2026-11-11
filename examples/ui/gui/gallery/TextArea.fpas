@@ -1,0 +1,23 @@
+unit GuiGallery.TextArea;
+
+uses GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.TextAreas as Area;
+
+// Builds the full-width multiline field under the Inputs grid.
+//
+// ## Parameters
+// - `Model`: Current profile description.
+// ## Returns
+// The original About field and helper text.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Area.TextArea<State.Msg>(
+    'input-about', Model.About, State.Msg.SetAbout,
+    new Area.Options(
+      Label := 'About',
+      Hint := 'Markdown is supported.',
+      Height := 96,
+      MaxUtf8Bytes := 511
+    )
+  );
+end function;
+end unit;

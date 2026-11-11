@@ -19,9 +19,14 @@ the accepted widget examples from the
   Dropdown menu clones CUI's Options and icon-only More actions examples,
   including section captions, separators, icons, shortcut hints and a danger
   action. Commands only update preview state; they do not modify a project.
-- **Inputs** shows Full name, Email and Password in the original responsive
-  text-field card. The email example uses a reserved example domain. Typing
-  a short password displays the validation error.
+- **Inputs** shows the original responsive Text fields card with Full name,
+  Email, Password, Search projects and About. The email example uses a
+  reserved example domain. Typing a short password displays the validation
+  error. The multiline About field spans the card and wraps on narrow screens.
+  The next card shows Topics, the six-box Verification code starting with
+  418, and New password with its strength meter.
+  Pickers adds Country, searchable Language, and Seats in their original
+  grid positions, stacked at narrow widths.
 - **Selection** shows native notification checkboxes, connectivity switches
   and the exclusive save-frequency radio group. The checkbox and switch
   cards share a row when both fit and stack at narrower widths. Radio cards

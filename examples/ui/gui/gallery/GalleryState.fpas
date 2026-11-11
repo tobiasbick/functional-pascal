@@ -116,10 +116,24 @@ public type Model = record
   public BranchDeleted: bool := false;
   // Sample name in the text-field example.
   public Name: string := 'Maya Okafor';
+  // Current query in the Search projects example.
+  public SearchQuery: string := '';
+  // Current multiline value in the About example.
+  public About: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';
   // Sample email in the reserved example domain.
   public Email: string := 'maya@example.com';
   // Current value of the password example.
   public Password: string := '';
+  // Ordered topics in the tag input example.
+  public Topics: array of string := ['design', 'c99', 'native'];
+  // Partial verification code in the example.
+  public VerificationCode: string := '418';
+  // Current country in the picker example.
+  public Country: int := 2;
+  // Current language, or minus one before selection.
+  public Language: int := -1;
+  // Bounded seat count.
+  public Seats: double := 3.0;
   // Editable part of the URL after its prefix.
   public Url: string := 'cui.dev';
   // Editable weight before the unit suffix.
@@ -218,10 +232,24 @@ public type Msg = variant
   PreviewBranchDeletion;
   // Update the sample full name.
   SetName(Value: string);
+  // Update the search query.
+  SetSearchQuery(Value: string);
+  // Update the About text.
+  SetAbout(Value: string);
   // Update the sample email address.
   SetEmail(Value: string);
   // Update the sample password.
   SetPassword(Value: string);
+  // Replace the selected topics.
+  SetTopics(Value: array of string);
+  // Replace the partial verification code.
+  SetVerificationCode(Value: string);
+  // Select a country.
+  SetCountry(Index: int);
+  // Select a language.
+  SetLanguage(Index: int);
+  // Adjust the seat count.
+  SetSeats(Value: double);
   // Update the URL without its displayed prefix.
   SetUrl(Value: string);
   // Update the weight without its displayed unit.
@@ -387,11 +415,32 @@ begin
     when Msg.SetName(const Value: string): State with
       Name := Value;
     end with;
+    when Msg.SetSearchQuery(const Value: string): State with
+      SearchQuery := Value;
+    end with;
+    when Msg.SetAbout(const Value: string): State with
+      About := Value;
+    end with;
     when Msg.SetEmail(const Value: string): State with
       Email := Value;
     end with;
     when Msg.SetPassword(const Value: string): State with
       Password := Value;
+    end with;
+    when Msg.SetTopics(const Value: array of string): State with
+      Topics := Value;
+    end with;
+    when Msg.SetVerificationCode(const Value: string): State with
+      VerificationCode := Value;
+    end with;
+    when Msg.SetCountry(const Index: int): State with
+      Country := Index;
+    end with;
+    when Msg.SetLanguage(const Index: int): State with
+      Language := Index;
+    end with;
+    when Msg.SetSeats(const Value: double): State with
+      Seats := Value;
     end with;
     when Msg.SetUrl(const Value: string): State with
       Url := Value;

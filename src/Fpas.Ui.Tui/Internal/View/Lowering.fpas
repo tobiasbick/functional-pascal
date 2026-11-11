@@ -196,11 +196,31 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException('Context menus require the graphical profile.');
       when Ui.Element.Hinted(_, _, _):
         raise new Sys.NotSupportedException('Tooltip requires the graphical profile.');
-      when Ui.Element.TextField(_, _, _, _, _):
-        raise new Sys.NotSupportedException('Text fields require the graphical profile.');
+      when Ui.Element.TextField(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.SearchField(_, _, _, _, _), Ui.Element.TextArea(_, _, _, _, _):
+        raise new Sys.NotSupportedException('These text editors require the graphical profile.');
+      when Ui.Element.TagInput(_, _, _, _), Ui.Element.OneTimeCodeInput(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.PasswordStrengthMeter(_, _):
+        raise new Sys.NotSupportedException(
+          'Tags, one-time codes and password strength require the graphical profile.'
+        );
       when Ui.Element.Dialog(_, _, _, _, _, _), Ui.Element.ActionFooter(_):
         raise new Sys.NotSupportedException(
           'Dialogs and action footers require the graphical profile.'
+        );
+      when Ui.Element.SelectInput(_, _, _, _, _), Ui.Element.NumberField(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Select and number fields require the graphical profile.'
         );
       when Ui.Element.Popover(_, _, _, _, _, _), Ui.Element.ConfirmPopover(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Popovers require the graphical profile.');

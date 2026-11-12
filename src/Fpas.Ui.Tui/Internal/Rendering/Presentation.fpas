@@ -5,10 +5,18 @@ uses Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System a
 function Color(Value: int?; Foreground: bool): string;
 begin
   if Value = null then
-    return if Foreground then '39' else '49' end if;
+    return if Foreground then
+      '39'
+    else
+      '49'
+    end if;
   end if;
   const Rgb: int := Sys.Math.Min(cast<int>(Value), 16777215);
-  return (if Foreground then '38;2;' else '48;2;' end if) + (Rgb div 65536).ToString() + ';' +
+  return (if Foreground then
+    '38;2;'
+  else
+    '48;2;'
+  end if) + (Rgb div 65536).ToString() + ';' +
     (Rgb div 256 mod 256).ToString() + ';' + (Rgb mod 256).ToString();
 end function;
 

@@ -31,7 +31,11 @@ begin
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, Label, 'switch', new Cui.CuiRectangle(), Allowed,
-      Value := if On then 'true' else 'false' end if
+      Value := if On then
+        'true'
+      else
+        'false'
+      end if
     )
   );
 end procedure;

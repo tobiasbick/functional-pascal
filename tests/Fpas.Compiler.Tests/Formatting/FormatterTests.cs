@@ -102,6 +102,61 @@ public sealed class FormatterTests
         Assert.All(output.Split('\n'), line => Assert.True(line.Length <= 100, line));
     }
 
+    [Fact]
+    public void Conditional_expressions_put_each_value_on_an_indented_line()
+    {
+        const string input = """
+            program Demo;
+            function Select(Mode: int): array of int;
+            begin
+              const Item: int := if Mode > 1 then 2 elsif Mode = 1 then 1 else 0 end if;
+              return case Mode of
+                when 0: if Item = 0 then [
+                  Item
+                ] else [] end if;
+                else [];
+              end case;
+            end function;
+            begin end;
+            end program;
+            """;
+        const string expected = """
+            program Demo;
+
+            function Select(Mode: int): array of int;
+            begin
+              const Item: int := if Mode > 1 then
+                2
+              elsif Mode = 1 then
+                1
+              else
+                0
+              end if;
+              return case Mode of
+                when 0: if Item = 0 then
+                  [Item]
+                else
+                  []
+                end if;
+                else [];
+              end case;
+            end function;
+
+            begin
+            end;
+            end program;
+            """;
+        Assert.Equal(expected.ReplaceLineEndings("\n") + "\n", Format(input));
+    }
+
+    [Fact]
+    public void Conditional_expression_aligns_with_the_continued_operand_that_starts_it()
+    {
+        const string input = "program Demo;begin discard Prefix +\n if Ready then 'yes' else 'no' end if;end;end program;";
+        var output = Format(input);
+        Assert.Contains("discard Prefix +\n    if Ready then\n      'yes'\n    else\n      'no'\n    end if;", output);
+    }
+
     [Theory]
     [InlineData("program Broken; begin return end; end program;")]
     [InlineData("program Broken; begin // missing endings")]

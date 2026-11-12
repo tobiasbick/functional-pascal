@@ -16,7 +16,11 @@ begin
     when L.Measure.Cells(const Count: int):
       return Count;
     when L.Measure.Logical(const Units: int):
-      const Scale: int := if Horizontal then 8 else 16 end if;
+      const Scale: int := if Horizontal then
+        8
+      else
+        16
+      end if;
       return cast<int>((cast<long>(Units) + Scale - 1L) div Scale);
   end case;
 end function;
@@ -51,7 +55,11 @@ begin
     raise new Sys.ArgumentException('Invalid flex size rule.');
   end if;
 
-  const Basis: int := if Rule.Basis < 0 then Intrinsic else Rule.Basis end if;
+  const Basis: int := if Rule.Basis < 0 then
+    Intrinsic
+  else
+    Rule.Basis
+  end if;
   return Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
 end function;
 

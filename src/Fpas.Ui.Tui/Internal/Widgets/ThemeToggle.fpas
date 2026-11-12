@@ -35,7 +35,11 @@ begin
   return E.Element<TMsg>.Action(
     Id, new Action<TMsg>(Appearance, OnChange), Enabled,
     new E.ActionView(
-      if Appearance = Themes.Mode.Dark then '☀ Light' else '☾ Dark' end if,
+      if Appearance = Themes.Mode.Dark then
+        '☀ Light'
+      else
+        '☾ Dark'
+      end if,
       Name := Label, Role := 'theme-toggle', Value := Appearance.ToString().ToLowerInvariant(),
       Variant := S.ButtonVariant.Ghost, ArrowFocus := false, Hint := Label
     )

@@ -79,19 +79,28 @@ program AgentFunctions;
 uses System as Sys, System.Console as Console;
 
 function Identity<T>(Value: T): T;
-begin return Value; end function;
+begin
+  return Value;
+end function;
 
 procedure Increase(ref Value: int);
 ensures Value > 0;
-begin Value := Value + 1; end procedure;
+begin
+  Value := Value + 1;
+end procedure;
 
 function Add(Left: int; Right: int := 1): int;
 ensures (Answer: int): Answer = Left + Right;
-begin return Left + Right; end function;
+begin
+  return Left + Right;
+end function;
 
 function MakeCounter(Start: int): function(): int;
   function Next(): int;
-  begin Count := Count + 1; return Count; end function;
+  begin
+    Count := Count + 1;
+    return Count;
+  end function;
 begin
   var Count: int := Start;
   return Next;
@@ -102,10 +111,12 @@ begin
   Increase(ref Value);
   const Counter: function(): int := MakeCounter(Value);
   const Double: function(int): int := function(Item: int): int => Item * 2;
-  if Counter() <> 3 or Counter() <> 4 or Double(Identity(7)) <> 14 or
-    Add(Right := 3, Left := 2) <> 5 or Add(2) <> 3 then
+  if Counter() <> 3 or Counter() <> 4 or Double(Identity(7)) <> 14
+    or Add(Right := 3, Left := 2) <> 5 or Add(2) <> 3
+  then
     raise new Sys.InvalidOperationException('Incorrect call or closure behavior');
   end if;
+
   Console.WriteLine('Functions verified');
 end;
 end program;

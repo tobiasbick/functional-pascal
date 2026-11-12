@@ -117,14 +117,30 @@ public function Lower<TMsg>(
 ): E.Element<TMsg>;
 begin
   const Recent: bool := Clipboard.Recent(Id);
-  const Label: string := if Recent then 'Copied' else 'Copy' end if;
+  const Label: string := if Recent then
+    'Copied'
+  else
+    'Copy'
+  end if;
   return E.Element<TMsg>.Action(
     Id, new Action<TMsg>(Id, Text, OnCopied, Clipboard), Enabled and Clipboard.Available,
     new E.ActionView(
-      if Recent then '✓' else 'Copy' end if, Name := Label, Role := 'copy-button',
-      Value := if Recent then 'copied' else '' end if, Variant := S.ButtonVariant.Ghost,
+      if Recent then
+        '✓'
+      else
+        'Copy'
+      end if, Name := Label, Role := 'copy-button',
+      Value := if Recent then
+        'copied'
+      else
+        ''
+      end if, Variant := S.ButtonVariant.Ghost,
       ArrowFocus := false, MinimumWidth := 6, Hint := Label,
-      Foreground := if Recent then Success else null end if
+      Foreground := if Recent then
+        Success
+      else
+        null
+      end if
     )
   );
 end function;

@@ -5,7 +5,10 @@ uses System as Sys;
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();
   const Root: string := Sys.AppContext.BaseDirectory;
-  Sys.IO.File.AppendAllText(Sys.IO.Path.Combine(Root, 'calls.log'), Args[1] + Sys.Environment.NewLine);
+  Sys.IO.File.AppendAllText(
+    Sys.IO.Path.Combine(Root, 'calls.log'),
+    Args[1] + Sys.Environment.NewLine
+  );
   if Args[1] = 'env' then
     const Start: Sys.Diagnostics.ProcessStartInfo := new Sys.Diagnostics.ProcessStartInfo();
     Start.FileName := Sys.IO.File.ReadAllText(Sys.IO.Path.Combine(Root, 'compiler.txt'));
@@ -13,8 +16,12 @@ begin
     for Index: int := 1 to Args.Length - 1 do
       Start.ArgumentList.Add(Args[Index]);
     end for;
+
     using const Child: Sys.Diagnostics.Process? := Sys.Diagnostics.Process.Start(Start);
-    if Child = null then raise new Sys.InvalidOperationException('Cannot start the fixture compiler.'); end if;
+    if Child = null then
+      raise new Sys.InvalidOperationException('Cannot start the fixture compiler.');
+    end if;
+
     Child.WaitForExit();
     Sys.Environment.ExitCode := Child.ExitCode;
   else

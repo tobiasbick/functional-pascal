@@ -131,7 +131,11 @@ requires Capacity > 0;
     Threads.Monitor.Enter(Gate);
     try
       if Cleanup = null then
-        Result := if Queue.Writer.TryWrite(Item) then Admission.Queued else Admission.Full end if;
+        Result := if Queue.Writer.TryWrite(Item) then
+          Admission.Queued
+        else
+          Admission.Full
+        end if;
       end if;
     finally
       Threads.Monitor.Exit(Gate);
@@ -158,16 +162,20 @@ requires Capacity > 0;
 
   function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
   begin
-    return if IsOpen() then Queue.Reader.WaitToReadAsync(Cancellation).AsTask()
-      else Tasks.Task.FromResult<bool>(false)
-      end if;
+    return if IsOpen() then
+      Queue.Reader.WaitToReadAsync(Cancellation).AsTask()
+    else
+      Tasks.Task.FromResult<bool>(false)
+    end if;
   end function;
 
   function WaitForSpace(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
   begin
-    return if IsOpen() then Queue.Writer.WaitToWriteAsync(Cancellation).AsTask()
-      else Tasks.Task.FromResult<bool>(false)
-      end if;
+    return if IsOpen() then
+      Queue.Writer.WaitToWriteAsync(Cancellation).AsTask()
+    else
+      Tasks.Task.FromResult<bool>(false)
+    end if;
   end function;
 
   function Close(): Tasks.Task;

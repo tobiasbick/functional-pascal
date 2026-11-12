@@ -5,14 +5,20 @@ uses Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Internal.LayoutValidation as 
 function Viewport(Size: Cui.CuiSize): L.Viewport;
 begin
   return new L.Viewport(
-    if Size.Width < 600 then L.SizeClass.Compact
-      elsif Size.Width < 1200 then L.SizeClass.Regular
-      else L.SizeClass.Expanded
-      end if,
-    if Size.Height < 400 then L.SizeClass.Compact
-      elsif Size.Height < 900 then L.SizeClass.Regular
-      else L.SizeClass.Expanded
-      end if,
+    if Size.Width < 600 then
+      L.SizeClass.Compact
+    elsif Size.Width < 1200 then
+      L.SizeClass.Regular
+    else
+      L.SizeClass.Expanded
+    end if,
+    if Size.Height < 400 then
+      L.SizeClass.Compact
+    elsif Size.Height < 900 then
+      L.SizeClass.Regular
+    else
+      L.SizeClass.Expanded
+    end if,
     cast<int>(Size.Width), cast<int>(Size.Height)
   );
 end function;
@@ -128,7 +134,11 @@ requires Capacity > 0;
       Focus,
       Modals,
       new Generic.HashSet<string>(),
-      if Last = null then [] else Last.Controls end if,
+      if Last = null then
+        []
+      else
+        Last.Controls
+      end if,
       Accept and Modal = null,
       Accept,
       Modal

@@ -17,37 +17,53 @@ two units. An oversized response fails instead of returning partial text.
 // Application-local HTTP text reading.
 unit Recipes.HttpText;
 
-uses System as Sys, System.IO as IO, System.Net.Http as Http,
+uses
+  System as Sys, System.IO as IO, System.Net.Http as Http,
   System.Text as Text, System.Threading as Threading,
   System.Threading.Tasks as Tasks;
 
 // Reads a successful UTF-8 response using a caller-owned reusable client.
-public async function GetUtf8(Client: Http.HttpClient; Address: Sys.Uri;
-  MaximumCharacters: int; Cancellation: Threading.CancellationToken): Tasks.Task<string>;
+public async function GetUtf8(
+  Client: Http.HttpClient; Address: Sys.Uri;
+  MaximumCharacters: int; Cancellation: Threading.CancellationToken
+): Tasks.Task<string>;
 requires MaximumCharacters >= 0;
 begin
-  using const Request: Http.HttpRequestMessage := new Http.HttpRequestMessage(Http.HttpMethod.Get, Address);
+  using const Request: Http.HttpRequestMessage := new Http.HttpRequestMessage(
+    Http.HttpMethod.Get,
+    Address
+  );
   Request.Headers.Accept.ParseAdd('text/plain');
-  using const Response: Http.HttpResponseMessage := await Client.SendAsync(Request,
-    Http.HttpCompletionOption.ResponseHeadersRead, Cancellation).ConfigureAwait(false);
+  using const Response: Http.HttpResponseMessage := await Client.SendAsync(
+    Request,
+    Http.HttpCompletionOption.ResponseHeadersRead, Cancellation
+  ).ConfigureAwait(false);
   discard Response.EnsureSuccessStatusCode();
-  const Body: IO.Stream := await Response.Content.ReadAsStreamAsync(Cancellation).ConfigureAwait(false);
-  using const Reader: IO.StreamReader := new IO.StreamReader(Body,
-    new Text.UTF8Encoding(false, true), false, 4096, true);
+  const Body: IO.Stream := await Response.Content.ReadAsStreamAsync(
+    Cancellation
+  ).ConfigureAwait(false);
+  using const Reader: IO.StreamReader := new IO.StreamReader(
+    Body,
+    new Text.UTF8Encoding(false, true), false, 4096, true
+  );
   const Buffer: array of char := new char[4096];
   const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
   const Result: Text.StringBuilder := new Text.StringBuilder();
   while true do
     const Count: int := await Reader.ReadAsync(Memory, Cancellation).ConfigureAwait(false);
-    if Count = 0 then break; end if;
+    if Count = 0 then
+      break;
+    end if;
+
     if Count > MaximumCharacters - Result.Length then
       raise new IO.InvalidDataException('HTTP text exceeds the character limit');
     end if;
+
     discard Result.Append(Buffer, 0, Count);
   end while;
+
   return Result.ToString();
 end function;
-
 end unit;
 ```
 
@@ -88,16 +104,24 @@ link a per-request deadline with the caller's cancellation token.
 ```pascal project=http-text
 async program FetchUtf8;
 
-uses System as Sys, System.Console as Console, System.IO as IO,
+uses
+  System as Sys, System.Console as Console, System.IO as IO,
   System.Net.Http as Http, System.Text as Text, System.Threading as Threading,
   Recipes.HttpText as Fetch;
 
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();
   Client.Timeout := Threading.Timeout.InfiniteTimeSpan;
-  using const Deadline: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(5000);
+  using const Deadline: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(
+    5000
+  );
   try
-    const Body: string := await Fetch.GetUtf8(Client, new Sys.Uri('https://example.com/'), 16384, Deadline.Token);
+    const Body: string := await Fetch.GetUtf8(
+      Client,
+      new Sys.Uri('https://example.com/'),
+      16384,
+      Deadline.Token
+    );
     Console.WriteLine(Body);
   catch Failure: Http.HttpRequestException do
     Console.WriteLine('HTTP request failed');

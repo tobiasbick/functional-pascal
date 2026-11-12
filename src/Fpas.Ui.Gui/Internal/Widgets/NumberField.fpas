@@ -28,7 +28,11 @@ begin
   const Proposed: double := Frame.Window.NumberField(
     Token, Value, Minimum, Maximum, Settings.Label, Settings.Suffix, Settings.Step,
     Settings.DecimalPlaces, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
-    if Frame.PaintingClosed then null else C.Token('button', Decrease) end if,
+    if Frame.PaintingClosed then
+      null
+    else
+      C.Token('button', Decrease)
+    end if,
     C.Token('button', Increase)
   );
   if Enabled and Proposed <> Value then

@@ -10,9 +10,11 @@ end record;
 
 public function Translate(Value: Point; DX: double; DY: double): Point;
 begin
-  return Value with X := Value.X + DX; Y := Value.Y + DY; end with;
+  return Value with
+    X := Value.X + DX;
+    Y := Value.Y + DY;
+  end with;
 end function;
-
 end unit;
 ```
 
@@ -38,6 +40,7 @@ behavior; there is no source initialization scheduler.
 unit Numerics.Statistics;
 
 public const MaximumSamples: int := 1_000;
+
 var TotalSamples: long := 0L;
 
 public procedure RecordSample();
@@ -49,7 +52,6 @@ public function SampleCount(): long;
 begin
   return TotalSamples;
 end function;
-
 end unit;
 ```
 

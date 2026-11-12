@@ -266,9 +266,11 @@ begin
   const Widgets: Th.WidgetStyles? := Theme.Widgets;
   const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
   const Allocations: Generic.List<F.AllocationMemo> := new Generic.List<F.AllocationMemo>();
-  const PreviousAllocations: array of F.AllocationMemo := if Previous = null then []
-    else Previous.Allocations
-    end if;
+  const PreviousAllocations: array of F.AllocationMemo := if Previous = null then
+    []
+  else
+    Previous.Allocations
+  end if;
   const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
@@ -280,7 +282,12 @@ begin
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
   const Pending: MenuWidget.Pending<TMsg>? := Popup;
-  if Pending <> null and Pending.Parent = (if Active = null then '' else Active.Id end if) then
+  if Pending <> null and Pending.Parent = (if Active = null then
+    ''
+  else
+    Active.Id
+  end if)
+  then
     const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
     const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
     const Width: int := Sys.Math.Max(21, M.Intrinsic<TMsg>(Pending.Content, true));
@@ -296,7 +303,11 @@ begin
       Pending.Position,
       Pending.Width
     );
-    const PreviousScope: A.Scope<TMsg>? := if Previous = null then null else Previous.Active end if;
+    const PreviousScope: A.Scope<TMsg>? := if Previous = null then
+      null
+    else
+      Previous.Active
+    end if;
     if PreviousScope = null or PreviousScope.Id <> Pending.Id then
       Scroll[Pending.Id] := 0;
     end if;
@@ -312,9 +323,11 @@ begin
       Colors
     );
   end if;
-  const PreviousRows: array of D.PaintedRow := if Previous = null then []
-    else Previous.Painted
-    end if;
+  const PreviousRows: array of D.PaintedRow := if Previous = null then
+    []
+  else
+    Previous.Painted
+  end if;
   const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, Theme.Text);
   return new A.Layout<TMsg>(
     Surface.Lines, Surface.Cells, Controls.ToArray(), Active, GlobalKeys, Regions.ToArray(),

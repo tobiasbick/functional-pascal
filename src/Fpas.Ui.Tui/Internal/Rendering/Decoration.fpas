@@ -19,7 +19,11 @@ begin
     when A.Binding.Scroll(const View: V.Viewport<TMsg>):
       if Focused then
         Mark(
-          if View.Bar then Bounds.X + Bounds.Width - 1 else Bounds.X end if,
+          if View.Bar then
+            Bounds.X + Bounds.Width - 1
+          else
+            Bounds.X
+          end if,
           Bounds.Y,
           Theme.Focus
         );
@@ -29,8 +33,13 @@ begin
     else
   end case;
   const Widgets: Th.WidgetStyles? := Theme.Widgets;
-  const Standard: T.Style := if not Focused then Theme.Hover else Theme.Focus end if;
-  const Style: T.Style := if Control.ButtonStyle then Buttons.WithForeground(
+  const Standard: T.Style := if not Focused then
+    Theme.Hover
+  else
+    Theme.Focus
+  end if;
+  const Style: T.Style := if Control.ButtonStyle then
+    Buttons.WithForeground(
       Theme,
       Buttons.Resolve(
         Theme,
@@ -40,23 +49,32 @@ begin
         not Focused,
         Control.Appearance
       ) ?? Standard,
-      if Control.Enabled then Control.Foreground else null end if
+      if Control.Enabled then
+        Control.Foreground
+      else
+        null
+      end if
     )
-    else Standard
-    end if;
+  else
+    Standard
+  end if;
   const Filled: int := Bounds.Width * Control.HoldProgress div 100;
-  const FillStyle: T.Style := if Filled > 0 then Hold.FillStyle(
+  const FillStyle: T.Style := if Filled > 0 then
+    Hold.FillStyle(
       Style,
       Theme.Text.Background ?? 0
     )
-    else Style
-    end if;
+  else
+    Style
+  end if;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
       Mark(
-        X, Y, if X < Bounds.X + Filled then FillStyle
-          else Style
-          end if
+        X, Y, if X < Bounds.X + Filled then
+          FillStyle
+        else
+          Style
+        end if
       );
     end for;
   end for;

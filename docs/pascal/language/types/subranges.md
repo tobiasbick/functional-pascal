@@ -2,6 +2,7 @@
 
 ```pascal fragment context=declarations
 type Percent = int range 0..100;
+
 type PortNumber = ushort range 1..65535;
 
 const Level: Percent := new Percent(50);
@@ -62,6 +63,7 @@ program Ranges;
 uses System as Sys, System.Console as Console;
 
 type Percent = int range 0..100;
+
 type PortNumber = ushort range 1..65535;
 
 begin

@@ -15,7 +15,11 @@ begin
     when 0: P.SearchId(Id);
     when 1: P.GridId(Id);
     when 2: P.ToneSelectorId(Id);
-    else if Part < 9 then P.ToneId(Id, Part - 3) else P.GroupId(Id, Part - 9) end if;
+    else if Part < 9 then
+      P.ToneId(Id, Part - 3)
+    else
+      P.GroupId(Id, Part - 9)
+    end if;
   end case;
 end function;
 
@@ -40,18 +44,24 @@ public procedure Draw<TMsg>(
 begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'emoji-picker';
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Part: int): string => Token(Id, Part)
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Token(Id, Part)
+  end if;
   const Focus: int := if Settings.Search and C.WantsFocus<TMsg>(
-      Frame,
-      P.SearchId(Id),
-      Token(Id, 0),
-      Accept
-    ) then 1
-    elsif C.WantsFocus<TMsg>(Frame, P.GridId(Id), Token(Id, 1), Accept) then 2
-    else 0
-    end if;
+    Frame,
+    P.SearchId(Id),
+    Token(Id, 0),
+    Accept
+  )
+  then
+    1
+  elsif C.WantsFocus<TMsg>(Frame, P.GridId(Id), Token(Id, 1), Accept) then
+    2
+  else
+    0
+  end if;
   const Result: Cui.CuiEmojiPickerResult := Frame.Window.EmojiPicker(
     C.Token(Role, Id), Value.Recent, Value.Tone, Settings.Width, Settings.Height, Settings.Size,
     Settings.Placeholder, Settings.EmptyText, Settings.Hint, Settings.Search, Settings.Preview,
@@ -77,14 +87,20 @@ begin
       when 0: 'Search emoji';
       when 1: 'Emoji grid';
       when 2: 'Skin tone';
-      else if Part < 9 then 'Skin tone ' + (Part - 3).ToString()
-        else GroupNames[Part - 9]
-        end if;
+      else if Part < 9 then
+        'Skin tone ' + (Part - 3).ToString()
+      else
+        GroupNames[Part - 9]
+      end if;
     end case;
     Frame.Controls.Add(
       new App.Control(
         Identity(Id, Part), Caption, 'emoji-part', new Cui.CuiRectangle(), Accept,
-        Value := if Part = 2 then Value.Tone.ToString() else '' end if
+        Value := if Part = 2 then
+          Value.Tone.ToString()
+        else
+          ''
+        end if
       )
     );
   end for;

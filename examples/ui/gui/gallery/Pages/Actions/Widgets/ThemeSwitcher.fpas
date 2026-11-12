@@ -22,9 +22,11 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
   begin
     return State.Msg.Shared(
       Demo.Msg.SetAppearance(
-        if Appearance = Themes.Mode.Dark then Switchers.Selection.Dark
-          else Switchers.Selection.Light
-          end if
+        if Appearance = Themes.Mode.Dark then
+          Switchers.Selection.Dark
+        else
+          Switchers.Selection.Light
+        end if
       )
     );
   end function;

@@ -132,7 +132,13 @@ begin
       discard Name.Append('.');
     end if;
 
-    discard Name.Append(if Value.StartsWith('@') then Value.Substring(1) else Value end if);
+    discard Name.Append(
+      if Value.StartsWith('@') then
+        Value.Substring(1)
+      else
+        Value
+      end if
+    );
   end for;
 
   return Name.ToString();
@@ -147,7 +153,11 @@ end procedure;
 public function Prepare(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string): M.Prepared;
 begin
   discard IO.Directory.CreateDirectory(Directory);
-  const Name: string := if Item.FileName.Length = 0 then 'example.fpas' else Item.FileName end if;
+  const Name: string := if Item.FileName.Length = 0 then
+    'example.fpas'
+  else
+    Item.FileName
+  end if;
   const Primary: M.Source := Wrap(Item, Options, IO.Path.Combine(Directory, Name), true);
   const Declaration: R.Match := Header(Primary.Text);
   if not Declaration.Success then

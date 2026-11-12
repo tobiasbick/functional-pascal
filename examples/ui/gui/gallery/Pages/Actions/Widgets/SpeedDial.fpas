@@ -20,12 +20,14 @@ begin
   const Trigger: E.Element<State.Msg> := D.SpeedDial<State.Msg>(
     'action-speed-dial', Items, State.Msg.DialChoice, new D.Options(Tooltip := 'Create')
   );
-  const Row: array of E.Element<State.Msg> := if Model.DialChoice < 0 then [Trigger]
-    else [
+  const Row: array of E.Element<State.Msg> := if Model.DialChoice < 0 then
+    [Trigger]
+  else
+    [
       Trigger,
       E.Styled<State.Msg>(E.Text<State.Msg>(Items[Model.DialChoice].Label), S.Role.Muted)
     ]
-    end if;
+  end if;
   return E.Size<State.Msg>(
     E.Row<State.Msg>(
       new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Wrap := true),

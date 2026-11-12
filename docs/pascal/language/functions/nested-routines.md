@@ -10,7 +10,10 @@ recursive helper and an escaping counter delegate.
 ```pascal fragment context=declarations
 function MakeCounter(Start: int): function(): int;
   function Next(): int;
-  begin Count := Count + 1; return Count; end function;
+  begin
+    Count := Count + 1;
+    return Count;
+  end function;
 begin
   var Count: int := Start;
   return Next;

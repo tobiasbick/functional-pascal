@@ -50,9 +50,12 @@ begin
         const View: E.ActionView
       ):
         const Variant: S.ButtonVariant := if View.Variant =
-            S.ButtonVariant.Default then S.ButtonVariant.Ghost
-          else View.Variant
-          end if;
+          S.ButtonVariant.Default
+        then
+          S.ButtonVariant.Ghost
+        else
+          View.Variant
+        end if;
         const Member: E.Element<TMsg> := E.Element<TMsg>.Action(
           Id, Handler, Enabled, View with
             Variant := Variant;
@@ -61,7 +64,11 @@ begin
           end with
         );
         Row.Add(
-          if FullWidth then E.Element<TMsg>.Sized(Member, new E.Flex(Grow := 1)) else Member end if
+          if FullWidth then
+            E.Element<TMsg>.Sized(Member, new E.Flex(Grow := 1))
+          else
+            Member
+          end if
         );
       else
         raise new Sys.InvalidOperationException('A lowered button group member must be an action.');
@@ -85,12 +92,14 @@ end function;
 // The fitted group rectangle.
 public function Bounds<TMsg>(Body: E.Element<TMsg>; Area: F.Rect; FullWidth: bool): F.Rect;
 begin
-  const Width: int := if FullWidth then Area.Width
-    else Sys.Math.Min(
+  const Width: int := if FullWidth then
+    Area.Width
+  else
+    Sys.Math.Min(
       Area.Width,
       M.Intrinsic<TMsg>(Body, true)
     )
-    end if;
+  end if;
   const Height: int := Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Body, false, Width));
   return new F.Rect(Area.X, Area.Y, Width, Height);
 end function;

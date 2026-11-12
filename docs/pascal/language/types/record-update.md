@@ -3,7 +3,9 @@
 Use with to create a shallow updated copy of a source record.
 
 ```pascal fragment context=point-update
-const Moved: Point := Position with X := Position.X + 1.0; end with;
+const Moved: Point := Position with
+  X := Position.X + 1.0;
+end with;
 ```
 
 `with` is a postfix expression for language records. It produces an updated

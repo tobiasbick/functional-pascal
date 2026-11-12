@@ -67,6 +67,7 @@ begin
   if Next.X < 0 or Next.X >= 10 or Next.Y < 0 or Next.Y >= 10 then
     return MoveOutcome.Blocked('The edge of the map');
   end if;
+
   return MoveOutcome.Moved(Next);
 end function;
 

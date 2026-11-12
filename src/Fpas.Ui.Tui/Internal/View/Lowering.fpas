@@ -26,8 +26,16 @@ begin
   const Minimum: L.Measure? := Value.Minimum;
   const Maximum: L.Measure? := Value.Maximum;
   return new E.Flex(
-    Basis, if Minimum = null then 0 else Geometry.Cells(Minimum, Horizontal) end if,
-    if Maximum = null then int.MaxValue else Geometry.Cells(Maximum, Horizontal) end if, Grow
+    Basis, if Minimum = null then
+      0
+    else
+      Geometry.Cells(Minimum, Horizontal)
+    end if,
+    if Maximum = null then
+      int.MaxValue
+    else
+      Geometry.Cells(Maximum, Horizontal)
+    end if, Grow
   );
 end function;
 
@@ -41,7 +49,11 @@ begin
     when L.Spacing.Normal:
       return 1;
     when L.Spacing.Loose:
-      return if Horizontal then 2 else 1 end if;
+      return if Horizontal then
+        2
+      else
+        1
+      end if;
     when L.Spacing.Fixed(const Distance: L.Measure):
       return Geometry.Cells(Distance, Horizontal);
   end case;
@@ -83,8 +95,16 @@ end function;
 function Merge(Parent: T.Style; Child: T.Style): T.Style;
 begin
   return new T.Style(
-    if Child.Foreground = null then Parent.Foreground else Child.Foreground end if,
-    if Child.Background = null then Parent.Background else Child.Background end if
+    if Child.Foreground = null then
+      Parent.Foreground
+    else
+      Child.Foreground
+    end if,
+    if Child.Background = null then
+      Parent.Background
+    else
+      Child.Background
+    end if
   );
 end function;
 

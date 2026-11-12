@@ -162,8 +162,16 @@ begin
     );
     const Frame: Tui.Frame := Session.Snapshot();
     const Close: Tui.ControlSnapshot := Frame.Controls[1];
-    const Column: int := if Side = Sheets.Side.Left then 7 else 29 end if;
-    const Row: int := if Side = Sheets.Side.Bottom then 7 else 1 end if;
+    const Column: int := if Side = Sheets.Side.Left then
+      7
+    else
+      29
+    end if;
+    const Row: int := if Side = Sheets.Side.Bottom then
+      7
+    else
+      1
+    end if;
     Check(
       Close.Id = Sheets.CloseId('sheet') and Close.Column = Column and Close.Row = Row,
       'Wrong sheet placement: ' + Side.ToString()
@@ -237,7 +245,11 @@ procedure ButtonAction();
     return E.Column<int>(
       B.Button<int>('ready', 'Finish loading', 1),
       B.Button<int>(
-        'save', if State = 0 then 'Saving ## literal' else 'Save' end if, 2,
+        'save', if State = 0 then
+          'Saving ## literal'
+        else
+          'Save'
+        end if, 2,
         new B.Options(
           Loading := State = 0,
           Enabled := State < 2,

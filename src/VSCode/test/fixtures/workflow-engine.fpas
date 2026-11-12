@@ -12,5 +12,4 @@ public procedure Fail();
 begin
   raise new Sys.InvalidOperationException('editor exception');
 end procedure;
-
 end unit;

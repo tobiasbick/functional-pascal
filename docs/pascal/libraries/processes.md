@@ -25,7 +25,8 @@ normal CLR struct that can cross await; this example does not require Span APIs.
 // Application-local process execution and text capture.
 unit Recipes.ProcessCapture;
 
-uses System as Sys, System.Diagnostics as Diagnostics, System.IO as IO,
+uses
+  System as Sys, System.Diagnostics as Diagnostics, System.IO as IO,
   System.Text as Text, System.Threading as Threading,
   System.Threading.Tasks as Tasks;
 
@@ -47,8 +48,10 @@ public type Result = record
   public Error: CapturedText;
 end record;
 
-async function Drain(Reader: IO.StreamReader; MaximumCharacters: int;
-  Cancellation: Threading.CancellationToken): Tasks.Task<CapturedText>;
+async function Drain(
+  Reader: IO.StreamReader; MaximumCharacters: int;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<CapturedText>;
 begin
   const Buffer: array of char := new char[4096];
   const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
@@ -56,18 +59,28 @@ begin
   var Truncated: bool := false;
   while true do
     const Count: int := await Reader.ReadAsync(Memory, Cancellation).ConfigureAwait(false);
-    if Count = 0 then break; end if;
+    if Count = 0 then
+      break;
+    end if;
     const Keep: int := Sys.Math.Min(Count, MaximumCharacters - Prefix.Length);
-    if Keep > 0 then discard Prefix.Append(Buffer, 0, Keep); end if;
-    if Keep < Count then Truncated := true; end if;
+    if Keep > 0 then
+      discard Prefix.Append(Buffer, 0, Keep);
+    end if;
+
+    if Keep < Count then
+      Truncated := true;
+    end if;
   end while;
+
   return new CapturedText(Prefix.ToString(), Truncated);
 end function;
 
 // Runs a fresh start configuration once; callers must not mutate it concurrently.
-public async function Run(Options: Diagnostics.ProcessStartInfo;
+public async function Run(
+  Options: Diagnostics.ProcessStartInfo;
   TimeoutMilliseconds: int; MaximumCharacters: int;
-  Cancellation: Threading.CancellationToken): Tasks.Task<Result>;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<Result>;
 requires TimeoutMilliseconds > 0;
 requires MaximumCharacters >= 0;
 begin
@@ -79,14 +92,26 @@ begin
   Options.RedirectStandardError := true;
   Options.StandardOutputEncoding := Text.Encoding.UTF8;
   Options.StandardErrorEncoding := Text.Encoding.UTF8;
-  using const Deadline: Threading.CancellationTokenSource :=
-    Threading.CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+  using const Deadline: Threading.CancellationTokenSource := Threading.CancellationTokenSource.CreateLinkedTokenSource(
+    Cancellation
+  );
   using const Child: Diagnostics.Process := new Diagnostics.Process();
   Child.StartInfo := Options;
-  if not Child.Start() then raise new Sys.InvalidOperationException('Process did not start'); end if;
+  if not Child.Start() then
+    raise new Sys.InvalidOperationException('Process did not start');
+  end if;
+
   Deadline.CancelAfter(TimeoutMilliseconds);
-  const Output: Tasks.Task<CapturedText> := Drain(Child.StandardOutput, MaximumCharacters, Deadline.Token);
-  const Error: Tasks.Task<CapturedText> := Drain(Child.StandardError, MaximumCharacters, Deadline.Token);
+  const Output: Tasks.Task<CapturedText> := Drain(
+    Child.StandardOutput,
+    MaximumCharacters,
+    Deadline.Token
+  );
+  const Error: Tasks.Task<CapturedText> := Drain(
+    Child.StandardError,
+    MaximumCharacters,
+    Deadline.Token
+  );
   const Readers: array of Tasks.Task<CapturedText> := [Output, Error];
   const Reading: Tasks.Task<array of CapturedText> := Tasks.Task.WhenAll<CapturedText>(Readers);
   try
@@ -99,7 +124,9 @@ begin
     raise new Sys.TimeoutException('Process execution or output capture timed out', Failure);
   finally
     Deadline.Cancel();
-    using const Cleanup: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(5000);
+    using const Cleanup: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(
+      5000
+    );
     try
       if not Child.HasExited then
         try
@@ -108,6 +135,7 @@ begin
           // The child exited between the check and Kill.
         end try;
       end if;
+
       await Child.WaitForExitAsync(Cleanup.Token).ConfigureAwait(false);
     finally
       try
@@ -118,7 +146,6 @@ begin
     end try;
   end try;
 end function;
-
 end unit;
 ```
 
@@ -152,7 +179,8 @@ PATH; use an absolute executable path when selecting a specific installation.
 ```pascal project=process-capture
 async program CaptureVersion;
 
-uses System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
+uses
+  System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
   System.Threading as Threading, Recipes.ProcessCapture as Capture;
 
 begin
@@ -160,8 +188,10 @@ begin
   Options.ArgumentList.Add('--version');
   Options.WorkingDirectory := Sys.Environment.CurrentDirectory;
   Options.Environment['DOTNET_NOLOGO'] := '1';
-  const Finished: Capture.Result := await Capture.Run(Options, 10000, 128,
-    Threading.CancellationToken.None);
+  const Finished: Capture.Result := await Capture.Run(
+    Options, 10000, 128,
+    Threading.CancellationToken.None
+  );
   Console.WriteLine(Finished.ExitCode);
   Console.WriteLine(Finished.Output.Value.Trim());
 end;

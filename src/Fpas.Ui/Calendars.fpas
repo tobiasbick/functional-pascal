@@ -21,7 +21,11 @@ end function;
 // The month navigation control identity.
 public function MonthId(Id: string; Forward: bool): string;
 begin
-  return Id + (if Forward then '/next' else '/previous' end if);
+  return Id + (if Forward then
+    '/next'
+  else
+    '/previous'
+  end if);
 end function;
 
 // Builds CUI's inline single-date calendar.

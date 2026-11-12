@@ -84,15 +84,18 @@ begin
     'main-' + State.Active.ToString().ToLowerInvariant(),
     E.Column<G.Msg>(
       Padded,
-      if State.Active = G.Page.Overview then PreviewContent
-        else E.Column<G.Msg>(
+      if State.Active = G.Page.Overview then
+        PreviewContent
+      else
+        E.Column<G.Msg>(
           new L.Flow(Gap := L.Spacing.Normal),
           E.Styled<G.Msg>(E.Text<G.Msg>(State.Active.ToString()), S.Role.PageTitle), PreviewContent
         )
-        end if
+      end if
     )
   );
-  const Body: E.Element<G.Msg> := if Compact then E.Column<G.Msg>(
+  const Body: E.Element<G.Msg> := if Compact then
+    E.Column<G.Msg>(
       E.Styled<G.Msg>(
         E.Row<G.Msg>(
           Padded,
@@ -106,7 +109,8 @@ begin
       ),
       E.Size<G.Msg>(Content, Fill)
     )
-    else E.Row<G.Msg>(
+  else
+    E.Row<G.Msg>(
       new L.Flow(Align := L.Alignment.Stretch),
       E.Size<G.Msg>(
         E.Styled<G.Msg>(
@@ -122,7 +126,7 @@ begin
       ),
       E.Size<G.Msg>(Content, Fill)
     )
-    end if;
+  end if;
   const Page: E.Element<G.Msg> := Views.Screen<G.Msg>(
     E.Column<G.Msg>(
       E.Size<G.Msg>(Body, Fill),
@@ -133,7 +137,8 @@ begin
     ),
     [], Shortcuts
   );
-  const Main: E.Element<G.Msg> := if Compact then Sheets.Sheet<G.Msg>(
+  const Main: E.Element<G.Msg> := if Compact then
+    Sheets.Sheet<G.Msg>(
       'drawer',
       Page,
       E.Column<G.Msg>(new L.Flow(Gap := L.Spacing.Normal), Pages, ThemeControl(State)),
@@ -145,8 +150,9 @@ begin
       ),
       G.Msg.SetDrawer(false)
     )
-    else Page
-    end if;
+  else
+    Page
+  end if;
   return Sheets.Sheet<G.Msg>(
     'sheet', Main, E.Text<G.Msg>('Choose what we tell you about.'), State.Sheet,
     new Sheets.Options('Notifications', Size := 240), G.Msg.SetSheet(false)

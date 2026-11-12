@@ -7,7 +7,9 @@ parameters, lambda signatures, and routine results still require explicit types.
 
 ```pascal fragment context=body
 function Identity<T>(Value: T): T;
-begin return Value; end function;
+begin
+  return Value;
+end function;
 
 const Number: int := Identity(42);
 const Copy: function(int): int := Identity<int>;

@@ -21,9 +21,11 @@ public procedure Draw<TMsg>(
 begin
   const Allowed: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('tag-input', Id);
-  const TrackRemove: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Index: int): string => C.Token('button', T.RemoveId(Id, Index))
-    end if;
+  const TrackRemove: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('button', T.RemoveId(Id, Index))
+  end if;
   const Result: Cui.CuiTagInputResult := Frame.Window.TagInput(
     Token, Tags, Settings.Label, Settings.Placeholder, Settings.MaxTags, Settings.MaxUtf8Bytes,
     Allowed, C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), TrackRemove

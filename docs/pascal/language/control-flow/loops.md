@@ -72,11 +72,26 @@ uses System as Sys, System.Console as Console;
 begin
   const Values: array of int := [2, 3];
   var Total: int := 0;
-  for Value: int in Values do Total := Total + Value; end for;
-  for Index: int := 0 to 1 do Total := Total + Index; end for;
-  repeat Total := Total - 1; until Total = 5;
-  while Total < 7 do Total := Total + 1; end while;
-  if Total <> 7 then raise new Sys.InvalidOperationException('Incorrect loop result'); end if;
+  for Value: int in Values do
+    Total := Total + Value;
+  end for;
+
+  for Index: int := 0 to 1 do
+    Total := Total + Index;
+  end for;
+
+  repeat
+    Total := Total - 1;
+  until Total = 5;
+
+  while Total < 7 do
+    Total := Total + 1;
+  end while;
+
+  if Total <> 7 then
+    raise new Sys.InvalidOperationException('Incorrect loop result');
+  end if;
+
   Console.WriteLine(Total);
 end;
 end program;

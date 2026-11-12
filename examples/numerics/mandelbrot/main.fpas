@@ -32,7 +32,11 @@ begin
       const CImaginary: double := -1.0 + 2.0 * cast<double>(Y) / cast<double>(Height - 1);
 
       const Count: int := EscapeIterations(CReal, CImaginary, Limit);
-      Row := Row + if Count = Limit then '#' else ' ' end if;
+      Row := Row + if Count = Limit then
+        '#'
+      else
+        ' '
+      end if;
     end for;
 
     Console.WriteLine(Row);

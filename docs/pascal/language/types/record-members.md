@@ -10,6 +10,7 @@ program RecordMembers;
 uses System.Console as Console;
 
 const DefaultLabel: string := 'Explorer';
+
 var DefaultsEvaluated: int := 0;
 var TotalCreated: int := 0;
 
@@ -49,21 +50,25 @@ type Counter = record
 
   public function Increment(): Counter;
   begin
-    return self with Value := self.NextValue(); end with;
+    return self with
+      Value := self.NextValue();
+    end with;
   end function;
 end record;
 
 begin
   Counter.ResetStatistics();
   const First: Counter := Counter.Create(2);
-  const Renamed: Counter := First with Label := 'Alpha'; end with;
+  const Renamed: Counter := First with
+    Label := 'Alpha';
+  end with;
   const Next: Counter := Renamed.Increment();
 
   Console.WriteLine(First.Current()); // 2
-  Console.WriteLine(Next.Current());  // 3
-  Console.WriteLine(Next.Label);     // Alpha
+  Console.WriteLine(Next.Current()); // 3
+  Console.WriteLine(Next.Label); // Alpha
   Console.WriteLine(DefaultsEvaluated); // 1: with does not rerun defaults
-  Console.WriteLine(TotalCreated);     // 1: the factory was called once
+  Console.WriteLine(TotalCreated); // 1: the factory was called once
 end;
 end program;
 ```

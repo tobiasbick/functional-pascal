@@ -44,7 +44,11 @@ public function RunBatch(Kind: string; Rounds: int): long;
 begin
   var Result: long := 0;
   for Round: int := 1 to Rounds do
-    Result := Result + (if Kind = 'cpu' then CpuBatch() else AllocationBatch() end if);
+    Result := Result + (if Kind = 'cpu' then
+      CpuBatch()
+    else
+      AllocationBatch()
+    end if);
   end for;
 
   return Result;
@@ -52,7 +56,11 @@ end function;
 
 public procedure Verify(Kind: string; Rounds: int; Value: long);
 begin
-  const Expected: long := if Kind = 'cpu' then CpuChecksum else AllocationChecksum end if;
+  const Expected: long := if Kind = 'cpu' then
+    CpuChecksum
+  else
+    AllocationChecksum
+  end if;
   if Value <> Expected * Rounds then
     raise new Sys.InvalidOperationException('Workload checksum mismatch');
   end if;

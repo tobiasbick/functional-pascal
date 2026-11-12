@@ -29,7 +29,7 @@ program TypeRules;
 
 uses System as Sys, System.Console as Console;
 
-type Direction = enum : byte
+type Direction = enum: byte
   North = 0;
   South = 1;
 end enum;

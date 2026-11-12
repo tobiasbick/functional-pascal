@@ -197,14 +197,20 @@ procedure Dynamic();
   end function;
   function View(Removed: bool): E.Element<int>;
   begin
-    return if not Visible then E.Text<int>('No menu')
-      else M.Menu<int>(
+    return if not Visible then
+      E.Text<int>('No menu')
+    else
+      M.Menu<int>(
         'dynamic',
         'Dynamic',
-        if Removed then [] else Entries() end if,
+        if Removed then
+          []
+        else
+          Entries()
+        end if,
         new M.Options(Enabled := Enabled)
       )
-      end if;
+    end if;
   end function;
 begin
   var Visible: bool := true;

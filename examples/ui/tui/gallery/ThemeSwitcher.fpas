@@ -15,9 +15,11 @@ public function View(Model: State.Model): E.Element<State.Msg>;
   function Choose(Appearance: Themes.Mode): State.Msg;
   begin
     return State.Msg.SetAppearance(
-      if Appearance = Themes.Mode.Dark then Switchers.Selection.Dark
-        else Switchers.Selection.Light
-        end if
+      if Appearance = Themes.Mode.Dark then
+        Switchers.Selection.Dark
+      else
+        Switchers.Selection.Light
+      end if
     );
   end function;
 begin
@@ -40,9 +42,11 @@ begin
     B.Button<State.Msg>(
       'system-appearance', 'System source: ' + Model.SystemAppearance.ToString(),
       State.Msg.SetSystemAppearance(
-        if Model.SystemAppearance = Themes.Mode.Light then Themes.Mode.Dark
-          else Themes.Mode.Light
-          end if
+        if Model.SystemAppearance = Themes.Mode.Light then
+          Themes.Mode.Dark
+        else
+          Themes.Mode.Light
+        end if
       ),
       new B.Options(ControlSize := B.Size.Small)
     ),

@@ -20,7 +20,10 @@ end function;
 
 begin
   const Answer: int := Double(21);
-  if Answer <> 42 then raise new Sys.InvalidOperationException('Incorrect answer'); end if;
+  if Answer <> 42 then
+    raise new Sys.InvalidOperationException('Incorrect answer');
+  end if;
+
   Console.WriteLine(Answer);
 end;
 end program;

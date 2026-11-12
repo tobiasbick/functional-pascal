@@ -43,7 +43,11 @@ public procedure Draw<TMsg>(
     Frame.Window.EndDialog();
   end procedure;
 begin
-  const Close: string? := if Settings.CloseButton then D.CloseId(Id) else null end if;
+  const Close: string? := if Settings.CloseButton then
+    D.CloseId(Id)
+  else
+    null
+  end if;
   Modal.Draw<TMsg>(
     Frame,
     Id,

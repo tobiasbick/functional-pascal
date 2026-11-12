@@ -39,7 +39,11 @@ begin
   discard TextOutput.AppendLine(
     'label,boundary,environment,sample,milliseconds,warmup,rounds,runtime,os,architecture,tiered_compilation,tiered_pgo,ready_to_run'
   );
-  const OS: string := if Sys.OperatingSystem.IsWindows() then 'windows' else 'linux' end if;
+  const OS: string := if Sys.OperatingSystem.IsWindows() then
+    'windows'
+  else
+    'linux'
+  end if;
   const Tiering: string := Sys.Environment.GetEnvironmentVariable(
     'DOTNET_TieredCompilation'
   ) ?? 'default';

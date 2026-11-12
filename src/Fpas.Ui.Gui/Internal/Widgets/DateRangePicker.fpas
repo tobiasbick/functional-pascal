@@ -21,9 +21,11 @@ begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'date-range-picker';
   const Token: string := C.Token(Role, Id);
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Part: int): string => Parts.Token(Id, Part)
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
   const Result: Cui.CuiDateRangeResult := Frame.Window.RangePicker(
     Token, Parts.StartDay(Value), Parts.EndDay(Value), Settings.Label, Settings.Placeholder,
     Settings.Width, Settings.Presets, Accept, C.WantsFocus<TMsg>(Frame, Id, Token, Accept), Track
@@ -33,7 +35,11 @@ begin
   end if;
 
   Parts.Publish<TMsg>(
-    Frame, Id, if Settings.Label = '' then 'Date range' else Settings.Label end if,
+    Frame, Id, if Settings.Label = '' then
+      'Date range'
+    else
+      Settings.Label
+    end if,
     Role, Value, Accept, Result, OnChange
   );
 end procedure;

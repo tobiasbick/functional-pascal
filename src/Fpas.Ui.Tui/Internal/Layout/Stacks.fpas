@@ -17,18 +17,34 @@ begin
     Sys.Math.Max(0, Area.Width - 2 * Flow.PaddingX),
     Sys.Math.Max(0, Area.Height - 2 * Flow.PaddingY)
   );
-  const Main: int := if Axis then Space.Width else Space.Height end if;
-  const Cross: int := if Axis then Space.Height else Space.Width end if;
-  const Align: L.Alignment := if Flow.Align <> L.Alignment.Default then Flow.Align
-    else if Axis then L.Alignment.Center else L.Alignment.Stretch end if
-    end if;
+  const Main: int := if Axis then
+    Space.Width
+  else
+    Space.Height
+  end if;
+  const Cross: int := if Axis then
+    Space.Height
+  else
+    Space.Width
+  end if;
+  const Align: L.Alignment := if Flow.Align <> L.Alignment.Default then
+    Flow.Align
+  else
+    if Axis then
+      L.Alignment.Center
+    else
+      L.Alignment.Stretch
+    end if
+  end if;
   const Sizes: array of int := new int[Children.Length];
   const Rules: Generic.List<E.Flex> := new Generic.List<E.Flex>(Children.Length);
   for Index: int := 0 to Children.Length - 1 do
     const Child: E.Element<TMsg> := Children[Index];
-    const Width: int := if WrapText and not Axis then M.CrossWidth<TMsg>(Child, Cross, Align)
-      else -1
-      end if;
+    const Width: int := if WrapText and not Axis then
+      M.CrossWidth<TMsg>(Child, Cross, Align)
+    else
+      -1
+    end if;
     Sizes[Index] := M.Intrinsic<TMsg>(Child, Axis, Width);
     Rules.Add(M.AllocationRule<TMsg>(Child, Axis));
   end for;
@@ -43,28 +59,39 @@ begin
     const Child: E.Element<TMsg> := Children[Index];
     const Span: int := Allocation[Index];
     const ChildCross: int := if Align = L.Alignment.Stretch and M.CanStretch<TMsg>(
-        Child,
-        not Axis,
-        Flow.Align = L.Alignment.Stretch
-      ) then Cross
-      else Sys.Math.Min(
+      Child,
+      not Axis,
+      Flow.Align = L.Alignment.Stretch
+    )
+    then
+      Cross
+    else
+      Sys.Math.Min(
         Cross,
-        M.Intrinsic<TMsg>(Child, not Axis, if WrapText and Axis then Span else -1 end if)
+        M.Intrinsic<TMsg>(
+          Child, not Axis, if WrapText and Axis then
+            Span
+          else
+            -1
+          end if
+        )
       )
-      end if;
+    end if;
     const CrossOffset: int := case Align of
       when L.Alignment.Center: (Cross - ChildCross) div 2;
       when L.Alignment.End: Cross - ChildCross;
       else 0;
     end case;
-    const Bounds: F.Rect := if Axis then new F.Rect(
+    const Bounds: F.Rect := if Axis then
+      new F.Rect(
         Space.X + Offset,
         Space.Y + CrossOffset,
         Span,
         ChildCross
       )
-      else new F.Rect(Space.X + CrossOffset, Space.Y + Offset, ChildCross, Span)
-      end if;
+    else
+      new F.Rect(Space.X + CrossOffset, Space.Y + Offset, ChildCross, Span)
+    end if;
     ChildrenBounds.Add(Bounds);
     Offset := Offset + Span + Flow.Gap;
   end for;

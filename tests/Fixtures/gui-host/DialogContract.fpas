@@ -158,7 +158,11 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
 
     Select(Name);
     KeyCode := 15;
-    Modifiers := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+    Modifiers := if Sys.OperatingSystem.IsMacOS() then
+      8
+    else
+      2
+    end if;
     Step();
     Input := 'Gallery editor';
     Step();

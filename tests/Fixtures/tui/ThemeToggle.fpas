@@ -32,7 +32,11 @@ function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   const Next: Model := case Message of
     when Msg.Choose(const Value: Themes.Mode): State with
-      Appearance := if State.Accept then Value else State.Appearance end if;
+      Appearance := if State.Accept then
+        Value
+      else
+        State.Appearance
+      end if;
     end with;
     when Msg.Accept: State with
       Accept := not State.Accept;
@@ -46,7 +50,11 @@ end function;
 
 function ThemeFor(State: Model): Themes.Theme;
 begin
-  return if State.Appearance = Themes.Mode.Dark then Themes.Dark() else Themes.Light() end if;
+  return if State.Appearance = Themes.Mode.Dark then
+    Themes.Dark()
+  else
+    Themes.Light()
+  end if;
 end function;
 
 function Control(Session: Tui.HeadlessSession; Id: string): Tui.ControlSnapshot;
@@ -79,9 +87,19 @@ procedure HoverBehavior();
   begin
     return E.Column<int>(
       E.Row<int>(
-        E.Text<int>(if State >= 3 then '            ' else '' end if),
+        E.Text<int>(
+          if State >= 3 then
+            '            '
+          else
+            ''
+          end if
+        ),
         UiButtons.Button<int>(
-          if State < 2 then 'first' else 'replacement' end if,
+          if State < 2 then
+            'first'
+          else
+            'replacement'
+          end if,
           'Target', 0, new UiButtons.Options(Enabled := State <> 1, Tooltip := 'Target hint')
         )
       ),
@@ -210,7 +228,8 @@ procedure Validation();
 begin
   for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
     for Duplicate: bool in [false, true] do
-      const Node: E.Element<int> := if Duplicate then E.Column<int>(
+      const Node: E.Element<int> := if Duplicate then
+        E.Column<int>(
           Toggles.ThemeToggle<int>(
             'bad',
             Themes.Mode.Light,
@@ -218,12 +237,13 @@ begin
           ),
           UiButtons.Button<int>('bad', 'Collision', 0)
         )
-        else Toggles.ThemeToggle<int>(
+      else
+        Toggles.ThemeToggle<int>(
           'bad',
           cast<Themes.Mode>(99),
           function(Value: Themes.Mode): int => 0
         )
-        end if;
+      end if;
       var Rejected: bool := false;
       try
         discard V.Prepare<int>(Node, Target);

@@ -2,6 +2,7 @@
 
 ```pascal fragment context=declarations
 type UserId = distinct long;
+
 type SampleName = distinct string;
 
 const Id: UserId := new UserId(42L);
@@ -49,6 +50,7 @@ program Identities;
 uses System.Console as Console;
 
 type UserId = distinct long;
+
 type SampleName = distinct string;
 
 begin

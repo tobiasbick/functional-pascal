@@ -14,9 +14,11 @@ uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Interna
 public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Steps: array of string; Current: int);
 begin
   Frame.Window.Stepper(Steps, Current);
-  const Caption: string := if Current = Steps.Length then 'All steps complete'
-    else Steps[Current]
-    end if;
+  const Caption: string := if Current = Steps.Length then
+    'All steps complete'
+  else
+    Steps[Current]
+  end if;
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, Caption, 'stepper', new Cui.CuiRectangle(), false, Value := Current.ToString()

@@ -30,7 +30,11 @@ begin
         return TopModal<TMsg>(Base, Prepared);
       end if;
       const Inner: string? := TopModal<TMsg>(Content, Prepared);
-      return if Inner = null then Id else Inner end if;
+      return if Inner = null then
+        Id
+      else
+        Inner
+      end if;
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       _,

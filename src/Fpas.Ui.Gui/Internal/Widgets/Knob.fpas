@@ -25,12 +25,15 @@ begin
   const Role: string := 'knob';
   const Token: string := C.Token(Role, Id);
   const Color: G.Color? := Settings.ArcColor;
-  const Rgba: uint := if Color = null then 0u
+  const Rgba: uint := if Color = null then
+    0u
     // CUI reserves all-zero RGBA for its default.
-    elsif Color.Alpha = 0 then 1u
-    else cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
-      or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
-    end if;
+  elsif Color.Alpha = 0 then
+    1u
+  else
+    cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
+  end if;
   const Proposed: float := Frame.Window.Knob(
     Token,
     Label,

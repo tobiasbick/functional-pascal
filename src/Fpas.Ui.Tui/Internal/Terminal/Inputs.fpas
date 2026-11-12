@@ -4,9 +4,11 @@ uses Fpas.Ui.Tui.Application as App, Fpas.Ui.TerminalExtensions.Input as K, Fpas
 
 public function Translate(Event: Terminal.TerminalInput): App.Input?;
 begin
-  const Button: K.MouseButton := if Event.Button = 'middle' then K.MouseButton.Middle
-    else K.MouseButton.Left
-    end if;
+  const Button: K.MouseButton := if Event.Button = 'middle' then
+    K.MouseButton.Middle
+  else
+    K.MouseButton.Left
+  end if;
   case Event.Kind of
     when 'focus':
       return App.Input.Focus(Event.Text);
@@ -30,9 +32,11 @@ begin
       return App.Input.Pointer(K.PointerKind.Move, Event.Column, Event.Row);
     when 'press', 'release':
       if Event.Button = 'left' or Event.Button = 'middle' then
-        const Kind: K.PointerKind := if Event.Kind = 'press' then K.PointerKind.Press
-          else K.PointerKind.Release
-          end if;
+        const Kind: K.PointerKind := if Event.Kind = 'press' then
+          K.PointerKind.Press
+        else
+          K.PointerKind.Release
+        end if;
         return App.Input.ButtonPointer(Kind, Button, Event.Column, Event.Row);
       end if;
 

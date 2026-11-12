@@ -39,7 +39,11 @@ begin
   end for;
   const Proposal: int := Frame.Window.RadioCards(
     Tokens[0], Choices.ToArray(), Selected, Settings.Columns, Enabled, Focus,
-    if Frame.PaintingClosed then null else Tokens.ToArray() end if
+    if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
   );
   if Proposal >= 0 then
     Frame.Messages.Add(OnChange(Proposal));
@@ -58,7 +62,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Items[Index].Title, 'radio-card', new Cui.CuiRectangle(), Enabled,
-        Key := Index.ToString(), Value := if Index = Selected then 'true' else 'false' end if
+        Key := Index.ToString(), Value := if Index = Selected then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end for;

@@ -61,7 +61,11 @@ begin
         '--output',
         Prepared.Assembly,
         '--target',
-        if Prepared.Library then 'library' else 'exe' end if,
+        if Prepared.Library then
+          'library'
+        else
+          'exe'
+        end if,
         '--reference-dir',
         Options.References,
         '--generate-documentation',
@@ -87,10 +91,16 @@ begin
       const Passed: bool := Compiled.ExitCode = 1 and Errors.Count > 0 and Errors.Expected;
       return Outcome with
         Passed := Passed;
-        Compile := if Passed then 'rejected' else 'failed' end if;
-        Message := if Passed then 'expected ' + Item.ExpectedError
-          else 'Expected ' + Item.ExpectedError + ' from the example itself. ' + Errors.Message
-          end if;
+        Compile := if Passed then
+          'rejected'
+        else
+          'failed'
+        end if;
+        Message := if Passed then
+          'expected ' + Item.ExpectedError
+        else
+          'Expected ' + Item.ExpectedError + ' from the example itself. ' + Errors.Message
+        end if;
       end with;
     end if;
 
@@ -144,12 +154,14 @@ begin
       Stage := 'run';
       Run := 'failed';
     end with;
-    const Expected: string := if Item.ExpectedException.Length = 0 then ExpectedOutput(
+    const Expected: string := if Item.ExpectedException.Length = 0 then
+      ExpectedOutput(
         Item,
         Items
       )
-      else ''
-      end if;
+    else
+      ''
+    end if;
 
     var Target: string := Prepared.Assembly;
     if Prepared.Manifest.Length > 0 then
@@ -214,10 +226,16 @@ begin
 
     return Outcome with
       Passed := Passed;
-      Run := if Passed then 'passed' else 'failed' end if;
-      Message := if Passed then 'passed'
-        else 'Execution did not satisfy the expected result. ' + Executed.Output
-        end if;
+      Run := if Passed then
+        'passed'
+      else
+        'failed'
+      end if;
+      Message := if Passed then
+        'passed'
+      else
+        'Execution did not satisfy the expected result. ' + Executed.Output
+      end if;
     end with;
   catch Failure: S.OperationCanceledException do
     Cancellation.ThrowIfCancellationRequested();

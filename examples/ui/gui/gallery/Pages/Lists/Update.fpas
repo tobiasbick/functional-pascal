@@ -15,9 +15,21 @@ begin
   const Next: S.Model := case Message of
     when S.Msg.SetAccordion(const Index: int, const Open: bool): State with
       AccordionOpen := [
-        if Index = 0 then Open else State.AccordionOpen[0] end if,
-        if Index = 1 then Open else State.AccordionOpen[1] end if,
-        if Index = 2 then Open else State.AccordionOpen[2] end if
+        if Index = 0 then
+          Open
+        else
+          State.AccordionOpen[0]
+        end if,
+        if Index = 1 then
+          Open
+        else
+          State.AccordionOpen[1]
+        end if,
+        if Index = 2 then
+          Open
+        else
+          State.AccordionOpen[2]
+        end if
       ];
     end with;
     else State;

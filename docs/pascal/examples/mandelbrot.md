@@ -13,8 +13,8 @@ begin
   var ImaginaryPart: double := 0.0;
   var Iteration: int := 0;
 
-  while Iteration < Limit and
-    RealPart * RealPart + ImaginaryPart * ImaginaryPart <= 4.0 do
+  while Iteration < Limit
+    and RealPart * RealPart + ImaginaryPart * ImaginaryPart <= 4.0 do
     const NextReal: double := RealPart * RealPart - ImaginaryPart * ImaginaryPart + CReal;
     ImaginaryPart := 2.0 * RealPart * ImaginaryPart + CImaginary;
     RealPart := NextReal;
@@ -35,8 +35,13 @@ begin
       const CReal: double := -2.0 + 3.0 * cast<double>(X) / cast<double>(Width - 1);
       const CImaginary: double := -1.0 + 2.0 * cast<double>(Y) / cast<double>(Height - 1);
       const Count: int := EscapeIterations(CReal, CImaginary, Limit);
-      Row := Row + if Count = Limit then '#' else ' ' end if;
+      Row := Row + if Count = Limit then
+        '#'
+      else
+        ' '
+      end if;
     end for;
+
     Console.WriteLine(Row);
   end for;
 end;

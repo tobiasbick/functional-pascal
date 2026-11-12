@@ -43,11 +43,14 @@ uses
 public function ThemeFor(State: G.Model): Themes.Theme;
 begin
   return if Switchers.Resolve(
-      State.Shared.Appearance,
-      State.Shared.SystemAppearance
-    ) = Themes.Mode.Dark then Themes.Dark()
-    else Themes.Light()
-    end if;
+    State.Shared.Appearance,
+    State.Shared.SystemAppearance
+  ) = Themes.Mode.Dark
+  then
+    Themes.Dark()
+  else
+    Themes.Light()
+  end if;
 end function;
 
 // Routes one message to its owner in the application's single MVU session.
@@ -202,15 +205,19 @@ begin
         end with, []
       );
     when G.Msg.Show(const Value: G.Page):
-      const Commands: array of Mvu.Command<G.Msg> := if Value = State.Active then []
-        elsif Value = G.Page.Audio then [
+      const Commands: array of Mvu.Command<G.Msg> := if Value = State.Active then
+        []
+      elsif Value = G.Page.Audio then
+        [
           AudioClock.Start<G.Msg>(
             G.Msg.Audio(Audio.Msg.Tick), function(Error: Sys.Exception): G.Msg => G.Msg.Preview
           )
         ]
-        elsif State.Active = G.Page.Audio then [Mvu.CancelBackground<G.Msg>(AudioClock.Id)]
-        else []
-        end if;
+      elsif State.Active = G.Page.Audio then
+        [Mvu.CancelBackground<G.Msg>(AudioClock.Id)]
+      else
+        []
+      end if;
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
           Active := Value;

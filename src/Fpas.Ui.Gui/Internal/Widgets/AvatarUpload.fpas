@@ -48,7 +48,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Name, Role, new Cui.CuiRectangle(), Accept,
-        Value := if Result.HasImage then Dropped ?? Path ?? '' else '' end if
+        Value := if Result.HasImage then
+          Dropped ?? Path ?? ''
+        else
+          ''
+        end if
       )
     );
   end if;

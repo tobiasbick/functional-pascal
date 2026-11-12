@@ -31,7 +31,11 @@ begin
   case Node of
     when E.Element.Label(const Value: string):
       if not Horizontal then
-        return if Value = '' then 0 else G.LineCount(Value, -1) end if;
+        return if Value = '' then
+          0
+        else
+          G.LineCount(Value, -1)
+        end if;
       end if;
       var Width: int := 0;
       for Word: string in Value.Split(new char[0], Sys.StringSplitOptions.RemoveEmptyEntries) do
@@ -46,7 +50,11 @@ begin
       end if;
 
       return Sys.Math.Clamp(
-        if Rule.Basis >= 0 then Rule.Basis else Content end if,
+        if Rule.Basis >= 0 then
+          Rule.Basis
+        else
+          Content
+        end if,
         Rule.Minimum,
         Rule.Maximum
       );
@@ -69,17 +77,25 @@ begin
       var Span: int := 0;
       for Child: E.Element<TMsg> in Children do
         const Size: int := Minimum<TMsg>(Child, Horizontal, Axis);
-        Span := if Axis = Horizontal then Span + Size else Sys.Math.Max(Span, Size) end if;
+        Span := if Axis = Horizontal then
+          Span + Size
+        else
+          Sys.Math.Max(Span, Size)
+        end if;
       end for;
 
-      return Span + 2 * (if Horizontal then Flow.PaddingX
-        else Flow.PaddingY
-        end if) + (if Axis = Horizontal then Sys.Math.Max(
+      return Span + 2 * (if Horizontal then
+        Flow.PaddingX
+      else
+        Flow.PaddingY
+      end if) + (if Axis = Horizontal then
+        Sys.Math.Max(
           0,
           Children.Length - 1
         ) * Flow.Gap
-        else 0
-        end if);
+      else
+        0
+      end if);
     when E.Element.Scrollable(_, _, _), E.Element.ControlledScroll(
       _,
       _,
@@ -183,11 +199,14 @@ end function;
 public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
 begin
   return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch<TMsg>(
-      Node,
-      true
-    ) then Available
-    else Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
-    end if;
+    Node,
+    true
+  )
+  then
+    Available
+  else
+    Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
+  end if;
 end function;
 
 function WrappedStackHeight<TMsg>(
@@ -238,14 +257,20 @@ begin
 
       return G.LineCount(Value, Columns);
     when E.Element.Separator(const Title: string):
-      return if Horizontal and Title <> '' then G.Measure(G.SingleLine(Title)) + 4 else 1 end if;
+      return if Horizontal and Title <> '' then
+        G.Measure(G.SingleLine(Title)) + 4
+      else
+        1
+      end if;
     when E.Element.Action(_, _, _, const View: E.ActionView):
-      return if Horizontal then View.FixedWidth ?? Sys.Math.Max(
+      return if Horizontal then
+        View.FixedWidth ?? Sys.Math.Max(
           View.MinimumWidth,
           G.Measure(View.Caption) + 2 * View.Padding
         )
-        else View.Height
-        end if;
+      else
+        View.Height
+      end if;
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       const Axis: bool,
@@ -257,17 +282,25 @@ begin
       var Size: int := 0;
       for Child: E.Element<TMsg> in Children do
         const Span: int := Intrinsic<TMsg>(Child, Horizontal);
-        Size := if Axis = Horizontal then Size + Span else Sys.Math.Max(Size, Span) end if;
+        Size := if Axis = Horizontal then
+          Size + Span
+        else
+          Sys.Math.Max(Size, Span)
+        end if;
       end for;
 
-      return Size + 2 * (if Horizontal then Rule.PaddingX
-        else Rule.PaddingY
-        end if) + (if Axis = Horizontal then Sys.Math.Max(
+      return Size + 2 * (if Horizontal then
+        Rule.PaddingX
+      else
+        Rule.PaddingY
+      end if) + (if Axis = Horizontal then
+        Sys.Math.Max(
           0,
           Children.Length - 1
         ) * Rule.Gap
-        else 0
-        end if);
+      else
+        0
+      end if);
     when E.Element.Sized(
       const Child: E.Element<TMsg>,
       _
@@ -291,9 +324,17 @@ begin
         Intrinsic<TMsg>(
           Child,
           Horizontal,
-          if Columns < 0 then -1 else Sys.Math.Max(0, Columns - 2) end if
+          if Columns < 0 then
+            -1
+          else
+            Sys.Math.Max(0, Columns - 2)
+          end if
         ),
-        if Horizontal then G.Measure(Title) else 0 end if
+        if Horizontal then
+          G.Measure(Title)
+        else
+          0
+        end if
       ) + 2;
   end case;
 end function;

@@ -23,7 +23,11 @@ begin
     return;
   end if;
 
-  const Pattern: string := if args.Length = 2 then args[1] else '*' end if;
+  const Pattern: string := if args.Length = 2 then
+    args[1]
+  else
+    '*'
+  end if;
 
   try
     const Root: string := IO.Path.GetFullPath(args[0]);

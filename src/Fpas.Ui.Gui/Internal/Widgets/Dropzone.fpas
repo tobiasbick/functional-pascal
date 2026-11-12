@@ -46,7 +46,11 @@ begin
   if not Frame.PaintingClosed then
     Frame.Controls.Add(
       new App.Control(
-        Id, if Settings.Title = '' then 'Drop files here' else Settings.Title end if,
+        Id, if Settings.Title = '' then
+          'Drop files here'
+        else
+          Settings.Title
+        end if,
         Role, new Cui.CuiRectangle(), Enabled
       )
     );

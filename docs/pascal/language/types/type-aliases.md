@@ -5,7 +5,9 @@ new CLR identity. Use nominal domains when a distinct identity is required.
 
 ```pascal fragment context=declarations
 type UserName = string;
+
 type Names = Collections.List<string>;
+
 type Matrix = array[,] of double;
 ```
 

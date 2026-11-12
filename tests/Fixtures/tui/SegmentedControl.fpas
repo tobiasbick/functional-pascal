@@ -44,7 +44,11 @@ function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   const Next: Model := case Message of
     when Msg.Choose(const Value: int): State with
-      Selected := if State.Accept then Value else State.Selected end if;
+      Selected := if State.Accept then
+        Value
+      else
+        State.Selected
+      end if;
     end with;
     when Msg.Accept: State with
       Accept := not State.Accept;
@@ -96,7 +100,11 @@ procedure Behavior();
         'choice', [new S.Item('List'), new S.Item('Board'), new S.Item('Timeline')],
         State.Selected, Choose, new S.Options(
           Enabled := State.Enabled, FullWidth := State.Full,
-          ControlSize := if State.Large then B.Size.Large else B.Size.Medium end if
+          ControlSize := if State.Large then
+            B.Size.Large
+          else
+            B.Size.Medium
+          end if
         )
       ),
       B.Button<Msg>('accept', 'Accept', Msg.Accept),
@@ -207,7 +215,11 @@ procedure FreshRouting();
     return E.Column<int>(
       S.SegmentedControl<int>(
         'fresh', [new S.Item('One'), new S.Item('Two'), new S.Item('Three')],
-        State div 2, function(Index: int): int => if State = 0 then 2 else 4 end if
+        State div 2, function(Index: int): int => if State = 0 then
+          2
+        else
+          4
+        end if
       ),
       B.Button<int>('change-routing', 'Change routing', 1)
     );

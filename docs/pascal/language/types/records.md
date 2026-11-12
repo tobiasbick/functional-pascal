@@ -104,7 +104,9 @@ end function;
 
 begin
   const Start: Point := new Point(X := 1.0, Y := 2.0);
-  const Moved: Point := Start with X := Start.X + 3.0; end with;
+  const Moved: Point := Start with
+    X := Start.X + 3.0;
+  end with;
   Console.WriteLine(Start.X); // 1
   Console.WriteLine(Moved.X); // 4
   Console.WriteLine(Area(Shape.Rectangle(3.0, 4.0))); // 12

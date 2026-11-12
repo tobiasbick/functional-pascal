@@ -34,9 +34,11 @@ begin
       PriceUpper := Value.Upper;
     end with;
     when S.Msg.SetChip(const Mask: int, const Selected: bool): State with
-      SelectedChips := if Selected then State.SelectedChips or Mask
-        else State.SelectedChips and not Mask
-        end if;
+      SelectedChips := if Selected then
+        State.SelectedChips or Mask
+      else
+        State.SelectedChips and not Mask
+      end if;
     end with;
     when S.Msg.SetRating(const Value: int): State with
       Stars := Value;

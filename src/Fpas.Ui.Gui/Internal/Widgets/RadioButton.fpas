@@ -31,7 +31,11 @@ begin
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, Label, 'radio', new Cui.CuiRectangle(), Allowed,
-      Value := if Selected then 'true' else 'false' end if
+      Value := if Selected then
+        'true'
+      else
+        'false'
+      end if
     )
   );
 end procedure;

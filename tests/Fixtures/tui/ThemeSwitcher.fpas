@@ -43,7 +43,11 @@ function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
 begin
   const Next: Model := case Message of
     when Msg.Choose(const Value: S.Selection): State with
-      Selected := if State.Accept then Value else State.Selected end if;
+      Selected := if State.Accept then
+        Value
+      else
+        State.Selected
+      end if;
       Count := State.Count + 1;
     end with;
     when Msg.ChooseOther(const Value: S.Selection): State with
@@ -69,19 +73,23 @@ end function;
 function ThemeFor(State: Model): Themes.Theme;
 begin
   const Mode: Themes.Mode := S.Resolve(State.Selected, State.Source);
-  const Theme: Themes.Theme := if Mode = Themes.Mode.Dark then Themes.Dark(Themes.Accent.Blue)
-    else Themes.Light(Themes.Accent.Blue)
-    end if;
+  const Theme: Themes.Theme := if Mode = Themes.Mode.Dark then
+    Themes.Dark(Themes.Accent.Blue)
+  else
+    Themes.Light(Themes.Accent.Blue)
+  end if;
   return Theme with
     Colors := Theme.Colors with
-      Background := if Mode = Themes.Mode.Dark then new G.Color(
+      Background := if Mode = Themes.Mode.Dark then
+        new G.Color(
           12,
           14,
           16,
           255
         )
-        else new G.Color(240, 242, 244, 255)
-        end if;
+      else
+        new G.Color(240, 242, 244, 255)
+      end if;
     end with;
   end with;
 end function;
@@ -113,7 +121,11 @@ begin
   Check(
     Frame.Cells[
       Frame.Cells.Length - 1
-    ].Colors.Background = (if Dark then $0C0E10 else $F0F2F4 end if),
+    ].Colors.Background = (if Dark then
+      $0C0E10
+    else
+      $F0F2F4
+    end if),
     'Only the accepted model/provider may replace the palette.'
   );
 end procedure;
@@ -270,21 +282,24 @@ procedure Validation();
 begin
   for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
     for Kind: int := 0 to 2 do
-      const Node: E.Element<int> := if Kind = 0 then S.ThemeSwitcher<int>(
+      const Node: E.Element<int> := if Kind = 0 then
+        S.ThemeSwitcher<int>(
           'bad',
           cast<S.Selection>(99),
           function(Value: S.Selection): int => 1
         )
-        elsif Kind = 1 then S.ThemeSwitcher<int>(
+      elsif Kind = 1 then
+        S.ThemeSwitcher<int>(
           'bad',
           S.Selection.System,
           function(Value: S.Selection): int => 1
         )
-        else E.Column<int>(
+      else
+        E.Column<int>(
           S.ThemeSwitcher<int>('bad', S.Selection.Light, function(Value: S.Selection): int => 1),
           UiButtons.Button<int>('bad/light', 'Collision', 0)
         )
-        end if;
+      end if;
       var Rejected: bool := false;
       try
         discard V.Prepare<int>(Node, Target);

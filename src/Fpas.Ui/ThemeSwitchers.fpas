@@ -70,9 +70,12 @@ public function Resolve(Selected: Selection; SystemAppearance: Themes.Mode): The
 requires cast<int>(Selected) >= 0 and cast<int>(Selected) <= 2;
 requires cast<int>(SystemAppearance) >= 0 and cast<int>(SystemAppearance) <= 1;
 begin
-  return if Selected = Selection.System then SystemAppearance
-    elsif Selected = Selection.Dark then Themes.Mode.Dark
-    else Themes.Mode.Light
-    end if;
+  return if Selected = Selection.System then
+    SystemAppearance
+  elsif Selected = Selection.Dark then
+    Themes.Mode.Dark
+  else
+    Themes.Mode.Light
+  end if;
 end function;
 end unit;

@@ -41,7 +41,11 @@ begin
   const Proposal: (array of bool)? := Frame.Window.ToggleGroup(
     Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast<int>(Settings.ControlSize),
     Settings.Exclusive, Settings.IconOnly, Enabled, Focus,
-    if Frame.PaintingClosed then null else Tokens.ToArray() end if
+    if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
   );
   if Proposal <> null then
     Frame.Messages.Add(OnChange(Proposal));
@@ -58,7 +62,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Items[Index].Label, 'toggle-group-item', new Cui.CuiRectangle(), Enabled,
-        Key := Index.ToString(), Value := if Selected[Index] then 'true' else 'false' end if
+        Key := Index.ToString(), Value := if Selected[Index] then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end for;

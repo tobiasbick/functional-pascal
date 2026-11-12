@@ -51,10 +51,13 @@ program AgentTypes;
 uses System as Sys, System.Console as Console;
 
 type UserId = distinct long;
+
 type Port = ushort range 1..65535;
+
 type Box<T> = record
   public Value: T;
 end record;
+
 type Point = record
   public X: int;
   public Y: int := 2;
@@ -62,14 +65,18 @@ end record;
 
 begin
   const Original: Point := new Point(X := 1);
-  const Moved: Point := Original with X := 4; end with;
+  const Moved: Point := Original with
+    X := 4;
+  end with;
   const Id: UserId := new UserId(7L);
   const Wrapped: Box<UserId> := new Box<UserId>(Id);
   const Ports: array of Port := new Port[1];
-  if Original.X <> 1 or Moved.X <> 4 or Moved.Y <> 2 or
-    cast<long>(Wrapped.Value) <> 7L or Ports[0].Value <> 1 then
+  if Original.X <> 1 or Moved.X <> 4 or Moved.Y <> 2
+    or cast<long>(Wrapped.Value) <> 7L or Ports[0].Value <> 1
+  then
     raise new Sys.InvalidOperationException('Incorrect record or domain behavior');
   end if;
+
   Console.WriteLine('Types verified');
 end;
 end program;
@@ -94,6 +101,7 @@ The following two sources share the documented project label and compile togethe
 unit Agent.Values;
 
 public const Step: int := 2;
+
 var Total: int := 0;
 
 public function Advance(): int;
@@ -101,7 +109,6 @@ begin
   Total := Total + Step;
   return Total;
 end function;
-
 end unit;
 ```
 
@@ -114,6 +121,7 @@ begin
   if Values.Advance() <> 2 or Values.Advance() <> 4 then
     raise new Sys.InvalidOperationException('Unit state was not shared');
   end if;
+
   Console.WriteLine('Units verified');
 end;
 end program;

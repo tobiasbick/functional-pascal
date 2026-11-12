@@ -17,7 +17,11 @@ the one before `elsif` or `else`, ends with `;`. An `if` expression requires
 `else` and one expression per branch:
 
 ```pascal fragment context=health
-const Label: string := if Health > 0 then 'Alive' else 'Defeated' end if;
+const Label: string := if Health > 0 then
+  'Alive'
+else
+  'Defeated'
+end if;
 ```
 
 Branch results must have a common type through identity, expected type, or an

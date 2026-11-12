@@ -13,7 +13,8 @@ renamed property. The collection and JSON operations use the original .NET APIs.
 ```pascal
 program Interop;
 
-uses System.Console as Console,
+uses
+  System.Console as Console,
   System.Collections.Generic as Generic,
   System.Text.Json as Json,
   System.Text.Json.Serialization as Serialization;

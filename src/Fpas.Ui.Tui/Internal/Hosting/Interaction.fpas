@@ -39,7 +39,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return '';
     end if;
     const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
-    return if Control <> null and Eligible(Control, Scope) then Id else '' end if;
+    return if Control <> null and Eligible(Control, Scope) then
+      Id
+    else
+      ''
+    end if;
   end function;
 
   procedure SetFocus(Layout: A.Layout<TMsg>; Id: string);
@@ -103,7 +107,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           Saved[Scope] := Focus;
         end if;
         const Modal: A.Scope<TMsg>? := Layout.Active;
-        Focus := if Modal = null then '' else Modal.Initial end if;
+        Focus := if Modal = null then
+          ''
+        else
+          Modal.Initial
+        end if;
       end if;
 
       FocusScope := Scope;
@@ -111,7 +119,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
     if PointerKnown then
       const Target: A.Control<TMsg>? := Hit(Layout, PointerColumn, PointerRow);
-      Hover := if Target = null then '' else Target.Id end if;
+      Hover := if Target = null then
+        ''
+      else
+        Target.Id
+      end if;
     end if;
 
     for Control: A.Control<TMsg> in Layout.Controls do
@@ -156,7 +168,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end for;
 
     if Keys.Count > 0 then
-      Focus := Keys[(Index + (if Backwards then Keys.Count - 1 else 1 end if)) mod Keys.Count];
+      Focus := Keys[
+        (Index + (if Backwards then
+          Keys.Count - 1
+        else
+          1
+        end if)) mod Keys.Count
+      ];
     end if;
   end procedure;
 
@@ -248,7 +266,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     PointerColumn := Column;
     PointerRow := Row;
     const Target: A.Control<TMsg>? := Hit(Layout, Column, Row);
-    Hover := if Target = null then '' else Target.Id end if;
+    Hover := if Target = null then
+      ''
+    else
+      Target.Id
+    end if;
     if HoldTracking.ActiveId() <> Hover then
       HoldTracking.Cancel();
     end if;
@@ -287,9 +309,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
             return;
           end if;
         end if;
-        const Held: string := if Button = K.MouseButton.Left then Captured
-          else MiddleCaptured
-          end if;
+        const Held: string := if Button = K.MouseButton.Left then
+          Captured
+        else
+          MiddleCaptured
+        end if;
         if Button = K.MouseButton.Left then
           Captured := '';
         else
@@ -324,7 +348,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
         case Handler of
           when is Actions.IArrowFocus as Arrows:
-            const Id: string? := Arrows.Neighbor(if Key = K.Key.Left then -1 else 1 end if);
+            const Id: string? := Arrows.Neighbor(
+              if Key = K.Key.Left then
+                -1
+              else
+                1
+              end if
+            );
             if Id <> null then
               const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
               if Target <> null and Eligible(Target, FocusScope) then
@@ -369,15 +399,21 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         if Region.Id = Modal.Id and Region.Scope = Modal.Id then
           MoveScroll(
             Region,
-            if Key = K.Key.PageUp then -Region.Bounds.Height else Region.Bounds.Height end if
+            if Key = K.Key.PageUp then
+              -Region.Bounds.Height
+            else
+              Region.Bounds.Height
+            end if
           );
           return;
         end if;
       end for;
     end if;
-    const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then Layout.GlobalKeys
-      else Modal.Shortcuts
-      end if;
+    const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then
+      Layout.GlobalKeys
+    else
+      Modal.Shortcuts
+    end if;
     for Shortcut: K.ShortcutBinding<TMsg> in Keys do
       if Shortcut.Character = '' and Shortcut.PressedKey = Key and Shortcut.Modifiers =
         Modifiers
@@ -398,9 +434,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure MoveScroll(Region: A.ScrollRegion; Delta: int);
   begin
-    const Before: int := if ScrollOffsets.ContainsKey(Region.Id) then ScrollOffsets[Region.Id]
-      else 0
-      end if;
+    const Before: int := if ScrollOffsets.ContainsKey(Region.Id) then
+      ScrollOffsets[Region.Id]
+    else
+      0
+    end if;
     ScrollOffsets[Region.Id] := cast<int>(Sys.Math.Clamp(
       cast<long>(Before) + cast<long>(Delta), 0L, cast<long>(Region.Maximum)
     ));
@@ -449,9 +487,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
     if Typed and Text <> '' then
       const Modal: A.Scope<TMsg>? := Layout.Active;
-      const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then Layout.GlobalKeys
-        else Modal.Shortcuts
-        end if;
+      const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then
+        Layout.GlobalKeys
+      else
+        Modal.Shortcuts
+      end if;
       for Shortcut: K.ShortcutBinding<TMsg> in Keys do
         if Shortcut.Character = Text then
           Apply(Shortcut.Message);

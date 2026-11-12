@@ -30,12 +30,14 @@ begin
     ),
     State.Msg.PreviewBranchDeletion, State.Msg.SetBranchQuestion(false)
   );
-  const Row: E.Element<State.Msg> := if Model.BranchDeleted then E.Row<State.Msg>(
+  const Row: E.Element<State.Msg> := if Model.BranchDeleted then
+    E.Row<State.Msg>(
       new L.Flow(Gap := G.Points(12), Wrap := true), Question,
       E.Styled<State.Msg>(E.Text<State.Msg>('Branch deleted'), S.Role.Muted)
     )
-    else E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
-    end if;
+  else
+    E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
+  end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
     G.Heading<State.Msg>('Confirm popover', 'Ask right where the action is.'),

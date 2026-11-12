@@ -13,7 +13,11 @@ begin
   ) <= S.MessageCapacity;
   return State with
     Emoji := Change.Value;
-    Message := if Insert then Combined else State.Message end if;
+    Message := if Insert then
+      Combined
+    else
+      State.Message
+    end if;
     EmojiOpen := State.EmojiOpen and not Insert;
   end with;
 end function;

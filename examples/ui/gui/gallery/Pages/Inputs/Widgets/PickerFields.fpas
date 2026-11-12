@@ -57,7 +57,8 @@ begin
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const Row: L.Flow := new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start);
   const Brand: E.Element<State.Msg> := BrandColor.View(Model);
-  const Fields: array of E.Element<State.Msg> := if Wide then [
+  const Fields: array of E.Element<State.Msg> := if Wide then
+    [
       E.Row<State.Msg>(Row, E.Size<State.Msg>(Country, Fill), E.Size<State.Msg>(Language, Fill)),
       E.Row<State.Msg>(
         Row,
@@ -66,8 +67,9 @@ begin
       ),
       Brand
     ]
-    else [Country, Language, Due, Seats, Brand]
-    end if;
+  else
+    [Country, Language, Due, Seats, Brand]
+  end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)), G.Heading<State.Msg>('Pickers'), G.Card<State.Msg>(16, Fields)
   );

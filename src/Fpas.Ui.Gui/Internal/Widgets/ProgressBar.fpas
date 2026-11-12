@@ -25,11 +25,13 @@ begin
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, Settings.Label, 'progress', new Cui.CuiRectangle(), false,
-      Value := if Settings.Indeterminate then 'indeterminate'
-        else Value.ToString(
+      Value := if Settings.Indeterminate then
+        'indeterminate'
+      else
+        Value.ToString(
           Culture.CultureInfo.InvariantCulture
         )
-        end if
+      end if
     )
   );
 end procedure;

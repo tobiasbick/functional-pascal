@@ -3,13 +3,11 @@
 Pass behavior using ordinary CLR delegate values and typed lambdas.
 
 ```pascal fragment context=body
-const Double: function(int): int :=
-  function(Value: int): int => Value * 2;
+const Double: function(int): int := function(Value: int): int => Value * 2;
 
-const Print: procedure(string) :=
-  procedure(Text: string) begin
-    Console.WriteLine(Text);
-  end procedure;
+const Print: procedure(string) := procedure(Text: string) begin
+  Console.WriteLine(Text);
+end procedure;
 ```
 
 Callable types are `function(T1, T2): R` and `procedure(T1, T2)`. Parameter names
@@ -87,8 +85,8 @@ begin
   const Counter: function(): int := MakeCounter();
   Console.WriteLine(Identity<string>('Functions first'));
   Console.WriteLine(Apply(21, Double)); // 42
-  Console.WriteLine(Counter());        // 1
-  Console.WriteLine(Counter());        // 2
+  Console.WriteLine(Counter()); // 1
+  Console.WriteLine(Counter()); // 2
 end;
 end program;
 ```

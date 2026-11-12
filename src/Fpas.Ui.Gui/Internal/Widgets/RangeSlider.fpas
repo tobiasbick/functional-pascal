@@ -29,7 +29,11 @@ begin
   if Frame.Window.RangeSlider(
     Token, Label, Value.Lower, Value.Upper, Minimum, Maximum, Allowed,
     C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
-    if Frame.PaintingClosed then null else Token end if, out Lower, out Upper
+    if Frame.PaintingClosed then
+      null
+    else
+      Token
+    end if, out Lower, out Upper
   )
   then
     Frame.Messages.Add(OnChange(new R.Interval(Lower, Upper)));

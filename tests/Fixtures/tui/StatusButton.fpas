@@ -73,22 +73,38 @@ end function;
 function View(State: Model): E.Element<Msg>;
 begin
   const Settings: Work.Options := new Work.Options(
-    BusyLabel := if State.Custom then 'Working ## literally' else null end if,
-    SuccessLabel := if State.Custom then 'Saved ### literally' else 'Done' end if,
-    ErrorLabel := if State.Custom then 'Failed ## literally' else 'Failed' end if,
+    BusyLabel := if State.Custom then
+      'Working ## literally'
+    else
+      null
+    end if,
+    SuccessLabel := if State.Custom then
+      'Saved ### literally'
+    else
+      'Done'
+    end if,
+    ErrorLabel := if State.Custom then
+      'Failed ## literally'
+    else
+      'Failed'
+    end if,
     Enabled := State.Enabled,
     Variant := State.Variant,
     ControlSize := State.Size,
     TerminalIcon := '↓'
   );
   return E.Column<Msg>(
-    if State.Visible then Work.StatusButton<Msg>(
-        'status', if State.Renamed then 'Renamed ### literally'
-          else 'Save ## literally'
-          end if, State.State, Msg.Start, Settings
+    if State.Visible then
+      Work.StatusButton<Msg>(
+        'status', if State.Renamed then
+          'Renamed ### literally'
+        else
+          'Save ## literally'
+        end if, State.State, Msg.Start, Settings
       )
-      else E.Text<Msg>('Hidden')
-      end if,
+    else
+      E.Text<Msg>('Hidden')
+    end if,
     B.Button<Msg>('other', 'Other', Msg.Noop),
     B.Button<Msg>('idle', 'Idle', Msg.SetState(Work.Status.Idle)),
     B.Button<Msg>('busy', 'Busy', Msg.SetState(Work.Status.Busy)),
@@ -232,7 +248,11 @@ begin
       Send(Session, Tui.Input.Focus('other'));
       const Normal: T.Style := Colors(Session);
       const Tone: int := Themes.Rgb(
-        if State = Work.Status.Success then Theme.Colors.Success else Theme.Colors.Danger end if,
+        if State = Work.Status.Success then
+          Theme.Colors.Success
+        else
+          Theme.Colors.Danger
+        end if,
         Theme.Colors.Background
       );
       Check(Focused <> Normal, 'Status colors must keep keyboard focus visible.');
@@ -268,9 +288,11 @@ procedure Validation();
 begin
   for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
     for Kind: int := 0 to 7 do
-      const State: Work.Status := if Kind = 0 then cast<Work.Status>(99)
-        else Work.Status.Idle
-        end if;
+      const State: Work.Status := if Kind = 0 then
+        cast<Work.Status>(99)
+      else
+        Work.Status.Idle
+      end if;
       const Settings: Work.Options := case Kind of
         when 1: new Work.Options(Variant := S.ButtonVariant.Active);
         when 2: new Work.Options(Variant := cast<S.ButtonVariant>(99));

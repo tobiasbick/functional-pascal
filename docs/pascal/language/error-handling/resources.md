@@ -26,6 +26,7 @@ begin
   using const Reader: IO.StreamReader := new IO.StreamReader('world.json');
   Console.WriteLine(Reader.ReadToEnd());
 end;
+
 // Reader has been disposed and is no longer in scope.
 Console.WriteLine('Read finished');
 ```
@@ -65,7 +66,11 @@ begin
     using const Owned: IO.MemoryStream := Stream;
     Owned.WriteByte(65);
   end;
-  if Stream.CanRead then raise new Sys.InvalidOperationException('Resource was not disposed'); end if;
+
+  if Stream.CanRead then
+    raise new Sys.InvalidOperationException('Resource was not disposed');
+  end if;
+
   Console.WriteLine('Resource released');
 end;
 end program;

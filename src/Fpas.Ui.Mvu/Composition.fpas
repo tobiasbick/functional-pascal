@@ -10,7 +10,11 @@ begin
     raise new Sys.ArgumentException('An effect ID must not be empty.');
   end if;
 
-  return if Scope = '' then Id else Scope + '/' + Id end if;
+  return if Scope = '' then
+    Id
+  else
+    Scope + '/' + Id
+  end if;
 end function;
 
 // Translates a child's command for the parent session without running it.

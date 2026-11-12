@@ -88,16 +88,28 @@ begin
   const Shared: array of int := Items;
   Shared[0] := 3;
   var Total: int := 0;
-  for Value: int in Items do Total := Total + Value; end for;
-  for Index: int := 1 to 2 do Total := Total + Index; end for;
-  repeat Total := Total - 1; until Total = 7;
-  while Total < 9 do Total := Total + 1; end while;
+  for Value: int in Items do
+    Total := Total + Value;
+  end for;
+
+  for Index: int := 1 to 2 do
+    Total := Total + Index;
+  end for;
+
+  repeat
+    Total := Total - 1;
+  until Total = 7;
+
+  while Total < 9 do
+    Total := Total + 1;
+  end while;
 
   const Text: string := 'A😀';
   const Half: double := Total / 2;
   if Total <> 9 or Items[0] <> 3 or Text.Length <> 3 or Text[0] <> #65 or Half <> 4.5 then
     raise new Sys.InvalidOperationException('Incorrect value, loop, or text behavior');
   end if;
+
   Console.WriteLine('Basics verified');
 end;
 end program;

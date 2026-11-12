@@ -91,6 +91,7 @@ begin
   if Total <> 15.00M or Unknown <> null or Missing < Price or Missing >= Price then
     raise new Sys.InvalidOperationException('Incorrect nullable calculation');
   end if;
+
   Console.WriteLine(Total ?? 0.00M);
   Console.WriteLine(Missing = cast<decimal?>(null));
 end;
@@ -116,7 +117,7 @@ begin
   const Text: string := 'A😀';
   Console.WriteLine(Text.Length); // 3 UTF-16 code units
   const First: char := Text[0];
-  Console.WriteLine(First);       // A
+  Console.WriteLine(First); // A
 end;
 end program;
 ```

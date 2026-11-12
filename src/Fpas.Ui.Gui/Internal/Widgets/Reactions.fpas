@@ -55,7 +55,11 @@ begin
   end if;
 
   const Result: Cui.CuiReactionChange := Frame.Window.Reactions(
-    Group, Native, Accept, Focus, if Frame.PaintingClosed then null else Tokens.ToArray() end if
+    Group, Native, Accept, Focus, if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
   );
   if Result.Index >= 0 then
     const Item: R.Item := Items[Result.Index] with

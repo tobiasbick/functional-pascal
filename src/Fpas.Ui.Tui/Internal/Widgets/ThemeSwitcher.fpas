@@ -27,7 +27,11 @@ public function Lower<TMsg>(
 begin
   const Items: Lists.List<Segments.Item> := new Lists.List<Segments.Item>();
   const Ids: Lists.List<string> := new Lists.List<string>();
-  for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
+  for Index: int := 0 to (if Settings.WithSystem then
+    2
+  else
+    1
+  end if) do
     const Choice: S.Selection := cast<S.Selection>(Index);
     Items.Add(new Segments.Item(Parts.Label(Choice)));
     Ids.Add(S.ItemId(Id, Choice));

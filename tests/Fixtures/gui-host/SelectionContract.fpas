@@ -127,9 +127,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       else
     end case;
     const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
-    return if Focus = '' then Next
-      else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
-      end if;
+    return if Focus = '' then
+      Next
+    else
+      new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+    end if;
   end function;
   procedure Inject();
   begin

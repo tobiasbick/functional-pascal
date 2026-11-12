@@ -101,12 +101,14 @@ begin
   const HoverColor: int := Rgb(C.Hover, Surface);
   const ErrorColor: int := Rgb(C.Danger, Canvas);
   const Focus: T.Style := new T.Style(AccentText, Accent);
-  const Primary: T.Style := if Value.AccentFamily = Shared.Accent.Neutral then new T.Style(
+  const Primary: T.Style := if Value.AccentFamily = Shared.Accent.Neutral then
+    new T.Style(
       Rgb(C.ControlGlyph, Rgb(C.ControlOn, Surface)),
       Rgb(C.ControlOn, Surface)
     )
-    else Focus
-    end if;
+  else
+    Focus
+  end if;
   const Hover: T.Style := new T.Style(Text, HoverColor);
   const Secondary: T.Style := new T.Style(Text, Rgb(C.SurfaceMuted, Surface));
   const Selected: T.Style := new T.Style(Rgb(C.Foreground, Surface), Rgb(C.AccentSubtle, Surface));

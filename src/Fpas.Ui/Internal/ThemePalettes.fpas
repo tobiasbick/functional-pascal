@@ -46,7 +46,13 @@ end function;
 // A detached palette in semantic token order.
 public function Create(Dark: bool; Accent: int): Th.Palette;
 begin
-  const C: array of string := Colors[(if Dark then 8 else 0 end if) + Accent].Split(' ');
+  const C: array of string := Colors[
+    (if Dark then
+      8
+    else
+      0
+    end if) + Accent
+  ].Split(' ');
   return new Th.Palette(
     Background := Read(C[0]),
     Surface := Read(C[1]),

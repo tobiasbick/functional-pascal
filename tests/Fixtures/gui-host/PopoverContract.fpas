@@ -72,9 +72,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       when State.Msg.Disclosure(SliceDisclosure.Msg.PreviewBranchDeletion):
         Confirmations := Confirmations + 1;
       when State.Msg.Preview:
-        const Target: string := if Model.Active = State.Page.Overlays then 'filters-active'
-          else 'branch-trigger'
-          end if;
+        const Target: string := if Model.Active = State.Page.Overlays then
+          'filters-active'
+        else
+          'branch-trigger'
+        end if;
         return new App.Transition<State.Model, State.Msg>(
           Model,
           [App.Focus<State.Msg>(Target)]

@@ -32,9 +32,11 @@ begin
       Captions.Add(Items[Index].Label);
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Index: int): string => C.Token('multi-select-option', S.OptionId(Id, Index))
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('multi-select-option', S.OptionId(Id, Index))
+  end if;
   const Result: Cui.CuiMultiSelectResult := Frame.Window.MultiSelect(
     Token,
     Labels.ToArray(),
@@ -75,7 +77,11 @@ begin
         'multi-select-option',
         new Cui.CuiRectangle(),
         Enabled,
-        Value := if Selected[Index] then 'true' else 'false' end if
+        Value := if Selected[Index] then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end for;

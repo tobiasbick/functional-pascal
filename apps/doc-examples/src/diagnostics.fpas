@@ -51,9 +51,11 @@ begin
         for Source: M.Source in Prepared.Sources do
           if Source.Path.Equals(
             Path,
-            if S.OperatingSystem.IsWindows() then S.StringComparison.OrdinalIgnoreCase
-              else S.StringComparison.Ordinal
-              end if
+            if S.OperatingSystem.IsWindows() then
+              S.StringComparison.OrdinalIgnoreCase
+            else
+              S.StringComparison.Ordinal
+            end if
           ) and Number > 0 and Number <= Source.Lines.Length
           then
             const Origin: M.Origin := Source.Lines[Number - 1];

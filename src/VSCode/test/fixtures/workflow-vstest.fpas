@@ -27,9 +27,11 @@ public procedure CanCancel();
 begin
   const Base: string := Sys.AppContext.BaseDirectory;
   if Sys.IO.File.Exists(Sys.IO.Path.Combine(Base, 'wait-for-cancellation')) then
-    Sys.IO.File.WriteAllText(Sys.IO.Path.Combine(Base, 'waiting-test.pid'), Sys.Environment.ProcessId.ToString());
+    Sys.IO.File.WriteAllText(
+      Sys.IO.Path.Combine(Base, 'waiting-test.pid'),
+      Sys.Environment.ProcessId.ToString()
+    );
     Sys.Threading.Thread.Sleep(60000);
   end if;
 end procedure;
-
 end unit;

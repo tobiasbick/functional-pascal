@@ -26,13 +26,21 @@ begin
   const HourToken: string := C.Token('time-selector', Hours);
   const MinuteToken: string := C.Token('time-selector', Minutes);
   const Focus: int := if C.WantsFocus<TMsg>(Frame, Hours, HourToken, Accept)
-      or C.WantsFocus<TMsg>(Frame, Id, HourToken, Accept) then 1
-    elsif C.WantsFocus<TMsg>(Frame, Minutes, MinuteToken, Accept) then 2
-    else 0
-    end if;
+    or C.WantsFocus<TMsg>(Frame, Id, HourToken, Accept)
+  then
+    1
+  elsif C.WantsFocus<TMsg>(Frame, Minutes, MinuteToken, Accept) then
+    2
+  else
+    0
+  end if;
   const Proposed: Sys.TimeOnly := Frame.Window.TimeDial(
     C.Token('time-dial', Id), Value, Size, Accept, Focus,
-    if Frame.PaintingClosed then null else HourToken end if, MinuteToken, C.Token('time-face', Face)
+    if Frame.PaintingClosed then
+      null
+    else
+      HourToken
+    end if, MinuteToken, C.Token('time-face', Face)
   );
   if Proposed.Ticks <> Value.Ticks then
     Frame.Messages.Add(OnChange(Proposed));

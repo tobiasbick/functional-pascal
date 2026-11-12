@@ -6,9 +6,11 @@ procedure Run(Arguments: array of string);
 requires Arguments.Length = 3;
 begin
   const Software: bool := Arguments[1] = 'software';
-  const Renderer: Cui.CuiRenderer := if Software then Cui.CuiRenderer.Software
-    else Cui.CuiRenderer.OpenGl
-    end if;
+  const Renderer: Cui.CuiRenderer := if Software then
+    Cui.CuiRenderer.Software
+  else
+    Cui.CuiRenderer.OpenGl
+  end if;
   using const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPAS GUI probe',
     640,

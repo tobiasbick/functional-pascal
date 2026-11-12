@@ -50,7 +50,11 @@ public function Arrange<TMsg>(
 begin
   var Height: int := ContentHeight<TMsg>(Child, Area);
   var View: Viewport<TMsg> := Resolve<TMsg>(Position, Height, Area, ShowScrollbar, OnScroll);
-  const Width: int := Area.Width - (if View.Bar then 1 else 0 end if);
+  const Width: int := Area.Width - (if View.Bar then
+    1
+  else
+    0
+  end if);
   const Body: F.Rect := new F.Rect(Area.X, Area.Y, Width, Area.Height);
   if View.Bar then
     Height := Sys.Math.Max(Height, ContentHeight<TMsg>(Child, Body));
@@ -77,19 +81,31 @@ begin
   );
   const Start: int := cast<int>(cast<long>(View.Offset) * cast<long>(View.Rows - Thumb) div
     cast<long>(View.Maximum));
-  const TrackStyle: T.Style := if Widgets = null then Style
-    else new T.Style(Widgets.ScrollTrackColor, Style.Background)
-    end if;
-  const ThumbStyle: T.Style := if Widgets = null then Style
-    else new T.Style(Widgets.ScrollThumbColor, Style.Background)
-    end if;
+  const TrackStyle: T.Style := if Widgets = null then
+    Style
+  else
+    new T.Style(Widgets.ScrollTrackColor, Style.Background)
+  end if;
+  const ThumbStyle: T.Style := if Widgets = null then
+    Style
+  else
+    new T.Style(Widgets.ScrollThumbColor, Style.Background)
+  end if;
   for Row: int := 0 to View.Rows - 1 do
     const BarCell: F.Rect := new F.Rect(Area.X + Area.Width - 1, Area.Y + Row, 1, 1);
     const Active: bool := Row >= Start and Row < Start + Thumb;
     Operations.Add(
       new D.Operation(
-        if Active then '█' else '│' end if, BarCell, Clip,
-        if Active then ThumbStyle else TrackStyle end if, false
+        if Active then
+          '█'
+        else
+          '│'
+        end if, BarCell, Clip,
+        if Active then
+          ThumbStyle
+        else
+          TrackStyle
+        end if, false
       )
     );
   end for;

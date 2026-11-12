@@ -32,7 +32,11 @@ begin
     end if;
   end for;
   const Proposal: int := Frame.Window.Breadcrumb(
-    Tokens[0], Items, Allowed, Focus, if Frame.PaintingClosed then null else Tokens.ToArray() end if
+    Tokens[0], Items, Allowed, Focus, if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
   );
   if Proposal >= 0 then
     Frame.Messages.Add(OnNavigate(Proposal));
@@ -50,7 +54,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Items[Index], 'crumb', new Cui.CuiRectangle(), Allowed and not Current,
-        Key := Index.ToString(), Value := if Current then 'current' else '' end if
+        Key := Index.ToString(), Value := if Current then
+          'current'
+        else
+          ''
+        end if
       )
     );
   end for;

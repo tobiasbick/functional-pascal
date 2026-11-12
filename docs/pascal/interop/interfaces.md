@@ -25,10 +25,13 @@ type ConstantSource<T> = record implements IDisposableSource<T>
   public Value: T;
 
   public function Read(): T;
-  begin return self.Value; end function;
+  begin
+    return self.Value;
+  end function;
 
   public procedure Dispose();
-  begin end procedure;
+  begin
+  end procedure;
 end record;
 
 begin
@@ -36,6 +39,7 @@ begin
   if Source.Name <> 'answer' or Source.Read() <> 42 then
     raise new Sys.InvalidOperationException('Incorrect interface dispatch');
   end if;
+
   Console.WriteLine(Source.Read());
 end;
 end program;

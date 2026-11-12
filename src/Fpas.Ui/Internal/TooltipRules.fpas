@@ -138,7 +138,11 @@ begin
   end if;
 
   const Length: int := Text.Encoding.UTF8.GetByteCount(Caption) +
-    (if Shortcut = '' then 0 else 6 + Text.Encoding.UTF8.GetByteCount(Shortcut) end if);
+    (if Shortcut = '' then
+      0
+    else
+      6 + Text.Encoding.UTF8.GetByteCount(Shortcut)
+    end if);
   if Length > 255 then
     R.Reject(Location, 'Tooltip text and its shortcut must fit in 255 UTF-8 bytes.');
   end if;

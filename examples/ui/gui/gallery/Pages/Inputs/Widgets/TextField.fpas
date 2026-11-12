@@ -38,10 +38,13 @@ begin
     )
   );
   const Error: string := if Model.Password <> '' and Text.Encoding.UTF8.GetByteCount(
-      Model.Password
-    ) < 8 then 'Use 8 or more characters.'
-    else ''
-    end if;
+    Model.Password
+  ) < 8
+  then
+    'Use 8 or more characters.'
+  else
+    ''
+  end if;
   const Password: E.Element<State.Msg> := F.TextField<State.Msg>(
     'input-password', Model.Password, State.Msg.SetPassword,
     new F.Options(
@@ -53,7 +56,8 @@ begin
   const Query: E.Element<State.Msg> := Search.View(Model, Data);
   const About: E.Element<State.Msg> := Area.View(Model, Data);
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-  const Fields: array of E.Element<State.Msg> := if Wide then [
+  const Fields: array of E.Element<State.Msg> := if Wide then
+    [
       E.Row<State.Msg>(Flow, E.Size<State.Msg>(Name, Fill), E.Size<State.Msg>(Email, Fill)),
       E.Row<State.Msg>(
         Flow,
@@ -62,8 +66,9 @@ begin
       ),
       About
     ]
-    else [Name, Email, Password, Query, About]
-    end if;
+  else
+    [Name, Email, Password, Query, About]
+  end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
     G.Heading<State.Msg>('Text fields', 'Labels above, hints and errors below.'),

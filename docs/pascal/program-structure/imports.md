@@ -1,7 +1,8 @@
 # Imports and companion sources
 
 ```pascal fragment context=imports
-uses System as Sys,
+uses
+  System as Sys,
   System.Console as Console,
   System.Collections.Generic as Collections,
   Numerics.Geometry as Geometry;

@@ -45,7 +45,11 @@ begin
     return;
   end if;
 
-  const Message: string := if Error <> '' then Error else Hint end if;
+  const Message: string := if Error <> '' then
+    Error
+  else
+    Hint
+  end if;
   for Caption: string in [Label, Message, Prefix, Suffix] do
     if Caption <> '' then
       Frame.Labels.Add(Caption);
@@ -55,7 +59,11 @@ begin
   Frame.Controls.Add(
     new App.Control(
       Id, Label, Role, new Cui.CuiRectangle(), Enabled,
-      Value := if Password then '' else Result.Value end if
+      Value := if Password then
+        ''
+      else
+        Result.Value
+      end if
     )
   );
   if Result.ClearVisible then
@@ -67,7 +75,11 @@ begin
   if Result.RevealVisible then
     Frame.Controls.Add(
       new App.Control(
-        F.RevealId(Id), if Result.Revealed then 'Hide password' else 'Show password' end if,
+        F.RevealId(Id), if Result.Revealed then
+          'Hide password'
+        else
+          'Show password'
+        end if,
         'button', new Cui.CuiRectangle(), Enabled, Value := Result.Revealed.ToString()
       )
     );

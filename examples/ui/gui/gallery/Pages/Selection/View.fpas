@@ -35,12 +35,14 @@ begin
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    if Wide then E.Row<State.Msg>(
+    if Wide then
+      E.Row<State.Msg>(
         new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start),
         E.Size<State.Msg>(Checkboxes, Fill), E.Size<State.Msg>(Switches, Fill)
       )
-      else E.Column<State.Msg>(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
-      end if,
+    else
+      E.Column<State.Msg>(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
+    end if,
     G.Heading<State.Msg>('Radio group'),
     G.Card<State.Msg>(12, [RadioGroup.View(Model, Data)]),
     G.Heading<State.Msg>('Radio cards', 'For choices that need a sentence of explanation.'),

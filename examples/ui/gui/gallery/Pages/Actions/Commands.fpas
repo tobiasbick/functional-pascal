@@ -32,26 +32,31 @@ end function;
 public function ForAction(State: S.Model; Message: S.Msg): array of Mvu.Command<S.Msg>;
 begin
   return case Message of
-    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then [
-        SaveAfter(1400, Work.Status.Success)
-      ]
-      else []
-      end if;
-    when S.Msg.SetSaveStatus(const Value: Work.Status): if Value = Work.Status.Success then [
-        SaveAfter(1600, Work.Status.Idle)
-      ]
-      else []
-      end if;
+    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
+      [SaveAfter(1400, Work.Status.Success)]
+    else
+      []
+    end if;
+    when S.Msg.SetSaveStatus(const Value: Work.Status): if Value = Work.Status.Success then
+      [SaveAfter(1600, Work.Status.Idle)]
+    else
+      []
+    end if;
     when S.Msg.SwipeChoice(const At: Swipe.Side, const Index: int): [
       Toasts.Show<S.Msg>(
-        if At = Swipe.Side.Left then 'Marked as done'
-          elsif Index = 0 then 'Archived'
-          else 'Deleted'
-          end if,
+        if At = Swipe.Side.Left then
+          'Marked as done'
+        elsif Index = 0 then
+          'Archived'
+        else
+          'Deleted'
+        end if,
         new Toasts.Options(
-          Appearance := if At = Swipe.Side.Right and Index = 1 then Toasts.Tone.Danger
-            else Toasts.Tone.Success
-            end if
+          Appearance := if At = Swipe.Side.Right and Index = 1 then
+            Toasts.Tone.Danger
+          else
+            Toasts.Tone.Success
+          end if
         )
       )
     ];

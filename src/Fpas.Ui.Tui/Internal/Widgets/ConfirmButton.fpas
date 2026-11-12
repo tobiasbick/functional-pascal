@@ -131,9 +131,11 @@ type Action<TMsg> = record implements A.IActivatable<TMsg>
   // No action while arming, otherwise the confirmed message.
   public function Activate(): A.Result<TMsg>;
   begin
-    return if self.Tracking.Activate(self.Id, self.Timeout) then A.Result<TMsg>.Send(self.Message)
-      else A.Result<TMsg>.NoAction
-      end if;
+    return if self.Tracking.Activate(self.Id, self.Timeout) then
+      A.Result<TMsg>.Send(self.Message)
+    else
+      A.Result<TMsg>.NoAction
+    end if;
   end function;
 end record;
 
@@ -153,18 +155,41 @@ public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: 
 begin
   Tracking.Configure(Id, Settings.TimeoutMilliseconds, Settings.Enabled);
   const Left: int := Tracking.Remaining(Id);
-  const Caption: string := if Left > 0 then Settings.ConfirmLabel + ' (' + Left.ToString() + 's)'
-    elsif Settings.TerminalIcon <> '' then Settings.TerminalIcon + ' ' + Label
-    else Label
-    end if;
+  const Caption: string := if Left > 0 then
+    Settings.ConfirmLabel + ' (' + Left.ToString() + 's)'
+  elsif Settings.TerminalIcon <> '' then
+    Settings.TerminalIcon + ' ' + Label
+  else
+    Label
+  end if;
   return E.Element<TMsg>.Action(
     Id, new Action<TMsg>(Id, Message, Settings.TimeoutMilliseconds, Tracking), Settings.Enabled,
     new E.ActionView(
-      Caption, Name := if Left > 0 then Settings.ConfirmLabel else Label end if,
-      Role := 'confirm-button', Value := if Left > 0 then 'armed' else '' end if,
-      Variant := if Left > 0 then S.ButtonVariant.Destructive else Settings.Variant end if,
-      Height := if Settings.ControlSize = B.Size.Large then 2 else 1 end if, ArrowFocus := false,
-      Hint := if Left > 0 then 'Activate again to confirm; Escape cancels' else '' end if
+      Caption, Name := if Left > 0 then
+        Settings.ConfirmLabel
+      else
+        Label
+      end if,
+      Role := 'confirm-button', Value := if Left > 0 then
+        'armed'
+      else
+        ''
+      end if,
+      Variant := if Left > 0 then
+        S.ButtonVariant.Destructive
+      else
+        Settings.Variant
+      end if,
+      Height := if Settings.ControlSize = B.Size.Large then
+        2
+      else
+        1
+      end if, ArrowFocus := false,
+      Hint := if Left > 0 then
+        'Activate again to confirm; Escape cancels'
+      else
+        ''
+      end if
     )
   );
 end function;
@@ -181,7 +206,11 @@ end function;
 public function Reconcile<TMsg>(Tracking: State; Layout: Scene.Layout<TMsg>): bool;
 begin
   const Active: Scene.Scope<TMsg>? := Layout.Active;
-  const Scope: string := if Active = null then '' else Active.Id end if;
+  const Scope: string := if Active = null then
+    ''
+  else
+    Active.Id
+  end if;
   var Changed: bool := false;
   for Id: string in Tracking.Ids() do
     const Control: Scene.Control<TMsg>? := Scene.FindControl<TMsg>(Layout, Id);

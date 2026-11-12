@@ -42,7 +42,8 @@ public sealed class HandbookTests
         var paths = new[] { "docs", "examples", "apps", "integrations", "sdk", "src", "tests", "third-party", ".agents", ".claude" }
             .Where(directory => Directory.Exists(Path.Combine(repository, directory))).SelectMany(directory =>
             Directory.GetFiles(Path.Combine(repository, directory), "*.md", SearchOption.AllDirectories))
-            .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/').Any(part => part is "bin" or "obj" or "node_modules"))
+            .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/')
+                .Any(part => part is "bin" or "obj" or "node_modules" or ".vscode-test"))
             .Concat(new[] { "README.md", "CONTRIBUTING.md", "AGENTS.md" }.Select(path => Path.Combine(repository, path)));
         DocumentationLinks.Validate(paths);
     }

@@ -3,8 +3,10 @@
 Declare a .NET Task result and await supported .NET operations inside the body.
 
 ```pascal fragment context=async-declarations
-async function Download(Address: string;
-  Cancellation: Threading.CancellationToken): Tasks.Task<string>;
+async function Download(
+  Address: string;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<string>;
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();
   return await Client.GetStringAsync(Address, Cancellation);

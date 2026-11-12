@@ -20,29 +20,45 @@ begin
     Menus.Close();
   end if;
   const Variant: S.ButtonVariant := if Settings.Variant <>
-      S.ButtonVariant.Default then Settings.Variant
-    elsif Settings.IconOnly then S.ButtonVariant.Ghost
-    else S.ButtonVariant.Secondary
-    end if;
-  const Caption: string := if Settings.IconOnly then (if Settings.TerminalIcon = '' then Label
-      else Settings.TerminalIcon
-      end if)
-    else (if Settings.TerminalIcon = '' then ''
-      else Settings.TerminalIcon + ' '
-      end if) + Label + ' ⌄'
-    end if;
+    S.ButtonVariant.Default
+  then
+    Settings.Variant
+  elsif Settings.IconOnly then
+    S.ButtonVariant.Ghost
+  else
+    S.ButtonVariant.Secondary
+  end if;
+  const Caption: string := if Settings.IconOnly then
+    (if Settings.TerminalIcon = '' then
+      Label
+    else
+      Settings.TerminalIcon
+    end if)
+  else
+    (if Settings.TerminalIcon = '' then
+      ''
+    else
+      Settings.TerminalIcon + ' '
+    end if) + Label + ' ⌄'
+  end if;
   const Trigger: E.Element<TMsg> := E.Element<TMsg>.Action(
     Id, new Popup.Trigger<TMsg>(Id, Menus), Settings.Enabled,
     new E.ActionView(
       Caption,
       Name := Label,
       Role := 'menu',
-      Value := if Menus.Id() = Id then 'true' else 'false' end if,
+      Value := if Menus.Id() = Id then
+        'true'
+      else
+        'false'
+      end if,
       Variant := Variant,
       ArrowFocus := false,
-      Hint := if Settings.IconOnly then Label
-        else ''
-        end if
+      Hint := if Settings.IconOnly then
+        Label
+      else
+        ''
+      end if
     )
   );
   if Menus.Id() <> Id then
@@ -56,12 +72,14 @@ begin
     Popup.Initial<TMsg>(Id, Entries),
     Menus.Close,
     Settings.Position,
-    if Settings.Width = 0.0 then 0
-      else cast<int>(Sys.Math.Min(
+    if Settings.Width = 0.0 then
+      0
+    else
+      cast<int>(Sys.Math.Min(
         2147483647.0,
         Sys.Math.Ceiling(Settings.Width / 8.0)
       ))
-      end if
+    end if
   );
 end function;
 end unit;

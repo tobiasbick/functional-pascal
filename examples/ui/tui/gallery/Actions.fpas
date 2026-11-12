@@ -23,12 +23,14 @@ begin
         E.Text<State.Msg>('Confirm before destroying, and show the result of work in place.'),
         S.Role.Secondary
       ),
-      if Wide then E.Row<State.Msg>(
+      if Wide then
+        E.Row<State.Msg>(
           new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12)), Align := L.Alignment.Start),
           Confirm.View(Model), Status.View(Model)
         )
-        else E.Column<State.Msg>(Confirm.View(Model), Status.View(Model))
-        end if
+      else
+        E.Column<State.Msg>(Confirm.View(Model), Status.View(Model))
+      end if
     ),
     Theme.View(Model)
   );

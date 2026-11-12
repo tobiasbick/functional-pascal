@@ -100,7 +100,11 @@ begin
   );
   const Save: E.Element<State.Msg> := B.Button<State.Msg>(
     'save',
-    if Model.ButtonLoading then 'Saving' else 'Save changes' end if,
+    if Model.ButtonLoading then
+      'Saving'
+    else
+      'Save changes'
+    end if,
     State.Msg.SetButtonLoading(true),
     new B.Options(Loading := Model.ButtonLoading, Variant := S.ButtonVariant.Primary)
   );
@@ -128,7 +132,8 @@ begin
   const Danger: E.Element<State.Msg> := Sample('danger', 'Danger', S.ButtonVariant.Destructive);
   const Link: E.Element<State.Msg> := Sample('link', 'Link', S.ButtonVariant.Link);
 
-  const Variants: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+  const Variants: E.Element<State.Msg> := if Wide then
+    E.Row<State.Msg>(
       Row,
       Primary,
       Secondary,
@@ -137,13 +142,15 @@ begin
       Danger,
       Link
     )
-    else E.Column<State.Msg>(
+  else
+    E.Column<State.Msg>(
       Stack,
       E.Row<State.Msg>(Row, Primary, Secondary, Outline),
       E.Row<State.Msg>(Row, Ghost, Danger, Link)
     )
-    end if;
-  const Icons: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+  end if;
+  const Icons: E.Element<State.Msg> := if Wide then
+    E.Row<State.Msg>(
       Row,
       Project,
       Download,
@@ -153,33 +160,38 @@ begin
       Like,
       Delete
     )
-    else E.Column<State.Msg>(
+  else
+    E.Column<State.Msg>(
       Stack,
       E.Row<State.Msg>(Row, Project, Download),
       E.Row<State.Msg>(Row, Continue, CopyIcon, Share, Like, Delete)
     )
-    end if;
-  const States: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+  end if;
+  const States: E.Element<State.Msg> := if Wide then
+    E.Row<State.Msg>(
       Row,
       Save,
       Reset,
       Disabled,
       Selected
     )
-    else E.Column<State.Msg>(
+  else
+    E.Column<State.Msg>(
       Stack,
       E.Row<State.Msg>(Row, Save, Reset),
       E.Row<State.Msg>(Row, Disabled, Selected)
     )
-    end if;
-  const GroupAndCopy: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+  end if;
+  const GroupAndCopy: E.Element<State.Msg> := if Wide then
+    E.Row<State.Msg>(
       Row,
       Group.View(Model),
       Copy.View(),
       Hold.View(Model)
     )
-    else E.Column<State.Msg>(Stack, Group.View(Model), Copy.View(), Hold.View(Model))
-    end if;
+  else
+    E.Column<State.Msg>(Stack, Group.View(Model), Copy.View(), Hold.View(Model))
+  end if;
 
   return E.Column<State.Msg>(
     new L.Flow(Gap := L.Spacing.Normal),

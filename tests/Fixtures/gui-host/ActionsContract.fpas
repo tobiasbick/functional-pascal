@@ -56,7 +56,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 
   procedure Focus(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
   begin
-    Target := if Key = '' then Id else Id + '/' + Key end if;
+    Target := if Key = '' then
+      Id
+    else
+      Id + '/' + Key
+    end if;
     A.Send(Session, State.Msg.Preview);
     Target := '';
     A.Check(

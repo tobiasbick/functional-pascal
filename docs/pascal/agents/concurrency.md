@@ -46,7 +46,8 @@ in supported catch/finally bodies, but not exception filters.
 ```pascal
 async program AgentAsync;
 
-uses System as Sys, System.Console as Console, System.IO as IO,
+uses
+  System as Sys, System.Console as Console, System.IO as IO,
   System.Threading as Threading, System.Threading.Tasks as Tasks;
 
 async function DoubleAfter(Value: int; Cancellation: Threading.CancellationToken): Tasks.Task<int>;
@@ -59,8 +60,7 @@ begin
 end function;
 
 begin
-  using const Cancellation: Threading.CancellationTokenSource :=
-    new Threading.CancellationTokenSource();
+  using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
   const Work: Tasks.Task<int> := DoubleAfter(21, Cancellation.Token);
   const Other: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int => 7);
   const Pending: array of Tasks.Task<int> := [Work, Other];
@@ -68,11 +68,15 @@ begin
   begin
     await using const Stream: IO.MemoryStream := new IO.MemoryStream();
     Stream.WriteByte(65);
-    if Stream.Length <> 1L then raise new Sys.InvalidOperationException('Incorrect stream'); end if;
+    if Stream.Length <> 1L then
+      raise new Sys.InvalidOperationException('Incorrect stream');
+    end if;
   end;
+
   if Results[0] <> 42 or Results[1] <> 7 then
     raise new Sys.InvalidOperationException('Incorrect async results');
   end if;
+
   Console.WriteLine('Async verified');
 end;
 end program;

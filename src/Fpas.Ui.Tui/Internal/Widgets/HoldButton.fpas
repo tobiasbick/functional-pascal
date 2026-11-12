@@ -72,7 +72,11 @@ begin
   var Shown: int := 0;
   return new State(
     Press, Release, Cancel, function(): string => Id,
-    function(ControlId: string): int => if Id = ControlId then Shown else 0 end if,
+    function(ControlId: string): int => if Id = ControlId then
+      Shown
+    else
+      0
+    end if,
     Refresh
   );
 end function;
@@ -92,13 +96,18 @@ end function;
 public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Holds.Options; Tracking: State): E.Element<TMsg>;
 begin
   const Progress: int := Tracking.Progress(Id);
-  const Caption: string := if Settings.TerminalIcon = '' then Label
-    else Settings.TerminalIcon + ' ' + Label
-    end if;
+  const Caption: string := if Settings.TerminalIcon = '' then
+    Label
+  else
+    Settings.TerminalIcon + ' ' + Label
+  end if;
   const Variant: S.ButtonVariant := if Settings.Variant =
-      S.ButtonVariant.Default then S.ButtonVariant.Destructive
-    else Settings.Variant
-    end if;
+    S.ButtonVariant.Default
+  then
+    S.ButtonVariant.Destructive
+  else
+    Settings.Variant
+  end if;
   return E.Element<TMsg>.Action(
     Id, new A.Direct<TMsg>(Message), Settings.Enabled,
     new E.ActionView(

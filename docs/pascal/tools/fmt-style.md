@@ -115,9 +115,13 @@ is introduced.
 
 Binary expressions retain authored operand breaks and gain breaks for the width
 target. Logical `and`, `or` and `xor` begin continuation lines; other operators
-end the preceding line. A multiline statement condition puts `then` on its own
-line aligned with `if`/`elsif`. Conditional expressions expand their branches
-when multiline or over the target. Case expressions use structural arm lines.
+end the preceding line. A multiline `if` condition puts `then` on its own line.
+In statements and expressions, each `then` and `else` starts a branch on the next
+line, indented two spaces. `elsif`, `else` and `end if` align with the line that
+starts the `if`, including after `return`, an assignment or a `when` header.
+A single-element array branch stays on one line if the element is single-line,
+the array fits the width target, and it has no internal comments or blank lines.
+Case expressions use structural arm lines.
 
 All `//` comments retain their order and text, except trailing whitespace.
 Standalone comments stay before the following token; trailing comments stay on

@@ -253,7 +253,11 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     );
   end procedure;
 begin
-  const Primary: int := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+  const Primary: int := if Sys.OperatingSystem.IsMacOS() then
+    8
+  else
+    2
+  end if;
   var X: float := -1.0F;
   var Y: float := -1.0F;
   var Left: int := -1;

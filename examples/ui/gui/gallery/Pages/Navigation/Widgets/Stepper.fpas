@@ -32,8 +32,16 @@ begin
       new B.Options(Enabled := Model.ActiveStep > 0)
     ),
     B.Button<State.Msg>(
-      'step-next', if Last then 'Finish' else 'Next' end if,
-      if Last then State.Msg.FinishSteps else State.Msg.SetStep(Model.ActiveStep + 1) end if,
+      'step-next', if Last then
+        'Finish'
+      else
+        'Next'
+      end if,
+      if Last then
+        State.Msg.FinishSteps
+      else
+        State.Msg.SetStep(Model.ActiveStep + 1)
+      end if,
       new B.Options(
         Variant := S.ButtonVariant.Primary,
         IconRight := Sys.Char.ConvertFromUtf32($E049)

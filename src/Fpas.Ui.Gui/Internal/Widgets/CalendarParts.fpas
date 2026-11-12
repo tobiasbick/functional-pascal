@@ -6,14 +6,20 @@ uses
 
 function Kind(Part: int): string;
 begin
-  return if Part >= 0 then 'calendar-day' else 'calendar-month' end if;
+  return if Part >= 0 then
+    'calendar-day'
+  else
+    'calendar-month'
+  end if;
 end function;
 
 function Identity(Id: string; Part: int): string;
 begin
-  return if Part >= 0 then Calendar.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
-    else Calendar.MonthId(Id, Part = -9)
-    end if;
+  return if Part >= 0 then
+    Calendar.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
+  else
+    Calendar.MonthId(Id, Part = -9)
+  end if;
 end function;
 
 // Maps a native calendar part to its snapshot token.
@@ -57,17 +63,24 @@ begin
   if Frame.PaintingClosed then
     return;
   end if;
-  const Display: string := if Value = null then '' else Iso(Value ?? Sys.DateOnly.MinValue) end if;
+  const Display: string := if Value = null then
+    ''
+  else
+    Iso(Value ?? Sys.DateOnly.MinValue)
+  end if;
   Frame.Controls.Add(
     new App.Control(
       Id, Label, Role, new Cui.CuiRectangle(), Enabled, Value := Display
     )
   );
   for Part: int in Result.VisibleParts do
-    const Caption: string := if Part >= 0 then Iso(Sys.DateOnly.FromDayNumber(Part))
-      elsif Part = -8 then 'Previous month'
-      else 'Next month'
-      end if;
+    const Caption: string := if Part >= 0 then
+      Iso(Sys.DateOnly.FromDayNumber(Part))
+    elsif Part = -8 then
+      'Previous month'
+    else
+      'Next month'
+    end if;
     Frame.Controls.Add(
       new App.Control(
         Identity(Id, Part), Caption, Kind(Part), new Cui.CuiRectangle(), Enabled

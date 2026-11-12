@@ -14,9 +14,21 @@ function Items(ShowResult: bool): array of Split.Item<State.Msg>;
   function Item(Key: string; Caption: string; Glyph: int; TerminalIcon: string): Split.Item<State.Msg>;
   begin
     return new Split.Item<State.Msg>(
-      Key, Caption, if ShowResult then State.Msg.SplitChoice(Caption) else State.Msg.Preview end if,
-      if ShowResult then Sys.Char.ConvertFromUtf32(Glyph) else '' end if,
-      if ShowResult then TerminalIcon else '' end if
+      Key, Caption, if ShowResult then
+        State.Msg.SplitChoice(Caption)
+      else
+        State.Msg.Preview
+      end if,
+      if ShowResult then
+        Sys.Char.ConvertFromUtf32(Glyph)
+      else
+        ''
+      end if,
+      if ShowResult then
+        TerminalIcon
+      else
+        ''
+      end if
     );
   end function;
 begin
@@ -48,9 +60,11 @@ begin
       TerminalIcon := '↓'
     )
   );
-  const Content: array of E.Element<State.Msg> := if Model.SplitResult = '' then [Save, Export]
-    else [Save, Export, E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)]
-    end if;
+  const Content: array of E.Element<State.Msg> := if Model.SplitResult = '' then
+    [Save, Export]
+  else
+    [Save, Export, E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)]
+  end if;
   return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
 end function;
 end unit;

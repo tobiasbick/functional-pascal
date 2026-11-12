@@ -20,15 +20,20 @@ public procedure Draw<TMsg>(
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;
   const Role: string := 'calendar';
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Part: int): string => Parts.Token(Id, Part)
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
   const Previous: string := Calendar.MonthId(Id, false);
   const Following: string := Calendar.MonthId(Id, true);
-  const Focus: int := if C.WantsFocus<TMsg>(Frame, Previous, Parts.Token(Id, -8), Accept) then 1
-    elsif C.WantsFocus<TMsg>(Frame, Following, Parts.Token(Id, -9), Accept) then 2
-    else 0
-    end if;
+  const Focus: int := if C.WantsFocus<TMsg>(Frame, Previous, Parts.Token(Id, -8), Accept) then
+    1
+  elsif C.WantsFocus<TMsg>(Frame, Following, Parts.Token(Id, -9), Accept) then
+    2
+  else
+    0
+  end if;
   const Result: Cui.CuiCalendarResult := Frame.Window.Calendar(
     C.Token(Role, Id), Value, Accept, Focus, Track
   );

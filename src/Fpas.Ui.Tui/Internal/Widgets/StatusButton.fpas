@@ -10,14 +10,20 @@ begin
   const Base: T.Style := Paint.Resolve(Theme, Variant, true) ?? Theme.Text;
   const Back: int := Base.Background ?? Theme.Text.Background ?? 0;
   const Tone: int := Th.Rgb(
-    if State = B.Status.Success then Theme.Colors.Success else Theme.Colors.Danger end if,
+    if State = B.Status.Success then
+      Theme.Colors.Success
+    else
+      Theme.Colors.Danger
+    end if,
     Back
   );
   const Filled: bool := Variant = S.ButtonVariant.Primary
     or (State = B.Status.Error and Variant = S.ButtonVariant.Destructive);
-  const Normal: T.Style := if Filled then new T.Style(Theme.Text.Background, Tone)
-    else new T.Style(Tone, Base.Background)
-    end if;
+  const Normal: T.Style := if Filled then
+    new T.Style(Theme.Text.Background, Tone)
+  else
+    new T.Style(Tone, Base.Background)
+  end if;
   return new Th.ButtonAppearance(
     Normal, new T.Style(Normal.Background ?? Back, Normal.Foreground),
     new T.Style(Tone, Th.Rgb(Theme.Colors.Hover, Back))
@@ -47,17 +53,32 @@ begin
     else '!';
   end case;
   const Variant: S.ButtonVariant := if Settings.Variant =
-      S.ButtonVariant.Default then S.ButtonVariant.Primary
-    else Settings.Variant
-    end if;
+    S.ButtonVariant.Default
+  then
+    S.ButtonVariant.Primary
+  else
+    Settings.Variant
+  end if;
   const Large: bool := Settings.ControlSize = Buttons.Size.Large;
   return E.Element<TMsg>.Action(
     Id, new A.Direct<TMsg>(Message, State <> B.Status.Idle), Settings.Enabled,
     new E.ActionView(
-      (if Icon = '' then '' else Icon + ' ' end if) + Caption,
+      (if Icon = '' then
+        ''
+      else
+        Icon + ' '
+      end if) + Caption,
       Name := Caption, Role := 'status-button', Value := Text.Value(State), Variant := Variant,
-      ArrowFocus := false, Padding := if Large then 2 else 1 end if,
-      Height := if Large then 2 else 1 end if, Appearance := Feedback(State, Variant, Theme)
+      ArrowFocus := false, Padding := if Large then
+        2
+      else
+        1
+      end if,
+      Height := if Large then
+        2
+      else
+        1
+      end if, Appearance := Feedback(State, Variant, Theme)
     )
   );
 end function;

@@ -20,23 +20,37 @@ uses System as Sys, System.Console as Console, System.Globalization as Global;
 function ReadPercent(Text: string): int;
 begin
   var Value: double := 0.0;
-  if not double.TryParse(Text, Global.NumberStyles.Float,
-    Global.CultureInfo.InvariantCulture, out Value) or not double.IsFinite(Value) then
+  if not double.TryParse(
+    Text, Global.NumberStyles.Float,
+    Global.CultureInfo.InvariantCulture, out Value
+  ) or not double.IsFinite(Value)
+  then
     raise new Sys.FormatException('Invalid percentage');
   end if;
-  return cast<int>(Sys.Math.Round(Sys.Math.Clamp(Value, 0.0, 100.0), Sys.MidpointRounding.AwayFromZero));
+
+  return cast<int>(Sys.Math.Round(
+    Sys.Math.Clamp(Value, 0.0, 100.0),
+    Sys.MidpointRounding.AwayFromZero
+  ));
 end function;
 
 begin
   const Culture: Global.CultureInfo := Global.CultureInfo.InvariantCulture;
   var Quantity: decimal := 0.0M;
-  if not decimal.TryParse('12.345', Global.NumberStyles.AllowDecimalPoint, Culture, out Quantity) then
+  if not decimal.TryParse(
+    '12.345',
+    Global.NumberStyles.AllowDecimalPoint,
+    Culture,
+    out Quantity
+  )
+  then
     raise new Sys.FormatException('Invalid quantity');
   end if;
   const Even: decimal := decimal.Round(Quantity, 2, Sys.MidpointRounding.ToEven);
   const Away: decimal := decimal.Round(Quantity, 2, Sys.MidpointRounding.AwayFromZero);
-  if Even <> 12.34M or Away <> 12.35M or ReadPercent('-4.2') <> 0 or
-    ReadPercent('110.2') <> 100 or ReadPercent('42.5') <> 43 then
+  if Even <> 12.34M or Away <> 12.35M or ReadPercent('-4.2') <> 0
+    or ReadPercent('110.2') <> 100 or ReadPercent('42.5') <> 43
+  then
     raise new Sys.InvalidOperationException('Incorrect rounding or bounds');
   end if;
   var Rejected: int := 0;
@@ -47,7 +61,11 @@ begin
       Rejected := Rejected + 1;
     end try;
   end for;
-  if Rejected <> 4 then raise new Sys.InvalidOperationException('Invalid percentage accepted'); end if;
+
+  if Rejected <> 4 then
+    raise new Sys.InvalidOperationException('Invalid percentage accepted');
+  end if;
+
   Console.WriteLine(Even.ToString('0.00', Culture));
   Console.WriteLine(Away.ToString('0.00', Culture));
   Console.WriteLine(ReadPercent('42.5'));
@@ -83,7 +101,9 @@ uses System as Sys, System.Console as Console, System.Security.Cryptography as C
 
 begin
   const Replay: Sys.Random := new Sys.Random(1729);
-  for Index: int := 1 to 3 do Console.WriteLine(Replay.Next(1, 7)); end for;
+  for Index: int := 1 to 3 do
+    Console.WriteLine(Replay.Next(1, 7));
+  end for;
   const Die: int := Sys.Random.Shared.Next(1, 7);
   const Names: array of string := ['North', 'East', 'West'];
   const Choice: int := Crypto.RandomNumberGenerator.GetInt32(0, Names.Length);
@@ -91,6 +111,7 @@ begin
   if Die < 1 or Die >= 7 or Choice < 0 or Choice >= Names.Length or Bytes.Length <> 16 then
     raise new Sys.InvalidOperationException('Incorrect random range or buffer');
   end if;
+
   Console.WriteLine('Random values verified');
 end;
 end program;

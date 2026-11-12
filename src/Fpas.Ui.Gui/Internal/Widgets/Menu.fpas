@@ -18,10 +18,13 @@ uses
 public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Entries: array of M.Entry<TMsg>; Settings: M.Options?; Enabled: bool; Account: U.Options? := null);
 begin
   const Accept: bool := Enabled and State.AcceptInput;
-  const Role: string := if Account <> null then 'user-menu'
-    elsif Settings = null then 'context-menu'
-    else 'menu'
-    end if;
+  const Role: string := if Account <> null then
+    'user-menu'
+  elsif Settings = null then
+    'context-menu'
+  else
+    'menu'
+  end if;
   const Token: string := C.Token(Role, Id);
   const Rows: Lists.List<Cui.CuiMenuEntry> := new Lists.List<Cui.CuiMenuEntry>();
   const Tokens: Lists.List<string> := new Lists.List<string>();
@@ -50,16 +53,27 @@ begin
         Tokens.Add('');
     end case;
   end for;
-  const Result: Cui.CuiMenuResult := if Account <> null then State.Window.UserMenu(
+  const Result: Cui.CuiMenuResult := if Account <> null then
+    State.Window.UserMenu(
       Token, Label, Account.Detail, Account.Status, Account.Compact, Rows.ToArray(),
       cast<int>(Account.Position), Account.Width, Accept,
       C.WantsFocus<TMsg>(State, Id, Token, Accept),
-      if State.PaintingClosed then null else Tokens.ToArray() end if
+      if State.PaintingClosed then
+        null
+      else
+        Tokens.ToArray()
+      end if
     )
-    elsif Settings = null then State.Window.ContextMenu(
-      Token, Rows.ToArray(), Accept, if State.PaintingClosed then null else Tokens.ToArray() end if
+  elsif Settings = null then
+    State.Window.ContextMenu(
+      Token, Rows.ToArray(), Accept, if State.PaintingClosed then
+        null
+      else
+        Tokens.ToArray()
+      end if
     )
-    else State.Window.Menu(
+  else
+    State.Window.Menu(
       Token,
       Label,
       Settings.Icon,
@@ -70,9 +84,13 @@ begin
       Settings.IconOnly,
       Accept,
       C.WantsFocus<TMsg>(State, Id, Token, Accept),
-      if State.PaintingClosed then null else Tokens.ToArray() end if
+      if State.PaintingClosed then
+        null
+      else
+        Tokens.ToArray()
+      end if
     )
-    end if;
+  end if;
   if Result.Choice >= 0 then
     case Entries[Result.Choice] of
       when M.Entry.Action(const Item: M.Item<TMsg>):
@@ -92,7 +110,11 @@ begin
       Role,
       new Cui.CuiRectangle(),
       Accept,
-      Value := if Result.Open then 'true' else 'false' end if
+      Value := if Result.Open then
+        'true'
+      else
+        'false'
+      end if
     )
   );
   if Result.Open then
@@ -106,7 +128,11 @@ begin
               'menu-item',
               new Cui.CuiRectangle(),
               Accept and Item.Enabled,
-              Value := if Index = Result.Highlighted then 'true' else 'false' end if
+              Value := if Index = Result.Highlighted then
+                'true'
+              else
+                'false'
+              end if
             )
           );
         else

@@ -32,22 +32,26 @@ or timeout policy is invented by the compiler.
 ```pascal
 async program DownloadPage;
 
-uses System as Sys,
+uses
+  System as Sys,
   System.Console as Console,
   System.Net.Http as Http,
   System.Threading as Threading,
   System.Threading.Tasks as Tasks;
 
-async function Download(Address: string;
-  Cancellation: Threading.CancellationToken): Tasks.Task<string>;
+async function Download(
+  Address: string;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<string>;
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();
   return await Client.GetStringAsync(Address, Cancellation);
 end function;
 
 begin
-  using const Cancellation: Threading.CancellationTokenSource :=
-    new Threading.CancellationTokenSource(Sys.TimeSpan.FromSeconds(5.0));
+  using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(
+    Sys.TimeSpan.FromSeconds(5.0)
+  );
   try
     const Text: string := await Download('https://example.com/', Cancellation.Token);
     Console.WriteLine(Text.Length);

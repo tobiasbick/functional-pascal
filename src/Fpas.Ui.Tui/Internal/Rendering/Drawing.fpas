@@ -37,17 +37,23 @@ end procedure;
 
 function BorderStyle(Style: T.Style; Widgets: Th.WidgetStyles?): T.Style;
 begin
-  return if Widgets = null then Style
-    else new T.Style(
+  return if Widgets = null then
+    Style
+  else
+    new T.Style(
       Widgets.BorderColor,
       Style.Background
     )
-    end if;
+  end if;
 end function;
 
 function HorizontalEdge(Widgets: Th.WidgetStyles?): char;
 begin
-  return if Widgets = null then #45 else #9472 end if;
+  return if Widgets = null then
+    #45
+  else
+    #9472
+  end if;
 end function;
 
 public procedure Divider(
@@ -63,13 +69,19 @@ begin
     Caption := Normalized.Substring(0, G.IndexAt(Normalized, 0, Width - 4));
   end if;
 
-  const Prefix: string := if Caption = '' then ''
-    else new string(
+  const Prefix: string := if Caption = '' then
+    ''
+  else
+    new string(
       Edge,
       1
     ) + ' ' + Caption + ' '
-    end if;
-  const Length: int := if Prefix = '' then 0 else G.Measure(Prefix) end if;
+  end if;
+  const Length: int := if Prefix = '' then
+    0
+  else
+    G.Measure(Prefix)
+  end if;
   const Line: F.Rect := new F.Rect(Area.X, Area.Y, Width, 1);
   Operations.Add(
     new Operation(
@@ -94,13 +106,27 @@ begin
   const Color: T.Style := BorderStyle(Style, Widgets);
   const Rounded: bool := Widgets <> null;
   const Edge: char := HorizontalEdge(Widgets);
-  const Vertical: string := if Rounded then '│' else '|' end if;
+  const Vertical: string := if Rounded then
+    '│'
+  else
+    '|'
+  end if;
   const Inner: int := Sys.Math.Max(0, Area.Width - 2);
   const Span: string := new string(Edge, Inner);
-  const Top: string := if Rounded then '╭' + Span + '╮' else '+' + Span + '+' end if;
+  const Top: string := if Rounded then
+    '╭' + Span + '╮'
+  else
+    '+' + Span + '+'
+  end if;
   Line(Top, Area.X, Area.Y, Area.Width);
   if Title.Length > 0 and Inner > 0 then
-    Line(if Rounded then ' ' + Title + ' ' else Title end if, Area.X + 1, Area.Y, Inner);
+    Line(
+      if Rounded then
+        ' ' + Title + ' '
+      else
+        Title
+      end if, Area.X + 1, Area.Y, Inner
+    );
   end if;
 
   for Row: int := Sys.Math.Max(Clip.Y, Area.Y + 1) to Sys.Math.Min(
@@ -113,7 +139,11 @@ begin
   end for;
 
   if Area.Height > 1 then
-    const Bottom: string := if Rounded then '╰' + Span + '╯' else '+' + Span + '+' end if;
+    const Bottom: string := if Rounded then
+      '╰' + Span + '╯'
+    else
+      '+' + Span + '+'
+    end if;
     Line(Bottom, Area.X, Area.Y + Area.Height - 1, Area.Width);
   end if;
 end procedure;
@@ -253,12 +283,15 @@ begin
   for Row: int := 0 to Rows - 1 do
     const Plan: array of Operation := Pending[Row].ToArray();
     const Complete: PaintedRow := if Row < Previous.Length and Previous[Row].Cells.Length = Columns
-        and Previous[Row].DefaultStyle = DefaultStyle and Same(
-        Plan,
-        Previous[Row].Operations
-      ) then Previous[Row]
-      else PaintRow(Plan, Columns, Row, Blank)
-      end if;
+      and Previous[Row].DefaultStyle = DefaultStyle and Same(
+      Plan,
+      Previous[Row].Operations
+    )
+    then
+      Previous[Row]
+    else
+      PaintRow(Plan, Columns, Row, Blank)
+    end if;
     Painted.Add(Complete);
     Cells.AddRange(Complete.Cells);
     Lines.Add(Complete.Text);

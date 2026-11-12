@@ -68,13 +68,17 @@ are no built-in Numeric/Printable constraints or runtime reflection fallback.
 
 ```pascal
 program GenericArithmetic;
+
 uses System.Numerics as N, System.Console as Console;
 
 function Sum<T>(Values: array of T): T;
 where T: N.INumber<T>;
 begin
   var Total: T := T.Zero;
-  for Value: T in Values do Total := Total + Value; end for;
+  for Value: T in Values do
+    Total := Total + Value;
+  end for;
+
   return Total;
 end function;
 

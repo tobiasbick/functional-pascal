@@ -21,9 +21,11 @@ begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'date-picker';
   const Token: string := C.Token(Role, Id);
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Part: int): string => Parts.Token(Id, Part)
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
   const Result: Cui.CuiCalendarResult := Frame.Window.DatePicker(
     Token, Value, Settings.Label, Settings.Placeholder, Settings.Width, Accept,
     C.WantsFocus<TMsg>(Frame, Id, Token, Accept), Track
@@ -31,7 +33,11 @@ begin
   if Settings.Label <> '' and not Frame.PaintingClosed then
     Frame.Labels.Add(Settings.Label);
   end if;
-  const Label: string := if Settings.Label = '' then 'Date' else Settings.Label end if;
+  const Label: string := if Settings.Label = '' then
+    'Date'
+  else
+    Settings.Label
+  end if;
   Parts.Publish<TMsg>(Frame, Id, Label, Role, Value, Accept, Result, OnChange);
 end procedure;
 end unit;

@@ -91,7 +91,9 @@ begin
   begin
     using const Reader: IO.StringReader := new IO.StringReader('42');
     const Text: string? := Reader.ReadLine();
-    if Text <> null then discard int.TryParse(Text, out Parsed); end if;
+    if Text <> null then
+      discard int.TryParse(Text, out Parsed);
+    end if;
   end;
   var Handled: bool := false;
   var Cleaned: bool := false;
@@ -102,9 +104,11 @@ begin
   finally
     Cleaned := true;
   end try;
+
   if Amount <> 4 or Parsed <> 42 or not Handled or not Cleaned then
     raise new Sys.InvalidOperationException('Incorrect pattern or cleanup behavior');
   end if;
+
   Console.WriteLine('Patterns verified');
 end;
 end program;

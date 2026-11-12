@@ -22,7 +22,11 @@ begin
   const Token: string := C.Token('speed-dial', Id);
   const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
   const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
-  var Focus: int := if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then 1 else 0 end if;
+  var Focus: int := if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+    1
+  else
+    0
+  end if;
   for Index: int := 0 to Items.Length - 1 do
     Labels.Add(Items[Index].Label);
     Icons.Add(Items[Index].Icon);
@@ -31,9 +35,11 @@ begin
       Focus := Index + 2;
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Index: int): string => C.Token('speed-action', S.ItemId(Id, Index))
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('speed-action', S.ItemId(Id, Index))
+  end if;
   const Result: Cui.CuiSpeedDialResult := Frame.Window.SpeedDial(
     Token, Labels.ToArray(), Icons.ToArray(), Settings.Icon, Settings.Tooltip,
     cast<int>(Settings.Position), Enabled, Focus, Track
@@ -49,7 +55,11 @@ begin
   Frame.Controls.Add(
     new App.Control(
       Id, Settings.Tooltip, 'speed-dial', new Cui.CuiRectangle(), Enabled,
-      Value := if Result.Open then 'true' else 'false' end if
+      Value := if Result.Open then
+        'true'
+      else
+        'false'
+      end if
     )
   );
   for Index: int in Result.VisibleActions do

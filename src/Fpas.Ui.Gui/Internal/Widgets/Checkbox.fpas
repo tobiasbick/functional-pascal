@@ -38,10 +38,13 @@ begin
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, Label, 'checkbox', new Cui.CuiRectangle(), Allowed,
-      Value := if Indeterminate and Checked then 'mixed'
-        elsif Checked then 'true'
-        else 'false'
-        end if
+      Value := if Indeterminate and Checked then
+        'mixed'
+      elsif Checked then
+        'true'
+      else
+        'false'
+      end if
     )
   );
 end procedure;

@@ -48,7 +48,11 @@ begin
   const Inside: C.State<TMsg> := Frame with
     AcceptInput := Enabled;
     PaintingClosed := not Open;
-    Labels := if Open then Frame.Labels else new Lists.List<string>() end if;
+    Labels := if Open then
+      Frame.Labels
+    else
+      new Lists.List<string>()
+    end if;
   end with;
   var FocusClose: bool := false;
   var CloseToken: string := '';

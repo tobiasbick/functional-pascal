@@ -6,11 +6,14 @@ uses
 
 function Pack(Color: G.Color?): uint;
 begin
-  return if Color = null then 0u
-    elsif Color.Alpha = 0 then 1u
-    else cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
-      or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
-    end if;
+  return if Color = null then
+    0u
+  elsif Color.Alpha = 0 then
+    1u
+  else
+    cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
+  end if;
 end function;
 
 // Draws native expandable text without mirroring its internal expansion state.
@@ -48,14 +51,22 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Text, 'expandable-text', new Cui.CuiRectangle(), false,
-        Value := if Expanded then 'true' else 'false' end if
+        Value := if Expanded then
+          'true'
+        else
+          'false'
+        end if
       )
     );
     Frame.Labels.Add(Text);
     if (Result and 4) <> 0 then
       Frame.Controls.Add(
         new App.Control(
-          Toggle, if Expanded then 'Show less' else 'Show more' end if,
+          Toggle, if Expanded then
+            'Show less'
+          else
+            'Show more'
+          end if,
           'expandable-text-toggle', new Cui.CuiRectangle(), Allowed
         )
       );

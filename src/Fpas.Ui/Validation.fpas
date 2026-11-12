@@ -294,7 +294,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         PickerRules.Time(Value, At);
         PickerRules.TimePicker(Settings, At);
 
-        const LastHour: int := if Settings.TwelveHour then 11 else 23 end if;
+        const LastHour: int := if Settings.TwelveHour then
+          11
+        else
+          23
+        end if;
         for Hour: int := 0 to LastHour do
           discard Identify(TimePickers.HourId(Id, Hour), At);
         end for;
@@ -879,7 +883,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'A theme selector needs an available Light, Dark or System choice.');
         end if;
 
-        for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
+        for Index: int := 0 to (if Settings.WithSystem then
+          2
+        else
+          1
+        end if) do
           discard Identify(
             ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index)),
             At + '/item'
@@ -949,7 +957,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Horizontal: bool,
         const Flow: L.Flow
       ):
-        const At: string := Location + (if Horizontal then '/row' else '/column' end if);
+        const At: string := Location + (if Horizontal then
+          '/row'
+        else
+          '/column'
+        end if);
         if Flow.Clip <> null then
           Rules.RequireProfile(Profile, Target.Graphical, Location + '/clip');
         end if;
@@ -1029,10 +1041,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         const At: string := Identify(Id, Location + '/subview');
         const Old: E.CacheEntry<TMsg>? := if Previous <> null and Previous.Subviews.ContainsKey(
-            Id
-          ) then Previous.Subviews[Id]
-          else null
-          end if;
+          Id
+        )
+        then
+          Previous.Subviews[Id]
+        else
+          null
+        end if;
         const Current: E.CacheEntry<TMsg> := Resolve(Old);
         Subviews.Add(Id, Current);
         Visit(Current.Tree, At);

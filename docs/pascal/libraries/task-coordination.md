@@ -19,9 +19,11 @@ unit Recipes.Coordination;
 uses System as Sys, System.Threading as Threading, System.Threading.Tasks as Tasks;
 
 // Holds the caller's permit until the supplied work has completed.
-public async function UnderGate<T>(Gate: Threading.SemaphoreSlim;
+public async function UnderGate<T>(
+  Gate: Threading.SemaphoreSlim;
   Work: Sys.Func<Threading.CancellationToken, Tasks.Task<T>>;
-  Cancellation: Threading.CancellationToken): Tasks.Task<T>;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<T>;
 begin
   await Gate.WaitAsync(Cancellation).ConfigureAwait(false);
   try
@@ -30,7 +32,6 @@ begin
     discard Gate.Release();
   end try;
 end function;
-
 end unit;
 ```
 
@@ -46,29 +47,35 @@ three pending jobs together; each shared update then uses the same semaphore.
 ```pascal project=serialized-work
 async program SerializedJobs;
 
-uses System as Sys, System.Console as Console, System.Threading as Threading,
+uses
+  System as Sys, System.Console as Console, System.Threading as Threading,
   System.Threading.Tasks as Tasks, Recipes.Coordination as Coordination;
 
 begin
   using const Gate: Threading.SemaphoreSlim := new Threading.SemaphoreSlim(1, 1);
-  const Start: Tasks.TaskCompletionSource<bool> :=
-    new Tasks.TaskCompletionSource<bool>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+  const Start: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
   var Total: int := 0;
   async function Add(Value: int): Tasks.Task<int>;
   begin
     discard await Start.Task.ConfigureAwait(false);
-    return await Coordination.UnderGate<int>(Gate,
-      async function(Cancellation: Threading.CancellationToken): Tasks.Task<int>
-      begin
+    return await Coordination.UnderGate<int>(
+      Gate,
+      async function(Cancellation: Threading.CancellationToken): Tasks.Task<int> begin
         Cancellation.ThrowIfCancellationRequested();
         Total := Total + Value;
         return Total;
-      end function, Threading.CancellationToken.None).ConfigureAwait(false);
+      end function, Threading.CancellationToken.None
+    ).ConfigureAwait(false);
   end function;
   const Jobs: array of Tasks.Task<int> := [Add(1), Add(2), Add(3)];
   Start.SetResult(true);
   discard await Tasks.Task.WhenAll<int>(Jobs).ConfigureAwait(false);
-  if Total <> 6 then raise new Sys.InvalidOperationException('Shared update was lost'); end if;
+  if Total <> 6 then
+    raise new Sys.InvalidOperationException('Shared update was lost');
+  end if;
+
   Console.WriteLine(Total);
 end;
 end program;
@@ -95,14 +102,17 @@ asynchronous operations; no sleeps or timing assumptions are needed.
 ```pascal
 async program TaskOutcomes;
 
-uses System as Sys, System.Console as Console, System.Threading as Threading,
+uses
+  System as Sys, System.Console as Console, System.Threading as Threading,
   System.Threading.Tasks as Tasks;
 
 begin
-  const First: Tasks.TaskCompletionSource<int> :=
-    new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-  const Second: Tasks.TaskCompletionSource<int> :=
-    new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+  const First: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Second: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
   const Jobs: array of Tasks.Task<int> := [First.Task, Second.Task];
   const Joined: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(Jobs);
   First.SetException(new Sys.InvalidOperationException('First operation failed'));
@@ -110,9 +120,13 @@ begin
   try
     discard await Finished;
   catch Failure: Sys.InvalidOperationException do
-    if Joined.IsCompleted then raise new Sys.InvalidOperationException('Other work was not joined'); end if;
+    if Joined.IsCompleted then
+      raise new Sys.InvalidOperationException('Other work was not joined');
+    end if;
+
     Console.WriteLine('First failure observed');
   end try;
+
   Second.SetException(new Sys.ArgumentException('Second operation failed'));
   try
     discard await Joined;
@@ -121,12 +135,16 @@ begin
     if Failures = null or Failures.InnerExceptions.Count <> 2 then
       raise new Sys.InvalidOperationException('Missing task failures');
     end if;
+
     Console.WriteLine(Failures.InnerExceptions.Count);
   end try;
+
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
   Cancellation.Cancel();
-  const CanceledJobs: array of Tasks.Task<int> := [Tasks.Task.FromResult<int>(1),
-    Tasks.Task.FromCanceled<int>(Cancellation.Token)];
+  const CanceledJobs: array of Tasks.Task<int> := [
+    Tasks.Task.FromResult<int>(1),
+    Tasks.Task.FromCanceled<int>(Cancellation.Token)
+  ];
   const CanceledJoin: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(CanceledJobs);
   try
     discard await CanceledJoin;

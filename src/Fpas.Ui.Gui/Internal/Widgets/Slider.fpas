@@ -37,7 +37,11 @@ begin
     Settings.Percent,
     Enabled,
     C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
-    if Frame.PaintingClosed then null else Token end if,
+    if Frame.PaintingClosed then
+      null
+    else
+      Token
+    end if,
     out Proposed
   )
   then

@@ -116,7 +116,15 @@ procedure Lifecycle(Renderer: Cui.CuiRenderer);
       when State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(const Header: bool)):
         return new Mvu.Transition<State.Model, State.Msg>(
           Model,
-          [Mvu.Focus<State.Msg>(if Header then 'card' else 'body' end if)]
+          [
+            Mvu.Focus<State.Msg>(
+              if Header then
+                'card'
+              else
+                'body'
+              end if
+            )
+          ]
         );
       when State.Msg.Disclosure(SliceDisclosure.Msg.SetBilling(_)):
         if Refuse then

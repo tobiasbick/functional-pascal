@@ -37,7 +37,11 @@ function Deferred<TChild, TParent>(
       Saved := cast<MappedCache<TChild, TParent>>(Previous.Dependencies);
     end if;
     const Current: E.CacheEntry<TChild> := Resolve(
-      if Saved = null then null else Saved.Source end if
+      if Saved = null then
+        null
+      else
+        Saved.Source
+      end if
     );
     if Previous <> null and Saved <> null and Sys.Object.ReferenceEquals(Saved.Source, Current)
       and Sys.Object.Equals(Saved.Messages, Messages)

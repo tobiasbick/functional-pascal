@@ -4,10 +4,9 @@ Use subscribe/unsubscribe with events declared by referenced .NET assemblies
 and ordinary CLR delegates.
 
 ```pascal fragment context=events
-const Handler: Timers.ElapsedEventHandler :=
-  procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin
-    Console.WriteLine('Tick');
-  end procedure;
+const Handler: Timers.ElapsedEventHandler := procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin
+  Console.WriteLine('Tick');
+end procedure;
 
 subscribe Timer.Elapsed with Handler;
 unsubscribe Timer.Elapsed with Handler;
@@ -28,16 +27,16 @@ declaration in the initial language.
 ```pascal
 program Events;
 
-uses System.Console as Console,
+uses
+  System.Console as Console,
   System.Threading as Threading,
   System.Timers as Timers;
 
 begin
   using const Timer: Timers.Timer := new Timers.Timer(100.0);
-  const Handler: Timers.ElapsedEventHandler :=
-    procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin
-      Console.WriteLine('Tick');
-    end procedure;
+  const Handler: Timers.ElapsedEventHandler := procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin
+    Console.WriteLine('Tick');
+  end procedure;
 
   subscribe Timer.Elapsed with Handler;
   Timer.Start();

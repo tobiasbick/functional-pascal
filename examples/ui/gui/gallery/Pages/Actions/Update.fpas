@@ -35,11 +35,13 @@ begin
     when S.Msg.ConfirmDelete: State with
       ProjectDeleted := true;
     end with;
-    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then State with
+    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
+      State with
         SaveStatus := Work.Status.Busy;
       end with
-      else State
-      end if;
+    else
+      State
+    end if;
     when S.Msg.SetSaveStatus(const Value: Work.Status): State with
       SaveStatus := Value;
     end with;

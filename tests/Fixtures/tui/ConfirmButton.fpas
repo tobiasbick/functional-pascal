@@ -110,14 +110,20 @@ end function;
 function View(State: Model): E.Element<int>;
 begin
   const Body: E.Element<int> := E.Column<int>(
-    if State.Visible then Confirm.ConfirmButton<int>(
+    if State.Visible then
+      Confirm.ConfirmButton<int>(
         'delete',
-        if State.Renamed then 'Renamed ### literally' else 'Delete ## literally' end if,
+        if State.Renamed then
+          'Renamed ### literally'
+        else
+          'Delete ## literally'
+        end if,
         1,
         new Confirm.Options(ConfirmLabel := 'Confirm ## literally', Enabled := State.Enabled)
       )
-      else E.Text<int>('Hidden')
-      end if,
+    else
+      E.Text<int>('Hidden')
+    end if,
     Buttons.Button<int>('other', 'Other', 0),
     Buttons.Button<int>('enabled', 'Toggle enabled', 2),
     Buttons.Button<int>('visible', 'Toggle visible', 3),

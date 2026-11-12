@@ -207,9 +207,11 @@ begin
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(
-    'GUI gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then 'software'
-      else 'opengl'
-      end if
+    'GUI gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then
+      'software'
+    else
+      'opengl'
+    end if
   );
 end procedure;
 
@@ -272,7 +274,11 @@ begin
 
   A.Check(Arguments[1] = 'software' or Arguments[1] = 'opengl', 'Unknown renderer.');
   Verify(
-    if Arguments[1] = 'software' then Cui.CuiRenderer.Software else Cui.CuiRenderer.OpenGl end if,
+    if Arguments[1] = 'software' then
+      Cui.CuiRenderer.Software
+    else
+      Cui.CuiRenderer.OpenGl
+    end if,
     Arguments[2]
   );
 end procedure;

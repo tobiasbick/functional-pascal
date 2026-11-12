@@ -39,7 +39,11 @@ begin
   C.Track<TMsg>(
     State, new App.Control(
       Id, Tooltip, 'icon-button', new Cui.CuiRectangle(), Enabled,
-      Value := if Settings.Loading then 'loading' else Settings.Selected.ToString() end if
+      Value := if Settings.Loading then
+        'loading'
+      else
+        Settings.Selected.ToString()
+      end if
     )
   );
 end procedure;

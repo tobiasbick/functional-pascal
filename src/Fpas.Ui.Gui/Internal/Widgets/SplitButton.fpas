@@ -22,10 +22,13 @@ begin
   const Menu: string := Split.MenuId(Id);
   const Token: string := C.Token('split-button', Id);
   const MenuToken: string := C.Token('split-menu', Menu);
-  const Focus: int := if C.WantsFocus<TMsg>(State, Id, Token, Enabled) then 1
-    elsif C.WantsFocus<TMsg>(State, Menu, MenuToken, Enabled) then 2
-    else 0
-    end if;
+  const Focus: int := if C.WantsFocus<TMsg>(State, Id, Token, Enabled) then
+    1
+  elsif C.WantsFocus<TMsg>(State, Menu, MenuToken, Enabled) then
+    2
+  else
+    0
+  end if;
   const Labels: Lists.List<string> := new Lists.List<string>();
   const Icons: Lists.List<string> := new Lists.List<string>();
   const Tokens: Lists.List<string> := new Lists.List<string>();
@@ -40,7 +43,11 @@ begin
 
   const Result: Cui.CuiSplitButtonResult := State.Window.SplitButton(
     Token, Label, Settings.Icon, Labels.ToArray(), Icons.ToArray(),
-    if State.PaintingClosed then null else Tokens.ToArray() end if,
+    if State.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if,
     cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled, Focus
   );
   if Result.Choice = 0 then
@@ -57,7 +64,11 @@ begin
   State.Controls.Add(
     new App.Control(
       Menu, 'More options', 'split-menu', new Cui.CuiRectangle(), Enabled,
-      Value := if Result.Open then 'true' else 'false' end if
+      Value := if Result.Open then
+        'true'
+      else
+        'false'
+      end if
     )
   );
   if Result.Open then
@@ -66,7 +77,11 @@ begin
       State.Controls.Add(
         new App.Control(
           Split.ItemId(Id, Item.Key), Item.Label, 'menu-item', new Cui.CuiRectangle(), Enabled,
-          Value := if Index = Result.Highlighted then 'true' else 'false' end if
+          Value := if Index = Result.Highlighted then
+            'true'
+          else
+            'false'
+          end if
         )
       );
     end for;

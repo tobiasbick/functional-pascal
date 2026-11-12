@@ -68,7 +68,11 @@ begin
     end if;
   catch Failure: Sys.OperationCanceledException do
     Sys.Console.Error.WriteLine('Measurement cancelled or timed out');
-    Sys.Environment.ExitCode := if Cancellation.IsCancellationRequested then 130 else 1 end if;
+    Sys.Environment.ExitCode := if Cancellation.IsCancellationRequested then
+      130
+    else
+      1
+    end if;
   catch Failure: Sys.ArgumentException do
     Sys.Console.Error.WriteLine(Failure.Message);
     Sys.Environment.ExitCode := 2;

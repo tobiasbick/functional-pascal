@@ -26,7 +26,11 @@ begin
   const Value: string := Used.ToString(Culture.CultureInfo.InvariantCulture) + '/' +
     Total.ToString(
     Culture.CultureInfo.InvariantCulture
-  ) + (if Unit = '' then '' else ' ' + Unit end if);
+  ) + (if Unit = '' then
+    ''
+  else
+    ' ' + Unit
+  end if);
   C.Track<TMsg>(
     Frame,
     new App.Control(Id, Label, 'meter', new Cui.CuiRectangle(), false, Value := Value)

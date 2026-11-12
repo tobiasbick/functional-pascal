@@ -28,11 +28,13 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
 begin
   const Delete: E.Element<State.Msg> := Confirm.View();
   const Save: E.Element<State.Msg> := Status.View(Model, Data);
-  const Morphing: array of E.Element<State.Msg> := if Model.ProjectDeleted then [
+  const Morphing: array of E.Element<State.Msg> := if Model.ProjectDeleted then
+    [
       Delete, Save, E.Styled<State.Msg>(E.Text<State.Msg>('Project deleted'), S.Role.Muted)
     ]
-    else [Delete, Save]
-    end if;
+  else
+    [Delete, Save]
+  end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
     G.Heading<State.Msg>('Split button', 'A main action with related actions one click away.'),

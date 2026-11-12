@@ -20,18 +20,26 @@ uses System as Sys, System.Console as Console, System.Globalization as Global;
 
 function ReadAttempts(Text: string?): int;
 begin
-  if Text = null then return 3; end if;
+  if Text = null then
+    return 3;
+  end if;
   var Value: int := 0;
-  if not int.TryParse(Text, Global.NumberStyles.Integer,
-    Global.CultureInfo.InvariantCulture, out Value) or Value < 1 or Value > 10 then
+  if not int.TryParse(
+    Text, Global.NumberStyles.Integer,
+    Global.CultureInfo.InvariantCulture, out Value
+  ) or Value < 1 or Value > 10
+  then
     raise new Sys.FormatException('Invalid FPAS_RECIPE_ATTEMPTS');
   end if;
+
   return Value;
 end function;
 
 begin
   try
-    const Attempts: int := ReadAttempts(Sys.Environment.GetEnvironmentVariable('FPAS_RECIPE_ATTEMPTS'));
+    const Attempts: int := ReadAttempts(
+      Sys.Environment.GetEnvironmentVariable('FPAS_RECIPE_ATTEMPTS')
+    );
     Console.WriteLine(Attempts);
   catch Failure: Sys.FormatException do
     Console.Error.WriteLine(Failure.Message);
@@ -62,29 +70,34 @@ adds ninety minutes of elapsed time without consulting the machine's local zone.
 ```pascal
 program TimeAndDuration;
 
-uses System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
+uses
+  System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
   System.Globalization as Global;
 
 begin
   const Culture: Global.CultureInfo := Global.CultureInfo.InvariantCulture;
   const Started: long := Diagnostics.Stopwatch.GetTimestamp();
   const Stamp: Sys.DateTimeOffset := Sys.DateTimeOffset.ParseExact(
-    '2030-04-05T12:30:00.0000000+02:00', 'O', Culture, Global.DateTimeStyles.None);
+    '2030-04-05T12:30:00.0000000+02:00', 'O', Culture, Global.DateTimeStyles.None
+  );
   const Wire: string := Stamp.ToString('O', Culture);
   const Restored: Sys.DateTimeOffset := Sys.DateTimeOffset.ParseExact(
-    Wire, 'O', Culture, Global.DateTimeStyles.None);
+    Wire, 'O', Culture, Global.DateTimeStyles.None
+  );
   const Utc: Sys.DateTimeOffset := Stamp.ToUniversalTime();
   const Window: Sys.TimeSpan := Sys.TimeSpan.FromMinutes(90.0);
   const Deadline: Sys.DateTimeOffset := Stamp + Window;
   const Duration: Sys.TimeSpan := Deadline - Stamp;
   const Elapsed: Sys.TimeSpan := Diagnostics.Stopwatch.GetElapsedTime(Started);
   const Now: Sys.DateTimeOffset := Sys.DateTimeOffset.UtcNow;
-  if Restored <> Stamp or Restored.Offset <> Stamp.Offset or
-    Utc.Hour <> 10 or Utc.Offset <> Sys.TimeSpan.Zero or
-    Duration <> Window or Deadline - Window <> Stamp or Elapsed < Sys.TimeSpan.Zero or
-    Now.Offset <> Sys.TimeSpan.Zero then
+  if Restored <> Stamp or Restored.Offset <> Stamp.Offset
+    or Utc.Hour <> 10 or Utc.Offset <> Sys.TimeSpan.Zero
+    or Duration <> Window or Deadline - Window <> Stamp or Elapsed < Sys.TimeSpan.Zero
+    or Now.Offset <> Sys.TimeSpan.Zero
+  then
     raise new Sys.InvalidOperationException('Incorrect instant or duration');
   end if;
+
   Console.WriteLine(Utc.ToString('O', Culture));
   Console.WriteLine(Duration.ToString('c', Culture));
 end;

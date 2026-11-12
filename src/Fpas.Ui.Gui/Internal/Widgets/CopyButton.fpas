@@ -29,9 +29,17 @@ begin
   const Recent: bool := (Events and 2) <> 0;
   C.Track<TMsg>(
     State, new App.Control(
-      Id, if Recent then 'Copied' else 'Copy' end if, 'copy-button',
+      Id, if Recent then
+        'Copied'
+      else
+        'Copy'
+      end if, 'copy-button',
       new Cui.CuiRectangle(), Allowed and (Events and 4) <> 0,
-      Value := if Recent then 'copied' else '' end if
+      Value := if Recent then
+        'copied'
+      else
+        ''
+      end if
     )
   );
 end procedure;

@@ -14,7 +14,8 @@ syntax, options, timeout, and escaping follow the actual .NET regex API.
 ```pascal
 program TextAndRegex;
 
-uses System as Sys, System.Console as Console, System.Text as Text,
+uses
+  System as Sys, System.Console as Console, System.Text as Text,
   System.Text.RegularExpressions as Regular;
 
 begin
@@ -24,6 +25,7 @@ begin
   if Bytes.Length <> 3 or Decoded <> 'Aé' or Replaced <> 'room#' then
     raise new Sys.InvalidOperationException('Incorrect encoding or regex result');
   end if;
+
   Console.WriteLine(Replaced);
   Console.WriteLine(Bytes.Length);
 end;

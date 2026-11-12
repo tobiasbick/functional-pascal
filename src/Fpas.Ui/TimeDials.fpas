@@ -10,7 +10,11 @@ uses Fpas.Ui.Elements as E, System as Sys;
 // The selector identity.
 public function SelectorId(Id: string; Minutes: bool): string;
 begin
-  return Id + (if Minutes then '/minutes' else '/hours' end if);
+  return Id + (if Minutes then
+    '/minutes'
+  else
+    '/hours'
+  end if);
 end function;
 
 // Gets the dial's clock face identity.

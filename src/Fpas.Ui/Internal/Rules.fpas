@@ -123,20 +123,24 @@ begin
       else
     end case;
   end if;
-  const Minimum: int := if Min = null then 0
-    else CheckMeasure(
+  const Minimum: int := if Min = null then
+    0
+  else
+    CheckMeasure(
       Min,
       Profile,
       Location + '/minimum'
     )
-    end if;
-  const Maximum: int := if Max = null then int.MaxValue
-    else CheckMeasure(
+  end if;
+  const Maximum: int := if Max = null then
+    int.MaxValue
+  else
+    CheckMeasure(
       Max,
       Profile,
       Location + '/maximum'
     )
-    end if;
+  end if;
   if Minimum > Maximum then
     Reject(Location, 'The minimum exceeds the maximum.');
   end if;

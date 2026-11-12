@@ -90,7 +90,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
     Check(Session.Step(), 'The text area fixture closed.');
   end procedure;
 begin
-  const Primary: int := if Sys.OperatingSystem.IsMacOS() then 8 else 2 end if;
+  const Primary: int := if Sys.OperatingSystem.IsMacOS() then
+    8
+  else
+    2
+  end if;
   const Lines: array of string := [
     'First',
     'Second',

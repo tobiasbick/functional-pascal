@@ -40,7 +40,11 @@ begin
   const Proposal: int := Frame.Window.Tabs(
     Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast<int>(Settings.Appearance),
     Settings.FullWidth, Enabled, Focus,
-    if Frame.PaintingClosed then null else Tokens.ToArray() end if
+    if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
   );
   if Proposal >= 0 then
     Frame.Messages.Add(OnChange(Proposal));
@@ -57,7 +61,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Items[Index].Label, 'tab', new Cui.CuiRectangle(), Enabled,
-        Key := Index.ToString(), Value := if Index = Selected then 'true' else 'false' end if
+        Key := Index.ToString(), Value := if Index = Selected then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end for;

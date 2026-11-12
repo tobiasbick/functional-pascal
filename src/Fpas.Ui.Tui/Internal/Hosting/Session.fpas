@@ -164,7 +164,11 @@ public function Start<TModel, TMsg>(
     case Outcome of
       when App.StepResult.Processed(const Id: long, const Complete: long, const Published: bool):
         return new Terminal.TuiControlReply(
-          if Published then 'presented' else 'unchanged' end if,
+          if Published then
+            'presented'
+          else
+            'unchanged'
+          end if,
           Id,
           Complete
         );
@@ -185,11 +189,13 @@ public function Start<TModel, TMsg>(
   async function WaitControl(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply>;
   begin
     const Outcome: App.StepResult? := await Wait(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
-    return if Outcome = null then new Terminal.TuiControlReply(
+    return if Outcome = null then
+      new Terminal.TuiControlReply(
         'timeout'
       )
-      else Describe(Outcome)
-      end if;
+    else
+      Describe(Outcome)
+    end if;
   end function;
 
   procedure DisposeSession();
@@ -209,20 +215,30 @@ public function Start<TModel, TMsg>(
     begin
       Phase := 'view';
       const Size: L.Viewport := new L.Viewport(
-        if Viewport.Columns < 60 then L.SizeClass.Compact
-          elsif Viewport.Columns < 100 then L.SizeClass.Regular
-          else L.SizeClass.Expanded
-          end if,
-        if Viewport.Rows < 20 then L.SizeClass.Compact
-          elsif Viewport.Rows < 35 then L.SizeClass.Regular
-          else L.SizeClass.Expanded
-          end if,
+        if Viewport.Columns < 60 then
+          L.SizeClass.Compact
+        elsif Viewport.Columns < 100 then
+          L.SizeClass.Regular
+        else
+          L.SizeClass.Expanded
+        end if,
+        if Viewport.Rows < 20 then
+          L.SizeClass.Compact
+        elsif Viewport.Rows < 35 then
+          L.SizeClass.Regular
+        else
+          L.SizeClass.Expanded
+        end if,
         Viewport.Columns * 8, Viewport.Rows * 16
       );
       const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
         View(Core.Model(), Size),
         Validation.Target.Terminal,
-        if Previous = null then null else Previous.Prepared end if,
+        if Previous = null then
+          null
+        else
+          Previous.Prepared
+        end if,
         new T.Viewport(Viewport.Columns, Viewport.Rows)
       );
       var Root: E.Element<TMsg> := Lower.Prepare<TMsg>(

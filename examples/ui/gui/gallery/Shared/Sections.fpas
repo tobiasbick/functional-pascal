@@ -46,13 +46,15 @@ begin
     E.Text<TMsg>(Title),
     S.Role.Heading
   );
-  const TitleBlock: E.Element<TMsg> := if Description = '' then Label
-    else E.Column<TMsg>(
+  const TitleBlock: E.Element<TMsg> := if Description = '' then
+    Label
+  else
+    E.Column<TMsg>(
       new L.Flow(Gap := Points(4)),
       Label,
       E.Styled<TMsg>(E.Text<TMsg>(Description), S.Role.Secondary)
     )
-    end if;
+  end if;
   return E.Column<TMsg>(Space<TMsg>(18), TitleBlock);
 end function;
 

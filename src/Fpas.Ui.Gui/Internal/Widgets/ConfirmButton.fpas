@@ -27,9 +27,17 @@ begin
 
   C.Track<TMsg>(
     State, new App.Control(
-      Id, if Result.Armed then Settings.ConfirmLabel else Label end if,
+      Id, if Result.Armed then
+        Settings.ConfirmLabel
+      else
+        Label
+      end if,
       'confirm-button', new Cui.CuiRectangle(), Enabled,
-      Value := if Result.Armed then 'armed' else '' end if
+      Value := if Result.Armed then
+        'armed'
+      else
+        ''
+      end if
     )
   );
 end procedure;

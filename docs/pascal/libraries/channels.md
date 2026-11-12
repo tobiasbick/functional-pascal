@@ -14,17 +14,24 @@ after its final write; the reader drains the queue before awaiting Completion.
 ```pascal
 async program ChannelBackpressure;
 
-uses System as Sys, System.Console as Console, System.Threading as Threading,
+uses
+  System as Sys, System.Console as Console, System.Threading as Threading,
   System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
 
 begin
   const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(1);
   await Pipe.Writer.WriteAsync(10, Threading.CancellationToken.None);
   const Pending: Tasks.ValueTask := Pipe.Writer.WriteAsync(20, Threading.CancellationToken.None);
-  if Pending.IsCompleted then raise new Sys.InvalidOperationException('Full queue accepted another item'); end if;
+  if Pending.IsCompleted then
+    raise new Sys.InvalidOperationException('Full queue accepted another item');
+  end if;
+
   Console.WriteLine(await Pipe.Reader.ReadAsync(Threading.CancellationToken.None));
   await Pending;
-  if not Pipe.Writer.TryComplete() then raise new Sys.InvalidOperationException('Writer was already closed'); end if;
+  if not Pipe.Writer.TryComplete() then
+    raise new Sys.InvalidOperationException('Writer was already closed');
+  end if;
+
   Console.WriteLine(await Pipe.Reader.ReadAsync(Threading.CancellationToken.None));
   await Pipe.Reader.Completion;
 end;
@@ -49,13 +56,16 @@ tasks before its linked cancellation source is disposed.
 // Application-local bounded aggregation of nonnegative inputs.
 unit Recipes.ChannelPipeline;
 
-uses System as Sys, System.Collections.Generic as Generic, System.IO as IO,
+uses
+  System as Sys, System.Collections.Generic as Generic, System.IO as IO,
   System.Threading as Threading, System.Threading.Tasks as Tasks,
   System.Threading.Channels as Channels;
 
 // Joins one producer and one consumer, including their failure paths.
-public async function Sum(Values: Generic.IEnumerable<int>; Capacity: int;
-  Cancellation: Threading.CancellationToken): Tasks.Task<int>;
+public async function Sum(
+  Values: Generic.IEnumerable<int>; Capacity: int;
+  Cancellation: Threading.CancellationToken
+): Tasks.Task<int>;
 requires Capacity > 0;
   async function Produce(): Tasks.Task;
   begin
@@ -78,10 +88,14 @@ requires Capacity > 0;
         var Value: int := 0;
         while Pipe.Reader.TryRead(out Value) do
           Stop.Token.ThrowIfCancellationRequested();
-          if Value < 0 then raise new IO.InvalidDataException('Negative pipeline input'); end if;
+          if Value < 0 then
+            raise new IO.InvalidDataException('Negative pipeline input');
+          end if;
+
           Total := Total + Value;
         end while;
       end while;
+
       return Total;
     catch do
       Stop.Cancel();
@@ -90,8 +104,9 @@ requires Capacity > 0;
   end function;
 begin
   Cancellation.ThrowIfCancellationRequested();
-  using const Stop: Threading.CancellationTokenSource :=
-    Threading.CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+  using const Stop: Threading.CancellationTokenSource := Threading.CancellationTokenSource.CreateLinkedTokenSource(
+    Cancellation
+  );
   const Options: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(Capacity);
   Options.FullMode := Channels.BoundedChannelFullMode.Wait;
   Options.SingleWriter := true;
@@ -99,15 +114,12 @@ begin
   Options.AllowSynchronousContinuations := false;
   const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(Options);
 
-
-
   const Sending: Tasks.Task := Produce();
   const Receiving: Tasks.Task<int> := Consume();
   const Workers: array of Tasks.Task := [Sending, Receiving];
   await Tasks.Task.WhenAll(Workers).ConfigureAwait(false);
   return await Receiving.ConfigureAwait(false);
 end function;
-
 end unit;
 ```
 
@@ -135,7 +147,8 @@ Place the unit and this program in one executable project:
 ```pascal project=channel-pipeline
 async program ChannelSum;
 
-uses System.Console as Console, System.Threading as Threading,
+uses
+  System.Console as Console, System.Threading as Threading,
   Recipes.ChannelPipeline as Pipeline;
 
 begin

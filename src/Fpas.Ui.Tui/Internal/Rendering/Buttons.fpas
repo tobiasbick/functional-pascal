@@ -36,9 +36,15 @@ begin
     when UiStyle.ButtonVariant.Default: Styles.Default;
     else Styles.Secondary;
   end case;
-  return if Focused then Appearance.Focused
-    else if Hovered then Appearance.Hovered else Appearance.Normal end if
-    end if;
+  return if Focused then
+    Appearance.Focused
+  else
+    if Hovered then
+      Appearance.Hovered
+    else
+      Appearance.Normal
+    end if
+  end if;
 end function;
 
 // Applies a button's foreground override to the resolved backdrop.
@@ -95,25 +101,33 @@ begin
   end if;
 
   const Resolved: T.Style? := Resolve(Theme, Variant, Enabled, Override := Appearance);
-  const Colors: T.Style := if Resolved = null then Style
-    else new T.Style(
+  const Colors: T.Style := if Resolved = null then
+    Style
+  else
+    new T.Style(
       Resolved.Foreground ?? Style.Foreground,
       Resolved.Background ?? Style.Background
     )
-    end if;
+  end if;
   const Color: T.Style := WithForeground(
     Theme,
     Colors,
-    if Enabled then Foreground else null end if
+    if Enabled then
+      Foreground
+    else
+      null
+    end if
   );
   if Resolved <> null then
     D.Fill(Operations, Clip, Color);
   end if;
 
   const TextWidth: int := G.Measure(Caption);
-  const Width: int := if Center then Area.Width
-    else Sys.Math.Min(Area.Width, Sys.Math.Max(MinimumWidth, TextWidth + 2 * Padding))
-    end if;
+  const Width: int := if Center then
+    Area.Width
+  else
+    Sys.Math.Min(Area.Width, Sys.Math.Max(MinimumWidth, TextWidth + 2 * Padding))
+  end if;
   const Extra: int := Sys.Math.Max(0, Width - 2 * Padding - TextWidth);
   const X: int := Area.X + Padding + Extra div 2;
   const Y: int := Area.Y;

@@ -46,7 +46,11 @@ begin
   var Parts: array of int := [];
   const Proposal: int := Frame.Window.Pagination(
     C.Token('pagination', Id), Page, Count, Allowed, Focus,
-    if Frame.PaintingClosed then null else Token end if, out Parts
+    if Frame.PaintingClosed then
+      null
+    else
+      Token
+    end if, out Parts
   );
   if Proposal >= 0 then
     Frame.Messages.Add(OnChange(Proposal));
@@ -62,16 +66,23 @@ begin
     )
   );
   for Index: int in Parts do
-    const Label: string := if Index = PreviousPage then 'Previous page'
-      elsif Index = NextPage then 'Next page'
-      else (Index + 1).ToString()
-      end if;
+    const Label: string := if Index = PreviousPage then
+      'Previous page'
+    elsif Index = NextPage then
+      'Next page'
+    else
+      (Index + 1).ToString()
+    end if;
     const CanSelect: bool := Allowed and (Index <> PreviousPage or Page > 0)
       and (Index <> NextPage or Page < Count - 1);
     Frame.Controls.Add(
       new App.Control(
         Id, Label, 'page', new Cui.CuiRectangle(), CanSelect,
-        Key := Index.ToString(), Value := if Index = Page then 'true' else 'false' end if
+        Key := Index.ToString(), Value := if Index = Page then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end for;

@@ -311,7 +311,11 @@ begin
       end if;
     when E.Element.ThemeChoice(const Id: string, _, _, const Settings: ThemeSwitchers.Options):
       if Settings.Enabled then
-        for Index: int := 0 to (if Settings.WithSystem then 2 else 1 end if) do
+        for Index: int := 0 to (if Settings.WithSystem then
+          2
+        else
+          1
+        end if) do
           const Item: string := ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index));
           if Preferred = null or Preferred = Item then
             return Item;

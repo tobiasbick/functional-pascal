@@ -28,27 +28,55 @@ function PaintSheet(
   Size: int; Colors: T.Style; Theme: Th.Theme
 ): SheetBounds;
 begin
-  const InsetX: int := if Area.Width >= 5 then 1 else 0 end if;
-  const InsetY: int := if Area.Height >= 5 then 1 else 0 end if;
+  const InsetX: int := if Area.Width >= 5 then
+    1
+  else
+    0
+  end if;
+  const InsetY: int := if Area.Height >= 5 then
+    1
+  else
+    0
+  end if;
   const Wide: bool := Settings.Edge = Sheets.Side.Left or Settings.Edge = Sheets.Side.Right;
   const Width: int := Sys.Math.Min(
-    Area.Width - 2 * InsetX, if Wide then Size else Area.Width end if
+    Area.Width - 2 * InsetX, if Wide then
+      Size
+    else
+      Area.Width
+    end if
   );
   const Height: int := Sys.Math.Min(
-    Area.Height - 2 * InsetY, if Wide then Area.Height else Size end if
+    Area.Height - 2 * InsetY, if Wide then
+      Area.Height
+    else
+      Size
+    end if
   );
-  const X: int := if Settings.Edge = Sheets.Side.Right then Area.X + Area.Width - InsetX - Width
-    else Area.X + InsetX
-    end if;
-  const Y: int := if Settings.Edge = Sheets.Side.Bottom then Area.Y + Area.Height - InsetY - Height
-    else Area.Y + InsetY
-    end if;
+  const X: int := if Settings.Edge = Sheets.Side.Right then
+    Area.X + Area.Width - InsetX - Width
+  else
+    Area.X + InsetX
+  end if;
+  const Y: int := if Settings.Edge = Sheets.Side.Bottom then
+    Area.Y + Area.Height - InsetY - Height
+  else
+    Area.Y + InsetY
+  end if;
   const Panel: F.Rect := new F.Rect(X, Y, Width, Height);
   const Framed: bool := Width >= 4 and Height >= 3;
-  const Edge: int := if Framed then 1 else 0 end if;
+  const Edge: int := if Framed then
+    1
+  else
+    0
+  end if;
   const Close: F.Rect := new F.Rect(X + Width - 1 - Edge, Y, 1, 1);
   const Title: F.Rect := new F.Rect(X + Edge, Y, Sys.Math.Max(0, Width - 2 * Edge - 1), 1);
-  const DetailRows: int := if Settings.Description <> '' and Height > Edge + 1 then 1 else 0 end if;
+  const DetailRows: int := if Settings.Description <> '' and Height > Edge + 1 then
+    1
+  else
+    0
+  end if;
   const Detail: F.Rect := new F.Rect(X + Edge, Y + 1, Width - 2 * Edge, DetailRows);
   const Body: F.Rect := new F.Rect(
     X + Edge, Y + 1 + DetailRows, Width - 2 * Edge,

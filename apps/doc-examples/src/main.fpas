@@ -102,9 +102,11 @@ begin
 
   if Dotnet.Length = 0 then
     const DotnetRoot: string := S.Environment.GetEnvironmentVariable('DOTNET_ROOT') ?? '';
-    const HostName: string := if S.OperatingSystem.IsWindows() then 'dotnet.exe'
-      else 'dotnet'
-      end if;
+    const HostName: string := if S.OperatingSystem.IsWindows() then
+      'dotnet.exe'
+    else
+      'dotnet'
+    end if;
 
     if DotnetRoot.Length > 0 then
       Dotnet := IO.Path.Combine(DotnetRoot, HostName);
@@ -271,15 +273,20 @@ begin
 
     const Identity: string := IO.Path.Combine(S.AppContext.BaseDirectory, 'DocExamples.sdk.txt');
     const SdkCompiler: string := if IO.File.Exists(
-        Identity
-      ) then IO.File.ReadAllText(Identity).Trim()
-      else ''
-      end if;
-    const SdkHash: string := if IO.File.Exists(SdkCompiler) then S.Convert.ToHexString(
+      Identity
+    )
+    then
+      IO.File.ReadAllText(Identity).Trim()
+    else
+      ''
+    end if;
+    const SdkHash: string := if IO.File.Exists(SdkCompiler) then
+      S.Convert.ToHexString(
         Crypto.SHA256.HashData(IO.File.ReadAllBytes(SdkCompiler))
       )
-      else ''
-      end if;
+    else
+      ''
+    end if;
 
     const Report: M.Report := new M.Report(
       1,

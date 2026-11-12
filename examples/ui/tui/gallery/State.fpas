@@ -107,11 +107,14 @@ end variant;
 public function ThemeFor(State: Model): Themes.Theme;
 begin
   return if Switchers.Resolve(
-      State.Appearance,
-      State.SystemAppearance
-    ) = Themes.Mode.Dark then Themes.Dark()
-    else Themes.Light()
-    end if;
+    State.Appearance,
+    State.SystemAppearance
+  ) = Themes.Mode.Dark
+  then
+    Themes.Dark()
+  else
+    Themes.Light()
+  end if;
 end function;
 
 // Applies a gallery action.
@@ -164,12 +167,14 @@ begin
     when Msg.ConfirmDelete: State with
       DeleteCount := State.DeleteCount + 1;
     end with;
-    when Msg.StartSave: if State.SaveStatus = Work.Status.Idle then State with
+    when Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
+      State with
         SaveStatus := Work.Status.Busy;
         SaveCount := State.SaveCount + 1;
       end with
-      else State
-      end if;
+    else
+      State
+    end if;
     when Msg.SetSaveStatus(const Value: Work.Status): State with
       SaveStatus := Value;
     end with;

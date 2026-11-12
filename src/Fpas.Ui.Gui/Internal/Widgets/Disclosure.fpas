@@ -25,7 +25,11 @@ public procedure Draw<TMsg>(
   Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
 );
 begin
-  const Role: string := if Card then 'expandable-card' else 'accordion' end if;
+  const Role: string := if Card then
+    'expandable-card'
+  else
+    'accordion'
+  end if;
   const Token: string := C.Token(Role, Id);
   const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
   const Result: int := Frame.Window.BeginDisclosure(
@@ -41,7 +45,11 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Id, Title, Role, new Cui.CuiRectangle(), Allowed,
-        Value := if Open then 'true' else 'false' end if
+        Value := if Open then
+          'true'
+        else
+          'false'
+        end if
       )
     );
   end if;
@@ -54,7 +62,11 @@ begin
     AcceptInput := Allowed and Visible;
     Interactive := Frame.Interactive and Settings.Enabled;
     PaintingClosed := not Visible;
-    Labels := if Visible then Frame.Labels else new Lists.List<string>() end if;
+    Labels := if Visible then
+      Frame.Labels
+    else
+      new Lists.List<string>()
+    end if;
   end with;
   Visit(Content, Inside, false, L.Alignment.Default);
   Frame.Window.EndDisclosure();

@@ -133,7 +133,6 @@ public function Create(Name: string): Greeting;
 begin
   return new Greeting(Shared.Words.For(Name));
 end function;
-
 end unit;
 ```
 
@@ -158,7 +157,6 @@ uses Standalone.Messages as Messages, System.Console as Console;
 begin
   Console.WriteLine(Messages.Create('FPAS').Text);
 end;
-
 end program;
 ```
 

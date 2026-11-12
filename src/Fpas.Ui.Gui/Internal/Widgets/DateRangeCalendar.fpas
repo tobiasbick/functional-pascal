@@ -21,9 +21,11 @@ public procedure Draw<TMsg>(
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;
   const Role: string := 'date-range-calendar';
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Part: int): string => Parts.Token(Id, Part)
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
   const Result: Cui.CuiDateRangeResult := Frame.Window.RangeCalendar(
     C.Token(Role, Id), Parts.StartDay(Value), Parts.EndDay(Value), Months, Accept, Track
   );

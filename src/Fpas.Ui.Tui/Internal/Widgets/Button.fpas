@@ -16,23 +16,38 @@ uses Fpas.Ui.Buttons as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Tui
 // A terminal action retaining the original label for inspection.
 public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: B.Options; Role: string := 'button'): E.Element<TMsg>;
 begin
-  const Leading: string := if Settings.Loading then '…'
-    else G.SingleLine(
+  const Leading: string := if Settings.Loading then
+    '…'
+  else
+    G.SingleLine(
       Settings.TerminalIcon
     )
-    end if;
+  end if;
   const Trailing: string := G.SingleLine(Settings.TerminalIconRight);
-  const Caption: string := (if Leading = '' then '' else Leading + ' ' end if) + Label +
-    (if Trailing = '' then '' else ' ' + Trailing end if);
-  const Hint: string := if Settings.Tooltip = '' or Settings.Shortcut = '' then Settings.Tooltip
-    else Settings.Tooltip + ' · ' + Settings.Shortcut
-    end if;
+  const Caption: string := (if Leading = '' then
+    ''
+  else
+    Leading + ' '
+  end if) + Label +
+    (if Trailing = '' then
+      ''
+    else
+      ' ' + Trailing
+    end if);
+  const Hint: string := if Settings.Tooltip = '' or Settings.Shortcut = '' then
+    Settings.Tooltip
+  else
+    Settings.Tooltip + ' · ' + Settings.Shortcut
+  end if;
   const Variant: S.ButtonVariant := if Settings.Selected
-      and (Settings.Variant = S.ButtonVariant.Default or Settings.Variant =
-      S.ButtonVariant.Secondary
-      or Settings.Variant = S.ButtonVariant.Ghost) then S.ButtonVariant.Active
-    else Settings.Variant
-    end if;
+    and (Settings.Variant = S.ButtonVariant.Default or Settings.Variant =
+    S.ButtonVariant.Secondary
+    or Settings.Variant = S.ButtonVariant.Ghost)
+  then
+    S.ButtonVariant.Active
+  else
+    Settings.Variant
+  end if;
   const Width: int? := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
     else null;
@@ -45,12 +60,23 @@ begin
   return E.Element<TMsg>.Action(
     Id, new A.Direct<TMsg>(Message, Settings.Loading), Settings.Enabled, new E.ActionView(
       Caption, Name := Label, Role := Role, Variant := Variant,
-      Value := if Settings.Loading then 'loading'
-        elsif Settings.Selected then 'true'
-        else ''
-        end if,
+      Value := if Settings.Loading then
+        'loading'
+      elsif Settings.Selected then
+        'true'
+      else
+        ''
+      end if,
       Hint := Hint, FixedWidth := Width, FillWidth := Fill,
-      Padding := if Large then 2 else 1 end if, Height := if Large then 2 else 1 end if,
+      Padding := if Large then
+        2
+      else
+        1
+      end if, Height := if Large then
+        2
+      else
+        1
+      end if,
       Foreground := Settings.Color
     )
   );

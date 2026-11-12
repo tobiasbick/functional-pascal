@@ -11,7 +11,6 @@ internal sealed class SourceFormatter
     private readonly SourceTrivia trivia;
     private readonly Dictionary<int, int> continuations = [];
     private readonly HashSet<SyntaxList> expanded = [];
-    private readonly HashSet<SyntaxConditional> conditionals = [];
 
     internal SourceFormatter(SourceText source, IReadOnlyList<Token> tokens, IReadOnlyList<SourceComment> comments, SyntaxLayout layout)
     {
@@ -28,10 +27,9 @@ internal sealed class SourceFormatter
             if (trivia.HasBreak(End(op - 1), tokens[op].Position) || trivia.HasBreak(End(binary.Right - 1), tokens[binary.Right].Position))
                 BreakBinary(binary);
         }
-        foreach (var conditional in layout.Conditionals.OrderBy(value => value.End - value.Start))
-            if (trivia.HasBreak(tokens[conditional.Start].Position, End(conditional.End - 1))) Expand(conditional);
         foreach (var list in layout.Lists.OrderBy(value => value.Close - value.Open))
-            if (trivia.HasBreak(End(list.Open), tokens[list.Close].Position)) Expand(list, allItems: false);
+            if (trivia.HasBreak(End(list.Open), tokens[list.Close].Position) && !CanCompactBranchArray(list))
+                Expand(list, allItems: false);
 
         // Layout only gains breaks. Each pass either makes progress or finishes.
         while (true)
@@ -50,8 +48,6 @@ internal sealed class SourceFormatter
                      expanded.Contains(list) && list.Items.Skip(1).Any(item => rendered.Line[item] == line.Number && layout.Breaks[item] == 0)))
                     .OrderByDescending(list => list.Close - list.Open).FirstOrDefault();
                 if (list is not null) { Expand(list, allItems: true); changed = true; continue; }
-                var conditional = layout.Conditionals.FirstOrDefault(value => !conditionals.Contains(value) && rendered.Line[value.Start] == line.Number && rendered.Line[value.End - 1] == line.Number);
-                if (conditional is not null) { Expand(conditional); changed = true; continue; }
                 var candidates = layout.Binary.Where(binary =>
                     rendered.Line[binary.Operator] == line.Number && layout.Breaks[BreakIndex(binary)] == 0 &&
                     rendered.Column[binary.Operator] > line.Indent && binary.Right < tokens.Count).OrderBy(binary => binary.Operator).ToArray();
@@ -101,12 +97,12 @@ internal sealed class SourceFormatter
         }
     }
 
-    private void Expand(SyntaxConditional conditional)
-    {
-        if (!conditionals.Add(conditional)) return;
-        foreach (var branch in conditional.Branches) layout.Line(branch);
-        layout.Indent(conditional.Start + 1, conditional.End);
-    }
+    private bool CanCompactBranchArray(SyntaxList list) =>
+        layout.SingleElementBranchArrays.Contains(list.Open) &&
+        trivia.Newlines(End(list.Open), tokens[list.Open + 1].Position) <= 1 &&
+        trivia.Newlines(End(list.Close - 1), tokens[list.Close].Position) <= 1 &&
+        !trivia.HasBreak(tokens[list.Open + 1].Position, End(list.Close - 1)) &&
+        Enumerable.Range(list.Open + 1, list.Close - list.Open).All(index => trivia.Comments[index].Count == 0);
 
     private void BreakBinary(SyntaxBinary binary)
     {

@@ -27,9 +27,12 @@ begin
     Menus.Close();
   end if;
   const Variant: S.ButtonVariant := if Settings.Variant =
-      S.ButtonVariant.Default then S.ButtonVariant.Primary
-    else Settings.Variant
-    end if;
+    S.ButtonVariant.Default
+  then
+    S.ButtonVariant.Primary
+  else
+    Settings.Variant
+  end if;
   const Main: E.Element<TMsg> := Button.Lower<TMsg>(
     Id, Label, Message,
     new B.Options(
@@ -41,9 +44,17 @@ begin
     Menu, new Popup.Trigger<TMsg>(Menu, Menus), Settings.Enabled,
     new E.ActionView(
       '⌄', Name := 'More options', Role := 'split-menu',
-      Value := if Menus.Id() = Menu then 'true' else 'false' end if,
+      Value := if Menus.Id() = Menu then
+        'true'
+      else
+        'false'
+      end if,
       Variant := Variant, ArrowFocus := false,
-      Height := if Settings.ControlSize = B.Size.Large then 2 else 1 end if,
+      Height := if Settings.ControlSize = B.Size.Large then
+        2
+      else
+        1
+      end if,
       Hint := 'More options'
     )
   );

@@ -56,13 +56,16 @@ field target syntax is outside the baseline.
 ```pascal
 program AgentInterop;
 
-uses System as Sys, System.Console as Console, System.Collections.Generic as C,
+uses
+  System as Sys, System.Console as Console, System.Collections.Generic as C,
   System.Linq.Enumerable as Enumerable, System.Text.Json as Json,
   System.Text.Json.Serialization as Serialization;
 
 type Descending = record implements C.IComparer<int>
   public function Compare(Left: int; Right: int): int;
-  begin return Right.CompareTo(Left); end function;
+  begin
+    return Right.CompareTo(Left);
+  end function;
 end record;
 
 type Item = record
@@ -72,14 +75,18 @@ end record;
 
 begin
   const Values: C.List<int> := new C.List<int>();
-  Values.Add(1); Values.Add(3); Values.Add(2);
+  Values.Add(1);
+  Values.Add(3);
+  Values.Add(2);
   Values.Sort(new Descending());
   const Count: int := Enumerable.Count<int>(Values);
   const Text: string := Json.JsonSerializer.Serialize<Item>(new Item(Name := 'entry'));
-  if Values[0] <> 3 or Count <> 3 or not Text.Contains('item_name') or
-    typeof(int).Name <> 'Int32' then
+  if Values[0] <> 3 or Count <> 3 or not Text.Contains('item_name')
+    or typeof(int).Name <> 'Int32'
+  then
     raise new Sys.InvalidOperationException('Incorrect CLR interoperability');
   end if;
+
   Console.WriteLine('Interop verified');
 end;
 end program;
@@ -96,21 +103,24 @@ dispatched handler. Use explicit cleanup where the lifetime requires it.
 ```pascal
 program AgentEvents;
 
-uses System as Sys, System.Console as Console, System.Collections.ObjectModel as C,
+uses
+  System as Sys, System.Console as Console, System.Collections.ObjectModel as C,
   System.Collections.Specialized as Events;
 
 begin
   var Changes: int := 0;
   const Items: C.ObservableCollection<int> := new C.ObservableCollection<int>();
-  const Handler: Events.NotifyCollectionChangedEventHandler :=
-    procedure(Sender: object?; Event: Events.NotifyCollectionChangedEventArgs) begin
-      Changes := Changes + 1;
-    end procedure;
+  const Handler: Events.NotifyCollectionChangedEventHandler := procedure(Sender: object?; Event: Events.NotifyCollectionChangedEventArgs) begin
+    Changes := Changes + 1;
+  end procedure;
   subscribe Items.CollectionChanged with Handler;
   Items.Add(1);
   unsubscribe Items.CollectionChanged with Handler;
   Items.Add(2);
-  if Changes <> 1 then raise new Sys.InvalidOperationException('Incorrect event lifetime'); end if;
+  if Changes <> 1 then
+    raise new Sys.InvalidOperationException('Incorrect event lifetime');
+  end if;
+
   Console.WriteLine('Events verified');
 end;
 end program;

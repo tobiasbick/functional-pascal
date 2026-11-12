@@ -54,9 +54,9 @@ signature and `begin`, without a declaration-header semicolon:
 
 ```pascal fragment context=declarations
 const Double: function(int): int := function(Value: int): int
-  requires Value >= 0;
-  requires Value <= int.MaxValue div 2;
-  ensures (Returned: int): Returned = Value * 2;
+requires Value >= 0;
+requires Value <= int.MaxValue div 2;
+ensures (Returned: int): Returned = Value * 2;
 begin
   return Value * 2;
 end function;

@@ -191,25 +191,30 @@ internal sealed partial class Parser
 
     private ConditionalSyntax ReadConditional()
     {
-        var layoutStart = position;
-        var branches = layout is null ? null : new List<int>();
+        var expressionStart = position;
         var start = Current.Position;
         var arms = new List<ConditionalArmSyntax>();
         do
         {
-            if (arms.Count != 0) branches?.Add(position);
-            position++;
+            var clause = position++;
             var condition = ReadExpression();
+            layout?.Conditions.Add((clause, position));
             Expect("then");
-            arms.Add(new(condition, ReadExpression()));
+            arms.Add(new(condition, ReadConditionalValue()));
         } while (At("elsif"));
-        branches?.Add(position);
         Expect("else");
-        var otherwise = ReadExpression();
-        branches?.Add(position);
+        var otherwise = ReadConditionalValue();
         Expect("end");
         Expect("if");
-        if (branches is not null) layout!.Conditionals.Add(new(layoutStart, position, branches));
+        layout?.ConditionalEnds.Add(expressionStart, position);
         return new(start, arms, otherwise);
+    }
+
+    private ExpressionSyntax ReadConditionalValue()
+    {
+        var start = position;
+        var value = ReadExpression();
+        layout?.ConditionalValue(start, position, value is ArrayLiteralSyntax { Elements.Count: 1 });
+        return value;
     }
 }

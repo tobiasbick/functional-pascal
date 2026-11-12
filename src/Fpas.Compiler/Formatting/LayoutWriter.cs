@@ -14,6 +14,7 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
     private readonly int[] columns = new int[tokens.Count];
     private readonly List<RenderedLine> renderedLines = [];
     private readonly int[] tokenIndents = new int[tokens.Count];
+    private readonly Stack<(int End, int ExtraIndent)> continuedConditionals = new();
     private int column;
     private int line;
     private int lineIndent;
@@ -23,18 +24,29 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
 
     internal RenderedSource Write()
     {
+        var conditionalIndent = 0;
         for (var index = 0; index < tokens.Count; index++)
         {
             source.CheckCancellation();
+            if (continuedConditionals.TryPeek(out var conditional) && conditional.End == index)
+                conditionalIndent -= continuedConditionals.Pop().ExtraIndent;
             depth += layout.Indents[index];
-            var indent = depth * 2;
+            var structuralIndent = depth * 2 + conditionalIndent;
+            var indent = structuralIndent;
             if (continuations.TryGetValue(index, out var anchor))
                 indent = Math.Max(indent, columns[anchor] == tokenIndents[anchor] ? columns[anchor] : tokenIndents[anchor] + 2);
-            tokenIndents[index] = depth * 2;
+            tokenIndents[index] = structuralIndent;
             Gap(index, indent);
             if (tokens[index].Kind == TokenKind.End) break;
             if (column == 0) { output.Append(' ', indent); column = indent; lineIndent = indent; }
             else if (SpaceBefore(index)) { output.Append(' '); column++; }
+            if (lineIndent > structuralIndent && layout.ConditionalEnds.TryGetValue(index, out var end))
+            {
+                var extraIndent = lineIndent - structuralIndent;
+                continuedConditionals.Push((end, extraIndent));
+                conditionalIndent += extraIndent;
+                tokenIndents[index] = lineIndent;
+            }
             lines[index] = line; columns[index] = column;
             Append(source.Text.Substring(tokens[index].Position, tokens[index].Length));
             codeWidth = column;

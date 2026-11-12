@@ -33,11 +33,14 @@ begin
   const ClearId: string := S.ClearId(Id);
   const ClearToken: string := C.Token(ClearRole, ClearId);
   const Ink: G.Color? := Settings.Ink;
-  const Rgba: uint := if Ink = null then 0u
-    elsif Ink.Alpha = 0 then 1u
-    else cast<uint>(Ink.Red) or (cast<uint>(Ink.Green) shl 8)
-      or (cast<uint>(Ink.Blue) shl 16) or (cast<uint>(Ink.Alpha) shl 24)
-    end if;
+  const Rgba: uint := if Ink = null then
+    0u
+  elsif Ink.Alpha = 0 then
+    1u
+  else
+    cast<uint>(Ink.Red) or (cast<uint>(Ink.Green) shl 8)
+    or (cast<uint>(Ink.Blue) shl 16) or (cast<uint>(Ink.Alpha) shl 24)
+  end if;
   var ClearVisible: bool := false;
   const Value: Cui.CuiSignature? := Frame.Window.SignaturePad(
     C.Token(Role, Id), Settings.Placeholder, Settings.Height, Rgba, Enabled,

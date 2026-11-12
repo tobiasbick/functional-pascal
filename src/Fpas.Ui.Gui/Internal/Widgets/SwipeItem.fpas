@@ -24,9 +24,11 @@ public procedure Draw<TMsg>(
 );
   function ActionId(Index: int): string;
   begin
-    return if Index < Left.Length then S.ItemId(Id, S.Side.Left, Index)
-      else S.ItemId(Id, S.Side.Right, Index - Left.Length)
-      end if;
+    return if Index < Left.Length then
+      S.ItemId(Id, S.Side.Left, Index)
+    else
+      S.ItemId(Id, S.Side.Right, Index - Left.Length)
+    end if;
   end function;
 
   procedure Append(Items: array of S.Item);
@@ -45,9 +47,11 @@ begin
   Append(Left);
   Append(Right);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
-    else function(Index: int): string => C.Token('swipe-action', ActionId(Index))
-    end if;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('swipe-action', ActionId(Index))
+  end if;
   const Visible: array of int := Frame.Window.BeginSwipeItem(
     C.Token('swipe-row', Id), Labels.ToArray(), Icons.ToArray(), Tones.ToArray(),
     Left.Length, Enabled, Settings.Icon, Track
@@ -61,9 +65,11 @@ begin
   const Result: int := Frame.Window.EndSwipeItem(Settings.Detail);
   if Enabled and Result >= 0 then
     Frame.Messages.Add(
-      if Result < 100 then OnChoose(S.Side.Left, Result)
-        else OnChoose(S.Side.Right, Result - 100)
-        end if
+      if Result < 100 then
+        OnChoose(S.Side.Left, Result)
+      else
+        OnChoose(S.Side.Right, Result - 100)
+      end if
     );
   end if;
 

@@ -19,7 +19,11 @@ end record;
 public function Create(): State;
   procedure Toggle(Id: string);
   begin
-    Current := if Current = Id then '' else Id end if;
+    Current := if Current = Id then
+      ''
+    else
+      Id
+    end if;
   end procedure;
 begin
   var Current: string := '';
@@ -84,11 +88,21 @@ begin
   for Entry: M.Entry<TMsg> in Entries do
     case Entry of
       when M.Entry.Action(const Item: M.Item<TMsg>):
-        const Caption: string := (if Item.TerminalIcon = '' then ''
-          else Item.TerminalIcon + ' '
+        const Caption: string := (if Item.TerminalIcon = '' then
+          ''
+        else
+          Item.TerminalIcon + ' '
+        end if) +
+          Item.Label + (if Item.Shortcut = '' then
+            ''
+          else
+            '  ' + Item.Shortcut
           end if) +
-          Item.Label + (if Item.Shortcut = '' then '' else '  ' + Item.Shortcut end if) +
-          (if Item.Checked then '  ✓' else '' end if);
+          (if Item.Checked then
+            '  ✓'
+          else
+            ''
+          end if);
         Children.Add(
           E.Element<TMsg>.Action(
             M.ItemId(Id, Item.Key), new Choice<TMsg>(Item.Message, Menus.Close), Item.Enabled,
@@ -100,7 +114,11 @@ begin
               ArrowFocus := true,
               FillWidth := true,
               Center := false,
-              Foreground := if Item.Danger then Theme.Colors.Danger else null end if
+              Foreground := if Item.Danger then
+                Theme.Colors.Danger
+              else
+                null
+              end if
             )
           )
         );
@@ -192,12 +210,14 @@ public function Place(
 begin
   const Across: int := Sys.Math.Min(
     Screen.Width,
-    if FixedWidth > 0 then Sys.Math.Max(23, FixedWidth)
-      else Sys.Math.Max(
+    if FixedWidth > 0 then
+      Sys.Math.Max(23, FixedWidth)
+    else
+      Sys.Math.Max(
         Anchor.Width,
         Width + 2
       )
-      end if
+    end if
   );
   const Below: int := Sys.Math.Max(0, Screen.Y + Screen.Height - Anchor.Y - Anchor.Height);
   const Above: int := Sys.Math.Max(0, Anchor.Y - Screen.Y);
@@ -205,12 +225,24 @@ begin
     M.Placement.TopEnd;
   const Side: bool := Position = M.Placement.RightStart or Position = M.Placement.LeftStart
     or Position = M.Placement.Right or Position = M.Placement.Left;
-  const Down: bool := if Up then Above < Height + 2 and Below > Above
-    else Below >= Height + 2 or Below >= Above
-    end if;
+  const Down: bool := if Up then
+    Above < Height + 2 and Below > Above
+  else
+    Below >= Height + 2 or Below >= Above
+  end if;
   const Rows: int := Sys.Math.Min(
     Height + 2,
-    Sys.Math.Max(1, if Side then Screen.Height else if Down then Below else Above end if end if)
+    Sys.Math.Max(
+      1, if Side then
+        Screen.Height
+      else
+        if Down then
+          Below
+        else
+          Above
+        end if
+      end if
+    )
   );
   var Left: int := Anchor.X;
   if Position = M.Placement.BottomEnd or Position = M.Placement.TopEnd then
@@ -221,10 +253,16 @@ begin
     const Right: bool := Position = M.Placement.RightStart or Position = M.Placement.Right;
     const RightSpace: int := Screen.X + Screen.Width - Anchor.X - Anchor.Width;
     const LeftSpace: int := Anchor.X - Screen.X;
-    const UseRight: bool := if Right then RightSpace >= Across or RightSpace >= LeftSpace
-      else LeftSpace < Across and RightSpace > LeftSpace
-      end if;
-    Left := if UseRight then Anchor.X + Anchor.Width else Anchor.X - Across end if;
+    const UseRight: bool := if Right then
+      RightSpace >= Across or RightSpace >= LeftSpace
+    else
+      LeftSpace < Across and RightSpace > LeftSpace
+    end if;
+    Left := if UseRight then
+      Anchor.X + Anchor.Width
+    else
+      Anchor.X - Across
+    end if;
   end if;
   const X: int := Sys.Math.Clamp(
     Left,
@@ -232,16 +270,29 @@ begin
     Screen.X + Screen.Width - Across
   );
   const Y: int := Sys.Math.Clamp(
-    if Side then Anchor.Y + (if Position = M.Placement.Right or Position =
-          M.Placement.Left then (Anchor.Height - Rows) div 2
-        else 0
-        end if)
-      else if Down then Anchor.Y + Anchor.Height else Anchor.Y - Rows end if
-      end if,
+    if Side then
+      Anchor.Y + (if Position = M.Placement.Right or Position =
+        M.Placement.Left
+      then
+        (Anchor.Height - Rows) div 2
+      else
+        0
+      end if)
+    else
+      if Down then
+        Anchor.Y + Anchor.Height
+      else
+        Anchor.Y - Rows
+      end if
+    end if,
     Screen.Y, Screen.Y + Screen.Height - Rows
   );
   const Panel: F.Rect := new F.Rect(X, Y, Across, Rows);
-  const Edge: int := if Across >= 4 and Rows >= 3 then 1 else 0 end if;
+  const Edge: int := if Across >= 4 and Rows >= 3 then
+    1
+  else
+    0
+  end if;
   D.Fill(Operations, Panel, Colors);
   if Edge = 1 then
     D.Border(Operations, Panel, Panel, '', Colors, Theme.Widgets);

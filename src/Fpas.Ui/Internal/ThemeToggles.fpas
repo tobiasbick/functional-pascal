@@ -10,7 +10,11 @@ uses Fpas.Ui.Themes as Themes;
 // The opposite concrete appearance.
 public function Opposite(Appearance: Themes.Mode): Themes.Mode;
 begin
-  return if Appearance = Themes.Mode.Dark then Themes.Mode.Light else Themes.Mode.Dark end if;
+  return if Appearance = Themes.Mode.Dark then
+    Themes.Mode.Light
+  else
+    Themes.Mode.Dark
+  end if;
 end function;
 
 // Gets the accessible action name for the opposite appearance.
@@ -21,6 +25,10 @@ end function;
 // Switch to light or Switch to dark.
 public function Label(Appearance: Themes.Mode): string;
 begin
-  return if Appearance = Themes.Mode.Dark then 'Switch to light' else 'Switch to dark' end if;
+  return if Appearance = Themes.Mode.Dark then
+    'Switch to light'
+  else
+    'Switch to dark'
+  end if;
 end function;
 end unit;

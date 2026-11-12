@@ -48,7 +48,11 @@ end function;
 // The period choice identity.
 public function PeriodId(Id: string; Afternoon: bool): string;
 begin
-  return Id + (if Afternoon then '/pm' else '/am' end if);
+  return Id + (if Afternoon then
+    '/pm'
+  else
+    '/am'
+  end if);
 end function;
 
 // Builds CUI's time field with scrolling hour and minute columns.

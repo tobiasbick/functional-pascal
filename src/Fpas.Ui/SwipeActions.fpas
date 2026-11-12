@@ -39,7 +39,11 @@ end record;
 // The identity used for inspection.
 public function ItemId(Id: string; At: Side; Index: int): string;
 begin
-  return Id + (if At = Side.Left then '/left/' else '/right/' end if) + Index.ToString();
+  return Id + (if At = Side.Left then
+    '/left/'
+  else
+    '/right/'
+  end if) + Index.ToString();
 end function;
 
 // Wraps a foreground view in a native swipe row.

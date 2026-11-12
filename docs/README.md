@@ -19,6 +19,7 @@ workflow to work on the compiler/toolchain.
 | Parser-facing grammar | [Syntax specification](specs/syntax.md) |
 | Public CLR identities and language lowering | [CLR mapping](specs/clr-mapping.md) |
 | Project, dependency, diagnostic, incremental, and output contracts | [MSBuild specification](build/msbuild.md) |
+| Proposals, deferred work and open gaps | [Future documents](future/README.md) |
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
 | Desktop GUI, shared widgets and terminal UI | [GUI handbook](pascal/libraries/gui.md), [terminal host](../src/Fpas.Ui.Tui/README.md) |

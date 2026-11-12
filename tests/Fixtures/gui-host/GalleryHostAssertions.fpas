@@ -1,0 +1,71 @@
+unit GalleryHostAssertions;
+
+uses
+  GuiGallery.State as State, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Mvu.Session as Mvu, System as Sys;
+
+// Requires an observable gallery condition.
+//
+// ## Parameters
+// - `Value`: Observed condition.
+// - `Reason`: Failure diagnostic.
+public procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+// Looks up a control in the presented snapshot.
+//
+// ## Parameters
+// - `Session`: Live gallery session.
+// - `Id`: Stable control ID.
+// - `Key`: Optional part key.
+// ## Returns
+// The matching control.
+public function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+begin
+  for Value: Gui.Control in Session.Snapshot().Controls do
+    if Value.Id = Id and Value.Key = Key then
+      return Value;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id + '/' + Key);
+end function;
+
+// Looks for an exact caption in the presented snapshot.
+//
+// ## Parameters
+// - `Session`: Live gallery session.
+// - `Value`: Caption to find.
+// ## Returns
+// Whether the caption is present.
+public function HasText(Session: Gui.Session<State.Msg>; Value: string): bool;
+begin
+  for Item: string in Session.Snapshot().Text do
+    if Item = Value then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Posts a message and presents the next gallery frame.
+//
+// ## Parameters
+// - `Session`: Live gallery session.
+// - `Message`: Gallery action to post.
+public procedure Send(Session: Gui.Session<State.Msg>; Message: State.Msg);
+begin
+  case Session.Post(Message) of
+    when Mvu.Admission.Queued:
+    else
+      raise new Sys.InvalidOperationException('Message was not admitted.');
+  end case;
+
+  Check(Session.Step(), 'Unexpected session close.');
+end procedure;
+end unit;

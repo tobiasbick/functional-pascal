@@ -226,6 +226,10 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException('Popovers require the graphical profile.');
       when Ui.Element.Toggles(_, _, _, _, _):
         raise new Sys.NotSupportedException('Toggle groups require the graphical profile.');
+      when Ui.Element.ReactionGroup(_, _, _, _), Ui.Element.AccountMenu(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Reactions and user menus require the graphical profile.'
+        );
       when Ui.Element.CheckboxAction(
         _,
         _,

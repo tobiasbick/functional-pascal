@@ -148,6 +148,7 @@ begin
   );
   Check(Bold.Value = 'true', 'Bold is initially selected.');
   Check(Control(Session, 'action-align', '0').Value = 'true', 'Left is initially selected.');
+  Step(Session);
   Session.CapturePng(Capture + '.actions.png');
 
   Click(Session, 'action-format', '1');

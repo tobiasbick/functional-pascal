@@ -1,0 +1,159 @@
+unit GalleryActionWidgetsContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.State as State, GuiGallery.View as View,
+  Fpas.Ui.Reactions as R, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App;
+
+// Checks native Reactions and User menu through the Actions gallery.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the closed and open gallery captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    case Message of
+      when State.Msg.UserCommand(const Chosen: string):
+        Command := Chosen;
+        Commands := Commands + 1;
+      when State.Msg.SetReaction(_, const Value: R.Item):
+        Active := Value.Active;
+        Changes := Changes + 1;
+      else
+    end case;
+
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'Actions window closed unexpectedly.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Area: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  var Target: string := '';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var PendingKey: int := 0;
+  var Changes: int := 0;
+  var Active: bool := true;
+  var Commands: int := 0;
+  var Command: string := '';
+  const Thumbs: string := R.ItemId('action-reactions', 0);
+  const Heart: string := R.ItemId('action-reactions', 1);
+  const User: string := 'action-user';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Actions', 1000, 1040, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Thumbs).Value = '12' and A.Control(Session, Heart).Value = '4'
+    and A.Control(Session, User).Bounds.Width = 260,
+    'Actions must show the original starting counts and account width.'
+  );
+  Session.CapturePng(Capture + '.actions-account.png');
+
+  Click(Session, User);
+  A.Check(
+    A.Control(Session, User).Value = 'true' and Commands = 0,
+    'Clicking the account trigger must open the native menu without a command.'
+  );
+  Step(Session);
+  Session.CapturePng(Capture + '.user-menu.png');
+  Click(Session, User + '/settings');
+  A.Check(
+    Command = 'settings' and Commands = 1 and A.Control(Session, User).Value = 'false',
+    'A pointer choice must dispatch its command exactly once and close.'
+  );
+  Focus(Session, User);
+  Key(Session, 2);
+  A.Check(A.Control(Session, User).Value = 'true', 'Enter must open the account menu.');
+  Key(Session, 10);
+  Key(Session, 10);
+  Key(Session, 2);
+  A.Check(
+    Command = 'billing' and Commands = 2 and A.Control(Session, User).Focused,
+    'Keyboard selection must dispatch the highlighted account command and retain focus.'
+  );
+  Key(Session, 6);
+  A.Check(A.Control(Session, User).Value = 'true', 'Space must open the account menu.');
+  Key(Session, 3);
+  A.Check(
+    Commands = 2 and A.Control(Session, User).Value = 'false' and A.Control(Session, User).Focused,
+    'Escape must close the account menu without dispatching a command.'
+  );
+  Key(Session, 2);
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Actions));
+  A.Check(
+    A.Control(Session, User).Value = 'false',
+    'Removing the account trigger must retire its popup.'
+  );
+
+  Click(Session, Thumbs);
+  A.Check(
+    Changes = 1 and not Active and A.Control(Session, Thumbs).Value = '11'
+    and A.Control(Session, Heart).Value = '4',
+    'A pointer change must decrement just the selected reaction and clear its activation.'
+  );
+  Focus(Session, Thumbs);
+  Key(Session, 6);
+  A.Check(
+    Changes = 2 and Active and A.Control(Session, Thumbs).Value = '12',
+    'Space must activate the focused reaction and restore its count.'
+  );
+end procedure;
+end unit;

@@ -124,7 +124,7 @@ begin
         )
       );
     when State.Page.Actions:
-      return Actions.View(Model, Width >= 600);
+      return Actions.View(Model);
     when State.Page.Buttons:
       return Buttons.View(Model, Width >= 600);
     when State.Page.Inputs:

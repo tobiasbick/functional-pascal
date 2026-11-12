@@ -2,6 +2,8 @@ program PublishedGallery;
 
 uses
   GalleryContextContract as ContextContract,
+  GalleryActionsContract as ActionsContract, GalleryHostAssertions as A,
+  GalleryActionWidgetsContract as ActionWidgetsContract,
   GalleryDropdownContract as DropdownContract,
   GallerySegmentedContract as SegmentedContract,
   GalleryToggleGroupContract as ToggleGroupContract,
@@ -15,51 +17,11 @@ uses
   GalleryCredentialFieldsContract as CredentialFieldsContract,
   GalleryPickerFieldsContract as PickerFieldsContract,
   GalleryDialogContract as DialogContract,
-  Fpas.Ui.ThemeSwitchers as Switchers,
   GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Session as Mvu, Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Themes as Themes,
   System as Sys, System.Console as Console, System.Text as Text,
   Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App;
-
-procedure Check(Value: bool; Reason: string);
-begin
-  if not Value then
-    raise new Sys.InvalidOperationException(Reason);
-  end if;
-end procedure;
-
-function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
-begin
-  for Value: Gui.Control in Session.Snapshot().Controls do
-    if Value.Id = Id and Value.Key = Key then
-      return Value;
-    end if;
-  end for;
-
-  raise new Sys.InvalidOperationException('Missing control: ' + Id + '/' + Key);
-end function;
-
-function HasText(Session: Gui.Session<State.Msg>; Value: string): bool;
-begin
-  for Item: string in Session.Snapshot().Text do
-    if Item = Value then
-      return true;
-    end if;
-  end for;
-
-  return false;
-end function;
-
-procedure Send(Session: Gui.Session<State.Msg>; Message: State.Msg);
-begin
-  case Session.Post(Message) of
-    when Mvu.Admission.Queued:
-    else
-      raise new Sys.InvalidOperationException('Message was not admitted.');
-  end case;
-
-  Check(Session.Step(), 'Unexpected session close.');
-end procedure;
 
 function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session<State.Msg>;
 begin
@@ -73,10 +35,10 @@ end function;
 procedure VerifyDesktop(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   using const Session: Gui.Session<State.Msg> := Open(Renderer, 'FPAS gallery contract');
-  Check(Session.Step(), 'Gallery did not present.');
-  Check(Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software), 'Unexpected renderer.');
-  Check(HasText(Session, 'Components for C'), 'Overview is the initial page.');
-  Check(HasText(Session, 'FPas CUI'), 'The gallery brand is missing.');
+  A.Check(Session.Step(), 'Gallery did not present.');
+  A.Check(Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software), 'Unexpected renderer.');
+  A.Check(A.HasText(Session, 'Components for C'), 'Overview is the initial page.');
+  A.Check(A.HasText(Session, 'FPas CUI'), 'The gallery brand is missing.');
   var Pages: int := 0;
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = 'navigation' then
@@ -84,61 +46,61 @@ begin
     end if;
   end for;
 
-  Check(Pages = 9, 'Only the confirmed gallery destinations should be visible.');
-  const Overview: Gui.Control := Control(Session, 'navigation', 'overview');
-  const Buttons: Gui.Control := Control(Session, 'navigation', 'buttons');
-  Check(
+  A.Check(Pages = 9, 'Only the confirmed gallery destinations should be visible.');
+  const Overview: Gui.Control := A.Control(Session, 'navigation', 'overview');
+  const Buttons: Gui.Control := A.Control(Session, 'navigation', 'buttons');
+  A.Check(
     Overview.Bounds.X = 12 and Overview.Bounds.Y >= 98 and Overview.Bounds.Y < 110,
     'The sidebar starts below the gallery brand.'
   );
-  Check(Buttons.Bounds.Y > Overview.Bounds.Y, 'Gallery navigation is in page order.');
-  Check(Buttons.Bounds.Width = 216, 'Gallery navigation uses the desktop sidebar width.');
+  A.Check(Buttons.Bounds.Y > Overview.Bounds.Y, 'Gallery navigation is in page order.');
+  A.Check(Buttons.Bounds.Width = 216, 'Gallery navigation uses the desktop sidebar width.');
 
-  Send(Session, State.Msg.Show(State.Page.Buttons));
-  Check(
-    HasText(Session, 'Variants') and HasText(Session, 'Sizes and icons'),
+  A.Send(Session, State.Msg.Show(State.Page.Buttons));
+  A.Check(
+    A.HasText(Session, 'Variants') and A.HasText(Session, 'Sizes and icons'),
     'Button sections are missing.'
   );
-  Check(
-    HasText(Session, 'States') and HasText(Session, 'Groups, copy and hold to confirm'),
+  A.Check(
+    A.HasText(Session, 'States') and A.HasText(Session, 'Groups, copy and hold to confirm'),
     'Confirmed button examples are missing.'
   );
-  Check(not Control(Session, 'disabled').Enabled, 'Disabled example accepts input.');
-  Check(
-    Control(Session, 'icon-share').Enabled and Control(Session, 'copy-install').Enabled,
+  A.Check(not A.Control(Session, 'disabled').Enabled, 'Disabled example accepts input.');
+  A.Check(
+    A.Control(Session, 'icon-share').Enabled and A.Control(Session, 'copy-install').Enabled,
     'Icon actions are missing.'
   );
-  Check(Control(Session, 'hold-delete').Enabled, 'The hold button is missing.');
-  Send(Session, State.Msg.SetButtonLoading(true));
-  Check(Control(Session, 'save').Value = 'loading', 'The busy button did not update.');
-  Send(Session, State.Msg.SetButtonLoading(false));
-  Send(Session, State.Msg.ToggleFormat(State.TextFormat.Bold));
-  Send(Session, State.Msg.ToggleFormat(State.TextFormat.Italic));
-  Check(
-    Control(
+  A.Check(A.Control(Session, 'hold-delete').Enabled, 'The hold button is missing.');
+  A.Send(Session, State.Msg.SetButtonLoading(true));
+  A.Check(A.Control(Session, 'save').Value = 'loading', 'The busy button did not update.');
+  A.Send(Session, State.Msg.SetButtonLoading(false));
+  A.Send(Session, State.Msg.ToggleFormat(State.TextFormat.Bold));
+  A.Send(Session, State.Msg.ToggleFormat(State.TextFormat.Italic));
+  A.Check(
+    A.Control(
       Session,
       'format-bold'
-    ).Value = 'true' and Control(Session, 'format-italic').Value = 'true',
+    ).Value = 'true' and A.Control(Session, 'format-italic').Value = 'true',
     'The group keeps independent selections.'
   );
   Session.CapturePng(Capture);
 
-  Send(Session, State.Msg.SetAppearance(Switchers.Selection.Dark));
-  Check(Session.Snapshot().Theme.Appearance = Themes.Mode.Dark, 'Theme did not change.');
-  Send(Session, State.Msg.Show(State.Page.Overlays));
-  Send(Session, State.Msg.SetSheet(true));
-  Check(Control(Session, 'sheet/close').Focused, 'The sheet close action owns focus.');
-  Check(not Control(Session, 'sheet-open').Enabled, 'The sheet did not disable the page.');
-  Send(Session, State.Msg.SetSheet(false));
-  Send(Session, State.Msg.Show(State.Page.Buttons));
-  Check(
-    Control(Session, 'format-bold').Value = 'true',
+  A.Send(Session, State.Msg.SetAppearance(Switchers.Selection.Dark));
+  A.Check(Session.Snapshot().Theme.Appearance = Themes.Mode.Dark, 'Theme did not change.');
+  A.Send(Session, State.Msg.Show(State.Page.Overlays));
+  A.Send(Session, State.Msg.SetSheet(true));
+  A.Check(A.Control(Session, 'sheet/close').Focused, 'The sheet close action owns focus.');
+  A.Check(not A.Control(Session, 'sheet-open').Enabled, 'The sheet did not disable the page.');
+  A.Send(Session, State.Msg.SetSheet(false));
+  A.Send(Session, State.Msg.Show(State.Page.Buttons));
+  A.Check(
+    A.Control(Session, 'format-bold').Value = 'true',
     'Navigation discarded the button group state.'
   );
-  Send(Session, State.Msg.Show(State.Page.Actions));
-  Check(HasText(Session, 'Split button'), 'The actions page is missing.');
-  Check(
-    Control(Session, 'split-save').Enabled and Control(Session, 'split-save/menu').Enabled,
+  A.Send(Session, State.Msg.Show(State.Page.Actions));
+  A.Check(A.HasText(Session, 'Split button'), 'The actions page is missing.');
+  A.Check(
+    A.Control(Session, 'split-save').Enabled and A.Control(Session, 'split-save/menu').Enabled,
     'Both halves of the split button must be interactive.'
   );
 end procedure;
@@ -146,243 +108,13 @@ end procedure;
 procedure VerifyDrawer(Renderer: Cui.CuiRenderer);
 begin
   using const Compact: Gui.Session<State.Msg> := Open(Renderer, 'FPAS compact gallery', 740, 680);
-  Check(Compact.Step(), 'Compact gallery did not present.');
-  Check(Control(Compact, 'drawer-open').Enabled, 'The narrow gallery needs a drawer.');
-  Send(Compact, State.Msg.SetDrawer(true));
-  Check(Control(Compact, 'drawer/close').Focused, 'The drawer close action owns focus.');
-  Check(not Control(Compact, 'drawer-open').Enabled, 'The drawer did not disable the page.');
-  Send(Compact, State.Msg.Show(State.Page.Overlays));
-  Check(HasText(Compact, 'Overlays'), 'The drawer did not select the destination.');
-end procedure;
-
-procedure VerifySplit(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
-  begin
-    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
-    case Message of
-      when State.Msg.Preview:
-        return new App.Transition<State.Model, State.Msg>(
-          Next.Model,
-          [App.Focus<State.Msg>(Target)]
-        );
-      else
-        return Next;
-    end case;
-  end function;
-
-  procedure Inject();
-  begin
-    if PendingKey <> 0 then
-      Window.SetKey(PendingKey, true);
-      Window.SetKey(PendingKey, false);
-      PendingKey := 0;
-    end if;
-  end procedure;
-
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
-  begin
-    Target := if Key = '' then Id else Id + '/' + Key end if;
-    Send(Session, State.Msg.Preview);
-    Check(Control(Session, Id, Key).Focused, 'The requested control part did not receive focus.');
-  end procedure;
-
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
-  begin
-    PendingKey := Value;
-    Check(Session.Step(), 'The split gallery closed during input.');
-    Check(Session.Step(), 'The split gallery closed while applying its message.');
-  end procedure;
-begin
-  var Target: string := '';
-  var PendingKey: int := 0;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow(
-    'FPas CUI split gallery',
-    1000,
-    760,
-    Renderer,
-    true
-  );
-  Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
-    new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
-  );
-  Check(Session.Step(), 'The split gallery did not present.');
-  Focus(Session, 'split-save');
-  Key(Session, 2);
-  Check(HasText(Session, 'Saved'), 'The main split action did not update the gallery.');
-  Focus(Session, 'split-save/menu');
-  Key(Session, 10);
-  Check(Control(Session, 'split-save/menu').Value = 'true', 'Down did not open the split menu.');
-  Key(Session, 10);
-  Check(
-    Control(Session, 'split-save/menu/draft').Value = 'true',
-    'Down did not highlight the first action.'
-  );
-  Key(Session, 10);
-  Check(
-    Control(Session, 'split-save/menu/publish').Value = 'true',
-    'Down did not highlight the second action.'
-  );
-  Session.CapturePng(Capture + '.split.png');
-  Key(Session, 2);
-  Check(HasText(Session, 'Save and publish'), 'Enter did not apply the chosen split action.');
-  Check(
-    Control(Session, 'split-save/menu').Value = 'false',
-    'Choosing an action left the menu open.'
-  );
-  Check(
-    Control(Session, 'split-save/menu').Focused,
-    'The split trigger lost focus after selection.'
-  );
-  Key(Session, 2);
-  Check(Control(Session, 'split-save/menu').Value = 'true', 'Enter did not reopen the menu.');
-  Key(Session, 3);
-  Check(Control(Session, 'split-save/menu').Value = 'false', 'Escape did not dismiss the menu.');
-  Check(Control(Session, 'split-save/menu').Focused, 'Escape discarded the trigger focus.');
-  Key(Session, 2);
-  Send(Session, State.Msg.Show(State.Page.Overview));
-  Send(Session, State.Msg.Show(State.Page.Actions));
-  Check(
-    Control(Session, 'split-save/menu').Value = 'false',
-    'Navigation retained a removed popup.'
-  );
-  Focus(Session, 'split-export');
-  Key(Session, 6);
-  Check(HasText(Session, 'Exported'), 'The outline split action did not update the gallery.');
-  Focus(Session, 'confirm-delete');
-  Key(Session, 2);
-  Check(
-    Control(Session, 'confirm-delete').Value = 'armed' and HasText(Session, 'Confirmed: 0'),
-    'First activation must arm without sending the destructive message.'
-  );
-  Check(Control(Session, 'confirm-delete').Focused, 'Confirmation must retain focus.');
-  Key(Session, 6);
-  Check(
-    Control(Session, 'confirm-delete').Value = '' and HasText(Session, 'Confirmed: 1'),
-    'Second activation must send exactly one confirmation message.'
-  );
-  Key(Session, 2);
-  Key(Session, 3);
-  Check(
-    Control(Session, 'confirm-delete').Value = '' and HasText(Session, 'Confirmed: 1'),
-    'Escape must disarm without sending a message.'
-  );
-  Key(Session, 2);
-  Send(Session, State.Msg.Show(State.Page.Overview));
-  Send(Session, State.Msg.Show(State.Page.Actions));
-  Check(
-    Control(Session, 'confirm-delete').Value = '',
-    'Navigation must retire removed confirmation state.'
-  );
-  Focus(Session, 'status-save');
-  Check(Control(Session, 'status-save').Value = 'idle', 'The status preview must begin idle.');
-  Key(Session, 2);
-  Check(
-    Control(Session, 'status-save').Value = 'busy' and HasText(Session, 'Requests: 1'),
-    'An idle activation must start one model-owned save.'
-  );
-  Check(Control(Session, 'status-save').Focused, 'Busy feedback must retain focus.');
-  Key(Session, 2);
-  Key(Session, 6);
-  Check(HasText(Session, 'Requests: 1'), 'Busy activation must not start another save.');
-  Focus(Session, 'status-success');
-  Key(Session, 2);
-  Check(
-    Control(
-      Session,
-      'status-save'
-    ).Value = 'success' and Control(Session, 'status-save').Text = 'Saved',
-    'The model must select the custom success caption.'
-  );
-  Session.CapturePng(Capture + '.status.png');
-  Focus(Session, 'status-save');
-  Key(Session, 2);
-  Check(HasText(Session, 'Requests: 1'), 'Success feedback must reject activation.');
-  Focus(Session, 'status-reset');
-  Key(Session, 2);
-  Focus(Session, 'status-save');
-  Key(Session, 6);
-  Check(
-    Control(Session, 'status-save').Value = 'busy' and HasText(Session, 'Requests: 2'),
-    'Only a model reset may re-enable the action.'
-  );
-  Focus(Session, 'status-error');
-  Key(Session, 2);
-  Focus(Session, 'status-save');
-  Key(Session, 6);
-  Check(
-    Control(Session, 'status-save').Value = 'error' and HasText(Session, 'Requests: 2'),
-    'Failure feedback must remain controlled and reject activation.'
-  );
-  Focus(Session, 'theme-preview', 'light');
-  Key(Session, 8);
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and Control(
-      Session,
-      'theme'
-    ).Value = 'dark',
-    'A preview choice must update the shared application theme and header selector.'
-  );
-  Check(
-    Control(Session, 'theme-preview', 'dark').Focused,
-    'Right must retain focus on the selected segment.'
-  );
-  Key(Session, 8);
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Light and Control(
-      Session,
-      'theme-preview'
-    ).Value = 'system',
-    'System must use the application-supplied appearance.'
-  );
-  Key(Session, 8);
-  Check(Control(Session, 'theme-preview', 'system').Focused, 'Right must not wrap past System.');
-  Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Dark));
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and Control(
-      Session,
-      'theme'
-    ).Value = 'system'
-    and Control(Session, 'theme-preview', 'system').Focused,
-    'A provider change must update the theme while retaining System and its focus.'
-  );
-  Session.CapturePng(Capture + '.theme.png');
-  Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Light));
-  Key(Session, 7);
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and Control(
-      Session,
-      'theme-preview'
-    ).Value = 'dark',
-    'An explicit choice must override the system appearance.'
-  );
-  Focus(Session, 'theme-toggle');
-  Check(
-    Control(Session, 'theme-toggle').Text = 'Switch to light',
-    'The toggle names its target appearance.'
-  );
-  Key(Session, 2);
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Light
-    and Control(Session, 'theme-toggle').Focused
-    and Control(Session, 'theme').Value = 'light',
-    'The toggle updates the model and retains focus across glyph changes.'
-  );
-  Key(Session, 6);
-  Check(
-    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark
-    and Control(Session, 'theme-toggle').Value = 'dark',
-    'Space proposes the opposite concrete theme.'
-  );
-  Send(Session, State.Msg.SetAppearance(Switchers.Selection.System));
-  Focus(Session, 'theme-toggle');
-  Key(Session, 2);
-  Check(
-    Control(Session, 'theme').Value = 'dark',
-    'Toggling System proposes an explicit opposite appearance.'
-  );
-  Session.CapturePng(Capture + '.theme-toggle.png');
+  A.Check(Compact.Step(), 'Compact gallery did not present.');
+  A.Check(A.Control(Compact, 'drawer-open').Enabled, 'The narrow gallery needs a drawer.');
+  A.Send(Compact, State.Msg.SetDrawer(true));
+  A.Check(A.Control(Compact, 'drawer/close').Focused, 'The drawer close action owns focus.');
+  A.Check(not A.Control(Compact, 'drawer-open').Enabled, 'The drawer did not disable the page.');
+  A.Send(Compact, State.Msg.Show(State.Page.Overlays));
+  A.Check(A.HasText(Compact, 'Overlays'), 'The drawer did not select the destination.');
 end procedure;
 
 procedure VerifySnapshotReentry(Renderer: Cui.CuiRenderer);
@@ -408,17 +140,18 @@ begin
     new Gui.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer), State.ThemeFor
   );
   Current := Session;
-  Check(Session.Step(), 'The initial frame was not presented.');
+  A.Check(Session.Step(), 'The initial frame was not presented.');
   discard Session.Snapshot();
-  Send(Session, State.Msg.Preview);
-  Check(Rejected, 'Snapshot must reject reentry from an update callback.');
+  A.Send(Session, State.Msg.Preview);
+  A.Check(Rejected, 'Snapshot must reject reentry from an update callback.');
 end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   VerifyDesktop(Renderer, Capture);
   VerifyDrawer(Renderer);
-  VerifySplit(Renderer, Capture);
+  ActionsContract.Verify(Renderer, Capture);
+  ActionWidgetsContract.Verify(Renderer, Capture);
   VerifySnapshotReentry(Renderer);
   SegmentedContract.Verify(Renderer, Capture);
   ToggleGroupContract.Verify(Renderer, Capture);
@@ -493,7 +226,7 @@ begin
     return;
   end if;
 
-  Check(Arguments[1] = 'software' or Arguments[1] = 'opengl', 'Unknown renderer.');
+  A.Check(Arguments[1] = 'software' or Arguments[1] = 'opengl', 'Unknown renderer.');
   Verify(
     if Arguments[1] = 'software' then Cui.CuiRenderer.Software else Cui.CuiRenderer.OpenGl end if,
     Arguments[2]

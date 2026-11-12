@@ -170,7 +170,8 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 - [ ] Emoji display (`cui_emoji`)
 - [ ] Keycap (`cui_kbd`)
 - [ ] Badge (`cui_badge`)
-- [ ] Avatar (`cui_avatar`)
+- [ ] Avatar (`cui_avatar`). Add shared image support for the avatar texture
+  option on User menu with this widget.
 - [ ] Avatar group (`cui_avatar_group`)
 - [ ] Card (`cui_card`)
 - [ ] Metric (`cui_metric`)
@@ -204,9 +205,11 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   controlled selection, focus, keyboard and application-provider contract.
 - [x] Theme toggle (`cui_theme_toggle`): [API][fpas-theme-toggle]. GUI composes
   the native icon button. TUI: implemented; target caption with sun/moon symbol.
-- [ ] Reactions (`cui_reactions`)
+- [x] Reactions (`cui_reactions`): [API][fpas-reactions]. GUI delegates the
+  count animation and interaction to CUI and returns the changed item to the model.
 - [ ] Speed dial (`cui_speed_dial`)
-- [ ] User menu (`cui_user_menu`)
+- [x] User menu (`cui_user_menu`): [API][fpas-user-menu]. GUI uses CUI's native
+  account trigger and popup with shared menu commands and focus handling.
 - [ ] Swipe actions (`cui_swipe_item_begin`)
 - [x] Segmented control (`cui_segmented`): [API][fpas-segmented]. GUI uses native
   CUI; Buttons contains the upstream view and compact date-range examples.
@@ -547,6 +550,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-theme-toggle]: ../../src/Fpas.Ui/README.md#theme-toggle
 [fpas-split-button]: ../../src/Fpas.Ui/README.md#split-button
 [fpas-menu]: ../../src/Fpas.Ui/README.md#dropdown-menu
+[fpas-reactions]: ../../src/Fpas.Ui/README.md#reactions
+[fpas-user-menu]: ../../src/Fpas.Ui/README.md#user-menu
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
 [fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
 [fpas-text-field]: ../../src/Fpas.Ui/README.md#text-field

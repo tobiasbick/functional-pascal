@@ -31,6 +31,7 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Selection chips and whole-star ratings.
 - Dropdown menus with native triggers, command states, hints, labels and separators.
 - Context menus attached to existing target components, using the same menu entries.
+- Reactions with model-owned counts and native animation, and native account menus.
 - Anchored popovers with model-owned visibility and native confirmation questions.
 - Native hover tooltips with optional shortcut key hints.
 - Single-line text fields with native editing, validation text, affixes and password reveal.

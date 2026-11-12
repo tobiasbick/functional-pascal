@@ -1,0 +1,30 @@
+unit GuiGallery.Reactions;
+
+uses GuiGallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Reactions as R, System as Sys;
+
+// Creates the four original reaction values for a new gallery.
+// ## Returns
+// Thumbs up, heart, rocket and smile with their starting counts.
+public function Initial(): array of R.Item;
+begin
+  return [
+    new R.Item('Thumbs up', Sys.Char.ConvertFromUtf32($E18A), 12, true),
+    new R.Item('Heart', Sys.Char.ConvertFromUtf32($E0F2), 4),
+    new R.Item('Rocket', Sys.Char.ConvertFromUtf32($E286), 7),
+    new R.Item('Smile', Sys.Char.ConvertFromUtf32($E164), 2)
+  ];
+end function;
+
+// Shows the native reaction group in the Actions page.
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The four independent reactions.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return R.Reactions<State.Msg>(
+    'action-reactions', Model.Reactions,
+    function(Index: int; Value: R.Item): State.Msg => State.Msg.SetReaction(Index, Value)
+  );
+end function;
+end unit;

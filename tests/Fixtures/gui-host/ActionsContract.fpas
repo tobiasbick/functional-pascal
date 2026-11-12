@@ -1,0 +1,282 @@
+unit GalleryActionsContract;
+
+uses
+  GalleryHostAssertions as A, Fpas.Ui.ThemeSwitchers as Switchers,
+  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Themes as Themes, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System.Diagnostics as Diagnostics, System.Threading as Threads;
+
+// Exercises the Actions examples through the native gallery.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the Actions captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    case Message of
+      when State.Msg.Preview:
+        if Target <> '' then
+          return new App.Transition<State.Model, State.Msg>(
+            Next.Model,
+            [App.Focus<State.Msg>(Target)]
+          );
+        end if;
+      when State.Msg.ConfirmDelete:
+        Confirmations := Confirmations + 1;
+      when State.Msg.StartSave:
+        SaveRequests := SaveRequests + 1;
+      else
+    end case;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
+  begin
+    Target := if Key = '' then Id else Id + '/' + Key end if;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(
+      A.Control(Session, Id, Key).Focused,
+      'The requested control part did not receive focus.'
+    );
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    A.Check(Session.Step(), 'The split gallery closed during input.');
+    A.Check(Session.Step(), 'The split gallery closed while applying its message.');
+  end procedure;
+  procedure WaitForStatus(Session: Gui.Session<State.Msg>; Status: string);
+  begin
+    const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+    while A.Control(Session, 'status-save').Value <> Status and Time.Elapsed.TotalSeconds < 5.0 do
+      Threads.Thread.Sleep(20);
+      A.Check(Session.Step(), 'The gallery closed before the scheduled save feedback.');
+    end while;
+
+    A.Check(
+      A.Control(Session, 'status-save').Value = Status,
+      'Missing scheduled save state ' + Status
+    );
+  end procedure;
+begin
+  var Target: string := '';
+  var PendingKey: int := 0;
+  var Confirmations: int := 0;
+  var SaveRequests: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI split gallery',
+    1000,
+    760,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
+    ThemeFor := State.ThemeFor
+  );
+  A.Check(Session.Step(), 'The split gallery did not present.');
+  const Switcher: Cui.CuiRectangle := A.Control(Session, 'theme-preview').Bounds;
+  const Toggle: Cui.CuiRectangle := A.Control(Session, 'theme-toggle').Bounds;
+  A.Check(
+    Toggle.X = Switcher.X + Switcher.Width + 16 and Toggle.Y < Switcher.Y + Switcher.Height,
+    'Both theme controls must share the original row.'
+  );
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    A.Check(
+      Item.Id <> 'status-success' and Item.Id <> 'status-error'
+      and Item.Id <> 'status-reset' and Item.Id <> 'system-appearance',
+      'The Actions preview displayed an auxiliary control.'
+    );
+  end for;
+
+  Focus(Session, 'split-save');
+  Key(Session, 2);
+  A.Check(A.HasText(Session, 'Saved'), 'The main split action did not update the gallery.');
+  Focus(Session, 'split-save/menu');
+  Key(Session, 10);
+  A.Check(
+    A.Control(Session, 'split-save/menu').Value = 'true',
+    'Down did not open the split menu.'
+  );
+  Key(Session, 10);
+  A.Check(
+    A.Control(Session, 'split-save/menu/draft').Value = 'true',
+    'Down did not highlight the first action.'
+  );
+  Key(Session, 10);
+  A.Check(
+    A.Control(Session, 'split-save/menu/publish').Value = 'true',
+    'Down did not highlight the second action.'
+  );
+  Session.CapturePng(Capture + '.split.png');
+  Key(Session, 2);
+  A.Check(A.HasText(Session, 'Save and publish'), 'Enter did not apply the chosen split action.');
+  A.Check(
+    A.Control(Session, 'split-save/menu').Value = 'false',
+    'Choosing an action left the menu open.'
+  );
+  A.Check(
+    A.Control(Session, 'split-save/menu').Focused,
+    'The split trigger lost focus after selection.'
+  );
+  Key(Session, 2);
+  A.Check(A.Control(Session, 'split-save/menu').Value = 'true', 'Enter did not reopen the menu.');
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, 'split-save/menu').Value = 'false',
+    'Escape did not dismiss the menu.'
+  );
+  A.Check(A.Control(Session, 'split-save/menu').Focused, 'Escape discarded the trigger focus.');
+  Key(Session, 2);
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Actions));
+  A.Check(
+    A.Control(Session, 'split-save/menu').Value = 'false',
+    'Navigation retained a removed popup.'
+  );
+  Focus(Session, 'split-export');
+  Key(Session, 6);
+  A.Check(
+    A.HasText(Session, 'Save and publish'),
+    'Export must leave the inline Save result in place.'
+  );
+  Focus(Session, 'confirm-delete');
+  Key(Session, 2);
+  A.Check(
+    A.Control(Session, 'confirm-delete').Value = 'armed' and Confirmations = 0
+    and not A.HasText(Session, 'Project deleted'),
+    'First activation must arm without sending the destructive message.'
+  );
+  A.Check(A.Control(Session, 'confirm-delete').Focused, 'Confirmation must retain focus.');
+  Key(Session, 6);
+  A.Check(
+    A.Control(Session, 'confirm-delete').Value = '' and Confirmations = 1
+    and A.HasText(Session, 'Project deleted'),
+    'Second activation must send exactly one confirmation message.'
+  );
+  Key(Session, 2);
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, 'confirm-delete').Value = '' and Confirmations = 1,
+    'Escape must disarm without sending a message.'
+  );
+  Key(Session, 2);
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Actions));
+  A.Check(
+    A.Control(Session, 'confirm-delete').Value = '',
+    'Navigation must retire removed confirmation state.'
+  );
+  Focus(Session, 'status-save');
+  A.Check(A.Control(Session, 'status-save').Value = 'idle', 'The status preview must begin idle.');
+  Key(Session, 2);
+  A.Check(
+    A.Control(Session, 'status-save').Value = 'busy' and SaveRequests = 1,
+    'An idle activation must start one model-owned save.'
+  );
+  A.Check(A.Control(Session, 'status-save').Focused, 'Busy feedback must retain focus.');
+  Key(Session, 2);
+  Key(Session, 6);
+  A.Check(SaveRequests = 1, 'Busy activation must not start another save.');
+  WaitForStatus(Session, 'success');
+  A.Check(
+    A.Control(Session, 'status-save').Text = 'Saved',
+    'Completion must show the original caption.'
+  );
+  Session.CapturePng(Capture + '.status.png');
+  Key(Session, 2);
+  A.Check(SaveRequests = 1, 'Success feedback must reject activation.');
+  WaitForStatus(Session, 'idle');
+  Key(Session, 6);
+  A.Check(
+    A.Control(Session, 'status-save').Value = 'busy' and SaveRequests = 2,
+    'Returning to idle must re-enable saving.'
+  );
+  Focus(Session, 'theme-preview', 'light');
+  Key(Session, 8);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
+      Session,
+      'theme'
+    ).Value = 'dark',
+    'A preview choice must update the shared application theme and header selector.'
+  );
+  A.Check(
+    A.Control(Session, 'theme-preview', 'dark').Focused,
+    'Right must retain focus on the selected segment.'
+  );
+  Key(Session, 8);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Light and A.Control(
+      Session,
+      'theme-preview'
+    ).Value = 'system',
+    'System must use the application-supplied appearance.'
+  );
+  Key(Session, 8);
+  A.Check(
+    A.Control(Session, 'theme-preview', 'system').Focused,
+    'Right must not wrap past System.'
+  );
+  A.Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Dark));
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
+      Session,
+      'theme'
+    ).Value = 'system'
+    and A.Control(Session, 'theme-preview', 'system').Focused,
+    'A provider change must update the theme while retaining System and its focus.'
+  );
+  Session.CapturePng(Capture + '.theme.png');
+  A.Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Light));
+  Key(Session, 7);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
+      Session,
+      'theme-preview'
+    ).Value = 'dark',
+    'An explicit choice must override the system appearance.'
+  );
+  Focus(Session, 'theme-toggle');
+  A.Check(
+    A.Control(Session, 'theme-toggle').Text = 'Switch to light',
+    'The toggle names its target appearance.'
+  );
+  Key(Session, 2);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Light
+    and A.Control(Session, 'theme-toggle').Focused
+    and A.Control(Session, 'theme').Value = 'light',
+    'The toggle updates the model and retains focus across glyph changes.'
+  );
+  Key(Session, 6);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark
+    and A.Control(Session, 'theme-toggle').Value = 'dark',
+    'Space proposes the opposite concrete theme.'
+  );
+  A.Send(Session, State.Msg.SetAppearance(Switchers.Selection.System));
+  Focus(Session, 'theme-toggle');
+  Key(Session, 2);
+  A.Check(
+    A.Control(Session, 'theme').Value = 'dark',
+    'Toggling System proposes an explicit opposite appearance.'
+  );
+  Session.CapturePng(Capture + '.theme-toggle.png');
+end procedure;
+end unit;

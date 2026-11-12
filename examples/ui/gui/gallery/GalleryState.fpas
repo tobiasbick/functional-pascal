@@ -2,7 +2,8 @@ unit GuiGallery.State;
 
 uses
   Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Themes as Themes,
-  Fpas.Ui.StatusButtons as Work, Fpas.Ui.RangeSliders as R, Fpas.Ui.Gui.Toasts as Toasts;
+  Fpas.Ui.StatusButtons as Work, Fpas.Ui.RangeSliders as R, Fpas.Ui.Gui.Toasts as Toasts,
+  System as Sys, GuiGallery.Commands as Commands, GuiGallery.Reactions as ReactionDemo, Fpas.Ui.Reactions as React;
 
 // Pages from the CUI gallery with accepted FPAS previews.
 public type Page = enum: byte
@@ -94,14 +95,14 @@ public type Model = record
   public ToggleAlignment: (array of bool)? := null;
   // Completed holds shown by the gallery preview.
   public HoldCount: int := 0;
-  // Completed two-step confirmations; the preview deletes no data.
-  public DeleteCount: int := 0;
+  // Whether the confirmation preview has completed.
+  public ProjectDeleted: bool := false;
   // Model-owned state of the inline save preview.
   public SaveStatus: Work.Status := Work.Status.Idle;
-  // Save requests accepted while idle.
-  public SaveCount: int := 0;
-  // Last action from either split button.
+  // Last action from the Save split button.
   public SplitResult: string := '';
+  // Reaction counts and activation on the Actions page.
+  public Reactions: array of React.Item := ReactionDemo.Initial();
   // Whether the compact navigation drawer is open.
   public Drawer: bool := false;
   // Whether the sheet preview is open.
@@ -212,10 +213,14 @@ public type Msg = variant
   ConfirmDelete;
   // Start the inline save preview while idle.
   StartSave;
-  // Complete, fail or reset the inline save preview.
+  // Apply a scheduled feedback state to the save preview.
   SetSaveStatus(Value: Work.Status);
   // Record a primary or menu action.
   SplitChoice(Value: string);
+  // Apply the changed reaction proposed by CUI.
+  SetReaction(Index: int; Value: React.Item);
+  // Choose a command from the simulated account menu.
+  UserCommand(Key: string);
   // Open or close the compact navigation drawer.
   SetDrawer(Open: bool);
   // Open or close the sheet preview.
@@ -270,6 +275,13 @@ begin
     ) = Themes.Mode.Dark then Themes.Dark()
     else Themes.Light()
     end if;
+end function;
+
+function ChangeReaction(Items: array of React.Item; Index: int; Value: React.Item): array of React.Item;
+begin
+  const Next: array of React.Item := cast<array of React.Item>(Items.Clone());
+  Next[Index] := Value;
+  return Next;
 end function;
 
 // Applies a gallery action.
@@ -379,11 +391,10 @@ begin
       HoldCount := State.HoldCount + 1;
     end with;
     when Msg.ConfirmDelete: State with
-      DeleteCount := State.DeleteCount + 1;
+      ProjectDeleted := true;
     end with;
     when Msg.StartSave: if State.SaveStatus = Work.Status.Idle then State with
         SaveStatus := Work.Status.Busy;
-        SaveCount := State.SaveCount + 1;
       end with
       else State
       end if;
@@ -448,31 +459,12 @@ begin
     when Msg.SetWeight(const Value: string): State with
       Weight := Value;
     end with;
+    when Msg.SetReaction(const Index: int, const Value: React.Item): State with
+      Reactions := ChangeReaction(State.Reactions, Index, Value);
+    end with;
+    when Msg.UserCommand(_): State;
     when Msg.Preview: State;
   end case;
-  const Commands: array of Mvu.Command<Msg> := case Message of
-    when Msg.SaveProfile: [
-      Toasts.Show<Msg>('Profile updated', new Toasts.Options(Appearance := Toasts.Tone.Success))
-    ];
-    when Msg.SelectAncestor(const Label: string): [Toasts.Show<Msg>(Label)];
-    when Msg.FinishSteps: [
-      Toasts.Show<Msg>('All set', new Toasts.Options(Appearance := Toasts.Tone.Success))
-    ];
-    when Msg.Notify(
-      const Title: string,
-      const Settings: Toasts.Options
-    ): [Toasts.Show<Msg>(Title, Settings)];
-    when Msg.ArchiveMessage: [
-      Toasts.Show<Msg>(
-        'Message archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
-        function(): Msg => Msg.UndoArchive
-      )
-    ];
-    when Msg.UndoArchive: [
-      Toasts.Show<Msg>('Message restored', new Toasts.Options(Appearance := Toasts.Tone.Success))
-    ];
-    else [];
-  end case;
-  return new Mvu.Transition<Model, Msg>(Next, Commands);
+  return new Mvu.Transition<Model, Msg>(Next, Commands.ForAction(State, Message));
 end function;
 end unit;

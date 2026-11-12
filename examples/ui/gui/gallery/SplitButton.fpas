@@ -1,33 +1,23 @@
 unit GuiGallery.SplitButton;
 
 uses
-  GuiGallery.State as State, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Elements as E,
+  GuiGallery.State as State, GuiGallery.Sections as G, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
-function Items(): array of Split.Item<State.Msg>;
+function Items(ShowResult: bool): array of Split.Item<State.Msg>;
+  function Item(Key: string; Caption: string; Glyph: int; TerminalIcon: string): Split.Item<State.Msg>;
+  begin
+    return new Split.Item<State.Msg>(
+      Key, Caption, if ShowResult then State.Msg.SplitChoice(Caption) else State.Msg.Preview end if,
+      if ShowResult then Sys.Char.ConvertFromUtf32(Glyph) else '' end if,
+      if ShowResult then TerminalIcon else '' end if
+    );
+  end function;
 begin
   return [
-    new Split.Item<State.Msg>(
-      'draft',
-      'Save as draft',
-      State.Msg.SplitChoice('Save as draft'),
-      Sys.Char.ConvertFromUtf32($E0CC),
-      '▤'
-    ),
-    new Split.Item<State.Msg>(
-      'publish',
-      'Save and publish',
-      State.Msg.SplitChoice('Save and publish'),
-      Sys.Char.ConvertFromUtf32($E152),
-      '↑'
-    ),
-    new Split.Item<State.Msg>(
-      'schedule',
-      'Schedule…',
-      State.Msg.SplitChoice('Schedule…'),
-      Sys.Char.ConvertFromUtf32($E087),
-      '◷'
-    )
+    Item('draft', 'Save as draft', $E0CC, '▤'),
+    Item('publish', 'Save and publish', $E152, '↑'),
+    Item('schedule', 'Schedule…', $E087, '◷')
   ];
 end function;
 
@@ -40,26 +30,20 @@ end function;
 public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   const Save: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
-    'split-save', 'Save', State.Msg.SplitChoice('Saved'), Items(),
+    'split-save', 'Save', State.Msg.SplitChoice('Saved'), Items(true),
     new Split.Options(Icon := Sys.Char.ConvertFromUtf32($E14D), TerminalIcon := '↓')
   );
   const Export: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
-    'split-export', 'Export', State.Msg.SplitChoice('Exported'), Items(),
+    'split-export', 'Export', State.Msg.Preview, Items(false),
     new Split.Options(
       Variant := S.ButtonVariant.Outline,
       Icon := Sys.Char.ConvertFromUtf32($E0B2),
       TerminalIcon := '↓'
     )
   );
-  return E.Column<State.Msg>(
-    new L.Flow(Gap := L.Spacing.Normal),
-    E.Styled<State.Msg>(E.Text<State.Msg>('Split button'), S.Role.Heading),
-    E.Styled<State.Msg>(
-      E.Text<State.Msg>('A main action with related actions one click away.'),
-      S.Role.Secondary
-    ),
-    E.Row<State.Msg>(new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))), Save, Export),
-    E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)
-  );
+  const Content: array of E.Element<State.Msg> := if Model.SplitResult = '' then [Save, Export]
+    else [Save, Export, E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)]
+    end if;
+  return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
 end function;
 end unit;

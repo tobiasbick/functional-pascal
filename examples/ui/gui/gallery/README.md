@@ -56,18 +56,21 @@ the accepted widget examples from the
   shortcuts shown as key hints on hover.
 - **Disclosure** asks for confirmation before showing the simulated branch
   deletion result. It uses the original danger action and Cancel button.
-- **Actions** shows the primary Save and outline Export split buttons. Their
-  main and menu actions update the inline result, as in the CUI gallery.
+- **Actions** shows the primary Save and outline Export split buttons.
+  Save reports its main or menu action beside the buttons.
   The Toggle group section shows independent formatting icons and exclusive
   text alignment, with the original Bold and Left defaults.
-  Delete project demonstrates two-step confirmation with a harmless counter.
-  Activate twice within three seconds; Escape or a click outside cancels.
-  Save changes shows inline work feedback. Complete, Fail and Reset select its
-  model-owned result; the status button itself accepts activation only while idle.
-  The Theme section uses the same light/dark/System switcher as the sidebar.
-  Its source button explicitly simulates an application appearance-provider change.
-  The adjacent sun/moon Theme toggle proposes an explicit opposite light/dark
+  Delete project demonstrates two-step confirmation and shows Project deleted
+  beside the buttons after confirmation.
+  Activate twice within three seconds. Escape or a click outside cancels.
+  Save changes shows inline work feedback. It runs for 1.4 seconds, displays
+  Saved for 1.6 seconds, and returns to idle.
+  Reactions starts with four native icon pills and animates changes to their counts.
+  The Theme section places the light/dark/System switcher beside the sun/moon
+  toggle. The toggle proposes an explicit opposite light/dark
   choice, including when System was selected, and retains focus after changing.
+  User menu opens the original account popup with Profile, Billing, Settings
+  and Log out as preview commands.
 - **Smart inputs** shows the original URL and weight fields with a prefix and
   suffix. Edits change only the value inside the field.
 - The sidebar changes pages. At narrow widths, open it with the **Components**

@@ -2,15 +2,15 @@ unit GuiGallery.ThemeSwitcher;
 
 uses
   Fpas.Ui.ThemeToggles as Toggles,
-  GuiGallery.State as State, Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Themes as Themes,
-  Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
+  GuiGallery.State as State, GuiGallery.Sections as G, Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
 // Shows the same controlled appearance selector used by the gallery header.
 //
 // ## Parameters
 // - `Model`: Current appearance choices and simulated provider value.
 // ## Returns
-// The selector, a concrete light/dark toggle and a simulated appearance provider.
+// The original row with the selector and light/dark toggle.
 public function View(Model: State.Model): E.Element<State.Msg>;
   function Choose(Appearance: Themes.Mode): State.Msg;
   begin
@@ -21,34 +21,16 @@ public function View(Model: State.Model): E.Element<State.Msg>;
     );
   end function;
 begin
-  return E.Column<State.Msg>(
-    E.Styled<State.Msg>(E.Text<State.Msg>('Theme'), S.Role.Heading),
-    E.Text<State.Msg>('Select light, dark, or the appearance supplied by the application.'),
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(16), Wrap := true),
     Switchers.ThemeSwitcher<State.Msg>(
       'theme-preview', Model.Appearance, State.Msg.SetAppearance,
       new Switchers.Options(WithSystem := true)
     ),
-    E.Row<State.Msg>(
-      new L.Flow(Gap := L.Spacing.Tight, Align := L.Alignment.Center),
-      Toggles.ThemeToggle<State.Msg>(
-        'theme-toggle',
-        Switchers.Resolve(Model.Appearance, Model.SystemAppearance),
-        Choose
-      ),
-      E.Text<State.Msg>('Theme toggle · explicit light/dark')
-    ),
-    B.Button<State.Msg>(
-      'system-appearance', 'System source: ' + Model.SystemAppearance.ToString(),
-      State.Msg.SetSystemAppearance(
-        if Model.SystemAppearance = Themes.Mode.Light then Themes.Mode.Dark
-          else Themes.Mode.Light
-          end if
-      ),
-      new B.Options(ControlSize := B.Size.Small)
-    ),
-    E.Styled<State.Msg>(
-      E.Text<State.Msg>('The source button simulates an external appearance change.'),
-      S.Role.Muted
+    Toggles.ThemeToggle<State.Msg>(
+      'theme-toggle',
+      Switchers.Resolve(Model.Appearance, Model.SystemAppearance),
+      Choose
     )
   );
 end function;

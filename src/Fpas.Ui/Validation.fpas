@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -204,6 +204,44 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         PopupRules.CheckQuestion(Settings, At);
         PopupRules.CheckTrigger<TMsg>(Trigger, At);
         Visit(Trigger, At + '/trigger');
+      when E.Element.ReactionGroup(const Id: string, const Items: array of Reactions.Item, _, _):
+        const Path: string := Location + '/reactions';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        if Items.Length = 0 then
+          Rules.Reject(At, 'A reaction group needs at least one item.');
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: Reactions.Item := Items[Index];
+          const Part: string := Identify(Reactions.ItemId(Id, Index), At + '/item');
+          Rules.CheckText(Item.Label, Part + '/label');
+          Rules.CheckText(Item.Icon, Part + '/icon');
+          if Sys.String.IsNullOrWhiteSpace(Item.Label) or Item.Label.Contains(#10)
+            or Item.Label.Contains(#13) or Item.Icon = ''
+            or Item.Count < 0 or (not Item.Active and Item.Count = int.MaxValue)
+          then
+            Rules.Reject(Part, 'A reaction needs a single-line name, an icon and a valid count.');
+          end if;
+        end for;
+      when E.Element.AccountMenu(
+        const Id: string, const Name: string, const Entries: array of Menus.Entry<TMsg>,
+        const Settings: UserMenus.Options
+      ):
+        const Path: string := Location + '/userMenu';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        MenuRules.Check<TMsg>(Id, Name, Entries, null, Path, Identify);
+        Rules.CheckText(Settings.Detail, Path + '/detail');
+        Rules.CheckText(Settings.Status, Path + '/status');
+        if Settings.Detail.Contains(#10) or Settings.Detail.Contains(#13)
+          or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
+          or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0
+        then
+          Rules.Reject(
+            Path,
+            'A user menu needs single-line detail, a CUI placement and finite nonnegative width.'
+          );
+        end if;
       when E.Element.Dropdown(
         const Id: string,
         const Label: string,

@@ -1,0 +1,68 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Reactions;
+
+uses
+  Fpas.Ui.Reactions as R, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists;
+
+// Presents the native reaction group and publishes its proposal.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context and message queue.
+// - `Id`: Stable group identity.
+// - `Items`: Model-owned reactions.
+// - `OnChange`: Maps the changed index and proposed item to a message.
+// - `Enabled`: Whether the group accepts input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of R.Item;
+  OnChange: function(int, R.Item): TMsg; Enabled: bool
+);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Group: string := C.Token('reactions', Id);
+  const Tokens: Lists.List<string> := new Lists.List<string>(Items.Length + 1);
+  const Native: array of Cui.CuiReaction := new Cui.CuiReaction[Items.Length];
+  Tokens.Add(Group);
+  var Focus: int := 0;
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: R.Item := Items[Index];
+    const ItemId: string := R.ItemId(Id, Index);
+    const Token: string := C.Token('reaction', ItemId);
+    Native[Index] := new Cui.CuiReaction(Item.Icon, Item.Count, Item.Active);
+    Tokens.Add(Token);
+    if C.WantsFocus<TMsg>(Frame, ItemId, Token, Accept) then
+      Focus := Index + 1;
+    end if;
+
+    if not Frame.PaintingClosed then
+      Frame.Controls.Add(
+        new App.Control(
+          ItemId,
+          Item.Label,
+          'reaction',
+          new Cui.CuiRectangle(),
+          Accept,
+          Value := Item.Count.ToString()
+        )
+      );
+    end if;
+  end for;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(Id, 'Reactions', 'reactions', new Cui.CuiRectangle(), Accept)
+    );
+  end if;
+
+  const Result: Cui.CuiReactionChange := Frame.Window.Reactions(
+    Group, Native, Accept, Focus, if Frame.PaintingClosed then null else Tokens.ToArray() end if
+  );
+  if Result.Index >= 0 then
+    const Item: R.Item := Items[Result.Index] with
+      Count := Result.Count;
+      Active := Result.Active;
+    end with;
+    Frame.Messages.Add(OnChange(Result.Index, Item));
+  end if;
+end procedure;
+end unit;

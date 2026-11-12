@@ -42,6 +42,8 @@
 #include "widgets/number_field.h"
 #include "widgets/split_button.h"
 #include "widgets/menu.h"
+#include "widgets/reactions.h"
+#include "widgets/user_menu.h"
 
 /** Presents the completed current frame without waiting for more input.
  * @param app Live UI-thread application with a frame open.

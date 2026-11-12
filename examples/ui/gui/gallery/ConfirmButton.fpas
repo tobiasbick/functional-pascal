@@ -2,26 +2,17 @@ unit GuiGallery.ConfirmButton;
 
 uses
   GuiGallery.State as State, Fpas.Ui.ConfirmButtons as Confirm, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+  System as Sys;
 
-// Shows CUI's two-step destructive action with a harmless confirmation counter.
+// Shows CUI's two-step destructive action.
 //
-// ## Parameters
-// - `Model`: Current gallery state.
 // ## Returns
-// The native gallery's confirmation example and its completed action count.
-public function View(Model: State.Model): E.Element<State.Msg>;
+// The native gallery's Delete project button.
+public function View(): E.Element<State.Msg>;
 begin
-  return E.Column<State.Msg>(
-    new L.Flow(Gap := L.Spacing.Normal),
-    Confirm.ConfirmButton<State.Msg>(
-      'confirm-delete', 'Delete project', State.Msg.ConfirmDelete,
-      new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
-    ),
-    E.Styled<State.Msg>(
-      E.Text<State.Msg>('Confirmed: ' + Model.DeleteCount.ToString()),
-      S.Role.Muted
-    )
+  return Confirm.ConfirmButton<State.Msg>(
+    'confirm-delete', 'Delete project', State.Msg.ConfirmDelete,
+    new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
   );
 end function;
 end unit;

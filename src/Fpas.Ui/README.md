@@ -34,6 +34,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Button group with a shared outline | Yes | Yes | Yes |
 | Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
 | Context menu attached to a component | | | Yes |
+| Reactions and user menus | | | Yes |
 | Popover and confirmation popover anchored to a button | | | Yes |
 | Tooltip attached to a single control | | | Yes |
 | Single-line text fields with labels, validation, affixes and password reveal | | | Yes |
@@ -233,6 +234,25 @@ each horizontal arrow press moves focus one item within the group.
 
 Toggle groups require the graphical profile. CUI draws and handles both
 groups on the GUI gallery's Actions page.
+
+## Reactions
+
+`Fpas.Ui.Reactions.Reactions` takes an ID, an ordered list of model-owned
+reactions, and an `OnChange` mapper. Each item has an accessible name, a CUI
+glyph, a count and an activation flag. The mapper receives the changed position
+and CUI's proposed item. Retain the proposal in the model to apply it. CUI
+animates the displayed count and selection. Use `ItemId(Id, Index)` to focus an
+item. Reactions require the graphical profile.
+
+## User menu
+
+`Fpas.Ui.UserMenus.UserMenu` takes a stable ID, an account name and the same
+`Fpas.Ui.Menus.Entry<TMsg>` commands and decorations as a dropdown. CUI draws
+the initials avatar, optional status and detail, trigger and popup. `Options`
+sets compact presentation, popup placement and width, and input permission.
+Use the pointer, Enter or Space to open the menu. Choosing a command dispatches
+its message. Escape dismisses the popup and returns focus to the trigger.
+User menus require the graphical profile.
 
 ## Checkbox, switch and radio controls
 

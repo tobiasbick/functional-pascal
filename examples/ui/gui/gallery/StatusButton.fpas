@@ -1,41 +1,22 @@
 unit GuiGallery.StatusButton;
 
 uses
-  GuiGallery.State as State, Fpas.Ui.StatusButtons as Work, Fpas.Ui.Buttons as B,
-  Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
+  GuiGallery.State as State, Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Elements as E, System as Sys;
 
-// Shows CUI's inline save feedback with explicit model transitions.
+// Shows CUI's inline save feedback.
 //
 // ## Parameters
 // - `Model`: Current gallery state.
 // ## Returns
-// The save button, model controls and accepted request count.
+// The Save changes button with its model-owned status.
 public function View(Model: State.Model): E.Element<State.Msg>;
 begin
-  return E.Column<State.Msg>(
-    Work.StatusButton<State.Msg>(
-      'status-save', 'Save changes', Model.SaveStatus, State.Msg.StartSave,
-      new Work.Options(
-        Icon := Sys.Char.ConvertFromUtf32($E14D),
-        TerminalIcon := '↓',
-        SuccessLabel := 'Saved'
-      )
-    ),
-    E.Row<State.Msg>(
-      B.Button<State.Msg>(
-        'status-success', 'Complete', State.Msg.SetSaveStatus(Work.Status.Success),
-        new B.Options(ControlSize := B.Size.Small, Enabled := Model.SaveStatus = Work.Status.Busy)
-      ),
-      B.Button<State.Msg>(
-        'status-error', 'Fail', State.Msg.SetSaveStatus(Work.Status.Error),
-        new B.Options(ControlSize := B.Size.Small, Enabled := Model.SaveStatus = Work.Status.Busy)
-      ),
-      B.Button<State.Msg>(
-        'status-reset', 'Reset', State.Msg.SetSaveStatus(Work.Status.Idle),
-        new B.Options(ControlSize := B.Size.Small, Enabled := Model.SaveStatus <> Work.Status.Idle)
-      )
-    ),
-    E.Styled<State.Msg>(E.Text<State.Msg>('Requests: ' + Model.SaveCount.ToString()), S.Role.Muted)
+  return Work.StatusButton<State.Msg>(
+    'status-save', 'Save changes', Model.SaveStatus, State.Msg.StartSave,
+    new Work.Options(
+      Icon := Sys.Char.ConvertFromUtf32($E14D), TerminalIcon := '↓', SuccessLabel := 'Saved'
+    )
   );
 end function;
 end unit;

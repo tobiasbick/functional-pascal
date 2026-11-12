@@ -46,7 +46,14 @@ choices, the copy control, and modal sheet focus. Native keyboard input drives
 the split button's main action, menu highlight, selection, Escape and focus
 return. The Actions page also exercises both toggle group modes, including
 single-step arrow focus, model rejection and repeated activation of the
-selected alignment.
+selected alignment. The morphing examples check two-step confirmation and
+the automatic Busy, Saved and Idle transitions through native keyboard
+input. The theme previews share one row at desktop width and update the
+same application appearance as the header selector.
+The reaction pills check pointer and keyboard proposals for the active flag and
+count. The account menu checks native pointer and keyboard selection, Escape,
+focus return and popup retirement on navigation. The contract captures the
+Actions page with the account menu closed and open.
 The Selection page checks native checkbox, switch and radio input, the
 graphical preflight boundary and the two-column and stacked layouts. It also
 checks pointer and keyboard selection in the radio cards, stepped slider
@@ -57,7 +64,7 @@ Navigation checks independent tab selections, ancestor activation and the inform
 breadcrumb, keyboard page selection, page boundaries and the compact pager.
 It also exercises Back, Next and Finish around the read-only stepper. The
 contract captures the Buttons, Selection, Navigation and Actions pages, the
-compact Navigation layout and the open split menu.
+compact Navigation layout, the open split menu and the saved status feedback.
 The Overlays contract captures the native toast stack and checks hover
 expansion, exactly-once Undo, dismissal and expiry in an idle event loop.
 Navigation exercises the breadcrumb and Finish toast commands.

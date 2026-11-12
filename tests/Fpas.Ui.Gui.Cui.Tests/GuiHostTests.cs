@@ -75,7 +75,8 @@ public sealed class GuiHostTests
         string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
         foreach (var (page, width, height) in new[]
         {
-            ("actions", 1000, 760), ("selection", 1100, 1360),
+            ("actions", 1000, 760), ("status", 1000, 760),
+            ("actions-account", 1000, 1040), ("user-menu", 1000, 1040), ("selection", 1100, 1360),
             ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
             ("tooltips", 1000, 900), ("popover", 1000, 900), ("confirm-popover", 1000, 900),
             ("text-fields", 1000, 760), ("text-fields-compact", 360, 760),

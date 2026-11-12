@@ -60,7 +60,8 @@ public sealed partial class CuiWindow
         => DrawMenu(id, "", "", entries, 0, 0, 0, false, enabled, false, trackingIds, true);
 
     private unsafe CuiMenuResult DrawMenu(string id, string label, string icon, CuiMenuEntry[] entries,
-        int variant, int placement, float width, bool iconOnly, bool enabled, bool focus, string[]? trackingIds, bool contextMenu)
+        int variant, int placement, float width, bool iconOnly, bool enabled, bool focus,
+        string[]? trackingIds, bool contextMenu, UserMenuTrigger? user = null)
     {
         CheckFrame();
         if (contextMenu && NativeMethods.LastNode(context) < 0)
@@ -91,11 +92,18 @@ public sealed partial class CuiWindow
             flags[i] = (int)entry.Kind | (entry.Enabled ? 0 : 4) | (entry.Danger ? 8 : 0) | (entry.Checked ? 16 : 0);
         }
         int choice, open, highlighted;
-        uint owner;
+        uint owner = 0;
+        string key = Stable(id);
         fixed (int* bits = flags, parts = nodes)
-            choice = NativeMethods.Menu(context, Stable(id), label, icon.Length == 0 ? null : icon,
+        {
+            choice = user is null ? NativeMethods.Menu(context, key, label, icon.Length == 0 ? null : icon,
                 keys, labels, icons, shortcuts, bits, entries.Length, variant, placement, width,
-                iconOnly ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, contextMenu ? 1 : 0, parts, out open, out highlighted, out owner);
+                iconOnly ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, contextMenu ? 1 : 0, parts, out open, out highlighted, out owner)
+                : NativeMethods.UserMenu(context, key, label, user.Detail.Length == 0 ? null : user.Detail,
+                    user.Status.Length == 0 ? null : user.Status, keys, labels, icons, shortcuts, bits,
+                    entries.Length, placement, width, user.Compact ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0,
+                    parts, out open, out highlighted);
+        }
         if (contextMenu) TrackModal(id, owner);
         if (trackingIds is not null)
             for (int i = 0; i < nodes.Length; i++)

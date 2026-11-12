@@ -66,4 +66,6 @@ static void fpas_route_text_area_wheel(cui_ctx *ui);
 #include "widgets/number_field.c"
 #include "widgets/split_button.c"
 #include "widgets/menu.c"
+#include "widgets/reactions.c"
+#include "widgets/user_menu.c"
 #include "host_theme.c"

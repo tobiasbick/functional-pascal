@@ -1,7 +1,10 @@
 unit Fpas.Ui.Composition;
 
 uses
-  Fpas.Ui.Elements as E,
+  Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
+  Fpas.Ui.Elements as E, Fpas.Ui.TableOfContents as Toc,
+  Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
+  Fpas.Ui.Metrics as Metrics, Fpas.Ui.AvatarGroups as AvatarGroups, Fpas.Ui.EmptyStates as EmptyStates,
   Fpas.Ui.SwipeActions as Swipe,
   Fpas.Ui.Internal.MessageMapping as M,
   Fpas.Ui.ExpandableCards as ExpandableCards,
@@ -15,6 +18,7 @@ uses
   Fpas.Ui.Terminal as T,
   Fpas.Ui.TerminalExtensions.Input as Keys,
   System as Sys,
+  Fpas.Ui.Internal.Mapping.Feedback as Feedback,
   Fpas.Ui.Internal.Mapping.Capture as Capture,
   Fpas.Ui.Internal.Mapping.Actions as Actions,
   Fpas.Ui.Internal.Mapping.Editors as Editors,
@@ -84,6 +88,40 @@ public function Map<TChild, TParent>(
   end function;
 begin
   return case Value of
+    when E.Element.LinkAction(
+      const Id: string,
+      const Label: string,
+      const Activate: TChild,
+      const Enabled: bool
+    ): E.Element<TParent>.LinkAction(Id, Label, Messages(Activate), Enabled);
+    when E.Element.Avatar(
+      const Id: string,
+      const Name: string,
+      const Settings: Avatars.Options
+    ): E.Element<TParent>.Avatar(Id, Name, Settings);
+    when E.Element.HoverCard(
+      const Id: string, const Trigger: E.Element<TChild>, const Content: E.Element<TChild>,
+      const Settings: HoverCards.Options
+    ): E.Element<TParent>.HoverCard(
+      Id,
+      Map<TChild, TParent>(Trigger, Messages),
+      Map<TChild, TParent>(Content, Messages),
+      Settings
+    );
+    when E.Element.Banner(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Countdown(_, _, _), E.Element.Checklist(
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Feedback.Map<TChild, TParent>(Value, Messages);
     when E.Element.Dropzone(_, _, _, _), E.Element.AvatarUpload(
       _,
       _,
@@ -198,6 +236,46 @@ begin
       Messages(FOnConfirm),
       Messages(FOnDismiss)
     );
+    when E.Element.Grid(
+      const Settings: Grids.Options,
+      const Nodes: array of E.Element<TChild>
+    ): E.Element<TParent>.Grid(Settings, Children(Nodes));
+    when E.Element.Card(
+      const Id: string, const Nodes: array of E.Element<TChild>, const Settings: Cards.Options,
+      const Activate: Sys.Func<TChild>?
+    ): E.Element<TParent>.Card(
+      Id,
+      Children(Nodes),
+      Settings,
+      M.Factory<TChild, TParent>(Activate, Messages)
+    );
+    when E.Element.Badge(
+      const Id: string,
+      const Text: string,
+      const Settings: Badges.Options
+    ): E.Element<TParent>.Badge(Id, Text, Settings);
+    when E.Element.Metric(
+      const Id: string,
+      const Label: string,
+      const Reading: string,
+      const Settings: Metrics.Options
+    ): E.Element<TParent>.Metric(Id, Label, Reading, Settings);
+    when E.Element.AvatarGroup(
+      const Id: string,
+      const Names: array of string,
+      const Settings: AvatarGroups.Options
+    ): E.Element<TParent>.AvatarGroup(Id, Names, Settings);
+    when E.Element.EmptyState(
+      const Id: string,
+      const Title: string,
+      const Settings: EmptyStates.Options,
+      const Action: Sys.Func<TChild>?
+    ): E.Element<TParent>.EmptyState(
+      Id,
+      Title,
+      Settings,
+      M.Factory<TChild, TParent>(Action, Messages)
+    );
     when E.Element.Stack(
       const FChildren: array of E.Element<TChild>,
       const FHorizontal: bool,
@@ -215,18 +293,25 @@ begin
       const FChild: E.Element<TChild>,
       const FTitle: string
     ): E.Element<TParent>.Framed(Map<TChild, TParent>(FChild, Messages), FTitle);
+    when E.Element.TableOfContents(
+      const FId: string, const FScrollId: string, const FItems: array of Toc.Item,
+      const FChanged: Sys.Func<string, TChild>?, const FEnabled: bool
+    ): E.Element<TParent>.TableOfContents(
+      FId, FScrollId, FItems, M.Callback<string, TChild, TParent>(FChanged, Messages), FEnabled
+    );
+    when E.Element.ScrollAnchor(const FId: string): E.Element<TParent>.ScrollAnchor(FId);
     when E.Element.Scroll(
       const FId: string,
       const FChild: E.Element<TChild>,
       const FPosition: L.ScrollPosition?,
       const FOnScroll: Sys.Func<L.ScrollChange, TChild>?,
-      const FShowScrollbar: bool
+      const FShowScrollbar: bool, const FFadeEdges: bool
     ): E.Element<TParent>.Scroll(
       FId,
       Map<TChild, TParent>(FChild, Messages),
       FPosition,
       M.Callback<L.ScrollChange, TChild, TParent>(FOnScroll, Messages),
-      FShowScrollbar
+      FShowScrollbar, FFadeEdges
     );
     when E.Element.Sheet(
       const FId: string,

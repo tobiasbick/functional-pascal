@@ -1,0 +1,63 @@
+unit GuiGallery.Pages.Feedback.Widgets.BadgesAndAvatars;
+
+uses
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
+  Fpas.Ui.Styles as S, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as B,
+  Fpas.Ui.Avatars as A, Fpas.Ui.AvatarGroups as Groups;
+
+// Shows the native badges, status avatars and overlapping team from Feedback.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The Badges and avatars card.
+public function View<TMsg>(): E.Element<TMsg>;
+begin
+  return Cards.Card<TMsg>(
+    'badges-and-avatars-card', [
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(8), Wrap := true),
+        B.Badge<TMsg>('badge-draft', 'Draft'),
+        B.Badge<TMsg>('badge-recommended', 'Recommended', new B.Options(Tone := S.Tone.Accent)),
+        B.Badge<TMsg>('badge-active', 'Active', new B.Options(Tone := S.Tone.Success, Dot := true)),
+        B.Badge<TMsg>(
+          'badge-pending',
+          'Pending',
+          new B.Options(Tone := S.Tone.Warning, Dot := true)
+        ),
+        B.Badge<TMsg>(
+          'badge-overdue',
+          'Overdue',
+          new B.Options(Tone := S.Tone.Danger, Dot := true)
+        ),
+        B.Badge<TMsg>('badge-beta', 'Beta', new B.Options(Tone := S.Tone.Violet)),
+        B.Badge<TMsg>('badge-new', 'New', new B.Options(Tone := S.Tone.Info, Solid := true))
+      ),
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(16), Wrap := true),
+        A.Avatar<TMsg>(
+          'avatar-online',
+          'Sam Whitfield',
+          new A.Options(Size := 40.0F, Status := 'online')
+        ),
+        A.Avatar<TMsg>(
+          'avatar-busy',
+          'Daniel Mensah',
+          new A.Options(Size := 40.0F, Status := 'busy')
+        ),
+        A.Avatar<TMsg>(
+          'avatar-square',
+          'Rosa Delgado',
+          new A.Options(Size := 40.0F, Square := true)
+        ),
+        Groups.AvatarGroup<TMsg>(
+          'feedback-team', [
+            'Kwame Asante', 'Hana Novak', 'Elif Kaya', 'Ben Carter',
+            'Omar Haddad', 'Felix Moreau', 'Iris Coleman'
+          ]
+        )
+      )
+    ], new Cards.Options(Gap := 16.0F)
+  );
+end function;
+
+end unit;

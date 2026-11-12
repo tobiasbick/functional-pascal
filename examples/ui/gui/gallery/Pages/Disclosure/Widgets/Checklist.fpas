@@ -1,0 +1,26 @@
+unit GuiGallery.Pages.Disclosure.Widgets.Checklist;
+
+uses
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Checklists as K,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Shows the original workspace onboarding card.
+// ## Parameters
+// - `Model`: Current step completion.
+// ## Returns
+// The native checklist at its original width.
+public function View(Model: S.Model): E.Element<S.Msg>;
+begin
+  return E.Row<S.Msg>(
+    new L.Flow(Align := L.Alignment.Start),
+    E.Size<S.Msg>(
+      K.Checklist<S.Msg>(
+        'workspace-onboarding', Model.Steps, S.Msg.SetStep, S.Msg.CompleteStep,
+        new K.Options(Title := 'Set up your workspace')
+      ),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(460)))
+    )
+  );
+end function;
+
+end unit;

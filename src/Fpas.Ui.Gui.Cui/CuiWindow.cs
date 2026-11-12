@@ -9,7 +9,7 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, Dialog, ActionFooter, Accordion, ExpandableCard, SwipeItem }
+    private enum Layout { Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter, Accordion, ExpandableCard, SwipeItem }
     private readonly record struct LayoutScope(Layout Kind, int Node = -1);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;

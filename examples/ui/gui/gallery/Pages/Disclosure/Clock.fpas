@@ -1,0 +1,45 @@
+unit GuiGallery.Pages.Disclosure.Clock;
+
+uses
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// Identity of the page-owned countdown clock.
+public const Id: string := 'disclosure-countdown';
+
+// Starts the countdown clock using the first visit's target.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Deadline`: Previously sampled target, or null on the first visit.
+// - `Tick`: Maps the target and its remaining seconds to a message.
+// - `OnFailure`: Maps a worker exception to a message.
+// ## Returns
+// The cancellable background command.
+public function Start<TMsg>(
+  Deadline: Sys.DateTimeOffset?; Tick: function(Sys.DateTimeOffset, double): TMsg;
+  OnFailure: function(Sys.Exception): TMsg
+): Mvu.Command<TMsg>;
+  async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    const Target: Sys.DateTimeOffset := Deadline ?? Sys.DateTimeOffset.UtcNow.AddSeconds(
+      S.InitialSeconds
+    );
+    while not Token.IsCancellationRequested do
+      const Remaining: double := Sys.Math.Max(
+        0.0,
+        Sys.Math.Ceiling((Target - Sys.DateTimeOffset.UtcNow).TotalSeconds)
+      );
+      await Post(Tick(Target, Remaining)).ConfigureAwait(false);
+      if Remaining = 0.0 then
+        return;
+      end if;
+
+      await Tasks.Task.Delay(1000, Token).ConfigureAwait(false);
+    end while;
+  end function;
+begin
+  return Mvu.StartBackground<TMsg>(Id, Run, OnFailure);
+end function;
+
+end unit;

@@ -1,0 +1,21 @@
+unit GuiGallery.Pages.Overview.State;
+
+uses GuiGallery.Shared.State as Demo;
+
+// The workspace form's page-local values.
+public type Model = record
+  // Whether the demo workspace sends a weekly email summary.
+  public WeeklySummary: bool := false;
+end record;
+
+// Messages from the workspace preview.
+public type Msg = variant
+  // Change the form's weekly email preference.
+  SetWeeklySummary(Value: bool);
+  // Show the original success toast.
+  CreateWorkspace;
+  // Change profile values shared with Inputs and Edit profile.
+  Shared(Value: Demo.Msg);
+end variant;
+
+end unit;

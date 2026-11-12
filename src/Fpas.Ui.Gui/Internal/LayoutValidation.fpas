@@ -39,7 +39,12 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end case;
 
         Visit(Child);
-      when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+      when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
+        _,
+        const Children: array of E.Element<TMsg>,
+        _,
+        _
+      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
         for Child: E.Element<TMsg> in Children do
           Visit(Child);
         end for;
@@ -57,6 +62,14 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         const Content: E.Element<TMsg>,
         _
       ), E.Element.ExpandableCard(_, _, _, _, const Content: E.Element<TMsg>, _):
+        Visit(Content);
+      when E.Element.HoverCard(
+        _,
+        const Trigger: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        _
+      ):
+        Visit(Trigger);
         Visit(Content);
       when E.Element.Popover(
         _,
@@ -78,6 +91,7 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         _,
         const Child: E.Element<TMsg>,
         const Position: L.ScrollPosition?,
+        _,
         _,
         _
       ):

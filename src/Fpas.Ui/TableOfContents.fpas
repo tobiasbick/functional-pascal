@@ -1,0 +1,46 @@
+unit Fpas.Ui.TableOfContents;
+
+uses Fpas.Ui.Elements as E, System as Sys, System.Globalization as Culture;
+
+// One entry in CUI's outline of a scroll view.
+public type Item = record
+  // Literal title shown in the outline.
+  public Title: string;
+  // Identity of a ScrollAnchor in the target scroll view.
+  public Anchor: string;
+  // Indentation from zero through four.
+  public Level: int := 0;
+end record;
+
+// Addresses an entry for inspection and keyboard focus.
+// ## Parameters
+// - `Id`: Stable table-of-contents identity.
+// - `Index`: Zero-based entry index.
+// ## Returns
+// The stable entry identity.
+public function ItemId(Id: string; Index: int): string;
+begin
+  return Id + '/item/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Builds CUI's native outline, scroll progress rail and active marker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity of the outline.
+// - `ScrollId`: Uncontrolled ScrollView in the same CUI scope as the outline.
+// - `Items`: One to 64 distinct anchors in the order they occur in the scroll view.
+// - `OnActiveChange`: Optional message for a change to the active anchor after the initial frame.
+// - `Enabled`: Whether the entries can receive focus and jump to their anchors.
+// ## Returns
+// The graphical table of contents.
+public function TableOfContents<TMsg>(
+  Id: string; ScrollId: string; Items: array of Item;
+  OnActiveChange: Sys.Func<string, TMsg>? := null; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TableOfContents(Id, ScrollId, Items, OnActiveChange, Enabled);
+end function;
+
+end unit;

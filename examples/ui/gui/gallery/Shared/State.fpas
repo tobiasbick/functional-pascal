@@ -17,6 +17,8 @@ public type Model = record
   public Marketing: bool := false;
   // Wi-Fi switch value.
   public Wifi: bool := true;
+  // Bluetooth switch value shared with the weekly digest demo.
+  public Bluetooth: bool := false;
   // Current brightness on the stepped slider.
   public Brightness: float := 40.0F;
   // Last harmless dropdown command; previews do not alter files or projects.
@@ -39,6 +41,8 @@ public type Msg = variant
   SetMarketing(Value: bool);
   // Set the Wi-Fi switch.
   SetWifi(Value: bool);
+  // Set the Bluetooth switch and its shared digest value.
+  SetBluetooth(Value: bool);
   // Adjust the brightness.
   SetBrightness(Value: float);
   // Show one of the passive toast examples.

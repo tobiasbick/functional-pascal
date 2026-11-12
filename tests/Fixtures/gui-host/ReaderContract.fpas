@@ -1,0 +1,142 @@
+unit GalleryReaderContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.TableOfContents as T,
+  System as Sys;
+
+// Drives the original Reader example with native pointer, wheel and keyboard input.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the Reader screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>; Frames: int := 1);
+  begin
+    for Index: int := 1 to Frames do
+      A.Check(Session.Step(), 'The Reader page closed unexpectedly.');
+    end for;
+  end procedure;
+
+  procedure CheckActive(Session: Gui.Session<State.Msg>; Index: int; Anchor: string);
+  begin
+    A.Check(
+      A.Control(Session, Outline).Value = Anchor,
+      'The outline did not select ' + Anchor + ', active is ' + A.Control(Session, Outline).Value
+    );
+    for Row: int := 0 to 7 do
+      A.Check(
+        A.Control(Session, T.ItemId(Outline, Row)).Value = (if Row = Index then
+          'true'
+        else
+          'false'
+        end if),
+        'Exactly the active outline entry must be marked.'
+      );
+    end for;
+  end procedure;
+
+  procedure CheckJump(Session: Gui.Session<State.Msg>; Anchor: string);
+  begin
+    const Viewport: Cui.CuiRectangle := A.Control(Session, 'reader').Bounds;
+    const Destination: Cui.CuiRectangle := A.Control(Session, Anchor).Bounds;
+    A.Check(
+      Sys.Math.Abs(Destination.Y - Viewport.Y - 12.0F) < 1.0F,
+      'The jump did not bring ' + Anchor + ' to the reader inset. Actual Y: ' +
+      Destination.Y.ToString()
+    );
+    A.Check(
+      A.Control(Session, 'main-reader').Value = '0',
+      'The surrounding page should stay in place.'
+    );
+  end procedure;
+begin
+  const Outline: string := 'reader-outline';
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Wheel: float := 0.0F;
+  var Key: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Reader', 1100, 850, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Reader),
+    G.Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := G.ThemeFor
+  );
+
+  Step(Session, 3);
+  CheckActive(Session, 0, 'intro');
+  const Viewport: Cui.CuiRectangle := A.Control(Session, 'reader').Bounds;
+  A.Check(Viewport.Height = 560.0F, 'The original reader needs a 560-point viewport.');
+  Window.CapturePng(Capture + '.reader.png');
+
+  const Install: Cui.CuiRectangle := A.Control(Session, T.ItemId(Outline, 1)).Bounds;
+  A.Check(
+    Install.Width > 0.0F and Install.Height > 0.0F,
+    'The Install entry has no native hit area.'
+  );
+  X := Install.X + Install.Width / 2.0F;
+  Y := Install.Y + Install.Height / 2.0F;
+  Left := 1;
+  Step(Session);
+  Left := 0;
+  Step(Session);
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session, 4);
+  CheckJump(Session, 'install');
+  CheckActive(Session, 1, 'install');
+  Window.CapturePng(Capture + '.reader-jump.png');
+
+  X := Viewport.X + Viewport.Width / 2.0F;
+  Y := Viewport.Y + Viewport.Height / 2.0F;
+  Wheel := -5.0F;
+  Step(Session);
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session, 4);
+  CheckActive(Session, 2, 'cmake');
+  A.Check(
+    A.Control(Session, 'install').Bounds.Y < Viewport.Y,
+    'Wheel input must move the inner article.'
+  );
+  A.Check(A.Control(Session, 'main-reader').Value = '0', 'Wheel input moved the surrounding page.');
+  Window.CapturePng(Capture + '.reader-scrolled.png');
+
+  // Enter activates the focused Install row again after the wheel moved past it.
+  A.Check(
+    A.Control(Session, T.ItemId(Outline, 1)).Focused,
+    'Install lost its native keyboard focus.'
+  );
+  Key := 2;
+  Step(Session, 4);
+  CheckJump(Session, 'install');
+  CheckActive(Session, 1, 'install');
+end procedure;
+
+end unit;

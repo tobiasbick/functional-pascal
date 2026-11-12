@@ -15,7 +15,10 @@ uses
   GuiGallery.Shared.State as SliceShared,
   GuiGallery.Pages.Buttons.State as SliceButtons,
   GuiGallery.Pages.Overlays.State as SliceOverlays,
+  GalleryCompletionContract as CompletionContract,
+  GalleryReaderContract as ReaderContract,
   GalleryDisclosureContract as DisclosureContract,
+  GalleryDisclosureFeedbackContract as DisclosureFeedbackContract,
   GalleryContextContract as ContextContract,
   GalleryActionsContract as ActionsContract,
   GalleryHostAssertions as A,
@@ -68,9 +71,10 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 14, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 15, 'Only the confirmed gallery destinations should be visible.');
   A.Check(
     A.Control(Session, 'navigation', 'pickers').Text = 'Pickers'
+    and A.Control(Session, 'navigation', 'reader').Text = 'Reader'
     and A.Control(Session, 'navigation', 'audio').Text = 'Audio'
     and A.Control(Session, 'navigation', 'capture').Text = 'Capture',
     'The Pickers, Audio or Capture destination is missing.'
@@ -201,7 +205,10 @@ begin
   CredentialFieldsContract.Verify(Renderer, Capture);
   PickerFieldsContract.Verify(Renderer, Capture);
   DialogContract.Verify(Renderer, Capture);
+  CompletionContract.Verify(Renderer, Capture);
+  ReaderContract.Verify(Renderer, Capture);
   DisclosureContract.Verify(Renderer, Capture);
+  DisclosureFeedbackContract.Verify(Renderer, Capture);
   FeedbackContract.Verify(Renderer, Capture);
   SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);

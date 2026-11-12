@@ -1,0 +1,66 @@
+unit GuiGallery.Pages.Reader.View;
+
+uses
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.TableOfContents as T, Fpas.Ui.ScrollAnchors as A, System.Collections.Generic as Lists;
+
+const Paragraph: string := 'Components are functions. They draw themselves, handle input and return what happened. Your variables are the ' +
+  'source of truth, so there is nothing to keep in sync, and conditional interface is just an if statement. ';
+
+// Builds the original Reader example with native anchor navigation.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Returns
+// The article viewport and its outline.
+public function View<TMsg>(): E.Element<TMsg>;
+begin
+  const Items: array of T.Item := [
+    new T.Item('Introduction', 'intro'), new T.Item('Install', 'install'),
+    new T.Item('With CMake', 'cmake', 1), new T.Item('Without CMake', 'nocmake', 1),
+    new T.Item('First window', 'window'), new T.Item('Immediate mode', 'imm'),
+    new T.Item('Layout', 'layout'), new T.Item('Next steps', 'next')
+  ];
+  const Sections: Lists.List<E.Element<TMsg>> := new Lists.List<E.Element<TMsg>>();
+  const Body: E.Element<TMsg> := E.Styled<TMsg>(E.Text<TMsg>(Paragraph), S.Role.Secondary);
+  for Item: T.Item in Items do
+    Sections.Add(A.ScrollAnchor<TMsg>(Item.Anchor));
+    Sections.Add(
+      E.Styled<TMsg>(
+        E.Text<TMsg>(Item.Title), if Item.Level = 0 then
+          S.Role.SectionTitle
+        else
+          S.Role.Heading
+        end if
+      )
+    );
+    for Index: int := 1 to 3 do
+      Sections.Add(Body);
+    end for;
+  end for;
+
+  Sections.Add(G.Space<TMsg>(200));
+  const Article: E.Element<TMsg> := E.ScrollView<TMsg>(
+    'reader',
+    E.Column<TMsg>(new L.Flow(Gap := G.Points(14), Clip := false), Sections.ToArray()),
+    FadeEdges := true
+  );
+  return E.Row<TMsg>(
+    new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start),
+    E.Size<TMsg>(
+      E.Column<TMsg>(
+        E.Size<TMsg>(Article, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(560))))
+      ),
+      new L.Flex(Basis := L.Extent.Fill)
+    ),
+    E.Size<TMsg>(
+      E.Column<TMsg>(
+        new L.Flow(Gap := G.Points(10), Clip := false),
+        E.Styled<TMsg>(E.Styled<TMsg>(E.Text<TMsg>('On this page'), S.Role.Strong), S.Role.Caption),
+        T.TableOfContents<TMsg>('reader-outline', 'reader', Items)
+      ),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(200)))
+    )
+  );
+end function;
+
+end unit;

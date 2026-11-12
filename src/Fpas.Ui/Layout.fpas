@@ -47,6 +47,20 @@ public type Alignment = enum: byte
   Stretch;
 end enum;
 
+// Distribution of free space along the main axis of a graphical row or column.
+public type Justification = enum: byte
+  // Pack children at the leading edge.
+  Start;
+  // Center the children.
+  Center;
+  // Pack children at the trailing edge.
+  End;
+  // Distribute free space between children.
+  Between;
+  // Distribute free space around children.
+  Around;
+end enum;
+
 // CUI spacing levels adapted to the host, or an explicit distance.
 public type Spacing = variant
   // Zero space.
@@ -73,6 +87,8 @@ public type Flow = record
   public Wrap: bool := false;
   // Optional graphical clipping of children and paint at the stack bounds.
   public Clip: bool? := null;
+  // Graphical main-axis distribution. Start is portable.
+  public Justify: Justification := Justification.Start;
 end record;
 
 // An application-facing size class for responsive views.

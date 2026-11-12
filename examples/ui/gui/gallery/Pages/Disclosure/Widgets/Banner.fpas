@@ -1,0 +1,35 @@
+unit GuiGallery.Pages.Disclosure.Widgets.Banner;
+
+uses
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Banners as Banners, Fpas.Ui.Buttons as Buttons,
+  Fpas.Ui.Elements as E;
+
+// Shows the original announcement or the control to reopen it.
+// ## Parameters
+// - `Model`: Current Disclosure model.
+// ## Returns
+// The native banner and its reopening action.
+public function View(Model: S.Model): E.Element<S.Msg>;
+begin
+  const Banner: E.Element<S.Msg> := Banners.Banner<S.Msg>(
+    'release-banner',
+    'CUI 1.1 is out: data grid, kanban and forty new components.',
+    Model.BannerOpen,
+    function(): S.Msg => S.Msg.SetBanner(false),
+    function(): S.Msg => S.Msg.ReadNotes,
+    new Banners.Options(ActionLabel := 'Read the notes')
+  );
+  if Model.BannerOpen then
+    return Banner;
+  end if;
+
+  return E.Column<S.Msg>(
+    Banner,
+    Buttons.Button<S.Msg>(
+      'show-release-banner', 'Show the banner again', S.Msg.SetBanner(true),
+      new Buttons.Options(ControlSize := Buttons.Size.Small)
+    )
+  );
+end function;
+
+end unit;

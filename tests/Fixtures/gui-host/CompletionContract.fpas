@@ -1,0 +1,223 @@
+unit GalleryCompletionContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as Update, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, System as Sys;
+
+// Exercises the workspace form, shared dialogs, notification preferences and timed archive toast.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Text <> '' then
+      Window.InputText(Text);
+      Text := '';
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The gallery closed during the original examples.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'The gallery control has no hit area: ' + Id);
+    X := Box.X + Box.Width / 2.0F;
+    Y := Box.Y + Box.Height / 2.0F;
+    Left := 1;
+    Step(Session);
+    Left := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  function Toast(Session: Gui.Session<State.Msg>; Title: string): string;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Role = 'toast' and Item.Text = Title then
+        return Item.Id;
+      end if;
+    end for;
+
+    return '';
+  end function;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Key: int := 0;
+  var Text: string := '';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI gallery examples',
+    1100,
+    1700,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), Update.Update, View.Build, Window, 256, Inject, ThemeFor := Update.ThemeFor
+  );
+
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, 'workspace-summary').Value = 'false',
+    'The workspace preference starts clear.'
+  );
+  const Components: Cui.CuiRectangle := A.Control(Session, 'overview-components').Bounds;
+  const FrameTime: Cui.CuiRectangle := A.Control(Session, 'overview-frame-time').Bounds;
+  const Dependencies: Cui.CuiRectangle := A.Control(Session, 'overview-dependencies').Bounds;
+  A.Check(
+    Components.Y = FrameTime.Y and FrameTime.Y = Dependencies.Y
+    and Components.Width = FrameTime.Width and FrameTime.Width = Dependencies.Width
+    and Components.Height = FrameTime.Height and FrameTime.Height = Dependencies.Height
+    and Components.X < FrameTime.X and FrameTime.X < Dependencies.X,
+    'The three Overview metrics must share one equal-width and equal-height row.'
+  );
+  const Workspace: Cui.CuiRectangle := A.Control(Session, 'workspace-card').Bounds;
+  const Team: Cui.CuiRectangle := A.Control(Session, 'team-card').Bounds;
+  A.Check(
+    Workspace.Y = Team.Y and Workspace.Height = Team.Height and Workspace.X < Team.X,
+    'Workspace and Team must share their grid row.'
+  );
+  A.Check(
+    A.Control(Session, 'team-owner-badge').Text = 'Owner',
+    'The original Owner badge is missing.'
+  );
+  Window.CapturePng(Capture + '.workspace.png');
+
+  Window.Resize(500, 1700);
+  Step(Session);
+  Step(Session);
+  const NarrowFirst: Cui.CuiRectangle := A.Control(Session, 'overview-components').Bounds;
+  const NarrowMiddle: Cui.CuiRectangle := A.Control(Session, 'overview-frame-time').Bounds;
+  const NarrowLast: Cui.CuiRectangle := A.Control(Session, 'overview-dependencies').Bounds;
+  A.Check(
+    NarrowFirst.Y = NarrowMiddle.Y and NarrowFirst.X < NarrowMiddle.X
+    and NarrowFirst.X = NarrowLast.X and NarrowFirst.Y < NarrowLast.Y,
+    'A compact Overview must reflow the metrics into two columns.'
+  );
+  A.Check(
+    A.Control(Session, 'workspace-card').Bounds.Y < A.Control(Session, 'team-card').Bounds.Y,
+    'Workspace and Team must stack when their minimum widths cannot fit.'
+  );
+  Window.CapturePng(Capture + '.overview-narrow.png');
+  Window.Resize(1100, 1700);
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, 'overview-dependencies').Bounds.Y = Components.Y,
+    'Overview must restore three columns after widening.'
+  );
+  Click(Session, 'workspace-summary');
+  A.Check(
+    A.Control(Session, 'workspace-summary').Value = 'true',
+    'The form must update the weekly summary.'
+  );
+  Click(Session, 'workspace-name');
+  Key := 12;
+  Step(Session);
+  Text := '!';
+  Step(Session);
+  Step(Session);
+  const Name: string := A.Control(Session, 'workspace-name').Value;
+  A.Check(Name = 'Maya Okafor!', 'The workspace name did not accept the edit.');
+  Click(Session, 'workspace-create');
+  const Created: string := Toast(Session, 'Workspace created');
+  A.Check(Created <> '', 'Create workspace must show the original success toast.');
+  Click(Session, Created + '/dismiss');
+
+  A.Send(Session, State.Msg.Show(State.Page.Buttons));
+  Click(Session, 'options');
+  Click(Session, 'options/delete');
+  const FromMenu: Cui.CuiRectangle := A.Control(Session, 'delete-project').Bounds;
+  A.Check(
+    A.HasText(Session, 'Delete this project?'),
+    'The Options menu must open the deletion dialog.'
+  );
+  Click(Session, 'delete-project-cancel');
+  A.Check(Toast(Session, 'Project deleted') = '', 'Cancel must not confirm deletion.');
+  A.Check(A.Control(Session, 'options').Enabled, 'Cancel must return control to the Buttons page.');
+
+  A.Send(Session, State.Msg.Show(State.Page.Overlays));
+  Click(Session, 'delete-project-open');
+  const FromOverlays: Cui.CuiRectangle := A.Control(Session, 'delete-project').Bounds;
+  A.Check(
+    FromMenu.Width = 400.0F and FromMenu.Width = FromOverlays.Width and FromMenu.Y = FromOverlays.Y,
+    'Both launchers must show the original deletion dialog.'
+  );
+  Window.CapturePng(Capture + '.project-delete.png');
+  Click(Session, 'delete-project-confirm');
+  const Deleted: string := Toast(Session, 'Project deleted');
+  A.Check(Deleted <> '', 'Confirmation must show the deletion toast.');
+  Click(Session, Deleted + '/action');
+  A.Check(Toast(Session, 'Project deleted') = '', 'Undo must dismiss the deletion toast.');
+
+  Click(Session, 'sheet-open');
+  A.Check(
+    A.Control(Session, 'notifications-comments').Value = 'true'
+    and A.Control(Session, 'notifications-mentions').Value = 'true'
+    and A.Control(Session, 'notifications-weekly').Value = 'false',
+    'Notifications must start with the original preferences.'
+  );
+  Window.CapturePng(Capture + '.notification-switches.png');
+  Click(Session, 'notifications-comments');
+  Click(Session, 'notifications-mentions');
+  Click(Session, 'notifications-weekly');
+  Click(Session, 'sheet/close');
+
+  Click(Session, 'edit-profile-open');
+  A.Check(
+    A.Control(Session, 'edit-profile-name').Value = Name,
+    'The workspace name must reach Edit profile.'
+  );
+  A.Check(
+    A.Control(Session, 'edit-profile-public').Value = 'false',
+    'Mentions must share the profile switch.'
+  );
+  Click(Session, 'edit-profile-cancel');
+  A.Send(Session, State.Msg.Show(State.Page.Selection));
+  A.Check(
+    A.Control(Session, 'newsletter').Value = 'false'
+    and A.Control(
+      Session,
+      'wifi'
+    ).Value = 'false' and A.Control(Session, 'bluetooth').Value = 'true',
+    'The notification preferences must reach Selection.'
+  );
+
+  Window.Resize(1100, 1800);
+  A.Send(Session, State.Msg.Show(State.Page.Disclosure));
+  Step(Session);
+  Step(Session);
+  Window.CapturePng(Capture + '.disclosure-undo.png');
+  Click(Session, 'archive-conversations');
+  const Archived: string := Toast(Session, '3 conversations archived');
+  A.Check(Archived <> '', 'Archiving three conversations must show a native toast.');
+  Window.CapturePng(Capture + '.disclosure-undo-toast.png');
+  Click(Session, Archived + '/action');
+  A.Check(Toast(Session, '3 conversations archived') = '', 'Undo must dismiss the archive toast.');
+end procedure;
+
+end unit;

@@ -1,6 +1,7 @@
 unit GuiGallery.App.State;
 
 uses
+  GuiGallery.Pages.Overview.State as Overview,
   GuiGallery.Pages.Buttons.State as Buttons,
   GuiGallery.Pages.Inputs.State as Inputs,
   GuiGallery.Pages.Selection.State as Selection,
@@ -45,6 +46,8 @@ public type Page = enum: byte
   Audio;
   // File drop, avatar upload and signature examples.
   Capture;
+  // Anchored sections and the native table of contents.
+  Reader;
 end enum;
 
 // Application state with one owner per feature.
@@ -55,6 +58,8 @@ public type Model = record
   public Drawer: bool := false;
   // Demo values shared by several pages.
   public Shared: Demo.Model := new Demo.Model();
+  // State owned by the Overview workspace form.
+  public Overview: Overview.Model := new Overview.Model();
   // State owned by the Buttons page.
   public Buttons: Buttons.Model := new Buttons.Model();
   // State owned by the Inputs page.
@@ -91,6 +96,8 @@ public type Msg = variant
   Preview;
   // Change values with a shared owner.
   Shared(Value: Demo.Msg);
+  // Route an action to the Overview slice.
+  Overview(Value: Overview.Msg);
   // Route an action to the Buttons slice.
   Buttons(Value: Buttons.Msg);
   // Route an action to the Inputs slice.

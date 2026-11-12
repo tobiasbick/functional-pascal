@@ -43,12 +43,16 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
+| Native table of contents and scroll anchors | | | Yes |
+| Native responsive grid, justification, cards, badges, metrics, avatar groups and empty states | | | Yes |
 | Tabs, breadcrumb, pagination and stepper | | | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Centered modal dialog and action footer | | | Yes |
+| Banners, countdowns and onboarding checklists | | | Yes |
 | Alerts, progress bars, spinners, meters, rings, skeletons and timeline entries | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
+| Inline links, avatars and hover cards | | | Yes |
 | Dropzones, avatar uploads and signature pads | | | Yes |
 | Audio knobs, faders and level meters | | | Yes |
 | Selection chips, whole-star ratings and wrapping rows | | | Yes |
@@ -65,6 +69,9 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 `Flow.Clip` controls native clipping at graphical stack bounds. By default,
 ordinary stacks clip and wrapping rows allow paint to extend past the bounds.
 Set it to false to keep strokes and shadows visible inside a containing viewport.
+
+`Role.DisplayValue` uses the graphical display face at 22 logical points
+with tabular digits.
 
 Layout follows the supported subset of CUI's box rules. Content uses the host's
 measured extent. Fill and positive Grow weights share the remaining space from
@@ -90,6 +97,31 @@ extension. Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
 units and adapts to the host's resolution.
 When both minimum and maximum bounds are supplied, use the same measure kind
 for both: `Logical` or `Cells`.
+
+## Native grids and surfaces
+
+`Fpas.Ui.Grids.Grid` uses CUI's equal-width grid. Set the maximum column count,
+the minimum logical column width and the gap. CUI reflows the grid using the
+space offered by its parent and sizes each row to its tallest cell. On
+graphical rows and columns, `Layout.Flow.Justify` distributes free space
+using Start, Center, End, Between or Around.
+
+- `Fpas.Ui.Cards.Card` draws a native surface around child elements. Options
+  set dimensions, padding, gap, axis, wrapping, muted fill and selection.
+  An optional activation message makes the card hoverable and focusable.
+- `Fpas.Ui.Badges.Badge` draws a literal label with an optional glyph, dot,
+  solid fill and semantic tone.
+- `Fpas.Ui.Metrics.Metric` shows a formatted value with an optional delta and
+  sparkline. CUI selects the trend color from the sign and `LowerIsBetter`.
+- `Fpas.Ui.AvatarGroups.AvatarGroup` takes ordered names and a visible limit.
+  CUI draws the overlapping initials and remaining count.
+- `Fpas.Ui.EmptyStates.EmptyState` centers a heading, optional description
+  and icon. Supply the action label and message factory together. Use
+  `EmptyStates.ActionId(Id)` to address the action for focus.
+
+These controls and non-default justification require the graphical profile.
+Overview demonstrates the metrics and team grid. Feedback demonstrates the
+two-column cards, status badges, avatar group and empty-state action.
 
 ## Shared themes
 
@@ -340,6 +372,21 @@ nonempty, finite nonnegative bin heights. It uses the same model-owned
 `Fpas.Ui.RangeSliders.Interval` as a range slider. Space switches the active
 handle for keyboard adjustment. Options configure bar height and the
 endpoint captions. Both sliders require the graphical profile.
+
+## Link, avatar and hover card
+
+`Fpas.Ui.Links.Link` draws CUI's native inline link and proposes the supplied message on
+click, Enter or Space. The application handles navigation in its update.
+
+`Fpas.Ui.Avatars.Avatar` draws initials or loads the optional model-owned image path. Size,
+round or rounded-square shape and the presence dot use native CUI options.
+Use online, busy or away for colored presence. An empty status hides the dot.
+
+`Fpas.Ui.HoverCards.HoverCard` attaches a nonmodal body to one interactive control. CUI
+opens it after the hover delay and keeps it open while the pointer is over
+the trigger or card. Escape closes it until the pointer leaves the trigger.
+Width and preferred placement are optional. All three widgets require
+the graphical profile.
 
 ## Capture controls
 
@@ -651,6 +698,23 @@ focus after toggling ([CUI-006](../../docs/future/cui-upstream-bugs.md#cui-006))
 Tab or an explicit focus request selects it again. All three disclosure widgets
 require the graphical profile. Terminal and portable preflight reject them.
 
+## Banner, countdown and checklist
+
+`Fpas.Ui.Banners.Banner` displays a native announcement with model-owned visibility. Supply a
+dismiss message to show the close button and update the model when it is used.
+An action caption and message factory together enable the action. The native
+banner animates when the application changes its visibility.
+
+`Fpas.Ui.Countdowns.Countdown` draws CUI's rolling digits from the supplied remaining seconds.
+Applications refresh that value on their own clock. Use compact tiles for a
+short display, and hide days to fold them into hours.
+
+`Fpas.Ui.Checklists.Checklist` renders ordered steps with model-owned completion. The first
+incomplete step exposes its description and optional action. Clicking a circle
+or activating it with the keyboard proposes a new completion flag. An action
+button sends its step index, which the application can complete in its update.
+All three widgets require the graphical profile.
+
 ## Alerts, progress and spinners
 
 `Fpas.Ui.Alerts.Alert<TMsg>(Id, Title, Settings, OnDismiss)` draws CUI's inline
@@ -931,6 +995,24 @@ A controlled scroll view clamps the requested position to the current range.
 `End` follows the end as content grows. User input proposes a new position
 with the resolved offset and maximum in explicit host units. Layout and
 content changes recompute the visible offset without emitting messages.
+
+## Table of contents and scroll anchors
+
+Add `Fpas.Ui.ScrollAnchors.ScrollAnchor<TMsg>(Id)` before each heading in an
+uncontrolled graphical `ScrollView`. Anchor IDs are unique within the view.
+The marker has zero height and takes its place in the containing stack.
+
+`Fpas.Ui.TableOfContents.TableOfContents<TMsg>(Id, ScrollId, Items)` takes one
+to 64 entries in document order. Give each entry its title, anchor ID and an
+optional indentation level from zero through four. Place the outline in the
+same GUI layer as its viewport. CUI handles jumps, tracks scroll progress
+and highlights the active entry. Supply `OnActiveChange` to turn changes
+to the active anchor into messages. Use `TableOfContents.ItemId(Id, Index)`
+to address a row for focus.
+
+Use `FadeEdges := true` on a graphical `ScrollView` to fade the edges with
+hidden content. The [Reader page](../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
+combines the outline, anchors and edge fades.
 
 ## Subview composition
 

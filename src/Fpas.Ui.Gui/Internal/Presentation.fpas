@@ -5,7 +5,22 @@ uses
   Fpas.Ui.Gui.Internal.Widgets.ColorPicker as ColorPickerWidget,
   Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.Gui.Internal.Widgets.Calendar as CalendarWidget,
   Fpas.Ui.Gui.Internal.Widgets.DatePicker as DatePickerWidget,
-  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Banners as Banners, Fpas.Ui.Countdowns as Countdowns, Fpas.Ui.Checklists as Checklists,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
+  Fpas.Ui.Gui.Internal.Widgets.Banner as BannerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Countdown as CountdownWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Checklist as ChecklistWidget,
+  Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
+  Fpas.Ui.Metrics as Metrics, Fpas.Ui.AvatarGroups as AvatarGroups, Fpas.Ui.EmptyStates as EmptyStates,
+  Fpas.Ui.Gui.Internal.Widgets.Grid as GridWidget, Fpas.Ui.Gui.Internal.Widgets.Card as CardWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Badge as BadgeWidget, Fpas.Ui.Gui.Internal.Widgets.Metric as MetricWidget,
+  Fpas.Ui.Gui.Internal.Widgets.AvatarGroup as AvatarGroupWidget, Fpas.Ui.Gui.Internal.Widgets.EmptyState as EmptyStateWidget,
+  Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Gui.Internal.Widgets.TableOfContents as TocWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ScrollAnchor as AnchorWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Link as LinkWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Avatar as AvatarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.HoverCard as HoverCardWidget,
   Fpas.Ui.Gui.Internal.Widgets.Dropzone as DropzoneWidget,
   Fpas.Ui.Gui.Internal.Widgets.AvatarUpload as AvatarUploadWidget,
   Fpas.Ui.Gui.Internal.Widgets.SignaturePad as SignaturePadWidget,
@@ -320,6 +335,25 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool
       ):
         RangeSlider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Enabled);
+      when E.Element.Banner(
+        const Id: string, const Text: string, const Open: bool, const Dismiss: Sys.Func<TMsg>?,
+        const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+      ):
+        BannerWidget.Draw<TMsg>(Current, Id, Text, Open, Dismiss, Action, Settings);
+      when E.Element.Countdown(
+        const Id: string,
+        const Seconds: double,
+        const Settings: Countdowns.Options
+      ):
+        CountdownWidget.Draw<TMsg>(Current, Id, Seconds, Settings);
+      when E.Element.Checklist(
+        const Id: string,
+        const Steps: array of Checklists.Step,
+        const Toggle: function(int, bool): TMsg,
+        const Action: Sys.Func<int, TMsg>?,
+        const Settings: Checklists.Options
+      ):
+        ChecklistWidget.Draw<TMsg>(Current, Id, Steps, Toggle, Action, Settings);
       when E.Element.Dropzone(
         const Id: string,
         const Drop: function(array of string): TMsg,
@@ -442,6 +476,34 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const OnToggle: Sys.Func<TMsg>?
       ):
         ExpandableTextWidget.Draw<TMsg>(Current, Id, Text, Settings, OnToggle);
+      when E.Element.LinkAction(
+        const Id: string,
+        const Label: string,
+        const Activate: TMsg,
+        const Enabled: bool
+      ):
+        LinkWidget.Draw<TMsg>(Current, Id, Label, Activate, Enabled);
+      when E.Element.Avatar(const Id: string, const Name: string, const Settings: Avatars.Options):
+        AvatarWidget.Draw<TMsg>(Current, Id, Name, Settings);
+        // CUI's avatar centers itself on the cross axis inside its row.
+        return;
+      when E.Element.HoverCard(
+        const Id: string,
+        const Trigger: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Settings: HoverCards.Options
+      ):
+        HoverCardWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Trigger,
+          Content,
+          Settings,
+          Horizontal,
+          Align,
+          Visit
+        );
+        return;
       when E.Element.Popover(
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>,
         const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options
@@ -515,6 +577,35 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         ButtonGroup.Draw<TMsg>(Current, Children, Visit);
       when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
         ActionFooterWidget.Draw<TMsg>(Current, Children, Visit);
+      when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
+        GridWidget.Draw<TMsg>(Current, Settings, Children, Visit);
+      when E.Element.Card(
+        const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options,
+        const Activate: Sys.Func<TMsg>?
+      ):
+        CardWidget.Draw<TMsg>(Current, Id, Children, Settings, Activate, Visit);
+      when E.Element.Badge(const Id: string, const Text: string, const Settings: Badges.Options):
+        BadgeWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.Metric(
+        const Id: string,
+        const Label: string,
+        const Reading: string,
+        const Settings: Metrics.Options
+      ):
+        MetricWidget.Draw<TMsg>(Current, Id, Label, Reading, Settings);
+      when E.Element.AvatarGroup(
+        const Id: string,
+        const Names: array of string,
+        const Settings: AvatarGroups.Options
+      ):
+        AvatarGroupWidget.Draw<TMsg>(Current, Id, Names, Settings);
+      when E.Element.EmptyState(
+        const Id: string,
+        const Title: string,
+        const Settings: EmptyStates.Options,
+        const Action: Sys.Func<TMsg>?
+      ):
+        EmptyStateWidget.Draw<TMsg>(Current, Id, Title, Settings, Action);
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Row: bool,
@@ -526,7 +617,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Size.Spacing(Settings.Gap),
           cast<int>(Settings.Align),
           false,
-          Settings.Wrap, Settings.Clip ?? not Settings.Wrap
+          Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast<int>(Settings.Justify)
         );
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, Row, Settings.Align);
@@ -550,12 +641,19 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
 
         Visit(Child, Current, false, L.Alignment.Stretch);
         Current.Window.EndGroup();
+      when E.Element.TableOfContents(
+        const Id: string, const ScrollId: string, const Items: array of Toc.Item,
+        const Changed: Sys.Func<string, TMsg>?, const Enabled: bool
+      ):
+        TocWidget.Draw<TMsg>(Current, Id, ScrollId, Items, Changed, Enabled);
+      when E.Element.ScrollAnchor(const Id: string):
+        AnchorWidget.Draw<TMsg>(Current, Id);
       when E.Element.Scroll(
         const Id: string,
         const Child: E.Element<TMsg>,
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
-        const Bar: bool
+        const Bar: bool, const FadeEdges: bool
       ):
         const Token: string := C.Token('scroll', Id);
         var Before: float := 0;
@@ -576,7 +674,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
 
         Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
         Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
-        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput);
+        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput, FadeEdges);
         Visit(Child, Current, false, L.Alignment.Stretch);
         Current.Window.EndScroll();
         var After: float := 0;

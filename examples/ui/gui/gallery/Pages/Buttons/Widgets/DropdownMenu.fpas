@@ -54,7 +54,7 @@ begin
           new M.Item<State.Msg>(
             'delete',
             'Delete',
-            State.Msg.Shared(Demo.Msg.MenuChoice('Delete')),
+            State.Msg.OpenDeleteDialog,
             Icon($E18E),
             Danger := true
           )

@@ -2,7 +2,19 @@ unit GuiGallery.Pages.Disclosure.Update;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.Disclosure.State as S;
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Checklists as K,
+  Fpas.Ui.Gui.Toasts as Toasts, System as Sys;
+
+function WithStep(State: S.Model; Index: int; Done: bool): S.Model;
+begin
+  const Steps: array of K.Step := cast<array of K.Step>(State.Steps.Clone());
+  Steps[Index] := Steps[Index] with
+    Done := Done;
+  end with;
+  return State with
+    Steps := Steps;
+  end with;
+end function;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters
@@ -26,9 +38,34 @@ begin
       BranchQuestion := false;
       BranchDeleted := true;
     end with;
+    when S.Msg.SetBanner(const Open: bool): State with
+      BannerOpen := Open;
+    end with;
+    when S.Msg.SetCountdown(const Deadline: Sys.DateTimeOffset, const Seconds: double): State with
+      Deadline := Deadline;
+      SecondsLeft := Seconds;
+    end with;
+    when S.Msg.SetStep(const Index: int, const Done: bool): WithStep(State, Index, Done);
+    when S.Msg.CompleteStep(const Index: int): WithStep(State, Index, true);
     else State;
   end case;
-  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+  const Commands: array of Mvu.Command<S.Msg> := case Message of
+    when S.Msg.ArchiveConversations: [
+      Toasts.Show<S.Msg>(
+        '3 conversations archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
+        function(): S.Msg => S.Msg.Preview
+      )
+    ];
+    when S.Msg.ReadNotes: [Toasts.Show<S.Msg>('Opening release notes')];
+    when S.Msg.CompleteStep(const Index: int): [
+      Toasts.Show<S.Msg>(
+        Next.Steps[Index].Title,
+        new Toasts.Options(Appearance := Toasts.Tone.Success)
+      )
+    ];
+    else [];
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, Commands);
 end function;
 
 end unit;

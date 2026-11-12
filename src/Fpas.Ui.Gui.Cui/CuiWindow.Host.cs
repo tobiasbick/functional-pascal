@@ -62,13 +62,27 @@ public sealed partial class CuiWindow
     /// <param name="wrap">Whether the row wraps across lines.</param>
     /// <param name="clip">Whether to clip children at the container bounds.</param>
     public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed, bool wrap, bool clip)
+        => BeginGroup(horizontal, padding, gap, alignment, framed, wrap, clip, 0);
+
+    /// <summary>Opens a native row or column with main-axis distribution.</summary>
+    /// <param name="horizontal">Whether its main axis is horizontal.</param>
+    /// <param name="padding">Logical inset.</param>
+    /// <param name="gap">Logical separation.</param>
+    /// <param name="alignment">Cross-axis alignment in native order.</param>
+    /// <param name="framed">Whether to draw a border.</param>
+    /// <param name="wrap">Whether a horizontal group wraps.</param>
+    /// <param name="clip">Whether to clip children at the container bounds.</param>
+    /// <param name="justify">Start, center, end, between, or around in native order.</param>
+    public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed,
+        bool wrap, bool clip, int justify)
     {
         CheckLayoutOptions(padding, gap);
         ArgumentOutOfRangeException.ThrowIfNegative(alignment);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 4);
+        if (justify is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(justify));
         if (wrap && !horizontal) throw new ArgumentException("Wrapping requires a horizontal group.", nameof(wrap));
         int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment,
-            framed ? 1 : 0, wrap ? 1 : 0, clip ? 1 : 0);
+            framed ? 1 : 0, wrap ? 1 : 0, clip ? 1 : 0, justify);
         layouts.Add(new(Layout.Group, Node: node));
     }
 
@@ -141,10 +155,18 @@ public sealed partial class CuiWindow
     /// <param name="id">Stable identity.</param>
     /// <param name="showScrollbar">Whether to show its scrollbar.</param>
     /// <param name="enabled">Whether user input is accepted.</param>
-    public void BeginViewport(string id, bool showScrollbar, bool enabled = true)
+    public void BeginViewport(string id, bool showScrollbar, bool enabled = true) =>
+        BeginViewport(id, showScrollbar, enabled, false);
+
+    /// <summary>Opens a scroll view with optional native edge fades.</summary>
+    /// <param name="id">Stable identity.</param>
+    /// <param name="showScrollbar">Whether to show its scrollbar.</param>
+    /// <param name="enabled">Whether user input is accepted.</param>
+    /// <param name="fadeEdges">Whether to fade edges with hidden content.</param>
+    public void BeginViewport(string id, bool showScrollbar, bool enabled, bool fadeEdges)
     {
         CheckFrame();
-        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0);
+        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0, fadeEdges ? 1 : 0);
         scrollNodes[id] = node;
         layouts.Add(new(Layout.Scroll, Node: node));
     }

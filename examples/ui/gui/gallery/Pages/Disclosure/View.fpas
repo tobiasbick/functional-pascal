@@ -3,7 +3,12 @@ unit GuiGallery.Pages.Disclosure.View;
 uses
   GuiGallery.Pages.Disclosure.State as State,
   GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Disclosure.Widgets.Banner as Banner,
+  GuiGallery.Pages.Disclosure.Widgets.Countdown as Countdown,
+  GuiGallery.Pages.Disclosure.Widgets.Checklist as Checklist,
+  GuiGallery.Pages.Disclosure.Widgets.UndoToast as UndoToast,
   GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm,
+  GuiGallery.Pages.Disclosure.Widgets.HoverCard as Hover,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
@@ -20,13 +25,13 @@ begin
       new L.Flow(Gap := G.Points(40), Wrap := true),
       E.Column<State.Msg>(
         new L.Flow(Gap := G.Points(2)),
-        E.Styled<State.Msg>(E.Text<State.Msg>('This month'), S.Role.Muted),
-        E.Styled<State.Msg>(E.Text<State.Msg>('$84.00'), S.Role.Heading)
+        E.Styled<State.Msg>(E.Text<State.Msg>('This month'), S.Role.Caption),
+        E.Styled<State.Msg>(E.Text<State.Msg>('$84.00'), S.Role.DisplayValue)
       ),
       E.Column<State.Msg>(
         new L.Flow(Gap := G.Points(2)),
-        E.Styled<State.Msg>(E.Text<State.Msg>('Seats'), S.Role.Muted),
-        E.Styled<State.Msg>(E.Text<State.Msg>('7 of 10'), S.Role.Heading)
+        E.Styled<State.Msg>(E.Text<State.Msg>('Seats'), S.Role.Caption),
+        E.Styled<State.Msg>(E.Text<State.Msg>('7 of 10'), S.Role.DisplayValue)
       )
     ),
     E.Row<State.Msg>(
@@ -43,7 +48,6 @@ begin
   );
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(10)),
-    G.Heading<State.Msg>('Expandable cards', 'A header that opens a body with a spring.'),
     C.ExpandableCard<State.Msg>(
       'billing', 'Billing', Model.BillingOpen, State.Msg.SetBilling, Billing,
       new C.Options(
@@ -70,11 +74,14 @@ end function;
 // ## Parameters
 // - `Model`: Model-owned accordion and card expansion.
 // ## Returns
-// Native text, cards and the confirmation popover.
+// Native disclosure, announcement and progress examples.
 public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(20)), Confirm.View(Model),
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    Banner.View(Model),
+    Hover.View(),
+    Confirm.View(Model),
     G.Heading<State.Msg>('Expandable text', 'Long text clamps to a few lines with a fade.'),
     T.ExpandableText<State.Msg>(
       'about-cui',
@@ -84,7 +91,13 @@ begin
       'renders through OpenGL or a built-in software rasterizer, so it also runs in virtual machines and over remote desktop.',
       new T.Options(Lines := 2)
     ),
-    Cards(Model)
+    G.Heading<State.Msg>('Expandable cards', 'A header that opens a body with a spring.'),
+    Cards(Model),
+    G.Heading<State.Msg>('Countdown', 'Digits roll as the time passes.'),
+    Countdown.View(Model),
+    G.Heading<State.Msg>('Onboarding checklist', 'Progress, with the next step open.'),
+    Checklist.View(Model),
+    UndoToast.View()
   );
 end function;
 

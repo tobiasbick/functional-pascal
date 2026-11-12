@@ -45,9 +45,15 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Native RGB palettes and searchable emoji pickers.
 - Native time fields, selection wheels with joined bands, and an analog time dial.
 - Native measurement rulers and adjustable ranges over histogram data.
+- Native inline links, avatars with images or initials, and pointer-driven hover cards.
+- Native announcement banners, rolling countdowns and onboarding checklists.
 - Native file dropzones, uploadable avatars and signature pads with Clear.
 - Native audio knobs, faders with channel meters, and standalone peak and clip meters.
 - Sidebar navigation and edge sheets/drawers.
+- Native responsive grids, main-axis justification, cards, badges, metrics,
+  overlapping avatar groups and empty-state actions.
+- Native tables of contents and scroll anchors. Snapshots expose the active
+  anchor, the marked row and the jump destination bounds.
 - Centered modal dialogs with native action footers and focus return.
 - Underline and pill tabs, breadcrumb links, responsive pagination and steppers.
 - Native toasts with stacking, hover pause and an optional timed action.

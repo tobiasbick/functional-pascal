@@ -14,6 +14,10 @@
  * @param wrap Wrap a row onto additional lines and allow focus rings past its edge.
  * @return Frame-local node. */
 CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip);
+
+/* Opens a native row or column with main-axis justification. */
+CUI_API int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, float gap,
+                                   int align, int framed, int wrap, int clip, int justify);
 /** Closes a group and restores its inspection identity.
  * @param ui Owner context.
  * @param node Frame-local group. */
@@ -100,6 +104,9 @@ CUI_API void fpas_cui_theme_read(cui_ctx *ui, uint32_t *colors);
  * @param enabled Input permission.
  * @return Frame-local node, closed with group_end. */
 CUI_API int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled);
+
+/* Opens the same viewport with optional native edge fades. */
+CUI_API int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges);
 /** Reads a tracked viewport's current offset and range.
  * @param ui Owner context.
  * @param node Tracked viewport node.

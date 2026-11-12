@@ -1,8 +1,13 @@
 #include "fpas_cui.h"
 
 int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip) {
+    return fpas_cui_group_begin_ex(ui, horizontal, padding, gap, align, framed, wrap, clip, CUI_JUSTIFY_START);
+}
+
+int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, float gap,
+                            int align, int framed, int wrap, int clip, int justify) {
     const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
-        .pad = padding, .gap = gap, .align = (cui_align)align,
+        .pad = padding, .gap = gap, .align = (cui_align)align, .justify = (cui_justify)justify,
         .border = framed ? 1 : 0, .clip = clip != 0, .wrap = wrap != 0 };
     cui_box_begin(ui, &options);
     return cui__current(ui);
@@ -49,13 +54,13 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
         }
         return;
     }
-    cui_color color = role == 3 || role == 12 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
-        role == 4 ? CUI_C(ui, ACCENT) : role == 5 ? CUI_C(ui, TEXT_SECONDARY) : CUI_C(ui, FOREGROUND);
+    cui_color color = role == 3 || role == 12 || role == 15 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
+        role == 4 ? CUI_C(ui, ACCENT) : role == 5 || role == 18 ? CUI_C(ui, TEXT_SECONDARY) : CUI_C(ui, FOREGROUND);
     int label = (ui->nodes[node].flags & CUI_NF_TEXT) ? node : fpas_label_node(ui, node);
     if (label >= 0) {
         ui->nodes[label].text_color = color;
-        if (role == 2 || role == 8) {
-            const float size = ui->theme.heading[role == 8 ? 1 : 3];
+        if (role == 2 || role == 8 || role == 16 || role == 17) {
+            const float size = ui->theme.heading[role == 17 ? 0 : role == 8 ? 1 : role == 16 ? 2 : 3];
             ui->nodes[label].font_size = cui__fs(ui, size);
             ui->nodes[label].font = size >= 26 ? CUI_FONT_DISPLAY : CUI_FONT_MEDIUM;
             ui->nodes[label].line_height = size >= 26 ? 1.15f : 1.3f;
@@ -65,6 +70,20 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].line_height = 1.35f;
         } else if (role == 12) {
             ui->nodes[label].font_size = cui__fs(ui, ui->theme.text_sm);
+        } else if (role == 13) {
+            ui->nodes[label].font = CUI_FONT_DISPLAY;
+            ui->nodes[label].font_size = cui__fs(ui, 22);
+            ui->nodes[label].flags |= CUI_NF_TABULAR;
+        } else if (role == 14) {
+            ui->nodes[label].font = CUI_FONT_MEDIUM;
+        } else if (role == 18) {
+            ui->nodes[label].font_size = cui__fs(ui, 15);
+        } else if (role == 15) {
+            ui->nodes[label].font = CUI_FONT_ICONS;
+            ui->nodes[label].font_size = 12;
+            ui->nodes[label].line_height = 1;
+            ui->nodes[label].flags &= ~CUI_NF_WRAP;
+            ui->nodes[label].self_align = CUI_ALIGN_CENTER;
         }
     }
     for (int child = n->first; child >= 0; child = ui->nodes[child].next)
@@ -103,10 +122,25 @@ static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
     cui_rect clip = ui->dl.clip_stack[ui->dl.clip_depth - 1];
     float scale = ui->scale;
     clip.x /= scale; clip.y /= scale; clip.w /= scale; clip.h /= scale;
+    if (state->fade.a) {
+        const float bar = state->bar_t;
+        const int hit_count = ui->hit_count;
+        state->bar_t = 0;
+        cui__paint_scrollbars(ui, node, clip);
+        state->bar_t = bar;
+        ui->hit_count = hit_count;
+    }
     cui__paint_add_hit(ui, node->id, cui__rect_intersect(node->rect, clip), CUI_NF_SCROLL_Y);
 }
 
 int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled) {
+    return fpas_cui_viewport_ex(ui, id, scrollbar, enabled, 0);
+}
+
+int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges) {
+    const cui_id key = cui_make_id(ui, id);
+    cui_scroll_state *state = cui_state(ui, key, sizeof *state);
+    state->fade = fade_edges ? cui__backdrop(ui) : cui__rgba(0, 0, 0, 0);
     const cui_box options = { .width = CUI_FILL, .height = CUI_FILL };
     float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
     /* CUI-007 (docs/future/cui-upstream-bugs.md#cui-007):
@@ -114,13 +148,14 @@ int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled) {
     ui->scroll_dx = 0;
     if (!enabled) ui->scroll_dy = 0;
     cui_push_disabled(ui, !enabled);
-    int node = cui__scroll_begin_ex(ui, cui_make_id(ui, id), &options, false);
+    int node = cui__scroll_begin_ex(ui, key, &options, false);
     cui_pop_disabled(ui);
     ui->scroll_dx = wheel_x;
     if (!enabled) ui->scroll_dy = wheel_y;
     if (!scrollbar) {
         ui->nodes[node].flags &= ~CUI_NF_SCROLL_Y;
         ui->nodes[node].flags |= CUI_NF_CLIP;
+        if (fade_edges) ui->nodes[node].flags |= CUI_NF_PAINT_AFTER;
         ui->nodes[node].paint = fpas_hidden_scroll;
     }
     return node;

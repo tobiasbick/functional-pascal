@@ -1,0 +1,43 @@
+unit Fpas.Ui.EmptyStates;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Native empty-state settings.
+public type Options = record
+  // Optional CUI glyph.
+  public Icon: string := '';
+  // Optional supporting text.
+  public Description: string := '';
+  // Optional action caption. Supply a matching message factory.
+  public ActionLabel: string := '';
+  // Whether the action accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Addresses the optional native action for focus and inspection.
+// ## Parameters
+// - `Id`: Stable empty state identity.
+// ## Returns
+// The action identity.
+public function ActionId(Id: string): string;
+begin
+  return Id + '/action';
+end function;
+
+// Draws a native empty state with an optional action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Title`: Literal heading.
+// - `Settings`: Optional description, glyph and action caption.
+// - `OnAction`: Optional message factory for the native action button.
+// ## Returns
+// The graphical element.
+public function EmptyState<TMsg>(Id: string; Title: string; Settings: Options? := null; OnAction: Sys.Func<TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.EmptyState(Id, Title, Settings ?? new Options(), OnAction);
+end function;
+
+end unit;

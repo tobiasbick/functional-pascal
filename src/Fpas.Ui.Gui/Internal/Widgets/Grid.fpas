@@ -1,0 +1,28 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Grid;
+
+uses Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Grids as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Sizing as Size;
+
+// Lets CUI resolve responsive columns and lay out their contents.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Settings`: Native grid settings.
+// - `Children`: Elements in reading order.
+// - `Visit`: Presents one child in the layout.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Settings: G.Options; Children: array of E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  Frame.Window.BeginGrid(
+    Settings.Columns,
+    Settings.MinimumColumnWidth,
+    Size.Spacing(Settings.Padding),
+    Size.Spacing(Settings.Gap)
+  );
+  for Child: E.Element<TMsg> in Children do
+    Visit(Child, Frame, false, L.Alignment.Default);
+  end for;
+
+  Frame.Window.EndGroup();
+end procedure;
+
+end unit;

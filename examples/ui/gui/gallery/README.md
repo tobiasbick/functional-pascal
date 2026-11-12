@@ -17,8 +17,8 @@ the accepted widget examples from the
   pages, including appearance, profile data and filter settings.
 - `Pages/<Topic>/`: a page's state, messages, update and view. Stateful widget
   examples live in that page's `Widgets/` directory. Actions owns its background
-  save commands. Overview is a static view with a supplied navigation message.
-  Feedback is a static composition; its alerts retain their local state in CUI.
+  save commands. Overview owns the workspace form's local preference.
+  Feedback retains alert dismissal and animation state in CUI.
 
 Namespaces follow these directories, for example
 `GuiGallery.Pages.Actions.State` and `GuiGallery.Pages.Actions.Widgets.SplitButton`.
@@ -29,6 +29,11 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 
 ## Pages
 
+- **Overview** shows the original Components, Frame time and Dependencies
+  metrics. The native grid lays out the Workspace form and Team card with
+  presence avatars and role badges. Name and email are shared with Inputs and
+  Edit profile. Creating the demo workspace shows the success toast. The
+  Command Palette is tracked in the CUI inventory.
 - **Buttons** shows the variants, sizes, icons, and input states. Save changes
   shows the busy state, and Reset enables it again. The formatting group toggles
   three independent actions. The copy button copies the displayed command.
@@ -37,7 +42,7 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   small Day/Week/Month/Year selector, with independent model-owned selections.
   Dropdown menu clones CUI's Options and icon-only More actions examples,
   including section captions, separators, icons, shortcut hints and a danger
-  action. Commands only update preview state; they do not modify a project.
+  action. Delete opens the same confirmation as the Overlays page.
 - **Inputs** shows the original responsive Text fields card with Full name,
   Email, Password, Search projects and About. The email example uses a
   reserved example domain. Typing a short password displays the validation
@@ -64,8 +69,11 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 - **Overlays** shows the original Edit profile dialog with Name, Email and
   Public profile. The fields update shared preview values. Cancel closes the
   dialog and Save changes also shows a success toast. The same card opens the
-  right-hand Notifications sheet. Escape, the close button and the scrim
-  dismiss both overlays.
+  right-hand Notifications sheet with Comments, Mentions and Weekly digest
+  switches. Their values are shared with Selection and Edit profile. Delete
+  project opens a confirmation with a native action footer. Confirming it
+  displays an Undo toast. Escape, the close button and the scrim dismiss the
+  open overlay.
   The context-menu area opens CUI's Cut/Copy/Paste/Delete menu on right click.
   Its commands only update preview state. Arrow keys and Enter choose a command;
   Escape and outside clicks dismiss it.
@@ -82,15 +90,25 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   lines and body placeholder, with CUI-owned shimmer and reduced-motion behavior.
   Activity reproduces the three native deployment, review and
   failed-build entries. Goals shows the native 104-point Onboarding and Quota rings.
-  Leaving the page releases native dismissal and interpolation state. Returning
-  shows the warning again. The cards use the available width; the native
-  two-column grid and Goals row justification remain open layout items in the
-  CUI inventory.
+  The native grid reflows the Progress, Loading, Activity and Goals cards.
+  CUI distributes space around the Goals rings. Badges and avatars shows
+  tones, presence and the overlapping team with its overflow count. The
+  empty-state New project action shows a success toast. Leaving the page
+  releases native dismissal and interpolation state.
+- **Reader** shows the original article, nested outline entries and scroll
+  fades. Click an entry or activate a focused row with Enter to jump to its
+  heading. The marker follows the reader while scrolling.
 - **Disclosure** shows clamped About text and Billing and Security expandable
   cards. The model owns header expansion;
   CUI owns the text link's local state. The original branch confirmation uses
   the danger action and Cancel button. All examples retain CUI rendering and
   interaction, including its [documented focus limitation](../../../../docs/future/cui-upstream-bugs.md#cui-006).
+  Hover over @jonas to see the original profile card with initials and the
+  online dot. Move onto the card to keep it open, or press Escape to close it.
+  The announcement can show its release-notes toast, dismiss and reopen. The
+  standard and compact Countdown examples share a clock. Onboarding checklist
+  starts at one completed step and opens the next action as each step completes.
+  Archive 3 conversations shows the original timed Undo toast.
 - **Actions** shows the primary Save and outline Export split buttons.
   Save reports its main or menu action beside the buttons.
   The Toggle group section shows independent formatting icons and exclusive

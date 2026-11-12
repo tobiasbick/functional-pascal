@@ -303,6 +303,15 @@ public function Prepare<TMsg>(
         _
       ), Ui.Element.ExpandableCard(_, _, _, _, _, _), Ui.Element.ExpandableText(_, _, _, _):
         raise new Sys.NotSupportedException('Disclosure widgets require the graphical profile.');
+      when Ui.Element.LinkAction(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Avatar(_, _, _), Ui.Element.HoverCard(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Link, avatar and hover card require the graphical profile.'
+        );
       when Ui.Element.Popover(_, _, _, _, _, _), Ui.Element.ConfirmPopover(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Popovers require the graphical profile.');
       when Ui.Element.Toggles(_, _, _, _, _):
@@ -372,6 +381,17 @@ public function Prepare<TMsg>(
         _
       ):
         raise new Sys.NotSupportedException('Sliders require the graphical profile.');
+      when Ui.Element.Banner(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Countdown(_, _, _), Ui.Element.Checklist(_, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Banner, countdown and checklist require the graphical profile.'
+        );
       when Ui.Element.Dropzone(_, _, _, _), Ui.Element.AvatarUpload(
         _,
         _,
@@ -421,6 +441,20 @@ public function Prepare<TMsg>(
         return Sidebar.Lower<TMsg>(Id, Sections, Active, Enabled);
       when Ui.Element.ButtonGroup(const Items: array of Ui.Element<TMsg>):
         return Group.Lower<TMsg>(Children(Items, Colors, true), Theme, Colors);
+      when Ui.Element.Grid(_, _), Ui.Element.Card(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Badge(_, _, _), Ui.Element.Metric(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.AvatarGroup(_, _, _), Ui.Element.EmptyState(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Grid, Card, Badge, Metric, Avatar group and Empty state require the graphical profile.'
+        );
       when Ui.Element.Stack(
         const Items: array of Ui.Element<TMsg>,
         const Horizontal: bool,
@@ -449,12 +483,17 @@ public function Prepare<TMsg>(
         return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
+      when Ui.Element.TableOfContents(_, _, _, _, _), Ui.Element.ScrollAnchor(_):
+        raise new Sys.NotSupportedException(
+          'Table of contents and scroll anchors require the graphical profile.'
+        );
       when Ui.Element.Scroll(
         const Id: string,
         const Child: Ui.Element<TMsg>,
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
-        const Bar: bool
+        const Bar: bool,
+        _
       ):
         case Scroll of
           when is Sys.Func<L.ScrollChange, TMsg> as Callback:

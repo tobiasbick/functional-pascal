@@ -14,9 +14,6 @@ uses
 public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
 begin
   const Next: S.Model := case Message of
-    when S.Msg.SetBluetooth(const Value: bool): State with
-      Bluetooth := Value;
-    end with;
     when S.Msg.SetAirplane(const Value: bool): State with
       Airplane := Value;
     end with;

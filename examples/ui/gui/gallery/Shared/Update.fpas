@@ -34,6 +34,9 @@ begin
     when S.Msg.SetWifi(const Value: bool): State with
       Wifi := Value;
     end with;
+    when S.Msg.SetBluetooth(const Value: bool): State with
+      Bluetooth := Value;
+    end with;
     when S.Msg.SetBrightness(const Value: float): State with
       Brightness := Value;
     end with;

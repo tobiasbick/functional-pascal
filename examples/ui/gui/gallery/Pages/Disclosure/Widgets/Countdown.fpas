@@ -1,0 +1,24 @@
+unit GuiGallery.Pages.Disclosure.Widgets.Countdown;
+
+uses
+  GuiGallery.Pages.Disclosure.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Countdowns as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Shows the original standard and compact countdowns.
+// ## Parameters
+// - `Model`: Current clock sample.
+// ## Returns
+// The native countdown pair.
+public function View(Model: S.Model): E.Element<S.Msg>;
+begin
+  return E.Row<S.Msg>(
+    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center),
+    D.Countdown<S.Msg>('disclosure-launch', Model.SecondsLeft),
+    D.Countdown<S.Msg>(
+      'disclosure-sale', Model.SecondsLeft - 172800.0,
+      new D.Options(Compact := true, HideDays := true)
+    )
+  );
+end function;
+
+end unit;

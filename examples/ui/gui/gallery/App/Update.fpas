@@ -1,6 +1,8 @@
 unit GuiGallery.App.Update;
 
 uses
+  GuiGallery.Pages.Overview.State as Overview,
+  GuiGallery.Pages.Overview.Update as OverviewUpdate,
   GuiGallery.Pages.Buttons.State as Buttons,
   GuiGallery.Pages.Inputs.State as Inputs,
   GuiGallery.Pages.Selection.State as Selection,
@@ -26,6 +28,8 @@ uses
   GuiGallery.Pages.Overlays.Update as OverlaysUpdate,
   GuiGallery.Pages.Actions.Update as ActionsUpdate,
   GuiGallery.Pages.SmartInputs.Update as SmartInputsUpdate,
+  GuiGallery.Pages.Disclosure.Clock as DisclosureClock,
+  System.Collections.Generic as Collections,
   GuiGallery.Pages.Disclosure.Update as DisclosureUpdate,
   GuiGallery.App.State as G,
   GuiGallery.Shared.State as Demo,
@@ -70,7 +74,9 @@ begin
       Selection.Msg.Shared(const Value: Demo.Msg)
     ), G.Msg.Overlays(
       Overlays.Msg.Shared(const Value: Demo.Msg)
-    ), G.Msg.Actions(Actions.Msg.Shared(const Value: Demo.Msg)):
+    ), G.Msg.Actions(
+      Actions.Msg.Shared(const Value: Demo.Msg)
+    ), G.Msg.Overview(Overview.Msg.Shared(const Value: Demo.Msg)):
       const Child: Mvu.Transition<Demo.Model, G.Msg> := C.MapTransition<Demo.Model, Demo.Msg, G.Msg>(
         DemoUpdate.Update(State.Shared, Value),
         G.Msg.Shared,
@@ -81,6 +87,17 @@ begin
           Shared := Child.Model;
         end with, Child.Commands
       );
+    when G.Msg.Overview(const Value: Overview.Msg):
+      const Child: Mvu.Transition<Overview.Model, G.Msg> := C.MapTransition<Overview.Model, Overview.Msg, G.Msg>(
+        OverviewUpdate.Update(State.Overview, Value), G.Msg.Overview, 'overview'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Overview := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Buttons(Buttons.Msg.OpenDeleteDialog):
+      return Update(State, G.Msg.Overlays(Overlays.Msg.SetDeleteDialog(true)));
     when G.Msg.Buttons(const Value: Buttons.Msg):
       const Child: Mvu.Transition<Buttons.Model, G.Msg> := C.MapTransition<Buttons.Model, Buttons.Msg, G.Msg>(
         ButtonsUpdate.Update(State.Buttons, Value),
@@ -205,19 +222,33 @@ begin
         end with, []
       );
     when G.Msg.Show(const Value: G.Page):
-      const Commands: array of Mvu.Command<G.Msg> := if Value = State.Active then
-        []
-      elsif Value = G.Page.Audio then
-        [
-          AudioClock.Start<G.Msg>(
-            G.Msg.Audio(Audio.Msg.Tick), function(Error: Sys.Exception): G.Msg => G.Msg.Preview
-          )
-        ]
-      elsif State.Active = G.Page.Audio then
-        [Mvu.CancelBackground<G.Msg>(AudioClock.Id)]
-      else
-        []
+      const Commands: Collections.List<Mvu.Command<G.Msg>> := new Collections.List<Mvu.Command<G.Msg>>();
+      if Value <> State.Active then
+        if State.Active = G.Page.Audio then
+          Commands.Add(Mvu.CancelBackground<G.Msg>(AudioClock.Id));
+        elsif State.Active = G.Page.Disclosure then
+          Commands.Add(Mvu.CancelBackground<G.Msg>(DisclosureClock.Id));
+        end if;
+
+        if Value = G.Page.Audio then
+          Commands.Add(
+            AudioClock.Start<G.Msg>(
+              G.Msg.Audio(Audio.Msg.Tick), function(Error: Sys.Exception): G.Msg => G.Msg.Preview
+            )
+          );
+        elsif Value = G.Page.Disclosure then
+          Commands.Add(
+            DisclosureClock.Start<G.Msg>(
+              State.Disclosure.Deadline,
+              function(Target: Sys.DateTimeOffset; Seconds: double): G.Msg => G.Msg.Disclosure(
+                Disclosure.Msg.SetCountdown(Target, Seconds)
+              ),
+              function(Error: Sys.Exception): G.Msg => G.Msg.Preview
+            )
+          );
+        end if;
       end if;
+
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
           Active := Value;
@@ -225,6 +256,7 @@ begin
           Overlays := State.Overlays with
             Sheet := false;
             ProfileDialog := false;
+            DeleteDialog := false;
             Filters := false;
           end with;
           Disclosure := State.Disclosure with
@@ -233,7 +265,7 @@ begin
           SmartInputs := State.SmartInputs with
             EmojiOpen := false;
           end with;
-        end with, Commands
+        end with, Commands.ToArray()
       );
     when G.Msg.SetDrawer(const Open: bool):
       return new Mvu.Transition<G.Model, G.Msg>(

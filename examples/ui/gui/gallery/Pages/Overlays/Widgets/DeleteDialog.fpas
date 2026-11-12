@@ -1,0 +1,40 @@
+unit GuiGallery.Pages.Overlays.Widgets.DeleteDialog;
+
+uses
+  GuiGallery.Pages.Overlays.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B, Fpas.Ui.Dialogs as D, Fpas.Ui.ActionFooters as F;
+
+// Wraps the active page with the shared project deletion confirmation.
+// ## Type parameters
+// - `TMsg`: Message type of the containing gallery.
+// ## Parameters
+// - `Base`: Current gallery view.
+// - `Open`: Visibility of the deletion dialog.
+// - `Messages`: Maps confirmation messages into the parent session.
+// ## Returns
+// The active page and its controlled native confirmation.
+public function Wrap<TMsg>(
+  Base: E.Element<TMsg>; Open: bool; Messages: function(State.Msg): TMsg
+): E.Element<TMsg>;
+begin
+  const Cancel: TMsg := Messages(State.Msg.SetDeleteDialog(false));
+  return D.Dialog<TMsg>(
+    'delete-project', Base,
+    F.ActionFooter<TMsg>(
+      B.Button<TMsg>('delete-project-cancel', 'Cancel', Cancel),
+      B.Button<TMsg>(
+        'delete-project-confirm', 'Delete project', Messages(State.Msg.DeleteProject),
+        new B.Options(Variant := S.ButtonVariant.Destructive)
+      )
+    ),
+    Open,
+    new D.Options(
+      'Delete this project?',
+      Description := 'This removes the project and its history for everyone. You cannot undo this.',
+      Width := 400
+    ),
+    Cancel
+  );
+end function;
+
+end unit;

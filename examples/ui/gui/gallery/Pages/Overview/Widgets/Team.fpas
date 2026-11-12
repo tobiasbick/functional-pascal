@@ -1,0 +1,84 @@
+unit GuiGallery.Pages.Overview.Widgets.Team;
+
+uses
+  GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges, Fpas.Ui.Avatars as Avatars,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
+  System as Sys, System.Collections.Generic as Lists;
+
+type Person = record
+  public Name: string;
+  public Email: string;
+  public Role: string;
+  public Status: string := '';
+end record;
+
+// Builds the original Team card with native presence avatars and role badges.
+// ## Returns
+// The Overview team card.
+public function View(): E.Element<State.Msg>;
+begin
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  const People: array of Person := [
+    new Person('Jonas Berg', 'jonas@example.com', 'Owner', 'online'),
+    new Person('Priya Nair', 'priya@example.com', 'Admin', 'away'),
+    new Person('Tomas Rivera', 'tomas@example.com', 'Editor'),
+    new Person('Lena Fischer', 'lena@example.com', 'Viewer')
+  ];
+  const Rows: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>();
+  Rows.Add(
+    E.Row<State.Msg>(
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(
+          new L.Flow(Gap := G.Points(4)),
+          E.Styled<State.Msg>(E.Text<State.Msg>('Team'), S.Role.Heading),
+          E.Styled<State.Msg>(E.Text<State.Msg>('Four people, one owner.'), S.Role.Secondary)
+        ),
+        Fill
+      ),
+      B.Button<State.Msg>(
+        'team-invite', 'Invite', State.Msg.Shared(Demo.Msg.Preview),
+        new B.Options(Icon := Sys.Char.ConvertFromUtf32($E1A2), ControlSize := B.Size.Small)
+      )
+    )
+  );
+  for Item: Person in People do
+    const Key: string := 'team-' + Item.Role.ToLowerInvariant();
+    const Tone: S.Tone := if Item.Role = 'Owner' then
+      S.Tone.Accent
+    else
+      S.Tone.Neutral
+    end if;
+    Rows.Add(
+      E.Column<State.Msg>(
+        new L.Flow(Clip := false),
+        G.Space<State.Msg>(4),
+        E.Row<State.Msg>(
+          new L.Flow(Gap := G.Points(12), Clip := false),
+          Avatars.Avatar<State.Msg>(
+            Key + '-avatar',
+            Item.Name,
+            new Avatars.Options(Size := 34.0F, Status := Item.Status)
+          ),
+          E.Size<State.Msg>(
+            E.Column<State.Msg>(
+              new L.Flow(Gap := G.Points(1)),
+              E.Styled<State.Msg>(E.Text<State.Msg>(Item.Name), S.Role.Strong),
+              E.Styled<State.Msg>(
+                E.Styled<State.Msg>(E.Text<State.Msg>(Item.Email), S.Role.Caption),
+                S.Role.Secondary
+              )
+            ),
+            Fill
+          ),
+          Badges.Badge<State.Msg>(Key + '-badge', Item.Role, new Badges.Options(Tone := Tone))
+        ),
+        G.Space<State.Msg>(4)
+      )
+    );
+  end for;
+
+  return Cards.Card<State.Msg>('team-card', Rows.ToArray());
+end function;
+
+end unit;

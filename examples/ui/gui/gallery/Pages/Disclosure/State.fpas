@@ -1,5 +1,10 @@
 unit GuiGallery.Pages.Disclosure.State;
 
+uses Fpas.Ui.Checklists as K, System as Sys;
+
+// Initial duration in the original Countdown example.
+public const InitialSeconds: double := 193338.0;
+
 // State owned by this gallery feature.
 public type Model = record
   // Whether the branch confirmation is open.
@@ -10,6 +15,23 @@ public type Model = record
   public BillingOpen: bool := true;
   // Expansion of the Security card.
   public SecurityOpen: bool := false;
+  // Visibility of the announcement.
+  public BannerOpen: bool := true;
+  // Target time retained across visits to Disclosure.
+  public Deadline: Sys.DateTimeOffset? := null;
+  // Most recent clock sample for the countdowns.
+  public SecondsLeft: double := InitialSeconds;
+  // Completion state of the original onboarding steps.
+  public Steps: array of K.Step := [
+    new K.Step('Create your workspace', 'Pick a name and invite your team.', 'Create', true),
+    new K.Step(
+      'Connect a repository',
+      'Link GitHub or GitLab to sync issues and pull requests.',
+      'Connect'
+    ),
+    new K.Step('Import your data', 'Bring tasks over from a CSV or another tool.', 'Import'),
+    new K.Step('Turn on notifications', 'Get pinged when something needs you.', 'Enable')
+  ];
 end record;
 
 // Messages handled by this gallery feature.
@@ -24,6 +46,18 @@ public type Msg = variant
   PreviewBranchDeletion;
   // A harmless preview activation.
   Preview;
+  // Dismiss or reopen the announcement.
+  SetBanner(Open: bool);
+  // Preview opening the release notes.
+  ReadNotes;
+  // Change a step from its completion circle.
+  SetStep(Index: int; Done: bool);
+  // Complete the active step and show its title.
+  CompleteStep(Index: int);
+  // Show the timed archive toast.
+  ArchiveConversations;
+  // Refresh the countdown from the page clock.
+  SetCountdown(Deadline: Sys.DateTimeOffset; SecondsLeft: double);
 end variant;
 
 end unit;

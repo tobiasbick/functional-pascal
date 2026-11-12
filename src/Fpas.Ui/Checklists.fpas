@@ -1,0 +1,69 @@
+unit Fpas.Ui.Checklists;
+
+uses Fpas.Ui.Elements as E, System as Sys, System.Globalization as Culture;
+
+// One model-owned onboarding step.
+public type Step = record
+  // Literal step title.
+  public Title: string;
+  // Optional supporting text shown for the first incomplete step.
+  public Description: string := '';
+  // Optional action caption shown for the first incomplete step.
+  public ActionLabel: string := '';
+  // Whether the step is complete.
+  public Done: bool := false;
+end record;
+
+// Presentation and input settings for a native onboarding checklist.
+public type Options = record
+  // Card heading. Empty uses the native default.
+  public Title: string := '';
+  // Optional replacement for the native progress caption.
+  public Description: string := '';
+  // Whether step circles and actions accept input.
+  public Enabled: bool := true;
+end record;
+
+// Addresses a native step circle.
+// ## Parameters
+// - `Id`: Stable checklist identity.
+// - `Index`: Zero-based step index.
+// ## Returns
+// The focus and inspection identity of the circle.
+public function StepId(Id: string; Index: int): string;
+begin
+  return Id + '/step/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Addresses a native step action.
+// ## Parameters
+// - `Id`: Stable checklist identity.
+// - `Index`: Zero-based step index.
+// ## Returns
+// The focus and inspection identity of the action.
+public function ActionId(Id: string; Index: int): string;
+begin
+  return StepId(Id, Index) + '/action';
+end function;
+
+// Builds a CUI onboarding card with model-owned completion flags.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable checklist identity.
+// - `Steps`: Ordered steps. The first incomplete step expands.
+// - `OnToggle`: Maps a circle's index and proposed completion flag to a message.
+// - `OnAction`: Optional callback for a step's action button, using its index.
+// - `Settings`: Optional heading, description and input settings.
+// ## Returns
+// The graphical checklist.
+public function Checklist<TMsg>(
+  Id: string; Steps: array of Step; OnToggle: function(int, bool): TMsg;
+  OnAction: Sys.Func<int, TMsg>? := null; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Checklist(Id, Steps, OnToggle, OnAction, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,239 @@
+unit GalleryDisclosureFeedbackContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, GuiGallery.Pages.Disclosure.State as D,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Banners as B, Fpas.Ui.Checklists as C,
+  System as Sys, System.Threading as Threads;
+
+// Exercises the original banner, countdowns and onboarding examples.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the disclosure screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Disclosure(D.Msg.Preview):
+        Activations := Activations + 1;
+      else
+    end case;
+    const Next: Mvu.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    if Target <> '' then
+      return new Mvu.Transition<State.Model, State.Msg>(Next.Model, [Mvu.Focus<State.Msg>(Target)]);
+    end if;
+
+    Seconds := Next.Model.Disclosure.SecondsLeft;
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The Disclosure page closed unexpectedly.');
+  end procedure;
+
+  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+
+  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native control ' + Id);
+    X := Box.X + Box.Width / 2.0F;
+    Y := Box.Y + Box.Height / 2.0F;
+  end procedure;
+
+  procedure WaitCard(Session: Gui.Session<State.Msg>; Open: bool);
+  begin
+    const Limit: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(3.0);
+    while HasControl(Session, 'jonas-card') <> Open and Sys.DateTime.UtcNow < Limit do
+      Threads.Thread.Sleep(20);
+      Step(Session);
+    end while;
+
+    A.Check(HasControl(Session, 'jonas-card') = Open, 'The hover card did not change visibility.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Aim(Session, Id);
+    Left := 1;
+    Step(Session);
+    Left := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Key: int := 0;
+  var Target: string := '';
+  var Seconds: double := D.InitialSeconds;
+  var Activations: int := 0;
+  const Banner: string := 'release-banner';
+  const Checklist: string := 'workspace-onboarding';
+  const First: string := C.StepId(Checklist, 0);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI disclosure feedback', 1100, 1500, Renderer, true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Disclosure),
+    Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, B.ActionId(Banner)).Text = 'Read the notes',
+    'The native announcement is missing.'
+  );
+  A.Check(
+    A.Control(Session, 'disclosure-launch').Value = '193338'
+    and A.Control(Session, 'disclosure-sale').Value = '20538',
+    'The countdowns must start at the original offsets.'
+  );
+  A.Check(
+    A.Control(Session, Checklist).Value = '1/4' and A.Control(
+      Session,
+      C.ActionId(Checklist, 1)
+    ).Text = 'Connect',
+    'The first incomplete checklist step must be open.'
+  );
+  Session.CapturePng(Capture + '.disclosure-feedback.png');
+
+  Aim(Session, 'jonas-link');
+  Step(Session);
+  A.Check(not HasControl(Session, 'jonas-card'), 'A link hover must wait for the native delay.');
+  WaitCard(Session, true);
+  A.Check(
+    A.Control(Session, 'jonas-avatar').Bounds.Width = 44.0F
+    and A.HasText(Session, 'Usually replies within an hour'),
+    'The native profile card must show the original avatar and details.'
+  );
+  Session.CapturePng(Capture + '.hover-card-open.png');
+  Aim(Session, 'jonas-avatar');
+  Step(Session);
+  Threads.Thread.Sleep(240);
+  Step(Session);
+  A.Check(HasControl(Session, 'jonas-card'), 'Moving onto the card must keep it open.');
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session);
+  WaitCard(Session, false);
+
+  Aim(Session, 'jonas-link');
+  Step(Session);
+  WaitCard(Session, true);
+  Key := 3;
+  Step(Session);
+  WaitCard(Session, false);
+  Threads.Thread.Sleep(500);
+  Step(Session);
+  A.Check(
+    not HasControl(Session, 'jonas-card'),
+    'Escape must keep the card closed until the pointer leaves.'
+  );
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session);
+
+  Target := 'jonas-link';
+  A.Send(Session, State.Msg.Preview);
+  Target := '';
+  Key := 8;
+  Step(Session);
+  Step(Session);
+  A.Check(A.Control(Session, 'jonas-link').Focused, 'The link must accept keyboard focus.');
+  Session.CapturePng(Capture + '.hover-link-focused.png');
+  Key := 2;
+  Step(Session);
+  Step(Session);
+  A.Check(Activations = 1, 'Enter must activate the link exactly once.');
+  Click(Session, 'jonas-link');
+  A.Check(Activations = 2, 'Clicking must activate the link exactly once.');
+
+  Target := First;
+  A.Send(Session, State.Msg.Preview);
+  Target := '';
+  Key := 8;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, First).Focused,
+    'The checklist completion circle must receive keyboard focus.'
+  );
+  Session.CapturePng(Capture + '.checklist-focused.png');
+  Key := 6;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Checklist).Value = '0/4' and A.Control(
+      Session,
+      C.ActionId(Checklist, 0)
+    ).Text = 'Create',
+    'Space must toggle the focused step and expand the first incomplete step.'
+  );
+  Click(Session, C.ActionId(Checklist, 0));
+  Click(Session, C.ActionId(Checklist, 1));
+  A.Check(
+    A.Control(Session, Checklist).Value = '2/4'
+    and A.Control(Session, C.ActionId(Checklist, 2)).Text = 'Import',
+    'Completing the current action must advance the checklist.'
+  );
+
+  Click(Session, B.ActionId(Banner));
+  var Notes: bool := false;
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Role = 'toast' and Item.Text = 'Opening release notes' then
+      Notes := true;
+    end if;
+  end for;
+
+  A.Check(Notes, 'The announcement action must show its toast.');
+  Click(Session, B.DismissId(Banner));
+  A.Check(
+    A.Control(Session, 'show-release-banner').Enabled,
+    'Dismissal must expose the reopen button.'
+  );
+  Click(Session, 'show-release-banner');
+  A.Check(A.Control(Session, B.ActionId(Banner)).Enabled, 'The announcement must reopen.');
+
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Disclosure));
+  const Until: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(4.0);
+  while Seconds >= D.InitialSeconds and Sys.DateTime.UtcNow < Until do
+    Threads.Thread.Sleep(30);
+    Step(Session);
+  end while;
+
+  A.Check(Seconds < D.InitialSeconds, 'The live countdown must advance after opening Disclosure.');
+end procedure;
+
+end unit;

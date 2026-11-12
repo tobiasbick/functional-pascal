@@ -22,7 +22,10 @@ begin
       Data.Wifi,
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetWifi(SharedValue))
     ),
-    S.Switch<State.Msg>('bluetooth', 'Bluetooth', Model.Bluetooth, State.Msg.SetBluetooth),
+    S.Switch<State.Msg>(
+      'bluetooth', 'Bluetooth', Data.Bluetooth,
+      function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetBluetooth(SharedValue))
+    ),
     S.Switch<State.Msg>(
       'airplane', 'Airplane mode', Model.Airplane, State.Msg.SetAirplane,
       Description := 'Turns off all radios.'

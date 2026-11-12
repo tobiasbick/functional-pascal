@@ -1,0 +1,37 @@
+unit Fpas.Ui.Metrics;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Appearance of a native metric tile.
+public type Options = record
+  // Percentage change. Zero hides the trend unless a label is supplied.
+  public Delta: float := 0.0F;
+  // Optional replacement for the formatted percentage.
+  public DeltaLabel: string := '';
+  // Samples for the native sparkline. At least two samples display a line.
+  public Spark: array of float := [];
+  // Optional CUI glyph.
+  public Icon: string := '';
+  // Preferred tile width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Treat a decrease as favorable.
+  public LowerIsBetter: bool := false;
+end record;
+
+// Draws a native metric with an optional trend and sparkline.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable inspection identity.
+// - `Label`: Metric caption.
+// - `Value`: Model-formatted value.
+// - `Settings`: Optional trend, icon and sparkline.
+// ## Returns
+// The graphical element.
+public function Metric<TMsg>(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Metric(Id, Label, Value, Settings ?? new Options());
+end function;
+
+end unit;

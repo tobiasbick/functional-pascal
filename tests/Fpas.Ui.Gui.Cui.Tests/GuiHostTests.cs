@@ -77,6 +77,9 @@ public sealed class GuiHostTests
         CheckDateFocus(galleryCapture);
         CheckColorFocus(galleryCapture);
         CheckSignatureInk(galleryCapture);
+        CheckChecklistFocus(galleryCapture);
+        CheckHoverLinkFocus(galleryCapture);
+        CheckReaderMarker(galleryCapture);
         string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
         foreach (var (page, width, height) in new[]
         {
@@ -97,10 +100,16 @@ public sealed class GuiHostTests
             ("tags-codes-strength", 1000, 1000),
             ("pickers", 1000, 1200), ("pickers-search", 1000, 1200), ("pickers-bound", 1000, 1200),
             ("text-affixes", 1000, 760), ("edit-profile", 1000, 900),
-            ("disclosure", 1100, 900), ("disclosure-dark", 1100, 900), ("disclosure-narrow", 650, 1250),
+            ("disclosure", 1100, 1100), ("disclosure-dark", 1100, 1100), ("disclosure-narrow", 650, 1250),
             ("capture", 1000, 1000), ("capture-signed", 1000, 1000), ("capture-cleared", 1000, 1000),
+            ("disclosure-feedback", 1100, 1500), ("checklist-focused", 1100, 1500),
+            ("hover-card-open", 1100, 1500), ("hover-link-focused", 1100, 1500),
+            ("reader", 1100, 850), ("reader-jump", 1100, 850), ("reader-scrolled", 1100, 850),
+            ("workspace", 1100, 1700), ("overview-narrow", 500, 1700), ("project-delete", 1100, 1700),
+            ("notification-switches", 1100, 1700), ("disclosure-undo", 1100, 1800),
+            ("disclosure-undo-toast", 1100, 1800),
             ("accordion", 1100, 760), ("audio", 1201, 800), ("audio-wrap", 900, 800),
-            ("feedback", 1100, 1700), ("feedback-dark", 1100, 1700), ("feedback-narrow", 650, 1800)
+            ("feedback", 1100, 1700), ("feedback-dark", 1100, 1700), ("feedback-narrow", 500, 1800)
         })
         {
             string pageCapture = galleryCapture + "." + page + ".png";
@@ -110,6 +119,65 @@ public sealed class GuiHostTests
                 string target = Directory.CreateDirectory(Path.Combine(artifacts, "host-gallery", renderer)).FullName;
                 File.Copy(pageCapture, Path.Combine(target, page + ".png"), overwrite: true);
             }
+        }
+    }
+
+    private static void CheckReaderMarker(string capture)
+    {
+        const int width = 1100, height = 850, railX = 860;
+        var rows = new[] { 137, 166, 195 };
+        var states = new[] { "reader", "reader-jump", "reader-scrolled" };
+        for (int state = 0; state < states.Length; ++state)
+        {
+            var pixels = PngAssertions.ReadPixels(capture + "." + states[state] + ".png", width, height);
+            for (int row = 0; row < rows.Length; ++row)
+            {
+                uint red = pixels[rows[row] * width + railX] & 0xff;
+                Assert.True((red < 64) == (row == state),
+                    $"The Reader rail marker is in the wrong row for {states[state]}.");
+            }
+        }
+    }
+
+    private static void CheckHoverLinkFocus(string capture)
+    {
+        const int width = 1100, height = 1500;
+        var normal = PngAssertions.ReadPixels(capture + ".disclosure-feedback.png", width, height);
+        var focused = PngAssertions.ReadPixels(capture + ".hover-link-focused.png", width, height);
+        const int left = 349, top = 243, areaWidth = 68, areaHeight = 28;
+        bool changed = false;
+        for (int y = top; y < top + areaHeight; ++y)
+        {
+            int start = y * width + left;
+            changed |= !normal.AsSpan(start, areaWidth).SequenceEqual(focused.AsSpan(start, areaWidth));
+        }
+        Assert.True(changed, "The link must show its keyboard focus ring.");
+    }
+
+    private static void CheckChecklistFocus(string capture)
+    {
+        const int width = 1100, height = 1500;
+        var normal = PngAssertions.ReadPixels(capture + ".disclosure-feedback.png", width, height);
+        var focused = PngAssertions.ReadPixels(capture + ".checklist-focused.png", width, height);
+        int normalGreen = 0, focusedGreen = 0;
+        bool changed = false;
+        for (int y = 1310; y < 1350; ++y)
+        {
+            for (int x = 295; x < 330; ++x)
+            {
+                int index = y * width + x;
+                if (IsSuccess(normal[index])) normalGreen++;
+                if (IsSuccess(focused[index])) focusedGreen++;
+                changed |= normal[index] != focused[index];
+            }
+        }
+        Assert.True(normalGreen > 250 && focusedGreen == normalGreen, "Keyboard focus must preserve the green check.");
+        Assert.True(changed, "Keyboard focus must add a visible ring.");
+
+        static bool IsSuccess(uint pixel)
+        {
+            uint red = pixel & 255, green = (pixel >> 8) & 255, blue = (pixel >> 16) & 255;
+            return green > 2 * red && green > blue;
         }
     }
 

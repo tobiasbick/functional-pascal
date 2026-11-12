@@ -1,0 +1,30 @@
+unit Fpas.Ui.Countdowns;
+
+uses Fpas.Ui.Elements as E;
+
+// Presentation settings for native countdown digits.
+public type Options = record
+  // Use small tiles separated by colons.
+  public Compact: bool := false;
+  // Fold days into the hours tile.
+  public HideDays: bool := false;
+end record;
+
+// Builds CUI's rolling countdown for a model-supplied duration.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable countdown identity.
+// - `SecondsLeft`: Finite remaining seconds. Negative values display zero.
+// - `Settings`: Optional compact tiles and day display.
+// ## Returns
+// The graphical countdown.
+public function Countdown<TMsg>(
+  Id: string; SecondsLeft: double; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Countdown(Id, SecondsLeft, Settings ?? new Options());
+end function;
+
+end unit;

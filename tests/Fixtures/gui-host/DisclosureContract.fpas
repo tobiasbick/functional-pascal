@@ -291,7 +291,7 @@ begin
     A.Control(Session, 'accordion/0').Value = 'true',
     'Space did not reopen the focused accordion.'
   );
-  Window.Resize(1100, 900);
+  Window.Resize(1100, 1100);
   A.Send(Session, State.Msg.Show(State.Page.Disclosure));
   Step(Session);
   Step(Session);
@@ -323,7 +323,7 @@ begin
     'The native card overflowed its narrow parent.'
   );
   Session.CapturePng(Capture + '.disclosure-narrow.png');
-  Window.Resize(1100, 900);
+  Window.Resize(1100, 1100);
   Step(Session);
   Step(Session);
   A.Check(A.Control(Session, 'billing').Value = 'true', 'Resizing lost model expansion.');

@@ -26,8 +26,11 @@ uses
   GuiGallery.Pages.SmartInputs.View as SmartInputs,
   GuiGallery.Pages.Disclosure.State as DisclosureState,
   GuiGallery.Pages.Disclosure.View as Disclosure,
-  GuiGallery.Pages.Overview.View as Overview,
+  GuiGallery.Pages.Reader.View as Reader,
+  GuiGallery.Pages.Overview.View as Overview, Fpas.Ui.Gui.Toasts as Toasts,
   GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
+  GuiGallery.Pages.Overlays.Widgets.DeleteDialog as DeleteDialog,
+  GuiGallery.Pages.Overlays.Widgets.Notifications as Notifications,
   GuiGallery.App.State as State,
   GuiGallery.Shared.State as Demo,
   Fpas.Ui.Composition as U,
@@ -98,7 +101,8 @@ begin
         [
           Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
           Destination(State.Page.Pickers, $E063), Destination(State.Page.Capture, $E19E),
-          Destination(State.Page.Disclosure, $E529), Destination(State.Page.Audio, $E55A)
+          Destination(State.Page.Disclosure, $E529), Destination(State.Page.Reader, $E0CC),
+          Destination(State.Page.Audio, $E55A)
         ]
       )
     ],
@@ -142,9 +146,15 @@ function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
 begin
   case Model.Active of
     when State.Page.Feedback:
-      return Feedback.View<State.Msg>();
+      return Feedback.View<State.Msg>(
+        State.Msg.Shared(
+          Demo.Msg.Notify('Project created', new Toasts.Options(Appearance := Toasts.Tone.Success))
+        )
+      );
     when State.Page.Overview:
-      return Overview.View<State.Msg>(State.Msg.Show(State.Page.Buttons));
+      return Overview.View<State.Msg>(
+        Model.Overview, Model.Shared, State.Msg.Show(State.Page.Buttons), State.Msg.Overview
+      );
     when State.Page.Buttons:
       return U.Map<ButtonsState.Msg, State.Msg>(
         Buttons.View(Model.Buttons, Model.Shared, Width >= 600),
@@ -188,6 +198,8 @@ begin
       return U.Map<AudioState.Msg, State.Msg>(Audio.View(Model.Audio), State.Msg.Audio);
     when State.Page.Pickers:
       return U.Map<PickersState.Msg, State.Msg>(Pickers.View(Model.Pickers), State.Msg.Pickers);
+    when State.Page.Reader:
+      return Reader.View<State.Msg>();
     when State.Page.Disclosure:
       return U.Map<DisclosureState.Msg, State.Msg>(
         Disclosure.View(Model.Disclosure),
@@ -247,7 +259,8 @@ begin
         Fill
       ),
       Space(Inset)
-    )
+    ),
+    FadeEdges := Model.Active = State.Page.Overview or Model.Active = State.Page.Feedback
   );
 end function;
 
@@ -301,15 +314,14 @@ begin
       Fill
     )
   end if;
-  const WithSheet: E.Element<State.Msg> := Sheets.Sheet<State.Msg>(
-    'sheet',
-    Body,
-    E.Text<State.Msg>('Choose what we tell you about.'),
-    Model.Overlays.Sheet,
-    new Sheets.Options('Notifications'),
-    State.Msg.Overlays(OverlaysState.Msg.SetSheet(false))
+  const WithSheet: E.Element<State.Msg> := Notifications.Wrap<State.Msg>(
+    Body, Model.Shared, Model.Overlays.Sheet, State.Msg.Overlays(OverlaysState.Msg.SetSheet(false)),
+    State.Msg.Shared
   );
-  return Dialog.Wrap<State.Msg>(Model.Overlays, Model.Shared, WithSheet, State.Msg.Overlays);
+  const WithProfile: E.Element<State.Msg> := Dialog.Wrap<State.Msg>(
+    Model.Overlays, Model.Shared, WithSheet, State.Msg.Overlays
+  );
+  return DeleteDialog.Wrap<State.Msg>(WithProfile, Model.Overlays.DeleteDialog, State.Msg.Overlays);
 end function;
 
 end unit;

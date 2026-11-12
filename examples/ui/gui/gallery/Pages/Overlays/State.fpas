@@ -9,6 +9,8 @@ public type Model = record
   public Sheet: bool := false;
   // Whether the Edit profile dialog is open.
   public ProfileDialog: bool := false;
+  // Whether the shared project deletion confirmation is open.
+  public DeleteDialog: bool := false;
   // Whether the Filters panel is open.
   public Filters: bool := false;
 end record;
@@ -25,6 +27,10 @@ public type Msg = variant
   SetProfileDialog(Open: bool);
   // Close the profile preview and show its success notification.
   SaveProfile;
+  // Open or close the shared project deletion confirmation.
+  SetDeleteDialog(Open: bool);
+  // Confirm the preview deletion and show its Undo toast.
+  DeleteProject;
   // Open or close the Filters panel.
   SetFilters(Open: bool);
   // A harmless preview activation.

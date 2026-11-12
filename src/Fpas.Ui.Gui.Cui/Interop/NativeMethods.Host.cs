@@ -11,9 +11,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_modal_key")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial uint ModalKey(nint context);
-    [LibraryImport(Library, EntryPoint = "fpas_cui_viewport", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_viewport_ex", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled);
+    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled, int fadeEdges);
     [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_metrics")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollMetrics(nint context, int node, out float offset, out float maximum);
@@ -38,9 +38,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_forget")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Forget(nint context, uint key);
-    [LibraryImport(Library, EntryPoint = "fpas_cui_group_begin")]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_group_begin_ex")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int GroupBegin(nint context, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip);
+    internal static partial int GroupBegin(nint context, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip, int justify);
     [LibraryImport(Library, EntryPoint = "fpas_cui_group_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void GroupEnd(nint context, int node);

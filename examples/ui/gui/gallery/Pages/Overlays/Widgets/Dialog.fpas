@@ -38,6 +38,13 @@ begin
           B.Button<State.Msg>(
             'sheet-open', 'Open sheet', State.Msg.SetSheet(true),
             new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
+          ),
+          B.Button<State.Msg>(
+            'delete-project-open', 'Delete project', State.Msg.SetDeleteDialog(true),
+            new B.Options(
+              Variant := S.ButtonVariant.Destructive,
+              Icon := Sys.Char.ConvertFromUtf32($E18E)
+            )
           )
         )
       ]

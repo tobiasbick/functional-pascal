@@ -1,0 +1,48 @@
+unit GuiGallery.Pages.Overlays.Widgets.Notifications;
+
+uses
+  GuiGallery.Shared.State as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Switches as S, Fpas.Ui.Sheets as Sheet, GuiGallery.Shared.Sections as G;
+
+// Presents the three original notification preferences in the native right sheet.
+// ## Type parameters
+// - `TMsg`: Message type of the containing gallery.
+// ## Parameters
+// - `Base`: Current gallery view.
+// - `Data`: Preferences also shown on Selection and in the profile dialog.
+// - `Open`: Visibility of the sheet.
+// - `Dismiss`: Message that closes the sheet.
+// - `Messages`: Maps shared preferences into the parent session.
+// ## Returns
+// The active page and its controlled Notifications sheet.
+public function Wrap<TMsg>(
+  Base: E.Element<TMsg>; Data: Demo.Model; Open: bool; Dismiss: TMsg; Messages: function(Demo.Msg): TMsg
+): E.Element<TMsg>;
+begin
+  return Sheet.Sheet<TMsg>(
+    'sheet', Base,
+    E.Column<TMsg>(
+      new L.Flow(Gap := G.Points(16)),
+      S.Switch<TMsg>(
+        'notifications-comments', 'Comments', Data.Newsletter,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetNewsletter(Value)),
+        Description := 'When someone replies to you.'
+      ),
+      S.Switch<TMsg>(
+        'notifications-mentions', 'Mentions', Data.Wifi,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetWifi(Value)),
+        Description := 'When someone mentions you.'
+      ),
+      S.Switch<TMsg>(
+        'notifications-weekly', 'Weekly digest', Data.Bluetooth,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetBluetooth(Value)),
+        Description := 'A summary every Monday.'
+      )
+    ),
+    Open,
+    new Sheet.Options('Notifications', Description := 'Choose what we tell you about.'),
+    Dismiss
+  );
+end function;
+
+end unit;

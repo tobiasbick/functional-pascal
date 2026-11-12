@@ -35,7 +35,12 @@ begin
       else
         Inner
       end if;
-    when E.Element.Stack(
+    when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       _,
       _
@@ -101,7 +106,7 @@ begin
       end if;
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return TopModal<TMsg>(Child, Prepared);
-    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _):
+    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _):
       return TopModal<TMsg>(Child, Prepared);
     when E.Element.Deferred(const Id: string, _):
       return TopModal<TMsg>(Prepared.Subviews[Id].Tree, Prepared);

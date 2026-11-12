@@ -210,6 +210,12 @@ replacement. The number and unit remain, but the tape and center marker
 disappear. The FPAS ruler adapter preserves both native painters. The gallery
 checks that the tape stays visible inside the focus ring.
 
+The native onboarding checklist has the same paint replacement at `c8baf35`.
+Tab to the completed circle in a checklist with one completed and one pending
+step. The focus ring appears, and the green circle and check disappear. The
+checklist bridge preserves the circle painter and adds the focus ring. The
+Disclosure gallery verifies both in its focused capture.
+
 <a id="cui-011"></a>
 
 ## CUI-011 — Ruler wheel snapping can exceed the upper bound
@@ -238,6 +244,11 @@ and after keyboard focus.
 The native color picker has the same behavior. Its swatch is unchanged on
 Tab and opens on Enter. The FPAS color picker applies the native focus ring
 to the swatch as well.
+
+A standalone CUI link also has no visible change on Tab in a Windows software
+capture at `c8baf35`. Enter activates the focused link. The bridge draws
+the native focus ring alongside the original underline painter. The
+Disclosure gallery checks the focus pixels and link activation.
 
 <a id="cui-013"></a>
 
@@ -277,3 +288,17 @@ upload claim through the same native helper, which has no disabled check.
 The FPAS adapters hide drop and drag input from a disabled target for the
 duration of its draw. The Windows test posts a shell drop and verifies that
 a disabled dropzone delivers no file action.
+
+<a id="cui-016"></a>
+
+## CUI-016 — Hover card reopens after Escape over its anchor
+
+At `c8baf35`, keep the pointer over the native @jonas example until
+the card opens. Press Escape while leaving the pointer in place. The popup
+closes for one frame and reopens because its hover-entry time still meets
+the delay.
+
+The FPAS bridge lets the native close complete and waits for the pointer
+to leave the anchor before starting the next hover. The Disclosure gallery
+keeps the pointer over the link past the delay after pressing Escape and
+checks that the card stays closed.

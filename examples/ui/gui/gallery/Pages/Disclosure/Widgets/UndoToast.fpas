@@ -1,0 +1,22 @@
+unit GuiGallery.Pages.Disclosure.Widgets.UndoToast;
+
+uses
+  GuiGallery.Pages.Disclosure.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Buttons as B, System as Sys;
+
+// Builds the original timed Undo toast trigger.
+// ## Returns
+// The Undo toast section.
+public function View(): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>('Undo toast', 'A draining line shows how long Undo stays.'),
+    B.Button<State.Msg>(
+      'archive-conversations', 'Archive 3 conversations', State.Msg.ArchiveConversations,
+      new B.Options(Icon := Sys.Char.ConvertFromUtf32($E041))
+    )
+  );
+end function;
+
+end unit;

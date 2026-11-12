@@ -1,0 +1,26 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Badge;
+
+uses Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Badges as B;
+
+// Draws a native badge.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable badge identity.
+// - `Text`: Literal caption.
+// - `Settings`: Appearance.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Settings: B.Options);
+begin
+  Frame.Window.Badge(
+    Text,
+    cast<int>(Settings.Tone),
+    Settings.Dot,
+    Settings.Solid,
+    Settings.Icon,
+    cast<int>(Settings.Size)
+  );
+  C.Track<TMsg>(Frame, new App.Control(Id, Text, 'badge', new Cui.CuiRectangle(), false));
+end procedure;
+
+end unit;

@@ -1,0 +1,56 @@
+unit GuiGallery.Pages.Overview.Widgets.Workspace;
+
+uses
+  GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.TextFields as T, Fpas.Ui.Checkboxes as C,
+  Fpas.Ui.Buttons as B, System as Sys;
+
+// Builds the original workspace form.
+// ## Parameters
+// - `Model`: Page-local checkbox state.
+// - `Data`: Profile values shared with other gallery pages.
+// ## Returns
+// A form that occupies its column in the original responsive layout.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return Cards.Card<State.Msg>(
+    'workspace-card', [
+      E.Column<State.Msg>(
+        new L.Flow(Gap := G.Points(4)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('Create a workspace'), S.Role.Heading),
+        E.Styled<State.Msg>(
+          E.Text<State.Msg>('You can invite people once it exists.'),
+          S.Role.Secondary
+        )
+      ),
+      T.TextField<State.Msg>(
+        'workspace-name', Data.Name,
+        function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(Value)),
+        new T.Options(Label := 'Name', Placeholder := 'Your name', MaxUtf8Bytes := 63)
+      ),
+      T.TextField<State.Msg>(
+        'workspace-email', Data.Email,
+        function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(Value)),
+        new T.Options(
+          Label := 'Email',
+          Icon := Sys.Char.ConvertFromUtf32($E10F),
+          Placeholder := 'you@example.com',
+          MaxUtf8Bytes := 95
+        )
+      ),
+      C.Checkbox<State.Msg>(
+        'workspace-summary',
+        'Email me a weekly summary',
+        Model.WeeklySummary,
+        State.Msg.SetWeeklySummary
+      ),
+      B.Button<State.Msg>(
+        'workspace-create', 'Create workspace', State.Msg.CreateWorkspace,
+        new B.Options(Variant := S.ButtonVariant.Primary, Width := L.Extent.Fill)
+      )
+    ], new Cards.Options(Gap := 16.0F)
+  );
+end function;
+
+end unit;

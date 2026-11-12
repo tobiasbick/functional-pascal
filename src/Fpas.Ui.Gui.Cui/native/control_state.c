@@ -1,5 +1,8 @@
 /* Keep companion-state ownership beside the CUI implementation that defines it. */
-typedef struct { cui_id first, second, popup; } fpas_owned_state;
+typedef struct {
+    cui_id first, second, popup;
+    void (*on_forget)(cui_ctx *ui, cui_id key);
+} fpas_owned_state;
 
 static cui_id fpas_owner_key(cui_id key) { return key ^ 0x46504153u; }
 
@@ -50,7 +53,14 @@ static void fpas_own(cui_ctx *ui, cui_id key, cui_id first, cui_id second, cui_i
     fpas_owned_state *state = cui_state(ui, fpas_owner_key(key), sizeof *state);
     if (state->first != first || state->second != second || state->popup != popup)
         fpas_release_owned(ui, *state);
-    *state = (fpas_owned_state){first, second, popup};
+    *state = (fpas_owned_state){.first = first, .second = second, .popup = popup};
+}
+
+/* Retirement callbacks remove companion entries only during host retirement.
+   CUI destroys the whole state table itself when it closes a context. */
+static void fpas_on_forget(cui_ctx *ui, cui_id key, void (*callback)(cui_ctx *, cui_id)) {
+    fpas_owned_state *state = cui_state(ui, fpas_owner_key(key), sizeof *state);
+    state->on_forget = callback;
 }
 
 void fpas_cui_forget(cui_ctx *ui, unsigned int key) {
@@ -58,6 +68,7 @@ void fpas_cui_forget(cui_ctx *ui, unsigned int key) {
     const cui_id owner = fpas_owner_key(key);
     const fpas_owned_state *entry = cui__state_lazy(ui, owner, sizeof *entry, false);
     if (entry) {
+        if (entry->on_forget) entry->on_forget(ui, key);
         fpas_release_owned(ui, *entry);
         fpas_forget_state(ui, owner);
     }

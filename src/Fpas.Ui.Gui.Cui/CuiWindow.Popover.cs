@@ -41,7 +41,7 @@ public sealed partial class CuiWindow
 
     private void CheckPopupDepth()
     {
-        if (layouts.Count(static scope => scope.Kind == Layout.Popover) >= 15)
+        if (layouts.Count(static scope => scope.Kind is Layout.Popover or Layout.HoverCard) >= 15)
             throw new InvalidOperationException("CUI supports up to sixteen nested popup scopes.");
     }
 }

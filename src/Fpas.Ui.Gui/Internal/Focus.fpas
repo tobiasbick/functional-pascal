@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
+uses Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -248,6 +248,64 @@ begin
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
+    when E.Element.LinkAction(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.HoverCard(_, const Trigger: E.Element<TMsg>, _, _):
+      return First<TMsg>(Trigger, Prepared, Preferred);
+    when E.Element.Banner(
+      const Id: string, _, const Open: bool, const Dismiss: Sys.Func<TMsg>?,
+      const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+    ):
+      if Open and Settings.Enabled then
+        if Action <> null and (Preferred = null or Preferred = Banners.ActionId(Id)) then
+          return Banners.ActionId(Id);
+        end if;
+
+        if Dismiss <> null and (Preferred = null or Preferred = Banners.DismissId(Id)) then
+          return Banners.DismissId(Id);
+        end if;
+      end if;
+    when E.Element.TableOfContents(
+      const Id: string,
+      _,
+      const Items: array of Toc.Item,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Toc.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.Checklist(
+      const Id: string,
+      const Steps: array of Checklists.Step,
+      _,
+      _,
+      const Settings: Checklists.Options
+    ):
+      if Settings.Enabled then
+        var FirstPending: bool := true;
+        for Index: int := 0 to Steps.Length - 1 do
+          const Item: string := Checklists.StepId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+
+          if FirstPending and not Steps[Index].Done then
+            FirstPending := false;
+            const Action: string := Checklists.ActionId(Id, Index);
+            if Steps[Index].ActionLabel <> '' and Preferred = Action then
+              return Action;
+            end if;
+          end if;
+        end for;
+      end if;
     when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -391,7 +449,31 @@ begin
           end for;
         end for;
       end if;
-    when E.Element.Stack(
+    when E.Element.EmptyState(
+      const Id: string,
+      _,
+      const Settings: EmptyStates.Options,
+      const Action: Sys.Func<TMsg>?
+    ):
+      const Part: string := EmptyStates.ActionId(Id);
+      if Settings.Enabled and Action <> null and (Preferred = null or Preferred = Part) then
+        return Part;
+      end if;
+    when E.Element.Card(
+      const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options,
+      const Activate: Sys.Func<TMsg>?
+    ):
+      if Settings.Enabled and Activate <> null and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      for Child: E.Element<TMsg> in Children do
+        const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      end for;
+    when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       _,
       _
@@ -498,7 +580,7 @@ begin
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return First<TMsg>(Child, Prepared, Preferred);
-    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _):
+    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _):
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Sheet(
       const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,

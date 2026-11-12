@@ -41,6 +41,8 @@ public type Msg = variant
   ConfirmHold;
   // A harmless preview activation.
   Preview;
+  // Open the shared project deletion dialog from the Options menu.
+  OpenDeleteDialog;
   // Propose a change to shared demo values.
   Shared(Value: Demo.Msg);
 end variant;

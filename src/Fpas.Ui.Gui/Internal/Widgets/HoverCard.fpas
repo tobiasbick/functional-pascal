@@ -1,0 +1,57 @@
+unit Fpas.Ui.Gui.Internal.Widgets.HoverCard;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.HoverCards as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  System.Collections.Generic as Lists;
+
+// Traverses the anchor and CUI's pointer-owned floating panel.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable card identity.
+// - `Trigger`: Anchor drawn in the parent flow.
+// - `Content`: Floating view.
+// - `Settings`: Native size, delay and placement.
+// - `Horizontal`: Parent layout axis.
+// - `Align`: Parent cross-axis alignment.
+// - `Visit`: Host traversal for the trigger and body.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>;
+  Settings: H.Options; Horizontal: bool; Align: L.Alignment;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  const Before: int := Frame.Controls.Count;
+  Visit(Trigger, Frame, Horizontal, Align);
+  if Frame.PaintingClosed then
+    return;
+  end if;
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput and Frame.Controls.Count > Before
+    and Frame.Controls[Before].Enabled;
+  const Result: int := Frame.Window.BeginHoverCard(
+    C.Token('hover-card', Id), cast<int>(Settings.Position), Settings.Width, Settings.Delay, Enabled
+  );
+  if (Result and 1) = 0 then
+    return;
+  end if;
+
+  const Visible: bool := (Result and 2) <> 0;
+  if Visible then
+    Frame.Controls.Add(new App.Control(Id, '', 'hover-card', new Cui.CuiRectangle(), false));
+  end if;
+  const Inside: C.State<TMsg> := Frame with
+    AcceptInput := Enabled and Visible;
+    PaintingClosed := not Visible;
+    Labels := if Visible then
+      Frame.Labels
+    else
+      new Lists.List<string>()
+    end if;
+  end with;
+  Visit(Content, Inside, false, L.Alignment.Default);
+  Frame.Window.EndHoverCard();
+end procedure;
+
+end unit;

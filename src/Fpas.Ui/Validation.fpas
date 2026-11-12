@@ -4,7 +4,12 @@ uses
   Fpas.Ui.ColorPickers as ColorPickers, Fpas.Ui.EmojiPickers as Emojis,
   Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers,
   Fpas.Ui.Internal.AudioRules as AudioRules,
-  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
+  Fpas.Ui.Metrics as Metrics, Fpas.Ui.AvatarGroups as AvatarGroups, Fpas.Ui.EmptyStates as EmptyStates,
+  Fpas.Ui.Internal.SurfaceRules as SurfaceRules, Fpas.Ui.TableOfContents as Toc,
+  Fpas.Ui.Banners as Banners, Fpas.Ui.Countdowns as Countdowns, Fpas.Ui.Checklists as Checklists,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
   Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
   Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
   Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
@@ -76,6 +81,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _, const Settings: Dialogs.Options, _
       ):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/dialog');
+        if HoverDepth > 0 then
+          Rules.Reject(Location, 'Place modal views outside pointer-owned hover card bodies.');
+        end if;
         const At: string := Identify(Id, Location + '/dialog');
         if Settings.CloseButton then
           discard Identify(Dialogs.CloseId(Id), At + '/close');
@@ -419,6 +427,52 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/expandableText');
         discard Identify(ExpandableTexts.ToggleId(Id), At + '/toggle');
         DisclosureRules.Text(Value, Settings, At);
+      when E.Element.LinkAction(const Id: string, const Label: string, _, _):
+        const At: string := Identify(Id, Location + '/link');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Label, At + '/label');
+        if Sys.String.IsNullOrWhiteSpace(Label) then
+          Rules.Reject(At, 'A link needs a caption.');
+        end if;
+      when E.Element.Avatar(const Id: string, const Name: string, const Settings: Avatars.Options):
+        const At: string := Identify(Id, Location + '/avatar');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Name, At + '/name');
+        Rules.CheckText(Settings.Status, At + '/status');
+        const Path: string? := Settings.ImagePath;
+        if Path <> null then
+          Rules.CheckText(Path, At + '/image');
+        end if;
+
+        if not Sys.Single.IsFinite(Settings.Size) or Settings.Size < 0.0F then
+          Rules.Reject(At, 'Avatar size must be finite and nonnegative.');
+        end if;
+      when E.Element.HoverCard(
+        const Id: string,
+        const Trigger: E.Element<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Settings: HoverCards.Options
+      ):
+        const At: string := Identify(Id, Location + '/hoverCard');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
+          or not Sys.Single.IsFinite(Settings.Delay) or Settings.Delay < 0.0F
+          or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
+        then
+          Rules.Reject(
+            At,
+            'A hover card needs a finite nonnegative width and delay and a valid placement.'
+          );
+        end if;
+
+        Visit(Trigger, At + '/trigger');
+        if not TooltipRules.HasAnchor<TMsg>(Trigger, Subviews) then
+          Rules.Reject(At, 'A hover card needs one interactive trigger.');
+        end if;
+
+        HoverDepth := HoverDepth + 1;
+        Visit(Content, At + '/content');
+        HoverDepth := HoverDepth - 1;
       when E.Element.Popover(
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _,
         const Settings: Popovers.Options
@@ -582,6 +636,68 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/rangeSlider');
         Rules.RequireProfile(Profile, Target.Graphical, At);
         SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
+      when E.Element.Banner(
+        const Id: string, const Announcement: string, _, const Dismiss: Sys.Func<TMsg>?,
+        const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+      ):
+        const At: string := Identify(Id, Location + '/banner');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Announcement, At + '/text');
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.ActionLabel, At + '/action');
+        if Sys.String.IsNullOrWhiteSpace(Announcement) or not Sys.Enum.IsDefined<S.Tone>(
+          Settings.Tone
+        )
+        then
+          Rules.Reject(At, 'A banner needs nonempty text and a valid tone.');
+        end if;
+
+        if (Settings.ActionLabel = '') <> (Action = null) then
+          Rules.Reject(At, 'A banner action needs a caption and a message factory.');
+        end if;
+
+        if Action <> null then
+          discard Identify(Banners.ActionId(Id), At);
+        end if;
+
+        if Dismiss <> null then
+          discard Identify(Banners.DismissId(Id), At);
+        end if;
+      when E.Element.Countdown(const Id: string, const Seconds: double, _):
+        const At: string := Identify(Id, Location + '/countdown');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if not Sys.Double.IsFinite(Seconds) or Seconds > 7730941132799.0 then
+          Rules.Reject(At, 'Countdown seconds must be finite and fit the native hours tile.');
+        end if;
+      when E.Element.Checklist(
+        const Id: string,
+        const Steps: array of Checklists.Step,
+        _,
+        const Action: Sys.Func<int, TMsg>?,
+        const Settings: Checklists.Options
+      ):
+        const At: string := Identify(Id, Location + '/checklist');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Settings.Title, At + '/title');
+        Rules.CheckText(Settings.Description, At + '/description');
+        for Index: int := 0 to Steps.Length - 1 do
+          const Step: Checklists.Step := Steps[Index];
+          const StepAt: string := Identify(Checklists.StepId(Id, Index), At);
+          Rules.CheckText(Step.Title, StepAt + '/title');
+          Rules.CheckText(Step.Description, StepAt + '/description');
+          Rules.CheckText(Step.ActionLabel, StepAt + '/action');
+          if Sys.String.IsNullOrWhiteSpace(Step.Title) then
+            Rules.Reject(StepAt, 'A checklist step needs a title.');
+          end if;
+
+          if Step.ActionLabel <> '' then
+            if Action = null then
+              Rules.Reject(StepAt, 'A checklist action needs a message callback.');
+            end if;
+
+            discard Identify(Checklists.ActionId(Id, Index), StepAt);
+          end if;
+        end for;
       when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
         const At: string := Identify(Id, Location + '/dropzone');
         Rules.RequireProfile(Profile, Target.Graphical, At);
@@ -952,6 +1068,55 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
 
         Rules.CheckSelected(Keys, Active, At);
+      when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
+        const At: string := Location + '/grid';
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.Grid(Settings, At);
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], At + '[' + Index.ToString() + ']');
+        end for;
+      when E.Element.Card(
+        const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options, _
+      ):
+        const At: string := Identify(Id, Location + '/card');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.Card(Settings, At);
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], At + '[' + Index.ToString() + ']');
+        end for;
+      when E.Element.Badge(const Id: string, const Caption: string, const Settings: Badges.Options):
+        const At: string := Identify(Id, Location + '/badge');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.Badge(Caption, Settings, At);
+      when E.Element.Metric(
+        const Id: string,
+        const Label: string,
+        const Reading: string,
+        const Settings: Metrics.Options
+      ):
+        const At: string := Identify(Id, Location + '/metric');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.Metric(Label, Reading, Settings, At);
+      when E.Element.AvatarGroup(
+        const Id: string,
+        const Names: array of string,
+        const Settings: AvatarGroups.Options
+      ):
+        const At: string := Identify(Id, Location + '/avatarGroup');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.AvatarGroup(Names, Settings, At);
+      when E.Element.EmptyState(
+        const Id: string,
+        const Title: string,
+        const Settings: EmptyStates.Options,
+        const Action: Sys.Func<TMsg>?
+      ):
+        const At: string := Identify(Id, Location + '/emptyState');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SurfaceRules.EmptyState(Title, Settings, Action <> null, At);
+        if Action <> null then
+          discard Identify(EmptyStates.ActionId(Id), At + '/action');
+        end if;
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Horizontal: bool,
@@ -977,6 +1142,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Unknown cross-axis alignment.');
         end if;
 
+        if not Sys.Enum.IsDefined<L.Justification>(Flow.Justify) then
+          Rules.Reject(At, 'Unknown main-axis justification.');
+        end if;
+
+        if Flow.Justify <> L.Justification.Start then
+          Rules.RequireProfile(Profile, Target.Graphical, At + '/justify');
+        end if;
+
         Rules.CheckSpacing(Flow.Gap, Profile, At + '/gap');
         Rules.CheckSpacing(Flow.Padding, Profile, At + '/padding');
         for Index: int := 0 to Children.Length - 1 do
@@ -990,7 +1163,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(Location + '/style', 'Unknown semantic style role.');
         end if;
 
-        if Role = S.Role.Label or Role = S.Role.Caption then
+        if Role = S.Role.Label or Role = S.Role.Caption or Role = S.Role.DisplayValue
+          or Role = S.Role.Strong or Role = S.Role.MutedGlyph or Role = S.Role.SectionTitle
+          or Role = S.Role.DisplayTitle or Role = S.Role.Introduction
+        then
           Rules.RequireProfile(Profile, Target.Graphical, Location + '/style');
         end if;
 
@@ -998,11 +1174,56 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
         Rules.CheckText(Title, Location + '/border');
         Visit(Child, Location + '/border');
+      when E.Element.TableOfContents(
+        const Id: string, const ScrollId: string, const Items: array of Toc.Item, _, _
+      ):
+        const At: string := Identify(Id, Location + '/tableOfContents');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(ScrollId, At + '/scrollId');
+        if Items.Length < 1 or Items.Length > 64 then
+          Rules.Reject(At, 'A table of contents needs one to 64 entries.');
+        end if;
+
+        if not TocTargets.TryAdd(ScrollId, Items) then
+          Rules.Reject(At, 'Each scroll viewport can have only one table of contents.');
+        end if;
+
+        const Seen: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Index: int := 0 to Items.Length - 1 do
+          const Entry: Toc.Item := Items[Index];
+          const Row: string := Identify(Toc.ItemId(Id, Index), At);
+          Rules.CheckText(Entry.Title, Row + '/title');
+          Rules.CheckText(Entry.Anchor, Row + '/anchor');
+          if Sys.String.IsNullOrWhiteSpace(Entry.Title) or Entry.Level < 0 or Entry.Level > 4 then
+            Rules.Reject(Row, 'An outline entry needs a title and a level from zero through four.');
+          end if;
+
+          if not Seen.Add(Entry.Anchor) then
+            Rules.Reject(Row, 'An anchor can occur only once in an outline.');
+          end if;
+        end for;
+      when E.Element.ScrollAnchor(const Id: string):
+        const At: string := Identify(Id, Location + '/scrollAnchor');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        case ScrollOwner of
+          when is string as Owner:
+            AnchorOwners.Add(Id, Owner);
+          else
+            Rules.Reject(At, 'A scroll anchor needs an enclosing scroll viewport.');
+        end case;
       when E.Element.Scroll(
         const Id: string, const Child: E.Element<TMsg>, const Position: L.ScrollPosition?,
-        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?, _
+        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?, _, const FadeEdges: bool
       ):
         const At: string := Identify(Id, Location + '/scroll');
+        if FadeEdges then
+          Rules.RequireProfile(Profile, Target.Graphical, At);
+        end if;
+
+        if Position = null then
+          discard UncontrolledScrolls.Add(Id);
+        end if;
+
         if (Position = null) <> (OnScroll = null) then
           Rules.Reject(At, 'Controlled scrolling needs a position and a callback.');
         end if;
@@ -1015,11 +1236,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end case;
         end if;
 
+        const ParentScroll: string? := ScrollOwner;
+        ScrollOwner := Id;
         Visit(Child, At);
+        ScrollOwner := ParentScroll;
       when E.Element.Sheet(
         const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _,
         const Settings: Sheets.Options, _
       ):
+        if HoverDepth > 0 then
+          Rules.Reject(Location, 'Place modal views outside pointer-owned hover card bodies.');
+        end if;
         const At: string := Identify(Id, Location + '/sheet');
         discard Identify(Sheets.CloseId(Id), At + '/close');
         Rules.CheckText(Settings.Title, At + '/title');
@@ -1148,7 +1375,26 @@ begin
     Generic.ReferenceEqualityComparer.Instance
   );
   const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
+  var HoverDepth: int := 0;
+  const UncontrolledScrolls: Generic.HashSet<string> := new Generic.HashSet<string>();
+  const AnchorOwners: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
+  const TocTargets: Generic.Dictionary<string, array of Toc.Item> := new Generic.Dictionary<string, array of Toc.Item>();
+  var ScrollOwner: string? := null;
   Visit(Tree, 'root');
+  for TargetEntries: Generic.KeyValuePair<string, array of Toc.Item> in TocTargets do
+    const ScrollId: string := TargetEntries.Key;
+    if not UncontrolledScrolls.Contains(ScrollId) then
+      Rules.Reject('root', 'Table of contents needs an uncontrolled viewport: ' + ScrollId);
+    end if;
+
+    for Entry: Toc.Item in TargetEntries.Value do
+      var Owner: string := '';
+      if not AnchorOwners.TryGetValue(Entry.Anchor, out Owner) or Owner <> ScrollId then
+        Rules.Reject('root', 'Anchor ' + Entry.Anchor + ' needs to be inside viewport ' + ScrollId);
+      end if;
+    end for;
+  end for;
+
   return new Prepared<TMsg>(
     Tree,
     new Collections.ReadOnlyDictionary<string, E.CacheEntry<TMsg>>(Subviews)

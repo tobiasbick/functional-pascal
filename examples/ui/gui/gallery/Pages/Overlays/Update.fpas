@@ -23,6 +23,12 @@ begin
     when S.Msg.SaveProfile: State with
       ProfileDialog := false;
     end with;
+    when S.Msg.SetDeleteDialog(const Open: bool): State with
+      DeleteDialog := Open;
+    end with;
+    when S.Msg.DeleteProject: State with
+      DeleteDialog := false;
+    end with;
     when S.Msg.SetFilters(const Open: bool): State with
       Filters := Open;
     end with;
@@ -32,6 +38,13 @@ begin
     Next, case Message of
       when S.Msg.SaveProfile: [
         Toasts.Show<S.Msg>('Profile updated', new Toasts.Options(Appearance := Toasts.Tone.Success))
+      ];
+      when S.Msg.DeleteProject: [
+        Toasts.Show<S.Msg>(
+          'Project deleted',
+          new Toasts.Options(Appearance := Toasts.Tone.Danger, ActionLabel := 'Undo'),
+          function(): S.Msg => S.Msg.Preview
+        )
       ];
       when S.Msg.ArchiveMessage: [
         Toasts.Show<S.Msg>(

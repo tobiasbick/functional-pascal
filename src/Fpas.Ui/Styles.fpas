@@ -28,6 +28,18 @@ public type Role = enum: byte
   Label;
   // Small secondary text using CUI's caption metrics.
   Caption;
+  // A graphical value in CUI's display face with tabular digits.
+  DisplayValue;
+  // Graphical body text in CUI's medium face.
+  Strong;
+  // A graphical CUI icon glyph at twelve logical points in the muted color.
+  MutedGlyph;
+  // A graphical section heading using the third CUI heading size.
+  SectionTitle;
+  // A graphical display heading using the first CUI heading size.
+  DisplayTitle;
+  // Graphical introductory text with CUI's secondary color at 15 logical points.
+  Introduction;
 end enum;
 
 // Native CUI semantic colors shared by graphical widgets.

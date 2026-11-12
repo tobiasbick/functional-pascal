@@ -1,37 +1,80 @@
 unit GuiGallery.Pages.Overview.View;
 
 uses
-  Fpas.Ui.Elements as E,
+  GuiGallery.Pages.Overview.State as State,
+  GuiGallery.Pages.Overview.Widgets.Workspace as Workspace, GuiGallery.Pages.Overview.Widgets.Team as Team,
+  GuiGallery.Shared.State as Demo, Fpas.Ui.Grids as Grid, Fpas.Ui.Metrics as Metrics,
+  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
   Fpas.Ui.Buttons as B,
   GuiGallery.Shared.Sections as G,
   System as Sys;
 
-// Builds the static introduction with a parent-supplied navigation action.
+// Builds the gallery introduction and workspace preview.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
+// - `Model`: The workspace preview state.
+// - `Data`: Profile fields shared with other pages.
 // - `Browse`: Navigate to Buttons.
+// - `Messages`: Wraps form messages for the application.
 // ## Returns
 // The Overview page.
-public function View<TMsg>(Browse: TMsg): E.Element<TMsg>;
+public function View<TMsg>(
+  Model: State.Model; Data: Demo.Model; Browse: TMsg; Messages: function(State.Msg): TMsg
+): E.Element<TMsg>;
 begin
-  return E.Column<TMsg>(
-    new L.Flow(Gap := G.Points(14)),
-    E.Styled<TMsg>(E.Text<TMsg>('Components for C'), S.Role.PageTitle),
+  const Hero: E.Element<TMsg> := E.Column<TMsg>(
+    new L.Flow(Gap := G.Points(14), Clip := false),
+    E.Styled<TMsg>(E.Text<TMsg>('Components for C'), S.Role.DisplayTitle),
     E.Styled<TMsg>(
-      E.Text<TMsg>('Explore the CUI components available in Functional Pascal.'),
-      S.Role.Secondary
+      E.Text<TMsg>(
+        'Forms, tables, charts, planning boards and chat pieces that draw themselves the same way on Windows, macOS and Linux. Every one works from the keyboard.'
+      ),
+      S.Role.Introduction
     ),
-    B.Button<TMsg>(
-      'browse',
-      'Browse components',
-      Browse,
-      new B.Options(
-        Variant := S.ButtonVariant.Primary,
-        IconRight := Sys.Char.ConvertFromUtf32($E049)
+    E.Column<TMsg>(
+      G.Space<TMsg>(6),
+      B.Button<TMsg>(
+        'browse', 'Browse components', Browse,
+        new B.Options(
+          Variant := S.ButtonVariant.Primary,
+          IconRight := Sys.Char.ConvertFromUtf32($E049)
+        )
       )
+    )
+  );
+  return E.Column<TMsg>(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    E.Column<TMsg>(Hero, G.Space<TMsg>(8)),
+    Grid.Grid<TMsg>(
+      new Grid.Options(Columns := 3, MinimumColumnWidth := 200.0F, Gap := G.Points(16)),
+      Metrics.Metric<TMsg>(
+        'overview-components',
+        'Components',
+        '150',
+        new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E061))
+      ),
+      Metrics.Metric<TMsg>(
+        'overview-frame-time', 'Frame time', '0.4 ms',
+        new Metrics.Options(
+          Delta := -18.0F, DeltaLabel := '-18% vs v0.9', LowerIsBetter := true,
+          Spark := [9.0F, 7.0F, 8.0F, 6.0F, 5.0F, 6.0F, 4.0F, 4.0F, 3.0F],
+          Icon := Sys.Char.ConvertFromUtf32($E1B4)
+        )
+      ),
+      Metrics.Metric<TMsg>(
+        'overview-dependencies',
+        'Dependencies',
+        '0',
+        new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E129))
+      )
+    ),
+    Grid.Grid<TMsg>(
+      new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
+      U.Map<State.Msg, TMsg>(Workspace.View(Model, Data), Messages),
+      U.Map<State.Msg, TMsg>(Team.View(), Messages)
     )
   );
 end function;

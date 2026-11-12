@@ -46,9 +46,19 @@ begin
   end case;
 end function;
 
-function HasAnchor<TMsg>(Node: E.Element<TMsg>; Subviews: Lists.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>): bool;
+// Checks for a single native interactive anchor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Prepared node to inspect.
+// - `Subviews`: Resolved deferred views.
+// ## Returns
+// Whether the node supplies one interactive anchor.
+public function HasAnchor<TMsg>(Node: E.Element<TMsg>; Subviews: Lists.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>): bool;
 begin
   case Node of
+    when E.Element.LinkAction(_, _, _, _):
+      return true;
     when E.Element.CheckboxAction(
       _,
       _,

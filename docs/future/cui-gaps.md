@@ -29,9 +29,9 @@ representations.
 Use this inventory to rebuild the [CUI gallery][gallery] in FPAS. Check each
 widget against its upstream demo and API. Accept it once its GUI API and behavior
 are covered by tests, it is shown in the GUI gallery, and its relevant page is
-captured. Only checked widgets have public FPAS widget implementations. Text,
-layout and native primitives needed to compose accepted widgets remain
-foundations; using a primitive does not accept its standalone widget API.
+captured. Checkmarks record acceptance of the documented GUI API and examples.
+Record any remaining native options with their widget. Public APIs and
+composition primitives can exist while their gallery acceptance is open.
 
 Show only checked widgets in the GUI gallery and use it for acceptance tests
 of its visible pages and interactions. The GUI gallery is a clone of the pinned
@@ -113,18 +113,15 @@ vertical scrolling. GUI uses CUI logical points. TUI converts 8 logical units
 to one column and 16 to one row. Both hosts expose responsive size classes.
 The [native layout tests][gui-layout-test] check weighted and fixed allocations.
 The [TUI contract][tui-contract] covers shrinkage, rounding, and logical
-distances in cells. Graphical rows also support native wrapping via
-`Flow.Wrap`, exercised by the chips in the [GUI gallery][gui-gallery-test].
+distances in cells. Graphical rows support native wrapping via `Flow.Wrap`,
+exercised by the chips in the [GUI gallery][gui-gallery-test]. Reader uses
+`ScrollView` with native edge fades. Selecting a different page starts at the
+top, including when returning to a previously scrolled page.
 
 The [CUI layout reference][layout] and [native gallery][gallery] also use
 features outside that shared subset. The following layout work targets the GUI;
 terminal equivalents are deferred.
 
-- [ ] Responsive grid with a maximum column count and minimum column width.
-  Feedback's Progress, Loading, Activity and Goals cards currently fill their
-  parent; match the native two-column grid when this foundation is available.
-- [ ] Main-axis justification, including space between children. Match the
-  native Goals row's `CUI_JUSTIFY_AROUND` when this foundation is available.
 - [ ] Stack layout with layered children, independent width/height constraints
   and per-edge padding. Native percentages are available through
   `Layout.Extent.Percent` for main-axis sizing, button width and skeleton width.
@@ -132,7 +129,8 @@ terminal equivalents are deferred.
 - [ ] Horizontal scrolling in the shared FPAS API and CUI-equivalent viewport
   control. The low-level native scroll binding supports both axes; shared
   `ScrollView` is vertical. Virtual list and split view have separate entries.
-- [ ] Reset the gallery content scroll position when selecting a different page.
+- [ ] Reset the gallery content scroll position when reselecting the active
+  destination. The native gallery also resets in this case.
 - [ ] Reading direction and logical start/end layout for right-to-left content.
 
 ### Native keyboard limits
@@ -170,18 +168,39 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 ### Text, icons, and display
 
-- [ ] Text, including heading, label, secondary, muted, and inline code (`cui_text`, `cui_heading`, `cui_label`, `cui_secondary`, `cui_muted`, `cui_code`)
-- [ ] Link (`cui_link`)
-- [ ] Icon (`cui_icon`)
+- [ ] Text, including heading, label, secondary, muted, and inline code
+  (`cui_text`, `cui_heading`, `cui_label`, `cui_secondary`, `cui_muted`, `cui_code`).
+  `Elements.Text` and semantic styles already supply text, headings, labels
+  and secondary and muted text in the gallery. Inline code and standalone
+  text acceptance remain open.
+- [x] Link (`cui_link`). [API][fpas-hover-card]. Disclosure verifies pointer
+  and keyboard activation of the original @jonas link and its visible focus
+  ring. The bridge applies the workaround for [CUI-012](cui-upstream-bugs.md#cui-012).
+  The graphical profile is required.
+- [ ] Icon (`cui_icon`). GUI widgets accept CUI icon glyphs. Standalone icons
+  still need a public API and gallery acceptance.
 - [ ] Emoji display (`cui_emoji`)
 - [ ] Keycap (`cui_kbd`)
-- [ ] Badge (`cui_badge`)
-- [ ] Avatar (`cui_avatar`). Add shared image support for the avatar texture
-  option on User menu with this widget.
-- [ ] Avatar group (`cui_avatar_group`)
-- [ ] Card (`cui_card`)
-- [ ] Metric (`cui_metric`)
-- [ ] Empty state (`cui_empty_state`)
+- [x] Badge (`cui_badge`). [API][fpas-surfaces]. Overview shows the original
+  team roles. Feedback shows neutral, tinted, dotted and solid badges.
+  The graphical profile is required.
+- [x] Avatar (`cui_avatar`). [API][fpas-hover-card]. The original Jonas
+  Berg card shows initials and the online dot. The native test verifies image
+  replacement and clearing. Avatar and Avatar upload share CUI image loading
+  and texture lifetime. The graphical profile is required.
+- [x] Avatar group (`cui_avatar_group`). [API][fpas-surfaces]. Feedback
+  reproduces the seven-name group with four initials and a +3 overflow badge.
+  The graphical profile is required.
+- [x] Card (`cui_card`). [API][fpas-surfaces]. Overview and Feedback use native
+  cards in responsive grids. The gallery checks equal row heights and reflow
+  after resizing. Feedback uses CUI's Around justification for the Goals rings.
+  The graphical profile is required.
+- [x] Metric (`cui_metric`). [API][fpas-surfaces]. Overview shows the original
+  three tiles, including the Frame time trend and sparkline. The graphical
+  profile is required.
+- [x] Empty state (`cui_empty_state`). [API][fpas-surfaces]. Feedback shows
+  No projects yet. The gallery activates New project and verifies the original
+  success toast. The graphical profile is required.
 - [ ] Image (`cui_image`)
 - [ ] Interactive canvas (`cui_canvas`)
 
@@ -218,6 +237,8 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   tests cover opening, choosing an action, Escape and focus return.
 - [x] User menu (`cui_user_menu`): [API][fpas-user-menu]. GUI uses CUI's native
   account trigger and popup with shared menu commands and focus handling.
+  The original example uses initials. The native avatar image option is open.
+  Reuse the image loading and lifetime handling from Avatar.
 - [x] Swipe actions (`cui_swipe_item_begin`): [API][fpas-swipe-actions]. Actions
   shows the three original task rows and the resulting toasts. The tests
   exercise mouse dragging and the Windows horizontal wheel path used by
@@ -390,7 +411,12 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 - [x] Stepper (`cui_stepper`): [API][fpas-stepper]. Navigation shows the native
   workflow in desktop and compact layouts and exercises Back, Next and Finish.
   Finish shows the native completion toast. TUI: graphical profile required.
-- [ ] Table of contents and anchors (`cui_toc`, `cui_toc_anchor`)
+- [x] Table of contents and anchors (`cui_toc`, `cui_toc_anchor`). [API][fpas-reader].
+  Reader shows the original article and its indented outline. The gallery
+  exercises pointer and Enter jumps, wheel-driven selection, and the painted
+  active marker in Windows Software and OpenGL. The Windows software Reader
+  area matches CUI at rest, after a jump and after scrolling at 1100 × 850.
+  The graphical profile is required.
 - [ ] Dock and dock items (`cui_dock`, `cui_dock_item`, `cui_dock_separator`)
 - [ ] Bottom tab bar (`cui_tab_bar`)
 - [ ] Menu bar and menus (`cui_menu_bar`, `cui_menu_bar_menu`)
@@ -420,16 +446,26 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   profile required.
 - [x] Dialog and action footer (`cui_dialog`, `cui_dialog_footer`):
   [API][fpas-dialog]. Overlays shows the original Edit profile example.
+  Buttons and Overlays share the original 400-point project deletion dialog.
+  The gallery verifies both launchers, cancellation, confirmation and Undo.
+  The dialog interior matches the Windows software reference.
   Windows Software and OpenGL cover footer alignment, focus return, Escape,
   scrim and close dismissal, and the Save changes toast. TUI: deferred;
   graphical profile required.
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
+  The Notifications sheet shows the original three switches. Their values are
+  shared with Selection and Edit profile. The header and switches match the
+  Windows software reference. The Recent list depends on List item.
 - [ ] Command palette (`cui_command_palette`)
 - [x] Accordion (`cui_accordion`): [API][fpas-accordion]. Lists shows the original
   three questions. Native headers propose model-owned expansion; pointer,
   Enter/Space, disabled input, closing bodies and nested dialogs are covered.
-- [ ] Hover card (`cui_hover_card`)
+- [x] Hover card (`cui_hover_card`). [API][fpas-hover-card]. Disclosure verifies
+  hover delay, moving onto the original @jonas card, leaving it and dismissal
+  with Escape. The open and closed examples match the Windows software reference
+  pixel for pixel. The bridge applies the workaround for [CUI-016](cui-upstream-bugs.md#cui-016).
+  The graphical profile is required.
 - [x] Confirm popover (`cui_confirm_popover`): [API][fpas-popovers].
   Disclosure shows the original Delete branch question. Windows Software and
   OpenGL cover separate open and confirm actions and cancellation. TUI:
@@ -451,6 +487,8 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 - [x] Toast, including timed undo toast (`cui_toast`, `cui_toast_action_clicked`):
   [API][fpas-toast]. Overlays shows the four native examples and a timed Undo.
+  Disclosure shows the original Archive 3 conversations trigger and draining
+  Undo timer. The gallery exercises the action and captures both states.
   Navigation uses toasts for breadcrumb activation and Finish. The gallery
   checks stacking, hover pause, expiry, dismissal and action delivery.
   TUI: graphical host command required.
@@ -492,13 +530,25 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   typed mapping, inspection and GUI-only preflight. Direct native pixel
   comparisons cover 576 tone, optional-field, last-item, theme and width
   combinations. Feedback captures show Activity in light, dark and narrow views.
-- [ ] Banner (`cui_banner`)
-- [ ] Countdown (`cui_countdown`)
-- [ ] Onboarding checklist (`cui_checklist`)
+- [x] Banner (`cui_banner`). [API][fpas-disclosure-feedback]. Disclosure
+  shows the original release announcement and verifies its action, dismissal
+  and reopening. The banner matches the Windows software reference pixel
+  for pixel. The graphical profile is required.
+- [x] Countdown (`cui_countdown`). [API][fpas-disclosure-feedback]. Disclosure
+  shows the original standard and compact countdowns, including hidden days.
+  The gallery verifies live updates. The Windows software capture matches
+  the original at the same remaining time. The graphical profile is required.
+- [x] Onboarding checklist (`cui_checklist`). [API][fpas-disclosure-feedback].
+  Disclosure shows the original workspace steps and verifies focus, keyboard
+  toggling, action completion and advancement. Six pixels in the Windows
+  software comparison differ by one level per color channel at most.
+  The bridge applies the workaround for [CUI-010](cui-upstream-bugs.md#cui-010).
+  The graphical profile is required.
 
 ### Lists, tables, and files
 
-- [ ] List item (`cui_list_item`)
+- [ ] List item (`cui_list_item`). Use it for the original Recent rows in the
+  Notifications sheet as well as the Data display page.
 - [ ] Tree (`cui_tree_begin`, `cui_tree_clicked`)
 - [ ] Virtual list (`cui_virtual_list`)
 - [ ] Reorderable list and items (`cui_reorder_begin`, `cui_reorder_item`)
@@ -671,6 +721,10 @@ track that native build option with the GUI RTL layout work.
 [fpas-ruler-histogram]: ../../src/Fpas.Ui/README.md#ruler-and-histogram-sliders
 [fpas-audio]: ../../src/Fpas.Ui/README.md#audio-controls
 [fpas-capture]: ../../src/Fpas.Ui/README.md#capture-controls
+[fpas-surfaces]: ../../src/Fpas.Ui/README.md#native-grids-and-surfaces
+[fpas-reader]: ../../src/Fpas.Ui/README.md#table-of-contents-and-scroll-anchors
+[fpas-hover-card]: ../../src/Fpas.Ui/README.md#link-avatar-and-hover-card
+[fpas-disclosure-feedback]: ../../src/Fpas.Ui/README.md#banner-countdown-and-checklist
 [fpas-chips-rating]: ../../src/Fpas.Ui/README.md#chip-and-rating
 [fpas-navigation-controls]: ../../src/Fpas.Ui/README.md#tabs-breadcrumb-and-pagination
 [fpas-stepper]: ../../src/Fpas.Ui/README.md#stepper

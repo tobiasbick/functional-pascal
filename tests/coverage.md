@@ -122,6 +122,27 @@ Shift+arrow, and the price range's pointer and keyboard endpoints. It
 captures the original sections at rest, with the ruler focused and after
 a price adjustment. The native ruler boundary test checks that the displayed
 value stays within bounds when the maximum falls between ticks.
+The @jonas section checks the native hover delay, movement onto the card,
+dismissal by leaving or Escape, and keyboard and pointer link activation.
+The gallery captures the card at rest, open and with keyboard focus on the link.
+The native avatar test checks that a Unicode image path replaces initials and
+that clearing the path restores them.
+Overview and Feedback verify native grid row sizing and responsive reflow.
+Feedback checks Around justification for the Goals rings, badges, the avatar
+group, and the Empty state action and resulting toast. Captures include
+wide and narrow layouts and dark Feedback.
+The gallery drives the workspace form, the shared project deletion dialog from
+Buttons and Overlays, the three Notifications switches and Disclosure's timed
+Undo. It checks that the form and switches share values with other pages,
+exercises cancel, confirm and Undo, and captures the native examples.
+Reader verifies a pointer jump to Install, the active entry changing to With
+CMake after wheel input, and a keyboard jump back to Install. It checks
+that the outer page stays in place and samples the painted rail marker in the
+Software and OpenGL captures.
+Disclosure verifies banner activation, dismissal and reopening, live countdown
+updates, checklist completion by keyboard and action buttons, and the original
+examples in both renderers. The focused capture checks that the completed
+circle retains its check when CUI adds the keyboard focus ring.
 Capture checks the original layout and the drawn and cleared signature in
 both native renderers. The native snapshot test checks detached points and
 stroke boundaries. Windows tests post shell drops, check filtered paths and

@@ -3,7 +3,12 @@ unit Fpas.Ui.Elements;
 uses
   Fpas.Ui.EmojiPickers as EmojiPickers,
   Fpas.Ui.DatePickers as DatePickers,
-  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
+  Fpas.Ui.Metrics as Metrics, Fpas.Ui.AvatarGroups as AvatarGroups, Fpas.Ui.EmptyStates as EmptyStates,
+  Fpas.Ui.TableOfContents as Toc,
+  Fpas.Ui.Banners as Banners, Fpas.Ui.Countdowns as Countdowns, Fpas.Ui.Checklists as Checklists,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
   Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
   Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
   Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
@@ -17,6 +22,18 @@ uses
 // ## Type parameters
 // - `TMsg`: The application message type.
 public type Element<TMsg> = variant
+  // Draw a native inline link.
+  LinkAction(Id: string; Label: string; OnActivate: TMsg; Enabled: bool);
+  // Display native initials or a picture with an optional presence dot.
+  Avatar(Id: string; Name: string; Settings: Avatars.Options);
+  // Attach a native pointer-driven panel to an interactive control.
+  HoverCard(Id: string; Trigger: Element<TMsg>; Content: Element<TMsg>; Settings: HoverCards.Options);
+  // Display a native banner with model-owned visibility.
+  Banner(Id: string; Text: string; Open: bool; OnDismiss: Sys.Func<TMsg>?; OnAction: Sys.Func<TMsg>?; Settings: Banners.Options);
+  // Display CUI's rolling countdown tiles.
+  Countdown(Id: string; SecondsLeft: double; Settings: Countdowns.Options);
+  // Display CUI's onboarding checklist and its native progress.
+  Checklist(Id: string; Steps: array of Checklists.Step; OnToggle: function(int, bool): TMsg; OnAction: Sys.Func<int, TMsg>?; Settings: Checklists.Options);
   // Display a native inline alert with CUI-owned dismissal.
   Alert(Id: string; Title: string; Settings: Alerts.Options; OnDismiss: Sys.Func<TMsg>?);
   // Display a native progress fraction or activity animation.
@@ -170,6 +187,18 @@ public type Element<TMsg> = variant
   ConfirmPopover(Id: string; Trigger: Element<TMsg>; Open: bool; Settings: ConfirmPopovers.Options; OnConfirm: TMsg; OnDismiss: TMsg);
   // Display grouped destinations with a single model-owned active key.
   Sidebar(Id: string; Sections: array of N.Section<TMsg>; ActiveKey: string?; Enabled: bool);
+  // Arrange children in the native equal-width responsive grid.
+  Grid(Settings: Grids.Options; Children: array of Element<TMsg>);
+  // Draw a native card around its children.
+  Card(Id: string; Children: array of Element<TMsg>; Settings: Cards.Options; OnActivate: Sys.Func<TMsg>?);
+  // Draw a tinted or solid label.
+  Badge(Id: string; Text: string; Settings: Badges.Options);
+  // Draw a metric tile with optional trend and sparkline.
+  Metric(Id: string; Label: string; Value: string; Settings: Metrics.Options);
+  // Draw overlapping avatars and an overflow count.
+  AvatarGroup(Id: string; Names: array of string; Settings: AvatarGroups.Options);
+  // Draw an empty-state message and its optional native action.
+  EmptyState(Id: string; Title: string; Settings: EmptyStates.Options; OnAction: Sys.Func<TMsg>?);
   // Lay children out along one axis in order.
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
   // Adjust the allocation of one child.
@@ -178,10 +207,14 @@ public type Element<TMsg> = variant
   Styled(Child: Element<TMsg>; Role: S.Role);
   // Frame one child with an optional title.
   Framed(Child: Element<TMsg>; Title: string);
+  // A native outline linked to an uncontrolled scroll viewport.
+  TableOfContents(Id: string; ScrollId: string; Items: array of Toc.Item; OnActiveChange: Sys.Func<string, TMsg>?; Enabled: bool);
+  // A zero-height destination inside a graphical viewport.
+  ScrollAnchor(Id: string);
   // Clip one child to a vertical viewport with optional model-controlled scrolling.
   Scroll(
     Id: string; Child: Element<TMsg>; Position: L.ScrollPosition?;
-    OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool
+    OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool; FadeEdges: bool
   );
   // Place a controlled, scrollable modal at one viewport edge.
   Sheet(
@@ -362,12 +395,13 @@ end function;
 // - `Id`: The stable viewport ID.
 // - `Child`: The scrollable content.
 // - `ShowScrollbar`: Whether to show an overflow indicator.
+// - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true): Element<TMsg>;
+public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true; FadeEdges: bool := false): Element<TMsg>;
 begin
-  return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar);
+  return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges);
 end function;
 
 // Displays a vertical viewport whose position belongs to the model.
@@ -381,12 +415,13 @@ end function;
 // - `Position`: The model's requested position.
 // - `OnScroll`: Maps a user scroll request and resolution to a message.
 // - `ShowScrollbar`: Whether to show an overflow indicator.
+// - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true): Element<TMsg>;
+public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false): Element<TMsg>;
 begin
-  return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar);
+  return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar, FadeEdges);
 end function;
 
 // Applies terminal-specific RGB colors.

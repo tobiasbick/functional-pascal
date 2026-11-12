@@ -1,0 +1,39 @@
+unit GuiGallery.Pages.Overview.Update;
+
+uses
+  GuiGallery.Pages.Overview.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Toasts as Toasts;
+
+// Updates the workspace preview and requests its native success toast.
+// ## Parameters
+// - `Model`: Current workspace form state.
+// - `Message`: A workspace preview action.
+// ## Returns
+// The next state and any toast command.
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  case Message of
+    when S.Msg.SetWeeklySummary(const Value: bool):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Model with
+          WeeklySummary := Value;
+        end with, []
+      );
+    when S.Msg.CreateWorkspace:
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Model, [
+          Toasts.Show<S.Msg>(
+            'Workspace created',
+            new Toasts.Options(
+              Description := 'It is empty for now. Start with a project.',
+              Appearance := Toasts.Tone.Success
+            )
+          )
+        ]
+      );
+    else
+      return new Mvu.Transition<S.Model, S.Msg>(Model, []);
+  end case;
+end function;
+
+end unit;

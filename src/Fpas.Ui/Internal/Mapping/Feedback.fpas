@@ -1,0 +1,49 @@
+unit Fpas.Ui.Internal.Mapping.Feedback;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Banners as Banners, Fpas.Ui.Countdowns as Countdowns,
+  Fpas.Ui.Checklists as Checklists, Fpas.Ui.Internal.MessageMapping as M, System as Sys;
+
+// Maps native feedback widgets into the parent message space.
+// ## Type parameters
+// - `TChild`: Source message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `View`: Feedback widget to map.
+// - `Messages`: Message translation.
+// ## Returns
+// The equivalent widget in the parent view.
+public function Map<TChild, TParent>(View: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case View of
+    when E.Element.Banner(
+      const Id: string, const Text: string, const Open: bool, const Dismiss: Sys.Func<TChild>?,
+      const Action: Sys.Func<TChild>?, const Settings: Banners.Options
+    ):
+      return E.Element<TParent>.Banner(
+        Id, Text, Open, M.Factory<TChild, TParent>(Dismiss, Messages),
+        M.Factory<TChild, TParent>(Action, Messages), Settings
+      );
+    when E.Element.Countdown(
+      const Id: string,
+      const Seconds: double,
+      const Settings: Countdowns.Options
+    ):
+      return E.Element<TParent>.Countdown(Id, Seconds, Settings);
+    when E.Element.Checklist(
+      const Id: string,
+      const Steps: array of Checklists.Step,
+      const Toggle: function(int, bool): TChild,
+      const Action: Sys.Func<int, TChild>?,
+      const Settings: Checklists.Options
+    ):
+      return E.Element<TParent>.Checklist(
+        Id, Steps, function(Index: int; Done: bool): TParent => Messages(Toggle(Index, Done)),
+        M.Callback<int, TChild, TParent>(Action, Messages), Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a feedback widget.');
+  end case;
+end function;
+
+end unit;

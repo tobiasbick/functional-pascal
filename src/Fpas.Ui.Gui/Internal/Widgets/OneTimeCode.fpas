@@ -37,6 +37,8 @@ begin
 
   if Allowed and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));
+    // CUI-003 (docs/future/cui-upstream-bugs.md#cui-003).
+    // Native completion misses replacements that leave all boxes filled.
     if Proposed.Length = Settings.Length then
       case OnComplete of
         when is Sys.Func<string, TMsg> as Complete:

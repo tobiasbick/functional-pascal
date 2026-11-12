@@ -6,7 +6,8 @@ static void fpas_paint_text_area(cui_ctx *ui, cui_node *area, void *data) {
     cui__edit_paint *paint = data;
     cui__paint_edit(ui, area, data);
 
-    /* Let CUI route the wheel to the editor before an enclosing viewport. */
+    /* CUI-001 (docs/future/cui-upstream-bugs.md#cui-001):
+     * Let the editor receive the wheel before an enclosing viewport. */
     cui_scroll_state *scroll = cui_state(ui, area->id, sizeof *scroll);
     scroll->view_h = area->rect.h;
     scroll->content_h = paint->line_count * paint->line_h;

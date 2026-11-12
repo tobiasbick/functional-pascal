@@ -25,6 +25,8 @@ void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double mi
     cui_number_ex(ui, id, value, min, max, &options);
     cui_pop_disabled(ui);
 
+    /* CUI-005 (docs/future/cui-upstream-bugs.md#cui-005):
+     * Reject invalid proposals and display the accepted value on commit or blur. */
     char *end;
     const double parsed = strtod(state->text, &end);
     if (!allowed || !isfinite(*value) || end == state->text || *end || !isfinite(parsed)) *value = original;

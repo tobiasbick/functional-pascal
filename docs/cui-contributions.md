@@ -3,6 +3,24 @@
 Use these checks when preparing CUI fixes. Read the review against the current
 PR commit and verify each finding in the code or with a small reproduction.
 
+## Tracking FPAS workarounds
+
+Give each confirmed defect a stable local `CUI-NNN` ID and anchor in
+[CUI upstream bugs](future/cui-upstream-bugs.md). Put the ID and the document
+path with its anchor beside the FPAS workaround. Add upstream issue and PR
+links to the same entry when available. Once the vendored CUI snapshot
+contains the fix, verify the reproduction and remove the workaround and its
+entry. Keep the IDs of the remaining entries.
+
+## Confirming upstream fixes
+
+Post confirmations on upstream CUI issues through the ChatGPT Codex
+Connector. Verify that GitHub shows “with ChatGPT Codex Connector” next to
+the author. [Example confirmation](https://github.com/yappologistic/CUI/issues/39#issuecomment-6816324000)
+
+Include the tested CUI commit and the behavior you verified. If you removed a
+local workaround, say so. Omit the downstream project's name.
+
 ## Interaction and layout
 
 - Test nearby keys independently when changing a keyboard guard. Cover Enter

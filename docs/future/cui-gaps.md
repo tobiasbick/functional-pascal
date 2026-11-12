@@ -139,8 +139,8 @@ The picker fields support keyboard opening and dismissal; their internal
 choices have no keyboard focus. Describe and test the pinned release's input
 behavior in each GUI widget's contract.
 
-See [CUI upstream bugs](cui-upstream-bugs.md) for the toggle group's
-Right-arrow reproduction and pending upstream fix.
+See [CUI upstream bugs](cui-upstream-bugs.md) for open defects referenced
+by the FPAS adapters.
 
 ### Terminal icon experiment (deferred)
 

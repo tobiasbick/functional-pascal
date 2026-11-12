@@ -38,6 +38,8 @@ int fpas_cui_select(cui_ctx *ui, const char *id, const char *const *items, const
 
     popup = cui__popup_get(ui, popup_id, false);
     const bool open = allowed && popup && popup->open;
+    /* CUI-004 (docs/future/cui-upstream-bugs.md#cui-004):
+     * Return focus from the disappearing search editor to its trigger. */
     if ((!open || !searchable) && ui->focus == search_id) {
         ui->focus = allowed ? key : 0;
         if (ui->edit == cui__state_lazy(ui, search_id, sizeof(cui_edit_state), false)) ui->edit = NULL;

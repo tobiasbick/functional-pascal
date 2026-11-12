@@ -63,7 +63,8 @@ public sealed partial class CuiWindow
         string proposed = Utf8.Encoding.GetString(buffer[..buffer.IndexOf((byte)0)]);
         if (!enabled || proposed == current) return new(tags, current, removals);
         string[] updated = proposed.Length == 0 ? [] : proposed.Split(", ", StringSplitOptions.None);
-        // Native comma-delimited paste can append multiple tags in one frame.
+        // CUI-002 (docs/future/cui-upstream-bugs.md#cui-002).
+        // A single comma-delimited input event can exceed the native tag limit.
         if (updated.Length > maxTags)
         {
             Array.Resize(ref updated, maxTags);

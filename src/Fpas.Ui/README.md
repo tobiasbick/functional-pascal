@@ -30,7 +30,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Widget or option | Portable | Terminal | Graphical |
 | --- | --- | --- | --- |
 | Text and titled or plain divider | Yes | Yes | Yes |
-| Button variants, sizes, icons, busy state and width | Yes | Yes | Yes |
+| Button variants, sizes, icons, busy state and content/fill/fixed width | Yes | Yes | Yes |
 | Button group with a shared outline | Yes | Yes | Yes |
 | Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
 | Context menu attached to a component | | | Yes |
@@ -46,6 +46,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Tabs, breadcrumb, pagination and stepper | | | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Centered modal dialog and action footer | | | Yes |
+| Alerts, progress bars, spinners, meters, rings, skeletons and timeline entries | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
 | Selection chips, whole-star ratings and wrapping rows | | | Yes |
@@ -53,6 +54,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
 | Fixed basis, bounds, spacing and scroll offsets in cells | | Yes | |
 | Fixed basis, bounds, spacing and scroll offsets in logical units | Yes | Yes | Yes |
+| Percentage basis and button or skeleton width | | | Yes |
 | Semantic style roles and typed cached subviews | Yes | Yes | Yes |
 | `CellStyled` colors, screens, shortcuts and exact viewport | | Yes | |
 
@@ -61,7 +63,10 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 Layout follows the supported subset of CUI's box rules. Content uses the host's
 measured extent. Fill and positive Grow weights share the remaining space from
 zero, freezing children that reach their minimum or maximum. Fixed sizes never
-grow or shrink. Content children shrink proportionally toward their minimum
+grow or shrink. GUI also supports `Extent.Percent(Value)` from zero through 100,
+resolved by CUI against the parent's inner main-axis extent. Percentages cannot
+grow and respect explicit bounds. Terminal and portable profiles reject them.
+Content children shrink proportionally toward their minimum
 content size; bounds can leave overflow, which the host clips.
 
 Default alignment stretches columns and centers rows on their cross axis.
@@ -171,8 +176,8 @@ message and optional `Buttons.Options`. The default uses CUI's secondary
 appearance. Options select the variant, control size, leading and trailing
 icons, disabled and busy states, selected appearance, foreground color,
 tooltip and shortcut hint. `Width` uses `Layout.Extent.Content`, `Fill` or
-`Fixed` with an explicit measure. It always describes horizontal width,
-including inside columns.
+`Fixed` with an explicit measure; GUI additionally accepts `Percent(Value)`.
+It always describes horizontal width, including inside columns.
 
 Tab focuses an enabled button. Click, Enter or Space proposes its message.
 Loading keeps the label and focus, shows a spinner in GUI or an ellipsis in
@@ -594,6 +599,34 @@ theme color and logical diameter; zero selects its default. It has a
 noninteractive `spinner` snapshot. Dimensions must be finite and nonnegative.
 All three widgets require the graphical profile. The Feedback gallery shows
 the original four alerts, upload and indexing bars, and 16/22/28-point spinners.
+
+## Skeleton
+
+`Fpas.Ui.Skeletons.Skeleton<TMsg>(Id, Width, Height := 0.0F)` draws CUI's loading
+placeholder. Omitted width fills its parent. Use `Layout.Extent.Fixed` with a
+logical measure or `Layout.Extent.Percent` for another width; `Content` is
+rejected because a placeholder has no intrinsic content. Percentages are finite
+values from zero through 100. Height must be finite and nonnegative; zero uses
+CUI's 14-point default.
+
+CUI owns rounding, shimmer, animation scheduling and reduced-motion behavior.
+FPAS adds no animation loop or retained widget state. The GUI-only `skeleton`
+snapshot is passive, with empty text and value. Feedback reproduces the original
+Loading avatar, percentage text lines and 88-point body placeholder.
+
+## Timeline item
+
+`Fpas.Ui.TimelineItems.TimelineItem<TMsg>(Id, Title, Settings)` displays a
+noninteractive native activity entry. The title must be nonempty. Options map
+directly to CUI's optional literal `Time` and `Description`, icon glyph,
+`Styles.Tone`, and `Last` flag. An empty icon uses CUI's dot. `Last` omits the
+connector and trailing item space; set it on the final entry.
+
+CUI owns text wrapping, title/time alignment, dot colors, icon and connector
+painting. FPAS does not parse or format the time caption. All text is literal,
+including `##`. The GUI-only `timeline-item` snapshot reports the title in
+`Text` and the time caption in `Value`. Feedback reproduces the original three
+Activity entries, including the final failed build without a connector.
 
 ## Progress ring
 

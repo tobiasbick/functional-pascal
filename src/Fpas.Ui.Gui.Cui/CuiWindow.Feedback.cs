@@ -91,6 +91,41 @@ public sealed partial class CuiWindow
         NativeMethods.ProgressRing(context, Stable(id), label, value, size);
     }
 
+    /// <summary>Draws CUI's native activity entry and optional connector.</summary>
+    /// <param name="id">Stable inspection identity.</param>
+    /// <param name="title">Nonempty literal heading.</param>
+    /// <param name="time">Optional literal time caption.</param>
+    /// <param name="description">Optional literal supporting text.</param>
+    /// <param name="icon">Optional icon glyph; empty selects CUI's dot.</param>
+    /// <param name="tone">Native semantic tone from zero through eight.</param>
+    /// <param name="last">Whether to omit the connector and trailing space.</param>
+    public void TimelineItem(string id, string title, string time = "", string description = "",
+        string icon = "", int tone = 0, bool last = false)
+    {
+        CheckFrame();
+        Utf8.Validate(title, nameof(title));
+        Utf8.Validate(time, nameof(time));
+        Utf8.Validate(description, nameof(description));
+        Utf8.Validate(icon, nameof(icon));
+        if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("A timeline item needs a title.", nameof(title));
+        CheckTone(tone);
+        NativeMethods.TimelineItem(context, Stable(id), title, time, description, icon, tone, last ? 1 : 0);
+    }
+
+    /// <summary>Draws CUI's native shimmer placeholder with an explicit width mode.</summary>
+    /// <param name="id">Stable inspection identity.</param>
+    /// <param name="widthKind">Fill one, logical pixels two, or percentage three.</param>
+    /// <param name="width">Logical pixels or a percentage from zero through 100.</param>
+    /// <param name="height">Logical height; zero uses CUI's 14-point default.</param>
+    public void Skeleton(string id, int widthKind = 1, float width = 0, float height = 0)
+    {
+        CheckFrame();
+        CheckExtent(widthKind, width, nameof(width));
+        if (widthKind == 0) throw new ArgumentOutOfRangeException(nameof(widthKind), "A skeleton has no content width; use fill.");
+        CheckFeedbackNumber(height, nameof(height));
+        NativeMethods.Skeleton(context, Stable(id), widthKind, width, height);
+    }
+
     private static void CheckProgressValue(float value)
     {
         if (!float.IsFinite(value) || value is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(value));

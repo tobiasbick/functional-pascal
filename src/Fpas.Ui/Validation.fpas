@@ -1,6 +1,8 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.Internal.FeedbackRules as FeedbackRules, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as ProgressBars, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.DisclosureRules as DisclosureRules, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses
+  Fpas.Ui.TimelineItems as Timeline,
+  Fpas.Ui.Internal.FeedbackRules as FeedbackRules, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as ProgressBars, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.DisclosureRules as DisclosureRules, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -159,6 +161,24 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Spinner(const Id: string, const Size: float):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/spinner');
         FeedbackRules.Nonnegative(Size, Identify(Id, Location + '/spinner'));
+      when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/skeleton');
+        const At: string := Identify(Id, Location + '/skeleton');
+        Rules.CheckExtent(Width, Profile, At + '/width');
+        case Width of
+          when L.Extent.Content:
+            Rules.Reject(At, 'A skeleton has no content width; use fill.');
+          else
+        end case;
+
+        FeedbackRules.Nonnegative(Height, At + '/height');
+      when E.Element.TimelineItem(
+        const Id: string,
+        const Title: string,
+        const Settings: Timeline.Options
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/timeline-item');
+        FeedbackRules.TimelineItem(Title, Settings, Identify(Id, Location + '/timeline-item'));
       when E.Element.ProgressRing(
         const Id: string, const Label: string, const Value: float, const Size: float
       ):
@@ -444,11 +464,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Unknown button variant or size.');
         end if;
 
-        case Settings.Width of
-          when L.Extent.Fixed(const Distance: L.Measure):
-            discard Rules.CheckMeasure(Distance, Profile, At + '/width');
-          else
-        end case;
+        Rules.CheckExtent(Settings.Width, Profile, At + '/width');
       when E.Element.IconAction(
         const Id: string,
         const Icon: string,

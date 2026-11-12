@@ -39,6 +39,10 @@ The [capacity meter](../../../src/Fpas.Ui/README.md#meter) uses CUI's numeric di
 track and warning colors.
 The [progress ring](../../../src/Fpas.Ui/README.md#progress-ring) delegates its
 centered percentage, optional caption and interpolation to CUI.
+The [timeline item](../../../src/Fpas.Ui/README.md#timeline-item) supplies native
+activity entries with literal time captions, descriptions, icons and connectors.
+The [skeleton](../../../src/Fpas.Ui/README.md#skeleton) uses native loading shimmer
+and CUI's reduced-motion behavior, with fill, fixed or percentage width.
 
 ## Model, update and view
 
@@ -59,6 +63,8 @@ Options select title, logical width/height, renderer and mailbox capacity.
 The host validates the whole active view before drawing. Explicit GUI sizing
 uses portable `Layout.Measure.Logical`; the terminal adapter translates those
 distances to cells. Layout follows the [shared CUI rules](../../../src/Fpas.Ui/README.md#layout-and-style).
+GUI additionally accepts `Layout.Extent.Percent` for main-axis sizing and button
+or skeleton width. CUI resolves the percentage against the parent's inner extent.
 Both hosts accept `Fpas.Ui.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
 and the same `ThemeFor(Model)` callback. Set a fixed theme with `Gui.Options.Theme`.
 Palette customization and terminal approximations are described in

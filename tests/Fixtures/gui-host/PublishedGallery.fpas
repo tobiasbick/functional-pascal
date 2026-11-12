@@ -1,6 +1,7 @@
 program PublishedGallery;
 
 uses
+  GallerySkeletonContract as SkeletonContract,
   GalleryFeedbackContract as FeedbackContract,
   GuiGallery.App.Update as GalleryUpdate,
   GuiGallery.Shared.State as SliceShared,
@@ -180,6 +181,7 @@ begin
   DialogContract.Verify(Renderer, Capture);
   DisclosureContract.Verify(Renderer, Capture);
   FeedbackContract.Verify(Renderer, Capture);
+  SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(

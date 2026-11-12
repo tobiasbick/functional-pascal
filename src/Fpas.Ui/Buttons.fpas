@@ -36,7 +36,7 @@ public type Options = record
   public Tooltip: string := '';
   // Shortcut hint displayed with the tooltip. Applications bind the key separately.
   public Shortcut: string := '';
-  // Use intrinsic, fixed or available width independently of the parent's main axis.
+  // Intrinsic, fixed, available or GUI percentage width, independent of the parent's main axis.
   public Width: L.Extent := L.Extent.Content;
   // Optional foreground for the label and icons.
   public Color: G.Color? := null;

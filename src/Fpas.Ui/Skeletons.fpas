@@ -1,0 +1,22 @@
+unit Fpas.Ui.Skeletons;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds a loading placeholder painted and animated by CUI.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable inspection identity.
+// - `Width`: Fill by default, a fixed logical distance or a percentage of the parent.
+// - `Height`: Finite nonnegative logical height; zero selects CUI's 14-point default.
+// ## Returns
+// A noninteractive GUI-only placeholder with native shimmer and reduced-motion behavior.
+public function Skeleton<TMsg>(
+  Id: string; Width: L.Extent? := null; Height: float := 0.0F
+): E.Element<TMsg>;
+requires Id <> '';
+requires Height >= 0.0F;
+begin
+  return E.Element<TMsg>.Skeleton(Id, Width ?? L.Extent.Fill, Height);
+end function;
+end unit;

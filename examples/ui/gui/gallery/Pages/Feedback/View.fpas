@@ -3,7 +3,8 @@ unit GuiGallery.Pages.Feedback.View;
 uses
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Alerts as A, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
-  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings;
+  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings,
+  Fpas.Ui.TimelineItems as Timeline, Fpas.Ui.Skeletons as Skel, System as Sys;
 
 // Reproduces the accepted native CUI Feedback examples.
 // ## Type parameters
@@ -60,6 +61,52 @@ begin
           Spin.Spinner<TMsg>('spinner-small', 16.0F),
           Spin.Spinner<TMsg>('spinner-medium', 22.0F),
           Spin.Spinner<TMsg>('spinner-large', 28.0F)
+        )
+      ]
+    ),
+    G.Card<TMsg>(
+      14, [
+        E.Styled<TMsg>(E.Text<TMsg>('Loading'), S.Role.Heading),
+        E.Row<TMsg>(
+          new L.Flow(Gap := G.Points(12), Wrap := true),
+          Skel.Skeleton<TMsg>('loading-avatar', L.Extent.Fixed(L.Measure.Logical(40)), 40.0F),
+          E.Size<TMsg>(
+            E.Column<TMsg>(
+              new L.Flow(Gap := G.Points(8)),
+              Skel.Skeleton<TMsg>('loading-title', L.Extent.Percent(70.0F), 12.0F),
+              Skel.Skeleton<TMsg>('loading-subtitle', L.Extent.Percent(45.0F), 12.0F)
+            ),
+            new L.Flex(Basis := L.Extent.Fill)
+          )
+        ),
+        Skel.Skeleton<TMsg>('loading-body', Height := 88.0F),
+        Skel.Skeleton<TMsg>('loading-line-1', L.Extent.Percent(90.0F), 12.0F),
+        Skel.Skeleton<TMsg>('loading-line-2', L.Extent.Percent(60.0F), 12.0F)
+      ]
+    ),
+    G.Card<TMsg>(
+      14, [
+        E.Styled<TMsg>(E.Text<TMsg>('Activity'), S.Role.Heading),
+        Timeline.TimelineItem<TMsg>(
+          'deployed', 'Deployed to production',
+          new Timeline.Options(
+            Time := '2m ago', Description := 'Release 1.0.3 is live in all regions.',
+            Icon := Sys.Char.ConvertFromUtf32($E286), Tone := S.Tone.Success
+          )
+        ),
+        Timeline.TimelineItem<TMsg>(
+          'review', 'Review requested',
+          new Timeline.Options(
+            Time := '1h ago', Description := 'Jonas asked you to review the theming changes.',
+            Icon := Sys.Char.ConvertFromUtf32($E117), Tone := S.Tone.Info
+          )
+        ),
+        Timeline.TimelineItem<TMsg>(
+          'failed', 'Build failed',
+          new Timeline.Options(
+            Time := '3h ago', Icon := Sys.Char.ConvertFromUtf32($E077),
+            Tone := S.Tone.Danger, Last := true
+          )
         )
       ]
     ),

@@ -136,7 +136,7 @@ begin
       ), V.Target.Portable
     );
   catch Error: Sys.ArgumentException do
-    Rejected := Error.Message.Contains('Fixed extents cannot grow');
+    Rejected := Error.Message.Contains('Fixed and percentage extents cannot grow');
   end try;
 
   Check(Rejected, 'Fixed and growing sizes must not be combined.');

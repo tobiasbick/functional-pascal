@@ -19,6 +19,8 @@ begin
       Basis := Geometry.Cells(Distance, Horizontal);
     when L.Extent.Fill:
       Grow := Sys.Math.Max(1, Grow);
+    when L.Extent.Percent(_):
+      raise new Sys.NotSupportedException('Percentage extents require the graphical profile.');
     else
   end case;
   const Minimum: L.Measure? := Value.Minimum;
@@ -219,7 +221,15 @@ public function Prepare<TMsg>(
         _,
         _,
         _
-      ), Ui.Element.ProgressBar(_, _, _), Ui.Element.Spinner(_, _), Ui.Element.ProgressRing(
+      ), Ui.Element.ProgressBar(
+        _,
+        _,
+        _
+      ), Ui.Element.Spinner(_, _), Ui.Element.Skeleton(
+        _,
+        _,
+        _
+      ), Ui.Element.TimelineItem(_, _, _), Ui.Element.ProgressRing(
         _,
         _,
         _,

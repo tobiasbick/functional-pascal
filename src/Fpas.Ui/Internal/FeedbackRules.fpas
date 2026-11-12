@@ -1,6 +1,7 @@
 unit Fpas.Ui.Internal.FeedbackRules;
 
 uses
+  Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Alerts as A, Fpas.Ui.ProgressBars as P, Fpas.Ui.Styles as S,
   Fpas.Ui.Internal.Rules as R, System as Sys;
 
@@ -16,6 +17,22 @@ begin
   R.CheckText(Settings.Icon, Location + '/icon');
   if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(Settings.Tone) then
     R.Reject(Location, 'An alert needs a nonempty title and a valid tone.');
+  end if;
+end procedure;
+
+// Validates the literal text and semantic tone of a native activity entry.
+// ## Parameters
+// - `Title`: Nonempty literal heading.
+// - `Settings`: Native text and decoration options.
+// - `Location`: Diagnostic path.
+public procedure TimelineItem(Title: string; Settings: Timeline.Options; Location: string);
+begin
+  R.CheckText(Title, Location + '/title');
+  R.CheckText(Settings.Time, Location + '/time');
+  R.CheckText(Settings.Description, Location + '/description');
+  R.CheckText(Settings.Icon, Location + '/icon');
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(Settings.Tone) then
+    R.Reject(Location, 'A timeline item needs a nonempty title and a valid tone.');
   end if;
 end procedure;
 

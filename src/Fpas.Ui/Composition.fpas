@@ -249,7 +249,15 @@ begin
       _,
       _,
       _
-    ), E.Element.ProgressBar(_, _, _), E.Element.Spinner(_, _), E.Element.ProgressRing(
+    ), E.Element.ProgressBar(
+      _,
+      _,
+      _
+    ), E.Element.Spinner(_, _), E.Element.Skeleton(
+      _,
+      _,
+      _
+    ), E.Element.TimelineItem(_, _, _), E.Element.ProgressRing(
       _,
       _,
       _,

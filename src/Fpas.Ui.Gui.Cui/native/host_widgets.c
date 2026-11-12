@@ -21,18 +21,18 @@ void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float b
     if (maximum < 0) maximum = 1e20f;
     /* Preserve intrinsic fixed leaf sizes for content; all other sizes use CUI directly. */
     if (horizontal) {
-        if (kind == 2) n->w = CUI_PX(basis);
+        if (kind == 2 || kind == 3) n->w = fpas_extent(kind, basis);
         else if (kind == 1 || grow > 0) n->w = CUI_GROW(grow > 0 ? grow : 1);
         n->min_w = minimum; n->max_w = maximum;
     } else {
-        if (kind == 2) n->h = CUI_PX(basis);
+        if (kind == 2 || kind == 3) n->h = fpas_extent(kind, basis);
         else if (kind == 1 || grow > 0) n->h = CUI_GROW(grow > 0 ? grow : 1);
         n->min_h = minimum; n->max_h = maximum;
     }
     if (align != CUI_ALIGN_DEFAULT) n->self_align = align;
     if (align == CUI_ALIGN_STRETCH) {
-        if (horizontal && n->h.kind != CUI_SIZE_FIXED) n->h = CUI_FILL;
-        if (!horizontal && n->w.kind != CUI_SIZE_FIXED) n->w = CUI_FILL;
+        if (horizontal && n->h.kind != CUI_SIZE_FIXED && n->h.kind != CUI_SIZE_PERCENT) n->h = CUI_FILL;
+        if (!horizontal && n->w.kind != CUI_SIZE_FIXED && n->w.kind != CUI_SIZE_PERCENT) n->w = CUI_FILL;
     }
 }
 

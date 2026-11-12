@@ -1,0 +1,155 @@
+unit GallerySkeletonContract;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update,
+  GalleryHostAssertions as A, Fpas.Ui.Elements as E, Fpas.Ui.Composition as U,
+  Fpas.Ui.Skeletons as Skel, Fpas.Ui.Spinners as Spin, Fpas.Ui.Buttons as Buttons,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Validation as V,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Skeleton sizing accepted an invalid view.');
+  end procedure;
+begin
+  Reject(Skel.Skeleton<int>('s'), V.Target.Terminal, 'Graphical profile');
+  Reject(Skel.Skeleton<int>('s'), V.Target.Portable, 'Graphical profile');
+  Reject(Skel.Skeleton<int>('s', L.Extent.Content), V.Target.Graphical, 'content');
+  Reject(
+    Skel.Skeleton<int>('s', L.Extent.Fixed(L.Measure.Cells(4))),
+    V.Target.Graphical,
+    'terminal'
+  );
+  Reject(
+    E.Column<int>(Skel.Skeleton<int>('same'), Spin.Spinner<int>('same')),
+    V.Target.Graphical,
+    'Duplicate'
+  );
+  for Value: float in [-1.0F, 101.0F, Sys.Single.NaN, Sys.Single.PositiveInfinity] do
+    const Extent: L.Extent := L.Extent.Percent(Value);
+    Reject(Skel.Skeleton<int>('s', Extent), V.Target.Graphical, 'percentage');
+    Reject(
+      Buttons.Button<int>('b', 'Example', 0, new Buttons.Options(Width := Extent)),
+      V.Target.Graphical,
+      'percentage'
+    );
+    Reject(
+      E.Size<int>(E.Text<int>('text'), new L.Flex(Basis := Extent)),
+      V.Target.Graphical,
+      'percentage'
+    );
+  end for;
+
+  for Value: float in [-1.0F, Sys.Single.NaN, Sys.Single.PositiveInfinity] do
+    Reject(E.Element<int>.Skeleton('s', L.Extent.Fill, Value), V.Target.Graphical, 'finite');
+  end for;
+
+  for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
+    Reject(
+      E.Size<int>(E.Text<int>('text'), new L.Flex(Basis := L.Extent.Percent(50.0F))),
+      Profile,
+      'Graphical profile'
+    );
+    Reject(
+      Buttons.Button<int>('b', 'Example', 0, new Buttons.Options(Width := L.Extent.Percent(50.0F))),
+      Profile,
+      'Graphical profile'
+    );
+  end for;
+
+  Reject(
+    E.Size<int>(E.Text<int>('text'), new L.Flex(Basis := L.Extent.Percent(50.0F), Grow := 1)),
+    V.Target.Graphical,
+    'cannot grow'
+  );
+end procedure;
+
+// Checks percentage layout, typed composition and passive placeholder inspection.
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function View(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+  begin
+    if Model.Drawer then
+      return E.Text<State.Msg>('Removed');
+    end if;
+
+    return U.Map<int, State.Msg>(
+      E.Column<int>(
+        new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(20)), Gap := L.Spacing.Normal),
+        Skel.Skeleton<int>('fill'),
+        Skel.Skeleton<int>('fixed', L.Extent.Fixed(L.Measure.Logical(40)), 40.0F),
+        E.Styled<int>(
+          E.Size<int>(Skel.Skeleton<int>('percent', L.Extent.Percent(50.0F), 12.0F), new L.Flex()),
+          S.Role.Panel
+        ),
+        Buttons.Button<int>(
+          'button-percent',
+          'Half width',
+          1,
+          new Buttons.Options(Width := L.Extent.Percent(50.0F))
+        ),
+        E.Row<int>(
+          E.Size<int>(
+            Buttons.Button<int>('flex-percent', 'Quarter width', 1),
+            new L.Flex(Basis := L.Extent.Percent(25.0F))
+          )
+        )
+      ),
+      function(Value: int): State.Msg => State.Msg.Preview
+    );
+  end function;
+  procedure Near(Actual: float; Expected: float; Reason: string);
+  begin
+    A.Check(
+      Sys.Math.Abs(Actual - Expected) < 0.6F,
+      Reason + ': ' + Actual.ToString() + ' expected ' + Expected.ToString()
+    );
+  end procedure;
+begin
+  Validate();
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Mapped skeleton', 600, 400, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), Update.Update, View, Window, 32
+  );
+  for Width: int in [600, 320, 600, 320] do
+    Window.Resize(Width, 400);
+    A.Check(Session.Step(), 'Skeleton session closed after resize.');
+    A.Check(Session.Step(), 'Skeleton session closed while settling resize.');
+    const Available: float := cast<float>(Width - 40);
+    Near(A.Control(Session, 'fill').Bounds.Width, Available, 'Fill width');
+    Near(A.Control(Session, 'fill').Bounds.Height, 14.0F, 'Default height');
+    Near(A.Control(Session, 'fixed').Bounds.Width, 40.0F, 'Fixed width');
+    Near(A.Control(Session, 'fixed').Bounds.Height, 40.0F, 'Fixed height');
+    Near(A.Control(Session, 'percent').Bounds.Width, Available * 0.5F, 'Skeleton percentage');
+    Near(A.Control(Session, 'percent').Bounds.Height, 12.0F, 'Explicit height');
+    Near(A.Control(Session, 'button-percent').Bounds.Width, Available * 0.5F, 'Button percentage');
+    Near(
+      A.Control(Session, 'flex-percent').Bounds.Width,
+      Available * 0.25F,
+      'Shared flex percentage'
+    );
+    const Placeholder: Gui.Control := A.Control(Session, 'percent');
+    A.Check(
+      Placeholder.Role = 'skeleton' and not Placeholder.Enabled and not Placeholder.Focused,
+      'Skeleton must remain passive.'
+    );
+    A.Check(Placeholder.Text = '' and Placeholder.Value = '', 'Skeleton must not invent content.');
+  end for;
+
+  A.Send(Session, State.Msg.SetDrawer(true));
+  A.Check(Session.Snapshot().Controls.Length = 0, 'Removed skeletons left inspection controls.');
+  A.Send(Session, State.Msg.SetDrawer(false));
+  A.Check(A.Control(Session, 'fill').Bounds.Width > 0.0F, 'Reinserted skeleton did not render.');
+end procedure;
+end unit;

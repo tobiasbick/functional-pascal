@@ -1,6 +1,7 @@
 unit Fpas.Ui.Internal.Mapping.Actions;
 
 uses
+  Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Alerts as Alerts,
   Fpas.Ui.ProgressBars as ProgressBars,
   Fpas.Ui.Elements as E,
@@ -58,6 +59,14 @@ begin
       return E.Element<TParent>.ProgressBar(Id, Fraction, Settings);
     when E.Element.Spinner(const Id: string, const Size: float):
       return E.Element<TParent>.Spinner(Id, Size);
+    when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
+      return E.Element<TParent>.Skeleton(Id, Width, Height);
+    when E.Element.TimelineItem(
+      const Id: string,
+      const Title: string,
+      const Settings: Timeline.Options
+    ):
+      return E.Element<TParent>.TimelineItem(Id, Title, Settings);
     when E.Element.Meter(
       const Id: string, const Label: string, const Used: float,
       const Total: float, const Unit: string

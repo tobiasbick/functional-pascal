@@ -27,4 +27,13 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_progress_ring", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ProgressRing(nint context, string id, string label, float value, float size);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_timeline_item", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void TimelineItem(nint context, string id, string title, string time,
+        string description, string icon, int tone, int last);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_skeleton", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Skeleton(nint context, string id, int widthKind, float width, float height);
 }

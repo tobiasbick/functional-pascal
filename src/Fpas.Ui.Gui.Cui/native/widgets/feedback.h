@@ -28,4 +28,15 @@ CUI_API void fpas_cui_meter(cui_ctx *ui, const char *id, const char *label,
  * value is a finite fraction from zero through one; size zero uses CUI's default. */
 CUI_API void fpas_cui_progress_ring(cui_ctx *ui, const char *id, const char *label,
     float value, float size);
+
+/** Draws a native activity entry with a stable inspection identity and literal text.
+ * Empty time, description and icon map to omitted native options; tone is a
+ * cui_tone, and last omits the final connector and trailing space. */
+CUI_API void fpas_cui_timeline_item(cui_ctx *ui, const char *id, const char *title,
+    const char *time, const char *description, const char *icon, int tone, int last);
+
+/** Draws CUI's shimmer placeholder. Width kind is fill 1, logical pixels 2,
+ * or percentage 3. Height zero uses CUI's native default. */
+CUI_API void fpas_cui_skeleton(cui_ctx *ui, const char *id, int width_kind,
+    float width, float height);
 #endif

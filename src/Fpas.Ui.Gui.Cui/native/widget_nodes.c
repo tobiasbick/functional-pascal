@@ -1,5 +1,15 @@
 #include "fpas_cui.h"
 
+/* Shared bridge encoding: content, fill, logical pixels, percentage. */
+static cui_size fpas_extent(int kind, float value) {
+    switch (kind) {
+        case 1: return CUI_FILL;
+        case 2: return CUI_PX(value);
+        case 3: return CUI_PCT(value);
+        default: return CUI_FIT;
+    }
+}
+
 static cui_button_variant fpas_button_variant(int variant) {
     switch (variant) {
         case 1: return CUI_BUTTON_PRIMARY;

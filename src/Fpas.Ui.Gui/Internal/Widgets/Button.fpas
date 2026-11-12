@@ -41,6 +41,12 @@ begin
     State.Messages.Add(Message);
   end if;
 
+  case Settings.Width of
+    when L.Extent.Percent(const Percent: float):
+      State.Window.SizeLast(true, 3, Percent, 0, -1, 0, 0);
+    else
+  end case;
+
   const Value: string := if Settings.Loading then 'loading'
     elsif Settings.Selected then 'true'
     else ''

@@ -62,6 +62,25 @@ begin
   return Amount;
 end function;
 
+// Validates an extent without calculating its resolved size.
+// ## Parameters
+// - `Value`: Content, fill, explicit distance or percentage.
+// - `Profile`: Receiving host profile.
+// - `Location`: Diagnostic location.
+public procedure CheckExtent(Value: L.Extent; Profile: V.Target; Location: string);
+begin
+  case Value of
+    when L.Extent.Fixed(const Distance: L.Measure):
+      discard CheckMeasure(Distance, Profile, Location);
+    when L.Extent.Percent(const Percent: float):
+      RequireProfile(Profile, V.Target.Graphical, Location);
+      if not Sys.Single.IsFinite(Percent) or Percent < 0.0F or Percent > 100.0F then
+        Reject(Location, 'A percentage must be finite and between zero and 100.');
+      end if;
+    else
+  end case;
+end procedure;
+
 // Checks size units, ordered bounds and nonnegative CUI growth weights.
 //
 // ## Parameters
@@ -74,11 +93,14 @@ begin
     Reject(Location, 'Growth weights must be nonnegative.');
   end if;
 
+  CheckExtent(Settings.Basis, Profile, Location + '/basis');
   case Settings.Basis of
-    when L.Extent.Fixed(const Value: L.Measure):
-      discard CheckMeasure(Value, Profile, Location + '/basis');
+    when L.Extent.Fixed(_), L.Extent.Percent(_):
       if Settings.Grow <> 0 then
-        Reject(Location, 'Fixed extents cannot grow. Use fill for weighted allocation.');
+        Reject(
+          Location,
+          'Fixed and percentage extents cannot grow. Use fill for weighted allocation.'
+        );
       end if;
     else
   end case;

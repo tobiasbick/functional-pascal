@@ -74,6 +74,23 @@ void fpas_cui_progress_ring(cui_ctx *ui, const char *id, const char *label,
     ui->last_id = key;
 }
 
+void fpas_cui_timeline_item(cui_ctx *ui, const char *id, const char *title,
+    const char *time, const char *description, const char *icon, int tone, int last) {
+    const int row = ui->node_count;
+    const cui_timeline_opts options = {
+        .time = *time ? time : NULL, .description = *description ? description : NULL,
+        .icon = *icon ? icon : NULL, .tone = (cui_tone)tone, .last = last != 0
+    };
+    cui_timeline_item_ex(ui, title, &options);
+    ui->last_node = row;
+    ui->last_id = ui->nodes[row].id = cui_make_id(ui, id);
+}
+
+void fpas_cui_skeleton(cui_ctx *ui, const char *id, int width_kind, float width, float height) {
+    cui_skeleton(ui, fpas_extent(width_kind, width), height);
+    ui->last_id = ui->nodes[ui->last_node].id = cui_make_id(ui, id);
+}
+
 void fpas_cui_meter(cui_ctx *ui, const char *id, const char *label,
     float used, float total, const char *unit) {
     const cui_id key = cui_make_id(ui, id);

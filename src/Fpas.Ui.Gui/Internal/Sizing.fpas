@@ -42,6 +42,33 @@ begin
   end case;
 end function;
 
+// Native extent encoding shared by widget widths and general layout constraints.
+public type NativeExtent = record
+  // Content zero, fill one, logical pixels two, or percentage three.
+  public Kind: int;
+  // Logical pixels or percentage; zero for content and fill.
+  public Value: float;
+end record;
+
+// Translates an extent for CUI without resolving parent-dependent allocation.
+// ## Parameters
+// - `Value`: Graphically validated extent.
+// ## Returns
+// The native bridge kind and its numeric value.
+public function Extent(Value: L.Extent): NativeExtent;
+begin
+  case Value of
+    when L.Extent.Content:
+      return new NativeExtent(Kind := 0, Value := 0.0F);
+    when L.Extent.Fill:
+      return new NativeExtent(Kind := 1, Value := 0.0F);
+    when L.Extent.Fixed(const Distance: L.Measure):
+      return new NativeExtent(Kind := 2, Value := Measure(Distance));
+    when L.Extent.Percent(const Percent: float):
+      return new NativeExtent(Kind := 3, Value := Percent);
+  end case;
+end function;
+
 // Applies CUI sizing directly after drawing one child.
 //
 // ## Parameters
@@ -51,19 +78,9 @@ end function;
 // - `Align`: Parent cross-axis alignment.
 public procedure Apply(Window: Cui.CuiWindow; Value: L.Flex; Horizontal: bool; Align: L.Alignment);
 begin
-  var Kind: int := 0;
-  var Basis: float := 0;
+  const Basis: NativeExtent := Extent(Value.Basis);
   var Minimum: float := 0;
   var Maximum: float := -1;
-  case Value.Basis of
-    when L.Extent.Fixed(const Distance: L.Measure):
-      Kind := 2;
-      Basis := Measure(Distance);
-    when L.Extent.Fill:
-      Kind := 1;
-    else
-  end case;
-
   case Value.Minimum of
     when is L.Measure as Distance:
       Minimum := Measure(Distance);
@@ -78,8 +95,8 @@ begin
 
   Window.SizeLast(
     Horizontal,
-    Kind,
-    Basis,
+    Basis.Kind,
+    Basis.Value,
     Minimum,
     Maximum,
     Value.Grow,

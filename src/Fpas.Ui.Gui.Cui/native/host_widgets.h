@@ -21,8 +21,8 @@ CUI_API void fpas_cui_group_end(cui_ctx *ui, int node);
  * @param ui Owner context.
  * @param node Frame-local node.
  * @param horizontal Parent axis.
- * @param kind Content=0, fill=1, fixed=2.
- * @param basis Logical fixed basis.
+ * @param kind Content=0, fill=1, fixed=2, percentage=3.
+ * @param basis Logical fixed basis or percentage of the parent's inner extent.
  * @param minimum Lower bound.
  * @param maximum Upper bound, negative for unbounded.
  * @param grow Extra-space weight.

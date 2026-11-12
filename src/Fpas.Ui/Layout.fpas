@@ -8,7 +8,7 @@ public type Measure = variant
   Logical(Value: int);
 end variant;
 
-// The preferred extent of a child along its parent's main axis.
+// A layout extent used for main-axis constraints and explicit widget widths.
 public type Extent = variant
   // Measure the child's content.
   Content;
@@ -16,6 +16,8 @@ public type Extent = variant
   Fill;
   // Start from an explicit backend distance.
   Fixed(Value: Measure);
+  // A finite percentage of the parent's inner extent, from zero through 100. GUI only.
+  Percent(Value: float);
 end variant;
 
 // Main-axis constraints and allocation weights.
@@ -27,7 +29,7 @@ public type Flex = record
   // An optional upper bound in explicit units; both bounds must use the same units.
   public Maximum: Measure? := null;
   // CUI growth weight, allocated from zero. Fill uses at least one.
-  // Fixed extents cannot grow; content with a positive weight becomes growing.
+  // Fixed and percentage extents cannot grow; positive content weights become growing.
   public Grow: int := 0;
 end record;
 

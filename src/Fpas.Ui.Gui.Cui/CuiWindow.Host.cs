@@ -71,8 +71,8 @@ public sealed partial class CuiWindow
 
     /// <summary>Applies shared sizing to the last widget.</summary>
     /// <param name="horizontal">Parent main axis.</param>
-    /// <param name="kind">Content=0, fill=1, fixed=2.</param>
-    /// <param name="basis">Fixed logical basis.</param>
+    /// <param name="kind">Content=0, fill=1, fixed=2, percentage=3.</param>
+    /// <param name="basis">Logical basis or percentage of the parent's inner extent.</param>
     /// <param name="minimum">Minimum extent.</param>
     /// <param name="maximum">Maximum extent or -1.</param>
     /// <param name="grow">Growth weight.</param>
@@ -80,12 +80,20 @@ public sealed partial class CuiWindow
     public void SizeLast(bool horizontal, int kind, float basis, float minimum, float maximum, float grow, int alignment)
     {
         CheckFrame();
-        if (!float.IsFinite(basis) || basis < 0 || !float.IsFinite(minimum) || minimum < 0 ||
+        CheckExtent(kind, basis, nameof(basis));
+        if (!float.IsFinite(minimum) || minimum < 0 ||
             !float.IsFinite(maximum) || maximum < -1 || maximum >= 0 && maximum < minimum ||
-            !float.IsFinite(grow) || grow < 0 || kind is < 0 or > 2 || kind == 2 && grow != 0 || alignment is < 0 or > 4)
+            !float.IsFinite(grow) || grow < 0 || (kind is 2 or 3) && grow != 0 || alignment is < 0 or > 4)
             throw new ArgumentOutOfRangeException(nameof(basis), "Invalid shared layout constraints.");
         int node = NativeMethods.LastNode(context);
         NativeMethods.NodeSize(context, node, horizontal ? 1 : 0, kind, basis, minimum, maximum, grow, alignment);
+    }
+
+    private static void CheckExtent(int kind, float value, string name)
+    {
+        if (kind is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (!float.IsFinite(value) || value < 0 || kind == 3 && value > 100)
+            throw new ArgumentOutOfRangeException(name);
     }
 
     /// <summary>Applies a semantic theme role to the last widget.</summary>

@@ -4,7 +4,7 @@ uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
   GuiGallery.Shared.State as Shared, GalleryHostAssertions as A, Fpas.Ui.Elements as E,
   Fpas.Ui.Composition as U, Fpas.Ui.Menus as Menus, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
-  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings,
+  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings, Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.ThemeSwitchers as Switchers,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys;
@@ -25,6 +25,34 @@ begin
   Reject(Alerts.Alert<int>('a', 'Title'), V.Target.Terminal, 'Graphical profile');
   Reject(P.ProgressBar<int>('p', 0.5F), V.Target.Portable, 'Graphical profile');
   Reject(Spin.Spinner<int>('s'), V.Target.Terminal, 'Graphical profile');
+  Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Terminal, 'Graphical profile');
+  Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Portable, 'Graphical profile');
+  Reject(Timeline.TimelineItem<int>('t', ''), V.Target.Graphical, 'nonempty title');
+  Reject(Timeline.TimelineItem<int>('t', 'x' + Sys.Char.MinValue), V.Target.Graphical, 'zero');
+  Reject(
+    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Time := 'x' + Sys.Char.MinValue)),
+    V.Target.Graphical, 'zero'
+  );
+  Reject(
+    Timeline.TimelineItem<int>(
+      't',
+      'Entry',
+      new Timeline.Options(Description := 'x' + Sys.Char.MinValue)
+    ),
+    V.Target.Graphical, 'zero'
+  );
+  Reject(
+    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Icon := 'x' + Sys.Char.MinValue)),
+    V.Target.Graphical, 'zero'
+  );
+  Reject(
+    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Tone := cast<S.Tone>(255))),
+    V.Target.Graphical, 'valid tone'
+  );
+  Reject(
+    E.Column<int>(Timeline.TimelineItem<int>('same', 'Entry'), Spin.Spinner<int>('same')),
+    V.Target.Graphical, 'Duplicate'
+  );
   Reject(Rings.ProgressRing<int>('r', 'Quota', 0.35F), V.Target.Terminal, 'Graphical profile');
   Reject(Rings.ProgressRing<int>('r', '', 0.0F), V.Target.Portable, 'Graphical profile');
   Reject(E.Element<int>.ProgressRing('r', '', Sys.Single.NaN, 0.0F), V.Target.Graphical, 'finite');
@@ -132,6 +160,14 @@ procedure Notification(Renderer: Cui.CuiRenderer);
             new L.Flex()
           ),
           S.Role.Panel
+        ),
+        Timeline.TimelineItem<int>(
+          'mapped-timeline', 'Event##literal',
+          new Timeline.Options(
+            Time := 'Just now',
+            Description := 'Description ## literal λ',
+            Last := true
+          )
         )
       ),
       function(Value: int): State.Msg => State.Msg.Preview
@@ -166,7 +202,7 @@ procedure Notification(Renderer: Cui.CuiRenderer);
 begin
   var Deliveries: int := 0;
   var Key: int := 0;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('Mapped feedback', 600, 480, Renderer, true);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Mapped feedback', 600, 680, Renderer, true);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(), Change, View, Window, 32, Inject
@@ -190,6 +226,23 @@ begin
     'Mapped ring lost its native diameter.'
   );
   A.Check(not A.Control(Session, 'mapped-ring').Enabled, 'Progress rings must not accept input.');
+  A.Check(
+    A.Control(Session, 'mapped-timeline').Role = 'timeline-item',
+    'Mapped activity lost its role.'
+  );
+  A.Check(
+    A.Control(Session, 'mapped-timeline').Value = 'Just now',
+    'Mapped activity lost its time caption.'
+  );
+  A.Check(
+    A.Control(Session, 'mapped-timeline').Text = 'Event##literal',
+    'Activity title is not literal.'
+  );
+  A.Check(A.HasText(Session, 'Description ## literal λ'), 'Activity description is missing.');
+  A.Check(
+    not A.Control(Session, 'mapped-timeline').Enabled,
+    'Activity entries must not accept input.'
+  );
   A.Check(
     A.Control(Session, 'mapped-progress').Value = '0.5',
     'Mapped progress lost its fraction.'
@@ -224,7 +277,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   Validate();
   Notification(Renderer);
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1100, Renderer, true);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1700, Renderer, true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Feedback), Update.Update, Gallery.Build,
     Window, 32, Inject, ThemeFor := Update.ThemeFor
@@ -243,11 +296,47 @@ begin
   );
   A.Check(not A.Control(Session, 'storage-usage').Enabled, 'The meter must not accept input.');
   A.Check(A.HasText(Session, 'Goals'), 'The native Goals example is missing.');
+  A.Check(A.HasText(Session, 'Loading'), 'The native Loading example is missing.');
+  A.Check(
+    A.Control(Session, 'loading-avatar').Bounds.Width = 40.0F,
+    'Loading avatar width changed.'
+  );
+  A.Check(
+    A.Control(Session, 'loading-avatar').Bounds.Height = 40.0F,
+    'Loading avatar height changed.'
+  );
+  A.Check(A.Control(Session, 'loading-body').Bounds.Height = 88.0F, 'Loading body height changed.');
+  const BodyWidth: float := A.Control(Session, 'loading-body').Bounds.Width;
+  A.Check(
+    Sys.Math.Abs(A.Control(Session, 'loading-line-1').Bounds.Width - BodyWidth * 0.9F) < 0.6F,
+    'Loading line lost its 90% width.'
+  );
+  A.Check(
+    Sys.Math.Abs(A.Control(Session, 'loading-line-2').Bounds.Width - BodyWidth * 0.6F) < 0.6F,
+    'Loading line lost its 60% width.'
+  );
+  A.Check(
+    Sys.Math.Abs(
+      A.Control(
+        Session,
+        'loading-title'
+      ).Bounds.Width * 0.45F - A.Control(Session, 'loading-subtitle').Bounds.Width * 0.7F
+    ) < 0.6F,
+    'Loading captions lost their percentage widths.'
+  );
+  A.Check(A.HasText(Session, 'Activity'), 'The native Activity example is missing.');
+  A.Check(
+    A.Control(Session, 'deployed').Text = 'Deployed to production',
+    'The deployment entry is missing.'
+  );
+  A.Check(A.Control(Session, 'review').Value = '1h ago', 'The review entry lost its time caption.');
+  A.Check(A.Control(Session, 'failed').Value = '3h ago', 'The final activity entry is missing.');
+  A.Check(not A.Control(Session, 'deployed').Enabled, 'Activity entries must not accept input.');
   A.Check(A.Control(Session, 'onboarding').Value = '0.72', 'Onboarding progress is missing.');
   A.Check(A.Control(Session, 'quota').Value = '0.35', 'Quota progress is missing.');
   A.Check(A.Control(Session, 'quota').Bounds.Width = 104.0F, 'The native ring diameter changed.');
   A.Check(
-    A.Control(Session, 'quota').Bounds.Y + 104.0F <= 1100.0F,
+    A.Control(Session, 'quota').Bounds.Y + 104.0F <= 1700.0F,
     'The ring is outside the gallery capture.'
   );
   A.Check(
@@ -257,7 +346,7 @@ begin
   Session.CapturePng(Capture + '.feedback.png');
   A.Send(Session, State.Msg.Shared(Shared.Msg.SetAppearance(Switchers.Selection.Dark)));
   Session.CapturePng(Capture + '.feedback-dark.png');
-  Window.Resize(650, 1250);
+  Window.Resize(650, 1800);
   A.Check(Session.Step(), 'Feedback gallery closed after resize.');
   A.Check(Session.Step(), 'Feedback gallery closed while settling resize.');
   Session.CapturePng(Capture + '.feedback-narrow.png');

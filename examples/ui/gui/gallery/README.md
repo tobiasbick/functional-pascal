@@ -76,7 +76,10 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 - **Lists** shows the original three-question native accordion.
 - **Feedback** shows CUI's four original alerts, including dismissible storage
   warning, upload percentage, indeterminate indexing, Storage usage and three
-  spinner sizes. Goals shows the native 104-point Onboarding and Quota rings.
+  spinner sizes. Loading reproduces the native skeleton avatar, percentage text
+  lines and body placeholder, with CUI-owned shimmer and reduced-motion behavior.
+  Activity reproduces the three native deployment, review and
+  failed-build entries. Goals shows the native 104-point Onboarding and Quota rings.
   Leaving the page releases native dismissal and interpolation state. Returning
   shows the warning again. The cards use the available width; the native
   two-column grid and Goals row justification remain open layout items in the

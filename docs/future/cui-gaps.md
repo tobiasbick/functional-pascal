@@ -121,12 +121,13 @@ features outside that shared subset. The following layout work targets the GUI;
 terminal equivalents are deferred.
 
 - [ ] Responsive grid with a maximum column count and minimum column width.
-  Feedback's Progress and Goals cards currently fill their parent; match the native
-  two-column grid when this foundation is available.
+  Feedback's Progress, Loading, Activity and Goals cards currently fill their
+  parent; match the native two-column grid when this foundation is available.
 - [ ] Main-axis justification, including space between children. Match the
   native Goals row's `CUI_JUSTIFY_AROUND` when this foundation is available.
-- [ ] Stack layout with layered children, per-axis sizing including percentages,
-  and per-edge padding.
+- [ ] Stack layout with layered children, independent width/height constraints
+  and per-edge padding. Native percentages are available through
+  `Layout.Extent.Percent` for main-axis sizing, button width and skeleton width.
 - [ ] Flexible spacer and fixed gap parity.
 - [ ] Horizontal scrolling in the shared FPAS API and CUI-equivalent viewport
   control. The low-level native scroll binding supports both axes; shared
@@ -406,7 +407,14 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   16/22/28-point sizes. Native rendering is checked alongside alerts and progress
   against direct CUI calls in 152 light/dark, narrow/wide and option combinations.
   Feedback captures cover both renderers in light, dark and narrow layouts.
-- [ ] Skeleton (`cui_skeleton`)
+- [x] Skeleton (`cui_skeleton`): [API][fpas-skeleton]. Feedback reproduces
+  the original Loading avatar, percentage text lines and body placeholder.
+  CUI owns shimmer, animation scheduling, rounding and reduced-motion behavior.
+  Software/OpenGL tests cover fill/fixed/percentage widths, default height,
+  resizing, typed mapping, passive inspection and GUI-only preflight. Direct
+  native pixel comparisons cover 144 width, height, theme, motion and viewport
+  combinations, including native percentage button widths. Feedback captures
+  show Loading in light, dark and narrow views.
 - [x] Progress ring (`cui_progress_ring`): [API][fpas-progress-ring]. Feedback
   shows the original Onboarding and Quota examples at 104 points. CUI owns
   percentage formatting, painting and interpolation. Software/OpenGL tests
@@ -414,7 +422,13 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   preflight. Direct native pixel comparisons cover 192 value, size, caption,
   theme, width and state-retirement combinations. Feedback captures show the
   rings in light, dark and narrow layouts.
-- [ ] Timeline item (`cui_timeline_item`)
+- [x] Timeline item (`cui_timeline_item`): [API][fpas-timeline]. Feedback
+  reproduces the original deployment, review and failed-build Activity entries.
+  CUI owns wrapping, title/time alignment, tone colors, icons and connectors.
+  Software/OpenGL tests cover literal text, final-item spacing, resizing,
+  typed mapping, inspection and GUI-only preflight. Direct native pixel
+  comparisons cover 576 tone, optional-field, last-item, theme and width
+  combinations. Feedback captures show Activity in light, dark and narrow views.
 - [ ] Banner (`cui_banner`)
 - [ ] Countdown (`cui_countdown`)
 - [ ] Onboarding checklist (`cui_checklist`)
@@ -621,6 +635,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-feedback]: ../../src/Fpas.Ui/README.md#alerts-progress-and-spinners
 [fpas-meter]: ../../src/Fpas.Ui/README.md#meter
 [fpas-progress-ring]: ../../src/Fpas.Ui/README.md#progress-ring
+[fpas-timeline]: ../../src/Fpas.Ui/README.md#timeline-item
+[fpas-skeleton]: ../../src/Fpas.Ui/README.md#skeleton
 [cui-006]: cui-upstream-bugs.md#cui-006
 [fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas

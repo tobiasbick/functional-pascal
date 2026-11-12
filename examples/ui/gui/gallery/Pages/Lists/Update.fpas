@@ -1,0 +1,27 @@
+unit GuiGallery.Pages.Lists.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  GuiGallery.Pages.Lists.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetAccordion(const Index: int, const Open: bool): State with
+      AccordionOpen := [
+        if Index = 0 then Open else State.AccordionOpen[0] end if,
+        if Index = 1 then Open else State.AccordionOpen[1] end if,
+        if Index = 2 then Open else State.AccordionOpen[2] end if
+      ];
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

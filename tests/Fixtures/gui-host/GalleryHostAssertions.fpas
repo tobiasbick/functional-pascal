@@ -1,8 +1,10 @@
 unit GalleryHostAssertions;
 
 uses
-  GuiGallery.State as State, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Mvu.Session as Mvu, System as Sys;
+  GuiGallery.App.State as State,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Mvu.Session as Mvu,
+  System as Sys;
 
 // Requires an observable gallery condition.
 //

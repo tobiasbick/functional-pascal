@@ -10,6 +10,24 @@ a centered content column, and a left drawer below 760 logical points. It shows
 the accepted widget examples from the
 [CUI inventory](../../../../docs/future/cui-gaps.md).
 
+## Source structure
+
+- `App/`: navigation, responsive window composition, root state and message routing.
+- `Shared/`: common section composition and the owner of values used on several
+  pages, including appearance, profile data and filter settings.
+- `Pages/<Topic>/`: a page's state, messages, update and view. Stateful widget
+  examples live in that page's `Widgets/` directory. Actions owns its background
+  save commands. Overview is a static view with a supplied navigation message.
+
+Namespaces follow these directories, for example
+`GuiGallery.Pages.Actions.State` and `GuiGallery.Pages.Actions.Widgets.SplitButton`.
+There is one MVU session. The root embeds child views with `Fpas.Ui.Composition.Map`
+and translates their transitions with `Fpas.Ui.Mvu.Composition.MapTransition`.
+Each feature receives a stable background-effect scope. Shared values have one
+owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
+
+## Pages
+
 - **Buttons** shows the variants, sizes, icons, and input states. Save changes
   shows the busy state, and Reset enables it again. The formatting group toggles
   three independent actions. The copy button copies the displayed command.
@@ -54,8 +72,12 @@ the accepted widget examples from the
   an Archive a message example with a timed Undo action.
   The Tooltips section reproduces the six CUI toolbar buttons, with formatting
   shortcuts shown as key hints on hover.
-- **Disclosure** asks for confirmation before showing the simulated branch
-  deletion result. It uses the original danger action and Cancel button.
+- **Lists** shows the original three-question native accordion.
+- **Disclosure** shows clamped About text and Billing and Security expandable
+  cards. The model owns header expansion;
+  CUI owns the text link's local state. The original branch confirmation uses
+  the danger action and Cancel button. All examples retain CUI rendering and
+  interaction, including its [documented focus limitation](../../../../docs/future/cui-upstream-bugs.md#cui-006).
 - **Actions** shows the primary Save and outline Export split buttons.
   Save reports its main or menu action beside the buttons.
   The Toggle group section shows independent formatting icons and exclusive
@@ -79,7 +101,6 @@ the accepted widget examples from the
   updates the model and its shared palette.
 
 The GUI gallery contract runs this view with both native renderers and captures
-the Buttons, Selection and Actions pages, the open Split button menu, inline work
-feedback and the appearance controls. It drives the Actions widgets with
-native pointer and keyboard input.
+the accepted pages and open overlays, including Lists plus light, dark and narrow
+Disclosure views. It drives the widgets with native pointer and keyboard input.
 The same contract also drives the package-only consumer.

@@ -1,8 +1,8 @@
 # CUI upstream bugs
 
 The `CUI-NNN` identifiers are local references used by the FPAS adapters.
-All five cases reproduced on upstream `c8baf35`. Their regression tests pass
-with the proposed fixes at `ffa2653`.
+All cases below reproduce on the pinned upstream `c8baf35`.
+CUI-001 through CUI-005 have proposed fixes at `ffa2653`.
 
 <a id="cui-001"></a>
 
@@ -122,3 +122,22 @@ The model becomes 99 while the editor still shows 999. Replace the draft
 with `nan` and the native call writes NaN into the model. Comparisons against
 the bounds do not reject NaN. The FPAS adapter only proposes complete
 finite numbers and refreshes the displayed draft on commit or blur.
+
+<a id="cui-006"></a>
+
+## CUI-006 — Expandable text loses keyboard focus after toggling
+
+Reproduced on Linux with direct `cui_expandable_text_ex` calls at `c8baf35`.
+Draw text long enough to exceed two collapsed lines. Press Tab to focus
+Show more, then Enter to expand. On the next frame, the link becomes Show less
+and no longer has focus. Another Enter does not collapse the text; Tab is
+needed to focus the link again. Space has the same problem.
+
+The native widget passes the changing caption to `cui_link`, which hashes
+the caption into its identity. Its focus key therefore changes from
+`hash("Show more") ^ 0x11AC0009` to `hash("Show less") ^ 0x11AC0009` inside
+the widget's ID scope. The widget owns the expansion state, so the application
+cannot give this internal link a stable identity through its public options.
+
+FPAS retains native behavior and provides `ExpandableTexts.ToggleId(Id)` for
+explicit focus requests. No workaround, upstream issue or fix is planned.

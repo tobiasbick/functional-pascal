@@ -1,0 +1,420 @@
+unit Fpas.Ui.Internal.Mapping.Actions;
+
+uses
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Internal.MessageMapping as M,
+  Fpas.Ui.ExpandableTexts as ExpandableTexts,
+  Fpas.Ui.Reactions as Reactions,
+  Fpas.Ui.UserMenus as UserMenus,
+  Fpas.Ui.Tabs as Tabs,
+  Fpas.Ui.RadioCards as RadioCards,
+  Fpas.Ui.Sliders as Sliders,
+  Fpas.Ui.RangeSliders as RangeSliders,
+  Fpas.Ui.RadioGroups as RadioGroups,
+  Fpas.Ui.ToggleGroups as ToggleGroups,
+  Fpas.Ui.Menus as Menus,
+  Fpas.Ui.SegmentedControls as Segmented,
+  Fpas.Ui.Themes as Themes,
+  Fpas.Ui.ThemeSwitchers as ThemeSwitchers,
+  Fpas.Ui.StatusButtons as Status,
+  Fpas.Ui.ConfirmButtons as Confirms,
+  Fpas.Ui.SplitButtons as Split,
+  Fpas.Ui.HoldButtons as Holds,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Navigation as N,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.IconButtons as Icons,
+  System as Sys;
+
+// Translates a validated family of UI nodes without changing presentation.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Value`: Original node.
+// - `Messages`: Message translation.
+// ## Returns
+// The node producing parent messages.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.ExpandableText(
+      const FId: string,
+      const FText: string,
+      const FSettings: ExpandableTexts.Options,
+      const FOnToggle: Sys.Func<TChild>?
+    ):
+      return E.Element<TParent>.ExpandableText(
+        FId,
+        FText,
+        FSettings,
+        M.Factory<TChild, TParent>(FOnToggle, Messages)
+      );
+    when E.Element.Label(const FText: string):
+      return E.Element<TParent>.Label(FText);
+    when E.Element.Separator(const FTitle: string):
+      return E.Element<TParent>.Separator(FTitle);
+    when E.Element.ButtonAction(
+      const FId: string,
+      const FText: string,
+      const FMessage: TChild,
+      const FSettings: B.Options
+    ):
+      return E.Element<TParent>.ButtonAction(FId, FText, Messages(FMessage), FSettings);
+    when E.Element.IconAction(
+      const FId: string,
+      const FIcon: string,
+      const FTooltip: string,
+      const FMessage: TChild,
+      const FSettings: Icons.Options
+    ):
+      return E.Element<TParent>.IconAction(FId, FIcon, FTooltip, Messages(FMessage), FSettings);
+    when E.Element.CopyAction(
+      const FId: string,
+      const FText: string,
+      const FOnCopied: Sys.Func<TChild>?,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.CopyAction(
+        FId,
+        FText,
+        M.Factory<TChild, TParent>(FOnCopied, Messages),
+        FEnabled
+      );
+    when E.Element.HoldAction(
+      const FId: string,
+      const FLabel: string,
+      const FMessage: TChild,
+      const FSettings: Holds.Options
+    ):
+      return E.Element<TParent>.HoldAction(FId, FLabel, Messages(FMessage), FSettings);
+    when E.Element.ConfirmAction(
+      const FId: string,
+      const FLabel: string,
+      const FMessage: TChild,
+      const FSettings: Confirms.Options
+    ):
+      return E.Element<TParent>.ConfirmAction(FId, FLabel, Messages(FMessage), FSettings);
+    when E.Element.StatusAction(
+      const FId: string,
+      const FLabel: string,
+      const FState: Status.Status,
+      const FMessage: TChild,
+      const FSettings: Status.Options
+    ):
+      return E.Element<TParent>.StatusAction(FId, FLabel, FState, Messages(FMessage), FSettings);
+    when E.Element.ThemeChoice(
+      const FId: string,
+      const FSelected: ThemeSwitchers.Selection,
+      const FOnChange: function(ThemeSwitchers.Selection): TChild,
+      const FSettings: ThemeSwitchers.Options
+    ):
+      return E.Element<TParent>.ThemeChoice(
+        FId,
+        FSelected,
+        function(A0: ThemeSwitchers.Selection): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.ThemeFlip(
+      const FId: string,
+      const FAppearance: Themes.Mode,
+      const FOnChange: function(Themes.Mode): TChild,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.ThemeFlip(
+        FId,
+        FAppearance,
+        function(A0: Themes.Mode): TParent => Messages(FOnChange(A0)),
+        FEnabled
+      );
+    when E.Element.Segments(
+      const FId: string,
+      const FItems: array of Segmented.Item,
+      const FSelected: int,
+      const FOnChange: function(int): TChild,
+      const FSettings: Segmented.Options
+    ):
+      return E.Element<TParent>.Segments(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.Toggles(
+      const FId: string,
+      const FItems: array of ToggleGroups.Item,
+      const FSelected: array of bool,
+      const FOnChange: function(array of bool): TChild,
+      const FSettings: ToggleGroups.Options
+    ):
+      return E.Element<TParent>.Toggles(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: array of bool): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.SplitAction(
+      const FId: string,
+      const FLabel: string,
+      const FMessage: TChild,
+      const FItems: array of Split.Item<TChild>,
+      const FSettings: Split.Options
+    ):
+      return E.Element<TParent>.SplitAction(
+        FId,
+        FLabel,
+        Messages(FMessage),
+        M.Split<TChild, TParent>(FItems, Messages),
+        FSettings
+      );
+    when E.Element.ReactionGroup(
+      const FId: string,
+      const FItems: array of Reactions.Item,
+      const FOnChange: function(int, Reactions.Item): TChild,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.ReactionGroup(
+        FId,
+        FItems,
+        function(A0: int; A1: Reactions.Item): TParent => Messages(FOnChange(A0, A1)),
+        FEnabled
+      );
+    when E.Element.AccountMenu(
+      const FId: string,
+      const FName: string,
+      const FEntries: array of Menus.Entry<TChild>,
+      const FSettings: UserMenus.Options
+    ):
+      return E.Element<TParent>.AccountMenu(
+        FId,
+        FName,
+        M.Menu<TChild, TParent>(FEntries, Messages),
+        FSettings
+      );
+    when E.Element.CheckboxAction(
+      const FId: string,
+      const FLabel: string,
+      const FChecked: bool,
+      const FOnChange: function(bool): TChild,
+      const FDescription: string,
+      const FEnabled: bool,
+      const FIndeterminate: bool
+    ):
+      return E.Element<TParent>.CheckboxAction(
+        FId,
+        FLabel,
+        FChecked,
+        function(A0: bool): TParent => Messages(FOnChange(A0)),
+        FDescription,
+        FEnabled,
+        FIndeterminate
+      );
+    when E.Element.SwitchAction(
+      const FId: string,
+      const FLabel: string,
+      const FOn: bool,
+      const FOnChange: function(bool): TChild,
+      const FDescription: string,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.SwitchAction(
+        FId,
+        FLabel,
+        FOn,
+        function(A0: bool): TParent => Messages(FOnChange(A0)),
+        FDescription,
+        FEnabled
+      );
+    when E.Element.RadioAction(
+      const FId: string,
+      const FLabel: string,
+      const FSelected: bool,
+      const FOnSelect: function(): TChild,
+      const FDescription: string,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.RadioAction(
+        FId,
+        FLabel,
+        FSelected,
+        function(): TParent => Messages(FOnSelect()),
+        FDescription,
+        FEnabled
+      );
+    when E.Element.Radios(
+      const FId: string,
+      const FItems: array of RadioGroups.Item,
+      const FSelected: int,
+      const FOnChange: function(int): TChild,
+      const FEnabled: bool,
+      const FGap: L.Spacing
+    ):
+      return E.Element<TParent>.Radios(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FEnabled,
+        FGap
+      );
+    when E.Element.Cards(
+      const FId: string,
+      const FItems: array of RadioCards.Item,
+      const FSelected: int,
+      const FOnChange: function(int): TChild,
+      const FSettings: RadioCards.Options
+    ):
+      return E.Element<TParent>.Cards(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.SliderAction(
+      const FId: string,
+      const FLabel: string,
+      const FValue: float,
+      const FMinimum: float,
+      const FMaximum: float,
+      const FOnChange: function(float): TChild,
+      const FSettings: Sliders.Options
+    ):
+      return E.Element<TParent>.SliderAction(
+        FId,
+        FLabel,
+        FValue,
+        FMinimum,
+        FMaximum,
+        function(A0: float): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.RangeSliderAction(
+      const FId: string,
+      const FLabel: string,
+      const FValue: RangeSliders.Interval,
+      const FMinimum: float,
+      const FMaximum: float,
+      const FOnChange: function(RangeSliders.Interval): TChild,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.RangeSliderAction(
+        FId,
+        FLabel,
+        FValue,
+        FMinimum,
+        FMaximum,
+        function(A0: RangeSliders.Interval): TParent => Messages(FOnChange(A0)),
+        FEnabled
+      );
+    when E.Element.ChipAction(
+      const FId: string,
+      const FLabel: string,
+      const FSelected: bool,
+      const FOnChange: function(bool): TChild,
+      const FIcon: string,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.ChipAction(
+        FId,
+        FLabel,
+        FSelected,
+        function(A0: bool): TParent => Messages(FOnChange(A0)),
+        FIcon,
+        FEnabled
+      );
+    when E.Element.RatingAction(
+      const FId: string,
+      const FLabel: string,
+      const FValue: int,
+      const FOnChange: function(int): TChild,
+      const FMaximum: int,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.RatingAction(
+        FId,
+        FLabel,
+        FValue,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FMaximum,
+        FEnabled
+      );
+    when E.Element.TabStrip(
+      const FId: string,
+      const FItems: array of Tabs.Item,
+      const FSelected: int,
+      const FOnChange: function(int): TChild,
+      const FSettings: Tabs.Options
+    ):
+      return E.Element<TParent>.TabStrip(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.BreadcrumbTrail(
+      const FId: string,
+      const FItems: array of string,
+      const FOnNavigate: function(int): TChild,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.BreadcrumbTrail(
+        FId,
+        FItems,
+        function(A0: int): TParent => Messages(FOnNavigate(A0)),
+        FEnabled
+      );
+    when E.Element.PaginationAction(
+      const FId: string,
+      const FPage: int,
+      const FPageCount: int,
+      const FOnChange: function(int): TChild,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.PaginationAction(
+        FId,
+        FPage,
+        FPageCount,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FEnabled
+      );
+    when E.Element.StepProgress(
+      const FId: string,
+      const FSteps: array of string,
+      const FCurrent: int
+    ):
+      return E.Element<TParent>.StepProgress(FId, FSteps, FCurrent);
+    when E.Element.Dropdown(
+      const FId: string,
+      const FLabel: string,
+      const FEntries: array of Menus.Entry<TChild>,
+      const FSettings: Menus.Options
+    ):
+      return E.Element<TParent>.Dropdown(
+        FId,
+        FLabel,
+        M.Menu<TChild, TParent>(FEntries, Messages),
+        FSettings
+      );
+    when E.Element.PasswordStrengthMeter(const FId: string, const FPassword: string):
+      return E.Element<TParent>.PasswordStrengthMeter(FId, FPassword);
+    when E.Element.Sidebar(
+      const FId: string,
+      const FSections: array of N.Section<TChild>,
+      const FActiveKey: string?,
+      const FEnabled: bool
+    ):
+      return E.Element<TParent>.Sidebar(
+        FId,
+        M.Navigation<TChild, TParent>(FSections, Messages),
+        FActiveKey,
+        FEnabled
+      );
+    else
+      raise new Sys.InvalidOperationException('An unexpected node reached message mapping.');
+  end case;
+end function;
+end unit;

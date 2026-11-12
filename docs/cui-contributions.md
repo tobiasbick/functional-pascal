@@ -3,6 +3,24 @@
 Use these checks when preparing CUI fixes. Read the review against the current
 PR commit and verify each finding in the code or with a small reproduction.
 
+## Contribution workflow
+
+Read these notes before changing CUI interaction or layout code or preparing
+an upstream contribution. Establish whether a defect or missing capability
+belongs to CUI or its FPAS integration and explain the impact.
+
+Before drafting a contribution, read the current upstream
+[issue form](https://github.com/yappologistic/CUI/tree/master/.github/ISSUE_TEMPLATE)
+or [pull request template](https://github.com/yappologistic/CUI/blob/master/.github/pull_request_template.md).
+Use its section order and complete the required fields, including when submitting
+through the CLI or API. Follow the upstream
+[contributing guide](https://github.com/yappologistic/CUI/blob/master/docs/CONTRIBUTING.md)
+for authorship, AI disclosure and evidence.
+
+For confirmed upstream findings, ask the user whether to open an issue and
+whether to prepare and contribute a fix. Obtain explicit approval before
+publishing an upstream issue or pull request.
+
 ## Tracking FPAS workarounds
 
 Give each confirmed defect a stable local `CUI-NNN` ID and anchor in

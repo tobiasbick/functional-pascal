@@ -1,0 +1,55 @@
+unit GuiGallery.Shared.State;
+
+uses
+  Fpas.Ui.Gui.Toasts as Toasts,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Appearance shared by both selectors and the light/dark toggle.
+  public Appearance: Switchers.Selection := Switchers.Selection.Light;
+  // Application-supplied appearance used by the System demo choice.
+  public SystemAppearance: Themes.Mode := Themes.Mode.Light;
+  // Email notifications preference.
+  public Newsletter: bool := true;
+  // Partner offers preference.
+  public Marketing: bool := false;
+  // Wi-Fi switch value.
+  public Wifi: bool := true;
+  // Current brightness on the stepped slider.
+  public Brightness: float := 40.0F;
+  // Last harmless dropdown command; previews do not alter files or projects.
+  public MenuResult: string := '';
+  // Sample name in the text-field example.
+  public Name: string := 'Maya Okafor';
+  // Sample email in the reserved example domain.
+  public Email: string := 'maya@example.com';
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Propose an appearance from the header or preview selector.
+  SetAppearance(Value: Switchers.Selection);
+  // Simulate a change from the application's appearance provider.
+  SetSystemAppearance(Value: Themes.Mode);
+  // Set the email notifications preference.
+  SetNewsletter(Value: bool);
+  // Set the partner offers preference.
+  SetMarketing(Value: bool);
+  // Set the Wi-Fi switch.
+  SetWifi(Value: bool);
+  // Adjust the brightness.
+  SetBrightness(Value: float);
+  // Show one of the passive toast examples.
+  Notify(Title: string; Settings: Toasts.Options);
+  // Record a dropdown command without performing external actions.
+  MenuChoice(Value: string);
+  // Update the sample full name.
+  SetName(Value: string);
+  // Update the sample email address.
+  SetEmail(Value: string);
+  // A harmless preview activation.
+  Preview;
+end variant;
+end unit;

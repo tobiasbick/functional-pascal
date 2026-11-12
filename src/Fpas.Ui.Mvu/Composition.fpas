@@ -1,0 +1,101 @@
+unit Fpas.Ui.Mvu.Composition;
+
+uses
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as Threads,
+  System.Threading.Tasks as Tasks, System.Collections.Generic as Lists;
+
+function EffectId(Scope: string; Id: string): string;
+begin
+  if Id = '' then
+    raise new Sys.ArgumentException('An effect ID must not be empty.');
+  end if;
+
+  return if Scope = '' then Id else Scope + '/' + Id end if;
+end function;
+
+// Translates a child's command for the parent session without running it.
+//
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Child command to translate.
+// - `Messages`: Wraps a child message in its parent message.
+// - `Scope`: Optional prefix for background start/cancel IDs; focus IDs stay global.
+// ## Returns
+// A parent command preserving cancellation, posting backpressure and failure handling.
+// Host extension payloads must implement Application.HostExtension<TChild>.
+public function MapCommand<TChild, TParent>(
+  Value: A.Command<TChild>;
+  Messages: function(TChild): TParent; Scope: string := ''
+): A.Command<TParent>;
+  function Start(
+    Id: string; Work: function(function(TChild): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    Failure: function(Sys.Exception): TChild
+  ): A.Command<TParent>;
+    function Run(Post: function(TParent): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+    begin
+      return Work(function(Message: TChild): Tasks.Task => Post(Messages(Message)), Token);
+    end function;
+  begin
+    return A.Command<TParent>.Start(
+      EffectId(Scope, Id), Run,
+      function(Error: Sys.Exception): TParent => Messages(Failure(Error))
+    );
+  end function;
+  function Host(Request: A.HostRequest): A.Command<TParent>;
+  begin
+    case Request of
+      when A.HostRequest.Extension(const Payload: Sys.Object):
+        if not (Payload is A.HostExtension<TChild>) then
+          raise new Sys.ArgumentException(
+            'A mapped host payload must implement HostExtension for its child message type.'
+          );
+        end if;
+
+        return A.Command<TParent>.Host(
+          A.HostRequest.Extension(
+            cast<A.HostExtension<TChild>>(Payload).Map<TParent>(Messages)
+          )
+        );
+      else
+        return A.Command<TParent>.Host(Request);
+    end case;
+  end function;
+begin
+  return case Value of
+    when A.Command.Start(
+      const Id: string,
+      const Work: function(function(TChild): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+      const Failure: function(Sys.Exception): TChild
+    ): Start(Id, Work, Failure);
+    when A.Command.Cancel(const Id: string): A.Command<TParent>.Cancel(EffectId(Scope, Id));
+    when A.Command.Host(const Request: A.HostRequest): Host(Request);
+  end case;
+end function;
+
+// Translates all commands in a child's transition while retaining its next model.
+//
+// ## Type parameters
+// - `TModel`: Child model type.
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Child update result.
+// - `Messages`: Wraps messages produced by the child's effects.
+// - `Scope`: Optional effect ID prefix shared by start and cancel commands.
+// ## Returns
+// The child model and parent commands in their original order.
+public function MapTransition<TModel, TChild, TParent>(
+  Value: A.Transition<TModel, TChild>;
+  Messages: function(TChild): TParent; Scope: string := ''
+): A.Transition<TModel, TParent>;
+begin
+  const Commands: Lists.List<A.Command<TParent>> := new Lists.List<A.Command<TParent>>();
+  for Index: int := 0 to Value.Commands.Length - 1 do
+    Commands.Add(MapCommand<TChild, TParent>(Value.Commands[Index], Messages, Scope));
+  end for;
+
+  return new A.Transition<TModel, TParent>(Value.Model, Commands.ToArray());
+end function;
+end unit;

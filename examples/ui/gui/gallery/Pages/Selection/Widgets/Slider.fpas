@@ -1,0 +1,50 @@
+unit GuiGallery.Pages.Selection.Widgets.Slider;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Selection.State as State,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Sliders as S;
+
+// Builds the continuous volume slider from the Selection page.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The volume slider.
+public function Volume(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return S.Slider<State.Msg>(
+    'volume',
+    'Volume',
+    Model.Volume,
+    0.0F,
+    100.0F,
+    State.Msg.SetVolume,
+    new S.Options(ShowValue := true)
+  );
+end function;
+
+// Builds the brightness slider with ten-point steps and percentage display.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The brightness slider.
+public function Brightness(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return S.Slider<State.Msg>(
+    'brightness',
+    'Brightness',
+    Data.Brightness,
+    0.0F,
+    100.0F,
+    function(SharedValue: float): State.Msg => State.Msg.Shared(
+      Demo.Msg.SetBrightness(SharedValue)
+    ),
+    new S.Options(Step := 10.0F, ShowValue := true, Percent := true)
+  );
+end function;
+end unit;

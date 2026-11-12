@@ -1,0 +1,44 @@
+unit GuiGallery.Pages.Inputs.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  GuiGallery.Pages.Inputs.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetSearchQuery(const Value: string): State with
+      SearchQuery := Value;
+    end with;
+    when S.Msg.SetAbout(const Value: string): State with
+      About := Value;
+    end with;
+    when S.Msg.SetPassword(const Value: string): State with
+      Password := Value;
+    end with;
+    when S.Msg.SetTopics(const Value: array of string): State with
+      Topics := Value;
+    end with;
+    when S.Msg.SetVerificationCode(const Value: string): State with
+      VerificationCode := Value;
+    end with;
+    when S.Msg.SetCountry(const Index: int): State with
+      Country := Index;
+    end with;
+    when S.Msg.SetLanguage(const Index: int): State with
+      Language := Index;
+    end with;
+    when S.Msg.SetSeats(const Value: double): State with
+      Seats := Value;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

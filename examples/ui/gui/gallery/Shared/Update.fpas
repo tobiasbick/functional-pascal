@@ -1,0 +1,58 @@
+unit GuiGallery.Shared.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Toasts as Toasts,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes,
+  GuiGallery.Shared.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetAppearance(const Value: Switchers.Selection): State with
+      Appearance := Value;
+    end with;
+    when S.Msg.SetSystemAppearance(const Value: Themes.Mode): State with
+      SystemAppearance := Value;
+    end with;
+    when S.Msg.MenuChoice(const Value: string): State with
+      MenuResult := Value;
+    end with;
+    when S.Msg.SetNewsletter(const Value: bool): State with
+      Newsletter := Value;
+    end with;
+    when S.Msg.SetMarketing(const Value: bool): State with
+      Marketing := Value;
+    end with;
+    when S.Msg.SetWifi(const Value: bool): State with
+      Wifi := Value;
+    end with;
+    when S.Msg.SetBrightness(const Value: float): State with
+      Brightness := Value;
+    end with;
+    when S.Msg.SetName(const Value: string): State with
+      Name := Value;
+    end with;
+    when S.Msg.SetEmail(const Value: string): State with
+      Email := Value;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Next, case Message of
+      when S.Msg.Notify(
+        const Title: string,
+        const Settings: Toasts.Options
+      ): [Toasts.Show<S.Msg>(Title, Settings)];
+      else [];
+    end case
+  );
+end function;
+end unit;

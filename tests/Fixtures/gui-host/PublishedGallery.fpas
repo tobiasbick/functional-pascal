@@ -1,8 +1,14 @@
 program PublishedGallery;
 
 uses
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Shared.State as SliceShared,
+  GuiGallery.Pages.Buttons.State as SliceButtons,
+  GuiGallery.Pages.Overlays.State as SliceOverlays,
+  GalleryDisclosureContract as DisclosureContract,
   GalleryContextContract as ContextContract,
-  GalleryActionsContract as ActionsContract, GalleryHostAssertions as A,
+  GalleryActionsContract as ActionsContract,
+  GalleryHostAssertions as A,
   GalleryActionWidgetsContract as ActionWidgetsContract,
   GalleryDropdownContract as DropdownContract,
   GallerySegmentedContract as SegmentedContract,
@@ -17,18 +23,24 @@ uses
   GalleryCredentialFieldsContract as CredentialFieldsContract,
   GalleryPickerFieldsContract as PickerFieldsContract,
   GalleryDialogContract as DialogContract,
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Themes as Themes,
-  System as Sys, System.Console as Console, System.Text as Text,
-  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App;
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes,
+  System as Sys,
+  System.Console as Console,
+  System.Text as Text,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App;
 
 function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session<State.Msg>;
 begin
   return Gui.Start<State.Model, State.Msg>(
-    new State.Model(), State.Update, View.Build,
+    new State.Model(), GalleryUpdate.Update, View.Build,
     new Gui.Options(Title := Title, Width := Width, Height := Height, Renderer := Renderer),
-    State.ThemeFor
+    GalleryUpdate.ThemeFor
   );
 end function;
 
@@ -46,7 +58,7 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 9, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 10, 'Only the confirmed gallery destinations should be visible.');
   const Overview: Gui.Control := A.Control(Session, 'navigation', 'overview');
   const Buttons: Gui.Control := A.Control(Session, 'navigation', 'buttons');
   A.Check(
@@ -71,11 +83,11 @@ begin
     'Icon actions are missing.'
   );
   A.Check(A.Control(Session, 'hold-delete').Enabled, 'The hold button is missing.');
-  A.Send(Session, State.Msg.SetButtonLoading(true));
+  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.SetButtonLoading(true)));
   A.Check(A.Control(Session, 'save').Value = 'loading', 'The busy button did not update.');
-  A.Send(Session, State.Msg.SetButtonLoading(false));
-  A.Send(Session, State.Msg.ToggleFormat(State.TextFormat.Bold));
-  A.Send(Session, State.Msg.ToggleFormat(State.TextFormat.Italic));
+  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.SetButtonLoading(false)));
+  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.ToggleFormat(SliceButtons.TextFormat.Bold)));
+  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.ToggleFormat(SliceButtons.TextFormat.Italic)));
   A.Check(
     A.Control(
       Session,
@@ -85,13 +97,13 @@ begin
   );
   Session.CapturePng(Capture);
 
-  A.Send(Session, State.Msg.SetAppearance(Switchers.Selection.Dark));
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAppearance(Switchers.Selection.Dark)));
   A.Check(Session.Snapshot().Theme.Appearance = Themes.Mode.Dark, 'Theme did not change.');
   A.Send(Session, State.Msg.Show(State.Page.Overlays));
-  A.Send(Session, State.Msg.SetSheet(true));
+  A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetSheet(true)));
   A.Check(A.Control(Session, 'sheet/close').Focused, 'The sheet close action owns focus.');
   A.Check(not A.Control(Session, 'sheet-open').Enabled, 'The sheet did not disable the page.');
-  A.Send(Session, State.Msg.SetSheet(false));
+  A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetSheet(false)));
   A.Send(Session, State.Msg.Show(State.Page.Buttons));
   A.Check(
     A.Control(Session, 'format-bold').Value = 'true',
@@ -130,14 +142,14 @@ procedure VerifySnapshotReentry(Renderer: Cui.CuiRenderer);
       else
     end case;
 
-    return State.Update(Model, Message);
+    return GalleryUpdate.Update(Model, Message);
   end function;
 begin
   var Current: Gui.Session<State.Msg>? := null;
   var Rejected: bool := false;
   using const Session: Gui.Session<State.Msg> := Gui.Start<State.Model, State.Msg>(
     new State.Model(), Update, View.Build,
-    new Gui.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer), State.ThemeFor
+    new Gui.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer), GalleryUpdate.ThemeFor
   );
   Current := Session;
   A.Check(Session.Step(), 'The initial frame was not presented.');
@@ -165,6 +177,7 @@ begin
   CredentialFieldsContract.Verify(Renderer, Capture);
   PickerFieldsContract.Verify(Renderer, Capture);
   DialogContract.Verify(Renderer, Capture);
+  DisclosureContract.Verify(Renderer, Capture);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(
@@ -191,7 +204,12 @@ begin
   // OS input targets stable geometry; animated scrolling can move it between events.
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
-    new State.Model(), State.Update, View.Build, Window, 256, ThemeFor := State.ThemeFor
+    new State.Model(),
+    GalleryUpdate.Update,
+    View.Build,
+    Window,
+    256,
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   while Session.Step() do
     const Frame: Gui.Frame := Session.Snapshot();

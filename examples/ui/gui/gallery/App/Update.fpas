@@ -1,0 +1,197 @@
+unit GuiGallery.App.Update;
+
+uses
+  GuiGallery.Pages.Buttons.State as Buttons,
+  GuiGallery.Pages.Inputs.State as Inputs,
+  GuiGallery.Pages.Selection.State as Selection,
+  GuiGallery.Pages.Navigation.State as Navigation,
+  GuiGallery.Pages.Lists.State as Lists,
+  GuiGallery.Pages.Overlays.State as Overlays,
+  GuiGallery.Pages.Actions.State as Actions,
+  GuiGallery.Pages.SmartInputs.State as SmartInputs,
+  GuiGallery.Pages.Disclosure.State as Disclosure,
+  GuiGallery.Pages.Buttons.Update as ButtonsUpdate,
+  GuiGallery.Pages.Inputs.Update as InputsUpdate,
+  GuiGallery.Pages.Selection.Update as SelectionUpdate,
+  GuiGallery.Pages.Navigation.Update as NavigationUpdate,
+  GuiGallery.Pages.Lists.Update as ListsUpdate,
+  GuiGallery.Pages.Overlays.Update as OverlaysUpdate,
+  GuiGallery.Pages.Actions.Update as ActionsUpdate,
+  GuiGallery.Pages.SmartInputs.Update as SmartInputsUpdate,
+  GuiGallery.Pages.Disclosure.Update as DisclosureUpdate,
+  GuiGallery.App.State as G,
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Shared.Update as DemoUpdate,
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Mvu.Composition as C,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes;
+
+// Resolves the application theme from its shared appearance state.
+// ## Parameters
+// - `State`: Current application model.
+// ## Returns
+// The current CUI palette.
+public function ThemeFor(State: G.Model): Themes.Theme;
+begin
+  return if Switchers.Resolve(
+      State.Shared.Appearance,
+      State.Shared.SystemAppearance
+    ) = Themes.Mode.Dark then Themes.Dark()
+    else Themes.Light()
+    end if;
+end function;
+
+// Routes one message to its owner in the application's single MVU session.
+// ## Parameters
+// - `State`: Current application model.
+// - `Message`: Navigation or a typed slice message.
+// ## Returns
+// Next application model and mapped commands.
+public function Update(State: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
+begin
+  case Message of
+    when G.Msg.Shared(const Value: Demo.Msg), G.Msg.Buttons(
+      Buttons.Msg.Shared(const Value: Demo.Msg)
+    ), G.Msg.Inputs(
+      Inputs.Msg.Shared(const Value: Demo.Msg)
+    ), G.Msg.Selection(
+      Selection.Msg.Shared(const Value: Demo.Msg)
+    ), G.Msg.Overlays(
+      Overlays.Msg.Shared(const Value: Demo.Msg)
+    ), G.Msg.Actions(Actions.Msg.Shared(const Value: Demo.Msg)):
+      const Child: Mvu.Transition<Demo.Model, G.Msg> := C.MapTransition<Demo.Model, Demo.Msg, G.Msg>(
+        DemoUpdate.Update(State.Shared, Value),
+        G.Msg.Shared,
+        'shared'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Shared := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Buttons(const Value: Buttons.Msg):
+      const Child: Mvu.Transition<Buttons.Model, G.Msg> := C.MapTransition<Buttons.Model, Buttons.Msg, G.Msg>(
+        ButtonsUpdate.Update(State.Buttons, Value),
+        G.Msg.Buttons,
+        'buttons'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Buttons := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Inputs(const Value: Inputs.Msg):
+      const Child: Mvu.Transition<Inputs.Model, G.Msg> := C.MapTransition<Inputs.Model, Inputs.Msg, G.Msg>(
+        InputsUpdate.Update(State.Inputs, Value),
+        G.Msg.Inputs,
+        'inputs'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Inputs := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Selection(const Value: Selection.Msg):
+      const Child: Mvu.Transition<Selection.Model, G.Msg> := C.MapTransition<Selection.Model, Selection.Msg, G.Msg>(
+        SelectionUpdate.Update(State.Selection, Value),
+        G.Msg.Selection,
+        'selection'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Selection := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Navigation(const Value: Navigation.Msg):
+      const Child: Mvu.Transition<Navigation.Model, G.Msg> := C.MapTransition<Navigation.Model, Navigation.Msg, G.Msg>(
+        NavigationUpdate.Update(State.Navigation, Value),
+        G.Msg.Navigation,
+        'navigation'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Navigation := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Lists(const Value: Lists.Msg):
+      const Child: Mvu.Transition<Lists.Model, G.Msg> := C.MapTransition<Lists.Model, Lists.Msg, G.Msg>(
+        ListsUpdate.Update(State.Lists, Value),
+        G.Msg.Lists,
+        'lists'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Lists := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Overlays(const Value: Overlays.Msg):
+      const Child: Mvu.Transition<Overlays.Model, G.Msg> := C.MapTransition<Overlays.Model, Overlays.Msg, G.Msg>(
+        OverlaysUpdate.Update(State.Overlays, Value),
+        G.Msg.Overlays,
+        'overlays'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Overlays := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Actions(const Value: Actions.Msg):
+      const Child: Mvu.Transition<Actions.Model, G.Msg> := C.MapTransition<Actions.Model, Actions.Msg, G.Msg>(
+        ActionsUpdate.Update(State.Actions, Value),
+        G.Msg.Actions,
+        'actions'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Actions := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.SmartInputs(const Value: SmartInputs.Msg):
+      const Child: Mvu.Transition<SmartInputs.Model, G.Msg> := C.MapTransition<SmartInputs.Model, SmartInputs.Msg, G.Msg>(
+        SmartInputsUpdate.Update(State.SmartInputs, Value),
+        G.Msg.SmartInputs,
+        'smartinputs'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          SmartInputs := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Disclosure(const Value: Disclosure.Msg):
+      const Child: Mvu.Transition<Disclosure.Model, G.Msg> := C.MapTransition<Disclosure.Model, Disclosure.Msg, G.Msg>(
+        DisclosureUpdate.Update(State.Disclosure, Value),
+        G.Msg.Disclosure,
+        'disclosure'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Disclosure := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Show(const Value: G.Page):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Active := Value;
+          Drawer := false;
+          Overlays := State.Overlays with
+            Sheet := false;
+            ProfileDialog := false;
+            Filters := false;
+          end with;
+          Disclosure := State.Disclosure with
+            BranchQuestion := false;
+          end with;
+        end with, []
+      );
+    when G.Msg.SetDrawer(const Open: bool):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Drawer := Open;
+        end with, []
+      );
+    when G.Msg.Preview:
+      return new Mvu.Transition<G.Model, G.Msg>(State, []);
+  end case;
+end function;
+end unit;

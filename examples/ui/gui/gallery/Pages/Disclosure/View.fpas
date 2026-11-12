@@ -1,0 +1,90 @@
+unit GuiGallery.Pages.Disclosure.View;
+
+uses
+  GuiGallery.Pages.Disclosure.State as State,
+  GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.ExpandableTexts as T,
+  Fpas.Ui.ExpandableCards as C,
+  System as Sys;
+
+function Cards(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Billing: E.Element<State.Msg> := E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(10)),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(40), Wrap := true),
+      E.Column<State.Msg>(
+        new L.Flow(Gap := G.Points(2)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('This month'), S.Role.Muted),
+        E.Styled<State.Msg>(E.Text<State.Msg>('$84.00'), S.Role.Heading)
+      ),
+      E.Column<State.Msg>(
+        new L.Flow(Gap := G.Points(2)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('Seats'), S.Role.Muted),
+        E.Styled<State.Msg>(E.Text<State.Msg>('7 of 10'), S.Role.Heading)
+      )
+    ),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(8)),
+      B.Button<State.Msg>(
+        'change-plan', 'Change plan', State.Msg.Preview,
+        new B.Options(ControlSize := B.Size.Small)
+      ),
+      B.Button<State.Msg>(
+        'invoices', 'Invoices', State.Msg.Preview,
+        new B.Options(ControlSize := B.Size.Small, Variant := S.ButtonVariant.Ghost)
+      )
+    )
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(10)),
+    G.Heading<State.Msg>('Expandable cards', 'A header that opens a body with a spring.'),
+    C.ExpandableCard<State.Msg>(
+      'billing', 'Billing', Model.BillingOpen, State.Msg.SetBilling, Billing,
+      new C.Options(
+        Description := 'Pro plan, renews on December 1',
+        Icon := Sys.Char.ConvertFromUtf32($E0AA), Badge := 'Active', BadgeTone := C.Tone.Success
+      )
+    ),
+    C.ExpandableCard<State.Msg>(
+      'security', 'Security', Model.SecurityOpen, State.Msg.SetSecurity,
+      E.Styled<State.Msg>(
+        E.Text<State.Msg>('Recovery codes were generated 3 months ago.'),
+        S.Role.Secondary
+      ),
+      new C.Options(
+        Description := 'Two-factor authentication is on',
+        Icon := Sys.Char.ConvertFromUtf32($E158)
+      )
+    )
+  );
+end function;
+
+// Reproduces the accepted extended Disclosure examples.
+//
+// ## Parameters
+// - `Model`: Model-owned accordion and card expansion.
+// ## Returns
+// Native text, cards and the confirmation popover.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)), Confirm.View(Model),
+    G.Heading<State.Msg>('Expandable text', 'Long text clamps to a few lines with a fade.'),
+    T.ExpandableText<State.Msg>(
+      'about-cui',
+      'CUI is a component library for C. It draws everything itself, so an app looks the same on Windows, macOS and Linux, and it ' +
+      'ships the parts most apps need: inputs, pickers, menus, dialogs, tables, charts and a command palette. Every component ' +
+      'supports the keyboard, light and dark themes and reduced motion. The core is plain C99 with no dependencies, and it ' +
+      'renders through OpenGL or a built-in software rasterizer, so it also runs in virtual machines and over remote desktop.',
+      new T.Options(Lines := 2)
+    ),
+    Cards(Model)
+  );
+end function;
+end unit;

@@ -1,0 +1,30 @@
+unit GuiGallery.Pages.Overlays.View;
+
+uses
+  GuiGallery.Pages.Overlays.State as S,
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
+  GuiGallery.Pages.Overlays.Widgets.ContextMenu as Context,
+  GuiGallery.Pages.Overlays.Widgets.Toast as Toast,
+  GuiGallery.Pages.Overlays.Widgets.Tooltip as Tooltip,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L;
+
+// Builds the native overlay triggers and examples.
+// ## Parameters
+// - `Model`: Overlay visibility.
+// - `Data`: Shared form and filter values.
+// ## Returns
+// The Overlays page.
+public function View(Model: S.Model; Data: Demo.Model): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    Dialog.Section(),
+    Context.View(Model, Data),
+    Toast.View(),
+    Tooltip.View()
+  );
+end function;
+end unit;

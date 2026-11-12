@@ -1,0 +1,49 @@
+unit GuiGallery.Pages.Inputs.State;
+
+uses
+  GuiGallery.Shared.State as Demo;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Current query in the Search projects example.
+  public SearchQuery: string := '';
+  // Current multiline value in the About example.
+  public About: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';
+  // Current value of the password example.
+  public Password: string := '';
+  // Ordered topics in the tag input example.
+  public Topics: array of string := ['design', 'c99', 'native'];
+  // Partial verification code in the example.
+  public VerificationCode: string := '418';
+  // Current country in the picker example.
+  public Country: int := 2;
+  // Current language, or minus one before selection.
+  public Language: int := -1;
+  // Bounded seat count.
+  public Seats: double := 3.0;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Update the search query.
+  SetSearchQuery(Value: string);
+  // Update the About text.
+  SetAbout(Value: string);
+  // Update the sample password.
+  SetPassword(Value: string);
+  // Replace the selected topics.
+  SetTopics(Value: array of string);
+  // Replace the partial verification code.
+  SetVerificationCode(Value: string);
+  // Select a country.
+  SetCountry(Index: int);
+  // Select a language.
+  SetLanguage(Index: int);
+  // Adjust the seat count.
+  SetSeats(Value: double);
+  // A harmless preview activation.
+  Preview;
+  // Propose a change to shared demo values.
+  Shared(Value: Demo.Msg);
+end variant;
+end unit;

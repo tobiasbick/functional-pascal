@@ -1,10 +1,20 @@
 unit GalleryActionsContract;
 
 uses
-  GalleryHostAssertions as A, Fpas.Ui.ThemeSwitchers as Switchers,
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Themes as Themes, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Mvu.Application as App, System.Diagnostics as Diagnostics, System.Threading as Threads;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Shared.State as SliceShared,
+  GuiGallery.Pages.Actions.State as SliceActions,
+  GalleryHostAssertions as A,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  System.Diagnostics as Diagnostics,
+  System.Threading as Threads;
 
 // Exercises the Actions examples through the native gallery.
 //
@@ -14,7 +24,7 @@ uses
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
   begin
-    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
     case Message of
       when State.Msg.Preview:
         if Target <> '' then
@@ -23,9 +33,9 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
             [App.Focus<State.Msg>(Target)]
           );
         end if;
-      when State.Msg.ConfirmDelete:
+      when State.Msg.Actions(SliceActions.Msg.ConfirmDelete):
         Confirmations := Confirmations + 1;
-      when State.Msg.StartSave:
+      when State.Msg.Actions(SliceActions.Msg.StartSave):
         SaveRequests := SaveRequests + 1;
       else
     end case;
@@ -35,6 +45,8 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 
   procedure Inject();
   begin
+    // Isolate keyboard navigation from the desktop pointer's native hover state.
+    Window.MovePointer(-1.0F, -1.0F);
     if PendingKey <> 0 then
       Window.SetKey(PendingKey, true);
       Window.SetKey(PendingKey, false);
@@ -87,7 +99,7 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   A.Check(Session.Step(), 'The split gallery did not present.');
   const Switcher: Cui.CuiRectangle := A.Control(Session, 'theme-preview').Bounds;
@@ -233,7 +245,7 @@ begin
     A.Control(Session, 'theme-preview', 'system').Focused,
     'Right must not wrap past System.'
   );
-  A.Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Dark));
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetSystemAppearance(Themes.Mode.Dark)));
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
       Session,
@@ -243,7 +255,7 @@ begin
     'A provider change must update the theme while retaining System and its focus.'
   );
   Session.CapturePng(Capture + '.theme.png');
-  A.Send(Session, State.Msg.SetSystemAppearance(Themes.Mode.Light));
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetSystemAppearance(Themes.Mode.Light)));
   Key(Session, 7);
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
@@ -270,7 +282,7 @@ begin
     and A.Control(Session, 'theme-toggle').Value = 'dark',
     'Space proposes the opposite concrete theme.'
   );
-  A.Send(Session, State.Msg.SetAppearance(Switchers.Selection.System));
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAppearance(Switchers.Selection.System)));
   Focus(Session, 'theme-toggle');
   Key(Session, 2);
   A.Check(

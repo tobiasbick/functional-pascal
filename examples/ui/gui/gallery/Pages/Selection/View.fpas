@@ -1,0 +1,57 @@
+unit GuiGallery.Pages.Selection.View;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Selection.State as State,
+  GuiGallery.Pages.Selection.Widgets.Checkbox as Checkbox,
+  GuiGallery.Pages.Selection.Widgets.Switch as Switch,
+  GuiGallery.Pages.Selection.Widgets.RadioGroup as RadioGroup,
+  GuiGallery.Pages.Selection.Widgets.RadioCards as RadioCards,
+  GuiGallery.Pages.Selection.Widgets.Slider as Slider,
+  GuiGallery.Pages.Selection.Widgets.RangeSlider as RangeSlider,
+  GuiGallery.Pages.Selection.Widgets.Chip as Chip,
+  GuiGallery.Pages.Selection.Widgets.Rating as Rating,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L;
+
+// Builds the accepted controls in CUI's Selection page order.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current controlled values.
+// - `Wide`: Whether two 260-point columns fit with the native gap.
+// ## Returns
+// The complete Selection page.
+public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+begin
+  const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12));
+  const Checkboxes: E.Element<State.Msg> := E.Column<State.Msg>(
+    SectionFlow, G.Heading<State.Msg>('Checkbox'), G.Card<State.Msg>(14, Checkbox.Rows(Model, Data))
+  );
+  const Switches: E.Element<State.Msg> := E.Column<State.Msg>(
+    SectionFlow, G.Heading<State.Msg>('Switch'), G.Card<State.Msg>(14, Switch.Rows(Model, Data))
+  );
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    if Wide then E.Row<State.Msg>(
+        new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start),
+        E.Size<State.Msg>(Checkboxes, Fill), E.Size<State.Msg>(Switches, Fill)
+      )
+      else E.Column<State.Msg>(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
+      end if,
+    G.Heading<State.Msg>('Radio group'),
+    G.Card<State.Msg>(12, [RadioGroup.View(Model, Data)]),
+    G.Heading<State.Msg>('Radio cards', 'For choices that need a sentence of explanation.'),
+    RadioCards.View(Model, Data),
+    G.Heading<State.Msg>('Sliders', 'Drag past either end: the track stretches like rubber.'),
+    G.Card<State.Msg>(
+      20,
+      [Slider.Volume(Model, Data), Slider.Brightness(Model, Data), RangeSlider.View(Model, Data)]
+    ),
+    G.Heading<State.Msg>('Chips and rating'),
+    G.Card<State.Msg>(16, [Chip.View(Model, Data), Rating.View(Model, Data)])
+  );
+end function;
+end unit;

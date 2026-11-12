@@ -1,0 +1,58 @@
+unit GuiGallery.Pages.Lists.View;
+
+uses
+  GuiGallery.Pages.Lists.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Accordions as A;
+
+function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element<State.Msg>;
+begin
+  return A.Accordion<State.Msg>(
+    'accordion/' + Index.ToString(), Title, Model.AccordionOpen[Index],
+    function(Open: bool): State.Msg => State.Msg.SetAccordion(Index, Open),
+    E.Styled<State.Msg>(E.Text<State.Msg>(Answer), S.Role.Secondary)
+  );
+end function;
+
+// Shows the original three-question native accordion.
+//
+// ## Parameters
+// - `Model`: Model-owned expansion for each question.
+// ## Returns
+// The accepted Accordion section of the Lists page.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Inset: E.Element<State.Msg> := E.Size<State.Msg>(
+    E.Column<State.Msg>(),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(20)))
+  );
+  const Items: E.Element<State.Msg> := E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(12)),
+    Question(
+      Model, 0, 'Is it really dependency free?',
+      'Yes. The core is plain C99. Windows uses Win32, macOS uses Cocoa and Linux uses X11. Fonts and icons are embedded.'
+    ),
+    Question(
+      Model, 1, 'Can I use my own renderer?',
+      'CUI outputs vertices and draw commands. Port the 60 line shader to Vulkan, Metal or Direct3D and you are done.'
+    ),
+    Question(
+      Model, 2, 'Does it respect reduced motion?',
+      'Every animation has a reduced motion path that keeps the final state and feedback.'
+    )
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(16)), G.Heading<State.Msg>('Accordion'),
+    E.Styled<State.Msg>(
+      E.Column<State.Msg>(
+        new L.Flow(Padding := G.Points(4)),
+        E.Row<State.Msg>(Inset, E.Size<State.Msg>(Items, new L.Flex(Basis := L.Extent.Fill)), Inset)
+      ),
+      S.Role.OutlinedPanel
+    )
+  );
+end function;
+end unit;

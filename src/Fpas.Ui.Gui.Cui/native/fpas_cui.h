@@ -2,6 +2,7 @@
 #define FPAS_CUI_H
 
 #include <cui.h>
+#include "widgets/disclosure.h"
 #include "host_widgets.h"
 #include "widgets/button.h"
 #include "widgets/button_group.h"

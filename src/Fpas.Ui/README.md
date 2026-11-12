@@ -534,6 +534,42 @@ menus require the graphical profile; terminal and portable preflight reject
 them. The GUI gallery's Overlays page shows Cut, Copy, Paste and Delete as
 harmless preview messages.
 
+## Accordion and expandable card
+
+`Fpas.Ui.Accordions.Accordion<TMsg>(Id, Title, Open, OnChange, Content, Enabled)`
+and `Fpas.Ui.ExpandableCards.ExpandableCard<TMsg>(Id, Title, Open, OnChange,
+Content, Settings)` use CUI's native header, chevron, layout and height spring.
+`Open` belongs to the model; `OnChange` proposes the next boolean. Update may
+accept or decline it. Stable IDs are independent of literal titles, including
+`##` and `###`. Pointer activation, Enter and Space toggle the focused header.
+Escape leaves expansion unchanged.
+
+Card options add CUI's description, icon, badge and badge tone. `Enabled` gates
+the header and body. CUI still draws outgoing content while closing, with input
+disabled; the host omits those descendants from agent snapshots and focus
+selection. The body's own control IDs remain independent of the header.
+Snapshots use `accordion` and `expandable-card`, with the model's boolean in
+`Value` and the native header's bounds and focus. CUI draws and sizes the whole
+wrapper; no second disclosure layout or animation system is involved.
+
+## Expandable text
+
+`Fpas.Ui.ExpandableTexts.ExpandableText<TMsg>(Id, Text, Settings, OnToggle)`
+uses CUI's wrapping text, fade and Show more / Show less link. CUI owns local
+expansion; removing the element releases it. `OnToggle` optionally notifies the
+application of native activation without duplicating that state in its model.
+Options map to CUI's collapsed `Lines` (default three), font `Size` (zero uses
+the body size), `Color`, `FadeTo` and input permission. Set `FadeTo` when the
+surface differs from the theme background.
+
+The noninteractive `expandable-text` snapshot reports native expansion in
+`Value`. When the text exceeds the line limit, `ExpandableTexts.ToggleId(Id)`
+identifies its `expandable-text-toggle` link for inspection and focus requests.
+The link disappears when the text fits. Native CUI currently loses keyboard
+focus after toggling ([CUI-006](../../docs/future/cui-upstream-bugs.md#cui-006));
+Tab or an explicit focus request selects it again. All three disclosure widgets
+require the graphical profile. Terminal and portable preflight reject them.
+
 ## Popover and confirmation popover
 
 `Fpas.Ui.Popovers.Popover<TMsg>(Id, Trigger, Content, Open, OnDismiss, Settings)`
@@ -677,6 +713,27 @@ A controlled scroll view clamps the requested position to the current range.
 `End` follows the end as content grows. User input proposes a new position
 with the resolved offset and maximum in explicit host units. Layout and
 content changes recompute the visible offset without emitting messages.
+
+## Subview composition
+
+`Fpas.Ui.Composition.Map<TChild, TParent>(Tree, Messages)` embeds a child view
+with its own message type. `Messages` is a pure wrapper, typically a case of
+the parent's message variant. IDs, options, values, layout and native widget
+selection stay unchanged. Every message-bearing node is supported, including
+menus, nested overlays, optional callbacks and terminal shortcuts.
+
+Mapping translates immediate message values while building the parent tree.
+It wraps callback factories without invoking them. Deferred subviews and terminal
+viewport builders remain deferred. Cached subviews retain the original child's
+dependency cache; changing the wrapper rebuilds the mapped messages without
+rerunning an unchanged child builder. Normal uncached nodes are traversed and
+rebuilt; mapping does not provide incremental native layout or virtualization.
+
+Control IDs must be unique across the composed view. The corresponding
+[`Fpas.Ui.Mvu.Composition`](../Fpas.Ui.Mvu/README.md#larger-applications) helpers
+translate transitions and commands, with optional scopes for background IDs.
+Keep cross-page values under one shared owner, as in the
+[GUI gallery](../../examples/ui/gui/gallery/README.md#source-structure).
 
 ## Host preflight
 

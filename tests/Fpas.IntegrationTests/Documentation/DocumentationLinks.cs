@@ -30,9 +30,13 @@ internal static class DocumentationLinks
                     errors.Add("An anchor must target a file: " + description);
                     continue;
                 }
-                var headings = Regex.Matches(File.ReadAllText(target), @"(?m)^#{1,6} (.+?)\r?$").Cast<Match>()
+                var contents = File.ReadAllText(target);
+                var headings = Regex.Matches(contents, @"(?m)^#{1,6} (.+?)\r?$").Cast<Match>()
                     .Select(heading => Regex.Replace(Regex.Replace(heading.Groups[1].Value.ToLowerInvariant(), @"[^\p{L}\p{N}_\s-]", ""), @"\s", "-"));
-                if (!headings.Contains(Uri.UnescapeDataString(pieces[1]))) errors.Add("Missing heading: " + description);
+                var explicitAnchors = Regex.Matches(contents, @"<a\b[^>]*\bid\s*=\s*[""']([^""']+)[""'][^>]*>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                    .Cast<Match>().Select(anchor => anchor.Groups[1].Value);
+                if (!headings.Concat(explicitAnchors).Contains(Uri.UnescapeDataString(pieces[1])))
+                    errors.Add("Missing anchor: " + description);
             }
         Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors));
     }

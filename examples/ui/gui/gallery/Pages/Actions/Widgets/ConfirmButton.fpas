@@ -1,0 +1,20 @@
+unit GuiGallery.Pages.Actions.Widgets.ConfirmButton;
+
+uses
+  GuiGallery.Pages.Actions.State as State,
+  Fpas.Ui.ConfirmButtons as Confirm,
+  Fpas.Ui.Elements as E,
+  System as Sys;
+
+// Shows CUI's two-step destructive action.
+//
+// ## Returns
+// The native gallery's Delete project button.
+public function View(): E.Element<State.Msg>;
+begin
+  return Confirm.ConfirmButton<State.Msg>(
+    'confirm-delete', 'Delete project', State.Msg.ConfirmDelete,
+    new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
+  );
+end function;
+end unit;

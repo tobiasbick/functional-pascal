@@ -1,0 +1,411 @@
+unit Fpas.Ui.Composition;
+
+uses
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Internal.MessageMapping as M,
+  Fpas.Ui.ExpandableCards as ExpandableCards,
+  Fpas.Ui.Dialogs as Dialogs,
+  Fpas.Ui.Popovers as Popovers,
+  Fpas.Ui.ConfirmPopovers as ConfirmPopovers,
+  Fpas.Ui.Menus as Menus,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Sheets as Sheets,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Terminal as T,
+  Fpas.Ui.TerminalExtensions.Input as Keys,
+  System as Sys,
+  Fpas.Ui.Internal.Mapping.Actions as Actions,
+  Fpas.Ui.Internal.Mapping.Editors as Editors,
+  System.Collections.Generic as Lists;
+
+type MappedCache<TChild, TParent> = record
+  public Source: E.CacheEntry<TChild>;
+  public Messages: function(TChild): TParent;
+end record;
+
+function Deferred<TChild, TParent>(
+  Id: string;
+  Resolve: function(E.CacheEntry<TChild>?): E.CacheEntry<TChild>;
+  Messages: function(TChild): TParent
+): E.Element<TParent>;
+  function Build(Previous: E.CacheEntry<TParent>?): E.CacheEntry<TParent>;
+  begin
+    var Saved: MappedCache<TChild, TParent>? := null;
+    if Previous <> null and Previous.Dependencies is MappedCache<TChild, TParent> then
+      Saved := cast<MappedCache<TChild, TParent>>(Previous.Dependencies);
+    end if;
+    const Current: E.CacheEntry<TChild> := Resolve(
+      if Saved = null then null else Saved.Source end if
+    );
+    if Previous <> null and Saved <> null and Sys.Object.ReferenceEquals(Saved.Source, Current)
+      and Sys.Object.Equals(Saved.Messages, Messages)
+    then
+      return Previous;
+    end if;
+
+    return new E.CacheEntry<TParent>(
+      new MappedCache<TChild, TParent>(Current, Messages),
+      Map<TChild, TParent>(Current.Tree, Messages)
+    );
+  end function;
+begin
+  return E.Element<TParent>.Deferred(Id, Build);
+end function;
+
+// Embeds a child view by translating all messages, callbacks and lazy subviews.
+//
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Child element tree; its options and control identities are retained.
+// - `Messages`: Pure translation of child messages to parent messages.
+// ## Returns
+// A parent-message tree with unchanged layout, native widgets and callback timing.
+// Cached subviews retain their child dependencies and rebuild if the mapper changes.
+public function Map<TChild, TParent>(
+  Value: E.Element<TChild>;
+  Messages: function(TChild): TParent
+): E.Element<TParent>;
+  function Children(Values: array of E.Element<TChild>): array of E.Element<TParent>;
+  begin
+    const Result: Lists.List<E.Element<TParent>> := new Lists.List<E.Element<TParent>>();
+    for Child: E.Element<TChild> in Values do
+      Result.Add(Map<TChild, TParent>(Child, Messages));
+    end for;
+
+    return Result.ToArray();
+  end function;
+begin
+  return case Value of
+    when E.Element.Accordion(
+      const FId: string,
+      const FTitle: string,
+      const FOpen: bool,
+      const FOnChange: function(bool): TChild,
+      const FContent: E.Element<TChild>,
+      const FEnabled: bool
+    ): E.Element<TParent>.Accordion(
+      FId,
+      FTitle,
+      FOpen,
+      function(A0: bool): TParent => Messages(FOnChange(A0)),
+      Map<TChild, TParent>(FContent, Messages),
+      FEnabled
+    );
+    when E.Element.ExpandableCard(
+      const FId: string,
+      const FTitle: string,
+      const FOpen: bool,
+      const FOnChange: function(bool): TChild,
+      const FContent: E.Element<TChild>,
+      const FSettings: ExpandableCards.Options
+    ): E.Element<TParent>.ExpandableCard(
+      FId,
+      FTitle,
+      FOpen,
+      function(A0: bool): TParent => Messages(FOnChange(A0)),
+      Map<TChild, TParent>(FContent, Messages),
+      FSettings
+    );
+    when E.Element.ButtonGroup(
+      const FChildren: array of E.Element<TChild>
+    ): E.Element<TParent>.ButtonGroup(Children(FChildren));
+    when E.Element.Contextual(
+      const FId: string,
+      const FTarget: E.Element<TChild>,
+      const FEntries: array of Menus.Entry<TChild>,
+      const FEnabled: bool
+    ): E.Element<TParent>.Contextual(
+      FId,
+      Map<TChild, TParent>(FTarget, Messages),
+      M.Menu<TChild, TParent>(FEntries, Messages),
+      FEnabled
+    );
+    when E.Element.Hinted(
+      const FTarget: E.Element<TChild>,
+      const FText: string,
+      const FShortcut: string
+    ): E.Element<TParent>.Hinted(Map<TChild, TParent>(FTarget, Messages), FText, FShortcut);
+    when E.Element.Dialog(
+      const FId: string,
+      const FBase: E.Element<TChild>,
+      const FContent: E.Element<TChild>,
+      const FOpen: bool,
+      const FSettings: Dialogs.Options,
+      const FOnDismiss: TChild
+    ): E.Element<TParent>.Dialog(
+      FId,
+      Map<TChild, TParent>(FBase, Messages),
+      Map<TChild, TParent>(FContent, Messages),
+      FOpen,
+      FSettings,
+      Messages(FOnDismiss)
+    );
+    when E.Element.ActionFooter(
+      const FChildren: array of E.Element<TChild>
+    ): E.Element<TParent>.ActionFooter(Children(FChildren));
+    when E.Element.Popover(
+      const FId: string,
+      const FTrigger: E.Element<TChild>,
+      const FContent: E.Element<TChild>,
+      const FOpen: bool,
+      const FOnDismiss: TChild,
+      const FSettings: Popovers.Options
+    ): E.Element<TParent>.Popover(
+      FId,
+      Map<TChild, TParent>(FTrigger, Messages),
+      Map<TChild, TParent>(FContent, Messages),
+      FOpen,
+      Messages(FOnDismiss),
+      FSettings
+    );
+    when E.Element.ConfirmPopover(
+      const FId: string,
+      const FTrigger: E.Element<TChild>,
+      const FOpen: bool,
+      const FSettings: ConfirmPopovers.Options,
+      const FOnConfirm: TChild,
+      const FOnDismiss: TChild
+    ): E.Element<TParent>.ConfirmPopover(
+      FId,
+      Map<TChild, TParent>(FTrigger, Messages),
+      FOpen,
+      FSettings,
+      Messages(FOnConfirm),
+      Messages(FOnDismiss)
+    );
+    when E.Element.Stack(
+      const FChildren: array of E.Element<TChild>,
+      const FHorizontal: bool,
+      const FSettings: L.Flow
+    ): E.Element<TParent>.Stack(Children(FChildren), FHorizontal, FSettings);
+    when E.Element.Sized(
+      const FChild: E.Element<TChild>,
+      const FSettings: L.Flex
+    ): E.Element<TParent>.Sized(Map<TChild, TParent>(FChild, Messages), FSettings);
+    when E.Element.Styled(
+      const FChild: E.Element<TChild>,
+      const FRole: S.Role
+    ): E.Element<TParent>.Styled(Map<TChild, TParent>(FChild, Messages), FRole);
+    when E.Element.Framed(
+      const FChild: E.Element<TChild>,
+      const FTitle: string
+    ): E.Element<TParent>.Framed(Map<TChild, TParent>(FChild, Messages), FTitle);
+    when E.Element.Scroll(
+      const FId: string,
+      const FChild: E.Element<TChild>,
+      const FPosition: L.ScrollPosition?,
+      const FOnScroll: Sys.Func<L.ScrollChange, TChild>?,
+      const FShowScrollbar: bool
+    ): E.Element<TParent>.Scroll(
+      FId,
+      Map<TChild, TParent>(FChild, Messages),
+      FPosition,
+      M.Callback<L.ScrollChange, TChild, TParent>(FOnScroll, Messages),
+      FShowScrollbar
+    );
+    when E.Element.Sheet(
+      const FId: string,
+      const FBase: E.Element<TChild>,
+      const FContent: E.Element<TChild>,
+      const FOpen: bool,
+      const FSettings: Sheets.Options,
+      const FOnDismiss: TChild
+    ): E.Element<TParent>.Sheet(
+      FId,
+      Map<TChild, TParent>(FBase, Messages),
+      Map<TChild, TParent>(FContent, Messages),
+      FOpen,
+      FSettings,
+      Messages(FOnDismiss)
+    );
+    when E.Element.Deferred(
+      const FId: string,
+      const FResolve: function(E.CacheEntry<TChild>?): E.CacheEntry<TChild>
+    ): Deferred<TChild, TParent>(FId, FResolve, Messages);
+    when E.Element.TerminalStyle(
+      const FChild: E.Element<TChild>,
+      const FColors: T.Style
+    ): E.Element<TParent>.TerminalStyle(Map<TChild, TParent>(FChild, Messages), FColors);
+    when E.Element.TerminalScreen(
+      const FContent: E.Element<TChild>,
+      const FLayers: array of E.Element<TChild>,
+      const FShortcuts: array of Keys.ShortcutBinding<TChild>
+    ): E.Element<TParent>.TerminalScreen(
+      Map<TChild, TParent>(FContent, Messages),
+      Children(FLayers),
+      M.Shortcuts<TChild, TParent>(FShortcuts, Messages)
+    );
+    when E.Element.TerminalViewport(
+      const FId: string,
+      const FBuild: function(T.Viewport): E.Element<TChild>
+    ): E.Element<TParent>.TerminalViewport(
+      FId,
+      function(A0: T.Viewport): E.Element<TParent> => Map<TChild, TParent>(FBuild(A0), Messages)
+    );
+    when E.Element.ExpandableText(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Label(_), E.Element.Separator(_), E.Element.ButtonAction(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.IconAction(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.CopyAction(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.HoldAction(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ConfirmAction(_, _, _, _), E.Element.StatusAction(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ThemeChoice(_, _, _, _), E.Element.ThemeFlip(_, _, _, _), E.Element.Segments(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Toggles(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SplitAction(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ReactionGroup(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.AccountMenu(_, _, _, _), E.Element.CheckboxAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SwitchAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RadioAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Radios(_, _, _, _, _, _), E.Element.Cards(_, _, _, _, _), E.Element.SliderAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RangeSliderAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ChipAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RatingAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TabStrip(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.BreadcrumbTrail(_, _, _, _), E.Element.PaginationAction(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.StepProgress(_, _, _), E.Element.Dropdown(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PasswordStrengthMeter(_, _), E.Element.Sidebar(
+      _,
+      _,
+      _,
+      _
+    ): Actions.Map<TChild, TParent>(Value, Messages);
+    when E.Element.TextField(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SearchField(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TextArea(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TagInput(_, _, _, _), E.Element.OneTimeCodeInput(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SelectInput(_, _, _, _, _), E.Element.NumberField(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Editors.Map<TChild, TParent>(Value, Messages);
+  end case;
+end function;
+end unit;

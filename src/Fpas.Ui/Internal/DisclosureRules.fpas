@@ -1,0 +1,40 @@
+unit Fpas.Ui.Internal.DisclosureRules;
+
+uses
+  Fpas.Ui.ExpandableCards as Cards, Fpas.Ui.ExpandableTexts as Texts,
+  Fpas.Ui.Internal.Rules as R, System as Sys;
+
+// Validates a native disclosure header.
+//
+// ## Parameters
+// - `Title`: Literal header caption.
+// - `Settings`: Native card decoration, or defaults for an accordion.
+// - `Location`: Diagnostic path.
+public procedure Header(Title: string; Settings: Cards.Options; Location: string);
+begin
+  R.CheckText(Title, Location + '/title');
+  R.CheckText(Settings.Description, Location + '/description');
+  R.CheckText(Settings.Icon, Location + '/icon');
+  R.CheckText(Settings.Badge, Location + '/badge');
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<Cards.Tone>(
+    Settings.BadgeTone
+  )
+  then
+    R.Reject(Location, 'A disclosure needs a nonempty title and a valid badge tone.');
+  end if;
+end procedure;
+
+// Validates native expandable-text options.
+//
+// ## Parameters
+// - `Value`: Literal wrapping text.
+// - `Settings`: Native clamping and font size.
+// - `Location`: Diagnostic path.
+public procedure Text(Value: string; Settings: Texts.Options; Location: string);
+begin
+  R.CheckText(Value, Location + '/text');
+  if Settings.Lines < 1 or not Sys.Single.IsFinite(Settings.Size) or Settings.Size < 0.0F then
+    R.Reject(Location, 'Expandable text needs positive Lines and a finite nonnegative Size.');
+  end if;
+end procedure;
+end unit;

@@ -2,6 +2,22 @@ unit Fpas.Ui.Mvu.Application;
 
 uses System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
+// A host-specific payload that can translate its message factories for a parent session.
+//
+// ## Type parameters
+// - `TMsg`: Messages produced by the payload.
+public type HostExtension<TMsg> = protocol
+  // Rebuilds the payload with translated messages without performing host work.
+  //
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Translates one child message.
+  // ## Returns
+  // The payload understood by the host of the parent session.
+  function Map<TNext>(Messages: function(TMsg): TNext): HostExtension<TNext>;
+end protocol;
+
 // A request for the host that owns the input, view and presentation.
 public type HostRequest = variant
   // Ask the host to finish the session.

@@ -11,6 +11,7 @@ public sealed class HeadlessTuiTests
     /// <param name="expected">Successful contract output.</param>
     [Theory]
     [InlineData("headless.fpas", "headless contracts verified\n")]
+    [InlineData("composition.fpas", "Composition contracts verified\n")]
     [InlineData("effects.fpas", "effect contracts verified\n")]
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
     [InlineData("rendering.fpas", "Rendering contracts verified\n")]

@@ -110,7 +110,9 @@ import library and static archive in separate build directories.
 The optional smoke target is an independent C consumer linked through
 `fpas::cui`. It initializes the bundled fonts, verifies software-rendered pixels,
 and checks copy, hold and split-button behavior. Dedicated tests cover confirm,
-status, segment and icon primitives. These tests run without a display. On Windows, the live-resize test creates a
+status, segments, icons, menus and disclosures, including disclosure pixel
+comparisons against direct CUI calls. These tests run without a display.
+On Windows, the live-resize test creates a
 hidden window and verifies callback registration and detachment.
 
 For Linux ABI inspection, check public symbols in each output:

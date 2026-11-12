@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
-uses Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Gui.Internal.Widgets.Reactions as ReactionsWidget, Fpas.Ui.Gui.Internal.Widgets.UserMenu as UserMenuWidget, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Gui.Internal.Widgets.Select as SelectWidget, Fpas.Ui.Gui.Internal.Widgets.NumberField as NumberWidget, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Gui.Internal.Widgets.TagInput as TagWidget, Fpas.Ui.Gui.Internal.Widgets.OneTimeCode as CodeWidget, Fpas.Ui.Gui.Internal.Widgets.PasswordStrength as StrengthWidget, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Gui.Internal.Widgets.SearchField as SearchFieldWidget, Fpas.Ui.Gui.Internal.Widgets.TextArea as TextAreaWidget, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.Gui.Internal.Widgets.Dialog as DialogWidget, Fpas.Ui.Gui.Internal.Widgets.ActionFooter as ActionFooterWidget, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Gui.Internal.Widgets.TextField as TextFieldWidget, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Stepper as Stepper, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Rating as Rating, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.RangeSlider as RangeSlider, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.RadioGroup as RadioGroup, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Gui.Internal.Widgets.ExpandableText as ExpandableTextWidget, Fpas.Ui.Gui.Internal.Widgets.Disclosure as DisclosureWidget, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Gui.Internal.Widgets.Reactions as ReactionsWidget, Fpas.Ui.Gui.Internal.Widgets.UserMenu as UserMenuWidget, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Gui.Internal.Widgets.Select as SelectWidget, Fpas.Ui.Gui.Internal.Widgets.NumberField as NumberWidget, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Gui.Internal.Widgets.TagInput as TagWidget, Fpas.Ui.Gui.Internal.Widgets.OneTimeCode as CodeWidget, Fpas.Ui.Gui.Internal.Widgets.PasswordStrength as StrengthWidget, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Gui.Internal.Widgets.SearchField as SearchFieldWidget, Fpas.Ui.Gui.Internal.Widgets.TextArea as TextAreaWidget, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.Gui.Internal.Widgets.Dialog as DialogWidget, Fpas.Ui.Gui.Internal.Widgets.ActionFooter as ActionFooterWidget, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Gui.Internal.Widgets.TextField as TextFieldWidget, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Stepper as Stepper, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Rating as Rating, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.RangeSlider as RangeSlider, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.RadioGroup as RadioGroup, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.ContextMenu as ContextMenu, Fpas.Ui.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.DropdownMenu as DropdownMenu, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.ThemeToggle as ThemeToggle, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.StatusButton as StatusButton, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.ConfirmButton as ConfirmButton, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.SplitButton as SplitButton, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Sidebar as Sidebar, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Sheet as Sheet, Fpas.Ui.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Button as Button, Fpas.Ui.Gui.Internal.Widgets.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.HoldButton as HoldButton, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.IconButton as IconButton, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic;
 
 // Draws a prepared tree and gathers messages without running Update or effects.
 //
@@ -240,6 +240,38 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Visit(Child, Current, Horizontal, Align);
         TooltipWidget.Attach<TMsg>(Current, Caption, Shortcut);
         return;
+      when E.Element.Accordion(
+        const Id: string, const Title: string, const Open: bool,
+        const OnChange: function(bool): TMsg, const Content: E.Element<TMsg>, const Enabled: bool
+      ):
+        DisclosureWidget.Draw<TMsg>(
+          Current, Id, Title, Open, OnChange, Content, false,
+          new ExpandableCards.Options(Enabled := Enabled), Visit
+        );
+      when E.Element.ExpandableCard(
+        const Id: string,
+        const Title: string,
+        const Open: bool,
+        const OnChange: function(bool): TMsg,
+        const Content: E.Element<TMsg>,
+        const Settings: ExpandableCards.Options
+      ):
+        DisclosureWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Title,
+          Open,
+          OnChange,
+          Content,
+          true,
+          Settings,
+          Visit
+        );
+      when E.Element.ExpandableText(
+        const Id: string, const Text: string, const Settings: ExpandableTexts.Options,
+        const OnToggle: Sys.Func<TMsg>?
+      ):
+        ExpandableTextWidget.Draw<TMsg>(Current, Id, Text, Settings, OnToggle);
       when E.Element.Popover(
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>,
         const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options

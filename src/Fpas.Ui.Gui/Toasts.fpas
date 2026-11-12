@@ -34,13 +34,33 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // Literal title, up to 127 UTF-8 bytes.
   public Title: string;
   // Native appearance, duration and action caption.
   public Settings: Options;
   // Optional factory called once if the action is activated.
   public OnAction: Sys.Func<TMsg>? := null;
+
+  // Translates the optional action factory without showing the toast or invoking it.
+  //
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Wraps an action message for the parent session.
+  // ## Returns
+  // A toast payload for the parent host, retaining its appearance and lifetime.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    var Action: Sys.Func<TNext>? := null;
+    case self.OnAction of
+      when is Sys.Func<TMsg> as Original:
+        Action := function(): TNext => Messages(Original.Invoke());
+      else
+    end case;
+
+    return new Request<TNext>(self.Title, self.Settings, Action);
+  end function;
 end record;
 
 // Queues a native toast when the graphical host applies the returned command.

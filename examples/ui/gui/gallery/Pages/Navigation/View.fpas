@@ -1,0 +1,33 @@
+unit GuiGallery.Pages.Navigation.View;
+
+uses
+  GuiGallery.Pages.Navigation.State as State,
+  GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Navigation.Widgets.Tabs as Tabs,
+  GuiGallery.Pages.Navigation.Widgets.Breadcrumb as Breadcrumb,
+  GuiGallery.Pages.Navigation.Widgets.Pagination as Pagination,
+  GuiGallery.Pages.Navigation.Widgets.Stepper as Stepper,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L;
+
+// Builds the accepted controls in the original Navigation page order.
+//
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The tabs, breadcrumb, pagination and stepper previews.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Trail: E.Element<State.Msg> := Breadcrumb.View();
+  const Pager: E.Element<State.Msg> := Pagination.View(Model);
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>('Tabs', 'The indicator slides to the active tab.'),
+    G.Card<State.Msg>(16, Tabs.Rows(Model)),
+    G.Heading<State.Msg>('Breadcrumb and pagination'),
+    G.Card<State.Msg>(18, [Trail, Pager]),
+    G.Heading<State.Msg>('Stepper'),
+    G.Card<State.Msg>(18, Stepper.Rows(Model))
+  );
+end function;
+end unit;

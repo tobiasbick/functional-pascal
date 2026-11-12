@@ -60,15 +60,8 @@ for the task.
 
 - Support upstream CUI. When finding a defect or missing capability, establish
   whether it belongs to CUI or the FPAS integration and explain its impact.
-- Read the [CUI contribution review notes](docs/cui-contributions.md) before
-  changing CUI interaction or layout code or preparing an upstream CUI PR.
-- Before drafting a CUI contribution, read the current upstream
-  [issue form](https://github.com/yappologistic/CUI/tree/master/.github/ISSUE_TEMPLATE)
-  or [pull request template](https://github.com/yappologistic/CUI/blob/master/.github/pull_request_template.md).
-  Use its section order and complete the required fields, including when
-  submitting through the CLI or API. Follow the upstream
-  [contributing guide](https://github.com/yappologistic/CUI/blob/master/docs/CONTRIBUTING.md)
-  for authorship, AI disclosure, and evidence.
+- Read the CUI contribution workflow routed by the agent reference before
+  changing CUI interaction or layout code or preparing an upstream contribution.
 - For confirmed upstream findings, ask the user whether to open a CUI issue and
   whether to prepare and contribute a fix. Obtain explicit approval before
   publishing an upstream issue or pull request.

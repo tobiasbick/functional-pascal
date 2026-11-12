@@ -1,0 +1,41 @@
+unit GuiGallery.Pages.Navigation.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Toasts as Toasts,
+  GuiGallery.Pages.Navigation.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetTab(const Value: int): State with
+      ActiveTab := Value;
+    end with;
+    when S.Msg.SetPillTab(const Value: int): State with
+      ActivePillTab := Value;
+    end with;
+    when S.Msg.SetPageIndex(const Value: int): State with
+      PageIndex := Value;
+    end with;
+    when S.Msg.SetStep(const Value: int): State with
+      ActiveStep := Value;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Next, case Message of
+      when S.Msg.SelectAncestor(const Label: string): [Toasts.Show<S.Msg>(Label)];
+      when S.Msg.FinishSteps: [
+        Toasts.Show<S.Msg>('All set', new Toasts.Options(Appearance := Toasts.Tone.Success))
+      ];
+      else [];
+    end case
+  );
+end function;
+end unit;

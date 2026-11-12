@@ -1,0 +1,86 @@
+unit GuiGallery.Pages.Buttons.Widgets.DropdownMenu;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Buttons.State as State,
+  Fpas.Ui.Menus as M,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  System as Sys;
+
+function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+// Clones both dropdown examples on CUI's Buttons page.
+// ## Returns
+// Options with sections, hints and a danger command, plus the icon-only More actions menu.
+public function View(): E.Element<State.Msg>;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    M.Menu<State.Msg>(
+      'options', 'Options', [
+        M.Entry<State.Msg>.Label('Project'),
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'rename',
+            'Rename',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Rename')),
+            Icon($E1F9),
+            Shortcut := 'F2'
+          )
+        ),
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'duplicate',
+            'Duplicate',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Duplicate')),
+            Icon($E09E),
+            Shortcut := 'Ctrl D'
+          )
+        ),
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'share',
+            'Share',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Share')),
+            Icon($E156)
+          )
+        ),
+        M.Entry<State.Msg>.Separator,
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'delete',
+            'Delete',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Delete')),
+            Icon($E18E),
+            Danger := true
+          )
+        )
+      ], new M.Options(Icon := Icon($E154))
+    ),
+    M.Menu<State.Msg>(
+      'more-actions', 'More actions', [
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'archive',
+            'Archive',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Archive')),
+            Icon($E041)
+          )
+        ),
+        M.Entry<State.Msg>.Action(
+          new M.Item<State.Msg>(
+            'export',
+            'Export',
+            State.Msg.Shared(Demo.Msg.MenuChoice('Export')),
+            Icon($E0B2)
+          )
+        )
+      ], new M.Options(Icon := Icon($E0B6), IconOnly := true)
+    )
+  );
+end function;
+end unit;

@@ -1,0 +1,42 @@
+unit GuiGallery.Pages.Selection.Widgets.RadioCards;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Selection.State as State,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.RadioCards as R,
+  System as Sys;
+
+// Builds the save destination choices from the native Selection page.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The native radio card grid.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return R.RadioCards<State.Msg>(
+    'places',
+    [
+      new R.Item(
+        'This computer',
+        'Saved next to the project. Nothing leaves the machine.',
+        Sys.Char.ConvertFromUtf32($E11D)
+      ),
+      new R.Item(
+        'Team server',
+        'Synced to your company server every few minutes.',
+        Sys.Char.ConvertFromUtf32($E153),
+        'Default'
+      ),
+      new R.Item(
+        'Both',
+        'A local copy, uploaded to the server every night.',
+        Sys.Char.ConvertFromUtf32($E529)
+      )
+    ],
+    Model.SavePlace, State.Msg.SetPlace
+  );
+end function;
+end unit;

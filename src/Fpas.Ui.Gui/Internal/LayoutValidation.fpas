@@ -47,6 +47,15 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         Visit(Child);
       when E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
         Visit(Child);
+      when E.Element.Accordion(
+        _,
+        _,
+        _,
+        _,
+        const Content: E.Element<TMsg>,
+        _
+      ), E.Element.ExpandableCard(_, _, _, _, const Content: E.Element<TMsg>, _):
+        Visit(Content);
       when E.Element.Popover(
         _,
         const Trigger: E.Element<TMsg>,

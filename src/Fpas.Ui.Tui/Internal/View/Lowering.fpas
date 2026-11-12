@@ -222,6 +222,15 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException(
           'Select and number fields require the graphical profile.'
         );
+      when Ui.Element.Accordion(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ExpandableCard(_, _, _, _, _, _), Ui.Element.ExpandableText(_, _, _, _):
+        raise new Sys.NotSupportedException('Disclosure widgets require the graphical profile.');
       when Ui.Element.Popover(_, _, _, _, _, _), Ui.Element.ConfirmPopover(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Popovers require the graphical profile.');
       when Ui.Element.Toggles(_, _, _, _, _):

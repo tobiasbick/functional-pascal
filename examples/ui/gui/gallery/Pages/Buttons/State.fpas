@@ -1,0 +1,47 @@
+unit GuiGallery.Pages.Buttons.State;
+
+uses
+  GuiGallery.Shared.State as Demo;
+
+// Independent actions in the button group.
+public type TextFormat = enum: byte
+  // Draw text in bold.
+  Bold = 1;
+  // Draw text in italics.
+  Italic = 2;
+  // Draw an underline.
+  Underline = 4;
+end enum;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Whether the save action is busy.
+  public ButtonLoading: bool := false;
+  // Selected position in the native view segment demo.
+  public SegmentedView: int := 0;
+  // Selected position in the compact date-range demo.
+  public SegmentedRange: int := 0;
+  // Active formatting actions.
+  public Formats: int := 0;
+  // Completed holds shown by the gallery preview.
+  public HoldCount: int := 0;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Change the save action's busy state.
+  SetButtonLoading(Value: bool);
+  // Select List, Board or Timeline.
+  SetSegmentedView(Value: int);
+  // Select Day, Week, Month or Year.
+  SetSegmentedRange(Value: int);
+  // Toggle one formatting action.
+  ToggleFormat(Style: TextFormat);
+  // Record one completed hold.
+  ConfirmHold;
+  // A harmless preview activation.
+  Preview;
+  // Propose a change to shared demo values.
+  Shared(Value: Demo.Msg);
+end variant;
+end unit;

@@ -40,6 +40,7 @@
     <None Include="../Fixtures/tui/SegmentedControl.fpas" Link="Fixtures/tui/segmented.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/DropdownMenu.fpas" Link="Fixtures/tui/dropdown.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/CompositionContract.fpas" Link="Fixtures/tui/composition.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/basics/units/**/*.fpas;../../examples/basics/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/io/read-file/*.fpas;../../examples/io/read-file/*.fpasproj;../../examples/io/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

@@ -1,0 +1,75 @@
+unit GuiGallery.Pages.Overlays.Widgets.Popover;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Overlays.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Checkboxes as Checks,
+  Fpas.Ui.Sliders as Sliders,
+  Fpas.Ui.Popovers as P,
+  System as Sys;
+
+// Builds the Filters button and the CUI gallery's filter controls.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current filter values and visibility.
+// ## Returns
+// An anchored panel shown in the Overlays card.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  const Trigger: E.Element<State.Msg> := B.Button<State.Msg>(
+    'filters-trigger', 'Filters', State.Msg.SetFilters(not Model.Filters),
+    new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0DC))
+  );
+  const Content: E.Element<State.Msg> := E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(10)),
+    E.Styled<State.Msg>(E.Text<State.Msg>('Filter results'), S.Role.Label),
+    Checks.Checkbox<State.Msg>(
+      'filters-active',
+      'Only active',
+      Data.Newsletter,
+      function(SharedValue: bool): State.Msg => State.Msg.Shared(
+        Demo.Msg.SetNewsletter(SharedValue)
+      )
+    ),
+    Checks.Checkbox<State.Msg>(
+      'filters-archived',
+      'Include archived',
+      Data.Marketing,
+      function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetMarketing(SharedValue))
+    ),
+    Sliders.Slider<State.Msg>(
+      'filters-score',
+      'Minimum score',
+      Data.Brightness,
+      0.0F,
+      100.0F,
+      function(SharedValue: float): State.Msg => State.Msg.Shared(
+        Demo.Msg.SetBrightness(SharedValue)
+      ),
+      new Sliders.Options(ShowValue := true)
+    ),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(8)),
+      E.Size<State.Msg>(E.Column<State.Msg>(), new L.Flex(Basis := L.Extent.Fill)),
+      B.Button<State.Msg>(
+        'filters-apply', 'Apply', State.Msg.SetFilters(false),
+        new B.Options(Variant := S.ButtonVariant.Primary, ControlSize := B.Size.Small)
+      )
+    )
+  );
+  return P.Popover<State.Msg>(
+    'filters',
+    Trigger,
+    Content,
+    Model.Filters,
+    State.Msg.SetFilters(false),
+    new P.Options(Width := 280)
+  );
+end function;
+end unit;

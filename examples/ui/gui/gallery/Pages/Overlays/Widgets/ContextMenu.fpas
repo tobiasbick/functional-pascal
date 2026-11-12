@@ -1,0 +1,90 @@
+unit GuiGallery.Pages.Overlays.Widgets.ContextMenu;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Overlays.Widgets.Popover as Filter,
+  GuiGallery.Pages.Overlays.State as State,
+  Fpas.Ui.Menus as M,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  System as Sys;
+
+function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+// Shows the Filters panel and the native right-click area.
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Filter values and visibility.
+// ## Returns
+// A muted target with Cut, Copy, Paste and Delete; commands only update preview state.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  const Target: E.Element<State.Msg> := E.Styled<State.Msg>(
+    E.Column<State.Msg>(
+      new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(28)), Align := L.Alignment.Center),
+      E.Styled<State.Msg>(E.Text<State.Msg>('Right click this area'), S.Role.Secondary)
+    ), S.Role.MutedPanel
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
+    E.Styled<State.Msg>(E.Text<State.Msg>('Popover and context menu'), S.Role.Heading),
+    E.Styled<State.Msg>(
+      E.Column<State.Msg>(
+        new L.Flow(
+          Padding := L.Spacing.Fixed(L.Measure.Logical(24)),
+          Gap := L.Spacing.Fixed(L.Measure.Logical(16))
+        ),
+        E.Row<State.Msg>(
+          new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
+          Filter.View(Model, Data)
+        ),
+        M.ContextMenu<State.Msg>(
+          'context', Target, [
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'cut',
+                'Cut',
+                State.Msg.Shared(Demo.Msg.MenuChoice('Cut')),
+                Icon($E14E),
+                Shortcut := 'Ctrl X'
+              )
+            ),
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'copy',
+                'Copy',
+                State.Msg.Shared(Demo.Msg.MenuChoice('Copy')),
+                Icon($E09E),
+                Shortcut := 'Ctrl C'
+              )
+            ),
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'paste',
+                'Paste',
+                State.Msg.Shared(Demo.Msg.MenuChoice('Paste')),
+                Icon($E085),
+                Shortcut := 'Ctrl V'
+              )
+            ),
+            M.Entry<State.Msg>.Separator,
+            M.Entry<State.Msg>.Action(
+              new M.Item<State.Msg>(
+                'delete',
+                'Delete',
+                State.Msg.Shared(Demo.Msg.MenuChoice('Delete')),
+                Icon($E18E),
+                Danger := true
+              )
+            )
+          ]
+        )
+      ), S.Role.OutlinedPanel
+    )
+  );
+end function;
+end unit;

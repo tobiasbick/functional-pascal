@@ -72,8 +72,15 @@ internal sealed class GuiPackageFixture : IDisposable
         }
 
         Directory.CreateDirectory(File("consumer"));
-        foreach (string file in Directory.GetFiles(Path.Combine(inputs, "examples", "ui", "gui", "gallery"), "*.fpas"))
-            if (Path.GetFileName(file) != "main.fpas") System.IO.File.Copy(file, File("consumer/" + Path.GetFileName(file)));
+        string gallerySources = Path.Combine(inputs, "examples", "ui", "gui", "gallery");
+        foreach (string file in Directory.GetFiles(gallerySources, "*.fpas", SearchOption.AllDirectories))
+        {
+            string relative = Path.GetRelativePath(gallerySources, file);
+            if (relative == "main.fpas") continue;
+            string target = File("consumer/" + relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            System.IO.File.Copy(file, target);
+        }
         System.IO.File.Copy(Path.Combine(inputs, "PublishedGallery.fpas"), File("consumer/main.fpas"));
         foreach (string file in Directory.GetFiles(inputs, "*.fpas"))
             if (Path.GetFileName(file) != "PublishedGallery.fpas")

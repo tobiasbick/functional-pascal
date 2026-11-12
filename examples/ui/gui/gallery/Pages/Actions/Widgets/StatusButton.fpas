@@ -1,0 +1,26 @@
+unit GuiGallery.Pages.Actions.Widgets.StatusButton;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Actions.State as State,
+  Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Elements as E,
+  System as Sys;
+
+// Shows CUI's inline save feedback.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The Save changes button with its model-owned status.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return Work.StatusButton<State.Msg>(
+    'status-save', 'Save changes', Model.SaveStatus, State.Msg.StartSave,
+    new Work.Options(
+      Icon := Sys.Char.ConvertFromUtf32($E14D), TerminalIcon := '↓', SuccessLabel := 'Saved'
+    )
+  );
+end function;
+end unit;

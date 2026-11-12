@@ -1,0 +1,54 @@
+unit GuiGallery.Pages.Actions.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Reactions as React,
+  GuiGallery.Pages.Actions.State as S,
+  GuiGallery.Pages.Actions.Commands as Commands;
+
+function ChangeReaction(Items: array of React.Item; Index: int; Value: React.Item): array of React.Item;
+begin
+  const Next: array of React.Item := cast<array of React.Item>(Items.Clone());
+  Next[Index] := Value;
+  return Next;
+end function;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetToggleFormats(const Value: array of bool): State with
+      ToggleFormats := Value;
+    end with;
+    when S.Msg.SetToggleAlignment(const Value: array of bool): State with
+      ToggleAlignment := Value;
+    end with;
+    when S.Msg.SplitChoice(const Value: string): State with
+      SplitResult := Value;
+    end with;
+    when S.Msg.ConfirmDelete: State with
+      ProjectDeleted := true;
+    end with;
+    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then State with
+        SaveStatus := Work.Status.Busy;
+      end with
+      else State
+      end if;
+    when S.Msg.SetSaveStatus(const Value: Work.Status): State with
+      SaveStatus := Value;
+    end with;
+    when S.Msg.SetReaction(const Index: int, const Value: React.Item): State with
+      Reactions := ChangeReaction(State.Reactions, Index, Value);
+    end with;
+    when S.Msg.UserCommand(_): State;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, Commands.ForAction(State, Message));
+end function;
+end unit;

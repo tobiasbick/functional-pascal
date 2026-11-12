@@ -1,0 +1,62 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Disclosure;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.ExpandableCards as Cards, System.Collections.Generic as Lists;
+
+// Draws CUI's accordion or expandable card, including its outgoing body.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Stable header identity.
+// - `Title`: Literal caption.
+// - `Open`: Model-owned expansion.
+// - `OnChange`: Maps a proposed expansion to a message.
+// - `Content`: Body subtree.
+// - `Card`: Selects CUI's expandable card instead of its accordion.
+// - `Settings`: Header decoration and input permission.
+// - `Visit`: Host traversal for the native body.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Title: string; Open: bool;
+  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Card: bool; Settings: Cards.Options;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  const Role: string := if Card then 'expandable-card' else 'accordion' end if;
+  const Token: string := C.Token(Role, Id);
+  const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
+  const Result: int := Frame.Window.BeginDisclosure(
+    Token, Title, Card, Open, Allowed,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), Settings.Description, Settings.Icon,
+    Settings.Badge, cast<int>(Settings.BadgeTone)
+  );
+  if (Result and 2) <> 0 and Allowed then
+    Frame.Messages.Add(OnChange((Result and 4) <> 0));
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Title, Role, new Cui.CuiRectangle(), Allowed,
+        Value := if Open then 'true' else 'false' end if
+      )
+    );
+  end if;
+
+  if (Result and 1) = 0 then
+    return;
+  end if;
+  const Visible: bool := Open and (Result and 4) <> 0 and not Frame.PaintingClosed;
+  const Inside: C.State<TMsg> := Frame with
+    AcceptInput := Allowed and Visible;
+    Interactive := Frame.Interactive and Settings.Enabled;
+    PaintingClosed := not Visible;
+    Labels := if Visible then Frame.Labels else new Lists.List<string>() end if;
+  end with;
+  Visit(Content, Inside, false, L.Alignment.Default);
+  Frame.Window.EndDisclosure();
+end procedure;
+end unit;

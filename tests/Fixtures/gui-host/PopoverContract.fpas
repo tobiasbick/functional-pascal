@@ -1,10 +1,20 @@
 unit GalleryPopoverContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
-  Fpas.Ui.Validation as V, Fpas.Ui.Popovers as P, Fpas.Ui.ConfirmPopovers as Q, Fpas.Ui.Buttons as B,
-  Fpas.Ui.Elements as E, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Pages.Disclosure.State as SliceDisclosure,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Validation as V,
+  Fpas.Ui.Popovers as P,
+  Fpas.Ui.ConfirmPopovers as Q,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E,
+  System as Sys;
 
 procedure Check(Condition: bool; Reason: string);
 begin
@@ -59,7 +69,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
   begin
     case Message of
-      when State.Msg.PreviewBranchDeletion:
+      when State.Msg.Disclosure(SliceDisclosure.Msg.PreviewBranchDeletion):
         Confirmations := Confirmations + 1;
       when State.Msg.Preview:
         const Target: string := if Model.Active = State.Page.Overlays then 'filters-active'
@@ -72,7 +82,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       else
     end case;
 
-    return State.Update(Model, Message);
+    return GalleryUpdate.Update(Model, Message);
   end function;
   procedure Exercise(Session: Gui.Session<State.Msg>);
     function Find(Id: string): Gui.Control?;
@@ -201,7 +211,7 @@ begin
     Window,
     256,
     Inject,
-    ThemeFor := State.ThemeFor
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Exercise(Session);
 end procedure;

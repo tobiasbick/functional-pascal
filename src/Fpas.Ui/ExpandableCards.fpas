@@ -1,0 +1,69 @@
+unit Fpas.Ui.ExpandableCards;
+
+uses Fpas.Ui.Elements as E;
+
+// Native CUI badge colors.
+public type Tone = enum: byte
+  // Neutral surface.
+  Neutral;
+  // Informational blue.
+  Info;
+  // Successful green.
+  Success;
+  // Warning amber.
+  Warning;
+  // Destructive red.
+  Danger;
+  // Violet accent.
+  Violet;
+  // Teal accent.
+  Teal;
+  // Rose accent.
+  Rose;
+  // Current theme accent.
+  Accent;
+end enum;
+
+// Native header decoration and input permission.
+public type Options = record
+  // Supporting text below the title.
+  public Description: string := '';
+  // Optional CUI icon-font glyph.
+  public Icon: string := '';
+  // Optional badge caption before the chevron.
+  public Badge: string := '';
+  // Semantic color of the badge.
+  public BadgeTone: Tone := Tone.Neutral;
+  // Whether the header and body accept input.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's graphical expandable card with model-owned expansion.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable header identity.
+// - `Title`: Literal header caption.
+// - `Open`: Model-owned expansion state.
+// - `OnChange`: Maps a proposed state to a message.
+// - `Content`: Body, drawn without input while closing.
+// - `Settings`: Native header decoration and input permission.
+// ## Returns
+// A GUI-only native expandable card.
+public function ExpandableCard<TMsg>(
+  Id: string; Title: string; Open: bool;
+  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ExpandableCard(
+    Id,
+    Title,
+    Open,
+    OnChange,
+    Content,
+    Settings ?? new Options()
+  );
+end function;
+end unit;

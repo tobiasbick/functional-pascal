@@ -1,0 +1,52 @@
+unit GuiGallery.Pages.Selection.State;
+
+uses
+  Fpas.Ui.RangeSliders as R,
+  GuiGallery.Shared.State as Demo;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Bluetooth switch value.
+  public Bluetooth: bool := false;
+  // Airplane-mode switch value.
+  public Airplane: bool := false;
+  // Selected save-frequency example.
+  public SaveFrequency: int := 1;
+  // Selected destination in the radio cards.
+  public SavePlace: int := 1;
+  // Current volume on the continuous slider.
+  public Volume: float := 64.0F;
+  // Lower price bound in the range slider.
+  public PriceLower: float := 20.0F;
+  // Upper price bound in the range slider.
+  public PriceUpper: float := 75.0F;
+  // Independent category chips, with Design and Marketing selected initially.
+  public SelectedChips: int := 5;
+  // Current whole-star rating.
+  public Stars: int := 4;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Set the Bluetooth switch.
+  SetBluetooth(Value: bool);
+  // Set the airplane-mode switch.
+  SetAirplane(Value: bool);
+  // Select a save frequency.
+  SetSaveFrequency(Value: int);
+  // Select the save destination.
+  SetPlace(Value: int);
+  // Adjust the volume.
+  SetVolume(Value: float);
+  // Adjust both price bounds as one interval.
+  SetPrice(Value: R.Interval);
+  // Set one category's selected flag.
+  SetChip(Mask: int; Selected: bool);
+  // Accept a whole-star rating.
+  SetRating(Value: int);
+  // A harmless preview activation.
+  Preview;
+  // Propose a change to shared demo values.
+  Shared(Value: Demo.Msg);
+end variant;
+end unit;

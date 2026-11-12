@@ -1,9 +1,18 @@
 unit GalleryContextContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B,
-  Fpas.Ui.Validation as V, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Mvu.Application as App, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Menus as M,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Validation as V,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -62,8 +71,8 @@ end procedure;
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
   begin
-    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
-    Last := Next.Model.MenuResult;
+    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    Last := Next.Model.Shared.MenuResult;
     return Next;
   end function;
   procedure Inject();
@@ -123,7 +132,7 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Overlays),
-    Update, View.Build, Window, 256, Inject, ThemeFor := State.ThemeFor
+    Update, View.Build, Window, 256, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
   const Area: Cui.CuiRectangle := Control(Session, 'context').Bounds;

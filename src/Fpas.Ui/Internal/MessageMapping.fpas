@@ -1,0 +1,183 @@
+unit Fpas.Ui.Internal.MessageMapping;
+
+uses
+  Fpas.Ui.Menus as M, Fpas.Ui.SplitButtons as S, Fpas.Ui.Navigation as N,
+  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Collections.Generic as Lists;
+
+// Wraps an optional message factory without invoking it.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Value`: Optional native activation factory.
+// - `Messages`: Message translation.
+// ## Returns
+// A translated factory, or null when the original was absent.
+public function Factory<TChild, TParent>(
+  Value: Sys.Func<TChild>?;
+  Messages: function(TChild): TParent
+): Sys.Func<TParent>?;
+begin
+  case Value of
+    when is Sys.Func<TChild> as Original:
+      return function(): TParent => Messages(Original.Invoke());
+    else
+      return null;
+  end case;
+end function;
+
+// Wraps an optional one-argument callback without invoking it.
+// ## Type parameters
+// - `TArg`: Callback argument.
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Value`: Optional callback.
+// - `Messages`: Message translation.
+// ## Returns
+// A translated callback, retaining absence.
+public function Callback<TArg, TChild, TParent>(
+  Value: Sys.Func<TArg, TChild>?;
+  Messages: function(TChild): TParent
+): Sys.Func<TArg, TParent>?;
+begin
+  case Value of
+    when is Sys.Func<TArg, TChild> as Original:
+      return function(Argument: TArg): TParent => Messages(Original.Invoke(Argument));
+    else
+      return null;
+  end case;
+end function;
+
+// Translates menu actions while retaining their keys and all decoration.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Values`: Original entries.
+// - `Messages`: Message translation.
+// ## Returns
+// Entries in the same order, including captions and separators.
+public function Menu<TChild, TParent>(
+  Values: array of M.Entry<TChild>;
+  Messages: function(TChild): TParent
+): array of M.Entry<TParent>;
+begin
+  const Result: Lists.List<M.Entry<TParent>> := new Lists.List<M.Entry<TParent>>();
+  for Index: int := 0 to Values.Length - 1 do
+    Result.Add(
+      case Values[Index] of
+        when M.Entry.Action(const Item: M.Item<TChild>): M.Entry<TParent>.Action(
+          new M.Item<TParent>(
+            Item.Key, Item.Label, Messages(Item.Message), Item.Icon, Item.TerminalIcon,
+            Item.Shortcut, Item.Enabled, Item.Danger, Item.Checked
+          )
+        );
+        when M.Entry.Label(const Caption: string): M.Entry<TParent>.Label(Caption);
+        when M.Entry.Separator: M.Entry<TParent>.Separator;
+      end case
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Translates split-button choices while retaining their identities and glyphs.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Values`: Original choices.
+// - `Messages`: Message translation.
+// ## Returns
+// Choices in their original order.
+public function Split<TChild, TParent>(
+  Values: array of S.Item<TChild>;
+  Messages: function(TChild): TParent
+): array of S.Item<TParent>;
+begin
+  const Result: Lists.List<S.Item<TParent>> := new Lists.List<S.Item<TParent>>();
+  for Index: int := 0 to Values.Length - 1 do
+    const Item: S.Item<TChild> := Values[Index];
+    Result.Add(
+      new S.Item<TParent>(
+        Item.Key,
+        Item.Label,
+        Messages(Item.Message),
+        Item.Icon,
+        Item.TerminalIcon
+      )
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Translates sidebar destinations while retaining keys, badges and input permission.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Values`: Original sections.
+// - `Messages`: Message translation.
+// ## Returns
+// Independently rebuilt sections in their original order.
+public function Navigation<TChild, TParent>(
+  Values: array of N.Section<TChild>;
+  Messages: function(TChild): TParent
+): array of N.Section<TParent>;
+begin
+  const Result: Lists.List<N.Section<TParent>> := new Lists.List<N.Section<TParent>>();
+  for Section: int := 0 to Values.Length - 1 do
+    const Original: N.Section<TChild> := Values[Section];
+    const Items: Lists.List<N.Item<TParent>> := new Lists.List<N.Item<TParent>>();
+    for Index: int := 0 to Original.Items.Length - 1 do
+      const Item: N.Item<TChild> := Original.Items[Index];
+      Items.Add(
+        new N.Item<TParent>(
+          Item.Key,
+          Item.Label,
+          Messages(Item.Message),
+          Item.Enabled,
+          Item.Icon,
+          Item.Badge
+        )
+      );
+    end for;
+
+    Result.Add(new N.Section<TParent>(Original.Title, Items.ToArray()));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Translates terminal shortcut messages without changing their key bindings.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Values`: Original bindings.
+// - `Messages`: Message translation.
+// ## Returns
+// Equivalent bindings producing parent messages.
+public function Shortcuts<TChild, TParent>(
+  Values: array of K.ShortcutBinding<TChild>;
+  Messages: function(TChild): TParent
+): array of K.ShortcutBinding<TParent>;
+begin
+  const Result: Lists.List<K.ShortcutBinding<TParent>> := new Lists.List<K.ShortcutBinding<TParent>>();
+  for Index: int := 0 to Values.Length - 1 do
+    const Item: K.ShortcutBinding<TChild> := Values[Index];
+    Result.Add(
+      new K.ShortcutBinding<TParent>(
+        Item.PressedKey,
+        Item.Modifiers,
+        Messages(Item.Message),
+        Item.Character
+      )
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+end unit;

@@ -1,0 +1,33 @@
+unit GuiGallery.Pages.Disclosure.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  GuiGallery.Pages.Disclosure.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetBilling(const Open: bool): State with
+      BillingOpen := Open;
+    end with;
+    when S.Msg.SetSecurity(const Open: bool): State with
+      SecurityOpen := Open;
+    end with;
+    when S.Msg.SetBranchQuestion(const Open: bool): State with
+      BranchQuestion := Open;
+    end with;
+    when S.Msg.PreviewBranchDeletion: State with
+      BranchQuestion := false;
+      BranchDeleted := true;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

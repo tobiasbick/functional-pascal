@@ -38,8 +38,28 @@ Split substantial applications into feature slices, each with its own model,
 message type, update function and view. The parent routes messages to the owning
 slice and combines its transition with the application state in one session.
 Keep shared state under an explicit owner and control/effect IDs distinct across
-slices. Composition currently requires application code; the libraries have no
-built-in helpers for lifting child messages, views and commands into a parent.
+slices. Use `Fpas.Ui.Mvu.Composition.MapTransition<TModel, TChild, TParent>`
+to translate a child's transition with a pure message wrapper such as a parent
+variant case. It retains the next child model and returns parent commands in
+their original order. The parent places that child model in its own model.
+`MapCommand<TChild, TParent>` translates an individual command.
+
+The optional `Scope` prefixes background start and cancel IDs with `Scope/`.
+Use the same scope for a slice's lifetime so cancellation and supersession reach
+its own runs. Focus IDs stay unchanged: they identify controls in the complete
+view. Mapping does not start work or invoke action factories. Workers retain
+their cancellation token, awaited Post task and failure-to-message mapper.
+
+Host-specific payloads implement `Application.HostExtension<TMsg>`. Its generic
+`Map<TNext>` method rebuilds the payload with translated message factories and
+returns `HostExtension<TNext>`. A mapped opaque payload is rejected instead of
+being delivered under the wrong message type. GUI toast requests implement this
+contract, including their Undo/action callbacks.
+
+Use [`Fpas.Ui.Composition.Map`](../Fpas.Ui/README.md#subview-composition) for
+element trees. The [gallery router](../../examples/ui/gui/gallery/App/Update.fpas)
+and [Actions slice](../../examples/ui/gui/gallery/Pages/Actions/Update.fpas)
+show model ownership, scoped effects and message routing in one session.
 
 Use `Fpas.Ui.Elements.CachedSubview` with only the inputs that affect that
 subtree. It avoids rebuilding an unchanged view, but the hosts still validate

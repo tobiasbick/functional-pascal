@@ -1,9 +1,18 @@
 unit GalleryPickerFieldsContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Selects as S,
-  Fpas.Ui.NumberFields as N, Fpas.Ui.Validation as V, Fpas.Ui.Elements as E, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Pages.Inputs.State as SliceInputs,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Selects as S,
+  Fpas.Ui.NumberFields as N,
+  Fpas.Ui.Validation as V,
+  Fpas.Ui.Elements as E,
+  System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -132,7 +141,7 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Inputs),
-    State.Update, View.Build, Window, 32, Inject, ThemeFor := State.ThemeFor
+    GalleryUpdate.Update, View.Build, Window, 32, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
   Step(Session);
@@ -221,7 +230,7 @@ begin
     Control(Session, 'input-seats').Value = '99',
     'Nonfinite input must preserve the last finite model value.'
   );
-  discard Session.Post(State.Msg.SetSeats(7.0));
+  discard Session.Post(State.Msg.Inputs(SliceInputs.Msg.SetSeats(7.0)));
   Step(Session);
   TypeText(Session, '1');
   Check(

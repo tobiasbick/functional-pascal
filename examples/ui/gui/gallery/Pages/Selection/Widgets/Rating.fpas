@@ -1,0 +1,20 @@
+unit GuiGallery.Pages.Selection.Widgets.Rating;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Selection.State as State,
+  Fpas.Ui.Ratings as R,
+  Fpas.Ui.Elements as E;
+
+// Builds the five-star example on the native Selection page.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The native rating.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return R.Rating<State.Msg>('rating', 'Rating', Model.Stars, State.Msg.SetRating);
+end function;
+end unit;

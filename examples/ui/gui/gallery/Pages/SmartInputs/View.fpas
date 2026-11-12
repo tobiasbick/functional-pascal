@@ -1,0 +1,47 @@
+unit GuiGallery.Pages.SmartInputs.View;
+
+uses
+  GuiGallery.Pages.SmartInputs.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.TextFields as F;
+
+// Builds the two fixed-width prefix and suffix examples from Smart inputs.
+//
+// ## Parameters
+// - `Model`: Editable URL and weight values.
+// ## Returns
+// The Prefix and suffix section.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>(
+      'Prefix and suffix',
+      'Any text field can carry muted text before and after the value.'
+    ),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Wrap := true),
+      E.Size<State.Msg>(
+        F.TextField<State.Msg>(
+          'input-url',
+          Model.Url,
+          State.Msg.SetUrl,
+          new F.Options(Prefix := 'https://', MaxUtf8Bytes := 95)
+        ),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
+      ),
+      E.Size<State.Msg>(
+        F.TextField<State.Msg>(
+          'input-weight',
+          Model.Weight,
+          State.Msg.SetWeight,
+          new F.Options(Suffix := 'kg', MaxUtf8Bytes := 15)
+        ),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
+      )
+    )
+  );
+end function;
+end unit;

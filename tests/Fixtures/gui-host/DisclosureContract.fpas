@@ -1,0 +1,323 @@
+unit GalleryDisclosureContract;
+
+uses
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Shared.State as SliceShared,
+  GuiGallery.Pages.Overlays.State as SliceOverlays,
+  GuiGallery.Pages.Disclosure.State as SliceDisclosure,
+  GalleryHostAssertions as A,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as Gallery,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Accordions as Accordions,
+  Fpas.Ui.ExpandableCards as Cards,
+  Fpas.Ui.ExpandableTexts as Texts,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Dialogs as D,
+  Fpas.Ui.Validation as V,
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  System as Sys;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Disclosure preflight accepted an invalid view.');
+  end procedure;
+begin
+  const Body: E.Element<int> := E.Text<int>('Body');
+  const Change: function(bool): int := function(Open: bool): int => 1;
+  Reject(
+    Accordions.Accordion<int>('a', 'Title', false, Change, Body),
+    V.Target.Terminal, 'Graphical profile'
+  );
+  Reject(
+    Cards.ExpandableCard<int>('c', 'Title', false, Change, Body),
+    V.Target.Portable, 'Graphical profile'
+  );
+  Reject(Texts.ExpandableText<int>('t', 'Text'), V.Target.Terminal, 'Graphical profile');
+  Reject(
+    Texts.ExpandableText<int>('t', 'Text', new Texts.Options(Lines := 0)),
+    V.Target.Graphical, 'positive Lines'
+  );
+  Reject(
+    Texts.ExpandableText<int>('t', 'Text', new Texts.Options(Size := Sys.Single.NaN)),
+    V.Target.Graphical, 'finite'
+  );
+  Reject(
+    Accordions.Accordion<int>('a', '', false, Change, Body),
+    V.Target.Graphical, 'nonempty title'
+  );
+  Reject(
+    Cards.ExpandableCard<int>(
+      'c', 'Title', false, Change, Body,
+      new Cards.Options(BadgeTone := cast<Cards.Tone>(255))
+    ), V.Target.Graphical, 'badge tone'
+  );
+  Reject(
+    E.Column<int>(
+      Texts.ExpandableText<int>('t', 'Text'),
+      B.Button<int>('t/toggle', 'Duplicate', 0)
+    ),
+    V.Target.Graphical, 'Duplicate'
+  );
+  Reject(
+    Accordions.Accordion<int>('a', 'Closed', false, Change, B.Button<int>('a', 'Duplicate', 0)),
+    V.Target.Graphical, 'Duplicate'
+  );
+end procedure;
+
+procedure Lifecycle(Renderer: Cui.CuiRenderer);
+  function View(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+  begin
+    return E.Column<State.Msg>(
+      Cards.ExpandableCard<State.Msg>(
+        'card',
+        'Card ## literal',
+        Model.Disclosure.BillingOpen,
+        function(ChildValue: bool): State.Msg => State.Msg.Disclosure(
+          SliceDisclosure.Msg.SetBilling(ChildValue)
+        ),
+        D.Dialog<State.Msg>(
+          'nested',
+          B.Button<State.Msg>('body', 'Body action', State.Msg.Preview),
+          E.Column<State.Msg>(
+            Texts.ExpandableText<State.Msg>('short', 'Short text'),
+            B.Button<State.Msg>('inside', 'Modal action', State.Msg.Preview)
+          ),
+          Model.Overlays.ProfileDialog,
+          new D.Options('Nested dialog', CloseButton := false),
+          State.Msg.Overlays(SliceOverlays.Msg.SetProfileDialog(false))
+        ),
+        new Cards.Options(Enabled := Model.Shared.Newsletter)
+      ), Texts.ExpandableText<State.Msg>(
+        'text',
+        'A long native paragraph that occupies more than one line. A long native paragraph that occupies more than one line.',
+        new Texts.Options(Lines := 1), function(): State.Msg => State.Msg.Preview
+      )
+    );
+  end function;
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Preview:
+        Activations := Activations + 1;
+      when State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(const Header: bool)):
+        return new Mvu.Transition<State.Model, State.Msg>(
+          Model,
+          [Mvu.Focus<State.Msg>(if Header then 'card' else 'body' end if)]
+        );
+      when State.Msg.Disclosure(SliceDisclosure.Msg.SetBilling(_)):
+        if Refuse then
+          return new Mvu.Transition<State.Model, State.Msg>(Model, []);
+        end if;
+      when State.Msg.Overlays(SliceOverlays.Msg.SetFilters(_)):
+        return new Mvu.Transition<State.Model, State.Msg>(
+          Model,
+          [Mvu.Focus<State.Msg>('text/toggle')]
+        );
+      else
+    end case;
+
+    return GalleryUpdate.Update(Model, Message);
+  end function;
+  procedure Inject();
+  begin
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+begin
+  var Activations: int := 0;
+  var Refuse: bool := true;
+  var Key: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Disclosure lifecycle',
+    640,
+    480,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Disclosure := new SliceDisclosure.Model(BillingOpen := false)),
+    Update,
+    View,
+    Window,
+    32,
+    Inject
+  );
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Send(Session, State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(true)));
+  Key := 2;
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Check(A.Control(Session, 'card').Value = 'false', 'A refused proposal changed the model.');
+  Refuse := false;
+  A.Send(Session, State.Msg.Disclosure(SliceDisclosure.Msg.SetBilling(true)));
+  A.Check(A.Control(Session, 'body').Enabled, 'An accepted opening did not expose the body.');
+  A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetProfileDialog(true)));
+  A.Check(
+    A.Control(Session, 'inside').Enabled and A.Control(Session, 'inside').Focused,
+    'An active modal inside the card must retain native input and initial focus.'
+  );
+  A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetProfileDialog(false)));
+  A.Send(Session, State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(false)));
+  A.Check(A.Control(Session, 'body').Focused, 'The body did not receive focus before closing.');
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetNewsletter(false)));
+  A.Check(
+    not A.Control(Session, 'body').Enabled and not A.Control(Session, 'card').Enabled,
+    'A disabled card must disable its header and body.'
+  );
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetNewsletter(true)));
+  A.Send(Session, State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(false)));
+  Window.SetReducedMotion(false);
+  A.Send(Session, State.Msg.Disclosure(SliceDisclosure.Msg.SetBilling(false)));
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    A.Check(Item.Id <> 'body', 'A closing body remained interactive or visible to agents.');
+  end for;
+
+  Key := 2;
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Check(Activations = 0, 'The closing body dispatched an activation.');
+  A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetFilters(true)));
+  A.Check(
+    A.Control(Session, 'text/toggle').Focused,
+    'The text link did not accept application focus.'
+  );
+  Key := 2;
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Check(Session.Step(), 'The disclosure host closed.');
+  A.Check(Activations = 1, 'Native text activation must notify the model exactly once.');
+end procedure;
+
+// Verifies native disclosures in the published GUI gallery and the shared host.
+//
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The Disclosure page closed.');
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    X := Box.X + Box.Width / 2;
+    Y := Box.Y + Box.Height / 2;
+    Left := 1;
+    Step(Session);
+    Left := 0;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  Validate();
+  Lifecycle(Renderer);
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Key: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI disclosures',
+    1100,
+    760,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Lists), GalleryUpdate.Update, Gallery.Build,
+    Window, 32, Inject, ThemeFor := GalleryUpdate.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.HasText(Session, 'Accordion'),
+    'Native sections are missing.'
+  );
+  A.Check(
+    A.Control(Session, 'accordion/0').Value = 'true',
+    'The first accordion should start open.'
+  );
+  Session.CapturePng(Capture + '.accordion.png');
+  Click(Session, 'accordion/0');
+  A.Check(
+    A.Control(Session, 'accordion/0').Value = 'false',
+    'Pointer input did not close the accordion.'
+  );
+  X := -1.0F;
+  Y := -1.0F;
+  Key := 6;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, 'accordion/0').Value = 'true',
+    'Space did not reopen the focused accordion.'
+  );
+  Window.Resize(1100, 900);
+  A.Send(Session, State.Msg.Show(State.Page.Disclosure));
+  Step(Session);
+  Step(Session);
+  A.Check(A.HasText(Session, 'Expandable cards'), 'The native card section is missing.');
+  A.Check(A.Control(Session, 'change-plan').Enabled, 'The Billing body is missing.');
+  A.Check(A.Control(Session, 'about-cui/toggle').Enabled, 'The native expansion link is missing.');
+  Session.CapturePng(Capture + '.disclosure.png');
+  Click(Session, 'billing');
+  A.Check(A.Control(Session, 'billing').Value = 'false', 'The card did not close.');
+  Key := 2;
+  Step(Session);
+  Step(Session);
+  A.Check(A.Control(Session, 'change-plan').Enabled, 'Enter did not reopen the focused card.');
+  Click(Session, 'about-cui/toggle');
+  A.Check(A.Control(Session, 'about-cui').Value = 'true', 'The native text did not expand.');
+  Click(Session, 'security');
+  A.Check(
+    A.HasText(Session, 'Recovery codes were generated 3 months ago.'),
+    'The Security body is missing.'
+  );
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAppearance(Switchers.Selection.Dark)));
+  Step(Session);
+  Session.CapturePng(Capture + '.disclosure-dark.png');
+  Window.Resize(650, 1250);
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, 'billing').Bounds.Width < 650,
+    'The native card overflowed its narrow parent.'
+  );
+  Session.CapturePng(Capture + '.disclosure-narrow.png');
+  Window.Resize(1100, 900);
+  Step(Session);
+  Step(Session);
+  A.Check(A.Control(Session, 'billing').Value = 'true', 'Resizing lost model expansion.');
+end procedure;
+end unit;

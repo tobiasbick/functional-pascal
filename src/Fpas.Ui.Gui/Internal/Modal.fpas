@@ -2,7 +2,7 @@ unit Fpas.Ui.Gui.Internal.Modal;
 
 uses
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
-  Fpas.Ui.Gui.Internal.Focus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Gui.Internal.ModalFocus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   System.Collections.Generic as Lists;
 
 // Presents the base and a native modal with shared input and focus rules.

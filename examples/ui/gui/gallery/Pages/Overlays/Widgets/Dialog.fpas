@@ -1,0 +1,99 @@
+unit GuiGallery.Pages.Overlays.Widgets.Dialog;
+
+uses
+  Fpas.Ui.Composition as U,
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Overlays.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Dialogs as D,
+  Fpas.Ui.ActionFooters as F,
+  Fpas.Ui.TextFields as TextFields,
+  Fpas.Ui.Switches as Switches,
+  System as Sys;
+
+// Shows the original dialog and sheet triggers on Overlays.
+//
+// ## Returns
+// The native gallery's accepted actions in their original card.
+public function Section(): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>(
+      'Dialogs and sheets',
+      'Esc or a click outside closes them. Focus stays inside.'
+    ),
+    G.Card<State.Msg>(
+      12, [
+        E.Row<State.Msg>(
+          new L.Flow(Gap := G.Points(8), Wrap := true),
+          B.Button<State.Msg>(
+            'edit-profile-open', 'Edit profile', State.Msg.SetProfileDialog(true),
+            new B.Options(Icon := Sys.Char.ConvertFromUtf32($E1F9))
+          ),
+          B.Button<State.Msg>(
+            'sheet-open', 'Open sheet', State.Msg.SetSheet(true),
+            new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
+          )
+        )
+      ]
+    )
+  );
+end function;
+
+// Presents the original Edit profile dialog over the gallery.
+//
+// ## Type parameters
+// - `TParent`: Message type of the containing application.
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Shared sample profile values and dialog visibility.
+// - `Base`: Current gallery view.
+// - `Messages`: Embeds this page's messages in the application.
+// ## Returns
+// The view with the controlled native dialog and action footer.
+public function Wrap<TParent>(Model: State.Model; Data: Demo.Model; Base: E.Element<TParent>; Messages: function(State.Msg): TParent): E.Element<TParent>;
+begin
+  const Content: E.Element<State.Msg> := E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(16), Align := L.Alignment.Stretch),
+    TextFields.TextField<State.Msg>(
+      'edit-profile-name',
+      Data.Name,
+      function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(SharedValue)),
+      new TextFields.Options(Label := 'Name', MaxUtf8Bytes := 63)
+    ),
+    TextFields.TextField<State.Msg>(
+      'edit-profile-email',
+      Data.Email,
+      function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(SharedValue)),
+      new TextFields.Options(
+        Label := 'Email',
+        Icon := Sys.Char.ConvertFromUtf32($E10F),
+        MaxUtf8Bytes := 95
+      )
+    ),
+    Switches.Switch<State.Msg>(
+      'edit-profile-public',
+      'Public profile',
+      Data.Wifi,
+      function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetWifi(SharedValue))
+    ),
+    F.ActionFooter<State.Msg>(
+      B.Button<State.Msg>('edit-profile-cancel', 'Cancel', State.Msg.SetProfileDialog(false)),
+      B.Button<State.Msg>(
+        'edit-profile-save', 'Save changes', State.Msg.SaveProfile,
+        new B.Options(Variant := S.ButtonVariant.Primary)
+      )
+    )
+  );
+  return D.Dialog<TParent>(
+    'edit-profile', Base, U.Map<State.Msg, TParent>(Content, Messages), Model.ProfileDialog,
+    new D.Options('Edit profile', Description := 'Changes are visible to your team.'),
+    Messages(State.Msg.SetProfileDialog(false))
+  );
+end function;
+end unit;

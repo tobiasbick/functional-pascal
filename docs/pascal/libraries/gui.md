@@ -30,6 +30,10 @@ Its checked-in project uses source references for repository development;
 application packages deliver the managed libraries, native assets and notices.
 Users of those packages do not download CUI or build its C sources.
 
+Native [accordions and expandable cards](../../../src/Fpas.Ui/README.md#accordion-and-expandable-card)
+use model-owned expansion. [Expandable text](../../../src/Fpas.Ui/README.md#expandable-text)
+keeps its local expansion in CUI. These widgets require the GUI host.
+
 ## Model, update and view
 
 Keep application state in an immutable record. Define a message variant for user

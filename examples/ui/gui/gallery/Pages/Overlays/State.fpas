@@ -1,0 +1,35 @@
+unit GuiGallery.Pages.Overlays.State;
+
+uses
+  GuiGallery.Shared.State as Demo;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Whether the sheet preview is open.
+  public Sheet: bool := false;
+  // Whether the Edit profile dialog is open.
+  public ProfileDialog: bool := false;
+  // Whether the Filters panel is open.
+  public Filters: bool := false;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Preview archiving a message and offer an Undo action.
+  ArchiveMessage;
+  // Handle the timed toast's Undo action.
+  UndoArchive;
+  // Open or close the sheet preview.
+  SetSheet(Open: bool);
+  // Open or close the Edit profile dialog.
+  SetProfileDialog(Open: bool);
+  // Close the profile preview and show its success notification.
+  SaveProfile;
+  // Open or close the Filters panel.
+  SetFilters(Open: bool);
+  // A harmless preview activation.
+  Preview;
+  // Propose a change to shared demo values.
+  Shared(Value: Demo.Msg);
+end variant;
+end unit;

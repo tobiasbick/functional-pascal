@@ -53,7 +53,9 @@ Give each new widget a dedicated source file for its FPAS interface and one
 GUI implementation file in `Fpas.Ui.Gui/Internal/Widgets`. Match the unit name
 to its location, such as `Fpas.Ui.Gui.Internal.Widgets.Sheet`. Add native code under
 `src/Fpas.Ui.Gui.Cui/native/widgets` and managed interop only when existing
-bindings cannot express the widget. A composition needs no dedicated C entry
+bindings cannot express the widget. Native widgets with identical begin/end
+contracts may share their traversal adapter while keeping separate public units.
+A composition needs no dedicated C entry
 point: theme switcher and theme toggle use the segment and icon-button
 primitives. Shared dispatch, layout translation, focus and input stay with
 their host. No new terminal implementation file is required.
@@ -254,11 +256,30 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   [API][fpas-text-area]. Inputs shows the full-width About field with its hint.
   Windows Software and OpenGL cover LF insertion, Unicode editing, visual-line
   movement, Ctrl+Enter submission with displayed affixes, and wheel routing
-  inside an enclosing viewport. TUI: deferred; graphical profile required.
+  inside an enclosing viewport. Wheel-routing workaround:
+  [CUI-001](cui-upstream-bugs.md#cui-001). TUI: deferred; graphical profile required.
+- [x] Number field, including suffix (`cui_number`): [API][fpas-number-field].
+  Inputs shows Seats with model-owned bounds, native step buttons and editable
+  numeric text. Draft and finite-value workaround:
+  [CUI-005](cui-upstream-bugs.md#cui-005). TUI: deferred; graphical profile required.
 - [ ] Inline edit (`cui_inline_edit`)
 - [ ] Scrub field (`cui_scrub`)
 - [ ] Money field (`cui_money_input`)
 - [ ] Shortcut recorder and shortcut label (`cui_shortcut_recorder`, `cui_shortcut_label`)
+- [x] Tag input (`cui_tag_input`): [API][fpas-tag-input]. Inputs shows Topics
+  with native tag entry and removal. Batched tag-limit workaround:
+  [CUI-002](cui-upstream-bugs.md#cui-002). TUI: deferred; graphical profile required.
+- [x] One-time code input (`cui_otp_input`): [API][fpas-one-time-code]. Inputs
+  shows Verification code with change and completion messages. Replacement
+  completion workaround: [CUI-003](cui-upstream-bugs.md#cui-003).
+  TUI: deferred; graphical profile required.
+- [x] Password strength meter (`cui_password_strength`): [API][fpas-password-strength].
+  Inputs shows CUI's native score and label for New password.
+  TUI: deferred; graphical profile required.
+- [x] Select, including searchable combobox (`cui_select`): [API][fpas-select].
+  Inputs shows Country and searchable Language choices with stable option
+  indices. Search-dismissal focus workaround:
+  [CUI-004](cui-upstream-bugs.md#cui-004). TUI: deferred; graphical profile required.
 - [ ] Multi-select (`cui_multi_select`)
 - [ ] Calendar (`cui_calendar`)
 - [ ] Date picker (`cui_date_picker`)
@@ -338,14 +359,25 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
 - [ ] Command palette (`cui_command_palette`)
-- [ ] Accordion (`cui_accordion`)
+- [x] Accordion (`cui_accordion`): [API][fpas-accordion]. Lists shows the original
+  three questions. Native headers propose model-owned expansion; pointer,
+  Enter/Space, disabled input, closing bodies and nested dialogs are covered.
 - [ ] Hover card (`cui_hover_card`)
 - [x] Confirm popover (`cui_confirm_popover`): [API][fpas-popovers].
   Disclosure shows the original Delete branch question. Windows Software and
   OpenGL cover separate open and confirm actions and cancellation. TUI:
   deferred; graphical profile required.
-- [ ] Expandable text (`cui_expandable_text`)
-- [ ] Expandable card (`cui_expandable_card`)
+- [x] Expandable text (`cui_expandable_text`): [API][fpas-expandable-text].
+  Disclosure shows the original clamped About text. CUI owns expansion, wrapping,
+  fade and the optional link. Removing the widget releases local state.
+  Native focus loss after toggling is documented as [CUI-006][cui-006]; no
+  integration workaround or upstream contribution is planned.
+- [x] Expandable card (`cui_expandable_card`): [API][fpas-accordion]. Disclosure
+  shows Billing and Security with their native descriptions, icons and badge.
+  CUI owns layout, chevrons and height springs. Software/OpenGL host tests cover
+  model proposals, keyboard/pointer input, closing content and responsive views.
+  Native pixel comparisons cover all three widgets in light/dark and narrow/wide
+  configurations. Gallery captures cover Lists and Disclosure.
 - [ ] Guided tour (`cui_tour`)
 
 ### Feedback and progress
@@ -557,7 +589,15 @@ track that native build option with the GUI RTL layout work.
 [fpas-text-field]: ../../src/Fpas.Ui/README.md#text-field
 [fpas-search-field]: ../../src/Fpas.Ui/README.md#search-field
 [fpas-text-area]: ../../src/Fpas.Ui/README.md#text-area
+[fpas-number-field]: ../../src/Fpas.Ui/README.md#number-field
+[fpas-tag-input]: ../../src/Fpas.Ui/README.md#tag-input
+[fpas-one-time-code]: ../../src/Fpas.Ui/README.md#one-time-code-input
+[fpas-password-strength]: ../../src/Fpas.Ui/README.md#password-strength-meter
+[fpas-select]: ../../src/Fpas.Ui/README.md#select
 [fpas-dialog]: ../../src/Fpas.Ui/README.md#dialog-and-action-footer
+[fpas-accordion]: ../../src/Fpas.Ui/README.md#accordion-and-expandable-card
+[fpas-expandable-text]: ../../src/Fpas.Ui/README.md#expandable-text
+[cui-006]: cui-upstream-bugs.md#cui-006
 [fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas
 [gui-gallery-test]: ../../tests/Fixtures/gui-host/PublishedGallery.fpas

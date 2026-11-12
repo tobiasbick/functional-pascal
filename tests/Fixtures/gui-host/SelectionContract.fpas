@@ -1,13 +1,28 @@
 unit GallerySelectionContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Mvu.Application as App, Fpas.Ui.Checkboxes as Checkboxes, Fpas.Ui.Switches as Switches,
-  Fpas.Ui.RadioButtons as Radio, Fpas.Ui.RadioGroups as Radios, Fpas.Ui.Elements as E,
-  Fpas.Ui.RadioCards as Cards, Fpas.Ui.Sliders as S, Fpas.Ui.RangeSliders as R,
-  Fpas.Ui.Chips as Chips, Fpas.Ui.Ratings as Ratings, Fpas.Ui.Layout as L,
-  Fpas.Ui.Validation as V, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Shared.State as SliceShared,
+  GuiGallery.Pages.Selection.State as SliceSelection,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Checkboxes as Checkboxes,
+  Fpas.Ui.Switches as Switches,
+  Fpas.Ui.RadioButtons as Radio,
+  Fpas.Ui.RadioGroups as Radios,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.RadioCards as Cards,
+  Fpas.Ui.Sliders as S,
+  Fpas.Ui.RangeSliders as R,
+  Fpas.Ui.Chips as Chips,
+  Fpas.Ui.Ratings as Ratings,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Validation as V,
+  System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -105,13 +120,13 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
   begin
     case Message of
-      when State.Msg.SetSaveFrequency(_):
+      when State.Msg.Selection(SliceSelection.Msg.SetSaveFrequency(_)):
         RadioChanges := RadioChanges + 1;
       when State.Msg.Preview:
         PreviewCalls := PreviewCalls + 1;
       else
     end case;
-    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
     return if Focus = '' then Next
       else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
       end if;
@@ -180,7 +195,7 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Selection), Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
   const Newsletter: Gui.Control := Control(Session, 'newsletter');
@@ -261,7 +276,7 @@ begin
     'Right must move both selection and focus by one card.'
   );
 
-  discard Session.Post(State.Msg.SetBrightness(43.0F));
+  discard Session.Post(State.Msg.Shared(SliceShared.Msg.SetBrightness(43.0F)));
   Step(Session);
   Step(Session);
   Check(

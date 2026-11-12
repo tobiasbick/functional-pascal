@@ -1,0 +1,61 @@
+unit GuiGallery.Pages.Actions.State;
+
+uses
+  Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Reactions as React,
+  System as Sys,
+  GuiGallery.Shared.State as Demo;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Independent formatting flags on the Actions page, with Bold selected initially.
+  public ToggleFormats: (array of bool)? := null;
+  // Exclusive alignment flags on the Actions page, with Left selected initially.
+  public ToggleAlignment: (array of bool)? := null;
+  // Whether the confirmation preview has completed.
+  public ProjectDeleted: bool := false;
+  // Model-owned state of the inline save preview.
+  public SaveStatus: Work.Status := Work.Status.Idle;
+  // Last action from the Save split button.
+  public SplitResult: string := '';
+  // Reaction counts and activation on the Actions page.
+  public Reactions: array of React.Item := InitialReactions();
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Accept the formatting group's changed flags.
+  SetToggleFormats(Value: array of bool);
+  // Accept the alignment group's changed flags.
+  SetToggleAlignment(Value: array of bool);
+  // Record one completed two-step confirmation.
+  ConfirmDelete;
+  // Start the inline save preview while idle.
+  StartSave;
+  // Apply a scheduled feedback state to the save preview.
+  SetSaveStatus(Value: Work.Status);
+  // Record a primary or menu action.
+  SplitChoice(Value: string);
+  // Apply the changed reaction proposed by CUI.
+  SetReaction(Index: int; Value: React.Item);
+  // Choose a command from the simulated account menu.
+  UserCommand(Key: string);
+  // A harmless preview activation.
+  Preview;
+  // Propose a change to shared demo values.
+  Shared(Value: Demo.Msg);
+end variant;
+
+// Creates the four original reaction values for a new gallery.
+// ## Returns
+// Thumbs up, heart, rocket and smile with their starting counts.
+function InitialReactions(): array of React.Item;
+begin
+  return [
+    new React.Item('Thumbs up', Sys.Char.ConvertFromUtf32($E18A), 12, true),
+    new React.Item('Heart', Sys.Char.ConvertFromUtf32($E0F2), 4),
+    new React.Item('Rocket', Sys.Char.ConvertFromUtf32($E286), 7),
+    new React.Item('Smile', Sys.Char.ConvertFromUtf32($E164), 2)
+  ];
+end function;
+end unit;

@@ -1,0 +1,48 @@
+unit GuiGallery.Pages.Selection.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.RangeSliders as R,
+  GuiGallery.Pages.Selection.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetBluetooth(const Value: bool): State with
+      Bluetooth := Value;
+    end with;
+    when S.Msg.SetAirplane(const Value: bool): State with
+      Airplane := Value;
+    end with;
+    when S.Msg.SetSaveFrequency(const Value: int): State with
+      SaveFrequency := Value;
+    end with;
+    when S.Msg.SetPlace(const Value: int): State with
+      SavePlace := Value;
+    end with;
+    when S.Msg.SetVolume(const Value: float): State with
+      Volume := Value;
+    end with;
+    when S.Msg.SetPrice(const Value: R.Interval): State with
+      PriceLower := Value.Lower;
+      PriceUpper := Value.Upper;
+    end with;
+    when S.Msg.SetChip(const Mask: int, const Selected: bool): State with
+      SelectedChips := if Selected then State.SelectedChips or Mask
+        else State.SelectedChips and not Mask
+        end if;
+    end with;
+    when S.Msg.SetRating(const Value: int): State with
+      Stars := Value;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

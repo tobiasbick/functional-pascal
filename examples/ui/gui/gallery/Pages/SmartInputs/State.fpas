@@ -1,0 +1,20 @@
+unit GuiGallery.Pages.SmartInputs.State;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Editable part of the URL after its prefix.
+  public Url: string := 'cui.dev';
+  // Editable weight before the unit suffix.
+  public Weight: string := '72';
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Update the URL without its displayed prefix.
+  SetUrl(Value: string);
+  // Update the weight without its displayed unit.
+  SetWeight(Value: string);
+  // A harmless preview activation.
+  Preview;
+end variant;
+end unit;

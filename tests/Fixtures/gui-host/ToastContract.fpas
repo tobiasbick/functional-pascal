@@ -1,9 +1,17 @@
 unit GalleryToastContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Toasts as Toasts,
-  System as Sys, System.Diagnostics as Diagnostics, System.Threading as Threads;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Shared.State as SliceShared,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Toasts as Toasts,
+  System as Sys,
+  System.Diagnostics as Diagnostics,
+  System.Threading as Threads;
 
 procedure Check(Condition: bool; Reason: string);
 begin
@@ -62,11 +70,18 @@ begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI idle toast', 1000, 760, Renderer);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
-    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    new State.Model(Active := State.Page.Overlays),
+    GalleryUpdate.Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
-  discard Session.Post(State.Msg.Notify('Idle notice', new Toasts.Options(Duration := 1.2F)));
+  discard Session.Post(
+    State.Msg.Shared(SliceShared.Msg.Notify('Idle notice', new Toasts.Options(Duration := 1.2F)))
+  );
   Step(Session);
   const Initial: Gui.Control := Card(Session, 'Idle notice');
   X := Initial.Bounds.X + Initial.Bounds.Width / 2;
@@ -135,8 +150,13 @@ begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Toasts', 1000, 760, Renderer, true);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
-    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    new State.Model(Active := State.Page.Overlays),
+    GalleryUpdate.Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
   Click(Session, 'toast-save-profile');

@@ -1,0 +1,52 @@
+unit GuiGallery.Pages.Overlays.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Toasts as Toasts,
+  GuiGallery.Pages.Overlays.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetSheet(const Open: bool): State with
+      Sheet := Open;
+    end with;
+    when S.Msg.SetProfileDialog(const Open: bool): State with
+      ProfileDialog := Open;
+    end with;
+    when S.Msg.SaveProfile: State with
+      ProfileDialog := false;
+    end with;
+    when S.Msg.SetFilters(const Open: bool): State with
+      Filters := Open;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Next, case Message of
+      when S.Msg.SaveProfile: [
+        Toasts.Show<S.Msg>('Profile updated', new Toasts.Options(Appearance := Toasts.Tone.Success))
+      ];
+      when S.Msg.ArchiveMessage: [
+        Toasts.Show<S.Msg>(
+          'Message archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
+          function(): S.Msg => S.Msg.UndoArchive
+        )
+      ];
+      when S.Msg.UndoArchive: [
+        Toasts.Show<S.Msg>(
+          'Message restored',
+          new Toasts.Options(Appearance := Toasts.Tone.Success)
+        )
+      ];
+      else [];
+    end case
+  );
+end function;
+end unit;

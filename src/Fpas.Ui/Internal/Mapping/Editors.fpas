@@ -1,0 +1,129 @@
+unit Fpas.Ui.Internal.Mapping.Editors;
+
+uses
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Internal.MessageMapping as M,
+  Fpas.Ui.Selects as Selects,
+  Fpas.Ui.NumberFields as NumberFields,
+  Fpas.Ui.TagInputs as TagInputs,
+  Fpas.Ui.OneTimeCodes as OneTimeCodes,
+  Fpas.Ui.SearchFields as SearchFields,
+  Fpas.Ui.TextAreas as TextAreas,
+  Fpas.Ui.TextFields as TextFields,
+  System as Sys;
+
+// Translates a validated family of UI nodes without changing presentation.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Value`: Original node.
+// - `Messages`: Message translation.
+// ## Returns
+// The node producing parent messages.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.TextField(
+      const FId: string,
+      const FValue: string,
+      const FOnChange: function(string): TChild,
+      const FSettings: TextFields.Options,
+      const FOnSubmit: Sys.Func<string, TChild>?
+    ):
+      return E.Element<TParent>.TextField(
+        FId,
+        FValue,
+        function(A0: string): TParent => Messages(FOnChange(A0)),
+        FSettings,
+        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+      );
+    when E.Element.SearchField(
+      const FId: string,
+      const FValue: string,
+      const FOnChange: function(string): TChild,
+      const FSettings: SearchFields.Options,
+      const FOnSubmit: Sys.Func<string, TChild>?
+    ):
+      return E.Element<TParent>.SearchField(
+        FId,
+        FValue,
+        function(A0: string): TParent => Messages(FOnChange(A0)),
+        FSettings,
+        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+      );
+    when E.Element.TextArea(
+      const FId: string,
+      const FValue: string,
+      const FOnChange: function(string): TChild,
+      const FSettings: TextAreas.Options,
+      const FOnSubmit: Sys.Func<string, TChild>?
+    ):
+      return E.Element<TParent>.TextArea(
+        FId,
+        FValue,
+        function(A0: string): TParent => Messages(FOnChange(A0)),
+        FSettings,
+        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+      );
+    when E.Element.TagInput(
+      const FId: string,
+      const FTags: array of string,
+      const FOnChange: function(array of string): TChild,
+      const FSettings: TagInputs.Options
+    ):
+      return E.Element<TParent>.TagInput(
+        FId,
+        FTags,
+        function(A0: array of string): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.OneTimeCodeInput(
+      const FId: string,
+      const FValue: string,
+      const FOnChange: function(string): TChild,
+      const FSettings: OneTimeCodes.Options,
+      const FOnComplete: Sys.Func<string, TChild>?
+    ):
+      return E.Element<TParent>.OneTimeCodeInput(
+        FId,
+        FValue,
+        function(A0: string): TParent => Messages(FOnChange(A0)),
+        FSettings,
+        M.Callback<string, TChild, TParent>(FOnComplete, Messages)
+      );
+    when E.Element.SelectInput(
+      const FId: string,
+      const FItems: array of Selects.Item,
+      const FSelected: int,
+      const FOnChange: function(int): TChild,
+      const FSettings: Selects.Options
+    ):
+      return E.Element<TParent>.SelectInput(
+        FId,
+        FItems,
+        FSelected,
+        function(A0: int): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    when E.Element.NumberField(
+      const FId: string,
+      const FValue: double,
+      const FMinimum: double,
+      const FMaximum: double,
+      const FOnChange: function(double): TChild,
+      const FSettings: NumberFields.Options
+    ):
+      return E.Element<TParent>.NumberField(
+        FId,
+        FValue,
+        FMinimum,
+        FMaximum,
+        function(A0: double): TParent => Messages(FOnChange(A0)),
+        FSettings
+      );
+    else
+      raise new Sys.InvalidOperationException('An unexpected node reached message mapping.');
+  end case;
+end function;
+end unit;

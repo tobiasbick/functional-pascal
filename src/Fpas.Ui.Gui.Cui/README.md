@@ -20,6 +20,9 @@ It supports the FPAS GUI host and interop fixtures. Applications use the
   widget engine or palette mutation.
 - Text, headings, separators, box sizing, styles and scrolling are composition
   foundations. The host supplies shared layout constraints to CUI.
+- Accordion and expandable-card scopes call CUI's native begin/end pairs;
+  expandable text retains its native local state and optional expansion link.
+  Header snapshots and outer layout nodes are tracked separately.
 - TrackLastControl and composite tracking expose geometry, focus and hover.
   ForgetControl releases retained state and owned popup/feedback state for
   disappearing controls. Private state keys stay in the native bridge.

@@ -1,0 +1,49 @@
+unit GuiGallery.Pages.Actions.Widgets.ThemeSwitcher;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  Fpas.Ui.ThemeToggles as Toggles,
+  GuiGallery.Pages.Actions.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L;
+
+// Shows the same controlled appearance selector used by the gallery header.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current appearance choices and simulated provider value.
+// ## Returns
+// The original row with the selector and light/dark toggle.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+  function Choose(Appearance: Themes.Mode): State.Msg;
+  begin
+    return State.Msg.Shared(
+      Demo.Msg.SetAppearance(
+        if Appearance = Themes.Mode.Dark then Switchers.Selection.Dark
+          else Switchers.Selection.Light
+          end if
+      )
+    );
+  end function;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(16), Wrap := true),
+    Switchers.ThemeSwitcher<State.Msg>(
+      'theme-preview',
+      Data.Appearance,
+      function(SharedValue: Switchers.Selection): State.Msg => State.Msg.Shared(
+        Demo.Msg.SetAppearance(SharedValue)
+      ),
+      new Switchers.Options(WithSystem := true)
+    ),
+    Toggles.ThemeToggle<State.Msg>(
+      'theme-toggle',
+      Switchers.Resolve(Data.Appearance, Data.SystemAppearance),
+      Choose
+    )
+  );
+end function;
+end unit;

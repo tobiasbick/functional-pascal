@@ -1,0 +1,28 @@
+unit GuiGallery.Pages.Disclosure.State;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Whether the branch confirmation is open.
+  public BranchQuestion: bool := false;
+  // Whether the harmless confirmation preview has completed.
+  public BranchDeleted: bool := false;
+  // Expansion of the Billing card.
+  public BillingOpen: bool := true;
+  // Expansion of the Security card.
+  public SecurityOpen: bool := false;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Accept expansion of the Billing card.
+  SetBilling(Open: bool);
+  // Accept expansion of the Security card.
+  SetSecurity(Open: bool);
+  // Open or cancel the branch confirmation.
+  SetBranchQuestion(Open: bool);
+  // Record confirmation without changing a repository.
+  PreviewBranchDeletion;
+  // A harmless preview activation.
+  Preview;
+end variant;
+end unit;

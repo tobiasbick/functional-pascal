@@ -64,6 +64,7 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Async functions, tasks, cancellation, and shared state | [Concurrency](concurrency.md) |
 | Build, test, inspect APIs, debug, profile, or change the compiler | [Tools](tools.md) |
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
+| Change CUI integration or prepare an upstream contribution | [CUI workflow](../../cui-contributions.md) |
 
 Use the owning handbook/specification for details. Check implementation status
 before using a feature from a proposal.

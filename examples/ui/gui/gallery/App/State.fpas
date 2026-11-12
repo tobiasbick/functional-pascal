@@ -1,0 +1,96 @@
+unit GuiGallery.App.State;
+
+uses
+  GuiGallery.Pages.Buttons.State as Buttons,
+  GuiGallery.Pages.Inputs.State as Inputs,
+  GuiGallery.Pages.Selection.State as Selection,
+  GuiGallery.Pages.Navigation.State as Navigation,
+  GuiGallery.Pages.Lists.State as Lists,
+  GuiGallery.Pages.Overlays.State as Overlays,
+  GuiGallery.Pages.Actions.State as Actions,
+  GuiGallery.Pages.SmartInputs.State as SmartInputs,
+  GuiGallery.Pages.Disclosure.State as Disclosure,
+  GuiGallery.Shared.State as Demo;
+
+// Pages from the CUI gallery with accepted FPAS previews.
+public type Page = enum: byte
+  // Gallery introduction.
+  Overview;
+  // Buttons and their related actions.
+  Buttons;
+  // Native text fields and their validation state.
+  Inputs;
+  // Native selection controls and sliders.
+  Selection;
+  // Native tabs, breadcrumb, pagination and stepper.
+  Navigation;
+  // Accepted native list components, starting with the accordion.
+  Lists;
+  // The sheet, popover, context menu and native toasts.
+  Overlays;
+  // Related actions from the extended gallery.
+  Actions;
+  // Native text-field affixes from the extended gallery.
+  SmartInputs;
+  // Native disclosure examples.
+  Disclosure;
+end enum;
+
+// Application state with one owner per feature.
+public type Model = record
+  // Active gallery page.
+  public Active: Page := Page.Overview;
+  // Visibility of the compact navigation drawer.
+  public Drawer: bool := false;
+  // Demo values shared by several pages.
+  public Shared: Demo.Model := new Demo.Model();
+  // State owned by the Buttons page.
+  public Buttons: Buttons.Model := new Buttons.Model();
+  // State owned by the Inputs page.
+  public Inputs: Inputs.Model := new Inputs.Model();
+  // State owned by the Selection page.
+  public Selection: Selection.Model := new Selection.Model();
+  // State owned by the Navigation page.
+  public Navigation: Navigation.Model := new Navigation.Model();
+  // State owned by the Lists page.
+  public Lists: Lists.Model := new Lists.Model();
+  // State owned by the Overlays page.
+  public Overlays: Overlays.Model := new Overlays.Model();
+  // State owned by the Actions page.
+  public Actions: Actions.Model := new Actions.Model();
+  // State owned by the SmartInputs page.
+  public SmartInputs: SmartInputs.Model := new SmartInputs.Model();
+  // State owned by the Disclosure page.
+  public Disclosure: Disclosure.Model := new Disclosure.Model();
+end record;
+
+// Application navigation and typed child messages.
+public type Msg = variant
+  // Navigate to an accepted page.
+  Show(Value: Page);
+  // Open or close the navigation drawer.
+  SetDrawer(Open: bool);
+  // A harmless application activation.
+  Preview;
+  // Change values with a shared owner.
+  Shared(Value: Demo.Msg);
+  // Route an action to the Buttons slice.
+  Buttons(Value: Buttons.Msg);
+  // Route an action to the Inputs slice.
+  Inputs(Value: Inputs.Msg);
+  // Route an action to the Selection slice.
+  Selection(Value: Selection.Msg);
+  // Route an action to the Navigation slice.
+  Navigation(Value: Navigation.Msg);
+  // Route an action to the Lists slice.
+  Lists(Value: Lists.Msg);
+  // Route an action to the Overlays slice.
+  Overlays(Value: Overlays.Msg);
+  // Route an action to the Actions slice.
+  Actions(Value: Actions.Msg);
+  // Route an action to the SmartInputs slice.
+  SmartInputs(Value: SmartInputs.Msg);
+  // Route an action to the Disclosure slice.
+  Disclosure(Value: Disclosure.Msg);
+end variant;
+end unit;

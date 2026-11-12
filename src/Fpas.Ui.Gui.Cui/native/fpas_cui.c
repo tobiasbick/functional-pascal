@@ -23,6 +23,7 @@ static void fpas_route_text_area_wheel(cui_ctx *ui);
 #include "controls.c"
 #include "widget_nodes.c"
 #include "control_state.c"
+#include "widgets/disclosure.c"
 #include "widgets/button.c"
 #include "widgets/button_group.c"
 #include "host_widgets.c"

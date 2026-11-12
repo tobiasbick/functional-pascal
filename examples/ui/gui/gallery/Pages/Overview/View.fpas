@@ -1,0 +1,38 @@
+unit GuiGallery.Pages.Overview.View;
+
+uses
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B,
+  GuiGallery.Shared.Sections as G,
+  System as Sys;
+
+// Builds the static introduction with a parent-supplied navigation action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Browse`: Navigate to Buttons.
+// ## Returns
+// The Overview page.
+public function View<TMsg>(Browse: TMsg): E.Element<TMsg>;
+begin
+  return E.Column<TMsg>(
+    new L.Flow(Gap := G.Points(14)),
+    E.Styled<TMsg>(E.Text<TMsg>('Components for C'), S.Role.PageTitle),
+    E.Styled<TMsg>(
+      E.Text<TMsg>('Explore the CUI components available in Functional Pascal.'),
+      S.Role.Secondary
+    ),
+    B.Button<TMsg>(
+      'browse',
+      'Browse components',
+      Browse,
+      new B.Options(
+        Variant := S.ButtonVariant.Primary,
+        IconRight := Sys.Char.ConvertFromUtf32($E049)
+      )
+    )
+  );
+end function;
+end unit;

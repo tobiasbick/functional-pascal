@@ -1,0 +1,22 @@
+unit GuiGallery.Pages.Actions.Widgets.Reactions;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Actions.State as State,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Reactions as R;
+
+// Shows the native reaction group in the Actions page.
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery state.
+// ## Returns
+// The four independent reactions.
+public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+begin
+  return R.Reactions<State.Msg>(
+    'action-reactions', Model.Reactions,
+    function(Index: int; Value: R.Item): State.Msg => State.Msg.SetReaction(Index, Value)
+  );
+end function;
+end unit;

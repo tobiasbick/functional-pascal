@@ -1,11 +1,15 @@
 program GuiWidgetGallery;
 
-uses GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui;
+uses
+  GuiGallery.App.State as State,
+  GuiGallery.App.Update as Update,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui;
 
 begin
   Gui.Run<State.Model, State.Msg>(
-    new State.Model(), State.Update, View.Build,
-    new Gui.Options(Title := 'FPas CUI Gallery', Width := 1240, Height := 820), State.ThemeFor
+    new State.Model(), Update.Update, View.Build,
+    new Gui.Options(Title := 'FPas CUI Gallery', Width := 1240, Height := 820), Update.ThemeFor
   );
 end;
 end program;

@@ -1,0 +1,230 @@
+unit GuiGallery.Pages.Buttons.View;
+
+uses
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Buttons.Widgets.DropdownMenu as Dropdown,
+  GuiGallery.Pages.Buttons.Widgets.SegmentedControl as Segmented,
+  GuiGallery.Pages.Buttons.State as State,
+  GuiGallery.Pages.Buttons.Widgets.ButtonGroup as Group,
+  GuiGallery.Pages.Buttons.Widgets.CopyButton as Copy,
+  GuiGallery.Pages.Buttons.Widgets.HoldButton as Hold,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.IconButtons as I,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  System as Sys;
+
+const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
+const Card: L.Flow := new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(24)));
+
+const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
+
+function Glyph(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+function Sample(Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element<State.Msg>;
+begin
+  return B.Button<State.Msg>(
+    Id,
+    Label,
+    State.Msg.Preview,
+    new B.Options(Variant := Style, ControlSize := Size)
+  );
+end function;
+
+function IconSample(Id: string; Code: int; Caption: string; Terminal: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element<State.Msg>;
+begin
+  return I.IconButton<State.Msg>(
+    Id, Glyph(Code), Caption, State.Msg.Preview,
+    new I.Options(Variant := Style, TerminalGlyph := Terminal, Shortcut := Shortcut)
+  );
+end function;
+
+function Section(Title: string; Description: string := ''): E.Element<State.Msg>;
+begin
+  const Padding: E.Element<State.Msg> := E.Size<State.Msg>(
+    E.Column<State.Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(18)))
+  );
+  const Heading: E.Element<State.Msg> := E.Styled<State.Msg>(
+    E.Text<State.Msg>(Title),
+    S.Role.Heading
+  );
+  if Description = '' then
+    return E.Column<State.Msg>(Padding, Heading);
+  end if;
+
+  return E.Column<State.Msg>(
+    Padding,
+    E.Column<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Tight),
+      Heading,
+      E.Styled<State.Msg>(E.Text<State.Msg>(Description), S.Role.Secondary)
+    )
+  );
+end function;
+
+function Panel(Child: E.Element<State.Msg>): E.Element<State.Msg>;
+begin
+  return E.Styled<State.Msg>(E.Column<State.Msg>(Card, Child), S.Role.OutlinedPanel);
+end function;
+
+// Builds the accepted examples from the CUI Buttons page.
+//
+// ## Parameters
+// - `Data`: Shared demo values owned by the application.
+// - `Model`: Current gallery model.
+// - `Wide`: Whether complete example rows fit side by side.
+// ## Returns
+// The button variants, sizes, states, group and copy action.
+public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+begin
+  const Sizes: E.Element<State.Msg> := E.Row<State.Msg>(
+    Row, Sample('small', 'Small', Size := B.Size.Small), Sample('medium', 'Medium'),
+    Sample('large', 'Large', Size := B.Size.Large)
+  );
+  const Project: E.Element<State.Msg> := B.Button<State.Msg>(
+    'new-project', 'New project', State.Msg.Preview,
+    new B.Options(Variant := S.ButtonVariant.Primary, Icon := Glyph($E13D), TerminalIcon := '+')
+  );
+  const Download: E.Element<State.Msg> := B.Button<State.Msg>(
+    'download',
+    'Download',
+    State.Msg.Preview,
+    new B.Options(Icon := Glyph($E0B2), TerminalIcon := '↓')
+  );
+  const Continue: E.Element<State.Msg> := B.Button<State.Msg>(
+    'continue', 'Continue', State.Msg.Preview,
+    new B.Options(
+      Variant := S.ButtonVariant.Outline,
+      IconRight := Glyph($E049),
+      TerminalIconRight := '→'
+    )
+  );
+  const CopyIcon: E.Element<State.Msg> := IconSample(
+    'icon-copy',
+    $E09E,
+    'Copy',
+    '⧉',
+    Shortcut := 'Ctrl C'
+  );
+  const Share: E.Element<State.Msg> := IconSample('icon-share', $E156, 'Share', '↗');
+  const Like: E.Element<State.Msg> := IconSample(
+    'icon-like',
+    $E0F2,
+    'Like',
+    '♥',
+    S.ButtonVariant.Outline
+  );
+  const Delete: E.Element<State.Msg> := IconSample(
+    'icon-delete',
+    $E18E,
+    'Delete',
+    '×',
+    S.ButtonVariant.Secondary
+  );
+  const Save: E.Element<State.Msg> := B.Button<State.Msg>(
+    'save',
+    if Model.ButtonLoading then 'Saving' else 'Save changes' end if,
+    State.Msg.SetButtonLoading(true),
+    new B.Options(Loading := Model.ButtonLoading, Variant := S.ButtonVariant.Primary)
+  );
+  const Reset: E.Element<State.Msg> := B.Button<State.Msg>(
+    'finish-save',
+    'Reset',
+    State.Msg.SetButtonLoading(false)
+  );
+  const Disabled: E.Element<State.Msg> := B.Button<State.Msg>(
+    'disabled', 'Disabled', State.Msg.Preview, new B.Options(Enabled := false)
+  );
+  const Selected: E.Element<State.Msg> := B.Button<State.Msg>(
+    'selected', 'Selected', State.Msg.Preview,
+    new B.Options(
+      Variant := S.ButtonVariant.Ghost,
+      Selected := true,
+      Icon := Glyph($E06C),
+      TerminalIcon := '✓'
+    )
+  );
+  const Primary: E.Element<State.Msg> := Sample('primary', 'Primary', S.ButtonVariant.Primary);
+  const Secondary: E.Element<State.Msg> := Sample('secondary', 'Secondary');
+  const Outline: E.Element<State.Msg> := Sample('outline', 'Outline', S.ButtonVariant.Outline);
+  const Ghost: E.Element<State.Msg> := Sample('ghost', 'Ghost', S.ButtonVariant.Ghost);
+  const Danger: E.Element<State.Msg> := Sample('danger', 'Danger', S.ButtonVariant.Destructive);
+  const Link: E.Element<State.Msg> := Sample('link', 'Link', S.ButtonVariant.Link);
+
+  const Variants: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+      Row,
+      Primary,
+      Secondary,
+      Outline,
+      Ghost,
+      Danger,
+      Link
+    )
+    else E.Column<State.Msg>(
+      Stack,
+      E.Row<State.Msg>(Row, Primary, Secondary, Outline),
+      E.Row<State.Msg>(Row, Ghost, Danger, Link)
+    )
+    end if;
+  const Icons: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+      Row,
+      Project,
+      Download,
+      Continue,
+      CopyIcon,
+      Share,
+      Like,
+      Delete
+    )
+    else E.Column<State.Msg>(
+      Stack,
+      E.Row<State.Msg>(Row, Project, Download),
+      E.Row<State.Msg>(Row, Continue, CopyIcon, Share, Like, Delete)
+    )
+    end if;
+  const States: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+      Row,
+      Save,
+      Reset,
+      Disabled,
+      Selected
+    )
+    else E.Column<State.Msg>(
+      Stack,
+      E.Row<State.Msg>(Row, Save, Reset),
+      E.Row<State.Msg>(Row, Disabled, Selected)
+    )
+    end if;
+  const GroupAndCopy: E.Element<State.Msg> := if Wide then E.Row<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))),
+      Group.View(Model, Data),
+      Copy.View(),
+      Hold.View(Model, Data)
+    )
+    else E.Column<State.Msg>(Stack, Group.View(Model, Data), Copy.View(), Hold.View(Model, Data))
+    end if;
+
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(20))),
+    Section('Variants', 'One primary action per view. Secondary for everything else.'),
+    Panel(Variants),
+    Section('Sizes and icons'),
+    Panel(E.Column<State.Msg>(Stack, Sizes, Icons)),
+    Section('States', 'Loading keeps the label so the layout does not jump.'),
+    Panel(States),
+    Section(
+      'Groups, copy and hold to confirm',
+      'Hold the button until it fills to confirm a destructive action.'
+    ),
+    Panel(GroupAndCopy),
+    Section('Segmented control', 'A highlight glides to the selected option.'),
+    Panel(Segmented.View(Model, Data)),
+    Section('Dropdown menu'),
+    Panel(Dropdown.View())
+  );
+end function;
+end unit;

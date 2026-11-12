@@ -1,0 +1,45 @@
+unit GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover;
+
+uses
+  GuiGallery.Pages.Disclosure.State as State,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.ConfirmPopovers as P,
+  System as Sys;
+
+// Builds the native inline branch-confirmation example.
+//
+// ## Parameters
+// - `Model`: Current confirmation and preview result.
+// ## Returns
+// The Confirm popover section on the Disclosure page.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Trigger: E.Element<State.Msg> := B.Button<State.Msg>(
+    'branch-trigger', 'Delete branch', State.Msg.SetBranchQuestion(true),
+    new B.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
+  );
+  const Question: E.Element<State.Msg> := P.ConfirmPopover<State.Msg>(
+    'branch-question', Trigger, Model.BranchQuestion,
+    new P.Options(
+      'Delete feature/grid?', 'The branch and its 12 commits are removed from the remote.',
+      ConfirmLabel := 'Delete branch', Danger := true
+    ),
+    State.Msg.PreviewBranchDeletion, State.Msg.SetBranchQuestion(false)
+  );
+  const Row: E.Element<State.Msg> := if Model.BranchDeleted then E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Wrap := true), Question,
+      E.Styled<State.Msg>(E.Text<State.Msg>('Branch deleted'), S.Role.Muted)
+    )
+    else E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
+    end if;
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>('Confirm popover', 'Ask right where the action is.'),
+    Row
+  );
+end function;
+end unit;

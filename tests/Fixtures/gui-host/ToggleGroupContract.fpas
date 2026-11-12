@@ -1,10 +1,18 @@
 unit GalleryToggleGroupContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Mvu.Application as App, Fpas.Ui.ToggleGroups as Toggles,
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.Pages.Actions.State as SliceActions,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.ToggleGroups as Toggles,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Validation as V,
+  System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -76,14 +84,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
   begin
     case Message of
-      when State.Msg.SetToggleAlignment(_):
+      when State.Msg.Actions(SliceActions.Msg.SetToggleAlignment(_)):
         Proposals := Proposals + 1;
         if RejectAlignment then
           return new App.Transition<State.Model, State.Msg>(Model, []);
         end if;
       else
     end case;
-    const Next: App.Transition<State.Model, State.Msg> := State.Update(Model, Message);
+    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
     return if Focus = '' then Next
       else new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
       end if;
@@ -138,7 +146,7 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
     new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
   const Bold: Gui.Control := Control(Session, 'action-format', '0');

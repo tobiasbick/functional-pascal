@@ -1,10 +1,20 @@
 unit GalleryDialogContract;
 
 uses
-  GuiGallery.State as State, GuiGallery.View as View, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App,
-  Fpas.Ui.Dialogs as D, Fpas.Ui.ActionFooters as F, Fpas.Ui.Validation as V,
-  Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+  GuiGallery.App.Update as GalleryUpdate,
+  GuiGallery.App.State as State,
+  GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Dialogs as D,
+  Fpas.Ui.ActionFooters as F,
+  Fpas.Ui.Validation as V,
+  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  System as Sys;
 
 procedure Check(Condition: bool; Reason: string);
 begin
@@ -221,8 +231,13 @@ begin
   );
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
-    new State.Model(Active := State.Page.Overlays), State.Update, View.Build, Window, 256, Inject,
-    ThemeFor := State.ThemeFor
+    new State.Model(Active := State.Page.Overlays),
+    GalleryUpdate.Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := GalleryUpdate.ThemeFor
   );
   Exercise(Session);
 end procedure;

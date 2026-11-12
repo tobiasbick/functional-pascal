@@ -1,7 +1,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Popover;
 
 uses
-  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.ModalFocus as F, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Popovers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   System.Collections.Generic as Lists;
 

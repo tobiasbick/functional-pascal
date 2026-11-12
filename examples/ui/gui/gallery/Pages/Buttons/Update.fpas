@@ -1,0 +1,35 @@
+unit GuiGallery.Pages.Buttons.Update;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  GuiGallery.Pages.Buttons.State as S;
+
+// Applies a message to this feature and describes its effects.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature message.
+// ## Returns
+// Next feature model and commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetButtonLoading(const Value: bool): State with
+      ButtonLoading := Value;
+    end with;
+    when S.Msg.SetSegmentedView(const Value: int): State with
+      SegmentedView := Value;
+    end with;
+    when S.Msg.SetSegmentedRange(const Value: int): State with
+      SegmentedRange := Value;
+    end with;
+    when S.Msg.ToggleFormat(const Style: S.TextFormat): State with
+      Formats := State.Formats xor cast<int>(Style);
+    end with;
+    when S.Msg.ConfirmHold: State with
+      HoldCount := State.HoldCount + 1;
+    end with;
+    else State;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

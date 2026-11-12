@@ -1,0 +1,16 @@
+unit GuiGallery.Pages.Lists.State;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Three independent headers in the native accordion example.
+  public AccordionOpen: array of bool := [true, false, false];
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Accept one accordion header's expansion proposal.
+  SetAccordion(Index: int; Open: bool);
+  // A harmless preview activation.
+  Preview;
+end variant;
+end unit;

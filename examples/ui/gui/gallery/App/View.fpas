@@ -1,0 +1,273 @@
+unit GuiGallery.App.View;
+
+uses
+  GuiGallery.Pages.Buttons.State as ButtonsState,
+  GuiGallery.Pages.Buttons.View as Buttons,
+  GuiGallery.Pages.Inputs.State as InputsState,
+  GuiGallery.Pages.Inputs.View as Inputs,
+  GuiGallery.Pages.Selection.State as SelectionState,
+  GuiGallery.Pages.Selection.View as Selection,
+  GuiGallery.Pages.Navigation.State as NavigationState,
+  GuiGallery.Pages.Navigation.View as Navigation,
+  GuiGallery.Pages.Lists.State as ListsState,
+  GuiGallery.Pages.Lists.View as Lists,
+  GuiGallery.Pages.Overlays.State as OverlaysState,
+  GuiGallery.Pages.Overlays.View as Overlays,
+  GuiGallery.Pages.Actions.State as ActionsState,
+  GuiGallery.Pages.Actions.View as Actions,
+  GuiGallery.Pages.SmartInputs.State as SmartInputsState,
+  GuiGallery.Pages.SmartInputs.View as SmartInputs,
+  GuiGallery.Pages.Disclosure.State as DisclosureState,
+  GuiGallery.Pages.Disclosure.View as Disclosure,
+  GuiGallery.Pages.Overview.View as Overview,
+  GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
+  GuiGallery.App.State as State,
+  GuiGallery.Shared.State as Demo,
+  Fpas.Ui.Composition as U,
+  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Navigation as N,
+  Fpas.Ui.Sheets as Sheets,
+  Fpas.Ui.IconButtons as Icons,
+  Fpas.Ui.Styles as S,
+  System as Sys;
+
+const SidebarWidth: int := 240;
+const DrawerBreakpoint: int := 760;
+
+function Gap(Units: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Units));
+end function;
+
+function Fixed(Units: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Units)));
+end function;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Space(Units: int): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(E.Column<State.Msg>(), Fixed(Units));
+end function;
+
+function PageTitle(Page: State.Page): string;
+begin
+  return if Page = State.Page.SmartInputs then 'Smart inputs' else Page.ToString() end if;
+end function;
+
+function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
+begin
+  return new N.Item<State.Msg>(
+    Page.ToString().ToLowerInvariant(),
+    PageTitle(Page),
+    State.Msg.Show(Page),
+    Icon := Sys.Char.ConvertFromUtf32(Icon)
+  );
+end function;
+
+function NavigationItems(Page: State.Page): E.Element<State.Msg>;
+begin
+  return N.Sidebar<State.Msg>(
+    'navigation',
+    [
+      new N.Section<State.Msg>(
+        'Components', [
+          Destination(State.Page.Overview, $E1C1), Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Inputs, $E198),
+          Destination(State.Page.Selection, $E29A), Destination(State.Page.Navigation, $E09B),
+          Destination(State.Page.Lists, $E106),
+          Destination(State.Page.Overlays, $E529)
+        ]
+      ),
+      new N.Section<State.Msg>(
+        'Extended',
+        [
+          Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
+          Destination(State.Page.Disclosure, $E529)
+        ]
+      )
+    ],
+    Page.ToString().ToLowerInvariant()
+  );
+end function;
+
+function ThemeControl(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Switchers.ThemeSwitcher<State.Msg>(
+    'theme',
+    Model.Shared.Appearance,
+    function(Value: Switchers.Selection): State.Msg => State.Msg.Shared(
+      Demo.Msg.SetAppearance(Value)
+    ),
+    new Switchers.Options(WithSystem := true)
+  );
+end function;
+
+function Sidebar(Model: State.Model; Pages: E.Element<State.Msg>): E.Element<State.Msg>;
+begin
+  return E.Styled<State.Msg>(
+    E.Column<State.Msg>(
+      new L.Flow(Padding := Gap(12), Gap := Gap(2), Align := L.Alignment.Stretch),
+      E.Column<State.Msg>(
+        new L.Flow(Padding := Gap(8)),
+        E.Styled<State.Msg>(E.Text<State.Msg>('FPas CUI'), S.Role.Heading)
+      ),
+      Space(11),
+      E.Size<State.Msg>(
+        E.ScrollView<State.Msg>('navigation-scroll', Pages, ShowScrollbar := false),
+        Fill
+      ),
+      E.Column<State.Msg>(new L.Flow(Padding := Gap(8)), ThemeControl(Model))
+    ),
+    S.Role.MutedPanel
+  );
+end function;
+
+function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
+begin
+  case Model.Active of
+    when State.Page.Overview:
+      return Overview.View<State.Msg>(State.Msg.Show(State.Page.Buttons));
+    when State.Page.Buttons:
+      return U.Map<ButtonsState.Msg, State.Msg>(
+        Buttons.View(Model.Buttons, Model.Shared, Width >= 600),
+        State.Msg.Buttons
+      );
+    when State.Page.Inputs:
+      return U.Map<InputsState.Msg, State.Msg>(
+        Inputs.View(Model.Inputs, Model.Shared, Width >= 584),
+        State.Msg.Inputs
+      );
+    when State.Page.Selection:
+      return U.Map<SelectionState.Msg, State.Msg>(
+        Selection.View(Model.Selection, Model.Shared, Width >= 536),
+        State.Msg.Selection
+      );
+    when State.Page.Navigation:
+      return U.Map<NavigationState.Msg, State.Msg>(
+        Navigation.View(Model.Navigation),
+        State.Msg.Navigation
+      );
+    when State.Page.Lists:
+      return U.Map<ListsState.Msg, State.Msg>(Lists.View(Model.Lists), State.Msg.Lists);
+    when State.Page.Overlays:
+      return U.Map<OverlaysState.Msg, State.Msg>(
+        Overlays.View(Model.Overlays, Model.Shared),
+        State.Msg.Overlays
+      );
+    when State.Page.Actions:
+      return U.Map<ActionsState.Msg, State.Msg>(
+        Actions.View(Model.Actions, Model.Shared),
+        State.Msg.Actions
+      );
+    when State.Page.SmartInputs:
+      return U.Map<SmartInputsState.Msg, State.Msg>(
+        SmartInputs.View(Model.SmartInputs),
+        State.Msg.SmartInputs
+      );
+    when State.Page.Disclosure:
+      return U.Map<DisclosureState.Msg, State.Msg>(
+        Disclosure.View(Model.Disclosure),
+        State.Msg.Disclosure
+      );
+    else
+      raise new Sys.InvalidOperationException('Unknown gallery page.');
+  end case;
+end function;
+
+function Content(Model: State.Model; Compact: bool; Inset: int; Width: int): E.Element<State.Msg>;
+begin
+  const PreviewContent: E.Element<State.Msg> := Preview(Model, Width);
+  const Gaps: L.Flow := new L.Flow(Gap := Gap(20));
+  const Titled: E.Element<State.Msg> := if Model.Active = State.Page.Overview then PreviewContent
+    else E.Column<State.Msg>(
+      Gaps,
+      E.Column<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(PageTitle(Model.Active)), S.Role.PageTitle),
+        Space(8)
+      ),
+      PreviewContent
+    )
+    end if;
+  const Header: E.Element<State.Msg> := E.Row<State.Msg>(
+    new L.Flow(Gap := Gap(8), Align := L.Alignment.Center),
+    Icons.IconButton<State.Msg>(
+      'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', State.Msg.SetDrawer(true)
+    ),
+    E.Text<State.Msg>('FPas CUI')
+  );
+  var Page: E.Element<State.Msg> := Titled;
+  if Compact then
+    Page := E.Column<State.Msg>(Gaps, Header, Titled);
+  end if;
+
+  return E.ScrollView<State.Msg>(
+    'main-' + Model.Active.ToString().ToLowerInvariant(),
+    E.Row<State.Msg>(
+      new L.Flow(Align := L.Alignment.Start),
+      Space(Inset),
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(
+          Space(if Compact then 12 else 36 end if),
+          Page,
+          Space(64)
+        ),
+        Fill
+      ),
+      Space(Inset)
+    )
+  );
+end function;
+
+// Builds the graphical gallery with CUI's sidebar, centered content and drawer.
+//
+// ## Parameters
+// - `Model`: Retained gallery state.
+// - `Viewport`: Measured window size and responsive classes.
+// ## Returns
+// The complete gallery view.
+public function Build(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+begin
+  const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then 600
+    else 1240
+    end if;
+  const Compact: bool := Width < DrawerBreakpoint;
+  const Available: int := if Compact then Width else Width - SidebarWidth - 1 end if;
+  const Inset: int := (if Compact then 16 else 40 end if) + Sys.Math.Max(
+    0,
+    (Available - 920) div 2
+  );
+  const Pages: E.Element<State.Msg> := NavigationItems(Model.Active);
+  const Main: E.Element<State.Msg> := Content(Model, Compact, Inset, Available - 2 * Inset);
+  const Body: E.Element<State.Msg> := if Compact then Sheets.Sheet<State.Msg>(
+      'drawer',
+      Main,
+      E.Column<State.Msg>(new L.Flow(Gap := Gap(8)), Pages, ThemeControl(Model)),
+      Model.Drawer,
+      new Sheets.Options('FPas CUI', Edge := Sheets.Side.Left, Size := 280),
+      State.Msg.SetDrawer(false)
+    )
+    else E.Size<State.Msg>(
+      E.Row<State.Msg>(
+        new L.Flow(Align := L.Alignment.Stretch),
+        E.Size<State.Msg>(Sidebar(Model, Pages), Fixed(SidebarWidth)),
+        E.Size<State.Msg>(E.Styled<State.Msg>(E.Column<State.Msg>(), S.Role.Divider), Fixed(1)),
+        E.Size<State.Msg>(Main, Fill)
+      ),
+      Fill
+    )
+    end if;
+  const WithSheet: E.Element<State.Msg> := Sheets.Sheet<State.Msg>(
+    'sheet',
+    Body,
+    E.Text<State.Msg>('Choose what we tell you about.'),
+    Model.Overlays.Sheet,
+    new Sheets.Options('Notifications'),
+    State.Msg.Overlays(OverlaysState.Msg.SetSheet(false))
+  );
+  return Dialog.Wrap<State.Msg>(Model.Overlays, Model.Shared, WithSheet, State.Msg.Overlays);
+end function;
+end unit;

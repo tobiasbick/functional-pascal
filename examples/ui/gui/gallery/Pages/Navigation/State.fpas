@@ -1,0 +1,32 @@
+unit GuiGallery.Pages.Navigation.State;
+
+// State owned by this gallery feature.
+public type Model = record
+  // Selected underline tab on the Navigation page.
+  public ActiveTab: int := 0;
+  // Selected pill tab on the Navigation page.
+  public ActivePillTab: int := 0;
+  // Current zero-based page in the pagination example.
+  public PageIndex: int := 0;
+  // Current zero-based step, starting at Workspace.
+  public ActiveStep: int := 1;
+end record;
+
+// Messages handled by this gallery feature.
+public type Msg = variant
+  // Choose a tab in the underline strip.
+  SetTab(Value: int);
+  // Choose a tab in the pill strip.
+  SetPillTab(Value: int);
+  // Notify the user which breadcrumb ancestor was activated.
+  SelectAncestor(Label: string);
+  // Accept a page in the pagination example.
+  SetPageIndex(Value: int);
+  // Move to another step in the preview.
+  SetStep(Value: int);
+  // Show the completion feedback from the final step.
+  FinishSteps;
+  // A harmless preview activation.
+  Preview;
+end variant;
+end unit;

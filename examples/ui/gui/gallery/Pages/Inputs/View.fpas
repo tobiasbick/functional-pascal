@@ -1,0 +1,29 @@
+unit GuiGallery.Pages.Inputs.View;
+
+uses
+  GuiGallery.Pages.Inputs.State as S,
+  GuiGallery.Shared.State as Demo,
+  GuiGallery.Pages.Inputs.Widgets.TextField as Fields,
+  GuiGallery.Pages.Inputs.Widgets.CredentialFields as Credentials,
+  GuiGallery.Pages.Inputs.Widgets.PickerFields as Pickers,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L;
+
+// Builds the native input sections.
+// ## Parameters
+// - `Model`: Values owned by Inputs.
+// - `Data`: Shared name and email.
+// - `Wide`: Whether the native grid fits.
+// ## Returns
+// The Inputs page.
+public function View(Model: S.Model; Data: Demo.Model; Wide: bool): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    Fields.Inputs(Model, Data, Wide),
+    Credentials.View(Model, Data),
+    Pickers.View(Model, Data, Wide)
+  );
+end function;
+end unit;

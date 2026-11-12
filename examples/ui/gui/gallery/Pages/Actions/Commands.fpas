@@ -1,0 +1,47 @@
+unit GuiGallery.Pages.Actions.Commands;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.StatusButtons as Work,
+  System as Sys,
+  GuiGallery.Pages.Actions.State as S,
+  System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+function SaveAfter(Milliseconds: int; Status: Work.Status): Mvu.Command<S.Msg>;
+  async function Advance(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    await Tasks.Task.Delay(Milliseconds, Token).ConfigureAwait(false);
+    await Post(S.Msg.SetSaveStatus(Status)).ConfigureAwait(false);
+  end function;
+begin
+  return Mvu.StartBackground<S.Msg>(
+    'save',
+    Advance,
+    function(Error: Sys.Exception): S.Msg => S.Msg.SetSaveStatus(Work.Status.Idle)
+  );
+end function;
+
+// Describes background work for a feature message.
+// ## Parameters
+// - `State`: Model before updating.
+// - `Message`: Feature action.
+// ## Returns
+// Commands to execute after the transition.
+public function ForAction(State: S.Model; Message: S.Msg): array of Mvu.Command<S.Msg>;
+begin
+  return case Message of
+    when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then [
+        SaveAfter(1400, Work.Status.Success)
+      ]
+      else []
+      end if;
+    when S.Msg.SetSaveStatus(const Value: Work.Status): if Value = Work.Status.Success then [
+        SaveAfter(1600, Work.Status.Idle)
+      ]
+      else []
+      end if;
+    else [];
+  end case;
+end function;
+end unit;

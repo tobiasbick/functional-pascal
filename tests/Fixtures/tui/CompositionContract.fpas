@@ -1,0 +1,263 @@
+program CompositionContract;
+
+uses
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as M,
+  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B,
+  Fpas.Ui.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
+  Fpas.Ui.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
+  System as Sys, System.Console as Console, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+type Payload<TMsg> = record implements A.HostExtension<TMsg>
+  // Message delivered by the test host.
+  public Message: TMsg;
+
+  // Translates the host message without delivering it.
+  // ## Type parameters
+  // - `TNext`: Destination message type.
+  // ## Parameters
+  // - `Messages`: Message translation.
+  // ## Returns
+  // The translated test payload.
+  public function Map<TNext>(Messages: function(TMsg): TNext): A.HostExtension<TNext>;
+  begin
+    return new Payload<TNext>(Messages(self.Message));
+  end function;
+end record;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Wrap(Value: int): string;
+begin
+  return 'parent/' + Value.ToString();
+end function;
+
+procedure Commands();
+  function Work(Post: function(int): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    Runs := Runs + 1;
+    Check(Token.Equals(Source.Token), 'Mapping changed the cancellation token.');
+    return Post(7);
+  end function;
+begin
+  var Runs: int := 0;
+  using const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+  const Gate: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource();
+  const Original: A.Command<int> := A.StartBackground<int>(
+    'save', Work,
+    function(Error: Sys.Exception): int => -1
+  );
+  const Mapped: A.Command<string> := M.MapCommand<int, string>(Original, Wrap, 'left');
+  Check(Runs = 0, 'Mapping started an effect eagerly.');
+  case Mapped of
+    when A.Command.Start(
+      const Id: string,
+      const Run: function(function(string): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+      const Failure: function(Sys.Exception): string
+    ):
+      Check(Id = 'left/save', 'The effect scope was lost.');
+      var Delivered: string := '';
+      const Pending: Tasks.Task := Run(
+        function(Message: string): Tasks.Task begin
+          Delivered := Message;
+          return Gate.Task;
+        end function, Source.Token
+      );
+      Check(
+        Runs = 1 and Delivered = 'parent/7' and Sys.Object.ReferenceEquals(Pending, Gate.Task),
+        'Mapping lost delivery, task identity or posting backpressure.'
+      );
+      Check(not Pending.IsCompleted, 'Mapping bypassed the pending post.');
+      Gate.SetResult();
+      Pending.GetAwaiter().GetResult();
+      Check(
+        Failure(new Sys.InvalidOperationException('failure')) = 'parent/-1',
+        'Failure messages were not mapped.'
+      );
+    else
+      raise new Sys.InvalidOperationException('Mapping changed the command kind.');
+  end case;
+  const Transition: A.Transition<int, string> := M.MapTransition<int, int, string>(
+    new A.Transition<int, int>(
+      42, [
+        A.CancelBackground<int>('save'), A.Focus<int>('global-control'),
+        A.Command<int>.Host(A.HostRequest.Extension(new Payload<int>(9))), A.Exit<int>()
+      ]
+    ), Wrap, 'left'
+  );
+  Check(
+    Transition.Model = 42 and Transition.Commands.Length = 4,
+    'Mapping changed the model or command order.'
+  );
+  case Transition.Commands[0] of
+    when A.Command.Cancel(const Id: string):
+      Check(Id = 'left/save', 'Cancellation did not use the start scope.');
+    else
+      raise new Sys.InvalidOperationException('The first command changed.');
+  end case;
+
+  case Transition.Commands[1] of
+    when A.Command.Host(A.HostRequest.Focus(const Id: string)):
+      Check(Id = 'global-control', 'Focus IDs must stay global.');
+    else
+      raise new Sys.InvalidOperationException('The focus command changed.');
+  end case;
+
+  case Transition.Commands[2] of
+    when A.Command.Host(A.HostRequest.Extension(const Value: Sys.Object)):
+      Check(
+        cast<Payload<string>>(Value).Message = 'parent/9',
+        'Generic host payload dispatch lost its message type.'
+      );
+    else
+      raise new Sys.InvalidOperationException('The host extension changed.');
+  end case;
+
+  try
+    discard M.MapCommand<int, string>(
+      A.Command<int>.Host(A.HostRequest.Extension(new Sys.Object())),
+      Wrap
+    );
+  catch Error: Sys.ArgumentException do
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException(
+    'An opaque payload was silently forwarded under the wrong message type.'
+  );
+end procedure;
+
+procedure Callbacks();
+begin
+  var Submitted: int := 0;
+  const Settings: F.Options := new F.Options(Enabled := false);
+  const Child: E.Element<int> := F.TextField<int>(
+    'field', 'value', function(Value: string): int => Value.Length,
+    Settings, function(Value: string): int begin
+      Submitted := Submitted + 1;
+      return Value.Length + 1;
+    end function
+  );
+  const Parent: E.Element<string> := U.Map<int, string>(Child, Wrap);
+  Check(Submitted = 0, 'Mapping invoked a submit callback eagerly.');
+  case Parent of
+    when E.Element.TextField(
+      const Id: string, const Value: string, const Change: function(string): string,
+      const Options: F.Options, const Submit: Sys.Func<string, string>?
+    ):
+      Check(
+        Id = 'field' and Value = 'value' and Sys.Object.ReferenceEquals(Options, Settings),
+        'Mapping changed identity, value or options.'
+      );
+      Check(Change('abcd') = 'parent/4', 'The editing callback was not translated.');
+      case Submit of
+        when is Sys.Func<string, string> as Factory:
+          Check(
+            Factory.Invoke('abcd') = 'parent/5' and Submitted = 1,
+            'The optional callback was invoked incorrectly.'
+          );
+        else
+          raise new Sys.InvalidOperationException('Mapping lost the submit callback.');
+      end case;
+    else
+      raise new Sys.InvalidOperationException('Mapping changed the element kind.');
+  end case;
+  const Menu: E.Element<string> := U.Map<int, string>(
+    Menus.Menu<int>(
+      'menu', 'Options',
+      [
+        Menus.Entry<int>.Label('Group'), Menus.Entry<int>.Action(
+          new Menus.Item<int>(
+            'item',
+            'Action',
+            3,
+            Icon := 'i',
+            TerminalIcon := 't',
+            Shortcut := 'Ctrl A',
+            Enabled := false,
+            Danger := true,
+            Checked := true
+          )
+        ),
+        Menus.Entry<int>.Separator
+      ]
+    ), Wrap
+  );
+  case Menu of
+    when E.Element.Dropdown(_, _, const Entries: array of Menus.Entry<string>, _):
+      case Entries[1] of
+        when Menus.Entry.Action(const Item: Menus.Item<string>):
+          Check(
+            Item.Message = 'parent/3' and Item.Key = 'item' and Item.Icon = 'i'
+            and Item.TerminalIcon = 't' and Item.Shortcut = 'Ctrl A' and not Item.Enabled
+            and Item.Danger and Item.Checked,
+            'A menu action lost its message or decoration.'
+          );
+        else
+          raise new Sys.InvalidOperationException('The menu action changed kind.');
+      end case;
+    else
+      raise new Sys.InvalidOperationException('The menu changed kind.');
+  end case;
+end procedure;
+
+procedure Cached();
+  function Build(Value: int): E.Element<int>;
+  begin
+    Builds := Builds + 1;
+    return B.Button<int>('cached-action', 'Action', Value);
+  end function;
+  function Child(Value: int): E.Element<int>;
+  begin
+    return E.CachedSubview<int, int>(
+      'cached',
+      Value,
+      Build,
+      function(Left: int; Right: int): bool => Left = Right
+    );
+  end function;
+begin
+  var Builds: int := 0;
+  const First: V.Prepared<string> := V.Prepare<string>(
+    U.Map<int, string>(Child(1), Wrap),
+    V.Target.Terminal
+  );
+  const Second: V.Prepared<string> := V.Prepare<string>(
+    U.Map<int, string>(Child(1), Wrap),
+    V.Target.Terminal,
+    First
+  );
+  Check(
+    Builds = 1 and Sys.Object.ReferenceEquals(First.Subviews['cached'], Second.Subviews['cached']),
+    'Mapping discarded an unchanged cached child.'
+  );
+  const Third: V.Prepared<string> := V.Prepare<string>(
+    U.Map<int, string>(
+      Child(1),
+      function(Value: int): string => 'other/' + Value.ToString()
+    ), V.Target.Terminal, Second
+  );
+  Check(Builds = 1, 'A new mapper rebuilt the child view.');
+  case Third.Subviews['cached'].Tree of
+    when E.Element.ButtonAction(_, _, const Message: string, _):
+      Check(Message = 'other/1', 'Cached mapping retained a stale mapper.');
+    else
+      raise new Sys.InvalidOperationException('The cached view changed kind.');
+  end case;
+
+  discard V.Prepare<string>(U.Map<int, string>(Child(2), Wrap), V.Target.Terminal, Third);
+  Check(Builds = 2, 'Mapping ignored changed child dependencies.');
+end procedure;
+
+begin
+  Commands();
+  Callbacks();
+  Cached();
+  Console.WriteLine('Composition contracts verified');
+end;
+end program;

@@ -1,0 +1,17 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Spinner;
+
+uses Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws the native activity spinner without a managed animation loop.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable inspection identity.
+// - `Size`: Logical diameter, or zero for the native default.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Size: float);
+begin
+  Frame.Window.Spinner(C.Token('spinner', Id), Size);
+  C.Track<TMsg>(Frame, new App.Control(Id, '', 'spinner', new Cui.CuiRectangle(), false));
+end procedure;
+end unit;

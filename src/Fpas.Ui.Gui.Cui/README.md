@@ -23,6 +23,8 @@ It supports the FPAS GUI host and interop fixtures. Applications use the
 - Accordion and expandable-card scopes call CUI's native begin/end pairs;
   expandable text retains its native local state and optional expansion link.
   Header snapshots and outer layout nodes are tracked separately.
+- Inline alerts, progress bars, spinners and capacity meters call the native
+  CUI widgets. CUI owns dismissal, numeric formatting, threshold colors and motion.
 - TrackLastControl and composite tracking expose geometry, focus and hover.
   ForgetControl releases retained state and owned popup/feedback state for
   disappearing controls. Private state keys stay in the native bridge.

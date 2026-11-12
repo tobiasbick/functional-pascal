@@ -34,6 +34,8 @@ public type Page = enum: byte
   SmartInputs;
   // Native disclosure examples.
   Disclosure;
+  // Native alerts, progress and activity indicators.
+  Feedback;
 end enum;
 
 // Application state with one owner per feature.

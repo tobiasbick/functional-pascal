@@ -121,7 +121,10 @@ features outside that shared subset. The following layout work targets the GUI;
 terminal equivalents are deferred.
 
 - [ ] Responsive grid with a maximum column count and minimum column width.
-- [ ] Main-axis justification, including space between children.
+  Feedback's Progress and Goals cards currently fill their parent; match the native
+  two-column grid when this foundation is available.
+- [ ] Main-axis justification, including space between children. Match the
+  native Goals row's `CUI_JUSTIFY_AROUND` when this foundation is available.
 - [ ] Stack layout with layered children, per-axis sizing including percentages,
   and per-edge padding.
 - [ ] Flexible spacer and fixed gap parity.
@@ -387,12 +390,30 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   Navigation uses toasts for breadcrumb activation and Finish. The gallery
   checks stacking, hover pause, expiry, dismissal and action delivery.
   TUI: graphical host command required.
-- [ ] Alert (`cui_alert`)
-- [ ] Progress bar (`cui_progress`)
-- [ ] Meter (`cui_meter`)
-- [ ] Spinner (`cui_spinner`)
+- [x] Alert (`cui_alert`): [API][fpas-feedback]. Feedback shows the four original
+  alerts. CUI owns dismissal; pointer, Enter/Space, disabled input, stable literal
+  titles, once-only notification, removal and reinsertion are tested.
+- [x] Progress bar (`cui_progress`): [API][fpas-feedback]. Feedback shows the
+  labeled upload percentage and indeterminate indexing bar. CUI owns animation;
+  validation, native dimensions, message mapping and resizing are tested.
+- [x] Meter (`cui_meter`): [API][fpas-meter]. Feedback shows the original
+  Storage example with 18.4 / 20 GB. CUI owns formatting, interpolation and warning
+  colors. Tests cover zero/exceeded capacity, literal text, value validation,
+  message mapping, resizing and release of native interpolation on removal.
+  Direct native pixel comparisons cover 64 threshold, capacity, label/unit,
+  light/dark and narrow/wide combinations.
+- [x] Spinner (`cui_spinner`): [API][fpas-feedback]. Feedback shows the original
+  16/22/28-point sizes. Native rendering is checked alongside alerts and progress
+  against direct CUI calls in 152 light/dark, narrow/wide and option combinations.
+  Feedback captures cover both renderers in light, dark and narrow layouts.
 - [ ] Skeleton (`cui_skeleton`)
-- [ ] Progress ring (`cui_progress_ring`)
+- [x] Progress ring (`cui_progress_ring`): [API][fpas-progress-ring]. Feedback
+  shows the original Onboarding and Quota examples at 104 points. CUI owns
+  percentage formatting, painting and interpolation. Software/OpenGL tests
+  cover literal captions, native diameters, resizing, typed mapping and GUI-only
+  preflight. Direct native pixel comparisons cover 192 value, size, caption,
+  theme, width and state-retirement combinations. Feedback captures show the
+  rings in light, dark and narrow layouts.
 - [ ] Timeline item (`cui_timeline_item`)
 - [ ] Banner (`cui_banner`)
 - [ ] Countdown (`cui_countdown`)
@@ -597,6 +618,9 @@ track that native build option with the GUI RTL layout work.
 [fpas-dialog]: ../../src/Fpas.Ui/README.md#dialog-and-action-footer
 [fpas-accordion]: ../../src/Fpas.Ui/README.md#accordion-and-expandable-card
 [fpas-expandable-text]: ../../src/Fpas.Ui/README.md#expandable-text
+[fpas-feedback]: ../../src/Fpas.Ui/README.md#alerts-progress-and-spinners
+[fpas-meter]: ../../src/Fpas.Ui/README.md#meter
+[fpas-progress-ring]: ../../src/Fpas.Ui/README.md#progress-ring
 [cui-006]: cui-upstream-bugs.md#cui-006
 [fpas-tooltip]: ../../src/Fpas.Ui/README.md#tooltip
 [glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas

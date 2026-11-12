@@ -1,0 +1,78 @@
+unit GuiGallery.Pages.Feedback.View;
+
+uses
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Alerts as A, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
+  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings;
+
+// Reproduces the accepted native CUI Feedback examples.
+// ## Type parameters
+// - `TMsg`: Message type of the containing application.
+// ## Returns
+// Native feedback widgets; CUI owns local dismissal and motion.
+public function View<TMsg>(): E.Element<TMsg>;
+begin
+  return E.Column<TMsg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<TMsg>('Alerts', 'Color only when something succeeded, needs attention or failed.'),
+    E.Column<TMsg>(
+      new L.Flow(Gap := G.Points(10)),
+      A.Alert<TMsg>(
+        'update', 'A new version is available',
+        new A.Options(Description := 'Restart to update to 1.1.')
+      ),
+      A.Alert<TMsg>(
+        'payment', 'Payment received',
+        new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
+      ),
+      A.Alert<TMsg>(
+        'storage', 'Storage almost full',
+        new A.Options(
+          Description := 'You have used 92% of your plan.',
+          Tone := S.Tone.Warning,
+          Dismissible := true
+        )
+      ),
+      A.Alert<TMsg>(
+        'build', 'Build failed',
+        new A.Options(
+          Description := 'Missing symbol cui_frame in main.c line 42.',
+          Tone := S.Tone.Danger
+        )
+      )
+    ),
+    G.Card<TMsg>(
+      18, [
+        E.Styled<TMsg>(E.Text<TMsg>('Progress'), S.Role.Heading),
+        P.ProgressBar<TMsg>(
+          'upload',
+          0.68F,
+          new P.Options(Label := 'Uploading assets', ShowValue := true)
+        ),
+        P.ProgressBar<TMsg>(
+          'index',
+          0.0F,
+          new P.Options(Label := 'Indexing', Indeterminate := true)
+        ),
+        Meters.Meter<TMsg>('storage-usage', 'Storage', 18.4F, 20.0F, 'GB'),
+        E.Row<TMsg>(
+          new L.Flow(Gap := G.Points(16), Wrap := true),
+          Spin.Spinner<TMsg>('spinner-small', 16.0F),
+          Spin.Spinner<TMsg>('spinner-medium', 22.0F),
+          Spin.Spinner<TMsg>('spinner-large', 28.0F)
+        )
+      ]
+    ),
+    G.Card<TMsg>(
+      14, [
+        E.Styled<TMsg>(E.Text<TMsg>('Goals'), S.Role.Heading),
+        E.Row<TMsg>(
+          new L.Flow(Gap := G.Points(24)),
+          Rings.ProgressRing<TMsg>('onboarding', 'Onboarding', 0.72F, 104.0F),
+          Rings.ProgressRing<TMsg>('quota', 'Quota', 0.35F, 104.0F)
+        )
+      ]
+    )
+  );
+end function;
+end unit;

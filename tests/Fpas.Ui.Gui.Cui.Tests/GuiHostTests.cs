@@ -84,7 +84,8 @@ public sealed class GuiHostTests
             ("pickers", 1000, 1200), ("pickers-search", 1000, 1200), ("pickers-bound", 1000, 1200),
             ("text-affixes", 1000, 760), ("edit-profile", 1000, 900),
             ("disclosure", 1100, 900), ("disclosure-dark", 1100, 900), ("disclosure-narrow", 650, 1250),
-            ("accordion", 1100, 760)
+            ("accordion", 1100, 760),
+            ("feedback", 1100, 1100), ("feedback-dark", 1100, 1100), ("feedback-narrow", 650, 1250)
         })
         {
             string pageCapture = galleryCapture + "." + page + ".png";

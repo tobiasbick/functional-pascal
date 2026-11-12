@@ -48,7 +48,7 @@ begin
       'billing', 'Billing', Model.BillingOpen, State.Msg.SetBilling, Billing,
       new C.Options(
         Description := 'Pro plan, renews on December 1',
-        Icon := Sys.Char.ConvertFromUtf32($E0AA), Badge := 'Active', BadgeTone := C.Tone.Success
+        Icon := Sys.Char.ConvertFromUtf32($E0AA), Badge := 'Active', BadgeTone := S.Tone.Success
       )
     ),
     C.ExpandableCard<State.Msg>(

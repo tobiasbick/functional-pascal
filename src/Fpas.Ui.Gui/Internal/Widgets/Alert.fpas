@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Alert;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Alerts as A, System as Sys;
+
+// Draws a native alert and delivers only its dismissal transition.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable alert identity.
+// - `Title`: Literal heading.
+// - `Settings`: Native presentation and input permission.
+// - `Notify`: Optional dismissal notification.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Title: string;
+  Settings: A.Options; Notify: Sys.Func<TMsg>?
+);
+begin
+  const Dismiss: string := A.DismissId(Id);
+  const Token: string := C.Token('alert-dismiss', Dismiss);
+  const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
+  const Result: int := Frame.Window.Alert(
+    C.Token('alert', Id), Title, Settings.Description,
+    Settings.Icon, cast<int>(Settings.Tone), Settings.Dismissible, Allowed,
+    C.WantsFocus<TMsg>(Frame, Dismiss, Token, Allowed and Settings.Dismissible), Token
+  );
+  if (Result and 2) <> 0 then
+    case Notify of
+      when is Sys.Func<TMsg> as Deliver:
+        Frame.Messages.Add(Deliver.Invoke());
+      else
+    end case;
+  end if;
+
+  if not Frame.PaintingClosed and (Result and 1) <> 0 then
+    Frame.Controls.Add(new App.Control(Id, Title, 'alert', new Cui.CuiRectangle(), false));
+    Frame.Labels.Add(Title);
+    if Settings.Description <> '' then
+      Frame.Labels.Add(Settings.Description);
+    end if;
+
+    if Settings.Dismissible then
+      Frame.Controls.Add(
+        new App.Control(Dismiss, 'Dismiss', 'alert-dismiss', new Cui.CuiRectangle(), Allowed)
+      );
+    end if;
+  end if;
+end procedure;
+end unit;

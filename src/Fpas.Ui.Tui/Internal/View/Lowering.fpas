@@ -214,6 +214,24 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException(
           'Tags, one-time codes and password strength require the graphical profile.'
         );
+      when Ui.Element.Alert(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ProgressBar(_, _, _), Ui.Element.Spinner(_, _), Ui.Element.ProgressRing(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Meter(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException('Feedback widgets require the graphical profile.');
       when Ui.Element.Dialog(_, _, _, _, _, _), Ui.Element.ActionFooter(_):
         raise new Sys.NotSupportedException(
           'Dialogs and action footers require the graphical profile.'

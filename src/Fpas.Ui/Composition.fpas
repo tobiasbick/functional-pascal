@@ -244,7 +244,23 @@ begin
       FId,
       function(A0: T.Viewport): E.Element<TParent> => Map<TChild, TParent>(FBuild(A0), Messages)
     );
-    when E.Element.ExpandableText(
+    when E.Element.Alert(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ProgressBar(_, _, _), E.Element.Spinner(_, _), E.Element.ProgressRing(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Meter(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ExpandableText(
       _,
       _,
       _,

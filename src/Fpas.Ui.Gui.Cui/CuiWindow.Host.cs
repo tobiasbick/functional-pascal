@@ -4,6 +4,9 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    /// <summary>Whether the last widget produced a layout node in the current frame.</summary>
+    public bool HasLastWidget { get { CheckFrame(); return NativeMethods.LastNode(context) >= 0; } }
+
     /// <summary>Draws a native hairline separator in the current container.</summary>
     public void Separator() { CheckFrame(); NativeMethods.Separator(context); }
     private readonly Dictionary<string, (int Mode, float Offset)> scrollRequests = [];

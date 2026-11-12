@@ -1,6 +1,7 @@
 program PublishedGallery;
 
 uses
+  GalleryFeedbackContract as FeedbackContract,
   GuiGallery.App.Update as GalleryUpdate,
   GuiGallery.Shared.State as SliceShared,
   GuiGallery.Pages.Buttons.State as SliceButtons,
@@ -58,7 +59,7 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 10, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 11, 'Only the confirmed gallery destinations should be visible.');
   const Overview: Gui.Control := A.Control(Session, 'navigation', 'overview');
   const Buttons: Gui.Control := A.Control(Session, 'navigation', 'buttons');
   A.Check(
@@ -178,6 +179,7 @@ begin
   PickerFieldsContract.Verify(Renderer, Capture);
   DialogContract.Verify(Renderer, Capture);
   DisclosureContract.Verify(Renderer, Capture);
+  FeedbackContract.Verify(Renderer, Capture);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
   Console.WriteLine(

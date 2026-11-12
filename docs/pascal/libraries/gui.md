@@ -33,6 +33,12 @@ Users of those packages do not download CUI or build its C sources.
 Native [accordions and expandable cards](../../../src/Fpas.Ui/README.md#accordion-and-expandable-card)
 use model-owned expansion. [Expandable text](../../../src/Fpas.Ui/README.md#expandable-text)
 keeps its local expansion in CUI. These widgets require the GUI host.
+Native [alerts, progress bars and spinners](../../../src/Fpas.Ui/README.md#alerts-progress-and-spinners)
+also require the GUI host. CUI owns alert dismissal and feedback animation.
+The [capacity meter](../../../src/Fpas.Ui/README.md#meter) uses CUI's numeric display,
+track and warning colors.
+The [progress ring](../../../src/Fpas.Ui/README.md#progress-ring) delegates its
+centered percentage, optional caption and interpolation to CUI.
 
 ## Model, update and view
 

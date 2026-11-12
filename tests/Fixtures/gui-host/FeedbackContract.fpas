@@ -1,0 +1,265 @@
+unit GalleryFeedbackContract;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
+  GuiGallery.Shared.State as Shared, GalleryHostAssertions as A, Fpas.Ui.Elements as E,
+  Fpas.Ui.Composition as U, Fpas.Ui.Menus as Menus, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
+  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings,
+  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Feedback preflight accepted an invalid view.');
+  end procedure;
+begin
+  Reject(Alerts.Alert<int>('a', 'Title'), V.Target.Terminal, 'Graphical profile');
+  Reject(P.ProgressBar<int>('p', 0.5F), V.Target.Portable, 'Graphical profile');
+  Reject(Spin.Spinner<int>('s'), V.Target.Terminal, 'Graphical profile');
+  Reject(Rings.ProgressRing<int>('r', 'Quota', 0.35F), V.Target.Terminal, 'Graphical profile');
+  Reject(Rings.ProgressRing<int>('r', '', 0.0F), V.Target.Portable, 'Graphical profile');
+  Reject(E.Element<int>.ProgressRing('r', '', Sys.Single.NaN, 0.0F), V.Target.Graphical, 'finite');
+  Reject(E.Element<int>.ProgressRing('r', '', 1.1F, 0.0F), V.Target.Graphical, 'zero and one');
+  Reject(E.Element<int>.ProgressRing('r', '', 0.5F, -1.0F), V.Target.Graphical, 'nonnegative');
+  Reject(
+    E.Element<int>.ProgressRing('r', '', 0.5F, Sys.Single.PositiveInfinity),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(Rings.ProgressRing<int>('r', 'x' + Sys.Char.MinValue, 0.5F), V.Target.Graphical, 'zero');
+  Reject(
+    E.Column<int>(Rings.ProgressRing<int>('same', '', 0.5F), Spin.Spinner<int>('same')),
+    V.Target.Graphical, 'Duplicate'
+  );
+  Reject(
+    Meters.Meter<int>('m', 'Storage', 18.4F, 20.0F, 'GB'),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+  Reject(Meters.Meter<int>('m', 'Storage', 18.4F, 20.0F), V.Target.Portable, 'Graphical profile');
+  Reject(E.Element<int>.Meter('m', 'Storage', -1.0F, 20.0F, ''), V.Target.Graphical, 'nonnegative');
+  Reject(E.Element<int>.Meter('m', 'Storage', 1.0F, -1.0F, ''), V.Target.Graphical, 'nonnegative');
+  Reject(
+    E.Element<int>.Meter('m', 'Storage', Sys.Single.NaN, 20.0F, ''),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(
+    E.Element<int>.Meter('m', 'Storage', 1.0F, Sys.Single.PositiveInfinity, ''),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(
+    Meters.Meter<int>('m', 'Storage', 1.0F, 20.0F, 'x' + Sys.Char.MinValue),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    E.Column<int>(Meters.Meter<int>('m', 'Storage', 1.0F, 20.0F), Spin.Spinner<int>('m')),
+    V.Target.Graphical, 'Duplicate'
+  );
+  Reject(
+    E.Element<int>.ProgressBar('p', Sys.Single.NaN, new P.Options()),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(
+    E.Element<int>.ProgressBar('p', 1.1F, new P.Options()),
+    V.Target.Graphical,
+    'zero and one'
+  );
+  Reject(
+    P.ProgressBar<int>('p', 0.5F, new P.Options(Height := -1.0F)),
+    V.Target.Graphical,
+    'nonnegative'
+  );
+  Reject(
+    P.ProgressBar<int>('p', 0.5F, new P.Options(Tone := cast<S.Tone>(255))),
+    V.Target.Graphical,
+    'valid tone'
+  );
+  Reject(E.Element<int>.Spinner('s', Sys.Single.PositiveInfinity), V.Target.Graphical, 'finite');
+  Reject(Alerts.Alert<int>('a', ''), V.Target.Graphical, 'nonempty title');
+  Reject(
+    Alerts.Alert<int>('a', 'Title', new Alerts.Options(Description := 'x' + Sys.Char.MinValue)),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    E.Column<int>(
+      Alerts.Alert<int>('a', 'Title', new Alerts.Options(Dismissible := true)),
+      Spin.Spinner<int>('a/dismiss')
+    ), V.Target.Graphical, 'Duplicate'
+  );
+end procedure;
+
+procedure Notification(Renderer: Cui.CuiRenderer);
+  function View(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+  begin
+    if Model.Drawer then
+      return E.Text<State.Msg>('Removed');
+    end if;
+
+    return U.Map<int, State.Msg>(
+      E.Column<int>(
+        Menus.ContextMenu<int>(
+          'mapped-menu', E.Styled<int>(
+            E.Size<int>(
+              Alerts.Alert<int>(
+                'mapped',
+                'Mapped ## literal',
+                new Alerts.Options(Dismissible := true),
+                function(): int => 42
+              ), new L.Flex()
+            ), S.Role.Panel
+          ), [Menus.Entry<int>.Action(new Menus.Item<int>('preview', 'Preview', 42))]
+        ),
+        P.ProgressBar<int>('mapped-progress', 0.5F), Spin.Spinner<int>('mapped-spinner'),
+        Meters.Meter<int>('mapped-meter', 'Usage ## literal', 24.0F, 20.0F, 'GB'),
+        Meters.Meter<int>('zero-meter', '', 0.0F, 0.0F),
+        E.Styled<int>(
+          E.Size<int>(
+            Rings.ProgressRing<int>('mapped-ring', 'Ring##literal', 0.72F, 104.0F),
+            new L.Flex()
+          ),
+          S.Role.Panel
+        )
+      ),
+      function(Value: int): State.Msg => State.Msg.Preview
+    );
+  end function;
+  function Change(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Preview:
+        Deliveries := Deliveries + 1;
+      when State.Msg.SetDrawer(false):
+        return new Mvu.Transition<State.Model, State.Msg>(
+          Model with
+            Drawer := false;
+          end with,
+          [Mvu.Focus<State.Msg>('mapped/dismiss')]
+        );
+      else
+    end case;
+
+    return Update.Update(Model, Message);
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(-1, -1);
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+  end procedure;
+begin
+  var Deliveries: int := 0;
+  var Key: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Mapped feedback', 600, 480, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(), Change, View, Window, 32, Inject
+  );
+  A.Check(Session.Step(), 'Feedback session closed.');
+  A.Send(Session, State.Msg.SetDrawer(false));
+  A.Check(A.Control(Session, 'mapped/dismiss').Focused, 'Mapped alert did not accept focus.');
+  A.Check(
+    A.Control(Session, 'mapped-meter').Value = '24/20 GB',
+    'Mapped meter lost usage, capacity or unit.'
+  );
+  A.Check(
+    A.Control(Session, 'mapped-meter').Text = 'Usage ## literal',
+    'The meter lost its literal label.'
+  );
+  A.Check(A.Control(Session, 'zero-meter').Value = '0/0', 'Zero capacity was rejected.');
+  A.Check(A.Control(Session, 'mapped-ring').Value = '0.72', 'Mapped ring lost its fraction.');
+  A.Check(A.Control(Session, 'mapped-ring').Text = 'Ring##literal', 'Ring caption is not literal.');
+  A.Check(
+    A.Control(Session, 'mapped-ring').Bounds.Width = 104.0F,
+    'Mapped ring lost its native diameter.'
+  );
+  A.Check(not A.Control(Session, 'mapped-ring').Enabled, 'Progress rings must not accept input.');
+  A.Check(
+    A.Control(Session, 'mapped-progress').Value = '0.5',
+    'Mapped progress lost its fraction.'
+  );
+  Key := 2;
+  A.Check(Session.Step(), 'Feedback session closed.');
+  A.Check(Session.Step(), 'Feedback session closed.');
+  A.Check(Session.Step(), 'Feedback session closed.');
+  A.Check(Deliveries = 1, 'Mapped dismissal must be lazy and delivered exactly once.');
+  A.Check(not A.HasText(Session, 'Mapped ## literal'), 'Dismissed alert reappeared.');
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    A.Check(Item.Id <> 'mapped-menu', 'A hidden alert left an interactive context-menu target.');
+  end for;
+
+  A.Send(Session, State.Msg.SetDrawer(true));
+  A.Send(Session, State.Msg.SetDrawer(false));
+  A.Check(
+    A.HasText(Session, 'Mapped ## literal'),
+    'Removing the alert did not release dismissal state.'
+  );
+end procedure;
+
+// Verifies native feedback in the gallery and through typed message composition.
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(-1, -1);
+  end procedure;
+begin
+  Validate();
+  Notification(Renderer);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1100, Renderer, true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Feedback), Update.Update, Gallery.Build,
+    Window, 32, Inject, ThemeFor := Update.ThemeFor
+  );
+  A.Check(Session.Step(), 'Feedback gallery closed.');
+  A.Check(
+    A.HasText(Session, 'Alerts') and A.HasText(Session, 'Progress'),
+    'Feedback sections are missing.'
+  );
+  A.Check(A.Control(Session, 'storage/dismiss').Enabled, 'The native dismiss action is missing.');
+  A.Check(A.Control(Session, 'upload').Value = '0.68', 'Progress lost its model value.');
+  A.Check(A.Control(Session, 'index').Value = 'indeterminate', 'Activity progress is missing.');
+  A.Check(
+    A.Control(Session, 'storage-usage').Value = '18.4/20 GB',
+    'Native Storage usage is missing.'
+  );
+  A.Check(not A.Control(Session, 'storage-usage').Enabled, 'The meter must not accept input.');
+  A.Check(A.HasText(Session, 'Goals'), 'The native Goals example is missing.');
+  A.Check(A.Control(Session, 'onboarding').Value = '0.72', 'Onboarding progress is missing.');
+  A.Check(A.Control(Session, 'quota').Value = '0.35', 'Quota progress is missing.');
+  A.Check(A.Control(Session, 'quota').Bounds.Width = 104.0F, 'The native ring diameter changed.');
+  A.Check(
+    A.Control(Session, 'quota').Bounds.Y + 104.0F <= 1100.0F,
+    'The ring is outside the gallery capture.'
+  );
+  A.Check(
+    A.Control(Session, 'spinner-large').Bounds.Width = 28.0F,
+    'Spinner lost its native size.'
+  );
+  Session.CapturePng(Capture + '.feedback.png');
+  A.Send(Session, State.Msg.Shared(Shared.Msg.SetAppearance(Switchers.Selection.Dark)));
+  Session.CapturePng(Capture + '.feedback-dark.png');
+  Window.Resize(650, 1250);
+  A.Check(Session.Step(), 'Feedback gallery closed after resize.');
+  A.Check(Session.Step(), 'Feedback gallery closed while settling resize.');
+  Session.CapturePng(Capture + '.feedback-narrow.png');
+end procedure;
+end unit;

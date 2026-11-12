@@ -1,0 +1,26 @@
+unit Fpas.Ui.Meters;
+
+uses Fpas.Ui.Elements as E;
+
+// Builds CUI's capacity meter with native numeric formatting and warning colors.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable meter identity.
+// - `Label`: Literal caption.
+// - `Used`: Finite nonnegative usage; values above Total are allowed.
+// - `Total`: Finite nonnegative capacity; zero displays an empty track.
+// - `Unit`: Optional literal unit displayed beside the values.
+// ## Returns
+// A GUI-only meter; CUI owns its track, interpolation and threshold colors.
+public function Meter<TMsg>(
+  Id: string; Label: string; Used: float; Total: float;
+  Unit: string := ''
+): E.Element<TMsg>;
+requires Id <> '';
+requires Used >= 0.0F;
+requires Total >= 0.0F;
+begin
+  return E.Element<TMsg>.Meter(Id, Label, Used, Total, Unit);
+end function;
+end unit;

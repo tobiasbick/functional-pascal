@@ -2,7 +2,7 @@ unit Fpas.Ui.Internal.DisclosureRules;
 
 uses
   Fpas.Ui.ExpandableCards as Cards, Fpas.Ui.ExpandableTexts as Texts,
-  Fpas.Ui.Internal.Rules as R, System as Sys;
+  Fpas.Ui.Styles as S, Fpas.Ui.Internal.Rules as R, System as Sys;
 
 // Validates a native disclosure header.
 //
@@ -16,7 +16,7 @@ begin
   R.CheckText(Settings.Description, Location + '/description');
   R.CheckText(Settings.Icon, Location + '/icon');
   R.CheckText(Settings.Badge, Location + '/badge');
-  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<Cards.Tone>(
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(
     Settings.BadgeTone
   )
   then

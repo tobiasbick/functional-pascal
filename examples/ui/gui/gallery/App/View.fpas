@@ -1,6 +1,7 @@
 unit GuiGallery.App.View;
 
 uses
+  GuiGallery.Pages.Feedback.View as Feedback,
   GuiGallery.Pages.Buttons.State as ButtonsState,
   GuiGallery.Pages.Buttons.View as Buttons,
   GuiGallery.Pages.Inputs.State as InputsState,
@@ -79,7 +80,7 @@ begin
           Destination(State.Page.Inputs, $E198),
           Destination(State.Page.Selection, $E29A), Destination(State.Page.Navigation, $E09B),
           Destination(State.Page.Lists, $E106),
-          Destination(State.Page.Overlays, $E529)
+          Destination(State.Page.Overlays, $E529), Destination(State.Page.Feedback, $E059)
         ]
       ),
       new N.Section<State.Msg>(
@@ -129,6 +130,8 @@ end function;
 function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
 begin
   case Model.Active of
+    when State.Page.Feedback:
+      return Feedback.View<State.Msg>();
     when State.Page.Overview:
       return Overview.View<State.Msg>(State.Msg.Show(State.Page.Buttons));
     when State.Page.Buttons:

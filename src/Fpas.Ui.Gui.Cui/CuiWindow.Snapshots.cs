@@ -35,11 +35,11 @@ public sealed partial class CuiWindow
         TrackControl(id, NativeMethods.LastNode(context));
     }
 
-    private void TrackControl(string id, int node)
+    private void TrackControl(string id, int node, uint? retainedKey = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(id);
         trackedNodes.Add(id, node);
-        uint key = NativeMethods.NodeKey(context, node);
+        uint key = retainedKey ?? NativeMethods.NodeKey(context, node);
         if (controlKeys.TryGetValue(id, out uint previous) && previous != key)
         {
             NativeMethods.Forget(context, previous);

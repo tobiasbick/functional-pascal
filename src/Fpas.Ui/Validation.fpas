@@ -1,6 +1,6 @@
 unit Fpas.Ui.Validation;
 
-uses Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.DisclosureRules as DisclosureRules, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
+uses Fpas.Ui.Internal.FeedbackRules as FeedbackRules, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as ProgressBars, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.DisclosureRules as DisclosureRules, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -137,6 +137,39 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Path: string := Location + '/passwordStrength';
         Rules.RequireProfile(Profile, Target.Graphical, Path);
         Rules.CheckText(Password, Identify(Id, Path) + '/password');
+      when E.Element.Alert(
+        const Id: string,
+        const Title: string,
+        const Settings: Alerts.Options,
+        _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/alert');
+        const At: string := Identify(Id, Location + '/alert');
+        FeedbackRules.Alert(Title, Settings, At);
+        if Settings.Dismissible then
+          discard Identify(Alerts.DismissId(Id), At + '/dismiss');
+        end if;
+      when E.Element.ProgressBar(
+        const Id: string,
+        const Value: float,
+        const Settings: ProgressBars.Options
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress');
+        FeedbackRules.Progress(Value, Settings, Identify(Id, Location + '/progress'));
+      when E.Element.Spinner(const Id: string, const Size: float):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/spinner');
+        FeedbackRules.Nonnegative(Size, Identify(Id, Location + '/spinner'));
+      when E.Element.ProgressRing(
+        const Id: string, const Label: string, const Value: float, const Size: float
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress-ring');
+        FeedbackRules.ProgressRing(Label, Value, Size, Identify(Id, Location + '/progress-ring'));
+      when E.Element.Meter(
+        const Id: string, const Label: string, const Used: float,
+        const Total: float, const Unit: string
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/meter');
+        FeedbackRules.Meter(Label, Used, Total, Unit, Identify(Id, Location + '/meter'));
       when E.Element.SelectInput(
         const Id: string,
         const Items: array of Selects.Item,

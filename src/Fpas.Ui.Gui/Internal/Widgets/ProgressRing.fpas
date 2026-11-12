@@ -1,0 +1,33 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ProgressRing;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System.Globalization as Culture;
+
+// Draws CUI's ring without duplicating its painting, percentage or interpolation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable ring identity.
+// - `Label`: Literal caption.
+// - `Value`: Model-owned progress fraction.
+// - `Size`: Logical diameter; zero selects the native default.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Size: float
+);
+begin
+  Frame.Window.ProgressRing(C.Token('progress-ring', Id), Label, Value, Size);
+  if not Frame.PaintingClosed and Label <> '' then
+    Frame.Labels.Add(Label);
+  end if;
+
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(
+      Id, Label, 'progress-ring', new Cui.CuiRectangle(), false,
+      Value := Value.ToString(Culture.CultureInfo.InvariantCulture)
+    )
+  );
+end procedure;
+end unit;

@@ -1,0 +1,34 @@
+unit Fpas.Ui.ProgressBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+
+// Native CUI progress-bar options.
+public type Options = record
+  // Whether to animate activity without displaying a percentage.
+  public Indeterminate: bool := false;
+  // Fill color; Neutral uses CUI's control-on color.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Track height in logical points; zero uses CUI's default.
+  public Height: float := 0.0F;
+  // Optional literal caption above the track.
+  public Label: string := '';
+  // Whether to show the rounded percentage for determinate progress.
+  public ShowValue: bool := false;
+end record;
+
+// Builds a progress bar with native interpolation and activity animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable progress identity.
+// - `Value`: Finite progress fraction from zero through one.
+// - `Settings`: Native caption, track and activity options; use Elements.Size for width.
+// ## Returns
+// A GUI-only progress bar with no input actions.
+public function ProgressBar<TMsg>(Id: string; Value: float; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+requires Value >= 0.0F and Value <= 1.0F;
+begin
+  return E.Element<TMsg>.ProgressBar(Id, Value, Settings ?? new Options());
+end function;
+end unit;

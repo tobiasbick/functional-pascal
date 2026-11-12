@@ -1,6 +1,8 @@
 unit Fpas.Ui.Internal.Mapping.Actions;
 
 uses
+  Fpas.Ui.Alerts as Alerts,
+  Fpas.Ui.ProgressBars as ProgressBars,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Internal.MessageMapping as M,
   Fpas.Ui.ExpandableTexts as ExpandableTexts,
@@ -38,6 +40,33 @@ uses
 public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
 begin
   case Value of
+    when E.Element.Alert(
+      const Id: string, const Title: string, const Settings: Alerts.Options,
+      const Notify: Sys.Func<TChild>?
+    ):
+      return E.Element<TParent>.Alert(
+        Id,
+        Title,
+        Settings,
+        M.Factory<TChild, TParent>(Notify, Messages)
+      );
+    when E.Element.ProgressBar(
+      const Id: string,
+      const Fraction: float,
+      const Settings: ProgressBars.Options
+    ):
+      return E.Element<TParent>.ProgressBar(Id, Fraction, Settings);
+    when E.Element.Spinner(const Id: string, const Size: float):
+      return E.Element<TParent>.Spinner(Id, Size);
+    when E.Element.Meter(
+      const Id: string, const Label: string, const Used: float,
+      const Total: float, const Unit: string
+    ):
+      return E.Element<TParent>.Meter(Id, Label, Used, Total, Unit);
+    when E.Element.ProgressRing(
+      const Id: string, const Label: string, const Value: float, const Size: float
+    ):
+      return E.Element<TParent>.ProgressRing(Id, Label, Value, Size);
     when E.Element.ExpandableText(
       const FId: string,
       const FText: string,

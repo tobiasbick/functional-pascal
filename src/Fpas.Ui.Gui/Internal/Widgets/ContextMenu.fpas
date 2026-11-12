@@ -12,6 +12,10 @@ uses Fpas.Ui.Menus as M, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal
 // - `Enabled`: Whether the context menu accepts input.
 public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Entries: array of M.Entry<TMsg>; Enabled: bool);
 begin
+  if not State.Window.HasLastWidget then
+    return;
+  end if;
+
   Menu.Draw<TMsg>(State, Id, 'Context menu', Entries, null, Enabled);
 end procedure;
 end unit;

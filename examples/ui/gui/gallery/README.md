@@ -18,6 +18,7 @@ the accepted widget examples from the
 - `Pages/<Topic>/`: a page's state, messages, update and view. Stateful widget
   examples live in that page's `Widgets/` directory. Actions owns its background
   save commands. Overview is a static view with a supplied navigation message.
+  Feedback is a static composition; its alerts retain their local state in CUI.
 
 Namespaces follow these directories, for example
 `GuiGallery.Pages.Actions.State` and `GuiGallery.Pages.Actions.Widgets.SplitButton`.
@@ -73,6 +74,13 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   The Tooltips section reproduces the six CUI toolbar buttons, with formatting
   shortcuts shown as key hints on hover.
 - **Lists** shows the original three-question native accordion.
+- **Feedback** shows CUI's four original alerts, including dismissible storage
+  warning, upload percentage, indeterminate indexing, Storage usage and three
+  spinner sizes. Goals shows the native 104-point Onboarding and Quota rings.
+  Leaving the page releases native dismissal and interpolation state. Returning
+  shows the warning again. The cards use the available width; the native
+  two-column grid and Goals row justification remain open layout items in the
+  CUI inventory.
 - **Disclosure** shows clamped About text and Billing and Security expandable
   cards. The model owns header expansion;
   CUI owns the text link's local state. The original branch confirmation uses
@@ -102,5 +110,5 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 
 The GUI gallery contract runs this view with both native renderers and captures
 the accepted pages and open overlays, including Lists plus light, dark and narrow
-Disclosure views. It drives the widgets with native pointer and keyboard input.
+Disclosure and Feedback views. It drives the widgets with native pointer and keyboard input.
 The same contract also drives the package-only consumer.

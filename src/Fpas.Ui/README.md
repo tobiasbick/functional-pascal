@@ -544,7 +544,7 @@ accept or decline it. Stable IDs are independent of literal titles, including
 `##` and `###`. Pointer activation, Enter and Space toggle the focused header.
 Escape leaves expansion unchanged.
 
-Card options add CUI's description, icon, badge and badge tone. `Enabled` gates
+Card options add CUI's description, icon, badge and `Styles.Tone` badge color. `Enabled` gates
 the header and body. CUI still draws outgoing content while closing, with input
 disabled; the host omits those descendants from agent snapshots and focus
 selection. The body's own control IDs remain independent of the header.
@@ -569,6 +569,58 @@ The link disappears when the text fits. Native CUI currently loses keyboard
 focus after toggling ([CUI-006](../../docs/future/cui-upstream-bugs.md#cui-006));
 Tab or an explicit focus request selects it again. All three disclosure widgets
 require the graphical profile. Terminal and portable preflight reject them.
+
+## Alerts, progress and spinners
+
+`Fpas.Ui.Alerts.Alert<TMsg>(Id, Title, Settings, OnDismiss)` draws CUI's inline
+alert. Options provide `Description`, `Styles.Tone`, an optional icon glyph,
+`Dismissible` and `Enabled`. Empty icons use CUI's tone-specific default. Titles
+and descriptions are literal, including `##`. CUI owns dismissal: the alert
+stays hidden while its stable ID remains in the view, even if its title changes.
+Removing it for a presented frame releases that state. `OnDismiss` optionally
+delivers one notification after the native action. Snapshots omit hidden alerts;
+visible ones have role `alert`. `Alerts.DismissId(Id)` identifies the optional
+`alert-dismiss` action for native pointer/Enter/Space input and explicit focus.
+
+`Fpas.Ui.ProgressBars.ProgressBar<TMsg>(Id, Value, Settings)` displays a finite
+fraction from zero through one. Options map to CUI's `Label`, `ShowValue`,
+`Indeterminate`, `Styles.Tone` and logical track `Height` (zero uses the native
+default). Indeterminate bars omit percentages. Use `Elements.Size` for width.
+CUI owns interpolation and activity motion. The noninteractive `progress`
+snapshot reports the invariant fraction or `indeterminate` in `Value`.
+
+`Fpas.Ui.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` uses CUI's activity animation,
+theme color and logical diameter; zero selects its default. It has a
+noninteractive `spinner` snapshot. Dimensions must be finite and nonnegative.
+All three widgets require the graphical profile. The Feedback gallery shows
+the original four alerts, upload and indexing bars, and 16/22/28-point spinners.
+
+## Progress ring
+
+`Fpas.Ui.ProgressRings.ProgressRing<TMsg>(Id, Label, Value, Size := 0.0F)` draws
+CUI's circular progress with a centered percentage and optional literal caption.
+The fraction must be finite and between zero and one. The diameter must be
+finite and nonnegative; zero selects CUI's 96-point default. The native ring
+keeps its diameter rather than stretching across its container.
+
+CUI owns numeric formatting, interpolation and painting. The stable ID is
+independent of the caption and surrounding node positions; captions containing
+`##` remain literal. Removing the ring releases its native interpolation state.
+The noninteractive `progress-ring` snapshot reports the model fraction in
+invariant notation. This widget requires the graphical profile. Feedback shows
+the original Onboarding and Quota examples at 104 points.
+
+## Meter
+
+`Fpas.Ui.Meters.Meter<TMsg>(Id, Label, Used, Total, Unit := '')` displays native
+capacity usage, for example `Meters.Meter<Msg>('storage', 'Storage', 18.4F, 20.0F, 'GB')`.
+Usage and capacity must be finite and nonnegative. Usage may exceed capacity;
+CUI clamps the visual fill. Zero capacity displays an empty track. CUI owns
+numeric formatting, interpolation and its warning/danger thresholds. Labels and
+units are literal, including `##`; use `Elements.Size` to constrain width.
+The noninteractive `meter` snapshot reports invariant `Used/Total Unit` in
+`Value`, omitting the space and suffix when Unit is empty. Removing the meter
+releases its native interpolation state. Meter requires the graphical profile.
 
 ## Popover and confirmation popover
 

@@ -1,28 +1,6 @@
 unit Fpas.Ui.ExpandableCards;
 
-uses Fpas.Ui.Elements as E;
-
-// Native CUI badge colors.
-public type Tone = enum: byte
-  // Neutral surface.
-  Neutral;
-  // Informational blue.
-  Info;
-  // Successful green.
-  Success;
-  // Warning amber.
-  Warning;
-  // Destructive red.
-  Danger;
-  // Violet accent.
-  Violet;
-  // Teal accent.
-  Teal;
-  // Rose accent.
-  Rose;
-  // Current theme accent.
-  Accent;
-end enum;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
 
 // Native header decoration and input permission.
 public type Options = record
@@ -33,7 +11,7 @@ public type Options = record
   // Optional badge caption before the chevron.
   public Badge: string := '';
   // Semantic color of the badge.
-  public BadgeTone: Tone := Tone.Neutral;
+  public BadgeTone: S.Tone := S.Tone.Neutral;
   // Whether the header and body accept input.
   public Enabled: bool := true;
 end record;

@@ -1,0 +1,19 @@
+unit Fpas.Ui.Spinners;
+
+uses Fpas.Ui.Elements as E;
+
+// Builds CUI's native activity spinner.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable spinner identity.
+// - `Size`: Diameter in logical points; zero uses CUI's default.
+// ## Returns
+// A GUI-only spinner whose drawing and animation belong to CUI.
+public function Spinner<TMsg>(Id: string; Size: float := 0.0F): E.Element<TMsg>;
+requires Id <> '';
+requires Size >= 0.0F;
+begin
+  return E.Element<TMsg>.Spinner(Id, Size);
+end function;
+end unit;

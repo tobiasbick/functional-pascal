@@ -18,7 +18,7 @@ uses
   Fpas.Ui.ExpandableTexts as Texts,
   Fpas.Ui.Buttons as B,
   Fpas.Ui.Dialogs as D,
-  Fpas.Ui.Validation as V,
+  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V,
   Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.ThemeSwitchers as Switchers,
   System as Sys;
@@ -62,7 +62,7 @@ begin
   Reject(
     Cards.ExpandableCard<int>(
       'c', 'Title', false, Change, Body,
-      new Cards.Options(BadgeTone := cast<Cards.Tone>(255))
+      new Cards.Options(BadgeTone := cast<S.Tone>(255))
     ), V.Target.Graphical, 'badge tone'
   );
   Reject(

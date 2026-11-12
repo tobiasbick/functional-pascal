@@ -28,6 +28,28 @@ public type Role = enum: byte
   Label;
 end enum;
 
+// Native CUI semantic colors shared by graphical widgets.
+public type Tone = enum: byte
+  // Neutral surface.
+  Neutral;
+  // Informational blue.
+  Info;
+  // Successful green.
+  Success;
+  // Warning amber.
+  Warning;
+  // Destructive red.
+  Danger;
+  // Violet accent.
+  Violet;
+  // Teal accent.
+  Teal;
+  // Rose accent.
+  Rose;
+  // Current theme accent.
+  Accent;
+end enum;
+
 // The role of a button within the application.
 public type ButtonVariant = enum: byte
   // An ordinary action.

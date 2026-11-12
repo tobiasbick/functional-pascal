@@ -16,6 +16,7 @@ void fpas_cui_group_end(cui_ctx *ui, int node) {
 
 void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float basis,
                         float minimum, float maximum, float grow, int align) {
+    if (node < 0 || node >= ui->node_count) return;
     cui_node *n = &ui->nodes[node];
     if (maximum < 0) maximum = 1e20f;
     /* Preserve intrinsic fixed leaf sizes for content; all other sizes use CUI directly. */
@@ -36,6 +37,7 @@ void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float b
 }
 
 void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
+    if (node < 0 || node >= ui->node_count) return;
     if (role == 0) return;
     cui_node *n = &ui->nodes[node];
     if (role == 1 || role == 7 || role == 9 || role == 10) {

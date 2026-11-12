@@ -1,0 +1,35 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Meter;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System.Globalization as Culture;
+
+// Draws the native meter without duplicating its formatting, thresholds or animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable meter identity.
+// - `Label`: Literal caption.
+// - `Used`: Model-owned usage.
+// - `Total`: Model-owned capacity.
+// - `Unit`: Literal value suffix.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Used: float;
+  Total: float; Unit: string
+);
+begin
+  Frame.Window.Meter(C.Token('meter', Id), Label, Used, Total, Unit);
+  if not Frame.PaintingClosed and Label <> '' then
+    Frame.Labels.Add(Label);
+  end if;
+  const Value: string := Used.ToString(Culture.CultureInfo.InvariantCulture) + '/' +
+    Total.ToString(
+    Culture.CultureInfo.InvariantCulture
+  ) + (if Unit = '' then '' else ' ' + Unit end if);
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, Label, 'meter', new Cui.CuiRectangle(), false, Value := Value)
+  );
+end procedure;
+end unit;

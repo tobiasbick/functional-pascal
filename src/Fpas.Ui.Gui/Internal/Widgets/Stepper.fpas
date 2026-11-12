@@ -13,7 +13,7 @@ uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Interna
 // - `Current`: Model-owned step index or the count when complete.
 public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Steps: array of string; Current: int);
 begin
-  Frame.Window.Stepper(C.Token('stepper', Id), Steps, Current);
+  Frame.Window.Stepper(Steps, Current);
   const Caption: string := if Current = Steps.Length then 'All steps complete'
     else Steps[Current]
     end if;

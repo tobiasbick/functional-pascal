@@ -45,14 +45,15 @@ the drawer at 740 logical points, the button examples, independent formatting
 choices, the copy control, and modal sheet focus. Native keyboard input drives
 the split button's main action, menu highlight, selection, Escape and focus
 return. The Actions page also exercises both toggle group modes, including
-focus, model rejection and repeated activation of the selected alignment.
+single-step arrow focus, model rejection and repeated activation of the
+selected alignment.
 The Selection page checks native checkbox, switch and radio input, the
 graphical preflight boundary and the two-column and stacked layouts. It also
 checks pointer and keyboard selection in the radio cards, stepped slider
-input, preservation of a model value between steps, and dragging both range
-endpoints. The last section checks chip wrapping, independent pointer and
-keyboard toggles, and selecting and clearing a rating. Navigation checks
-independent tab selections, ancestor activation and the informational final
+input, preservation of a model value between steps, and pointer and keyboard
+adjustment of both range endpoints. The last section checks chip wrapping,
+independent pointer and keyboard toggles, and selecting and clearing a rating.
+Navigation checks independent tab selections, ancestor activation and the informational final
 breadcrumb, keyboard page selection, page boundaries and the compact pager.
 It also exercises Back, Next and Finish around the read-only stepper. The
 contract captures the Buttons, Selection, Navigation and Actions pages, the

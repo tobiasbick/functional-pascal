@@ -60,9 +60,9 @@ their host. No new terminal implementation file is required.
 
 ## Reference
 
-The catalog targets the [vendored CUI v1.4.0 release][vendor] at commit
-[`5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5`][revision]. Compare each component
-with that release before binding it.
+The catalog targets the [vendored CUI snapshot][vendor] at commit
+[`c8baf35008807d66efe8e766c8964122227a2f80`][revision]. Compare each component
+with that snapshot before binding it.
 
 The inventory combines the [core catalog][components], [extended
 catalog][more], [public header][header], and both parts of the native gallery
@@ -270,7 +270,7 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   Volume and stepped Brightness with percentage display and keyboard adjustment.
   TUI: graphical profile required.
 - [x] Range slider (`cui_range_slider`): [API][fpas-sliders]. Selection shows
-  Price range and tests dragging both endpoints. Pinned CUI adjusts by pointer.
+  Price range and tests pointer and keyboard adjustment of both endpoints.
   TUI: graphical profile required.
 - [ ] Ruler slider (`cui_ruler_slider`)
 - [ ] Histogram slider (`cui_histogram_slider`)
@@ -509,17 +509,17 @@ track that native build option with the GUI RTL layout work.
 - [ ] Context meter (`cui_context_meter`)
 - [ ] Voice orb (`cui_voice_orb`)
 
-[revision]: https://github.com/yappologistic/CUI/tree/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5
-[components]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/components.md
-[more]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/components-more.md
-[header]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/include/cui/cui.h
-[gallery]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/examples/gallery_ui.c
-[gallery-more]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/examples/gallery_more.c
-[theming]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/theming.md
-[layout]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/layout.md
-[icons]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/icons.md
-[app-id]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/docs/getting-started.md#your-apps-name-and-icon-on-linux
-[input-limits]: https://github.com/yappologistic/CUI/blob/5a9c12b433d4501bc2f5632ead3a1cc05e5b1ee5/README.md#limitations
+[revision]: https://github.com/yappologistic/CUI/tree/c8baf35008807d66efe8e766c8964122227a2f80
+[components]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/components.md
+[more]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/components-more.md
+[header]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/include/cui/cui.h
+[gallery]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/examples/gallery_ui.c
+[gallery-more]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/examples/gallery_more.c
+[theming]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/theming.md
+[layout]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/layout.md
+[icons]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/icons.md
+[app-id]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/docs/getting-started.md#your-apps-name-and-icon-on-linux
+[input-limits]: https://github.com/yappologistic/CUI/blob/c8baf35008807d66efe8e766c8964122227a2f80/README.md#limitations
 [emoji]: https://www.unicode.org/reports/tr51/
 [width]: https://www.unicode.org/reports/tr11/
 [vendor]: ../../third-party/cui/UPSTREAM.md

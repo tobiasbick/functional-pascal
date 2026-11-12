@@ -4,7 +4,7 @@ uses
   Fpas.Ui.RangeSliders as R, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Context as C, System.Globalization as Culture;
 
-// Presents CUI's two-endpoint track and forwards pointer proposals.
+// Presents CUI's two-endpoint track and forwards pointer and keyboard proposals.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.

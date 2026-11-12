@@ -13,13 +13,6 @@ static cui_id fpas_pager_focus(cui_ctx *ui, const char *id, int focus) {
 int fpas_cui_pagination(cui_ctx *ui, const char *id, int page, int count,
     int enabled, int focus, int *parts, int *used) {
     const cui_id group = cui_make_id(ui, id);
-    /* CUI measures the previous rectangle of a named parent for compact pagination. */
-    const int parent = cui__current(ui);
-    cui_id owned_parent = 0;
-    if (parent >= 0 && !ui->nodes[parent].id) {
-        owned_parent = group ^ 0x50414745u;
-        ui->nodes[parent].id = owned_parent;
-    }
     const bool allowed = enabled && !cui_is_disabled(ui);
     const cui_id key = allowed && focus != -3 ? fpas_pager_focus(ui, id, focus) : 0;
     if (key) ui->focus_next_request = key;
@@ -40,7 +33,10 @@ int fpas_cui_pagination(cui_ctx *ui, const char *id, int page, int count,
         parts[*used * 2 + 1] = child;
         ++*used;
     }
-    fpas_own(ui, group, owned_parent, 0, 0);
+    cui_push_id(ui, id);
+    const cui_id measurement = cui_make_id(ui, "#pager-width");
+    cui_pop_id(ui);
+    fpas_own(ui, group, measurement, 0, 0);
     ui->nodes[row].id = group;
     if (!enabled) ui->nodes[row].opacity = CUI__DISABLED;
     ui->last_node = row;

@@ -16,9 +16,6 @@
 #pragma warning(pop)
 #endif
 
-static void fpas_toast_tick(cui_ctx *ui);
-static void fpas_tooltip_init(cui_ctx *ui);
-static void fpas_tooltip_tick(cui_ctx *ui);
 static void fpas_paint_text_area(cui_ctx *ui, cui_node *area, void *data);
 static void fpas_route_text_area_wheel(cui_ctx *ui);
 

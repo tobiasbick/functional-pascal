@@ -1,6 +1,6 @@
 #include "../fpas_cui.h"
 
-/* Both sliders adjust only during a track press or drag. */
+/* Track a pointer gesture when choosing the single-value slider's step. */
 static bool fpas_slider_dragging(cui_ctx *ui, cui_id track) {
     return ui->mdown[CUI_MOUSE_LEFT] && cui__prev_rect(ui, track).w > 18 &&
         (ui->active == track || (!ui->active && ui->hot == track && ui->mpressed[CUI_MOUSE_LEFT]));

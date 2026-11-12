@@ -166,6 +166,12 @@ begin
     Control(Session, 'action-format', '1').Focused,
     'Left must move focus without changing a toggle.'
   );
+  Key(Session, 7);
+  Key(Session, 8);
+  Check(
+    Control(Session, 'action-format', '1').Focused,
+    'One Right press must reach the next toggle.'
+  );
   Key(Session, 6);
   Check(
     Control(Session, 'action-format', '0').Value = 'true'

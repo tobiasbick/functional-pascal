@@ -10,7 +10,7 @@ public type Interval = record
   public Upper: float;
 end record;
 
-// Creates a native CUI slider with two pointer-adjustable endpoints.
+// Creates a native CUI slider with two endpoints adjustable by pointer or keyboard.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.

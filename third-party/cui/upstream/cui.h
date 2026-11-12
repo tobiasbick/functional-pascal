@@ -380,7 +380,8 @@ CUI_API void cui_set_viewport(cui_ctx *ui, float width, float height, float scal
 CUI_API cui_vec2 cui_viewport_size(cui_ctx *ui);
 CUI_API float cui_dpi_scale(cui_ctx *ui);
 
-/* dt is the time since the previous frame in seconds. */
+/* dt is the elapsed time since the previous frame in seconds.
+ * Timers use the full interval (up to an hour). Animation steps are capped after idle. */
 CUI_API void cui_begin_frame(cui_ctx *ui, float dt);
 CUI_API void cui_end_frame(cui_ctx *ui);
 
@@ -469,6 +470,12 @@ typedef struct cui_platform_iface {
 } cui_platform_iface;
 CUI_API void cui_set_platform(cui_ctx *ui, const cui_platform_iface *platform);
 CUI_API cui_cursor cui_get_cursor(cui_ctx *ui);
+/* The system clipboard, for a menu or status bar item that copies or pastes ("Copy path").
+ * They go through the platform's clipboard hooks, as the copy button and text fields do:
+ * without a hook, setting does nothing and getting returns "". The returned text stays
+ * valid until the next call. */
+CUI_API void cui_set_clipboard_text(cui_ctx *ui, const char *text);
+CUI_API const char *cui_get_clipboard_text(cui_ctx *ui);
 
 /* Queries, useful for app level shortcuts. */
 CUI_API bool cui_key_pressed(cui_ctx *ui, cui_key key);          /* pressed this frame (with repeat) */
@@ -780,6 +787,8 @@ typedef struct cui_slider_opts {
 } cui_slider_opts;
 /* Elastic slider: the track stretches like rubber when dragged past its ends. */
 CUI_API bool cui_slider_ex(cui_ctx *ui, const char *label, float *value, float min, float max, const cui_slider_opts *opts);
+/* Range slider with two non-crossing thumbs. Tab focuses the range, Space
+ * selects the other thumb, and the slider keys adjust the focused thumb. */
 CUI_API bool cui_range_slider(cui_ctx *ui, const char *label, float *lo, float *hi, float min, float max);
 CUI_API bool cui_rating(cui_ctx *ui, const char *id, int *value, int max);
 
@@ -799,7 +808,7 @@ typedef struct cui_input_opts {
     const char *icon;          /* leading icon */
     const char *hint;          /* helper text below */
     const char *error;         /* error text below (red) */
-    bool password;             /* shows dots instead of the text, with an eye button that reveals it */
+    bool password;             /* shows dots instead of the text, with an eye button that reveals it (inactive when disabled) */
     bool disabled;
     bool clearable;            /* x button when not empty */
     bool autofocus;
@@ -872,8 +881,12 @@ typedef struct cui_nav_opts {
 CUI_API bool cui_nav_item_ex(cui_ctx *ui, const char *label, const cui_nav_opts *opts);
 CUI_API void cui_nav_section(cui_ctx *ui, const char *title);
 
-CUI_API int cui_breadcrumb(cui_ctx *ui, const char *const *items, int count);   /* returns clicked index or -1 */
-CUI_API bool cui_pagination(cui_ctx *ui, const char *id, int *page, int page_count);  /* page is 0 based */
+/* Ancestor links, which show keyboard focus. Returns the clicked index or -1. */
+CUI_API int cui_breadcrumb(cui_ctx *ui, const char *const *items, int count);
+/* Page buttons, which show keyboard focus; page is 0 based. The compact layout is
+ * chosen from the parent's inner width. */
+CUI_API bool cui_pagination(cui_ctx *ui, const char *id, int *page, int page_count);
+/* Process steps; labels collapse to fit the width of their own row. */
 CUI_API void cui_stepper(cui_ctx *ui, const char *const *steps, int count, int current);
 
 /* ------------------------------------------------------------------------ */
@@ -953,7 +966,8 @@ CUI_API bool cui_menu_item_ex(cui_ctx *ui, const char *label, const cui_menu_ite
 CUI_API void cui_menu_separator(cui_ctx *ui);
 CUI_API void cui_menu_label(cui_ctx *ui, const char *text);
 
-/* Tooltip for the previous component, shown after a short hover delay. */
+/* Tooltip for the previous component. The first hover waits for the delay,
+ * measured in elapsed time even when the app sleeps between frames. */
 CUI_API void cui_tooltip(cui_ctx *ui, const char *text);
 
 /* ------------------------------------------------------------------------ */
@@ -967,7 +981,8 @@ typedef struct cui_dialog_opts {
     bool no_close_button;      /* hides the x in the corner (Esc and a click outside still close it unless `persistent`) */
     bool persistent;           /* clicking outside or Esc does not close */
 } cui_dialog_opts;
-/* Modal dialog. Shown while *open is true; closing sets it to false. */
+/* Modal dialog. Shown while *open is true; closing sets it to false.
+ * Escape leaves a focused text field before it can dismiss the dialog. */
 CUI_API bool cui_dialog_begin(cui_ctx *ui, const char *title, bool *open, const cui_dialog_opts *opts);
 CUI_API void cui_dialog_end(cui_ctx *ui);
 /* A right-aligned row for dialog actions. */
@@ -993,7 +1008,7 @@ typedef struct cui_toast_opts {
     bool show_timer;           /* a draining line shows how long the action stays (undo) */
 } cui_toast_opts;
 /* Queue a toast. Returns a handle; cui_toast_action_clicked(handle) tells
- * whether its action button was pressed. */
+ * whether its action button was pressed before the toast started closing. */
 CUI_API int cui_toast_ex(cui_ctx *ui, const char *title, const cui_toast_opts *opts);
 CUI_API bool cui_toast_action_clicked(cui_ctx *ui, int handle);
 CUI_API void cui_toast_dismiss(cui_ctx *ui, int handle);
@@ -1320,7 +1335,8 @@ CUI_API int cui_split_button_ex(cui_ctx *ui, const char *label, const char *cons
 
 /* Toggle group: a row of toggles (bold, italic...). values[i] is toggled
  * when item i is clicked; with exclusive set exactly one stays on. Labels
- * become tooltips when icon_only is set. Returns true when a value changed. */
+ * become tooltips when icon_only is set. Left and Right move focus one item.
+ * Returns true when a value changed. */
 typedef struct cui_toggle_group_opts {
     int _;
     const char *const *icons;
@@ -2596,7 +2612,8 @@ CUI_API bool cui_hover_card_begin(cui_ctx *ui, const char *id, const cui_hover_c
 CUI_API void cui_hover_card_end(cui_ctx *ui);
 
 /* Confirm popover: a small question anchored to the previous component.
- * Open it with cui_popover_open(ui, id). Returns true when confirmed. */
+ * Open it with cui_popover_open(ui, id). A new Enter press can confirm it.
+ * Returns true when confirmed. */
 typedef struct cui_confirm_popover_opts {
     int _;
     const char *title;            /* the question, in medium weight at the top, e.g. "Delete this file?" */
@@ -4785,6 +4802,11 @@ CUI_API void cui_app_set_title(cui_app *app, const char *title);
 /* The window's size in logical points (the same units as cui_app_desc.width). */
 CUI_API void cui_app_set_size(cui_app *app, int width, int height);
 CUI_API cui_vec2 cui_app_size(cui_app *app);
+/* Starts or stops following the OS light/dark setting, as cui_app_desc.follow_system_theme
+ * does at creation, for a theme switcher with Light, Dark and System. Starting applies the
+ * OS setting at once, where the platform reports one. Stopping keeps the current theme, so
+ * a cui_set_theme after it lasts. Later OS changes are followed on Windows and macOS. */
+CUI_API void cui_app_follow_system_theme(cui_app *app, bool follow);
 /* True when the software renderer is drawing (no usable OpenGL, or it was asked for). */
 CUI_API bool cui_app_is_software(cui_app *app);
 /* HWND, NSWindow*, X11 Window (cast to uintptr_t), SDL_Window* or GLFWwindow*. */

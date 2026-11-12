@@ -1,8 +1,8 @@
 # Native CUI build
 
 Build the private native `fpas_cui` module from the pinned
-[CUI release pair](../../../third-party/cui/UPSTREAM.md). The FPAS CMake target
-links the platform libraries. `fpas_cui.c` includes the release's `cui.c` and
+[CUI source pair](../../../third-party/cui/UPSTREAM.md). The FPAS CMake target
+links the platform libraries. `fpas_cui.c` includes the generated `cui.c` and
 the adapters that access its private types in the same translation unit.
 `bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
 [`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, text

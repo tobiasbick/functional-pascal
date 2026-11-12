@@ -298,6 +298,22 @@ begin
     Control(Session, 'price-range').Value = '75 – 100',
     'Pressing the right end must move the upper price.'
   );
+  Pending := 7;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'price-range').Value = '75 – 99',
+    'Left must adjust the upper endpoint after a pointer adjustment.'
+  );
+  Pending := 6;
+  Step(Session);
+  Pending := 9;
+  Step(Session);
+  Step(Session);
+  Check(
+    Control(Session, 'price-range').Value = '76 – 99',
+    'Space must switch the active endpoint so Up adjusts the lower value.'
+  );
 
   Click(Session, 'category-engineering');
   Check(

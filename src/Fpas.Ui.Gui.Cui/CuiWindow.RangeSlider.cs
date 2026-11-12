@@ -16,7 +16,7 @@ public sealed partial class CuiWindow
     /// <param name="trackingId">Optional identity for inspecting the track.</param>
     /// <param name="proposedLower">Lower endpoint proposed by the user, or the original value.</param>
     /// <param name="proposedUpper">Upper endpoint proposed by the user, or the original value.</param>
-    /// <returns>Whether pointer input proposed different endpoints.</returns>
+    /// <returns>Whether pointer or keyboard input proposed different endpoints.</returns>
     public bool RangeSlider(string id, string label, float lower, float upper, float minimum, float maximum,
         bool enabled, bool focus, string? trackingId, out float proposedLower, out float proposedUpper)
     {

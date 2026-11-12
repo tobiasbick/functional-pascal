@@ -228,9 +228,8 @@ item is activated. Each proposal contains a fresh array of flags.
 `Options` sets the control size, selection mode, icon-only presentation and
 input permission. Items with glyphs use their labels as tooltips in icon-only
 mode. Use `ItemId(Id, Index)` to focus an item, or the group ID to focus the
-first item. Pointer, Enter and Space activate an item. Tab and the horizontal
-arrow keys move focus. Right can skip intermediate items in CUI v1.4.0.
-See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md).
+first item. Pointer, Enter and Space activate an item. Tab moves focus, and
+each horizontal arrow press moves focus one item within the group.
 
 Toggle groups require the graphical profile. CUI draws and handles both
 groups on the GUI gallery's Actions page.
@@ -275,8 +274,8 @@ accelerates the adjustment, and Home and End move toward the bounds.
 
 `Fpas.Ui.RangeSliders.RangeSlider` takes a model-owned `Interval` with two
 ordered endpoints. The native range track moves the nearest endpoint on
-press and keeps the two endpoints ordered during a drag. It accepts Tab
-focus, and the pinned CUI version adjusts endpoints through pointer input.
+press and keeps the two endpoints ordered during a drag. Tab focuses the
+track, Space switches the active endpoint, and the slider keys adjust it.
 Both sliders use finite, increasing bounds and values within those bounds.
 Radio cards and both sliders require the graphical profile.
 

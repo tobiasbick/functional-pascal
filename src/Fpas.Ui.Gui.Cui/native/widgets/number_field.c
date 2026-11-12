@@ -37,7 +37,6 @@ void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double mi
     if (label && strstr(label, "##")) fpas_text(ui, ui->nodes[root].first, label);
 
     cui_edit_state *edit = cui__state_lazy(ui, key, sizeof *edit, false);
-    if (ui->edit == edit && ui->focus != key) ui->edit = NULL;
     const int area = fpas_find(ui, key ^ 0xED17u);
     cui__edit_paint *paint = ui->nodes[area].paint_data;
     const int length = (int)strlen(state->text);

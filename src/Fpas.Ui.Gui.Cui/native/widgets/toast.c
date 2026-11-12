@@ -11,26 +11,12 @@ int fpas_cui_toast(cui_ctx *ui, const char *title, const char *description,
     return cui_toast_ex(ui, title, &options);
 }
 
-static void fpas_toast_tick(cui_ctx *ui) {
-    if (!ui->in_frame || ui->hot_layer == fpas_toast_layer) return;
-    for (int i = 0; i < ui->toast_count; ++i) {
-        const cui_toast_item *toast = &ui->toasts[i];
-        if (!toast->dismissed && toast->duration > 0) {
-            /* CUI caps its frame delta at 250 ms, even after sleeping until a toast's deadline. */
-            cui__wakeup_after(ui, 0.2f);
-            return;
-        }
-    }
-}
-
 int fpas_cui_toast_inspect(cui_ctx *ui, int handle, int *card, int *action, int *dismiss) {
     *card = *action = *dismiss = -1;
     const int invoked = cui_toast_action_clicked(ui, handle) ? 2 : 0;
     for (int i = 0; i < ui->toast_count; ++i) {
         const cui_toast_item *toast = &ui->toasts[i];
         if (toast->handle != handle) continue;
-        /* CUI can still build the action button during the exit animation. */
-        if (toast->duration > 0 && toast->age >= toast->duration) return 0;
         if (toast->dismissed) return invoked;
         const int node = fpas_find(ui, cui__hash(&handle, sizeof handle, fpas_toast_layer));
         if (node < 0 || ui->nodes[node].opacity <= 0.01f) return 1 | invoked;

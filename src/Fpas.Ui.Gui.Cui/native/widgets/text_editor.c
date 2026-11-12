@@ -59,10 +59,8 @@ static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_
     if (options.placeholder)
         options.placeholder = cui__frame_strdup(ui, options.placeholder, (int)strlen(options.placeholder));
 
-    /* Disable all editor affordances within the same scope. */
-    cui_push_disabled(ui, !enabled);
+    options.disabled = !allowed;
     const int flags = draw(ui, id, value, capacity, &options);
-    cui_pop_disabled(ui);
 
     nodes[0] = fpas_find(ui, key);
     nodes[1] = options.clearable ? fpas_find(ui, clear) : -1;
@@ -72,8 +70,6 @@ static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_
     ui->last_node = root;
     ui->last_id = key;
     edit = cui__state_lazy(ui, key, sizeof *edit, false);
-    /* Escape can release focus after CUI marks this editor active for the frame. */
-    if (ui->edit == edit && ui->focus != key) ui->edit = NULL;
     *revealed = options.password && edit->show_password;
 
     length = strlen(value);

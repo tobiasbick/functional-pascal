@@ -1,19 +1,5 @@
 #include "../fpas_cui.h"
 
-static void fpas_tooltip_init(cui_ctx *ui) {
-    /* The first tooltip has no earlier tooltip from which to inherit a warm delay. */
-    cui__tooltip_get(ui)->last_shown = -1.0;
-}
-
-static void fpas_tooltip_tick(cui_ctx *ui) {
-    if (ui->in_frame && ui->tooltip_id && ui->tooltip_id == ui->hot &&
-        !ui->active && !ui->mdown[CUI_MOUSE_LEFT] &&
-        ui->time - ui->hover_start < 0.55 && ui->wakeup > 0.2f) {
-        /* A longer sleep would lose elapsed hover time to CUI's frame-delta cap. */
-        cui__wakeup_after(ui, 0.2f);
-    }
-}
-
 void fpas_cui_tooltip(cui_ctx *ui, const char *text, const char *shortcut) {
     if (!ui->last_id || ui->last_node < 0) return;
     const int anchor = fpas_find(ui, ui->last_id);

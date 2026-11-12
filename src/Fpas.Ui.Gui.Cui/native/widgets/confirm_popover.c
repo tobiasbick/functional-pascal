@@ -23,8 +23,6 @@ int fpas_cui_confirm_popover(cui_ctx *ui, const char *id, const char *title,
     const cui_id confirm_key = cui_make_id(ui, confirm_slot);
     cui_pop_id(ui);
 
-    /* The input opening a question must never answer the same question. */
-    if (popup->open && popup->opened_frame == ui->frame) ui->kpressed[CUI_KEY_ENTER] = 0;
     const bool confirmed = cui_confirm_popover_ex(ui, id, &options);
     fpas_popup_inherit_focus(ui, key);
     const int cancel_node = fpas_find(ui, cancel_key);

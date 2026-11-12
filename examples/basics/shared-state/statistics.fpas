@@ -18,4 +18,5 @@ public procedure Reset();
 begin
   TotalMoves := 0L;
 end procedure;
+
 end unit;

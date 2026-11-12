@@ -24,4 +24,5 @@ begin
   Console.WriteLine(Updated.Label + ': ' + Updated.Count.ToString());
   Console.WriteLine(Input = Model.Tree.Branch(Model.Tree.Leaf(21), Model.Tree.Leaf(34)));
 end;
+
 end program;

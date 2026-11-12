@@ -63,4 +63,5 @@ public type Msg = variant
   // Accept a price interval proposed by the histogram.
   SetPrice(Value: Range.Interval);
 end variant;
+
 end unit;

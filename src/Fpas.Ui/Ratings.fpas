@@ -23,4 +23,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.RatingAction(Id, Label, Value, OnChange, Maximum, Enabled);
 end function;
+
 end unit;

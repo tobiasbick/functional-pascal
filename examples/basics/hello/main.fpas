@@ -7,4 +7,5 @@ begin
   const Message: string := 'Hello from FPAS';
   Console.WriteLine(Message);
 end;
+
 end program;

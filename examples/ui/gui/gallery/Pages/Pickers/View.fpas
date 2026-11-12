@@ -50,4 +50,5 @@ begin
     RulerAndHistogram.View(Model)
   );
 end function;
+
 end unit;

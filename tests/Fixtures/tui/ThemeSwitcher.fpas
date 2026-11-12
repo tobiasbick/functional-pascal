@@ -317,4 +317,5 @@ begin
   Behavior();
   Console.WriteLine('Theme switcher contracts verified');
 end;
+
 end program;

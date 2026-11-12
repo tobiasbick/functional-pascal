@@ -56,4 +56,5 @@ begin
     G.Card<State.Msg>(16, [Chip.View(Model, Data), Rating.View(Model, Data)])
   );
 end function;
+
 end unit;

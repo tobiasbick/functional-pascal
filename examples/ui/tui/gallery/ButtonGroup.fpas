@@ -31,4 +31,5 @@ begin
     FormatButton(Model, 'format-underline', 'Underline', State.TextFormat.Underline, $E19A)
   );
 end function;
+
 end unit;

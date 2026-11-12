@@ -173,4 +173,5 @@ begin
   Step(Session);
   A.Check(Phase = StoppedPhase, 'Leaving Audio must cancel its background signal.');
 end procedure;
+
 end unit;

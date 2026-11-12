@@ -62,4 +62,5 @@ begin
     E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)
   );
 end function;
+
 end unit;

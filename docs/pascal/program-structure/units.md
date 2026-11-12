@@ -15,6 +15,7 @@ begin
     Y := Value.Y + DY;
   end with;
 end function;
+
 end unit;
 ```
 
@@ -52,6 +53,7 @@ public function SampleCount(): long;
 begin
   return TotalSamples;
 end function;
+
 end unit;
 ```
 

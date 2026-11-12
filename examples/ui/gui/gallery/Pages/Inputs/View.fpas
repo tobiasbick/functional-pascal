@@ -28,4 +28,5 @@ begin
     InlineCalendar.View(Model)
   );
 end function;
+
 end unit;

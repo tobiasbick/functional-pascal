@@ -109,7 +109,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             statements = ReadBody(bodyStart, () => { Expect("begin"); var body = ReadStatements(); Expect("end"); Expect(";", programEnd: true); return body; });
             container.Body(bodyStart, Math.Max(bodyStart, LastEnd));
         }
-        layout?.Line(position);
+        layout?.CloseCompilationUnit(position);
         if (recover && Current.Kind == TokenKind.End)
         { source.Diagnostics.Add(Expected(["end"], "Expected the source terminator.").Diagnostic); InvalidRegions.Add((Current.Position, Current.Position)); }
         else { Expect("end"); Expect(isProgram ? "program" : "unit"); Expect(";"); }

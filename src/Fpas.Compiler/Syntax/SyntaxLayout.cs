@@ -14,9 +14,16 @@ internal sealed class SyntaxLayout(int tokenCount)
     internal Dictionary<int, int> ConditionalEnds { get; } = [];
     internal HashSet<int> SingleElementBranchArrays { get; } = [];
     internal List<(int Start, int End)> Bodies { get; } = [];
+    internal int CompilationEnd { get; private set; } = -1;
 
     internal void Line(int index) => Breaks[index] = Math.Max(Breaks[index], 1);
     internal void Section(int index) => Breaks[index] = 2;
+    internal void CloseCompilationUnit(int index)
+    {
+        CompilationEnd = index;
+        Section(index);
+    }
+
     internal void Indent(int start, int end) { Indents[start]++; Indents[end]--; }
     internal void Body(int start, int end)
     {

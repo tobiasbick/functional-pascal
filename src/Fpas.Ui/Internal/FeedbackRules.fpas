@@ -98,4 +98,5 @@ begin
     R.Reject(Location, 'The value must be finite and nonnegative.');
   end if;
 end procedure;
+
 end unit;

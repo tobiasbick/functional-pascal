@@ -46,4 +46,5 @@ begin
     EmojiMessage.View(Model)
   );
 end function;
+
 end unit;

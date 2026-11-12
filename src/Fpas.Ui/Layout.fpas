@@ -116,4 +116,5 @@ public type ScrollChange = record
   // The maximum offset in the host's units.
   public Maximum: Measure;
 end record;
+
 end unit;

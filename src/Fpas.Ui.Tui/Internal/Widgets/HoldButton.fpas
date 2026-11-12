@@ -138,4 +138,5 @@ begin
     Th.Rgb(new G.Color(0, 0, 0, 56), Style.Background ?? Background)
   );
 end function;
+
 end unit;

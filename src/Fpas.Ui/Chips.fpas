@@ -23,4 +23,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.ChipAction(Id, Label, Selected, OnChange, Icon, Enabled);
 end function;
+
 end unit;

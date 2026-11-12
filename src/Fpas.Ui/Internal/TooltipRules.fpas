@@ -151,4 +151,5 @@ begin
     R.Reject(Location, 'A tooltip needs one interactive target control.');
   end if;
 end procedure;
+
 end unit;

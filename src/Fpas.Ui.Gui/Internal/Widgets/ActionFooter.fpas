@@ -22,4 +22,5 @@ begin
 
   Frame.Window.EndActionFooter();
 end procedure;
+
 end unit;

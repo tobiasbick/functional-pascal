@@ -62,4 +62,5 @@ begin
     new App.Control(Id, Label, 'button', new Cui.CuiRectangle(), Enabled, Value := Value)
   );
 end procedure;
+
 end unit;

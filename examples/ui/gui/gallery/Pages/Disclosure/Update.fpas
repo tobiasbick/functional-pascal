@@ -30,4 +30,5 @@ begin
   end case;
   return new Mvu.Transition<S.Model, S.Msg>(Next, []);
 end function;
+
 end unit;

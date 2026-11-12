@@ -119,4 +119,5 @@ public function CancelBackground<TMsg>(Id: string): Command<TMsg>;
 begin
   return Command<TMsg>.Cancel(Id);
 end function;
+
 end unit;

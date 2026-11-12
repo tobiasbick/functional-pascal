@@ -32,4 +32,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.HoldAction(Id, Label, Message, Settings ?? new Options());
 end function;
+
 end unit;

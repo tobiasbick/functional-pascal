@@ -3,6 +3,14 @@ namespace Fpas.Compiler.Tests.Formatting;
 public sealed class SourceSectionTests
 {
     [Theory]
+    [InlineData("program Demo;begin end;\n// Closing note\nend program;", "end;\n// Closing note\n\nend program;\n")]
+    [InlineData("unit Demo;const Value: int := 1;\n\n\nend unit;", "const Value: int := 1;\n\nend unit;\n")]
+    public void Source_terminators_follow_exactly_one_blank_line(string source, string ending)
+    {
+        Assert.EndsWith(ending, FormatterTests.Format(source));
+    }
+
+    [Theory]
     [InlineData("\n")]
     [InlineData("\r\n")]
     [InlineData("\r")]
@@ -62,6 +70,7 @@ public sealed class SourceSectionTests
 
               discard Detached + Limit;
             end;
+
             end program;
             """;
         var source = input.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", newline, StringComparison.Ordinal);

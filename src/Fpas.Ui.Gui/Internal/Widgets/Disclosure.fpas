@@ -71,4 +71,5 @@ begin
   Visit(Content, Inside, false, L.Alignment.Default);
   Frame.Window.EndDisclosure();
 end procedure;
+
 end unit;

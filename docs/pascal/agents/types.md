@@ -79,6 +79,7 @@ begin
 
   Console.WriteLine('Types verified');
 end;
+
 end program;
 ```
 
@@ -109,6 +110,7 @@ begin
   Total := Total + Step;
   return Total;
 end function;
+
 end unit;
 ```
 
@@ -124,6 +126,7 @@ begin
 
   Console.WriteLine('Units verified');
 end;
+
 end program;
 ```
 

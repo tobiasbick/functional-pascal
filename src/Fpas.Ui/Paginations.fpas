@@ -21,4 +21,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.PaginationAction(Id, Page, PageCount, OnChange, Enabled);
 end function;
+
 end unit;

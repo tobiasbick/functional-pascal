@@ -23,4 +23,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.SwitchAction(Id, Label, On, OnChange, Description, Enabled);
 end function;
+
 end unit;

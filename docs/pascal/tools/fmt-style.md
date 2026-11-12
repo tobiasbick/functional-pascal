@@ -85,10 +85,11 @@ diagnostics go to stderr.
 - Separate the compilation-unit header, imports and following section with one
   blank line. Separate top-level declarations, except adjacent bindings of the
   same kind/visibility. Separate record fields from methods and methods from
-  one another. A unit's final ending follows its last declaration directly.
+  one another. Put exactly one blank line before `end program;` and `end unit;`,
+  after any comments that precede the ending.
 - Separate a completed block/control statement from the next sibling with one
-  blank line unless the next sibling is `const`/`var`. No blank is inserted before
-  structural continuations or closers.
+  blank line unless the next sibling is `const`/`var`. Structural continuations
+  and block closers inside a source have no preceding blank line.
 - Preserve authored sections between sibling statements and adjacent bindings,
   including before `const` and `var`; normalize repeated blank lines to one.
   Comments alone do not create a section. A blank after a comment still keeps
@@ -118,7 +119,8 @@ target. Logical `and`, `or` and `xor` begin continuation lines; other operators
 end the preceding line. A multiline `if` condition puts `then` on its own line.
 In statements and expressions, each `then` and `else` starts a branch on the next
 line, indented two spaces. `elsif`, `else` and `end if` align with the line that
-starts the `if`, including after `return`, an assignment or a `when` header.
+starts the `if`. When a `when` arm directly returns an `if` expression, indent
+its continuation lines two more spaces so `end if;` is inside the arm.
 A single-element array branch stays on one line if the element is single-line,
 the array fits the width target, and it has no internal comments or blank lines.
 Case expressions use structural arm lines.
@@ -153,6 +155,7 @@ end function;
 begin
   Console.WriteLine(Clamp(7, 0, 10));
 end;
+
 end program;
 ```
 

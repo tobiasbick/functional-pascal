@@ -66,4 +66,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.SwipeRow(Id, Content, Left, Right, OnChoose, Settings ?? new Options());
 end function;
+
 end unit;

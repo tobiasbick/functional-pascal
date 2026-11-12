@@ -40,4 +40,5 @@ begin
   end if;
   Parts.Publish<TMsg>(Frame, Id, Label, Role, Value, Accept, Result, OnChange);
 end procedure;
+
 end unit;

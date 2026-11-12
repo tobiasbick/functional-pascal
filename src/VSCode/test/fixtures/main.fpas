@@ -11,4 +11,5 @@ begin
   Console.WriteLine('λ😀' + Double(H.Answer() + Api.Value()).ToString());
   discard Api.Echo('text', 2);
 end;
+
 end program;

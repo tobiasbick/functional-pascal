@@ -21,4 +21,5 @@ requires Size >= 0.0F;
 begin
   return E.Element<TMsg>.ProgressRing(Id, Label, Value, Size);
 end function;
+
 end unit;

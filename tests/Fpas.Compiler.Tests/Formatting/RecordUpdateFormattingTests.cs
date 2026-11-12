@@ -9,7 +9,7 @@ public sealed class RecordUpdateFormattingTests
     {
         var input = "program Demo;begin case Key of when 'id':Item:=Item with " + fields + "end with;end case;end;end program;";
         var expected = "program Demo;\n\nbegin\n  case Key of\n    when 'id':\n      Item := Item with\n" + expectedFields +
-            "\n      end with;\n  end case;\nend;\nend program;\n";
+            "\n      end with;\n  end case;\nend;\n\nend program;\n";
         Assert.Equal(expected, FormatterTests.Format(input));
     }
 
@@ -40,6 +40,7 @@ public sealed class RecordUpdateFormattingTests
                 // outer end
               end with;
             end;
+
             end program;
             """;
         Assert.Equal(expected.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n", FormatterTests.Format(input));

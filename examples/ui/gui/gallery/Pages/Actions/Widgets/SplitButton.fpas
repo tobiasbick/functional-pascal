@@ -67,4 +67,5 @@ begin
   end if;
   return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
 end function;
+
 end unit;

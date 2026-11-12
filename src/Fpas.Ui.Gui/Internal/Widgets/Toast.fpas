@@ -76,4 +76,5 @@ begin
     Track(Id + '/dismiss', 'Dismiss notification', 'toast-dismiss', Current.Dismiss, true);
   end for;
 end procedure;
+
 end unit;

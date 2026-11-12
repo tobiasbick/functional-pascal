@@ -15,4 +15,5 @@ begin
     Text.Encoding.UTF8.GetBytes(Value)
   ) + Escape + '\';
 end function;
+
 end unit;

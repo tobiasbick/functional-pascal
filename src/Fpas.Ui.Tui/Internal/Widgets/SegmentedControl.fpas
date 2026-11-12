@@ -118,4 +118,5 @@ begin
 
   return Group.Lower<TMsg>(Children.ToArray(), Theme, Colors, Settings.FullWidth);
 end function;
+
 end unit;

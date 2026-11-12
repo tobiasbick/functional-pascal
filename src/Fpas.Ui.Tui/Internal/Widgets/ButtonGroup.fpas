@@ -103,4 +103,5 @@ begin
   const Height: int := Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Body, false, Width));
   return new F.Rect(Area.X, Area.Y, Width, Height);
 end function;
+
 end unit;

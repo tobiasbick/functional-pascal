@@ -85,6 +85,7 @@ end function;
 begin
   Console.WriteLine(Sum<int>([20, 22]));
 end;
+
 end program;
 ```
 

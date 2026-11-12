@@ -25,4 +25,5 @@ begin
     Console.WriteLine(Number);
   end for;
 end;
+
 end program;

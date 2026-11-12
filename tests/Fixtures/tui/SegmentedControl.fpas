@@ -276,4 +276,5 @@ begin
   Validation();
   Console.WriteLine('Segmented control contracts verified');
 end;
+
 end program;

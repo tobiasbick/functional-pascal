@@ -107,4 +107,5 @@ begin
   DisabledForeground();
   Console.WriteLine('Rendering contracts verified');
 end;
+
 end program;

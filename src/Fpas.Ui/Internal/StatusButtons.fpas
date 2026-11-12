@@ -47,4 +47,5 @@ begin
       raise new Sys.ArgumentOutOfRangeException('State');
   end case;
 end function;
+
 end unit;

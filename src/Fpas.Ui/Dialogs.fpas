@@ -51,4 +51,5 @@ public function CloseId(Id: string): string;
 begin
   return Id + '/close';
 end function;
+
 end unit;

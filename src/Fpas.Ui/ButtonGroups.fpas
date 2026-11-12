@@ -15,4 +15,5 @@ requires Children <> null;
 begin
   return E.Element<TMsg>.ButtonGroup(Children);
 end function;
+
 end unit;

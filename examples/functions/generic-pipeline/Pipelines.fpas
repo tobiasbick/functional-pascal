@@ -22,4 +22,5 @@ public function Compose<T, U, V>(First: function(T): U; Second: function(U): V):
 begin
   return function(Value: T): V => Second(First(Value));
 end function;
+
 end unit;

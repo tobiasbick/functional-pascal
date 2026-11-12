@@ -299,4 +299,5 @@ begin
 
   return new Surface(Painted.ToArray(), Cells.ToArray(), Lines.ToArray());
 end function;
+
 end unit;

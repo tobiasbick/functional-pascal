@@ -524,4 +524,5 @@ begin
     Send, Step, ReadFrame, Wait, Core.WaitForWork, Core.IsOpen, Close, DisposeSession
   );
 end function;
+
 end unit;

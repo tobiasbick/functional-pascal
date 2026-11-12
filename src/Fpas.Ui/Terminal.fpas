@@ -25,4 +25,5 @@ public type Cell = record
   // The cell's color overrides.
   public Colors: Style;
 end record;
+
 end unit;

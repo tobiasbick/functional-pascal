@@ -44,4 +44,5 @@ begin
     Ids.ToArray(), 'theme-choice'
   );
 end function;
+
 end unit;

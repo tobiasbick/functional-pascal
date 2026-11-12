@@ -36,4 +36,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.ConfirmAction(Id, Label, Message, Settings ?? new Options());
 end function;
+
 end unit;

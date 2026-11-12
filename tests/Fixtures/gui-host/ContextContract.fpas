@@ -176,4 +176,5 @@ begin
   Open(Session, Area);
   Session.CapturePng(Capture + '.context.png');
 end procedure;
+
 end unit;

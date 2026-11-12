@@ -74,4 +74,5 @@ public function RevealId(Id: string): string;
 begin
   return Id + '/reveal';
 end function;
+
 end unit;

@@ -60,6 +60,8 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
         var comments = trivia.Comments[index];
         var requested = layout.Breaks[index];
         if (comments.Count == 0) { Break(requested); return; }
+        var beforeCompilationEnd = index == layout.CompilationEnd;
+        if (beforeCompilationEnd) requested = 0;
         var previous = index == 0 ? 0 : tokens[index - 1].Position + tokens[index - 1].Length;
         foreach (var comment in comments)
         {
@@ -76,7 +78,7 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
             previous = comment.End;
         }
         // A blank before the next token keeps Markdown documentation detached.
-        Break(Math.Max(requested, trivia.Newlines(previous, tokens[index].Position) > 1 ? 2 : 1));
+        Break(beforeCompilationEnd ? 2 : Math.Max(requested, trivia.Newlines(previous, tokens[index].Position) > 1 ? 2 : 1));
     }
 
     private bool SpaceBefore(int index)

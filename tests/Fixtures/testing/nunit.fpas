@@ -66,4 +66,5 @@ public type Tests = record
     raise new Sys.InvalidOperationException('user failure');
   end procedure;
 end record;
+
 end unit;

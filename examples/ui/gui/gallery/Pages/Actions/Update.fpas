@@ -36,12 +36,12 @@ begin
       ProjectDeleted := true;
     end with;
     when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
-      State with
-        SaveStatus := Work.Status.Busy;
-      end with
-    else
-      State
-    end if;
+        State with
+          SaveStatus := Work.Status.Busy;
+        end with
+      else
+        State
+      end if;
     when S.Msg.SetSaveStatus(const Value: Work.Status): State with
       SaveStatus := Value;
     end with;
@@ -56,4 +56,5 @@ begin
   end case;
   return new Mvu.Transition<S.Model, S.Msg>(Next, Commands.ForAction(State, Message));
 end function;
+
 end unit;

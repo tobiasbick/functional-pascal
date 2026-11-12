@@ -203,4 +203,5 @@ begin
   var Sequence: long := 0L;
   return new State<TMsg>(Start, Cancel, IsCurrent, Pending, Close);
 end function;
+
 end unit;

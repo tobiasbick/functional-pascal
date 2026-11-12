@@ -328,4 +328,5 @@ begin
   Step(Session);
   A.Check(A.Control(Session, 'billing').Value = 'true', 'Resizing lost model expansion.');
 end procedure;
+
 end unit;

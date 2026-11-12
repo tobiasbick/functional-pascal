@@ -30,4 +30,5 @@ begin
     new App.Control(Id, Label, 'rating', new Cui.CuiRectangle(), Allowed, Value := Value.ToString())
   );
 end procedure;
+
 end unit;

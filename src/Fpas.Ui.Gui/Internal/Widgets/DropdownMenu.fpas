@@ -15,4 +15,5 @@ public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Ent
 begin
   Menu.Draw<TMsg>(State, Id, Label, Entries, Settings, Settings.Enabled);
 end procedure;
+
 end unit;

@@ -245,4 +245,5 @@ begin
       return new Mvu.Transition<G.Model, G.Msg>(State, []);
   end case;
 end function;
+
 end unit;

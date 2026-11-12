@@ -116,4 +116,5 @@ public type Msg = variant
   // Route an action to the Capture slice.
   Capture(Value: Capture.Msg);
 end variant;
+
 end unit;

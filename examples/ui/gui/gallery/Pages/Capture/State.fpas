@@ -26,4 +26,5 @@ public type Msg = variant
   // Set the profile photo from a drop or a dialog.
   SetAvatar(Path: string);
 end variant;
+
 end unit;

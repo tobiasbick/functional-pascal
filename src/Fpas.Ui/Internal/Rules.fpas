@@ -229,4 +229,5 @@ begin
     Reject(Location, 'The graphical viewport needs positive dimensions.');
   end if;
 end procedure;
+
 end unit;

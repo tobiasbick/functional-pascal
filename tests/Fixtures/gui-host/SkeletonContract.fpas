@@ -152,4 +152,5 @@ begin
   A.Send(Session, State.Msg.SetDrawer(false));
   A.Check(A.Control(Session, 'fill').Bounds.Width > 0.0F, 'Reinserted skeleton did not render.');
 end procedure;
+
 end unit;

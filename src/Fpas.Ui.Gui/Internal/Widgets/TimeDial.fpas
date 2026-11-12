@@ -77,4 +77,5 @@ begin
     new App.Control(Face, 'Clock face', 'time-face', new Cui.CuiRectangle(), Accept)
   );
 end procedure;
+
 end unit;

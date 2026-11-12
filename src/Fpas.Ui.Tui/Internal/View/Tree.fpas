@@ -113,4 +113,5 @@ public type Element<TMsg> = variant
     Dismiss: TMsg; Colors: T.Style
   );
 end variant;
+
 end unit;

@@ -43,6 +43,7 @@ begin
   const Sample: Measurement := new Measurement(Name := 'Alpha', Value := 10);
   Console.WriteLine(Json.JsonSerializer.Serialize<Measurement>(Sample));
 end;
+
 end program;
 ```
 

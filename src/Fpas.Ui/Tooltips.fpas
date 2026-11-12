@@ -17,4 +17,5 @@ requires Text <> '';
 begin
   return E.Element<TMsg>.Hinted(Target, Text, Shortcut);
 end function;
+
 end unit;

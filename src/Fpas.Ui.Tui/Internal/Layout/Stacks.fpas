@@ -98,4 +98,5 @@ begin
 
   return ChildrenBounds.ToArray();
 end function;
+
 end unit;

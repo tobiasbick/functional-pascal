@@ -102,4 +102,5 @@ begin
 
   return new A.Transition<TModel, TParent>(Value.Model, Commands.ToArray());
 end function;
+
 end unit;

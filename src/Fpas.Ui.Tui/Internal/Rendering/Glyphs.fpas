@@ -146,4 +146,5 @@ begin
 
   return Value.Length;
 end function;
+
 end unit;

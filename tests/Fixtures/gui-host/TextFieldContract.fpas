@@ -477,4 +477,5 @@ begin
   VerifyOptions(Renderer);
   VerifyCompact(Renderer, Capture);
 end procedure;
+
 end unit;

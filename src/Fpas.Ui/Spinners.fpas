@@ -16,4 +16,5 @@ requires Size >= 0.0F;
 begin
   return E.Element<TMsg>.Spinner(Id, Size);
 end function;
+
 end unit;

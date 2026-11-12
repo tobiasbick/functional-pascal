@@ -200,4 +200,5 @@ begin
 
   return new ShortcutBinding<TMsg>(Key.Unknown, KeyModifiers.None, Message, Character);
 end function;
+
 end unit;

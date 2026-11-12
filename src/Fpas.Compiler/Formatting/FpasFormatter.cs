@@ -24,13 +24,14 @@ public static class FpasFormatter
             new Parser(source, tokens, layout).ParseCompilationUnit();
             source.Diagnostics.ThrowIfErrors();
             var output = new SourceFormatter(source, tokens, comments, layout).Format();
-            Validate(source, tokens, comments, output);
+            Validate(source, tokens, comments, output, layout.CompilationEnd);
             return new(output, []);
         }
         catch (CompilationFailure failure) { return new(null, failure.Diagnostics); }
     }
 
-    private static void Validate(SourceText original, IReadOnlyList<Token> before, IReadOnlyList<SourceComment> comments, string output)
+    private static void Validate(SourceText original, IReadOnlyList<Token> before, IReadOnlyList<SourceComment> comments,
+        string output, int compilationEnd)
     {
         var formatted = new SourceText(original.Path, output, original.CancellationToken);
         var afterComments = new List<SourceComment>();
@@ -42,7 +43,9 @@ public static class FpasFormatter
             formatted.Diagnostics.ThrowIfErrors();
         }
         catch (CompilationFailure) { throw PreservationFailure(original.Path); }
-        if (before.Count == after.Count && before.Zip(after).All(pair => SameToken(pair.First, pair.Second)) &&
+        // The compilation terminator cannot own declaration documentation.
+        if (before.Count == after.Count && Enumerable.Range(0, before.Count)
+            .All(index => SameToken(before[index], after[index], compareDocumentation: index != compilationEnd)) &&
             comments.Select(comment => original.Text[comment.Start..comment.End].TrimEnd())
             .SequenceEqual(afterComments.Select(comment => output[comment.Start..comment.End].TrimEnd()))) return;
         throw PreservationFailure(original.Path);
@@ -52,8 +55,8 @@ public static class FpasFormatter
         => new(new("FP7001", "Formatting could not preserve valid syntax, tokens, comments and documentation attachment.", null)
         { InputPath = path, Help = "The source was not modified. Please report this formatter error." });
 
-    private static bool SameToken(Token before, Token after)
+    private static bool SameToken(Token before, Token after, bool compareDocumentation)
         => before.Kind == after.Kind && before.Text == after.Text &&
-           (before.Documentation?.Lines.Select(line => line.Text.TrimEnd()) ?? [])
-           .SequenceEqual(after.Documentation?.Lines.Select(line => line.Text.TrimEnd()) ?? []);
+           (!compareDocumentation || (before.Documentation?.Lines.Select(line => line.Text.TrimEnd()) ?? [])
+               .SequenceEqual(after.Documentation?.Lines.Select(line => line.Text.TrimEnd()) ?? []));
 }

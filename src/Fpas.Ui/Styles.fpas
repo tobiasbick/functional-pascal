@@ -71,4 +71,5 @@ public type ButtonVariant = enum: byte
   // An action styled as a link.
   Link;
 end enum;
+
 end unit;

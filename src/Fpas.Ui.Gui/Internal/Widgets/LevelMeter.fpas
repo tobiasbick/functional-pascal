@@ -35,4 +35,5 @@ begin
     Frame.Controls.Add(new App.Control(Id, '', Role, new Cui.CuiRectangle(), Frame.AcceptInput));
   end if;
 end procedure;
+
 end unit;

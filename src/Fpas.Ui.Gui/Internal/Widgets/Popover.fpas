@@ -62,4 +62,5 @@ begin
   Visit(Content, Inside, false, L.Alignment.Default);
   Frame.Window.EndPopover();
 end procedure;
+
 end unit;

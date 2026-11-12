@@ -33,15 +33,15 @@ public function ForAction(State: S.Model; Message: S.Msg): array of Mvu.Command<
 begin
   return case Message of
     when S.Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
-      [SaveAfter(1400, Work.Status.Success)]
-    else
-      []
-    end if;
+        [SaveAfter(1400, Work.Status.Success)]
+      else
+        []
+      end if;
     when S.Msg.SetSaveStatus(const Value: Work.Status): if Value = Work.Status.Success then
-      [SaveAfter(1600, Work.Status.Idle)]
-    else
-      []
-    end if;
+        [SaveAfter(1600, Work.Status.Idle)]
+      else
+        []
+      end if;
     when S.Msg.SwipeChoice(const At: Swipe.Side, const Index: int): [
       Toasts.Show<S.Msg>(
         if At = Swipe.Side.Left then
@@ -63,4 +63,5 @@ begin
     else [];
   end case;
 end function;
+
 end unit;

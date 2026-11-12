@@ -25,4 +25,5 @@ public type Msg = variant
   // A harmless preview activation.
   Preview;
 end variant;
+
 end unit;

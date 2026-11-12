@@ -7,4 +7,5 @@ uses
 begin
   // @example
 end;
+
 end program;

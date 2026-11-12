@@ -111,6 +111,7 @@ begin
 
   Console.WriteLine('Patterns verified');
 end;
+
 end program;
 ```
 

@@ -12,4 +12,5 @@ begin
     new Gui.Options(Title := 'FPas CUI Gallery', Width := 1240, Height := 820), Update.ThemeFor
   );
 end;
+
 end program;

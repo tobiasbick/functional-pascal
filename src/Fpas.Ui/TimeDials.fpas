@@ -46,4 +46,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.TimeDial(Id, Value, OnChange, Size, Enabled);
 end function;
+
 end unit;

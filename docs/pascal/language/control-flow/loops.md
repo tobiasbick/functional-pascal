@@ -94,6 +94,7 @@ begin
 
   Console.WriteLine(Total);
 end;
+
 end program;
 ```
 

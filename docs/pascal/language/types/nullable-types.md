@@ -95,6 +95,7 @@ begin
   Console.WriteLine(Total ?? 0.00M);
   Console.WriteLine(Missing = cast<decimal?>(null));
 end;
+
 end program;
 ```
 
@@ -119,6 +120,7 @@ begin
   const First: char := Text[0];
   Console.WriteLine(First); // A
 end;
+
 end program;
 ```
 

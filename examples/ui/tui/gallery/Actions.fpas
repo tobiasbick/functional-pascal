@@ -35,4 +35,5 @@ begin
     Theme.View(Model)
   );
 end function;
+
 end unit;

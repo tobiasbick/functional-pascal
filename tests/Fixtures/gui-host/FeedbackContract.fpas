@@ -351,4 +351,5 @@ begin
   A.Check(Session.Step(), 'Feedback gallery closed while settling resize.');
   Session.CapturePng(Capture + '.feedback-narrow.png');
 end procedure;
+
 end unit;

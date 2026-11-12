@@ -36,4 +36,5 @@ begin
     new App.Control(Id, Label, 'meter', new Cui.CuiRectangle(), false, Value := Value)
   );
 end procedure;
+
 end unit;

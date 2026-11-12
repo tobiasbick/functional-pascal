@@ -34,4 +34,5 @@ public type Direct<TMsg> = record implements IActivatable<TMsg>
     end if;
   end function;
 end record;
+
 end unit;

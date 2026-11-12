@@ -49,4 +49,5 @@ begin
       raise new Sys.InvalidOperationException('Expected a capture widget.');
   end case;
 end function;
+
 end unit;

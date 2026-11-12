@@ -262,4 +262,5 @@ begin
   Behavior();
   Console.WriteLine('Theme toggle contracts verified');
 end;
+
 end program;

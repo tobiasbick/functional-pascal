@@ -20,4 +20,5 @@ begin
     0.0F, 100.0F, State.Msg.SetPrice
   );
 end function;
+
 end unit;

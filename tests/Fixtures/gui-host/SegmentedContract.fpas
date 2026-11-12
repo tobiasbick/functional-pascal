@@ -119,4 +119,5 @@ begin
   );
   Session.CapturePng(Capture + '.segmented.png');
 end procedure;
+
 end unit;

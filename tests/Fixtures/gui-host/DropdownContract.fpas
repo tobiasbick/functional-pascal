@@ -140,4 +140,5 @@ begin
   Key(Session, 10);
   Session.CapturePng(Capture + '.dropdown.png');
 end procedure;
+
 end unit;

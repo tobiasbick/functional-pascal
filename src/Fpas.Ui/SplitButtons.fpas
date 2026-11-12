@@ -76,4 +76,5 @@ requires Items.Length > 0;
 begin
   return E.Element<TMsg>.SplitAction(Id, Label, Message, Items, Settings ?? new Options());
 end function;
+
 end unit;

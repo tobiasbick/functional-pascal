@@ -71,7 +71,11 @@ internal sealed partial class Parser
             }
             if (expression)
             {
-                var value = ReadExpression(); Expect(";");
+                var valueStart = position;
+                var value = ReadExpression();
+                if (layout is not null && !fallback && value is ConditionalSyntax)
+                    layout.Indent(valueStart + 1, position);
+                Expect(";");
                 arms.Add(new(armPosition, patterns, guard, null, value));
             }
             else arms.Add(new(armPosition, patterns, guard, ReadStatements("when", "else", "end"), null));

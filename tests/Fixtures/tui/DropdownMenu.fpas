@@ -329,4 +329,5 @@ begin
   Scrolling();
   Console.WriteLine('Dropdown menu contracts verified');
 end;
+
 end program;

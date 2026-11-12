@@ -45,4 +45,5 @@ requires Items.Length > 0;
 begin
   return E.Element<TMsg>.ReactionGroup(Id, Items, OnChange, Enabled);
 end function;
+
 end unit;

@@ -20,4 +20,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.CopyAction(Id, Text, OnCopied, Enabled);
 end function;
+
 end unit;

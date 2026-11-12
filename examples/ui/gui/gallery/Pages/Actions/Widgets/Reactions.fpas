@@ -19,4 +19,5 @@ begin
     function(Index: int; Value: R.Item): State.Msg => State.Msg.SetReaction(Index, Value)
   );
 end function;
+
 end unit;

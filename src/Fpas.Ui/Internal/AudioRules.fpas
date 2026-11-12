@@ -97,4 +97,5 @@ begin
     R.Reject(At, 'Invalid level meter dimensions, dB scale or ballistics.');
   end if;
 end procedure;
+
 end unit;

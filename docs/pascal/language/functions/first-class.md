@@ -88,6 +88,7 @@ begin
   Console.WriteLine(Counter()); // 1
   Console.WriteLine(Counter()); // 2
 end;
+
 end program;
 ```
 

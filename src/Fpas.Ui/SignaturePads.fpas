@@ -56,4 +56,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.SignaturePad(Id, OnChange, Settings ?? new Options());
 end function;
+
 end unit;

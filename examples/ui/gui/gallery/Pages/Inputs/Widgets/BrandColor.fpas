@@ -17,4 +17,5 @@ begin
     P.ColorPicker<State.Msg>('input-brand-color', Model.BrandColor, State.Msg.SetBrandColor)
   );
 end function;
+
 end unit;

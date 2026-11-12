@@ -18,4 +18,5 @@ begin
 
   Menu.Draw<TMsg>(State, Id, 'Context menu', Entries, null, Enabled);
 end procedure;
+
 end unit;

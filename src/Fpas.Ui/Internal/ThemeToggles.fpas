@@ -31,4 +31,5 @@ begin
     'Switch to dark'
   end if;
 end function;
+
 end unit;

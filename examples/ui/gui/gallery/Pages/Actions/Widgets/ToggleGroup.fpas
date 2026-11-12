@@ -37,4 +37,5 @@ begin
   );
   return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Formats, Alignment);
 end function;
+
 end unit;

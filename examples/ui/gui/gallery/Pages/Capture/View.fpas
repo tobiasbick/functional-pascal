@@ -88,4 +88,5 @@ begin
   Parts.AddRange(Remaining);
   return E.Column<C.Msg>(new L.Flow(Gap := G.Points(20), Clip := false), Parts.ToArray());
 end function;
+
 end unit;

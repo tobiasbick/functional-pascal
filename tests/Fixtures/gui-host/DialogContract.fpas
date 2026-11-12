@@ -341,4 +341,5 @@ begin
   VerifyProfile(Renderer, Capture);
   VerifyPersistent(Renderer);
 end procedure;
+
 end unit;

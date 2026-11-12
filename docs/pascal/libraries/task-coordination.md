@@ -32,6 +32,7 @@ begin
     discard Gate.Release();
   end try;
 end function;
+
 end unit;
 ```
 
@@ -78,6 +79,7 @@ begin
 
   Console.WriteLine(Total);
 end;
+
 end program;
 ```
 
@@ -152,6 +154,7 @@ begin
     Console.WriteLine('Canceled batch observed');
   end try;
 end;
+
 end program;
 ```
 

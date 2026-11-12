@@ -113,4 +113,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.EmojiPicker(Id, Value, OnChange, Settings ?? new Options());
 end function;
+
 end unit;

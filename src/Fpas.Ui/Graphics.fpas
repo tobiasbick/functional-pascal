@@ -11,4 +11,5 @@ public type Color = record
   // Alpha channel.
   public Alpha: byte := 255;
 end record;
+
 end unit;

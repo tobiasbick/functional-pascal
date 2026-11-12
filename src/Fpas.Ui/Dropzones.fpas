@@ -38,4 +38,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.Dropzone(Id, OnDrop, OnBrowse, Settings ?? new Options());
 end function;
+
 end unit;

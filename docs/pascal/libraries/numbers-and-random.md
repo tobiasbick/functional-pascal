@@ -70,6 +70,7 @@ begin
   Console.WriteLine(Away.ToString('0.00', Culture));
   Console.WriteLine(ReadPercent('42.5'));
 end;
+
 end program;
 ```
 
@@ -114,6 +115,7 @@ begin
 
   Console.WriteLine('Random values verified');
 end;
+
 end program;
 ```
 

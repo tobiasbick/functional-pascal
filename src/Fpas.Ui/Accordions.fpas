@@ -23,4 +23,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.Accordion(Id, Title, Open, OnChange, Content, Enabled);
 end function;
+
 end unit;

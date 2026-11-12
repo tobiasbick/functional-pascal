@@ -450,4 +450,5 @@ begin
   CopyAction();
   Console.WriteLine('CUI terminal contracts verified');
 end;
+
 end program;

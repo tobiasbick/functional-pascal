@@ -106,4 +106,5 @@ begin
   Rules.CheckText(Settings.Prefix, Location + '/prefix');
   Rules.CheckText(Settings.Suffix, Location + '/suffix');
 end procedure;
+
 end unit;

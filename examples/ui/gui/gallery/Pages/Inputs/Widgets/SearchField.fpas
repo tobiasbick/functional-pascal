@@ -20,4 +20,5 @@ begin
     new Search.Options(Label := 'Search', Placeholder := 'Search projects', MaxUtf8Bytes := 63)
   );
 end function;
+
 end unit;

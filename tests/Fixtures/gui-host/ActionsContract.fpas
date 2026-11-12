@@ -295,4 +295,5 @@ begin
   );
   Session.CapturePng(Capture + '.theme-toggle.png');
 end procedure;
+
 end unit;

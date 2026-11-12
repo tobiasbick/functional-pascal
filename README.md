@@ -90,6 +90,7 @@ uses System.Console as Console;
 begin
   Console.WriteLine('Hello, World!');
 end;
+
 end program;
 ```
 
@@ -157,6 +158,7 @@ begin
     Console.WriteLine(Fib(I));
   end for;
 end;
+
 end program;
 ```
 
@@ -188,6 +190,7 @@ end function;
 begin
   Console.WriteLine(TrafficAdvice(Light.Red));
 end;
+
 end program;
 ```
 
@@ -212,6 +215,7 @@ begin
   const Op: function(int): int := Double;
   Console.WriteLine(Apply(Op, 10)); // 20
 end;
+
 end program;
 ```
 
@@ -246,6 +250,7 @@ begin
     end if;
   end for;
 end;
+
 end program;
 ```
 
@@ -269,6 +274,7 @@ begin
     end if;
   end for;
 end;
+
 end program;
 ```
 

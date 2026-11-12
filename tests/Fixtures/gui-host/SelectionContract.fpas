@@ -374,4 +374,5 @@ begin
     'At compact width, the last chip must wrap below the first.'
   );
 end procedure;
+
 end unit;

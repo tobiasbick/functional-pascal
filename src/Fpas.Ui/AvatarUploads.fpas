@@ -26,4 +26,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.AvatarUpload(Id, Name, Path, OnDrop, OnBrowse, Size, Enabled);
 end function;
+
 end unit;

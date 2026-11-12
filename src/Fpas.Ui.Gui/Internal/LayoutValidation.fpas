@@ -106,4 +106,5 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
 begin
   Visit(Prepared.Tree);
 end procedure;
+
 end unit;

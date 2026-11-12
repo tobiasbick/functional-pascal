@@ -226,4 +226,5 @@ begin
     'A tone-capable emoji must be appended as one complete Unicode sequence.'
   );
 end procedure;
+
 end unit;

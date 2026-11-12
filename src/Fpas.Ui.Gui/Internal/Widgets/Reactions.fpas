@@ -69,4 +69,5 @@ begin
     Frame.Messages.Add(OnChange(Result.Index, Item));
   end if;
 end procedure;
+
 end unit;

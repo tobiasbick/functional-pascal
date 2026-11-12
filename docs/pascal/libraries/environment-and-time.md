@@ -46,6 +46,7 @@ begin
     Sys.Environment.ExitCode := 2;
   end try;
 end;
+
 end program;
 ```
 
@@ -101,6 +102,7 @@ begin
   Console.WriteLine(Utc.ToString('O', Culture));
   Console.WriteLine(Duration.ToString('c', Culture));
 end;
+
 end program;
 ```
 

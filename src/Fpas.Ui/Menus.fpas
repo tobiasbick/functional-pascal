@@ -124,4 +124,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.Contextual(Id, Target, Entries, Enabled);
 end function;
+
 end unit;

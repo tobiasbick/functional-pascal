@@ -168,13 +168,13 @@ begin
       DeleteCount := State.DeleteCount + 1;
     end with;
     when Msg.StartSave: if State.SaveStatus = Work.Status.Idle then
-      State with
-        SaveStatus := Work.Status.Busy;
-        SaveCount := State.SaveCount + 1;
-      end with
-    else
-      State
-    end if;
+        State with
+          SaveStatus := Work.Status.Busy;
+          SaveCount := State.SaveCount + 1;
+        end with
+      else
+        State
+      end if;
     when Msg.SetSaveStatus(const Value: Work.Status): State with
       SaveStatus := Value;
     end with;
@@ -193,4 +193,5 @@ begin
   end case;
   return new Mvu.Transition<Model, Msg>(Next, Commands);
 end function;
+
 end unit;

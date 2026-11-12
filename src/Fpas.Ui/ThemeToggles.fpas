@@ -18,4 +18,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.ThemeFlip(Id, Appearance, OnChange, Enabled);
 end function;
+
 end unit;

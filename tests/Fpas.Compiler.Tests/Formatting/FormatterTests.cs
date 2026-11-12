@@ -56,6 +56,7 @@ public sealed class FormatterTests
 
               Console.WriteLine(X);
             end;
+
             end program;
             """;
         Assert.Equal(expected.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n", Format(input));
@@ -134,16 +135,17 @@ public sealed class FormatterTests
               end if;
               return case Mode of
                 when 0: if Item = 0 then
-                  [Item]
-                else
-                  []
-                end if;
+                    [Item]
+                  else
+                    []
+                  end if;
                 else [];
               end case;
             end function;
 
             begin
             end;
+
             end program;
             """;
         Assert.Equal(expected.ReplaceLineEndings("\n") + "\n", Format(input));
@@ -234,7 +236,7 @@ public sealed class FormatterTests
     public void Type_constraints_members_contracts_and_attributes_use_structural_lines()
     {
         var output = Format("unit Models;[Sys.Obsolete('sample')]public type Box<T> =where T:class;record public Value:T;public function Read():T;requires true;ensures true;begin return Self.Value;end function;end record;end unit;");
-        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box<T> =\nwhere T: class;\nrecord\n  public Value: T;\n\n  public function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\nend unit;", output);
+        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box<T> =\nwhere T: class;\nrecord\n  public Value: T;\n\n  public function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\n\nend unit;", output);
     }
 
     [Fact]

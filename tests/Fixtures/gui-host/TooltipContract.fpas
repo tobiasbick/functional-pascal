@@ -138,4 +138,5 @@ begin
   Step(Session);
   Check(Presses = 1, 'The wrapped button must still deliver its normal activation.');
 end procedure;
+
 end unit;

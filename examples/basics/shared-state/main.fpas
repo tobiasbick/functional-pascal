@@ -18,4 +18,5 @@ begin
   Statistics.Reset();
   Console.WriteLine(Statistics.Moves());
 end;
+
 end program;

@@ -90,4 +90,5 @@ begin
     Rules.CheckText(Item.Badge, At + '/badge');
   end for;
 end procedure;
+
 end unit;

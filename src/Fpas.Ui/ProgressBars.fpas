@@ -31,4 +31,5 @@ requires Value >= 0.0F and Value <= 1.0F;
 begin
   return E.Element<TMsg>.ProgressBar(Id, Value, Settings ?? new Options());
 end function;
+
 end unit;

@@ -35,6 +35,7 @@ begin
   Console.WriteLine(await Pipe.Reader.ReadAsync(Threading.CancellationToken.None));
   await Pipe.Reader.Completion;
 end;
+
 end program;
 ```
 
@@ -120,6 +121,7 @@ begin
   await Tasks.Task.WhenAll(Workers).ConfigureAwait(false);
   return await Receiving.ConfigureAwait(false);
 end function;
+
 end unit;
 ```
 
@@ -155,6 +157,7 @@ begin
   const Values: array of int := [10, 20, 30];
   Console.WriteLine(await Pipeline.Sum(Values, 1, Threading.CancellationToken.None));
 end;
+
 end program;
 ```
 

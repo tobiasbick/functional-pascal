@@ -260,4 +260,5 @@ begin
   Cached();
   Console.WriteLine('Composition contracts verified');
 end;
+
 end program;

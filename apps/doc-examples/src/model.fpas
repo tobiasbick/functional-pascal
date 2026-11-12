@@ -96,4 +96,5 @@ public type FailureReport = record
   public Results: array of Outcome;
   public Error: string;
 end record;
+
 end unit;

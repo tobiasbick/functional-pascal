@@ -19,4 +19,5 @@ requires Height >= 0.0F;
 begin
   return E.Element<TMsg>.Skeleton(Id, Width ?? L.Extent.Fill, Height);
 end function;
+
 end unit;

@@ -19,4 +19,5 @@ public procedure Draw<TMsg>(
 begin
   Menu.Draw<TMsg>(Frame, Id, Name, Entries, null, Settings.Enabled, Settings);
 end procedure;
+
 end unit;

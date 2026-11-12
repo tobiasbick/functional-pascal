@@ -195,4 +195,5 @@ begin
   );
   CheckStay(Session, '2026-12-30..2027-01-04');
 end procedure;
+
 end unit;

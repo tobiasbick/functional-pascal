@@ -51,4 +51,5 @@ requires Tooltip <> '';
 begin
   return E.Element<TMsg>.IconAction(Id, Icon, Tooltip, Message, Settings ?? new Options());
 end function;
+
 end unit;

@@ -35,4 +35,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.AccountMenu(Id, Name, Entries, Settings ?? new Options());
 end function;
+
 end unit;

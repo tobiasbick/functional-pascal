@@ -116,4 +116,5 @@ begin
   return Left.Offset = Right.Offset and Left.Maximum = Right.Maximum and Left.Rows = Right.Rows
     and Left.Following = Right.Following and Left.Bar = Right.Bar;
 end function;
+
 end unit;

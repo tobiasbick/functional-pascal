@@ -54,4 +54,5 @@ public type Msg = variant
   // Propose a change to shared demo values.
   Shared(Value: Demo.Msg);
 end variant;
+
 end unit;

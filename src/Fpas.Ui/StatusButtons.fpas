@@ -51,4 +51,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.StatusAction(Id, Label, State, Message, Settings ?? new Options());
 end function;
+
 end unit;

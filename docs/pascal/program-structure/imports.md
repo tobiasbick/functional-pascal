@@ -40,6 +40,7 @@ begin
   const Moved: Geometry.Point := Geometry.Translate(Start, 3.0, 0.0);
   Console.WriteLine(Moved.X);
 end;
+
 end program;
 ```
 

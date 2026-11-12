@@ -17,4 +17,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.StepProgress(Id, Steps, Current);
 end function;
+
 end unit;

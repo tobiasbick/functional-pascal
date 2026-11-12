@@ -501,4 +501,5 @@ begin
   const Result: E.Element<TMsg> := Visit(Prepared.Tree, Theme.Text);
   return Result;
 end function;
+
 end unit;

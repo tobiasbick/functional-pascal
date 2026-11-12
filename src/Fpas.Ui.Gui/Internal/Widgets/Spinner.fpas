@@ -14,4 +14,5 @@ begin
   Frame.Window.Spinner(C.Token('spinner', Id), Size);
   C.Track<TMsg>(Frame, new App.Control(Id, '', 'spinner', new Cui.CuiRectangle(), false));
 end procedure;
+
 end unit;

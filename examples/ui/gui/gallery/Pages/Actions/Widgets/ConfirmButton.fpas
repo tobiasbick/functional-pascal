@@ -17,4 +17,5 @@ begin
     new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
   );
 end function;
+
 end unit;

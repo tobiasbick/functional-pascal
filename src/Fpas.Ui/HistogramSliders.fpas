@@ -40,4 +40,5 @@ begin
     Id, Label, Bins, Value, Minimum, Maximum, OnChange, Settings ?? new Options()
   );
 end function;
+
 end unit;

@@ -31,4 +31,5 @@ begin
   );
   Parts.Publish<TMsg>(Frame, Id, 'Date range calendar', Role, Value, Accept, Result, OnChange);
 end procedure;
+
 end unit;

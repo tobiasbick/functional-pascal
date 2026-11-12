@@ -140,4 +140,5 @@ begin
   Sys.Array.Copy(Hint.Cells, 0, Layout.Cells, Row * Columns, Columns);
   Layout.Lines[Row] := Hint.Lines[0];
 end procedure;
+
 end unit;

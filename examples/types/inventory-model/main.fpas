@@ -21,4 +21,5 @@ begin
   Console.WriteLine('Original unchanged: ' + (Before[1] = Potions).ToString());
   Console.WriteLine('Item retained: ' + (AfterDrink.Item = Potion).ToString());
 end;
+
 end program;

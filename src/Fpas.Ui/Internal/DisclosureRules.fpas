@@ -37,4 +37,5 @@ begin
     R.Reject(Location, 'Expandable text needs positive Lines and a finite nonnegative Size.');
   end if;
 end procedure;
+
 end unit;

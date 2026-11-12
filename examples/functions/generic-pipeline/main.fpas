@@ -23,4 +23,5 @@ begin
   const Copy: function(string): string := Pipeline.Identity<string>;
   Console.WriteLine(Copy('identity'));
 end;
+
 end program;

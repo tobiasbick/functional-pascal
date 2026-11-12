@@ -220,4 +220,5 @@ begin
   VerifyExamples(Renderer, Capture);
   VerifyIdle(Renderer);
 end procedure;
+
 end unit;

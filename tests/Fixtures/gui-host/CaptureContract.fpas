@@ -93,4 +93,5 @@ begin
   A.Check(not HasClear(Session), 'The native Clear action must reset the pad.');
   Session.CapturePng(Capture + '.capture-cleared.png');
 end procedure;
+
 end unit;

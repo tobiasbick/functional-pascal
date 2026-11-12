@@ -29,4 +29,5 @@ begin
     Category('Sales', 8), Category('Support', 16), Category('Finance', 32)
   );
 end function;
+
 end unit;

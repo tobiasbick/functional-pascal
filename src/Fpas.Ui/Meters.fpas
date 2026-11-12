@@ -23,4 +23,5 @@ requires Total >= 0.0F;
 begin
   return E.Element<TMsg>.Meter(Id, Label, Used, Total, Unit);
 end function;
+
 end unit;

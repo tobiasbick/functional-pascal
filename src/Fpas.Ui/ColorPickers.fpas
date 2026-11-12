@@ -51,4 +51,5 @@ requires Id <> '';
 begin
   return E.Element<TMsg>.ColorPicker(Id, Value, OnChange, Enabled);
 end function;
+
 end unit;

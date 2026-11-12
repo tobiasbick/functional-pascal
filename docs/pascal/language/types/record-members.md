@@ -70,6 +70,7 @@ begin
   Console.WriteLine(DefaultsEvaluated); // 1: with does not rerun defaults
   Console.WriteLine(TotalCreated); // 1: the factory was called once
 end;
+
 end program;
 ```
 

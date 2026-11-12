@@ -34,4 +34,5 @@ begin
   Console.WriteLine(Counter());
   Console.WriteLine(Counter());
 end;
+
 end program;

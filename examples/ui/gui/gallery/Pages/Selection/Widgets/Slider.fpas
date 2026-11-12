@@ -47,4 +47,5 @@ begin
     new S.Options(Step := 10.0F, ShowValue := true, Percent := true)
   );
 end function;
+
 end unit;

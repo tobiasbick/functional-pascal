@@ -51,4 +51,5 @@ begin
 
   return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow(Align := L.Alignment.Stretch));
 end function;
+
 end unit;

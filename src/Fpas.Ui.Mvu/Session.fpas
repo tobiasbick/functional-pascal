@@ -276,4 +276,5 @@ begin
     function(): int => Queue.Reader.Count, Workers.Pending, Close
   );
 end function;
+
 end unit;

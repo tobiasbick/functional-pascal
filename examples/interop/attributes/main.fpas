@@ -15,4 +15,5 @@ begin
   const Sample: Measurement := new Measurement('Alpha', 42);
   Console.WriteLine(Json.JsonSerializer.Serialize<Measurement>(Sample));
 end;
+
 end program;

@@ -20,4 +20,5 @@ begin
   Console.WriteLine(typeof(array[,] of int).GetArrayRank());
   Console.WriteLine(TypeName<string>());
 end;
+
 end program;

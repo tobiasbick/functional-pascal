@@ -76,4 +76,5 @@ begin
 
   return new Checked(Count, Expected, Document, Line, Message);
 end function;
+
 end unit;

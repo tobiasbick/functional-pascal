@@ -1,0 +1,88 @@
+unit GuiGallery.Pages.Audio.View;
+
+uses
+  GuiGallery.Pages.Audio.State as A, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Knobs as K, Fpas.Ui.Faders as F, Fpas.Ui.LevelMeters as M,
+  System as Sys;
+
+function Peak(Phase: int; Track: int; Channel: int): float;
+begin
+  const Index: float := cast<float>(Track);
+  const Time: float := cast<float>(Phase + Channel * 5) / 60.0F;
+  const Cycle: float := Time * (1.8F + 0.2F * Index) + Index * 0.31F;
+  const Beat: float := Cycle - Sys.MathF.Floor(Cycle);
+  return (0.3F + 0.1F * Index) * (0.2F + 0.8F * Sys.MathF.Exp(-Beat * (2.5F + Index)));
+end function;
+
+function Synth(Model: A.Model): E.Element<A.Msg>;
+begin
+  return E.Size<A.Msg>(
+    G.Card<A.Msg>(
+      16, [
+        E.Styled<A.Msg>(E.Text<A.Msg>('Synth'), S.Role.Heading),
+        E.Row<A.Msg>(
+          new L.Flow(Gap := G.Points(14), Wrap := true),
+          K.Knob<A.Msg>(
+            'audio-cutoff', 'Cutoff', Model.Cutoff, 20.0F, 20000.0F, A.Msg.SetCutoff,
+            new K.Options(UnitLabel := 'Hz', LogScale := true, Reset := 1000.0F)
+          ),
+          K.Knob<A.Msg>(
+            'audio-resonance', 'Resonance', Model.Resonance, 0.0F, 1.0F, A.Msg.SetResonance,
+            new K.Options(DecimalPlaces := 2)
+          ),
+          K.Knob<A.Msg>(
+            'audio-attack', 'Attack', Model.Attack, 1.0F, 2000.0F, A.Msg.SetAttack,
+            new K.Options(UnitLabel := 'ms', LogScale := true, Reset := 10.0F)
+          ),
+          K.Knob<A.Msg>(
+            'audio-pan', 'Pan', Model.Pan, -1.0F, 1.0F, A.Msg.SetPan,
+            new K.Options(Bipolar := true, DecimalPlaces := 2, ShowSign := true)
+          )
+        ),
+        M.LevelMeter<A.Msg>(
+          'audio-master',
+          [Peak(Model.Phase, 0, 0) * 1.4F, Peak(Model.Phase, 4, 1) * 1.3F],
+          new M.Options(Length := 240.0F, Horizontal := true, Scale := true, Segmented := true)
+        )
+      ]
+    ),
+    new L.Flex(Minimum := L.Measure.Logical(280))
+  );
+end function;
+
+function Channel(Model: A.Model; Name: string; Index: int): E.Element<A.Msg>;
+begin
+  return F.Fader<A.Msg>(
+    'audio-' + Name.ToLowerInvariant(), Name, Model.Gains[Index], -48.0F, 6.0F,
+    function(Value: float): A.Msg => A.Msg.SetGain(Index, Value),
+    new F.Options(
+      UnitLabel := 'dB', Length := 180.0F,
+      Ticks := if Index = 0 then [6.0F, 0.0F, -6.0F, -12.0F, -24.0F, -48.0F] else [] end if,
+      Levels := [Peak(Model.Phase, Index, 0), Peak(Model.Phase, Index, 1)]
+    )
+  );
+end function;
+
+// Displays the original CUI synth and six-channel mixer cards.
+// ## Parameters
+// - `Model`: Current control settings and signal phase.
+// ## Returns
+// The wrapping audio cards.
+public function View(Model: A.Model): E.Element<A.Msg>;
+begin
+  const Mixer: E.Element<A.Msg> := E.Styled<A.Msg>(
+    E.Row<A.Msg>(
+      new L.Flow(Padding := G.Points(24), Gap := G.Points(8), Wrap := true),
+      Channel(Model, 'Kick', 0), Channel(Model, 'Snare', 1), Channel(Model, 'Bass', 2),
+      Channel(Model, 'Keys', 3), Channel(Model, 'Vocals', 4), Channel(Model, 'FX', 5)
+    ),
+    S.Role.OutlinedPanel
+  );
+  return E.Row<A.Msg>(
+    new L.Flow(Gap := G.Points(16), Wrap := true, Align := L.Alignment.Start),
+    Synth(Model),
+    Mixer
+  );
+end function;
+end unit;

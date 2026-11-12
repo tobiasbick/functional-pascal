@@ -1,9 +1,9 @@
 #include "fpas_cui.h"
 
-int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap) {
+int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip) {
     const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
         .pad = padding, .gap = gap, .align = (cui_align)align,
-        .border = framed ? 1 : 0, .clip = !wrap, .wrap = wrap != 0 };
+        .border = framed ? 1 : 0, .clip = clip != 0, .wrap = wrap != 0 };
     cui_box_begin(ui, &options);
     return cui__current(ui);
 }
@@ -49,7 +49,7 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
         }
         return;
     }
-    cui_color color = role == 3 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
+    cui_color color = role == 3 || role == 12 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
         role == 4 ? CUI_C(ui, ACCENT) : role == 5 ? CUI_C(ui, TEXT_SECONDARY) : CUI_C(ui, FOREGROUND);
     int label = (ui->nodes[node].flags & CUI_NF_TEXT) ? node : fpas_label_node(ui, node);
     if (label >= 0) {
@@ -63,6 +63,8 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].font = CUI_FONT_MEDIUM;
             ui->nodes[label].font_size = cui__fs(ui, ui->theme.text_body);
             ui->nodes[label].line_height = 1.35f;
+        } else if (role == 12) {
+            ui->nodes[label].font_size = cui__fs(ui, ui->theme.text_sm);
         }
     }
     for (int child = n->first; child >= 0; child = ui->nodes[child].next)
@@ -107,11 +109,15 @@ static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
 int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled) {
     const cui_box options = { .width = CUI_FILL, .height = CUI_FILL };
     float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
-    if (!enabled) ui->scroll_dx = ui->scroll_dy = 0;
+    /* CUI-007 (docs/future/cui-upstream-bugs.md#cui-007):
+       A vertical viewport must leave horizontal wheel input for swipe rows. */
+    ui->scroll_dx = 0;
+    if (!enabled) ui->scroll_dy = 0;
     cui_push_disabled(ui, !enabled);
     int node = cui__scroll_begin_ex(ui, cui_make_id(ui, id), &options, false);
     cui_pop_disabled(ui);
-    if (!enabled) { ui->scroll_dx = wheel_x; ui->scroll_dy = wheel_y; }
+    ui->scroll_dx = wheel_x;
+    if (!enabled) ui->scroll_dy = wheel_y;
     if (!scrollbar) {
         ui->nodes[node].flags &= ~CUI_NF_SCROLL_Y;
         ui->nodes[node].flags |= CUI_NF_CLIP;

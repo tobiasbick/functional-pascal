@@ -1,0 +1,67 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Knob;
+
+uses
+  Fpas.Ui.Knobs as W, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, System.Globalization as Culture;
+
+// Draws the native rotary control and forwards proposed values.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Model-owned value.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `OnChange`: Maps a proposed value to a message.
+// - `Settings`: Native display and input settings.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
+  OnChange: function(float): TMsg; Settings: W.Options
+);
+begin
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
+  const Role: string := 'knob';
+  const Token: string := C.Token(Role, Id);
+  const Color: G.Color? := Settings.ArcColor;
+  const Rgba: uint := if Color = null then 0u
+    // CUI reserves all-zero RGBA for its default.
+    elsif Color.Alpha = 0 then 1u
+    else cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+      or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
+    end if;
+  const Proposed: float := Frame.Window.Knob(
+    Token,
+    Label,
+    Value,
+    Minimum,
+    Maximum,
+    Settings.Step,
+    Settings.Reset,
+    Settings.DecimalPlaces,
+    Settings.UnitLabel,
+    Settings.HideValue,
+    Settings.Size,
+    Settings.Bipolar,
+    Settings.LogScale,
+    Settings.ShowSign,
+    Rgba,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed
+  );
+  if Proposed <> Value then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Label, Role, new Cui.CuiRectangle(), Enabled,
+        Value := Value.ToString(Culture.CultureInfo.InvariantCulture)
+      )
+    );
+  end if;
+end procedure;
+end unit;

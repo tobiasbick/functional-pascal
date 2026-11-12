@@ -126,7 +126,7 @@ begin
     Window.Resize(Width, 400);
     A.Check(Session.Step(), 'Skeleton session closed after resize.');
     A.Check(Session.Step(), 'Skeleton session closed while settling resize.');
-    const Available: float := cast<float>(Width - 40);
+    const Available: float := cast<float>(Session.Snapshot().Size.Width - 40);
     Near(A.Control(Session, 'fill').Bounds.Width, Available, 'Fill width');
     Near(A.Control(Session, 'fill').Bounds.Height, 14.0F, 'Default height');
     Near(A.Control(Session, 'fixed').Bounds.Width, 40.0F, 'Fixed width');

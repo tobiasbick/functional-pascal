@@ -1,0 +1,20 @@
+unit GuiGallery.Pages.Inputs.Widgets.BrandColor;
+
+uses
+  GuiGallery.Pages.Inputs.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.ColorPickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Shows the original Brand color label and swatch.
+// ## Parameters
+// - `Model`: Inputs model with the selected color.
+// ## Returns
+// The color field below the Pickers grid.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(6)),
+    E.Styled<State.Msg>(E.Text<State.Msg>('Brand color'), S.Role.Label),
+    P.ColorPicker<State.Msg>('input-brand-color', Model.BrandColor, State.Msg.SetBrandColor)
+  );
+end function;
+end unit;

@@ -1,0 +1,96 @@
+unit GalleryCaptureContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.SignaturePads as Signatures;
+
+// Exercises the original Capture layout and the native signature Clear action.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the Capture page images.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The Capture page closed unexpectedly.');
+  end procedure;
+
+  function HasClear(Session: Gui.Session<State.Msg>): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Signatures.ClearId(Signature) then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  const Signature: string := 'capture-signature';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Capture', 1000, 1000, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Capture),
+    G.Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.HasText(
+      Session,
+      'Dropzone'
+    ) and A.HasText(Session, 'Avatar upload') and A.HasText(Session, 'Signature'),
+    'The Capture page must show its three original sections.'
+  );
+  A.Check(A.Control(Session, 'capture-avatar').Bounds.Width = 88.0F, 'Unexpected avatar diameter.');
+  const Pad: Cui.CuiRectangle := A.Control(Session, Signature).Bounds;
+  A.Check(
+    Pad.Width = 520.0F and Pad.Height = 180.0F and not HasClear(Session),
+    'Unexpected empty signature pad.'
+  );
+  Session.CapturePng(Capture + '.capture.png');
+
+  X := Pad.X + 45.0F;
+  Y := Pad.Y + 100.0F;
+  Button := 1;
+  Step(Session);
+  X := X + 70.0F;
+  Y := Y - 30.0F;
+  Step(Session);
+  X := X + 80.0F;
+  Y := Y + 10.0F;
+  Step(Session);
+  Button := 0;
+  Step(Session);
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session);
+  A.Check(HasClear(Session), 'Drawing must reveal the native Clear button.');
+  Session.CapturePng(Capture + '.capture-signed.png');
+
+  const Clear: Cui.CuiRectangle := A.Control(Session, Signatures.ClearId(Signature)).Bounds;
+  X := Clear.X + Clear.Width / 2.0F;
+  Y := Clear.Y + Clear.Height / 2.0F;
+  Button := 1;
+  Step(Session);
+  Button := 0;
+  Step(Session);
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session);
+  A.Check(not HasClear(Session), 'The native Clear action must reset the pad.');
+  Session.CapturePng(Capture + '.capture-cleared.png');
+end procedure;
+end unit;

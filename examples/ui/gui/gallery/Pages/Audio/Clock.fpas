@@ -1,0 +1,29 @@
+unit GuiGallery.Pages.Audio.Clock;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu, System as Sys,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// Identity of the page-owned background signal.
+public const Id: string := 'audio-meter-clock';
+
+// Starts the synthetic signal clock while the page is visible.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Tick`: Message that advances the audio signal.
+// - `OnFailure`: Maps a worker failure into an application message.
+// ## Returns
+// The cancellable background command.
+public function Start<TMsg>(Tick: TMsg; OnFailure: function(Sys.Exception): TMsg): Mvu.Command<TMsg>;
+  async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    while not Token.IsCancellationRequested do
+      await Tasks.Task.Delay(16, Token).ConfigureAwait(false);
+      await Post(Tick).ConfigureAwait(false);
+    end while;
+  end function;
+begin
+  return Mvu.StartBackground<TMsg>(Id, Run, OnFailure);
+end function;
+end unit;

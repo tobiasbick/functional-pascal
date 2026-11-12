@@ -44,8 +44,10 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   error. The multiline About field spans the card and wraps on narrow screens.
   The next card shows Topics, the six-box Verification code starting with
   418, and New password with its strength meter.
-  Pickers adds Country, searchable Language, and Seats in their original
-  grid positions, stacked at narrow widths.
+  Pickers shows Country, searchable Language, Due date, and Seats in their
+  original grid positions, stacked at narrow widths, with Brand color beneath
+  them. The supplementary
+  Calendar below the card shares the Due date selection.
 - **Selection** shows native notification checkboxes, connectivity switches
   and the exclusive save-frequency radio group. The checkbox and switch
   cards share a row when both fit and stack at narrower widths. Radio cards
@@ -104,8 +106,25 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   choice, including when System was selected, and retains focus after changing.
   User menu opens the original account popup with Profile, Billing, Settings
   and Log out as preview commands.
+  Swipe actions shows the three original task rows and the Done, Archive and
+  Delete notifications. The Create speed dial displays the chosen action.
+- **Pickers** opens with the original searchable Languages multi-select,
+  with C, Rust and Swift selected. Date range shows the original presets
+  picker and the Stay dates picker linked to the two-month inline calendar.
+  Time shows the original 24-hour and 12-hour fields. Wheels and dial shows
+  the three joined date wheels and the analog clock face. Ruler and histogram
+  shows the Height and Temperature tapes and the Price range over 24 bins.
 - **Smart inputs** shows the original URL and weight fields with a prefix and
-  suffix. Edits change only the value inside the field.
+  suffix and the original message field with an emoji popup. Selections
+  append to the message and keep recent emoji and the chosen skin tone.
+- **Capture** shows the original tall dropzone, two compact targets,
+  Maya Okafor's profile photo, and the signature pad. Click to browse or
+  drop an accepted file. The avatar shows the selected image. Draw on the pad
+  and use its native Clear action to start over.
+- **Audio** shows the original Synth card with Cutoff, Resonance, Attack and Pan
+  and a stereo master meter. The six mixer faders show stereo peaks and Kick
+  carries the original dB marks. The demo signal runs while Audio is selected.
+  The two cards wrap when the available width cannot fit them side by side.
 - The sidebar changes pages. At narrow widths, open it with the **Components**
   icon. Selecting a page dismisses the drawer.
   Theme segments use Tab, Left/Right, Enter, Space or the pointer; selection

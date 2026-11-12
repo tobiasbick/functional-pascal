@@ -1,0 +1,229 @@
+unit GalleryColorEmojiContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, GuiGallery.Pages.Inputs.State as Inputs,
+  Fpas.Ui.ColorPickers as Colors, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System as Sys;
+
+// Exercises the native Brand color and emoji message examples.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for closed and open gallery captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Inputs(Inputs.Msg.SetBrandColor(const Color: Graphics.Color)):
+        ProposedColor := Color;
+      else
+    end case;
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Text <> '' then
+      Window.InputText(Text);
+      Text := '';
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The picker gallery closed unexpectedly.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Horizontal: float := 0.5F);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native picker geometry for ' + Id);
+    X := Box.X + Box.Width * Horizontal;
+    Y := Box.Y + Box.Height / 2.0F;
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+
+  procedure Search(Session: Gui.Session<State.Msg>; Query: string);
+  begin
+    Click(Session, Emojis.SearchId(Emoji));
+    Text := Query;
+    Step(Session);
+    Step(Session);
+    Key(Session, 2);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Text: string := '';
+  var PendingKey: int := 0;
+  var Target: string := '';
+  var ProposedColor: Graphics.Color := new Graphics.Color(0, 0, 0);
+  const Brand: string := 'input-brand-color';
+  const Message: string := 'smart-message';
+  const Emoji: string := 'smart-emoji';
+  const Trigger: string := 'smart-emoji-trigger';
+  const Original: string := 'Release notes are up ';
+  const Smile: string := Sys.Char.ConvertFromUtf32($1F600);
+  const Thumb: string := Sys.Char.ConvertFromUtf32($1F44D) + Sys.Char.ConvertFromUtf32($1F3FD);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Color and emoji',
+    1000,
+    1700,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Inputs),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.HasText(Session, 'Brand color') and A.Control(Session, Brand).Value = '#7747FF',
+    'The Inputs card must show the original brand swatch.'
+  );
+  Session.CapturePng(Capture + '.brand-color.png');
+  Focus(Session, Brand);
+  Key(Session, 8);
+  Session.CapturePng(Capture + '.brand-color-focused.png');
+  Click(Session, Brand);
+  A.Check(
+    HasControl(Session, Colors.SurfaceId(Brand)) and HasControl(Session, Colors.HueId(Brand)),
+    'The native palette must expose both color surfaces.'
+  );
+  Session.CapturePng(Capture + '.brand-color-open.png');
+  Click(Session, Colors.PresetId(Brand, 3));
+  A.Check(
+    A.Control(Session, Brand).Value = '#00864B',
+    'The native preset must update the brand swatch.'
+  );
+  A.Send(Session, State.Msg.Inputs(Inputs.Msg.SetBrandColor(new Graphics.Color(255, 0, 0, 137))));
+  Click(Session, Colors.HueId(Brand), 1.0F / 3.0F);
+  A.Check(
+    ProposedColor.Green = 255 and ProposedColor.Red <= 1 and ProposedColor.Blue <= 1
+    and ProposedColor.Alpha = 137,
+    'Hue input must start from the latest model RGB and preserve alpha.'
+  );
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, Brand).Focused and not HasControl(Session, Colors.HueId(Brand)),
+    'Escape must close the color popup and return focus to the swatch.'
+  );
+
+  A.Send(Session, State.Msg.Show(State.Page.SmartInputs));
+  Window.Resize(1000, 800);
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Message).Value = Original,
+    'The original message text must be editable.'
+  );
+  Session.CapturePng(Capture + '.emoji-message.png');
+  Click(Session, Trigger);
+  A.Check(
+    HasControl(Session, Emojis.SearchId(Emoji)),
+    'The original emoji popup must show native search.'
+  );
+  // CUI rasterizes a bounded number of new glyphs per frame.
+  for Frame: int := 1 to 12 do
+    Step(Session);
+  end for;
+
+  Session.CapturePng(Capture + '.emoji-open.png');
+  if not HasControl(Session, Emojis.GroupId(Emoji, 1)) then
+    A.Check(not Sys.OperatingSystem.IsWindows(), 'CUI must load the Windows emoji font.');
+    Key(Session, 3);
+    return;
+  end if;
+
+  Click(Session, Emojis.GroupId(Emoji, 2));
+  A.Check(
+    A.Control(Session, Message).Value = Original,
+    'A group tab must browse without inserting text.'
+  );
+  Click(Session, Emojis.ToneSelectorId(Emoji));
+  Click(Session, Emojis.ToneId(Emoji, 3));
+  A.Check(
+    A.Control(Session, Emojis.ToneSelectorId(Emoji)).Value = '3',
+    'The native tone selector must update the model.'
+  );
+  Search(Session, 'grinning face');
+  A.Check(
+    A.Control(Session, Message).Value = Original + Smile and not HasControl(Session, Emoji),
+    'Enter in emoji search must insert the selected result and close the popup.'
+  );
+  A.Check(
+    A.Control(Session, Trigger).Focused,
+    'Choosing an emoji must return focus to its trigger.'
+  );
+
+  Key(Session, 2);
+  A.Check(
+    HasControl(Session, Emojis.GroupId(Emoji, 0)) and A.Control(Session, Emoji).Value = Smile
+    and A.Control(Session, Emojis.ToneSelectorId(Emoji)).Value = '3',
+    'Recent emoji and skin tone must survive closing and reopening the popup.'
+  );
+  Search(Session, 'thumbs up');
+  A.Check(
+    A.Control(Session, Message).Value = Original + Smile + Thumb,
+    'A tone-capable emoji must be appended as one complete Unicode sequence.'
+  );
+end procedure;
+end unit;

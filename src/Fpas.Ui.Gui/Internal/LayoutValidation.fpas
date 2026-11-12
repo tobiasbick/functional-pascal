@@ -45,6 +45,8 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end for;
       when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
         Visit(Child);
+      when E.Element.SwipeRow(_, const Child: E.Element<TMsg>, _, _, _, _):
+        Visit(Child);
       when E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
         Visit(Child);
       when E.Element.Accordion(

@@ -1,0 +1,52 @@
+unit GuiGallery.Pages.Capture.Update;
+
+uses
+  GuiGallery.Pages.Capture.State as S, Fpas.Ui.AvatarUploads as A,
+  Fpas.Ui.Gui.FileDialogs as Dialogs, Fpas.Ui.Mvu.Application as Mvu;
+
+// Records accepted files and requests the native file dialog on browse.
+// ## Parameters
+// - `State`: Current Capture model.
+// - `Message`: User action or selected path.
+// ## Returns
+// The next Capture model and any dialog command.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  case Message of
+    when S.Msg.Dropped(const Paths: array of string):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        State with
+          Last := Paths[0];
+        end with, []
+      );
+    when S.Msg.SetFile(const Path: string):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        State with
+          Last := Path;
+        end with, []
+      );
+    when S.Msg.SetAvatar(const Path: string):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        State with
+          Avatar := Path;
+        end with, []
+      );
+    when S.Msg.Browse(const Accept: string):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        State, [Dialogs.OpenFile<S.Msg>(S.Msg.SetFile, 'Select a file', 'Accepted files', Accept)]
+      );
+    when S.Msg.BrowseAvatar:
+      return new Mvu.Transition<S.Model, S.Msg>(
+        State,
+        [
+          Dialogs.OpenFile<S.Msg>(
+            S.Msg.SetAvatar,
+            'Select a profile photo',
+            'Images',
+            A.ImageExtensions
+          )
+        ]
+      );
+  end case;
+end function;
+end unit;

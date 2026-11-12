@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Inputs.Update;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.Inputs.State as S;
+  GuiGallery.Pages.Inputs.State as S, Fpas.Ui.Graphics as G, System as Sys;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters
@@ -34,8 +34,14 @@ begin
     when S.Msg.SetLanguage(const Index: int): State with
       Language := Index;
     end with;
+    when S.Msg.SetDueDate(const Value: Sys.DateOnly): State with
+      DueDate := Value;
+    end with;
     when S.Msg.SetSeats(const Value: double): State with
       Seats := Value;
+    end with;
+    when S.Msg.SetBrandColor(const Value: G.Color): State with
+      BrandColor := Value;
     end with;
     else State;
   end case;

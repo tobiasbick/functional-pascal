@@ -16,6 +16,12 @@ uses
   GuiGallery.Pages.Overlays.View as Overlays,
   GuiGallery.Pages.Actions.State as ActionsState,
   GuiGallery.Pages.Actions.View as Actions,
+  GuiGallery.Pages.Capture.State as CaptureState,
+  GuiGallery.Pages.Capture.View as Capture,
+  GuiGallery.Pages.Audio.State as AudioState,
+  GuiGallery.Pages.Audio.View as Audio,
+  GuiGallery.Pages.Pickers.State as PickersState,
+  GuiGallery.Pages.Pickers.View as Pickers,
   GuiGallery.Pages.SmartInputs.State as SmartInputsState,
   GuiGallery.Pages.SmartInputs.View as SmartInputs,
   GuiGallery.Pages.Disclosure.State as DisclosureState,
@@ -87,7 +93,8 @@ begin
         'Extended',
         [
           Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
-          Destination(State.Page.Disclosure, $E529)
+          Destination(State.Page.Pickers, $E063), Destination(State.Page.Capture, $E19E),
+          Destination(State.Page.Disclosure, $E529), Destination(State.Page.Audio, $E55A)
         ]
       )
     ],
@@ -171,6 +178,12 @@ begin
         SmartInputs.View(Model.SmartInputs),
         State.Msg.SmartInputs
       );
+    when State.Page.Capture:
+      return U.Map<CaptureState.Msg, State.Msg>(Capture.View(Model.Capture), State.Msg.Capture);
+    when State.Page.Audio:
+      return U.Map<AudioState.Msg, State.Msg>(Audio.View(Model.Audio), State.Msg.Audio);
+    when State.Page.Pickers:
+      return U.Map<PickersState.Msg, State.Msg>(Pickers.View(Model.Pickers), State.Msg.Pickers);
     when State.Page.Disclosure:
       return U.Map<DisclosureState.Msg, State.Msg>(
         Disclosure.View(Model.Disclosure),
@@ -184,7 +197,7 @@ end function;
 function Content(Model: State.Model; Compact: bool; Inset: int; Width: int): E.Element<State.Msg>;
 begin
   const PreviewContent: E.Element<State.Msg> := Preview(Model, Width);
-  const Gaps: L.Flow := new L.Flow(Gap := Gap(20));
+  const Gaps: L.Flow := new L.Flow(Gap := Gap(20), Clip := false);
   const Titled: E.Element<State.Msg> := if Model.Active = State.Page.Overview then PreviewContent
     else E.Column<State.Msg>(
       Gaps,
@@ -214,6 +227,7 @@ begin
       Space(Inset),
       E.Size<State.Msg>(
         E.Column<State.Msg>(
+          new L.Flow(Clip := false),
           Space(if Compact then 12 else 36 end if),
           Page,
           Space(64)

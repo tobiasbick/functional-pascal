@@ -26,6 +26,8 @@ public type Role = enum: byte
   OutlinedPanel;
   // A graphical CUI label with medium weight and native body-size metrics.
   Label;
+  // Small secondary text using CUI's caption metrics.
+  Caption;
 end enum;
 
 // Native CUI semantic colors shared by graphical widgets.

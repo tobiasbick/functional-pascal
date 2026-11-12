@@ -1,0 +1,41 @@
+unit GuiGallery.Pages.Audio.Update;
+
+uses GuiGallery.Pages.Audio.State as S;
+
+function SetGain(Model: S.Model; Channel: int; Value: float): S.Model;
+begin
+  const Gains: array of float := cast<array of float>(Model.Gains.Clone());
+  Gains[Channel] := Value;
+  return Model with
+    Gains := Gains;
+  end with;
+end function;
+
+// Updates the editable audio settings or advances the synthetic signal.
+// ## Parameters
+// - `Model`: Current audio state.
+// - `Message`: Audio action.
+// ## Returns
+// The new audio state.
+public function Update(Model: S.Model; Message: S.Msg): S.Model;
+begin
+  return case Message of
+    when S.Msg.SetCutoff(const Value: float): Model with
+      Cutoff := Value;
+    end with;
+    when S.Msg.SetResonance(const Value: float): Model with
+      Resonance := Value;
+    end with;
+    when S.Msg.SetAttack(const Value: float): Model with
+      Attack := Value;
+    end with;
+    when S.Msg.SetPan(const Value: float): Model with
+      Pan := Value;
+    end with;
+    when S.Msg.SetGain(const Channel: int, const Value: float): SetGain(Model, Channel, Value);
+    when S.Msg.Tick: Model with
+      Phase := Model.Phase mod 600 + 1;
+    end with;
+  end case;
+end function;
+end unit;

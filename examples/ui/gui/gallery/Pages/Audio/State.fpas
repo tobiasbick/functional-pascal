@@ -1,0 +1,34 @@
+unit GuiGallery.Pages.Audio.State;
+
+// Editable synth and mixer values, plus the phase of the synthetic signal.
+public type Model = record
+  // Cutoff in Hz.
+  public Cutoff: float := 1800.0F;
+  // Resonance from zero to one.
+  public Resonance: float := 0.3F;
+  // Attack in milliseconds.
+  public Attack: float := 12.0F;
+  // Stereo pan from -1 to 1.
+  public Pan: float := 0.15F;
+  // Channel gains in dB.
+  public Gains: array of float := [-4.0F, -9.0F, 0.0F, -15.0F, -6.0F, -2.0F];
+  // Synthetic signal phase, measured in sixtieths of a second.
+  public Phase: int := 1;
+end record;
+
+// Changes to the audio examples.
+public type Msg = variant
+  // Set the cutoff in Hz.
+  SetCutoff(Value: float);
+  // Set the normalized resonance.
+  SetResonance(Value: float);
+  // Set the attack in milliseconds.
+  SetAttack(Value: float);
+  // Set the stereo pan.
+  SetPan(Value: float);
+  // Set one mixer channel's gain in dB.
+  SetGain(Channel: int; Value: float);
+  // Advance the synthetic signal.
+  Tick;
+end variant;
+end unit;

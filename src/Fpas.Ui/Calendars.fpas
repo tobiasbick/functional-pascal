@@ -1,0 +1,44 @@
+unit Fpas.Ui.Calendars;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Gets the stable identity of a day cell.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Day`: Calendar day.
+// ## Returns
+// The cell identity while that day is visible.
+public function DayId(Id: string; Day: Sys.DateOnly): string;
+begin
+  return Id + '/day/' + Day.DayNumber.ToString();
+end function;
+
+// Gets the identity of a calendar navigation button.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Forward`: Selects the next-month button when true.
+// ## Returns
+// The month navigation control identity.
+public function MonthId(Id: string; Forward: bool): string;
+begin
+  return Id + (if Forward then '/next' else '/previous' end if);
+end function;
+
+// Builds CUI's inline single-date calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable calendar identity.
+// - `Value`: Model-owned selection, or null.
+// - `OnChange`: Maps a chosen date to a message.
+// - `Enabled`: Whether the calendar accepts input.
+// ## Returns
+// A graphical calendar with CUI-owned month navigation.
+public function Calendar<TMsg>(
+  Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Calendar(Id, Value, OnChange, Enabled);
+end function;
+end unit;

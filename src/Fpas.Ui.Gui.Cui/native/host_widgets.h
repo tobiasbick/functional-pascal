@@ -10,9 +10,10 @@
  * @param gap Logical separation.
  * @param align Shared alignment ordinal.
  * @param framed Border permission.
+ * @param clip Whether to clip children at the group bounds.
  * @param wrap Wrap a row onto additional lines and allow focus rings past its edge.
  * @return Frame-local node. */
-CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap);
+CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip);
 /** Closes a group and restores its inspection identity.
  * @param ui Owner context.
  * @param node Frame-local group. */

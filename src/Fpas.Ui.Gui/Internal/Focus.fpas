@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
+uses Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,6 +17,66 @@ uses Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.TimePicker(const Id: string, _, _, const Settings: TimePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.WheelPicker(const Id: string, _, _, _, const Settings: WheelPickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TimeDial(const Id: string, _, _, _, const Enabled: bool):
+      if Enabled then
+        const Hours: string := TimeDials.SelectorId(Id, false);
+        const Minutes: string := TimeDials.SelectorId(Id, true);
+        if Preferred = null or Preferred = Id or Preferred = Hours then
+          return Hours;
+        end if;
+
+        if Preferred = Minutes then
+          return Minutes;
+        end if;
+      end if;
+    when E.Element.ColorPicker(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.EmojiPicker(const Id: string, _, _, const Settings: Emojis.Options):
+      if Settings.Enabled then
+        const Search: string := Emojis.SearchId(Id);
+        const Grid: string := Emojis.GridId(Id);
+        if Settings.Search and (Preferred = null or Preferred = Id or Preferred = Search) then
+          return Search;
+        end if;
+
+        if Preferred = null or Preferred = Id or Preferred = Grid then
+          return Grid;
+        end if;
+      end if;
+    when E.Element.Calendar(const Id: string, _, _, const Enabled: bool):
+      if Enabled then
+        const Previous: string := Calendars.MonthId(Id, false);
+        const Following: string := Calendars.MonthId(Id, true);
+        if Preferred = null or Preferred = Id or Preferred = Previous then
+          return Previous;
+        end if;
+
+        if Preferred = Following then
+          return Following;
+        end if;
+      end if;
+    when E.Element.DatePicker(const Id: string, _, _, const Settings: DatePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RangePicker(const Id: string, _, _, const Settings: RangePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.MultiSelectInput(const Id: string, _, _, _, const Settings: Multi.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
     when E.Element.SelectInput(const Id: string, _, _, _, const Settings: Selects.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -188,6 +248,44 @@ begin
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
+    when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.AvatarUpload(const Id: string, _, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SignaturePad(const Id: string, _, const Settings: Signatures.Options):
+      const Clear: string := Signatures.ClearId(Id);
+      if Settings.Enabled and Preferred = Clear then
+        return Clear;
+      end if;
+    when E.Element.Knob(const Id: string, _, _, _, _, _, const Settings: Knobs.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Fader(const Id: string, _, _, _, _, _, const Settings: Faders.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RulerSlider(const Id: string, _, _, _, _, _, const Settings: Rulers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.HistogramSlider(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      const Settings: Histograms.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
     when E.Element.RangeSliderAction(const Id: string, _, _, _, _, _, const Enabled: bool):
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -233,6 +331,21 @@ begin
             return Item;
           end if;
         end for;
+      end if;
+    when E.Element.SpeedDialAction(const Id: string, _, _, const Settings: Speed.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SwipeRow(
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _,
+      _,
+      const Settings: Swipe.Options
+    ):
+      if Settings.Enabled then
+        return First<TMsg>(Child, Prepared, Preferred);
       end if;
     when E.Element.AccountMenu(const Id: string, _, _, const Settings: UserMenus.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then

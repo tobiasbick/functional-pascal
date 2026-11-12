@@ -1,11 +1,22 @@
 unit GuiGallery.Pages.SmartInputs.State;
 
+uses Fpas.Ui.EmojiPickers as Emojis;
+
+// Maximum message length in UTF-8 bytes, excluding the native terminator.
+public const MessageCapacity: int := 159;
+
 // State owned by this gallery feature.
 public type Model = record
   // Editable part of the URL after its prefix.
   public Url: string := 'cui.dev';
   // Editable weight before the unit suffix.
   public Weight: string := '72';
+  // Text in the original message example.
+  public Message: string := 'Release notes are up ';
+  // Whether the emoji popover is open.
+  public EmojiOpen: bool := false;
+  // Recent emoji and skin tone.
+  public Emoji: Emojis.State := new Emojis.State();
 end record;
 
 // Messages handled by this gallery feature.
@@ -14,6 +25,12 @@ public type Msg = variant
   SetUrl(Value: string);
   // Update the weight without its displayed unit.
   SetWeight(Value: string);
+  // Update the message text.
+  SetMessage(Value: string);
+  // Open or dismiss the emoji popover.
+  SetEmojiOpen(Open: bool);
+  // Apply a proposed emoji selection or tone.
+  ChangeEmoji(Value: Emojis.Change);
   // A harmless preview activation.
   Preview;
 end variant;

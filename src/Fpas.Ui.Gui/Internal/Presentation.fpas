@@ -1,6 +1,31 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Gui.Internal.Widgets.EmojiPicker as EmojiPickerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ColorPicker as ColorPickerWidget,
+  Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.Gui.Internal.Widgets.Calendar as CalendarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.DatePicker as DatePickerWidget,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Gui.Internal.Widgets.Dropzone as DropzoneWidget,
+  Fpas.Ui.Gui.Internal.Widgets.AvatarUpload as AvatarUploadWidget,
+  Fpas.Ui.Gui.Internal.Widgets.SignaturePad as SignaturePadWidget,
+  Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
+  Fpas.Ui.Gui.Internal.Widgets.Knob as KnobWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Fader as FaderWidget,
+  Fpas.Ui.Gui.Internal.Widgets.LevelMeter as LevelMeterWidget,
+  Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
+  Fpas.Ui.Gui.Internal.Widgets.RulerSlider as RulerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.HistogramSlider as HistogramWidget,
+  Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
+  Fpas.Ui.Gui.Internal.Widgets.TimePicker as TimePickerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.WheelPicker as WheelPickerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.TimeDial as TimeDialWidget,
+  Fpas.Ui.DateRanges as Dates, Fpas.Ui.DateRangePickers as RangePickers,
+  Fpas.Ui.Gui.Internal.Widgets.DateRangePicker as RangePickerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.DateRangeCalendar as RangeCalendarWidget,
+  Fpas.Ui.SpeedDials as Speed, Fpas.Ui.Gui.Internal.Widgets.SpeedDial as SpeedWidget,
+  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Gui.Internal.Widgets.SwipeItem as SwipeWidget,
+  Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Gui.Internal.Widgets.MultiSelect as MultiWidget,
   Fpas.Ui.Gui.Internal.Widgets.Skeleton as SkeletonWidget,
   Fpas.Ui.TimelineItems as Timeline, Fpas.Ui.Gui.Internal.Widgets.TimelineItem as TimelineWidget,
   Fpas.Ui.Gui.Internal.Widgets.ProgressRing as RingWidget,
@@ -74,11 +99,68 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Id: string, const Label: string, const Value: float, const Diameter: float
       ):
         RingWidget.Draw<TMsg>(Current, Id, Label, Value, Diameter);
+      when E.Element.LevelMeter(
+        const Id: string,
+        const Peaks: array of float,
+        const Settings: Levels.Options,
+        const Notify: Sys.Func<TMsg>?
+      ):
+        LevelMeterWidget.Draw<TMsg>(Current, Id, Peaks, Settings, Notify);
       when E.Element.Meter(
         const Id: string, const Label: string, const Used: float,
         const Total: float, const Unit: string
       ):
         MeterWidget.Draw<TMsg>(Current, Id, Label, Used, Total, Unit);
+      when E.Element.ColorPicker(
+        const Id: string, const Value: G.Color, const Change: function(G.Color): TMsg,
+        const Enabled: bool
+      ):
+        ColorPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Enabled);
+      when E.Element.EmojiPicker(
+        const Id: string, const Value: Emojis.State, const Change: function(Emojis.Change): TMsg,
+        const Settings: Emojis.Options
+      ):
+        EmojiPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.Calendar(
+        const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TMsg,
+        const Enabled: bool
+      ):
+        CalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Enabled);
+      when E.Element.DatePicker(
+        const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TMsg,
+        const Settings: DatePickers.Options
+      ):
+        DatePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.RangeCalendar(
+        const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TMsg,
+        const Months: int, const Enabled: bool
+      ):
+        RangeCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Months, Enabled);
+      when E.Element.RangePicker(
+        const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TMsg,
+        const Settings: RangePickers.Options
+      ):
+        RangePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.TimePicker(
+        const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TMsg,
+        const Settings: TimePickers.Options
+      ):
+        TimePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.WheelPicker(
+        const Id: string, const Items: array of string, const Selected: int,
+        const Change: function(int): TMsg, const Settings: WheelPickers.Options
+      ):
+        WheelPickerWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+      when E.Element.TimeDial(
+        const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TMsg,
+        const Diameter: float, const Enabled: bool
+      ):
+        TimeDialWidget.Draw<TMsg>(Current, Id, Value, Change, Diameter, Enabled);
+      when E.Element.MultiSelectInput(
+        const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
+        const Change: function(array of bool): TMsg, const Settings: Multi.Options
+      ):
+        MultiWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
       when E.Element.SelectInput(
         const Id: string, const Items: array of Selects.Item, const Selected: int,
         const OnChange: function(int): TMsg, const Settings: Selects.Options
@@ -238,6 +320,60 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool
       ):
         RangeSlider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Enabled);
+      when E.Element.Dropzone(
+        const Id: string,
+        const Drop: function(array of string): TMsg,
+        const Browse: Sys.Func<TMsg>?,
+        const Settings: Dropzones.Options
+      ):
+        DropzoneWidget.Draw<TMsg>(Current, Id, Drop, Browse, Settings);
+      when E.Element.AvatarUpload(
+        const Id: string,
+        const Name: string,
+        const Path: string?,
+        const Drop: function(string): TMsg,
+        const Browse: Sys.Func<TMsg>?,
+        const Diameter: float,
+        const Enabled: bool
+      ):
+        AvatarUploadWidget.Draw<TMsg>(Current, Id, Name, Path, Drop, Browse, Diameter, Enabled);
+      when E.Element.SignaturePad(
+        const Id: string,
+        const Change: Sys.Func<Signatures.Signature, TMsg>?,
+        const Settings: Signatures.Options
+      ):
+        SignaturePadWidget.Draw<TMsg>(Current, Id, Change, Settings);
+      when E.Element.Knob(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, const Change: function(float): TMsg, const Settings: Knobs.Options
+      ):
+        KnobWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+      when E.Element.Fader(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, const Change: function(float): TMsg, const Settings: Faders.Options
+      ):
+        FaderWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+      when E.Element.RulerSlider(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, const Change: function(float): TMsg, const Settings: Rulers.Options
+      ):
+        RulerWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+      when E.Element.HistogramSlider(
+        const Id: string, const Label: string, const Bins: array of float,
+        const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
+        const Change: function(RangeSliders.Interval): TMsg, const Settings: Histograms.Options
+      ):
+        HistogramWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Label,
+          Bins,
+          Value,
+          Minimum,
+          Maximum,
+          Change,
+          Settings
+        );
       when E.Element.ChipAction(
         const Id: string,
         const Label: string,
@@ -345,6 +481,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(int, Reactions.Item): TMsg, const Enabled: bool
       ):
         ReactionsWidget.Draw<TMsg>(Current, Id, Items, Change, Enabled);
+      when E.Element.SpeedDialAction(
+        const Id: string, const Items: array of Speed.Item, const Choose: function(int): TMsg,
+        const Settings: Speed.Options
+      ):
+        SpeedWidget.Draw<TMsg>(Current, Id, Items, Choose, Settings);
+      when E.Element.SwipeRow(
+        const Id: string, const Content: E.Element<TMsg>, const Left: array of Swipe.Item,
+        const Right: array of Swipe.Item, const Choose: function(Swipe.Side, int): TMsg,
+        const Settings: Swipe.Options
+      ):
+        SwipeWidget.Draw<TMsg>(Current, Id, Content, Left, Right, Choose, Settings, Visit);
       when E.Element.AccountMenu(
         const Id: string, const Name: string, const Entries: array of Menus.Entry<TMsg>,
         const Settings: UserMenus.Options
@@ -379,7 +526,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Size.Spacing(Settings.Gap),
           cast<int>(Settings.Align),
           false,
-          Settings.Wrap
+          Settings.Wrap, Settings.Clip ?? not Settings.Wrap
         );
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, Row, Settings.Align);

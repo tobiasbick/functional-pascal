@@ -1,0 +1,40 @@
+unit Fpas.Ui.Gui.Internal.Widgets.DateRangePicker;
+
+uses
+  Fpas.Ui.DateRanges as R, Fpas.Ui.DateRangePickers as P, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Widgets.DateRangeParts as Parts,
+  System as Sys;
+
+// Draws CUI's native date range picker and popup.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable trigger identity.
+// - `Value`: Model-owned range.
+// - `OnChange`: Maps a range proposal to a message.
+// - `Settings`: Field label, width, presets and input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: R.Value; OnChange: function(R.Value): TMsg; Settings: P.Options
+);
+begin
+  const Accept: bool := Settings.Enabled and Frame.AcceptInput;
+  const Role: string := 'date-range-picker';
+  const Token: string := C.Token(Role, Id);
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
+    else function(Part: int): string => Parts.Token(Id, Part)
+    end if;
+  const Result: Cui.CuiDateRangeResult := Frame.Window.RangePicker(
+    Token, Parts.StartDay(Value), Parts.EndDay(Value), Settings.Label, Settings.Placeholder,
+    Settings.Width, Settings.Presets, Accept, C.WantsFocus<TMsg>(Frame, Id, Token, Accept), Track
+  );
+  if Settings.Label <> '' and not Frame.PaintingClosed then
+    Frame.Labels.Add(Settings.Label);
+  end if;
+
+  Parts.Publish<TMsg>(
+    Frame, Id, if Settings.Label = '' then 'Date range' else Settings.Label end if,
+    Role, Value, Accept, Result, OnChange
+  );
+end procedure;
+end unit;

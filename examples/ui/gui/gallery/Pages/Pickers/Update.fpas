@@ -1,0 +1,55 @@
+unit GuiGallery.Pages.Pickers.Update;
+
+uses
+  GuiGallery.Pages.Pickers.State as S, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.DateRanges as R,
+  Fpas.Ui.RangeSliders as PriceRange, System as Sys;
+
+// Applies the picker selection to its owning model.
+// ## Parameters
+// - `State`: Current feature model.
+// - `Message`: Feature action.
+// ## Returns
+// The updated picker and its commands.
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.SetLanguages(const Flags: array of bool): State with
+      Languages := Flags;
+    end with;
+    when S.Msg.SetDateRange(const Range: R.Value): State with
+      DateRange := Range;
+    end with;
+    when S.Msg.SetStay(const Range: R.Value): State with
+      Stay := Range;
+    end with;
+    when S.Msg.SetStartTime(const Time: Sys.TimeOnly): State with
+      StartTime := Time;
+    end with;
+    when S.Msg.SetEndTime(const Time: Sys.TimeOnly): State with
+      EndTime := Time;
+    end with;
+    when S.Msg.SetDay(const Index: int): State with
+      Day := Index;
+    end with;
+    when S.Msg.SetMonth(const Index: int): State with
+      Month := Index;
+    end with;
+    when S.Msg.SetYear(const Index: int): State with
+      Year := Index;
+    end with;
+    when S.Msg.SetDialTime(const Time: Sys.TimeOnly): State with
+      DialTime := Time;
+    end with;
+    when S.Msg.SetHeight(const Height: float): State with
+      Height := Height;
+    end with;
+    when S.Msg.SetTemperature(const Temperature: float): State with
+      Temperature := Temperature;
+    end with;
+    when S.Msg.SetPrice(const Price: PriceRange.Interval): State with
+      Price := Price;
+    end with;
+  end case;
+  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+end function;
+end unit;

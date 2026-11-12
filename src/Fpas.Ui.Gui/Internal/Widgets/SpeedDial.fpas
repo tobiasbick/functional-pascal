@@ -1,0 +1,63 @@
+unit Fpas.Ui.Gui.Internal.Widgets.SpeedDial;
+
+uses
+  Fpas.Ui.SpeedDials as S, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Collections.Generic as Lists;
+
+// Draws CUI's speed dial and its floating action rows.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable trigger identity.
+// - `Items`: Ordered native actions.
+// - `OnChoose`: Maps a chosen action index to a message.
+// - `Settings`: Native trigger and input settings.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of S.Item;
+  OnChoose: function(int): TMsg; Settings: S.Options
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('speed-dial', Id);
+  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
+  var Focus: int := if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then 1 else 0 end if;
+  for Index: int := 0 to Items.Length - 1 do
+    Labels.Add(Items[Index].Label);
+    Icons.Add(Items[Index].Icon);
+    const ItemId: string := S.ItemId(Id, Index);
+    if C.WantsFocus<TMsg>(Frame, ItemId, C.Token('speed-action', ItemId), Enabled) then
+      Focus := Index + 2;
+    end if;
+  end for;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then null
+    else function(Index: int): string => C.Token('speed-action', S.ItemId(Id, Index))
+    end if;
+  const Result: Cui.CuiSpeedDialResult := Frame.Window.SpeedDial(
+    Token, Labels.ToArray(), Icons.ToArray(), Settings.Icon, Settings.Tooltip,
+    cast<int>(Settings.Position), Enabled, Focus, Track
+  );
+  if Result.Choice >= 0 then
+    Frame.Messages.Add(OnChoose(Result.Choice));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Settings.Tooltip, 'speed-dial', new Cui.CuiRectangle(), Enabled,
+      Value := if Result.Open then 'true' else 'false' end if
+    )
+  );
+  for Index: int in Result.VisibleActions do
+    Frame.Controls.Add(
+      new App.Control(
+        S.ItemId(Id, Index), Items[Index].Label, 'speed-action', new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end for;
+end procedure;
+end unit;

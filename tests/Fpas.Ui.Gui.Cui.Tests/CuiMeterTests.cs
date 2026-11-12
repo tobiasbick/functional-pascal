@@ -20,7 +20,7 @@ public sealed class CuiMeterTests
             {
                 Draw(used, total); Draw(used, total);
                 var box = window.GetControlRectangle("meter");
-                Assert.Equal(width - 24, box.Width);
+                Assert.Equal(window.Size.Width - 24, box.Width);
                 Assert.True(box.Height > 25);
                 Assert.False(window.ControlFocused("meter"));
             }

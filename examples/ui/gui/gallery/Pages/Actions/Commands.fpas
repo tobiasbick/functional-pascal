@@ -3,6 +3,7 @@ unit GuiGallery.Pages.Actions.Commands;
 uses
   Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Gui.Toasts as Toasts,
   System as Sys,
   GuiGallery.Pages.Actions.State as S,
   System.Threading as Threads,
@@ -41,6 +42,19 @@ begin
       ]
       else []
       end if;
+    when S.Msg.SwipeChoice(const At: Swipe.Side, const Index: int): [
+      Toasts.Show<S.Msg>(
+        if At = Swipe.Side.Left then 'Marked as done'
+          elsif Index = 0 then 'Archived'
+          else 'Deleted'
+          end if,
+        new Toasts.Options(
+          Appearance := if At = Swipe.Side.Right and Index = 1 then Toasts.Tone.Danger
+            else Toasts.Tone.Success
+            end if
+        )
+      )
+    ];
     else [];
   end case;
 end function;

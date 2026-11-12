@@ -1,0 +1,187 @@
+unit GalleryRulerHistogramContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App;
+
+// Exercises the ruler tapes and price interval in the original Pickers page.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the completed page, focus and range captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if ScrollX <> 0.0F or ScrollY <> 0.0F then
+      Window.Wheel(ScrollX, ScrollY);
+      ScrollX := 0.0F;
+      ScrollY := 0.0F;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true, Modifiers);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The Pickers page closed unexpectedly.');
+  end procedure;
+
+  procedure Aim(Session: Gui.Session<State.Msg>; Id: string; Fraction: float := 0.5F);
+  begin
+    const Track: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(
+      Track.Width > 18.0F and Track.Height > 0.0F,
+      'Missing native slider geometry for ' + Id
+    );
+    X := Track.X + Track.Width * Fraction;
+    Y := Track.Y + Track.Height / 2.0F;
+  end procedure;
+
+  procedure Release(Session: Gui.Session<State.Msg>);
+  begin
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int; WithModifiers: int := 0);
+  begin
+    PendingKey := Value;
+    Modifiers := WithModifiers;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var ScrollX: float := 0.0F;
+  var ScrollY: float := 0.0F;
+  var PendingKey: int := 0;
+  var Modifiers: int := 0;
+  var Target: string := '';
+  const Height: string := 'picker-height';
+  const Temperature: string := 'picker-temperature';
+  const Price: string := 'picker-price';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Ruler and histogram',
+    1000,
+    1600,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Pickers),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Height).Value = '172' and A.Control(Session, Temperature).Value = '21.5'
+    and A.Control(Session, Price).Value = '40 – 160',
+    'The gallery must use the original ruler and price values.'
+  );
+  Session.CapturePng(Capture + '.ruler-histogram.png');
+
+  Focus(Session, Temperature);
+  Key(Session, 2);
+  Session.CapturePng(Capture + '.ruler-focused.png');
+
+  const Track: Cui.CuiRectangle := A.Control(Session, Price).Bounds;
+  Aim(Session, Price, 1.0F / Track.Width);
+  Button := 1;
+  Step(Session);
+  Release(Session);
+  A.Check(
+    A.Control(Session, Price).Value = '0 – 160',
+    'Pointer input must move the lower price endpoint.'
+  );
+  Session.CapturePng(Capture + '.histogram-adjusted.png');
+  Key(Session, 6);
+  Key(Session, 12);
+  A.Check(
+    A.Control(Session, Price).Value = '0 – 240',
+    'Space must switch to the upper price endpoint.'
+  );
+  Aim(Session, Price, 1.0F / Track.Width);
+  Button := 1;
+  Step(Session);
+  X := Track.X + Track.Width - 1.0F;
+  Step(Session);
+  Release(Session);
+  A.Check(
+    A.Control(Session, Price).Value = '240 – 240',
+    'Dragging the lower endpoint cannot cross the upper one.'
+  );
+
+  Focus(Session, Temperature);
+  Key(Session, 8, 1);
+  A.Check(
+    A.Control(Session, Temperature).Value = '23.5',
+    'Shift+Right must advance four half-degree ticks.'
+  );
+  Aim(Session, Temperature);
+  Button := 1;
+  Step(Session);
+  X := X - 14.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Temperature).Value = '24',
+    'Dragging the tape by one tick must add half a degree.'
+  );
+  Release(Session);
+
+  Aim(Session, Height);
+  ScrollY := -1.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Height).Value = '173',
+    'The page must leave vertical wheel input for the ruler.'
+  );
+  ScrollX := -1.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Height).Value = '174',
+    'The ruler must also accept horizontal wheel input.'
+  );
+end procedure;
+end unit;

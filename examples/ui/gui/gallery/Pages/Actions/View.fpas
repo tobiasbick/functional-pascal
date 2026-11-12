@@ -3,6 +3,8 @@ unit GuiGallery.Pages.Actions.View;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Actions.Widgets.ToggleGroup as ToggleGroup,
+  GuiGallery.Pages.Actions.Widgets.SpeedDial as SpeedDial,
+  GuiGallery.Pages.Actions.Widgets.SwipeActions as SwipeActions,
   GuiGallery.Pages.Actions.Widgets.ThemeSwitcher as Theme,
   GuiGallery.Pages.Actions.State as State,
   GuiGallery.Pages.Actions.Widgets.SplitButton as Split,
@@ -53,7 +55,11 @@ begin
     ),
     Theme.View(Model, Data),
     G.Heading<State.Msg>('User menu', 'Account trigger for sidebars and headers.'),
-    UserMenu.View()
+    UserMenu.View(),
+    G.Heading<State.Msg>('Swipe actions', 'Drag a row sideways or swipe with two fingers.'),
+    SwipeActions.View(),
+    G.Heading<State.Msg>('Speed dial', 'A floating action button that fans out related actions.'),
+    SpeedDial.View(Model)
   );
 end function;
 end unit;

@@ -1,0 +1,36 @@
+unit Fpas.Ui.DateRanges;
+
+uses Fpas.Ui.Calendars as Calendars, System as Sys;
+
+// A date selection that can be empty, awaiting an end, or complete.
+public type Value = variant
+  // Neither endpoint is selected.
+  Empty;
+  // The start is selected and the next day choice completes the range.
+  Started(Start: Sys.DateOnly);
+  // Both endpoints, inclusive and in chronological order.
+  Complete(Start: Sys.DateOnly; Finish: Sys.DateOnly);
+end variant;
+
+// Gets the stable identity of a day cell.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Day`: Calendar day.
+// ## Returns
+// The cell identity while that day is visible.
+public function DayId(Id: string; Day: Sys.DateOnly): string;
+begin
+  return Calendars.DayId(Id, Day);
+end function;
+
+// Gets the identity of a calendar navigation button.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Forward`: Selects the next-month button when true.
+// ## Returns
+// The month navigation control identity.
+public function MonthId(Id: string; Forward: bool): string;
+begin
+  return Calendars.MonthId(Id, Forward);
+end function;
+end unit;

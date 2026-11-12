@@ -54,6 +54,11 @@ The reaction pills check pointer and keyboard proposals for the active flag and
 count. The account menu checks native pointer and keyboard selection, Escape,
 focus return and popup retirement on navigation. The contract captures the
 Actions page with the account menu closed and open.
+The extended Actions and Pickers contract checks mouse dragging, horizontal
+wheel reveal, speed dial selection and focus return, and searchable
+multi-selection. It captures the original examples at rest and while open
+or revealed. The Windows native swipe test exercises `WM_MOUSEHWHEEL` through
+CUI's window procedure inside a vertically scrollable view.
 The Selection page checks native checkbox, switch and radio input, the
 graphical preflight boundary and the two-column and stacked layouts. It also
 checks pointer and keyboard selection in the radio cards, stepped slider
@@ -92,6 +97,40 @@ would otherwise exceed the configured count.
 Pickers exercises country selection by mouse and keyboard, language filtering
 and focus return, numeric step buttons and Shift+Up, bounds, invalid input,
 and replacement of a focused numeric draft.
+The Inputs date contract checks the Due date cell, selection shared with
+the supplementary Calendar, a cleared selection, month navigation across
+a year boundary, and popup dismissal and focus return. Captures cover the
+closed field, open popup and visible keyboard focus.
+The color and emoji gallery contract checks brand presets, hue edits after
+a model update, alpha preservation and focus return. Smart inputs exercises
+group navigation, tone selection, keyboard search and insertion of a full
+emoji sequence, and verifies that recent emoji and tone persist on reopening.
+The Windows captures include both closed and open pickers and the color
+field's keyboard focus.
+The date range contract exercises native presets, month browsing, selection
+across the year boundary, and shared partial ranges across the picker and
+inline calendar. It checks Escape and focus return and captures the section
+at rest and with each popup open.
+The time picker contract exercises minute steps, AM/PM, Escape and focus
+return. The same Pickers session verifies wheel keyboard wrapping, scroll
+and drag input, plus the dial's hour-to-minute transition and keyboard
+selection of the hour mode. It captures the page and both time popups.
+The focused-wheel capture checks that the focus ring leaves the selected
+month visible.
+The completed Pickers page checks both ruler wheel axes, tape dragging,
+Shift+arrow, and the price range's pointer and keyboard endpoints. It
+captures the original sections at rest, with the ruler focused and after
+a price adjustment. The native ruler boundary test checks that the displayed
+value stays within bounds when the maximum falls between ticks.
+Capture checks the original layout and the drawn and cleared signature in
+both native renderers. The native snapshot test checks detached points and
+stroke boundaries. Windows tests post shell drops, check filtered paths and
+avatar replacement with a Unicode filename, and select and cancel in the
+owner window's real file dialog.
+Audio checks the original synth and mixer values, the logarithmic cutoff reset,
+pan dragging, focused fader wheel and keyboard input, and the lifetime of the
+demo signal across navigation. The gallery captures both card layouts.
+The native clip test checks the latched indicator and its click-to-clear event.
 Edit profile checks centered dialog geometry, right-aligned footer spacing,
 focus return, consecutive Escape presses from a text field, Cancel, close,
 scrim dismissal and the Save changes toast. The dialog options case checks a

@@ -1,6 +1,14 @@
 program PublishedGallery;
 
 uses
+  GalleryActionsPickersContract as ActionsPickersContract,
+  GalleryDateRangeContract as DateRangeContract,
+  GalleryDateCalendarContract as DateCalendarContract,
+  GalleryColorEmojiContract as ColorEmojiContract,
+  GalleryAudioContract as AudioContract,
+  GalleryCaptureContract as CaptureContract,
+  GalleryTimePickersContract as TimePickersContract,
+  GalleryRulerHistogramContract as RulerHistogramContract,
   GallerySkeletonContract as SkeletonContract,
   GalleryFeedbackContract as FeedbackContract,
   GuiGallery.App.Update as GalleryUpdate,
@@ -60,7 +68,13 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 11, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 14, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(
+    A.Control(Session, 'navigation', 'pickers').Text = 'Pickers'
+    and A.Control(Session, 'navigation', 'audio').Text = 'Audio'
+    and A.Control(Session, 'navigation', 'capture').Text = 'Capture',
+    'The Pickers, Audio or Capture destination is missing.'
+  );
   const Overview: Gui.Control := A.Control(Session, 'navigation', 'overview');
   const Buttons: Gui.Control := A.Control(Session, 'navigation', 'buttons');
   A.Check(
@@ -166,6 +180,14 @@ begin
   VerifyDrawer(Renderer);
   ActionsContract.Verify(Renderer, Capture);
   ActionWidgetsContract.Verify(Renderer, Capture);
+  ActionsPickersContract.Verify(Renderer, Capture);
+  DateRangeContract.Verify(Renderer, Capture);
+  DateCalendarContract.Verify(Renderer, Capture);
+  ColorEmojiContract.Verify(Renderer, Capture);
+  AudioContract.Verify(Renderer, Capture);
+  CaptureContract.Verify(Renderer, Capture);
+  TimePickersContract.Verify(Renderer, Capture);
+  RulerHistogramContract.Verify(Renderer, Capture);
   VerifySnapshotReentry(Renderer);
   SegmentedContract.Verify(Renderer, Capture);
   ToggleGroupContract.Verify(Renderer, Capture);

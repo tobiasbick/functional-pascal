@@ -1,0 +1,91 @@
+unit GuiGallery.Pages.Capture.View;
+
+uses
+  GuiGallery.Pages.Capture.State as C, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Dropzones as D, Fpas.Ui.AvatarUploads as A, Fpas.Ui.SignaturePads as P,
+  System as Sys, System.Collections.Generic as Lists;
+
+function Target(Id: string; Settings: D.Options): E.Element<C.Msg>;
+begin
+  const Accept: string := Settings.Accept;
+  return D.Dropzone<C.Msg>(
+    Id, C.Msg.Dropped, function(): C.Msg => C.Msg.Browse(Accept), Settings
+  );
+end function;
+
+// Displays the original Capture examples in their gallery order.
+// ## Parameters
+// - `Model`: Current file selections.
+// ## Returns
+// The Dropzone, Avatar upload and Signature sections.
+public function View(Model: C.Model): E.Element<C.Msg>;
+begin
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  const Children: array of E.Element<C.Msg> := [
+    G.Heading<C.Msg>('Dropzone', 'Drop files from your desktop, or click to browse.'),
+    Target(
+      'capture-files',
+      new D.Options(Description := 'PNG, JPG or PDF, up to 25 MB', Accept := C.Files)
+    ),
+    E.Row<C.Msg>(
+      new L.Flow(Gap := G.Points(12), Wrap := true),
+      E.Size<C.Msg>(
+        Target(
+          'capture-attach',
+          new D.Options(Title := 'Attach a file', Description := 'Any type', Compact := true)
+        ),
+        Fill
+      ),
+      E.Size<C.Msg>(
+        Target(
+          'capture-images', new D.Options(
+            Title := 'Add images',
+            Description := 'PNG or JPG',
+            Icon := Sys.Char.ConvertFromUtf32($E0F6),
+            Accept := C.Images,
+            Compact := true
+          )
+        ),
+        Fill
+      )
+    )
+  ];
+  const Remaining: array of E.Element<C.Msg> := [
+    G.Heading<C.Msg>('Avatar upload', 'Drop an image on the avatar.'),
+    E.Row<C.Msg>(
+      new L.Flow(Gap := G.Points(20), Align := L.Alignment.Center, Clip := false),
+      A.AvatarUpload<C.Msg>(
+        'capture-avatar',
+        'Maya Okafor',
+        Model.Avatar,
+        C.Msg.SetAvatar,
+        function(): C.Msg => C.Msg.BrowseAvatar
+      ),
+      E.Column<C.Msg>(
+        new L.Flow(Gap := G.Points(4)),
+        E.Styled<C.Msg>(E.Text<C.Msg>('Profile photo'), S.Role.Label),
+        E.Styled<C.Msg>(E.Text<C.Msg>('At least 256 by 256 pixels.'), S.Role.Secondary)
+      )
+    ),
+    G.Heading<C.Msg>(
+      'Signature',
+      'Draw with the mouse or a pen. Faster strokes are thinner, like ink.'
+    ),
+    E.Row<C.Msg>(
+      new L.Flow(Align := L.Alignment.Start),
+      E.Size<C.Msg>(
+        P.SignaturePad<C.Msg>('capture-signature', Settings := new P.Options(Height := 180.0F)),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(520)))
+      )
+    )
+  ];
+  const Parts: Lists.List<E.Element<C.Msg>> := new Lists.List<E.Element<C.Msg>>(Children);
+  if Model.Last <> '' then
+    Parts.Add(E.Styled<C.Msg>(E.Text<C.Msg>(Model.Last), S.Role.Muted));
+  end if;
+
+  Parts.AddRange(Remaining);
+  return E.Column<C.Msg>(new L.Flow(Gap := G.Points(20), Clip := false), Parts.ToArray());
+end function;
+end unit;

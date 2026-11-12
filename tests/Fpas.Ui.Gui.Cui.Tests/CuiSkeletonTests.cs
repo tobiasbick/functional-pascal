@@ -15,9 +15,10 @@ public sealed class CuiSkeletonTests
         {
             window.Resize(width, 260);
             Draw(); Draw();
-            Check("fill", width - 24, 14);
+            float available = window.Size.Width - 24;
+            Check("fill", available, 14);
             Check("fixed", 40, 40);
-            Check("percent", (width - 24) * .45f, 12);
+            Check("percent", available * .45f, 12);
             Check("zero", 0, 14);
         }
         void Check(string id, float width, float height)

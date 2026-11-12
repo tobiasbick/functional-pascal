@@ -32,12 +32,21 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 - Dropdown menus with native triggers, command states, hints, labels and separators.
 - Context menus attached to existing target components, using the same menu entries.
 - Reactions with model-owned counts and native animation, and native account menus.
+- Speed dial with native floating actions and swipe rows with pointer and horizontal wheel input.
 - Anchored popovers with model-owned visibility and native confirmation questions.
 - Native hover tooltips with optional shortcut key hints.
 - Single-line text fields with native editing, validation text, affixes and password reveal.
 - Search fields with a native clear action and text areas with wrapping and wheel scrolling.
 - Tag inputs, one-time code boxes and native password strength meters.
 - Plain and searchable select lists and bounded number fields with native step buttons.
+- Searchable multi-select with native checkboxes and removable selection chips.
+- Native date range pickers with optional presets and inline date range calendars.
+- Native single-date fields and inline calendars with month navigation.
+- Native RGB palettes and searchable emoji pickers.
+- Native time fields, selection wheels with joined bands, and an analog time dial.
+- Native measurement rulers and adjustable ranges over histogram data.
+- Native file dropzones, uploadable avatars and signature pads with Clear.
+- Native audio knobs, faders with channel meters, and standalone peak and clip meters.
 - Sidebar navigation and edge sheets/drawers.
 - Centered modal dialogs with native action footers and focus return.
 - Underline and pill tabs, breadcrumb links, responsive pagination and steppers.
@@ -56,6 +65,13 @@ arrays and callbacks remain unchanged while retained by the host.
 
 A visible native tooltip appears in `Snapshot().Controls` with role `tooltip`
 and its finalized bounds. The underlying control retains its own identity.
+
+## File selection
+
+Return `Fpas.Ui.Gui.FileDialogs.OpenFile<TMsg>` from the update that handles a browse message. The
+owner window opens CUI's platform dialog between frames. Use its extension
+filter to match the drop target. A confirmed matching path becomes a normal
+application message.
 
 ## Toasts
 

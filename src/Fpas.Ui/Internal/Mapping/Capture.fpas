@@ -1,0 +1,52 @@
+unit Fpas.Ui.Internal.Mapping.Capture;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Internal.MessageMapping as M, System as Sys;
+
+// Maps the native capture controls into a parent message space.
+// ## Type parameters
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `View`: Capture widget to translate.
+// - `Messages`: Application message translator.
+// ## Returns
+// The translated capture widget.
+public function Map<TChild, TParent>(View: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case View of
+    when E.Element.Dropzone(
+      const Id: string, const Drop: function(array of string): TChild,
+      const Browse: Sys.Func<TChild>?, const Settings: Dropzones.Options
+    ):
+      return E.Element<TParent>.Dropzone(
+        Id, function(Paths: array of string): TParent => Messages(Drop(Paths)),
+        M.Factory<TChild, TParent>(Browse, Messages), Settings
+      );
+    when E.Element.AvatarUpload(
+      const Id: string,
+      const Name: string,
+      const Path: string?,
+      const Drop: function(string): TChild,
+      const Browse: Sys.Func<TChild>?,
+      const Size: float,
+      const Enabled: bool
+    ):
+      return E.Element<TParent>.AvatarUpload(
+        Id, Name, Path, function(Image: string): TParent => Messages(Drop(Image)),
+        M.Factory<TChild, TParent>(Browse, Messages), Size, Enabled
+      );
+    when E.Element.SignaturePad(
+      const Id: string,
+      const Change: Sys.Func<Signatures.Signature, TChild>?,
+      const Settings: Signatures.Options
+    ):
+      return E.Element<TParent>.SignaturePad(
+        Id, M.Callback<Signatures.Signature, TChild, TParent>(Change, Messages), Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a capture widget.');
+  end case;
+end function;
+end unit;

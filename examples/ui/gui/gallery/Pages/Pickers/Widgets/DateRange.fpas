@@ -1,0 +1,40 @@
+unit GuiGallery.Pages.Pickers.Widgets.DateRange;
+
+uses
+  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.DateRangePickers as P, Fpas.Ui.DateRangeCalendars as C,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Shows the two original CUI date range fields and inline calendar.
+// ## Parameters
+// - `Model`: Picker and shared stay selections.
+// ## Returns
+// The presets and preset-free fields followed by the linked calendar.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Wrap := true),
+      P.DateRangePicker<State.Msg>(
+        'picker-date-range', Model.DateRange, State.Msg.SetDateRange, new P.Options(Width := 300.0F)
+      ),
+      P.DateRangePicker<State.Msg>(
+        'picker-stay',
+        Model.Stay,
+        State.Msg.SetStay,
+        new P.Options(Width := 300.0F, Presets := false)
+      )
+    ),
+    E.Row<State.Msg>(
+      E.Styled<State.Msg>(
+        E.Column<State.Msg>(
+          new L.Flow(Padding := G.Points(16)),
+          C.DateRangeCalendar<State.Msg>('picker-inline-range', Model.Stay, State.Msg.SetStay)
+        ),
+        S.Role.OutlinedPanel
+      )
+    )
+  );
+end function;
+end unit;

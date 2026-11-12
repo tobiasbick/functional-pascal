@@ -3,11 +3,12 @@ unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.State as State,
+  GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Selects as S,
-  Fpas.Ui.NumberFields as N;
+  Fpas.Ui.NumberFields as N, Fpas.Ui.DatePickers as D;
 
 const Countries: array of S.Item := [
   new S.Item('Canada'), new S.Item('Denmark'), new S.Item('Germany'), new S.Item('Iran'),
@@ -30,7 +31,7 @@ const Languages: array of S.Item := [
 //
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.
-// - `Model`: Model-owned choices and seat count.
+// - `Model`: Model-owned choices, due date, seat count and brand color.
 // - `Wide`: Whether the two native grid columns fit.
 // ## Returns
 // The Pickers section of the Inputs page.
@@ -47,20 +48,25 @@ begin
     'input-language', Languages, Model.Language, State.Msg.SetLanguage,
     new S.Options(Label := 'Language', Placeholder := 'Pick a language', Searchable := true)
   );
+  const Due: E.Element<State.Msg> := D.DatePicker<State.Msg>(
+    'input-due-date', Model.DueDate, State.Msg.SetDueDate, new D.Options(Label := 'Due date')
+  );
   const Seats: E.Element<State.Msg> := N.NumberField<State.Msg>(
     'input-seats', Model.Seats, 0.0, 99.0, State.Msg.SetSeats, new N.Options(Label := 'Seats')
   );
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const Row: L.Flow := new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start);
+  const Brand: E.Element<State.Msg> := BrandColor.View(Model);
   const Fields: array of E.Element<State.Msg> := if Wide then [
       E.Row<State.Msg>(Row, E.Size<State.Msg>(Country, Fill), E.Size<State.Msg>(Language, Fill)),
       E.Row<State.Msg>(
         Row,
-        E.Size<State.Msg>(E.Column<State.Msg>(), Fill),
+        E.Size<State.Msg>(Due, Fill),
         E.Size<State.Msg>(Seats, Fill)
-      )
+      ),
+      Brand
     ]
-    else [Country, Language, Seats]
+    else [Country, Language, Due, Seats, Brand]
     end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)), G.Heading<State.Msg>('Pickers'), G.Card<State.Msg>(16, Fields)

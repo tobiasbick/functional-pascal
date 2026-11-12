@@ -1,0 +1,72 @@
+unit Fpas.Ui.Gui.Internal.Widgets.TimeDial;
+
+uses
+  Fpas.Ui.TimeDials as D, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Context as C, System as Sys, System.Globalization as Culture;
+
+// Draws the native dial and publishes changes to its time.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable dial identity.
+// - `Value`: Model-owned time.
+// - `OnChange`: Maps a proposed time to a message.
+// - `Size`: Face diameter or zero for CUI's default.
+// - `Enabled`: Whether the dial accepts input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
+  Size: float; Enabled: bool
+);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Hours: string := D.SelectorId(Id, false);
+  const Minutes: string := D.SelectorId(Id, true);
+  const Face: string := D.FaceId(Id);
+  const HourToken: string := C.Token('time-selector', Hours);
+  const MinuteToken: string := C.Token('time-selector', Minutes);
+  const Focus: int := if C.WantsFocus<TMsg>(Frame, Hours, HourToken, Accept)
+      or C.WantsFocus<TMsg>(Frame, Id, HourToken, Accept) then 1
+    elsif C.WantsFocus<TMsg>(Frame, Minutes, MinuteToken, Accept) then 2
+    else 0
+    end if;
+  const Proposed: Sys.TimeOnly := Frame.Window.TimeDial(
+    C.Token('time-dial', Id), Value, Size, Accept, Focus,
+    if Frame.PaintingClosed then null else HourToken end if, MinuteToken, C.Token('time-face', Face)
+  );
+  if Proposed.Ticks <> Value.Ticks then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+  const Time: string := Value.ToString('HH:mm', Culture.CultureInfo.InvariantCulture);
+  Frame.Controls.Add(
+    new App.Control(Id, 'Time dial', 'time-dial', new Cui.CuiRectangle(), Accept, Value := Time)
+  );
+  Frame.Controls.Add(
+    new App.Control(
+      Hours,
+      'Hours',
+      'time-selector',
+      new Cui.CuiRectangle(),
+      Accept,
+      Value := Value.Hour.ToString()
+    )
+  );
+  Frame.Controls.Add(
+    new App.Control(
+      Minutes,
+      'Minutes',
+      'time-selector',
+      new Cui.CuiRectangle(),
+      Accept,
+      Value := Value.Minute.ToString()
+    )
+  );
+  Frame.Controls.Add(
+    new App.Control(Face, 'Clock face', 'time-face', new Cui.CuiRectangle(), Accept)
+  );
+end procedure;
+end unit;

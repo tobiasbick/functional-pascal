@@ -1,0 +1,176 @@
+unit GalleryAudioContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
+  System.Threading as Threads, System.Globalization as Culture;
+
+// Exercises the original synth and mixer in the published gallery.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the audio page capture.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    Phase := Next.Model.Audio.Phase;
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Scroll <> 0.0F then
+      Window.Wheel(0.0F, Scroll);
+      Scroll := 0.0F;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'The Audio page closed unexpectedly.');
+  end procedure;
+
+  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Bounds.Width > 0.0F and Bounds.Height > 0.0F, 'Missing native geometry for ' + Id);
+    X := Bounds.X + Bounds.Width / 2.0F;
+    Y := Bounds.Y + Bounds.Height / 2.0F;
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Scroll: float := 0.0F;
+  var PendingKey: int := 0;
+  var Target: string := '';
+  var Phase: int := 1;
+  const Cutoff: string := 'audio-cutoff';
+  const Pan: string := 'audio-pan';
+  const Kick: string := 'audio-kick';
+  const Snare: string := 'audio-snare';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Audio', 1201, 800, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Audio),
+    Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.HasText(Session, 'Synth') and A.Control(Session, Cutoff).Value = '1800'
+    and A.Control(Session, 'audio-resonance').Value = '0.3'
+    and A.Control(Session, 'audio-attack').Value = '12'
+    and A.Control(Session, Pan).Value = '0.15'
+    and A.Control(Session, 'audio-master').Bounds.Width >= 240.0F,
+    'The synth must show the original knob values and master meter.'
+  );
+  const Channels: array of string := ['kick', 'snare', 'bass', 'keys', 'vocals', 'fx'];
+  const Gains: array of string := ['-4', '-9', '0', '-15', '-6', '-2'];
+  for Index: int := 0 to Channels.Length - 1 do
+    const Strip: Gui.Control := A.Control(Session, 'audio-' + Channels[Index]);
+    A.Check(Strip.Value = Gains[Index] and Strip.Bounds.Height = 180.0F, 'Unexpected mixer strip.');
+  end for;
+
+  Session.CapturePng(Capture + '.audio.png');
+  Window.Resize(900, 800);
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Kick).Bounds.Y > A.Control(Session, 'audio-master').Bounds.Y,
+    'The mixer must wrap below the synth when the cards cannot fit side by side.'
+  );
+  Session.CapturePng(Capture + '.audio-wrap.png');
+  Window.Resize(1201, 800);
+  Step(Session);
+  Step(Session);
+
+  Focus(Session, Cutoff);
+  Key(Session, 5);
+  A.Check(
+    Sys.MathF.Abs(
+      Sys.Single.Parse(
+        A.Control(Session, Cutoff).Value,
+        Culture.CultureInfo.InvariantCulture
+      ) - 1000.0F
+    ) < 0.01F,
+    'Delete must restore the logarithmic cutoff reset.'
+  );
+
+  Aim(Session, Pan);
+  Button := 1;
+  Step(Session);
+  Y := Y - 30.0F;
+  Step(Session);
+  Button := 0;
+  Step(Session);
+  A.Check(
+    Sys.Single.Parse(
+      A.Control(Session, Pan).Value,
+      Culture.CultureInfo.InvariantCulture
+    ) > 0.4F,
+    'Dragging the pan knob upward must increase its value.'
+  );
+
+  Focus(Session, Kick);
+  Aim(Session, Kick);
+  Scroll := 1.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(A.Control(Session, Kick).Value <> '-4', 'The focused fader must receive the wheel.');
+  Key(Session, 11);
+  A.Check(
+    A.Control(Session, Kick).Value = '-48' and A.Control(Session, Snare).Value = '-9',
+    'Home must move only the focused fader to its lower bound.'
+  );
+
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Audio));
+  const StartPhase: int := Phase;
+  const Deadline: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(2.0);
+  while Phase = StartPhase and Sys.DateTime.UtcNow < Deadline do
+    Threads.Thread.Sleep(16);
+    Step(Session);
+  end while;
+
+  A.Check(Phase <> StartPhase, 'Entering Audio must start the synthetic signal.');
+  A.Check(A.Control(Session, Kick).Value = '-48', 'Navigation must preserve the mixer value.');
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  const StoppedPhase: int := Phase;
+  Threads.Thread.Sleep(40);
+  Step(Session);
+  A.Check(Phase = StoppedPhase, 'Leaving Audio must cancel its background signal.');
+end procedure;
+end unit;

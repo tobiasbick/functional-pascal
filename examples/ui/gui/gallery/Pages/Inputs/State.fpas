@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Inputs.State;
 
 uses
-  GuiGallery.Shared.State as Demo;
+  GuiGallery.Shared.State as Demo, Fpas.Ui.Graphics as G, System as Sys;
 
 // State owned by this gallery feature.
 public type Model = record
@@ -19,8 +19,12 @@ public type Model = record
   public Country: int := 2;
   // Current language, or minus one before selection.
   public Language: int := -1;
+  // Due date shared by the date field and standalone calendar.
+  public DueDate: Sys.DateOnly? := new Sys.DateOnly(2026, 11, 14);
   // Bounded seat count.
   public Seats: double := 3.0;
+  // Selected brand swatch.
+  public BrandColor: G.Color := new G.Color(119, 71, 255);
 end record;
 
 // Messages handled by this gallery feature.
@@ -39,8 +43,12 @@ public type Msg = variant
   SetCountry(Index: int);
   // Select a language.
   SetLanguage(Index: int);
+  // Select the due date from either calendar.
+  SetDueDate(Value: Sys.DateOnly);
   // Adjust the seat count.
   SetSeats(Value: double);
+  // Select a new brand swatch.
+  SetBrandColor(Value: G.Color);
   // A harmless preview activation.
   Preview;
   // Propose a change to shared demo values.

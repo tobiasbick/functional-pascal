@@ -1,0 +1,116 @@
+unit Fpas.Ui.EmojiPickers;
+
+uses Fpas.Ui.Elements as E;
+
+// Model-owned state for the native emoji palette.
+public type State = record
+  // Recent emoji, newest first and space separated, up to 255 UTF-8 bytes.
+  public Recent: string := '';
+  // Skin tone from zero (default) through five (dark).
+  public Tone: int := 0;
+end record;
+
+// Native palette changes offered to the application.
+public type Change = record
+  // Updated recent emoji and skin tone.
+  public Value: State;
+  // Selected emoji, or null for a tone change.
+  public Emoji: string? := null;
+end record;
+
+// Presentation and input options for the native palette.
+public type Options = record
+  // Logical width. Zero selects CUI's default.
+  public Width: float := 0.0F;
+  // Logical grid height. Zero selects CUI's default.
+  public Height: float := 0.0F;
+  // Logical glyph size. Zero selects CUI's default.
+  public Size: float := 0.0F;
+  // Optional search placeholder.
+  public Placeholder: string := '';
+  // Optional caption when the search returns no results.
+  public EmptyText: string := '';
+  // Optional preview caption before an emoji is highlighted.
+  public Hint: string := '';
+  // Whether to show search.
+  public Search: bool := true;
+  // Whether to show the emoji preview.
+  public Preview: bool := true;
+  // Whether to show the skin tone selector.
+  public ToneSelector: bool := true;
+  // Whether the picker accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Gets the search field's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// ## Returns
+// The search part identity when shown.
+public function SearchId(Id: string): string;
+begin
+  return Id + '/search';
+end function;
+
+// Gets the emoji grid's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// ## Returns
+// The keyboard and pointer grid identity.
+public function GridId(Id: string): string;
+begin
+  return Id + '/grid';
+end function;
+
+// Gets the skin tone selector's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// ## Returns
+// The tone selector identity when shown.
+public function ToneSelectorId(Id: string): string;
+begin
+  return Id + '/tones';
+end function;
+
+// Gets a skin tone choice's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// - `Tone`: Native tone index from zero through five.
+// ## Returns
+// The choice identity while the tone selector is expanded.
+public function ToneId(Id: string; Tone: int): string;
+requires Tone >= 0 and Tone <= 5;
+begin
+  return Id + '/tone/' + Tone.ToString();
+end function;
+
+// Gets an emoji group tab's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// - `Group`: Zero for recent, or one through nine for the native Unicode groups.
+// ## Returns
+// The group tab identity when shown.
+public function GroupId(Id: string; Group: int): string;
+requires Group >= 0 and Group <= 9;
+begin
+  return Id + '/group/' + Group.ToString();
+end function;
+
+// Builds CUI's native emoji palette for inline use or placement in a popover.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Value`: Model-owned history and tone.
+// - `OnChange`: Maps a selection or tone proposal to a message.
+// - `Settings`: Optional layout, labels and input settings.
+// ## Returns
+// The graphical emoji picker.
+public function EmojiPicker<TMsg>(
+  Id: string; Value: State; OnChange: function(Change): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.EmojiPicker(Id, Value, OnChange, Settings ?? new Options());
+end function;
+end unit;

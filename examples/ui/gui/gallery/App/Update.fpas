@@ -8,6 +8,14 @@ uses
   GuiGallery.Pages.Lists.State as Lists,
   GuiGallery.Pages.Overlays.State as Overlays,
   GuiGallery.Pages.Actions.State as Actions,
+  GuiGallery.Pages.Capture.State as Capture,
+  GuiGallery.Pages.Capture.Update as CaptureUpdate,
+  GuiGallery.Pages.Audio.State as Audio,
+  GuiGallery.Pages.Audio.Update as AudioUpdate,
+  GuiGallery.Pages.Audio.Clock as AudioClock,
+  System as Sys,
+  GuiGallery.Pages.Pickers.State as Pickers,
+  GuiGallery.Pages.Pickers.Update as PickersUpdate,
   GuiGallery.Pages.SmartInputs.State as SmartInputs,
   GuiGallery.Pages.Disclosure.State as Disclosure,
   GuiGallery.Pages.Buttons.Update as ButtonsUpdate,
@@ -158,6 +166,15 @@ begin
           SmartInputs := Child.Model;
         end with, Child.Commands
       );
+    when G.Msg.Pickers(const Value: Pickers.Msg):
+      const Child: Mvu.Transition<Pickers.Model, G.Msg> := C.MapTransition<Pickers.Model, Pickers.Msg, G.Msg>(
+        PickersUpdate.Update(State.Pickers, Value), G.Msg.Pickers, 'pickers'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Pickers := Child.Model;
+        end with, Child.Commands
+      );
     when G.Msg.Disclosure(const Value: Disclosure.Msg):
       const Child: Mvu.Transition<Disclosure.Model, G.Msg> := C.MapTransition<Disclosure.Model, Disclosure.Msg, G.Msg>(
         DisclosureUpdate.Update(State.Disclosure, Value),
@@ -169,7 +186,31 @@ begin
           Disclosure := Child.Model;
         end with, Child.Commands
       );
+    when G.Msg.Capture(const Value: Capture.Msg):
+      const Child: Mvu.Transition<Capture.Model, G.Msg> := C.MapTransition<Capture.Model, Capture.Msg, G.Msg>(
+        CaptureUpdate.Update(State.Capture, Value), G.Msg.Capture, 'capture'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Capture := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Audio(const Value: Audio.Msg):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Audio := AudioUpdate.Update(State.Audio, Value);
+        end with, []
+      );
     when G.Msg.Show(const Value: G.Page):
+      const Commands: array of Mvu.Command<G.Msg> := if Value = State.Active then []
+        elsif Value = G.Page.Audio then [
+          AudioClock.Start<G.Msg>(
+            G.Msg.Audio(Audio.Msg.Tick), function(Error: Sys.Exception): G.Msg => G.Msg.Preview
+          )
+        ]
+        elsif State.Active = G.Page.Audio then [Mvu.CancelBackground<G.Msg>(AudioClock.Id)]
+        else []
+        end if;
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
           Active := Value;
@@ -182,7 +223,10 @@ begin
           Disclosure := State.Disclosure with
             BranchQuestion := false;
           end with;
-        end with, []
+          SmartInputs := State.SmartInputs with
+            EmojiOpen := false;
+          end with;
+        end with, Commands
       );
     when G.Msg.SetDrawer(const Open: bool):
       return new Mvu.Transition<G.Model, G.Msg>(

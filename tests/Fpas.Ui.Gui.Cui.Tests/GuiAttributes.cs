@@ -18,6 +18,13 @@ internal sealed class GuiTheoryAttribute : TheoryAttribute
     public GuiTheoryAttribute() => Skip = GuiAvailability.SkipReason;
 }
 
+internal sealed class WindowsGuiFactAttribute : FactAttribute
+{
+    public WindowsGuiFactAttribute() => Skip = !OperatingSystem.IsWindows()
+        ? "This OS event-path check uses the Windows shell and common dialog."
+        : GuiAvailability.SkipReason;
+}
+
 internal sealed class X11GuiFactAttribute : FactAttribute
 {
     public X11GuiFactAttribute() => Skip = !OperatingSystem.IsLinux()

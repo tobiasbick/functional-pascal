@@ -1,0 +1,53 @@
+unit GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram;
+
+uses
+  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.RulerSliders as R, Fpas.Ui.HistogramSliders as H, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Shows the original measurement rulers and price histogram.
+// ## Parameters
+// - `Model`: Model-owned measurements and price interval.
+// ## Returns
+// The two native rulers and the native histogram card.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Height: E.Element<State.Msg> := R.RulerSlider<State.Msg>(
+    'picker-height', 'Height', Model.Height, 120.0F, 220.0F, State.Msg.SetHeight,
+    new R.Options(UnitLabel := 'cm')
+  );
+  const Temperature: E.Element<State.Msg> := R.RulerSlider<State.Msg>(
+    'picker-temperature', 'Temperature', Model.Temperature, 10.0F, 30.0F, State.Msg.SetTemperature,
+    new R.Options(
+      Step := 0.5F,
+      MajorEvery := 4,
+      Spacing := 14.0F,
+      DecimalPlaces := 1,
+      UnitLabel := '°C'
+    )
+  );
+  const Bins: array of float := [
+    2.0F, 4.0F, 7.0F, 12.0F, 18.0F, 26.0F, 31.0F, 29.0F, 34.0F, 40.0F, 37.0F, 30.0F,
+    24.0F, 22.0F, 18.0F, 15.0F, 11.0F, 9.0F, 7.0F, 5.0F, 4.0F, 3.0F, 2.0F, 1.0F
+  ];
+  const Price: E.Element<State.Msg> := H.HistogramSlider<State.Msg>(
+    'picker-price', 'Price', Bins, Model.Price, 0.0F, 240.0F, State.Msg.SetPrice,
+    new H.Options(Prefix := '$')
+  );
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start),
+    E.Size<State.Msg>(
+      E.Column<State.Msg>(new L.Flow(Gap := G.Points(20)), Height, Temperature),
+      Fill
+    ),
+    E.Size<State.Msg>(
+      G.Card<State.Msg>(
+        6,
+        [Price, E.Styled<State.Msg>(E.Text<State.Msg>('1,204 listings in range'), S.Role.Caption)]
+      ),
+      Fill
+    )
+  );
+end function;
+end unit;

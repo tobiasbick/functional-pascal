@@ -51,13 +51,24 @@ public sealed partial class CuiWindow
     /// <param name="framed">Whether to draw a border.</param>
     /// <param name="wrap">Whether a horizontal group continues on another line.</param>
     public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed, bool wrap)
+        => BeginGroup(horizontal, padding, gap, alignment, framed, wrap, !wrap);
+
+    /// <summary>Opens a native host layout container with explicit clipping.</summary>
+    /// <param name="horizontal">Whether its main axis is horizontal.</param>
+    /// <param name="padding">Logical inset.</param>
+    /// <param name="gap">Logical separation.</param>
+    /// <param name="alignment">Default=0, start=1, center=2, end=3, stretch=4.</param>
+    /// <param name="framed">Whether to draw a border.</param>
+    /// <param name="wrap">Whether the row wraps across lines.</param>
+    /// <param name="clip">Whether to clip children at the container bounds.</param>
+    public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed, bool wrap, bool clip)
     {
         CheckLayoutOptions(padding, gap);
         ArgumentOutOfRangeException.ThrowIfNegative(alignment);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 4);
         if (wrap && !horizontal) throw new ArgumentException("Wrapping requires a horizontal group.", nameof(wrap));
         int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment,
-            framed ? 1 : 0, wrap ? 1 : 0);
+            framed ? 1 : 0, wrap ? 1 : 0, clip ? 1 : 0);
         layouts.Add(new(Layout.Group, Node: node));
     }
 
@@ -202,5 +213,14 @@ public sealed partial class CuiWindow
 
     /// <summary>Injects wheel movement for integration tests.</summary>
     /// <param name="delta">Vertical movement in lines.</param>
-    public void Wheel(float delta) { CheckFrame(); NativeMethods.InputScroll(context, 0, delta); }
+    public void Wheel(float delta) => Wheel(0, delta);
+
+    /// <summary>Supplies horizontal and vertical wheel input to CUI.</summary>
+    /// <param name="horizontal">Horizontal movement in native wheel lines.</param>
+    /// <param name="vertical">Vertical movement in native wheel lines.</param>
+    public void Wheel(float horizontal, float vertical)
+    {
+        CheckFrame();
+        NativeMethods.InputScroll(context, horizontal, vertical);
+    }
 }

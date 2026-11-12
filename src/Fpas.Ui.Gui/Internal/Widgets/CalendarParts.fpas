@@ -1,0 +1,78 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CalendarParts;
+
+uses
+  Fpas.Ui.Calendars as Calendar, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, System as Sys, System.Globalization as Culture;
+
+function Kind(Part: int): string;
+begin
+  return if Part >= 0 then 'calendar-day' else 'calendar-month' end if;
+end function;
+
+function Identity(Id: string; Part: int): string;
+begin
+  return if Part >= 0 then Calendar.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
+    else Calendar.MonthId(Id, Part = -9)
+    end if;
+end function;
+
+// Maps a native calendar part to its snapshot token.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Part`: Native day number or navigation code.
+// ## Returns
+// The native tracking token for this frame.
+public function Token(Id: string; Part: int): string;
+begin
+  return C.Token(Kind(Part), Identity(Id, Part));
+end function;
+
+function Iso(Day: Sys.DateOnly): string;
+begin
+  return Day.ToString('yyyy-MM-dd', Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Publishes selection changes and the native calendar parts.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing state.
+// - `Id`: Calendar or picker identity.
+// - `Label`: Caption of the control.
+// - `Role`: Root snapshot role.
+// - `Value`: Model-owned selection.
+// - `Enabled`: Whether the control accepts input.
+// - `Result`: Native selection and visible parts.
+// - `OnChange`: Maps a chosen date to a message.
+public procedure Publish<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Role: string; Value: Sys.DateOnly?; Enabled: bool;
+  Result: Cui.CuiCalendarResult; OnChange: function(Sys.DateOnly): TMsg
+);
+begin
+  const Chosen: Sys.DateOnly? := Result.Value;
+  if Chosen <> null and Chosen <> Value then
+    Frame.Messages.Add(OnChange(Chosen ?? Sys.DateOnly.MinValue));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+  const Display: string := if Value = null then '' else Iso(Value ?? Sys.DateOnly.MinValue) end if;
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Label, Role, new Cui.CuiRectangle(), Enabled, Value := Display
+    )
+  );
+  for Part: int in Result.VisibleParts do
+    const Caption: string := if Part >= 0 then Iso(Sys.DateOnly.FromDayNumber(Part))
+      elsif Part = -8 then 'Previous month'
+      else 'Next month'
+      end if;
+    Frame.Controls.Add(
+      new App.Control(
+        Identity(Id, Part), Caption, Kind(Part), new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end for;
+end procedure;
+end unit;

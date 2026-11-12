@@ -1,0 +1,53 @@
+unit GuiGallery.Pages.Pickers.Widgets.WheelsAndDial;
+
+uses
+  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.TimeDials as D, Fpas.Ui.WheelPickers as W, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, System.Globalization as Culture, System.Collections.Generic as Generic;
+
+function Numbered(First: int; Count: int): array of string;
+begin
+  const Captions: Generic.List<string> := new Generic.List<string>(Count);
+  for Index: int := 0 to Count - 1 do
+    Captions.Add((First + Index).ToString(Culture.CultureInfo.InvariantCulture));
+  end for;
+
+  return Captions.ToArray();
+end function;
+
+// Shows the original joined date reel and analog dial.
+// ## Parameters
+// - `Model`: Model-owned wheel indices and dial time.
+// ## Returns
+// The three native wheels and the time dial.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Months: array of string := [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const Reel: E.Element<State.Msg> := E.Styled<State.Msg>(
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Padding := G.Points(8)),
+      W.WheelPicker<State.Msg>(
+        'picker-wheel-day', Numbered(1, 31), Model.Day, State.Msg.SetDay,
+        new W.Options(Width := 64.0F, Loop := true, JoinRight := true)
+      ),
+      W.WheelPicker<State.Msg>(
+        'picker-wheel-month', Months, Model.Month, State.Msg.SetMonth,
+        new W.Options(Width := 128.0F, Loop := true, JoinLeft := true, JoinRight := true)
+      ),
+      W.WheelPicker<State.Msg>(
+        'picker-wheel-year', Numbered(2020, 12), Model.Year, State.Msg.SetYear,
+        new W.Options(Width := 80.0F, JoinLeft := true)
+      )
+    ),
+    S.Role.OutlinedPanel
+  );
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(32), Align := L.Alignment.Center),
+    Reel,
+    D.TimeDial<State.Msg>('picker-time-dial', Model.DialTime, State.Msg.SetDialTime, Size := 232.0F)
+  );
+end function;
+end unit;

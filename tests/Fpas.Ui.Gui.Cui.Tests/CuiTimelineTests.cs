@@ -19,7 +19,7 @@ public sealed class CuiTimelineTests
             window.Resize(width, 400);
             Draw(false); Draw(false);
             var regular = window.GetControlRectangle("entry");
-            Assert.Equal(width - 24, regular.Width);
+            Assert.Equal(window.Size.Width - 24, regular.Width);
             Assert.False(window.ControlFocused("entry"));
             if (width == 640) wideHeight = regular.Height;
             else Assert.True(regular.Height > wideHeight);

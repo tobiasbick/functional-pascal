@@ -1,0 +1,23 @@
+unit GuiGallery.Pages.Pickers.Widgets.Time;
+
+uses
+  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.TimePickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Shows the original two time fields.
+// ## Parameters
+// - `Model`: Model-owned start and end times.
+// ## Returns
+// The 24-hour and 12-hour fields with CUI's original spacing.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(12), Wrap := true),
+    P.TimePicker<State.Msg>('picker-start-time', Model.StartTime, State.Msg.SetStartTime),
+    P.TimePicker<State.Msg>(
+      'picker-end-time', Model.EndTime, State.Msg.SetEndTime,
+      new P.Options(TwelveHour := true, MinuteStep := 15)
+    )
+  );
+end function;
+end unit;

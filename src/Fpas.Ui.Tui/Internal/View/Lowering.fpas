@@ -234,6 +234,8 @@ public function Prepare<TMsg>(
         _,
         _,
         _
+      ), Ui.Element.LevelMeter(
+        _, _, _, _
       ), Ui.Element.Meter(
         _,
         _,
@@ -245,6 +247,28 @@ public function Prepare<TMsg>(
       when Ui.Element.Dialog(_, _, _, _, _, _), Ui.Element.ActionFooter(_):
         raise new Sys.NotSupportedException(
           'Dialogs and action footers require the graphical profile.'
+        );
+      when Ui.Element.RangeCalendar(_, _, _, _, _), Ui.Element.RangePicker(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Date range calendars and pickers require the graphical profile.'
+        );
+      when Ui.Element.Calendar(_, _, _, _), Ui.Element.DatePicker(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Calendars and date pickers require the graphical profile.'
+        );
+      when Ui.Element.TimePicker(_, _, _, _), Ui.Element.WheelPicker(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.TimeDial(_, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Time pickers, wheel pickers and time dials require the graphical profile.'
+        );
+      when Ui.Element.ColorPicker(_, _, _, _), Ui.Element.EmojiPicker(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Color and emoji pickers require the graphical profile.'
         );
       when Ui.Element.SelectInput(_, _, _, _, _), Ui.Element.NumberField(_, _, _, _, _, _):
         raise new Sys.NotSupportedException(
@@ -266,6 +290,17 @@ public function Prepare<TMsg>(
       when Ui.Element.ReactionGroup(_, _, _, _), Ui.Element.AccountMenu(_, _, _, _):
         raise new Sys.NotSupportedException(
           'Reactions and user menus require the graphical profile.'
+        );
+      when Ui.Element.SpeedDialAction(_, _, _, _), Ui.Element.SwipeRow(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.MultiSelectInput(_, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Speed dial, swipe rows and multi-select require the graphical profile.'
         );
       when Ui.Element.CheckboxAction(
         _,
@@ -296,8 +331,41 @@ public function Prepare<TMsg>(
         _,
         _,
         _
-      ), Ui.Element.RangeSliderAction(_, _, _, _, _, _, _):
+      ), Ui.Element.RangeSliderAction(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Knob(_, _, _, _, _, _, _), Ui.Element.Fader(
+        _, _, _, _, _, _, _
+      ), Ui.Element.RulerSlider(_, _, _, _, _, _, _), Ui.Element.HistogramSlider(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
         raise new Sys.NotSupportedException('Sliders require the graphical profile.');
+      when Ui.Element.Dropzone(_, _, _, _), Ui.Element.AvatarUpload(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.SignaturePad(
+        _, _, _
+      ):
+        raise new Sys.NotSupportedException(
+          'Dropzone, avatar upload and signature pad require the graphical profile.'
+        );
       when Ui.Element.ChipAction(_, _, _, _, _, _), Ui.Element.RatingAction(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Chip and rating require the graphical profile.');
       when Ui.Element.TabStrip(

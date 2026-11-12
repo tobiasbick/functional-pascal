@@ -1,0 +1,59 @@
+unit Fpas.Ui.SignaturePads;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, System as Sys;
+
+// A point in CUI's logical signature drawing space.
+public type Point = record
+  // Horizontal coordinate.
+  public X: float;
+  // Vertical coordinate.
+  public Y: float;
+end record;
+
+// Detached signature points and stroke boundaries.
+public type Signature = record
+  // Points in recording order.
+  public Points: array of Point;
+  // Exclusive end point index of each stroke.
+  public StrokeEnds: array of int;
+end record;
+
+// Display and input settings for a native signature pad.
+public type Options = record
+  // Height in logical points. Zero selects the native default.
+  public Height: float := 0.0F;
+  // Literal instruction. Empty selects the native default.
+  public Placeholder: string := '';
+  // Optional straight-alpha ink color.
+  public Ink: G.Color? := null;
+  // Whether the pad accepts drawing and clearing.
+  public Enabled: bool := true;
+end record;
+
+// Addresses the native Clear button when the pad has strokes.
+// ## Parameters
+// - `Id`: Stable pad identity.
+// ## Returns
+// The focus and inspection identity for the button.
+public function ClearId(Id: string): string;
+begin
+  return Id + '/clear';
+end function;
+
+// Builds a CUI-owned drawing pad with an embedded Clear button.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable pad identity.
+// - `OnChange`: Optional callback receiving detached points on drawing and clearing.
+// - `Settings`: Optional geometry, ink and input permission.
+// ## Returns
+// The graphical signature pad.
+public function SignaturePad<TMsg>(
+  Id: string; OnChange: Sys.Func<Signature, TMsg>? := null; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SignaturePad(Id, OnChange, Settings ?? new Options());
+end function;
+end unit;

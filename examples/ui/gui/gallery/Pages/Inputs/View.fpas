@@ -6,6 +6,7 @@ uses
   GuiGallery.Pages.Inputs.Widgets.TextField as Fields,
   GuiGallery.Pages.Inputs.Widgets.CredentialFields as Credentials,
   GuiGallery.Pages.Inputs.Widgets.PickerFields as Pickers,
+  GuiGallery.Pages.Inputs.Widgets.InlineCalendar as InlineCalendar,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
@@ -23,7 +24,8 @@ begin
     new L.Flow(Gap := G.Points(20)),
     Fields.Inputs(Model, Data, Wide),
     Credentials.View(Model, Data),
-    Pickers.View(Model, Data, Wide)
+    Pickers.View(Model, Data, Wide),
+    InlineCalendar.View(Model)
   );
 end function;
 end unit;

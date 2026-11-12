@@ -1,6 +1,8 @@
 unit Fpas.Ui.Internal.SliderRules;
 
-uses Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.Sliders as S, System as Sys;
+uses
+  Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.Sliders as S, Fpas.Ui.RulerSliders as Rulers,
+  Fpas.Ui.HistogramSliders as Histograms, System as Sys;
 
 // Checks finite ordered bounds and endpoints before calling the native slider.
 //
@@ -44,5 +46,64 @@ begin
   then
     Rules.Reject(Location, 'A slider needs a finite step and zero through six decimal places.');
   end if;
+end procedure;
+
+// Checks ruler options against the native tape's numeric limits.
+// ## Parameters
+// - `Settings`: Tick, size and display settings.
+// - `Minimum`: Validated lower bound.
+// - `Maximum`: Validated upper bound.
+// - `Location`: Control path for diagnostics.
+public procedure CheckRuler(Settings: Rulers.Options; Minimum: float; Maximum: float; Location: string);
+begin
+  const Step: float := Settings.Step;
+  if not Sys.Single.IsFinite(Step * 60.0F) or Step <= 0.0F
+    or (Maximum - Minimum) / Step > 8388608.0F
+    or not Sys.Single.IsFinite(Minimum - Step * 3.0F)
+    or not Sys.Single.IsFinite(Maximum + Step * 3.0F)
+  then
+    Rules.Reject(
+      Location,
+      'The ruler step must keep the native tick indices and values representable.'
+    );
+  end if;
+
+  if Settings.MajorEvery < 1 or not Sys.Single.IsFinite(cast<float>(Settings.MajorEvery) * Step)
+    or not Sys.Single.IsFinite(Settings.Spacing) or Settings.Spacing < 1.0F
+    or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
+    or Settings.Width / Settings.Spacing > 8388608.0F
+    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
+  then
+    Rules.Reject(Location, 'Invalid ruler dimensions, major tick interval or decimal precision.');
+  end if;
+
+  Rules.CheckText(Settings.UnitLabel, Location + '/unit');
+end procedure;
+
+// Checks histogram data and display options.
+// ## Parameters
+// - `Bins`: Ordered bin heights.
+// - `Settings`: Height, endpoint display and input settings.
+// - `Location`: Control path for diagnostics.
+public procedure CheckHistogram(Bins: array of float; Settings: Histograms.Options; Location: string);
+begin
+  if Bins.Length = 0 then
+    Rules.Reject(Location, 'A histogram needs at least one bin.');
+  end if;
+
+  for Bin: float in Bins do
+    if not Sys.Single.IsFinite(Bin) or Bin < 0.0F then
+      Rules.Reject(Location, 'Histogram bin heights must be finite and nonnegative.');
+    end if;
+  end for;
+
+  if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F
+    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
+  then
+    Rules.Reject(Location, 'Invalid histogram height or decimal precision.');
+  end if;
+
+  Rules.CheckText(Settings.Prefix, Location + '/prefix');
+  Rules.CheckText(Settings.Suffix, Location + '/suffix');
 end procedure;
 end unit;

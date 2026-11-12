@@ -1,0 +1,37 @@
+unit GuiGallery.Pages.Actions.Widgets.SpeedDial;
+
+uses
+  GuiGallery.Pages.Actions.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.SpeedDials as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  System as Sys;
+
+// Shows the CUI gallery's floating Create actions.
+// ## Parameters
+// - `Model`: Current Actions state.
+// ## Returns
+// The original dial and its chosen-action caption.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Items: array of D.Item := [
+    new D.Item('New note', Sys.Char.ConvertFromUtf32($E0CC)),
+    new D.Item('Upload image', Sys.Char.ConvertFromUtf32($E0F6)),
+    new D.Item('Record memo', Sys.Char.ConvertFromUtf32($E118))
+  ];
+  const Trigger: E.Element<State.Msg> := D.SpeedDial<State.Msg>(
+    'action-speed-dial', Items, State.Msg.DialChoice, new D.Options(Tooltip := 'Create')
+  );
+  const Row: array of E.Element<State.Msg> := if Model.DialChoice < 0 then [Trigger]
+    else [
+      Trigger,
+      E.Styled<State.Msg>(E.Text<State.Msg>(Items[Model.DialChoice].Label), S.Role.Muted)
+    ]
+    end if;
+  return E.Size<State.Msg>(
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Wrap := true),
+      Row
+    ),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(80)))
+  );
+end function;
+end unit;

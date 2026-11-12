@@ -79,7 +79,28 @@ begin
       _,
       _,
       _
-    ), E.Element.RangeSliderAction(_, _, _, _, _, _, _):
+    ), E.Element.RangeSliderAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Dropzone(_, _, _, _), E.Element.AvatarUpload(
+      _, _, _, _, _, _, _
+    ), E.Element.Knob(_, _, _, _, _, _, _), E.Element.Fader(
+      _, _, _, _, _, _, _
+    ), E.Element.RulerSlider(_, _, _, _, _, _, _), E.Element.HistogramSlider(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ):
       return true;
     when E.Element.Sized(
       const Child: E.Element<TMsg>,

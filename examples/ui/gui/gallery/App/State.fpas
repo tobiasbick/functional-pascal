@@ -8,6 +8,9 @@ uses
   GuiGallery.Pages.Lists.State as Lists,
   GuiGallery.Pages.Overlays.State as Overlays,
   GuiGallery.Pages.Actions.State as Actions,
+  GuiGallery.Pages.Capture.State as Capture,
+  GuiGallery.Pages.Audio.State as Audio,
+  GuiGallery.Pages.Pickers.State as Pickers,
   GuiGallery.Pages.SmartInputs.State as SmartInputs,
   GuiGallery.Pages.Disclosure.State as Disclosure,
   GuiGallery.Shared.State as Demo;
@@ -36,6 +39,12 @@ public type Page = enum: byte
   Disclosure;
   // Native alerts, progress and activity indicators.
   Feedback;
+  // The extended selection pickers.
+  Pickers;
+  // Synth and mixer controls.
+  Audio;
+  // File drop, avatar upload and signature examples.
+  Capture;
 end enum;
 
 // Application state with one owner per feature.
@@ -60,10 +69,16 @@ public type Model = record
   public Overlays: Overlays.Model := new Overlays.Model();
   // State owned by the Actions page.
   public Actions: Actions.Model := new Actions.Model();
+  // State owned by the extended Pickers page.
+  public Pickers: Pickers.Model := new Pickers.Model();
   // State owned by the SmartInputs page.
   public SmartInputs: SmartInputs.Model := new SmartInputs.Model();
   // State owned by the Disclosure page.
   public Disclosure: Disclosure.Model := new Disclosure.Model();
+  // State owned by the Audio page.
+  public Audio: Audio.Model := new Audio.Model();
+  // State owned by the Capture page.
+  public Capture: Capture.Model := new Capture.Model();
 end record;
 
 // Application navigation and typed child messages.
@@ -90,9 +105,15 @@ public type Msg = variant
   Overlays(Value: Overlays.Msg);
   // Route an action to the Actions slice.
   Actions(Value: Actions.Msg);
+  // Route an action to the Pickers slice.
+  Pickers(Value: Pickers.Msg);
   // Route an action to the SmartInputs slice.
   SmartInputs(Value: SmartInputs.Msg);
   // Route an action to the Disclosure slice.
   Disclosure(Value: Disclosure.Msg);
+  // Route an action to the Audio slice.
+  Audio(Value: Audio.Msg);
+  // Route an action to the Capture slice.
+  Capture(Value: Capture.Msg);
 end variant;
 end unit;

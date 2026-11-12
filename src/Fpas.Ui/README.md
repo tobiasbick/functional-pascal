@@ -49,6 +49,8 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Alerts, progress bars, spinners, meters, rings, skeletons and timeline entries | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
+| Dropzones, avatar uploads and signature pads | | | Yes |
+| Audio knobs, faders and level meters | | | Yes |
 | Selection chips, whole-star ratings and wrapping rows | | | Yes |
 | CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
@@ -59,6 +61,10 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | `CellStyled` colors, screens, shortcuts and exact viewport | | Yes | |
 
 ## Layout and style
+
+`Flow.Clip` controls native clipping at graphical stack bounds. By default,
+ordinary stacks clip and wrapping rows allow paint to extend past the bounds.
+Set it to false to keep strokes and shadows visible inside a containing viewport.
 
 Layout follows the supported subset of CUI's box rules. Content uses the host's
 measured extent. Fill and positive Grow weights share the remaining space from
@@ -249,6 +255,23 @@ and CUI's proposed item. Retain the proposal in the model to apply it. CUI
 animates the displayed count and selection. Use `ItemId(Id, Index)` to focus an
 item. Reactions require the graphical profile.
 
+## Speed dial
+
+`Fpas.Ui.SpeedDials.SpeedDial` takes one through sixteen caption and glyph
+pairs. CUI lays out and animates the floating actions. Choosing an action
+passes its zero-based index to the supplied mapper. Use `ItemId` to inspect
+or focus a visible action. Escape closes the dial and restores focus from a
+focused action to the trigger. Speed dials require the graphical profile.
+
+## Swipe actions
+
+`Fpas.Ui.SwipeActions.SwipeItem` wraps a foreground view in CUI's horizontal
+swipe row. Each side has ordered actions with a caption, optional glyph and
+semantic tone. The callback receives the side and zero-based action index.
+Drag with the mouse or scroll horizontally over the row to reveal the actions.
+The row can also show a leading glyph and trailing annotation. Swipe rows
+require the graphical profile.
+
 ## User menu
 
 `Fpas.Ui.UserMenus.UserMenu` takes a stable ID, an account name and the same
@@ -303,6 +326,59 @@ press and keeps the two endpoints ordered during a drag. Tab focuses the
 track, Space switches the active endpoint, and the slider keys adjust it.
 Both sliders use finite, increasing bounds and values within those bounds.
 Radio cards and both sliders require the graphical profile.
+
+## Ruler and histogram sliders
+
+`Fpas.Ui.RulerSliders.RulerSlider` displays a movable tape under a fixed
+marker. The model supplies a bounded value. Options configure the tick
+step, spacing, major tick interval, width, decimal places and unit. Native
+input includes dragging, the wheel, and arrow keys. Shift+arrow moves one
+major tick interval.
+
+`Fpas.Ui.HistogramSliders.HistogramSlider` overlays two range handles on
+nonempty, finite nonnegative bin heights. It uses the same model-owned
+`Fpas.Ui.RangeSliders.Interval` as a range slider. Space switches the active
+handle for keyboard adjustment. Options configure bar height and the
+endpoint captions. Both sliders require the graphical profile.
+
+## Capture controls
+
+`Fpas.Ui.Dropzones.Dropzone` receives a detached array of accepted paths from CUI. Its options
+set the title, description, extension filter, icon and compact or tall
+appearance. `Fpas.Ui.AvatarUploads.AvatarUpload` displays initials or a decoded image from the model's
+path. Store the path proposed by a successful drop to accept the new image.
+
+Both controls can map browse activation to an application message.
+`Fpas.Ui.Gui.FileDialogs.OpenFile` is the graphical host command for opening the native
+file chooser and mapping a matching selection to a message. Cancellation
+delivers no message.
+
+`Fpas.Ui.SignaturePads.SignaturePad` lets CUI own the ink and Clear action. An optional callback receives
+a detached snapshot on drawing and clearing. Each stroke end is an exclusive
+index into the points array. The points use CUI's logical drawing space.
+`SignaturePads.ClearId(Id)` addresses the native Clear button while it is visible.
+All three controls require the graphical profile.
+
+## Audio controls
+
+`Fpas.Ui.Knobs.Knob` and `Fpas.Ui.Faders.Fader` take a stable ID, a literal caption,
+a finite value within increasing bounds, and an OnChange mapper. CUI
+handles dragging, the wheel on the focused control and keyboard adjustment.
+Double-click, Delete or Backspace restores the configured reset value.
+Shift makes pointer dragging finer and increases the arrow-key step.
+
+Knob options include diameter, logarithmic scaling for positive ranges,
+a bipolar arc and an arc color. Faders can run in either direction and
+show up to 32 tick labels and up to eight channels of metering beside the track.
+Both controls support continuous or stepped values, decimal precision,
+an optional unit and a hidden value caption.
+
+`Fpas.Ui.LevelMeters.LevelMeter` takes one to eight nonnegative, finite
+linear sample peaks. A peak of 1.0 represents 0 dBFS. CUI draws the bars,
+decay, peak hold and a latched clip light. Options control the dBFS bounds,
+dimensions, orientation, scale, segments and ballistics. Supply
+OnClipCleared to receive a message when the clip light is clicked.
+All three controls require the graphical profile.
 
 ## Chip and rating
 
@@ -771,6 +847,63 @@ characters.
 displays CUI's heuristic score from zero to four and its corresponding
 strength label. Its GUI snapshot contains the score and label. These three
 widgets require the Graphical profile.
+
+## Multi-select
+
+`Fpas.Ui.MultiSelects.MultiSelect` takes `Selects.Item` choices and one
+model-owned flag per choice. The native popup supports checkboxes, optional
+search, and selecting or clearing the list. The field shows removable chips
+and a count of extra selections. The callback receives a fresh array of flags
+when CUI proposes a change. Multi-select requires the graphical profile.
+
+## Color and emoji pickers
+
+`Fpas.Ui.ColorPickers.ColorPicker` opens CUI's native swatch palette with
+hue, saturation/value and eight presets. It reads and proposes a
+`Fpas.Ui.Graphics.Color`. RGB edits preserve the model's alpha channel.
+
+`Fpas.Ui.EmojiPickers.EmojiPicker` displays CUI's native search, group
+tabs, skin tones, recent emoji and preview. It can be placed inline or
+inside a `Popovers.Popover`. Its model-owned state holds the selected skin
+tone and the space-separated recent list. A change carries the updated
+state and, on selection, the complete emoji string. Both pickers require
+the graphical profile.
+
+## Calendar and date picker
+
+`Fpas.Ui.Calendars.Calendar` shows CUI's single-month calendar inline.
+`Fpas.Ui.DatePickers.DatePicker` opens it from a date field with an
+optional label and placeholder. Both read a model-owned `System.DateOnly?`
+and propose a `System.DateOnly` on selection. The application can clear the
+selection by passing null. Each calendar retains its own displayed month.
+Both widgets require the graphical profile.
+
+## Date range
+
+`Fpas.Ui.DateRangePickers.DateRangePicker` opens a native calendar with
+optional presets and adjusts the number of months to the available width.
+`Fpas.Ui.DateRangeCalendars.DateRangeCalendar` shows one or two months inline.
+Both accept a model-owned
+`Fpas.Ui.DateRanges.Value` containing `Empty`, `Started`, or `Complete` with
+`System.DateOnly` endpoints. A complete range has inclusive, ordered endpoints.
+The callback receives each proposed selection, so a picker and a calendar
+can share one value, including a first endpoint that still needs an end date.
+Each native calendar retains its own displayed month. Both widgets require
+the graphical profile.
+
+## Time picker, wheel picker and time dial
+
+`Fpas.Ui.TimePickers.TimePicker` opens CUI's scrolling hour and minute
+columns. It defaults to 24-hour display and five-minute choices. Enable
+`TwelveHour` for an AM/PM column and set `MinuteStep` to change the
+choices. `Fpas.Ui.TimeDials.TimeDial` uses an analog face with hour and
+minute selectors. Both accept a model-owned `System.TimeOnly` at minute
+precision and report the proposed time through the callback.
+
+`Fpas.Ui.WheelPickers.WheelPicker` takes captions and a model-owned
+zero-based index. CUI handles dragging, wheel input and arrow keys. Options
+set the width, visible row count, wrapping and joined selection bands.
+All three widgets require the graphical profile.
 
 ## Select
 

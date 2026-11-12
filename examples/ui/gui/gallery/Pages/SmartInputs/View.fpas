@@ -2,17 +2,18 @@ unit GuiGallery.Pages.SmartInputs.View;
 
 uses
   GuiGallery.Pages.SmartInputs.State as State,
+  GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage as EmojiMessage,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.TextFields as F;
 
-// Builds the two fixed-width prefix and suffix examples from Smart inputs.
+// Builds the accepted Smart inputs examples.
 //
 // ## Parameters
-// - `Model`: Editable URL and weight values.
+// - `Model`: Editable field values and emoji preferences.
 // ## Returns
-// The Prefix and suffix section.
+// The Prefix and suffix and Emoji picker sections.
 public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
@@ -41,7 +42,8 @@ begin
         ),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
       )
-    )
+    ),
+    EmojiMessage.View(Model)
   );
 end function;
 end unit;

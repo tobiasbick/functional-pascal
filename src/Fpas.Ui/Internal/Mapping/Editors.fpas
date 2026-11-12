@@ -1,6 +1,11 @@
 unit Fpas.Ui.Internal.Mapping.Editors;
 
 uses
+  Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.DatePickers as DatePickers,
+  Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
+  Fpas.Ui.DateRanges as Dates, Fpas.Ui.DateRangePickers as RangePickers,
+  Fpas.Ui.MultiSelects as Multi,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Internal.MessageMapping as M,
   Fpas.Ui.Selects as Selects,
@@ -91,6 +96,98 @@ begin
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
         M.Callback<string, TChild, TParent>(FOnComplete, Messages)
+      );
+    when E.Element.ColorPicker(
+      const Id: string, const Value: Graphics.Color, const Change: function(Graphics.Color): TChild,
+      const Enabled: bool
+    ):
+      return E.Element<TParent>.ColorPicker(
+        Id,
+        Value,
+        function(Proposal: Graphics.Color): TParent => Messages(Change(Proposal)),
+        Enabled
+      );
+    when E.Element.EmojiPicker(
+      const Id: string, const Value: Emojis.State, const Change: function(Emojis.Change): TChild,
+      const Settings: Emojis.Options
+    ):
+      return E.Element<TParent>.EmojiPicker(
+        Id,
+        Value,
+        function(Proposal: Emojis.Change): TParent => Messages(Change(Proposal)),
+        Settings
+      );
+    when E.Element.Calendar(
+      const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TChild,
+      const Enabled: bool
+    ):
+      return E.Element<TParent>.Calendar(
+        Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Enabled
+      );
+    when E.Element.DatePicker(
+      const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TChild,
+      const Settings: DatePickers.Options
+    ):
+      return E.Element<TParent>.DatePicker(
+        Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Settings
+      );
+    when E.Element.RangeCalendar(
+      const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TChild,
+      const Months: int, const Enabled: bool
+    ):
+      return E.Element<TParent>.RangeCalendar(
+        Id,
+        Value,
+        function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)),
+        Months,
+        Enabled
+      );
+    when E.Element.RangePicker(
+      const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TChild,
+      const Settings: RangePickers.Options
+    ):
+      return E.Element<TParent>.RangePicker(
+        Id, Value, function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)), Settings
+      );
+    when E.Element.TimePicker(
+      const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TChild,
+      const Settings: TimePickers.Options
+    ):
+      return E.Element<TParent>.TimePicker(
+        Id, Value, function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)), Settings
+      );
+    when E.Element.WheelPicker(
+      const Id: string, const Items: array of string, const Selected: int,
+      const Change: function(int): TChild, const Settings: WheelPickers.Options
+    ):
+      return E.Element<TParent>.WheelPicker(
+        Id,
+        Items,
+        Selected,
+        function(Proposed: int): TParent => Messages(Change(Proposed)),
+        Settings
+      );
+    when E.Element.TimeDial(
+      const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TChild,
+      const Size: float, const Enabled: bool
+    ):
+      return E.Element<TParent>.TimeDial(
+        Id,
+        Value,
+        function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)),
+        Size,
+        Enabled
+      );
+    when E.Element.MultiSelectInput(
+      const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
+      const Change: function(array of bool): TChild, const Settings: Multi.Options
+    ):
+      return E.Element<TParent>.MultiSelectInput(
+        Id,
+        Items,
+        Selected,
+        function(Flags: array of bool): TParent => Messages(Change(Flags)),
+        Settings
       );
     when E.Element.SelectInput(
       const FId: string,

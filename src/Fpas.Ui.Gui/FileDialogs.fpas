@@ -1,0 +1,55 @@
+unit Fpas.Ui.Gui.FileDialogs;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// An owner-window file selection request.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type OpenRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Optional dialog title.
+  public Title: string;
+  // Optional name for the extension filter.
+  public FilterName: string;
+  // Semicolon-separated extensions, or empty for any type.
+  public Accept: string;
+  // Mapper for a confirmed selection.
+  public OnSelected: function(string): TMsg;
+
+  // Translates the selected file into a parent message.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Wraps a child message.
+  // ## Returns
+  // The same request in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    const Select: function(string): TMsg := self.OnSelected;
+    return new OpenRequest<TNext>(
+      self.Title,
+      self.FilterName,
+      self.Accept,
+      function(Path: string): TNext => Messages(Select(Path))
+    );
+  end function;
+end record;
+
+// Opens the native file chooser between frames. Cancellation posts no message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnSelected`: Maps a matching selected path to a message.
+// - `Title`: Optional dialog title.
+// - `FilterName`: Optional name for the extension filter.
+// - `Accept`: Semicolon-separated extensions without dots, or empty for any type.
+// ## Returns
+// The graphical host command.
+public function OpenFile<TMsg>(
+  OnSelected: function(string): TMsg; Title: string := ''; FilterName: string := ''; Accept: string := ''
+): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(
+    Mvu.HostRequest.Extension(new OpenRequest<TMsg>(Title, FilterName, Accept, OnSelected))
+  );
+end function;
+end unit;

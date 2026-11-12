@@ -1,6 +1,18 @@
 unit Fpas.Ui.Validation;
 
 uses
+  Fpas.Ui.ColorPickers as ColorPickers, Fpas.Ui.EmojiPickers as Emojis,
+  Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers,
+  Fpas.Ui.Internal.AudioRules as AudioRules,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
+  Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
+  Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
+  Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.Internal.PickerRules as PickerRules,
+  Fpas.Ui.DateRanges as Dates, Fpas.Ui.DateRangePickers as RangePickers,
+  Fpas.Ui.Internal.DateRangeRules as DateRangeRules,
+  Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi,
+  Fpas.Ui.Internal.ActionRules as ActionRules,
   Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Internal.FeedbackRules as FeedbackRules, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as ProgressBars, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.DisclosureRules as DisclosureRules, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.Internal.SelectRules as SelectRules, Fpas.Ui.Internal.NumberFieldRules as NumberRules, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.TagInputRules as TagRules, Fpas.Ui.Internal.OneTimeCodeRules as CodeRules, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Internal.EditorRules as EditorRules, Fpas.Ui.Internal.PopoverRules as PopupRules, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.TooltipRules as TooltipRules, Fpas.Ui.Internal.NavigationRules as NavigationRules, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.Internal.SliderRules as SliderRules, Fpas.Ui.Internal.SelectionRules as SelectionRules, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Menus as Menus, Fpas.Ui.Internal.MenuRules as MenuRules, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections, System.Text as Text;
 
@@ -184,12 +196,149 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress-ring');
         FeedbackRules.ProgressRing(Label, Value, Size, Identify(Id, Location + '/progress-ring'));
+      when E.Element.LevelMeter(
+        const Id: string,
+        const Peaks: array of float,
+        const Settings: Levels.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/levelMeter');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        AudioRules.CheckMeter(Peaks, Settings, At);
       when E.Element.Meter(
         const Id: string, const Label: string, const Used: float,
         const Total: float, const Unit: string
       ):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/meter');
         FeedbackRules.Meter(Label, Used, Total, Unit, Identify(Id, Location + '/meter'));
+      when E.Element.ColorPicker(const Id: string, _, _, _):
+        const At: string := Identify(Id, Location + '/colorPicker');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        discard Identify(ColorPickers.SurfaceId(Id), At);
+        discard Identify(ColorPickers.HueId(Id), At);
+        for Index: int := 0 to 7 do
+          discard Identify(ColorPickers.PresetId(Id, Index), At);
+        end for;
+      when E.Element.EmojiPicker(
+        const Id: string, const Value: Emojis.State, _, const Settings: Emojis.Options
+      ):
+        const At: string := Identify(Id, Location + '/emojiPicker');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        PickerRules.Emoji(Value, Settings, At);
+        discard Identify(Emojis.GridId(Id), At);
+        if Settings.Search then
+          discard Identify(Emojis.SearchId(Id), At);
+        end if;
+
+        if Settings.ToneSelector then
+          discard Identify(Emojis.ToneSelectorId(Id), At);
+          for Index: int := 0 to 5 do
+            discard Identify(Emojis.ToneId(Id, Index), At);
+          end for;
+        end if;
+
+        for Index: int := 0 to 9 do
+          discard Identify(Emojis.GroupId(Id, Index), At);
+        end for;
+      when E.Element.Calendar(const Id: string, _, _, _):
+        const At: string := Identify(Id, Location + '/calendar');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        discard Identify(Calendars.MonthId(Id, false), At);
+        discard Identify(Calendars.MonthId(Id, true), At);
+      when E.Element.DatePicker(const Id: string, _, _, const Settings: DatePickers.Options):
+        const At: string := Identify(Id, Location + '/datePicker');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Settings.Label, At + '/label');
+        Rules.CheckText(Settings.Placeholder, At + '/placeholder');
+        PickerRules.Size(Settings.Width, At + '/width');
+        discard Identify(Calendars.MonthId(Id, false), At);
+        discard Identify(Calendars.MonthId(Id, true), At);
+      when E.Element.RangeCalendar(
+        const Id: string,
+        const Value: Dates.Value,
+        _,
+        const Months: int,
+        _
+      ):
+        const Path: string := Location + '/rangeCalendar';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        DateRangeRules.Check(Value, At);
+        if Months < 1 or Months > 2 then
+          Rules.Reject(At, 'A range calendar shows one or two months.');
+        end if;
+
+        discard Identify(Dates.MonthId(Id, false), At);
+        discard Identify(Dates.MonthId(Id, true), At);
+      when E.Element.RangePicker(
+        const Id: string, const Value: Dates.Value, _, const Settings: RangePickers.Options
+      ):
+        const Path: string := Location + '/rangePicker';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        DateRangeRules.Check(Value, At);
+        DateRangeRules.Picker(Settings, At);
+        discard Identify(Dates.MonthId(Id, false), At);
+        discard Identify(Dates.MonthId(Id, true), At);
+        if Settings.Presets then
+          for Index: int := 0 to 6 do
+            discard Identify(RangePickers.PresetId(Id, Index), At);
+          end for;
+        end if;
+      when E.Element.TimePicker(
+        const Id: string, const Value: Sys.TimeOnly, _, const Settings: TimePickers.Options
+      ):
+        const Path: string := Location + '/timePicker';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        PickerRules.Time(Value, At);
+        PickerRules.TimePicker(Settings, At);
+
+        const LastHour: int := if Settings.TwelveHour then 11 else 23 end if;
+        for Hour: int := 0 to LastHour do
+          discard Identify(TimePickers.HourId(Id, Hour), At);
+        end for;
+
+        for Minute: int := 0 to 59 do
+          if Minute mod Settings.MinuteStep = 0 then
+            discard Identify(TimePickers.MinuteId(Id, Minute), At);
+          end if;
+        end for;
+
+        if Settings.TwelveHour then
+          discard Identify(TimePickers.PeriodId(Id, false), At);
+          discard Identify(TimePickers.PeriodId(Id, true), At);
+        end if;
+      when E.Element.WheelPicker(
+        const Id: string,
+        const Items: array of string,
+        const Selected: int,
+        _,
+        const Settings: WheelPickers.Options
+      ):
+        const Path: string := Location + '/wheelPicker';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        PickerRules.WheelPicker(Items, Selected, Settings, Identify(Id, Path));
+      when E.Element.TimeDial(const Id: string, const Value: Sys.TimeOnly, _, const Size: float, _):
+        const Path: string := Location + '/timeDial';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        PickerRules.Time(Value, At);
+        PickerRules.Size(Size, At + '/size');
+        discard Identify(TimeDials.SelectorId(Id, false), At);
+        discard Identify(TimeDials.SelectorId(Id, true), At);
+        discard Identify(TimeDials.FaceId(Id), At);
+      when E.Element.MultiSelectInput(
+        const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
+        _, const Settings: Multi.Options
+      ):
+        const Path: string := Location + '/multiSelect';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        SelectRules.MultiSelect(Items, Selected, Settings, At);
+        for Index: int := 0 to Items.Length - 1 do
+          discard Identify(Selects.OptionId(Id, Index), At + '/option');
+        end for;
       when E.Element.SelectInput(
         const Id: string,
         const Items: array of Selects.Item,
@@ -311,6 +460,33 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             Rules.Reject(Part, 'A reaction needs a single-line name, an icon and a valid count.');
           end if;
         end for;
+      when E.Element.SpeedDialAction(
+        const Id: string, const Items: array of Speed.Item, _, const Settings: Speed.Options
+      ):
+        const Path: string := Location + '/speedDial';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        ActionRules.SpeedDial(Items, Settings, At);
+        for Index: int := 0 to Items.Length - 1 do
+          discard Identify(Speed.ItemId(Id, Index), At + '/action');
+        end for;
+      when E.Element.SwipeRow(
+        const Id: string, const Child: E.Element<TMsg>, const Left: array of Swipe.Item,
+        const Right: array of Swipe.Item, _, const Settings: Swipe.Options
+      ):
+        const Path: string := Location + '/swipeRow';
+        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        const At: string := Identify(Id, Path);
+        ActionRules.SwipeRow(Left, Right, Settings, At);
+        for Index: int := 0 to Left.Length - 1 do
+          discard Identify(Swipe.ItemId(Id, Swipe.Side.Left, Index), At);
+        end for;
+
+        for Index: int := 0 to Right.Length - 1 do
+          discard Identify(Swipe.ItemId(Id, Swipe.Side.Right, Index), At);
+        end for;
+
+        Visit(Child, At + '/content');
       when E.Element.AccountMenu(
         const Id: string, const Name: string, const Entries: array of Menus.Entry<TMsg>,
         const Settings: UserMenus.Options
@@ -402,6 +578,99 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/rangeSlider');
         Rules.RequireProfile(Profile, Target.Graphical, At);
         SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
+      when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
+        const At: string := Identify(Id, Location + '/dropzone');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Settings.Title, At + '/title');
+        Rules.CheckText(Settings.Description, At + '/description');
+        Rules.CheckText(Settings.Accept, At + '/accept');
+        Rules.CheckText(Settings.Icon, At + '/icon');
+        if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
+          Rules.Reject(At, 'Dropzone height must be finite and nonnegative.');
+        end if;
+      when E.Element.AvatarUpload(
+        const Id: string,
+        const Name: string,
+        const Path: string?,
+        _,
+        _,
+        const Size: float,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/avatarUpload');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Name, At + '/name');
+        if Path <> null then
+          Rules.CheckText(Path, At + '/image');
+        end if;
+
+        if not Sys.Single.IsFinite(Size) or Size < 0.0F then
+          Rules.Reject(At, 'Avatar diameter must be finite and nonnegative.');
+        end if;
+      when E.Element.SignaturePad(const Id: string, _, const Settings: Signatures.Options):
+        const At: string := Identify(Id, Location + '/signaturePad');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        discard Identify(Signatures.ClearId(Id), At);
+        Rules.CheckText(Settings.Placeholder, At + '/placeholder');
+        if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
+          Rules.Reject(At, 'Signature pad height must be finite and nonnegative.');
+        end if;
+      when E.Element.Knob(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, _, const Settings: Knobs.Options
+      ):
+        const At: string := Identify(Id, Location + '/knob');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+        AudioRules.CheckDial(
+          Settings.Step,
+          Settings.Reset,
+          Settings.DecimalPlaces,
+          Settings.UnitLabel,
+          Maximum - Minimum,
+          At
+        );
+        AudioRules.CheckKnob(Settings.Size, Settings.LogScale, Minimum, Maximum, At);
+      when E.Element.Fader(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, _, const Settings: Faders.Options
+      ):
+        const At: string := Identify(Id, Location + '/fader');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+        AudioRules.CheckDial(
+          Settings.Step,
+          Settings.Reset,
+          Settings.DecimalPlaces,
+          Settings.UnitLabel,
+          Maximum - Minimum,
+          At
+        );
+        AudioRules.CheckFader(
+          Settings.Length,
+          Settings.Ticks,
+          Settings.Levels,
+          Minimum,
+          Maximum,
+          At
+        );
+      when E.Element.RulerSlider(
+        const Id: string, const Label: string, const Value: float, const Minimum: float,
+        const Maximum: float, _, const Settings: Rulers.Options
+      ):
+        const At: string := Identify(Id, Location + '/rulerSlider');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+        SliderRules.CheckRuler(Settings, Minimum, Maximum, At);
+      when E.Element.HistogramSlider(
+        const Id: string, const Label: string, const Bins: array of float,
+        const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
+        _, const Settings: Histograms.Options
+      ):
+        const At: string := Identify(Id, Location + '/histogramSlider');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
+        SliderRules.CheckHistogram(Bins, Settings, At);
       when E.Element.ChipAction(const Id: string, const Label: string, _, _, const Icon: string, _):
         SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/chip', Identify);
         Rules.CheckText(Icon, Location + '/chip/icon');
@@ -681,6 +950,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Flow: L.Flow
       ):
         const At: string := Location + (if Horizontal then '/row' else '/column' end if);
+        if Flow.Clip <> null then
+          Rules.RequireProfile(Profile, Target.Graphical, Location + '/clip');
+        end if;
+
         if Flow.Wrap then
           Rules.RequireProfile(Profile, Target.Graphical, At);
           if not Horizontal then
@@ -705,7 +978,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(Location + '/style', 'Unknown semantic style role.');
         end if;
 
-        if Role = S.Role.Label then
+        if Role = S.Role.Label or Role = S.Role.Caption then
           Rules.RequireProfile(Profile, Target.Graphical, Location + '/style');
         end if;
 

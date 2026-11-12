@@ -1,6 +1,7 @@
 unit Fpas.Ui.Internal.Mapping.Actions;
 
 uses
+  Fpas.Ui.SpeedDials as Speed,
   Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Alerts as Alerts,
   Fpas.Ui.ProgressBars as ProgressBars,
@@ -13,6 +14,8 @@ uses
   Fpas.Ui.RadioCards as RadioCards,
   Fpas.Ui.Sliders as Sliders,
   Fpas.Ui.RangeSliders as RangeSliders,
+  Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
+  Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
   Fpas.Ui.RadioGroups as RadioGroups,
   Fpas.Ui.ToggleGroups as ToggleGroups,
   Fpas.Ui.Menus as Menus,
@@ -67,6 +70,18 @@ begin
       const Settings: Timeline.Options
     ):
       return E.Element<TParent>.TimelineItem(Id, Title, Settings);
+    when E.Element.LevelMeter(
+      const Id: string,
+      const Peaks: array of float,
+      const Settings: Levels.Options,
+      const Notify: Sys.Func<TChild>?
+    ):
+      return E.Element<TParent>.LevelMeter(
+        Id,
+        Peaks,
+        Settings,
+        M.Factory<TChild, TParent>(Notify, Messages)
+      );
     when E.Element.Meter(
       const Id: string, const Label: string, const Used: float,
       const Total: float, const Unit: string
@@ -219,6 +234,13 @@ begin
         function(A0: int; A1: Reactions.Item): TParent => Messages(FOnChange(A0, A1)),
         FEnabled
       );
+    when E.Element.SpeedDialAction(
+      const Id: string, const Items: array of Speed.Item, const Choose: function(int): TChild,
+      const Settings: Speed.Options
+    ):
+      return E.Element<TParent>.SpeedDialAction(
+        Id, Items, function(Index: int): TParent => Messages(Choose(Index)), Settings
+      );
     when E.Element.AccountMenu(
       const FId: string,
       const FName: string,
@@ -346,6 +368,54 @@ begin
         FMaximum,
         function(A0: RangeSliders.Interval): TParent => Messages(FOnChange(A0)),
         FEnabled
+      );
+    when E.Element.Knob(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, const Change: function(float): TChild, const Settings: Knobs.Options
+    ):
+      return E.Element<TParent>.Knob(
+        Id,
+        Label,
+        Value,
+        Minimum,
+        Maximum,
+        function(Next: float): TParent => Messages(Change(Next)),
+        Settings
+      );
+    when E.Element.Fader(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, const Change: function(float): TChild, const Settings: Faders.Options
+    ):
+      return E.Element<TParent>.Fader(
+        Id,
+        Label,
+        Value,
+        Minimum,
+        Maximum,
+        function(Next: float): TParent => Messages(Change(Next)),
+        Settings
+      );
+    when E.Element.RulerSlider(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, const Change: function(float): TChild, const Settings: Rulers.Options
+    ):
+      return E.Element<TParent>.RulerSlider(
+        Id,
+        Label,
+        Value,
+        Minimum,
+        Maximum,
+        function(Proposal: float): TParent => Messages(Change(Proposal)),
+        Settings
+      );
+    when E.Element.HistogramSlider(
+      const Id: string, const Label: string, const Bins: array of float,
+      const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
+      const Change: function(RangeSliders.Interval): TChild, const Settings: Histograms.Options
+    ):
+      return E.Element<TParent>.HistogramSlider(
+        Id, Label, Bins, Value, Minimum, Maximum,
+        function(Proposal: RangeSliders.Interval): TParent => Messages(Change(Proposal)), Settings
       );
     when E.Element.ChipAction(
       const FId: string,

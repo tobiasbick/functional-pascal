@@ -1,0 +1,198 @@
+unit GalleryDateRangeContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.DateRanges as R, Fpas.Ui.DateRangePickers as P,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System as Sys;
+
+// Checks the native date range section through the real Pickers page.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the closed and open picker captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'Date range gallery closed unexpectedly.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0 and Box.Height > 0, 'No date range control geometry for ' + Id);
+    X := Box.X + Box.Width / 2;
+    Y := Box.Y + Box.Height / 2;
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+
+  function DateText(Day: Sys.DateOnly): string;
+  begin
+    return Day.ToString('yyyy-MM-dd', Sys.Globalization.CultureInfo.InvariantCulture);
+  end function;
+
+  procedure CheckStay(Session: Gui.Session<State.Msg>; Expected: string);
+  begin
+    A.Check(
+      A.Control(Session, Stay).Value = Expected and A.Control(Session, Inline).Value = Expected,
+      'The stay picker and inline calendar must share the same selection.'
+    );
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var PendingKey: int := 0;
+  var Target: string := '';
+  const Range: string := 'picker-date-range';
+  const Stay: string := 'picker-stay';
+  const Inline: string := 'picker-inline-range';
+  const TodayPreset: string := P.PresetId(Range, 0);
+  const Dec20: Sys.DateOnly := new Sys.DateOnly(2026, 12, 20);
+  const Dec22: Sys.DateOnly := new Sys.DateOnly(2026, 12, 22);
+  const Dec30: Sys.DateOnly := new Sys.DateOnly(2026, 12, 30);
+  const Jan4: Sys.DateOnly := new Sys.DateOnly(2027, 1, 4);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Date ranges',
+    1000,
+    1000,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Pickers),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Range).Bounds.Width = 300 and A.Control(Session, Stay).Bounds.Width = 300,
+    'The original picker fields are 300 logical points wide.'
+  );
+  A.Check(
+    A.Control(Session, Range).Value = '2026-11-03..2026-11-14',
+    'The presets field must start with the original November selection.'
+  );
+  CheckStay(Session, '2026-12-18..2026-12-27');
+  A.Check(
+    HasControl(Session, R.DayId(Inline, Dec20)) and HasControl(Session, R.DayId(Inline, Jan4)),
+    'The original inline calendar must present consecutive months across the year boundary.'
+  );
+  Session.CapturePng(Capture + '.date-range.png');
+
+  Click(Session, Stay);
+  A.Check(
+    HasControl(Session, R.DayId(Stay, Jan4)) and not HasControl(Session, P.PresetId(Stay, 0)),
+    'The second popup must show both months without the presets list.'
+  );
+  Session.CapturePng(Capture + '.date-range-stay.png');
+  Key(Session, 3);
+
+  Click(Session, Range);
+  A.Check(A.Control(Session, TodayPreset).Text = 'Today', 'The native presets are missing.');
+  Session.CapturePng(Capture + '.date-range-presets.png');
+  Click(Session, TodayPreset);
+  const Today: string := DateText(Sys.DateOnly.FromDateTime(Sys.DateTime.Today));
+  A.Check(
+    A.Control(Session, Range).Value = Today + '..' + Today and not HasControl(Session, TodayPreset),
+    'Today must propose a complete range and close the native popup.'
+  );
+  CheckStay(Session, '2026-12-18..2026-12-27');
+
+  Click(Session, R.DayId(Inline, Dec22));
+  CheckStay(Session, '2026-12-22');
+  Focus(Session, Stay);
+  Key(Session, 2);
+  Click(Session, R.DayId(Stay, Dec20));
+  CheckStay(Session, '2026-12-20..2026-12-22');
+  A.Check(
+    not HasControl(Session, R.DayId(Stay, Dec20)) and A.Control(Session, Stay).Focused,
+    'Completing the partial selection from the inline calendar must close the picker and restore focus.'
+  );
+
+  Key(Session, 6);
+  Click(Session, R.DayId(Stay, Dec30));
+  CheckStay(Session, '2026-12-30');
+  A.Check(
+    HasControl(Session, R.DayId(Stay, Jan4)),
+    'The picker stays open after its first endpoint.'
+  );
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, Stay).Focused and not HasControl(Session, R.DayId(Stay, Jan4)),
+    'Escape must close the popup and return focus.'
+  );
+  Click(Session, R.DayId(Inline, Jan4));
+  CheckStay(Session, '2026-12-30..2027-01-04');
+
+  Click(Session, R.MonthId(Inline, true));
+  A.Check(
+    HasControl(Session, R.DayId(Inline, new Sys.DateOnly(2027, 2, 1)))
+    and not HasControl(Session, R.DayId(Inline, Dec20)),
+    'Month navigation must browse the native calendar.'
+  );
+  CheckStay(Session, '2026-12-30..2027-01-04');
+end procedure;
+end unit;

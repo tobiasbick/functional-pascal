@@ -3,6 +3,7 @@ unit GuiGallery.Pages.Actions.State;
 uses
   Fpas.Ui.StatusButtons as Work,
   Fpas.Ui.Reactions as React,
+  Fpas.Ui.SwipeActions as Swipe,
   System as Sys,
   GuiGallery.Shared.State as Demo;
 
@@ -20,6 +21,8 @@ public type Model = record
   public SplitResult: string := '';
   // Reaction counts and activation on the Actions page.
   public Reactions: array of React.Item := InitialReactions();
+  // Last chosen speed dial action, or minus one.
+  public DialChoice: int := -1;
 end record;
 
 // Messages handled by this gallery feature.
@@ -40,6 +43,10 @@ public type Msg = variant
   SetReaction(Index: int; Value: React.Item);
   // Choose a command from the simulated account menu.
   UserCommand(Key: string);
+  // Show the chosen speed dial caption.
+  DialChoice(Index: int);
+  // Show the result of a swipe action.
+  SwipeChoice(At: Swipe.Side; Index: int);
   // A harmless preview activation.
   Preview;
   // Propose a change to shared demo values.

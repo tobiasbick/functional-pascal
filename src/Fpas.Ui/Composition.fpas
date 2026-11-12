@@ -2,6 +2,7 @@ unit Fpas.Ui.Composition;
 
 uses
   Fpas.Ui.Elements as E,
+  Fpas.Ui.SwipeActions as Swipe,
   Fpas.Ui.Internal.MessageMapping as M,
   Fpas.Ui.ExpandableCards as ExpandableCards,
   Fpas.Ui.Dialogs as Dialogs,
@@ -14,6 +15,7 @@ uses
   Fpas.Ui.Terminal as T,
   Fpas.Ui.TerminalExtensions.Input as Keys,
   System as Sys,
+  Fpas.Ui.Internal.Mapping.Capture as Capture,
   Fpas.Ui.Internal.Mapping.Actions as Actions,
   Fpas.Ui.Internal.Mapping.Editors as Editors,
   System.Collections.Generic as Lists;
@@ -78,6 +80,23 @@ public function Map<TChild, TParent>(
   end function;
 begin
   return case Value of
+    when E.Element.Dropzone(_, _, _, _), E.Element.AvatarUpload(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SignaturePad(_, _, _): Capture.Map<TChild, TParent>(Value, Messages);
+    when E.Element.SwipeRow(
+      const Id: string, const Content: E.Element<TChild>, const Left: array of Swipe.Item,
+      const Right: array of Swipe.Item, const Choose: function(Swipe.Side, int): TChild,
+      const Settings: Swipe.Options
+    ): E.Element<TParent>.SwipeRow(
+      Id, Map<TChild, TParent>(Content, Messages), Left, Right,
+      function(Side: Swipe.Side; Index: int): TParent => Messages(Choose(Side, Index)), Settings
+    );
     when E.Element.Accordion(
       const FId: string,
       const FTitle: string,
@@ -262,6 +281,8 @@ begin
       _,
       _,
       _
+    ), E.Element.LevelMeter(
+      _, _, _, _
     ), E.Element.Meter(
       _,
       _,
@@ -323,7 +344,12 @@ begin
       _,
       _,
       _
-    ), E.Element.AccountMenu(_, _, _, _), E.Element.CheckboxAction(
+    ), E.Element.AccountMenu(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SpeedDialAction(_, _, _, _), E.Element.CheckboxAction(
       _,
       _,
       _,
@@ -354,6 +380,17 @@ begin
       _,
       _
     ), E.Element.RangeSliderAction(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Knob(_, _, _, _, _, _, _), E.Element.Fader(
+      _, _, _, _, _, _, _
+    ), E.Element.RulerSlider(_, _, _, _, _, _, _), E.Element.HistogramSlider(
+      _,
       _,
       _,
       _,
@@ -422,7 +459,51 @@ begin
       _,
       _,
       _
-    ), E.Element.SelectInput(_, _, _, _, _), E.Element.NumberField(
+    ), E.Element.SelectInput(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.MultiSelectInput(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RangeCalendar(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RangePicker(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Calendar(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.DatePicker(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ColorPicker(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.EmojiPicker(_, _, _, _), E.Element.TimePicker(_, _, _, _), E.Element.WheelPicker(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TimeDial(_, _, _, _, _), E.Element.NumberField(
       _,
       _,
       _,

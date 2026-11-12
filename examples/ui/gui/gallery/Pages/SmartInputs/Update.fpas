@@ -2,7 +2,21 @@ unit GuiGallery.Pages.SmartInputs.Update;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.SmartInputs.State as S;
+  GuiGallery.Pages.SmartInputs.State as S, Fpas.Ui.EmojiPickers as Emojis, System.Text as Text;
+
+function ApplyEmoji(State: S.Model; Change: Emojis.Change): S.Model;
+begin
+  const Chosen: string? := Change.Emoji;
+  const Combined: string := State.Message + (Chosen ?? '');
+  const Insert: bool := Chosen <> null and Text.Encoding.UTF8.GetByteCount(
+    Combined
+  ) <= S.MessageCapacity;
+  return State with
+    Emoji := Change.Value;
+    Message := if Insert then Combined else State.Message end if;
+    EmojiOpen := State.EmojiOpen and not Insert;
+  end with;
+end function;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters
@@ -19,6 +33,13 @@ begin
     when S.Msg.SetWeight(const Value: string): State with
       Weight := Value;
     end with;
+    when S.Msg.SetMessage(const Value: string): State with
+      Message := Value;
+    end with;
+    when S.Msg.SetEmojiOpen(const Open: bool): State with
+      EmojiOpen := Open;
+    end with;
+    when S.Msg.ChangeEmoji(const Change: Emojis.Change): ApplyEmoji(State, Change);
     else State;
   end case;
   return new Mvu.Transition<S.Model, S.Msg>(Next, []);

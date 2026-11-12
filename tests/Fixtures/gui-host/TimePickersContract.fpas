@@ -1,0 +1,226 @@
+unit GalleryTimePickersContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, Fpas.Ui.TimePickers as P, Fpas.Ui.TimeDials as D,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App;
+
+// Exercises the original Time and Wheels and dial sections.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for the closed and open captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Scroll <> 0.0F then
+      Window.Wheel(Scroll);
+      Scroll := 0.0F;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'Time pickers gallery closed unexpectedly.');
+  end procedure;
+
+  procedure Aim(Session: Gui.Session<State.Msg>; Id: string; Horizontal: float := 0.5F; Vertical: float := 0.5F);
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0 and Box.Height > 0, 'Missing native geometry for ' + Id);
+    X := Box.X + Box.Width * Horizontal;
+    Y := Box.Y + Box.Height * Vertical;
+  end procedure;
+
+  procedure Leave(Session: Gui.Session<State.Msg>);
+  begin
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Horizontal: float := 0.5F; Vertical: float := 0.5F);
+  begin
+    Aim(Session, Id, Horizontal, Vertical);
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    Leave(Session);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Scroll: float := 0.0F;
+  var PendingKey: int := 0;
+  var Target: string := '';
+  const Start: string := 'picker-start-time';
+  const Finish: string := 'picker-end-time';
+  const Day: string := 'picker-wheel-day';
+  const Month: string := 'picker-wheel-month';
+  const Year: string := 'picker-wheel-year';
+  const Dial: string := 'picker-time-dial';
+  const Face: string := D.FaceId(Dial);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Time pickers',
+    1000,
+    1280,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Pickers),
+    Update,
+    View.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Start).Value = '09:30' and A.Control(Session, Finish).Value = '6:45 PM',
+    'The original fields must display 24-hour and 12-hour time respectively.'
+  );
+  A.Check(
+    A.Control(Session, Day).Text = '14' and A.Control(Session, Month).Text = 'November'
+    and A.Control(Session, Year).Text = '2026' and A.Control(Session, Dial).Value = '07:25',
+    'The native reel and dial must show the original initial choices.'
+  );
+  Session.CapturePng(Capture + '.time-wheels-dial.png');
+  Focus(Session, Month);
+  Key(Session, 8);
+  Session.CapturePng(Capture + '.wheel-focused.png');
+
+  Click(Session, Start);
+  A.Check(
+    A.Control(Session, P.MinuteId(Start, 35)).Text = '35'
+    and not HasControl(Session, P.PeriodId(Start, true)),
+    'The 24-hour popup must offer the default five-minute choices and no period selector.'
+  );
+  Session.CapturePng(Capture + '.time-24-hour.png');
+  Key(Session, 3);
+  Click(Session, Finish);
+  A.Check(
+    A.Control(Session, P.PeriodId(Finish, false)).Text = 'AM'
+    and HasControl(
+      Session,
+      P.MinuteId(Finish, 30)
+    ) and not HasControl(Session, P.MinuteId(Finish, 35)),
+    'The 12-hour popup must offer AM and PM and use a fifteen-minute increment.'
+  );
+  Session.CapturePng(Capture + '.time-12-hour.png');
+  Click(Session, P.MinuteId(Finish, 30));
+  Click(Session, P.PeriodId(Finish, false));
+  A.Check(
+    A.Control(Session, Finish).Value = '6:30 AM',
+    'A period change must preserve the selected hour and minute.'
+  );
+  Key(Session, 3);
+
+  Focus(Session, Start);
+  Key(Session, 2);
+  A.Check(HasControl(Session, P.HourId(Start, 9)), 'Enter must open the focused time picker.');
+  Click(Session, P.MinuteId(Start, 35));
+  A.Check(A.Control(Session, Start).Value = '09:35', 'A minute choice must update the model.');
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, Start).Focused and not HasControl(Session, P.MinuteId(Start, 35)),
+    'Escape must close the native popup and return focus to its trigger.'
+  );
+
+  Focus(Session, Month);
+  Key(Session, 10);
+  A.Check(A.Control(Session, Month).Text = 'December', 'Down must advance the wheel one choice.');
+  Key(Session, 10);
+  A.Check(A.Control(Session, Month).Text = 'January', 'The month wheel must wrap at the end.');
+  Aim(Session, Day);
+  Scroll := -1.0F;
+  Step(Session);
+  Leave(Session);
+  A.Check(
+    A.Control(Session, Day).Text = '15',
+    'A vertical wheel line must advance the native reel.'
+  );
+
+  Aim(Session, Year);
+  Button := 1;
+  Step(Session);
+  Y := Y - 34.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(
+    A.Control(Session, Year).Text = '2027',
+    'Dragging the reel one row must update its selected year.'
+  );
+  Button := 0;
+  Step(Session);
+  Leave(Session);
+
+  Click(Session, Face, 0.9F, 0.5F);
+  A.Check(A.Control(Session, Dial).Value = '03:25', 'The outer hour ring must update the hour.');
+  Click(Session, Face, 0.5F, 0.9F);
+  A.Check(
+    A.Control(Session, Dial).Value = '03:30',
+    'Releasing the hours hand must advance to minute selection.'
+  );
+  Focus(Session, D.SelectorId(Dial, false));
+  Key(Session, 2);
+  Click(Session, Face, 0.1F, 0.5F);
+  A.Check(
+    A.Control(Session, Dial).Value = '09:30',
+    'Enter on the hour selector must return the dial to hour mode.'
+  );
+end procedure;
+end unit;

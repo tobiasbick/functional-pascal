@@ -1,0 +1,29 @@
+unit GuiGallery.Pages.Capture.State;
+
+// Extensions shown in the primary dropzone and its file dialog.
+public const Files: string := 'png;jpg;jpeg;pdf';
+// Extensions shown in the compact image dropzone and its file dialog.
+public const Images: string := 'png;jpg;jpeg';
+
+// The file selections demonstrated by the Capture page.
+public type Model = record
+  // Last accepted file path.
+  public Last: string := '';
+  // Path of the selected profile photo.
+  public Avatar: string? := null;
+end record;
+
+// File actions on the Capture page.
+public type Msg = variant
+  // Record the first accepted file.
+  Dropped(Paths: array of string);
+  // Open the file dialog with the source target's extensions.
+  Browse(Accept: string);
+  // Record a file chosen through a dialog.
+  SetFile(Path: string);
+  // Open the profile photo dialog.
+  BrowseAvatar;
+  // Set the profile photo from a drop or a dialog.
+  SetAvatar(Path: string);
+end variant;
+end unit;

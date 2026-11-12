@@ -1,0 +1,87 @@
+unit Fpas.Ui.Internal.PickerRules;
+
+uses
+  Fpas.Ui.Internal.Rules as R, Fpas.Ui.TimePickers as P, Fpas.Ui.WheelPickers as W,
+  Fpas.Ui.EmojiPickers as E, System as Sys, System.Text as Text;
+
+// Checks that a time can be represented by native hour and minute controls.
+// ## Parameters
+// - `Value`: Model-owned time.
+// - `At`: Diagnostic path.
+public procedure Time(Value: Sys.TimeOnly; At: string);
+begin
+  if Value.Ticks mod Sys.TimeSpan.TicksPerMinute <> 0L then
+    R.Reject(At, 'Time controls require minute precision.');
+  end if;
+end procedure;
+
+// Checks a logical size before it is passed to CUI.
+// ## Parameters
+// - `Value`: Logical size, or zero for the default.
+// - `At`: Diagnostic path.
+public procedure Size(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F then
+    R.Reject(At, 'The logical size must be finite and nonnegative.');
+  end if;
+end procedure;
+
+// Checks native time field options.
+// ## Parameters
+// - `Settings`: Field options.
+// - `At`: Diagnostic path.
+public procedure TimePicker(Settings: P.Options; At: string);
+begin
+  R.CheckText(Settings.Label, At + '/label');
+  Size(Settings.Width, At + '/width');
+  if Settings.MinuteStep < 1 or Settings.MinuteStep > 60 then
+    R.Reject(At, 'The minute step must be between one and sixty.');
+  end if;
+end procedure;
+
+// Checks the wheel options and controlled selection.
+// ## Parameters
+// - `Items`: Choice captions.
+// - `Selected`: Model-owned index.
+// - `Settings`: Wheel options.
+// - `At`: Diagnostic path.
+public procedure WheelPicker(Items: array of string; Selected: int; Settings: W.Options; At: string);
+begin
+  Size(Settings.Width, At + '/width');
+  if Settings.Rows < 1 then
+    R.Reject(At, 'A wheel picker needs at least one visible row.');
+  end if;
+
+  if Selected < 0 or Selected >= Items.Length then
+    R.Reject(At, 'The wheel selection must identify a choice.');
+  end if;
+
+  for Caption: string in Items do
+    R.CheckText(Caption, At + '/item');
+  end for;
+end procedure;
+
+// Checks emoji persistence data and native palette options.
+// ## Parameters
+// - `Value`: Recent emoji and selected skin tone.
+// - `Settings`: Layout and presentation options.
+// - `At`: Diagnostic path.
+public procedure Emoji(Value: E.State; Settings: E.Options; At: string);
+begin
+  R.CheckText(Value.Recent, At + '/recent');
+  if Text.Encoding.UTF8.GetByteCount(Value.Recent) > 255 then
+    R.Reject(At, 'Recent emoji must fit in 255 UTF-8 bytes.');
+  end if;
+
+  if Value.Tone < 0 or Value.Tone > 5 then
+    R.Reject(At, 'The emoji skin tone must be between zero and five.');
+  end if;
+
+  Size(Settings.Width, At + '/width');
+  Size(Settings.Height, At + '/height');
+  Size(Settings.Size, At + '/size');
+  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  R.CheckText(Settings.EmptyText, At + '/emptyText');
+  R.CheckText(Settings.Hint, At + '/hint');
+end procedure;
+end unit;

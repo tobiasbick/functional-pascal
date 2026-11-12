@@ -1,0 +1,56 @@
+unit Fpas.Ui.Gui.Internal.Widgets.AvatarUpload;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+
+// Draws CUI's uploadable avatar and forwards file actions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable avatar identity.
+// - `Name`: Name for initials.
+// - `Path`: Model-owned image path.
+// - `OnDrop`: Maps a decoded image drop to a message.
+// - `OnBrowse`: Optional browse message factory.
+// - `Size`: Logical diameter.
+// - `Enabled`: Whether the avatar accepts input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Name: string; Path: string?;
+  OnDrop: function(string): TMsg; OnBrowse: Sys.Func<TMsg>?; Size: float; Enabled: bool
+);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Role: string := 'avatar-upload';
+  const Token: string := C.Token(Role, Id);
+  const Result: Cui.CuiAvatarUploadResult := Frame.Window.AvatarUpload(
+    Token,
+    Name,
+    Path,
+    Size,
+    Accept,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Accept),
+    not Frame.PaintingClosed
+  );
+  const Dropped: string? := Result.Path;
+  if Dropped <> null then
+    Frame.Messages.Add(OnDrop(Dropped));
+  elsif Result.Browse then
+    case OnBrowse of
+      when is Sys.Func<TMsg> as Browse:
+        Frame.Messages.Add(Browse.Invoke());
+      else
+    end case;
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Name, Role, new Cui.CuiRectangle(), Accept,
+        Value := if Result.HasImage then Dropped ?? Path ?? '' else '' end if
+      )
+    );
+  end if;
+end procedure;
+end unit;

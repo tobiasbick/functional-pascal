@@ -1,0 +1,54 @@
+unit Fpas.Ui.ColorPickers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+
+// Gets the native saturation and value surface's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// ## Returns
+// The part identity while the palette is open.
+public function SurfaceId(Id: string): string;
+begin
+  return Id + '/saturation-value';
+end function;
+
+// Gets the native hue strip's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// ## Returns
+// The part identity while the palette is open.
+public function HueId(Id: string): string;
+begin
+  return Id + '/hue';
+end function;
+
+// Gets a native color preset's identity.
+// ## Parameters
+// - `Id`: Picker identity.
+// - `Index`: Zero-based position in CUI's eight presets.
+// ## Returns
+// The part identity while the palette is open.
+public function PresetId(Id: string; Index: int): string;
+requires Index >= 0 and Index < 8;
+begin
+  return Id + '/preset/' + Index.ToString();
+end function;
+
+// Builds the native swatch field and its color palette.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Value`: Model-owned color. CUI edits its RGB channels.
+// - `OnChange`: Maps an RGB proposal with the original alpha to a message.
+// - `Enabled`: Whether the picker accepts input.
+// ## Returns
+// The graphical color picker.
+public function ColorPicker<TMsg>(
+  Id: string; Value: G.Color; OnChange: function(G.Color): TMsg; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ColorPicker(Id, Value, OnChange, Enabled);
+end function;
+end unit;

@@ -1,0 +1,37 @@
+unit GuiGallery.Pages.Actions.Widgets.SwipeActions;
+
+uses
+  GuiGallery.Pages.Actions.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  System as Sys;
+
+function Row(Id: string; Title: string): E.Element<State.Msg>;
+begin
+  return Swipe.SwipeItem<State.Msg>(
+    Id, E.Size<State.Msg>(E.Text<State.Msg>(Title), new L.Flex(Basis := L.Extent.Fill)),
+    [new Swipe.Item('Done', Sys.Char.ConvertFromUtf32($E06C), S.Tone.Success)],
+    [
+      new Swipe.Item('Archive', Sys.Char.ConvertFromUtf32($E041), S.Tone.Info),
+      new Swipe.Item('Delete', Sys.Char.ConvertFromUtf32($E18E), S.Tone.Danger)
+    ],
+    State.Msg.SwipeChoice,
+    new Swipe.Options(Icon := Sys.Char.ConvertFromUtf32($E076), Detail := 'Today')
+  );
+end function;
+
+// Shows the three original CUI swipe rows.
+// ## Returns
+// A compact card of preview tasks.
+public function View(): E.Element<State.Msg>;
+begin
+  return E.Styled<State.Msg>(
+    E.Column<State.Msg>(
+      new L.Flow(Padding := G.Points(6), Gap := G.Points(6)),
+      Row('swipe-design', 'Review the design tokens'),
+      Row('swipe-release', 'Reply to Jonas about the release'),
+      Row('swipe-venue', 'Book the offsite venue')
+    ),
+    S.Role.OutlinedPanel
+  );
+end function;
+end unit;

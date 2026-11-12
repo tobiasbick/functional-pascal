@@ -1,0 +1,53 @@
+unit GuiGallery.Pages.Pickers.View;
+
+uses
+  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Selects as S, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, GuiGallery.Pages.Pickers.Widgets.DateRange as DateRange,
+  GuiGallery.Pages.Pickers.Widgets.Time as Time, GuiGallery.Pages.Pickers.Widgets.WheelsAndDial as WheelsAndDial,
+  GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram as RulerAndHistogram;
+
+// Shows the original CUI Pickers page.
+// ## Parameters
+// - `Model`: Current picker state.
+// ## Returns
+// The five original sections in their display order.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const Choices: array of S.Item := [
+    new S.Item('C'), new S.Item('C++'), new S.Item('Rust'), new S.Item('Zig'),
+    new S.Item('Go'), new S.Item('Swift'), new S.Item('Kotlin'), new S.Item('Odin')
+  ];
+  const Languages: E.Element<State.Msg> := Multi.MultiSelect<State.Msg>(
+    'picker-languages', Choices, Model.Languages, State.Msg.SetLanguages,
+    new Multi.Options(Label := 'Languages', Searchable := true)
+  );
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>('Multi-select', 'Chips for the chosen items, checkboxes in the list.'),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(Languages), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(320)))
+      )
+    ),
+    G.Heading<State.Msg>(
+      'Date range',
+      'Presets on the left, two months to pick a start and an end.'
+    ),
+    DateRange.View(Model),
+    G.Heading<State.Msg>('Time', 'A field with hour and minute columns, 24 hour or 12 hour.'),
+    Time.View(Model),
+    G.Heading<State.Msg>(
+      'Wheels and dial',
+      'Drag, scroll or use the arrow keys. Several wheels make a date reel.'
+    ),
+    WheelsAndDial.View(Model),
+    G.Heading<State.Msg>(
+      'Ruler and histogram',
+      'A tape that slides under a fixed marker, and a range over its data.'
+    ),
+    RulerAndHistogram.View(Model)
+  );
+end function;
+end unit;

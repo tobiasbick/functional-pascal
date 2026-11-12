@@ -1,0 +1,66 @@
+unit GuiGallery.Pages.Pickers.State;
+
+uses Fpas.Ui.DateRanges as R, Fpas.Ui.RangeSliders as Range, System as Sys;
+
+// State owned by the extended Pickers page.
+public type Model = record
+  // Model-owned selections in the Languages example.
+  public Languages: array of bool := [true, false, true, false, false, true, false, false];
+  // Selection in the field with relative presets.
+  public DateRange: R.Value := R.Value.Complete(
+    new Sys.DateOnly(2026, 11, 3),
+    new Sys.DateOnly(2026, 11, 14)
+  );
+  // Selection shared by the second field and the inline calendar.
+  public Stay: R.Value := R.Value.Complete(
+    new Sys.DateOnly(2026, 12, 18),
+    new Sys.DateOnly(2026, 12, 27)
+  );
+  // Time shown by the 24-hour field.
+  public StartTime: Sys.TimeOnly := new Sys.TimeOnly(9, 30);
+  // Time shown by the 12-hour field.
+  public EndTime: Sys.TimeOnly := new Sys.TimeOnly(18, 45);
+  // Zero-based day choice in the date reel.
+  public Day: int := 13;
+  // Zero-based month choice in the date reel.
+  public Month: int := 10;
+  // Zero-based year choice in the date reel.
+  public Year: int := 6;
+  // Time shown by the analog dial.
+  public DialTime: Sys.TimeOnly := new Sys.TimeOnly(7, 25);
+  // Selected height in centimeters.
+  public Height: float := 172.0F;
+  // Selected temperature in degrees Celsius.
+  public Temperature: float := 21.5F;
+  // Selected price interval.
+  public Price: Range.Interval := new Range.Interval(40.0F, 160.0F);
+end record;
+
+// Actions accepted by the extended Pickers page.
+public type Msg = variant
+  // Accept a new native Languages selection.
+  SetLanguages(Value: array of bool);
+  // Accept a selection from the field with presets.
+  SetDateRange(Value: R.Value);
+  // Accept a selection from either of the stay controls.
+  SetStay(Value: R.Value);
+  // Accept the time from the 24-hour field.
+  SetStartTime(Value: Sys.TimeOnly);
+  // Accept the time from the 12-hour field.
+  SetEndTime(Value: Sys.TimeOnly);
+  // Accept the chosen day index.
+  SetDay(Index: int);
+  // Accept the chosen month index.
+  SetMonth(Index: int);
+  // Accept the chosen year index.
+  SetYear(Index: int);
+  // Accept the time from the analog dial.
+  SetDialTime(Value: Sys.TimeOnly);
+  // Accept a height proposed by the ruler.
+  SetHeight(Value: float);
+  // Accept a temperature proposed by the ruler.
+  SetTemperature(Value: float);
+  // Accept a price interval proposed by the histogram.
+  SetPrice(Value: Range.Interval);
+end variant;
+end unit;

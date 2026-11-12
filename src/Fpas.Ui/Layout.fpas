@@ -71,6 +71,8 @@ public type Flow = record
   public Align: Alignment := Alignment.Default;
   // Whether a graphical row continues on another line when its children do not fit.
   public Wrap: bool := false;
+  // Optional graphical clipping of children and paint at the stack bounds.
+  public Clip: bool? := null;
 end record;
 
 // An application-facing size class for responsive views.

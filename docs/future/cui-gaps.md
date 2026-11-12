@@ -213,10 +213,15 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   the native icon button. TUI: implemented; target caption with sun/moon symbol.
 - [x] Reactions (`cui_reactions`): [API][fpas-reactions]. GUI delegates the
   count animation and interaction to CUI and returns the changed item to the model.
-- [ ] Speed dial (`cui_speed_dial`)
+- [x] Speed dial (`cui_speed_dial`): [API][fpas-speed-dial]. Actions shows the
+  original Create dial. CUI owns the floating layout and animation. Gallery
+  tests cover opening, choosing an action, Escape and focus return.
 - [x] User menu (`cui_user_menu`): [API][fpas-user-menu]. GUI uses CUI's native
   account trigger and popup with shared menu commands and focus handling.
-- [ ] Swipe actions (`cui_swipe_item_begin`)
+- [x] Swipe actions (`cui_swipe_item_begin`): [API][fpas-swipe-actions]. Actions
+  shows the three original task rows and the resulting toasts. The tests
+  exercise mouse dragging and the Windows horizontal wheel path used by
+  touchpads inside a vertical scroll view.
 - [x] Segmented control (`cui_segmented`): [API][fpas-segmented]. GUI uses native
   CUI; Buttons contains the upstream view and compact date-range examples.
   TUI: implemented; joined cell segments, explicit glyphs or labels, Tab and
@@ -284,30 +289,88 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   Inputs shows Country and searchable Language choices with stable option
   indices. Search-dismissal focus workaround:
   [CUI-004](cui-upstream-bugs.md#cui-004). TUI: deferred; graphical profile required.
-- [ ] Multi-select (`cui_multi_select`)
-- [ ] Calendar (`cui_calendar`)
-- [ ] Date picker (`cui_date_picker`)
-- [ ] Date range calendar (`cui_range_calendar`)
-- [ ] Date range picker (`cui_date_range_picker`)
-- [ ] Time picker (`cui_time_picker`)
-- [ ] Time dial (`cui_time_dial`)
-- [ ] Wheel picker (`cui_wheel_picker`)
-- [ ] Color picker (`cui_color_picker`)
-- [ ] Emoji picker (`cui_emoji_picker`)
+- [x] Multi-select (`cui_multi_select`): [API][fpas-multi-select]. Pickers
+  shows the original searchable Languages example. Gallery tests cover
+  filtering, controlled selection, and dismissal with focus return.
+- [x] Calendar (`cui_calendar`): [API][fpas-calendar]. The supplementary
+  Inputs example shares the Due date selection. The gallery verifies
+  day selection and browsing across a year boundary. Its Windows capture
+  matches a standalone native CUI calendar.
+- [x] Date picker (`cui_date_picker`): [API][fpas-calendar]. Inputs shows the
+  original Due date field. Windows comparison covers the field and popup.
+  The gallery checks selection, an empty value, dismissal and focus return.
+  Focus ring workaround: [CUI-012](cui-upstream-bugs.md#cui-012).
+- [x] Date range calendar (`cui_range_calendar`): [API][fpas-date-range].
+  Pickers shows the original inline two-month calendar, linked to Stay dates.
+  The gallery verifies month navigation and selection across a year boundary.
+- [x] Date range picker (`cui_date_range_picker`): [API][fpas-date-range].
+  Pickers shows the original fields with and without presets. The gallery
+  verifies presets, shared partial selections, Escape, and focus return.
+  The Pickers content matched the CUI reference on Windows in all three captures.
+- [x] Time picker (`cui_time_picker`): [API][fpas-time-controls]. Pickers shows
+  the original 24-hour and 12-hour examples. Windows captures match the
+  reference with both fields closed and each popup open. The gallery checks
+  minute steps, AM/PM, Escape and focus return.
+- [x] Time dial (`cui_time_dial`): [API][fpas-time-controls]. The original
+  clock face is captured in Pickers. The gallery verifies hour and minute
+  selection and keyboard activation of the hour selector.
+- [x] Wheel picker (`cui_wheel_picker`): [API][fpas-time-controls]. Pickers
+  shows the original three joined date wheels. The gallery verifies keyboard
+  wrapping, wheel input, dragging and visible captions on keyboard focus.
+  Native workarounds: [CUI-009](cui-upstream-bugs.md#cui-009) and
+  [CUI-010](cui-upstream-bugs.md#cui-010).
+- [x] Color picker (`cui_color_picker`): [API][fpas-color-emoji]. Inputs shows
+  the original Brand color field. The gallery verifies presets, hue editing
+  after a model change, alpha preservation, and keyboard focus and dismissal.
+  Windows captures match within one color level per channel. Native
+  workarounds: [CUI-012](cui-upstream-bugs.md#cui-012) and
+  [CUI-013](cui-upstream-bugs.md#cui-013).
+- [x] Emoji picker (`cui_emoji_picker`): [API][fpas-color-emoji]. Smart inputs
+  shows the original message field and popup. The gallery verifies group
+  navigation, search, insertion, and persistence of recent emoji and skin
+  tone. The accepted Smart inputs sections match the Windows reference
+  with the popup closed and open after the glyphs finish loading.
 - [x] Slider (`cui_slider`): [API][fpas-sliders]. Selection shows continuous
   Volume and stepped Brightness with percentage display and keyboard adjustment.
   TUI: graphical profile required.
 - [x] Range slider (`cui_range_slider`): [API][fpas-sliders]. Selection shows
   Price range and tests pointer and keyboard adjustment of both endpoints.
   TUI: graphical profile required.
-- [ ] Ruler slider (`cui_ruler_slider`)
-- [ ] Histogram slider (`cui_histogram_slider`)
-- [ ] Knob (`cui_knob`)
-- [ ] Fader (`cui_fader`)
-- [ ] Level meter (`cui_level_meter`)
-- [ ] Dropzone (`cui_dropzone`)
-- [ ] Avatar upload (`cui_avatar_upload`)
-- [ ] Signature pad (`cui_signature_pad`)
+- [x] Ruler slider (`cui_ruler_slider`): [API][fpas-ruler-histogram]. Pickers
+  shows the original Height and Temperature tapes. The gallery verifies
+  dragging, both wheel axes, Shift+arrow and visible ticks with keyboard focus.
+  Native workarounds: [CUI-009](cui-upstream-bugs.md#cui-009),
+  [CUI-010](cui-upstream-bugs.md#cui-010) and [CUI-011](cui-upstream-bugs.md#cui-011).
+- [x] Histogram slider (`cui_histogram_slider`): [API][fpas-ruler-histogram].
+  Pickers shows the original 24-bin Price example and verifies both endpoints.
+  Windows captures of the complete page at rest and after price adjustment
+  match the CUI content within one level per color channel.
+- [x] Knob (`cui_knob`): [API][fpas-audio]. Audio shows the original Cutoff,
+  Resonance, Attack and Pan. The gallery verifies logarithmic reset and drag.
+  TUI: graphical profile required.
+- [x] Fader (`cui_fader`): [API][fpas-audio]. Audio shows the six original
+  mixer strips with stereo peaks and the Kick scale. The gallery verifies
+  the focused wheel and keyboard input. TUI: graphical profile required.
+- [x] Level meter (`cui_level_meter`): [API][fpas-audio]. Audio shows the
+  segmented stereo master, and the native test checks clip clearing.
+  The accepted Audio content matches CUI pixel for pixel in Windows software
+  captures at 1201 and 900 points with the same signal phase.
+  TUI: graphical profile required.
+- [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. Capture shows the original
+  tall and compact targets. Windows tests verify accepted and rejected shell
+  drops and confirmation and cancellation in the native file dialog.
+  Native workaround: [CUI-015](cui-upstream-bugs.md#cui-015).
+  TUI: graphical profile required.
+- [x] Avatar upload (`cui_avatar_upload`): [API][fpas-capture]. Capture shows the
+  original profile photo control. Windows verifies Unicode file paths and
+  replacement of the rendered image. Native workarounds:
+  [CUI-014](cui-upstream-bugs.md#cui-014) and [CUI-015](cui-upstream-bugs.md#cui-015).
+  TUI: graphical profile required.
+- [x] Signature pad (`cui_signature_pad`): [API][fpas-capture]. Capture shows
+  the original 520 by 180 pad and verifies native ink, stroke boundaries,
+  and clearing. In the Windows software comparison at 1000 by 1000, five
+  pixels in the Capture content differ by at most one level per color channel.
+  TUI: graphical profile required.
 
 ### Navigation and app chrome
 
@@ -605,6 +668,9 @@ track that native build option with the GUI RTL layout work.
 [fpas-selection]: ../../src/Fpas.Ui/README.md#checkbox-switch-and-radio-controls
 [fpas-radio-cards]: ../../src/Fpas.Ui/README.md#radio-cards
 [fpas-sliders]: ../../src/Fpas.Ui/README.md#slider-and-range-slider
+[fpas-ruler-histogram]: ../../src/Fpas.Ui/README.md#ruler-and-histogram-sliders
+[fpas-audio]: ../../src/Fpas.Ui/README.md#audio-controls
+[fpas-capture]: ../../src/Fpas.Ui/README.md#capture-controls
 [fpas-chips-rating]: ../../src/Fpas.Ui/README.md#chip-and-rating
 [fpas-navigation-controls]: ../../src/Fpas.Ui/README.md#tabs-breadcrumb-and-pagination
 [fpas-stepper]: ../../src/Fpas.Ui/README.md#stepper
@@ -618,6 +684,8 @@ track that native build option with the GUI RTL layout work.
 [fpas-split-button]: ../../src/Fpas.Ui/README.md#split-button
 [fpas-menu]: ../../src/Fpas.Ui/README.md#dropdown-menu
 [fpas-reactions]: ../../src/Fpas.Ui/README.md#reactions
+[fpas-speed-dial]: ../../src/Fpas.Ui/README.md#speed-dial
+[fpas-swipe-actions]: ../../src/Fpas.Ui/README.md#swipe-actions
 [fpas-user-menu]: ../../src/Fpas.Ui/README.md#user-menu
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
 [fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
@@ -629,6 +697,11 @@ track that native build option with the GUI RTL layout work.
 [fpas-one-time-code]: ../../src/Fpas.Ui/README.md#one-time-code-input
 [fpas-password-strength]: ../../src/Fpas.Ui/README.md#password-strength-meter
 [fpas-select]: ../../src/Fpas.Ui/README.md#select
+[fpas-multi-select]: ../../src/Fpas.Ui/README.md#multi-select
+[fpas-date-range]: ../../src/Fpas.Ui/README.md#date-range
+[fpas-calendar]: ../../src/Fpas.Ui/README.md#calendar-and-date-picker
+[fpas-color-emoji]: ../../src/Fpas.Ui/README.md#color-and-emoji-pickers
+[fpas-time-controls]: ../../src/Fpas.Ui/README.md#time-picker-wheel-picker-and-time-dial
 [fpas-dialog]: ../../src/Fpas.Ui/README.md#dialog-and-action-footer
 [fpas-accordion]: ../../src/Fpas.Ui/README.md#accordion-and-expandable-card
 [fpas-expandable-text]: ../../src/Fpas.Ui/README.md#expandable-text

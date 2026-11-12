@@ -47,6 +47,9 @@ begin
       Reactions := ChangeReaction(State.Reactions, Index, Value);
     end with;
     when S.Msg.UserCommand(_): State;
+    when S.Msg.DialChoice(const Index: int): State with
+      DialChoice := Index;
+    end with;
     else State;
   end case;
   return new Mvu.Transition<S.Model, S.Msg>(Next, Commands.ForAction(State, Message));

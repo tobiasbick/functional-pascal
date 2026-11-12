@@ -80,7 +80,7 @@ public sealed class CuiFeedbackTests
         {
             window.Resize(width, 500);
             Draw(); Draw();
-            Assert.Equal(width - 24, window.GetControlRectangle("bar").Width);
+            Assert.Equal(window.Size.Width - 24, window.GetControlRectangle("bar").Width);
             Assert.Equal(12, window.GetControlRectangle("bar").Height);
             Assert.Equal(28, window.GetControlRectangle("spinner").Height);
             Assert.True(window.GetControlRectangle("activity").Height > 6);

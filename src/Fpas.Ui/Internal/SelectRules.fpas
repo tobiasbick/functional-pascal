@@ -1,6 +1,17 @@
 unit Fpas.Ui.Internal.SelectRules;
 
-uses Fpas.Ui.Selects as S, Fpas.Ui.Internal.Rules as R, System as Sys;
+uses Fpas.Ui.Selects as S, Fpas.Ui.MultiSelects as M, Fpas.Ui.Internal.Rules as R, System as Sys;
+
+procedure Choices(Items: array of S.Item; At: string);
+begin
+  for Item: S.Item in Items do
+    R.CheckText(Item.Label, At + '/option');
+    R.CheckText(Item.Icon, At + '/icon');
+    if Sys.String.IsNullOrWhiteSpace(Item.Label) then
+      R.Reject(At, 'Each select option needs a visible label.');
+    end if;
+  end for;
+end procedure;
 
 // Validates the select options before native presentation.
 //
@@ -17,12 +28,23 @@ begin
     R.Reject(At, 'A select needs choices and a valid index or minus one.');
   end if;
 
-  for Item: S.Item in Items do
-    R.CheckText(Item.Label, At + '/option');
-    R.CheckText(Item.Icon, At + '/icon');
-    if Sys.String.IsNullOrWhiteSpace(Item.Label) then
-      R.Reject(At, 'Each select option needs a visible label.');
-    end if;
-  end for;
+  Choices(Items, At);
+end procedure;
+
+// Validates a native multi-select and its controlled selection.
+// ## Parameters
+// - `Items`: Choices in display order.
+// - `Selected`: Flags in the same order.
+// - `Settings`: Picker options.
+// - `At`: Diagnostic path.
+public procedure MultiSelect(Items: array of S.Item; Selected: array of bool; Settings: M.Options; At: string);
+begin
+  R.CheckText(Settings.Label, At + '/label');
+  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  if Items.Length = 0 or Selected.Length <> Items.Length or Settings.MaxChips < 0 then
+    R.Reject(At, 'A multi-select needs choices, matching flags and a nonnegative chip limit.');
+  end if;
+
+  Choices(Items, At);
 end procedure;
 end unit;

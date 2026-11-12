@@ -1,6 +1,14 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.EmojiPickers as EmojiPickers,
+  Fpas.Ui.DatePickers as DatePickers,
+  Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.AvatarUploads as Avatars, Fpas.Ui.SignaturePads as Signatures,
+  Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.LevelMeters as Levels,
+  Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms,
+  Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
+  Fpas.Ui.DateRanges as Dates, Fpas.Ui.DateRangePickers as RangePickers,
+  Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi,
   Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as ProgressBars, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Popovers as Popovers, Fpas.Ui.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Tabs as Tabs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.Themes as Themes, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Layout as L, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Graphics as G, System as Sys;
 
@@ -15,6 +23,8 @@ public type Element<TMsg> = variant
   ProgressBar(Id: string; Value: float; Settings: ProgressBars.Options);
   // Display a native activity spinner.
   Spinner(Id: string; Size: float);
+  // Display linear audio peaks on a native dBFS scale.
+  LevelMeter(Id: string; Peaks: array of float; Settings: Levels.Options; OnClipCleared: Sys.Func<TMsg>?);
   // Display native capacity usage and its threshold color.
   Meter(Id: string; Label: string; Used: float; Total: float; Unit: string);
   // Display native circular progress with a literal caption.
@@ -62,6 +72,10 @@ public type Element<TMsg> = variant
   ReactionGroup(Id: string; Items: array of Reactions.Item; OnChange: function(int, Reactions.Item): TMsg; Enabled: bool);
   // Native account trigger and its command popup.
   AccountMenu(Id: string; Name: string; Entries: array of Menus.Entry<TMsg>; Settings: UserMenus.Options);
+  // Native floating trigger and ordered actions.
+  SpeedDialAction(Id: string; Items: array of Speed.Item; OnChoose: function(int): TMsg; Settings: Speed.Options);
+  // Foreground content with native swipe actions on either side.
+  SwipeRow(Id: string; Content: Element<TMsg>; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
   // Propose a changed checkbox value through native CUI.
   CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool);
   // Propose a changed switch value through native CUI.
@@ -76,6 +90,20 @@ public type Element<TMsg> = variant
   SliderAction(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Sliders.Options);
   // Propose both endpoints of a native range slider in one message.
   RangeSliderAction(Id: string; Label: string; Value: RangeSliders.Interval; Minimum: float; Maximum: float; OnChange: function(RangeSliders.Interval): TMsg; Enabled: bool);
+  // A native file drop target with an optional browse action.
+  Dropzone(Id: string; OnDrop: function(array of string): TMsg; OnBrowse: Sys.Func<TMsg>?; Settings: Dropzones.Options);
+  // A native avatar with image drop and an optional browse action.
+  AvatarUpload(Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg; OnBrowse: Sys.Func<TMsg>?; Size: float; Enabled: bool);
+  // A native drawing pad for signatures and its Clear action.
+  SignaturePad(Id: string; OnChange: Sys.Func<Signatures.Signature, TMsg>?; Settings: Signatures.Options);
+  // A native rotary control.
+  Knob(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Knobs.Options);
+  // A native mixer fader.
+  Fader(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Faders.Options);
+  // A native ruler with a movable tape.
+  RulerSlider(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Rulers.Options);
+  // A native histogram with an adjustable range.
+  HistogramSlider(Id: string; Label: string; Bins: array of float; Value: RangeSliders.Interval; Minimum: float; Maximum: float; OnChange: function(RangeSliders.Interval): TMsg; Settings: Histograms.Options);
   // Toggle an independent graphical selection.
   ChipAction(Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg; Icon: string; Enabled: bool);
   // Select a graphical whole-star rating.
@@ -110,6 +138,26 @@ public type Element<TMsg> = variant
   PasswordStrengthMeter(Id: string; Password: string);
   // Choose an option by position, with optional filtering.
   SelectInput(Id: string; Items: array of Selects.Item; Selected: int; OnChange: function(int): TMsg; Settings: Selects.Options);
+  // Native multi-select with model-owned flags.
+  MultiSelectInput(Id: string; Items: array of Selects.Item; Selected: array of bool; OnChange: function(array of bool): TMsg; Settings: Multi.Options);
+  // Inline calendar for a model-owned range.
+  RangeCalendar(Id: string; Value: Dates.Value; OnChange: function(Dates.Value): TMsg; Months: int; Enabled: bool);
+  // Graphical date range field and its native popup.
+  RangePicker(Id: string; Value: Dates.Value; OnChange: function(Dates.Value): TMsg; Settings: RangePickers.Options);
+  // An inline calendar with a single model-owned selection.
+  Calendar(Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg; Enabled: bool);
+  // A date field with a single-month calendar popup.
+  DatePicker(Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg; Settings: DatePickers.Options);
+  // A native swatch field and RGB palette.
+  ColorPicker(Id: string; Value: G.Color; OnChange: function(G.Color): TMsg; Enabled: bool);
+  // A searchable native emoji palette with model-owned history and tone.
+  EmojiPicker(Id: string; Value: EmojiPickers.State; OnChange: function(EmojiPickers.Change): TMsg; Settings: EmojiPickers.Options);
+  // A native field with hour and minute columns.
+  TimePicker(Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg; Settings: TimePickers.Options);
+  // A native wheel that selects one caption by index.
+  WheelPicker(Id: string; Items: array of string; Selected: int; OnChange: function(int): TMsg; Settings: WheelPickers.Options);
+  // A native analog face for choosing the hour and minute.
+  TimeDial(Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg; Size: float; Enabled: bool);
   // Edit a bounded number with native step buttons.
   NumberField(Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg; Settings: NumberFields.Options);
   // Present a native centered modal over the base view.

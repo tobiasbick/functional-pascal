@@ -1,0 +1,234 @@
+unit GalleryActionsPickersContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
+  GuiGallery.App.Update as G, GuiGallery.Pages.Actions.State as Actions,
+  Fpas.Ui.SpeedDials as Dial, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Selects as Selects,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Mvu.Application as App, System.Threading as Threads;
+
+// Exercises CUI's swipe rows, speed dial and Languages picker through the gallery.
+// ## Parameters
+// - `Renderer`: Native renderer to exercise.
+// - `Capture`: Prefix for the page captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  begin
+    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    case Message of
+      when State.Msg.Actions(Actions.Msg.SwipeChoice(const At: Swipe.Side, const Index: int)):
+        Swipes := Swipes + 1;
+        ChosenSide := At;
+        ChosenIndex := Index;
+      else
+    end case;
+
+    if Target <> '' then
+      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel, 0.0F);
+      Wheel := 0.0F;
+    end if;
+
+    if PendingKey <> 0 then
+      Window.SetKey(PendingKey, true);
+      Window.SetKey(PendingKey, false);
+      PendingKey := 0;
+    end if;
+
+    if Input <> '' then
+      Window.InputText(Input);
+      Input := '';
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'Actions and Pickers gallery closed unexpectedly.');
+  end procedure;
+
+  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Area: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Area.Width > 0 and Area.Height > 0, 'No clickable geometry for ' + Id);
+    X := Area.X + Area.Width / 2;
+    Y := Area.Y + Area.Height / 2;
+  end procedure;
+
+  procedure Leave(Session: Gui.Session<State.Msg>);
+  begin
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Trailing: bool := false);
+  begin
+    Aim(Session, Id);
+    if Trailing then
+      X := X + A.Control(Session, Id).Bounds.Width / 2 - 12.0F;
+    end if;
+
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    Leave(Session);
+  end procedure;
+
+  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  begin
+    PendingKey := Value;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Target := Id;
+    A.Send(Session, State.Msg.Preview);
+    Target := '';
+    A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
+  end procedure;
+
+  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return true;
+      end if;
+    end for;
+
+    return false;
+  end function;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Wheel: float := 0.0F;
+  var Button: int := -1;
+  var PendingKey: int := 0;
+  var Input: string := '';
+  var Target: string := '';
+  var Swipes: int := 0;
+  var ChosenSide: Swipe.Side := Swipe.Side.Left;
+  var ChosenIndex: int := -1;
+  const Design: string := 'swipe-design';
+  const Release: string := 'swipe-release';
+  const Speed: string := 'action-speed-dial';
+  const Languages: string := 'picker-languages';
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Actions and Pickers',
+    1000,
+    1440,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
+    ThemeFor := G.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+  Session.CapturePng(Capture + '.actions-complete.png');
+
+  Click(Session, Speed);
+  A.Check(A.Control(Session, Speed).Value = 'true', 'Click must open the native speed dial.');
+  Session.CapturePng(Capture + '.speed-dial.png');
+  Click(Session, Dial.ItemId(Speed, 1));
+  A.Check(
+    A.HasText(Session, 'Upload image') and A.Control(Session, Speed).Value = 'false',
+    'A native dial choice must reach the Actions model and close the dial.'
+  );
+  Focus(Session, Speed);
+  Key(Session, 2);
+  A.Check(A.Control(Session, Speed).Value = 'true', 'Enter must open the focused dial.');
+  Focus(Session, Dial.ItemId(Speed, 1));
+  Key(Session, 3);
+  A.Check(
+    A.Control(Session, Speed).Value = 'false' and A.Control(Session, Speed).Focused,
+    'Escape must dismiss the dial and keep trigger focus.'
+  );
+
+  A.Send(Session, State.Msg.Show(State.Page.Pickers));
+  Step(Session);
+  A.Check(
+    A.Control(Session, Languages).Value = 'C, Rust, Swift',
+    'Languages must start with the original selection.'
+  );
+  Session.CapturePng(Capture + '.multi-select.png');
+  Click(Session, Languages, true);
+  A.Check(
+    A.Control(Session, Selects.OptionId(Languages, 2)).Value = 'true',
+    'The original Rust checkbox must open selected.'
+  );
+  Session.CapturePng(Capture + '.multi-select-open.png');
+  Input := 'Rust';
+  Step(Session);
+  Step(Session);
+  A.Check(
+    HasControl(Session, Selects.OptionId(Languages, 2))
+    and not HasControl(Session, Selects.OptionId(Languages, 0)),
+    'The native search must filter to the matching original index.'
+  );
+  Click(Session, Selects.OptionId(Languages, 2));
+  A.Check(
+    A.Control(Session, Languages).Value = 'C, Swift'
+    and A.Control(Session, Selects.OptionId(Languages, 2)).Value = 'false',
+    'Changing a checkbox must update the model and leave the popup open.'
+  );
+  Key(Session, 3);
+  A.Check(
+    not HasControl(Session, Selects.OptionId(Languages, 2))
+    and A.Control(Session, Languages).Focused,
+    'Escape must close the searchable picker and restore trigger focus.'
+  );
+  A.Send(Session, State.Msg.Show(State.Page.Actions));
+  Step(Session);
+  Aim(Session, Design);
+  Button := 1;
+  Step(Session);
+  X := X - 110.0F;
+  Step(Session);
+  Button := 0;
+  Step(Session);
+  Leave(Session);
+  A.Check(Swipes = 0, 'Dragging should reveal commands without choosing one.');
+  Session.CapturePng(Capture + '.swipe-revealed.png');
+  Click(Session, Swipe.ItemId(Design, Swipe.Side.Right, 0));
+  A.Check(
+    Swipes = 1 and ChosenSide = Swipe.Side.Right and ChosenIndex = 0,
+    'The revealed Archive action must dispatch once.'
+  );
+
+  const Top: float := A.Control(Session, Release).Bounds.Y;
+  Aim(Session, Release);
+  Wheel := 3.0F;
+  Step(Session);
+  Threads.Thread.Sleep(175);
+  Step(Session);
+  Leave(Session);
+  A.Check(
+    A.Control(Session, Release).Bounds.Y = Top and Swipes = 1,
+    'A horizontal gesture must reveal the row without scrolling the page or choosing an action.'
+  );
+  Click(Session, Swipe.ItemId(Release, Swipe.Side.Left, 0));
+  A.Check(
+    Swipes = 2 and ChosenSide = Swipe.Side.Left and ChosenIndex = 0,
+    'The touchpad wheel path must reveal Done and allow it to be chosen.'
+  );
+end procedure;
+end unit;

@@ -1,0 +1,25 @@
+unit Fpas.Ui.DateRangeCalendars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.DateRanges as R;
+
+// Displays CUI's inline date range calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable calendar identity.
+// - `Value`: Model-owned range or partial selection.
+// - `OnChange`: Maps a native proposal to a message.
+// - `Months`: One or two consecutive months.
+// - `Enabled`: Whether day selection and month navigation accept input.
+// ## Returns
+// An inline graphical calendar with CUI-owned layout and browsing.
+public function DateRangeCalendar<TMsg>(
+  Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
+  Months: int := 2; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+requires Months = 1 or Months = 2;
+begin
+  return E.Element<TMsg>.RangeCalendar(Id, Value, OnChange, Months, Enabled);
+end function;
+end unit;

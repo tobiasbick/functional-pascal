@@ -52,7 +52,11 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   Pickers shows Country, searchable Language, Due date, and Seats in their
   original grid positions, stacked at narrow widths, with Brand color beneath
   them. The supplementary
-  Calendar below the card shares the Due date selection.
+  Calendar below the card shares the Due date selection. Its title opens CUI's
+  month and year choices; navigation and visible choices remain natively drawn.
+  The Text fields and Pickers cards use CUI's native responsive grids. Shared
+  section headings use native top padding, and card outlines are drawn without
+  an extra clipping pass.
 - **Selection** shows native notification checkboxes, connectivity switches
   and the exclusive save-frequency radio group. The checkbox and switch
   cards share a row when both fit and stack at narrower widths. Radio cards
@@ -85,8 +89,8 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   shortcuts shown as key hints on hover.
 - **Lists** shows the original three-question native accordion.
 - **Feedback** shows CUI's four original alerts, including dismissible storage
-  warning, upload percentage, indeterminate indexing, Storage usage and three
-  spinner sizes. Loading reproduces the native skeleton avatar, percentage text
+  warning, upload percentage, indeterminate indexing, dithered export and sync,
+  Storage usage and three spinner sizes. Loading reproduces the native skeleton avatar, percentage text
   lines and body placeholder, with CUI-owned shimmer and reduced-motion behavior.
   Activity reproduces the three native deployment, review and
   failed-build entries. Goals shows the native 104-point Onboarding and Quota rings.
@@ -95,6 +99,8 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   tones, presence and the overlapping team with its overflow count. The
   empty-state New project action shows a success toast. Leaving the page
   releases native dismissal and interpolation state.
+  The new dither spinner/status-spinner examples and skeleton group remain
+  outside the accepted subset; their upstream gallery examples are not shown yet.
 - **Reader** shows the original article, nested outline entries and scroll
   fades. Click an entry or activate a focused row with Enter to jump to its
   heading. The marker follows the reader while scrolling.

@@ -11,8 +11,8 @@
  * @param enabled Whether the field accepts input.
  * @param focus Whether to request trigger focus.
  * @param trigger Receives the native field node.
- * @param parts Optional 44-entry array receiving day and navigation codes.
- * @param nodes Corresponding native nodes, also with 44 entries.
+ * @param parts Optional 45-entry array receiving the same part codes as fpas_cui_calendar.
+ * @param nodes Corresponding native nodes, also with 45 entries.
  * @param count Receives the number of reported popup parts.
  * @return The proposed day number, or the original value. */
 CUI_API int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *label,

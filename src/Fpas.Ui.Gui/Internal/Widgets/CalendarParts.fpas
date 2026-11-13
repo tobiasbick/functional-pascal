@@ -8,6 +8,12 @@ function Kind(Part: int): string;
 begin
   return if Part >= 0 then
     'calendar-day'
+  elsif Part <= -200000 then
+    'calendar-year-choice'
+  elsif Part <= -100 then
+    'calendar-month-choice'
+  elsif Part = -10 then
+    'calendar-title'
   else
     'calendar-month'
   end if;
@@ -17,6 +23,12 @@ function Identity(Id: string; Part: int): string;
 begin
   return if Part >= 0 then
     Calendar.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
+  elsif Part <= -200000 then
+    Calendar.YearChoiceId(Id, -Part - 200000)
+  elsif Part <= -100 then
+    Calendar.MonthChoiceId(Id, (-Part - 100) div 12, (-Part - 100) mod 12 + 1)
+  elsif Part = -10 then
+    Calendar.TitleId(Id)
   else
     Calendar.MonthId(Id, Part = -9)
   end if;
@@ -36,6 +48,25 @@ end function;
 function Iso(Day: Sys.DateOnly): string;
 begin
   return Day.ToString('yyyy-MM-dd', Culture.CultureInfo.InvariantCulture);
+end function;
+
+function Caption(Part: int): string;
+begin
+  return if Part >= 0 then
+    Iso(Sys.DateOnly.FromDayNumber(Part))
+  elsif Part <= -200000 then
+    (-Part - 200000).ToString()
+  elsif Part <= -100 then
+    Culture.CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(
+      (-Part - 100) mod 12 + 1
+    )
+  elsif Part = -10 then
+    'Choose a month and year'
+  elsif Part = -8 then
+    'Previous page'
+  else
+    'Next page'
+  end if;
 end function;
 
 // Publishes selection changes and the native calendar parts.
@@ -74,16 +105,9 @@ begin
     )
   );
   for Part: int in Result.VisibleParts do
-    const Caption: string := if Part >= 0 then
-      Iso(Sys.DateOnly.FromDayNumber(Part))
-    elsif Part = -8 then
-      'Previous month'
-    else
-      'Next month'
-    end if;
     Frame.Controls.Add(
       new App.Control(
-        Identity(Id, Part), Caption, Kind(Part), new Cui.CuiRectangle(), Enabled
+        Identity(Id, Part), Caption(Part), Kind(Part), new Cui.CuiRectangle(), Enabled
       )
     );
   end for;

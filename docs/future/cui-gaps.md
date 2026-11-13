@@ -62,9 +62,10 @@ their host. No new terminal implementation file is required.
 
 ## Reference
 
-The catalog targets the [vendored CUI snapshot][vendor] at commit
-[`c8baf35008807d66efe8e766c8964122227a2f80`][revision]. Compare each component
-with that snapshot before binding it.
+The inventory was assessed against CUI at commit
+[`c8baf35008807d66efe8e766c8964122227a2f80`][revision]. The
+[vendored library][vendor] now pins `86d9781`; review changed and newly added
+components against that snapshot before claiming current gallery parity.
 
 The inventory combines the [core catalog][components], [extended
 catalog][more], [public header][header], and both parts of the native gallery
@@ -76,6 +77,20 @@ axis formatting, and chart annotations are listed separately because the
 gallery also needs them.
 
 ## Shared foundations
+
+### Strict gallery pixel parity
+
+- [ ] Remove the remaining single-channel antialiasing differences in wide page
+  composition. At `86d9781`, Linux software captures at 1240x1700, scale 1,
+  differ by one 8-bit channel step at 182/184 pixels in the Inputs picker card
+  (dark/light), 487 in dark Feedback progress and one in dark Loading. The
+  measured wide picker positions differ by about 0.00012 logical points from
+  direct CUI. Ten of twelve reviewed Inputs regions and four of six reviewed
+  Feedback regions match exactly. Comparisons exclude the reserved sample email,
+  unsynchronized activity animations and the unbound skeleton group. The native
+  widget and calendar tests compare at identical positions and times and pass
+  without a pixel tolerance. Keep strict whole-page parity open until the
+  composition differences are resolved.
 
 ### Native window identity
 
@@ -281,37 +296,42 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   [API][fpas-text-area]. Inputs shows the full-width About field with its hint.
   Windows Software and OpenGL cover LF insertion, Unicode editing, visual-line
   movement, Ctrl+Enter submission with displayed affixes, and wheel routing
-  inside an enclosing viewport. Wheel-routing workaround:
-  [CUI-001](cui-upstream-bugs.md#cui-001). TUI: deferred; graphical profile required.
+  inside an enclosing viewport. The native adapter regression also covers mixed
+  wheel axes and edge handoff using CUI's own routing.
+  TUI: deferred; graphical profile required.
 - [x] Number field, including suffix (`cui_number`): [API][fpas-number-field].
   Inputs shows Seats with model-owned bounds, native step buttons and editable
-  numeric text. Draft and finite-value workaround:
-  [CUI-005](cui-upstream-bugs.md#cui-005). TUI: deferred; graphical profile required.
+  numeric text. CUI validates finite drafts and refreshes committed or blurred
+  text; native adapter regressions cover clamping, NaN and incomplete numbers.
+  TUI: deferred; graphical profile required.
 - [ ] Inline edit (`cui_inline_edit`)
 - [ ] Scrub field (`cui_scrub`)
 - [ ] Money field (`cui_money_input`)
 - [ ] Shortcut recorder and shortcut label (`cui_shortcut_recorder`, `cui_shortcut_label`)
 - [x] Tag input (`cui_tag_input`): [API][fpas-tag-input]. Inputs shows Topics
-  with native tag entry and removal. Batched tag-limit workaround:
-  [CUI-002](cui-upstream-bugs.md#cui-002). TUI: deferred; graphical profile required.
+  with native tag entry, removal and per-event limit enforcement.
+  TUI: deferred; graphical profile required.
 - [x] One-time code input (`cui_otp_input`): [API][fpas-one-time-code]. Inputs
-  shows Verification code with change and completion messages. Replacement
-  completion workaround: [CUI-003](cui-upstream-bugs.md#cui-003).
+  shows Verification code with change and native completion messages. The adapter
+  regression covers replacing a complete code and repeating the same paste.
   TUI: deferred; graphical profile required.
 - [x] Password strength meter (`cui_password_strength`): [API][fpas-password-strength].
   Inputs shows CUI's native score and label for New password.
   TUI: deferred; graphical profile required.
 - [x] Select, including searchable combobox (`cui_select`): [API][fpas-select].
   Inputs shows Country and searchable Language choices with stable option
-  indices. Search-dismissal focus workaround:
-  [CUI-004](cui-upstream-bugs.md#cui-004). TUI: deferred; graphical profile required.
+  indices. CUI restores trigger focus after dismissing its search; native adapter
+  regressions cover Escape followed by Enter to reopen.
+  TUI: deferred; graphical profile required.
 - [x] Multi-select (`cui_multi_select`): [API][fpas-multi-select]. Pickers
   shows the original searchable Languages example. Gallery tests cover
   filtering, controlled selection, and dismissal with focus return.
 - [x] Calendar (`cui_calendar`): [API][fpas-calendar]. The supplementary
   Inputs example shares the Due date selection. The gallery verifies
   day selection and browsing across a year boundary. Its Windows capture
-  matches a standalone native CUI calendar.
+  matches a standalone native CUI calendar. The binding tracks the title and
+  month/year choices in the current snapshot; native keyboard navigation and
+  exact pixel comparisons cover all three views in light and dark themes.
 - [x] Date picker (`cui_date_picker`): [API][fpas-calendar]. Inputs shows the
   original Due date field. Windows comparison covers the field and popup.
   The gallery checks selection, an empty value, dismissal and focus return.
@@ -497,7 +517,8 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   alerts. CUI owns dismissal; pointer, Enter/Space, disabled input, stable literal
   titles, once-only notification, removal and reinsertion are tested.
 - [x] Progress bar (`cui_progress`): [API][fpas-feedback]. Feedback shows the
-  labeled upload percentage and indeterminate indexing bar. CUI owns animation;
+  labeled upload percentage, indeterminate indexing bar and native dithered
+  export/sync examples. CUI owns animation;
   validation, native dimensions, message mapping and resizing are tested.
 - [x] Meter (`cui_meter`): [API][fpas-meter]. Feedback shows the original
   Storage example with 18.4 / 20 GB. CUI owns formatting, interpolation and warning
@@ -507,8 +528,10 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   light/dark and narrow/wide combinations.
 - [x] Spinner (`cui_spinner`): [API][fpas-feedback]. Feedback shows the original
   16/22/28-point sizes. Native rendering is checked alongside alerts and progress
-  against direct CUI calls in 152 light/dark, narrow/wide and option combinations.
+  against direct CUI calls in 224 light/dark, narrow/wide and option combinations,
+  including determinate and indeterminate dither progress.
   Feedback captures cover both renderers in light, dark and narrow layouts.
+  The new dither spinner styles and status spinner are not yet bound.
 - [x] Skeleton (`cui_skeleton`): [API][fpas-skeleton]. Feedback reproduces
   the original Loading avatar, percentage text lines and body placeholder.
   CUI owns shimmer, animation scheduling, rounding and reduced-motion behavior.
@@ -517,6 +540,7 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   native pixel comparisons cover 144 width, height, theme, motion and viewport
   combinations, including native percentage button widths. Feedback captures
   show Loading in light, dark and narrow views.
+  The new skeleton group and its dither option are not yet bound.
 - [x] Progress ring (`cui_progress_ring`): [API][fpas-progress-ring]. Feedback
   shows the original Onboarding and Quota examples at 104 points. CUI owns
   percentage formatting, painting and interpolation. Software/OpenGL tests

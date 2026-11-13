@@ -40,15 +40,17 @@ public sealed partial class CuiWindow
     /// <param name="height">Logical track height; zero uses CUI's default.</param>
     /// <param name="label">Optional literal caption.</param>
     /// <param name="showValue">Whether to display the rounded percentage.</param>
+    /// <param name="dither">Whether to draw the native ordered-dot fill.</param>
     public void Progress(string id, float value, int tone = 0, bool indeterminate = false,
-        float height = 0, string label = "", bool showValue = false)
+        float height = 0, string label = "", bool showValue = false, bool dither = false)
     {
         CheckFrame();
         Utf8.Validate(label, nameof(label));
         CheckProgressValue(value);
         CheckTone(tone);
         CheckFeedbackNumber(height, nameof(height));
-        NativeMethods.Progress(context, Stable(id), value, tone, indeterminate ? 1 : 0, height, label, showValue ? 1 : 0);
+        NativeMethods.Progress(context, Stable(id), value, tone, indeterminate ? 1 : 0, height, label,
+            showValue ? 1 : 0, dither ? 1 : 0);
     }
 
     /// <summary>Draws CUI's native activity spinner.</summary>

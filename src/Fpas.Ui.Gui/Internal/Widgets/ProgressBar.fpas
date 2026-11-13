@@ -16,7 +16,7 @@ public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: float; Sett
 begin
   Frame.Window.Progress(
     C.Token('progress', Id), Value, cast<int>(Settings.Tone),
-    Settings.Indeterminate, Settings.Height, Settings.Label, Settings.ShowValue
+    Settings.Indeterminate, Settings.Height, Settings.Label, Settings.ShowValue, Settings.Dither
   );
   if not Frame.PaintingClosed and Settings.Label <> '' then
     Frame.Labels.Add(Settings.Label);

@@ -14,7 +14,6 @@ int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *lab
     cui_date date = fpas_date_from_number(value);
     cui_push_id_int(ui, (int)popup_key);
     const cui_id calendar = cui_make_id(ui, "#cal");
-    const int month = fpas_calendar_month(ui, calendar, date);
     cui_pop_id(ui);
     fpas_own(ui, key, calendar, 0, popup_key);
 
@@ -40,9 +39,7 @@ int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *lab
 
     *count = 0;
     if (open && parts) {
-        cui_push_id_int(ui, (int)popup_key);
-        fpas_calendar_parts(ui, "#cal", calendar, first, month, parts, nodes, count);
-        cui_pop_id(ui);
+        fpas_calendar_parts(ui, calendar, first, parts, nodes, count);
     }
     const int proposed = fpas_date_number(date);
     return allowed && changed && proposed >= 0 ? proposed : value;

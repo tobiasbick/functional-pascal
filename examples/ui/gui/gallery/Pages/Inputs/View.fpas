@@ -15,16 +15,15 @@ uses
 // ## Parameters
 // - `Model`: Values owned by Inputs.
 // - `Data`: Shared name and email.
-// - `Wide`: Whether the native grid fits.
 // ## Returns
 // The Inputs page.
-public function View(Model: S.Model; Data: Demo.Model; Wide: bool): E.Element<S.Msg>;
+public function View(Model: S.Model; Data: Demo.Model): E.Element<S.Msg>;
 begin
   return E.Column<S.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    Fields.Inputs(Model, Data, Wide),
+    Fields.Inputs(Model, Data),
     Credentials.View(Model, Data),
-    Pickers.View(Model, Data, Wide),
+    Pickers.View(Model),
     InlineCalendar.View(Model)
   );
 end function;

@@ -8,7 +8,8 @@
  * @param length Number of code boxes.
  * @param enabled Whether the boxes accept input.
  * @param focus Whether to request keyboard focus.
+ * @param complete Receives CUI's completion event, or zero when disabled.
  * @return Native code row node. */
-CUI_API int fpas_cui_one_time_code(cui_ctx *ui, const char *id, char *code, int length, int enabled, int focus);
+CUI_API int fpas_cui_one_time_code(cui_ctx *ui, const char *id, char *code, int length, int enabled, int focus, int *complete);
 
 #endif

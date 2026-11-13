@@ -3,6 +3,11 @@ using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;
 
+/// <summary>A native code edit and CUI's completion event.</summary>
+/// <param name="Value">The proposed ASCII code.</param>
+/// <param name="Completed">Whether CUI reported a newly completed code this frame.</param>
+public readonly record struct CuiOneTimeCodeResult(string Value, bool Completed);
+
 public sealed partial class CuiWindow
 {
     /// <summary>Draws a native row of one-time code boxes.</summary>
@@ -12,8 +17,8 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether input is accepted.</param>
     /// <param name="focus">Whether to request keyboard focus.</param>
     /// <param name="track">Whether to track the row in the current frame.</param>
-    /// <returns>The proposed code after the frame's input.</returns>
-    public unsafe string OneTimeCode(string id, string value, int length, bool enabled, bool focus, bool track)
+    /// <returns>The proposed code and native completion event.</returns>
+    public unsafe CuiOneTimeCodeResult OneTimeCode(string id, string value, int length, bool enabled, bool focus, bool track)
     {
         CheckFrame();
         string stable = Stable(id);
@@ -25,11 +30,12 @@ public sealed partial class CuiWindow
         code[Encoding.ASCII.GetBytes(value, code)] = 0;
         try
         {
-            int node;
+            int node, complete;
             fixed (byte* bytes = code)
-                node = NativeMethods.OneTimeCode(context, stable, bytes, length, enabled ? 1 : 0, focus ? 1 : 0);
+                node = NativeMethods.OneTimeCode(context, stable, bytes, length, enabled ? 1 : 0, focus ? 1 : 0,
+                    out complete);
             if (track) TrackControl(id, node);
-            return enabled ? Encoding.ASCII.GetString(code[..code.IndexOf((byte)0)]) : value;
+            return new(enabled ? Encoding.ASCII.GetString(code[..code.IndexOf((byte)0)]) : value, complete != 0);
         }
         finally { code.Clear(); }
     }

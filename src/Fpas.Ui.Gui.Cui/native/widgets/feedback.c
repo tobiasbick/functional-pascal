@@ -34,7 +34,7 @@ int fpas_cui_alert(cui_ctx *ui, const char *id, const char *title,
 }
 
 void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
-    int tone, int indeterminate, float height, const char *label, int show_value) {
+    int tone, int indeterminate, float height, const char *label, int show_value, int dither) {
     const cui_id key = cui_make_id(ui, id);
     const int first = ui->node_count;
     cui_push_id(ui, id);
@@ -44,7 +44,7 @@ void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
     fpas_own(ui, key, fpas_progress_state(ui, caption, first), 0, 0);
     const cui_progress_opts options = {
         .tone = (cui_tone)tone, .indeterminate = indeterminate != 0,
-        .height = height, .label = caption, .show_value = show_value != 0
+        .height = height, .label = caption, .show_value = show_value != 0, .dither = dither != 0
     };
     cui_progress_ex(ui, value, &options);
     cui_pop_id(ui);

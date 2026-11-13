@@ -1,12 +1,12 @@
 unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 
 uses
-  GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.State as State,
   GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
+  Fpas.Ui.Grids as Grid,
   Fpas.Ui.Selects as S,
   Fpas.Ui.NumberFields as N, Fpas.Ui.DatePickers as D;
 
@@ -30,12 +30,10 @@ const Languages: array of S.Item := [
 // Builds the accepted fields in the original Pickers card.
 //
 // ## Parameters
-// - `Data`: Shared demo values owned by the application.
 // - `Model`: Model-owned choices, due date, seat count and brand color.
-// - `Wide`: Whether the two native grid columns fit.
 // ## Returns
 // The Pickers section of the Inputs page.
-public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   const Country: E.Element<State.Msg> := S.Select<State.Msg>(
     'input-country',
@@ -54,22 +52,14 @@ begin
   const Seats: E.Element<State.Msg> := N.NumberField<State.Msg>(
     'input-seats', Model.Seats, 0.0, 99.0, State.Msg.SetSeats, new N.Options(Label := 'Seats')
   );
-  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-  const Row: L.Flow := new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start);
   const Brand: E.Element<State.Msg> := BrandColor.View(Model);
-  const Fields: array of E.Element<State.Msg> := if Wide then
-    [
-      E.Row<State.Msg>(Row, E.Size<State.Msg>(Country, Fill), E.Size<State.Msg>(Language, Fill)),
-      E.Row<State.Msg>(
-        Row,
-        E.Size<State.Msg>(Due, Fill),
-        E.Size<State.Msg>(Seats, Fill)
-      ),
-      Brand
-    ]
-  else
-    [Country, Language, Due, Seats, Brand]
-  end if;
+  const Fields: array of E.Element<State.Msg> := [
+    Grid.Grid<State.Msg>(
+      new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
+      Country, Language, Due, Seats
+    ),
+    Brand
+  ];
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)), G.Heading<State.Msg>('Pickers'), G.Card<State.Msg>(16, Fields)
   );

@@ -27,25 +27,25 @@ begin
     Frame.Window.Text(Settings.Label);
     Frame.Window.StyleLast(cast<int>(S.Role.Label));
   end if;
-  const Proposed: string := Frame.Window.OneTimeCode(
+  const Result: Cui.CuiOneTimeCodeResult := Frame.Window.OneTimeCode(
     Token, Value, Settings.Length, Allowed,
     C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), not Frame.PaintingClosed
   );
+  const Proposed: string := Result.Value;
   if Settings.Label <> '' then
     Frame.Window.EndGroup();
   end if;
 
   if Allowed and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));
-    // CUI-003 (docs/future/cui-upstream-bugs.md#cui-003).
-    // Native completion misses replacements that leave all boxes filled.
-    if Proposed.Length = Settings.Length then
-      case OnComplete of
-        when is Sys.Func<string, TMsg> as Complete:
-          Frame.Messages.Add(Complete.Invoke(Proposed));
-        else
-      end case;
-    end if;
+  end if;
+
+  if Allowed and Result.Completed then
+    case OnComplete of
+      when is Sys.Func<string, TMsg> as Complete:
+        Frame.Messages.Add(Complete.Invoke(Proposed));
+      else
+    end case;
   end if;
 
   if not Frame.PaintingClosed then

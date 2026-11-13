@@ -3,22 +3,39 @@
 | Property | Value |
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
+| Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream snapshot after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`c8baf35008807d66efe8e766c8964122227a2f80`](https://github.com/yappologistic/CUI/commit/c8baf35008807d66efe8e766c8964122227a2f80) |
+| Commit | [`86d9781bbc3c35c264ec46287ad89c1d86a4c4de`](https://github.com/yappologistic/CUI/commit/86d9781bbc3c35c264ec46287ad89c1d86a4c4de) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
 The amalgamated C source and public header are the unchanged output of
-`python3 tools/amalgamate.py` on Linux at the pinned commit.
+`python3 tools/amalgamate.py` on Linux in the source fork at the pinned commit.
+That commit is identical to upstream `master` at the time of this update.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `c993feda5cb526e621c3dc3d8ff068d44b0874a8a25d2448e02a080516954b6f` |
-| `cui.h` | `c739f3fef670f9662cc7b207769954c6b3bf0c446f18ac37edda61c183c737ec` |
+| `cui.c` | `70947695ffdb92a9fa90677758489fe4febca6985b77616ec6042261a8617ff0` |
+| `cui.h` | `73137288220b10b52182434468e33ee35a199f99b6505310d149f79a338575c9` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
 from the unmodified upstream sources here.
+
+## Snapshot verification
+
+The copied pair was checked byte for byte against the generated files. License
+inputs and theme token order are unchanged; the shared series palettes were
+updated to match the new upstream colors. All sixteen exported light/dark accent
+palettes were checked against this snapshot's native theme builder.
+
+Verification on Linux x64: the native CTest suite passed all 16 tests, including
+exact calendar and widget pixel comparisons and regressions for the five applied
+input fixes. Their FPAS workarounds have been removed. The CLR binding suite
+passed 105 tests with two Windows-only cases skipped. The gallery built without
+warnings and was captured in light/dark themes at wide and narrow widths.
+Integration, deployment, publishing and Native AOT checks were excluded.
+See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 
 ## License inventory
 

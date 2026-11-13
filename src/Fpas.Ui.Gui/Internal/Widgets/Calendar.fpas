@@ -31,6 +31,8 @@ begin
     1
   elsif C.WantsFocus<TMsg>(Frame, Following, Parts.Token(Id, -9), Accept) then
     2
+  elsif C.WantsFocus<TMsg>(Frame, Calendar.TitleId(Id), Parts.Token(Id, -10), Accept) then
+    3
   else
     0
   end if;

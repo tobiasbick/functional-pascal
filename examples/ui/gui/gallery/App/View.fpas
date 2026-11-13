@@ -165,7 +165,7 @@ begin
       );
     when State.Page.Inputs:
       return U.Map<InputsState.Msg, State.Msg>(
-        Inputs.View(Model.Inputs, Model.Shared, Width >= 584),
+        Inputs.View(Model.Inputs, Model.Shared),
         State.Msg.Inputs
       );
     when State.Page.Selection:

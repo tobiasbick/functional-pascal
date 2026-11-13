@@ -14,6 +14,8 @@ public type Options = record
   public Label: string := '';
   // Whether to show the rounded percentage for determinate progress.
   public ShowValue: bool := false;
+  // Whether CUI draws the fill as drifting ordered dots.
+  public Dither: bool := false;
 end record;
 
 // Builds a progress bar with native interpolation and activity animation.

@@ -8,6 +8,7 @@ uses
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
+  Fpas.Ui.Grids as Grid,
   Fpas.Ui.TextFields as F,
   System as Sys,
   System.Text as Text;
@@ -17,10 +18,9 @@ uses
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Current values.
-// - `Wide`: Whether the native two-column grid fits.
 // ## Returns
 // The Text fields section of the Inputs page.
-public function Inputs(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+public function Inputs(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
 begin
   const Name: E.Element<State.Msg> := F.TextField<State.Msg>(
     'input-name',
@@ -52,23 +52,15 @@ begin
       Error := Error, MaxUtf8Bytes := 63
     )
   );
-  const Flow: L.Flow := new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start);
   const Query: E.Element<State.Msg> := Search.View(Model, Data);
   const About: E.Element<State.Msg> := Area.View(Model, Data);
-  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-  const Fields: array of E.Element<State.Msg> := if Wide then
-    [
-      E.Row<State.Msg>(Flow, E.Size<State.Msg>(Name, Fill), E.Size<State.Msg>(Email, Fill)),
-      E.Row<State.Msg>(
-        Flow,
-        E.Size<State.Msg>(Password, Fill),
-        E.Size<State.Msg>(Query, Fill)
-      ),
-      About
-    ]
-  else
-    [Name, Email, Password, Query, About]
-  end if;
+  const Fields: array of E.Element<State.Msg> := [
+    Grid.Grid<State.Msg>(
+      new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
+      Name, Email, Password, Query
+    ),
+    About
+  ];
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
     G.Heading<State.Msg>('Text fields', 'Labels above, hints and errors below.'),

@@ -776,8 +776,9 @@ visible ones have role `alert`. `Alerts.DismissId(Id)` identifies the optional
 
 `Fpas.Ui.ProgressBars.ProgressBar<TMsg>(Id, Value, Settings)` displays a finite
 fraction from zero through one. Options map to CUI's `Label`, `ShowValue`,
-`Indeterminate`, `Styles.Tone` and logical track `Height` (zero uses the native
-default). Indeterminate bars omit percentages. Use `Elements.Size` for width.
+`Indeterminate`, `Dither`, `Styles.Tone` and logical track `Height` (zero uses the
+native default). `Dither` uses CUI's drifting ordered-dot fill for either progress
+mode. Indeterminate bars omit percentages. Use `Elements.Size` for width.
 CUI owns interpolation and activity motion. The noninteractive `progress`
 snapshot reports the invariant fraction or `indeterminate` in `Value`.
 
@@ -785,7 +786,8 @@ snapshot reports the invariant fraction or `indeterminate` in `Value`.
 theme color and logical diameter; zero selects its default. It has a
 noninteractive `spinner` snapshot. Dimensions must be finite and nonnegative.
 All three widgets require the graphical profile. The Feedback gallery shows
-the original four alerts, upload and indexing bars, and 16/22/28-point spinners.
+the original four alerts, upload and indexing bars, dithered export and sync
+bars, and 16/22/28-point spinners.
 
 ## Skeleton
 
@@ -948,9 +950,10 @@ use `TagInputs.RemoveId(Id, Index)` in GUI snapshots.
 `Fpas.Ui.OneTimeCodes.OneTimeCodeInput<TMsg>(Id, Value, OnChange, Settings, OnComplete)`
 uses one to twelve native boxes for ASCII letters or digits. Typing appends,
 Backspace removes the last character, and paste replaces the code. When a
-user edit fills all boxes, the change message precedes the optional
-completion message. A GUI snapshot exposes only the number of entered
-characters.
+user edit fills all boxes, the change message precedes the optional completion
+message. Completion comes from CUI, including a paste that replaces a complete
+code; repeating the same complete paste produces no second event. A GUI snapshot
+exposes only the number of entered characters.
 
 ## Password strength meter
 
@@ -986,8 +989,16 @@ the graphical profile.
 `Fpas.Ui.DatePickers.DatePicker` opens it from a date field with an
 optional label and placeholder. Both read a model-owned `System.DateOnly?`
 and propose a `System.DateOnly` on selection. The application can clear the
-selection by passing null. Each calendar retains its own displayed month.
-Both widgets require the graphical profile.
+selection by passing null. Each calendar retains its own displayed month. Its
+title switches from days to twelve months, then to twelve years. Choosing a year
+returns to months; choosing a month returns to days without changing the selected
+date. The arrows keep their identities across these views.
+
+`Calendars.TitleId`, `MonthChoiceId` and `YearChoiceId` identify the visible title
+and choices in GUI snapshots. `DayId` identifies day cells; `MonthId` identifies
+the previous/next page arrows in every view. Calendar snapshots use the roles
+`calendar-title`, `calendar-month-choice` and `calendar-year-choice` for the new
+parts. Both widgets require the graphical profile.
 
 ## Date range
 

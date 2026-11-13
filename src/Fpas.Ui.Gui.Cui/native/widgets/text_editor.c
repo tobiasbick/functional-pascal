@@ -93,8 +93,6 @@ static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_
         paint->password = !edit->show_password;
         cui__wakeup_after(ui, 0.001f);
     }
-    if (multiline && allowed) ui->nodes[area].paint = fpas_paint_text_area;
-
     if (!binding->value || length != binding->length || memcmp(value, binding->value, length) != 0) {
         fpas_text_binding_dispose(ui, binding);
         binding->value = cui__alloc(ui, length + 1);

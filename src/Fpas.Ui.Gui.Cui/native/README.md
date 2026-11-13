@@ -14,6 +14,18 @@ Reuse native CUI primitives before adding adapters. Required adapters live in
 private CUI types within the native bridge. Managed bindings are partial files
 on `CuiWindow` and `NativeMethods`. Compositions need no additional C entry point.
 
+Text areas retain CUI's own paint callback and direction-specific wheel routing.
+The code-box adapter forwards CUI's completion event through
+`CuiOneTimeCodeResult`; the FPAS host sends change before completion. Number-field
+reconciliation only handles external model replacements; CUI owns draft validation
+and commit/blur formatting. Tag limits and searchable-select dismissal also remain
+native.
+
+The single-date calendar and date picker expose up to 45 native parts: 42 day
+cells and the title/page arrows, or twelve month/year choices and those three
+header controls. Their adapters use CUI's stable navigation IDs across views.
+Range calendars retain their separate native navigation IDs.
+
 `widgets/button.c` passes the portable button options to CUI and replaces
 its label text after creating the native label slot. This keeps literal
 `##` text, leading and trailing icons, and loading spinners independent of

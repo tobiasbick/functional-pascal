@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool pixels_match(int kind, int tone, bool decorated, bool dark, int width) {
+static bool pixels_match(int kind, int tone, bool decorated, bool dark, int width, bool dither) {
     const int height = 440;
     const size_t bytes = (size_t)width * height * 4;
     unsigned char *pixels[2] = { calloc(1, bytes), calloc(1, bytes) };
@@ -32,9 +32,9 @@ static bool pixels_match(int kind, int tone, bool decorated, bool dark, int widt
                 } else if (kind == 1) {
                     const cui_progress_opts options = { .tone = (cui_tone)tone,
                         .label = decorated ? "Uploading assets" : NULL, .show_value = decorated,
-                        .indeterminate = !decorated, .height = decorated ? 12 : 0 };
+                        .indeterminate = !decorated, .height = decorated ? 12 : 0, .dither = dither };
                     if (pass) fpas_cui_progress(ui, "###progress", .68f, tone, !decorated,
-                        options.height, options.label ? options.label : "", decorated);
+                        options.height, options.label ? options.label : "", decorated, dither);
                     else cui_progress_ex(ui, .68f, &options);
                 } else {
                     if (pass) fpas_cui_spinner(ui, "###spinner", decorated ? 28 : 0);
@@ -67,7 +67,7 @@ static bool activity_requests_frames(int kind) {
         cui_column(ui, .width = CUI_FILL, .pad = 16) {
             if (frame < 24) {
                 if (kind) fpas_cui_spinner(ui, "###spin", 22);
-                else fpas_cui_progress(ui, "###progress", 0, 0, 1, 0, "Indexing", 0);
+                else fpas_cui_progress(ui, "###progress", 0, 0, 1, 0, "Indexing", 0, 0);
             } else cui_text(ui, "Finished");
         }
         cui_end_frame(ui);
@@ -87,7 +87,8 @@ int main(void) {
             for (int decorated = 0; decorated < 2; ++decorated)
                 for (int dark = 0; dark < 2; ++dark)
                     for (int narrow = 0; narrow < 2; ++narrow)
-                        valid = pixels_match(kind, tone, decorated != 0, dark != 0,
-                            narrow ? 280 : 640) && valid;
+                        for (int dither = 0; dither < (kind == 1 ? 2 : 1); ++dither)
+                            valid = pixels_match(kind, tone, decorated != 0, dark != 0,
+                                narrow ? 280 : 640, dither != 0) && valid;
     return activity_requests_frames(0) && activity_requests_frames(1) && valid ? 0 : 1;
 }

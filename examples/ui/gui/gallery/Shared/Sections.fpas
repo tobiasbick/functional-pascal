@@ -44,16 +44,15 @@ begin
     E.Text<TMsg>(Title),
     S.Role.Heading
   );
-  const TitleBlock: E.Element<TMsg> := if Description = '' then
-    Label
+  const Children: array of E.Element<TMsg> := if Description = '' then
+    [Label]
   else
-    E.Column<TMsg>(
-      new L.Flow(Gap := Points(4)),
-      Label,
-      E.Styled<TMsg>(E.Text<TMsg>(Description), S.Role.Secondary)
-    )
+    [Label, E.Styled<TMsg>(E.Text<TMsg>(Description), S.Role.Secondary)]
   end if;
-  return E.Column<TMsg>(Space<TMsg>(18), TitleBlock);
+  return E.Column<TMsg>(
+    new L.Flow(Gap := Points(4), PaddingTop := Points(18), Clip := false),
+    Children
+  );
 end function;
 
 // Builds the outlined card used by the native gallery.
@@ -68,7 +67,10 @@ end function;
 public function Card<TMsg>(RowGap: int; Children: array of E.Element<TMsg>): E.Element<TMsg>;
 begin
   return E.Styled<TMsg>(
-    E.Column<TMsg>(new L.Flow(Padding := Points(24), Gap := Points(RowGap)), Children),
+    E.Column<TMsg>(
+      new L.Flow(Padding := Points(24), Gap := Points(RowGap), Clip := false),
+      Children
+    ),
     S.Role.OutlinedPanel
   );
 end function;

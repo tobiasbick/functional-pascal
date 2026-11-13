@@ -14,7 +14,7 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_progress", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Progress(nint context, string id, float value, int tone,
-        int indeterminate, float height, string label, int showValue);
+        int indeterminate, float height, string label, int showValue, int dither);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_spinner", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

@@ -66,6 +66,14 @@ begin
             0.0F,
             new P.Options(Label := 'Indexing', Indeterminate := true)
           ),
+          P.ProgressBar<TMsg>(
+            'export', 0.42F,
+            new P.Options(Label := 'Exporting clip.mp4', ShowValue := true, Dither := true)
+          ),
+          P.ProgressBar<TMsg>(
+            'sync', 0.0F,
+            new P.Options(Label := 'Syncing library', Indeterminate := true, Dither := true)
+          ),
           Meters.Meter<TMsg>('storage-usage', 'Storage', 18.4F, 20.0F, 'GB'),
           E.Row<TMsg>(
             new L.Flow(Gap := G.Points(16), Wrap := true),

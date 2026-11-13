@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Sizing;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Layout as L, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Graphics as G, System as Sys;
 
 // Resolves a graphical measure and rejects terminal distances.
 //
@@ -76,6 +76,17 @@ end function;
 // - `Layered`: Whether uniform padding still needs applying to a native stack.
 public procedure Container(Window: Cui.CuiWindow; Settings: L.Flow; Layered: bool := false);
 begin
+  const Background: G.Color? := Settings.Background;
+  if Background <> null or Settings.CornerRadius > 0.0F then
+    Window.SurfaceLast(
+      if Background = null then
+        0U
+      else
+        P.Pack(Background)
+      end if, Settings.CornerRadius
+    );
+  end if;
+
   if not Layered and Settings.PaddingTop = null and Settings.PaddingEnd = null
     and Settings.PaddingBottom = null and Settings.PaddingStart = null
     and Settings.ReadingDirection = L.Direction.Inherit

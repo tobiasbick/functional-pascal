@@ -10,8 +10,8 @@
  * @param enabled Whether the row accepts input.
  * @param focus Whether to request keyboard focus.
  * @param indeterminate Draw a dash in place of the check mark while checked.
- * @return Nonzero when CUI proposes a change. */
+ * @param hide_label Whether to draw only the checkbox. Nonzero when CUI proposes a change. */
 CUI_API int fpas_cui_checkbox(cui_ctx *ui, const char *id, const char *label,
-    const char *description, int checked_value, int enabled, int focus, int indeterminate);
+    const char *description, int checked_value, int enabled, int focus, int indeterminate, int hide_label);
 
 #endif

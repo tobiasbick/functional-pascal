@@ -12,14 +12,15 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether the row accepts input.</param>
     /// <param name="focus">Whether to request keyboard focus.</param>
     /// <param name="indeterminate">Draw a dash in place of the check mark while checked.</param>
+    /// <param name="hideLabel">Draws the checkbox without the visible caption.</param>
     /// <returns>Whether CUI proposed a change.</returns>
-    public bool Checkbox(string id, string label, string description, bool @checked, bool enabled, bool focus, bool indeterminate)
+    public bool Checkbox(string id, string label, string description, bool @checked, bool enabled, bool focus, bool indeterminate, bool hideLabel = false)
     {
         CheckFrame();
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(description, nameof(description));
         ArgumentException.ThrowIfNullOrEmpty(label);
         return NativeMethods.Checkbox(context, Stable(id), label, description.Length == 0 ? null : description,
-            @checked ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, indeterminate ? 1 : 0) != 0;
+            @checked ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, indeterminate ? 1 : 0, hideLabel ? 1 : 0) != 0;
     }
 }

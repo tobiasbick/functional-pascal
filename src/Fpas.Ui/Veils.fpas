@@ -1,0 +1,40 @@
+unit Fpas.Ui.Veils;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;
+
+// Appearance and interaction settings for a native veil.
+public type Options = record
+  // Text centered on the cover.
+  public Label: string? := null;
+  // Smaller text below the label.
+  public Hint: string? := null;
+  // Whether pointer activation also covers revealed content.
+  public Toggle: bool := false;
+  // Corner radius in logical points.
+  public Radius: float := 0.0F;
+  // Cover color, or null to use the theme.
+  public Color: G.Color? := null;
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Content;
+  // Whether the cover accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Creates a native CUI veil element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable cover identity.
+// - `Revealed`: Whether the content is currently shown.
+// - `Changed`: Maps a reveal or cover proposal to a message.
+// - `Child`: Content underneath the cover.
+// - `Settings`: Native veil settings.
+// ## Returns
+// A graphical element.
+public function Veil<TMsg>(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Veil(Id, Revealed, Changed, Child, Settings ?? new Options());
+end function;
+
+end unit;

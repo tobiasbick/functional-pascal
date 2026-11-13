@@ -1,0 +1,327 @@
+unit GuiGallery.Pages.Canvas.View;
+
+uses
+  GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Motion as M,
+  Fpas.Ui.FormatBars as F, Fpas.Ui.Toolbars as T, Fpas.Ui.CanvasControls as C, Fpas.Ui.LiveCursors as Live,
+  Fpas.Ui.PresencePills as P, Fpas.Ui.SelectionRings as R, Fpas.Ui.NodeEditors as N,
+  Fpas.Ui.ResultCards as Result, Fpas.Ui.SelectionBars as Bulk, Fpas.Ui.Checkboxes as Check,
+  Fpas.Ui.Themes as Theme, System as Sys, System.Collections.Generic as Lists;
+
+function Glyph(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+function Tool(Icon: string; Tooltip: string; Shortcut: string? := null; Toggle: bool? := null; Tone: S.Tone := S.Tone.Neutral): T.Item;
+begin
+  return T.Item.Button(
+    new T.Button(Icon, Tooltip := Tooltip, Shortcut := Shortcut, Toggle := Toggle, Tone := Tone)
+  );
+end function;
+
+function Grouped(Model: State.Model): E.Element<State.Msg>;
+begin
+  return T.Toolbar<State.Msg>(
+    'canvas-tools', [
+      T.Item.Group(
+        [Tool(Glyph($E2A1), 'Undo', 'Ctrl Z'), Tool(Glyph($E2A0), 'Redo', 'Ctrl Shift Z')]
+      ),
+      T.Item.Group(
+        [
+          T.Item.Button(new T.Button(null, '123', 'Numbers', Toggle := Model.Numbers)),
+          Tool(Glyph($E05D), 'Bold', Toggle := Model.Bold),
+          Tool(Glyph($E0FB), 'Italic', Toggle := Model.Italic),
+          T.Item.Radio(
+            [Glyph($E121), Glyph($E172), Glyph($E198)],
+            ['Move', 'Draw', 'Text'],
+            Model.Mode
+          )
+        ]
+      ),
+      T.Item.Primary(new T.Button(Glyph($E412), Tooltip := 'Generate'))
+    ], State.Msg.Tools, new T.Options(Style := 1)
+  );
+end function;
+
+function People(Seconds: float): array of Live.Person;
+begin
+  const Names: array of string := ['Paul', 'Kate', 'Mario'];
+  const Tones: array of S.Tone := [S.Tone.Warning, S.Tone.Info, S.Tone.Rose];
+  const Users: Lists.List<Live.Person> := new Lists.List<Live.Person>(3);
+  for Index: int := 0 to 2 do
+    const Step: uint := cast<uint>(cast<double>(Seconds) / (1.6 + 0.4 * Index));
+    const Hash: uint := Step * 2654435761U + cast<uint>(Index) * 40503U;
+    const Says: string? := if Index = 1 and Step mod 3U <> 0U then
+      'Bumping steps to 40?'
+    else
+      null
+    end if;
+    Users.Add(
+      new Live.Person(
+        Names[Index], Tones[Index], 60.0F + cast<float>(Hash mod 420U),
+        60.0F + cast<float>((Hash shr 12) mod 220U), Says, Index = 0
+      )
+    );
+  end for;
+
+  return Users.ToArray();
+end function;
+
+function Nodes(Model: State.Model; Colors: Theme.Palette): array of N.Node<State.Msg>;
+begin
+  return [
+    new N.Node<State.Msg>(
+      0,
+      Model.Positions[0].X,
+      Model.Positions[0].Y,
+      'Positive',
+      [new N.Pin(1, 'Prompt', true, 1)],
+      E.FormattedText<State.Msg>(
+        'A black bear, minimalist style, soft gradients',
+        M.Font.Body,
+        12.0F,
+        Colors.TextSecondary
+      ),
+      184.0F
+    ),
+    new N.Node<State.Msg>(
+      1,
+      Model.Positions[1].X,
+      Model.Positions[1].Y,
+      'Negative',
+      [new N.Pin(2, 'Avoid', true, 1)],
+      E.FormattedText<State.Msg>('No text, no people', M.Font.Body, 12.0F, Colors.TextSecondary),
+      184.0F
+    ),
+    new N.Node<State.Msg>(
+      2,
+      Model.Positions[2].X,
+      Model.Positions[2].Y,
+      'Generate',
+      [new N.Pin(3, 'Prompt', false, 1), new N.Pin(4, 'Avoid', false, 1)],
+      E.FormattedText<State.Msg>('Steps 30 · dpm++ 2M', M.Font.Body, 12.0F, Colors.TextSecondary),
+      184.0F,
+      Ring := new R.Options(Tone := S.Tone.Warning, Name := 'Paul')
+    )
+  ];
+end function;
+
+function Canvas(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  const Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(360));
+  const Users: array of Live.Person := People(Model.Seconds);
+  const Graph: E.Element<State.Msg> := N.NodeEditor<State.Msg>(
+    'canvas-graph',
+    Model.Viewport,
+    Nodes(Model, Colors),
+    [new N.Link(1, 1, 3), new N.Link(2, 2, 4)],
+    State.Msg.Graph,
+    new N.Options(Height := Height, HideGrid := not Model.Grid)
+  );
+  const Bounds: C.Bounds := new C.Bounds(
+    Model.Positions[0].X, Model.Positions[0].Y,
+    Sys.MathF.Max(0.0F, Model.Positions[2].X + 184.0F - Model.Positions[0].X), 290.0F
+  );
+  const Rail: E.Element<State.Msg> := C.CanvasControls<State.Msg>(
+    'canvas-zoom',
+    Model.Viewport,
+    [
+      new C.Toggle(Glyph($E0BA), 'Show grid', Model.Grid),
+      new C.Toggle(Glyph($E529), 'Layers', Model.Layers)
+    ],
+    State.Msg.Rail,
+    Graph,
+    new C.Options(Content := Bounds)
+  );
+  return E.Size<State.Msg>(
+    E.Element<State.Msg>.Layered(
+      [
+        Live.LiveCursors<State.Msg>(
+          'canvas-people',
+          Users,
+          Rail,
+          new Live.Options(View := Model.Viewport)
+        ),
+        E.Column<State.Msg>(
+          new L.Flow(Padding := G.Points(12)),
+          P.PresencePill<State.Msg>('canvas-here', Users)
+        )
+      ], new L.Flow(Clip := true, CornerRadius := 14.0F)
+    ),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill),
+      Height := new L.AxisSize(Basis := Height)
+    )
+  );
+end function;
+
+function Floating(Model: State.Model): E.Element<State.Msg>;
+begin
+  return T.Toolbar<State.Msg>(
+    'canvas-result-actions', [
+      Tool(Glyph($E113), 'Expand'),
+      Tool(Glyph($E060), 'Save', Toggle := Model.Saved, Tone := S.Tone.Warning),
+      Tool(Glyph($E09E), 'Copy'),
+      Tool(Glyph($E12A), 'Compare'),
+      T.Item.Separator,
+      T.Item.Cycle(
+        ['1x', '2x', '4x'],
+        Model.Scale,
+        'Scale'
+      ),
+      T.Item.Cycle(['PNG', 'JPG', 'WEBP'], Model.Kind, 'Format'),
+      T.Item.Separator,
+      Tool(Glyph($E0B2), 'Download')
+    ], State.Msg.ResultTools, new T.Options(Style := 2)
+  );
+end function;
+
+function FileRow(Index: int; Picked: bool; Name: string; Bytes: string; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(
+    E.Row<State.Msg>(
+      new L.Flow(
+        Gap := G.Points(12), PaddingStart := G.Points(10), PaddingEnd := G.Points(10),
+        Align := L.Alignment.Center, CornerRadius := 10.0F, Background := if Picked then
+          Colors.AccentSubtle
+        else
+          null
+        end if
+      ),
+      Check.Checkbox<State.Msg>(
+        'canvas-file-' + Index.ToString(), Name, Picked,
+        function(Value: bool): State.Msg => State.Msg.Pick(Index, Value), HideLabel := true
+      ),
+      E.Styled<State.Msg>(E.Text<State.Msg>(Glyph($E0F6)), S.Role.CompactMutedIcon),
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(E.Styled<State.Msg>(E.Text<State.Msg>(Name), S.Role.Label)),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+      ),
+      E.Styled<State.Msg>(
+        E.FormattedText<State.Msg>(Bytes, M.Font.Body, 12.0F, Colors.TextMuted),
+        S.Role.Tabular
+      )
+    ),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill),
+      Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(44)))
+    )
+  );
+end function;
+
+function Files(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  const Names: array of string := [
+    'hero-dark.png',
+    'hero-light.png',
+    'social-card.png',
+    'icon-512.png',
+    'thumb@2x.png'
+  ];
+  const Bytes: array of string := ['2.4 MB', '2.3 MB', '812 KB', '96 KB', '140 KB'];
+  const Rows: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>(
+    Names.Length
+  );
+  for Index: int := 0 to Names.Length - 1 do
+    Rows.Add(FileRow(Index, Model.Picked[Index], Names[Index], Bytes[Index], Colors));
+  end for;
+
+  return Bulk.SelectionBar<State.Msg>(
+    'canvas-bulk', Model.Picked, [
+      new Bulk.Action(Glyph($E121), 'Move'),
+      new Bulk.Action(Glyph($E09E), 'Copy'),
+      new Bulk.Action(Glyph($E18E), 'Delete', S.Tone.Danger)
+    ], State.Msg.Bulk, E.Size<State.Msg>(
+      E.Styled<State.Msg>(
+        E.Column<State.Msg>(
+          new L.Flow(Padding := G.Points(4), Gap := G.Points(2), CornerRadius := 14.0F),
+          Rows.ToArray()
+        ),
+        S.Role.OutlinedPanel
+      ),
+      new L.Flex(
+        Width := new L.AxisSize(
+          Basis := L.Extent.Fill,
+          Minimum := L.Measure.Logical(280),
+          Maximum := L.Measure.Logical(520)
+        )
+      )
+    )
+  );
+end function;
+
+function Results(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(
+    E.Row<State.Msg>(
+      new L.Flow(
+        Gap := G.Points(28),
+        Wrap := true,
+        Align := L.Alignment.Start,
+        PaddingBottom := G.Points(60),
+        Clip := false
+      ),
+      E.Size<State.Msg>(
+        E.Column<State.Msg>(
+          new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
+          Result.ResultCard<State.Msg>(
+            'canvas-result', Picture.Result, 'Final result', State.Msg.Preview,
+            new Result.Options(
+              Caption := 'Minimal illustration, soft gradients and smooth shapes against a clear sky',
+              Badge := 'Done in 4.2 s', Width := L.Extent.Fixed(L.Measure.Logical(344))
+            )
+          ),
+          Floating(Model)
+        ),
+        new L.Flex(Width := new L.AxisSize(Minimum := L.Measure.Logical(360)))
+      ),
+      Files(Model, Colors)
+    ),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+  );
+end function;
+
+// Displays the original Canvas and bars examples.
+// ## Parameters
+// - `Model`: Current page state.
+// - `Colors`: Active theme colors.
+// ## Returns
+// Sections and native widgets in original order.
+public function View(Model: State.Model; Colors: Theme.Palette): array of E.Element<State.Msg>;
+begin
+  const Note: string := if Model.Deleted = 0 then
+    'The bar edits one struct; the app applies it to the selection.'
+  else
+    'Deleted ' + Model.Deleted.ToString() + if Model.Deleted = 1 then
+      ' time.'
+    else
+      ' times.'
+    end if
+  end if;
+  return [
+    G.Heading<State.Msg>(
+      'Grouped toolbar',
+      'Raised groups in one pill, an inset set of modes and a primary action. Narrow the window and the end folds into the “more” menu.'
+    ),
+    Grouped(Model),
+    G.Heading<State.Msg>(
+      'Format bar',
+      'Color, bold, underline, link, the text style (each previewed at its size), alignment and lists. Delete asks first.'
+    ),
+    F.FormatBar<State.Msg>('canvas-format', Model.Format, State.Msg.Format),
+    E.Styled<State.Msg>(E.Text<State.Msg>(Note), S.Role.Caption),
+    G.Heading<State.Msg>(
+      'Live cursors and canvas controls',
+      'Three people on one canvas: their pointers glide to where they move, one talks, one has a node selected. The rail zooms in steps; click the percentage to reset.'
+    ),
+    Canvas(Model, Colors),
+    G.Heading<State.Msg>(
+      'Result card and selection bar',
+      'A picture with its status and caption, and its actions in a floating toolbar. Tick files and a bar slides up; Esc clears.'
+    ),
+    Results(Model, Colors)
+  ];
+end function;
+
+end unit;

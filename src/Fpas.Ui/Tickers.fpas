@@ -1,0 +1,40 @@
+unit Fpas.Ui.Tickers;
+
+uses Fpas.Ui.Elements as E;
+
+// One entry in the scrolling strip.
+public type Item = record
+  // Entry label.
+  public Label: string;
+  // Optional secondary value.
+  public Value: string := '';
+  // Percent change, or zero to omit the trend.
+  public Delta: float := 0.0F;
+  // Use the success color for a fall.
+  public LowerIsBetter: bool := false;
+end record;
+
+// Native ticker options.
+public type Options = record
+  // Logical points per second, or zero for the default.
+  public Speed: float := 0.0F;
+  // Logical height, or zero for the default.
+  public Height: float := 0.0F;
+end record;
+
+// Draws the native scrolling ticker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Items`: Ordered ticker entries.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Ticker<TMsg>(Id: string; Items: array of Item; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Ticker(Id, Items, Settings ?? new Options());
+end function;
+
+end unit;

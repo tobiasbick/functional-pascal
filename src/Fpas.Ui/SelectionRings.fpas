@@ -1,0 +1,32 @@
+unit Fpas.Ui.SelectionRings;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G;
+
+// Selection ring appearance.
+public type Options = record
+  // Theme color used for the ring.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Overrides the tone with an explicit color.
+  public Color: G.Color? := null;
+  // Optional collaborator label.
+  public Name: string? := null;
+  // Corner radius, or zero to follow the child.
+  public Radius: float := 0.0F;
+end record;
+
+// Builds the native SelectionRing element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Child`: Component framed by the ring.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function SelectionRing<TMsg>(Id: string; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SelectionRing(Id, Child, Settings ?? new Options());
+end function;
+
+end unit;

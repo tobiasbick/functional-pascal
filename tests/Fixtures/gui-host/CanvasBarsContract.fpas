@@ -1,0 +1,121 @@
+unit GalleryCanvasBarsContract;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
+  GalleryHostAssertions as A,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.ShortcutRecorders as Keys,
+  Fpas.Ui.Gui.Internal.Context as Context;
+
+procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; Width: int);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Offset > 0.0F then
+      var Before: float := 0.0F;
+      var Maximum: float := 0.0F;
+      Window.ScrollState(Token, 0, Offset, out Before, out Maximum);
+    end if;
+
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Escape then
+      Window.SetKey(cast<int>(Keys.Key.Escape), true);
+      Window.SetKey(cast<int>(Keys.Key.Escape), false);
+      Escape := false;
+    end if;
+  end procedure;
+begin
+  const Token: string := Context.Token(
+    'scroll',
+    'main-' + Page.ToString().ToLowerInvariant() + '-0'
+  );
+  var Offset: float := 0.0F;
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Escape: bool := false;
+  var Button: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI canvas and controls',
+    Width,
+    1700,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := Page),
+    Update.Update,
+    Gallery.Build,
+    Window,
+    32,
+    Inject,
+    ThemeFor := Update.ThemeFor
+  );
+  for Frame: int := 0 to 7 do
+    A.Check(Session.Step(), 'The canvas gallery closed.');
+  end for;
+
+  Session.CapturePng(Root + '-' + Width.ToString() + '.png');
+  if Width = 550 then
+    Offset := if Page = State.Page.CanvasAndBars then
+      265.0F
+    else
+      143.0F
+    end if;
+    for Frame: int := 0 to 2 do
+      A.Check(Session.Step(), 'The gallery closed after scrolling.');
+    end for;
+
+    Session.CapturePng(Root + '-550-end.png');
+  end if;
+
+  if Page = State.Page.CanvasAndBars and Width = 1100 then
+    A.Check(A.Control(Session, 'canvas-graph').Value = '1', 'The canvas starts at 100 percent.');
+    A.Check(
+      A.Control(Session, 'canvas-result').Text = 'Final result',
+      'The result card is missing.'
+    );
+    const File: Cui.CuiRectangle := A.Control(Session, 'canvas-file-3').Bounds;
+    X := File.X + File.Width / 2.0F;
+    Y := File.Y + File.Height / 2.0F;
+    A.Check(Session.Step(), 'The canvas gallery closed after moving to a file.');
+    Button := 1;
+    A.Check(Session.Step(), 'The canvas gallery closed after pressing a file.');
+    Button := 0;
+    A.Check(Session.Step(), 'The canvas gallery closed after selecting a file.');
+    A.Check(Session.Step(), 'The canvas gallery closed before showing the selection.');
+    A.Check(
+      A.Control(Session, 'canvas-file-3').Value = 'true',
+      'The fourth file must become selected.'
+    );
+    X := -1.0F;
+    Y := -1.0F;
+    Escape := true;
+    A.Check(Session.Step(), 'The canvas gallery closed after Escape.');
+    A.Check(Session.Step(), 'The canvas gallery closed before clearing the selection.');
+    for Index: int := 0 to 4 do
+      A.Check(
+        A.Control(Session, 'canvas-file-' + Index.ToString()).Value = 'false',
+        'Escape must clear selected files.'
+      );
+    end for;
+  end if;
+end procedure;
+
+// Captures both pages and checks checkbox and Escape behavior.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix of the gallery screenshots.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 1100);
+  CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 550);
+  CapturePage(State.Page.CreativeControls, Renderer, Capture + '-creative', 1100);
+  CapturePage(State.Page.CreativeControls, Renderer, Capture + '-creative', 550);
+end procedure;
+
+end unit;

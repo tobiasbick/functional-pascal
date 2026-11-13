@@ -1,11 +1,15 @@
 unit GuiGallery.Pages.Files.State;
 
-uses Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
+uses GuiGallery.Pages.Files.Terminal as Shell, Fpas.Ui.Terminals as Terminal, Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
 
 // File gallery state.
 public type Model = record
   // Browser's current folder.
   public Folder: string := '.';
+  // Cumulative output for the terminal.
+  public Output: string := Shell.Welcome;
+  // Explicit terminal reset revision.
+  public TerminalRevision: int := 0;
   // Last chosen filename.
   public Chosen: string := '';
   // Native open picker visibility.
@@ -26,6 +30,8 @@ public type Msg = variant
   Opened(Event: Picker.Event);
   // Closes Save with an optional filename.
   Saved(Event: Picker.Event);
+  // Native terminal input.
+  Terminal(Value: Terminal.Event);
   // Navigates the standalone path bar.
   Path(Event: Paths.Event);
 end variant;

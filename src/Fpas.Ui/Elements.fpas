@@ -1,6 +1,55 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.PropertyInspectors as PropertyInspectors,
+  Fpas.Ui.FlameGraphs as FlameGraphs,
+  Fpas.Ui.CurveEditors as CurveEditors,
+  Fpas.Ui.GradientEditors as GradientEditors,
+  Fpas.Ui.TimelineEditors as TimelineEditors,
+  Fpas.Ui.Markdowns as Markdowns,
+  Fpas.Ui.CodeEditors as CodeEditors,
+  Fpas.Ui.DiffViews as DiffViews,
+  Fpas.Ui.HexViews as HexViews,
+  Fpas.Ui.LogConsoles as LogConsoles,
+  Fpas.Ui.Terminals as Terminals,
+  Fpas.Ui.Texts as Texts,
+  Fpas.Ui.Images as Images,
+  Fpas.Ui.Canvases as Canvases,
+  Fpas.Ui.Veils as Veils,
+  Fpas.Ui.FormatBars as FormatBars,
+  Fpas.Ui.LiveCursors as LiveCursors,
+  Fpas.Ui.PresencePills as PresencePills,
+  Fpas.Ui.SelectionRings as SelectionRings,
+  Fpas.Ui.CanvasControls as CanvasControls,
+  Fpas.Ui.ResultCards as ResultCards,
+  Fpas.Ui.SelectionBars as SelectionBars,
+  Fpas.Ui.Toolbars as Toolbars,
+  Fpas.Ui.NodeEditors as NodeEditors,
+  Fpas.Ui.ProblemsPanels as ProblemsPanels,
+  Fpas.Ui.Pipelines as Pipelines,
+  Fpas.Ui.Keymaps as Keymaps,
+  Fpas.Ui.CommitGraphs as CommitGraphs,
+  Fpas.Ui.DependencyGraphs as DependencyGraphs,
+  Fpas.Ui.NetworkWaterfalls as NetworkWaterfalls,
+  Fpas.Ui.TraceViewers as TraceViewers,
+  Fpas.Ui.TestExplorers as TestExplorers,
+  Fpas.Ui.StackTraces as StackTraces,
+  Fpas.Ui.ResponseStatuses as ResponseStatuses,
+  Fpas.Ui.Uptimes as Uptimes,
+  Fpas.Ui.TimeHistograms as TimeHistograms,
+  Fpas.Ui.Coverages as Coverages,
+  Fpas.Ui.Blames as Blames,
+  Fpas.Ui.ApiExplorers as ApiExplorers,
+  Fpas.Ui.KeyValueEditors as KeyValueEditors,
+  Fpas.Ui.QueryBuilders as QueryBuilders,
+  Fpas.Ui.SchedulePickers as SchedulePickers,
+  Fpas.Ui.RegexTesters as RegexTesters,
+  Fpas.Ui.RequestBars as RequestBars,
+  Fpas.Ui.FeatureFlagEditors as FeatureFlagEditors,
+  Fpas.Ui.VoiceWaves as VoiceWaves, Fpas.Ui.VoiceNotes as VoiceNotes, Fpas.Ui.VoiceSessions as VoiceSessions, Fpas.Ui.Composers as Composers, Fpas.Ui.VoiceOrbs as VoiceOrbs, Fpas.Ui.Reasonings as Reasonings, Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.AgentPlans as AgentPlans, Fpas.Ui.AgentStatuses as AgentStatuses, Fpas.Ui.SourceLists as SourceLists, Fpas.Ui.Citations as Citations, Fpas.Ui.ContextMeters as ContextMeters, Fpas.Ui.ResponseActions as ResponseActions, Fpas.Ui.PromptSuggestions as PromptSuggestions, Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Voice as Voice, Fpas.Ui.Sources as Sources,
+  Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons, Fpas.Ui.MediaImages as Media,
+  Fpas.Ui.Spinners as Spinners,
+  Fpas.Ui.ChatMessages as ChatMessages, Fpas.Ui.Comments as Comments, Fpas.Ui.Presences as Presences, Fpas.Ui.Counters as Counters, Fpas.Ui.Tickers as Tickers, Fpas.Ui.StatusSpinners as StatusSpinners, Fpas.Ui.SkeletonGroups as SkeletonGroups, Fpas.Ui.Sparklines as Sparklines,
   Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
   Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
   Fpas.Ui.Motion as Motion, Fpas.Ui.ShimmerTexts as ShimmerTexts, Fpas.Ui.Typewriters as Typewriters, Fpas.Ui.TextReveals as TextReveals, Fpas.Ui.WordRotations as WordRotations, Fpas.Ui.NumberRolls as NumberRolls, Fpas.Ui.GradientTexts as GradientTexts, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.Loaders as Loaders, Fpas.Ui.Docks as Docks, Fpas.Ui.ControlTiles as ControlTiles, Fpas.Ui.NowPlaying as NowPlaying, Fpas.Ui.Waveforms as Waveforms, Fpas.Ui.TabBars as TabBars,
@@ -63,7 +112,7 @@ public type Element<TMsg> = variant
   // Display a native progress fraction or activity animation.
   ProgressBar(Id: string; Value: float; Settings: ProgressBars.Options);
   // Display a native activity spinner.
-  Spinner(Id: string; Size: float);
+  Spinner(Id: string; Size: float; Settings: Spinners.Options?);
   // Display linear audio peaks on a native dBFS scale.
   LevelMeter(Id: string; Peaks: array of float; Settings: Levels.Options; OnClipCleared: Sys.Func<TMsg>?);
   // Display native capacity usage and its threshold color.
@@ -82,6 +131,8 @@ public type Element<TMsg> = variant
   ExpandableText(Id: string; Text: string; Settings: ExpandableTexts.Options; OnToggle: Sys.Func<TMsg>?);
   // Display text.
   Label(Text: string);
+  // Static text with an explicit native typeface, size and color.
+  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color);
   // Separate adjacent content, with an optional caption.
   Separator(Title: string);
   // Activate a button with model-owned presentation and input settings.
@@ -118,7 +169,7 @@ public type Element<TMsg> = variant
   // Foreground content with native swipe actions on either side.
   SwipeRow(Id: string; Content: Element<TMsg>; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
   // Propose a changed checkbox value through native CUI.
-  CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool);
+  CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool);
   // Propose a changed switch value through native CUI.
   SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool);
   // Propose selecting one native CUI radio row.
@@ -311,6 +362,162 @@ public type Element<TMsg> = variant
   MonthCalendar(Id: string; Current: MonthCalendars.Value; Change: function(MonthCalendars.Event): TMsg; Settings: MonthCalendars.Options);
   // Native CUI Gantt chart.
   Gantt(Id: string; Current: Gantts.Value; Change: function(Gantts.Event): TMsg; Settings: Gantts.Options);
+  // Draws a native conversation bubble.
+  ChatMessage(Id: string; Text: string; Settings: ChatMessages.Options);
+  // Draws a native labeled conversation divider.
+  ChatDivider(Id: string; Label: string);
+  // Draws the native typing indicator.
+  TypingIndicator(Id: string; Name: string);
+  // Draws a threaded comment and reports native actions.
+  Comment(Id: string; Author: string; Text: string; Current: Comments.Value; Change: function(Comments.Event): TMsg; Settings: Comments.Options);
+  // Draws an overlapping native group of active and away users.
+  Presence(Id: string; Users: array of Presences.User; Settings: Presences.Options);
+  // Draws the native rolling numeric counter.
+  Counter(Id: string; Value: double; Settings: Counters.Options);
+  // Draws the native scrolling ticker.
+  Ticker(Id: string; Items: array of Tickers.Item; Settings: Tickers.Options);
+  // Draws the native status spinner and its result transition.
+  StatusSpinner(Id: string; Status: Status.Status; Settings: StatusSpinners.Options);
+  // Builds a native group of placeholders with a shared animation.
+  SkeletonGroup(Id: string; Children: array of Element<TMsg>; Settings: SkeletonGroups.Options);
+  // Draws a compact native chart for a series of values.
+  Sparkline(Id: string; Values: array of float; Settings: Sparklines.Options);
+  // Native VoiceWave element.
+  VoiceWave(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func<float, TMsg>?; Settings: VoiceWaves.Options);
+  // Native VoiceNote element.
+  VoiceNote(Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
+  // Native VoiceSession element.
+  VoiceSession(Id: string; Mode: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(VoiceSessions.Event): TMsg; Settings: VoiceSessions.Options);
+  // Native Composer element.
+  Composer(Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
+  // Native VoiceOrb element.
+  VoiceOrb(Id: string; Mode: Voice.Activity; Level: float; Activate: Sys.Func<TMsg>?; Settings: VoiceOrbs.Options);
+  // Native Reasoning element.
+  Reasoning(Id: string; Bodies: array of Element<TMsg>; Settings: Reasonings.Options);
+  // Native ToolCall element.
+  ToolCall(Id: string; Name: string; Settings: ToolCalls.Options);
+  // Native AgentPlan element.
+  AgentPlan(Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func<int, TMsg>?; Settings: AgentPlans.Options);
+  // Native AgentStatus element.
+  AgentStatus(Id: string; Label: string; Settings: AgentStatuses.Options);
+  // Native SourceList element.
+  SourceList(Id: string; Documents: array of Sources.Item; Changed: Sys.Func<int, TMsg>?; Settings: SourceLists.Options);
+  // Native Citation element.
+  Citation(Id: string; Number: int; Source: Sources.Item?; Activate: Sys.Func<TMsg>?; Settings: Citations.Options);
+  // Native ContextMeter element.
+  ContextMeter(Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
+  // Native ResponseActions element.
+  ResponseActions(Id: string; Vote: int?; Changed: function(ResponseActions.Event): TMsg; Settings: ResponseActions.Options);
+  // Native PromptSuggestions element.
+  PromptSuggestions(Id: string; Items: array of PromptSuggestions.Item; Changed: function(int): TMsg; Settings: PromptSuggestions.Options);
+  // Native ModelPicker element.
+  ModelPicker(Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
+  // Native text roles and inline code.
+  NativeText(Text: string; Role: Texts.Appearance);
+  // Native PropertyInspector.
+  PropertyInspector(Id: string; Groups: array of PropertyInspectors.Group; Changed: function(PropertyInspectors.Event): TMsg; Settings: PropertyInspectors.Options);
+  // Native FlameGraph.
+  FlameGraph(Id: string; Spans: array of FlameGraphs.Span; Current: FlameGraphs.View; Changed: function(FlameGraphs.Event): TMsg; Settings: FlameGraphs.Options);
+  // Native CurveEditor.
+  CurveEditor(Id: string; Keys: array of CurveEditors.Key; Selected: int; Changed: function(CurveEditors.Event): TMsg; Settings: CurveEditors.Options);
+  // Native GradientEditor.
+  GradientEditor(Id: string; Stops: array of GradientEditors.Stop; Selected: int; Changed: function(GradientEditors.Event): TMsg; Settings: GradientEditors.Options);
+  // Native TimelineEditor.
+  TimelineEditor(Id: string; Tracks: array of TimelineEditors.Track; Current: TimelineEditors.View; Changed: function(TimelineEditors.Event): TMsg; Settings: TimelineEditors.Options);
+  // Markdown rendered by the native graphical host.
+  Markdown(Id: string; Text: string; Changed: function(Markdowns.Event): TMsg; Settings: Markdowns.Options);
+  // CodeEditor rendered by the native graphical host.
+  CodeEditor(Id: string; Text: string; Changed: function(CodeEditors.Event): TMsg; Settings: CodeEditors.Options);
+  // DiffView rendered by the native graphical host.
+  DiffView(Id: string; Before: string; After: string; Current: int; Changed: function(DiffViews.Event): TMsg; Settings: DiffViews.Options);
+  // HexView rendered by the native graphical host.
+  HexView(Id: string; Data: array of byte; Selected: HexViews.Selection; Changed: function(HexViews.Event): TMsg; Settings: HexViews.Options);
+  // LogConsole rendered by the native graphical host.
+  LogConsole(Id: string; Entries: array of LogConsoles.Entry; Cleared: TMsg; Settings: LogConsoles.Options);
+  // Terminal rendered by the native graphical host.
+  Terminal(Id: string; Output: string; Revision: int; Received: function(Terminals.Event): TMsg; Settings: Terminals.Options);
+  // Native CUI Icon element.
+  Icon(Glyph: string; Size: float; Color: G.Color?);
+  // Native CUI Emoji element.
+  Emoji(Glyph: string; Size: float);
+  // Native CUI Keycap element.
+  Keycap(Keys: string);
+  // Native CUI Image element.
+  Image(Id: string; Source: Media.Source; Settings: Images.Options);
+  // Native CUI Canvas element.
+  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options);
+  // Native CUI Veil element.
+  Veil(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: Element<TMsg>; Settings: Veils.Options);
+  // Native CUI FormatBar element.
+  FormatBar(Id: string; Format: FormatBars.Value; Changed: function(FormatBars.Event): TMsg; Settings: FormatBars.Options);
+  // Native CUI LiveCursors element.
+  LiveCursors(Id: string; People: array of LiveCursors.Person; Child: Element<TMsg>; Settings: LiveCursors.Options);
+  // Native CUI PresencePill element.
+  PresencePill(Id: string; People: array of LiveCursors.Person; Settings: PresencePills.Options);
+  // Native CUI SelectionRing element.
+  SelectionRing(Id: string; Child: Element<TMsg>; Settings: SelectionRings.Options);
+  // Native CUI CanvasControls element.
+  CanvasControls(Id: string; Viewport: NodeEditors.View; Toggles: array of CanvasControls.Toggle; Changed: function(CanvasControls.Event): TMsg; Child: Element<TMsg>; Settings: CanvasControls.Options);
+  // Native CUI ResultCard element.
+  ResultCard(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: ResultCards.Options);
+  // Native CUI SelectionBar element.
+  SelectionBar(Id: string; Selected: array of bool; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element<TMsg>; Settings: SelectionBars.Options);
+  // Native CUI Toolbar element.
+  Toolbar(Id: string; Items: array of Toolbars.Item; Changed: function(Toolbars.Event): TMsg; Settings: Toolbars.Options);
+  // Native CUI NodeEditor element.
+  NodeEditor(Id: string; Viewport: NodeEditors.View; Nodes: array of NodeEditors.Node<TMsg>; Links: array of NodeEditors.Link; Changed: function(NodeEditors.Event): TMsg; Settings: NodeEditors.Options);
+  // Native Problems widget.
+  Problems(Id: string; Diagnostics: array of ProblemsPanels.Diagnostic; Changed: function(ProblemsPanels.Event): TMsg; Settings: ProblemsPanels.Options);
+  // Native Pipeline widget.
+  Pipeline(Id: string; Stages: array of string; Jobs: array of Pipelines.Job; Selection: int; Changed: function(Pipelines.Event): TMsg; Settings: Pipelines.Options);
+  // Native Keymap widget.
+  Keymap(Id: string; Bindings: array of Keymaps.Binding; Categories: array of string; Modifiers: int; Changed: function(Keymaps.Event): TMsg; Settings: Keymaps.Options);
+  // Native CommitGraph widget.
+  CommitGraph(Id: string; Commits: array of CommitGraphs.Commit; Selection: int; Changed: function(CommitGraphs.Event): TMsg; Settings: CommitGraphs.Options);
+  // Native DependencyGraph widget.
+  DependencyGraph(Id: string; Vertices: array of DependencyGraphs.Vertex; Edges: array of DependencyGraphs.Edge; Selection: int; Changed: function(DependencyGraphs.Event): TMsg; Settings: DependencyGraphs.Options);
+  // Native NetworkWaterfall widget.
+  NetworkWaterfall(Id: string; Requests: array of NetworkWaterfalls.Request; Selection: int; Changed: function(NetworkWaterfalls.Event): TMsg; Settings: NetworkWaterfalls.Options);
+  // Native TraceViewer widget.
+  TraceViewer(Id: string; Tracks: array of TraceViewers.Track; Spans: array of TraceViewers.Span; Markers: array of TraceViewers.Marker; Value: TraceViewers.View; Selection: int; Changed: function(TraceViewers.Event): TMsg; Settings: TraceViewers.Options);
+  // Native TestExplorer widget.
+  TestExplorer(Id: string; Entries: array of TestExplorers.Item; Changed: function(TestExplorers.Event): TMsg; Settings: TestExplorers.Options);
+  // Native StackTrace widget.
+  StackTrace(Id: string; Frames: array of StackTraces.Frame; Changed: function(StackTraces.Event): TMsg; Settings: StackTraces.Options);
+  // Native ResponseStatus widget.
+  ResponseStatus(Id: string; Status: int; Seconds: double; Bytes: double; Settings: ResponseStatuses.Options);
+  // Native Uptime widget.
+  Uptime(Id: string; Services: array of Uptimes.Service; LastDay: Sys.DateOnly; Settings: Uptimes.Options);
+  // Native TimeHistogram widget.
+  TimeHistogram(Id: string; Start: double; Bucket: double; Buckets: int; SeriesData: array of TimeHistograms.Series; Value: TimeHistograms.Range; Changed: function(TimeHistograms.Event): TMsg; Settings: TimeHistograms.Options);
+  // Native Coverage widget.
+  Coverage(Id: string; ReportFiles: array of Coverages.File; Changed: function(Coverages.Event): TMsg; Settings: Coverages.Options);
+  // Native Blame widget.
+  Blame(Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of Blames.Revision; Changed: function(Blames.Event): TMsg; Settings: Blames.Options);
+  // Native ApiExplorer widget.
+  ApiExplorer(Id: string; Endpoints: array of ApiExplorers.Endpoint; Selection: int; Changed: function(ApiExplorers.Event): TMsg; Settings: ApiExplorers.Options);
+  // Native KeyValueEditor widget.
+  KeyValueEditor(Id: string; Pairs: array of KeyValueEditors.Pair; Changed: function(KeyValueEditors.Event): TMsg; Settings: KeyValueEditors.Options);
+  // Native QueryBuilder widget.
+  QueryBuilder(Id: string; Fields: array of QueryBuilders.Field; RulesData: array of QueryBuilders.Rule; Changed: function(QueryBuilders.Event): TMsg; Settings: QueryBuilders.Options);
+  // Native SchedulePicker widget.
+  SchedulePicker(Id: string; Expression: string; Changed: function(SchedulePickers.Event): TMsg; Settings: SchedulePickers.Options);
+  // Native RegexTester widget.
+  RegexTester(Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(RegexTesters.Event): TMsg; Settings: RegexTesters.Options);
+  // Native RequestBar widget.
+  RequestBar(Id: string; Method: int; Url: string; Changed: function(RequestBars.Event): TMsg; Settings: RequestBars.Options);
+  // Native FeatureFlags widget.
+  FeatureFlags(Id: string; Entries: array of FeatureFlagEditors.Flag; Environments: array of string; Changed: function(FeatureFlagEditors.Event): TMsg; Settings: FeatureFlagEditors.Options);
+  // Native Carousel element.
+  Carousel(Id: string; Slides: array of Element<TMsg>; Index: int; Change: function(int): TMsg; Settings: Carousels.Options);
+  // Native CardStack element.
+  CardStack(Id: string; Cards: array of Element<TMsg>; Change: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options);
+  // Native ImageViewer element.
+  ImageViewer(Id: string; Image: Media.Source; Current: ImageViewers.Value; Change: function(ImageViewers.Value): TMsg; Settings: ImageViewers.Options);
+  // Native ImageCropper element.
+  ImageCropper(Id: string; Image: Media.Source; Current: ImageCroppers.Value; Change: function(ImageCroppers.Value): TMsg; Settings: ImageCroppers.Options);
+  // Native ImageCompare element.
+  ImageCompare(Id: string; Before: Media.Source; After: Media.Source; Position: float; Change: function(float): TMsg; Settings: ImageComparisons.Options);
   // Native CUI Kanban board.
   Kanban(Id: string; Columns: array of Kanbans.Column<TMsg>; Change: function(Kanbans.Event): TMsg; Settings: Kanbans.Options);
   // Native CUI status tag.
@@ -428,6 +635,21 @@ end record;
 public function Text<TMsg>(Text: string): Element<TMsg>;
 begin
   return Element<TMsg>.Label(Text);
+end function;
+
+// Displays text with explicit graphical typography.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Text`: Visible text.
+// - `Font`: Native typeface.
+// - `Size`: Logical font size, or zero to use the theme.
+// - `Color`: Straight-alpha text color.
+// ## Returns
+// A label for the graphical profile.
+public function FormattedText<TMsg>(Text: string; Font: Motion.Font; Size: float; Color: G.Color): Element<TMsg>;
+begin
+  return Element<TMsg>.FormattedText(Text, Font, Size, Color);
 end function;
 
 // Separates adjacent content.

@@ -1,0 +1,82 @@
+unit GuiGallery.Pages.Canvas.Picture;
+
+uses Fpas.Ui.MediaImages as Media, System as Sys;
+
+const Width: int := 288;
+const Height: int := 360;
+const Hills: array of array of float := [
+  [0.18F, 1.04F, 0.54F, 0.26F], [0.92F, 1.08F, 0.53F, 0.26F], [0.5F, 1.18F, 0.64F, 0.28F]
+];
+const Tints: array of array of float := [
+  [238.0F, 143.0F, 120.0F], [184.0F, 96.0F, 106.0F], [122.0F, 63.0F, 82.0F]
+];
+
+function Build(): Media.Source;
+begin
+  const Pixels: array of byte := new byte[Width * Height * 4];
+  for Y: int := 0 to Height - 1 do
+    for X: int := 0 to Width - 1 do
+      var Red: float := 0.0F;
+      var Green: float := 0.0F;
+      var Blue: float := 0.0F;
+      for Sample: int := 0 to 3 do
+        const Fx: float := X + 0.25F + 0.5F * (Sample and 1);
+        const Fy: float := Y + 0.25F + 0.5F * (Sample shr 1);
+        const V: float := Fy / Height;
+        var R: float := 0.0F;
+        var G: float := 0.0F;
+        var B: float := 0.0F;
+        if V < 0.48F then
+          const K: float := V / 0.48F;
+          R := 118.0F + 67.0F * K;
+          G := 169.0F + 43.0F * K;
+          B := 236.0F + 10.0F * K;
+        else
+          const K: float := (V - 0.48F) / 0.52F;
+          R := 185.0F + 57.0F * K;
+          G := 212.0F + 5.0F * K;
+          B := 246.0F - 43.0F * K;
+        end if;
+        const Dx: float := Fx - Width * 0.66F;
+        const Dy: float := Fy - Height * 0.32F;
+        const Distance: float := Sys.MathF.Sqrt(Dx * Dx + Dy * Dy) / Width;
+        const Sun: float := if Distance < 0.08F then
+          1.0F
+        elsif Distance < 0.24F then
+          0.55F * (1.0F - (Distance - 0.09F) / 0.15F)
+        else
+          0.0F
+        end if;
+        R := R + (255.0F - R) * Sun;
+        G := G + (247.0F - G) * Sun;
+        B := B + (236.0F - B) * Sun;
+        for I: int := 0 to Hills.Length - 1 do
+          const Hill: array of float := Hills[I];
+          const Ex: float := (Fx / Width - Hill[0]) / Hill[2];
+          const Ey: float := (V - Hill[1]) / Hill[3];
+          if Ex * Ex + Ey * Ey < 1.0F then
+            R := Tints[I][0];
+            G := Tints[I][1];
+            B := Tints[I][2];
+          end if;
+        end for;
+
+        Red := Red + R * 0.25F;
+        Green := Green + G * 0.25F;
+        Blue := Blue + B * 0.25F;
+      end for;
+      const At: int := (Y * Width + X) * 4;
+      Pixels[At] := cast<byte>(Red);
+      Pixels[At + 1] := cast<byte>(Green);
+      Pixels[At + 2] := cast<byte>(Blue);
+      Pixels[At + 3] := 255;
+    end for;
+  end for;
+
+  return Media.Source.Rgba(Width, Height, Pixels);
+end function;
+
+// Original CUI result picture, sampled once into an immutable RGBA buffer.
+public const Result: Media.Source := Build();
+
+end unit;

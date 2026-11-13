@@ -13,21 +13,23 @@ public const Id: string := 'motion-playback-clock';
 // ## Parameters
 // - `Tick`: Converts elapsed seconds into a message.
 // - `OnFailure`: Converts a worker failure into a message.
+// - `Interval`: Clock interval in milliseconds.
+// - `Identity`: Background effect identity.
 // ## Returns
 // The cancellable playback command.
-public function Start<TMsg>(Tick: function(float): TMsg; OnFailure: function(Sys.Exception): TMsg): A.Command<TMsg>;
+public function Start<TMsg>(Tick: function(float): TMsg; OnFailure: function(Sys.Exception): TMsg; Interval: int := 100; Identity: string := 'motion-playback-clock'): A.Command<TMsg>;
   async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
   begin
     const Clock: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
     while not Token.IsCancellationRequested do
-      await Tasks.Task.Delay(100, Token).ConfigureAwait(false);
+      await Tasks.Task.Delay(Interval, Token).ConfigureAwait(false);
       const Seconds: float := cast<float>(Clock.Elapsed.TotalSeconds);
       Clock.Restart();
       await Post(Tick(Seconds)).ConfigureAwait(false);
     end while;
   end function;
 begin
-  return A.StartBackground<TMsg>(Id, Run, OnFailure);
+  return A.StartBackground<TMsg>(Identity, Run, OnFailure);
 end function;
 
 end unit;

@@ -430,3 +430,96 @@ keeping native editing disabled. The week adapter also handles the release
 and distinguishes a click from a drag. `fpas_cui_planning` verifies activation
 and confirms that an arrow press leaves the event or task unchanged. Its
 `upstream` mode reproduces the missing activations.
+
+<a id="cui-033"></a>
+
+## CUI-033 — Typing indicator animates with reduced motion
+
+Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
+`cui_typing_indicator` over successive frames. Its dots still advance and
+`cui_needs_redraw` stays true once layout has settled.
+
+The FPAS adapter keeps the native dots at their initial phase and preserves
+the redraw state from widgets already built in the frame.
+`fpas_cui_social upstream` reproduces the continuous redraw request.
+
+<a id="cui-034"></a>
+
+## CUI-034 — Running task glyphs animate with reduced motion
+
+Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
+`cui_agent_plan` with a step in `CUI_TASK_RUNNING`. The glyph keeps rotating
+and `cui_needs_redraw` stays true after the layout settles. The same native
+glyph is used by running tool calls.
+
+The FPAS adapters keep CUI's glyph at its initial phase and preserve animation
+requests from earlier widgets. `fpas_cui_voice_ai upstream` reproduces the
+continuous redraw. The adapter regression verifies that redraw stops.
+
+<a id="cui-035"></a>
+
+## CUI-035 — Running jobs and tests animate with reduced motion
+
+Reproduced on Windows at `86d9781`. Enable reduced motion and render a
+`cui_pipeline` job or a `cui_test_explorer` item in `CUI_JOB_RUNNING`.
+The arc still uses the animation clock and keeps `cui_needs_redraw` true.
+The FPAS adapters paint the same arc at its initial phase and preserve any
+redraw request made by another control. `fpas_cui_developer_tools upstream`
+reproduces the native redraw request. The regular test verifies that it stops.
+
+<a id="cui-036"></a>
+
+## CUI-036 — Trace measurements do not set view_changed
+
+Reproduced on Windows at `86d9781`. Shift-drag in the plot of
+`cui_trace_view` without changing the time window or vertical scroll.
+CUI writes the new measurement to `mark_start` and `mark_end` while leaving
+`view_changed` false. An application that applies changes only when the
+flag is set can lose the measurement when it redraws from its model.
+The FPAS adapter also compares the measurement endpoints.
+`fpas_cui_developer_tools measurement` reproduces the missing native
+notification. The regular test verifies the FPAS proposal.
+
+<a id="cui-037"></a>
+
+## CUI-037 — Disabled node editor accepts wheel zoom
+
+Reproduced on Windows at `86d9781`. Build a node editor under
+`cui_push_disabled(ui, true)`, move the pointer into the canvas and scroll.
+The native view's zoom and pan change even though the editor is disabled.
+The wheel handler reads the raw scroll target outside CUI's normal interaction
+check. The FPAS adapter masks the editor's input while disabled and cancels
+any ongoing gesture. `fpas_cui_canvas_bars upstream` reproduces the issue
+against native CUI. The same test verifies that FPAS preserves the disabled
+view and that enabled wheel zoom and dragging still work.
+
+<a id="cui-038"></a>
+
+## CUI-038 — A disabled veil intercepts clicks
+
+Reproduced on Windows at `86d9781`. Overlay a covered `cui_veil` on an
+interactive canvas and disable the veil with `cui_push_disabled(ui, true)`.
+Clicks inside the overlap never reach the canvas. CUI registers an
+interactive node for the disabled veil and adds a second hit target during
+painting.
+
+The FPAS adapter suppresses both hit registrations when the veil is disabled.
+The cover still paints. `fpas_cui_display native` reproduces the blocked
+click against pinned CUI. The regular test verifies that FPAS forwards the
+click to the underlying canvas with the same local coordinates as an
+uncovered canvas.
+
+<a id="cui-039"></a>
+
+## CUI-039 — Disabled flame graph and timeline accept wheel zoom
+
+Reproduced on Windows at `86d9781`. Draw a flame graph or timeline inside
+`cui_push_disabled(ui, true)`, move the pointer over the plot and scroll up.
+Both widgets shrink the visible range. They read the raw scroll target
+outside the disabled interaction check.
+
+The FPAS adapters temporarily mask their own wheel target while disabled and
+discard any ongoing drag. The timeline also suppresses a middle-button pan
+start. `fpas_cui_editing_tools native` reproduces both zooms with direct CUI
+calls. The regular test verifies that the original range is preserved by the
+adapters.

@@ -1,0 +1,39 @@
+unit Fpas.Ui.AgentPlans;
+
+uses Fpas.Ui.Elements as E, System as Sys, Fpas.Ui.TaskStates as TaskStates;
+
+// One step in the plan.
+public type Step = record
+  // Visible title.
+  public Title: string;
+  // Supporting text.
+  public Detail: string := '';
+  // Current step state.
+  public Status: TaskStates.Status := TaskStates.Status.Pending;
+end record;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Heading or empty for the native default.
+  public Title: string := '';
+  // Allow activating steps.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native AgentPlan widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Steps`: Steps in order.
+// - `Changed`: Optional step activation mapper.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function AgentPlan<TMsg>(Id: string; Steps: array of Step; Changed: Sys.Func<int, TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.AgentPlan(Id, Steps, Changed, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,92 @@
+unit GuiGallery.Pages.Disclosure.Widgets.Veil;
+
+uses
+  GuiGallery.Pages.Disclosure.State as State, GuiGallery.Pages.Canvas.Picture as Picture,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Motion as M,
+  Fpas.Ui.Themes as Theme, Fpas.Ui.Buttons as B, Fpas.Ui.Veils as V, Fpas.Ui.Images as I;
+
+function SampleKey(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(
+      Gap := G.Points(8), Align := L.Alignment.Center, Padding := G.Points(8),
+      PaddingStart := G.Points(10), PaddingEnd := G.Points(10),
+      Background := Colors.SurfaceMuted, CornerRadius := 10.0F, Clip := false
+    ),
+    E.FormattedText<State.Msg>('demo-id-', M.Font.Mono, 12.5F, Colors.TextSecondary),
+    E.Size<State.Msg>(
+      E.Column<State.Msg>(
+        new L.Flow(Clip := false),
+        V.Veil<State.Msg>(
+          'sample-key', Model.KeyShown, State.Msg.SetKey,
+          E.FormattedText<State.Msg>('example-value-0000', M.Font.Mono, 12.5F, Colors.Foreground),
+          new V.Options(Color := Colors.Surface)
+        )
+      ),
+      new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+    ),
+    B.Button<State.Msg>(
+      'reveal-sample-key', if Model.KeyShown then
+        'Hide'
+      else
+        'Reveal'
+      end if,
+      State.Msg.SetKey(not Model.KeyShown), new B.Options(ControlSize := B.Size.Small)
+    )
+  );
+end function;
+
+// Builds the original picture, sample key and spoiler example.
+// ## Parameters
+// - `Model`: Current reveal state for the examples.
+// - `Colors`: Active theme palette.
+// ## Returns
+// A card containing the three native veils.
+public function View(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(
+    E.Styled<State.Msg>(
+      E.Column<State.Msg>(
+        new L.Flow(
+          Gap := G.Points(12),
+          Padding := G.Points(12),
+          CornerRadius := 16.0F,
+          Clip := false
+        ),
+        V.Veil<State.Msg>(
+          'photo', Model.Photo, State.Msg.SetPhoto,
+          I.Image<State.Msg>(
+            'veil-picture', Picture.Result,
+            new I.Options(
+              Width := L.Extent.Fixed(L.Measure.Logical(234)),
+              Height := L.Extent.Fixed(L.Measure.Logical(150)), Radius := 10.0F
+            )
+          ),
+          new V.Options(
+            Label := 'Sensitive image',
+            Hint := 'Click to show',
+            Toggle := true,
+            Radius := 10.0F
+          )
+        ),
+        SampleKey(Model, Colors),
+        E.Row<State.Msg>(
+          new L.Flow(Gap := G.Points(4), Wrap := true, Align := L.Alignment.Center, Clip := false),
+          E.Text<State.Msg>('Finished it last night. The ending:'),
+          V.Veil<State.Msg>(
+            'spoiler',
+            Model.Spoiler,
+            State.Msg.SetSpoiler,
+            E.Text<State.Msg>('the keeper was the narrator'),
+            new V.Options(Toggle := true, Radius := 4.0F)
+          )
+        )
+      ),
+      S.Role.OutlinedPanel
+    ),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(420)))
+  );
+end function;
+
+end unit;

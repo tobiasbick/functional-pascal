@@ -1,0 +1,163 @@
+unit Fpas.Ui.Internal.Mapping.Canvas;
+
+uses
+  Fpas.Ui.FormatBars as FormatBars,
+  Fpas.Ui.LiveCursors as LiveCursors,
+  Fpas.Ui.PresencePills as PresencePills,
+  Fpas.Ui.SelectionRings as SelectionRings,
+  Fpas.Ui.CanvasControls as CanvasControls,
+  Fpas.Ui.ResultCards as ResultCards,
+  Fpas.Ui.SelectionBars as SelectionBars,
+  Fpas.Ui.Toolbars as Toolbars,
+  Fpas.Ui.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.MediaImages as Media,
+  System as Sys, System.Collections.Generic as Lists;
+
+function MapNodes<TChild, TParent>(Items: array of NodeEditors.Node<TChild>; Child: function(E.Element<TChild>): E.Element<TParent>): array of NodeEditors.Node<TParent>;
+begin
+  const Nodes: Lists.List<NodeEditors.Node<TParent>> := new Lists.List<NodeEditors.Node<TParent>>(
+    Items.Length
+  );
+  for Item: NodeEditors.Node<TChild> in Items do
+    var Body: E.Element<TParent>? := null;
+    case Item.Body of
+      when is E.Element<TChild> as Content:
+        Body := Child(Content);
+      else
+    end case;
+
+    Nodes.Add(
+      new NodeEditors.Node<TParent>(
+        Item.Id,
+        Item.X,
+        Item.Y,
+        Item.Title,
+        Item.Pins,
+        Body,
+        Item.Width,
+        Item.Icon,
+        Item.Ring
+      )
+    );
+  end for;
+
+  return Nodes.ToArray();
+end function;
+
+// Maps canvas messages and embedded content to a parent view.
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Canvas widget.
+// - `Messages`: Message conversion.
+// - `Child`: Element conversion.
+// ## Returns
+// The corresponding parent element.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent; Child: function(E.Element<TChild>): E.Element<TParent>): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.FormatBar(
+      const Id: string,
+      const Format: FormatBars.Value,
+      const Changed: function(FormatBars.Event): TChild,
+      const Settings: FormatBars.Options
+    ):
+      return E.Element<TParent>.FormatBar(
+        Id,
+        Format,
+        function(Proposal: FormatBars.Event): TParent => Messages(Changed(Proposal)),
+        Settings
+      );
+    when E.Element.LiveCursors(
+      const Id: string,
+      const People: array of LiveCursors.Person,
+      const Content: E.Element<TChild>,
+      const Settings: LiveCursors.Options
+    ):
+      return E.Element<TParent>.LiveCursors(Id, People, Child(Content), Settings);
+    when E.Element.PresencePill(
+      const Id: string,
+      const People: array of LiveCursors.Person,
+      const Settings: PresencePills.Options
+    ):
+      return E.Element<TParent>.PresencePill(Id, People, Settings);
+    when E.Element.SelectionRing(
+      const Id: string,
+      const Content: E.Element<TChild>,
+      const Settings: SelectionRings.Options
+    ):
+      return E.Element<TParent>.SelectionRing(Id, Child(Content), Settings);
+    when E.Element.CanvasControls(
+      const Id: string,
+      const Viewport: NodeEditors.View,
+      const Toggles: array of CanvasControls.Toggle,
+      const Changed: function(CanvasControls.Event): TChild,
+      const Content: E.Element<TChild>,
+      const Settings: CanvasControls.Options
+    ):
+      return E.Element<TParent>.CanvasControls(
+        Id,
+        Viewport,
+        Toggles,
+        function(Proposal: CanvasControls.Event): TParent => Messages(Changed(Proposal)),
+        Child(Content),
+        Settings
+      );
+    when E.Element.ResultCard(
+      const Id: string,
+      const Image: Media.Source,
+      const Title: string,
+      const Activate: TChild,
+      const Settings: ResultCards.Options
+    ):
+      return E.Element<TParent>.ResultCard(Id, Image, Title, Messages(Activate), Settings);
+    when E.Element.SelectionBar(
+      const Id: string,
+      const Selected: array of bool,
+      const Actions: array of SelectionBars.Action,
+      const Changed: function(SelectionBars.Event): TChild,
+      const Content: E.Element<TChild>,
+      const Settings: SelectionBars.Options
+    ):
+      return E.Element<TParent>.SelectionBar(
+        Id,
+        Selected,
+        Actions,
+        function(Proposal: SelectionBars.Event): TParent => Messages(Changed(Proposal)),
+        Child(Content),
+        Settings
+      );
+    when E.Element.Toolbar(
+      const Id: string,
+      const Items: array of Toolbars.Item,
+      const Changed: function(Toolbars.Event): TChild,
+      const Settings: Toolbars.Options
+    ):
+      return E.Element<TParent>.Toolbar(
+        Id,
+        Items,
+        function(Proposal: Toolbars.Event): TParent => Messages(Changed(Proposal)),
+        Settings
+      );
+    when E.Element.NodeEditor(
+      const Id: string,
+      const Viewport: NodeEditors.View,
+      const Nodes: array of NodeEditors.Node<TChild>,
+      const Links: array of NodeEditors.Link,
+      const Changed: function(NodeEditors.Event): TChild,
+      const Settings: NodeEditors.Options
+    ):
+      return E.Element<TParent>.NodeEditor(
+        Id,
+        Viewport,
+        MapNodes<TChild, TParent>(Nodes, Child),
+        Links,
+        function(Proposal: NodeEditors.Event): TParent => Messages(Changed(Proposal)),
+        Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a canvas element.');
+  end case;
+end function;
+
+end unit;

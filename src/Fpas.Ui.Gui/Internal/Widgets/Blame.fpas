@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Blame;
+
+uses Fpas.Ui.Blames as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+
+function PackRevision(Items: array of D.Revision): array of Cui.CuiDevRevision;
+begin
+  const Native: Lists.List<Cui.CuiDevRevision> := new Lists.List<Cui.CuiDevRevision>(Items.Length);
+  for Entry: D.Revision in Items do
+    Native.Add(new Cui.CuiDevRevision(Entry.Hash, Entry.Author, Entry.Summary, Entry.Time));
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native Blame widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Lines`: Lines supplied to the widget.
+// - `LineCommits`: LineCommits supplied to the widget.
+// - `Revisions`: Revisions supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of D.Revision; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'blame';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: Cui.CuiDevResult := Frame.Window.Blame(
+    Token,
+    Lines,
+    LineCommits,
+    PackRevision(Revisions),
+    Settings.Height,
+    Settings.Language,
+    Settings.Now,
+    Settings.FirstLine,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  if Enabled and (Result.Action >= 0) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Action)));
+  end if;
+end procedure;
+
+end unit;

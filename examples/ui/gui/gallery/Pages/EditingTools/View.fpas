@@ -1,0 +1,183 @@
+unit GuiGallery.Pages.EditingTools.View;
+
+uses
+  GuiGallery.Pages.EditingTools.State as M, GuiGallery.Pages.EditingTools.Samples as Sample,
+  GuiGallery.Pages.EditingTools.Capture as Capture, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Motion as Text,
+  Fpas.Ui.Themes as Theme, Fpas.Ui.Cards as Card, Fpas.Ui.IconButtons as Button,
+  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.FlameGraphs as F, Fpas.Ui.CurveEditors as C,
+  Fpas.Ui.GradientEditors as Ramp, Fpas.Ui.TimelineEditors as T,
+  System as Sys, System.Globalization as Locale, System.Collections.Generic as Lists;
+
+function Limited(Value: E.Element<M.Msg>; Width: int): E.Element<M.Msg>;
+begin
+  return E.Size<M.Msg>(
+    Value, new L.Flex(
+      Width := new L.AxisSize(
+        Basis := L.Extent.Fill,
+        Maximum := L.Measure.Logical(Width)
+      )
+    )
+  );
+end function;
+
+function Flame(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  var LabelText: E.Element<M.Msg> := E.FormattedText<M.Msg>(
+    'Click a span to select it',
+    Text.Font.Body,
+    13.0F,
+    Colors.TextMuted
+  );
+  if Model.Flame.Selected >= 0 then
+    const Span: F.Span := Capture.Spans[Model.Flame.Selected];
+    const Label: string := Span.Name + ', ' + ((Span.Finish - Span.Start) * 1000.0).ToString(
+      '0.00',
+      Locale.CultureInfo.InvariantCulture
+    ) + ' ms';
+    LabelText := E.Styled<M.Msg>(
+      E.FormattedText<M.Msg>(Label, Text.Font.Body, 13.0F, Colors.TextSecondary),
+      S.Role.Tabular
+    );
+  end if;
+
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(10), Clip := false),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+      E.FormattedText<M.Msg>('Frames 4812 to 4813', Text.Font.Medium, 13.0F, Colors.Foreground),
+      LabelText
+    ),
+    F.FlameGraph<M.Msg>('capture', Capture.Spans, Model.Flame, M.Msg.Flame)
+  );
+end function;
+
+function TrackCurve(Model: M.Model; Index: int; Colors: Theme.Palette): array of E.Element<M.Msg>;
+begin
+  if Index < 0 or Model.Tracks[Index].Capacity = 0 then
+    return [
+      E.FormattedText<M.Msg>(
+        'Select a key or a track name to edit its curve here.',
+        Text.Font.Body,
+        13.0F,
+        Colors.TextMuted
+      )
+    ];
+  end if;
+  const Track: T.Track := Model.Tracks[Index];
+  const Axes: Sample.Axis := Sample.Axes[Index];
+  const Keys: Lists.List<C.Key> := new Lists.List<C.Key>(Track.Keys.Length);
+  for Key: T.Key in Track.Keys do
+    Keys.Add(Key.Curve);
+  end for;
+
+  return [
+    E.FormattedText<M.Msg>(Track.Name, Text.Font.Medium, 13.0F, Colors.Foreground),
+    C.CurveEditor<M.Msg>(
+      'track-curve-' + Index.ToString(), Keys.ToArray(), Model.Timeline.KeyIndex,
+      function(Value: C.Event): M.Msg => M.Msg.TrackCurve(Index, Value),
+      new C.Options(
+        Height := 170.0F,
+        XMaximum := 5.0F,
+        XLabel := 'Time',
+        YLabel := Axes.Label,
+        YMinimum := Axes.Minimum,
+        YMaximum := Axes.Maximum,
+        Capacity := Track.Capacity,
+        Playhead := Model.Timeline.Time
+      )
+    )
+  ];
+end function;
+
+function Shot(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  const Items: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  Items.Add(
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+      Button.IconButton<M.Msg>(
+        'shot-playback', Sys.Char.ConvertFromUtf32(
+          if Model.Playing then
+            $E12E
+          else
+            $E13C
+          end if
+        ),
+        if Model.Playing then
+          'Pause'
+        else
+          'Play'
+        end if, M.Msg.Playback, new Button.Options()
+      ),
+      E.FormattedText<M.Msg>('Shot 4', Text.Font.Medium, 13.0F, Colors.Foreground),
+      E.FormattedText<M.Msg>('5 seconds at 24 fps', Text.Font.Body, 13.0F, Colors.TextSecondary)
+    )
+  );
+  Items.Add(
+    T.TimelineEditor<M.Msg>(
+      'shot', Model.Tracks, Model.Timeline, M.Msg.Timeline,
+      new T.Options(Finish := 5.0F, FramesPerSecond := 24.0F, Toggles := true)
+    )
+  );
+  Items.AddRange(TrackCurve(Model, Model.Timeline.TrackIndex, Colors));
+  return E.Column<M.Msg>(new L.Flow(Gap := G.Points(12), Clip := false), Items.ToArray());
+end function;
+
+// Shows the pinned CUI editing tool specimens.
+// ## Parameters
+// - `Model`: Editing tool state.
+// - `Colors`: Active theme colors.
+// ## Returns
+// The five editing tools in gallery order.
+public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element<M.Msg>;
+begin
+  return [
+    G.Heading<M.Msg>('Property inspector'),
+    Card.Card<M.Msg>(
+      'crate-material', [I.PropertyInspector<M.Msg>('props', Model.Inspector, M.Msg.Inspector)],
+      new Card.Options(
+        Width := L.Extent.Fill,
+        MaximumWidth := 460.0F,
+        PaddingX := 16.0F,
+        PaddingY := 6.0F
+      )
+    ),
+    G.Heading<M.Msg>('Flame graph'), Flame(Model, Colors),
+    G.Heading<M.Msg>('Curve editor'),
+    Limited(
+      E.Column<M.Msg>(
+        new L.Flow(Clip := false),
+        C.CurveEditor<M.Msg>(
+          'ease', Model.Curve, Model.CurveKey, M.Msg.Curve,
+          new C.Options(
+            Capacity := 16,
+            XMaximum := 2.0F,
+            YMaximum := 1.2F,
+            XLabel := 'Time',
+            YLabel := 'Value'
+          )
+        )
+      ), 620
+    ),
+    G.Heading<M.Msg>('Gradient editor'),
+    Limited(
+      E.Column<M.Msg>(
+        new L.Flow(Gap := G.Points(10), Clip := false),
+        E.FormattedText<M.Msg>(
+          'Flame color over lifetime',
+          Text.Font.Medium,
+          13.0F,
+          Colors.Foreground
+        ),
+        Ramp.GradientEditor<M.Msg>(
+          'flame-ramp', Model.Ramp, Model.Stop, M.Msg.Gradient,
+          new Ramp.Options(Capacity := 12)
+        )
+      ), 560
+    ),
+    G.Heading<M.Msg>('Timeline editor'), Shot(Model, Colors)
+  ];
+end function;
+
+end unit;

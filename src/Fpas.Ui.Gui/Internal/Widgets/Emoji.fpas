@@ -1,0 +1,18 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Emoji;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C;
+
+// Draws the native CUI emoji.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Glyph`: Emoji sequence to display.
+// - `Size`: Logical emoji size. Zero uses the default.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Glyph: string; Size: float);
+begin
+  Frame.Window.DisplayEmoji(Glyph, Size);
+end procedure;
+
+end unit;

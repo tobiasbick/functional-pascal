@@ -1,0 +1,251 @@
+unit GuiGallery.Pages.Code.Tools;
+
+uses
+  GuiGallery.Pages.Code.State as M, GuiGallery.Pages.Code.Samples as Sample,
+  GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Motion as F,
+  Fpas.Ui.Themes as Theme, Fpas.Ui.Styles as S,
+  Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as I, Fpas.Ui.SegmentedControls as Seg,
+  Fpas.Ui.TextFields as Field, Fpas.Ui.Markdowns as Markdown,
+  Fpas.Ui.CodeEditors as Editor, Fpas.Ui.DiffViews as Diff,
+  Fpas.Ui.HexViews as Hex, Fpas.Ui.LogConsoles as Log, System as Sys, System.Linq as Linq;
+
+function Join(First: array of E.Element<M.Msg>; Second: array of E.Element<M.Msg>): array of E.Element<M.Msg>;
+begin
+  return Linq.Enumerable.ToArray<E.Element<M.Msg>>(
+    Linq.Enumerable.Concat<E.Element<M.Msg>>(First, Second)
+  );
+end function;
+
+function ReleaseNotes(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  const Streaming: bool := Model.Replay >= 0;
+  const Visible: string := if Streaming then
+    Model.Notes.Substring(0, Model.Replay)
+  else
+    Model.Notes
+  end if;
+  return E.Size<M.Msg>(
+    E.Column<M.Msg>(
+      new L.Flow(Gap := G.Points(16), Clip := false),
+      Markdown.Markdown<M.Msg>(
+        'markdown-notes',
+        Visible,
+        M.Msg.Markdown,
+        new Markdown.Options(Streaming := Streaming)
+      ),
+      E.Divider<M.Msg>(),
+      E.Row<M.Msg>(
+        new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center, Wrap := true, Clip := false),
+        B.Button<M.Msg>(
+          'markdown-replay', 'Replay as a stream', M.Msg.Replay,
+          new B.Options(ControlSize := B.Size.Small, Icon := Sys.Char.ConvertFromUtf32($E13C))
+        ),
+        E.FormattedText<M.Msg>(
+          if Model.NotesStatus = '' then
+            if Model.NotesHover = '' then
+              'Click a link or a task box'
+            else
+              Model.NotesHover
+            end if
+          else
+            Model.NotesStatus
+          end if,
+          F.Font.Body, 12.5F, Colors.TextSecondary
+        )
+      )
+    ),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(640)))
+  );
+end function;
+
+function EditCode(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  const Status: E.Element<M.Msg> := E.Row<M.Msg>(
+    new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Wrap := true, Clip := false),
+    E.Text<M.Msg>('Ln ' + Model.Line.ToString() + ', Col ' + Model.Column.ToString()),
+    E.Text<M.Msg>(Model.Lines.ToString() + ' lines'),
+    E.FormattedText<M.Msg>('Spaces: 4', F.Font.Body, 12.5F, Colors.TextMuted)
+  );
+  const Warnings: array of E.Element<M.Msg> := if Model.Full then
+    [E.FormattedText<M.Msg>('Buffer full', F.Font.Body, 12.5F, Colors.Danger)]
+  else
+    []
+  end if;
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(10), Clip := false),
+    Join(
+      [
+        Editor.CodeEditor<M.Msg>(
+          'code-editor', Model.Source, M.Msg.Code,
+          new Editor.Options(Language := 'c', Height := 356.0F, Placeholder := 'Write some C')
+        ),
+        Status
+      ], Warnings
+    )
+  );
+end function;
+
+function DiffToolbar(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  const Size: I.Size := I.Size.Small;
+  const Caption: string := if Model.Change >= 0 then
+    'Change ' + (Model.Change + 1).ToString() + ' of ' +
+    Model.Changes.ToString()
+  else
+    Model.Changes.ToString() + ' changes'
+  end if;
+  const Mode: E.Element<M.Msg> := Seg.SegmentedControl<M.Msg>(
+    'diff-mode', [new Seg.Item('Split'), new Seg.Item('Inline')],
+    if Model.Inline then
+      1
+    else
+      0
+    end if, M.Msg.Mode, new Seg.Options(ControlSize := B.Size.Small)
+  );
+  const Parts: array of E.Element<M.Msg> := if Model.ActualInline and not Model.Inline then
+    [Mode, E.FormattedText<M.Msg>('Inline on narrow screens', F.Font.Body, 12.5F, Colors.TextMuted)]
+  else
+    [Mode]
+  end if;
+  return E.Row<M.Msg>(
+    new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+    Join(
+      Parts, [
+        E.Size<M.Msg>(E.Column<M.Msg>(), new L.Flex(Basis := L.Extent.Fill)),
+        E.Row<M.Msg>(
+          new L.Flow(Gap := G.Points(4), Align := L.Alignment.Center, Clip := false),
+          E.Styled<M.Msg>(
+            E.FormattedText<M.Msg>(Caption, F.Font.Body, 12.5F, Colors.TextSecondary),
+            S.Role.Tabular
+          ),
+          E.Gap<M.Msg>(L.Measure.Logical(4)),
+          I.IconButton<M.Msg>(
+            'diff-previous',
+            Sys.Char.ConvertFromUtf32($E04A),
+            'Previous change',
+            M.Msg.Navigate(-1),
+            new I.Options(ControlSize := Size, Enabled := Model.Change > 0, Shortcut := 'P')
+          ),
+          I.IconButton<M.Msg>(
+            'diff-next', Sys.Char.ConvertFromUtf32($E042), 'Next change', M.Msg.Navigate(1),
+            new I.Options(
+              ControlSize := Size,
+              Enabled := Model.Change < Model.Changes - 1,
+              Shortcut := 'N'
+            )
+          )
+        )
+      ]
+    )
+  );
+end function;
+
+function CompareFiles(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(16), Clip := false),
+    DiffToolbar(Model, Colors),
+    Diff.DiffView<M.Msg>(
+      'diff', Sample.DiffBefore, Sample.DiffAfter, Model.Change, M.Msg.Diff,
+      new Diff.Options(
+        Height := 372.0F,
+        Language := 'c',
+        OldTitle := 'config.c (main)',
+        NewTitle := 'config.c',
+        Inline := Model.Inline
+      )
+    )
+  );
+end function;
+
+function InspectBytes(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+begin
+  const Selection: Hex.Selection := Model.Selection;
+  const Status: string := if Selection.Length > 0 then
+    Selection.Start.ToString(
+      'X4'
+    ) + ' to ' + (Selection.Start + Selection.Length - 1).ToString('X4') +
+    ', ' + Selection.Length.ToString() + (if Selection.Length = 1 then
+      ' byte selected'
+    else
+      ' bytes selected'
+    end if)
+  else
+    'Cursor at ' + Selection.Cursor.ToString('X4')
+  end if;
+  const Offset: E.Element<M.Msg> := E.Size<M.Msg>(
+    Field.TextField<M.Msg>(
+      'hex-offset', Model.Offset, M.Msg.Offset,
+      new Field.Options(Placeholder := 'Go to offset', ControlSize := B.Size.Small),
+      function(Text: string): M.Msg => M.Msg.GoTo(Text)
+    ),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(150)))
+  );
+  const Tags: array of E.Element<M.Msg> := if Model.Edited = '' then
+    []
+  else
+    [
+      E.Styled<M.Msg>(
+        E.FormattedText<M.Msg>(Model.Edited, F.Font.Body, 12.5F, Colors.TextMuted),
+        S.Role.Tabular
+      )
+    ]
+  end if;
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(12), Clip := false),
+    Hex.HexView<M.Msg>(
+      'hex', Model.Bytes, Selection, M.Msg.Hex, new Hex.Options(
+        Height := 300.0F, Editable := true, GoTo := Model.Jump,
+        Marks := [
+          new Hex.Mark(0, 8, S.Tone.Info, 'PNG signature'),
+          new Hex.Mark(8, 25, S.Tone.Violet, 'IHDR chunk, 1280 by 720 RGBA'),
+          new Hex.Mark(33, 28, S.Tone.Teal, 'tEXt chunk, Software')
+        ]
+      )
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center, Wrap := true, Clip := false),
+      Join(
+        [
+          Offset,
+          E.Styled<M.Msg>(
+            E.FormattedText<M.Msg>(Status, F.Font.Body, 12.5F, Colors.TextSecondary),
+            S.Role.Tabular
+          )
+        ],
+        Tags
+      )
+    )
+  );
+end function;
+
+// Reuses the native CUI component specimens on the Code page.
+// ## Parameters
+// - `Model`: Current Code state.
+// - `Colors`: Active theme colors.
+// ## Returns
+// The interactive Code extensions in their gallery order.
+public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element<M.Msg>;
+begin
+  return [
+    G.Heading<M.Msg>('Markdown'), ReleaseNotes(Model, Colors),
+    G.Heading<M.Msg>('Code editor'), EditCode(Model, Colors),
+    G.Heading<M.Msg>('SQL editor'),
+    Editor.CodeEditor<M.Msg>(
+      'sql-editor', Model.Sql, M.Msg.Sql,
+      new Editor.Options(Language := 'sql', Height := 128.0F)
+    ),
+    G.Heading<M.Msg>('Diff viewer'), CompareFiles(Model, Colors),
+    G.Heading<M.Msg>('Hex viewer'), InspectBytes(Model, Colors),
+    G.Heading<M.Msg>('Log console'),
+    Log.LogConsole<M.Msg>(
+      'log-console',
+      Model.Entries,
+      M.Msg.Clear,
+      new Log.Options(Height := 352.0F, Timestamps := true)
+    )
+  ];
+end function;
+
+end unit;

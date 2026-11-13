@@ -1,0 +1,57 @@
+unit GuiGallery.Pages.MoreDeveloper.State;
+
+uses GuiGallery.Pages.MoreDeveloper.Samples as Samples, Fpas.Ui.TestExplorers as T, Fpas.Ui.StackTraces as S, Fpas.Ui.Blames as B, Fpas.Ui.Coverages as C, Fpas.Ui.RegexTesters as R, Fpas.Ui.RequestBars as H, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.ApiExplorers as A, Fpas.Ui.FeatureFlagEditors as F, Fpas.Ui.TimeHistograms as G;
+
+// State of the More developer tools examples.
+public type Model = record
+  // Regular expression in the native tester.
+  public Pattern: string := '(?<user>[\w.]+)@(?<host>[\w-]+)\.(com|org)';
+  // Sample input in the native tester.
+  public Sample: string := 'Contact maya.okafor@example.com or jonas@example.org for access.' +
+    cast<char>(10) +
+    'Old address: priya@demo1.test (no longer read).' + cast<char>(10) +
+    'Support: help@example.com';
+  // Active regex flags.
+  public Modifiers: int := 0;
+  // Selected HTTP method index.
+  public Method: int := 1;
+  // URL displayed in the HTTP example.
+  public Url: string := 'https://api.example.com/v1/orders?status=open&limit=20';
+  // Editable query parameters.
+  public Parameters: array of K.Pair := [
+    new K.Pair('status', 'open', true, false),
+    new K.Pair('limit', '20', true, false)
+  ];
+  // Selected API endpoint.
+  public Endpoint: int := 2;
+  // Feature toggles and rollout percentages.
+  public Flags: array of F.Flag := Samples.Flags;
+  // Selection on the time histogram.
+  public Range: G.Range := new G.Range(1794258000.0, 1794267000.0);
+end record;
+
+// Changes reported by the More developer tools examples.
+public type Msg = variant
+  // Test run or source navigation.
+  Tests(Value: T.Event);
+  // Stack-frame navigation.
+  Stack(Value: S.Event);
+  // Commit activation.
+  Blame(Value: B.Event);
+  // Coverage file activation.
+  Coverage(Value: C.Event);
+  // Edits the regular expression or its sample.
+  Regex(Value: R.Event);
+  // Edits the HTTP request preview.
+  Request(Value: H.Event);
+  // Edits the HTTP query parameters.
+  Parameters(Value: K.Event);
+  // Selects the API endpoint.
+  Endpoint(Value: A.Event);
+  // Changes an environment flag.
+  Flag(Value: F.Event);
+  // Selects a histogram range.
+  Range(Value: G.Event);
+end variant;
+
+end unit;

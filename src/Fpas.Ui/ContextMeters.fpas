@@ -1,0 +1,38 @@
+unit Fpas.Ui.ContextMeters;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as Charts;
+
+// One part of context usage.
+public type Part = record
+  // Caption in the breakdown.
+  public Label: string;
+  // Amount of context used.
+  public Amount: float;
+  // Optional part color.
+  public Color: Charts.Color := Charts.Color.Automatic;
+end record;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Optional usage unit.
+  public Unit: string := '';
+end record;
+
+// Builds the native ContextMeter widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Used`: Current context size.
+// - `Limit`: Context capacity.
+// - `Parts`: Optional usage breakdown.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ContextMeter<TMsg>(Id: string; Used: float; Limit: float; Parts: array of Part; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ContextMeter(Id, Used, Limit, Parts, Settings ?? new Options());
+end function;
+
+end unit;

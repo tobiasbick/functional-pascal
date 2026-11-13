@@ -1,0 +1,36 @@
+unit Fpas.Ui.Voice;
+
+// Speaker tags for a shared waveform.
+public type Owner = enum: byte
+  // The local speaker.
+  You;
+  // The responding speaker.
+  Reply;
+end enum;
+
+// State of a voice session.
+public type Activity = enum: byte
+  // Waiting to start.
+  Idle;
+  // Listening to the local speaker.
+  Listening;
+  // Preparing a reply.
+  Thinking;
+  // Playing the reply.
+  Speaking;
+  // The microphone is muted.
+  Muted;
+end enum;
+
+// A silent interval, displayed as a flat gap.
+public const Silent: float := -1.0F;
+
+// Measured signal for CUI's voice widgets.
+public type Signal = record
+  // Normalized levels, with Silent allowed.
+  public Levels: array of float;
+  // Optional byte tags from Owner, one for each level.
+  public Owners: (array of byte)? := null;
+end record;
+
+end unit;

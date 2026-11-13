@@ -1,0 +1,39 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ImageViewer;
+
+uses Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.MediaImages as Media, Fpas.Ui.Gui.Internal.MediaData as Data, Fpas.Ui.Gui.Cui as Cui;
+
+// Presents CUI's native ImageViewer widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Image`: Image to display.
+// - `ViewValue`: Current zoom and center.
+// - `Changed`: Maps a native change to a message.
+// - `Settings`: Native widget options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Image: Media.Source; ViewValue: ImageViewers.Value; Changed: function(ImageViewers.Value): TMsg; Settings: ImageViewers.Options);
+begin
+  const Role: string := 'image-viewer';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  var Next: Cui.CuiImageView := new Cui.CuiImageView(
+    ViewValue.Zoom,
+    ViewValue.CenterX,
+    ViewValue.CenterY
+  );
+  const Proposed: bool := Frame.Window.ImageViewer(
+    Token, Data.Convert(Image), ref Next, Width.Kind, Width.Value,
+    Height.Kind, Height.Value, Settings.MaximumZoom,
+    P.Bits(Enabled, 1) or P.Bits(Settings.HideToolbar, 2) or P.Bits(Settings.Checkerboard, 4), Focus
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, ViewValue.Zoom.ToString());
+  if Enabled and Proposed then
+    Frame.Messages.Add(Changed(new ImageViewers.Value(Next.Zoom, Next.CenterX, Next.CenterY)));
+  end if;
+end procedure;
+
+end unit;

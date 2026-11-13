@@ -140,6 +140,8 @@ public function Prepare<TMsg>(
   function Visit(Node: Ui.Element<TMsg>; Colors: T.Style; ParentHorizontal: bool := false): E.Element<TMsg>;
   begin
     case Node of
+      when Ui.Element.FormattedText(_, _, _, _):
+        raise new Sys.NotSupportedException('Formatted text requires the graphical host.');
       when Ui.Element.Label(const Text: string):
         return E.Element<TMsg>.Label(Text);
       when Ui.Element.Separator(const Title: string):
@@ -245,7 +247,7 @@ public function Prepare<TMsg>(
         _,
         _,
         _
-      ), Ui.Element.Spinner(_, _), Ui.Element.Skeleton(
+      ), Ui.Element.Spinner(_, _, _), Ui.Element.Skeleton(
         _,
         _,
         _
@@ -426,6 +428,7 @@ public function Prepare<TMsg>(
           'Speed dial, swipe rows and multi-select require the graphical profile.'
         );
       when Ui.Element.CheckboxAction(
+        _,
         _,
         _,
         _,
@@ -636,6 +639,261 @@ public function Prepare<TMsg>(
       ), Ui.Element.EventTrack(_, _, _, _):
         raise new Sys.NotSupportedException(
           'Native code and instrument widgets require the graphical profile.'
+        );
+      when Ui.Element.Problems(_, _, _, _), Ui.Element.Pipeline(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Keymap(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.CommitGraph(_, _, _, _, _), Ui.Element.DependencyGraph(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.NetworkWaterfall(_, _, _, _, _), Ui.Element.TraceViewer(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.TestExplorer(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.StackTrace(_, _, _, _), Ui.Element.ResponseStatus(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Uptime(_, _, _, _), Ui.Element.TimeHistogram(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Coverage(_, _, _, _), Ui.Element.Blame(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ApiExplorer(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.KeyValueEditor(_, _, _, _), Ui.Element.QueryBuilder(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.SchedulePicker(_, _, _, _), Ui.Element.RegexTester(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.RequestBar(_, _, _, _, _), Ui.Element.FeatureFlags(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Developer widgets require the graphical host.');
+      when Ui.Element.FormatBar(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.LiveCursors(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.PresencePill(
+        _,
+        _,
+        _
+      ), Ui.Element.SelectionRing(_, _, _), Ui.Element.CanvasControls(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ResultCard(_, _, _, _, _), Ui.Element.SelectionBar(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Toolbar(_, _, _, _), Ui.Element.NodeEditor(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException('Canvas widgets require the graphical host.');
+      when Ui.Element.Markdown(_, _, _, _), Ui.Element.CodeEditor(_, _, _, _), Ui.Element.DiffView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.HexView(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.LogConsole(_, _, _, _), Ui.Element.Terminal(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Source tool widgets require the graphical host.');
+      when Ui.Element.PropertyInspector(_, _, _, _), Ui.Element.FlameGraph(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.CurveEditor(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.GradientEditor(_, _, _, _, _), Ui.Element.TimelineEditor(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Editing tools require the graphical host.');
+      when Ui.Element.NativeText(_, _), Ui.Element.Icon(
+        _,
+        _,
+        _
+      ), Ui.Element.Emoji(_, _), Ui.Element.Keycap(_), Ui.Element.Image(_, _, _), Ui.Element.Canvas(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Veil(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException('Native display widgets require the graphical host.');
+      when Ui.Element.VoiceWave(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.VoiceNote(_, _, _, _, _), Ui.Element.VoiceSession(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Composer(_, _, _, _), Ui.Element.VoiceOrb(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Reasoning(_, _, _), Ui.Element.ToolCall(_, _, _), Ui.Element.AgentPlan(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.AgentStatus(_, _, _), Ui.Element.SourceList(_, _, _, _), Ui.Element.Citation(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ContextMeter(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ResponseActions(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.PromptSuggestions(_, _, _, _), Ui.Element.ModelPicker(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException('Voice and AI widgets require the graphical host.');
+      when Ui.Element.Carousel(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.CardStack(_, _, _, _), Ui.Element.ImageViewer(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ImageCropper(_, _, _, _, _), Ui.Element.ImageCompare(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException('Media widgets require the graphical host.');
+      when Ui.Element.ChatMessage(
+        _,
+        _,
+        _
+      ), Ui.Element.ChatDivider(_, _), Ui.Element.TypingIndicator(_, _), Ui.Element.Comment(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Presence(
+        _,
+        _,
+        _
+      ), Ui.Element.Counter(
+        _,
+        _,
+        _
+      ), Ui.Element.Ticker(
+        _,
+        _,
+        _
+      ), Ui.Element.StatusSpinner(
+        _,
+        _,
+        _
+      ), Ui.Element.SkeletonGroup(_, _, _), Ui.Element.Sparkline(_, _, _):
+        raise new Sys.NotSupportedException(
+          'Native conversation and feedback widgets require the graphical profile.'
         );
       when Ui.Element.PathBar(
         _,

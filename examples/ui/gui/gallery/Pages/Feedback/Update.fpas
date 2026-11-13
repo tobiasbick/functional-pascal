@@ -1,0 +1,55 @@
+unit GuiGallery.Pages.Feedback.Update;
+
+uses
+  GuiGallery.Pages.Feedback.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.StatusButtons as Work, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+function Complete(Status: Work.Status): Mvu.Command<S.Msg>;
+  async function Run(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    await Tasks.Task.Delay(2000, Token).ConfigureAwait(false);
+    await Post(S.Msg.Finish(Status)).ConfigureAwait(false);
+  end function;
+begin
+  return Mvu.StartBackground<S.Msg>(
+    'upload',
+    Run,
+    function(Error: Sys.Exception): S.Msg => S.Msg.Finish(Work.Status.Error)
+  );
+end function;
+
+// Applies an upload action to the status spinner demo.
+// ## Parameters
+// - `Model`: Previous upload state.
+// - `Message`: An activation or result.
+// ## Returns
+// The next state and any upload command.
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  case Message of
+    when S.Msg.Upload:
+      if Model.Status = Work.Status.Busy then
+        return new Mvu.Transition<S.Model, S.Msg>(Model, []);
+      end if;
+      const Runs: int := Model.Runs + 1;
+      const Result: Work.Status := if Runs mod 2 = 1 then
+        Work.Status.Success
+      else
+        Work.Status.Error
+      end if;
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Model with
+          Status := Work.Status.Busy;
+          Runs := Runs;
+        end with, [Complete(Result)]
+      );
+    when S.Msg.Finish(const Result: Work.Status):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Model with
+          Status := Result;
+        end with, []
+      );
+  end case;
+end function;
+
+end unit;

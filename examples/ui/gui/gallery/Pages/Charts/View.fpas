@@ -1,6 +1,7 @@
 unit GuiGallery.Pages.Charts.View;
 
 uses
+  Fpas.Ui.Sparklines as Sparklines,
   GuiGallery.Pages.Charts.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.LineCharts as Lines,
   Fpas.Ui.BarCharts as Bars, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.Gauges as Gauges,
@@ -204,7 +205,9 @@ begin
         Gauges.Gauge<State.Msg>('cpu', 'CPU', 0.42F, 130.0F),
         Gauges.Gauge<State.Msg>('memory', 'Memory', 0.81F, 130.0F)
       )
-    )
+    ),
+    G.Heading<State.Msg>('Sparkline'),
+    Sparklines.Sparkline<State.Msg>('chart-sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
   ];
 end function;
 

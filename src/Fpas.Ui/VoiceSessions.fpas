@@ -1,0 +1,60 @@
+unit Fpas.Ui.VoiceSessions;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Voice as Voice;
+
+// Native call actions.
+public type Event = variant
+  // Apply the proposed microphone state.
+  Mute(Muted: bool);
+  // End the current call.
+  EndCall;
+end variant;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Preferred native width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Override the native activity label.
+  public Label: string := '';
+  // Words spoken so far.
+  public Transcript: string? := null;
+  // Words still to be spoken.
+  public Upcoming: string? := null;
+  // Current speaker.
+  public Speaker: Voice.Owner := Voice.Owner.You;
+  // Override the local speaker name.
+  public You: string := '';
+  // Override the other speaker name.
+  public Assistant: string := '';
+  // Omit the end button.
+  public HideEnd: bool := false;
+  // Allows call actions.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's native VoiceSession.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable session identity.
+// - `Activity`: Current conversation activity.
+// - `Signal`: The shared timeline.
+// - `Muted`: Microphone state, or null to omit the button.
+// - `Changed`: Maps a call action.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function VoiceSession<TMsg>(Id: string; Activity: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.VoiceSession(
+    Id,
+    Activity,
+    Signal,
+    Muted,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

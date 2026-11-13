@@ -28,7 +28,7 @@ public function View<TMsg>(
 begin
   const Hero: E.Element<TMsg> := E.Column<TMsg>(
     new L.Flow(Gap := G.Points(14), Clip := false),
-    E.Styled<TMsg>(E.Text<TMsg>('Components for C'), S.Role.DisplayTitle),
+    E.Styled<TMsg>(E.Text<TMsg>('Components for FPas'), S.Role.DisplayTitle),
     E.Styled<TMsg>(
       E.Text<TMsg>(
         'Forms, tables, charts, planning boards and chat pieces that draw themselves the same way on Windows, macOS and Linux. Every one works from the keyboard.'

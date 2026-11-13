@@ -1,0 +1,114 @@
+unit GuiGallery.Pages.Ai.Update;
+
+uses
+  GuiGallery.Pages.Ai.State as S, Fpas.Ui.Composers as Composer, Fpas.Ui.ResponseActions as Response,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Toasts as Toasts, System.Collections.Generic as Lists;
+
+function ApplyEditor(Value: Composer.Value; Change: Composer.Event): Composer.Value;
+begin
+  case Change of
+    when Composer.Event.Edit(const Draft: string):
+      return Value with
+        Draft := Draft;
+      end with;
+    when Composer.Event.Send(_):
+      return Value with
+        Draft := '';
+        Busy := true;
+      end with;
+    when Composer.Event.Stop:
+      return Value with
+        Busy := false;
+      end with;
+    when Composer.Event.Select(const Index: int):
+      return Value with
+        Selected := Index;
+      end with;
+    when Composer.Event.Remove(const Index: int):
+      const Files: Lists.List<string> := new Lists.List<string>(Value.Attachments);
+      Files.RemoveAt(Index);
+      return Value with
+        Attachments := Files.ToArray();
+      end with;
+    else
+      return Value;
+  end case;
+end function;
+
+function Apply(Model: S.Model; Message: S.Msg): S.Model;
+begin
+  case Message of
+    when S.Msg.Editor(const Change: Composer.Event):
+      const Value: Composer.Value := ApplyEditor(Model.Editor, Change);
+      return Model with
+        Editor := Value;
+        Elapsed := if Value.Busy and Model.Editor.Busy then
+          Model.Elapsed
+        else
+          0.0F
+        end if;
+      end with;
+    when S.Msg.Suggestion(const Title: string):
+      return Model with
+        Editor := Model.Editor with
+          Draft := Title + ': ';
+        end with;
+      end with;
+    when S.Msg.Response(Response.Event.Regenerate):
+      return Model with
+        Editor := Model.Editor with
+          Busy := true;
+        end with;
+      end with;
+    when S.Msg.Response(Response.Event.Vote(const Value: int)):
+      return Model with
+        Vote := Value;
+      end with;
+    when S.Msg.ModelChoice(const Index: int):
+      return Model with
+        Editor := Model.Editor with
+          Selected := Index;
+        end with;
+      end with;
+    when S.Msg.Tick(const Seconds: float):
+      if Model.Editor.Busy then
+        return Model with
+          Elapsed := Model.Elapsed + Seconds;
+          Editor := Model.Editor with
+            Busy := Model.Elapsed + Seconds < 9.0F;
+          end with;
+        end with;
+      end if;
+
+      return Model;
+    else
+      return Model;
+  end case;
+end function;
+
+// Applies a native action or the gallery clock.
+// ## Parameters
+// - `Model`: Current AI page state.
+// - `Message`: Proposed action.
+// ## Returns
+// Updated state and any attachment toast.
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := Apply(Model, Message);
+  case Message of
+    when S.Msg.Editor(Composer.Event.Attach):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Next,
+        [
+          Toasts.Show<S.Msg>(
+            'Attach files',
+            new Toasts.Options(Description := 'Drop files on the window, too.')
+          )
+        ]
+      );
+    else
+      return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+  end case;
+end function;
+
+end unit;

@@ -1,0 +1,31 @@
+unit GuiGallery.Pages.Ai.State;
+
+uses Fpas.Ui.Composers as Composer, Fpas.Ui.ResponseActions as Response;
+
+// Current values for the original AI examples.
+public type Model = record
+  // Draft, attachments, selected model and generation state.
+  public Editor: Composer.Value := new Composer.Value(
+    Attachments := ['quarterly-report.pdf', 'metrics.csv']
+  );
+  // Current response vote.
+  public Vote: int := 0;
+  // Time spent generating the current response.
+  public Elapsed: float := 0.0F;
+end record;
+
+// Actions of the AI examples.
+public type Msg = variant
+  // Edits the conversation composer.
+  Editor(Change: Composer.Event);
+  // Uses the chosen prompt suggestion as the draft prefix.
+  Suggestion(Title: string);
+  // Uses the response toolbar.
+  Response(Change: Response.Event);
+  // Updates the duration of a busy response.
+  Tick(Seconds: float);
+  // Selects a model in the standalone example.
+  ModelChoice(Index: int);
+end variant;
+
+end unit;

@@ -1,0 +1,28 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Icon;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Graphics as G;
+
+function OptionalColor(Color: G.Color?): uint;
+begin
+  return if Color = null then
+    0U
+  else
+    P.Pack(Color)
+  end if;
+end function;
+
+// Draws the native CUI icon.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Glyph`: CUI icon glyph.
+// - `Size`: Logical icon size. Zero uses the default.
+// - `Color`: Explicit color, or null for the foreground.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Glyph: string; Size: float; Color: G.Color?);
+begin
+  Frame.Window.DisplayIcon(Glyph, Size, OptionalColor(Color));
+end procedure;
+
+end unit;

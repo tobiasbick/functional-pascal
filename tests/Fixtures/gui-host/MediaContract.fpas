@@ -1,0 +1,167 @@
+unit GalleryMediaContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.Update as U,
+  GuiGallery.App.View as View, GuiGallery.Pages.Social.State as Social, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.CardStacks as Cards, System as Sys, System.IO as IO;
+
+// Exercises each media example through native input and captures the initial page.
+// ## Parameters
+// - `Renderer`: Windows renderer to verify.
+// - `Capture`: Directory for the PNG.
+// - `Suffix`: Renderer label for the PNG.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: string);
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  begin
+    case Message of
+      when State.Msg.Social(Social.Msg.Swipe(const Direction: Cards.Direction)):
+        Swiped := Direction;
+      else
+    end case;
+    const Next: Mvu.Transition<State.Model, State.Msg> := U.Update(Model, Message);
+    Latest := Next.Model;
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true);
+      Window.SetKey(Key, false);
+      Key := 0;
+    end if;
+
+    if Scroll <> 0.0F then
+      Window.Wheel(Scroll);
+      Scroll := 0.0F;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<State.Msg>; Count: int := 2);
+  begin
+    for Frame: int := 1 to Count do
+      A.Check(Session.Step(), 'The gallery closed.');
+    end for;
+  end procedure;
+
+  function Bounds(Session: Gui.Session<State.Msg>; Id: string): Cui.CuiRectangle;
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native bounds for ' + Id);
+    return Box;
+  end function;
+
+  procedure Move(Session: Gui.Session<State.Msg>; AtX: float; AtY: float);
+  begin
+    X := AtX;
+    Y := AtY;
+    Step(Session, 1);
+  end procedure;
+
+  procedure Drag(Session: Gui.Session<State.Msg>; DeltaX: float; DeltaY: float);
+  begin
+    Left := 1;
+    Step(Session, 1);
+    Move(Session, X + DeltaX, Y + DeltaY);
+    Left := 0;
+    Step(Session);
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  var Key: int := 0;
+  var Scroll: float := 0.0F;
+  var Swiped: Cards.Direction? := null;
+  var Latest: State.Model := new State.Model(Active := State.Page.Social);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Media', 1100, 2200, Renderer, true);
+  A.Check(
+    Window.IsSoftware = (Renderer = Cui.CuiRenderer.Software),
+    'The requested renderer fell back.'
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    Latest, Update, View.Build, Window, 256, Inject, ThemeFor := U.ThemeFor
+  );
+  Step(Session, 9);
+  Window.CapturePng(IO.Path.Combine(Capture, 'media-' + Suffix + '.png'));
+  A.Check(Latest.Social.Slide = 1, 'The original ARM64 slide is missing.');
+  const Dot: Cui.CuiRectangle := Bounds(Session, 'social-tour/dot-2');
+  Move(Session, Dot.X + Dot.Width * 0.5F, Dot.Y + Dot.Height * 0.5F);
+  Drag(Session, 0.0F, 0.0F);
+  A.Check(Latest.Social.Slide = 2, 'The third dot did not select the third slide.');
+  const Tour: Cui.CuiRectangle := Bounds(Session, 'social-tour/viewport');
+  Move(Session, Tour.X + Tour.Width * 0.5F, Tour.Y + Tour.Height * 0.5F);
+  Drag(Session, 0.0F, 0.0F);
+  Key := 7; // Left
+  Step(Session);
+  A.Check(Latest.Social.Slide = 1, 'Left did not select the previous slide.');
+
+  const Viewer: Cui.CuiRectangle := Bounds(Session, 'social-viewer');
+  Move(Session, Viewer.X + Viewer.Width * 0.5F, Viewer.Y + Viewer.Height * 0.5F);
+  Scroll := 4.0F;
+  Step(Session);
+  A.Check(Latest.Social.Picture.Zoom > 1.0F, 'The image viewer did not zoom with the wheel.');
+  const Center: float := Latest.Social.Picture.CenterX;
+  Drag(Session, 45.0F, 0.0F);
+  A.Check(Latest.Social.Picture.CenterX < Center, 'Dragging did not pan the zoomed image.');
+  Key := 41; // Zero
+  Step(Session);
+  A.Check(Latest.Social.Picture.Zoom = 0.0F, 'Zero did not fit the image.');
+
+  const Crop: Cui.CuiRectangle := Bounds(Session, 'social-crop');
+  const Scale: float := Sys.MathF.Min(
+    (Crop.Width - 28.0F) / 640.0F,
+    (Crop.Height - 28.0F) / 400.0F
+  );
+  Move(
+    Session,
+    Crop.X + Crop.Width * 0.5F + 172.0F * Scale,
+    Crop.Y + Crop.Height * 0.5F + 172.0F * Scale
+  );
+  Drag(Session, -30.0F, -30.0F);
+  A.Check(
+    Latest.Social.Crop.Width > 0.0F and Latest.Social.Crop.Width < 344.0F
+    and Sys.MathF.Abs(Latest.Social.Crop.Width - Latest.Social.Crop.Height) < 0.01F,
+    'The corner drag did not shrink the crop and keep it square.'
+  );
+
+  const Compare: Cui.CuiRectangle := Bounds(Session, 'social-compare');
+  Move(Session, Compare.X + Compare.Width * 0.45F, Compare.Y + Compare.Height * 0.5F);
+  Drag(Session, Compare.Width * 0.24F, 0.0F);
+  A.Check(
+    Sys.MathF.Abs(Latest.Social.Divider - 0.69F) < 0.01F,
+    'The divider did not follow the drag.'
+  );
+  Key := 8; // Right
+  Step(Session);
+  A.Check(Sys.MathF.Abs(Latest.Social.Divider - 0.74F) < 0.01F, 'Right did not move the divider.');
+
+  const Top: Cui.CuiRectangle := Bounds(Session, 'social-deck/top');
+  Move(Session, Top.X + Top.Width * 0.5F, Top.Y + Top.Height * 0.5F);
+  Drag(Session, 0.0F, 0.0F);
+  Key := 8; // Right
+  Step(Session, 8);
+  A.Check(
+    Latest.Social.Destination = 1 and Swiped = Cards.Direction.Right,
+    'Right did not save the top card.'
+  );
+  const Next: Cui.CuiRectangle := Bounds(Session, 'social-deck/top');
+  Move(Session, Next.X + Next.Width * 0.5F, Next.Y + Next.Height * 0.5F);
+  Drag(Session, -Next.Width * 0.55F, 0.0F);
+  Step(Session, 8);
+  A.Check(
+    Latest.Social.Destination = 2 and Swiped = Cards.Direction.Left,
+    'Dragging left did not skip the top card.'
+  );
+  Sys.Console.WriteLine('Verified the five media widgets with ' + Renderer.ToString());
+end procedure;
+
+end unit;

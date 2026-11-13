@@ -1,0 +1,96 @@
+unit Fpas.Ui.Internal.Mapping.EditingTools;
+
+uses
+  Fpas.Ui.PropertyInspectors as PropertyInspectors,
+  Fpas.Ui.FlameGraphs as FlameGraphs,
+  Fpas.Ui.CurveEditors as CurveEditors,
+  Fpas.Ui.GradientEditors as GradientEditors,
+  Fpas.Ui.TimelineEditors as TimelineEditors,
+  Fpas.Ui.Elements as E, System as Sys;
+
+// Maps native editing tool proposals.
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Child element.
+// - `Messages`: Proposal conversion.
+// ## Returns
+// The same element in the parent message type.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.PropertyInspector(
+      const Id: string,
+      const Groups: array of PropertyInspectors.Group,
+      const Changed: function(PropertyInspectors.Event): TChild,
+      const Settings: PropertyInspectors.Options
+    ):
+      return E.Element<TParent>.PropertyInspector(
+        Id,
+        Groups,
+        function(Value: PropertyInspectors.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.FlameGraph(
+      const Id: string,
+      const Spans: array of FlameGraphs.Span,
+      const Current: FlameGraphs.View,
+      const Changed: function(FlameGraphs.Event): TChild,
+      const Settings: FlameGraphs.Options
+    ):
+      return E.Element<TParent>.FlameGraph(
+        Id,
+        Spans,
+        Current,
+        function(Value: FlameGraphs.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.CurveEditor(
+      const Id: string,
+      const Keys: array of CurveEditors.Key,
+      const Selected: int,
+      const Changed: function(CurveEditors.Event): TChild,
+      const Settings: CurveEditors.Options
+    ):
+      return E.Element<TParent>.CurveEditor(
+        Id,
+        Keys,
+        Selected,
+        function(Value: CurveEditors.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.GradientEditor(
+      const Id: string,
+      const Stops: array of GradientEditors.Stop,
+      const Selected: int,
+      const Changed: function(GradientEditors.Event): TChild,
+      const Settings: GradientEditors.Options
+    ):
+      return E.Element<TParent>.GradientEditor(
+        Id,
+        Stops,
+        Selected,
+        function(Value: GradientEditors.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.TimelineEditor(
+      const Id: string,
+      const Tracks: array of TimelineEditors.Track,
+      const Current: TimelineEditors.View,
+      const Changed: function(TimelineEditors.Event): TChild,
+      const Settings: TimelineEditors.Options
+    ):
+      return E.Element<TParent>.TimelineEditor(
+        Id,
+        Tracks,
+        Current,
+        function(Value: TimelineEditors.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected an editing tool.');
+  end case;
+end function;
+
+end unit;

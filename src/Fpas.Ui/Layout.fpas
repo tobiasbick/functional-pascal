@@ -1,5 +1,7 @@
 unit Fpas.Ui.Layout;
 
+uses Fpas.Ui.Graphics as G;
+
 // A portable logical distance or an explicit terminal cell distance.
 public type Measure = variant
   // A whole number of terminal cells.
@@ -123,6 +125,10 @@ public type Flow = record
   public PaddingStart: Spacing? := null;
   // Native inherited reading direction. Explicit directions require GUI.
   public ReadingDirection: Direction := Direction.Inherit;
+  // Optional graphical fill color for the container.
+  public Background: G.Color? := null;
+  // Graphical corner radius in logical units.
+  public CornerRadius: float := 0.0F;
 end record;
 
 // An application-facing size class for responsive views.

@@ -1,0 +1,115 @@
+unit Fpas.Ui.Gui.Internal.CanvasPresentation;
+
+uses
+  Fpas.Ui.FormatBars as FormatBars,
+  Fpas.Ui.LiveCursors as LiveCursors,
+  Fpas.Ui.PresencePills as PresencePills,
+  Fpas.Ui.SelectionRings as SelectionRings,
+  Fpas.Ui.CanvasControls as CanvasControls,
+  Fpas.Ui.ResultCards as ResultCards,
+  Fpas.Ui.SelectionBars as SelectionBars,
+  Fpas.Ui.Toolbars as Toolbars,
+  Fpas.Ui.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.MediaImages as Media,
+  Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.Widgets.FormatBar as FormatBarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.LiveCursors as LiveCursorsWidget,
+  Fpas.Ui.Gui.Internal.Widgets.PresencePill as PresencePillWidget,
+  Fpas.Ui.Gui.Internal.Widgets.SelectionRing as SelectionRingWidget,
+  Fpas.Ui.Gui.Internal.Widgets.CanvasControls as CanvasControlsWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ResultCard as ResultCardWidget,
+  Fpas.Ui.Gui.Internal.Widgets.SelectionBar as SelectionBarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Toolbar as ToolbarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.NodeEditor as NodeEditorWidget;
+
+// Presents canvas elements using their native adapters.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Node`: Canvas element.
+// - `Visit`: Presents embedded content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  case Node of
+    when E.Element.FormatBar(
+      const Id: string,
+      const Format: FormatBars.Value,
+      const Changed: function(FormatBars.Event): TMsg,
+      const Settings: FormatBars.Options
+    ):
+      FormatBarWidget.Draw<TMsg>(Frame, Id, Format, Changed, Settings);
+    when E.Element.LiveCursors(
+      const Id: string,
+      const People: array of LiveCursors.Person,
+      const Child: E.Element<TMsg>,
+      const Settings: LiveCursors.Options
+    ):
+      LiveCursorsWidget.Draw<TMsg>(Frame, Id, People, Child, Settings, Visit);
+    when E.Element.PresencePill(
+      const Id: string,
+      const People: array of LiveCursors.Person,
+      const Settings: PresencePills.Options
+    ):
+      PresencePillWidget.Draw<TMsg>(Frame, Id, People, Settings);
+    when E.Element.SelectionRing(
+      const Id: string,
+      const Child: E.Element<TMsg>,
+      const Settings: SelectionRings.Options
+    ):
+      SelectionRingWidget.Draw<TMsg>(Frame, Id, Child, Settings, Visit);
+    when E.Element.CanvasControls(
+      const Id: string,
+      const Viewport: NodeEditors.View,
+      const Toggles: array of CanvasControls.Toggle,
+      const Changed: function(CanvasControls.Event): TMsg,
+      const Child: E.Element<TMsg>,
+      const Settings: CanvasControls.Options
+    ):
+      CanvasControlsWidget.Draw<TMsg>(
+        Frame,
+        Id,
+        Viewport,
+        Toggles,
+        Changed,
+        Child,
+        Settings,
+        Visit
+      );
+    when E.Element.ResultCard(
+      const Id: string,
+      const Image: Media.Source,
+      const Title: string,
+      const Activate: TMsg,
+      const Settings: ResultCards.Options
+    ):
+      ResultCardWidget.Draw<TMsg>(Frame, Id, Image, Title, Activate, Settings);
+    when E.Element.SelectionBar(
+      const Id: string,
+      const Selected: array of bool,
+      const Actions: array of SelectionBars.Action,
+      const Changed: function(SelectionBars.Event): TMsg,
+      const Child: E.Element<TMsg>,
+      const Settings: SelectionBars.Options
+    ):
+      SelectionBarWidget.Draw<TMsg>(Frame, Id, Selected, Actions, Changed, Child, Settings, Visit);
+    when E.Element.Toolbar(
+      const Id: string,
+      const Items: array of Toolbars.Item,
+      const Changed: function(Toolbars.Event): TMsg,
+      const Settings: Toolbars.Options
+    ):
+      ToolbarWidget.Draw<TMsg>(Frame, Id, Items, Changed, Settings);
+    when E.Element.NodeEditor(
+      const Id: string,
+      const Viewport: NodeEditors.View,
+      const Nodes: array of NodeEditors.Node<TMsg>,
+      const Links: array of NodeEditors.Link,
+      const Changed: function(NodeEditors.Event): TMsg,
+      const Settings: NodeEditors.Options
+    ):
+      NodeEditorWidget.Draw<TMsg>(Frame, Id, Viewport, Nodes, Links, Changed, Settings, Visit);
+    else
+  end case;
+end procedure;
+
+end unit;

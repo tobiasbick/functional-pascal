@@ -1,6 +1,7 @@
 unit GuiGallery.Pages.Feedback.View;
 
 uses
+  GuiGallery.Pages.Feedback.State as Model, GuiGallery.Pages.Feedback.Widgets.Loading as Loading,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Alerts as A, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
   Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings,
@@ -13,9 +14,11 @@ uses
 // - `TMsg`: Message type of the containing application.
 // ## Parameters
 // - `CreateProject`: The empty-state action message.
+// - `State`: Current upload state.
+// - `Upload`: Starts the status spinner example.
 // ## Returns
 // Native feedback widgets with their responsive card layout.
-public function View<TMsg>(CreateProject: TMsg): E.Element<TMsg>;
+public function View<TMsg>(CreateProject: TMsg; State: Model.Model; Upload: TMsg): E.Element<TMsg>;
 begin
   const Columns: Grid.Options := new Grid.Options(
     Columns := 2,
@@ -100,9 +103,11 @@ begin
           ),
           Skel.Skeleton<TMsg>('loading-body', Height := 88.0F),
           Skel.Skeleton<TMsg>('loading-line-1', L.Extent.Percent(90.0F), 12.0F),
-          Skel.Skeleton<TMsg>('loading-line-2', L.Extent.Percent(60.0F), 12.0F)
+          Skel.Skeleton<TMsg>('loading-line-2', L.Extent.Percent(60.0F), 12.0F),
+          Loading.Placeholders<TMsg>()
         ], new Cards.Options(Gap := 14.0F)
-      )
+      ),
+      Loading.Spinners<TMsg>(State, Upload)
     ),
     Grid.Grid<TMsg>(
       Columns,

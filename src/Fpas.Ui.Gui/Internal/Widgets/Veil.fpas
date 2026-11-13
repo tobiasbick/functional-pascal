@@ -1,0 +1,58 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Veil;
+
+uses
+  Fpas.Ui.Veils as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P,
+  Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+
+function OptionalColor(Color: G.Color?): uint;
+begin
+  return if Color = null then
+    0U
+  else
+    P.Pack(Color)
+  end if;
+end function;
+
+// Draws the native CUI veil.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable cover identity.
+// - `Revealed`: Whether the content is currently shown.
+// - `Changed`: Maps a reveal or cover proposal to a message.
+// - `Child`: Content underneath the cover.
+// - `Settings`: Native veil settings.
+// - `Visit`: Draws the covered child.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Role: string := 'veil';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: int := Frame.Window.VeilBegin(
+    Token, Revealed, Settings.Label, Settings.Hint, Settings.Radius,
+    OptionalColor(Settings.Color), Width.Kind, Width.Value,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Toggle, 2) or P.Bits(Focus, 4)
+  );
+  const Shown: bool := (Result and 1) <> 0;
+  Visit(
+    Child, Frame with
+      AcceptInput := Enabled and Shown;
+    end with, false, L.Alignment.Default
+  );
+  Frame.Window.VeilEnd();
+  P.Root<TMsg>(
+    Frame, Id, Role, Settings.Label ?? '', Enabled, if Shown then
+      'true'
+    else
+      'false'
+    end if
+  );
+  if (Result and 2) <> 0 then
+    Frame.Messages.Add(Changed(Shown));
+  end if;
+end procedure;
+
+end unit;

@@ -1,13 +1,23 @@
 unit GuiGallery.App.Update;
 
 uses
+  GuiGallery.Pages.EditingTools.State as Editing, GuiGallery.Pages.EditingTools.Update as EditUpdate,
+  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Terminals as TerminalWidget,
+  GuiGallery.Pages.Code.State as CodePage, GuiGallery.Pages.Code.Update as CodeUpdate,
+  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Ai.Update as AiUpdate,
+  GuiGallery.Pages.Voice.State as Voice, GuiGallery.Pages.Voice.Update as VoiceUpdate,
+  GuiGallery.Pages.Feedback.State as Feedback, GuiGallery.Pages.Feedback.Update as FeedbackUpdate,
+  GuiGallery.Pages.Social.State as Social, GuiGallery.Pages.Social.Update as SocialUpdate,
   GuiGallery.Pages.Instruments.State as Instruments,
   GuiGallery.Pages.Motion.State as Motion,
   GuiGallery.Pages.Motion.Update as MotionUpdate,
   GuiGallery.Pages.Motion.Clock as MotionClock,
   GuiGallery.Pages.Creative.State as Creative,
   GuiGallery.Pages.Creative.Update as CreativeUpdate,
+  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
   GuiGallery.Pages.Files.State as Files,
+  GuiGallery.Pages.Developer.State as Developer, GuiGallery.Pages.Developer.Update as DeveloperUpdate,
+  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper, GuiGallery.Pages.MoreDeveloper.Update as MoreDeveloperUpdate,
   GuiGallery.Pages.Files.Update as FileUpdate,
   GuiGallery.Pages.Planning.State as Planning,
   GuiGallery.Pages.Planning.Update as PlanningUpdate,
@@ -84,6 +94,78 @@ end function;
 public function Update(State: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
 begin
   case Message of
+    when G.Msg.Feedback(const Value: Feedback.Msg):
+      const Child: Mvu.Transition<Feedback.Model, G.Msg> := C.MapTransition<Feedback.Model, Feedback.Msg, G.Msg>(
+        FeedbackUpdate.Update(State.Feedback, Value), G.Msg.Feedback, 'feedback'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Feedback := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.AI(const Value: Ai.Msg):
+      const Child: Mvu.Transition<Ai.Model, G.Msg> := C.MapTransition<Ai.Model, Ai.Msg, G.Msg>(
+        AiUpdate.Update(State.AI, Value),
+        G.Msg.AI,
+        'ai'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          AI := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Voice(const Value: Voice.Msg):
+      const Child: Mvu.Transition<Voice.Model, G.Msg> := C.MapTransition<Voice.Model, Voice.Msg, G.Msg>(
+        VoiceUpdate.Update(State.Voice, Value),
+        G.Msg.Voice,
+        'voice'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Voice := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Social(const Value: Social.Msg):
+      const Child: Mvu.Transition<Social.Model, G.Msg> := C.MapTransition<Social.Model, Social.Msg, G.Msg>(
+        SocialUpdate.Update(State.Social, Value), G.Msg.Social, 'social'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Social := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Developer(const Value: Developer.Msg):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Developer := DeveloperUpdate.Update(State.Developer, Value);
+        end with, []
+      );
+    when G.Msg.MoreDeveloper(const Value: MoreDeveloper.Msg):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          MoreDeveloper := MoreDeveloperUpdate.Update(State.MoreDeveloper, Value);
+        end with, []
+      );
+    when G.Msg.Editing(const Value: Editing.Msg):
+      const Child: Mvu.Transition<Editing.Model, G.Msg> := C.MapTransition<Editing.Model, Editing.Msg, G.Msg>(
+        EditUpdate.Update(State.Editing, Value), G.Msg.Editing, 'editing'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Editing := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Code(const Value: CodePage.Msg):
+      const Child: Mvu.Transition<CodePage.Model, G.Msg> := C.MapTransition<CodePage.Model, CodePage.Msg, G.Msg>(
+        CodeUpdate.Update(State.Code, Value), G.Msg.Code, 'code'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Code := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Files(Files.Msg.Terminal(TerminalWidget.Event.Interrupt)):
+      return new Mvu.Transition<G.Model, G.Msg>(State, [Toasts.Show<G.Msg>('Interrupted')]);
     when G.Msg.Files(const Value: Files.Msg):
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
@@ -98,6 +180,12 @@ begin
         State with
           Planning := Child.Model;
         end with, Child.Commands
+      );
+    when G.Msg.Canvas(const Value: Canvas.Msg):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Canvas := CanvasUpdate.Update(State.Canvas, Value);
+        end with, []
       );
     when G.Msg.Creative(const Value: Creative.Msg):
       return new Mvu.Transition<G.Model, G.Msg>(
@@ -304,8 +392,14 @@ begin
       if Value <> State.Active then
         if State.Active = G.Page.Audio then
           Commands.Add(Mvu.CancelBackground<G.Msg>(AudioClock.Id));
-        elsif State.Active = G.Page.Motion then
+        elsif State.Active = G.Page.Motion or State.Active = G.Page.Voice or State.Active =
+          G.Page.AI or State.Active = G.Page.CanvasAndBars
+        then
           Commands.Add(Mvu.CancelBackground<G.Msg>(MotionClock.Id));
+        elsif State.Active = G.Page.EditingTools then
+          Commands.Add(Mvu.CancelBackground<G.Msg>('editing/shot-playback'));
+        elsif State.Active = G.Page.Code then
+          Commands.Add(Mvu.CancelBackground<G.Msg>('code/markdown-replay'));
         elsif State.Active = G.Page.Disclosure then
           Commands.Add(Mvu.CancelBackground<G.Msg>(DisclosureClock.Id));
         end if;
@@ -320,6 +414,27 @@ begin
           Commands.Add(
             MotionClock.Start<G.Msg>(
               function(Seconds: float): G.Msg => G.Msg.Motion(Motion.Msg.Tick(Seconds)),
+              function(Error: Sys.Exception): G.Msg => G.Msg.Preview
+            )
+          );
+        elsif Value = G.Page.CanvasAndBars then
+          Commands.Add(
+            MotionClock.Start<G.Msg>(
+              function(Seconds: float): G.Msg => G.Msg.Canvas(Canvas.Msg.Tick(Seconds)),
+              function(Error: Sys.Exception): G.Msg => G.Msg.Preview, 400
+            )
+          );
+        elsif Value = G.Page.Voice then
+          Commands.Add(
+            MotionClock.Start<G.Msg>(
+              function(Seconds: float): G.Msg => G.Msg.Voice(Voice.Msg.Tick(Seconds)),
+              function(Error: Sys.Exception): G.Msg => G.Msg.Preview, 50
+            )
+          );
+        elsif Value = G.Page.AI then
+          Commands.Add(
+            MotionClock.Start<G.Msg>(
+              function(Seconds: float): G.Msg => G.Msg.AI(Ai.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview
             )
           );
@@ -340,7 +455,21 @@ begin
         State with
           Active := Value;
           NavigationRevision := State.NavigationRevision + 1;
+          Code := if Value <> G.Page.Code then
+            State.Code with
+              Replay := -1;
+            end with
+          else
+            State.Code
+          end if;
           Drawer := false;
+          Editing := if Value <> G.Page.EditingTools then
+            State.Editing with
+              Playing := false;
+            end with
+          else
+            State.Editing
+          end if;
           Overlays := State.Overlays with
             Sheet := false;
             ProfileDialog := false;
@@ -360,6 +489,12 @@ begin
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
           Drawer := Open;
+        end with, []
+      );
+    when G.Msg.DisplaySwatch(const Index: int):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          DisplaySwatch := Index;
         end with, []
       );
     when G.Msg.Preview:

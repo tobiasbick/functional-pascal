@@ -41,6 +41,15 @@ begin
     when S.Msg.SetBanner(const Open: bool): State with
       BannerOpen := Open;
     end with;
+    when S.Msg.SetPhoto(const Shown: bool): State with
+      Photo := Shown;
+    end with;
+    when S.Msg.SetKey(const Shown: bool): State with
+      KeyShown := Shown;
+    end with;
+    when S.Msg.SetSpoiler(const Shown: bool): State with
+      Spoiler := Shown;
+    end with;
     when S.Msg.SetCountdown(const Deadline: Sys.DateTimeOffset, const Seconds: double): State with
       Deadline := Deadline;
       SecondsLeft := Seconds;

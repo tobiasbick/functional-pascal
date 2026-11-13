@@ -1,0 +1,80 @@
+unit Fpas.Ui.HexViews;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Zero-based byte selection.
+public type Selection = record
+  // First selected offset.
+  public Start: int := 0;
+  // Number of selected bytes.
+  public Length: int := 0;
+  // Caret offset.
+  public Cursor: int := 0;
+end record;
+
+// Highlighted byte range.
+public type Mark = record
+  // First byte.
+  public Start: int;
+  // Number of bytes.
+  public Length: int;
+  // CUI highlight tone.
+  public Tone: S.Tone;
+  // Optional tooltip label.
+  public Label: string := '';
+end record;
+
+// Selection and optional data edit reported by CUI.
+public type Event = record
+  // Proposed selection.
+  public Selected: Selection;
+  // Replacement bytes, or null if no edit occurred.
+  public Data: (array of byte)?;
+  // Offset of the first overwritten byte.
+  public EditOffset: int;
+  // Number of overwritten bytes.
+  public EditLength: int;
+end record;
+
+// Native HexView configuration.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Logical height, zero for the native default or minus one to fill.
+  public Height: float := 0.0F;
+  // Font size, or zero for the native default.
+  public Size: float := 0.0F;
+  // Ranges tinted by the native viewer.
+  public Marks: array of Mark := [];
+  // Displayed address of byte zero.
+  public BaseAddress: ulong := 0UL;
+  // Preferred row width of 8, 16 or 32 bytes.
+  public BytesPerRow: int := 16;
+  // One-shot native reveal request, or minus one. Clear after the next proposal.
+  public GoTo: int := -1;
+  // Allow overwriting hex digits.
+  public Editable: bool := false;
+  // Display the ASCII column.
+  public ShowAscii: bool := true;
+  // Display the byte-offset header.
+  public ShowHeader: bool := true;
+end record;
+
+// Creates a graphical HexView.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Data`: Immutable byte buffer.
+// - `Selected`: Current selection and cursor.
+// - `Changed`: Maps selection and editing proposals.
+// - `Settings`: Native presentation options.
+// ## Returns
+// A graphical view element.
+public function HexView<TMsg>(Id: string; Data: array of byte; Selected: Selection; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.HexView(Id, Data, Selected, Changed, Settings ?? new Options());
+end function;
+
+end unit;

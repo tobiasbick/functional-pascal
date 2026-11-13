@@ -60,11 +60,18 @@ public sealed partial class CuiWindow
     /// <summary>Draws CUI's native activity spinner.</summary>
     /// <param name="id">Stable inspection identity.</param>
     /// <param name="size">Logical diameter; zero uses the native default.</param>
-    public void Spinner(string id, float size = 0)
+    /// <param name="style">Native animation style.</param>
+    /// <param name="color">Optional ink color.</param>
+    /// <param name="track">Optional track color.</param>
+    /// <param name="inverse">Use the current theme background as ink.</param>
+    public void Spinner(string id, float size = 0, int style = 0, CuiChartColor color = default, CuiChartColor track = default, bool inverse = false)
     {
         CheckFrame();
         CheckFeedbackNumber(size, nameof(size));
-        NativeMethods.Spinner(context, Stable(id), size);
+        if (style is < 0 or > 14) throw new ArgumentOutOfRangeException(nameof(style));
+        CheckChartColor(color);
+        CheckChartColor(track);
+        NativeMethods.Spinner(context, Stable(id), size, style, inverse ? -2 : color.Palette, color.Rgba, track.Palette, track.Rgba);
     }
 
     /// <summary>Draws CUI's usage meter with native formatting and threshold colors.</summary>

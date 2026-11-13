@@ -1,0 +1,19 @@
+unit Fpas.Ui.TypingIndicators;
+
+uses Fpas.Ui.Elements as E;
+
+// Draws the native typing indicator.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Name`: Name shown as an avatar.
+// ## Returns
+// The graphical element.
+public function TypingIndicator<TMsg>(Id: string; Name: string): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TypingIndicator(Id, Name);
+end function;
+
+end unit;

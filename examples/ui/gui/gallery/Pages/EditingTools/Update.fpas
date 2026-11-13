@@ -1,0 +1,143 @@
+unit GuiGallery.Pages.EditingTools.Update;
+
+uses
+  GuiGallery.Pages.EditingTools.State as M, GuiGallery.Pages.Motion.Clock as Clock,
+  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.FlameGraphs as F, Fpas.Ui.CurveEditors as C,
+  Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as Lists;
+
+function Inspector(Groups: array of I.Group; Value: I.Event): array of I.Group;
+begin
+  const Copy: array of I.Group := cast<array of I.Group>(Groups.Clone());
+  case Value of
+    when I.Event.Expansion(const Index: int, const Open: bool):
+      Copy[Index] := Copy[Index] with
+        Open := Open;
+      end with;
+    when I.Event.Edit(const Index: int, const Row: int, const Current: I.Value):
+      const Rows: array of I.Property := cast<array of I.Property>(Copy[Index].Properties.Clone());
+      Rows[Row] := Rows[Row] with
+        Current := Current;
+      end with;
+      Copy[Index] := Copy[Index] with
+        Properties := Rows;
+      end with;
+  end case;
+
+  return Copy;
+end function;
+
+function TrackCurve(Model: M.Model; Index: int; Value: C.Event): M.Model;
+begin
+  const Tracks: array of T.Track := cast<array of T.Track>(Model.Tracks.Clone());
+  const Keys: Lists.List<T.Key> := new Lists.List<T.Key>(Value.Keys.Length);
+  for K: int := 0 to Value.Keys.Length - 1 do
+    Keys.Add(new T.Key(Value.Keys[K], K = Value.Selected));
+  end for;
+
+  for Track: int := 0 to Tracks.Length - 1 do
+    if Track = Index then
+      Tracks[Track] := Tracks[Track] with
+        Keys := Keys.ToArray();
+      end with;
+    elsif Model.Timeline.KeyIndex <> Value.Selected or Value.Added >= 0 or Value.Removed >= 0 then
+      const Others: array of T.Key := cast<array of T.Key>(Tracks[Track].Keys.Clone());
+      for K: int := 0 to Others.Length - 1 do
+        if Others[K].Selected then
+          Others[K] := Others[K] with
+            Selected := false;
+          end with;
+        end if;
+      end for;
+
+      Tracks[Track] := Tracks[Track] with
+        Keys := Others;
+      end with;
+    end if;
+  end for;
+
+  return Model with
+    Tracks := Tracks;
+    Timeline := Model.Timeline with
+      TrackIndex := Index;
+      KeyIndex := Value.Selected;
+    end with;
+  end with;
+end function;
+
+function Advance(View: T.View; Seconds: float): T.View;
+begin
+  const Loop: T.PlayRange := View.Range ?? new T.PlayRange(0.0F, 5.0F);
+  const Time: float := View.Time + Seconds;
+  return View with
+    Time := if Time >= Loop.Finish or Time < Loop.Start then
+      Loop.Start
+    else
+      Time
+    end if;
+  end with;
+end function;
+
+function Next(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Inspector(const Value: I.Event): Model with
+      Inspector := Inspector(Model.Inspector, Value);
+    end with;
+    when M.Msg.Flame(const Value: F.Event): Model with
+      Flame := Value.Current;
+    end with;
+    when M.Msg.Curve(const Value: C.Event): Model with
+      Curve := Value.Keys;
+      CurveKey := Value.Selected;
+    end with;
+    when M.Msg.Gradient(const Value: G.Event): Model with
+      Ramp := Value.Stops;
+      Stop := Value.Selected;
+    end with;
+    when M.Msg.Timeline(const Value: T.Event): Model with
+      Timeline := Value.Current;
+      Tracks := Value.Tracks;
+      Playing := Model.Playing <> Value.TogglePlayback;
+    end with;
+    when M.Msg.TrackCurve(const Track: int, const Value: C.Event): TrackCurve(Model, Track, Value);
+    when M.Msg.Playback: Model with
+      Playing := not Model.Playing;
+    end with;
+    when M.Msg.Tick(const Seconds: float): if Model.Playing then
+        Model with
+          Timeline := Advance(Model.Timeline, Seconds);
+        end with
+      else
+        Model
+      end if;
+  end case;
+end function;
+
+// Applies a proposal from the editing tools.
+// ## Parameters
+// - `Model`: Current editing tool state.
+// - `Message`: Native or playback action.
+// ## Returns
+// Updated state and a playback command when needed.
+public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+begin
+  const Value: M.Model := Next(Model, Message);
+  const Commands: array of A.Command<M.Msg> := if Value.Playing = Model.Playing then
+    []
+  elsif Value.Playing then
+    [
+      Clock.Start<M.Msg>(
+        M.Msg.Tick,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Playback,
+        16,
+        'shot-playback'
+      )
+    ]
+  else
+    [A.CancelBackground<M.Msg>('shot-playback')]
+  end if;
+  return new A.Transition<M.Model, M.Msg>(Value, Commands);
+end function;
+
+end unit;

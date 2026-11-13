@@ -1,6 +1,7 @@
 unit Fpas.Ui.Internal.Mapping.Actions;
 
 uses
+  Fpas.Ui.Spinners as Spinners,
   Fpas.Ui.SpeedDials as Speed,
   Fpas.Ui.TimelineItems as Timeline,
   Fpas.Ui.Alerts as Alerts,
@@ -60,8 +61,8 @@ begin
       const Settings: ProgressBars.Options
     ):
       return E.Element<TParent>.ProgressBar(Id, Fraction, Settings);
-    when E.Element.Spinner(const Id: string, const Size: float):
-      return E.Element<TParent>.Spinner(Id, Size);
+    when E.Element.Spinner(const Id: string, const Size: float, const Settings: Spinners.Options?):
+      return E.Element<TParent>.Spinner(Id, Size, Settings);
     when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
       return E.Element<TParent>.Skeleton(Id, Width, Height);
     when E.Element.TimelineItem(
@@ -260,7 +261,7 @@ begin
       const FOnChange: function(bool): TChild,
       const FDescription: string,
       const FEnabled: bool,
-      const FIndeterminate: bool
+      const FIndeterminate: bool, const FHideLabel: bool
     ):
       return E.Element<TParent>.CheckboxAction(
         FId,
@@ -269,7 +270,8 @@ begin
         function(A0: bool): TParent => Messages(FOnChange(A0)),
         FDescription,
         FEnabled,
-        FIndeterminate
+        FIndeterminate,
+        FHideLabel
       );
     when E.Element.SwitchAction(
       const FId: string,

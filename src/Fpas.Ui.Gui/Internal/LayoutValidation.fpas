@@ -16,6 +16,20 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
   procedure Visit(Node: E.Element<TMsg>);
   begin
     case Node of
+      when E.Element.Reasoning(_, const Bodies: array of E.Element<TMsg>, _):
+        for Child: E.Element<TMsg> in Bodies do
+          Visit(Child);
+        end for;
+      when E.Element.Carousel(
+        _,
+        const Views: array of E.Element<TMsg>,
+        _,
+        _,
+        _
+      ), E.Element.CardStack(_, const Views: array of E.Element<TMsg>, _, _):
+        for Child: E.Element<TMsg> in Views do
+          Visit(Child);
+        end for;
       when E.Element.FilePicker(_, const Base: E.Element<TMsg>?, _, _, _):
         if Base <> null then
           Visit(Base);
@@ -77,7 +91,11 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         const Children: array of E.Element<TMsg>,
         _,
         _
-      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.TreeNode(
+      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+        _,
+        const Children: array of E.Element<TMsg>,
+        _
+      ), E.Element.TreeNode(
         _,
         _,
         _,

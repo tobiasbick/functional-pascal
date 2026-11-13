@@ -1,56 +1,10 @@
 unit GuiGallery.Pages.Files.View;
 
 uses
-  GuiGallery.Pages.Files.State as M, GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Terminals as Terminal, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
   Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths,
   Fpas.Ui.FileListings as Listings, System as Sys, System.IO as IO, System.Collections.Generic as Lists;
-
-function ExampleRoot(Path: string): Listings.Listing?;
-begin
-  if Path <> '.' then
-    return null;
-  end if;
-
-  return new Listings.Listing(
-    [
-      new Listings.Entry('assets', true, 0UL, 1730000000L),
-      new Listings.Entry('src', true, 13100UL, 1730086400L),
-      new Listings.Entry('README.md', false, 26200UL, 1730172800L),
-      new Listings.Entry('notes.txt', false, 39300UL, 1730259200L),
-      new Listings.Entry('cover.png', false, 52400UL, 1730345600L),
-      new Listings.Entry('report.pdf', false, 65500UL, 1730432000L)
-    ]
-  );
-end function;
-
-function ReadFolder(Path: string; Hidden: bool): Listings.Listing?;
-begin
-  try
-    const Result: Lists.List<Listings.Entry> := new Lists.List<Listings.Entry>();
-    const Folder: IO.DirectoryInfo := new IO.DirectoryInfo(Path);
-    for Child: IO.FileSystemInfo in Folder.EnumerateFileSystemInfos() do
-      const IsHidden: bool := Child.Name.StartsWith('.')
-        or (cast<int>(Child.Attributes) and cast<int>(IO.FileAttributes.Hidden)) <> 0;
-      if Hidden or not IsHidden then
-        const Modified: long := new Sys.DateTimeOffset(Child.LastWriteTimeUtc).ToUnixTimeSeconds();
-        case Child of
-          when is IO.FileInfo as File:
-            Result.Add(new Listings.Entry(Child.Name, false, cast<ulong>(File.Length), Modified));
-          else
-            Result.Add(new Listings.Entry(Child.Name, true, 0UL, Modified));
-        end case;
-      end if;
-    end for;
-
-    return new Listings.Listing(Result.ToArray());
-  catch Failure: IO.IOException do
-
-    return ExampleRoot(Path);
-  catch Failure: Sys.UnauthorizedAccessException do
-    return ExampleRoot(Path);
-  end try;
-end function;
 
 function Controls(Model: M.Model): E.Element<M.Msg>;
 begin
@@ -84,7 +38,7 @@ begin
     G.Heading<M.Msg>('File browser', 'Double-click to open; type to jump; Backspace goes up.'),
     Browser.FileBrowser<M.Msg>(
       'files-browser', Model.Folder, M.Msg.Browse, new Browser.Options(
-        Height := L.Extent.Fixed(L.Measure.Logical(380)), Source := ReadFolder
+        Height := L.Extent.Fixed(L.Measure.Logical(380)), Source := Directory.ReadFolder
       )
     ),
     Controls(Model)
@@ -115,7 +69,7 @@ end function;
 
 function ChildFolders(Folder: string): array of string;
 begin
-  const Listing: Listings.Listing? := ReadFolder(Folder, false);
+  const Listing: Listings.Listing? := Directory.ReadFolder(Folder, false);
   const Names: Lists.List<string> := new Lists.List<string>();
   if Listing <> null then
     for Entry: Listings.Entry in Listing.Entries do
@@ -187,6 +141,14 @@ begin
   const Base: E.Element<M.Msg> := E.Column<M.Msg>(
     new L.Flow(Gap := G.Points(20), Clip := false),
     Original(Model),
+    G.Heading<M.Msg>(
+      'Terminal',
+      'Colors, \r progress, history on Up and Down, Ctrl+C, Ctrl+L, drag to select.'
+    ),
+    Terminal.Terminal<M.Msg>(
+      'files-terminal', Model.Output, Model.TerminalRevision, M.Msg.Terminal,
+      new Terminal.Options(Height := 300.0F, Prompt := '> ')
+    ),
     G.Heading<M.Msg>('Path bar', 'Open a segment or its menu, or type a folder path.'),
     Paths.PathBar<M.Msg>(
       'files-path-bar', new Paths.Value(Path, Model.Folder, Children(Path)),
@@ -196,11 +158,15 @@ begin
   return [
     Picker.FilePicker<M.Msg>(
       'files-open-picker', Model.Opening, M.Msg.Opened,
-      new Picker.Options(Source := ReadFolder), Base
+      new Picker.Options(Source := Directory.ReadFolder), Base
     ),
     Picker.FilePicker<M.Msg>(
       'files-save-picker', Model.Saving, M.Msg.Saved,
-      new Picker.Options(Kind := Picker.Mode.SaveFile, Name := 'untitled.txt', Source := ReadFolder)
+      new Picker.Options(
+        Kind := Picker.Mode.SaveFile,
+        Name := 'untitled.txt',
+        Source := Directory.ReadFolder
+      )
     )
   ];
 end function;

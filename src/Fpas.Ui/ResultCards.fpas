@@ -1,0 +1,38 @@
+unit Fpas.Ui.ResultCards;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.MediaImages as Media;
+
+// Result card settings.
+public type Options = record
+  // Optional caption shown over the picture.
+  public Caption: string? := null;
+  // Optional status badge.
+  public Badge: string? := null;
+  // Status badge tone, or neutral for the native default.
+  public BadgeTone: S.Tone := S.Tone.Neutral;
+  // Preferred width. Fill uses the native maximum.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height divided by width, or zero for the default.
+  public Aspect: float := 0.0F;
+  // Whether the card accepts activation.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native ResultCard element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Image`: Picture displayed in the card.
+// - `Title`: Caption title.
+// - `Activate`: Message on card activation.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ResultCard<TMsg>(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ResultCard(Id, Image, Title, Activate, Settings ?? new Options());
+end function;
+
+end unit;

@@ -66,6 +66,7 @@ begin
       _,
       _,
       _,
+      _,
       _
     ), E.Element.SwitchAction(
       _,

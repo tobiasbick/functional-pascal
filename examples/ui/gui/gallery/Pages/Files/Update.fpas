@@ -2,6 +2,7 @@ unit GuiGallery.Pages.Files.Update;
 
 uses
   GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.View as V,
+  GuiGallery.Pages.Files.Terminal as Shell, Fpas.Ui.Terminals as Terminal,
   Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
 
 // Applies native file navigation and picker results.
@@ -31,6 +32,17 @@ begin
       Saving := false;
       Chosen := Event.Path ?? Model.Chosen;
     end with;
+    when M.Msg.Terminal(Terminal.Event.Command(const Command: string)): if Command = 'clear' then
+        Model with
+          Output := '';
+          TerminalRevision := Model.TerminalRevision + 1;
+        end with
+      else
+        Model with
+          Output := Model.Output + Shell.Run(Command, Model.Folder);
+        end with
+      end if;
+    when M.Msg.Terminal(Terminal.Event.Interrupt): Model;
     when M.Msg.Path(const Event: Paths.Event): Model with
       Folder := if Event.Text <> null then
         Event.Text ?? Model.Folder

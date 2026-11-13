@@ -1,0 +1,241 @@
+unit GuiGallery.Pages.MoreDeveloper.Samples;
+
+uses Fpas.Ui.TestExplorers as X, Fpas.Ui.StackTraces as S, Fpas.Ui.Coverages as CV, Fpas.Ui.Blames as B, Fpas.Ui.ApiExplorers as A, Fpas.Ui.Uptimes as U, Fpas.Ui.TimeHistograms as H, Fpas.Ui.FeatureFlagEditors as F, System as Sys;
+
+// Original gallery sample data.
+public const Tests: array of X.Item := [
+  new X.Item('layout', 0, 0, 0.0F, null),
+  new X.Item('row distributes extra space', 1, 2, 0.004F, null),
+  new X.Item('wraps to the next line', 1, 2, 0.006F, null),
+  new X.Item(
+    'mirrors under right to left',
+    1,
+    3,
+    0.012F,
+    'expected x = 412, got 388 (padding not mirrored)'
+  ),
+  new X.Item('text', 0, 0, 0.0F, null),
+  new X.Item('shapes Persian', 1, 2, 0.210F, null),
+  new X.Item('ellipsis keeps whole characters', 1, 2, 0.003F, null),
+  new X.Item('bidi brackets', 1, 4, -1.0F, null),
+  new X.Item('renderer', 0, 0, 0.0F, null),
+  new X.Item('software', 1, 0, 0.0F, null),
+  new X.Item('rounded corners', 2, 2, 0.031F, null),
+  new X.Item('soft shadows', 2, 1, -1.0F, null),
+  new X.Item('OpenGL', 1, 0, 0.0F, null),
+  new X.Item('atlas growth', 2, 0, -1.0F, null),
+  new X.Item('slow gradient path', 2, 2, 1.42F, null)
+];
+
+// Original gallery sample data.
+public const SourceOne: array of string := [
+  'function total(cart) {',
+  '  let sum = 0;',
+  '  for (const item of cart.items) {',
+  '    sum += item.price * item.qty;',
+  '  }',
+  '  return sum;'
+];
+
+// Original gallery sample data.
+public const SourceTwo: array of string := [
+  'export function checkout(user) {',
+  '  const cart = carts.get(user.id);',
+  '  const amount = total(cart);',
+  '  return charge(user, amount);'
+];
+
+// Original gallery sample data.
+public const Frames: array of S.Frame := [
+  new S.Frame('total', 'src/cart.js', 3, 29, false, SourceOne, 1),
+  new S.Frame('checkout', 'src/checkout.js', 3, 18, false, SourceTwo, 1),
+  new S.Frame('handle', 'node_modules/express/lib/router/layer.js', 95, 5, true, [], 0),
+  new S.Frame('next', 'node_modules/express/lib/router/route.js', 149, 13, true, [], 0),
+  new S.Frame('dispatch', 'node_modules/express/lib/router/index.js', 284, 15, true, [], 0),
+  new S.Frame('onRequest', 'src/server.js', 41, 9, false, [], 0)
+];
+
+// Original gallery sample data.
+public const Coverage: array of CV.File := [
+  new CV.File('src/core/layout.c', 1840, 1702, 620, 541, 88, 86),
+  new CV.File('src/core/state.c', 420, 401, 96, 90, 31, 31),
+  new CV.File('src/core/draw.c', 960, 610, 300, 160, 54, 40),
+  new CV.File('src/text/shape.c', 2210, 1490, 802, 411, 120, 88),
+  new CV.File('src/text/atlas.c', 640, 598, 140, 131, 30, 30),
+  new CV.File('src/render/gl.c', 1300, 410, 260, 60, 70, 22),
+  new CV.File('src/render/software.c', 2400, 2210, 900, 799, 140, 136),
+  new CV.File('src/main.c', 120, 120, 10, 10, 4, 4)
+];
+
+// Original gallery sample data.
+public const Lines: array of string := [
+  '#include "cui_internal.h"',
+  '',
+  '/* the width a component asks for */',
+  'static float measure(cui_node *n) {',
+  '    float w = n->pad[1] + n->pad[3];',
+  '    for (int c = n->first; c >= 0; c = next(c))',
+  '        w += width_of(c) + n->gap;',
+  '    return w - n->gap;',
+  '}',
+  '',
+  'void cui__layout(cui_ctx *ui) {',
+  '    for (int i = 0; i < ui->node_count; i++)',
+  '        measure(&ui->nodes[i]);',
+  '    place(ui, 0);  /* the root */',
+  '}'
+];
+
+// Original gallery sample data.
+public const LineCommits: array of int := [
+  0,
+  0,
+  1,
+  1,
+  2,
+  2,
+  2,
+  1,
+  1,
+  0,
+  3,
+  3,
+  4,
+  3,
+  3
+];
+
+// Original gallery sample data.
+public const Revisions: array of B.Revision := [
+  new B.Revision('a1b2c3d4e5', 'Maya Okafor', 'First layout pass', 1730000000L),
+  new B.Revision('b2c3d4e5f6', 'Jonas Berg', 'Measure: count padding once', 1760000000L),
+  new B.Revision('c3d4e5f6a7', 'Priya Nair', 'Gaps between children', 1790000000L),
+  new B.Revision('d4e5f6a7b8', 'Omid Saadat', 'Layout entry point', 1793000000L),
+  new B.Revision('e5f6a7b8c9', 'Aiko Tanaka', 'Measure every node', 1794100000L)
+];
+
+// Original gallery sample data.
+public const ParamsOne: array of A.Parameter := [
+  new A.Parameter('id', 'path', 'string', true, 'The user''s id'),
+  new A.Parameter('fields', 'query', 'string', false, 'Comma separated fields to return')
+];
+
+// Original gallery sample data.
+public const ParamsTwo: array of A.Parameter := [
+  new A.Parameter('limit', 'query', 'integer', false, 'At most this many, default 20'),
+  new A.Parameter('cursor', 'query', 'string', false, 'From a previous page')
+];
+
+// Original gallery sample data.
+public const Endpoints: array of A.Endpoint := [
+  new A.Endpoint('GET', '/users', 'List users', 'Users', false, ParamsTwo),
+  new A.Endpoint('POST', '/users', 'Create a user', 'Users', false, []),
+  new A.Endpoint('GET', '/users/{id}', 'Get a user', 'Users', false, ParamsOne),
+  new A.Endpoint('PATCH', '/users/{id}', 'Update a user', 'Users', false, [ParamsOne[0]]),
+  new A.Endpoint('DELETE', '/users/{id}', 'Delete a user', 'Users', false, [ParamsOne[0]]),
+  new A.Endpoint('GET', '/orders', 'List orders', 'Orders', false, ParamsTwo),
+  new A.Endpoint('PUT', '/orders/{id}/status', 'Set an order''s status', 'Orders', false, []),
+  new A.Endpoint('GET', '/v1/orders', 'List orders (old)', 'Orders', true, [])
+];
+
+// Original gallery sample data.
+public const Environments: array of string := [
+  'Development',
+  'Staging',
+  'Production'
+];
+
+// Original flag states and rollout percentages.
+public const Flags: array of F.Flag := [
+  new F.Flag(
+    'new-checkout',
+    'Single-page checkout with saved cards',
+    [true, true, false],
+    [0, 25, 0]
+  ),
+  new F.Flag(
+    'dark-mode-default',
+    'Start new accounts in dark mode',
+    [true, false, false],
+    [0, 0, 0]
+  ),
+  new F.Flag('search-v2', 'Ranked search with typo tolerance', [true, true, true], [0, 100, 5]),
+  new F.Flag('export-pdf', 'Export reports as PDF', [false, false, false], [0, 0, 0])
+];
+
+function Availability(): array of U.Service;
+begin
+  const Api: array of float := new float[90];
+  const Web: array of float := new float[90];
+  const Db: array of float := new float[90];
+  const Cdn: array of float := new float[90];
+  for Day: int := 0 to 89 do
+    Api[Day] := if Day = 61 then
+      0.962F
+    elsif Day mod 17 = 5 then
+      0.9985F
+    else
+      1.0F
+    end if;
+    Web[Day] := if Day = 44 then
+      0.93F
+    else
+      1.0F
+    end if;
+    Db[Day] := if Day = 88 then
+      0.97F
+    elsif Day mod 23 = 9 then
+      0.995F
+    else
+      1.0F
+    end if;
+    Cdn[Day] := if Day < 20 then
+      -1.0F
+    else
+      1.0F
+    end if;
+  end for;
+
+  return [
+    new U.Service('API', Api),
+    new U.Service('Website', Web),
+    new U.Service('Database', Db),
+    new U.Service('CDN', Cdn)
+  ];
+end function;
+
+// Original 90-day availability series.
+public const Services: array of U.Service := Availability();
+
+function Histograms(): array of H.Series;
+begin
+  const Info: array of float := new float[96];
+  const Warnings: array of float := new float[96];
+  const Errors: array of float := new float[96];
+  for Index: int := 0 to 95 do
+    Info[Index] := cast<float>(120.0 + 80.0 * Sys.Math.Sin(
+      Index / 96.0 * 6.28 * 2
+    ) + (Index * 37 mod 23));
+    Warnings[Index] := cast<float>(12 + (Index * 13 mod 9) + (if Index > 60 and Index < 70 then
+      40
+    else
+      0
+    end if));
+    Errors[Index] := cast<float>((Index * 7 mod 5) + (if Index > 62 and Index < 67 then
+      30
+    else
+      0
+    end if));
+  end for;
+
+  return [
+    new H.Series('Info', Info, 1),
+    new H.Series('Warning', Warnings, 3),
+    new H.Series('Error', Errors, 4)
+  ];
+end function;
+
+// Original 15-minute log count buckets.
+public const Histogram: array of H.Series := Histograms();
+
+end unit;

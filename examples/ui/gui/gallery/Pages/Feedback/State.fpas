@@ -1,0 +1,21 @@
+unit GuiGallery.Pages.Feedback.State;
+
+uses Fpas.Ui.StatusButtons as Work;
+
+// Model for the status spinner example.
+public type Model = record
+  // Current upload phase.
+  public Status: Work.Status := Work.Status.Idle;
+  // Number of starts. Odd jobs succeed and even jobs fail.
+  public Runs: int := 0;
+end record;
+
+// Upload actions from the gallery.
+public type Msg = variant
+  // Starts a simulated upload.
+  Upload;
+  // Completes the current upload.
+  Finish(Status: Work.Status);
+end variant;
+
+end unit;

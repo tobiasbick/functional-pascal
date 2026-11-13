@@ -1,0 +1,150 @@
+unit GuiGallery.Pages.Code.Update;
+
+uses
+  GuiGallery.Pages.Code.State as M, Fpas.Ui.Markdowns as Markdown, Fpas.Ui.CodeEditors as Editor,
+  Fpas.Ui.DiffViews as Diff, Fpas.Ui.HexViews as Hex,
+  Fpas.Ui.Mvu.Application as A, GuiGallery.Pages.Motion.Clock as Clock,
+  System as Sys, System.Globalization as Locale, System.Text as Text;
+
+function ApplyTask(Notes: string; Offset: int; Checked: bool): string;
+begin
+  const Bytes: array of byte := Text.Encoding.UTF8.GetBytes(Notes);
+  if Offset <= 0 or Offset >= Bytes.Length - 1 or Bytes[
+    Offset - 1
+  ] <> 91 or Bytes[Offset + 1] <> 93
+  then
+    return Notes;
+  end if;
+
+  Bytes[Offset] := cast<byte>(if Checked then
+    120
+  else
+    32
+  end if);
+  return Text.Encoding.UTF8.GetString(Bytes);
+end function;
+
+function AtOffset(Model: M.Model; Value: string): M.Model;
+begin
+  var Offset: int := 0;
+  if not int.TryParse(
+    Value,
+    Locale.NumberStyles.HexNumber,
+    Locale.CultureInfo.InvariantCulture,
+    out Offset
+  )
+    or Offset < 0 or Offset >= Model.Bytes.Length
+  then
+    return Model;
+  end if;
+
+  return Model with
+    Offset := Value;
+    Jump := Offset;
+  end with;
+end function;
+
+function Next(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Markdown(Markdown.Event.Hover(const Url: string?)): Model with
+      NotesHover := Url ?? '';
+    end with;
+    when M.Msg.Markdown(Markdown.Event.Link(const Url: string)): Model with
+      NotesStatus := 'Opened: ' + Url;
+    end with;
+    when M.Msg.Markdown(
+      Markdown.Event.Task(const Offset: int, const Line: int, const Checked: bool)
+    ): Model with
+      Notes := ApplyTask(Model.Notes, Offset, Checked);
+      NotesStatus := (if Checked then
+        'Checked'
+      else
+        'Unchecked'
+      end if) + ' the task on line ' + Line.ToString();
+    end with;
+    when M.Msg.Replay: Model with
+      Replay := 0;
+      NotesStatus := '';
+    end with;
+    when M.Msg.Tick: Model with
+      Replay := if Model.Replay < 0 or Model.Replay + 7 >= Model.Notes.Length then
+        -1
+      else
+        Model.Replay + 7
+      end if;
+    end with;
+    when M.Msg.Code(const Value: Editor.Event): Model with
+      Source := Value.Text ?? Model.Source;
+      Line := Value.Line;
+      Column := Value.Column;
+      Lines := Value.LineCount;
+      Full := Value.Refused;
+    end with;
+    when M.Msg.Sql(const Value: Editor.Event): Model with
+      Sql := Value.Text ?? Model.Sql;
+    end with;
+    when M.Msg.Mode(const Index: int): Model with
+      Inline := Index = 1;
+    end with;
+    when M.Msg.Diff(const Value: Diff.Event): Model with
+      Change := Value.Current;
+      Changes := Value.Count;
+      ActualInline := Value.Inline;
+    end with;
+    when M.Msg.Navigate(const Delta: int): Model with
+      Change := Sys.Math.Clamp(Model.Change + Delta, -1, Sys.Math.Max(-1, Model.Changes - 1));
+    end with;
+    when M.Msg.Hex(const Value: Hex.Event): Model with
+      Bytes := Value.Data ?? Model.Bytes;
+      Selection := Value.Selected;
+      Jump := -1;
+      Edited := if Value.EditLength = 0 then
+        Model.Edited
+      else
+        'Edited ' +
+        Value.EditLength.ToString() + (if Value.EditLength = 1 then
+          ' byte'
+        else
+          ' bytes'
+        end if) +
+        ' at ' + Value.EditOffset.ToString('X4')
+      end if;
+    end with;
+    when M.Msg.Offset(const Value: string): Model with
+      Offset := Value;
+    end with;
+    when M.Msg.GoTo(const Value: string): AtOffset(Model, Value);
+    when M.Msg.Clear: Model with
+      Entries := [];
+    end with;
+  end case;
+end function;
+
+// Applies a native source tool event and manages the Markdown replay clock.
+// ## Parameters
+// - `Model`: Current Code state.
+// - `Message`: Code action.
+// ## Returns
+// Updated Code state and replay commands.
+public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+begin
+  const Value: M.Model := Next(Model, Message);
+  const Commands: array of A.Command<M.Msg> := case Message of
+    when M.Msg.Replay: [
+      Clock.Start<M.Msg>(
+        function(Seconds: float): M.Msg => M.Msg.Tick,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Tick, 17, 'markdown-replay'
+      )
+    ];
+    when M.Msg.Tick: if Value.Replay = -1 then
+        [A.CancelBackground<M.Msg>('markdown-replay')]
+      else
+        []
+      end if;
+    else [];
+  end case;
+  return new A.Transition<M.Model, M.Msg>(Value, Commands);
+end function;
+
+end unit;

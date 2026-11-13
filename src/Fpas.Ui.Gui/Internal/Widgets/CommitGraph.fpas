@@ -1,0 +1,56 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CommitGraph;
+
+uses Fpas.Ui.CommitGraphs as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+
+function PackCommit(Items: array of D.Commit): array of Cui.CuiDevCommit;
+begin
+  const Native: Lists.List<Cui.CuiDevCommit> := new Lists.List<Cui.CuiDevCommit>(Items.Length);
+  for Entry: D.Commit in Items do
+    Native.Add(
+      new Cui.CuiDevCommit(
+        Entry.Hash,
+        Entry.Message,
+        Entry.Author,
+        Entry.Date,
+        Entry.Refs,
+        Entry.Parent,
+        Entry.MergeParent
+      )
+    );
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native CommitGraph widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Commits`: Commits supplied to the widget.
+// - `Selection`: Selection supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Commits: array of D.Commit; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'commit-graph';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: Cui.CuiDevResult := Frame.Window.CommitGraph(
+    Token,
+    PackCommit(Commits),
+    Selection,
+    Settings.Height,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  if Enabled and (Result.Index <> Selection or Result.Action >= 0 or Result.Count >= 0) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Count, Result.Action)));
+  end if;
+end procedure;
+
+end unit;

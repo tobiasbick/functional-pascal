@@ -1,0 +1,303 @@
+unit Fpas.Ui.Internal.DeveloperInspectorValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Rules as Rules,
+  Fpas.Ui.Internal.ChartRules as Chart, System as Sys, System.Text as Text,
+  Fpas.Ui.ProblemsPanels as ProblemsPanels,
+  Fpas.Ui.Pipelines as Pipelines,
+  Fpas.Ui.Keymaps as Keymaps,
+  Fpas.Ui.CommitGraphs as CommitGraphs,
+  Fpas.Ui.DependencyGraphs as DependencyGraphs,
+  Fpas.Ui.NetworkWaterfalls as NetworkWaterfalls,
+  Fpas.Ui.TraceViewers as TraceViewers,
+  Fpas.Ui.TestExplorers as TestExplorers,
+  Fpas.Ui.StackTraces as StackTraces,
+  Fpas.Ui.ResponseStatuses as ResponseStatuses,
+  Fpas.Ui.Uptimes as Uptimes;
+
+procedure Fail(At: string);
+begin
+  Rules.Reject(At, 'Invalid developer widget data.');
+end procedure;
+
+procedure SelectionIndex(Index: int; Count: int; At: string);
+begin
+  if Index < -1 or Index >= Count then
+    Fail(At);
+  end if;
+end procedure;
+
+procedure Number(Value: double; At: string);
+begin
+  if not Sys.Double.IsFinite(Value) or Value < 0.0 then
+    Fail(At);
+  end if;
+end procedure;
+
+procedure Capacity(Count: int; Maximum: int; At: string);
+begin
+  if Maximum < 1 or Maximum > 4096 or Count > Maximum then
+    Fail(At);
+  end if;
+end procedure;
+
+procedure TextLimit(Value: string; Maximum: int; At: string);
+begin
+  Rules.CheckText(Value, At);
+  if Maximum <= 0 or Maximum > 1048576 or Text.Encoding.UTF8.GetByteCount(Value) > Maximum then
+    Fail(At);
+  end if;
+end procedure;
+
+// Checks developer widget data before native presentation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Widget to validate.
+// - `Location`: Parent diagnostic path.
+// - `Profile`: Target capabilities.
+// - `Identify`: Registers a stable widget identity.
+public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string);
+begin
+  case Node of
+    when E.Element.Problems(
+      const Id: string,
+      const Diagnostics: array of ProblemsPanels.Diagnostic,
+      _,
+      const Settings: ProblemsPanels.Options
+    ):
+      const At: string := Identify(Id, Location + '/problems');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      for Item: ProblemsPanels.Diagnostic in Diagnostics do
+        Rules.CheckText(Item.Message, At);
+        if Item.Severity < 0 or Item.Severity > 3 or Item.Line < 0 or Item.Column < 0 then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.Pipeline(
+      const Id: string,
+      const Stages: array of string,
+      const Jobs: array of Pipelines.Job,
+      const Selection: int,
+      _,
+      const Settings: Pipelines.Options
+    ):
+      const At: string := Identify(Id, Location + '/pipeline');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      SelectionIndex(Selection, Jobs.Length, At);
+      for Item: Pipelines.Job in Jobs do
+        if Item.Stage < 0 or Item.Stage >= Stages.Length or Item.Status < 0 or Item.Status > 5
+          or not Sys.Single.IsFinite(Item.Duration)
+        then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.Keymap(
+      const Id: string,
+      const Bindings: array of Keymaps.Binding,
+      const Categories: array of string,
+      const Modifiers: int,
+      _,
+      const Settings: Keymaps.Options
+    ):
+      const At: string := Identify(Id, Location + '/keymap');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      if Modifiers < 0 or Modifiers > 15 then
+        Fail(At);
+      end if;
+
+      for Item: Keymaps.Binding in Bindings do
+        if Item.Modifiers < 0 or Item.Modifiers > 15 or Item.Key < 0 or Item.Key >= 68
+          or Item.Category < 0
+        then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.CommitGraph(
+      const Id: string,
+      const Commits: array of CommitGraphs.Commit,
+      const Selection: int,
+      _,
+      const Settings: CommitGraphs.Options
+    ):
+      const At: string := Identify(Id, Location + '/commit-graph');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      SelectionIndex(Selection, Commits.Length, At);
+      for Index: int := 0 to Commits.Length - 1 do
+        const Item: CommitGraphs.Commit := Commits[Index];
+        if Item.Parent <> -1 and (Item.Parent <= Index or Item.Parent >= Commits.Length) then
+          Fail(At);
+        end if;
+
+        if Item.MergeParent <> -1 and (Item.MergeParent <= Index or Item.MergeParent >=
+          Commits.Length)
+        then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.DependencyGraph(
+      const Id: string,
+      const Vertices: array of DependencyGraphs.Vertex,
+      const Edges: array of DependencyGraphs.Edge,
+      const Selection: int,
+      _,
+      const Settings: DependencyGraphs.Options
+    ):
+      const At: string := Identify(Id, Location + '/dependency-graph');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      SelectionIndex(Selection, Vertices.Length, At);
+      for Item: DependencyGraphs.Edge in Edges do
+        if Item.From < 0 or Item.From >= Vertices.Length or Item.To < 0 or Item.To >=
+          Vertices.Length
+        then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.NetworkWaterfall(
+      const Id: string,
+      const Requests: array of NetworkWaterfalls.Request,
+      const Selection: int,
+      _,
+      const Settings: NetworkWaterfalls.Options
+    ):
+      const At: string := Identify(Id, Location + '/network-waterfall');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      Number(Settings.DomLoaded, At);
+      Number(Settings.Loaded, At);
+      SelectionIndex(Selection, Requests.Length, At);
+      for Item: NetworkWaterfalls.Request in Requests do
+        Number(Item.Size, At);
+        Number(Item.Start, At);
+        for Duration: float in [
+          Item.Queued,
+          Item.Dns,
+          Item.Connect,
+          Item.Tls,
+          Item.Wait,
+          Item.Download
+        ] do
+          Chart.Distance(Duration, At);
+        end for;
+      end for;
+    when E.Element.TraceViewer(
+      const Id: string,
+      const Tracks: array of TraceViewers.Track,
+      const Spans: array of TraceViewers.Span,
+      const Markers: array of TraceViewers.Marker,
+      const Value: TraceViewers.View,
+      const Selection: int,
+      _,
+      const Settings: TraceViewers.Options
+    ):
+      const At: string := Identify(Id, Location + '/trace-viewer');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      Chart.Distance(Settings.RowHeight, At);
+      SelectionIndex(Selection, Spans.Length, At);
+      if not Sys.Double.IsFinite(Value.Start) or not Sys.Double.IsFinite(Value.End)
+        or not Sys.Double.IsFinite(Value.MarkStart) or not Sys.Double.IsFinite(Value.MarkEnd)
+      then
+        Fail(At);
+      end if;
+
+      Chart.Distance(Value.Scroll, At);
+      var Prior: TraceViewers.Span? := null;
+      for Item: TraceViewers.Span in Spans do
+        if Item.Track < 0 or Item.Track >= Tracks.Length or Item.Depth < 0 or Item.Depth > 256
+          or not Sys.Double.IsFinite(
+          Item.Start
+        ) or not Sys.Double.IsFinite(Item.End) or Item.Start > Item.End
+        then
+          Fail(At);
+        end if;
+
+        if Prior <> null and (Prior.Track > Item.Track or (Prior.Track = Item.Track
+          and (Prior.Depth > Item.Depth or (Prior.Depth = Item.Depth and Prior.End > Item.Start))))
+        then
+          Fail(At);
+        end if;
+
+        Prior := Item;
+      end for;
+    when E.Element.TestExplorer(
+      const Id: string,
+      const Entries: array of TestExplorers.Item,
+      _,
+      const Settings: TestExplorers.Options
+    ):
+      const At: string := Identify(Id, Location + '/test-explorer');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Chart.Distance(Settings.Height, At);
+      var Depth: int := -1;
+      for Item: TestExplorers.Item in Entries do
+        if Item.Depth < 0 or Item.Depth > Depth + 1 or Item.Depth > 256 or Item.Status < 0
+          or Item.Status > 5
+          or not Sys.Single.IsFinite(Item.Duration)
+        then
+          Fail(At);
+        end if;
+
+        Depth := Item.Depth;
+      end for;
+    when E.Element.StackTrace(
+      const Id: string,
+      const Frames: array of StackTraces.Frame,
+      _,
+      const Settings: StackTraces.Options
+    ):
+      const At: string := Identify(Id, Location + '/stack-trace');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Rules.CheckText(Settings.Title, At);
+      Rules.CheckText(Settings.Message, At);
+      Rules.CheckText(Settings.Language, At);
+      for Item: StackTraces.Frame in Frames do
+        if Item.Line < 0 or Item.Column < 0 or Item.SourceFirst < 0 then
+          Fail(At);
+        end if;
+      end for;
+    when E.Element.ResponseStatus(
+      const Id: string,
+      const Status: int,
+      const Seconds: double,
+      const Bytes: double,
+      const Settings: ResponseStatuses.Options
+    ):
+      const At: string := Identify(Id, Location + '/response-status');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      Number(Seconds, At);
+      Number(Bytes, At);
+    when E.Element.Uptime(
+      const Id: string,
+      const Services: array of Uptimes.Service,
+      const LastDay: Sys.DateOnly,
+      const Settings: Uptimes.Options
+    ):
+      const At: string := Identify(Id, Location + '/uptime');
+      Rules.RequireProfile(Profile, V.Target.Graphical, At);
+      Rules.CheckExtent(Settings.Width, Profile, At);
+      for Item: Uptimes.Service in Services do
+        for Day: float in Item.Days do
+          if not Sys.Single.IsFinite(Day) or Day > 1.0F then
+            Fail(At);
+          end if;
+        end for;
+      end for;
+    else
+  end case;
+end procedure;
+
+end unit;

@@ -1,0 +1,41 @@
+unit Fpas.Ui.CardStacks;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Direction of a card dismissal.
+public type Direction = enum: byte
+  // The card left through the leading edge.
+  Left;
+  // The card left through the trailing edge.
+  Right;
+end enum;
+
+// Native card stack options.
+public type Options = record
+  // Preferred deck width.
+  public Width: L.Extent := L.Extent.Content;
+  // Logical height of one card, or zero for the native default.
+  public Height: float := 0.0F;
+  // Number of visible cards, or zero for the native default.
+  public Visible: int := 0;
+  // Allow card dismissal.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native graphical card stack.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Cards`: Card bodies, starting with the top card.
+// - `Change`: Maps the direction of the dismissed card.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function CardStack<TMsg>(Id: string; Cards: array of E.Element<TMsg>; Change: function(Direction): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.CardStack(Id, Cards, Change, Settings ?? new Options());
+end function;
+
+end unit;

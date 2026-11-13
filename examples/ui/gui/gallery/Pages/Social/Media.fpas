@@ -1,0 +1,202 @@
+unit GuiGallery.Pages.Social.Media;
+
+uses
+  GuiGallery.Pages.Social.State as S, GuiGallery.Pages.Social.Scenes as Scene,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Graphics as Color, Fpas.Ui.Motion as M, Fpas.Ui.Carousels as Carousels,
+  Fpas.Ui.CardStacks as Stacks, Fpas.Ui.ImageViewers as Viewers, Fpas.Ui.ImageCroppers as Croppers,
+  Fpas.Ui.ImageComparisons as Comparisons, Fpas.Ui.MediaImages as Images, System.Collections.Generic as Lists;
+
+function Points(Amount: int): L.Extent;
+begin
+  return L.Extent.Fixed(L.Measure.Logical(Amount));
+end function;
+
+function Tile(Title: string; Description: string; Background: Color.Color; Deck: bool): E.Element<S.Msg>;
+begin
+  return E.Size<S.Msg>(
+    E.Column<S.Msg>(
+      new L.Flow(
+        Gap := G.Points(
+          if Deck then
+            4
+          else
+            8
+          end if
+        ), Padding := G.Points(
+          if Deck then
+            20
+          else
+            28
+          end if
+        ),
+        Justify := L.Justification.End, Clip := false, Background := Background,
+        CornerRadius := if Deck then
+          25.0F
+        else
+          16.0F
+        end if
+      ),
+      E.FormattedText<S.Msg>(
+        Title, M.Font.Display, if Deck then
+          22.0F
+        else
+          24.0F
+        end if,
+        new Color.Color(255, 255, 255)
+      ),
+      E.FormattedText<S.Msg>(
+        Description, if Deck then
+          M.Font.Medium
+        else
+          M.Font.Body
+        end if,
+        if Deck then
+          13.0F
+        else
+          0.0F
+        end if, new Color.Color(
+          255, 255, 255, cast<byte>(if Deck then
+            $F0
+          else
+            $C0
+          end if)
+        )
+      )
+    ),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill),
+      Height := new L.AxisSize(Basis := L.Extent.Fill)
+    )
+  );
+end function;
+
+function Tour(Index: int): E.Element<S.Msg>;
+begin
+  return Carousels.Carousel<S.Msg>(
+    'social-tour',
+    [
+      Tile(
+        'Faster exports',
+        'A 900 file project now exports in 40 seconds, down from four minutes.',
+        new Color.Color($1F, $2A, $37),
+        false
+      ),
+      Tile(
+        'ARM64 runners',
+        'Linux and macOS jobs can run on ARM64 machines in every plan.',
+        new Color.Color($0F, $3D, $3E),
+        false
+      ),
+      Tile(
+        'Shortcuts everywhere',
+        'Every action in the editor has a key, listed under Help, Shortcuts.',
+        new Color.Color($3A, $2E, $22),
+        false
+      ),
+      Tile(
+        'Smaller downloads',
+        'The desktop app is 38 MB lighter after dropping the bundled browser.',
+        new Color.Color($2B, $2F, $3A),
+        false
+      )
+    ],
+    Index,
+    function(Next: int): S.Msg => S.Msg.Slide(Next),
+    new Carousels.Options(Height := 200.0F, AutoAdvance := 6.0F)
+  );
+end function;
+
+function Deck(Index: int): E.Element<S.Msg>;
+begin
+  const Names: array of string := ['Kyoto', 'Lisbon', 'Reykjavik', 'Oaxaca', 'Hanoi'];
+  const Colors: array of Color.Color := [
+    new Color.Color($C8, $55, $3D), new Color.Color($2D, $30, $47), new Color.Color($5B, $8E, $7D),
+    new Color.Color($B7, $79, $1F), new Color.Color($1F, $3A, $5F)
+  ];
+  const Cards: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>(3);
+  for Depth: int := 0 to 2 do
+    const Card: int := (Index + Depth) mod Names.Length;
+    Cards.Add(Tile(Names[Card], 'Swipe right to save', Colors[Card], true));
+  end for;
+
+  return Stacks.CardStack<S.Msg>(
+    'social-deck',
+    Cards.ToArray(),
+    function(Direction: Stacks.Direction): S.Msg => S.Msg.Swipe(Direction),
+    new Stacks.Options(Width := Points(260), Height := 200.0F)
+  );
+end function;
+
+function Column(
+  Title: string; Description: string; Widget: E.Element<S.Msg>; Weight: float := 1.0F;
+  Minimum: L.Measure? := null; Align: L.Alignment := L.Alignment.Default
+): E.Element<S.Msg>;
+begin
+  return E.Size<S.Msg>(
+    E.Column<S.Msg>(
+      new L.Flow(Gap := G.Points(10), Align := Align, Clip := false),
+      G.Heading<S.Msg>(Title, Description), Widget
+    ),
+    new L.Flex(Grow := Weight, Minimum := Minimum)
+  );
+end function;
+
+// Builds the carousel, image tools and swipe deck in the original layout.
+// ## Parameters
+// - `Model`: Current values for the five examples.
+// ## Returns
+// The sections following the ticker.
+public function View(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  const Landscape: Images.Source := Scene.Picture(true);
+  return [
+    G.Heading<S.Msg>('Carousel', 'Drag, flick, scroll sideways or use the arrows and dots.'),
+    Tour(Model.Slide),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Wrap := true, Clip := false),
+      Column(
+        'Image viewer', 'Wheel to zoom around the pointer, drag to pan, double-click for 100%.',
+        Viewers.ImageViewer<S.Msg>(
+          'social-viewer',
+          Landscape,
+          Model.Picture,
+          function(Next: Viewers.Value): S.Msg => S.Msg.Picture(Next),
+          new Viewers.Options(Height := Points(260))
+        ), 3.0F, L.Measure.Logical(280)
+      ),
+      Column(
+        'Cropper', 'Drag the corners; the square keeps its shape.',
+        Croppers.ImageCropper<S.Msg>(
+          'social-crop',
+          Landscape,
+          Model.Crop,
+          function(Next: Croppers.Value): S.Msg => S.Msg.Crop(Next),
+          new Croppers.Options(Height := Points(260), Aspect := 1.0F)
+        ), 2.0F, L.Measure.Logical(240)
+      )
+    ),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
+      Column(
+        'Before and after', 'Drag the divider.',
+        Comparisons.ImageCompare<S.Msg>(
+          'social-compare',
+          Scene.Picture(false),
+          Landscape,
+          Model.Divider,
+          function(Next: float): S.Msg => S.Msg.Divider(Next),
+          new Comparisons.Options(Height := 230.0F, Aspect := 1.6F)
+        )
+      ),
+      Column(
+        'Card stack',
+        'Flick the top card away, left or right.',
+        Deck(Model.Destination),
+        Align := L.Alignment.Center
+      )
+    )
+  ];
+end function;
+
+end unit;

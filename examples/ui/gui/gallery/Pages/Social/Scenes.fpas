@@ -1,0 +1,80 @@
+unit GuiGallery.Pages.Social.Scenes;
+
+uses Fpas.Ui.MediaImages as Media, System as Sys;
+
+function Channel(Value: float): byte;
+begin
+  return cast<byte>(Sys.MathF.Min(1.0F, Sys.MathF.Max(0.0F, Value)) * 255.0F);
+end function;
+
+function Scene(Colored: bool): Media.Source;
+begin
+  const Width: int := 640;
+  const Height: int := 400;
+  const Pixels: array of byte := new byte[Width * Height * 4];
+  for Y: int := 0 to Height - 1 do
+    const V: float := cast<float>(Y) / Height;
+    for X: int := 0 to Width - 1 do
+      const U: float := cast<float>(X) / Width;
+      var R: float := 0.56F + V * 0.34F;
+      var G: float := 0.72F + V * 0.20F;
+      var B: float := 0.88F + V * 0.06F;
+      const Sun: float := (U - 0.72F) * (U - 0.72F) * 15.4F + (V - 0.24F) * (V - 0.24F) * 6.0F;
+      if Sun < 0.024F then
+        R := 1.0F;
+        G := 0.97F;
+        B := 0.86F;
+      end if;
+      const FarHill: float := 0.50F + 0.10F * Sys.MathF.Sin(
+        U * 6.0F + 0.60F
+      ) + 0.03F * Sys.MathF.Sin(U * 23.0F);
+      const NearHill: float := 0.68F + 0.06F * Sys.MathF.Sin(
+        U * 4.0F + 2.1F
+      ) + 0.02F * Sys.MathF.Sin(U * 31.0F);
+      if V > FarHill then
+        R := 0.50F;
+        G := 0.60F;
+        B := 0.62F - V * 0.08F;
+      end if;
+
+      if V > NearHill then
+        R := 0.30F - (V - NearHill) * 0.20F;
+        G := 0.45F - (V - NearHill) * 0.25F;
+        B := 0.30F;
+      end if;
+
+      if not Colored then
+        const Luminance: float := (R * 0.30F + G * 0.59F + B * 0.11F) * 0.85F + 0.05F;
+        R := Luminance;
+        G := Luminance;
+        B := Luminance;
+      end if;
+      const Offset: int := (Y * Width + X) * 4;
+      Pixels[Offset] := Channel(R);
+      Pixels[Offset + 1] := Channel(G);
+      Pixels[Offset + 2] := Channel(B);
+      Pixels[Offset + 3] := 255;
+    end for;
+  end for;
+
+  return Media.Source.Rgba(Width, Height, Pixels);
+end function;
+
+const Grayscale: Media.Source := Scene(false);
+const Color: Media.Source := Scene(true);
+
+// Returns the original gallery's landscape.
+// ## Parameters
+// - `Colored`: Selects the full-color scene.
+// ## Returns
+// The immutable picture used by the image examples.
+public function Picture(Colored: bool): Media.Source;
+begin
+  return if Colored then
+    Color
+  else
+    Grayscale
+  end if;
+end function;
+
+end unit;

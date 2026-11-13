@@ -3,7 +3,7 @@ unit Fpas.Ui.Gui.Internal.ModalFocus;
 uses
   Fpas.Ui.Gui.Internal.Focus as F, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
   Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.ExpandableCards as Cards,
-  Fpas.Ui.SwipeActions as Swipe, System as Sys;
+  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, System as Sys;
 
 // Finds the last/deepest active modal scope in traversal order.
 //
@@ -64,6 +64,25 @@ begin
       else
         Inner
       end if;
+    when E.Element.Carousel(
+      _,
+      const Slides: array of E.Element<TMsg>,
+      const Index: int,
+      _,
+      const Settings: Carousels.Options
+    ):
+      if Settings.Enabled then
+        return TopModal<TMsg>(Slides[Index], Prepared);
+      end if;
+    when E.Element.CardStack(
+      _,
+      const DeckItems: array of E.Element<TMsg>,
+      _,
+      const Settings: CardStacks.Options
+    ):
+      if Settings.Enabled and DeckItems.Length > 0 then
+        return TopModal<TMsg>(DeckItems[0], Prepared);
+      end if;
     when E.Element.Layered(
       const Children: array of E.Element<TMsg>,
       _
@@ -80,7 +99,11 @@ begin
       const Children: array of E.Element<TMsg>,
       _,
       _
-    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ):
       var Found: string? := null;
       for Child: E.Element<TMsg> in Children do
         const Next: string? := TopModal<TMsg>(Child, Prepared);

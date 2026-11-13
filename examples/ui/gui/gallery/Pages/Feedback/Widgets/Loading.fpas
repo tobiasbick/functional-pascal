@@ -1,0 +1,142 @@
+unit GuiGallery.Pages.Feedback.Widgets.Loading;
+
+uses
+  GuiGallery.Shared.Sections as G, GuiGallery.Pages.Feedback.State as M,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Cards as Cards,
+  Fpas.Ui.Spinners as Spin, Fpas.Ui.StatusSpinners as Status, Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Skeletons as Skeleton, Fpas.Ui.SkeletonGroups as Group, Fpas.Ui.Buttons as B,
+  System.Collections.Generic as Lists;
+
+// Recreates the native skeleton group's shared dither sweep.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// Grouped placeholders with the original layout.
+public function Placeholders<TMsg>(): E.Element<TMsg>;
+begin
+  return Group.SkeletonGroup<TMsg>(
+    'loading-dither', [
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center),
+        Skeleton.Skeleton<TMsg>(
+          'loading-dither-avatar',
+          L.Extent.Fixed(L.Measure.Logical(32)),
+          32.0F
+        ),
+        E.Size<TMsg>(
+          E.Column<TMsg>(
+            new L.Flow(Gap := G.Points(8)),
+            Skeleton.Skeleton<TMsg>('loading-dither-title', L.Extent.Percent(60.0F), 8.0F),
+            Skeleton.Skeleton<TMsg>('loading-dither-subtitle', L.Extent.Percent(40.0F), 8.0F)
+          ),
+          new L.Flex(Basis := L.Extent.Fill)
+        )
+      ),
+      Skeleton.Skeleton<TMsg>('loading-dither-line', Height := 8.0F)
+    ], new Group.Options(Gap := 10.0F, Dither := true)
+  );
+end function;
+
+function Inline<TMsg>(Id: string; Caption: string; Animation: Spin.Style): E.Element<TMsg>;
+begin
+  const Inverse: bool := Animation = Spin.Style.Comet;
+  const InsetX: L.Spacing := G.Points(
+    if Inverse then
+      14
+    else
+      11
+    end if
+  );
+  const InsetY: L.Spacing := G.Points(
+    if Inverse then
+      8
+    else
+      6
+    end if
+  );
+  return E.Styled<TMsg>(
+    E.Row<TMsg>(
+      new L.Flow(
+        Gap := G.Points(8), Align := L.Alignment.Center,
+        PaddingStart := InsetX, PaddingEnd := InsetX, PaddingTop := InsetY, PaddingBottom := InsetY
+      ),
+      Spin.Spinner<TMsg>(Id, 14.0F, new Spin.Options(Animation := Animation, Inverse := Inverse)),
+      E.Styled<TMsg>(
+        E.Text<TMsg>(Caption), if Inverse then
+          S.Role.InverseLabel
+        else
+          S.Role.Secondary
+        end if
+      )
+    ),
+    if Inverse then
+      S.Role.InverseSurface
+    else
+      S.Role.PillSurface
+    end if
+  );
+end function;
+
+// Recreates the dither spinner collection and the upload status example.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Model`: Current upload state.
+// - `Upload`: Starts an upload.
+// ## Returns
+// A native feedback card.
+public function Spinners<TMsg>(Model: M.Model; Upload: TMsg): E.Element<TMsg>;
+begin
+  const Styles: array of Spin.Style := [
+    Spin.Style.Comet, Spin.Style.DotMatrix, Spin.Style.FillDrain, Spin.Style.Radar,
+    Spin.Style.Ripple, Spin.Style.Transfer, Spin.Style.Orbit, Spin.Style.Bounce,
+    Spin.Style.Scan, Spin.Style.Pulse, Spin.Style.Spiral, Spin.Style.Plasma
+  ];
+  const Demos: Lists.List<E.Element<TMsg>> := new Lists.List<E.Element<TMsg>>();
+  for Animation: Spin.Style in Styles do
+    Demos.Add(
+      Spin.Spinner<TMsg>(
+        'dither-' + Animation.ToString(),
+        40.0F,
+        new Spin.Options(Animation := Animation)
+      )
+    );
+  end for;
+
+  const Caption: string := case Model.Status of
+    when Work.Status.Busy: 'Uploading';
+    when Work.Status.Success: 'Uploaded';
+    when Work.Status.Error: 'Upload failed';
+    else '';
+  end case;
+  return Cards.Card<TMsg>(
+    'dither-spinners-card', [
+      E.Styled<TMsg>(E.Text<TMsg>('Dither spinners'), S.Role.Heading),
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(20), Wrap := true, Align := L.Alignment.Center),
+        Demos.ToArray()
+      ),
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(10), Wrap := true, Align := L.Alignment.Center),
+        Inline<TMsg>('dither-saving', 'Saving…', Spin.Style.Comet),
+        Inline<TMsg>('dither-syncing', 'Syncing 24 files', Spin.Style.Orbit),
+        Inline<TMsg>('dither-connecting', 'Connecting', Spin.Style.Ripple)
+      ),
+      E.Row<TMsg>(
+        new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center),
+        B.Button<TMsg>(
+          'feedback-upload', 'Upload', Upload,
+          new B.Options(ControlSize := B.Size.Small, Enabled := Model.Status <> Work.Status.Busy)
+        ),
+        Status.StatusSpinner<TMsg>(
+          'feedback-upload-status',
+          Model.Status,
+          new Status.Options(Size := 18.0F)
+        ),
+        E.Styled<TMsg>(E.Text<TMsg>(Caption), S.Role.Secondary)
+      )
+    ], new Cards.Options(Gap := 14.0F)
+  );
+end function;
+
+end unit;

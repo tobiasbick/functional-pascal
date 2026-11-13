@@ -1,0 +1,65 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CanvasControls;
+
+uses
+  Fpas.Ui.CanvasControls as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.NodeEditors as N, Fpas.Ui.Gui.Internal.CanvasData as Data, System.Collections.Generic as Lists;
+
+function Bounds(Value: D.Bounds?): Cui.CuiRectangle;
+begin
+  var Result: Cui.CuiRectangle := new Cui.CuiRectangle();
+  if Value <> null then
+    Result.X := Value.X;
+    Result.Y := Value.Y;
+    Result.Width := Value.Width;
+    Result.Height := Value.Height;
+  end if;
+
+  return Result;
+end function;
+
+// Presents CUI's native CanvasControls widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Viewport`: Current pan and zoom.
+// - `Toggles`: Additional toggle buttons.
+// - `Changed`: Maps native proposals to messages.
+// - `Child`: Canvas underneath the rail.
+// - `Settings`: Native widget settings.
+// - `Visit`: Presents embedded content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Viewport: N.View; Toggles: array of D.Toggle; Changed: function(D.Event): TMsg; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  Visit(Child, Frame, false, L.Alignment.Default);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Items: Lists.List<Cui.CuiCanvasToggle> := new Lists.List<Cui.CuiCanvasToggle>(
+    Toggles.Length
+  );
+  const Values: Lists.List<bool> := new Lists.List<bool>(Toggles.Length);
+  for Entry: D.Toggle in Toggles do
+    Items.Add(new Cui.CuiCanvasToggle(Entry.Icon, Entry.Label));
+    Values.Add(Entry.On);
+  end for;
+  const States: array of bool := Values.ToArray();
+  const Current: Cui.CuiNodeView := Data.View(Viewport);
+  var Next: Cui.CuiNodeView := Current;
+  const Flags: int := Frame.Window.CanvasControls(
+    C.Token('canvas-controls', Id),
+    ref Next,
+    Bounds(Settings.Content),
+    Settings.Steps,
+    Items.ToArray(),
+    States,
+    P.Bits(Enabled, 1) or P.Bits(Settings.HideFit, 2) or P.Bits(Settings.StartSide, 4)
+  );
+  if Enabled and (Flags <> 0 or Next.X <> Current.X or Next.Y <> Current.Y or Next.Zoom <>
+    Current.Zoom)
+  then
+    Frame.Messages.Add(
+      Changed(new D.Event(new N.View(Next.X, Next.Y, Next.Zoom), States, (Flags and 2) <> 0))
+    );
+  end if;
+end procedure;
+
+end unit;

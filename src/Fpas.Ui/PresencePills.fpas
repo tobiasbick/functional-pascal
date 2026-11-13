@@ -1,0 +1,28 @@
+unit Fpas.Ui.PresencePills;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.LiveCursors as Live;
+
+// Presence pill settings.
+public type Options = record
+  // Avatar diameter, or zero for the default.
+  public Size: float := 0.0F;
+  // Maximum visible avatars, or zero for the default.
+  public MaxVisible: int := 0;
+end record;
+
+// Builds the native PresencePill element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `People`: Current collaborators.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function PresencePill<TMsg>(Id: string; People: array of Live.Person; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.PresencePill(Id, People, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,80 @@
+unit GuiGallery.Pages.Code.State;
+
+uses
+  GuiGallery.Pages.Code.Samples as Sample, Fpas.Ui.Markdowns as Markdown,
+  Fpas.Ui.CodeEditors as Editor, Fpas.Ui.DiffViews as Diff,
+  Fpas.Ui.HexViews as Hex, Fpas.Ui.LogConsoles as Log;
+
+// State for the editable examples on Code.
+public type Model = record
+  // Current release notes.
+  public Notes: string := Sample.Notes;
+  // Last Markdown activation.
+  public NotesStatus: string := '';
+  // Link currently under the pointer.
+  public NotesHover: string := '';
+  // Replay position in UTF-16 units, or minus one when complete.
+  public Replay: int := -1;
+  // Current editable C source.
+  public Source: string := Sample.Code;
+  // Current editable SQL source.
+  public Sql: string := 'SELECT team, COUNT(*) AS members FROM people GROUP BY team;';
+  // Latest C caret line.
+  public Line: int := 1;
+  // Latest C caret column.
+  public Column: int := 1;
+  // Number of C source lines.
+  public Lines: int := 43;
+  // Whether the C editor rejected the last edit.
+  public Full: bool := false;
+  // Whether the diff is explicitly inline.
+  public Inline: bool := false;
+  // Whether CUI currently lays the diff out inline.
+  public ActualInline: bool := false;
+  // Number of changes in the diff.
+  public Changes: int := 6;
+  // Current diff selection, or minus one.
+  public Change: int := 6;
+  // Model-owned copy of the hex viewer's fixture.
+  public Bytes: array of byte := Sample.Bytes;
+  // Hex selection.
+  public Selection: Hex.Selection := new Hex.Selection(16, 8, 23);
+  // Pending native goto request.
+  public Jump: int := -1;
+  // Entered offset in hexadecimal.
+  public Offset: string := '';
+  // Last hex overwrite status.
+  public Edited: string := '';
+  // Log console lines.
+  public Entries: array of Log.Entry := Sample.Entries;
+end record;
+
+// Messages from the native source tools.
+public type Msg = variant
+  // Apply a link or task activation.
+  Markdown(Value: Markdown.Event);
+  // Replay the release notes.
+  Replay;
+  // Advance the Markdown replay.
+  Tick;
+  // Apply C source or cursor changes.
+  Code(Value: Editor.Event);
+  // Update the SQL source.
+  Sql(Value: Editor.Event);
+  // Switch the diff layout.
+  Mode(Index: int);
+  // Apply native diff state.
+  Diff(Value: Diff.Event);
+  // Move to the next or previous diff change.
+  Navigate(Delta: int);
+  // Apply a hex selection or overwrite.
+  Hex(Value: Hex.Event);
+  // Edit the go-to field.
+  Offset(Text: string);
+  // Select the submitted offset.
+  GoTo(Text: string);
+  // Clear the log lines.
+  Clear;
+end variant;
+
+end unit;

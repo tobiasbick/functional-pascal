@@ -1,0 +1,149 @@
+unit GuiGallery.Pages.EditingTools.Samples;
+
+uses
+  Fpas.Ui.CurveEditors as C, Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T,
+  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.Graphics as Color, System as Sys;
+
+// The original crate material and transform properties.
+public const Inspector: array of I.Group := [
+  new I.Group(
+    'Transform', [
+      new I.Property('Position', I.Value.Vector([12.5F, 0.0F, -4.25F]), Step := 0.05F, Digits := 2),
+      new I.Property('Rotation', I.Value.Vector([0.0F, 45.0F, 0.0F]), Step := 1.0F, Digits := 0),
+      new I.Property('Scale', I.Value.Vector([1.0F, 1.0F, 1.0F]), Step := 0.01F, Digits := 2)
+    ]
+  ),
+  new I.Group(
+    'Material', [
+      new I.Property('Name', I.Value.Text('crate_large_02'), Capacity := 32),
+      new I.Property('Shader', I.Value.Choice(['Standard PBR', 'Unlit', 'Toon', 'Glass'], 0)),
+      new I.Property('Base color', I.Value.Color(new Color.Color($C2, $6A, $3D, 255))),
+      new I.Property('Roughness', I.Value.Number(0.42F), Maximum := 1.0F, Step := 0.01F),
+      new I.Property('Metallic', I.Value.Number(0.0F), Maximum := 1.0F, Step := 0.01F),
+      new I.Property('Emission', I.Value.Number(1.6F), Step := 0.1F, Suffix := 'nits'),
+      new I.Property('Double sided', I.Value.Boolean(false))
+    ]
+  ),
+  new I.Group(
+    'Shadows', [
+      new I.Property('Cast shadows', I.Value.Boolean(true)),
+      new I.Property('Layer', I.Value.Integer(3), Maximum := 31.0F)
+    ], Open := false
+  )
+];
+
+// The original easing curve with one free tangent pair.
+public const Curve: array of C.Key := [
+  new C.Key(0.0F, 0.0F),
+  new C.Key(0.55F, 0.66F, -0.22F, -0.42F, 0.24F, 0.46F, C.Mode.Free),
+  new C.Key(1.20F, 1.08F),
+  new C.Key(2.0F, 1.0F)
+];
+
+// The original flame ramp, including its transparent endpoint.
+public const Ramp: array of G.Stop := [
+  new G.Stop(0.0F, new Color.Color($FF, $F1, $C1, $FF)),
+  new G.Stop(0.24F, new Color.Color($FF, $B1, $4A, $FF)),
+  new G.Stop(0.58F, new Color.Color($E2, $55, $2B, $FF)),
+  new G.Stop(1.0F, new Color.Color($5C, $1F, $16, $00))
+];
+
+function Key(Time: float; Value: float; Mode: C.Mode; Selected: bool := false): T.Key;
+begin
+  return new T.Key(new C.Key(Time, Value, Interpolation := Mode), Selected);
+end function;
+
+function Smooth(Time: float; Value: float): T.Key;
+begin
+  return Key(Time, Value, C.Mode.Smooth);
+end function;
+
+function Linear(Time: float; Value: float): T.Key;
+begin
+  return Key(Time, Value, C.Mode.Linear);
+end function;
+
+// The original hero, camera and sound tracks.
+public const Tracks: array of T.Track := [
+  new T.Track('Hero', Sys.Char.ConvertFromUtf32($E19F)),
+  new T.Track(
+    'Position X', Depth := 1, Capacity := 32,
+    Keys := [
+      Smooth(0.0F, 40.0F),
+      Smooth(1.25F, 250.0F),
+      Smooth(2.25F, 380.0F),
+      Smooth(3.5F, 520.0F),
+      Smooth(5.0F, 600.0F)
+    ]
+  ),
+  new T.Track(
+    'Position Y', Depth := 1, Capacity := 32,
+    Keys := [
+      Smooth(0.0F, 0.0F),
+      Smooth(1.25F, 0.0F),
+      Smooth(1.75F, 72.0F),
+      Smooth(2.25F, 0.0F),
+      Key(4.0F, 0.0F, C.Mode.Step)
+    ]
+  ),
+  new T.Track(
+    'Rotation', Depth := 1, Capacity := 32,
+    Keys := [
+      Smooth(0.0F, 0.0F),
+      Smooth(1.25F, -8.0F),
+      Key(1.75F, 12.0F, C.Mode.Smooth, true),
+      Smooth(2.25F, 0.0F),
+      Smooth(3.5F, 4.0F)
+    ]
+  ),
+  new T.Track(
+    'Scale', Depth := 1, Capacity := 32,
+    Keys := [Smooth(0.0F, 1.0F), Linear(2.25F, 1.0F), Linear(2.375F, 0.86F), Smooth(2.625F, 1.0F)]
+  ),
+  new T.Track(
+    'Opacity', Depth := 1, Capacity := 32,
+    Keys := [Linear(0.0F, 0.0F), Linear(0.5F, 1.0F), Linear(4.5F, 1.0F), Linear(5.0F, 0.0F)]
+  ),
+  new T.Track('Camera', Sys.Char.ConvertFromUtf32($E1A5), Color := 4),
+  new T.Track(
+    'Zoom', Depth := 1, Capacity := 32,
+    Keys := [Smooth(0.0F, 1.0F), Smooth(3.0F, 1.0F), Smooth(4.25F, 1.6F), Smooth(5.0F, 1.6F)]
+  ),
+  new T.Track(
+    'Pan', Depth := 1, Capacity := 32,
+    Keys := [Linear(0.0F, -80.0F), Linear(5.0F, 120.0F)]
+  ),
+  new T.Track(
+    'Sound', Sys.Char.ConvertFromUtf32($E55A), Color := 3,
+    Clips := [
+      new T.Clip(0.375F, 2.25F, 0.0F, 'Footsteps'),
+      new T.Clip(3.0F, 4.625F, 0.75F, 'Street ambience')
+    ]
+  )
+];
+
+// Axis range and units for the curve of a track.
+public type Axis = record
+  // Minimum visible value.
+  public Minimum: float;
+  // Maximum visible value.
+  public Maximum: float;
+  // Readout label.
+  public Label: string;
+end record;
+
+// Axis ranges indexed by timeline track.
+public const Axes: array of Axis := [
+  new Axis(0.0F, 1.0F, ''),
+  new Axis(0.0F, 640.0F, 'Pixels'),
+  new Axis(-10.0F, 100.0F, 'Pixels'),
+  new Axis(-20.0F, 20.0F, 'Degrees'),
+  new Axis(0.6F, 1.2F, 'Scale'),
+  new Axis(0.0F, 1.0F, 'Opacity'),
+  new Axis(0.0F, 1.0F, ''),
+  new Axis(0.8F, 2.0F, 'Zoom'),
+  new Axis(-150.0F, 150.0F, 'Pixels'),
+  new Axis(0.0F, 1.0F, '')
+];
+
+end unit;

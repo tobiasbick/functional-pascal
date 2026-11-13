@@ -1,0 +1,83 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Toolbar;
+
+uses
+  Fpas.Ui.Toolbars as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+function Button(Window: Cui.CuiWindow; Value: D.Button; Primary: bool): int;
+begin
+  const Pressed: bool? := Value.Toggle;
+  const Toggle: int := if Pressed = null then
+    -1
+  else
+    P.Bits(Pressed = true, 1)
+  end if;
+  return Window.ToolbarButton(
+    Value.Icon, Value.Label, Value.Tooltip, Value.Shortcut, Toggle, cast<int>(Value.Tone),
+    P.Bits(Value.Disabled, 1) or P.Bits(Value.Flyout, 2) or P.Bits(Primary, 4)
+  );
+end function;
+
+procedure ItemsDraw<TMsg>(Frame: C.State<TMsg>; Items: array of D.Item; Changed: function(D.Event): TMsg; Enabled: bool; ref Index: int);
+begin
+  for Item: D.Item in Items do
+    var Value: int := -1;
+    var Action: bool := true;
+    case Item of
+      when D.Item.Button(const Options: D.Button):
+        Value := Button(Frame.Window, Options, false);
+      when D.Item.Primary(const Options: D.Button):
+        Value := Button(Frame.Window, Options, true);
+      when D.Item.Radio(
+        const Icons: array of string,
+        const Labels: array of string,
+        const Selected: int
+      ):
+        Value := Frame.Window.ToolbarRadio('radio-' + Index.ToString(), Icons, Labels, Selected);
+      when D.Item.Cycle(const Labels: array of string, const Selected: int, const Tooltip: string):
+        Value := Frame.Window.ToolbarCycle('cycle-' + Index.ToString(), Labels, Selected, Tooltip);
+      when D.Item.Group(const Children: array of D.Item):
+        Action := false;
+        Frame.Window.BeginToolbarGroup();
+        ItemsDraw<TMsg>(Frame, Children, Changed, Enabled, ref Index);
+        Frame.Window.EndToolbarGroup();
+      when D.Item.Separator:
+        Action := false;
+        Frame.Window.ToolbarSeparator();
+      when D.Item.Spacer:
+        Action := false;
+        Frame.Window.ToolbarSpacer();
+    end case;
+
+    if Action then
+      if Enabled and Value >= 0 then
+        Frame.Messages.Add(Changed(new D.Event(Index, Value)));
+      end if;
+
+      Index := Index + 1;
+    end if;
+  end for;
+end procedure;
+
+// Presents CUI's native Toolbar widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Items`: Buttons, choices and groups in display order.
+// - `Changed`: Maps native proposals to messages.
+// - `Settings`: Native widget settings.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'toolbar';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  var Index: int := 0;
+  Frame.Window.BeginToolbar(Token, Settings.Style, Settings.HideBorder, Enabled);
+  ItemsDraw<TMsg>(Frame, Items, Changed, Enabled, ref Index);
+  Frame.Window.EndToolbar();
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

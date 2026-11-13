@@ -13,7 +13,8 @@ public sealed partial class CuiWindow : IDisposable
     {
         Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter,
         Accordion, ExpandableCard, SwipeItem, Tree, VirtualList, VirtualRow, Reorder, ReorderItem,
-        Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard
+        Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard, SkeletonGroup,
+        Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil
     }
     private readonly record struct LayoutScope(Layout Kind, int Node = -1, object? Data = null);
 

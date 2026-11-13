@@ -1,0 +1,67 @@
+unit Fpas.Ui.Internal.Mapping.Display;
+
+uses
+  Fpas.Ui.Texts as Texts,
+  Fpas.Ui.Images as Images,
+  Fpas.Ui.Canvases as Canvases,
+  Fpas.Ui.Veils as Veils, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.MediaImages as Media, System as Sys;
+
+// Translates callbacks and children for native display elements.
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Element to map.
+// - `Messages`: Converts proposed messages.
+// - `Content`: Maps a nested element.
+// ## Returns
+// The element in the parent message type.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent; Content: function(E.Element<TChild>): E.Element<TParent>): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
+      return E.Element<TParent>.NativeText(Text, Role);
+    when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
+      return E.Element<TParent>.Icon(Glyph, Size, Color);
+    when E.Element.Emoji(const Glyph: string, const Size: float):
+      return E.Element<TParent>.Emoji(Glyph, Size);
+    when E.Element.Keycap(const Keys: string):
+      return E.Element<TParent>.Keycap(Keys);
+    when E.Element.Image(
+      const Id: string,
+      const Source: Media.Source,
+      const Settings: Images.Options
+    ):
+      return E.Element<TParent>.Image(Id, Source, Settings);
+    when E.Element.Canvas(
+      const Id: string,
+      const Drawing: array of Canvases.Shape,
+      const Clicked: function(Canvases.Event): TChild,
+      const Settings: Canvases.Options
+    ):
+      return E.Element<TParent>.Canvas(
+        Id,
+        Drawing,
+        function(Event: Canvases.Event): TParent => Messages(Clicked(Event)),
+        Settings
+      );
+    when E.Element.Veil(
+      const Id: string,
+      const Revealed: bool,
+      const Changed: function(bool): TChild,
+      const Child: E.Element<TChild>,
+      const Settings: Veils.Options
+    ):
+      return E.Element<TParent>.Veil(
+        Id,
+        Revealed,
+        function(Visible: bool): TParent => Messages(Changed(Visible)),
+        Content(Child),
+        Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a native display widget.');
+  end case;
+end function;
+
+end unit;

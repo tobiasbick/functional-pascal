@@ -1,0 +1,32 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Presence;
+
+uses Fpas.Ui.Presences as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.ChartData as Colors;
+
+// Draws an overlapping native group of active and away users.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Users`: Users in visible order.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Users: array of W.User; Settings: W.Options);
+begin
+  const Role: string := 'presence';
+  const Token: string := C.Token(Role, Id);
+  const Data: array of Cui.CuiPresenceUser := new Cui.CuiPresenceUser[Users.Length];
+  for Index: int := 0 to Users.Length - 1 do
+    const User: W.User := Users[Index];
+    Data[Index] := new Cui.CuiPresenceUser(
+      User.Name,
+      Colors.Color(User.Color),
+      User.Avatar,
+      User.Idle
+    );
+  end for;
+
+  Frame.Window.Presence(Token, Data, Settings.MaximumVisible, Settings.Size);
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+end procedure;
+
+end unit;

@@ -190,6 +190,14 @@ begin
     Reject(Location, 'Unknown reading direction.');
   end if;
 
+  if not Sys.Single.IsFinite(Settings.CornerRadius) or Settings.CornerRadius < 0.0F then
+    Reject(Location, 'The corner radius must be finite and nonnegative.');
+  end if;
+
+  if Settings.Background <> null or Settings.CornerRadius > 0.0F then
+    RequireProfile(Profile, V.Target.Graphical, Location);
+  end if;
+
   if Settings.ReadingDirection <> L.Direction.Inherit then
     RequireProfile(Profile, V.Target.Graphical, Location);
   end if;

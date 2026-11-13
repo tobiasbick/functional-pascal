@@ -1,0 +1,335 @@
+unit Fpas.Ui.Internal.Mapping.DeveloperTools;
+
+uses
+  Fpas.Ui.ProblemsPanels as ProblemsPanels,
+  Fpas.Ui.Pipelines as Pipelines,
+  Fpas.Ui.Keymaps as Keymaps,
+  Fpas.Ui.CommitGraphs as CommitGraphs,
+  Fpas.Ui.DependencyGraphs as DependencyGraphs,
+  Fpas.Ui.NetworkWaterfalls as NetworkWaterfalls,
+  Fpas.Ui.TraceViewers as TraceViewers,
+  Fpas.Ui.TestExplorers as TestExplorers,
+  Fpas.Ui.StackTraces as StackTraces,
+  Fpas.Ui.ResponseStatuses as ResponseStatuses,
+  Fpas.Ui.Uptimes as Uptimes,
+  Fpas.Ui.TimeHistograms as TimeHistograms,
+  Fpas.Ui.Coverages as Coverages,
+  Fpas.Ui.Blames as Blames,
+  Fpas.Ui.ApiExplorers as ApiExplorers,
+  Fpas.Ui.KeyValueEditors as KeyValueEditors,
+  Fpas.Ui.QueryBuilders as QueryBuilders,
+  Fpas.Ui.SchedulePickers as SchedulePickers,
+  Fpas.Ui.RegexTesters as RegexTesters,
+  Fpas.Ui.RequestBars as RequestBars,
+  Fpas.Ui.FeatureFlagEditors as FeatureFlagEditors,
+  Fpas.Ui.Elements as E, System as Sys;
+
+// Translates the proposal callbacks of developer widgets.
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Prepared developer widget.
+// - `Messages`: Maps each child proposal.
+// ## Returns
+// A widget retaining the original data and options.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.Problems(
+      const Id: string,
+      const Diagnostics: array of ProblemsPanels.Diagnostic,
+      const Changed: function(ProblemsPanels.Event): TChild,
+      const Settings: ProblemsPanels.Options
+    ):
+      return E.Element<TParent>.Problems(
+        Id,
+        Diagnostics,
+        function(Proposed: ProblemsPanels.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.Pipeline(
+      const Id: string,
+      const Stages: array of string,
+      const Jobs: array of Pipelines.Job,
+      const Selection: int,
+      const Changed: function(Pipelines.Event): TChild,
+      const Settings: Pipelines.Options
+    ):
+      return E.Element<TParent>.Pipeline(
+        Id,
+        Stages,
+        Jobs,
+        Selection,
+        function(Proposed: Pipelines.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.Keymap(
+      const Id: string,
+      const Bindings: array of Keymaps.Binding,
+      const Categories: array of string,
+      const Modifiers: int,
+      const Changed: function(Keymaps.Event): TChild,
+      const Settings: Keymaps.Options
+    ):
+      return E.Element<TParent>.Keymap(
+        Id,
+        Bindings,
+        Categories,
+        Modifiers,
+        function(Proposed: Keymaps.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.CommitGraph(
+      const Id: string,
+      const Commits: array of CommitGraphs.Commit,
+      const Selection: int,
+      const Changed: function(CommitGraphs.Event): TChild,
+      const Settings: CommitGraphs.Options
+    ):
+      return E.Element<TParent>.CommitGraph(
+        Id,
+        Commits,
+        Selection,
+        function(Proposed: CommitGraphs.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.DependencyGraph(
+      const Id: string,
+      const Vertices: array of DependencyGraphs.Vertex,
+      const Edges: array of DependencyGraphs.Edge,
+      const Selection: int,
+      const Changed: function(DependencyGraphs.Event): TChild,
+      const Settings: DependencyGraphs.Options
+    ):
+      return E.Element<TParent>.DependencyGraph(
+        Id,
+        Vertices,
+        Edges,
+        Selection,
+        function(Proposed: DependencyGraphs.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.NetworkWaterfall(
+      const Id: string,
+      const Requests: array of NetworkWaterfalls.Request,
+      const Selection: int,
+      const Changed: function(NetworkWaterfalls.Event): TChild,
+      const Settings: NetworkWaterfalls.Options
+    ):
+      return E.Element<TParent>.NetworkWaterfall(
+        Id,
+        Requests,
+        Selection,
+        function(Proposed: NetworkWaterfalls.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.TraceViewer(
+      const Id: string,
+      const Tracks: array of TraceViewers.Track,
+      const Spans: array of TraceViewers.Span,
+      const Markers: array of TraceViewers.Marker,
+      const Value: TraceViewers.View,
+      const Selection: int,
+      const Changed: function(TraceViewers.Event): TChild,
+      const Settings: TraceViewers.Options
+    ):
+      return E.Element<TParent>.TraceViewer(
+        Id,
+        Tracks,
+        Spans,
+        Markers,
+        Value,
+        Selection,
+        function(Proposed: TraceViewers.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.TestExplorer(
+      const Id: string,
+      const Entries: array of TestExplorers.Item,
+      const Changed: function(TestExplorers.Event): TChild,
+      const Settings: TestExplorers.Options
+    ):
+      return E.Element<TParent>.TestExplorer(
+        Id,
+        Entries,
+        function(Proposed: TestExplorers.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.StackTrace(
+      const Id: string,
+      const Frames: array of StackTraces.Frame,
+      const Changed: function(StackTraces.Event): TChild,
+      const Settings: StackTraces.Options
+    ):
+      return E.Element<TParent>.StackTrace(
+        Id,
+        Frames,
+        function(Proposed: StackTraces.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.ResponseStatus(
+      const Id: string,
+      const Status: int,
+      const Seconds: double,
+      const Bytes: double,
+      const Settings: ResponseStatuses.Options
+    ):
+      return E.Element<TParent>.ResponseStatus(Id, Status, Seconds, Bytes, Settings);
+    when E.Element.Uptime(
+      const Id: string,
+      const Services: array of Uptimes.Service,
+      const LastDay: Sys.DateOnly,
+      const Settings: Uptimes.Options
+    ):
+      return E.Element<TParent>.Uptime(Id, Services, LastDay, Settings);
+    when E.Element.TimeHistogram(
+      const Id: string,
+      const Start: double,
+      const Bucket: double,
+      const Buckets: int,
+      const SeriesData: array of TimeHistograms.Series,
+      const Value: TimeHistograms.Range,
+      const Changed: function(TimeHistograms.Event): TChild,
+      const Settings: TimeHistograms.Options
+    ):
+      return E.Element<TParent>.TimeHistogram(
+        Id,
+        Start,
+        Bucket,
+        Buckets,
+        SeriesData,
+        Value,
+        function(Proposed: TimeHistograms.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.Coverage(
+      const Id: string,
+      const ReportFiles: array of Coverages.File,
+      const Changed: function(Coverages.Event): TChild,
+      const Settings: Coverages.Options
+    ):
+      return E.Element<TParent>.Coverage(
+        Id,
+        ReportFiles,
+        function(Proposed: Coverages.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.Blame(
+      const Id: string,
+      const Lines: array of string,
+      const LineCommits: array of int,
+      const Revisions: array of Blames.Revision,
+      const Changed: function(Blames.Event): TChild,
+      const Settings: Blames.Options
+    ):
+      return E.Element<TParent>.Blame(
+        Id,
+        Lines,
+        LineCommits,
+        Revisions,
+        function(Proposed: Blames.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.ApiExplorer(
+      const Id: string,
+      const Endpoints: array of ApiExplorers.Endpoint,
+      const Selection: int,
+      const Changed: function(ApiExplorers.Event): TChild,
+      const Settings: ApiExplorers.Options
+    ):
+      return E.Element<TParent>.ApiExplorer(
+        Id,
+        Endpoints,
+        Selection,
+        function(Proposed: ApiExplorers.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.KeyValueEditor(
+      const Id: string,
+      const Pairs: array of KeyValueEditors.Pair,
+      const Changed: function(KeyValueEditors.Event): TChild,
+      const Settings: KeyValueEditors.Options
+    ):
+      return E.Element<TParent>.KeyValueEditor(
+        Id,
+        Pairs,
+        function(Proposed: KeyValueEditors.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.QueryBuilder(
+      const Id: string,
+      const Fields: array of QueryBuilders.Field,
+      const RulesData: array of QueryBuilders.Rule,
+      const Changed: function(QueryBuilders.Event): TChild,
+      const Settings: QueryBuilders.Options
+    ):
+      return E.Element<TParent>.QueryBuilder(
+        Id,
+        Fields,
+        RulesData,
+        function(Proposed: QueryBuilders.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.SchedulePicker(
+      const Id: string,
+      const Expression: string,
+      const Changed: function(SchedulePickers.Event): TChild,
+      const Settings: SchedulePickers.Options
+    ):
+      return E.Element<TParent>.SchedulePicker(
+        Id,
+        Expression,
+        function(Proposed: SchedulePickers.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.RegexTester(
+      const Id: string,
+      const Pattern: string,
+      const Sample: string,
+      const Modifiers: int,
+      const Changed: function(RegexTesters.Event): TChild,
+      const Settings: RegexTesters.Options
+    ):
+      return E.Element<TParent>.RegexTester(
+        Id,
+        Pattern,
+        Sample,
+        Modifiers,
+        function(Proposed: RegexTesters.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.RequestBar(
+      const Id: string,
+      const Method: int,
+      const Url: string,
+      const Changed: function(RequestBars.Event): TChild,
+      const Settings: RequestBars.Options
+    ):
+      return E.Element<TParent>.RequestBar(
+        Id,
+        Method,
+        Url,
+        function(Proposed: RequestBars.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    when E.Element.FeatureFlags(
+      const Id: string,
+      const Entries: array of FeatureFlagEditors.Flag,
+      const Environments: array of string,
+      const Changed: function(FeatureFlagEditors.Event): TChild,
+      const Settings: FeatureFlagEditors.Options
+    ):
+      return E.Element<TParent>.FeatureFlags(
+        Id,
+        Entries,
+        Environments,
+        function(Proposed: FeatureFlagEditors.Event): TParent => Messages(Changed(Proposed)),
+        Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a developer widget.');
+  end case;
+end function;
+
+end unit;

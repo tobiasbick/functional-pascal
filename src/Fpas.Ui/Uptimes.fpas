@@ -1,0 +1,37 @@
+unit Fpas.Ui.Uptimes;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+// Data for the native Uptime widget.
+public type Service = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Days supplied to CUI.
+  public Days: array of float;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native Uptime widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Services`: Model-owned services data.
+// - `LastDay`: Model-owned lastday data.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Uptime<TMsg>(Id: string; Services: array of Service; LastDay: Sys.DateOnly; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Uptime(Id, Services, LastDay, Settings ?? new Options());
+end function;
+
+end unit;

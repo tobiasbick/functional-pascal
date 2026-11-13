@@ -1,0 +1,43 @@
+unit Fpas.Ui.Gui.Internal.Widgets.DiffView;
+
+uses
+  Fpas.Ui.DiffViews as D, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Renders the native DiffView and dispatches its proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Before`: Previous source.
+// - `After`: Updated source.
+// - `Current`: Selected change, or minus one.
+// - `Changed`: Maps diff and selection updates.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Before: string; After: string; Current: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'diff-view';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Result: Cui.CuiDiffViewEvent? := Frame.Window.DiffView(
+    Token, Before, After, Current, Settings.Language, Settings.OldTitle, Settings.NewTitle,
+    Settings.Context, Width.Kind, Width.Value, Settings.Height, Settings.Size,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Inline, 2) or P.Bits(not Settings.Fold, 4)
+    or P.Bits(Settings.IgnoreLineEndings, 8) or P.Bits(Focus, 16)
+  );
+  if Enabled then
+    case Result of
+      when is Cui.CuiDiffViewEvent as Event:
+        Frame.Messages.Add(Changed(new D.Event(Event.Selected, Event.Count, Event.Inline)));
+      else
+    end case;
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

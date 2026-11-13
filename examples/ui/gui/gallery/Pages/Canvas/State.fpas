@@ -1,0 +1,75 @@
+unit GuiGallery.Pages.Canvas.State;
+
+uses
+  Fpas.Ui.FormatBars as F, Fpas.Ui.NodeEditors as N, Fpas.Ui.CanvasControls as C,
+  Fpas.Ui.Toolbars as T, Fpas.Ui.SelectionBars as B, Fpas.Ui.Styles as S;
+
+// Position of a node in the canvas example.
+public type Position = record
+  // Horizontal canvas point.
+  public X: float;
+  // Vertical canvas point.
+  public Y: float;
+end record;
+
+// Application state for Canvas and bars.
+public type Model = record
+  // Whether numeric tools are enabled.
+  public Numbers: bool := true;
+  // Bold toolbar toggle.
+  public Bold: bool := false;
+  // Italic toolbar toggle.
+  public Italic: bool := false;
+  // Selected Move, Draw or Text mode.
+  public Mode: int := 0;
+  // Format of the example selection.
+  public Format: F.Value := new F.Value(S.Tone.Rose, true, false, false, 0, 44.0F, 0, 0);
+  // Number of confirmed deletes.
+  public Deleted: int := 0;
+  // Current canvas transform.
+  public Viewport: N.View := new N.View(10.0F, 6.0F, 1.0F);
+  // Current position of each node.
+  public Positions: array of Position := [
+    new Position(36.0F, 64.0F),
+    new Position(36.0F, 206.0F),
+    new Position(330.0F, 124.0F)
+  ];
+  // Whether the graph grid is visible.
+  public Grid: bool := true;
+  // Current Layers toggle.
+  public Layers: bool := false;
+  // Whether the result is bookmarked.
+  public Saved: bool := false;
+  // Output scale choice.
+  public Scale: int := 1;
+  // Output format choice.
+  public Kind: int := 0;
+  // The file selection.
+  public Picked: array of bool := [true, true, true, false, false];
+  // Seconds elapsed on the collaborator demo.
+  public Seconds: float := 0.0F;
+end record;
+
+// Proposals from the native widgets on Canvas and bars.
+public type Msg = variant
+  // Grouped toolbar action.
+  Tools(Value: T.Event);
+  // Format bar edit or activation.
+  Format(Value: F.Event);
+  // Pan, zoom, or node movement.
+  Graph(Value: N.Event);
+  // Rail zoom, fit or toggle.
+  Rail(Value: C.Event);
+  // Floating result toolbar action.
+  ResultTools(Value: T.Event);
+  // Changes one selected file.
+  Pick(Index: int; Value: bool);
+  // Bulk action or clear selection.
+  Bulk(Value: B.Event);
+  // Updates collaborator positions.
+  Tick(Seconds: float);
+  // Activation without an application side effect in the original example.
+  Preview;
+end variant;
+
+end unit;

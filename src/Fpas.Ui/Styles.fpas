@@ -54,6 +54,14 @@ public type Role = enum: byte
   CompactLabel;
   // A success-colored CUI glyph at fourteen logical points.
   SuccessGlyph;
+  // Inverse foreground surface with rounded corners.
+  InverseSurface;
+  // Rounded outlined surface for compact labels.
+  PillSurface;
+  // Medium text on an inverse surface.
+  InverseLabel;
+  // A muted CUI icon glyph at fifteen logical points.
+  CompactMutedIcon;
 end enum;
 
 // Native CUI semantic colors shared by graphical widgets.

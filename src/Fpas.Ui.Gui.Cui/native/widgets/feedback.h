@@ -19,6 +19,8 @@ CUI_API void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
 
 /** Draws a native spinner with stable inspection identity and logical diameter. */
 CUI_API void fpas_cui_spinner(cui_ctx *ui, const char *id, float size);
+CUI_API void fpas_cui_spinner_styled(cui_ctx *ui, const char *id, float size, int style,
+    int color, uint32_t rgba, int track, uint32_t track_rgba);
 
 /** Draws native capacity usage with stable identity and literal label/unit.
  * used and total are finite nonnegative values; total zero uses CUI's empty track. */

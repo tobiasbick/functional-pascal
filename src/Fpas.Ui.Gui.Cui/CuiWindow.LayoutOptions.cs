@@ -4,6 +4,30 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    /// <summary>Applies color and corner radius to the current container.</summary>
+    /// <param name="rgba">Straight-alpha RGBA channels packed low to high.</param>
+    /// <param name="radius">Corner radius in logical units.</param>
+    public void SurfaceLast(uint rgba, float radius)
+    {
+        CheckFrame();
+        if (!float.IsFinite(radius) || radius < 0) throw new ArgumentOutOfRangeException(nameof(radius));
+        NativeMethods.Surface(context, NativeMethods.LastNode(context), rgba, radius);
+    }
+
+    /// <summary>Draws static text with an explicit typeface, size and color.</summary>
+    /// <param name="text">Text to draw.</param>
+    /// <param name="font">Native body, medium, display or mono face.</param>
+    /// <param name="size">Logical size or zero for the theme default.</param>
+    /// <param name="rgba">Straight-alpha RGBA channels packed low to high.</param>
+    public void FormattedText(string text, int font, float size, uint rgba)
+    {
+        CheckFrame();
+        Utf8.Validate(text, nameof(text));
+        if (font is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(font));
+        if (!float.IsFinite(size) || size < 0) throw new ArgumentOutOfRangeException(nameof(size));
+        NativeMethods.FormattedText(context, text, font, size, rgba);
+    }
+
     /// <summary>Opens a native stack whose children paint over one another.</summary>
     /// <param name="alignment">Horizontal default/start/center/end/stretch, zero through four.</param>
     /// <param name="justification">Vertical start/center/end/between/around, zero through four.</param>

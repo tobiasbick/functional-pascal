@@ -1,0 +1,199 @@
+unit GalleryVoiceAiContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as G, GuiGallery.App.Update as U, GuiGallery.App.View as V,
+  GuiGallery.Pages.Voice.State as VoicePage, GuiGallery.Pages.Voice.Update as VoiceUpdate,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO;
+
+procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(Model: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
+  begin
+    const Next: Mvu.Transition<G.Model, G.Msg> := U.Update(Model, Message);
+    Latest := Next.Model;
+    return Next;
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if Key <> 0 then
+      Window.SetKey(Key, true, Modifiers);
+      Window.SetKey(Key, false, Modifiers);
+      Key := 0;
+    end if;
+
+    if Input <> '' then
+      Window.InputText(Input);
+      Input := '';
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session<G.Msg>; Frames: int := 2);
+  begin
+    for Index: int := 1 to Frames do
+      A.Check(Session.Step(), 'The gallery closed.');
+    end for;
+  end procedure;
+
+  procedure Click(Session: Gui.Session<G.Msg>; Id: string; Fraction: float := 0.5F);
+  begin
+    const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Bounds.Width > 0.0F and Bounds.Height > 0.0F, 'Missing native bounds for ' + Id);
+    X := Bounds.X + Bounds.Width * Fraction;
+    Y := Bounds.Y + Bounds.Height * 0.5F;
+    Step(Session, 1);
+    Button := 1;
+    Step(Session, 1);
+    Button := 0;
+    Step(Session);
+  end procedure;
+
+  procedure Press(Session: Gui.Session<G.Msg>; NativeKey: int; Mods: int := 0);
+  begin
+    Key := NativeKey;
+    Modifiers := Mods;
+    Step(Session);
+  end procedure;
+
+  procedure CheckVoice(Session: Gui.Session<G.Msg>);
+  begin
+    Click(Session, 'voice-note-0/play');
+    A.Check(Latest.Voice.Notes[0].Playback.Playing, 'Play did not start the note.');
+    Click(Session, 'voice-note-0/speed');
+    A.Check(Latest.Voice.Notes[0].Playback.Speed = 1.5F, 'Speed did not advance to 1.5×.');
+    Click(Session, 'voice-note-0/seek', 0.75F);
+    A.Check(Latest.Voice.Notes[0].Playback.Position > 5.0F, 'The note did not seek.');
+    Click(Session, 'voice-clip', 0.6F);
+    const Progress: float := Latest.Voice.Progress;
+    Press(Session, 8);
+    A.Check(
+      Progress > 0.55F and Latest.Voice.Progress > Progress,
+      'Clip click and Right must seek.'
+    );
+    Click(Session, 'voice-composer/record');
+    A.Check(Latest.Voice.Editor.Take <> null, 'Record did not enter recorder mode.');
+    A.Send(Session, G.Msg.Voice(VoicePage.Msg.Tick(0.25F)));
+    Press(Session, 3);
+    A.Check(
+      Latest.Voice.Editor.Take = null and Latest.Voice.Notes.Length = 1,
+      'Escape did not discard the take.'
+    );
+    Click(Session, 'voice-composer/record');
+    A.Send(Session, G.Msg.Voice(VoicePage.Msg.Tick(0.25F)));
+    Click(Session, 'voice-composer/send');
+    A.Check(
+      Latest.Voice.Editor.Take = null and Latest.Voice.Notes.Length = 2
+      and Latest.Voice.Notes[
+        1
+      ].Levels.Length = 64 and Latest.Voice.Notes[1].Playback.Duration > 0.0F,
+      'Sending a take did not add a resampled voice note.'
+    );
+    Click(Session, 'voice-call/mute');
+    A.Check(Latest.Voice.Muted, 'Mute did not update the microphone state.');
+    Click(Session, 'voice-call/end');
+    A.Check(Latest.Voice.Timeline.Levels.Length = 0, 'End did not reset the timeline.');
+    Click(Session, 'voice-orb');
+    A.Check(Latest.Voice.OrbListening, 'The legacy orb did not activate.');
+  end procedure;
+
+  procedure CheckAi(Session: Gui.Session<G.Msg>);
+  begin
+    Click(Session, 'ai-reasoning/toggle');
+    A.Check(A.Control(Session, 'ai-reasoning').Value = 'True', 'Reasoning did not open.');
+    Click(Session, 'ai-search/toggle');
+    A.Check(A.Control(Session, 'ai-search').Value = 'True', 'Tool payload did not open.');
+    Click(Session, 'ai-search/toggle');
+    Click(Session, 'ai-reasoning/toggle');
+    Click(Session, 'ai-suggestions/0');
+    A.Check(
+      Latest.AI.Editor.Draft = 'Explain this code: ',
+      'The suggestion did not seed the draft.'
+    );
+    Click(Session, 'ai-composer/editor');
+    Press(Session, 2, 1);
+    A.Check(
+      Latest.AI.Editor.Draft.Contains(Sys.Convert.ToChar(10)) and not Latest.AI.Editor.Busy,
+      'Shift+Enter did not add a line.'
+    );
+    Input := 'é';
+    Step(Session);
+    A.Check(Latest.AI.Editor.Draft.Contains('é'), 'The composer lost UTF-8 input.');
+    Press(Session, 2);
+    A.Check(Latest.AI.Editor.Busy and Latest.AI.Editor.Draft = '', 'Enter did not send the draft.');
+    A.Check(A.Control(Session, 'ai-status').Value = 'Running', 'The busy agent status is missing.');
+    Click(Session, 'ai-composer/send');
+    A.Check(not Latest.AI.Editor.Busy, 'Stop did not clear the busy state.');
+    Click(Session, 'ai-response/up');
+    A.Check(Latest.AI.Vote = 1, 'The response vote was not recorded.');
+    Click(Session, 'ai-response/regenerate');
+    A.Check(Latest.AI.Editor.Busy, 'Regenerate did not start a response.');
+    Click(Session, 'ai-model');
+    Press(Session, 10);
+    Press(Session, 10);
+    Press(Session, 2);
+    A.Check(
+      Latest.AI.Editor.Selected > 0,
+      'The native model picker did not commit a keyboard selection.'
+    );
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var Key: int := 0;
+  var Modifiers: int := 0;
+  var Input: string := '';
+  var Latest: G.Model := new G.Model(
+    Active := Page,
+    Voice := VoiceUpdate.Update(new VoicePage.Model(), VoicePage.Msg.Tick(0.25F)).Model
+  );
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI Voice and AI',
+    1100,
+    1800,
+    Renderer,
+    true
+  );
+  A.Check(
+    Window.IsSoftware = (Renderer = Cui.CuiRenderer.Software),
+    'The requested renderer fell back.'
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<G.Msg> := Host.Start<G.Model, G.Msg>(
+    Latest,
+    Update,
+    V.Build,
+    Window,
+    256,
+    Inject,
+    ThemeFor := U.ThemeFor
+  );
+  Step(Session, 9);
+  Window.CapturePng(Capture);
+  if Page = G.Page.Voice then
+    CheckVoice(Session);
+  else
+    CheckAi(Session);
+  end if;
+
+  Sys.Console.WriteLine(Page.ToString() + ' verified with ' + Renderer.ToString());
+end procedure;
+
+// Runs the two focused gallery contracts.
+// ## Parameters
+// - `Renderer`: Native backend.
+// - `Directory`: Output folder for the PNG captures.
+// - `Suffix`: Backend identifier in the filename.
+public procedure Verify(Renderer: Cui.CuiRenderer; Directory: string; Suffix: string);
+begin
+  Run(G.Page.Voice, Renderer, IO.Path.Combine(Directory, 'voice-' + Suffix + '.png'));
+  Run(G.Page.AI, Renderer, IO.Path.Combine(Directory, 'ai-' + Suffix + '.png'));
+end procedure;
+
+end unit;

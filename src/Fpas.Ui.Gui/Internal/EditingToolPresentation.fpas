@@ -1,0 +1,68 @@
+unit Fpas.Ui.Gui.Internal.EditingToolPresentation;
+
+uses
+  Fpas.Ui.PropertyInspectors as PropertyInspectors,
+  Fpas.Ui.FlameGraphs as FlameGraphs,
+  Fpas.Ui.CurveEditors as CurveEditors,
+  Fpas.Ui.GradientEditors as GradientEditors,
+  Fpas.Ui.TimelineEditors as TimelineEditors,
+  Fpas.Ui.Gui.Internal.Widgets.PropertyInspector as PropertyInspector,
+  Fpas.Ui.Gui.Internal.Widgets.FlameGraph as FlameGraph,
+  Fpas.Ui.Gui.Internal.Widgets.CurveEditor as CurveEditor,
+  Fpas.Ui.Gui.Internal.Widgets.GradientEditor as GradientEditor,
+  Fpas.Ui.Gui.Internal.Widgets.TimelineEditor as TimelineEditor,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Elements as E;
+
+// Draws the native editing tools.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Node`: Element to present.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+begin
+  case Node of
+    when E.Element.PropertyInspector(
+      const Id: string,
+      const Groups: array of PropertyInspectors.Group,
+      const Changed: function(PropertyInspectors.Event): TMsg,
+      const Settings: PropertyInspectors.Options
+    ):
+      PropertyInspector.Draw<TMsg>(Frame, Id, Groups, Changed, Settings);
+    when E.Element.FlameGraph(
+      const Id: string,
+      const Spans: array of FlameGraphs.Span,
+      const Current: FlameGraphs.View,
+      const Changed: function(FlameGraphs.Event): TMsg,
+      const Settings: FlameGraphs.Options
+    ):
+      FlameGraph.Draw<TMsg>(Frame, Id, Spans, Current, Changed, Settings);
+    when E.Element.CurveEditor(
+      const Id: string,
+      const Keys: array of CurveEditors.Key,
+      const Selected: int,
+      const Changed: function(CurveEditors.Event): TMsg,
+      const Settings: CurveEditors.Options
+    ):
+      CurveEditor.Draw<TMsg>(Frame, Id, Keys, Selected, Changed, Settings);
+    when E.Element.GradientEditor(
+      const Id: string,
+      const Stops: array of GradientEditors.Stop,
+      const Selected: int,
+      const Changed: function(GradientEditors.Event): TMsg,
+      const Settings: GradientEditors.Options
+    ):
+      GradientEditor.Draw<TMsg>(Frame, Id, Stops, Selected, Changed, Settings);
+    when E.Element.TimelineEditor(
+      const Id: string,
+      const Tracks: array of TimelineEditors.Track,
+      const Current: TimelineEditors.View,
+      const Changed: function(TimelineEditors.Event): TMsg,
+      const Settings: TimelineEditors.Options
+    ):
+      TimelineEditor.Draw<TMsg>(Frame, Id, Tracks, Current, Changed, Settings);
+    else
+  end case;
+end procedure;
+
+end unit;

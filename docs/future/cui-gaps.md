@@ -184,19 +184,17 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 ### Text, icons, and display
 
-- [ ] Text, including heading, label, secondary, muted, and inline code
+- [x] Text, including heading, label, secondary, muted, and inline code
   (`cui_text`, `cui_heading`, `cui_label`, `cui_secondary`, `cui_muted`, `cui_code`).
-  `Elements.Text` and semantic styles already supply text, headings, labels
-  and secondary and muted text in the gallery. Inline code and standalone
-  text acceptance remain open.
+  `Fpas.Ui.Texts` exposes the native roles used on Text and display.
+  `Elements.Text` remains available in the portable profile.
 - [x] Link (`cui_link`). [API][fpas-hover-card]. Disclosure verifies pointer
   and keyboard activation of the original @jonas link and its visible focus
   ring. The bridge applies the workaround for [CUI-012](cui-upstream-bugs.md#cui-012).
   The graphical profile is required.
-- [ ] Icon (`cui_icon`). GUI widgets accept CUI icon glyphs. Standalone icons
-  still need a public API and gallery acceptance.
-- [ ] Emoji display (`cui_emoji`)
-- [ ] Keycap (`cui_kbd`)
+- [x] Icon (`cui_icon`): standalone file icon from the CUI icon specimen.
+- [x] Emoji display (`cui_emoji`): the original three emoji and counts.
+- [x] Keycap (`cui_kbd`): native Ctrl Shift P keycaps.
 - [x] Badge (`cui_badge`). [API][fpas-surfaces]. Overview shows the original
   team roles. Feedback shows neutral, tinted, dotted and solid badges.
   The graphical profile is required.
@@ -217,8 +215,17 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 - [x] Empty state (`cui_empty_state`). [API][fpas-surfaces]. Feedback shows
   No projects yet. The gallery activates New project and verifies the original
   success toast. The graphical profile is required.
-- [ ] Image (`cui_image`)
-- [ ] Interactive canvas (`cui_canvas`)
+- [x] Image (`cui_image`): the original illustration with native rounding.
+  The API accepts file and RGBA sources and reuses native texture ownership.
+- [x] Interactive canvas (`cui_canvas`): native rectangle, circle and line
+  commands and local click coordinates. The gallery reuses the original
+  sidebar swatch drawings in a standalone selection example. The native test
+  checks the click coordinates. Custom paint callbacks and hover/press
+  notifications remain unexposed.
+
+Text and display matches its native CUI reference pixel for pixel on Windows
+in Software and OpenGL at 1100 × 1700 and 550 × 1700, scale 1. The gallery
+contract checks the keycap and inline code text and clicks a swatch.
 
 ### Actions and selection
 
@@ -501,11 +508,13 @@ checks that the slider wells stack in one column.
   original tabs and Inbox badge. The Windows keyboard test checks that Right
   moves one tab and transfers focus. FPAS works around CUI-029.
 - [ ] Menu bar and menus (`cui_menu_bar`, `cui_menu_bar_menu`)
-- [ ] Toolbar and toolbar buttons (`cui_toolbar`, `cui_toolbar_button`,
+- [x] Toolbar and toolbar buttons (`cui_toolbar`, `cui_toolbar_button`,
   `cui_toolbar_spacer`, `cui_toolbar_separator`). Include grouped and floating
   styles, overflow menus, groups, radio sets, primary actions, cycle pickers,
   and flyout markers (`cui_toolbar_group`, `cui_toolbar_radio`,
-  `cui_toolbar_primary`, `cui_toolbar_cycle`, `cui_flyout_mark`).
+  `cui_toolbar_primary`, `cui_toolbar_cycle`, `cui_flyout_mark`). Canvas and
+  bars shows the grouped and floating examples. The native test advances a
+  cycle control. [API](../../src/Fpas.Ui/README.md#canvas-and-bars)
 - [ ] Document tabs (`cui_doc_tabs`)
 - [ ] Status bar and its items (`cui_status_bar`, `cui_status_bar_text`, `cui_status_bar_item`, `cui_status_bar_progress`, `cui_status_bar_spacer`)
 - [ ] Docking workspace and panels (`cui_dockspace`, `cui_dock_panel`)
@@ -579,7 +588,13 @@ checks that the slider wells stack in one column.
   and state retirement. Native pixel comparisons cover light/dark themes,
   centered/targeted cards, all three steps, widths and spotlight options.
   Custom captions and step-count formatting remain unexposed native options.
-- [ ] Veil (`cui_veil`)
+- [x] Veil (`cui_veil`): Disclosure reproduces the picture, sample identifier
+  and spoiler. Windows Software and OpenGL tests cover pointer reveal and
+  re-cover, the Reveal/Hide button and Enter on the focused picture.
+  The covered and revealed cards were compared at both widths, using the
+  same synthetic sample identifier in the reference. Subpixel placement
+  differences remain on Disclosure. [CUI-038](cui-upstream-bugs.md#cui-038)
+  records the tested workaround for a disabled veil intercepting input.
 
 ### Feedback and progress
 
@@ -608,9 +623,11 @@ checks that the slider wells stack in one column.
   against direct CUI calls in 224 light/dark, narrow/wide and option combinations,
   including determinate and indeterminate dither progress.
   Feedback captures cover both renderers in light, dark and narrow layouts.
-  The dither styles and their color and track options (`cui_spinner_ex`)
-  remain open.
-- [ ] Status spinner (`cui_status_spinner`)
+  Feedback also shows the original dither styles and inline examples.
+  The API exposes native ink and track colors.
+- [x] Status spinner (`cui_status_spinner`): the original Feedback Upload
+  example shows Busy and alternates Success and Error. Targeted checks cover
+  the transitions, result expiry and retained results.
 - [x] Skeleton (`cui_skeleton`): [API][fpas-skeleton]. Feedback reproduces
   the original Loading avatar, percentage text lines and body placeholder.
   CUI owns shimmer, animation scheduling, rounding and reduced-motion behavior.
@@ -619,8 +636,8 @@ checks that the slider wells stack in one column.
   native pixel comparisons cover 144 width, height, theme, motion and viewport
   combinations, including native percentage button widths. Feedback captures
   show Loading in light, dark and narrow views.
-- [ ] Skeleton group (`cui_skeleton_group`), including the shared dither sweep
-  across placeholders.
+- [x] Skeleton group (`cui_skeleton_group`): the original Loading example
+  shares CUI's dither sweep across nested placeholder rows.
 - [x] Progress ring (`cui_progress_ring`): [API][fpas-progress-ring]. Feedback
   shows the original Onboarding and Quota examples at 104 points. CUI owns
   percentage formatting, painting and interpolation. Software/OpenGL tests
@@ -718,44 +735,85 @@ is tracked under code and tool panels. [Files API][fpas-files-planning]
 - [x] JSON viewer (`cui_json_view`): the Code page reproduces the expandable
   document and native parse error. Windows checks cover folding and invalid
   text, including [CUI-027](cui-upstream-bugs.md#cui-027).
-- [ ] Markdown view (`cui_markdown`)
-- [ ] Code editor (`cui_code_editor`), including SQL syntax highlighting.
-- [ ] Diff viewer (`cui_diff_view`)
-- [ ] Property inspector and editors for float, integer, text, boolean, enum,
+- [x] Markdown view (`cui_markdown`): original release notes, task checkboxes,
+  links and streaming replay. The native test verifies keyboard activation and
+  UTF-8 task offsets.
+- [x] Code editor (`cui_code_editor`): original editable C tile cache and an
+  editable SQL example. Native tests cover UTF-8 edits, capacity refusal and
+  undo reset after external replacement. Programmatic caret and find requests
+  and custom marks remain unexposed.
+- [x] Diff viewer (`cui_diff_view`): original config loader comparison with
+  split/inline selection, change navigation and folding. The native test
+  verifies keyboard navigation and responsive inline fallback.
+- [x] Property inspector and editors for float, integer, text, boolean, enum,
   color, and vectors (`cui_inspector`, `cui_inspector_group`, `cui_prop_float`,
   `cui_prop_int`, `cui_prop_text`, `cui_prop_bool`, `cui_prop_enum`,
-  `cui_prop_color`, `cui_prop_vec2`, `cui_prop_vec3`, `cui_prop_vec4`)
-- [ ] Log console (`cui_log_view`)
-- [ ] Terminal widget (`cui_terminal`)
-- [ ] Hex viewer (`cui_hex_view`)
-- [ ] Flame graph (`cui_flame_graph`)
-- [ ] Curve editor (`cui_curve_editor`)
-- [ ] Gradient editor (`cui_gradient_editor`)
-- [ ] Timeline editor (`cui_timeline_editor`)
+  `cui_prop_color`, `cui_prop_vec2`, `cui_prop_vec3`, `cui_prop_vec4`): the original crate transform,
+  material and shadows. Native tests toggle a property group and a boolean row.
+- [x] Log console (`cui_log_view`): original timestamped build log with native
+  filters, copy, follow and clear. The native test verifies timestamped
+  clipboard contents and the clear proposal.
+- [x] Terminal widget (`cui_terminal`): original Files shell with built-in
+  commands, ANSI output, native input and history. The native test verifies
+  submission, history and Ctrl+C; the gallery contract verifies command
+  routing. CUI keeps the echo and history while the widget is mounted.
+- [x] Hex viewer (`cui_hex_view`): original editable PNG specimen with marked
+  ranges, selection, overwrite and Go to offset. The native test checks the
+  selected address and edited byte.
+- [x] Flame graph (`cui_flame_graph`): the original two-frame profiler capture.
+  Native tests select a child and zoom to it. The disabled-input workaround
+  is tracked in [CUI-039](cui-upstream-bugs.md#cui-039).
+- [x] Curve editor (`cui_curve_editor`): the original easing curve and the
+  selected timeline track's curve. Native tests nudge and delete a key.
+- [x] Gradient editor (`cui_gradient_editor`): the original flame ramp.
+  Native tests nudge a stop, delete it and preserve the transparent endpoint.
+- [x] Timeline editor (`cui_timeline_editor`): the original hero, camera and
+  sound tracks, range, playhead and track curve. Tests cover exact frame steps,
+  keyframe moves and deletion, playback requests and the shared gallery model.
+  See [CUI-039](cui-upstream-bugs.md#cui-039) for disabled wheel input.
+
+The five CUI component specimens are grouped under Editing tools. Windows
+Software and OpenGL captures match the native reference at 1100 × 1400 and
+550 × 1400, scale 1, across three scroll positions.
+
+The Code page's new sections and the original Files content through Terminal
+match their CUI references pixel for pixel on Windows at widths 1100 and 550,
+scale 1, using Software and OpenGL. The Code comparison covers four scroll
+positions per width. The supplementary Files path bar is outside the comparison.
 
 ### Developer tools
 
-- [ ] Key-value editor (`cui_kv_editor`)
-- [ ] Problems panel (`cui_problems`)
-- [ ] Pipeline (`cui_pipeline`)
-- [ ] Query builder (`cui_query_builder`)
-- [ ] Schedule picker (`cui_schedule_picker`)
-- [ ] Keymap (`cui_keymap`)
-- [ ] Commit graph (`cui_commit_graph`)
-- [ ] Dependency graph (`cui_graph_view`)
-- [ ] Network waterfall (`cui_waterfall`)
-- [ ] Trace viewer (`cui_trace_view`)
-- [ ] Regex tester (`cui_regex_tester`)
-- [ ] Test explorer (`cui_test_explorer`)
-- [ ] Stack trace (`cui_stack_trace`)
-- [ ] HTTP request bar (`cui_request_bar`)
-- [ ] HTTP response status (`cui_response_status`)
-- [ ] Uptime bars (`cui_uptime`)
-- [ ] Time histogram (`cui_time_histogram`)
-- [ ] Coverage (`cui_coverage`)
-- [ ] Blame (`cui_blame`)
-- [ ] Feature flags (`cui_feature_flags`)
-- [ ] API explorer (`cui_api_explorer`)
+- [x] Key-value editor (`cui_kv_editor`)
+- [x] Problems panel (`cui_problems`)
+- [x] Pipeline (`cui_pipeline`)
+- [x] Query builder (`cui_query_builder`)
+- [x] Schedule picker (`cui_schedule_picker`)
+- [x] Keymap (`cui_keymap`)
+- [x] Commit graph (`cui_commit_graph`)
+- [x] Dependency graph (`cui_graph_view`)
+- [x] Network waterfall (`cui_waterfall`)
+- [x] Trace viewer (`cui_trace_view`)
+- [x] Regex tester (`cui_regex_tester`)
+- [x] Test explorer (`cui_test_explorer`)
+- [x] Stack trace (`cui_stack_trace`)
+- [x] HTTP request bar (`cui_request_bar`)
+- [x] HTTP response status (`cui_response_status`)
+- [x] Uptime bars (`cui_uptime`)
+- [x] Time histogram (`cui_time_histogram`)
+- [x] Coverage (`cui_coverage`)
+- [x] Blame (`cui_blame`)
+- [x] Feature flags (`cui_feature_flags`)
+- [x] API explorer (`cui_api_explorer`)
+
+The original Developer tools and More developer tools pages exercise these
+[graphical APIs](../../src/Fpas.Ui/README.md#developer-tools). The page content
+matches the pinned CUI reference on Windows at 1100 × 1700 and scale 1.
+Software and OpenGL comparisons covered three scroll positions per page with
+the same animation clock. Focused tests cover trace folding and measurement,
+regex results, histogram selection and clearing, reduced motion, and URL
+and query-parameter synchronization.
+The native workarounds are tracked in [CUI-035](cui-upstream-bugs.md#cui-035)
+and [CUI-036](cui-upstream-bugs.md#cui-036).
 
 ### Charts and instruments
 
@@ -763,7 +821,8 @@ is tracked under code and tool panels. [Files API][fpas-files-planning]
   grouped/stacked bars (`cui_bar_chart`) and responsive donut
   (`cui_donut_chart`): [API](../../src/Fpas.Ui/README.md#charts).
   Charts reproduces their original data, labels, formatting and theme palette.
-- [ ] Sparkline (`cui_sparkline`)
+- [x] Sparkline (`cui_sparkline`): a standalone example on Charts shows
+  the native compact line and endpoint.
 - [x] Gauge (`cui_gauge`): original CPU and Memory examples in Charts.
 - [x] Pattern meter (`cui_pattern_meter`): original storage parts, free capacity,
   native hover/keyboard readout and Grayscale checkbox. CUI owns local selection;
@@ -830,28 +889,53 @@ which remains a separate native build option.
 
 ### Conversation and media
 
-- [ ] Chat message (`cui_chat_message`)
-- [ ] Chat divider (`cui_chat_divider`)
-- [ ] Typing indicator (`cui_typing_indicator`)
-- [ ] Comment (`cui_comment`)
-- [ ] Presence (`cui_presence`)
-- [ ] Counter (`cui_counter`)
-- [ ] Ticker (`cui_ticker`)
-- [ ] Carousel and slides (`cui_carousel`, `cui_carousel_slide`)
-- [ ] Image compare (`cui_image_compare`)
-- [ ] Card stack and items (`cui_card_stack_begin`, `cui_card_stack_item_begin`)
-- [ ] Image viewer (`cui_image_viewer`)
-- [ ] Image cropper (`cui_cropper`)
+- [x] Chat message (`cui_chat_message`): the original grouped conversation
+  shows outgoing and incoming bubbles, sender information and read receipts.
+  The API accepts avatar paths and native Markdown rendering. Markdown link and
+  task proposals remain part of the open Markdown work.
+- [x] Chat divider (`cui_chat_divider`): the original Today divider.
+- [x] Typing indicator (`cui_typing_indicator`): Jonas and the native dots.
+  The adapter stops the animation with reduced motion. [CUI-033](cui-upstream-bugs.md#cui-033)
+- [x] Comment (`cui_comment`): the original three threaded comments.
+  Windows checks cover pointer and keyboard likes and Reply events.
+- [x] Presence (`cui_presence`): the original overlapping avatars with away
+  state, overflow and native hover expansion.
+- [x] Counter (`cui_counter`): Add a sale updates the original rolling amount
+  with grouped thousands.
+- [x] Ticker (`cui_ticker`): the original figures and native hover pause.
+
+- [x] Carousel and slides (`cui_carousel`, `cui_carousel_slide`): the original
+  four release slides with native arrows, dots, gestures and automatic advance.
+  The Windows test selects a dot and moves with the keyboard.
+- [x] Image viewer (`cui_image_viewer`): the original landscape with the CUI
+  toolbar. The Windows test zooms with the wheel, pans and fits with the keyboard.
+- [x] Image cropper (`cui_cropper`): the same landscape with the original
+  square crop. The Windows test resizes a corner and checks the aspect ratio.
+- [x] Image compare (`cui_image_compare`): the original grayscale and color
+  scenes. The Windows test drags the divider and moves it with the keyboard.
+- [x] Card stack and items (`cui_card_stack_begin`, `cui_card_stack_item_begin`):
+  the original destination deck with Saved and Skipped toasts. The Windows
+  test dismisses cards by mouse and keyboard and checks both directions.
+
+The five media examples match the pinned Windows gallery pixel for pixel with
+Software and OpenGL at scale one and a 1100×2130 client area. The Social and
+media content differs only at the typing dots because FPAS honors reduced
+motion. Feedback retains small timing and antialiasing differences. The
+standalone sparkline matches direct CUI in the fixed-frame Software comparison.
+
 - [x] Now playing (`cui_now_playing`): [API][fpas-motion]. Motion shows the
   original Low Tide track with playback, transport and seeking. The Windows
   test pauses playback and seeks on the native scrubber.
 - [x] Waveform (`cui_waveform`): [API][fpas-motion]. Motion shows the original
   96 peaks. The Windows test drags across the waveform and checks the proposed
   position.
-- [ ] Voice waveform (`cui_voice_wave`), including live and seekable clip modes.
-- [ ] Voice note (`cui_voice_note`), including playback, seeking and speed controls.
-- [ ] Voice session (`cui_voice_session`), including the shared timeline,
-  transcript, mute and end controls.
+- [x] Voice waveform (`cui_voice_wave`): the original live timeline and
+  seekable clip. Windows checks pointer and keyboard seeking.
+- [x] Voice note (`cui_voice_note`): the original incoming note plus recorded
+  takes. Windows checks play, seek and the playback-speed chip.
+- [x] Voice session (`cui_voice_session`): the original shared timeline,
+  scripted transcript, mute and end controls. Windows checks both call actions.
+  The demo uses synthetic voice levels like the CUI original.
 
 ### Planning and diagram editors
 
@@ -867,18 +951,36 @@ read-only week events and Gantt tasks and click activation of read-only week
 events. [Planning API][fpas-files-planning]
 [CUI-032](cui-upstream-bugs.md#cui-032)
 
-- [ ] Node editor with pins, links, and node content (`cui_node_editor_begin`,
+- [x] Node editor with pins, links, and node content (`cui_node_editor_begin`,
   `cui_node_begin`, `cui_node_input`, `cui_node_output`,
-  `cui_node_content_begin`, `cui_node_link`)
+  `cui_node_content_begin`, `cui_node_link`): Canvas and bars uses the original
+  three-node graph; the native test covers node dragging, wheel zoom and the
+  disabled-input workaround. [CUI-037](cui-upstream-bugs.md#cui-037)
 
 ### Canvas and bars
 
-- [ ] Format bar (`cui_format_bar`)
-- [ ] Live cursors, presence pill, and selection ring (`cui_live_cursors`,
-  `cui_presence_pill`, `cui_selection_ring`)
-- [ ] Canvas controls (`cui_canvas_controls`)
-- [ ] Result card (`cui_result_card`), with the floating toolbar in its demo.
-- [ ] Selection bar (`cui_selection_bar`)
+- [x] Format bar (`cui_format_bar`): the original color, styles, alignment,
+  list and delete controls. A native test toggles Bold.
+- [x] Live cursors, presence pill, and selection ring (`cui_live_cursors`,
+  `cui_presence_pill`, `cui_selection_ring`): the original collaborators,
+  speaking indicator, cursor speech and node selection. Custom avatar images
+  in the presence pill remain an unexposed native option.
+- [x] Canvas controls (`cui_canvas_controls`): the original zoom, fit, Grid
+  and Layers controls. The native test selects the next zoom preset and resets
+  to 100 percent.
+- [x] Result card (`cui_result_card`): the original picture, caption and
+  status chip, with the floating toolbar below it.
+- [x] Selection bar (`cui_selection_bar`): the five-file example with native
+  bulk actions and Escape-to-clear. The Windows gallery test selects a fourth
+  file and clears the selection. The native count-format override and count-only
+  mode remain unexposed.
+
+The [Canvas and bars APIs](../../src/Fpas.Ui/README.md#canvas-and-bars) use the
+graphical profile. Windows captures at 1100 × 1700 and 550 × 1700, scale 1,
+match the original page content at rest and after scrolling the narrow layout.
+The wide OpenGL capture differs in one pixel by one RGB level on an
+antialiased edge. The Creative controls regression captures match exactly at
+both sizes in software and OpenGL.
 
 ### Motion
 
@@ -910,19 +1012,33 @@ follows the original page content.
 
 ### AI interfaces
 
-- [ ] Reasoning panel (`cui_reasoning_begin`)
-- [ ] Tool call (`cui_tool_call`)
-- [ ] Agent plan (`cui_agent_plan`)
-- [ ] Agent status (`cui_agent_status`)
-- [ ] Source list (`cui_source_list`)
-- [ ] Citation (`cui_citation`)
-- [ ] Composer (`cui_chat_composer`), including the voice recorder mode with
-  application-supplied levels, elapsed time, and record, cancel and send events.
-- [ ] Model picker (`cui_model_picker`)
-- [ ] Prompt suggestions (`cui_prompt_suggestions`)
-- [ ] Response actions (`cui_response_actions`)
-- [ ] Context meter (`cui_context_meter`)
-- [ ] Voice orb (`cui_voice_orb`)
+- [x] Reasoning panel (`cui_reasoning_begin`): the original expandable thought
+  with app-supplied content and running/finished state.
+- [x] Tool call (`cui_tool_call`): the original search and file calls, including
+  expandable native JSON payloads for Search.
+- [x] Agent plan (`cui_agent_plan`): the original research plan and its step
+  states. Running glyphs honor reduced motion. [CUI-034](cui-upstream-bugs.md#cui-034)
+- [x] Agent status (`cui_agent_status`): the original busy report-reading pill.
+- [x] Source list (`cui_source_list`): the original horizontally scrolling cards.
+- [x] Citation (`cui_citation`): the three original inline source previews.
+- [x] Composer (`cui_chat_composer`): the original AI editor and Voice recorder.
+  Windows checks UTF-8, Shift+Enter, send, stop, recording, cancel and voice send.
+- [x] Model picker (`cui_model_picker`): the embedded menu and a supplementary
+  standalone example. Windows checks keyboard selection.
+- [x] Prompt suggestions (`cui_prompt_suggestions`): the original four cards.
+  Choosing one fills the draft.
+- [x] Response actions (`cui_response_actions`): the original copy, regenerate,
+  voting and share toolbar. Windows checks vote and regenerate proposals.
+- [x] Context meter (`cui_context_meter`): the original context percentage and
+  breakdown by system, files and messages.
+- [x] Voice orb (`cui_voice_orb`): a supplemental example on Voice for CUI's
+  legacy widget. Clicking it switches from idle to listening.
+
+At 1100 × 1800 and scale one, the original AI and Voice sections match the
+pinned Windows gallery pixel for pixel in Software and OpenGL. The Voice
+comparison fixes the demo time at 250 ms. The AI comparison uses a fixed
+native animation phase to match the reduced-motion workaround. The standalone
+model picker and legacy voice orb follow the original content.
 
 [revision]: https://github.com/yappologistic/CUI/tree/86d9781bbc3c35c264ec46287ad89c1d86a4c4de
 [fpas-motion]: ../../src/Fpas.Ui/README.md#motion-and-compact-controls

@@ -24,6 +24,8 @@ CUI_API int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, 
 CUI_API void fpas_cui_group_end(cui_ctx *ui, int node);
 /** Sets physical top/bottom and logical start/end padding and native inherited direction.
  * Call immediately after beginning the container, before layout resolution. */
+CUI_API void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius);
+CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba);
 CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
  * @param ui Owner context.

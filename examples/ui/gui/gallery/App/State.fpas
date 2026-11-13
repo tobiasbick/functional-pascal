@@ -1,10 +1,18 @@
 unit GuiGallery.App.State;
 
 uses
+  GuiGallery.Pages.EditingTools.State as Editing,
+  GuiGallery.Pages.Code.State as CodePage,
+  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Voice.State as VoicePage,
+  GuiGallery.Pages.Feedback.State as Feedback,
+  GuiGallery.Pages.Social.State as Social,
   GuiGallery.Pages.Instruments.State as Instruments,
   GuiGallery.Pages.Motion.State as Motion,
   GuiGallery.Pages.Creative.State as Creative,
+  GuiGallery.Pages.Canvas.State as Canvas,
   GuiGallery.Pages.Files.State as Files,
+  GuiGallery.Pages.Developer.State as Developer,
+  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper,
   GuiGallery.Pages.Planning.State as Planning,
   GuiGallery.Pages.DataGrid.State as Grid,
   GuiGallery.Pages.MoreCharts.State as MoreCharts,
@@ -73,10 +81,26 @@ public type Page = enum: byte
   Motion;
   // Creative controls and color settings.
   CreativeControls;
+  // Canvas collaboration and editing bars.
+  CanvasAndBars;
   // File browser and pickers.
   Files;
+  // CUI diagnostics, traces and configuration editors.
+  DeveloperTools;
+  // CUI test reports, request tools and operational charts.
+  MoreDeveloperTools;
   // Project board and scheduling.
   Planning;
+  // Conversation bubbles, comments and live presence.
+  Social;
+  // The AI conversation and agent plan.
+  AI;
+  // Voice messages and live call examples.
+  Voice;
+  // Standalone text and drawing primitives.
+  Display;
+  // Inspector, profiler and animation editors.
+  EditingTools;
 end enum;
 
 // Application state with one owner per feature.
@@ -127,22 +151,60 @@ public type Model = record
   public Motion: Motion.Model := new Motion.Model();
   // State owned by the Creative controls page.
   public Creative: Creative.Model := new Creative.Model();
+  // State owned by Canvas and bars.
+  public Canvas: Canvas.Model := new Canvas.Model();
+  // Native animation and inspection examples.
+  public Editing: Editing.Model := new Editing.Model();
+  // Editable examples on Code.
+  public Code: CodePage.Model := new CodePage.Model();
   // State owned by Files.
   public Files: Files.Model := new Files.Model();
+  // State owned by Developer tools.
+  public Developer: Developer.Model := new Developer.Model();
+  // State owned by More developer tools.
+  public MoreDeveloper: MoreDeveloper.Model := new MoreDeveloper.Model();
   // State owned by Planning.
   public Planning: Planning.Model := new Planning.Model();
+  // State owned by Social and media.
+  public Social: Social.Model := new Social.Model();
+  // AI conversation state.
+  public AI: Ai.Model := new Ai.Model();
+  // Voice demo state.
+  public Voice: VoicePage.Model := new VoicePage.Model();
+  // Selected color in the interactive canvas example.
+  public DisplaySwatch: int := 0;
+  // State owned by the Feedback upload example.
+  public Feedback: Feedback.Model := new Feedback.Model();
 end record;
 
 // Application navigation and typed child messages.
 public type Msg = variant
+  // Routes the Feedback upload actions.
+  Feedback(Value: Feedback.Msg);
+  // Routes social preview actions.
+  Social(Value: Social.Msg);
+  // Routes AI conversation actions.
+  AI(Value: Ai.Msg);
+  // Routes voice and recorder actions.
+  Voice(Value: VoicePage.Msg);
   // Route an input proposal to Instruments.
   Instruments(Value: Instruments.Msg);
   // Route an input proposal to Motion.
   Motion(Value: Motion.Msg);
   // Route a proposal to Creative controls.
   Creative(Value: Creative.Msg);
+  // Routes an interaction to Canvas and bars.
+  Canvas(Value: Canvas.Msg);
+  // Routes an editing tool proposal.
+  Editing(Value: Editing.Msg);
+  // Routes source tool events.
+  Code(Value: CodePage.Msg);
   // Routes file navigation and selection.
   Files(Value: Files.Msg);
+  // Routes a proposal to Developer tools.
+  Developer(Value: Developer.Msg);
+  // Routes a proposal to More developer tools.
+  MoreDeveloper(Value: MoreDeveloper.Msg);
   // Routes board and calendar changes.
   Planning(Value: Planning.Msg);
   // Route an input proposal to the data grid page.
@@ -151,6 +213,8 @@ public type Msg = variant
   Show(Value: Page);
   // Open or close the navigation drawer.
   SetDrawer(Open: bool);
+  // Select a swatch in the interactive canvas example.
+  DisplaySwatch(Index: int);
   // A harmless application activation.
   Preview;
   // Change values with a shared owner.

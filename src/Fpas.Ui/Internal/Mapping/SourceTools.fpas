@@ -1,0 +1,104 @@
+unit Fpas.Ui.Internal.Mapping.SourceTools;
+
+uses
+  Fpas.Ui.Markdowns as Markdowns,
+  Fpas.Ui.CodeEditors as CodeEditors,
+  Fpas.Ui.DiffViews as DiffViews,
+  Fpas.Ui.HexViews as HexViews,
+  Fpas.Ui.LogConsoles as LogConsoles,
+  Fpas.Ui.Terminals as Terminals,
+  Fpas.Ui.Elements as E, System as Sys;
+
+// Maps the source tools to a parent message type.
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Source tool element.
+// - `Messages`: Message converter.
+// ## Returns
+// Equivalent element with mapped messages.
+public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+begin
+  case Value of
+    when E.Element.Markdown(
+      const Id: string,
+      const Text: string,
+      const Changed: function(Markdowns.Event): TChild,
+      const Settings: Markdowns.Options
+    ):
+      return E.Element<TParent>.Markdown(
+        Id,
+        Text,
+        function(Value: Markdowns.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.CodeEditor(
+      const Id: string,
+      const Text: string,
+      const Changed: function(CodeEditors.Event): TChild,
+      const Settings: CodeEditors.Options
+    ):
+      return E.Element<TParent>.CodeEditor(
+        Id,
+        Text,
+        function(Value: CodeEditors.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.DiffView(
+      const Id: string,
+      const Before: string,
+      const After: string,
+      const Current: int,
+      const Changed: function(DiffViews.Event): TChild,
+      const Settings: DiffViews.Options
+    ):
+      return E.Element<TParent>.DiffView(
+        Id,
+        Before,
+        After,
+        Current,
+        function(Value: DiffViews.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.HexView(
+      const Id: string,
+      const Data: array of byte,
+      const Selected: HexViews.Selection,
+      const Changed: function(HexViews.Event): TChild,
+      const Settings: HexViews.Options
+    ):
+      return E.Element<TParent>.HexView(
+        Id,
+        Data,
+        Selected,
+        function(Value: HexViews.Event): TParent => Messages(Changed(Value)),
+        Settings
+      );
+    when E.Element.LogConsole(
+      const Id: string,
+      const Entries: array of LogConsoles.Entry,
+      const Cleared: TChild,
+      const Settings: LogConsoles.Options
+    ):
+      return E.Element<TParent>.LogConsole(Id, Entries, Messages(Cleared), Settings);
+    when E.Element.Terminal(
+      const Id: string,
+      const Output: string,
+      const Revision: int,
+      const Received: function(Terminals.Event): TChild,
+      const Settings: Terminals.Options
+    ):
+      return E.Element<TParent>.Terminal(
+        Id,
+        Output,
+        Revision,
+        function(Value: Terminals.Event): TParent => Messages(Received(Value)),
+        Settings
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected a source tool element.');
+  end case;
+end function;
+
+end unit;

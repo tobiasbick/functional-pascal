@@ -56,11 +56,21 @@ void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
     ui->last_id = key;
 }
 
-void fpas_cui_spinner(cui_ctx *ui, const char *id, float size) {
+static cui_color fpas_chart_color(int palette, uint32_t rgba);
+
+void fpas_cui_spinner_styled(cui_ctx *ui, const char *id, float size, int style,
+    int color, uint32_t rgba, int track, uint32_t track_rgba) {
     const cui_id key = cui_make_id(ui, id);
-    cui_spinner(ui, size);
+    const cui_spinner_opts options = { .style = style,
+        .color = color == -2 ? CUI_COLOR_BACKGROUND : fpas_chart_color(color, rgba),
+        .track = fpas_chart_color(track, track_rgba) };
+    cui_spinner_ex(ui, size, &options);
     ui->nodes[ui->last_node].id = key;
     ui->last_id = key;
+}
+
+void fpas_cui_spinner(cui_ctx *ui, const char *id, float size) {
+    fpas_cui_spinner_styled(ui, id, size, CUI_SPINNER_ARC, 0, 0, 0, 0);
 }
 
 void fpas_cui_progress_ring(cui_ctx *ui, const char *id, const char *label,

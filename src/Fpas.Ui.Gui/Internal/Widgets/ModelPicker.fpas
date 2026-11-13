@@ -1,0 +1,37 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ModelPicker;
+
+uses Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.AiData as Data;
+
+// Presents CUI's native ModelPicker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable widget identity.
+// - `Items`: Available models.
+// - `Selected`: Selected model index.
+// - `Changed`: Maps the proposed index.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
+begin
+  const Role: string := 'model-picker';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Items.Length > 0;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Next: int := Frame.Window.ModelPicker(
+    Token, Data.Models(Items), Selected, cast<int>(Settings.Placement),
+    P.Bits(Enabled, 1) or P.Bits(Focus, 2) or P.Bits(Settings.Ghost, 4)
+  );
+  P.Root<TMsg>(
+    Frame, Id, Role, if Items.Length = 0 then
+      ''
+    else
+      Items[Selected].Name
+    end if, Enabled, Selected.ToString()
+  );
+  if Enabled and Next <> Selected then
+    Frame.Messages.Add(Changed(Next));
+  end if;
+end procedure;
+
+end unit;

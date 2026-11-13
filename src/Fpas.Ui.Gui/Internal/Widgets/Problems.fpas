@@ -1,0 +1,57 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Problems;
+
+uses Fpas.Ui.ProblemsPanels as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+
+function PackDiagnostic(Items: array of D.Diagnostic): array of Cui.CuiDevDiagnostic;
+begin
+  const Native: Lists.List<Cui.CuiDevDiagnostic> := new Lists.List<Cui.CuiDevDiagnostic>(
+    Items.Length
+  );
+  for Entry: D.Diagnostic in Items do
+    Native.Add(
+      new Cui.CuiDevDiagnostic(
+        Entry.Severity,
+        Entry.Message,
+        Entry.File,
+        Entry.Line,
+        Entry.Column,
+        Entry.Source,
+        Entry.Code
+      )
+    );
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native Problems widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Diagnostics`: Diagnostics supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Diagnostics: array of D.Diagnostic; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'problems';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: Cui.CuiDevResult := Frame.Window.Problems(
+    Token,
+    PackDiagnostic(Diagnostics),
+    Settings.Height,
+    Settings.HideToolbar,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Count.ToString());
+  if Enabled and (Result.Action >= 0) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action, Result.Count)));
+  end if;
+end procedure;
+
+end unit;

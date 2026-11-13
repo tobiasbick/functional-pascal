@@ -1,0 +1,53 @@
+unit Fpas.Ui.Canvases;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;
+
+// A drawing command in canvas-local logical points.
+public type Shape = variant
+  // Fills a rectangle with rounded corners.
+  Rectangle(X: float; Y: float; Width: float; Height: float; Radius: float; Color: G.Color);
+  // Fills a circle.
+  Circle(X: float; Y: float; Radius: float; Color: G.Color);
+  // Draws a line between two points.
+  Line(X: float; Y: float; EndX: float; EndY: float; Thickness: float; Color: G.Color);
+end variant;
+
+// Canvas layout and input settings.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Preferred height.
+  public Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(120));
+  // Whether the canvas accepts pointer input.
+  public Enabled: bool := true;
+end record;
+
+// Button activation on a canvas.
+public type Event = record
+  // Pointer X in canvas-local logical points.
+  public X: float;
+  // Pointer Y in canvas-local logical points.
+  public Y: float;
+  // Width of the canvas at activation.
+  public Width: float;
+  // Height of the canvas at activation.
+  public Height: float;
+end record;
+
+// Creates a native CUI canvas element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable canvas identity.
+// - `Drawing`: Draw commands in paint order.
+// - `Clicked`: Maps native activation to an application message.
+// - `Settings`: Native canvas options.
+// ## Returns
+// A graphical element.
+public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Canvas(Id, Drawing, Clicked, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,111 @@
+unit Fpas.Ui.NodeEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.SelectionRings as Ring;
+
+// Transform from canvas coordinates to the visible viewport.
+public type View = record
+  // Horizontal pan in logical points.
+  public X: float := 0.0F;
+  // Vertical pan in logical points.
+  public Y: float := 0.0F;
+  // Canvas zoom, where one means 100%.
+  public Zoom: float := 1.0F;
+end record;
+
+// A typed input or output on a node.
+public type Pin = record
+  // Unique pin identity within the editor.
+  public Id: int;
+  // Visible pin caption.
+  public Label: string;
+  // True for an output pin.
+  public Output: bool;
+  // Connection type. Zero accepts any type.
+  public Kind: int := 0;
+end record;
+
+// An application-owned node and its composed body.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Node<TMsg> = record
+  // Unique node identity.
+  public Id: int;
+  // Horizontal canvas position.
+  public X: float;
+  // Vertical canvas position.
+  public Y: float;
+  // Node title.
+  public Title: string;
+  // Pin rows in display order.
+  public Pins: array of Pin;
+  // Optional body content.
+  public Body: E.Element<TMsg>? := null;
+  // Node width, or zero for the default.
+  public Width: float := 0.0F;
+  // Optional glyph before the title.
+  public Icon: string? := null;
+  // Optional collaborator selection ring.
+  public Ring: Ring.Options? := null;
+end record;
+
+// A link between existing pins.
+public type Link = record
+  // Unique link identity.
+  public Id: int;
+  // Origin output pin.
+  public FromPin: int;
+  // Destination input pin.
+  public ToPin: int;
+end record;
+
+// Node editor settings.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Preferred height.
+  public Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(440));
+  // Minimum zoom, or zero for the default.
+  public MinimumZoom: float := 0.0F;
+  // Maximum zoom, or zero for the default.
+  public MaximumZoom: float := 0.0F;
+  // Hides the canvas grid.
+  public HideGrid: bool := false;
+  // Shows the native minimap.
+  public Minimap: bool := false;
+  // Whether the editor accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Changes proposed by the native node editor.
+public type Event = variant
+  // The canvas was panned or zoomed.
+  Pan(Value: View);
+  // A node moved.
+  Move(Id: int; X: float; Y: float);
+  // A connection was drawn.
+  Connect(FromPin: int; ToPin: int);
+  // A link was detached or deleted.
+  Unlink(Id: int);
+  // A node was deleted.
+  Delete(Id: int);
+end variant;
+
+// Builds the native NodeEditor element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Viewport`: Current pan and zoom.
+// - `Nodes`: Nodes and their bodies.
+// - `Links`: Current links.
+// - `Changed`: Maps native proposals to messages.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function NodeEditor<TMsg>(Id: string; Viewport: View; Nodes: array of Node<TMsg>; Links: array of Link; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.NodeEditor(Id, Viewport, Nodes, Links, Changed, Settings ?? new Options());
+end function;
+
+end unit;

@@ -115,7 +115,11 @@ begin
     V.Target.Graphical,
     'valid tone'
   );
-  Reject(E.Element<int>.Spinner('s', Sys.Single.PositiveInfinity), V.Target.Graphical, 'finite');
+  Reject(
+    E.Element<int>.Spinner('s', Sys.Single.PositiveInfinity, null),
+    V.Target.Graphical,
+    'finite'
+  );
   Reject(Alerts.Alert<int>('a', ''), V.Target.Graphical, 'nonempty title');
   Reject(
     Alerts.Alert<int>('a', 'Title', new Alerts.Options(Description := 'x' + Sys.Char.MinValue)),
@@ -273,6 +277,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   procedure Inject();
   begin
     Window.MovePointer(X, Y);
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+
     if Left >= 0 then
       Window.SetLeftButton(Left = 1);
       Left := -1;
@@ -283,6 +292,7 @@ begin
   Notification(Renderer);
   var X: float := -1.0F;
   var Y: float := -1.0F;
+  var Wheel: float := 0.0F;
   var Left: int := -1;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1700, Renderer, true);
   Window.SetReducedMotion(true);
@@ -390,7 +400,16 @@ begin
   Window.Resize(1100, 1700);
   A.Check(Session.Step(), 'Feedback gallery closed after widening.');
   A.Check(Session.Step(), 'Feedback gallery closed while settling.');
+  X := 700.0F;
+  Y := 900.0F;
+  Wheel := -16.0F;
+  A.Check(Session.Step(), 'Feedback closed while scrolling to the empty state.');
+  A.Check(Session.Step(), 'Feedback closed while presenting the empty state.');
   const Action: Cui.CuiRectangle := A.Control(Session, 'no-projects/action').Bounds;
+  A.Check(
+    Action.Y >= 0.0F and Action.Y + Action.Height <= 1700.0F,
+    'The empty-state action is outside the viewport.'
+  );
   X := Action.X + Action.Width / 2.0F;
   Y := Action.Y + Action.Height / 2.0F;
   Left := 1;

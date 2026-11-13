@@ -1,0 +1,130 @@
+unit GuiGallery.Pages.MoreDeveloper.View;
+
+uses
+  GuiGallery.Pages.MoreDeveloper.State as M, GuiGallery.Pages.MoreDeveloper.Samples as D, GuiGallery.Shared.Sections as Section,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.TestExplorers as T, Fpas.Ui.StackTraces as S, Fpas.Ui.Blames as B, Fpas.Ui.Coverages as C, Fpas.Ui.RegexTesters as R, Fpas.Ui.RequestBars as H, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.ResponseStatuses as Status, Fpas.Ui.ApiExplorers as A, Fpas.Ui.FeatureFlagEditors as F, Fpas.Ui.Uptimes as U, Fpas.Ui.TimeHistograms as G, System as Sys;
+
+function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
+begin
+  return E.Size<M.Msg>(
+    E.Column<M.Msg>(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(Maximum))
+    )
+  );
+end function;
+
+// Builds the original CUI More developer tools page.
+// ## Parameters
+// - `Model`: Retained page state.
+// ## Returns
+// Sections and examples in the original order.
+public function View(Model: M.Model): array of E.Element<M.Msg>;
+begin
+  return [
+    Section.Heading<M.Msg>(
+      'Test explorer',
+      'Suites fold; hover a row to run it; filter by status or name.'
+    ),
+    Limit(
+      760, 10,
+      T.TestExplorer<M.Msg>('dev-tests', D.Tests, M.Msg.Tests, new T.Options(Height := 500.0F))
+    ),
+    Section.Heading<M.Msg>(
+      'Stack trace',
+      'Library frames fold; a frame with source opens; copy the trace.'
+    ),
+    Limit(
+      760, 10,
+      S.StackTrace<M.Msg>(
+        'dev-stack',
+        D.Frames,
+        M.Msg.Stack,
+        new S.Options(
+          Title := 'TypeError',
+          Message := 'Cannot read properties of undefined (reading ''items'')',
+          Language := 'js'
+        )
+      )
+    ),
+    Section.Heading<M.Msg>(
+      'Blame',
+      'Hover the gutter to mark a commit''s lines; click it to open the commit.'
+    ),
+    Limit(
+      900, 10,
+      B.Blame<M.Msg>(
+        'dev-blame',
+        D.Lines,
+        D.LineCommits,
+        D.Revisions,
+        M.Msg.Blame,
+        new B.Options(Language := 'c', Now := 1794211200L, Height := 320.0F, FirstLine := 120)
+      )
+    ),
+    Section.Heading<M.Msg>('Coverage', 'Folders sum up their files; click a column to sort.'),
+    Limit(
+      820, 10,
+      C.Coverage<M.Msg>('dev-coverage', D.Coverage, M.Msg.Coverage, new C.Options(Height := 372.0F))
+    ),
+    Section.Heading<M.Msg>('Regex tester', 'Matches and groups are marked as you type.'),
+    Limit(
+      760, 10,
+      R.RegexTester<M.Msg>(
+        'dev-regex',
+        Model.Pattern,
+        Model.Sample,
+        Model.Modifiers,
+        M.Msg.Regex,
+        new R.Options(Height := 110.0F)
+      )
+    ),
+    Section.Heading<M.Msg>('HTTP request bar', 'The parameters table and the URL stay in step.'),
+    Limit(
+      760, 12,
+      H.RequestBar<M.Msg>('dev-request', Model.Method, Model.Url, M.Msg.Request),
+      K.KeyValueEditor<M.Msg>(
+        'dev-params',
+        Model.Parameters,
+        M.Msg.Parameters,
+        new K.Options(Capacity := 8)
+      ),
+      Status.ResponseStatus<M.Msg>('dev-response', 201, 0.142, 18400.0)
+    ),
+    Section.Heading<M.Msg>('API explorer', 'Click an endpoint for its parameters.'),
+    Limit(
+      820, 10,
+      A.ApiExplorer<M.Msg>('dev-api', D.Endpoints, Model.Endpoint, M.Msg.Endpoint)
+    ),
+    Section.Heading<M.Msg>(
+      'Feature flags',
+      'A switch per environment; click a share to change it.'
+    ),
+    Limit(
+      860, 10,
+      F.FeatureFlags<M.Msg>('dev-flags', Model.Flags, D.Environments, M.Msg.Flag)
+    ),
+    Section.Heading<M.Msg>('Uptime', 'One bar per day; hover for the day.'),
+    Limit(
+      860, 10,
+      U.Uptime<M.Msg>('dev-uptime', D.Services, new Sys.DateOnly(2026, 11, 9))
+    ),
+    Section.Heading<M.Msg>('Time histogram', 'Drag to select a range; click to clear it.'),
+    Limit(
+      900, 10,
+      G.TimeHistogram<M.Msg>(
+        'dev-histogram',
+        1794240000.0,
+        900.0,
+        96,
+        D.Histogram,
+        Model.Range,
+        M.Msg.Range,
+        new G.Options(Utc := true, Height := 150.0F)
+      )
+    )
+  ];
+end function;
+
+end unit;

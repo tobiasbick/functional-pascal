@@ -1,0 +1,45 @@
+unit GuiGallery.Pages.Social.State;
+
+uses Fpas.Ui.Comments as Comments, Fpas.Ui.ImageViewers as Viewer, Fpas.Ui.ImageCroppers as Cropper, Fpas.Ui.CardStacks as Deck;
+
+// Current values for the conversation and presence examples.
+public type Model = record
+  // Reactions on the three comments, in thread order.
+  public Likes: array of Comments.Value := [
+    new Comments.Value(12, true),
+    new Comments.Value(3),
+    new Comments.Value()
+  ];
+  // The amount shown in the rolling counter.
+  public Revenue: double := 48210.0;
+  // Selected slide in the release tour.
+  public Slide: int := 1;
+  // Index of the first destination in the deck.
+  public Destination: int := 0;
+  // Zoom and pan of the landscape.
+  public Picture: Viewer.Value := new Viewer.Value();
+  // Selected square in image pixels.
+  public Crop: Cropper.Value := new Cropper.Value();
+  // Position of the before and after divider.
+  public Divider: float := 0.45F;
+end record;
+
+// Actions from the original social examples.
+public type Msg = variant
+  // Applies a native comment action.
+  Comment(Index: int; Change: Comments.Event);
+  // Adds the sale amount to the counter.
+  Sale;
+  // Selects a slide.
+  Slide(Index: int);
+  // Applies a zoom or pan.
+  Picture(Value: Viewer.Value);
+  // Applies a crop change.
+  Crop(Value: Cropper.Value);
+  // Moves the comparison divider.
+  Divider(Position: float);
+  // Dismisses the top destination.
+  Swipe(Direction: Deck.Direction);
+end variant;
+
+end unit;

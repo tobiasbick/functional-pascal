@@ -1,6 +1,14 @@
 unit Fpas.Ui.Composition;
 
 uses
+  Fpas.Ui.Internal.Mapping.EditingTools as EditingTools,
+  Fpas.Ui.Internal.Mapping.SourceTools as SourceTools,
+  Fpas.Ui.Internal.Mapping.Display as Display,
+  Fpas.Ui.Internal.Mapping.Canvas as Canvas,
+  Fpas.Ui.Internal.Mapping.DeveloperTools as Developer,
+  Fpas.Ui.VoiceWaves as VoiceWaves, Fpas.Ui.VoiceNotes as VoiceNotes, Fpas.Ui.VoiceSessions as VoiceSessions, Fpas.Ui.Composers as Composers, Fpas.Ui.VoiceOrbs as VoiceOrbs, Fpas.Ui.Reasonings as Reasonings, Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.AgentPlans as AgentPlans, Fpas.Ui.AgentStatuses as AgentStatuses, Fpas.Ui.SourceLists as SourceLists, Fpas.Ui.Citations as Citations, Fpas.Ui.ContextMeters as ContextMeters, Fpas.Ui.ResponseActions as ResponseActions, Fpas.Ui.PromptSuggestions as PromptSuggestions, Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Voice as Voice, Fpas.Ui.Sources as Sources,
+  Fpas.Ui.Graphics as MediaColor, Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
+  Fpas.Ui.ChatMessages as ChatMessages, Fpas.Ui.Comments as Comments, Fpas.Ui.Presences as Presences, Fpas.Ui.Counters as Counters, Fpas.Ui.Tickers as Tickers, Fpas.Ui.StatusSpinners as StatusSpinners, Fpas.Ui.SkeletonGroups as SkeletonGroups, Fpas.Ui.Sparklines as Sparklines, Fpas.Ui.StatusButtons as Status,
   Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
   Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
   Fpas.Ui.Motion as Motion, Fpas.Ui.ShimmerTexts as ShimmerTexts, Fpas.Ui.Typewriters as Typewriters, Fpas.Ui.TextReveals as TextReveals, Fpas.Ui.WordRotations as WordRotations, Fpas.Ui.NumberRolls as NumberRolls, Fpas.Ui.GradientTexts as GradientTexts, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.Loaders as Loaders, Fpas.Ui.Docks as Docks, Fpas.Ui.ControlTiles as ControlTiles, Fpas.Ui.NowPlaying as NowPlaying, Fpas.Ui.Waveforms as Waveforms, Fpas.Ui.TabBars as TabBars,
@@ -502,6 +510,458 @@ begin
       function(Next: EventTracks.Change): TParent => Messages(Change(Next)),
       Settings
     );
+    when E.Element.FormattedText(
+      const Text: string,
+      const Font: Motion.Font,
+      const FontSize: float,
+      const Tint: MediaColor.Color
+    ): E.Element<TParent>.FormattedText(Text, Font, FontSize, Tint);
+    when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Keymap(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.CommitGraph(_, _, _, _, _), E.Element.DependencyGraph(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.NetworkWaterfall(_, _, _, _, _), E.Element.TraceViewer(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TestExplorer(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.StackTrace(_, _, _, _), E.Element.ResponseStatus(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Coverage(_, _, _, _), E.Element.Blame(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ApiExplorer(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.KeyValueEditor(_, _, _, _), E.Element.QueryBuilder(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SchedulePicker(_, _, _, _), E.Element.RegexTester(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RequestBar(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.FeatureFlags(_, _, _, _, _): Developer.Map<TChild, TParent>(Value, Messages);
+    when E.Element.FormatBar(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.LiveCursors(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PresencePill(_, _, _), E.Element.SelectionRing(_, _, _), E.Element.CanvasControls(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ResultCard(_, _, _, _, _), E.Element.SelectionBar(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Canvas.Map<TChild, TParent>(
+      Value,
+      Messages,
+      function(Content: E.Element<TChild>): E.Element<TParent> => Map<TChild, TParent>(
+        Content,
+        Messages
+      )
+    );
+    when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.HexView(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(
+      _,
+      _,
+      _,
+      _,
+      _
+    ): SourceTools.Map<TChild, TParent>(Value, Messages);
+    when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.CurveEditor(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.GradientEditor(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TimelineEditor(_, _, _, _, _): EditingTools.Map<TChild, TParent>(Value, Messages);
+    when E.Element.NativeText(_, _), E.Element.Icon(
+      _,
+      _,
+      _
+    ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Veil(
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Display.Map<TChild, TParent>(
+      Value,
+      Messages,
+      function(Child: E.Element<TChild>): E.Element<TParent> => Map<TChild, TParent>(
+        Child,
+        Messages
+      )
+    );
+    when E.Element.VoiceWave(
+      const Id: string,
+      const Signal: Voice.Signal,
+      const Progress: float?,
+      const Changed: Sys.Func<float, TChild>?,
+      const Settings: VoiceWaves.Options
+    ): E.Element<TParent>.VoiceWave(
+      Id, Signal, Progress, M.Callback<float, TChild, TParent>(Changed, Messages), Settings
+    );
+    when E.Element.VoiceNote(
+      const Id: string,
+      const Levels: array of float,
+      const Playback: VoiceNotes.Value,
+      const Changed: function(VoiceNotes.Event): TChild,
+      const Settings: VoiceNotes.Options
+    ): E.Element<TParent>.VoiceNote(
+      Id,
+      Levels,
+      Playback,
+      function(Next: VoiceNotes.Event): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.VoiceSession(
+      const Id: string,
+      const Mode: Voice.Activity,
+      const Signal: Voice.Signal,
+      const Muted: bool?,
+      const Changed: function(VoiceSessions.Event): TChild,
+      const Settings: VoiceSessions.Options
+    ): E.Element<TParent>.VoiceSession(
+      Id,
+      Mode,
+      Signal,
+      Muted,
+      function(Next: VoiceSessions.Event): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.Composer(
+      const Id: string,
+      const Content: Composers.Value,
+      const Changed: function(Composers.Event): TChild,
+      const Settings: Composers.Options
+    ): E.Element<TParent>.Composer(
+      Id,
+      Content,
+      function(Next: Composers.Event): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.VoiceOrb(
+      const Id: string,
+      const Mode: Voice.Activity,
+      const Level: float,
+      const Activate: Sys.Func<TChild>?,
+      const Settings: VoiceOrbs.Options
+    ): E.Element<TParent>.VoiceOrb(
+      Id, Mode, Level, M.Factory<TChild, TParent>(Activate, Messages), Settings
+    );
+    when E.Element.Reasoning(
+      const Id: string,
+      const Bodies: array of E.Element<TChild>,
+      const Settings: Reasonings.Options
+    ): E.Element<TParent>.Reasoning(Id, Children(Bodies), Settings);
+    when E.Element.ToolCall(
+      const Id: string,
+      const Name: string,
+      const Settings: ToolCalls.Options
+    ): E.Element<TParent>.ToolCall(Id, Name, Settings);
+    when E.Element.AgentPlan(
+      const Id: string,
+      const Steps: array of AgentPlans.Step,
+      const Changed: Sys.Func<int, TChild>?,
+      const Settings: AgentPlans.Options
+    ): E.Element<TParent>.AgentPlan(
+      Id, Steps, M.Callback<int, TChild, TParent>(Changed, Messages), Settings
+    );
+    when E.Element.AgentStatus(
+      const Id: string,
+      const Label: string,
+      const Settings: AgentStatuses.Options
+    ): E.Element<TParent>.AgentStatus(Id, Label, Settings);
+    when E.Element.SourceList(
+      const Id: string,
+      const Documents: array of Sources.Item,
+      const Changed: Sys.Func<int, TChild>?,
+      const Settings: SourceLists.Options
+    ): E.Element<TParent>.SourceList(
+      Id, Documents, M.Callback<int, TChild, TParent>(Changed, Messages), Settings
+    );
+    when E.Element.Citation(
+      const Id: string,
+      const Number: int,
+      const Source: Sources.Item?,
+      const Activate: Sys.Func<TChild>?,
+      const Settings: Citations.Options
+    ): E.Element<TParent>.Citation(
+      Id, Number, Source, M.Factory<TChild, TParent>(Activate, Messages), Settings
+    );
+    when E.Element.ContextMeter(
+      const Id: string,
+      const Used: float,
+      const Limit: float,
+      const Breakdown: array of ContextMeters.Part,
+      const Settings: ContextMeters.Options
+    ): E.Element<TParent>.ContextMeter(Id, Used, Limit, Breakdown, Settings);
+    when E.Element.ResponseActions(
+      const Id: string,
+      const Vote: int?,
+      const Changed: function(ResponseActions.Event): TChild,
+      const Settings: ResponseActions.Options
+    ): E.Element<TParent>.ResponseActions(
+      Id,
+      Vote,
+      function(Next: ResponseActions.Event): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.PromptSuggestions(
+      const Id: string,
+      const Items: array of PromptSuggestions.Item,
+      const Changed: function(int): TChild,
+      const Settings: PromptSuggestions.Options
+    ): E.Element<TParent>.PromptSuggestions(
+      Id,
+      Items,
+      function(Next: int): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.ModelPicker(
+      const Id: string,
+      const Items: array of ModelPickers.Item,
+      const Selected: int,
+      const Changed: function(int): TChild,
+      const Settings: ModelPickers.Options
+    ): E.Element<TParent>.ModelPicker(
+      Id,
+      Items,
+      Selected,
+      function(Next: int): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.Carousel(
+      const Id: string,
+      const Slides: array of E.Element<TChild>,
+      const Index: int,
+      const Changed: function(int): TChild,
+      const Settings: Carousels.Options
+    ): E.Element<TParent>.Carousel(
+      Id,
+      Children(Slides),
+      Index,
+      function(Next: int): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.CardStack(
+      const Id: string,
+      const DeckItems: array of E.Element<TChild>,
+      const Changed: function(CardStacks.Direction): TChild,
+      const Settings: CardStacks.Options
+    ): E.Element<TParent>.CardStack(
+      Id,
+      Children(DeckItems),
+      function(Next: CardStacks.Direction): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.ImageViewer(
+      const Id: string,
+      const Image: Media.Source,
+      const ViewValue: ImageViewers.Value,
+      const Changed: function(ImageViewers.Value): TChild,
+      const Settings: ImageViewers.Options
+    ): E.Element<TParent>.ImageViewer(
+      Id,
+      Image,
+      ViewValue,
+      function(Next: ImageViewers.Value): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.ImageCropper(
+      const Id: string,
+      const Image: Media.Source,
+      const Crop: ImageCroppers.Value,
+      const Changed: function(ImageCroppers.Value): TChild,
+      const Settings: ImageCroppers.Options
+    ): E.Element<TParent>.ImageCropper(
+      Id,
+      Image,
+      Crop,
+      function(Next: ImageCroppers.Value): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.ImageCompare(
+      const Id: string,
+      const Before: Media.Source,
+      const After: Media.Source,
+      const Position: float,
+      const Changed: function(float): TChild,
+      const Settings: ImageComparisons.Options
+    ): E.Element<TParent>.ImageCompare(
+      Id,
+      Before,
+      After,
+      Position,
+      function(Next: float): TParent => Messages(Changed(Next)),
+      Settings
+    );
+    when E.Element.ChatMessage(
+      const Id: string,
+      const Text: string,
+      const Settings: ChatMessages.Options
+    ): E.Element<TParent>.ChatMessage(Id, Text, Settings);
+    when E.Element.ChatDivider(
+      const Id: string,
+      const Label: string
+    ): E.Element<TParent>.ChatDivider(Id, Label);
+    when E.Element.TypingIndicator(
+      const Id: string,
+      const Name: string
+    ): E.Element<TParent>.TypingIndicator(Id, Name);
+    when E.Element.Comment(
+      const Id: string,
+      const Author: string,
+      const Text: string,
+      const Current: Comments.Value,
+      const Change: function(Comments.Event): TChild,
+      const Settings: Comments.Options
+    ): E.Element<TParent>.Comment(
+      Id,
+      Author,
+      Text,
+      Current,
+      function(Event: Comments.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.Presence(
+      const Id: string,
+      const Users: array of Presences.User,
+      const Settings: Presences.Options
+    ): E.Element<TParent>.Presence(Id, Users, Settings);
+    when E.Element.Counter(
+      const Id: string,
+      const Value: double,
+      const Settings: Counters.Options
+    ): E.Element<TParent>.Counter(Id, Value, Settings);
+    when E.Element.Ticker(
+      const Id: string,
+      const Items: array of Tickers.Item,
+      const Settings: Tickers.Options
+    ): E.Element<TParent>.Ticker(Id, Items, Settings);
+    when E.Element.StatusSpinner(
+      const Id: string,
+      const CurrentStatus: Status.Status,
+      const Settings: StatusSpinners.Options
+    ): E.Element<TParent>.StatusSpinner(Id, CurrentStatus, Settings);
+    when E.Element.SkeletonGroup(
+      const Id: string,
+      const Views: array of E.Element<TChild>,
+      const Settings: SkeletonGroups.Options
+    ): E.Element<TParent>.SkeletonGroup(Id, Children(Views), Settings);
+    when E.Element.Sparkline(
+      const Id: string,
+      const Values: array of float,
+      const Settings: Sparklines.Options
+    ): E.Element<TParent>.Sparkline(Id, Values, Settings);
     when E.Element.PathBar(
       const Id: string,
       const Value: PathBars.Value,
@@ -1000,7 +1460,7 @@ begin
       _,
       _,
       _
-    ), E.Element.Spinner(_, _), E.Element.Skeleton(
+    ), E.Element.Spinner(_, _, _), E.Element.Skeleton(
       _,
       _,
       _
@@ -1078,6 +1538,7 @@ begin
       _,
       _
     ), E.Element.SpeedDialAction(_, _, _, _), E.Element.CheckboxAction(
+      _,
       _,
       _,
       _,

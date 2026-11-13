@@ -19,6 +19,17 @@ void fpas_cui_group_end(cui_ctx *ui, int node) {
     ui->last_id = ui->nodes[node].id;
 }
 
+void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius) {
+    if (node < 0 || node >= ui->node_count) return;
+    ui->nodes[node].bg = fpas_chart_color(-1, rgba);
+    ui->nodes[node].radius = CUI_CORNERS(radius);
+}
+
+void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba) {
+    const cui_text_opts options = { .font = (cui_font)font, .size = size, .color = fpas_chart_color(-1, rgba) };
+    cui_text_ex(ui, text, &options);
+}
+
 void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction) {
     cui_node *n = &ui->nodes[node];
     n->pad[0] = top; n->pad[1] = end; n->pad[2] = bottom; n->pad[3] = start;
@@ -51,18 +62,27 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
     if (node < 0 || node >= ui->node_count) return;
     if (role == 0) return;
     cui_node *n = &ui->nodes[node];
-    if (role == 1 || role == 7 || role == 9 || role == 10) {
-        n->bg = role == 7 ? CUI_C(ui, SURFACE_MUTED) : role == 9 ? CUI_C(ui, BORDER) : CUI_C(ui, SURFACE);
-        if (role == 10) {
-            n->radius = CUI_CORNERS(ui->theme.radius_surface);
+    if (role == 26 || role == 27) {
+        n->bg = role == 26 ? CUI_C(ui, FOREGROUND) : CUI_C(ui, SURFACE);
+        n->radius = CUI_CORNERS(role == 26 ? 10 : 999);
+        if (role == 27) {
             n->border = 1;
             n->border_color = CUI_C(ui, BORDER);
         }
         return;
     }
-    cui_color color = role == 3 || role == 12 || role == 15 || role == 22 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
+    if (role == 1 || role == 7 || role == 9 || role == 10) {
+        n->bg = role == 7 ? CUI_C(ui, SURFACE_MUTED) : role == 9 ? CUI_C(ui, BORDER) : CUI_C(ui, SURFACE);
+        if (role == 10) {
+            if (n->radius.tl == 0) n->radius = CUI_CORNERS(ui->theme.radius_surface);
+            n->border = 1;
+            n->border_color = CUI_C(ui, BORDER);
+        }
+        return;
+    }
+    cui_color color = role == 3 || role == 12 || role == 15 || role == 22 || role == 29 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
         role == 4 ? CUI_C(ui, ACCENT) : role == 5 || role == 18 ? CUI_C(ui, TEXT_SECONDARY) :
-        role == 25 ? CUI_C(ui, SUCCESS) : CUI_C(ui, FOREGROUND);
+        role == 25 ? CUI_C(ui, SUCCESS) : role == 28 ? CUI_C(ui, BACKGROUND) : CUI_C(ui, FOREGROUND);
     int label = (ui->nodes[node].flags & CUI_NF_TEXT) ? node : fpas_label_node(ui, node);
     if (label >= 0) {
         if (role != 19 && role != 20 && role != 21) ui->nodes[label].text_color = color;
@@ -81,7 +101,7 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].font = CUI_FONT_DISPLAY;
             ui->nodes[label].font_size = cui__fs(ui, 22);
             ui->nodes[label].flags |= CUI_NF_TABULAR;
-        } else if (role == 14) {
+        } else if (role == 14 || role == 28) {
             ui->nodes[label].font = CUI_FONT_MEDIUM;
         } else if (role == 18) {
             ui->nodes[label].font_size = cui__fs(ui, 15);
@@ -98,9 +118,9 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].font = CUI_FONT_MEDIUM;
             ui->nodes[label].font_size = cui__fs(ui, 13.5f);
             ui->nodes[label].line_height = 1.35f;
-        } else if (role == 15 || role == 22 || role == 25) {
+        } else if (role == 15 || role == 22 || role == 25 || role == 29) {
             ui->nodes[label].font = CUI_FONT_ICONS;
-            ui->nodes[label].font_size = role == 22 ? 16 : role == 25 ? 14 : 12;
+            ui->nodes[label].font_size = role == 22 ? 16 : role == 29 ? 15 : role == 25 ? 14 : 12;
             ui->nodes[label].line_height = 1;
             ui->nodes[label].flags &= ~CUI_NF_WRAP;
             ui->nodes[label].self_align = CUI_ALIGN_CENTER;

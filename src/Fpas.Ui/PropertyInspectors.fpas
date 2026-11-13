@@ -1,0 +1,95 @@
+unit Fpas.Ui.PropertyInspectors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+
+// Typed value supported by CUI's inspector.
+public type Value = variant
+  // Floating-point scrub field.
+  Number(Amount: float);
+  // Integral scrub field.
+  Integer(Amount: int);
+  // Single-line input.
+  Text(Content: string);
+  // Switch or checkbox.
+  Boolean(Checked: bool);
+  // Dropdown choices and selected index.
+  Choice(Items: array of string; Selected: int);
+  // RGBA swatch.
+  Color(Tint: G.Color);
+  // Two, three or four scrub fields.
+  Vector(Components: array of float);
+end variant;
+
+// One property row.
+public type Property = record
+  // Visible label.
+  public Label: string;
+  // Current typed value.
+  public Current: Value;
+  // Minimum. Both bounds zero use the native unbounded range.
+  public Minimum: float := 0.0F;
+  // Maximum.
+  public Maximum: float := 0.0F;
+  // Drag and arrow step.
+  public Step: float := 0.0F;
+  // Fixed decimal digits, or minus one to derive precision from the step.
+  public Digits: int := -1;
+  // Unit after the value.
+  public Suffix: string := '';
+  // Text shown in an empty input.
+  public Placeholder: string := '';
+  // Tooltip on the label.
+  public Tooltip: string := '';
+  // UTF-8 input capacity including the terminator.
+  public Capacity: int := 256;
+  // Whether the row accepts input.
+  public Enabled: bool := true;
+  // Draw booleans as checkboxes.
+  public Checkbox: bool := false;
+end record;
+
+// A native group of property rows.
+public type Group = record
+  // Group heading.
+  public Title: string;
+  // Rows in display order.
+  public Properties: array of Property;
+  // Current expansion.
+  public Open: bool := true;
+  // Whether the header can collapse.
+  public Collapsible: bool := true;
+end record;
+
+// Proposed inspector update.
+public type Event = variant
+  // A group's proposed expansion.
+  Expansion(GroupIndex: int; Open: bool);
+  // Proposed property value in a group.
+  Edit(GroupIndex: int; RowIndex: int; Current: Value);
+end variant;
+
+// Native PropertyInspector settings.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Initial label column width, or zero for the native proportion.
+  public LabelWidth: float := 0.0F;
+end record;
+
+// Creates a graphical PropertyInspector.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Groups`: Groups and their model-owned property values.
+// - `Changed`: Maps a native proposal to a message.
+// - `Settings`: Native layout and behavior options.
+// ## Returns
+// A graphical element.
+public function PropertyInspector<TMsg>(Id: string; Groups: array of Group; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.PropertyInspector(Id, Groups, Changed, Settings ?? new Options());
+end function;
+
+end unit;

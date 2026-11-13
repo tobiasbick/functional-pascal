@@ -80,6 +80,28 @@ public sealed class GuiHostTests
         CheckChecklistFocus(galleryCapture);
         CheckHoverLinkFocus(galleryCapture);
         CheckReaderMarker(galleryCapture);
+        foreach (string page in new[] { "developer", "more" })
+            for (int offset = 0; offset < 3; offset++)
+                PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-{offset}.png", 1100, 1700);
+        foreach (string page in new[] { "canvas", "creative" })
+        {
+            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-1100.png", 1100, 1700);
+            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550.png", 550, 1700);
+            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550-end.png", 550, 1700);
+        }
+
+        foreach (int width in new[] { 1100, 550 })
+        {
+            PngAssertions.HasRenderedContent($"{galleryCapture}-display-{width}.png", width, 1700);
+            PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}.png", width, 1700);
+            PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}-revealed.png", width, 1700);
+            PngAssertions.HasRenderedContent($"{galleryCapture}-files-{width}-0.png", width, 1400);
+            foreach (int offset in new[] { 0, 520, 900 })
+                PngAssertions.HasRenderedContent($"{galleryCapture}-editing-{width}-{offset}.png", width, 1400);
+            foreach (int offset in new[] { 650, 1450, 2100, 2800 })
+                PngAssertions.HasRenderedContent($"{galleryCapture}-code-{width}-{offset}.png", width, 1700);
+        }
+
         string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
         foreach (var (page, width, height) in new[]
         {

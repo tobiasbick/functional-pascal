@@ -17,6 +17,12 @@ public type Model = record
   public SecurityOpen: bool := false;
   // Visibility of the announcement.
   public BannerOpen: bool := true;
+  // Whether the photo is revealed.
+  public Photo: bool := false;
+  // Whether the sample key is revealed.
+  public KeyShown: bool := false;
+  // Whether the spoiler is revealed.
+  public Spoiler: bool := false;
   // Target time retained across visits to Disclosure.
   public Deadline: Sys.DateTimeOffset? := null;
   // Most recent clock sample for the countdowns.
@@ -56,6 +62,12 @@ public type Msg = variant
   CompleteStep(Index: int);
   // Show the timed archive toast.
   ArchiveConversations;
+  // Reveal or cover the photo.
+  SetPhoto(Shown: bool);
+  // Reveal or cover the sample key.
+  SetKey(Shown: bool);
+  // Reveal or cover the spoiler.
+  SetSpoiler(Shown: bool);
   // Refresh the countdown from the page clock.
   SetCountdown(Deadline: Sys.DateTimeOffset; SecondsLeft: double);
 end variant;

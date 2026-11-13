@@ -1,0 +1,106 @@
+unit Fpas.Ui.TraceViewers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native TraceViewer widget.
+public type Track = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Collapsed supplied to CUI.
+  public Collapsed: bool;
+end record;
+
+// Data for the native TraceViewer widget.
+public type Span = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Start supplied to CUI.
+  public Start: double;
+  // End supplied to CUI.
+  public End: double;
+  // Track supplied to CUI.
+  public Track: int;
+  // Nesting depth, starting at zero.
+  public Depth: int;
+  // Color Key supplied to CUI.
+  public ColorKey: uint;
+end record;
+
+// Data for the native TraceViewer widget.
+public type Marker = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Time supplied to CUI.
+  public Time: double;
+  // Tone supplied to CUI.
+  public Tone: int;
+end record;
+
+// Data for the native TraceViewer widget.
+public type View = record
+  // Start supplied to CUI.
+  public Start: double;
+  // End supplied to CUI.
+  public End: double;
+  // Scroll supplied to CUI.
+  public Scroll: float;
+  // Mark Start supplied to CUI.
+  public MarkStart: double;
+  // Mark End supplied to CUI.
+  public MarkEnd: double;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Viewport supplied to CUI.
+  public Viewport: View;
+  // Selected zero-based index, or minus one.
+  public Selection: int;
+  // Changed lane, or minus one when all lanes kept their state.
+  public TrackIndex: int;
+  // New collapsed state of the changed lane.
+  public Collapsed: bool;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Row Height supplied to CUI.
+  public RowHeight: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native TraceViewer widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Tracks`: Model-owned tracks data.
+// - `Spans`: Model-owned spans data.
+// - `Markers`: Model-owned markers data.
+// - `Value`: Model-owned value data.
+// - `Selection`: Selected zero-based index, or minus one.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function TraceViewer<TMsg>(Id: string; Tracks: array of Track; Spans: array of Span; Markers: array of Marker; Value: View; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TraceViewer(
+    Id,
+    Tracks,
+    Spans,
+    Markers,
+    Value,
+    Selection,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

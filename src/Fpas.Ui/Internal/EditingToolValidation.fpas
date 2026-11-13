@@ -1,0 +1,288 @@
+unit Fpas.Ui.Internal.EditingToolValidation;
+
+uses
+  Fpas.Ui.PropertyInspectors as PropertyInspectors,
+  Fpas.Ui.FlameGraphs as FlameGraphs,
+  Fpas.Ui.CurveEditors as CurveEditors,
+  Fpas.Ui.GradientEditors as GradientEditors,
+  Fpas.Ui.TimelineEditors as TimelineEditors,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Rules as R,
+  Fpas.Ui.Internal.ChartRules as C, System as Sys;
+
+procedure Finite(Value: float; Path: string);
+begin
+  if not Sys.Single.IsFinite(Value) then
+    R.Reject(Path, 'Expected a finite value.');
+  end if;
+end procedure;
+
+procedure Capacity(Count: int; Limit: int; Path: string);
+begin
+  if Limit < Count or Limit > 65536 then
+    R.Reject(Path, 'Invalid editing capacity.');
+  end if;
+end procedure;
+
+procedure Selection(Index: int; Count: int; Path: string);
+begin
+  if Index < -1 or Index >= Count then
+    R.Reject(Path, 'Selection is out of range.');
+  end if;
+end procedure;
+
+procedure CurveKey(Item: CurveEditors.Key; Previous: float; Path: string);
+begin
+  Finite(Item.X, Path);
+  Finite(Item.Y, Path);
+  Finite(Item.InX, Path);
+  Finite(Item.InY, Path);
+  Finite(Item.OutX, Path);
+  Finite(Item.OutY, Path);
+  if Item.X < Previous or not Sys.Enum.IsDefined<CurveEditors.Mode>(Item.Interpolation) then
+    R.Reject(Path, 'Invalid key order or interpolation.');
+  end if;
+end procedure;
+
+procedure Curve(Keys: array of CurveEditors.Key; Limit: int; Path: string);
+begin
+  Capacity(Keys.Length, Limit, Path);
+  var Previous: float := Sys.Single.MinValue;
+  for Item: CurveEditors.Key in Keys do
+    CurveKey(Item, Previous, Path);
+    Previous := Item.X;
+  end for;
+end procedure;
+
+// Validates a native editing tool and registers its identity.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Widget to validate.
+// - `Location`: Diagnostic path.
+// - `Profile`: Rendering target.
+// - `Identify`: Stable identity registrar.
+public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string);
+begin
+  R.RequireProfile(Profile, V.Target.Graphical, Location);
+  case Node of
+    when E.Element.PropertyInspector(
+      const Id: string,
+      const Groups: array of PropertyInspectors.Group,
+      _,
+      const Settings: PropertyInspectors.Options
+    ):
+      const Path: string := Identify(Id, Location + '/PropertyInspector');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      for Group: PropertyInspectors.Group in Groups do
+        R.CheckText(Group.Title, Path);
+        for Row: PropertyInspectors.Property in Group.Properties do
+          R.CheckText(Row.Label, Path);
+          R.CheckText(Row.Suffix, Path);
+          R.CheckText(Row.Placeholder, Path);
+          R.CheckText(Row.Tooltip, Path);
+          Finite(Row.Minimum, Path);
+          Finite(Row.Maximum, Path);
+          C.Distance(Row.Step, Path);
+          if Row.Digits < -1 or Row.Digits > 9 or Row.Capacity < 1 or Row.Capacity > 1048576 then
+            R.Reject(Path, 'Invalid property precision or capacity.');
+          end if;
+
+          case Row.Current of
+            when PropertyInspectors.Value.Number(const Amount: float):
+              Finite(Amount, Path);
+            when PropertyInspectors.Value.Text(const Value: string):
+              R.CheckText(Value, Path);
+              if Sys.Text.Encoding.UTF8.GetByteCount(Value) >= Row.Capacity then
+                R.Reject(Path, 'Property text exceeds its capacity.');
+              end if;
+            when PropertyInspectors.Value.Choice(const Items: array of string, const Selected: int):
+              if Items.Length = 0 or Selected < 0 or Selected >= Items.Length then
+                R.Reject(Path, 'Invalid property choice.');
+              end if;
+
+              for Item: string in Items do
+                R.CheckText(Item, Path);
+              end for;
+            when PropertyInspectors.Value.Vector(const Vector: array of float):
+              if Vector.Length < 2 or Vector.Length > 4 then
+                R.Reject(Path, 'Expected two to four components.');
+              end if;
+
+              for Part: float in Vector do
+                Finite(Part, Path);
+              end for;
+            else
+          end case;
+        end for;
+      end for;
+
+      C.Distance(Settings.LabelWidth, Path);
+    when E.Element.FlameGraph(
+      const Id: string,
+      const Spans: array of FlameGraphs.Span,
+      const Current: FlameGraphs.View,
+      _,
+      const Settings: FlameGraphs.Options
+    ):
+      const Path: string := Identify(Id, Location + '/FlameGraph');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Height, Path);
+      C.Distance(Settings.RowHeight, Path);
+      if not Sys.Double.IsFinite(Current.Start) or not Sys.Double.IsFinite(Current.Finish)
+        or not Sys.Double.IsFinite(Settings.MinimumRange) or Settings.MinimumRange < 0.0
+      then
+        R.Reject(Path, 'Invalid flame graph range.');
+      end if;
+
+      Selection(Current.Selected, Spans.Length, Path);
+      C.Distance(Current.Scroll, Path);
+      var Depth: int := -1;
+      var Start: double := 0.0;
+      var Finish: double := 0.0;
+      for Span: FlameGraphs.Span in Spans do
+        R.CheckText(Span.Name, Path);
+        if Span.Depth < 0 or Span.Depth < Depth or not Sys.Double.IsFinite(Span.Start)
+          or not Sys.Double.IsFinite(Span.Finish) or Span.Finish < Span.Start
+          or (Span.Depth = Depth and (Span.Start < Start or (Span.Start = Start and Span.Finish >
+          Finish)))
+        then
+          R.Reject(Path, 'Flame spans must be sorted by depth, start and longer first on ties.');
+        end if;
+
+        Depth := Span.Depth;
+        Start := Span.Start;
+        Finish := Span.Finish;
+      end for;
+    when E.Element.CurveEditor(
+      const Id: string,
+      const Keys: array of CurveEditors.Key,
+      const Selected: int,
+      _,
+      const Settings: CurveEditors.Options
+    ):
+      const Path: string := Identify(Id, Location + '/CurveEditor');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Height, Path);
+      Curve(Keys, Settings.Capacity, Path);
+      Selection(Selected, Keys.Length, Path);
+      Finite(Settings.XMinimum, Path);
+      Finite(Settings.XMaximum, Path);
+      Finite(Settings.YMinimum, Path);
+      Finite(Settings.YMaximum, Path);
+      if Settings.XMaximum <= Settings.XMinimum or Settings.YMaximum <= Settings.YMinimum then
+        R.Reject(Path, 'Curve ranges must be increasing.');
+      end if;
+      const Position: float? := Settings.Playhead;
+      if Position <> null then
+        Finite(Position ?? 0.0F, Path);
+      end if;
+
+      R.CheckText(Settings.XLabel, Path);
+      R.CheckText(Settings.YLabel, Path);
+    when E.Element.GradientEditor(
+      const Id: string,
+      const Stops: array of GradientEditors.Stop,
+      const Selected: int,
+      _,
+      const Settings: GradientEditors.Options
+    ):
+      const Path: string := Identify(Id, Location + '/GradientEditor');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Height, Path);
+      Capacity(Stops.Length, Settings.Capacity, Path);
+      Selection(Selected, Stops.Length, Path);
+      var Previous: float := 0.0F;
+      for Stop: GradientEditors.Stop in Stops do
+        Finite(Stop.Position, Path);
+        if Stop.Position < Previous or Stop.Position > 1.0F then
+          R.Reject(Path, 'Gradient stops must be sorted within zero to one.');
+        end if;
+
+        Previous := Stop.Position;
+      end for;
+    when E.Element.TimelineEditor(
+      const Id: string,
+      const Tracks: array of TimelineEditors.Track,
+      const Current: TimelineEditors.View,
+      _,
+      const Settings: TimelineEditors.Options
+    ):
+      const Path: string := Identify(Id, Location + '/TimelineEditor');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Height, Path);
+      Finite(Settings.Start, Path);
+      Finite(Settings.Finish, Path);
+      if Settings.Finish <= Settings.Start or not Sys.Single.IsFinite(Settings.FramesPerSecond)
+        or Settings.FramesPerSecond <= 0.0F or Settings.FramesPerSecond > 1000.0F
+        or not Sys.Enum.IsDefined<TimelineEditors.Ruler>(Settings.Labels)
+      then
+        R.Reject(Path, 'Invalid timeline range, frame rate or ruler.');
+      end if;
+
+      C.Distance(Settings.RowHeight, Path);
+      C.Distance(Settings.TrackWidth, Path);
+      C.Distance(Current.Scroll, Path);
+      Finite(Current.Time, Path);
+      Finite(Current.Start, Path);
+      Finite(Current.Finish, Path);
+      Selection(Current.TrackIndex, Tracks.Length, Path);
+      if Current.TrackIndex >= 0 then
+        Selection(Current.KeyIndex, Tracks[Current.TrackIndex].Keys.Length, Path);
+      elsif Current.KeyIndex <> -1 then
+        R.Reject(Path, 'A selected key needs a track.');
+      end if;
+      const Range: TimelineEditors.PlayRange? := Current.Range;
+      if Range <> null then
+        Finite(Range.Start, Path);
+        Finite(Range.Finish, Path);
+        if Range.Start < Settings.Start or Range.Finish > Settings.Finish or Range.Start >
+          Range.Finish
+        then
+          R.Reject(Path, 'Play range must be inside the sequence.');
+        end if;
+      end if;
+      var Depth: int := -1;
+      for Track: TimelineEditors.Track in Tracks do
+        R.CheckText(Track.Name, Path);
+        R.CheckText(Track.Icon, Path);
+        if Track.Depth < 0 or Track.Depth > Depth + 1 or Track.Color < 0 or Track.Color > 6 then
+          R.Reject(Path, 'Invalid timeline depth or series color.');
+        end if;
+
+        Depth := Track.Depth;
+        Capacity(
+          Track.Keys.Length, if Track.Capacity = 0 then
+            Track.Keys.Length
+          else
+            Track.Capacity
+          end if, Path
+        );
+        var Time: float := Settings.Start;
+        for Key: TimelineEditors.Key in Track.Keys do
+          const Item: CurveEditors.Key := Key.Curve;
+          CurveKey(Item, Time, Path);
+          if Item.X > Settings.Finish then
+            R.Reject(Path, 'Key is outside the sequence.');
+          end if;
+
+          Time := Item.X;
+        end for;
+
+        Time := Settings.Start;
+        for Clip: TimelineEditors.Clip in Track.Clips do
+          Finite(Clip.Start, Path);
+          Finite(Clip.Finish, Path);
+          R.CheckText(Clip.Name, Path);
+          C.Distance(Clip.Offset, Path);
+          if Clip.Start < Time or Clip.Finish <= Clip.Start or Clip.Finish > Settings.Finish then
+            R.Reject(Path, 'Clips must be ordered, nonempty and non-overlapping.');
+          end if;
+
+          Time := Clip.Finish;
+        end for;
+      end for;
+    else
+  end case;
+end procedure;
+
+end unit;

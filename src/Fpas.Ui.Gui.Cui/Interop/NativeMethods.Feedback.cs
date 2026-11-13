@@ -16,9 +16,10 @@ internal static partial class NativeMethods
     internal static partial void Progress(nint context, string id, float value, int tone,
         int indeterminate, float height, string label, int showValue, int dither, int widthKind, float width);
 
-    [LibraryImport(Library, EntryPoint = "fpas_cui_spinner", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_spinner_styled", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void Spinner(nint context, string id, float size);
+    internal static partial void Spinner(nint context, string id, float size, int style,
+        int color, uint rgba, int track, uint trackRgba);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_meter", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

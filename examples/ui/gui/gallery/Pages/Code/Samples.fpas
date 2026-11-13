@@ -1,0 +1,303 @@
+unit GuiGallery.Pages.Code.Samples;
+
+uses Fpas.Ui.LogConsoles as Log, System as Sys;
+
+function Lines(Values: array of string): string;
+begin
+  const Result: Sys.Text.StringBuilder := new Sys.Text.StringBuilder();
+  for Index: int := 0 to Values.Length - 1 do
+    if Index > 0 then
+      discard Result.Append(cast<char>(10));
+    end if;
+
+    discard Result.Append(Values[Index]);
+  end for;
+
+  return Result.ToString();
+end function;
+
+// Original release notes with links and tasks.
+public const Notes: string := Lines(
+  [
+    '## Tern 2.4 release notes',
+    '',
+    'The ~~beta~~ sync engine is now the default. It batches writes, so **a 2,000 item import takes 3.1 s** instead of 14 s. Run `tern migrate` once after updating; the [upgrade guide](https://tern.dev/docs/upgrade) lists every *breaking* change.',
+    '',
+    '### What changed',
+    '',
+    '- The offline banner waits 2 s before it appears',
+    '  - It no longer flickers on a slow network',
+    '  - Retry keeps your scroll position',
+    '- Attachments upload in the background',
+    '',
+    '### Before you ship',
+    '',
+    '- [x] Update the changelog',
+    '- [ ] Rerun the sync benchmark on Android',
+    '- [ ] Tag the release',
+    '',
+    '> Builds made before March 4 still read the old cache format, but they write the new one.',
+    '',
+    '```c',
+    'int sync_flush(sync_queue *q) {',
+    '    if (q->count == 0) return 0;   /* nothing to send */',
+    '    return send_batch(q->items, q->count);',
+    '}',
+    '```',
+    '',
+    '| Platform | Cold start | vs 2.3 |',
+    '|:---------|-----------:|:------:|',
+    '| macOS | 412 ms | -18% |',
+    '| Windows | 498 ms | -11% |',
+    '| Android | 731 ms | -9% |',
+    ''
+  ]
+);
+
+// Original editable C tile cache.
+public const Code: string := Lines(
+  [
+    '/* tile_cache.c: a small LRU cache of decoded map tiles */',
+    '#include <stdint.h>',
+    '#include <stdlib.h>',
+    '#include <string.h>',
+    '',
+    '#define CACHE_SLOTS 64',
+    '',
+    'typedef struct {',
+    '    uint32_t key;           /* zoom << 24 | y << 12 | x */',
+    '    uint32_t last_used;',
+    '    uint8_t *pixels;',
+    '} tile;',
+    '',
+    'static tile cache[CACHE_SLOTS];',
+    'static uint32_t clock_now;',
+    '',
+    'static uint32_t tile_key(int zoom, int x, int y) {',
+    '    return (uint32_t)zoom << 24 | (uint32_t)y << 12 | (uint32_t)x;',
+    '}',
+    '',
+    'tile *tile_get(int zoom, int x, int y) {',
+    '    uint32_t key = tile_key(zoom, x, y);',
+    '    tile *oldest = &cache[0];',
+    '    for (int i = 0; i < CACHE_SLOTS; i++) {',
+    '        if (cache[i].key == key && cache[i].pixels) {',
+    '            cache[i].last_used = ++clock_now;',
+    '            return &cache[i];',
+    '        }',
+    '        if (cache[i].last_used < oldest->last_used) oldest = &cache[i];',
+    '    }',
+    '    /* miss: reuse the least recently used slot */',
+    '    free(oldest->pixels);',
+    '    oldest->pixels = decode_tile(zoom, x, y);',
+    '    oldest->key = key;',
+    '    oldest->last_used = ++clock_now;',
+    '    return oldest;',
+    '}',
+    '',
+    'void tile_cache_clear(void) {',
+    '    for (int i = 0; i < CACHE_SLOTS; i++) free(cache[i].pixels);',
+    '    memset(cache, 0, sizeof cache);',
+    '}',
+    ''
+  ]
+);
+
+// Previous source in the original diff specimen.
+public const DiffBefore: string := Lines(
+  [
+    '#include <stdio.h>',
+    '#include <stdlib.h>',
+    '#include <string.h>',
+    '',
+    '#include "config.h"',
+    '',
+    '#define LINE_MAX 256',
+    '',
+    'static void trim(char *s) {',
+    '    size_t n = strlen(s);',
+    '    while (n > 0 && (s[n - 1] == ''\n'' || s[n - 1] == '' '')) s[--n] = ''\0'';',
+    '}',
+    '',
+    'static int parse_line(const char *line, char *key, char *value) {',
+    '    const char *eq = strchr(line, ''='');',
+    '    if (!eq) return 0;',
+    '    size_t n = (size_t)(eq - line);',
+    '    memcpy(key, line, n);',
+    '    key[n] = ''\0'';',
+    '    strcpy(value, eq + 1);',
+    '    trim(value);',
+    '    return 1;',
+    '}',
+    '',
+    'int config_load(config *cfg, const char *path) {',
+    '    FILE *f = fopen(path, "r");',
+    '    char buf[LINE_MAX];',
+    '    int count = 0;',
+    '    while (fgets(buf, sizeof buf, f)) {',
+    '        char key[LINE_MAX], value[LINE_MAX];',
+    '        if (buf[0] == ''#'') continue;',
+    '        if (!parse_line(buf, key, value)) continue;',
+    '        /* keys from version 1 used dashes */',
+    '        for (char *p = key; *p; p++)',
+    '            if (*p == ''-'') *p = ''_'';',
+    '        config_set(cfg, key, value);',
+    '        count++;',
+    '    }',
+    '    fclose(f);',
+    '    return count;',
+    '}',
+    '',
+    'void config_free(config *cfg) {',
+    '    for (int i = 0; i < cfg->count; i++) {',
+    '        free(cfg->keys[i]);',
+    '        free(cfg->values[i]);',
+    '    }',
+    '    free(cfg->keys);',
+    '    free(cfg->values);',
+    '    cfg->count = 0;',
+    '}',
+    ''
+  ]
+);
+
+// Revised source in the original diff specimen.
+public const DiffAfter: string := Lines(
+  [
+    '#include <stdio.h>',
+    '#include <stdlib.h>',
+    '#include <string.h>',
+    '',
+    '#include "config.h"',
+    '#include "log.h"',
+    '',
+    '#define LINE_MAX 256',
+    '',
+    'static void trim(char *s) {',
+    '    size_t n = strlen(s);',
+    '    while (n > 0 && (s[n - 1] == ''\n'' || s[n - 1] == '' '')) s[--n] = ''\0'';',
+    '}',
+    '',
+    'static int parse_line(const char *line, char *key, char *value) {',
+    '    const char *eq = strchr(line, ''='');',
+    '    if (!eq || eq == line) return 0;',
+    '    size_t n = (size_t)(eq - line);',
+    '    memcpy(key, line, n);',
+    '    key[n] = ''\0'';',
+    '    snprintf(value, LINE_MAX, "%s", eq + 1);',
+    '    trim(value);',
+    '    return 1;',
+    '}',
+    '',
+    'int config_load(config *cfg, const char *path) {',
+    '    FILE *f = fopen(path, "r");',
+    '    if (!f) {',
+    '        log_error("cannot open %s", path);',
+    '        return -1;',
+    '    }',
+    '    char buf[LINE_MAX];',
+    '    int loaded = 0;',
+    '    while (fgets(buf, sizeof buf, f)) {',
+    '        char key[LINE_MAX], value[LINE_MAX];',
+    '        if (buf[0] == ''#'') continue;',
+    '        if (!parse_line(buf, key, value)) continue;',
+    '        config_set(cfg, key, value);',
+    '        loaded++;',
+    '    }',
+    '    fclose(f);',
+    '    return loaded;',
+    '}',
+    '',
+    'void config_free(config *cfg) {',
+    '    for (int i = 0; i < cfg->count; i++) {',
+    '        free(cfg->keys[i]);',
+    '        free(cfg->values[i]);',
+    '    }',
+    '    free(cfg->keys);',
+    '    free(cfg->values);',
+    '    cfg->count = 0;',
+    '}',
+    ''
+  ]
+);
+
+// The 2048-byte PNG specimen used by CUI, including its synthetic IDAT bytes.
+public const Bytes: array of byte := Sys.Convert.FromBase64String(
+  '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' +
+  'TKkpFy1VHW+HWo4AAAAASUVORK5CYII='
+);
+
+// Original deterministic build log.
+public const Entries: array of Log.Entry := [
+  new Log.Entry(Log.Level.Info, 50527.120, 'Loading project harbor_town (412 assets)'),
+  new Log.Entry(Log.Level.Debug, 50527.203, 'Asset cache hit rate 91.4% (376 of 412)'),
+  new Log.Entry(Log.Level.Trace, 50527.564, 'vfs: mounted /content/packs/base.pak (218 MB)'),
+  new Log.Entry(Log.Level.Info, 50528.203, 'Compiling shaders: 64 variants on 8 threads'),
+  new Log.Entry(Log.Level.Debug, 50528.937, 'terrain_blend.frag: 3 permutations, 1.8 ms each'),
+  new Log.Entry(
+    Log.Level.Warning,
+    50529.949,
+    'water_surface.frag:118: implicit float to half conversion'
+  ),
+  new Log.Entry(Log.Level.Info, 50530.154, 'Shaders compiled in 2.41 s'),
+  new Log.Entry(Log.Level.Trace, 50530.454, 'gpu: uploaded 37 textures, 148.2 MB resident'),
+  new Log.Entry(Log.Level.Info, 50531.032, 'Baking navmesh for 3 regions'),
+  new Log.Entry(Log.Level.Debug, 50531.888, 'navmesh: harbor 18,204 polys, market 9,377 polys'),
+  new Log.Entry(
+    Log.Level.Warning,
+    50532.839,
+    'Texture props/barrel_d.png is 4096x4096; streaming budget is 2048'
+  ),
+  new Log.Entry(Log.Level.Info, 50532.983, 'Lightmaps: 12 of 12 atlases up to date'),
+  new Log.Entry(
+    Log.Level.Error,
+    50533.405,
+    'Missing material ''dock_planks_wet'' on mesh pier_03.obj (using fallback)'
+  ),
+  new Log.Entry(Log.Level.Debug, 50533.922, 'audio: 96 voices, 48 kHz, latency 10.7 ms'),
+  new Log.Entry(Log.Level.Info, 50534.717, 'Entering play mode'),
+  new Log.Entry(
+    Log.Level.Trace,
+    50535.790,
+    'frame 1: 14.2 ms (update 3.1, render 9.8, present 1.3)'
+  ),
+  new Log.Entry(Log.Level.Info, 50535.873, 'Spawned 214 entities in harbor'),
+  new Log.Entry(
+    Log.Level.Warning,
+    50536.234,
+    'Physics step took 21.4 ms (budget 16.6 ms) after the crane collision'
+  ),
+  new Log.Entry(Log.Level.Debug, 50536.873, 'Streaming in market district, 31 cells'),
+  new Log.Entry(Log.Level.Info, 50537.607, 'Autosave written to saves/slot_2.sav (1.2 MB)')
+];
+
+end unit;

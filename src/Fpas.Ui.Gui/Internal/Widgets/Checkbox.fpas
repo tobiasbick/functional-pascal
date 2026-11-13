@@ -15,9 +15,10 @@ uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Interna
 // - `Description`: Optional secondary caption.
 // - `Enabled`: Model-owned input permission.
 // - `Indeterminate`: Draw a dash in place of the check mark while checked.
+// - `HideLabel`: Whether to render only the checkbox.
 public procedure Draw<TMsg>(
   Frame: C.State<TMsg>; Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
-  Description: string; Enabled: bool; Indeterminate: bool
+  Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;
@@ -29,7 +30,8 @@ begin
     Checked,
     Allowed,
     C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
-    Indeterminate
+    Indeterminate,
+    HideLabel
   )
   then
     Frame.Messages.Add(OnChange(not Checked));

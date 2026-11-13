@@ -1,0 +1,43 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CodeEditor;
+
+uses
+  Fpas.Ui.CodeEditors as D, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Renders the native CodeEditor and dispatches its proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Text`: Model-owned source code.
+// - `Changed`: Maps editing and caret proposals.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'code-editor';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Result: Cui.CuiCodeEditorEvent? := Frame.Window.CodeEditor(
+    Token, Text, Settings.Capacity, Settings.Language, Settings.Placeholder,
+    Width.Kind, Width.Value, Settings.Height, Settings.Size, Settings.TabSize,
+    P.Bits(Enabled, 1) or P.Bits(Settings.ReadOnly, 2) or P.Bits(Settings.UseTabs, 4)
+    or P.Bits(not Settings.LineNumbers, 8) or P.Bits(Focus, 16)
+  );
+  if Enabled then
+    case Result of
+      when is Cui.CuiCodeEditorEvent as Event:
+        Frame.Messages.Add(
+          Changed(new D.Event(Event.Text, Event.Line, Event.Column, Event.Lines, Event.Refused))
+        );
+      else
+    end case;
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

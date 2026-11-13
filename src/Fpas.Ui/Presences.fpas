@@ -1,0 +1,40 @@
+unit Fpas.Ui.Presences;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as Charts;
+
+// One user in a presence strip.
+public type User = record
+  // Tooltip and initials source.
+  public Name: string;
+  // Ring color.
+  public Color: Charts.Color := Charts.Color.Automatic;
+  // Optional avatar image file.
+  public Avatar: string := '';
+  // Show the user as away.
+  public Idle: bool := false;
+end record;
+
+// Native presence options.
+public type Options = record
+  // Limit before a count badge is shown.
+  public MaximumVisible: int := 5;
+  // Avatar size in logical points.
+  public Size: float := 30.0F;
+end record;
+
+// Draws an overlapping native group of active and away users.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Users`: Users in visible order.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Presence<TMsg>(Id: string; Users: array of User; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Presence(Id, Users, Settings ?? new Options());
+end function;
+
+end unit;

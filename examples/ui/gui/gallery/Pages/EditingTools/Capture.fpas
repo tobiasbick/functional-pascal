@@ -1,0 +1,194 @@
+unit GuiGallery.Pages.EditingTools.Capture;
+
+uses Fpas.Ui.FlameGraphs as F, System.Collections.Generic as C;
+
+function Order(A: F.Span; B: F.Span): int;
+begin
+  if A.Depth <> B.Depth then
+    return A.Depth.CompareTo(B.Depth);
+  end if;
+
+  if A.Start <> B.Start then
+    return A.Start.CompareTo(B.Start);
+  end if;
+
+  return B.Finish.CompareTo(A.Finish);
+end function;
+
+function Generate(): array of F.Span;
+  function Random(): double;
+  begin
+    Seed := cast<uint>((cast<ulong>(Seed) * 1103515245UL + 12345UL) and $FFFFFFFFUL);
+    return cast<double>((Seed shr 16) and $7FFFU) / 32767.0;
+  end function;
+
+  procedure Put(Name: string; Start: double; Finish: double; Depth: int; Color: uint := 0U);
+  begin
+    Items.Add(new F.Span(Name, Start * 0.001, Finish * 0.001, Depth, Color));
+  end procedure;
+
+  procedure Split(Name: string; Start: double; Finish: double; Depth: int; Count: int; Fill: double);
+  begin
+    const Slot: double := (Finish - Start) / cast<double>(Count);
+    for Index: int := 0 to Count - 1 do
+      const Width: double := Slot * Fill * (0.55 + 0.45 * Random());
+      const A: double := Start + cast<double>(Index) * Slot + (Slot - Width) * Random();
+      Put(Name, A, A + Width, Depth);
+    end for;
+  end procedure;
+
+  procedure Sequence(Start: double; Finish: double; Depth: int; Names: array of string; Weights: array of double; Bounds: array of double);
+  begin
+    var Total: double := 0.0;
+    var X: double := Start;
+    for Weight: double in Weights do
+      Total := Total + Weight;
+    end for;
+    const Gap: double := (Finish - Start) * 0.012;
+    const Length: double := (Finish - Start) - Gap * cast<double>(Names.Length + 1);
+    for Index: int := 0 to Names.Length - 1 do
+      const A: double := X + Gap;
+      const B: double := A + Length * Weights[Index] / Total;
+      Put(Names[Index], A, B, Depth);
+      Bounds[2 * Index] := A;
+      Bounds[2 * Index + 1] := B;
+      X := B;
+    end for;
+  end procedure;
+
+  procedure Frame(Title: string; Start: double; Length: double);
+  begin
+    const O: array of double := new double[16];
+    const Top: array of string := ['Update', 'Render', 'Present'];
+    const Tw: array of double := [7.1, 7.6, 1.3];
+    const T3: array of double := new double[6];
+    const Upd: array of string := ['Input', 'Animation', 'Physics', 'AI', 'Scripts'];
+    const Uw: array of double := [0.4, 1.5, 3.2, 1.1, 0.9];
+    const U: array of double := new double[10];
+    const Anim: array of string := ['Blend tree', 'Skinning'];
+    const Aw: array of double := [0.45, 0.55];
+    const Phys: array of string := ['Broadphase', 'Narrowphase', 'Solver'];
+    const Pw: array of double := [0.6, 0.9, 1.5];
+    const Ph: array of double := new double[6];
+    const Sw: array of double := [1.3, 1.0, 0.8, 1.1, 0.7, 0.9, 1.2, 0.6];
+    const Is: array of double := new double[16];
+    const Isl: array of string := [
+      'Island 0',
+      'Island 1',
+      'Island 2',
+      'Island 3',
+      'Island 4',
+      'Island 5',
+      'Island 6',
+      'Island 7'
+    ];
+    const St: array of string := ['Contacts', 'Integrate'];
+    const Stw: array of double := [0.6, 0.4];
+    const So: array of double := new double[4];
+    const Ai: array of string := ['Perception', 'Pathfinding'];
+    const Aiw: array of double := [0.35, 0.65];
+    const Ao: array of double := new double[4];
+    const Ren: array of string := ['Cull', 'Shadow pass', 'GBuffer', 'Lighting', 'Post'];
+    const Rw: array of double := [0.8, 1.9, 2.6, 1.3, 0.8];
+    const R: array of double := new double[10];
+    const Cas: array of string := ['Cascade 0', 'Cascade 1', 'Cascade 2', 'Cascade 3'];
+    const Cw: array of double := [1.4, 1.1, 0.9, 0.7];
+    const Co: array of double := new double[8];
+    const Gb: array of string := ['Opaque', 'Decals'];
+    const Gw: array of double := [0.8, 0.2];
+    const Go: array of double := new double[4];
+    const Bo: array of double := new double[24];
+    const Bw: array of double := new double[12];
+    const Batch: array of string := [
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch',
+      'Batch'
+    ];
+    const Li: array of string := ['Light culling', 'Deferred shading'];
+    const Lw: array of double := [0.35, 0.65];
+    const Lo: array of double := new double[4];
+    const Post: array of string := ['Bloom', 'Tone map', 'TAA'];
+    const Pow3: array of double := [0.4, 0.2, 0.4];
+    const Po: array of double := new double[6];
+    const Pre: array of string := ['Swap buffers'];
+    const Prw: array of double := [1.0];
+    const Pr: array of double := new double[2];
+    const Wt: array of string := ['Wait for GPU'];
+
+    Put(Title, Start, Start + Length, 0, 3U);
+    Sequence(Start, Start + Length, 1, Top, Tw, T3);
+    Sequence(T3[0], T3[1], 2, Upd, Uw, U);
+    Split('Poll devices', U[0], U[1], 3, 3, 0.7);
+    Sequence(U[2], U[3], 3, Anim, Aw, O);
+    Split('Evaluate clip', O[0], O[1], 4, 9, 0.8);
+    Split('Skin mesh', O[2], O[3], 4, 24, 0.75);
+    Sequence(U[4], U[5], 3, Phys, Pw, Ph);
+    Split('Sweep axis', Ph[0], Ph[1], 4, 3, 0.85);
+    Split('Collide pair', Ph[2], Ph[3], 4, 46, 0.7);
+    Sequence(Ph[4], Ph[5], 4, Isl, Sw, Is);
+    for Index: int := 0 to 7 do
+      Sequence(Is[2 * Index], Is[2 * Index + 1], 5, St, Stw, So);
+      Split('Body', So[2], So[3], 6, 6, 0.8);
+    end for;
+
+    Sequence(U[6], U[7], 3, Ai, Aiw, Ao);
+    Split('A* search', Ao[2], Ao[3], 4, 6, 0.85);
+    Split('OnUpdate', U[8], U[9], 3, 28, 0.7);
+    Sequence(T3[2], T3[3], 2, Ren, Rw, R);
+    Split('Frustum test', R[0], R[1], 3, 4, 0.8);
+    Sequence(R[2], R[3], 3, Cas, Cw, Co);
+    for Index: int := 0 to 3 do
+      Split('Draw', Co[2 * Index], Co[2 * Index + 1], 4, 22, 0.7);
+    end for;
+
+    Sequence(R[4], R[5], 3, Gb, Gw, Go);
+    for Index: int := 0 to 11 do
+      Bw[Index] := 0.6 + Random();
+    end for;
+
+    Sequence(Go[0], Go[1], 4, Batch, Bw, Bo);
+    for Index: int := 0 to 11 do
+      Split('Draw', Bo[2 * Index], Bo[2 * Index + 1], 5, 8, 0.75);
+    end for;
+
+    Sequence(R[6], R[7], 3, Li, Lw, Lo);
+    Sequence(R[8], R[9], 3, Post, Pow3, Po);
+    Sequence(T3[4], T3[5], 2, Pre, Prw, Pr);
+    Sequence(Pr[0], Pr[1], 3, Wt, Prw, O);
+  end procedure;
+begin
+  var Seed: uint := 41U;
+  const Items: C.List<F.Span> := new C.List<F.Span>();
+  Frame('Frame 4812', 0.0, 16.4);
+  Frame('Frame 4813', 16.6, 16.9);
+  Items.Sort(function(A: F.Span; B: F.Span): int => Order(A, B));
+  return Items.ToArray();
+end function;
+
+// Original sorted two-frame profile.
+public const Spans: array of F.Span := Generate();
+
+function Pick(): int;
+begin
+  for Index: int := 0 to Spans.Length - 1 do
+    if Spans[Index].Name = 'Physics' and Spans[Index].Start > 0.0166 then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Initially selected Physics span in the second frame.
+public const Selected: int := Pick();
+
+end unit;

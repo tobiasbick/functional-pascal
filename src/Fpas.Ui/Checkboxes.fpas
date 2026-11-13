@@ -14,11 +14,12 @@ uses Fpas.Ui.Elements as E;
 // - `Description`: Optional secondary text below the caption.
 // - `Enabled`: Whether the row accepts input.
 // - `Indeterminate`: Draw a dash in place of the check mark while checked.
+// - `HideLabel`: Draw only the checkbox while retaining its accessible label.
 // ## Returns
 // The graphical control that proposes changes to the model.
 public function Checkbox<TMsg>(
   Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
-  Description: string := ''; Enabled: bool := true; Indeterminate: bool := false
+  Description: string := ''; Enabled: bool := true; Indeterminate: bool := false; HideLabel: bool := false
 ): E.Element<TMsg>;
 requires Id <> '';
 begin
@@ -29,7 +30,8 @@ begin
     OnChange,
     Description,
     Enabled,
-    Indeterminate
+    Indeterminate,
+    HideLabel
   );
 end function;
 

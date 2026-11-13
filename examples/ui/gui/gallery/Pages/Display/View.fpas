@@ -1,0 +1,111 @@
+unit GuiGallery.Pages.Display.View;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Canvas.Picture as Picture,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme,
+  Fpas.Ui.Graphics as Color, Fpas.Ui.Motion as M,
+  Fpas.Ui.Texts as T, Fpas.Ui.Icons as I, Fpas.Ui.Emojis as Em,
+  Fpas.Ui.Keycaps as K, Fpas.Ui.Images as Image, Fpas.Ui.Canvases as C, System as Sys;
+
+const Swatches: array of Color.Color := [
+  new Color.Color($55, $55, $55), new Color.Color($77, $47, $FF),
+  new Color.Color($05, $62, $EF), new Color.Color($00, $86, $4B),
+  new Color.Color($F3, $AD, $20), new Color.Color($C2, $53, $00),
+  new Color.Color($D1, $40, $3A), new Color.Color($D2, $32, $86)
+];
+
+function PickSwatch(Index: int): function(C.Event): State.Msg;
+begin
+  return function(Value: C.Event): State.Msg => State.Msg.DisplaySwatch(Index);
+end function;
+
+function Swatch(Index: int; Selected: bool; Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  const Shapes: array of C.Shape := if Selected then
+    [
+      C.Shape.Circle(11.0F, 11.0F, 11.0F, Colors.Foreground),
+      C.Shape.Circle(11.0F, 11.0F, 9.0F, Colors.SurfaceMuted),
+      C.Shape.Circle(11.0F, 11.0F, 7.0F, Swatches[Index])
+    ]
+  else
+    [
+      C.Shape.Circle(11.0F, 11.0F, 11.0F, Colors.SurfaceMuted),
+      C.Shape.Circle(11.0F, 11.0F, 7.0F, Swatches[Index])
+    ]
+  end if;
+  const Size: L.Extent := L.Extent.Fixed(L.Measure.Logical(22));
+  return C.Canvas<State.Msg>(
+    'accent-' + Index.ToString(),
+    Shapes,
+    PickSwatch(Index),
+    new C.Options(Width := Size, Height := Size)
+  );
+end function;
+
+function EmojiRow(Colors: Theme.Palette): E.Element<State.Msg>;
+begin
+  return E.Row<State.Msg>(
+    new L.Flow(Gap := G.Points(6), Align := L.Alignment.Center, Clip := false),
+    Em.Emoji<State.Msg>('🎉', 18.0F),
+    E.FormattedText<State.Msg>('3', M.Font.Body, 13.0F, Colors.Foreground),
+    Em.Emoji<State.Msg>('👀', 18.0F),
+    E.FormattedText<State.Msg>('5', M.Font.Body, 13.0F, Colors.Foreground),
+    Em.Emoji<State.Msg>('🚀', 18.0F),
+    E.FormattedText<State.Msg>('2', M.Font.Body, 13.0F, Colors.Foreground)
+  );
+end function;
+
+// Displays standalone CUI drawing primitives and the gallery swatches.
+// ## Parameters
+// - `Selected`: Selected swatch index.
+// - `Colors`: Palette of the active theme.
+// ## Returns
+// Display examples in gallery order.
+public function View(Selected: int; Colors: Theme.Palette): array of E.Element<State.Msg>;
+begin
+  return [
+    G.Heading<State.Msg>('Text and inline code'),
+    T.Text<State.Msg>('Components for FPas', T.Appearance.HeadingOne),
+    T.Text<State.Msg>('Components are functions.', T.Appearance.Body),
+    T.Text<State.Msg>('Label', T.Appearance.Label),
+    T.Text<State.Msg>('Secondary text', T.Appearance.Secondary),
+    T.Text<State.Msg>('Muted text', T.Appearance.Muted),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Clip := false),
+      T.Text<State.Msg>('Run the gallery with', T.Appearance.Body),
+      T.Text<State.Msg>('fpas run', T.Appearance.Code)
+    ),
+    G.Heading<State.Msg>('Icon, emoji and keycap'),
+    E.Row<State.Msg>(
+      new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
+      I.Icon<State.Msg>(Sys.Char.ConvertFromUtf32($E0CC), 18.0F),
+      E.FormattedText<State.Msg>('File text', M.Font.Body, 12.0F, Colors.TextSecondary)
+    ),
+    EmojiRow(Colors),
+    K.Keycap<State.Msg>('Ctrl Shift P'),
+    G.Heading<State.Msg>('Image'),
+    Image.Image<State.Msg>(
+      'picture', Picture.Result,
+      new Image.Options(
+        Width := L.Extent.Fixed(L.Measure.Logical(234)),
+        Height := L.Extent.Fixed(L.Measure.Logical(150)), Radius := 10.0F
+      )
+    ),
+    G.Heading<State.Msg>('Interactive canvas'),
+    E.Size<State.Msg>(
+      E.Row<State.Msg>(
+        new L.Flow(Justify := L.Justification.Between, Clip := false),
+        [
+          Swatch(0, Selected = 0, Colors), Swatch(1, Selected = 1, Colors),
+          Swatch(2, Selected = 2, Colors), Swatch(3, Selected = 3, Colors),
+          Swatch(4, Selected = 4, Colors), Swatch(5, Selected = 5, Colors),
+          Swatch(6, Selected = 6, Colors), Swatch(7, Selected = 7, Colors)
+        ]
+      ),
+      new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(200))))
+    )
+  ];
+end function;
+
+end unit;

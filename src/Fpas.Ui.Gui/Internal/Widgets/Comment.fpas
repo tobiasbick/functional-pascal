@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Comment;
+
+uses Fpas.Ui.Comments as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P;
+
+// Draws a threaded comment and reports native actions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Author`: Comment author.
+// - `Text`: Comment body.
+// - `Current`: Current like state.
+// - `Change`: Maps the proposed like state or reply.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Author: string; Text: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
+begin
+  const Role: string := 'comment';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Parts: array of string := ['like', 'reply'];
+  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Parts, P.Inputs(2, Enabled), 0);
+  const LikeId: string? := if Frame.PaintingClosed then
+    null
+  else
+    C.Token(Role, Id + '/like')
+  end if;
+  const ReplyId: string? := if Frame.PaintingClosed then
+    null
+  else
+    C.Token(Role, Id + '/reply')
+  end if;
+  var Likes: int := Current.Likes;
+  var Liked: int := P.Bits(Current.Liked, 1);
+  const Result: int := Frame.Window.Comment(
+    Token, Author, Text, Settings.Time, Settings.Depth, Settings.Badge,
+    P.Bits(Settings.Edited, 1) + P.Bits(Enabled, 2), Focus, ref Likes, ref Liked,
+    LikeId, ReplyId
+  );
+  if (Result and 1) <> 0 then
+    Frame.Messages.Add(Change(W.Event.Like(new W.Value(Likes, Liked <> 0))));
+  end if;
+
+  if (Result and 2) <> 0 then
+    Frame.Messages.Add(Change(W.Event.Reply));
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, Author, false, Text);
+  P.Part<TMsg>(Frame, Id, Role, Parts[0], 'Like', Enabled, Likes.ToString());
+  P.Part<TMsg>(Frame, Id, Role, Parts[1], 'Reply', Enabled, '');
+end procedure;
+
+end unit;

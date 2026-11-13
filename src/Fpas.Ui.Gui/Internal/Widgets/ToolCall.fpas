@@ -1,0 +1,39 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ToolCall;
+
+uses Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P;
+
+// Presents CUI's native ToolCall.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable widget identity.
+// - `Name`: Displayed tool name.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Name: string; Settings: ToolCalls.Options);
+begin
+  const Role: string := 'tool-call';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and (Settings.Input <> ''
+    or Settings.Output <> '');
+  const Header: string := C.Token(Role, Id + '/toggle');
+  const Focus: bool := C.WantsFocus<TMsg>(
+    Frame,
+    Id + '/toggle',
+    Header,
+    Enabled
+  ) or C.WantsFocus<TMsg>(Frame, Id, Header, Enabled);
+  const Open: bool := Frame.Window.ToolCall(
+    Token, Name, cast<int>(Settings.Status), Settings.Icon, Settings.Detail,
+    Settings.Input, Settings.Output, Settings.Seconds, P.Bits(Enabled, 1) or P.Bits(Focus, 2),
+    if Frame.PaintingClosed then
+      null
+    else
+      Header
+    end if
+  );
+  P.Root<TMsg>(Frame, Id, Role, Name, false, Open.ToString());
+  P.Part<TMsg>(Frame, Id, Role, 'toggle', Name, Enabled, Open.ToString());
+end procedure;
+
+end unit;

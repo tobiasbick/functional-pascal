@@ -1,0 +1,124 @@
+unit GalleryDeveloperToolsContract;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
+  GuiGallery.Pages.MoreDeveloper.State as More, GuiGallery.Pages.MoreDeveloper.Update as MoreUpdate,
+  GalleryHostAssertions as A, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Context as Context, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.RequestBars as Requests,
+  Fpas.Ui.KeyValueEditors as Pairs, System as Sys;
+
+procedure Parameters();
+begin
+  const Initial: More.Model := new More.Model();
+  const Typed: More.Model := MoreUpdate.Update(
+    Initial, More.Msg.Request(
+      new Requests.Event(2, 'https://api.example.com/v1/orders?name=two+words&x=%26', false, false)
+    )
+  );
+  A.Check(
+    Typed.Method = 2 and Typed.Parameters.Length = 2,
+    'Editing the request lost its method or parameters.'
+  );
+  A.Check(
+    Typed.Parameters[0].Value = 'two words' and Typed.Parameters[1].Value = '&',
+    'URL decoding differs from CUI.'
+  );
+  const Edited: More.Model := MoreUpdate.Update(
+    Typed, More.Msg.Parameters(
+      new Pairs.Event(
+        [new Pairs.Pair('q', 'a&b', true, false), new Pairs.Pair('skip', 'x', false, false)]
+      )
+    )
+  );
+  A.Check(
+    Edited.Url = 'https://api.example.com/v1/orders?q=a%26b',
+    'Editing pairs must update the URL with CUI encoding.'
+  );
+end procedure;
+
+procedure Page(Page: State.Page; Renderer: Cui.CuiRenderer; Capture: string; Controls: array of string);
+  procedure Inject();
+  begin
+    Window.MovePointer(-1.0F, -1.0F);
+    var Position: float := 0.0F;
+    var Maximum: float := 0.0F;
+    Window.ScrollState(Token, 0, Offset, out Position, out Maximum);
+  end procedure;
+begin
+  var Offset: float := 0.0F;
+  const Token: string := Context.Token(
+    'scroll',
+    'main-' + Page.ToString().ToLowerInvariant() + '-0'
+  );
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas CUI developer tools',
+    1100,
+    1700,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := Page),
+    Update.Update,
+    Gallery.Build,
+    Window,
+    32,
+    Inject,
+    ThemeFor := Update.ThemeFor
+  );
+  for Index: int := 0 to 2 do
+    A.Check(Session.Step(), 'Developer gallery closed.');
+  end for;
+
+  for Id: string in Controls do
+    A.Check(A.Control(Session, Id).Bounds.Width > 0.0F, 'Developer widget is empty: ' + Id);
+  end for;
+
+  if Page = State.Page.MoreDeveloperTools then
+    A.Check(
+      A.Control(Session, 'dev-regex').Value = '3',
+      'The original regex sample must contain three matches.'
+    );
+  end if;
+
+  for Index: int := 0 to 2 do
+    Offset := if Index = 2 then
+      if Page = State.Page.DeveloperTools then
+        2259.0F
+      else
+        2542.0F
+      end if
+    else
+      cast<float>(Index * 1050)
+    end if;
+    for Frame: int := 0 to 2 do
+      A.Check(Session.Step(), 'Developer gallery closed after scrolling.');
+    end for;
+
+    Session.CapturePng(Capture + '-' + Index.ToString() + '.png');
+  end for;
+end procedure;
+
+// Checks request synchronization and captures both complete gallery pages.
+// ## Parameters
+// - `Renderer`: CUI renderer under test.
+// - `Capture`: Prefix for the captured PNG files.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+begin
+  Parameters();
+  Page(
+    State.Page.DeveloperTools, Renderer, Capture + '-developer', [
+      'dev-trace', 'dev-net', 'dev-deps', 'dev-history', 'dev-pipeline', 'dev-problems',
+      'dev-headers', 'dev-filter', 'dev-backup', 'dev-keys'
+    ]
+  );
+  Page(
+    State.Page.MoreDeveloperTools, Renderer, Capture + '-more', [
+      'dev-tests', 'dev-stack', 'dev-blame', 'dev-coverage', 'dev-regex', 'dev-request',
+      'dev-params', 'dev-response', 'dev-api', 'dev-flags', 'dev-uptime', 'dev-histogram'
+    ]
+  );
+end procedure;
+
+end unit;

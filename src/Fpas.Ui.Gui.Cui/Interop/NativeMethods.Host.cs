@@ -11,6 +11,12 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_gap")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Gap(nint context, float distance);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_surface")]
+    internal static partial void Surface(nint context, int node, uint rgba, float radius);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_formatted_text", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial void FormattedText(nint context, string text, int font, float size, uint rgba);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_box_details")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void BoxDetails(nint context, int node, float top, float end, float bottom, float start, int direction);

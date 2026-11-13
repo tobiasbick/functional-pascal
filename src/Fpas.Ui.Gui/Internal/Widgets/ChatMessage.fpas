@@ -1,0 +1,26 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ChatMessage;
+
+uses Fpas.Ui.ChatMessages as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P;
+
+// Draws a native conversation bubble.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Text`: Message body.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Settings: W.Options);
+begin
+  const Role: string := 'chat-message';
+  const Token: string := C.Token(Role, Id);
+  const Flags: int := P.Bits(Settings.Mine, 1) + P.Bits(Settings.Grouped, 2) +
+    P.Bits(Settings.LastInGroup, 4) + P.Bits(Settings.Markdown, 8);
+  Frame.Window.ChatMessage(
+    Token, Text, Settings.Author, Settings.Time, Settings.Status,
+    Settings.Avatar, Flags, Frame.AcceptInput
+  );
+  P.Root<TMsg>(Frame, Id, Role, Text, false, '');
+end procedure;
+
+end unit;

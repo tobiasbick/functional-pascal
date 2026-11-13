@@ -1,0 +1,97 @@
+unit GuiGallery.Pages.Files.Terminal;
+
+uses
+  GuiGallery.Pages.Files.Folders as Files, Fpas.Ui.FileListings as Listing,
+  System as Sys, System.Globalization as Locale, System.Text as Text;
+
+// Initial ANSI output of the CUI shell example.
+public const Welcome: string := 'Type ' + Sys.Char.ConvertFromUtf32(27) + '[1mhelp' +
+  Sys.Char.ConvertFromUtf32(27) + '[0m for the commands.' + Sys.Char.ConvertFromUtf32(10);
+
+const Escape: string := Sys.Char.ConvertFromUtf32(27);
+const Line: string := Sys.Char.ConvertFromUtf32(10);
+const Reset: string := Escape + '[0m';
+
+function Names(Folder: string): string;
+begin
+  const Entries: Listing.Listing? := Files.ReadFolder(Folder, false);
+  if Entries = null then
+    return Escape + '[31mls: cannot read this folder' + Reset + Line;
+  end if;
+  const Result: Text.StringBuilder := new Text.StringBuilder();
+  for Entry: Listing.Entry in Entries.Entries do
+    if Entry.Directory then
+      discard Result.Append(Escape + '[1;34m' + Entry.Name + '/' + Reset + Line);
+    else
+      discard Result.Append(Entry.Name + Line);
+    end if;
+  end for;
+
+  return Result.ToString();
+end function;
+
+function Colors(): string;
+begin
+  const Result: Text.StringBuilder := new Text.StringBuilder();
+  for Index: int := 0 to 15 do
+    const Code: int := if Index < 8 then
+      30 + Index
+    else
+      82 + Index
+    end if;
+    discard Result.Append(
+      Escape + '[' + Code.ToString() + 'm██' + Reset + (if Index = 7 or Index = 15 then
+        Line
+      else
+        ' '
+      end if)
+    );
+  end for;
+
+  return Result.ToString();
+end function;
+
+function Build(): string;
+begin
+  const Result: Text.StringBuilder := new Text.StringBuilder();
+  const CarriageReturn: string := Sys.Char.ConvertFromUtf32(13);
+  for Step: int := 0 to 20 do
+    const Filled: string := new Sys.String(cast<char>($2588), Step);
+    const Empty: string := new Sys.String(cast<char>($2591), 20 - Step);
+    discard Result.Append(
+      CarriageReturn + Escape + '[32m' + Filled + Empty + Reset +
+      ' ' + (Step * 5).ToString(Locale.CultureInfo.InvariantCulture).PadLeft(3) + '%'
+    );
+  end for;
+
+  return Result.ToString() + Line + Escape + '[32mdone' + Reset + Line;
+end function;
+
+// Runs one of the built-in gallery commands and returns its ANSI output.
+// ## Parameters
+// - `Command`: Submitted command.
+// - `Folder`: Current directory from the Files page.
+// ## Returns
+// Output to append to the terminal.
+public function Run(Command: string; Folder: string): string;
+begin
+  return case Command of
+    when 'help': '  ' + Escape + '[36mls' + Reset + '      the folder above' + Line +
+      '  ' + Escape + '[36mcolors' + Reset + '  the 16 colors' + Line +
+      '  ' + Escape + '[36mbuild' + Reset + '   a progress bar' + Line +
+      '  ' + Escape + '[36mecho' + Reset + '    prints its words' + Line +
+      '  ' + Escape + '[36mclear' + Reset + '   empties the screen' + Line;
+    when 'ls': Names(Folder);
+    when 'colors': Colors();
+    when 'build': Build();
+    when 'echo': Line;
+    when '': '';
+    else if Command.StartsWith('echo ', Sys.StringComparison.Ordinal) then
+      Command.Substring(5) + Line
+    else
+      Escape + '[31m' + Command + ': command not found' + Reset + Line
+    end if;
+  end case;
+end function;
+
+end unit;

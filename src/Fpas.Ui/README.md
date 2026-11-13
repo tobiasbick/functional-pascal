@@ -30,6 +30,9 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Widget or option | Portable | Terminal | Graphical |
 | --- | --- | --- | --- |
 | Text and titled or plain divider | Yes | Yes | Yes |
+| Native text roles, inline code, icons, emoji, keycaps, images, canvas and veil | | | Yes |
+| Markdown, code editor, diff viewer, hex viewer, log console and terminal | | | Yes |
+| Property inspector, flame graph, curve editor, gradient editor and timeline editor | | | Yes |
 | Button variants, sizes, icons, busy state and content/fill/fixed width | Yes | Yes | Yes |
 | Button group with a shared outline | Yes | Yes | Yes |
 | Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
@@ -101,6 +104,46 @@ extension. Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
 units and adapts to the host's resolution.
 When both minimum and maximum bounds are supplied, use the same measure kind
 for both: `Logical` or `Cells`.
+
+## Native text and drawing
+
+`Texts.Text` selects the CUI body, heading, label, secondary, muted or inline
+code role. `Icons.Icon`, `Emojis.Emoji` and `Keycaps.Keycap` draw individual
+glyphs or shortcuts. `Images.Image` accepts an image path or immutable RGBA
+pixels.
+
+`Canvases.Canvas` paints rectangles, circles and lines in local logical
+coordinates and reports the local position and bounds on click.
+`Veils.Veil` wraps one element and proposes changes to the model's revealed
+state. The optional toggle also lets a pointer click cover revealed content.
+
+## Native source tools
+
+`Markdowns.Markdown` reports link activation and task changes using UTF-8
+byte offsets. `CodeEditors.CodeEditor` proposes edits and caret positions.
+`DiffViews.DiffView` reports the selected change and the actual split or inline
+layout. `HexViews.HexView` accepts immutable bytes and proposes a replacement
+array on edit. Clear a hex GoTo request after handling its proposal.
+
+`LogConsoles.LogConsole` accepts timestamped entries and proposes a clear
+message. `Terminals.Terminal` accepts cumulative ANSI output. Append to the
+same output to preserve the live scrollback, or change the revision to
+reset it. Route command and interrupt events through the application update.
+CUI manages command echo, input history and Ctrl+L for the mounted widget.
+
+## Native editing tools
+
+`PropertyInspectors.PropertyInspector` proposes edits to typed property
+values and changes to group expansion. `FlameGraphs.FlameGraph` takes spans
+sorted by depth and start, with longer spans first on ties. It proposes a
+new visible range or selected span.
+
+`CurveEditors.CurveEditor` and `GradientEditors.GradientEditor` report the
+updated sorted items, selection, and insertion or removal indices.
+`TimelineEditors.TimelineEditor` accepts tracks with those same curve keys
+and with clips. It proposes track, playhead, and view changes. The application
+handles playback requests and can edit a track's keys in a separate curve
+editor.
 
 ## Native grids and surfaces
 
@@ -846,6 +889,61 @@ rolling-number example.
 These widgets require the graphical profile. The Creative controls gallery
 page shows the native wells and their model updates.
 
+## Conversation and activity
+
+- `ChatMessages.ChatMessage`, `ChatDividers.ChatDivider` and
+  `TypingIndicators.TypingIndicator` render the native conversation pieces.
+  `Comments.Comment` reports Reply or a proposed like count and state.
+- `Presences.Presence` shows the supplied users and their away state.
+  `Counters.Counter` rolls to a model-owned value.
+  `Tickers.Ticker` scrolls entries and pauses under the pointer.
+- `Spinners.Spinner` accepts the native activity styles, ink and track colors.
+  `StatusSpinners.StatusSpinner` renders the current work state.
+  `SkeletonGroups.SkeletonGroup` shares an animation across its placeholders.
+- `Sparklines.Sparkline` draws a compact line and its endpoint.
+
+These widgets use the graphical profile.
+
+## Media
+
+- `Carousels.Carousel` composes slide bodies and proposes a new selected index.
+  CUI handles the arrows, dots, gestures and optional timed advance.
+- `ImageViewers.ImageViewer` proposes zoom and pan. A zero zoom requests a
+  fitted image. `ImageCroppers.ImageCropper` proposes a rectangle in image
+  pixels and supports a fixed aspect ratio or round mask.
+- `ImageComparisons.ImageCompare` shows two images and proposes a divider
+  position from zero to one.
+- `CardStacks.CardStack` composes card bodies, with the top card first. It
+  reports the direction of a completed swipe so the model can remove or rotate
+  the card.
+
+The image widgets accept a file path or a tightly packed RGBA buffer through
+`Fpas.Ui.MediaImages.Source`. Keep the buffer immutable while the view uses it
+and supply a new array when the pixels change. Media widgets use the graphical
+profile. The Social and media page shows all five with the original CUI examples.
+
+## Voice and AI
+
+- `VoiceWaves.VoiceWave` draws live levels or a clip. Optional speaker tags
+  distinguish both voices. Supply a progress fraction and a callback to seek.
+- `VoiceNotes.VoiceNote` proposes play, pause, seek and speed changes.
+  `VoiceSessions.VoiceSession` displays a shared signal and transcript and
+  reports mute and end actions. The app supplies audio levels and playback.
+  `VoiceOrbs.VoiceOrb` exposes CUI's legacy voice indicator.
+- `Composers.Composer` proposes draft edits, attachment and model actions,
+  send and stop, and voice recording actions. The model owns the draft,
+  recording levels and elapsed time. `ModelPickers.ModelPicker` also works
+  independently of a composer.
+- `Reasonings.Reasoning` composes a native disclosure body. `ToolCalls.ToolCall`,
+  `AgentPlans.AgentPlan` and `AgentStatuses.AgentStatus` display tool payloads,
+  steps and task state.
+- `SourceLists.SourceList` and `Citations.Citation` report source activation.
+  `ContextMeters.ContextMeter`, `ResponseActions.ResponseActions` and
+  `PromptSuggestions.PromptSuggestions` supply the conversation controls.
+
+These widgets use the graphical profile. The AI and Voice gallery pages show
+their native examples.
+
 ## Files and planning
 
 - `PathBars.PathBar` proposes a segment, a child from its dropdown, or a
@@ -863,6 +961,53 @@ page shows the native wells and their model updates.
 
 These widgets require the graphical profile. The Files and Planning gallery
 pages demonstrate their native controls and model updates.
+
+## Canvas and bars
+
+- `Toolbars.Toolbar` supports plain, grouped and floating styles. CUI
+  handles overflow, groups, radio sets, cycle choices and flyout marks.
+  The callback receives the position of the action in traversal order.
+- `FormatBars.FormatBar` proposes edits to one text-format record. Its
+  separate link, delete-confirmed and more flags let the app apply the action.
+- `NodeEditors.NodeEditor` renders the supplied nodes, pins, links and
+  composed node bodies. The model owns pan, zoom and positions and decides
+  whether to apply proposed links or deletions.
+- `CanvasControls.CanvasControls` adds the native zoom rail over a child.
+  It proposes pan, zoom and toggle states. `LiveCursors.LiveCursors` adds
+  the shared collaborators to the same child. `PresencePills.PresencePill`
+  and `SelectionRings.SelectionRing` show their presence and selections.
+- `ResultCards.ResultCard` takes a file or immutable RGBA picture.
+  `SelectionBars.SelectionBar` anchors to its child and proposes a bulk
+  action or clearing the supplied selection.
+
+The original Canvas and bars page exercises the graphical APIs. The
+collaborator positions and result image are generated locally from the
+same sample data as the native gallery.
+
+## Developer tools
+
+- `TraceViewers.TraceViewer` takes spans sorted by track, depth, and start
+  time. Its proposals carry the viewport, measurement, selected span, and
+  any lane collapse change. `NetworkWaterfalls.NetworkWaterfall`,
+  `DependencyGraphs.DependencyGraph`, `CommitGraphs.CommitGraph` and
+  `Pipelines.Pipeline` accept model-owned selections.
+- `ProblemsPanels.Problems`, `TestExplorers.TestExplorer`,
+  `StackTraces.StackTrace`, `Blames.Blame` and `Coverages.Coverage`
+  report native activations. CUI keeps filters, sort order and expanded
+  rows. `Keymaps.Keymap` uses the same key and modifier codes as the
+  shortcut recorder.
+- `KeyValueEditors.KeyValueEditor`, `QueryBuilders.QueryBuilder`,
+  `SchedulePickers.SchedulePicker`, `RegexTesters.RegexTester` and
+  `FeatureFlagEditors.FeatureFlags` propose changes to the supplied model.
+- `RequestBars.RequestBar` reports method and URL changes and Send or
+  Cancel intents. `ResponseStatuses.ResponseStatus` formats status, timing
+  and size. `ApiExplorers.ApiExplorer` reports endpoint selection.
+- `Uptimes.Uptime` displays daily availability. Negative samples represent
+  missing days. `TimeHistograms.TimeHistogram` takes one sample per bucket
+  and series, and reports range changes.
+
+Both developer pages demonstrate these APIs in the GUI gallery. The HTTP
+example uses local sample data and keeps the URL and parameter editor in sync.
 
 ## Expandable text
 

@@ -1,0 +1,61 @@
+unit GuiGallery.Pages.Developer.Update;
+
+uses GuiGallery.Pages.Developer.State as M, Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys;
+
+function Trace(Model: M.Model; Value: T.Event): M.Model;
+begin
+  var Tracks: array of T.Track := Model.Tracks;
+  if Value.TrackIndex >= 0 and Value.TrackIndex < Tracks.Length then
+    Tracks := cast<array of T.Track>(Tracks.Clone());
+    const Lane: T.Track := Tracks[Value.TrackIndex];
+    Tracks[Value.TrackIndex] := Lane with
+      Collapsed := Value.Collapsed;
+    end with;
+  end if;
+
+  return Model with
+    Timeline := Value.Viewport;
+    Span := Value.Selection;
+    Tracks := Tracks;
+  end with;
+end function;
+
+// Applies an interaction to the Developer tools examples.
+// ## Parameters
+// - `Model`: Current example state.
+// - `Message`: Native widget proposal.
+// ## Returns
+// Updated example state.
+public function Update(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Trace(const Value: T.Event): Trace(Model, Value);
+    when M.Msg.Waterfall(const Value: W.Event): Model with
+      Waterfall := Value.Selection;
+    end with;
+    when M.Msg.Graph(const Value: G.Event): Model with
+      Graph := Value.Selection;
+    end with;
+    when M.Msg.Commit(const Value: C.Event): Model with
+      Commit := Value.Selection;
+    end with;
+    when M.Msg.Pipeline(const Value: J.Event): Model with
+      Pipeline := Value.Selection;
+    end with;
+    when M.Msg.Headers(const Value: K.Event): Model with
+      Headers := Value.Pairs;
+    end with;
+    when M.Msg.Query(const Value: Q.Event): Model with
+      Rules := Value.Rules;
+    end with;
+    when M.Msg.Schedule(const Value: S.Event): Model with
+      Cron := Value.Expression;
+    end with;
+    when M.Msg.Keys(const Value: Keys.Event): Model with
+      Modifiers := Value.Modifiers;
+    end with;
+    else Model;
+  end case;
+end function;
+
+end unit;

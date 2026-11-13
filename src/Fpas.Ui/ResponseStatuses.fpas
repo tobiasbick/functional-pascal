@@ -1,0 +1,30 @@
+unit Fpas.Ui.ResponseStatuses;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Content;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native ResponseStatus widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Status`: Model-owned status data.
+// - `Seconds`: Model-owned seconds data.
+// - `Bytes`: Model-owned bytes data.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ResponseStatus<TMsg>(Id: string; Status: int; Seconds: double; Bytes: double; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ResponseStatus(Id, Status, Seconds, Bytes, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,208 @@
+unit GuiGallery.Pages.Voice.Update;
+
+uses
+  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, Fpas.Ui.Voice as V,
+  Fpas.Ui.VoiceNotes as Notes, Fpas.Ui.VoiceSessions as Calls, Fpas.Ui.Composers as Editor,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Cui as Cui,
+  System as Sys, System.Collections.Generic as Lists;
+
+function Tick(Model: S.Model; Seconds: float): S.Model;
+begin
+  const Now: float := Model.Time + Seconds;
+  const Last: int := cast<int>(Sys.MathF.Floor(Now * 20.0F));
+  const First: int := Sys.Math.Max(Model.SampleIndex, Last - 239);
+  const Levels: Lists.List<float> := new Lists.List<float>(Model.Timeline.Levels);
+  const PreviousTags: (array of byte)? := Model.Timeline.Owners;
+  const Tags: Lists.List<byte> := new Lists.List<byte>();
+  if PreviousTags <> null then
+    Tags.AddRange(PreviousTags);
+  end if;
+  const Take: Editor.Recording? := Model.Editor.Take;
+  const Samples: Lists.List<float> := new Lists.List<float>();
+  if Take <> null then
+    Samples.AddRange(Take.Levels);
+  end if;
+
+  for Index: int := First to Last do
+    const Time: float := cast<float>(Index) / 20.0F;
+    const Sample: Script.SampleValue := Script.Sample(
+      Time,
+      Sys.MathF.Max(0.0F, Time - Model.Started),
+      Model.Muted
+    );
+    Levels.Add(Sample.Level);
+    Tags.Add(Sample.Owner);
+    if Take <> null and Samples.Count < 600 then
+      Samples.Add(Script.Recording(Time));
+    end if;
+  end for;
+  const Trim: int := Sys.Math.Max(0, Levels.Count - 240);
+  Levels.RemoveRange(0, Trim);
+  Tags.RemoveRange(0, Trim);
+  const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes.Length);
+  for Note: S.Note in Model.Notes do
+    const Playback: Notes.Value := Note.Playback;
+    if Playback.Playing then
+      const Position: float := Playback.Position + Seconds * Playback.Speed;
+      Messages.Add(
+        Note with
+          Playback := Playback with
+            Position := if Position >= Playback.Duration then
+              0.0F
+            else
+              Position
+            end if;
+            Playing := Position < Playback.Duration;
+          end with;
+        end with
+      );
+    else
+      Messages.Add(Note);
+    end if;
+  end for;
+
+  return Model with
+    Time := Now;
+    SampleIndex := Last + 1;
+    Timeline := new V.Signal(Levels.ToArray(), Tags.ToArray());
+    Notes := Messages.ToArray();
+    Editor := Model.Editor with
+      Take := if Take = null then
+        null
+      else
+        new Editor.Recording(Samples.ToArray(), cast<float>(Samples.Count) / 20.0F)
+      end if;
+    end with;
+  end with;
+end function;
+
+function Transport(Model: S.Model; Key: int; Change: Notes.Event): S.Model;
+begin
+  const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes);
+  for Index: int := 0 to Messages.Count - 1 do
+    const Item: S.Note := Messages[Index];
+    if Item.Key = Key then
+      const Value: Notes.Value := Item.Playback;
+      const Next: Notes.Value := case Change of
+        when Notes.Event.Toggle(const Active: bool): Value with
+          Playing := Active;
+        end with;
+        when Notes.Event.Seek(const Position: float): Value with
+          Position := Position;
+        end with;
+        when Notes.Event.Speed(const Rate: float): Value with
+          Speed := Rate;
+        end with;
+      end case;
+      Messages[Index] := Item with
+        Playback := Next;
+      end with;
+    end if;
+  end for;
+
+  return Model with
+    Notes := Messages.ToArray();
+  end with;
+end function;
+
+function Compose(Model: S.Model; Change: Editor.Event): S.Model;
+begin
+  const Value: Editor.Value := Model.Editor;
+  case Change of
+    when Editor.Event.Edit(const Draft: string):
+      return Model with
+        Editor := Value with
+          Draft := Draft;
+        end with;
+      end with;
+    when Editor.Event.Send(_):
+      return Model with
+        Editor := Value with
+          Draft := '';
+        end with;
+      end with;
+    when Editor.Event.Record:
+      return Model with
+        Editor := Value with
+          Take := new Editor.Recording([], 0.0F);
+        end with;
+      end with;
+    when Editor.Event.Cancel:
+      return Model with
+        Editor := Value with
+          Take := null;
+        end with;
+      end with;
+    when Editor.Event.SendVoice:
+      const Take: Editor.Recording? := Value.Take;
+      if Take = null then
+        return Model;
+      end if;
+      const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes);
+      if Messages.Count = 8 then
+        Messages.RemoveAt(1);
+      end if;
+
+      Messages.Add(
+        new S.Note(
+          Model.NextKey,
+          Cui.CuiWindow.ResampleVoice(Take.Levels, 64),
+          new Notes.Value(Take.Seconds),
+          true
+        )
+      );
+      return Model with
+        Editor := Value with
+          Take := null;
+        end with;
+        Notes := Messages.ToArray();
+        NextKey := Model.NextKey + 1;
+      end with;
+    else
+      return Model;
+  end case;
+end function;
+
+// Applies native voice actions and advances the simulated call.
+// ## Parameters
+// - `Model`: Current voice page model.
+// - `Message`: Native action or elapsed clock time.
+// ## Returns
+// Updated state and any call-end toast.
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  const Next: S.Model := case Message of
+    when S.Msg.Tick(const Seconds: float): Tick(Model, Seconds);
+    when S.Msg.NoteAction(const Key: int, const Change: Notes.Event): Transport(Model, Key, Change);
+    when S.Msg.Editor(const Change: Editor.Event): Compose(Model, Change);
+    when S.Msg.Call(Calls.Event.Mute(const Muted: bool)): Model with
+      Muted := Muted;
+    end with;
+    when S.Msg.Call(Calls.Event.EndCall): Model with
+      Started := Model.Time;
+      Timeline := new V.Signal([], []);
+    end with;
+    when S.Msg.Seek(const Progress: float): Model with
+      Progress := Progress;
+    end with;
+    when S.Msg.Orb: Model with
+      OrbListening := not Model.OrbListening;
+    end with;
+  end case;
+  case Message of
+    when S.Msg.Call(Calls.Event.EndCall):
+      return new Mvu.Transition<S.Model, S.Msg>(
+        Next,
+        [
+          Toasts.Show<S.Msg>(
+            'Call ended',
+            new Toasts.Options(Description := 'A new one starts from the top.')
+          )
+        ]
+      );
+    else
+      return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+  end case;
+end function;
+
+end unit;

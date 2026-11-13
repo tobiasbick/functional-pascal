@@ -1,0 +1,77 @@
+unit Fpas.Ui.Gui.Internal.SourceToolPresentation;
+
+uses
+  Fpas.Ui.Markdowns as Markdowns,
+  Fpas.Ui.CodeEditors as CodeEditors,
+  Fpas.Ui.DiffViews as DiffViews,
+  Fpas.Ui.HexViews as HexViews,
+  Fpas.Ui.LogConsoles as LogConsoles,
+  Fpas.Ui.Terminals as Terminals,
+  Fpas.Ui.Gui.Internal.Widgets.Markdown as Markdown,
+  Fpas.Ui.Gui.Internal.Widgets.CodeEditor as CodeEditor,
+  Fpas.Ui.Gui.Internal.Widgets.DiffView as DiffView,
+  Fpas.Ui.Gui.Internal.Widgets.HexView as HexView,
+  Fpas.Ui.Gui.Internal.Widgets.LogConsole as LogConsole,
+  Fpas.Ui.Gui.Internal.Widgets.Terminal as Terminal,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Elements as E;
+
+// Presents graphical source tools.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation.
+// - `Node`: Source tool element.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+begin
+  case Node of
+    when E.Element.Markdown(
+      const Id: string,
+      const Text: string,
+      const Changed: function(Markdowns.Event): TMsg,
+      const Settings: Markdowns.Options
+    ):
+      Markdown.Draw<TMsg>(Frame, Id, Text, Changed, Settings);
+    when E.Element.CodeEditor(
+      const Id: string,
+      const Text: string,
+      const Changed: function(CodeEditors.Event): TMsg,
+      const Settings: CodeEditors.Options
+    ):
+      CodeEditor.Draw<TMsg>(Frame, Id, Text, Changed, Settings);
+    when E.Element.DiffView(
+      const Id: string,
+      const Before: string,
+      const After: string,
+      const Current: int,
+      const Changed: function(DiffViews.Event): TMsg,
+      const Settings: DiffViews.Options
+    ):
+      DiffView.Draw<TMsg>(Frame, Id, Before, After, Current, Changed, Settings);
+    when E.Element.HexView(
+      const Id: string,
+      const Data: array of byte,
+      const Selected: HexViews.Selection,
+      const Changed: function(HexViews.Event): TMsg,
+      const Settings: HexViews.Options
+    ):
+      HexView.Draw<TMsg>(Frame, Id, Data, Selected, Changed, Settings);
+    when E.Element.LogConsole(
+      const Id: string,
+      const Entries: array of LogConsoles.Entry,
+      const Cleared: TMsg,
+      const Settings: LogConsoles.Options
+    ):
+      LogConsole.Draw<TMsg>(Frame, Id, Entries, Cleared, Settings);
+    when E.Element.Terminal(
+      const Id: string,
+      const Output: string,
+      const Revision: int,
+      const Received: function(Terminals.Event): TMsg,
+      const Settings: Terminals.Options
+    ):
+      Terminal.Draw<TMsg>(Frame, Id, Output, Revision, Received, Settings);
+    else
+  end case;
+end procedure;
+
+end unit;

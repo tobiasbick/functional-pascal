@@ -1,0 +1,151 @@
+unit GuiGallery.Pages.Developer.View;
+
+uses
+  GuiGallery.Pages.Developer.State as M, GuiGallery.Pages.Developer.Samples as D, GuiGallery.Shared.Sections as Section,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.ProblemsPanels as P, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys, Fpas.Ui.Motion as Font, Fpas.Ui.Themes as Themes, Fpas.Ui.Gui.Internal.Widgets.QueryBuilder as NativeQuery;
+
+function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
+begin
+  return E.Size<M.Msg>(
+    E.Column<M.Msg>(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(Maximum))
+    )
+  );
+end function;
+
+// Builds the original CUI Developer tools page.
+// ## Parameters
+// - `Model`: Retained page state.
+// - `Palette`: Colors for the sample labels.
+// ## Returns
+// Sections and examples in the original order.
+public function View(Model: M.Model; Palette: Themes.Palette): array of E.Element<M.Msg>;
+begin
+  return [
+    Section.Heading<M.Msg>(
+      'Trace viewer',
+      'Wheel zooms, drag pans, Shift+drag measures, a lane''s name folds it.'
+    ),
+    Limit(
+      1000, 10,
+      T.TraceViewer<M.Msg>(
+        'dev-trace',
+        Model.Tracks,
+        D.Spans,
+        D.Markers,
+        Model.Timeline,
+        Model.Span,
+        M.Msg.Trace,
+        new T.Options(Height := 320.0F)
+      )
+    ),
+    Section.Heading<M.Msg>(
+      'Network waterfall',
+      'Hover a bar for its timing; Up and Down move the selection.'
+    ),
+    Limit(
+      1000, 10,
+      W.NetworkWaterfall<M.Msg>(
+        'dev-net',
+        D.Requests,
+        Model.Waterfall,
+        M.Msg.Waterfall,
+        new W.Options(Height := 340.0F, DomLoaded := 0.395, Loaded := 0.68)
+      )
+    ),
+    Section.Heading<M.Msg>(
+      'Dependency graph',
+      'Hover a node to light up its neighbours; wheel zooms, F fits.'
+    ),
+    Limit(
+      1000, 10,
+      G.DependencyGraph<M.Msg>(
+        'dev-deps',
+        D.Vertices,
+        D.Edges,
+        Model.Graph,
+        M.Msg.Graph,
+        new G.Options(Height := 340.0F)
+      )
+    ),
+    Section.Heading<M.Msg>(
+      'Commit graph',
+      'Branch lanes, merges and refs; only the rows in view are built.'
+    ),
+    Limit(
+      920, 10,
+      C.CommitGraph<M.Msg>(
+        'dev-history',
+        D.Commits,
+        Model.Commit,
+        M.Msg.Commit,
+        new C.Options(Height := 320.0F)
+      )
+    ),
+    Section.Heading<M.Msg>('Pipeline', 'Stages of jobs; a stage sums up its jobs.'),
+    Limit(
+      920, 10,
+      J.Pipeline<M.Msg>('dev-pipeline', D.Stages, D.Jobs, Model.Pipeline, M.Msg.Pipeline)
+    ),
+    Section.Heading<M.Msg>('Problems', 'Grouped by file; filter by severity or text, Enter opens.'),
+    Limit(
+      760, 10,
+      P.Problems<M.Msg>(
+        'dev-problems',
+        D.Diagnostics,
+        M.Msg.Problems,
+        new P.Options(Height := 300.0F)
+      )
+    ),
+    Section.Heading<M.Msg>(
+      'Key-value editor',
+      'Type in the empty row to add a pair; the lock hides a value.'
+    ),
+    Limit(
+      680, 10,
+      E.FormattedText<M.Msg>('Headers', Font.Font.Medium, 0.0F, Palette.Foreground),
+      K.KeyValueEditor<M.Msg>(
+        'dev-headers',
+        Model.Headers,
+        M.Msg.Headers,
+        new K.Options(Capacity := 12)
+      )
+    ),
+    Section.Heading<M.Msg>('Query builder', 'Nested all and any groups.'),
+    Limit(
+      720, 10,
+      Q.QueryBuilder<M.Msg>(
+        'dev-filter',
+        D.Fields,
+        Model.Rules,
+        M.Msg.Query,
+        new Q.Options(Capacity := 16)
+      ),
+      E.FormattedText<M.Msg>(
+        NativeQuery.Description(D.Fields, Model.Rules),
+        Font.Font.Body,
+        12.0F,
+        Palette.TextMuted
+      )
+    ),
+    Section.Heading<M.Msg>('Schedule picker', 'Writes a cron expression and shows the next runs.'),
+    Limit(
+      560, 10,
+      S.SchedulePicker<M.Msg>(
+        'dev-backup',
+        Model.Cron,
+        M.Msg.Schedule,
+        new S.Options(Now := 1794211200L, Utc := true)
+      )
+    ),
+    Section.Heading<M.Msg>('Keymap', 'Shortcuts on a keyboard; keys bound twice are marked.'),
+    Limit(
+      900, 10,
+      Keys.Keymap<M.Msg>('dev-keys', D.Bindings, D.Categories, Model.Modifiers, M.Msg.Keys)
+    )
+  ];
+end function;
+
+end unit;

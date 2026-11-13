@@ -1,0 +1,27 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Ticker;
+
+uses Fpas.Ui.Tickers as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws the native scrolling ticker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Items`: Ordered ticker entries.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of W.Item; Settings: W.Options);
+begin
+  const Role: string := 'ticker';
+  const Token: string := C.Token(Role, Id);
+  const Data: array of Cui.CuiTickerItem := new Cui.CuiTickerItem[Items.Length];
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: W.Item := Items[Index];
+    Data[Index] := new Cui.CuiTickerItem(Item.Label, Item.Value, Item.Delta, Item.LowerIsBetter);
+  end for;
+
+  Frame.Window.Ticker(Token, Data, Settings.Speed, Settings.Height);
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+end procedure;
+
+end unit;

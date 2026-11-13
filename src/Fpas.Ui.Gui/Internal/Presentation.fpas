@@ -1,6 +1,18 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.Gui.Internal.EditingToolPresentation as EditingTools,
+  Fpas.Ui.Gui.Internal.SourceToolPresentation as SourceTools,
+  Fpas.Ui.Gui.Internal.DisplayPresentation as Display,
+  Fpas.Ui.Gui.Internal.CanvasPresentation as Canvas,
+  Fpas.Ui.Gui.Internal.DeveloperPresentation as DeveloperPresentation,
+  Fpas.Ui.VoiceWaves as VoiceWaves, Fpas.Ui.VoiceNotes as VoiceNotes, Fpas.Ui.VoiceSessions as VoiceSessions, Fpas.Ui.Composers as Composers, Fpas.Ui.VoiceOrbs as VoiceOrbs, Fpas.Ui.Reasonings as Reasonings, Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.AgentPlans as AgentPlans, Fpas.Ui.AgentStatuses as AgentStatuses, Fpas.Ui.SourceLists as SourceLists, Fpas.Ui.Citations as Citations, Fpas.Ui.ContextMeters as ContextMeters, Fpas.Ui.ResponseActions as ResponseActions, Fpas.Ui.PromptSuggestions as PromptSuggestions, Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Voice as Voice, Fpas.Ui.Sources as Sources,
+  Fpas.Ui.Gui.Internal.Widgets.VoiceWave as VoiceWaveWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceNote as VoiceNoteWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceSession as VoiceSessionWidget, Fpas.Ui.Gui.Internal.Widgets.Composer as ComposerWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceOrb as VoiceOrbWidget, Fpas.Ui.Gui.Internal.Widgets.Reasoning as ReasoningWidget, Fpas.Ui.Gui.Internal.Widgets.ToolCall as ToolCallWidget, Fpas.Ui.Gui.Internal.Widgets.AgentPlan as AgentPlanWidget, Fpas.Ui.Gui.Internal.Widgets.AgentStatus as AgentStatusWidget, Fpas.Ui.Gui.Internal.Widgets.SourceList as SourceListWidget, Fpas.Ui.Gui.Internal.Widgets.Citation as CitationWidget, Fpas.Ui.Gui.Internal.Widgets.ContextMeter as ContextMeterWidget, Fpas.Ui.Gui.Internal.Widgets.ResponseActions as ResponseActionsWidget, Fpas.Ui.Gui.Internal.Widgets.PromptSuggestions as PromptSuggestionsWidget, Fpas.Ui.Gui.Internal.Widgets.ModelPicker as ModelPickerWidget,
+  Fpas.Ui.Gui.Internal.CreativeParts as CreativeParts, Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
+  Fpas.Ui.Gui.Internal.Widgets.Carousel as CarouselWidget, Fpas.Ui.Gui.Internal.Widgets.CardStack as CardStackWidget, Fpas.Ui.Gui.Internal.Widgets.ImageViewer as ImageViewerWidget, Fpas.Ui.Gui.Internal.Widgets.ImageCropper as ImageCropperWidget, Fpas.Ui.Gui.Internal.Widgets.ImageCompare as ImageCompareWidget,
+  Fpas.Ui.Spinners as Spinners,
+  Fpas.Ui.ChatMessages as ChatMessages, Fpas.Ui.Comments as Comments, Fpas.Ui.Presences as Presences, Fpas.Ui.Counters as Counters, Fpas.Ui.Tickers as Tickers, Fpas.Ui.StatusSpinners as StatusSpinners, Fpas.Ui.SkeletonGroups as SkeletonGroups, Fpas.Ui.Sparklines as Sparklines,
+  Fpas.Ui.Gui.Internal.Widgets.ChatMessage as ChatMessageWidget, Fpas.Ui.Gui.Internal.Widgets.ChatDivider as ChatDividerWidget, Fpas.Ui.Gui.Internal.Widgets.TypingIndicator as TypingIndicatorWidget, Fpas.Ui.Gui.Internal.Widgets.Comment as CommentWidget, Fpas.Ui.Gui.Internal.Widgets.Presence as PresenceWidget, Fpas.Ui.Gui.Internal.Widgets.Counter as CounterWidget, Fpas.Ui.Gui.Internal.Widgets.Ticker as TickerWidget, Fpas.Ui.Gui.Internal.Widgets.StatusSpinner as StatusSpinnerWidget, Fpas.Ui.Gui.Internal.Widgets.SkeletonGroup as SkeletonGroupWidget, Fpas.Ui.Gui.Internal.Widgets.Sparkline as SparklineWidget,
   Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
   Fpas.Ui.Gui.Internal.Widgets.PathBar as PathBarWidget, Fpas.Ui.Gui.Internal.Widgets.FileBrowser as FileBrowserWidget, Fpas.Ui.Gui.Internal.Widgets.FilePicker as FilePickerWidget, Fpas.Ui.Gui.Internal.Widgets.WeekCalendar as WeekCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.MonthCalendar as MonthCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.Gantt as GanttWidget, Fpas.Ui.Gui.Internal.Widgets.Kanban as KanbanWidget,
   Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
@@ -126,9 +138,23 @@ uses
 // ## Parameters
 // - `State`: Frame context and retained resources.
 public procedure Draw<TMsg>(State: C.State<TMsg>);
+  // Keep recursive layout visits out of the large widget dispatch frames.
   procedure Visit(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
   begin
+    DrawTextAndEditors(Node, Current, Horizontal, Align);
+  end procedure;
+
+  procedure DrawTextAndEditors(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
     case Node of
+      when E.Element.FormattedText(
+        const Value: string,
+        const Font: Motion.Font,
+        const FontSize: float,
+        const Tint: G.Color
+      ):
+        Current.Window.FormattedText(Value, cast<int>(Font), FontSize, CreativeParts.Pack(Tint));
+        Current.Labels.Add(Value);
       when E.Element.Label(const Value: string):
         Current.Window.Text(Value);
         Current.Labels.Add(Value);
@@ -199,14 +225,399 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Notify: Sys.Func<TMsg>?
       ):
         AlertWidget.Draw<TMsg>(Current, Id, Title, Settings, Notify);
+      when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Keymap(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CommitGraph(_, _, _, _, _), E.Element.DependencyGraph(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.NetworkWaterfall(_, _, _, _, _), E.Element.TraceViewer(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.TestExplorer(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.StackTrace(_, _, _, _), E.Element.ResponseStatus(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Coverage(_, _, _, _), E.Element.Blame(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ApiExplorer(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.KeyValueEditor(_, _, _, _), E.Element.QueryBuilder(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.SchedulePicker(_, _, _, _), E.Element.RegexTester(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.RequestBar(_, _, _, _, _), E.Element.FeatureFlags(_, _, _, _, _):
+        DeveloperPresentation.Draw<TMsg>(Current, Node);
+      when E.Element.FormatBar(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.LiveCursors(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.PresencePill(
+        _,
+        _,
+        _
+      ), E.Element.SelectionRing(_, _, _), E.Element.CanvasControls(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ResultCard(_, _, _, _, _), E.Element.SelectionBar(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
+        Canvas.Draw<TMsg>(Current, Node, Visit);
+      when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.HexView(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(_, _, _, _, _):
+        SourceTools.Draw<TMsg>(Current, Node);
+      when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CurveEditor(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
+        EditingTools.Draw<TMsg>(Current, Node);
+      when E.Element.NativeText(_, _), E.Element.Icon(
+        _,
+        _,
+        _
+      ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Veil(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        Display.Draw<TMsg>(Current, Node, Visit);
+      when E.Element.VoiceWave(
+        const Id: string,
+        const Signal: Voice.Signal,
+        const Progress: float?,
+        const Changed: Sys.Func<float, TMsg>?,
+        const Settings: VoiceWaves.Options
+      ):
+        VoiceWaveWidget.Draw<TMsg>(Current, Id, Signal, Progress, Changed, Settings);
+      when E.Element.VoiceNote(
+        const Id: string,
+        const Samples: array of float,
+        const Playback: VoiceNotes.Value,
+        const Changed: function(VoiceNotes.Event): TMsg,
+        const Settings: VoiceNotes.Options
+      ):
+        VoiceNoteWidget.Draw<TMsg>(Current, Id, Samples, Playback, Changed, Settings);
+      when E.Element.VoiceSession(
+        const Id: string,
+        const Mode: Voice.Activity,
+        const Signal: Voice.Signal,
+        const Muted: bool?,
+        const Changed: function(VoiceSessions.Event): TMsg,
+        const Settings: VoiceSessions.Options
+      ):
+        VoiceSessionWidget.Draw<TMsg>(Current, Id, Mode, Signal, Muted, Changed, Settings);
+      when E.Element.Composer(
+        const Id: string,
+        const Content: Composers.Value,
+        const Changed: function(Composers.Event): TMsg,
+        const Settings: Composers.Options
+      ):
+        ComposerWidget.Draw<TMsg>(Current, Id, Content, Changed, Settings);
+      else
+        DrawDeveloperAndMedia(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawDeveloperAndMedia(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
+      when E.Element.VoiceOrb(
+        const Id: string,
+        const Mode: Voice.Activity,
+        const Level: float,
+        const Activate: Sys.Func<TMsg>?,
+        const Settings: VoiceOrbs.Options
+      ):
+        VoiceOrbWidget.Draw<TMsg>(Current, Id, Mode, Level, Activate, Settings);
+      when E.Element.Reasoning(
+        const Id: string,
+        const Bodies: array of E.Element<TMsg>,
+        const Settings: Reasonings.Options
+      ):
+        ReasoningWidget.Draw<TMsg>(Current, Id, Bodies, Settings, Visit);
+      when E.Element.ToolCall(
+        const Id: string,
+        const Name: string,
+        const Settings: ToolCalls.Options
+      ):
+        ToolCallWidget.Draw<TMsg>(Current, Id, Name, Settings);
+      when E.Element.AgentPlan(
+        const Id: string,
+        const Steps: array of AgentPlans.Step,
+        const Changed: Sys.Func<int, TMsg>?,
+        const Settings: AgentPlans.Options
+      ):
+        AgentPlanWidget.Draw<TMsg>(Current, Id, Steps, Changed, Settings);
+      when E.Element.AgentStatus(
+        const Id: string,
+        const Label: string,
+        const Settings: AgentStatuses.Options
+      ):
+        AgentStatusWidget.Draw<TMsg>(Current, Id, Label, Settings);
+      when E.Element.SourceList(
+        const Id: string,
+        const Documents: array of Sources.Item,
+        const Changed: Sys.Func<int, TMsg>?,
+        const Settings: SourceLists.Options
+      ):
+        SourceListWidget.Draw<TMsg>(Current, Id, Documents, Changed, Settings);
+      when E.Element.Citation(
+        const Id: string,
+        const Number: int,
+        const Source: Sources.Item?,
+        const Activate: Sys.Func<TMsg>?,
+        const Settings: Citations.Options
+      ):
+        CitationWidget.Draw<TMsg>(Current, Id, Number, Source, Activate, Settings);
+      when E.Element.ContextMeter(
+        const Id: string,
+        const Used: float,
+        const Limit: float,
+        const Breakdown: array of ContextMeters.Part,
+        const Settings: ContextMeters.Options
+      ):
+        ContextMeterWidget.Draw<TMsg>(Current, Id, Used, Limit, Breakdown, Settings);
+      when E.Element.ResponseActions(
+        const Id: string,
+        const Vote: int?,
+        const Changed: function(ResponseActions.Event): TMsg,
+        const Settings: ResponseActions.Options
+      ):
+        ResponseActionsWidget.Draw<TMsg>(Current, Id, Vote, Changed, Settings);
+      when E.Element.PromptSuggestions(
+        const Id: string,
+        const Items: array of PromptSuggestions.Item,
+        const Changed: function(int): TMsg,
+        const Settings: PromptSuggestions.Options
+      ):
+        PromptSuggestionsWidget.Draw<TMsg>(Current, Id, Items, Changed, Settings);
+      when E.Element.ModelPicker(
+        const Id: string,
+        const Items: array of ModelPickers.Item,
+        const Selected: int,
+        const Changed: function(int): TMsg,
+        const Settings: ModelPickers.Options
+      ):
+        ModelPickerWidget.Draw<TMsg>(Current, Id, Items, Selected, Changed, Settings);
+      when E.Element.Carousel(
+        const Id: string,
+        const Slides: array of E.Element<TMsg>,
+        const Index: int,
+        const Changed: function(int): TMsg,
+        const Settings: Carousels.Options
+      ):
+        CarouselWidget.Draw<TMsg>(Current, Id, Slides, Index, Changed, Settings, Visit);
+      when E.Element.CardStack(
+        const Id: string,
+        const DeckItems: array of E.Element<TMsg>,
+        const Changed: function(CardStacks.Direction): TMsg,
+        const Settings: CardStacks.Options
+      ):
+        CardStackWidget.Draw<TMsg>(Current, Id, DeckItems, Changed, Settings, Visit);
+      when E.Element.ImageViewer(
+        const Id: string,
+        const Image: Media.Source,
+        const ViewValue: ImageViewers.Value,
+        const Changed: function(ImageViewers.Value): TMsg,
+        const Settings: ImageViewers.Options
+      ):
+        ImageViewerWidget.Draw<TMsg>(Current, Id, Image, ViewValue, Changed, Settings);
+      when E.Element.ImageCropper(
+        const Id: string,
+        const Image: Media.Source,
+        const Crop: ImageCroppers.Value,
+        const Changed: function(ImageCroppers.Value): TMsg,
+        const Settings: ImageCroppers.Options
+      ):
+        ImageCropperWidget.Draw<TMsg>(Current, Id, Image, Crop, Changed, Settings);
+      when E.Element.ImageCompare(
+        const Id: string,
+        const Before: Media.Source,
+        const After: Media.Source,
+        const Position: float,
+        const Changed: function(float): TMsg,
+        const Settings: ImageComparisons.Options
+      ):
+        ImageCompareWidget.Draw<TMsg>(Current, Id, Before, After, Position, Changed, Settings);
+      when E.Element.ChatMessage(
+        const Id: string,
+        const Text: string,
+        const Settings: ChatMessages.Options
+      ):
+        ChatMessageWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.ChatDivider(const Id: string, const Label: string):
+        ChatDividerWidget.Draw<TMsg>(Current, Id, Label);
+      when E.Element.TypingIndicator(const Id: string, const Name: string):
+        TypingIndicatorWidget.Draw<TMsg>(Current, Id, Name);
+      when E.Element.Comment(
+        const Id: string,
+        const Author: string,
+        const Text: string,
+        const Likes: Comments.Value,
+        const Change: function(Comments.Event): TMsg,
+        const Settings: Comments.Options
+      ):
+        CommentWidget.Draw<TMsg>(Current, Id, Author, Text, Likes, Change, Settings);
+      when E.Element.Presence(
+        const Id: string,
+        const Users: array of Presences.User,
+        const Settings: Presences.Options
+      ):
+        PresenceWidget.Draw<TMsg>(Current, Id, Users, Settings);
+      when E.Element.Counter(
+        const Id: string,
+        const Value: double,
+        const Settings: Counters.Options
+      ):
+        CounterWidget.Draw<TMsg>(Current, Id, Value, Settings);
+      else
+        DrawVoiceAndChat(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawVoiceAndChat(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
+      when E.Element.Ticker(
+        const Id: string,
+        const Items: array of Tickers.Item,
+        const Settings: Tickers.Options
+      ):
+        TickerWidget.Draw<TMsg>(Current, Id, Items, Settings);
+      when E.Element.StatusSpinner(
+        const Id: string,
+        const CurrentStatus: Status.Status,
+        const Settings: StatusSpinners.Options
+      ):
+        StatusSpinnerWidget.Draw<TMsg>(Current, Id, CurrentStatus, Settings);
+      when E.Element.SkeletonGroup(
+        const Id: string,
+        const Children: array of E.Element<TMsg>,
+        const Settings: SkeletonGroups.Options
+      ):
+        SkeletonGroupWidget.Draw<TMsg>(Current, Id, Children, Settings, Visit);
+      when E.Element.Sparkline(
+        const Id: string,
+        const Values: array of float,
+        const Settings: Sparklines.Options
+      ):
+        SparklineWidget.Draw<TMsg>(Current, Id, Values, Settings);
       when E.Element.ProgressBar(
         const Id: string,
         const Value: float,
         const Settings: ProgressBars.Options
       ):
         ProgressWidget.Draw<TMsg>(Current, Id, Value, Settings);
-      when E.Element.Spinner(const Id: string, const Diameter: float):
-        SpinnerWidget.Draw<TMsg>(Current, Id, Diameter);
+      when E.Element.Spinner(
+        const Id: string,
+        const Diameter: float,
+        const Settings: Spinners.Options?
+      ):
+        SpinnerWidget.Draw<TMsg>(Current, Id, Diameter, Settings ?? new Spinners.Options());
       when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
         SkeletonWidget.Draw<TMsg>(Current, Id, Width, Height);
       when E.Element.TimelineItem(
@@ -286,6 +697,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const OnChange: function(int): TMsg, const Settings: Selects.Options
       ):
         SelectWidget.Draw<TMsg>(Current, Id, Items, Selected, OnChange, Settings);
+      else
+        DrawButtonsAndMenus(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawButtonsAndMenus(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
       when E.Element.NumberField(
         const Id: string, const Value: double, const Minimum: double, const Maximum: double,
         const OnChange: function(double): TMsg, const Settings: NumberFields.Options
@@ -393,7 +815,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(bool): TMsg,
         const Description: string,
         const Enabled: bool,
-        const Indeterminate: bool
+        const Indeterminate: bool, const HideLabel: bool
       ):
         Checkbox.Draw<TMsg>(
           Current,
@@ -403,7 +825,8 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Change,
           Description,
           Enabled,
-          Indeterminate
+          Indeterminate,
+          HideLabel
         );
       when E.Element.SwitchAction(
         const Id: string, const Label: string, const On: bool, const Change: function(bool): TMsg,
@@ -430,6 +853,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Maximum: float, const Change: function(float): TMsg, const Settings: Sliders.Options
       ):
         Slider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+      else
+        DrawPickersAndSelection(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawPickersAndSelection(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
       when E.Element.RangeSliderAction(
         const Id: string,
         const Label: string,
@@ -609,6 +1043,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Visit
         );
         return;
+      else
+        DrawDisclosureAndData(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawDisclosureAndData(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
       when E.Element.Popover(
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>,
         const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options
@@ -794,6 +1239,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Settings: Readouts.Options
       ):
         ReadoutWidget.Draw<TMsg>(Current, Id, Label, Value, Settings);
+      else
+        DrawChartsAndSections(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawChartsAndSections(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
       when E.Element.DotDisplay(
         const Id: string,
         const Text: string,
@@ -1218,6 +1674,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Visit(Base, Current, Horizontal, Align);
         TourWidget.Draw<TMsg>(Current, Id, Steps, CurrentStep, Changed, Settings);
         return;
+      else
+        DrawLayout(Node, Current, Horizontal, Align);
+        return;
+    end case;
+
+    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
+  end procedure;
+
+  procedure DrawLayout(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  begin
+    case Node of
       when E.Element.Spacer:
         Current.Window.Spacer();
       when E.Element.Gap(const Distance: L.Measure):

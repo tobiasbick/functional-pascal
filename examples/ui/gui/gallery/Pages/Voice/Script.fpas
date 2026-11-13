@@ -1,0 +1,181 @@
+unit GuiGallery.Pages.Voice.Script;
+
+uses Fpas.Ui.Voice as V, System as Sys;
+
+type Turn = record
+  public Speaker: V.Owner;
+  public Seconds: float;
+  public Text: string;
+end record;
+
+const Turns: array of Turn := [
+  new Turn(V.Owner.You, 3.2F, 'What''s the weather like tomorrow morning?'),
+  new Turn(V.Owner.Reply, 1.4F, ''),
+  new Turn(V.Owner.Reply, 4.2F, 'Clear and cool, about 9 degrees at eight, warming to 15 by noon.'),
+  new Turn(V.Owner.You, 2.4F, 'Should I bring a jacket?'),
+  new Turn(V.Owner.Reply, 1.1F, ''),
+  new Turn(V.Owner.Reply, 3.0F, 'A light one, yes. It''s breezy until around ten.')
+];
+
+function Noise(Time: float; Seed: float): float;
+begin
+  return (Sys.MathF.Sin(Time * 1.7F + Seed) * 0.5F +
+    Sys.MathF.Sin(Time * 3.1F + Seed * 2.3F) * 0.3F +
+    Sys.MathF.Sin(Time * 7.3F + Seed * 0.7F) * 0.2F) * 0.5F + 0.5F;
+end function;
+
+function Level(Time: float; Seed: float): float;
+begin
+  const Envelope: float := if Sys.MathF.Sin(Time * 2.6F + Seed) > -0.45F then
+    1.0F
+  else
+    0.06F
+  end if;
+  return Envelope * (0.28F + Noise(Time * 2.4F, Seed) * 0.72F);
+end function;
+
+function Position(Time: float): float;
+begin
+  var Length: float := 0.0F;
+  for Item: Turn in Turns do
+    Length := Length + Item.Seconds;
+  end for;
+
+  return Time - Sys.MathF.Floor(Time / Length) * Length;
+end function;
+
+// A moment in the original scripted conversation.
+public type Moment = record
+  // Activity shown in the voice session.
+  public Mode: V.Activity;
+  // The speaker of the visible transcript.
+  public Speaker: V.Owner;
+  // Words revealed so far.
+  public Spoken: string;
+  // The remaining transcript.
+  public Upcoming: string;
+end record;
+
+// Replays the original conversation at a known time.
+// ## Parameters
+// - `Time`: Seconds since the call began.
+// - `Muted`: Current microphone state.
+// ## Returns
+// The current activity and transcript.
+public function At(Time: float; Muted: bool): Moment;
+begin
+  var Into: float := Position(Time);
+  var Index: int := 0;
+  while Index < Turns.Length - 1 and Into >= Turns[Index].Seconds do
+    Into := Into - Turns[Index].Seconds;
+    Index := Index + 1;
+  end while;
+  const Current: Turn := Turns[Index];
+  const Thinking: bool := Current.Text = '';
+  const Said: Turn := if Thinking then
+    Turns[Index - 1]
+  else
+    Current
+  end if;
+  const Mode: V.Activity := if Thinking then
+    V.Activity.Thinking
+  elsif Current.Speaker = V.Owner.Reply then
+    V.Activity.Speaking
+  elsif Muted then
+    V.Activity.Muted
+  else
+    V.Activity.Listening
+  end if;
+  const Shown: int := if Thinking then
+    Said.Text.Length
+  else
+    cast<int>(cast<float>(Said.Text.Length) * Sys.MathF.Min(1.0F, Into / Current.Seconds * 1.15F))
+  end if;
+  return new Moment(Mode, Said.Speaker, Said.Text.Substring(0, Shown), Said.Text.Substring(Shown));
+end function;
+
+// One measured level and its native owner tag.
+public type SampleValue = record
+  // Loudness or the silence marker.
+  public Level: float;
+  // Speaker tag.
+  public Owner: byte;
+end record;
+
+// Samples both voices without using a microphone.
+// ## Parameters
+// - `Time`: Global demo time.
+// - `CallTime`: Seconds since the call began.
+// - `Muted`: Whether the local voice is muted.
+// ## Returns
+// A measured level and the speaker tag.
+public function Sample(Time: float; CallTime: float; Muted: bool): SampleValue;
+begin
+  const Current: Moment := At(CallTime, Muted);
+  const Speaker: V.Owner := if Current.Mode = V.Activity.Thinking then
+    V.Owner.Reply
+  else
+    Current.Speaker
+  end if;
+  return new SampleValue(
+    if Current.Mode = V.Activity.Thinking then
+      V.Silent
+    elsif Speaker = V.Owner.Reply then
+      Level(Time * 1.4F, 5.0F)
+    elsif Muted then
+      0.0F
+    else
+      0.8F * Level(Time * 1.3F, 2.0F)
+    end if, cast<byte>(Speaker)
+  );
+end function;
+
+// Samples the recording simulation.
+// ## Parameters
+// - `Time`: Global demo time.
+// ## Returns
+// The synthetic microphone level.
+public function Recording(Time: float): float;
+begin
+  return 0.85F * Level(Time * 1.1F, 1.7F);
+end function;
+
+// The original incoming voice-note waveform.
+// ## Returns
+// Sixty-four samples.
+public function Incoming(): array of float;
+begin
+  const Values: array of float := new float[64];
+  for Index: int := 0 to Values.Length - 1 do
+    const I: float := cast<float>(Index);
+    Values[Index] := (0.2F + Noise(I * 0.3F, 0.4F) * 0.8F) *
+      (if Sys.MathF.Sin(I * 0.45F + 0.4F) > -0.7F then
+        1.0F
+      else
+        0.15F
+      end if);
+  end for;
+
+  return Values;
+end function;
+
+// The original seekable standalone waveform.
+// ## Returns
+// One hundred and sixty samples.
+public function Clip(): array of float;
+begin
+  const Values: array of float := new float[160];
+  for Index: int := 0 to Values.Length - 1 do
+    const I: float := cast<float>(Index);
+    Values[Index] := (0.2F + Noise(I * 0.22F, 1.3F) * 0.8F) *
+      (if Sys.MathF.Sin(I * 0.12F + 1.0F) > -0.75F then
+        1.0F
+      else
+        0.1F
+      end if);
+  end for;
+
+  return Values;
+end function;
+
+end unit;

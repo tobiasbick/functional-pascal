@@ -1,0 +1,60 @@
+unit GuiGallery.Pages.Developer.State;
+
+uses GuiGallery.Pages.Developer.Samples as Samples, Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys, Fpas.Ui.ShortcutRecorders as Shortcuts, Fpas.Ui.ProblemsPanels as P;
+
+// State of the Developer tools examples.
+public type Model = record
+  // Trace lanes and their collapsed state.
+  public Tracks: array of T.Track := Samples.Tracks;
+  // Selected trace span.
+  public Span: int := Samples.SelectedSpan();
+  // Visible trace interval and measurement.
+  public Timeline: T.View := new T.View(0.0042, 0.0418, 0.0F, 0.0161, 0.0236);
+  // Selected network request.
+  public Waterfall: int := 2;
+  // Selected dependency.
+  public Graph: int := 1;
+  // Selected commit.
+  public Commit: int := 1;
+  // Selected pipeline job.
+  public Pipeline: int := 3;
+  // Example request headers.
+  public Headers: array of K.Pair := [
+    new K.Pair('Authorization', 'Bearer demo-token-000', true, true),
+    new K.Pair('Accept', 'application/json', true, false),
+    new K.Pair('X-Request-Id', '7d1c0a', false, false),
+    new K.Pair('Accept', 'text/html', true, false)
+  ];
+  // Current query rules.
+  public Rules: array of Q.Rule := Samples.Rules;
+  // Backup cron expression.
+  public Cron: string := '30 9 * * 1-5';
+  // Keyboard modifiers highlighted on the keymap.
+  public Modifiers: int := cast<int>(Shortcuts.PrimaryModifier());
+end record;
+
+// Changes reported by the Developer tools examples.
+public type Msg = variant
+  // Applies the trace proposal.
+  Trace(Value: T.Event);
+  // Applies the waterfall proposal.
+  Waterfall(Value: W.Event);
+  // Applies the graph proposal.
+  Graph(Value: G.Event);
+  // Applies the commit proposal.
+  Commit(Value: C.Event);
+  // Applies the pipeline proposal.
+  Pipeline(Value: J.Event);
+  // Applies the headers proposal.
+  Headers(Value: K.Event);
+  // Applies the query proposal.
+  Query(Value: Q.Event);
+  // Applies the schedule proposal.
+  Schedule(Value: S.Event);
+  // Applies the keys proposal.
+  Keys(Value: Keys.Event);
+  // Opens a diagnostic in an application that provides an editor.
+  Problems(Value: P.Event);
+end variant;
+
+end unit;

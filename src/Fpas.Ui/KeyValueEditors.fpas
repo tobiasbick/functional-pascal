@@ -1,0 +1,59 @@
+unit Fpas.Ui.KeyValueEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native KeyValueEditor widget.
+public type Pair = record
+  // Key supplied to CUI.
+  public Key: string;
+  // Value supplied to CUI.
+  public Value: string;
+  // Whether the widget accepts interaction.
+  public Enabled: bool;
+  // Secret supplied to CUI.
+  public Secret: bool;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Pairs supplied to CUI.
+  public Pairs: array of Pair;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Maximum entries or UTF-8 bytes, as applicable.
+  public Capacity: int := 16;
+  // Key Placeholder supplied to CUI.
+  public KeyPlaceholder: string := '';
+  // Value Placeholder supplied to CUI.
+  public ValuePlaceholder: string := '';
+  // Hide Toggles supplied to CUI.
+  public HideToggles: bool := false;
+  // Hide Secrets supplied to CUI.
+  public HideSecrets: bool := false;
+  // Disallow edits.
+  public ReadOnly: bool := false;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native KeyValueEditor widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Pairs`: Model-owned pairs data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function KeyValueEditor<TMsg>(Id: string; Pairs: array of Pair; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.KeyValueEditor(Id, Pairs, Changed, Settings ?? new Options());
+end function;
+
+end unit;

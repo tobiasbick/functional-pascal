@@ -1,0 +1,30 @@
+unit Fpas.Ui.Sparklines;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as Charts, Fpas.Ui.Layout as L;
+
+// Native sparkline options.
+public type Options = record
+  // Preferred native width.
+  public Width: L.Extent := L.Extent.Content;
+  // Height in logical points.
+  public Height: float := 0.0F;
+  // Stroke color.
+  public Color: Charts.Color := Charts.Color.Automatic;
+end record;
+
+// Draws a compact native chart for a series of values.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Values`: Finite samples in display order.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Sparkline<TMsg>(Id: string; Values: array of float; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Sparkline(Id, Values, Settings ?? new Options());
+end function;
+
+end unit;

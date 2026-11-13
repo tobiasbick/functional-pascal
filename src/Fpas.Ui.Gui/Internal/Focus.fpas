@@ -1,6 +1,11 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Gui.Internal.CreativeFocus as Creative, Fpas.Ui.ControlTiles as Tiles, Fpas.Ui.Docks as Docks, Fpas.Ui.NowPlaying as Player, Fpas.Ui.Waveforms as Waves, Fpas.Ui.TabBars as Bars, Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks, Fpas.Ui.DataGrids as DataGrid, Fpas.Ui.TreeTables as TreeTable, Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables, Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields, Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys, Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
+uses
+  Fpas.Ui.Veils as Veil, Fpas.Ui.Terminals as TerminalWidget,
+  Fpas.Ui.Gui.Internal.AiFocus as AiFocus, Fpas.Ui.ResultCards as ResultCards,
+  Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
+  Fpas.Ui.Comments as Comments,
+  Fpas.Ui.Gui.Internal.CreativeFocus as Creative, Fpas.Ui.ControlTiles as Tiles, Fpas.Ui.Docks as Docks, Fpas.Ui.NowPlaying as Player, Fpas.Ui.Waveforms as Waves, Fpas.Ui.TabBars as Bars, Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks, Fpas.Ui.DataGrids as DataGrid, Fpas.Ui.TreeTables as TreeTable, Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables, Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields, Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys, Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,6 +22,52 @@ uses Fpas.Ui.Gui.Internal.CreativeFocus as Creative, Fpas.Ui.ControlTiles as Til
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.VoiceWave(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.VoiceNote(_, _, _, _, _), E.Element.VoiceSession(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Composer(_, _, _, _), E.Element.VoiceOrb(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Reasoning(_, _, _), E.Element.ToolCall(_, _, _), E.Element.SourceList(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Citation(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ContextMeter(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PromptSuggestions(_, _, _, _), E.Element.ModelPicker(_, _, _, _, _):
+      return AiFocus.First<TMsg>(Node, Preferred);
+    when E.Element.Comment(const Id: string, _, _, _, _, const Settings: Comments.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id or Preferred = Id + '/like' then
+          return Id + '/like';
+        elsif Preferred = Id + '/reply' then
+          return Id + '/reply';
+        end if;
+      end if;
     when E.Element.StatusTag(
       _,
       _,
@@ -461,7 +512,7 @@ begin
       _,
       _,
       const Enabled: bool,
-      _
+      _, _
     ), E.Element.SwitchAction(
       const Id: string,
       _,
@@ -725,6 +776,66 @@ begin
           return Found;
         end if;
       end for;
+    when E.Element.Carousel(
+      const Id: string,
+      const Slides: array of E.Element<TMsg>,
+      const Index: int,
+      _,
+      const Settings: Carousels.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Preferred = Id + '/viewport' then
+          return Preferred;
+        end if;
+
+        return First<TMsg>(Slides[Index], Prepared, Preferred);
+      end if;
+    when E.Element.CardStack(
+      const Id: string,
+      const DeckItems: array of E.Element<TMsg>,
+      _,
+      const Settings: CardStacks.Options
+    ):
+      if Settings.Enabled and DeckItems.Length > 0 then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Preferred = Id + '/top' then
+          return Preferred;
+        end if;
+
+        return First<TMsg>(DeckItems[0], Prepared, Preferred);
+      end if;
+    when E.Element.ImageViewer(const Id: string, _, _, _, const Settings: ImageViewers.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
+    when E.Element.ImageCropper(const Id: string, _, _, _, const Settings: ImageCroppers.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
+    when E.Element.ImageCompare(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Settings: ImageComparisons.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
     when E.Element.Layered(
       const Children: array of E.Element<TMsg>,
       _
@@ -738,7 +849,11 @@ begin
       _
     ), E.Element.ButtonGroup(
       const Children: array of E.Element<TMsg>
-    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ):
       for Child: E.Element<TMsg> in Children do
         const Found: string? := First<TMsg>(Child, Prepared, Preferred);
         if Found <> null then
@@ -854,6 +969,63 @@ begin
       end if;
 
       return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.LiveCursors(
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.SelectionRing(_, const Child: E.Element<TMsg>, _), E.Element.CanvasControls(
+      _,
+      _,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.SelectionBar(_, _, _, _, const Child: E.Element<TMsg>, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.ResultCard(const Id: string, _, _, _, const Settings: ResultCards.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.FlameGraph(
+      const Id: string,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TimelineEditor(const Id: string, _, _, _, _):
+      if Preferred = null or Preferred = Id then
+        return Id;
+      end if;
+    when E.Element.CodeEditor(const Id: string, _, _, _), E.Element.DiffView(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.HexView(const Id: string, _, _, _, _):
+      if Preferred = null or Preferred = Id then
+        return Id;
+      end if;
+    when E.Element.Terminal(const Id: string, _, _, _, const Settings: TerminalWidget.Options):
+      if Settings.Input and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Veil(
+      const Id: string,
+      const Revealed: bool,
+      _,
+      const Child: E.Element<TMsg>,
+      const Settings: Veil.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      if Settings.Enabled and Revealed then
+        return First<TMsg>(Child, Prepared, Preferred);
+      end if;
     when E.Element.Deferred(const Id: string, _):
       return First<TMsg>(Prepared.Subviews[Id].Tree, Prepared, Preferred);
     else

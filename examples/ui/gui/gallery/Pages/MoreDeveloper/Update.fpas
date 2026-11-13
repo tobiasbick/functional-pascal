@@ -1,0 +1,81 @@
+unit GuiGallery.Pages.MoreDeveloper.Update;
+
+uses GuiGallery.Pages.MoreDeveloper.State as M, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.RegexTesters as R, Fpas.Ui.RequestBars as H, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.ApiExplorers as A, Fpas.Ui.FeatureFlagEditors as F, Fpas.Ui.TimeHistograms as G, System.Collections.Generic as Lists;
+
+function Request(Model: M.Model; Value: H.Event): M.Model;
+begin
+  if Value.Url = Model.Url then
+    return Model with
+      Method := Value.Method;
+    end with;
+  end if;
+  const Pairs: Lists.List<K.Pair> := new Lists.List<K.Pair>();
+  for Entry: Cui.CuiDevPair in Cui.CuiWindow.UrlParameters(Value.Url, 8) do
+    Pairs.Add(new K.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
+  end for;
+
+  return Model with
+    Method := Value.Method;
+    Url := Value.Url;
+    Parameters := Pairs.ToArray();
+  end with;
+end function;
+
+function Parameters(Model: M.Model; Value: K.Event): M.Model;
+begin
+  const Pairs: Lists.List<Cui.CuiDevPair> := new Lists.List<Cui.CuiDevPair>(Value.Pairs.Length);
+  for Entry: K.Pair in Value.Pairs do
+    Pairs.Add(new Cui.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
+  end for;
+
+  return Model with
+    Url := Cui.CuiWindow.SetUrlParameters(Model.Url, Pairs.ToArray(), 255) ?? Model.Url;
+    Parameters := Value.Pairs;
+  end with;
+end function;
+
+function Flag(Model: M.Model; Value: F.Event): M.Model;
+begin
+  const Flags: array of F.Flag := cast<array of F.Flag>(Model.Flags.Clone());
+  const Row: F.Flag := Flags[Value.Index];
+  const Enabled: array of bool := cast<array of bool>(Row.On.Clone());
+  const Rollout: array of int := cast<array of int>(Row.Rollout.Clone());
+  Enabled[Value.Environment] := Value.On;
+  Rollout[Value.Environment] := Value.Rollout;
+  Flags[Value.Index] := Row with
+    On := Enabled;
+    Rollout := Rollout;
+  end with;
+  return Model with
+    Flags := Flags;
+  end with;
+end function;
+
+// Applies an interaction to the More developer tools examples.
+// ## Parameters
+// - `Model`: Current example state.
+// - `Message`: Native widget proposal.
+// ## Returns
+// Updated example state.
+public function Update(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Regex(const Value: R.Event): Model with
+      Pattern := Value.Pattern;
+      Sample := Value.Sample;
+      Modifiers := Value.Modifiers;
+    end with;
+    when M.Msg.Request(const Value: H.Event): Request(Model, Value);
+    when M.Msg.Parameters(const Value: K.Event): Parameters(Model, Value);
+    when M.Msg.Endpoint(const Value: A.Event): Model with
+      Endpoint := Value.Selection;
+    end with;
+    when M.Msg.Flag(const Value: F.Event): Flag(Model, Value);
+    when M.Msg.Range(const Value: G.Event): Model with
+      Range := new G.Range(Value.Start, Value.End);
+    end with;
+    else Model;
+  end case;
+end function;
+
+end unit;

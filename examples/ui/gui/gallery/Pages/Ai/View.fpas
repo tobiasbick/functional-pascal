@@ -1,0 +1,233 @@
+unit GuiGallery.Pages.Ai.View;
+
+uses
+  GuiGallery.Pages.Ai.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.Motion as Motion,
+  Fpas.Ui.ChatMessages as Chat, Fpas.Ui.Reasonings as Reason, Fpas.Ui.ToolCalls as Tools,
+  Fpas.Ui.TaskStates as Task, Fpas.Ui.AgentStatuses as Status, Fpas.Ui.AgentPlans as Plan,
+  Fpas.Ui.Sources as Sources, Fpas.Ui.Citations as Citations, Fpas.Ui.SourceLists as Lists,
+  Fpas.Ui.ResponseActions as Response, Fpas.Ui.ContextMeters as Context, Fpas.Ui.Typewriters as Typing,
+  Fpas.Ui.Composers as Editor, Fpas.Ui.ModelPickers as Picker, Fpas.Ui.PromptSuggestions as Suggestions, System as Sys, System.Collections.Generic as Generic;
+
+function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+const Models: array of Picker.Item := [
+  new Picker.Item('Atlas', 'Longer answers, reads files and code', 'New', Icon($E529)),
+  new Picker.Item('Atlas Fast', 'Short answers in about a second', Icon := Icon($E1B4)),
+  new Picker.Item('Atlas Mini', 'Runs on your own machine', Icon := Icon($E061))
+];
+
+const Documents: array of Sources.Item := [
+  new Sources.Item(
+    'https://fieldnotes.dev/immediate-mode',
+    'Immediate mode GUIs and why they keep coming back',
+    'A look at retained and immediate mode toolkits and the trade offs between them.'
+  ),
+  new Sources.Item(
+    'https://glyphlab.io/notes/subpixel',
+    'Notes on subpixel text positioning',
+    'Shaping, hinting and subpixel positioning explained with examples.'
+  ),
+  new Sources.Item(
+    'https://motionbook.dev/springs',
+    'Spring physics for interface motion',
+    'Why spring physics feel more natural than cubic beziers for motion.'
+  )
+];
+
+const Prompts: array of Suggestions.Item := [
+  new Suggestions.Item('Explain this code', 'Walk through what it does', Icon($E093)),
+  new Suggestions.Item('Analyze a dataset', 'Find trends and outliers', Icon($E2A2)),
+  new Suggestions.Item('Draft an email', 'Clear and friendly', Icon($E1F9)),
+  new Suggestions.Item('Debug an error', 'Paste the stack trace', Icon($E20C))
+];
+
+function Conversation(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+begin
+  const Busy: bool := Model.Editor.Busy;
+  const Elapsed: float := Model.Elapsed;
+  const Views: Generic.List<E.Element<S.Msg>> := new Generic.List<E.Element<S.Msg>>(
+    [
+      G.Heading<S.Msg>(
+        'Conversation',
+        'Reasoning, tool calls, an answer with sources, and the composer.'
+      ),
+      Chat.ChatMessage<S.Msg>(
+        'ai-question',
+        'Why do immediate mode toolkits feel so fast? Cite a few sources.',
+        new Chat.Options(Mine := true)
+      ),
+      Reason.Reasoning<S.Msg>(
+        'ai-reasoning', [
+          E.FormattedText<S.Msg>(
+            'The question is about perceived speed. Two parts: how little work a frame does, and how quickly input shows up on screen.',
+            Motion.Font.Body,
+            13.5F,
+            Colors.TextSecondary
+          ),
+          E.FormattedText<S.Msg>(
+            'Look for sources on retained versus immediate mode, text rendering cost and motion.',
+            Motion.Font.Body,
+            13.5F,
+            Colors.TextSecondary
+          )
+        ], new Reason.Options(
+          Thinking := Busy, Seconds := if Busy then
+            Elapsed
+          else
+            8.0F
+          end if
+        )
+      ),
+      Tools.ToolCall<S.Msg>(
+        'ai-search', 'web_search', new Tools.Options(
+          Status := Task.Status.Done,
+          Icon := Icon($E0E8),
+          Detail := 'immediate mode gui performance',
+          Seconds := 1.4F,
+          Input := '{"query": "immediate mode gui performance", "limit": 5}',
+          Output := '{"results": [{"title": "Immediate mode GUIs", "url": "https://fieldnotes.dev/immediate-mode"}], "took_ms": 1380}'
+        )
+      ),
+      Tools.ToolCall<S.Msg>(
+        'ai-read', 'read_file', new Tools.Options(
+          Icon := Icon($E0CC), Detail := 'quarterly-report.pdf',
+          Status := if Busy then
+            Task.Status.Running
+          else
+            Task.Status.Done
+          end if,
+          Seconds := if Busy then
+            Elapsed
+          else
+            2.1F
+          end if
+        )
+      )
+    ]
+  );
+  if Busy then
+    Views.Add(
+      Status.AgentStatus<S.Msg>(
+        'ai-status', 'Reading quarterly-report.pdf',
+        new Status.Options(Status := Task.Status.Running, Seconds := Elapsed)
+      )
+    );
+  end if;
+
+  Views.Add(
+    Typing.Typewriter<S.Msg>(
+      'ai-answer',
+      'They do very little work per frame: the interface is rebuilt from your data, laid out once and drawn in a handful of batches, so there is no tree of objects to keep in sync. Text is the expensive part, which is why glyphs are cached in an atlas, and motion feels quick when it is driven by springs instead of fixed curves.',
+      Settings := new Motion.TextOptions(Size := 15.0F)
+    )
+  );
+  Views.Add(
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(6), Align := L.Alignment.Center, Clip := false),
+      E.FormattedText<S.Msg>('Sources', Motion.Font.Body, 12.0F, Colors.TextMuted),
+      Citations.Citation<S.Msg>('ai-cite-1', 1, Documents[0], null),
+      Citations.Citation<S.Msg>('ai-cite-2', 2, Documents[1], null),
+      Citations.Citation<S.Msg>('ai-cite-3', 3, Documents[2], null)
+    )
+  );
+  Views.Add(Lists.SourceList<S.Msg>('ai-sources', Documents, null));
+  Views.Add(
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Clip := false),
+      Response.ResponseActions<S.Msg>(
+        'ai-response', Model.Vote, S.Msg.Response,
+        new Response.Options(CopyText := 'They do very little work per frame.')
+      ),
+      E.Spacer<S.Msg>(),
+      Context.ContextMeter<S.Msg>(
+        'ai-context', 113400.0F, 200000.0F, [
+          new Context.Part('System', 3200.0F),
+          new Context.Part('Files', 41800.0F),
+          new Context.Part('Messages', 68400.0F)
+        ]
+      )
+    )
+  );
+  Views.Add(
+    Editor.Composer<S.Msg>(
+      'ai-composer', Model.Editor with
+        Models := Models;
+      end with,
+      S.Msg.Editor, new Editor.Options(Placeholder := 'Ask a follow up')
+    )
+  );
+  return E.Column<S.Msg>(new L.Flow(Gap := G.Points(14), Clip := false), Views.ToArray());
+end function;
+
+function Agent(Model: S.Model): E.Element<S.Msg>;
+begin
+  const Busy: bool := Model.Editor.Busy;
+  return E.Column<S.Msg>(
+    new L.Flow(Gap := G.Points(14), Clip := false),
+    G.Heading<S.Msg>('Agent plan', 'Steps and their status.'),
+    Plan.AgentPlan<S.Msg>(
+      'ai-plan', [
+        new Plan.Step('Search for sources', '3 results', Task.Status.Done),
+        new Plan.Step(
+          'Read the attached report', if Busy then
+            'Page 12 of 40'
+          else
+            '40 pages'
+          end if,
+          if Busy then
+            Task.Status.Running
+          else
+            Task.Status.Done
+          end if
+        ),
+        new Plan.Step(
+          'Compare the numbers with last quarter', Status := if Busy then
+            Task.Status.Pending
+          else
+            Task.Status.Done
+          end if
+        ),
+        new Plan.Step(
+          'Draft the summary', Status := if Busy then
+            Task.Status.Pending
+          else
+            Task.Status.Running
+          end if
+        ),
+        new Plan.Step('Check the citations')
+      ], null, new Plan.Options(Title := 'Research plan')
+    ),
+    G.Heading<S.Msg>('Suggestions', 'Ways to start.'),
+    Suggestions.PromptSuggestions<S.Msg>(
+      'ai-suggestions',
+      Prompts,
+      function(Index: int): S.Msg => S.Msg.Suggestion(Prompts[Index].Title),
+      new Suggestions.Options(Columns := 1)
+    )
+  );
+end function;
+
+// Builds the original AI page and its standalone model picker example.
+// ## Parameters
+// - `Model`: Current conversation and toolbar state.
+// - `Colors`: Active native palette.
+// ## Returns
+// The visible gallery sections.
+public function View(Model: S.Model; Colors: Theme.Palette): array of E.Element<S.Msg>;
+begin
+  return [
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start, Clip := false),
+      E.Size<S.Msg>(Conversation(Model, Colors), new L.Flex(Grow := 1.6F)),
+      E.Size<S.Msg>(Agent(Model), new L.Flex(Grow := 1.0F))
+    ),
+    G.Heading<S.Msg>('Model picker', 'Choose a model using the same menu as the composer.'),
+    Picker.ModelPicker<S.Msg>('ai-model', Models, Model.Editor.Selected, S.Msg.ModelChoice)
+  ];
+end function;
+
+end unit;

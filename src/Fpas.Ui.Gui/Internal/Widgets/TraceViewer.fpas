@@ -1,0 +1,93 @@
+unit Fpas.Ui.Gui.Internal.Widgets.TraceViewer;
+
+uses Fpas.Ui.TraceViewers as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+
+function PackTrack(Items: array of D.Track): array of Cui.CuiDevTrack;
+begin
+  const Native: Lists.List<Cui.CuiDevTrack> := new Lists.List<Cui.CuiDevTrack>(Items.Length);
+  for Entry: D.Track in Items do
+    Native.Add(new Cui.CuiDevTrack(Entry.Name, Entry.Collapsed));
+  end for;
+
+  return Native.ToArray();
+end function;
+
+function PackSpan(Items: array of D.Span): array of Cui.CuiDevSpan;
+begin
+  const Native: Lists.List<Cui.CuiDevSpan> := new Lists.List<Cui.CuiDevSpan>(Items.Length);
+  for Entry: D.Span in Items do
+    Native.Add(
+      new Cui.CuiDevSpan(
+        Entry.Name,
+        Entry.Start,
+        Entry.End,
+        Entry.Track,
+        Entry.Depth,
+        Entry.ColorKey
+      )
+    );
+  end for;
+
+  return Native.ToArray();
+end function;
+
+function PackMarker(Items: array of D.Marker): array of Cui.CuiDevMarker;
+begin
+  const Native: Lists.List<Cui.CuiDevMarker> := new Lists.List<Cui.CuiDevMarker>(Items.Length);
+  for Entry: D.Marker in Items do
+    Native.Add(new Cui.CuiDevMarker(Entry.Name, Entry.Time, Entry.Tone));
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native TraceViewer widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Tracks`: Tracks supplied to the widget.
+// - `Spans`: Spans supplied to the widget.
+// - `Markers`: Markers supplied to the widget.
+// - `Value`: Value supplied to the widget.
+// - `Selection`: Selection supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Tracks: array of D.Track; Spans: array of D.Span; Markers: array of D.Marker; Value: D.View; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'trace-viewer';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: Cui.CuiDevResult := Frame.Window.TraceViewer(
+    Token,
+    PackTrack(Tracks),
+    PackSpan(Spans),
+    PackMarker(Markers),
+    Value.Start,
+    Value.End,
+    Value.Scroll,
+    Value.MarkStart,
+    Value.MarkEnd,
+    Selection,
+    Settings.Height,
+    Settings.RowHeight,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  if Enabled and (Result.Flags <> 0) then
+    Frame.Messages.Add(
+      Changed(
+        new D.Event(
+          new D.View(Result.X, Result.Y, cast<float>(Result.Z), Result.A, Result.B),
+          Result.Index, Result.Action, Result.Count <> 0
+        )
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

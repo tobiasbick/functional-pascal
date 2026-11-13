@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Markdown;
+
+uses
+  Fpas.Ui.Markdowns as D, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Internal.Sizing as S,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Renders the native Markdown and dispatches its proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Text`: Markdown source.
+// - `Changed`: Maps link and task activations.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'markdown';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Result: Cui.CuiMarkdownEvent := Frame.Window.Markdown(
+    Token, Text, Width.Kind, Width.Value, Settings.Size,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Compact, 2) or P.Bits(Settings.Streaming, 4)
+  );
+  if Enabled then
+    const Link: string? := Result.Link;
+    if Link <> null then
+      Frame.Messages.Add(Changed(D.Event.Link(Link)));
+    end if;
+
+    if Result.HoverChanged then
+      Frame.Messages.Add(Changed(D.Event.Hover(Result.Hovered)));
+    end if;
+
+    if Result.Offset >= 0 then
+      Frame.Messages.Add(Changed(D.Event.Task(Result.Offset, Result.Line, Result.Checked)));
+    end if;
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

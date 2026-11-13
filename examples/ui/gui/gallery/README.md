@@ -98,7 +98,16 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   example email addresses and stable ties when sorting.
 - **Code** shows the original C, Python and shell code blocks, native copy
   buttons, expandable JSON and the parse-error example. An additional SQL
-  block demonstrates native SQL highlighting.
+  block and editor demonstrate native SQL highlighting. Replay the Markdown
+  release notes, edit the C tile cache, navigate the config diff, overwrite
+  bytes in the PNG specimen, and filter or clear the build log.
+- **Developer tools** shows the original trace, network waterfall, dependency
+  and commit graphs, pipeline, problems, headers editor, query builder,
+  schedule picker and keymap. Fold a trace lane or Shift-drag to measure.
+- **More developer tools** shows the original test explorer, stack trace,
+  blame, coverage, regex tester, HTTP preview, API explorer, feature flags,
+  uptime and time histogram. The URL and parameters update each other in
+  the local request example. Drag on the histogram to select an interval.
 - **Instruments** shows the original caffeine example. Click the dot chart to
   add a cup, drag it along the event track or use the arrow keys. The readouts
   and bedtime dot display update with the cup times.
@@ -108,12 +117,34 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 - **Creative controls** shows the original status tags, Coffee/Milk and
   Train/Test ratios, gradient and step sliders, palette locks and shuffle,
   aspect choices, export controls and seed dice.
-- **Files** shows the original browser and its Open and Save as dialogs.
+- **Canvas and bars** shows the original grouped toolbar, format bar, three
+  collaborators over the node graph, zoom rail, result picture and floating
+  actions. Tick files to update the selection bar. Escape clears the selection.
+- **Editing tools** shows the original crate inspector, two-frame flame graph,
+  easing curve, gradient ramp and shot timeline. Move or select a timeline key
+  to edit the same track in its curve below.
+- **Text and display** shows typography, inline code, an icon, emoji, a
+  keyboard shortcut, and the original preview picture. Click a color swatch
+  to move the selection ring.
+- **Files** shows the original browser, its Open and Save as dialogs, and a
+  terminal with built-in `help`, `ls`, `colors`, `build`, `echo` and `clear`.
   Double-click a folder or press Enter to navigate into it. A supplementary
   standalone path bar demonstrates ancestor navigation, child menus and path entry.
 - **Planning** shows the original Kanban board, week schedule, release Gantt
   and month calendar. Drag a card across columns, move or resize an event or
   task, and change the visible month or select a day.
+- **Social and media** shows the original grouped chat, threaded comments,
+  presence strip, rolling revenue and ticker. Like a comment or add a sale,
+  then browse the release carousel. Zoom or pan the landscape, resize its square
+  crop, drag the before-and-after divider, and swipe destination cards to save
+  or skip them.
+- **AI** shows the original reasoning, tool calls, agent plan, citations, source
+  cards and composer. Use a suggestion to fill the draft, then send or stop
+  the simulated response. A standalone model picker follows the conversation.
+- **Voice** shows an incoming voice note, the recorder, a scripted call and
+  live and seekable waveforms. The synthetic levels make it possible to record,
+  cancel, send and play demo takes without microphone access. The legacy orb
+  follows the original examples.
 - **Feedback** shows CUI's four original alerts, including dismissible storage
   warning, upload percentage, indeterminate indexing, dithered export and sync,
   Storage usage and three spinner sizes. Loading reproduces the native skeleton avatar, percentage text
@@ -125,8 +156,9 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   tones, presence and the overlapping team with its overflow count. The
   empty-state New project action shows a success toast. Leaving the page
   releases native dismissal and interpolation state.
-  The new dither spinner/status-spinner examples and skeleton group remain
-  outside the accepted subset; their upstream gallery examples are not shown yet.
+  Loading includes the shared dither skeleton group. Dither spinners shows the
+  original native styles and the Upload example, which alternates success and
+  failure.
 - **Reader** shows the original article, nested outline entries and scroll
   fades. Click an entry or activate a focused row with Enter to jump to its
   heading. The marker follows the reader while scrolling.
@@ -137,6 +169,7 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   interaction, including its [documented focus limitation](../../../../docs/future/cui-upstream-bugs.md#cui-006).
   Hover over @jonas to see the original profile card with initials and the
   online dot. Move onto the card to keep it open, or press Escape to close it.
+  Use the Veil examples to reveal a picture, a sample identifier or a spoiler.
   The announcement can show its release-notes toast, dismiss and reopen. The
   standard and compact Countdown examples share a clock. Onboarding checklist
   starts at one completed step and opens the next action as each step completes.
@@ -178,7 +211,8 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   donut, stacked dither areas, storage pattern meter, stacked bars and CPU/Memory
   gauges. Hover to inspect native values; Tab and arrows inspect meter parts.
   Grayscale changes only the meter's palette. Native CUI owns drawing,
-  layout, legends, animation and local interaction.
+  layout, legends, animation and local interaction. A standalone sparkline
+  demonstrates the native compact chart.
 - **More charts** reproduces the complete original page: weekday/hour heatmap,
   yearly activity, module treemap, release radar, signup funnel, frame-time split
   bar, platform waffle, Sankey, ranked pages with Shuffle, activity rings, bubble

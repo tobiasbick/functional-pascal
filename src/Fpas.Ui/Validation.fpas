@@ -1,6 +1,16 @@
 unit Fpas.Ui.Validation;
 
 uses
+  Fpas.Ui.Internal.EditingToolValidation as EditingTools,
+  Fpas.Ui.Internal.SourceToolValidation as SourceTools,
+  Fpas.Ui.Internal.DisplayValidation as Display,
+  Fpas.Ui.Internal.CanvasValidation as Canvas,
+  Fpas.Ui.Internal.DeveloperValidation as Developer,
+  Fpas.Ui.Internal.VoiceAndAiValidation as VoiceAndAi,
+  Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
+  Fpas.Ui.Internal.MediaRules as MediaRules,
+  Fpas.Ui.Spinners as Spinners,
+  Fpas.Ui.ChatMessages as ChatMessages, Fpas.Ui.Comments as Comments, Fpas.Ui.Presences as Presences, Fpas.Ui.Counters as Counters, Fpas.Ui.Tickers as Tickers, Fpas.Ui.StatusSpinners as StatusSpinners, Fpas.Ui.SkeletonGroups as SkeletonGroups, Fpas.Ui.Sparklines as Sparklines,
   Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
   Fpas.Ui.Internal.PlanningRules as PlanningRules,
   Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
@@ -112,6 +122,252 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
     return Named;
   end function;
+
+  procedure CheckMedia(Node: E.Element<TMsg>; Location: string);
+  begin
+    case Node of
+      when E.Element.Carousel(
+        const Id: string,
+        const Slides: array of E.Element<TMsg>,
+        const Index: int,
+        _,
+        const Settings: Carousels.Options
+      ):
+        const At: string := Identify(Id, Location + '/carousel');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Slides.Length < 1 or Slides.Length > 64 or Index < 0 or Index >= Slides.Length then
+          Rules.Reject(At, 'A carousel needs one to 64 slides and a valid selection.');
+        end if;
+
+        ChartRules.Distance(Settings.Height, At);
+        ChartRules.Distance(Settings.Gap, At);
+        ChartRules.Distance(Settings.AutoAdvance, At);
+        discard Identify(Id + '/viewport', At);
+        if not Settings.HideDots and Slides.Length > 1 then
+          for Part: int := 0 to Slides.Length - 1 do
+            discard Identify(
+              Id + '/dot-' + Part.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+              At
+            );
+          end for;
+        end if;
+
+        for Slide: E.Element<TMsg> in Slides do
+          Visit(Slide, At);
+        end for;
+      when E.Element.CardStack(
+        const Id: string,
+        const DeckItems: array of E.Element<TMsg>,
+        _,
+        const Settings: CardStacks.Options
+      ):
+        const At: string := Identify(Id, Location + '/card-stack');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        ChartRules.Distance(Settings.Height, At);
+        if Settings.Visible < 0 then
+          Rules.Reject(At, 'The visible card count must be nonnegative.');
+        end if;
+
+        if DeckItems.Length > 0 then
+          discard Identify(Id + '/top', At);
+        end if;
+
+        for Card: E.Element<TMsg> in DeckItems do
+          Visit(Card, At);
+        end for;
+      when E.Element.ImageViewer(
+        const Id: string,
+        const Image: Media.Source,
+        const ViewValue: ImageViewers.Value,
+        _,
+        const Settings: ImageViewers.Options
+      ):
+        const At: string := Identify(Id, Location + '/image-viewer');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MediaRules.Image(Image, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        Rules.CheckExtent(Settings.Height, Profile, At);
+        ChartRules.Distance(Settings.MaximumZoom, At);
+        ChartRules.Distance(ViewValue.Zoom, At);
+        MediaRules.Finite(ViewValue.CenterX, ViewValue.CenterY, At);
+      when E.Element.ImageCropper(
+        const Id: string,
+        const Image: Media.Source,
+        const Crop: ImageCroppers.Value,
+        _,
+        const Settings: ImageCroppers.Options
+      ):
+        const At: string := Identify(Id, Location + '/image-cropper');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MediaRules.Image(Image, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        Rules.CheckExtent(Settings.Height, Profile, At);
+        ChartRules.Distance(Settings.Aspect, At);
+        ChartRules.Distance(Settings.MinimumSize, At);
+        MediaRules.Finite(Crop.X, Crop.Y, At);
+        ChartRules.Distance(Crop.Width, At);
+        ChartRules.Distance(Crop.Height, At);
+      when E.Element.ImageCompare(
+        const Id: string,
+        const Before: Media.Source,
+        const After: Media.Source,
+        const Position: float,
+        _,
+        const Settings: ImageComparisons.Options
+      ):
+        const At: string := Identify(Id, Location + '/image-compare');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MediaRules.Image(Before, At);
+        MediaRules.Image(After, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        ChartRules.Distance(Settings.Height, At);
+        ChartRules.Distance(Settings.Aspect, At);
+        Rules.CheckText(Settings.BeforeLabel, At);
+        Rules.CheckText(Settings.AfterLabel, At);
+        if not Sys.Single.IsFinite(Position) or Position < 0.0F or Position > 1.0F then
+          Rules.Reject(At, 'The divider position must be between zero and one.');
+        end if;
+      else
+    end case;
+  end procedure;
+
+  procedure CheckConversationAndFeedback(Node: E.Element<TMsg>; Location: string);
+  begin
+    case Node of
+      when E.Element.ChatMessage(
+        const Id: string,
+        const Body: string,
+        const Settings: ChatMessages.Options
+      ):
+        const At: string := Identify(Id, Location + '/chat-message');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Body, At);
+        Rules.CheckText(Settings.Author, At);
+        Rules.CheckText(Settings.Time, At);
+        Rules.CheckText(Settings.Status, At);
+        Rules.CheckText(Settings.Avatar, At);
+      when E.Element.ChatDivider(const Id: string, const Label: string):
+        const At: string := Identify(Id, Location + '/chat-divider');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Label, At);
+      when E.Element.TypingIndicator(const Id: string, const Name: string):
+        const At: string := Identify(Id, Location + '/typing-indicator');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckText(Name, At);
+      when E.Element.Comment(
+        const Id: string,
+        const Author: string,
+        const Body: string,
+        const Current: Comments.Value,
+        _,
+        const Settings: Comments.Options
+      ):
+        const At: string := Identify(Id, Location + '/comment');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        discard Identify(Id + '/like', At);
+        discard Identify(Id + '/reply', At);
+        Rules.CheckText(Author, At);
+        Rules.CheckText(Body, At);
+        Rules.CheckText(Settings.Time, At);
+        Rules.CheckText(Settings.Badge, At);
+        if Settings.Depth < 0 or Current.Likes < (if Current.Liked then
+          1
+        else
+          0
+        end if)
+          or Current.Likes = Sys.Int32.MaxValue
+        then
+          Rules.Reject(At, 'Invalid comment depth or like count.');
+        end if;
+      when E.Element.Presence(
+        const Id: string,
+        const Users: array of Presences.User,
+        const Settings: Presences.Options
+      ):
+        const At: string := Identify(Id, Location + '/presence');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Distance(Settings.Size, At);
+        if Settings.MaximumVisible <= 0 then
+          Rules.Reject(At, 'A presence strip needs a positive visibility limit.');
+        end if;
+
+        for User: Presences.User in Users do
+          Rules.CheckText(User.Name, At);
+          Rules.CheckText(User.Avatar, At);
+          ChartRules.Color(User.Color, At);
+        end for;
+      when E.Element.Counter(
+        const Id: string,
+        const Value: double,
+        const Settings: Counters.Options
+      ):
+        const At: string := Identify(Id, Location + '/counter');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Distance(Settings.Size, At);
+        ChartRules.Color(Settings.Color, At);
+        ChartRules.Format(Settings.Format, At);
+        if not Sys.Double.IsFinite(Value) then
+          Rules.Reject(At, 'A counter value must be finite.');
+        end if;
+      when E.Element.Ticker(
+        const Id: string,
+        const Items: array of Tickers.Item,
+        const Settings: Tickers.Options
+      ):
+        const At: string := Identify(Id, Location + '/ticker');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Distance(Settings.Speed, At);
+        ChartRules.Distance(Settings.Height, At);
+        for Item: Tickers.Item in Items do
+          Rules.CheckText(Item.Label, At);
+          Rules.CheckText(Item.Value, At);
+          if not Sys.Single.IsFinite(Item.Delta) then
+            Rules.Reject(At, 'A ticker change must be finite.');
+          end if;
+        end for;
+      when E.Element.StatusSpinner(
+        const Id: string,
+        const CurrentStatus: Status.Status,
+        const Settings: StatusSpinners.Options
+      ):
+        const At: string := Identify(Id, Location + '/status-spinner');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Distance(Settings.Size, At);
+        ChartRules.Color(Settings.Color, At);
+        if not Sys.Enum.IsDefined<Status.Status>(CurrentStatus) then
+          Rules.Reject(At, 'Unknown spinner status.');
+        end if;
+      when E.Element.SkeletonGroup(
+        const Id: string,
+        const Children: array of E.Element<TMsg>,
+        const Settings: SkeletonGroups.Options
+      ):
+        const At: string := Identify(Id, Location + '/skeleton-group');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        ChartRules.Distance(Settings.Gap, At);
+        for Child: E.Element<TMsg> in Children do
+          Visit(Child, At);
+        end for;
+      when E.Element.Sparkline(
+        const Id: string,
+        const Values: array of float,
+        const Settings: Sparklines.Options
+      ):
+        const At: string := Identify(Id, Location + '/sparkline');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.CheckExtent(Settings.Width, Profile, At);
+        ChartRules.Distance(Settings.Height, At);
+        ChartRules.Color(Settings.Color, At);
+        for Value: float in Values do
+          if not Sys.Single.IsFinite(Value) then
+            Rules.Reject(At, 'Sparkline samples must be finite.');
+          end if;
+        end for;
+      else
+    end case;
+  end procedure;
 
   procedure CheckPlanning(Node: E.Element<TMsg>; Location: string);
   begin
@@ -562,9 +818,21 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/progress');
         FeedbackRules.Progress(Value, Settings, At);
         Rules.CheckExtent(Settings.Width, Profile, At + '/width');
-      when E.Element.Spinner(const Id: string, const Size: float):
+      when E.Element.Spinner(
+        const Id: string,
+        const Size: float,
+        const Settings: Spinners.Options?
+      ):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/spinner');
-        FeedbackRules.Nonnegative(Size, Identify(Id, Location + '/spinner'));
+        const At: string := Identify(Id, Location + '/spinner');
+        FeedbackRules.Nonnegative(Size, At);
+        if Settings <> null then
+          ChartRules.Color(Settings.Color, At);
+          ChartRules.Color(Settings.Track, At);
+          if not Sys.Enum.IsDefined<Spinners.Style>(Settings.Animation) then
+            Rules.Reject(At, 'Unknown spinner animation.');
+          end if;
+        end if;
       when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/skeleton');
         const At: string := Identify(Id, Location + '/skeleton');
@@ -1011,6 +1279,18 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Menus.Options
       ):
         MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
+      when E.Element.FormattedText(
+        const Value: string,
+        const Font: Motion.Font,
+        const FontSize: float,
+        _
+      ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.CheckText(Value, Location);
+        ChartRules.Distance(FontSize, Location);
+        if not Sys.Enum.IsDefined<Motion.Font>(Font) then
+          Rules.Reject(Location, 'Unknown graphical text font.');
+        end if;
       when E.Element.Label(const Value: string):
         Rules.CheckText(Value, Location + '/text');
       when E.Element.CheckboxAction(
@@ -1020,7 +1300,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         const Description: string,
         _,
-        _
+        _, _
       ), E.Element.SwitchAction(
         const Id: string,
         const Label: string,
@@ -1713,6 +1993,259 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/eventTrack');
         Rules.RequireProfile(Profile, Target.Graphical, At);
         InstrumentRules.Events(Current, Settings, At);
+      when E.Element.ChatMessage(
+        _,
+        _,
+        _
+      ), E.Element.ChatDivider(_, _), E.Element.TypingIndicator(_, _), E.Element.Comment(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Presence(
+        _,
+        _,
+        _
+      ), E.Element.Counter(
+        _,
+        _,
+        _
+      ), E.Element.Ticker(
+        _,
+        _,
+        _
+      ), E.Element.StatusSpinner(
+        _,
+        _,
+        _
+      ), E.Element.SkeletonGroup(_, _, _), E.Element.Sparkline(_, _, _):
+        CheckConversationAndFeedback(Node, Location);
+      when E.Element.Carousel(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CardStack(_, _, _, _), E.Element.ImageViewer(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ImageCropper(_, _, _, _, _), E.Element.ImageCompare(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        CheckMedia(Node, Location);
+      when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Keymap(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CommitGraph(_, _, _, _, _), E.Element.DependencyGraph(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.NetworkWaterfall(_, _, _, _, _), E.Element.TraceViewer(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.TestExplorer(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.StackTrace(_, _, _, _), E.Element.ResponseStatus(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Coverage(_, _, _, _), E.Element.Blame(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ApiExplorer(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.KeyValueEditor(_, _, _, _), E.Element.QueryBuilder(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.SchedulePicker(_, _, _, _), E.Element.RegexTester(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.RequestBar(_, _, _, _, _), E.Element.FeatureFlags(_, _, _, _, _):
+        Developer.Check<TMsg>(Node, Location, Profile, Identify);
+      when E.Element.FormatBar(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.LiveCursors(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.PresencePill(
+        _,
+        _,
+        _
+      ), E.Element.SelectionRing(_, _, _), E.Element.CanvasControls(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ResultCard(_, _, _, _, _), E.Element.SelectionBar(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
+        Canvas.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+      when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.HexView(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(_, _, _, _, _):
+        SourceTools.Check<TMsg>(Node, Location, Profile, Identify);
+      when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CurveEditor(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
+        EditingTools.Check<TMsg>(Node, Location, Profile, Identify);
+      when E.Element.NativeText(_, _), E.Element.Icon(
+        _,
+        _,
+        _
+      ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Veil(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        Display.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+      when E.Element.VoiceWave(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.VoiceNote(_, _, _, _, _), E.Element.VoiceSession(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Composer(_, _, _, _), E.Element.VoiceOrb(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Reasoning(_, _, _), E.Element.ToolCall(_, _, _), E.Element.AgentPlan(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.AgentStatus(_, _, _), E.Element.SourceList(_, _, _, _), E.Element.Citation(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ContextMeter(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.ResponseActions(
+        _,
+        _,
+        _,
+        _
+      ), E.Element.PromptSuggestions(_, _, _, _), E.Element.ModelPicker(
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        VoiceAndAi.Check<TMsg>(Node, Location, Profile, Identify, Visit);
       when E.Element.PathBar(_, _, _, _), E.Element.FileBrowser(_, _, _, _), E.Element.FilePicker(
         _,
         _,
@@ -2153,6 +2686,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           or Role = S.Role.Strong or Role = S.Role.MutedGlyph or Role = S.Role.SectionTitle
           or Role = S.Role.DisplayTitle or Role = S.Role.Introduction or Role = S.Role.SingleLine
           or Role = S.Role.Tabular or Role = S.Role.SmallBody or Role = S.Role.MutedIcon
+          or Role = S.Role.InverseSurface or Role = S.Role.PillSurface or Role = S.Role.InverseLabel
         then
           Rules.RequireProfile(Profile, Target.Graphical, Location + '/style');
         end if;

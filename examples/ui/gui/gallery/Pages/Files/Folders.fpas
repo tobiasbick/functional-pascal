@@ -1,0 +1,59 @@
+unit GuiGallery.Pages.Files.Folders;
+
+uses
+  Fpas.Ui.FileListings as Listings, System as Sys, System.IO as IO,
+  System.Collections.Generic as Lists;
+
+function ExampleRoot(Path: string): Listings.Listing?;
+begin
+  if Path <> '.' then
+    return null;
+  end if;
+
+  return new Listings.Listing(
+    [
+      new Listings.Entry('assets', true, 0UL, 1730000000L),
+      new Listings.Entry('src', true, 13100UL, 1730086400L),
+      new Listings.Entry('README.md', false, 26200UL, 1730172800L),
+      new Listings.Entry('notes.txt', false, 39300UL, 1730259200L),
+      new Listings.Entry('cover.png', false, 52400UL, 1730345600L),
+      new Listings.Entry('report.pdf', false, 65500UL, 1730432000L)
+    ]
+  );
+end function;
+
+// Lists entries for the gallery browser and built-in ls command.
+// ## Parameters
+// - `Path`: Directory to read.
+// - `Hidden`: Include hidden entries.
+// ## Returns
+// The requested listing, or null when unavailable.
+public function ReadFolder(Path: string; Hidden: bool): Listings.Listing?;
+begin
+  try
+    const Result: Lists.List<Listings.Entry> := new Lists.List<Listings.Entry>();
+    const Folder: IO.DirectoryInfo := new IO.DirectoryInfo(Path);
+    for Child: IO.FileSystemInfo in Folder.EnumerateFileSystemInfos() do
+      const IsHidden: bool := Child.Name.StartsWith('.')
+        or (cast<int>(Child.Attributes) and cast<int>(IO.FileAttributes.Hidden)) <> 0;
+      if Hidden or not IsHidden then
+        const Modified: long := new Sys.DateTimeOffset(Child.LastWriteTimeUtc).ToUnixTimeSeconds();
+        case Child of
+          when is IO.FileInfo as File:
+            Result.Add(new Listings.Entry(Child.Name, false, cast<ulong>(File.Length), Modified));
+          else
+            Result.Add(new Listings.Entry(Child.Name, true, 0UL, Modified));
+        end case;
+      end if;
+    end for;
+
+    return new Listings.Listing(Result.ToArray());
+  catch Failure: IO.IOException do
+
+    return ExampleRoot(Path);
+  catch Failure: Sys.UnauthorizedAccessException do
+    return ExampleRoot(Path);
+  end try;
+end function;
+
+end unit;

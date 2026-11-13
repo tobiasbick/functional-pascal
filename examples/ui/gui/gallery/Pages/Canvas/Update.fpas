@@ -1,0 +1,121 @@
+unit GuiGallery.Pages.Canvas.Update;
+
+uses
+  GuiGallery.Pages.Canvas.State as M, Fpas.Ui.FormatBars as F, Fpas.Ui.NodeEditors as N,
+  Fpas.Ui.CanvasControls as C, Fpas.Ui.Toolbars as T, Fpas.Ui.SelectionBars as B;
+
+function Tools(Model: M.Model; Value: T.Event): M.Model;
+begin
+  return case Value.Index of
+    when 2: Model with
+      Numbers := Value.Value <> 0;
+    end with;
+    when 3: Model with
+      Bold := Value.Value <> 0;
+    end with;
+    when 4: Model with
+      Italic := Value.Value <> 0;
+    end with;
+    when 5: Model with
+      Mode := Value.Value;
+    end with;
+    else Model;
+  end case;
+end function;
+
+function Format(Model: M.Model; Value: F.Event): M.Model;
+begin
+  const Next: F.Value := Value.Format;
+  return Model with
+    Format := if Value.ToggleLink then
+      Next with
+        Link := not Next.Link;
+      end with
+    else
+      Next
+    end if;
+    Deleted := if Value.Delete then
+      Model.Deleted + 1
+    else
+      Model.Deleted
+    end if;
+  end with;
+end function;
+
+function Graph(Model: M.Model; Value: N.Event): M.Model;
+begin
+  case Value of
+    when N.Event.Pan(const Viewport: N.View):
+      return Model with
+        Viewport := Viewport;
+      end with;
+    when N.Event.Move(const Id: int, const X: float, const Y: float):
+      const Positions: array of M.Position := cast<array of M.Position>(Model.Positions.Clone());
+      Positions[Id] := new M.Position(X, Y);
+      return Model with
+        Positions := Positions;
+      end with;
+    else
+      return Model;
+  end case;
+end function;
+
+function ResultTools(Model: M.Model; Value: T.Event): M.Model;
+begin
+  return case Value.Index of
+    when 1: Model with
+      Saved := Value.Value <> 0;
+    end with;
+    when 4: Model with
+      Scale := Value.Value;
+    end with;
+    when 5: Model with
+      Kind := Value.Value;
+    end with;
+    else Model;
+  end case;
+end function;
+
+function Pick(Model: M.Model; Index: int; Value: bool): M.Model;
+begin
+  const Picked: array of bool := cast<array of bool>(Model.Picked.Clone());
+  Picked[Index] := Value;
+  return Model with
+    Picked := Picked;
+  end with;
+end function;
+
+// Applies one proposal from Canvas and bars.
+// ## Parameters
+// - `Model`: Current page model.
+// - `Message`: Widget proposal or clock tick.
+// ## Returns
+// Updated page model.
+public function Update(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Tools(const Value: T.Event): Tools(Model, Value);
+    when M.Msg.Format(const Value: F.Event): Format(Model, Value);
+    when M.Msg.Graph(const Value: N.Event): Graph(Model, Value);
+    when M.Msg.Rail(const Value: C.Event): Model with
+      Viewport := Value.Viewport;
+      Grid := Value.Toggles[0];
+      Layers := Value.Toggles[1];
+    end with;
+    when M.Msg.ResultTools(const Value: T.Event): ResultTools(Model, Value);
+    when M.Msg.Pick(const Index: int, const Value: bool): Pick(Model, Index, Value);
+    when M.Msg.Bulk(const Value: B.Event): if Value.Clear then
+        Model with
+          Picked := new bool[Model.Picked.Length];
+        end with
+      else
+        Model
+      end if;
+    when M.Msg.Tick(const Seconds: float): Model with
+      Seconds := Seconds;
+    end with;
+    when M.Msg.Preview: Model;
+  end case;
+end function;
+
+end unit;

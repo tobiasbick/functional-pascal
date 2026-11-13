@@ -1,0 +1,62 @@
+unit Fpas.Ui.FeatureFlagEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native FeatureFlags widget.
+public type Flag = record
+  // Key supplied to CUI.
+  public Key: string;
+  // Description supplied to CUI.
+  public Description: string?;
+  // On supplied to CUI.
+  public On: array of bool;
+  // Rollout percentage.
+  public Rollout: array of int;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Index supplied to CUI.
+  public Index: int;
+  // Environment supplied to CUI.
+  public Environment: int;
+  // On supplied to CUI.
+  public On: bool;
+  // Rollout percentage.
+  public Rollout: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native FeatureFlags widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Entries`: Model-owned entries data.
+// - `Environments`: Model-owned environments data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function FeatureFlags<TMsg>(Id: string; Entries: array of Flag; Environments: array of string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.FeatureFlags(
+    Id,
+    Entries,
+    Environments,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

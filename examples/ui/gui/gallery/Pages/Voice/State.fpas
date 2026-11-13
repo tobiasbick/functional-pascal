@@ -1,0 +1,59 @@
+unit GuiGallery.Pages.Voice.State;
+
+uses
+  GuiGallery.Pages.Voice.Script as Script, Fpas.Ui.Voice as V, Fpas.Ui.VoiceNotes as Notes,
+  Fpas.Ui.VoiceSessions as Calls, Fpas.Ui.Composers as Composer;
+
+// A simulated voice message.
+public type Note = record
+  // Stable message key.
+  public Key: int;
+  // Normalized audio peaks.
+  public Levels: array of float;
+  // Current playback state.
+  public Playback: Notes.Value;
+  // Whether the local user sent it.
+  public Mine: bool := false;
+end record;
+
+// Current state of the simulated call and recording.
+public type Model = record
+  // Elapsed gallery time.
+  public Time: float := 0.0F;
+  // Time when the present call began.
+  public Started: float := 0.0F;
+  // Index of the next 20 Hz sample.
+  public SampleIndex: int := 0;
+  // Shared call waveform.
+  public Timeline: V.Signal := new V.Signal([], []);
+  // Current mute state.
+  public Muted: bool := false;
+  // The editor or recorder.
+  public Editor: Composer.Value := new Composer.Value();
+  // Received and recorded messages.
+  public Notes: array of Note := [new Note(0, Script.Incoming(), new Notes.Value(9.0F))];
+  // Key assigned to the next outgoing note.
+  public NextKey: int := 1;
+  // Selected progress of the standalone clip.
+  public Progress: float := 0.3F;
+  // State shown by the supplemental legacy orb.
+  public OrbListening: bool := false;
+end record;
+
+// Actions of the voice examples.
+public type Msg = variant
+  // Updates demo time.
+  Tick(Seconds: float);
+  // Edits or uses the recorder.
+  Editor(Change: Composer.Event);
+  // Controls a recorded message.
+  NoteAction(Key: int; Change: Notes.Event);
+  // Controls the call.
+  Call(Change: Calls.Event);
+  // Seeks the standalone clip.
+  Seek(Progress: float);
+  // Toggles the supplemental orb.
+  Orb;
+end variant;
+
+end unit;

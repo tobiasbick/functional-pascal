@@ -1,0 +1,37 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Image;
+
+uses
+  Fpas.Ui.Images as D, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.CreativeParts as P,
+  Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Internal.MediaData as MediaData,
+  Fpas.Ui.Graphics as G, Fpas.Ui.MediaImages as Media;
+
+function OptionalColor(Color: G.Color?): uint;
+begin
+  return if Color = null then
+    0U
+  else
+    P.Pack(Color)
+  end if;
+end function;
+
+// Draws the native CUI image.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable picture identity.
+// - `Source`: Picture file or immutable RGBA pixels.
+// - `Settings`: Native image settings.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Source: Media.Source; Settings: D.Options);
+begin
+  const Role: string := 'image';
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  Frame.Window.DisplayImage(
+    C.Token(Role, Id), MediaData.Convert(Source), Width.Kind, Width.Value,
+    Height.Kind, Height.Value, Settings.Radius, OptionalColor(Settings.Tint)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+end procedure;
+
+end unit;

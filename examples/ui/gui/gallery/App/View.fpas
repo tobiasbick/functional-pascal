@@ -1,15 +1,24 @@
 unit GuiGallery.App.View;
 
 uses
+  GuiGallery.Pages.EditingTools.State as EditState, GuiGallery.Pages.EditingTools.View as EditView,
+  GuiGallery.Pages.Ai.State as AiState, GuiGallery.Pages.Ai.View as Ai,
+  GuiGallery.Pages.Voice.State as VoiceState, GuiGallery.Pages.Voice.View as Voice, GuiGallery.App.Update as AppUpdate,
+  GuiGallery.Pages.Feedback.State as FeedbackState,
+  GuiGallery.Pages.Social.State as SocialState, GuiGallery.Pages.Social.View as Social,
   GuiGallery.Pages.Code.View as Code,
+  GuiGallery.Pages.Code.Tools as CodeTools, GuiGallery.Pages.Code.State as CodePage,
   GuiGallery.Pages.Instruments.State as InstrumentState,
   GuiGallery.Pages.Instruments.View as Instruments,
   GuiGallery.Pages.Motion.State as MotionState,
   GuiGallery.Pages.Motion.View as Motion,
   GuiGallery.Pages.Creative.State as CreativeState,
   GuiGallery.Pages.Creative.View as Creative,
+  GuiGallery.Pages.Canvas.State as CanvasState, GuiGallery.Pages.Canvas.View as Canvas,
   GuiGallery.Pages.Files.State as FileState,
   GuiGallery.Pages.Files.View as Files,
+  GuiGallery.Pages.Developer.State as DeveloperState, GuiGallery.Pages.Developer.View as Developer,
+  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloperState, GuiGallery.Pages.MoreDeveloper.View as MoreDeveloper,
   GuiGallery.Pages.Planning.State as PlanningState,
   GuiGallery.Pages.Planning.View as Planning,
   GuiGallery.Pages.DataGrid.State as GridState,
@@ -21,6 +30,7 @@ uses
   System.Collections.Generic as Collections,
   GuiGallery.Pages.Feedback.View as Feedback,
   GuiGallery.Pages.Layout.View as LayoutDemo,
+  GuiGallery.Pages.Display.View as Display,
   GuiGallery.Pages.Buttons.State as ButtonsState,
   GuiGallery.Pages.Buttons.View as Buttons,
   GuiGallery.Pages.Inputs.State as InputsState,
@@ -86,12 +96,24 @@ function PageTitle(Page: State.Page): string;
 begin
   return if Page = State.Page.Lists then
     'Data display'
+  elsif Page = State.Page.Social then
+    'Social and media'
+  elsif Page = State.Page.DeveloperTools then
+    'Developer tools'
+  elsif Page = State.Page.MoreDeveloperTools then
+    'More developer tools'
   elsif Page = State.Page.MoreCharts then
     'More charts'
+  elsif Page = State.Page.CanvasAndBars then
+    'Canvas and bars'
   elsif Page = State.Page.CreativeControls then
     'Creative controls'
   elsif Page = State.Page.DataGrid then
     'Data grid'
+  elsif Page = State.Page.EditingTools then
+    'Editing tools'
+  elsif Page = State.Page.Display then
+    'Text and display'
   elsif Page = State.Page.SmartInputs then
     'Smart inputs'
   else
@@ -138,14 +160,22 @@ begin
           Destination(State.Page.Reader, $E0CC),
           Destination(State.Page.DataGrid, $E0E9),
           Destination(State.Page.Code, $E093),
+          Destination(State.Page.Social, $E117),
           Destination(State.Page.Planning, $E1D0),
           Destination(State.Page.MoreCharts, $E06B),
           Destination(State.Page.Motion, $E038),
+          Destination(State.Page.AI, $E117),
           Destination(State.Page.Audio, $E55A),
           Destination(State.Page.Files, $E0D7),
+          Destination(State.Page.DeveloperTools, $E20A),
+          Destination(State.Page.MoreDeveloperTools, $E20C),
           Destination(State.Page.Instruments, $E2A5),
           Destination(State.Page.CreativeControls, $E1DD),
-          Destination(State.Page.Layout, $E529)
+          Destination(State.Page.CanvasAndBars, $E529),
+          Destination(State.Page.Voice, $E118),
+          Destination(State.Page.Layout, $E529),
+          Destination(State.Page.Display, $E198),
+          Destination(State.Page.EditingTools, $E20A)
         ]
       )
     ],
@@ -188,6 +218,44 @@ end function;
 function Preview(Model: State.Model; Width: int): array of E.Element<State.Msg>;
 begin
   case Model.Active of
+    when State.Page.AI:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<AiState.Msg> in Ai.View(Model.AI, AppUpdate.ThemeFor(Model).Colors) do
+        Parts.Add(U.Map<AiState.Msg, State.Msg>(Item, State.Msg.AI));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Voice:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<VoiceState.Msg> in Voice.View(Model.Voice) do
+        Parts.Add(U.Map<VoiceState.Msg, State.Msg>(Item, State.Msg.Voice));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Social:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<SocialState.Msg> in Social.View(Model.Social) do
+        Parts.Add(U.Map<SocialState.Msg, State.Msg>(Item, State.Msg.Social));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.DeveloperTools:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<DeveloperState.Msg> in Developer.View(
+        Model.Developer,
+        AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map<DeveloperState.Msg, State.Msg>(Item, State.Msg.Developer));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.MoreDeveloperTools:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<MoreDeveloperState.Msg> in MoreDeveloper.View(Model.MoreDeveloper) do
+        Parts.Add(U.Map<MoreDeveloperState.Msg, State.Msg>(Item, State.Msg.MoreDeveloper));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Files:
       const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
       for Item: E.Element<FileState.Msg> in Files.View(Model.Files) do
@@ -199,6 +267,16 @@ begin
       const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
       for Item: E.Element<PlanningState.Msg> in Planning.View(Model.Planning) do
         Parts.Add(U.Map<PlanningState.Msg, State.Msg>(Item, State.Msg.Planning));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.CanvasAndBars:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<CanvasState.Msg> in Canvas.View(
+        Model.Canvas,
+        AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map<CanvasState.Msg, State.Msg>(Item, State.Msg.Canvas));
       end for;
 
       return Parts.ToArray();
@@ -217,7 +295,17 @@ begin
 
       return Parts.ToArray();
     when State.Page.Code:
-      return Code.View<State.Msg>();
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>(
+        Code.View<State.Msg>()
+      );
+      for Item: E.Element<CodePage.Msg> in CodeTools.View(
+        Model.Code,
+        AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map<CodePage.Msg, State.Msg>(Item, State.Msg.Code));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Instruments:
       const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
       for Item: E.Element<InstrumentState.Msg> in Instruments.View(Model.Instruments) do
@@ -244,6 +332,18 @@ begin
       end for;
 
       return Parts.ToArray();
+    when State.Page.EditingTools:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<EditState.Msg> in EditView.View(
+        Model.Editing,
+        AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map<EditState.Msg, State.Msg>(Item, State.Msg.Editing));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Display:
+      return Display.View(Model.DisplaySwatch, AppUpdate.ThemeFor(Model).Colors);
     when State.Page.Layout:
       return [LayoutDemo.View<State.Msg>(State.Msg.Preview)];
     when State.Page.Feedback:
@@ -254,7 +354,8 @@ begin
               'Project created',
               new Toasts.Options(Appearance := Toasts.Tone.Success)
             )
-          )
+          ),
+          Model.Feedback, State.Msg.Feedback(FeedbackState.Msg.Upload)
         )
       ];
     when State.Page.Overview:
@@ -334,7 +435,7 @@ begin
     when State.Page.Disclosure:
       return [
         U.Map<DisclosureState.Msg, State.Msg>(
-          Disclosure.View(Model.Disclosure),
+          Disclosure.View(Model.Disclosure, AppUpdate.ThemeFor(Model).Colors),
           State.Msg.Disclosure
         )
       ];

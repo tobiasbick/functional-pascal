@@ -1,0 +1,55 @@
+unit GuiGallery.Pages.EditingTools.State;
+
+uses
+  GuiGallery.Pages.EditingTools.Samples as Sample, GuiGallery.Pages.EditingTools.Capture as Capture,
+  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.FlameGraphs as F, Fpas.Ui.CurveEditors as C,
+  Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T;
+
+// Editable samples from the original CUI component gallery.
+public type Model = record
+  // Crate transform and material.
+  public Inspector: array of I.Group := Sample.Inspector;
+  // Profile selection and viewport.
+  public Flame: F.View := new F.View(Selected := Capture.Selected);
+  // Standalone easing curve.
+  public Curve: array of C.Key := Sample.Curve;
+  // Selected easing key.
+  public CurveKey: int := 1;
+  // Flame gradient stops.
+  public Ramp: array of G.Stop := Sample.Ramp;
+  // Selected gradient stop.
+  public Stop: int := 2;
+  // Current shot tracks.
+  public Tracks: array of T.Track := Sample.Tracks;
+  // Current shot viewport and playback range.
+  public Timeline: T.View := new T.View(
+    Time := 1.5F,
+    TrackIndex := 3,
+    KeyIndex := 2,
+    Range := new T.PlayRange(0.5F, 4.5F)
+  );
+  // Whether playback is running.
+  public Playing: bool := false;
+end record;
+
+// Native proposals and playback actions.
+public type Msg = variant
+  // Accept a crate property or expansion change.
+  Inspector(Value: I.Event);
+  // Accept a profiler view change.
+  Flame(Value: F.Event);
+  // Accept a change to the standalone curve.
+  Curve(Value: C.Event);
+  // Accept a change to the gradient.
+  Gradient(Value: G.Event);
+  // Accept a timeline proposal.
+  Timeline(Value: T.Event);
+  // Accept a change to the curve of the selected track.
+  TrackCurve(Track: int; Value: C.Event);
+  // Toggle playback.
+  Playback;
+  // Advance by the elapsed seconds.
+  Tick(Seconds: float);
+end variant;
+
+end unit;

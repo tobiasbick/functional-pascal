@@ -13,6 +13,11 @@ uses
   GalleryRulerHistogramContract as RulerHistogramContract,
   GallerySkeletonContract as SkeletonContract,
   GalleryFeedbackContract as FeedbackContract,
+  GalleryDeveloperToolsContract as DeveloperToolsContract,
+  GalleryCanvasBarsContract as CanvasBarsContract,
+  GalleryDisplayContract as DisplayContract,
+  GallerySourceToolsContract as SourceToolsContract,
+  GalleryEditingToolsContract as EditingToolsContract,
   GuiGallery.App.Update as GalleryUpdate,
   GuiGallery.Shared.State as SliceShared,
   GuiGallery.Pages.Buttons.State as SliceButtons,
@@ -64,7 +69,7 @@ begin
   using const Session: Gui.Session<State.Msg> := Open(Renderer, 'FPAS gallery contract');
   A.Check(Session.Step(), 'Gallery did not present.');
   A.Check(Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software), 'Unexpected renderer.');
-  A.Check(A.HasText(Session, 'Components for C'), 'Overview is the initial page.');
+  A.Check(A.HasText(Session, 'Components for FPas'), 'Overview is the initial page.');
   A.Check(A.HasText(Session, 'FPas CUI'), 'The gallery brand is missing.');
   var Pages: int := 0;
   for Item: Gui.Control in Session.Snapshot().Controls do
@@ -73,7 +78,7 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 16, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 33, 'Only the confirmed gallery destinations should be visible.');
   A.Check(
     A.Control(Session, 'navigation', 'pickers').Text = 'Pickers'
     and A.Control(Session, 'navigation', 'reader').Text = 'Reader'
@@ -213,6 +218,11 @@ begin
   DisclosureContract.Verify(Renderer, Capture);
   DisclosureFeedbackContract.Verify(Renderer, Capture);
   FeedbackContract.Verify(Renderer, Capture);
+  DeveloperToolsContract.Verify(Renderer, Capture);
+  CanvasBarsContract.Verify(Renderer, Capture);
+  DisplayContract.Verify(Renderer, Capture);
+  SourceToolsContract.Verify(Renderer, Capture);
+  EditingToolsContract.Verify(Renderer, Capture);
   LayoutContract.Verify(Renderer, Capture);
   SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);

@@ -1,0 +1,62 @@
+unit Fpas.Ui.Keymaps;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native Keymap widget.
+public type Binding = record
+  // Modifiers supplied to CUI.
+  public Modifiers: int;
+  // Key supplied to CUI.
+  public Key: int;
+  // Action supplied to CUI.
+  public Action: string;
+  // Category supplied to CUI.
+  public Category: int;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Modifiers supplied to CUI.
+  public Modifiers: int;
+  // Key supplied to CUI.
+  public Key: int;
+  // Conflicts supplied to CUI.
+  public Conflicts: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Hide Function Row supplied to CUI.
+  public HideFunctionRow: bool := false;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native Keymap widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Bindings`: Model-owned bindings data.
+// - `Categories`: Model-owned categories data.
+// - `Modifiers`: Model-owned modifiers data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Keymap<TMsg>(Id: string; Bindings: array of Binding; Categories: array of string; Modifiers: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Keymap(
+    Id,
+    Bindings,
+    Categories,
+    Modifiers,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

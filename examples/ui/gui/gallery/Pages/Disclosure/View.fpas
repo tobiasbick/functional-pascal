@@ -9,6 +9,8 @@ uses
   GuiGallery.Pages.Disclosure.Widgets.UndoToast as UndoToast,
   GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm,
   GuiGallery.Pages.Disclosure.Widgets.HoverCard as Hover,
+  GuiGallery.Pages.Disclosure.Widgets.Veil as Veil,
+  Fpas.Ui.Themes as Theme,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
@@ -73,9 +75,10 @@ end function;
 //
 // ## Parameters
 // - `Model`: Model-owned accordion and card expansion.
+// - `Colors`: Palette of the active theme.
 // ## Returns
 // Native disclosure, announcement and progress examples.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20), Clip := false),
@@ -97,7 +100,12 @@ begin
     Countdown.View(Model),
     G.Heading<State.Msg>('Onboarding checklist', 'Progress, with the next step open.'),
     Checklist.View(Model),
-    UndoToast.View()
+    UndoToast.View(),
+    G.Heading<State.Msg>(
+      'Veil',
+      'Covers a picture, a secret or a spoiler with moving dots, and dissolves when clicked.'
+    ),
+    Veil.View(Model, Colors)
   );
 end function;
 

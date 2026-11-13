@@ -1,0 +1,114 @@
+unit Fpas.Ui.Internal.DisplayValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Rules as R,
+  Fpas.Ui.Internal.ChartRules as C, Fpas.Ui.Internal.MediaRules as M, Fpas.Ui.MediaImages as Media,
+  Fpas.Ui.Texts as Texts, Fpas.Ui.Images as Images, Fpas.Ui.Canvases as Canvas, Fpas.Ui.Veils as Veil,
+  System as Sys;
+
+procedure Coordinates(X: float; Y: float; Path: string);
+begin
+  if not Sys.Single.IsFinite(X) or not Sys.Single.IsFinite(Y) then
+    R.Reject(Path, 'Canvas points must be finite.');
+  end if;
+end procedure;
+
+procedure Drawings(Shapes: array of Canvas.Shape; Path: string);
+begin
+  for Shape: Canvas.Shape in Shapes do
+    case Shape of
+      when Canvas.Shape.Rectangle(
+        const X: float,
+        const Y: float,
+        const W: float,
+        const H: float,
+        const Radius: float,
+        _
+      ):
+        Coordinates(X, Y, Path);
+        C.Distance(W, Path);
+        C.Distance(H, Path);
+        C.Distance(Radius, Path);
+      when Canvas.Shape.Circle(const X: float, const Y: float, const Radius: float, _):
+        Coordinates(X, Y, Path);
+        C.Distance(Radius, Path);
+      when Canvas.Shape.Line(
+        const X: float,
+        const Y: float,
+        const EndX: float,
+        const EndY: float,
+        const Thickness: float,
+        _
+      ):
+        Coordinates(X, Y, Path);
+        Coordinates(EndX, EndY, Path);
+        C.Distance(Thickness, Path);
+    end case;
+  end for;
+end procedure;
+
+// Validates the graphical display inputs and composed veil content.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Display widget.
+// - `Location`: Parent diagnostic path.
+// - `Profile`: Target capabilities.
+// - `Identify`: Registers the widget ID.
+// - `Visit`: Validates composed children.
+public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
+begin
+  R.RequireProfile(Profile, V.Target.Graphical, Location);
+  case Node of
+    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
+      R.CheckText(Text, Location);
+      if not Sys.Enum.IsDefined<Texts.Appearance>(Role) then
+        R.Reject(Location, 'Unknown native text role.');
+      end if;
+    when E.Element.Icon(
+      const Glyph: string,
+      const Size: float,
+      _
+    ), E.Element.Emoji(const Glyph: string, const Size: float):
+      R.CheckText(Glyph, Location);
+      C.Distance(Size, Location);
+    when E.Element.Keycap(const Keys: string):
+      R.CheckText(Keys, Location);
+    when E.Element.Image(
+      const Id: string,
+      const Source: Media.Source,
+      const Options: Images.Options
+    ):
+      const Path: string := Identify(Id, Location + '/image');
+      M.Image(Source, Path);
+      R.CheckExtent(Options.Width, Profile, Path);
+      R.CheckExtent(Options.Height, Profile, Path);
+      C.Distance(Options.Radius, Path);
+    when E.Element.Canvas(
+      const Id: string,
+      const Drawing: array of Canvas.Shape,
+      _,
+      const Options: Canvas.Options
+    ):
+      const Path: string := Identify(Id, Location + '/canvas');
+      R.CheckExtent(Options.Width, Profile, Path);
+      R.CheckExtent(Options.Height, Profile, Path);
+      Drawings(Drawing, Path);
+    when E.Element.Veil(
+      const Id: string,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      const Options: Veil.Options
+    ):
+      const Path: string := Identify(Id, Location + '/veil');
+      R.CheckText(Options.Label ?? '', Path);
+      R.CheckText(Options.Hint ?? '', Path);
+      C.Distance(Options.Radius, Path);
+      R.CheckExtent(Options.Width, Profile, Path);
+      Visit(Child, Path);
+    else
+  end case;
+end procedure;
+
+end unit;

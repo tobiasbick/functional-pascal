@@ -1,0 +1,80 @@
+unit Fpas.Ui.NetworkWaterfalls;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native NetworkWaterfall widget.
+public type Request = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Method supplied to CUI.
+  public Method: string;
+  // Status supplied to CUI.
+  public Status: int;
+  // Type supplied to CUI.
+  public Type: string?;
+  // Size supplied to CUI.
+  public Size: double;
+  // Start supplied to CUI.
+  public Start: double;
+  // Queued supplied to CUI.
+  public Queued: float;
+  // Dns supplied to CUI.
+  public Dns: float;
+  // Connect supplied to CUI.
+  public Connect: float;
+  // Tls supplied to CUI.
+  public Tls: float;
+  // Wait supplied to CUI.
+  public Wait: float;
+  // Download supplied to CUI.
+  public Download: float;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selection: int;
+  // Clicked zero-based index, or minus one.
+  public Clicked: int;
+  // Activated zero-based index, or minus one.
+  public Activated: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Dom Loaded supplied to CUI.
+  public DomLoaded: double := 0.0;
+  // Loaded supplied to CUI.
+  public Loaded: double := 0.0;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native NetworkWaterfall widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Requests`: Model-owned requests data.
+// - `Selection`: Selected zero-based index, or minus one.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function NetworkWaterfall<TMsg>(Id: string; Requests: array of Request; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.NetworkWaterfall(
+    Id,
+    Requests,
+    Selection,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

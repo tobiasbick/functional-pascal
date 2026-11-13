@@ -1,0 +1,109 @@
+unit GuiGallery.Pages.Voice.View;
+
+uses
+  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Cards as Cards, Fpas.Ui.Voice as V,
+  Fpas.Ui.VoiceNotes as Notes, Fpas.Ui.VoiceSessions as Calls, Fpas.Ui.VoiceWaves as Waves, Fpas.Ui.VoiceOrbs as Orbs,
+  Fpas.Ui.Composers as Editor, System as Sys, System.Collections.Generic as Lists;
+
+const Clip: array of float := Script.Clip();
+
+function Limit(Body: E.Element<S.Msg>): E.Element<S.Msg>;
+begin
+  return E.Size<S.Msg>(
+    Body,
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(620)))
+  );
+end function;
+
+function Messages(Model: S.Model): E.Element<S.Msg>;
+begin
+  const Views: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
+  for Item: S.Note in Model.Notes do
+    const Key: int := Item.Key;
+    Views.Add(
+      Notes.VoiceNote<S.Msg>(
+        'voice-note-' + Key.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+        Item.Levels,
+        Item.Playback,
+        function(Change: Notes.Event): S.Msg => S.Msg.NoteAction(Key, Change),
+        new Notes.Options(Mine := Item.Mine)
+      )
+    );
+  end for;
+
+  Views.Add(
+    Editor.Composer<S.Msg>(
+      'voice-composer', Model.Editor, S.Msg.Editor,
+      new Editor.Options(Placeholder := 'Message', MaxUtf8Bytes := 255, Microphone := true)
+    )
+  );
+  return Limit(E.Column<S.Msg>(new L.Flow(Gap := G.Points(10), Clip := false), Views.ToArray()));
+end function;
+
+// Builds the native voice page and the supplemental legacy orb.
+// ## Parameters
+// - `Model`: Current synthetic call and playback state.
+// ## Returns
+// The original voice examples followed by the orb example.
+public function View(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  const Moment: Script.Moment := Script.At(Model.Time - Model.Started, Model.Muted);
+  return [
+    G.Heading<S.Msg>(
+      'Voice messages',
+      'Press the microphone to record: the strip scrolls with the level. Cancel throws the take away, send adds it below.'
+    ),
+    Messages(Model),
+    G.Heading<S.Msg>(
+      'Voice session',
+      'Both voices on one timeline, with the live transcript. While it thinks there is no sound, so the strip stays flat.'
+    ),
+    Limit(
+      Cards.Card<S.Msg>(
+        'voice-session-card', [
+          Calls.VoiceSession<S.Msg>(
+            'voice-call', Moment.Mode, Model.Timeline, Model.Muted, S.Msg.Call,
+            new Calls.Options(
+              Transcript := Moment.Spoken,
+              Upcoming := Moment.Upcoming,
+              Speaker := Moment.Speaker
+            )
+          )
+        ], new Cards.Options(Width := L.Extent.Fill, Padding := 20.0F)
+      )
+    ),
+    G.Heading<S.Msg>(
+      'Voice waveform',
+      'The strip on its own: the newest levels scroll in from the right, a finished clip fits the width and seeks.'
+    ),
+    Limit(
+      E.Column<S.Msg>(
+        new L.Flow(Gap := G.Points(12), Clip := false),
+        Waves.VoiceWave<S.Msg>('voice-live', Model.Timeline, null, null),
+        Waves.VoiceWave<S.Msg>(
+          'voice-clip', new V.Signal(Clip), Model.Progress,
+          function(Value: float): S.Msg => S.Msg.Seek(Value)
+        )
+      )
+    ),
+    G.Heading<S.Msg>(
+      'Voice orb',
+      'Click the legacy voice orb to switch between idle and listening.'
+    ),
+    Orbs.VoiceOrb<S.Msg>(
+      'voice-orb', if Model.OrbListening then
+        V.Activity.Listening
+      else
+        V.Activity.Idle
+      end if,
+      if Model.OrbListening then
+        0.6F
+      else
+        0.0F
+      end if, function(): S.Msg => S.Msg.Orb
+    )
+  ];
+end function;
+
+end unit;

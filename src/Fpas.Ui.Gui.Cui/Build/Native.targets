@@ -10,8 +10,8 @@
     <FpasCuiNativeOutput>$(FpasCuiNativeBuildDirectory)/out</FpasCuiNativeOutput>
     <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'linux-x64'">libfpas_cui.so</FpasCuiNativeFile>
     <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'win-x64'">fpas_cui.dll</FpasCuiNativeFile>
-    <!-- The pinned CUI visualization code shadows a parameter. Keep MSVC's warning visible. -->
-    <MSBuildWarningsNotAsErrors Condition="'$(FpasCuiNativeRid)' == 'win-x64'">$(MSBuildWarningsNotAsErrors);C4457</MSBuildWarningsNotAsErrors>
+    <!-- The pinned CUI Gantt code shadows a local. Keep MSVC's warning visible. -->
+    <MSBuildWarningsNotAsErrors Condition="'$(FpasCuiNativeRid)' == 'win-x64'">$(MSBuildWarningsNotAsErrors);C4456</MSBuildWarningsNotAsErrors>
   </PropertyGroup>
   <ItemGroup Condition="'$(FpasCuiSkipSourceBuild)' != 'true'">
     <Content Include="$(FpasCuiNativeOutput)/$(FpasCuiNativeFile)" Link="$(FpasCuiNativeFile)"

@@ -76,6 +76,12 @@ public type Prepared<TMsg> = record
   public Subviews: Generic.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>;
 end record;
 
+type Work<TMsg> = variant
+  Enter(Node: E.Element<TMsg>?; Location: string);
+  Leave(Node: E.Element<TMsg>);
+  Resume(Action: procedure());
+end variant;
+
 // Validates the entire view and resolves deferred subtrees before presentation.
 //
 // ## Type parameters
@@ -815,7 +821,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Location + '/tooltip';
         Rules.RequireProfile(Profile, Target.Graphical, At);
         Visit(Child, At + '/target');
-        TooltipRules.Check<TMsg>(Child, Caption, Shortcut, Subviews, At);
+        After(
+          procedure() begin
+            TooltipRules.Check<TMsg>(Child, Caption, Shortcut, Subviews, At);
+          end procedure
+        );
       when E.Element.Accordion(
         const Id: string,
         const Title: string,
@@ -889,13 +899,21 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Visit(Trigger, At + '/trigger');
-        if not TooltipRules.HasAnchor<TMsg>(Trigger, Subviews) then
-          Rules.Reject(At, 'A hover card needs one interactive trigger.');
-        end if;
+        After(
+          procedure() begin
+            if not TooltipRules.HasAnchor<TMsg>(Trigger, Subviews) then
+              Rules.Reject(At, 'A hover card needs one interactive trigger.');
+            end if;
 
-        HoverDepth := HoverDepth + 1;
+            HoverDepth := HoverDepth + 1;
+          end procedure
+        );
         Visit(Content, At + '/content');
-        HoverDepth := HoverDepth - 1;
+        After(
+          procedure() begin
+            HoverDepth := HoverDepth - 1;
+          end procedure
+        );
       when E.Element.Popover(
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _,
         const Settings: Popovers.Options
@@ -1436,11 +1454,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
-          if not TooltipRules.IsButton<TMsg>(Child) then
-            Rules.Reject(At, 'A button group accepts only button actions.');
-          end if;
-
-          Visit(Child, At);
+          CheckGroupedButton(Child, At);
         end for;
       when E.Element.SplitAction(
         const Id: string,
@@ -1546,21 +1560,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
 
         for Row: Tables.Row<TMsg> in Rows do
-          const RowAt: string := Identify(Row.Id, At + '/row');
-          if Row.Cells.Length <> Columns.Length then
-            Rules.Reject(RowAt, 'A row needs one cell per column.');
-          end if;
-
-          for Cell: Tables.Cell<TMsg> in Row.Cells do
-            case Cell of
-              when Tables.Cell.Text(const Caption: string):
-                Rules.CheckText(Caption, RowAt + '/cell');
-              when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
-                for Child: E.Element<TMsg> in Nodes do
-                  Visit(Child, RowAt + '/cell');
-                end for;
-            end case;
-          end for;
+          CheckTableRow(Row, Columns.Length, At);
         end for;
       when E.Element.FilterBar(
         const Id: string, const Fields: array of Filters.Field, const Current: Filters.Value,
@@ -2068,13 +2068,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
 
         Visit(Base, At + '/base');
-        if Current >= 0 then
-          discard Identify(Tours.CloseId(Id), At + '/close');
-          discard Identify(Tours.NextId(Id), At + '/next');
-          if Current > 0 then
-            discard Identify(Tours.BackId(Id), At + '/back');
-          end if;
-        end if;
+        After(
+          procedure() begin
+            if Current >= 0 then
+              discard Identify(Tours.CloseId(Id), At + '/close');
+              discard Identify(Tours.NextId(Id), At + '/next');
+              if Current > 0 then
+                discard Identify(Tours.BackId(Id), At + '/back');
+              end if;
+            end if;
+          end procedure
+        );
       when E.Element.Spacer:
         Rules.RequireProfile(Profile, Target.Graphical, Location + '/spacer');
       when E.Element.Gap(const Distance: L.Measure):
@@ -2225,9 +2229,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         const ParentScroll: string? := ScrollOwner;
-        ScrollOwner := Id;
+        After(
+          procedure() begin
+            ScrollOwner := Id;
+          end procedure
+        );
         Visit(Child, At);
-        ScrollOwner := ParentScroll;
+        After(
+          procedure() begin
+            ScrollOwner := ParentScroll;
+          end procedure
+        );
       when E.Element.Sheet(
         const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _,
         const Settings: Sheets.Options, _
@@ -2304,21 +2316,91 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     end case;
   end procedure;
 
+  procedure CheckGroupedButton(Child: E.Element<TMsg>; Location: string);
+  begin
+    After(
+      procedure() begin
+        if not TooltipRules.IsButton<TMsg>(Child) then
+          Rules.Reject(Location, 'A button group accepts only button actions.');
+        end if;
+
+        Visit(Child, Location);
+      end procedure
+    );
+  end procedure;
+
+  procedure CheckTableCell(Cell: Tables.Cell<TMsg>; Location: string);
+  begin
+    case Cell of
+      when Tables.Cell.Text(const Caption: string):
+        After(
+          procedure() begin
+            Rules.CheckText(Caption, Location);
+          end procedure
+        );
+      when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
+        for Child: E.Element<TMsg> in Nodes do
+          Visit(Child, Location);
+        end for;
+    end case;
+  end procedure;
+
+  procedure CheckTableRow(Row: Tables.Row<TMsg>; ColumnCount: int; Location: string);
+  begin
+    After(
+      procedure() begin
+        const At: string := Identify(Row.Id, Location + '/row');
+        if Row.Cells.Length <> ColumnCount then
+          Rules.Reject(At, 'A row needs one cell per column.');
+        end if;
+
+        for Cell: Tables.Cell<TMsg> in Row.Cells do
+          CheckTableCell(Cell, At + '/cell');
+        end for;
+      end procedure
+    );
+  end procedure;
+
+  // Schedule work in source order. ValidateTree processes each appended batch
+  // depth-first after the current check has returned.
   procedure Visit(Node: E.Element<TMsg>?; Location: string);
   begin
-    if Node = null then
-      raise new Sys.ArgumentException(Location + ' — A view node is missing.');
-    end if;
+    Pending.Add(Work<TMsg>.Enter(Node, Location));
+  end procedure;
 
-    if not Visiting.Add(Node) then
-      Rules.Reject(Location, 'A view cannot contain a cycle.');
-    end if;
+  procedure After(Action: procedure());
+  begin
+    Pending.Add(Work<TMsg>.Resume(Action));
+  end procedure;
 
-    try
-      CheckNode(Node, Location);
-    finally
-      discard Visiting.Remove(Node);
-    end try;
+  procedure ValidateTree();
+  begin
+    Visit(Tree, 'root');
+    while Pending.Count > 0 do
+      const Index: int := Pending.Count - 1;
+      const Next: Work<TMsg> := Pending[Index];
+      Pending.RemoveAt(Index);
+      case Next of
+        when Work.Enter(const Node: E.Element<TMsg>?, const Location: string):
+          if Node = null then
+            raise new Sys.ArgumentException(Location + ' — A view node is missing.');
+          end if;
+
+          if not Visiting.Add(Node) then
+            Rules.Reject(Location, 'A view cannot contain a cycle.');
+          end if;
+
+          Pending.Add(Work<TMsg>.Leave(Node));
+          CheckNode(Node, Location);
+          // The leave marker stays below the scheduled children.
+          Pending.Reverse(Index + 1, Pending.Count - Index - 1);
+        when Work.Leave(const Node: E.Element<TMsg>):
+          discard Visiting.Remove(Node);
+        when Work.Resume(const Action: procedure()):
+          Action();
+          Pending.Reverse(Index, Pending.Count - Index);
+      end case;
+    end while;
   end procedure;
 
   procedure CheckShortcuts(Shortcuts: array of K.ShortcutBinding<TMsg>; Location: string);
@@ -2362,13 +2444,14 @@ begin
   const Visiting: Generic.HashSet<Sys.Object> := new Generic.HashSet<Sys.Object>(
     Generic.ReferenceEqualityComparer.Instance
   );
+  const Pending: Generic.List<Work<TMsg>> := new Generic.List<Work<TMsg>>();
   const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
   var HoverDepth: int := 0;
   const UncontrolledScrolls: Generic.HashSet<string> := new Generic.HashSet<string>();
   const AnchorOwners: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
   const TocTargets: Generic.Dictionary<string, array of Toc.Item> := new Generic.Dictionary<string, array of Toc.Item>();
   var ScrollOwner: string? := null;
-  Visit(Tree, 'root');
+  ValidateTree();
   for TargetEntries: Generic.KeyValuePair<string, array of Toc.Item> in TocTargets do
     const ScrollId: string := TargetEntries.Key;
     if not UncontrolledScrolls.Contains(ScrollId) then

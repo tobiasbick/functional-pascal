@@ -5,6 +5,7 @@ uses
   GuiGallery.App.View as Gallery, GuiGallery.Shared.State as Shared,
   Fpas.Ui.Elements as E, Fpas.Ui.Stacks as Stacks, Fpas.Ui.Layout as L,
   Fpas.Ui.Composition as Composition, Fpas.Ui.Validation as V,
+  Fpas.Ui.Styles as Styles,
   Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
   System as Sys;
@@ -22,6 +23,13 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Invalid layout was accepted.');
   end procedure;
 begin
+  var Nested: E.Element<int> := E.Text<int>('leaf');
+  for Depth: int := 1 to 64 do
+    Nested := E.Styled<int>(Nested, Styles.Role.Default);
+  end for;
+  const Prepared: V.Prepared<int> := V.Prepare<int>(Nested, V.Target.Graphical);
+  A.Check(Sys.Object.ReferenceEquals(Nested, Prepared.Tree), 'Validation changed the nested view.');
+
   for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
     Reject(E.Spacer<int>(), Profile, 'Graphical');
     Reject(E.Gap<int>(L.Measure.Logical(8)), Profile, 'Graphical');

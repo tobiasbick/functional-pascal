@@ -1,0 +1,93 @@
+unit GuiGallery.Pages.DataGrid.Update;
+
+uses
+  GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
+  Fpas.Ui.DataGrids as D, Fpas.Ui.FilterBars as F, Fpas.Ui.Tables as T, Fpas.Ui.TreeTables as Tree,
+  System.Collections.Generic as Lists;
+
+function Grid(State: S.Model; Value: D.Value): S.Model;
+begin
+  const Selected: array of bool := new bool[P.Count()];
+  const Mask: (array of bool)? := Value.Selected;
+  if Mask <> null then
+    for Index: int := 0 to State.Order.Length - 1 do
+      Selected[State.Order[Index]] := Mask[Index];
+    end for;
+  end if;
+  const Before: T.Sort? := State.Grid.Order;
+  const Sort: T.Sort? := Value.Order;
+  const Reorder: bool := Sort <> null and (Before = null
+    or Before.Column <> Sort.Column or Before.Descending <> Sort.Descending);
+  return State with
+    Grid := if Reorder then
+      new D.Value(Order := Sort)
+    else
+      Value
+    end if;
+    Order := if Reorder and Sort <> null then
+      P.Order(Sort, State.Names)
+    else
+      State.Order
+    end if;
+    Selected := Selected;
+  end with;
+end function;
+
+function UpdateTree(State: S.Model; Value: Tree.Change): S.Model;
+begin
+  const Nodes: Lists.List<Tree.Node> := new Lists.List<Tree.Node>(Value.Nodes);
+  for Index: int in Value.Load do
+    Nodes[Index] := Nodes[Index] with
+      Loading := false;
+    end with;
+    Nodes.Add(
+      new Tree.Node('button.c', Parent := Index, Cells := ['1', '24 KB'], Icon := P.Icon($E0C0))
+    );
+  end for;
+
+  return State with
+    TreeNodes := Nodes.ToArray();
+    TreeCursor := Value.Cursor;
+    Activated := if Value.Activated >= 0 then
+      Value.Nodes[Value.Activated].Label
+    else
+      State.Activated
+    end if;
+  end with;
+end function;
+
+// Adopts native proposals in the gallery model.
+// ## Parameters
+// - `State`: Current example model.
+// - `Message`: Native interaction.
+// ## Returns
+// Next gallery model.
+public function Update(State: S.Model; Message: S.Msg): S.Model;
+begin
+  case Message of
+    when S.Msg.SetFilter(const Value: F.Value):
+      return State with
+        Filter := Value;
+      end with;
+    when S.Msg.SetGrid(const Value: D.Value):
+      return Grid(State, Value);
+    when S.Msg.Rename(const Index: int, const Name: string):
+      const Names: Lists.Dictionary<int, string> := new Lists.Dictionary<int, string>(State.Names);
+      Names[Index] := Name;
+      return State with
+        Names := Names;
+      end with;
+    when S.Msg.SetSource(const Open: bool):
+      return State with
+        SourceOpen := Open;
+      end with;
+    when S.Msg.SetUi(const Open: bool):
+      return State with
+        UiOpen := Open;
+      end with;
+    when S.Msg.SetTree(const Value: Tree.Change):
+      return UpdateTree(State, Value);
+  end case;
+end function;
+
+end unit;

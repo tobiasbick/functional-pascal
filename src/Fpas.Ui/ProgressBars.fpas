@@ -1,6 +1,6 @@
 unit Fpas.Ui.ProgressBars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
 
 // Native CUI progress-bar options.
 public type Options = record
@@ -16,6 +16,8 @@ public type Options = record
   public ShowValue: bool := false;
   // Whether CUI draws the fill as drifting ordered dots.
   public Dither: bool := false;
+  // Native width. Content uses the default full-width track.
+  public Width: L.Extent := L.Extent.Content;
 end record;
 
 // Builds a progress bar with native interpolation and activity animation.
@@ -24,7 +26,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable progress identity.
 // - `Value`: Finite progress fraction from zero through one.
-// - `Settings`: Native caption, track and activity options; use Elements.Size for width.
+// - `Settings`: Native caption, track, width and activity options.
 // ## Returns
 // A GUI-only progress bar with no input actions.
 public function ProgressBar<TMsg>(Id: string; Value: float; Settings: Options? := null): E.Element<TMsg>;

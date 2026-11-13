@@ -1,0 +1,215 @@
+unit Fpas.Ui.Internal.PlanningRules;
+
+uses
+  Fpas.Ui.Internal.Rules as R, Fpas.Ui.Internal.ChartRules as Chart,
+  Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
+  System as Sys, System.Collections.Generic as Lists,
+  Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans;
+
+procedure Extent(Value: L.Extent; At: string);
+begin
+  R.CheckExtent(Value, V.Target.Graphical, At);
+end procedure;
+
+procedure Texts(Values: array of string; At: string);
+begin
+  for Value: string in Values do
+    R.CheckText(Value, At);
+  end for;
+end procedure;
+
+procedure Path(Value: string; Capacity: int; At: string);
+begin
+  R.CheckText(Value, At);
+  if Sys.Text.Encoding.UTF8.GetByteCount(Value) >= Capacity then
+    R.Reject(At, 'The path exceeds the native buffer.');
+  end if;
+end procedure;
+
+procedure Tone(Value: S.Tone; At: string);
+begin
+  if not Sys.Enum.IsDefined<S.Tone>(Value) then
+    R.Reject(At, 'Unknown native tone.');
+  end if;
+end procedure;
+
+procedure Hour(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F or Value > 24.0F then
+    R.Reject(At, 'An hour must be finite and between zero and twenty-four.');
+  end if;
+end procedure;
+
+// Validates the native path bar.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure PathBar(Current: PathBars.Value; Settings: PathBars.Options; At: string);
+begin
+  if Current.Segments.Length > 64 or Current.Children.Length > Current.Segments.Length then
+    R.Reject(At, 'The native path bar accepts up to 64 segments and their child menus.');
+  end if;
+
+  Texts(Current.Segments, At);
+  for Menu: array of string in Current.Children do
+    Texts(Menu, At);
+  end for;
+
+  R.CheckText(Current.Text, At);
+  R.CheckText(Settings.Icon, At);
+  R.CheckText(Settings.Placeholder, At);
+  if not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize) then
+    R.Reject(At, 'Invalid control size.');
+  end if;
+
+  Extent(Settings.Width, At);
+end procedure;
+
+// Validates the native file browser.
+// ## Parameters
+// - `Folder`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure FileBrowser(Folder: string; Settings: FileBrowsers.Options; At: string);
+begin
+  Path(Folder, 1024, At);
+  R.CheckText(Settings.Filter, At);
+  Extent(Settings.Width, At);
+  Extent(Settings.Height, At);
+  if Settings.Places.Length > 6 or Settings.MaximumEntries < 0 or Settings.MaximumEntries >
+    100000
+  then
+    R.Reject(At, 'The browser accepts up to six places and 100,000 entries.');
+  end if;
+
+  for Place: string in Settings.Places do
+    Path(Place, 1024, At);
+  end for;
+end procedure;
+
+// Validates the native file picker.
+// ## Parameters
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure FilePicker(Settings: FilePickers.Options; At: string);
+begin
+  R.CheckText(Settings.Title, At);
+  R.CheckText(Settings.Filter, At);
+  R.CheckText(Settings.FilterLabel, At);
+  Path(Settings.Start, 1024, At);
+  Path(Settings.Name, 256, At);
+  if not Sys.Enum.IsDefined<FilePickers.Mode>(Settings.Kind) then
+    R.Reject(At, 'Unknown file picker mode.');
+  end if;
+end procedure;
+
+// Validates the native week calendar.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure WeekCalendar(Current: WeekCalendars.Value; Settings: WeekCalendars.Options; At: string);
+begin
+  Hour(Settings.StartHour, At);
+  Hour(Settings.EndHour, At);
+  if Settings.EndHour <= Settings.StartHour or Current.Week.DayNumber > 3652052 then
+    R.Reject(At, 'The calendar needs an increasing hour range and a representable week.');
+  end if;
+
+  Chart.Distance(Settings.HourHeight, At);
+  Extent(Settings.Height, At);
+  for Event: WeekCalendars.Appointment in Current.Events do
+    R.CheckText(Event.Title, At);
+    R.CheckText(Event.Detail, At);
+    Tone(Event.Tone, At);
+    Hour(Event.Start, At);
+    Hour(Event.Finish, At);
+    if Event.Day < 0 or Event.Day > 6 or Event.Finish <= Event.Start then
+      R.Reject(At, 'A week appointment needs a valid day and increasing hours.');
+    end if;
+  end for;
+end procedure;
+
+// Validates the native month calendar.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure MonthCalendar(Current: MonthCalendars.Value; Settings: MonthCalendars.Options; At: string);
+begin
+  if Settings.FirstWeekday < 0 or Settings.FirstWeekday > 6
+    or (Settings.MonthNames.Length <> 0 and Settings.MonthNames.Length <> 12)
+    or (Settings.DayNames.Length <> 0 and Settings.DayNames.Length <> 7)
+  then
+    R.Reject(At, 'The month calendar needs a valid first weekday and complete localized names.');
+  end if;
+
+  Texts(Settings.MonthNames, At);
+  Texts(Settings.DayNames, At);
+  Chart.Distance(Settings.CellHeight, At);
+  for Event: MonthCalendars.Appointment in Current.Events do
+    R.CheckText(Event.Title, At);
+    Tone(Event.Tone, At);
+    Hour(Event.Time, At);
+  end for;
+end procedure;
+
+// Validates the native Gantt chart.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure Gantt(Current: Gantts.Value; Settings: Gantts.Options; At: string);
+begin
+  if Current.Days <= 0 or cast<long>(Current.Origin.DayNumber) + Current.Days > 3652058L
+    or Settings.Today < 0 or Settings.Today >= Current.Days
+  then
+    R.Reject(At, 'The chart needs a positive, representable day range.');
+  end if;
+
+  Chart.Distance(Settings.DayWidth, At);
+  Chart.Distance(Settings.RowHeight, At);
+  Extent(Settings.Height, At);
+  for Task: Gantts.Task in Current.Tasks do
+    R.CheckText(Task.Name, At);
+    R.CheckText(Task.Owner, At);
+    Tone(Task.Tone, At);
+    if Task.Start < 0 or Task.Finish > Current.Days or Task.Finish < Task.Start
+      or (Task.Finish = Task.Start and not Task.Milestone) or Task.DependsOn < -1
+      or Task.DependsOn >= Current.Tasks.Length or not Sys.Single.IsFinite(Task.Progress)
+      or Task.Progress < 0.0F or Task.Progress > 1.0F or not Sys.Enum.IsDefined<Gantts.Status>(
+      Task.State
+    )
+    then
+      R.Reject(At, 'Invalid timeline task dates, progress, dependency or state.');
+    end if;
+  end for;
+end procedure;
+
+// Validates the native Kanban board.
+// ## Parameters
+// - `Columns`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure Kanban<TMsg>(Columns: array of Kanbans.Column<TMsg>; Settings: Kanbans.Options; At: string);
+begin
+  const Keys: Lists.HashSet<int> := new Lists.HashSet<int>();
+  for Column: Kanbans.Column<TMsg> in Columns do
+    R.CheckText(Column.Title, At);
+    Chart.Distance(Column.Width, At);
+    Chart.Color(Column.Dot, At);
+    if Column.Limit < 0 then
+      R.Reject(At, 'A work-in-progress limit cannot be negative.');
+    end if;
+
+    for Card: Kanbans.Card<TMsg> in Column.Cards do
+      R.CheckText(Card.Title, At);
+      if Card.Key < 0 or not Keys.Add(Card.Key) then
+        R.Reject(At, 'Kanban card identities must be unique and nonnegative.');
+      end if;
+    end for;
+  end for;
+end procedure;
+
+end unit;

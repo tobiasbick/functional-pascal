@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields, Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys, Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
+uses Fpas.Ui.Gui.Internal.CreativeFocus as Creative, Fpas.Ui.ControlTiles as Tiles, Fpas.Ui.Docks as Docks, Fpas.Ui.NowPlaying as Player, Fpas.Ui.Waveforms as Waves, Fpas.Ui.TabBars as Bars, Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks, Fpas.Ui.DataGrids as DataGrid, Fpas.Ui.TreeTables as TreeTable, Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables, Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields, Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys, Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,6 +17,102 @@ uses Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fp
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.StatusTag(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RatioSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.GradientSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.StepSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PaletteStrip(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.AspectPicker(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.OptionAction(_, _, _, _), E.Element.SeedField(_, _, _, _):
+      return Creative.First<TMsg>(Node, Preferred);
+    when E.Element.ControlTile(const Id: string, _, _, _, const Settings: Tiles.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Waveform(
+      const Id: string,
+      _,
+      const Progress: float?,
+      const Change: Sys.Func<float, TMsg>?,
+      const Settings: Waves.Options
+    ):
+      if Settings.Enabled and Progress <> null and Change <> null and (Preferred = null
+        or Preferred = Id)
+      then
+        return Id;
+      end if;
+    when E.Element.NowPlaying(const Id: string, _, _, const Settings: Player.Options):
+      if Settings.Enabled then
+        for Part: string in [Id + '/previous', Id + '/toggle', Id + '/next'] do
+          if Preferred = null or Preferred = Part then
+            return Part;
+          end if;
+        end for;
+
+        if Preferred = Id then
+          return Id + '/toggle';
+        end if;
+      end if;
+    when E.Element.TabBar(
+      const Id: string,
+      const Items: array of Bars.Item,
+      const Selected: int,
+      _,
+      const Settings: Bars.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id + '/' + Selected.ToString();
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Part: string := Id + '/' + Index.ToString();
+          if Preferred = Part then
+            return Part;
+          end if;
+        end for;
+      end if;
+    when E.Element.Dock(
+      const Id: string,
+      const Entries: array of Docks.Entry<TMsg>,
+      const Settings: Docks.Options
+    ):
+      if Settings.Enabled then
+        for Index: int := 0 to Entries.Length - 1 do
+          case Entries[Index] of
+            when Docks.Entry.Item(_, _, _, _, _, _):
+              const Part: string := Id + '/' + Index.ToString();
+              if Preferred = null or Preferred = Id or Preferred = Part then
+                return Part;
+              end if;
+            else
+          end case;
+        end for;
+      end if;
     when E.Element.Candlestick(const Id: string, _, const Settings: Candlesticks.Options, _):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -25,6 +121,111 @@ begin
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
+    when E.Element.CommandPalette(_, const Base: E.Element<TMsg>, const Open: bool, _, _, _):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+    when E.Element.CodeBlock(const Id: string, _, const Settings: CodeBlocks.Options):
+      const Copy: string := Id + '/copy';
+      if not Settings.NoHeader and (Settings.Title <> '' or Settings.Language <> '')
+        and (Preferred = null or Preferred = Id or Preferred = Copy)
+      then
+        return Copy;
+      end if;
+    when E.Element.DotChart(const Id: string, _, _, _, const Settings: DotCharts.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.EventTrack(const Id: string, _, _, const Settings: EventTracks.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.FilterBar(const Id: string, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.DataGrid(const Id: string, _, _, _, _, _, const Settings: DataGrid.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TreeTable(const Id: string, _, _, _, _, _, const Settings: TreeTable.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ListItem(const Id: string, _, _, const Settings: ListItems.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TreeNode(
+      const Id: string,
+      _,
+      const Open: bool?,
+      const Children: array of E.Element<TMsg>,
+      _,
+      _,
+      const Settings: Trees.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      if Open ?? false then
+        for Child: E.Element<TMsg> in Children do
+          const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+          if Found <> null then
+            return Found;
+          end if;
+        end for;
+      end if;
+    when E.Element.Table(
+      const Id: string,
+      const Columns: array of Tables.Column,
+      const Rows: array of Tables.Row<TMsg>,
+      const Order: Tables.Sort?,
+      _,
+      const OnSelect: Sys.Func<string, TMsg>?,
+      const Settings: Tables.Options
+    ):
+      if Settings.Enabled and Order <> null then
+        for Index: int := 0 to Columns.Length - 1 do
+          const Header: string := Tables.HeaderId(Id, Index);
+          if Columns[Index].Sortable and (Preferred = null or Preferred = Header) then
+            return Header;
+          end if;
+        end for;
+      end if;
+
+      for Row: Tables.Row<TMsg> in Rows do
+        if Settings.Enabled and OnSelect <> null and (Preferred = null or Preferred = Row.Id) then
+          return Row.Id;
+        end if;
+
+        for Cell: Tables.Cell<TMsg> in Row.Cells do
+          case Cell of
+            when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
+              for Child: E.Element<TMsg> in Nodes do
+                const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+                if Found <> null then
+                  return Found;
+                end if;
+              end for;
+            else
+          end case;
+        end for;
+      end for;
+    when E.Element.ReorderableList(
+      _,
+      const Items: array of E.Element<TMsg>,
+      const Order: array of int,
+      _,
+      _
+    ):
+      for Index: int in Order do
+        const Found: string? := First<TMsg>(Items[Index], Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      end for;
     when E.Element.Tour(const Id: string, const Base: E.Element<TMsg>, _, const Current: int, _, _):
       if Current >= 0 then
         if Preferred = Id or Preferred = Id + '/next' then
@@ -527,7 +728,11 @@ begin
     when E.Element.Layered(
       const Children: array of E.Element<TMsg>,
       _
-    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Stack(
+    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       _,
       _

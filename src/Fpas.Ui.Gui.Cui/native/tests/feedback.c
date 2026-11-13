@@ -34,7 +34,7 @@ static bool pixels_match(int kind, int tone, bool decorated, bool dark, int widt
                         .label = decorated ? "Uploading assets" : NULL, .show_value = decorated,
                         .indeterminate = !decorated, .height = decorated ? 12 : 0, .dither = dither };
                     if (pass) fpas_cui_progress(ui, "###progress", .68f, tone, !decorated,
-                        options.height, options.label ? options.label : "", decorated, dither);
+                        options.height, options.label ? options.label : "", decorated, dither, 0, 0);
                     else cui_progress_ex(ui, .68f, &options);
                 } else {
                     if (pass) fpas_cui_spinner(ui, "###spinner", decorated ? 28 : 0);
@@ -67,7 +67,7 @@ static bool activity_requests_frames(int kind) {
         cui_column(ui, .width = CUI_FILL, .pad = 16) {
             if (frame < 24) {
                 if (kind) fpas_cui_spinner(ui, "###spin", 22);
-                else fpas_cui_progress(ui, "###progress", 0, 0, 1, 0, "Indexing", 0, 0);
+                else fpas_cui_progress(ui, "###progress", 0, 0, 1, 0, "Indexing", 0, 0, 0, 0);
             } else cui_text(ui, "Finished");
         }
         cui_end_frame(ui);

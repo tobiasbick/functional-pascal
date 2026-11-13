@@ -1,0 +1,57 @@
+unit Fpas.Ui.AspectPickers;
+
+uses Fpas.Ui.Elements as E;
+
+// One aspect choice.
+public type Ratio = record
+  // Relative width.
+  public Width: int;
+  // Relative height.
+  public Height: int;
+  // Optional caption. Empty formats the ratio.
+  public Label: string := '';
+end record;
+
+// Model-owned input.
+public type Value = record
+  // Well caption. A leading ## hides it.
+  public Label: string;
+  // Zero-based choice, including the optional final custom choice.
+  public Index: int;
+end record;
+
+// Native widget settings.
+public type Options = record
+  // Custom ratios. Empty uses the six native defaults.
+  public Ratios: array of Ratio := [];
+  // Adds the Custom choice.
+  public Custom: bool := false;
+  // Optional custom choice caption.
+  public CustomLabel: string := '';
+  // Short side in pixels. Zero uses 1080. Negative hides the size.
+  public Base: int := 0;
+  // Optional value caption.
+  public Display: string := '';
+  // Omits the surrounding well.
+  public Plain: bool := false;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Presents the CUI aspect ratio picker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Current model value.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native appearance and input settings.
+// ## Returns
+// The graphical widget.
+public function AspectPicker<TMsg>(Id: string; Current: Value; Change: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.AspectPicker(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

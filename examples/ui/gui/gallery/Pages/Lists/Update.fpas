@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Lists.Update;
 
 uses
-  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tables as T, Fpas.Ui.Gui.Toasts as Toasts,
   GuiGallery.Pages.Lists.State as S;
 
 // Applies a message to this feature and describes its effects.
@@ -32,9 +32,35 @@ begin
         end if
       ];
     end with;
+    when S.Msg.SetSort(const Value: T.Sort): State with
+      Sort := Value;
+    end with;
+    when S.Msg.SelectPerson(const Id: string): State with
+      Selected := Id;
+    end with;
+    when S.Msg.SetSource(const Open: bool): State with
+      SourceOpen := Open;
+    end with;
+    when S.Msg.SetComponents(const Open: bool): State with
+      ComponentsOpen := Open;
+    end with;
+    when S.Msg.SetAssets(const Open: bool): State with
+      AssetsOpen := Open;
+    end with;
+    when S.Msg.SelectFile(const Name: string): State with
+      File := Name;
+    end with;
+    when S.Msg.Reorder(const Order: array of int): State with
+      TaskOrder := Order;
+    end with;
     else State;
   end case;
-  return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Next, case Message of
+      when S.Msg.Reorder(_): [Toasts.Show<S.Msg>('Order saved')];
+      else [];
+    end case
+  );
 end function;
 
 end unit;

@@ -1,7 +1,23 @@
 unit GuiGallery.Pages.Lists.State;
 
+uses Fpas.Ui.Tables as T;
+
 // State owned by this gallery feature.
 public type Model = record
+  // Model-owned sort of the original people table.
+  public Sort: T.Sort := new T.Sort(0);
+  // Selected person in the table.
+  public Selected: string := 'person-1';
+  // Expansion of the source and component folders.
+  public SourceOpen: bool := true;
+  // Expansion of the component folder.
+  public ComponentsOpen: bool := true;
+  // Expansion of the assets folder.
+  public AssetsOpen: bool := false;
+  // Current selected example file.
+  public File: string := 'slider.c';
+  // Reorder permutation of the five demo tasks.
+  public TaskOrder: array of int := [0, 1, 2, 3, 4];
   // Three independent headers in the native accordion example.
   public AccordionOpen: array of bool := [true, false, false];
 end record;
@@ -10,6 +26,20 @@ end record;
 public type Msg = variant
   // Accept one accordion header's expansion proposal.
   SetAccordion(Index: int; Open: bool);
+  // Apply a native sort proposal.
+  SetSort(Value: T.Sort);
+  // Select a person row.
+  SelectPerson(Id: string);
+  // Change source folder expansion.
+  SetSource(Open: bool);
+  // Change component folder expansion.
+  SetComponents(Open: bool);
+  // Change assets folder expansion.
+  SetAssets(Open: bool);
+  // Select a file.
+  SelectFile(Name: string);
+  // Accept a new drag order.
+  Reorder(Order: array of int);
   // A harmless preview activation.
   Preview;
 end variant;

@@ -1,6 +1,13 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
+  Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
+  Fpas.Ui.Motion as Motion, Fpas.Ui.ShimmerTexts as ShimmerTexts, Fpas.Ui.Typewriters as Typewriters, Fpas.Ui.TextReveals as TextReveals, Fpas.Ui.WordRotations as WordRotations, Fpas.Ui.NumberRolls as NumberRolls, Fpas.Ui.GradientTexts as GradientTexts, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.Loaders as Loaders, Fpas.Ui.Docks as Docks, Fpas.Ui.ControlTiles as ControlTiles, Fpas.Ui.NowPlaying as NowPlaying, Fpas.Ui.Waveforms as Waveforms, Fpas.Ui.TabBars as TabBars,
+  Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.JsonViews as JsonViews, Fpas.Ui.Readouts as Readouts, Fpas.Ui.DotDisplays as DotDisplays, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks,
+  Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables,
+  Fpas.Ui.FilterBars as Filters, Fpas.Ui.DataGrids as DataGrids, Fpas.Ui.TreeTables as TreeTables,
+  Fpas.Ui.ReorderableLists as Reorders, Fpas.Ui.VirtualLists as Virtuals, Fpas.Ui.CommandPalettes as Palettes,
   Fpas.Ui.Sankeys as Sankeys,
   Fpas.Ui.BarLists as BarLists,
   Fpas.Ui.ActivityRings as ActivityRings,
@@ -262,6 +269,94 @@ public type Element<TMsg> = variant
   AvatarGroup(Id: string; Names: array of string; Settings: AvatarGroups.Options);
   // Draw an empty-state message and its optional native action.
   EmptyState(Id: string; Title: string; Settings: EmptyStates.Options; OnAction: Sys.Func<TMsg>?);
+  // Native list item with optional activation.
+  ListItem(Id: string; Title: string; Activate: Sys.Func<TMsg>?; Settings: ListItems.Options);
+  // A branch with model-owned expansion or a leaf with optional activation.
+  TreeNode(Id: string; Label: string; Open: bool?; Children: array of Element<TMsg>; Change: Sys.Func<bool, TMsg>?; Activate: Sys.Func<TMsg>?; Settings: Trees.Options);
+  // Native table with structured rows and model-owned sorting.
+  Table(Id: string; Columns: array of Tables.Column; Rows: array of Tables.Row<TMsg>; Order: Tables.Sort?; Sort: Sys.Func<Tables.Sort, TMsg>?; Select: Sys.Func<string, TMsg>?; Settings: Tables.Options);
+  // Native search and multi-value filters.
+  FilterBar(Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg; Capacity: int; Enabled: bool);
+  // Virtualized native grid with lazily built cells.
+  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row<TMsg>; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options);
+  // Indented tree content for an existing table cell.
+  TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
+  // Virtualized native tree table with model-owned nodes.
+  TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options);
+  // Native drag-to-reorder list.
+  ReorderableList(Id: string; Items: array of Element<TMsg>; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
+  // Native viewport with lazily realized rows.
+  VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element<TMsg>);
+  // Native code block.
+  CodeBlock(Id: string; Code: string; Settings: CodeBlocks.Options);
+  // Native json view.
+  JsonView(Id: string; Json: string; Settings: JsonViews.Options);
+  // Native readout.
+  Readout(Id: string; Label: string; Value: string; Settings: Readouts.Options);
+  // Native dot display.
+  DotDisplay(Id: string; Text: string; Settings: DotDisplays.Options);
+  // Native dot chart.
+  DotChart(Id: string; Bands: array of DotCharts.Series; Count: int; Activate: Sys.Func<DotCharts.Hit, TMsg>?; Settings: DotCharts.Options);
+  // Native event track.
+  EventTrack(Id: string; Current: EventTracks.Value; Change: function(EventTracks.Change): TMsg; Settings: EventTracks.Options);
+  // Native CUI path bar.
+  PathBar(Id: string; Current: PathBars.Value; Change: function(PathBars.Event): TMsg; Settings: PathBars.Options);
+  // Native CUI file browser.
+  FileBrowser(Id: string; Folder: string; Change: function(FileBrowsers.Event): TMsg; Settings: FileBrowsers.Options);
+  // Native CUI file picker.
+  FilePicker(Id: string; Base: Element<TMsg>?; Open: bool; Change: function(FilePickers.Event): TMsg; Settings: FilePickers.Options);
+  // Native CUI week calendar.
+  WeekCalendar(Id: string; Current: WeekCalendars.Value; Change: function(WeekCalendars.Event): TMsg; Settings: WeekCalendars.Options);
+  // Native CUI month calendar.
+  MonthCalendar(Id: string; Current: MonthCalendars.Value; Change: function(MonthCalendars.Event): TMsg; Settings: MonthCalendars.Options);
+  // Native CUI Gantt chart.
+  Gantt(Id: string; Current: Gantts.Value; Change: function(Gantts.Event): TMsg; Settings: Gantts.Options);
+  // Native CUI Kanban board.
+  Kanban(Id: string; Columns: array of Kanbans.Column<TMsg>; Change: function(Kanbans.Event): TMsg; Settings: Kanbans.Options);
+  // Native CUI status tag.
+  StatusTag(Id: string; Current: StatusTags.Value; Remove: Sys.Func<TMsg>?; Settings: StatusTags.Options);
+  // Native CUI ratio slider.
+  RatioSlider(Id: string; Current: RatioSliders.Value; Change: function(float): TMsg; Settings: RatioSliders.Options);
+  // Native CUI gradient slider.
+  GradientSlider(Id: string; Current: GradientSliders.Value; Change: function(GradientSliders.Event): TMsg; Settings: GradientSliders.Options);
+  // Native CUI step slider.
+  StepSlider(Id: string; Current: StepSliders.Value; Change: function(StepSliders.Event): TMsg; Settings: StepSliders.Options);
+  // Native CUI palette strip.
+  PaletteStrip(Id: string; Current: PaletteStrips.Value; Change: function(PaletteStrips.Event): TMsg; Settings: PaletteStrips.Options);
+  // Native CUI aspect ratio picker.
+  AspectPicker(Id: string; Current: AspectPickers.Value; Change: function(int): TMsg; Settings: AspectPickers.Options);
+  // Native CUI option field with action.
+  OptionAction(Id: string; Current: OptionActions.Value; Change: function(OptionActions.Event): TMsg; Settings: OptionActions.Options);
+  // Native CUI seed field.
+  SeedField(Id: string; Current: SeedFields.Value; Change: function(SeedFields.Event): TMsg; Settings: SeedFields.Options);
+  // Native shimmer text.
+  ShimmerText(Id: string; Text: string; Settings: Motion.TextOptions);
+  // Native typewriter.
+  Typewriter(Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: Sys.Func<TMsg>?);
+  // Native text reveal.
+  TextReveal(Id: string; Text: string; Replay: int; Settings: Motion.TextOptions);
+  // Native word rotate.
+  WordRotate(Id: string; Words: array of string; Interval: float; Settings: Motion.TextOptions);
+  // Native number roll.
+  NumberRoll(Id: string; Text: string; Settings: Motion.TextOptions);
+  // Native gradient text.
+  GradientText(Id: string; Text: string; Settings: GradientTexts.Options);
+  // Native spotlight.
+  Spotlight(Id: string; Children: array of Element<TMsg>; Settings: Spotlights.Options);
+  // Native loader.
+  Loader(Id: string; Style: Loaders.Animation; Settings: Loaders.Options);
+  // Native dock.
+  Dock(Id: string; Entries: array of Docks.Entry<TMsg>; Settings: Docks.Options);
+  // Native control tile.
+  ControlTile(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: ControlTiles.Options);
+  // Native now playing.
+  NowPlaying(Id: string; Current: NowPlaying.Value; Change: function(NowPlaying.Event): TMsg; Settings: NowPlaying.Options);
+  // Native waveform.
+  Waveform(Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func<float, TMsg>?; Settings: Waveforms.Options);
+  // Native tab bar.
+  TabBar(Id: string; Items: array of TabBars.Item; Selected: int; Change: function(int): TMsg; Settings: TabBars.Options);
+  // Native searchable modal command palette.
+  CommandPalette(Id: string; Base: Element<TMsg>; Open: bool; Commands: array of Palettes.Command<TMsg>; Change: function(bool): TMsg; UseShortcut: bool);
   // Lay children out along one axis in order.
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
   // Place graphical children on top of each other using native CUI layout.

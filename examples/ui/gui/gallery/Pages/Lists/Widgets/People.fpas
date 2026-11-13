@@ -1,0 +1,118 @@
+unit GuiGallery.Pages.Lists.Widgets.People;
+
+uses
+  GuiGallery.Pages.Lists.State as State, Fpas.Ui.Tables as T,
+  Fpas.Ui.Avatars as A, Fpas.Ui.Badges as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as Lists;
+
+type Person = record
+  public Name: string;
+  public Email: string;
+  public Role: string;
+  public Status: string;
+  public Tone: S.Tone;
+  public Revenue: string;
+end record;
+
+function SortKey(Item: Person; Index: int): string;
+begin
+  return case Index of
+    when 0: Item.Name;
+    when 2: Item.Role;
+    else Item.Status;
+  end case;
+end function;
+
+function Fixed(Points: int): L.Extent;
+begin
+  return L.Extent.Fixed(L.Measure.Logical(Points));
+end function;
+
+// Draws the original five-person sortable table.
+// ## Parameters
+// - `Model`: Current sort and selection.
+// ## Returns
+// The native people table.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  const People: array of Person := [
+    new Person('Jonas Berg', 'jonas@example.com', 'Owner', 'Active', S.Tone.Success, '$12,384'),
+    new Person('Priya Nair', 'priya@example.com', 'Admin', 'Active', S.Tone.Success, '$9,846'),
+    new Person('Tomas Rivera', 'tomas@example.com', 'Editor', 'Invited', S.Tone.Warning, '$7,215'),
+    new Person('Lena Fischer', 'lena@example.com', 'Viewer', 'Active', S.Tone.Success, '$3,127'),
+    new Person('Aiko Tanaka', 'aiko@example.com', 'Editor', 'Suspended', S.Tone.Danger, '$1,962')
+  ];
+  const Order: array of int := [0, 1, 2, 3, 4];
+  for Index: int := 1 to Order.Length - 1 do
+    const Current: int := Order[Index];
+    var Position: int := Index;
+    while Position > 0 do
+      const Compare: int := Sys.String.CompareOrdinal(
+        SortKey(People[Order[Position - 1]], Model.Sort.Column),
+        SortKey(People[Current], Model.Sort.Column)
+      );
+      if (not Model.Sort.Descending and Compare <= 0) or (Model.Sort.Descending and Compare >=
+        0)
+      then
+        break;
+      end if;
+
+      Order[Position] := Order[Position - 1];
+      Position := Position - 1;
+    end while;
+
+    Order[Position] := Current;
+  end for;
+
+  const Rows: Lists.List<T.Row<State.Msg>> := new Lists.List<T.Row<State.Msg>>();
+  for Index: int in Order do
+    const Item: Person := People[Index];
+    const Id: string := 'person-' + Index.ToString();
+    Rows.Add(
+      new T.Row<State.Msg>(
+        Id, [
+          T.Cell<State.Msg>.Content(
+            [
+              A.Avatar<State.Msg>(Id + '/avatar', Item.Name, new A.Options(Size := 26.0F)),
+              E.Styled<State.Msg>(
+                E.Styled<State.Msg>(E.Text<State.Msg>(Item.Name), S.Role.Strong),
+                S.Role.SingleLine
+              )
+            ]
+          ),
+          T.Cell<State.Msg>.Content(
+            [
+              E.Styled<State.Msg>(
+                E.Styled<State.Msg>(E.Text<State.Msg>(Item.Email), S.Role.Secondary),
+                S.Role.SingleLine
+              )
+            ]
+          ),
+          T.Cell<State.Msg>.Text(Item.Role),
+          T.Cell<State.Msg>.Content(
+            [
+              B.Badge<State.Msg>(
+                Id + '/status',
+                Item.Status,
+                new B.Options(Tone := Item.Tone, Dot := true)
+              )
+            ]
+          ),
+          T.Cell<State.Msg>.Text(Item.Revenue)
+        ], Model.Selected = Id
+      )
+    );
+  end for;
+
+  return T.Table<State.Msg>(
+    'people', [
+      new T.Column('Name', Sortable := true),
+      new T.Column('Email', Grow := 1.2F),
+      new T.Column('Role', Fixed(110), Sortable := true),
+      new T.Column('Status', Fixed(120), Sortable := true),
+      new T.Column('Revenue', Fixed(110), Align := T.Alignment.Right)
+    ], Rows.ToArray(), Model.Sort, State.Msg.SetSort, State.Msg.SelectPerson
+  );
+end function;
+
+end unit;

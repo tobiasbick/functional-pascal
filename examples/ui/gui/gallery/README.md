@@ -32,8 +32,8 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 - **Overview** shows the original Components, Frame time and Dependencies
   metrics. The native grid lays out the Workspace form and Team card with
   presence avatars and role badges. Name and email are shared with Inputs and
-  Edit profile. Creating the demo workspace shows the success toast. The
-  Command Palette is tracked in the CUI inventory.
+  Edit profile. Creating the demo workspace shows the success toast.
+  Open command palette and Ctrl+K show the native searchable command list.
 - **Buttons** shows the variants, sizes, icons, and input states. Save changes
   shows the busy state, and Reset enables it again. The formatting group toggles
   three independent actions. The copy button copies the displayed command.
@@ -74,7 +74,9 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   Public profile. The fields update shared preview values. Cancel closes the
   dialog and Save changes also shows a success toast. The same card opens the
   right-hand Notifications sheet with Comments, Mentions and Weekly digest
-  switches. Their values are shared with Selection and Edit profile. Delete
+  switches and the two original Recent items. Switch values are shared with
+  Selection and Edit profile. The Command palette button opens the same
+  searchable command list as Overview. Delete
   project opens a confirmation with a native action footer. Confirming it
   displays an Undo toast. Escape, the close button and the scrim dismiss the
   open overlay.
@@ -87,7 +89,31 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   an Archive a message example with a timed Undo action.
   The Tooltips section reproduces the six CUI toolbar buttons, with formatting
   shortcuts shown as key hints on hover.
-- **Lists** shows the original three-question native accordion.
+- **Data display** shows the sortable People table, the expandable source tree,
+  the file list, draggable Tasks, the native accordion and 10,000 invoices in a
+  virtual list. People uses reserved example email addresses.
+- **Data grid** shows the original Filter bar, editable 2,000-person grid and
+  Tree table. The virtual tree below them demonstrates the standalone native
+  API, including keyboard navigation and lazy children. The grid uses reserved
+  example email addresses and stable ties when sorting.
+- **Code** shows the original C, Python and shell code blocks, native copy
+  buttons, expandable JSON and the parse-error example. An additional SQL
+  block demonstrates native SQL highlighting.
+- **Instruments** shows the original caffeine example. Click the dot chart to
+  add a cup, drag it along the event track or use the arrow keys. The readouts
+  and bedtime dot display update with the cup times.
+- **Motion** shows the original text effects, spotlight cards, loaders, dock,
+  control tiles, Now playing, waveform and tab bar. Replay restarts the
+  typewriter and reveal. An extra example changes a rolling currency value.
+- **Creative controls** shows the original status tags, Coffee/Milk and
+  Train/Test ratios, gradient and step sliders, palette locks and shuffle,
+  aspect choices, export controls and seed dice.
+- **Files** shows the original browser and its Open and Save as dialogs.
+  Double-click a folder or press Enter to navigate into it. A supplementary
+  standalone path bar demonstrates ancestor navigation, child menus and path entry.
+- **Planning** shows the original Kanban board, week schedule, release Gantt
+  and month calendar. Drag a card across columns, move or resize an event or
+  task, and change the visible month or select a day.
 - **Feedback** shows CUI's four original alerts, including dismissible storage
   warning, upload percentage, indeterminate indexing, dithered export and sync,
   Storage usage and three spinner sizes. Loading reproduces the native skeleton avatar, percentage text
@@ -184,6 +210,6 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   updates the model and its shared palette.
 
 The GUI gallery contract runs this view with both native renderers and captures
-the accepted pages and open overlays, including Lists plus light, dark and narrow
+the accepted pages and open overlays, including Data display plus light, dark and narrow
 Disclosure and Feedback views. It drives the widgets with native pointer and keyboard input.
 The same contract also drives the package-only consumer.

@@ -1,0 +1,244 @@
+unit GuiGallery.Pages.Motion.Controls;
+
+uses
+  GuiGallery.Pages.Motion.State as M, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Docks as Docking,
+  Fpas.Ui.ControlTiles as Tiles, Fpas.Ui.Grids as Grids, Fpas.Ui.Charts as Colors, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.NowPlaying as Player, Fpas.Ui.TabBars as Tabs, Fpas.Ui.Waveforms as Waves,
+  Fpas.Ui.Cards as Cards, Fpas.Ui.IconButtons as Icons, System as Sys;
+
+function Glyph(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+function Width(Size: int): L.Extent;
+begin
+  return L.Extent.Fixed(L.Measure.Logical(Size));
+end function;
+
+function Rgb(Red: byte; Green: byte; Blue: byte): Colors.Color;
+begin
+  return Colors.Color.Rgba(new Graphics.Color(Red, Green, Blue));
+end function;
+
+// Displays the centered dock and its original app icons.
+// ## Returns
+// The dock within its fixed-height row.
+public function Dock(): E.Element<M.Msg>;
+begin
+  return E.Size<M.Msg>(
+    E.Row<M.Msg>(
+      new L.Flow(Align := L.Alignment.End, Justify := L.Justification.Center, Clip := false),
+      Docking.Dock<M.Msg>(
+        'motion-dock',
+        [
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E0D7),
+            'Files',
+            M.Msg.Files,
+            Rgb($3B, $82, $F6),
+            true,
+            0
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E10F),
+            'Mail',
+            M.Msg.Preview,
+            Rgb($0E, $A5, $E9),
+            true,
+            3
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E063),
+            'Calendar',
+            M.Msg.Preview,
+            Rgb($EF, $44, $44),
+            false,
+            0
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E122),
+            'Music',
+            M.Msg.Preview,
+            Rgb($EC, $48, $99),
+            true,
+            0
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E20A),
+            'Terminal',
+            M.Msg.Preview,
+            Rgb($27, $27, $2A),
+            false,
+            0
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E1DD),
+            'Design',
+            M.Msg.Preview,
+            Rgb($8B, $5C, $F6),
+            false,
+            0
+          ),
+          Docking.Entry<M.Msg>.Separator,
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E154),
+            'Settings',
+            M.Msg.Preview,
+            Colors.Color.Automatic,
+            false,
+            0
+          ),
+          Docking.Entry<M.Msg>.Item(
+            Glyph($E18E),
+            'Trash',
+            M.Msg.Preview,
+            Colors.Color.Automatic,
+            false,
+            0
+          )
+        ]
+      )
+    ),
+    new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fill),
+      Height := new L.AxisSize(Basis := Width(110))
+    )
+  );
+end function;
+
+function ControlTiles(Model: M.Model): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(10), Clip := false),
+    G.Heading<M.Msg>('Control tiles', 'Big toggles for quick settings.'),
+    E.Size<M.Msg>(
+      Grids.Grid<M.Msg>(
+        new Grids.Options(Columns := 2, Gap := G.Points(10)),
+        Tiles.ControlTile<M.Msg>(
+          'motion-wifi', 'Wi-Fi', Model.Wifi, M.Msg.Wifi,
+          new Tiles.Options(
+            Icon := Glyph($E1AE), Detail := if Model.Wifi then
+              'Home'
+            else
+              'Off'
+            end if
+          )
+        ),
+        Tiles.ControlTile<M.Msg>(
+          'motion-hotspot',
+          'Hotspot',
+          Model.Hotspot,
+          M.Msg.Hotspot,
+          new Tiles.Options(Icon := Glyph($E142))
+        ),
+        Tiles.ControlTile<M.Msg>(
+          'motion-focus', 'Focus', Model.Focus, M.Msg.Focus,
+          new Tiles.Options(
+            Icon := Glyph($E11E), Detail := if Model.Focus then
+              'Until 6 pm'
+            else
+              'Off'
+            end if
+          )
+        ),
+        Tiles.ControlTile<M.Msg>(
+          'motion-airshare', 'AirShare', Model.AirShare, M.Msg.AirShare,
+          new Tiles.Options(
+            Icon := Glyph($E156), Detail := if Model.AirShare then
+              'Everyone'
+            else
+              'Contacts only'
+            end if
+          )
+        )
+      ),
+      new L.Flex(Width := new L.AxisSize(Basis := Width(300)))
+    ),
+    Tiles.ControlTile<M.Msg>(
+      'motion-dark', 'Dark appearance', Model.Dark, M.Msg.Dark,
+      new Tiles.Options(Icon := Glyph($E178), Wide := true, Width := Width(300))
+    )
+  );
+end function;
+
+function Peaks(): array of float;
+begin
+  const Result: array of float := new float[96];
+  for Index: int := 0 to Result.Length - 1 do
+    const Sample: float := cast<float>(Index);
+    Result[Index] := 0.18F + 0.8F * Sys.MathF.Abs(
+      Sys.MathF.Sin(Sample * 0.37F) * Sys.MathF.Sin(Sample * 0.11F + 1.3F)
+    );
+  end for;
+
+  return Result;
+end function;
+
+const WavePeaks: array of float := Peaks();
+
+function Media(Model: M.Model): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(10), Clip := false),
+    G.Heading<M.Msg>('Now playing', 'Artwork, a scrubber and transport.'),
+    Player.NowPlaying<M.Msg>('motion-player', Model.Track, M.Msg.Track),
+    G.Heading<M.Msg>('Waveform', 'Click or drag to seek.'),
+    Cards.Card<M.Msg>(
+      'motion-wave-card',
+      [
+        E.Row<M.Msg>(
+          new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center, Clip := false),
+          Icons.IconButton<M.Msg>(
+            'motion-wave-play', Glyph($E13C), 'Play', M.Msg.Preview,
+            new Icons.Options(
+              ControlSize := Icons.Size.Small,
+              Variant := S.ButtonVariant.Secondary
+            )
+          ),
+          E.Size<M.Msg>(
+            E.Column<M.Msg>(
+              new L.Flow(Clip := false),
+              Waves.Waveform<M.Msg>(
+                'motion-wave',
+                WavePeaks,
+                Model.Progress,
+                M.Msg.Seek,
+                new Waves.Options(Height := 34.0F)
+              )
+            ),
+            new L.Flex(Basis := L.Extent.Fill)
+          ),
+          E.Styled<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>('0:42'), S.Role.Tabular), S.Role.Caption)
+        )
+      ],
+      new Cards.Options(Padding := 14.0F, Gap := 8.0F, Width := Width(360))
+    ),
+    G.Heading<M.Msg>('Tab bar', 'For compact layouts.'),
+    Tabs.TabBar<M.Msg>(
+      'motion-tabs',
+      [
+        new Tabs.Item(Glyph($E0F5), 'Home'), new Tabs.Item(Glyph($E151), 'Search'),
+        new Tabs.Item(Glyph($E0F7), 'Inbox', 4), new Tabs.Item(Glyph($E19F), 'Profile')
+      ],
+      Model.Tab, M.Msg.Tab, new Tabs.Options(Width := Width(360))
+    )
+  );
+end function;
+
+// Displays the original quick controls and media samples side by side.
+// ## Parameters
+// - `Model`: Current widget values.
+// ## Returns
+// The two growing columns.
+public function Compact(Model: M.Model): E.Element<M.Msg>;
+begin
+  return E.Row<M.Msg>(
+    new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start, Clip := false),
+    E.Size<M.Msg>(ControlTiles(Model), new L.Flex(Basis := L.Extent.Fill)),
+    E.Size<M.Msg>(Media(Model), new L.Flex(Basis := L.Extent.Fill))
+  );
+end function;
+
+end unit;

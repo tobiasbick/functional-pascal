@@ -1,6 +1,19 @@
 unit GuiGallery.App.View;
 
 uses
+  GuiGallery.Pages.Code.View as Code,
+  GuiGallery.Pages.Instruments.State as InstrumentState,
+  GuiGallery.Pages.Instruments.View as Instruments,
+  GuiGallery.Pages.Motion.State as MotionState,
+  GuiGallery.Pages.Motion.View as Motion,
+  GuiGallery.Pages.Creative.State as CreativeState,
+  GuiGallery.Pages.Creative.View as Creative,
+  GuiGallery.Pages.Files.State as FileState,
+  GuiGallery.Pages.Files.View as Files,
+  GuiGallery.Pages.Planning.State as PlanningState,
+  GuiGallery.Pages.Planning.View as Planning,
+  GuiGallery.Pages.DataGrid.State as GridState,
+  GuiGallery.Pages.DataGrid.View as GridView,
   GuiGallery.Pages.MoreCharts.State as MoreChartsState,
   GuiGallery.Pages.MoreCharts.View as MoreCharts,
   GuiGallery.Pages.Charts.State as ChartsState,
@@ -33,7 +46,7 @@ uses
   GuiGallery.Pages.Disclosure.State as DisclosureState,
   GuiGallery.Pages.Disclosure.View as Disclosure,
   GuiGallery.Pages.Reader.View as Reader,
-  GuiGallery.Pages.Overview.View as Overview, Fpas.Ui.Gui.Toasts as Toasts,
+  GuiGallery.App.Palette as Palette, GuiGallery.Pages.Overview.View as Overview, Fpas.Ui.Gui.Toasts as Toasts,
   GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
   GuiGallery.Pages.Overlays.Widgets.DeleteDialog as DeleteDialog,
   GuiGallery.Pages.Overlays.Widgets.Notifications as Notifications,
@@ -71,8 +84,14 @@ end function;
 
 function PageTitle(Page: State.Page): string;
 begin
-  return if Page = State.Page.MoreCharts then
+  return if Page = State.Page.Lists then
+    'Data display'
+  elsif Page = State.Page.MoreCharts then
     'More charts'
+  elsif Page = State.Page.CreativeControls then
+    'Creative controls'
+  elsif Page = State.Page.DataGrid then
+    'Data grid'
   elsif Page = State.Page.SmartInputs then
     'Smart inputs'
   else
@@ -117,8 +136,15 @@ begin
           Destination(State.Page.Capture, $E19E),
           Destination(State.Page.Disclosure, $E529),
           Destination(State.Page.Reader, $E0CC),
+          Destination(State.Page.DataGrid, $E0E9),
+          Destination(State.Page.Code, $E093),
+          Destination(State.Page.Planning, $E1D0),
           Destination(State.Page.MoreCharts, $E06B),
+          Destination(State.Page.Motion, $E038),
           Destination(State.Page.Audio, $E55A),
+          Destination(State.Page.Files, $E0D7),
+          Destination(State.Page.Instruments, $E2A5),
+          Destination(State.Page.CreativeControls, $E1DD),
           Destination(State.Page.Layout, $E529)
         ]
       )
@@ -162,6 +188,50 @@ end function;
 function Preview(Model: State.Model; Width: int): array of E.Element<State.Msg>;
 begin
   case Model.Active of
+    when State.Page.Files:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<FileState.Msg> in Files.View(Model.Files) do
+        Parts.Add(U.Map<FileState.Msg, State.Msg>(Item, State.Msg.Files));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Planning:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<PlanningState.Msg> in Planning.View(Model.Planning) do
+        Parts.Add(U.Map<PlanningState.Msg, State.Msg>(Item, State.Msg.Planning));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.CreativeControls:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<CreativeState.Msg> in Creative.View(Model.Creative) do
+        Parts.Add(U.Map<CreativeState.Msg, State.Msg>(Item, State.Msg.Creative));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Motion:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<MotionState.Msg> in Motion.View(Model.Motion) do
+        Parts.Add(U.Map<MotionState.Msg, State.Msg>(Item, State.Msg.Motion));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Code:
+      return Code.View<State.Msg>();
+    when State.Page.Instruments:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<InstrumentState.Msg> in Instruments.View(Model.Instruments) do
+        Parts.Add(U.Map<InstrumentState.Msg, State.Msg>(Item, State.Msg.Instruments));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.DataGrid:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<GridState.Msg> in GridView.View(Model.DataGrid) do
+        Parts.Add(U.Map<GridState.Msg, State.Msg>(Item, State.Msg.DataGrid));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.MoreCharts:
       return MoreCharts.View<State.Msg>(
         Model.MoreCharts,
@@ -190,7 +260,11 @@ begin
     when State.Page.Overview:
       return [
         Overview.View<State.Msg>(
-          Model.Overview, Model.Shared, State.Msg.Show(State.Page.Buttons), State.Msg.Overview
+          Model.Overview,
+          Model.Shared,
+          State.Msg.Show(State.Page.Buttons),
+          State.Msg.Overlays(OverlaysState.Msg.SetPalette(true)),
+          State.Msg.Overview
         )
       ];
     when State.Page.Buttons:
@@ -222,7 +296,12 @@ begin
         )
       ];
     when State.Page.Lists:
-      return [U.Map<ListsState.Msg, State.Msg>(Lists.View(Model.Lists), State.Msg.Lists)];
+      const Sections: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Part: E.Element<ListsState.Msg> in Lists.View(Model.Lists) do
+        Sections.Add(U.Map<ListsState.Msg, State.Msg>(Part, State.Msg.Lists));
+      end for;
+
+      return Sections.ToArray();
     when State.Page.Overlays:
       return [
         U.Map<OverlaysState.Msg, State.Msg>(
@@ -380,7 +459,12 @@ begin
   const WithProfile: E.Element<State.Msg> := Dialog.Wrap<State.Msg>(
     Model.Overlays, Model.Shared, WithSheet, State.Msg.Overlays
   );
-  return DeleteDialog.Wrap<State.Msg>(WithProfile, Model.Overlays.DeleteDialog, State.Msg.Overlays);
+  const WithDelete: E.Element<State.Msg> := DeleteDialog.Wrap<State.Msg>(
+    WithProfile,
+    Model.Overlays.DeleteDialog,
+    State.Msg.Overlays
+  );
+  return Palette.Wrap(Model.Overlays.PaletteOpen, WithDelete);
 end function;
 
 end unit;

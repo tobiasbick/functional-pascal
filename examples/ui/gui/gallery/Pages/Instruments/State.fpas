@@ -1,0 +1,19 @@
+unit GuiGallery.Pages.Instruments.State;
+
+uses Fpas.Ui.DotCharts as Chart, Fpas.Ui.EventTracks as Track;
+
+// Retained state of the original caffeine example.
+public type Model = record
+  // Current cup times and selected cup.
+  public Cups: Track.Value := new Track.Value([8.0, 10.75, 12.25], 2);
+end record;
+
+// Interactions from the native chart and event track.
+public type Msg = variant
+  // Add a cup where the chart was activated.
+  AddCup(Hit: Chart.Hit);
+  // Adopt the native track proposal.
+  EditCups(Value: Track.Change);
+end variant;
+
+end unit;

@@ -1,0 +1,84 @@
+unit Fpas.Ui.Gui.Internal.Widgets.FileBrowser;
+
+uses
+  Fpas.Ui.FileBrowsers as A, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Internal.FileData as D, Fpas.Ui.Gui.Application as App;
+
+// Presents the native file browser.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Folder`: Model-owned input.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Folder: string; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'file-browser';
+  const Token: string := C.Token(Role, Id);
+  const Parts: array of string := ['list', 'back', 'forward', 'up', 'path', 'filter', 'reload'];
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, C.Token(Role, Id + '/list'), Enabled)
+    or C.WantsFocus<TMsg>(Frame, Id + '/list', C.Token(Role, Id + '/list'), Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Flags: int := P.Bits(Enabled, 1) + P.Bits(Settings.FoldersOnly, 2) +
+    P.Bits(Settings.Hidden, 4) + P.Bits(Settings.NoPlaces, 8);
+  const Result: Cui.CuiFileBrowserResult := Frame.Window.FileBrowser(
+    Token,
+    Folder,
+    Width.Kind,
+    Width.Value,
+    Height.Kind,
+    Height.Value,
+    Settings.Filter,
+    Settings.Places,
+    D.Provider(Settings.Source),
+    Settings.MaximumEntries,
+    Settings.Revision,
+    Flags,
+    Focus,
+    P.Tracker<TMsg>(Frame, Id, Role, Parts)
+  );
+  const Selected: string := Result.Selected ?? '';
+  var Previous: string := '';
+  var PreviousError: bool := false;
+  for Control: App.Control in Frame.Previous do
+    if Control.Id = Id and Control.Role = Role then
+      Previous := Control.Value;
+      PreviousError := Control.Text = 'This folder could not be read';
+      break;
+    end if;
+  end for;
+
+  if Enabled and (Result.Folder <> Folder or Result.Picked <> null or Selected <> Previous
+    or Result.Error <> PreviousError)
+  then
+    Frame.Messages.Add(
+      Change(new A.Event(Result.Folder, Result.Selected, Result.Picked, Result.Error))
+    );
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, Result.Folder, false, Selected);
+  if Result.Error and not Frame.PaintingClosed then
+    // The list snapshot carries the status separately from the selected path.
+    Frame.Controls[Frame.Controls.Count - 1] := Frame.Controls[Frame.Controls.Count - 1] with
+      Text := 'This folder could not be read';
+    end with;
+  end if;
+
+  for Index: int := 0 to Parts.Length - 1 do
+    if Result.Parts[Index] then
+      P.Part<TMsg>(
+        Frame, Id, Role, Parts[Index], Parts[Index], Enabled, if Index = 0 then
+          Selected
+        else
+          ''
+        end if
+      );
+    end if;
+  end for;
+end procedure;
+
+end unit;

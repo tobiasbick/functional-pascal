@@ -131,8 +131,10 @@ public sealed partial class CuiWindow
     public bool ControlFocused(string id)
     {
         CheckOpen();
-        _ = trackedNodes[id];
-        return NativeMethods.FocusKey(context, controlKeys[id]) != 0;
+        int node = trackedNodes[id];
+        return controlKeys.TryGetValue(id, out uint key)
+            ? NativeMethods.FocusKey(context, key) != 0
+            : NativeMethods.Focused(context, node) != 0;
     }
 
     /// <summary>Reads hover from a tracked node after presentation.</summary>

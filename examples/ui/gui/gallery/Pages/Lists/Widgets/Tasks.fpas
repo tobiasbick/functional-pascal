@@ -1,0 +1,39 @@
+unit GuiGallery.Pages.Lists.Widgets.Tasks;
+
+uses
+  GuiGallery.Pages.Lists.State as State, Fpas.Ui.ReorderableLists as R, Fpas.Ui.Elements as E,
+  Fpas.Ui.Badges as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+function Row(Id: string; Title: string; Label: string; Tone: S.Tone): E.Element<State.Msg>;
+begin
+  return E.Size<State.Msg>(
+    E.Row<State.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(10)), Clip := false),
+      E.Size<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(Title), S.Role.SingleLine),
+        new L.Flex(Basis := L.Extent.Fill)
+      ),
+      B.Badge<State.Msg>(Id, Label, new B.Options(Tone := Tone))
+    ), new L.Flex(Basis := L.Extent.Fill)
+  );
+end function;
+
+// Presents the original draggable task rows.
+// ## Parameters
+// - `Model`: Current task permutation.
+// ## Returns
+// The native reorderable list.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return R.ReorderableList<State.Msg>(
+    'task-order', [
+      Row('task-docs', 'Write the release notes', 'Docs', S.Tone.Info),
+      Row('task-video', 'Record the demo video', 'Video', S.Tone.Neutral),
+      Row('task-screenshots', 'Update the screenshots', 'Docs', S.Tone.Info),
+      Row('task-tag', 'Tag version 1.0', 'Release', S.Tone.Warning),
+      Row('task-blog', 'Post the announcement', 'Blog', S.Tone.Teal)
+    ], Model.TaskOrder, State.Msg.Reorder
+  );
+end function;
+
+end unit;

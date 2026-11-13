@@ -1,0 +1,65 @@
+unit Fpas.Ui.PaletteStrips;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+
+// One swatch in the palette.
+public type Swatch = record
+  // Current swatch color.
+  public Color: G.Color;
+  // Preserves this color during shuffle.
+  public Locked: bool := false;
+end record;
+
+// Model-owned input.
+public type Value = record
+  // Well caption. A leading ## hides it.
+  public Label: string;
+  // One to sixteen swatches.
+  public Swatches: array of Swatch;
+  // Optional shuffle state. Null leaves recoloring to the caller.
+  public Seed: uint? := null;
+end record;
+
+// Native widget settings.
+public type Options = record
+  // Optional value caption.
+  public Display: string := '';
+  // Hides shuffle.
+  public NoShuffle: bool := false;
+  // Swatch height, or zero for the native default.
+  public Height: float := 0.0F;
+  // Omits the surrounding well.
+  public Plain: bool := false;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Native proposal.
+public type Event = record
+  // Proposed swatches and locks.
+  public Swatches: array of Swatch;
+  // Proposed shuffle state.
+  public Seed: uint?;
+  // A color or lock changed.
+  public Changed: bool;
+  // Shuffle was activated.
+  public Shuffled: bool;
+end record;
+
+// Presents the CUI palette strip.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Current model value.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native appearance and input settings.
+// ## Returns
+// The graphical widget.
+public function PaletteStrip<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.PaletteStrip(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

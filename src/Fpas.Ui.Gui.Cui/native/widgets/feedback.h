@@ -12,9 +12,10 @@ CUI_API int fpas_cui_alert(cui_ctx *ui, const char *id, const char *title,
     int enabled, int focus, int *node, int *dismiss, unsigned int *key);
 
 /** Draws native progress. value is a fraction; tone, indeterminate, height,
- * label, show_value and dither map to CUI options. Host sizing supplies width. */
+ * label, show_value, dither and optional width map to CUI options. */
 CUI_API void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
-    int tone, int indeterminate, float height, const char *label, int show_value, int dither);
+    int tone, int indeterminate, float height, const char *label, int show_value, int dither,
+    int width_kind, float width);
 
 /** Draws a native spinner with stable inspection identity and logical diameter. */
 CUI_API void fpas_cui_spinner(cui_ctx *ui, const char *id, float size);

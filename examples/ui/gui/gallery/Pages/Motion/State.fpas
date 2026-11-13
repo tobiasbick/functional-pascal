@@ -1,0 +1,66 @@
+unit GuiGallery.Pages.Motion.State;
+
+uses Fpas.Ui.NowPlaying as Player, Fpas.Ui.Charts as Colors, Fpas.Ui.Graphics as Graphics;
+
+// Model for the original Motion page and the rolling-number sample.
+public type Model = record
+  // Current replay revision.
+  public Revision: int := 0;
+  // Wi-Fi tile state.
+  public Wifi: bool := true;
+  // Hotspot tile state.
+  public Hotspot: bool := false;
+  // Focus tile state.
+  public Focus: bool := true;
+  // AirShare tile state.
+  public AirShare: bool := false;
+  // Dark appearance tile state.
+  public Dark: bool := true;
+  // Selected compact tab.
+  public Tab: int := 0;
+  // Waveform cursor.
+  public Progress: float := 0.36F;
+  // Current track and transport.
+  public Track: Player.Value := new Player.Value(
+    'Low Tide',
+    'Marlow Avenue',
+    76.0F,
+    222.0F,
+    true,
+    Colors.Color.Rgba(new Graphics.Color($C8, $55, $3D))
+  );
+  // Chooses the alternate rolling-number value.
+  public Alternate: bool := false;
+end record;
+
+// Local actions of the Motion page.
+public type Msg = variant
+  // Replay the typewriter and text reveal.
+  Replay;
+  // Set the Wi-Fi tile.
+  Wifi(On: bool);
+  // Set the Hotspot tile.
+  Hotspot(On: bool);
+  // Set the Focus tile.
+  Focus(On: bool);
+  // Set the AirShare tile.
+  AirShare(On: bool);
+  // Set the Dark appearance tile.
+  Dark(On: bool);
+  // Switch tabs.
+  Tab(Index: int);
+  // Seek within the waveform.
+  Seek(Progress: float);
+  // Apply a transport proposal.
+  Track(Event: Player.Event);
+  // Display a toast from the dock.
+  Files;
+  // Advance playback by elapsed seconds.
+  Tick(Seconds: float);
+  // Change the rolling-number sample value.
+  Roll;
+  // An activation without a gallery action.
+  Preview;
+end variant;
+
+end unit;

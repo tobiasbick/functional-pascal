@@ -257,7 +257,7 @@ begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI disclosures',
     1100,
-    760,
+    1800,
     Renderer,
     true
   );

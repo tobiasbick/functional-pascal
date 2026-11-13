@@ -1,0 +1,33 @@
+unit GuiGallery.Pages.Files.State;
+
+uses Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
+
+// File gallery state.
+public type Model = record
+  // Browser's current folder.
+  public Folder: string := '.';
+  // Last chosen filename.
+  public Chosen: string := '';
+  // Native open picker visibility.
+  public Opening: bool := false;
+  // Native save picker visibility.
+  public Saving: bool := false;
+end record;
+
+// File gallery actions.
+public type Msg = variant
+  // Applies a folder or selection proposal.
+  Browse(Event: Browser.Event);
+  // Opens the native Open dialog.
+  Open;
+  // Opens the native Save dialog.
+  Save;
+  // Closes Open with an optional selection.
+  Opened(Event: Picker.Event);
+  // Closes Save with an optional filename.
+  Saved(Event: Picker.Event);
+  // Navigates the standalone path bar.
+  Path(Event: Paths.Event);
+end variant;
+
+end unit;

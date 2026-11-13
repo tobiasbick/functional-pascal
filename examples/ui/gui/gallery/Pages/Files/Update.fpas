@@ -1,0 +1,48 @@
+unit GuiGallery.Pages.Files.Update;
+
+uses
+  GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.View as V,
+  Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
+
+// Applies native file navigation and picker results.
+// ## Parameters
+// - `Model`: Current Files state.
+// - `Message`: Proposed file action.
+// ## Returns
+// The new gallery state.
+public function Update(Model: M.Model; Message: M.Msg): M.Model;
+begin
+  return case Message of
+    when M.Msg.Browse(const Event: Browser.Event): Model with
+      Folder := Event.Folder;
+      Chosen := Event.Picked ?? Model.Chosen;
+    end with;
+    when M.Msg.Open: Model with
+      Opening := true;
+    end with;
+    when M.Msg.Save: Model with
+      Saving := true;
+    end with;
+    when M.Msg.Opened(const Event: Picker.Event): Model with
+      Opening := false;
+      Chosen := Event.Path ?? Model.Chosen;
+    end with;
+    when M.Msg.Saved(const Event: Picker.Event): Model with
+      Saving := false;
+      Chosen := Event.Path ?? Model.Chosen;
+    end with;
+    when M.Msg.Path(const Event: Paths.Event): Model with
+      Folder := if Event.Text <> null then
+        Event.Text ?? Model.Folder
+      elsif Event.Child >= 0 then
+        V.MenuPath(Model.Folder, Event.MenuSegment, Event.Child)
+      elsif Event.Segment >= 0 then
+        V.At(Model.Folder, Event.Segment)
+      else
+        Model.Folder
+      end if;
+    end with;
+  end case;
+end function;
+
+end unit;

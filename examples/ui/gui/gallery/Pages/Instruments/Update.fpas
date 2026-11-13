@@ -1,0 +1,41 @@
+unit GuiGallery.Pages.Instruments.Update;
+
+uses
+  GuiGallery.Pages.Instruments.State as S, Fpas.Ui.EventTracks as E, Fpas.Ui.DotCharts as D,
+  System as Sys;
+
+// Applies one native instrument interaction.
+// ## Parameters
+// - `State`: Current cups.
+// - `Message`: Chart activation or event-track proposal.
+// ## Returns
+// Updated cups and selection.
+public function Update(State: S.Model; Message: S.Msg): S.Model;
+begin
+  case Message of
+    when S.Msg.EditCups(const Change: E.Change):
+      return State with
+        Cups := Change.Current;
+      end with;
+    when S.Msg.AddCup(const Hit: D.Hit):
+      const Times: array of double := State.Cups.Times;
+      if Times.Length >= 8 then
+        return State;
+      end if;
+      const Time: double := Sys.Math.Floor(Hit.X * 4.0 + 0.5) / 4.0;
+      const Next: array of double := new double[Times.Length + 1];
+      var At: int := 0;
+      while At < Times.Length and Times[At] <= Time do
+        At := At + 1;
+      end while;
+
+      Sys.Array.Copy(Times, 0, Next, 0, At);
+      Next[At] := Time;
+      Sys.Array.Copy(Times, At, Next, At + 1, Times.Length - At);
+      return State with
+        Cups := new E.Value(Next, At);
+      end with;
+  end case;
+end function;
+
+end unit;

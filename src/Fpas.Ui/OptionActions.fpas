@@ -1,0 +1,55 @@
+unit Fpas.Ui.OptionActions;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.ControlWells as W;
+
+// Model-owned input.
+public type Value = record
+  // Well caption. A leading ## hides it.
+  public Label: string;
+  // Choice captions in order.
+  public Items: array of string;
+  // Zero-based selected option.
+  public Index: int;
+  // Action for the selected option.
+  public Tool: W.Tool;
+end record;
+
+// Native widget settings.
+public type Options = record
+  // Optional value caption.
+  public Display: string := '';
+  // Omits the surrounding well.
+  public Plain: bool := false;
+  // Accepts activation of the action next to the options.
+  public ActionEnabled: bool := true;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Native proposal.
+public type Event = record
+  // Proposed selected option.
+  public Index: int;
+  // Selection changed.
+  public Changed: bool;
+  // Action was activated.
+  public Action: bool;
+end record;
+
+// Presents the CUI option field with action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Current model value.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native appearance and input settings.
+// ## Returns
+// The graphical widget.
+public function OptionAction<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.OptionAction(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

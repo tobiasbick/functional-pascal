@@ -11,6 +11,8 @@ public type Model = record
   public ProfileDialog: bool := false;
   // Whether the shared project deletion confirmation is open.
   public DeleteDialog: bool := false;
+  // Whether the shared command palette is open.
+  public PaletteOpen: bool := false;
   // Whether the Filters panel is open.
   public Filters: bool := false;
 end record;
@@ -31,6 +33,8 @@ public type Msg = variant
   SetDeleteDialog(Open: bool);
   // Confirm the preview deletion and show its Undo toast.
   DeleteProject;
+  // Open or close the command palette.
+  SetPalette(Open: bool);
   // Open or close the Filters panel.
   SetFilters(Open: bool);
   // A harmless preview activation.

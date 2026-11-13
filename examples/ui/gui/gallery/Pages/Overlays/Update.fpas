@@ -29,6 +29,9 @@ begin
     when S.Msg.DeleteProject: State with
       DeleteDialog := false;
     end with;
+    when S.Msg.SetPalette(const Open: bool): State with
+      PaletteOpen := Open;
+    end with;
     when S.Msg.SetFilters(const Open: bool): State with
       Filters := Open;
     end with;

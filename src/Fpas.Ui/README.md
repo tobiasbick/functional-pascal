@@ -729,6 +729,141 @@ Snapshots use `accordion` and `expandable-card`, with the model's boolean in
 `Value` and the native header's bounds and focus. CUI draws and sizes the whole
 wrapper; no second disclosure layout or animation system is involved.
 
+## Data display
+
+- `ListItems.ListItem` presents a native row with an optional subtitle, trailing
+  text, initials avatar or icon, and activation message. Selection belongs to the
+  model.
+- `Trees.Branch` proposes expansion changes and `Trees.Leaf` reports activation.
+  Supply stable IDs and hold expansion and selection in the model. CUI owns the
+  indentation, disclosure chevron and default file and folder icons.
+- `Tables.Table` accepts column descriptors and model-ordered rows. Each cell
+  uses native plain text or draws a row of graphical elements. A sortable header
+  proposes a `Sort`, and a selectable row reports its stable ID. Sort the model
+  data in the update. Use `Tables.HeaderId` to focus or inspect a heading.
+- `ReorderableLists.ReorderableList` displays a permutation of one to 256
+  canonical items. CUI draws the handles and animates a drag. The update receives
+  the proposed permutation and decides whether to adopt it.
+- `VirtualLists.VirtualList` realizes CUI's visible range and overscan through a
+  pure row factory. Give each row a fixed height of at least one logical point
+  and each interactive child an ID unique across the view. The viewport snapshot reports the
+  half-open range as `first:last`.
+
+The graphical gallery shows these controls on Data display and uses list items
+for Recent in the Notifications sheet. Terminal and portable preflight reject
+these elements.
+
+## Command palette
+
+`CommandPalettes.CommandPalette` wraps a base view in CUI's searchable modal.
+Supply the current open flag and a message mapper for visibility proposals.
+Each command has a title, a message and optional icon, group and shortcut hint.
+CUI filters and ranks the titles, moves the highlight and handles activation and
+dismissal. Primary+K toggles the palette by default. The host restores focus to
+the preceding control when it closes. The graphical profile is required.
+
+## Data grid, filter bar and tree table
+
+- `FilterBars.FilterBar` draws CUI's search, filter chips and option menus.
+  Supply a mask per field and optional search text. Each mask bit names one
+  option. The model receives new masks and text when they change.
+- `DataGrids.DataGrid` accepts native column definitions, a row count and a
+  pure row factory. CUI requests the visible range and overscan. Each row
+  supplies a stable ID and a text, composed or editable cell per column.
+  Editable cells can draw leading children and report the committed text.
+  Set their UTF-8 capacity to at most 256 bytes, including the terminator.
+  Native proposals report sort, selection, cursor and range anchor in display
+  order. The model controls how sorting changes the row order.
+- `TreeTables.TreeCell` adds CUI's indented label and disclosure chevron to a
+  cell in an ordinary table. `TreeTables.TreeTable` uses CUI's virtual tree
+  grid. Supply a parent-first node array, one text cell per additional column
+  and optional sorting. Changes propose expansion, selection, cursor, sort,
+  activation and nodes that request lazy children. To satisfy a load, supply
+  the children and clear their parent's loading flag. Keep node indices
+  meaningful across updates, including when assigning a cursor.
+
+The GUI gallery's Data grid page shows the original three sections followed
+by a separate virtual tree example. All three widgets require the graphical
+profile.
+
+## Code blocks, JSON and instruments
+
+- `CodeBlocks.CodeBlock` renders literal source with native highlighting, line
+  numbers, a highlighted line range and a copy button. Language names include
+  `sql`. `JsonViews.JsonView` folds objects and arrays using native interaction
+  and displays parse errors in place. The `json-view` snapshot reports validity.
+- `Readouts.Readout` draws an instrument label, value, unit and detail.
+  `DotDisplays.DotDisplay` uses CUI's 5×7 font, with optional accent and marquee.
+- `DotCharts.DotChart` takes equally sampled bands and optional annotations in
+  axis units. Activations report native X coordinates. `EventTracks.EventTrack`
+  takes sorted event times and an optional selected index and proposes updates
+  after native input. Both expose numeric and hours axes and can be aligned
+  by giving them the same width and range.
+
+These widgets require the graphical profile. The Code and Instruments gallery
+pages demonstrate the native options and interactions.
+
+## Motion and compact controls
+
+`ShimmerTexts.ShimmerText`, `Typewriters.Typewriter`,
+`TextReveals.TextReveal`, `WordRotations.WordRotate` and
+`NumberRolls.NumberRoll` use the native CUI text effects. Change the replay
+revision to restart the typewriter or reveal. The typewriter can emit a
+completion message and reports completion in its snapshot. Number roll takes
+formatted display text. Values exceeding the
+native animation buffers appear in full as tabular text.
+
+`GradientTexts.GradientText` draws a static or animated gradient.
+`Spotlights.Spotlight` arranges children in a native card with pointer lighting
+and an optional beam. `Loaders.Loader` offers dots, bars, pulse, orbit and grid.
+
+`Docks.Dock` accepts item messages, colors, running indicators, badges and
+separators. `ControlTiles.ControlTile` proposes a Boolean toggle.
+`NowPlaying.NowPlaying` proposes play/pause, previous, next and seek events.
+The application owns playback time and track changes. `Waveforms.Waveform`
+accepts normalized peaks and an optional seek position.
+`TabBars.TabBar` proposes a zero-based selection.
+
+The graphical Motion page demonstrates these widgets, including a separate
+rolling-number example.
+
+## Creative controls
+
+- `StatusTags.StatusTag` presents a native status preset with an optional
+  removal message. `RatioSliders.RatioSlider` proposes the first part's share
+  of a whole.
+- `GradientSliders.GradientSlider` accepts hue, temperature, opacity or custom
+  stops. It can report the color under the thumb and the adjacent tool action.
+  `StepSliders.StepSlider` selects a discrete stop with optional stop labels
+  and a tool.
+- `PaletteStrips.PaletteStrip` proposes swatch locks and seeded shuffles.
+  The application owns the colors, locks and shuffle seed.
+- `AspectPickers.AspectPicker` selects a built-in or supplied ratio and can
+  include Custom. `OptionActions.OptionAction` reports selection and action
+  together so the application can act on the proposed choice.
+  `SeedFields.SeedField` proposes a new seed or lock state.
+
+These widgets require the graphical profile. The Creative controls gallery
+page shows the native wells and their model updates.
+
+## Files and planning
+
+- `PathBars.PathBar` proposes a segment, a child from its dropdown, or a
+  submitted path. The model supplies the visible segments and child labels.
+- `FileBrowsers.FileBrowser` proposes folder changes and file activation.
+  `FilePickers.FilePicker` opens a native CUI dialog for opening, saving, or
+  choosing a folder. Its event carries the chosen path or null on dismissal.
+  A `FileListings.Provider` supplies entries for either widget.
+- `Kanbans.Kanban` lays out model-owned columns and cards. Card bodies can
+  contain regular FPAS UI elements. Native drag proposes a card's destination.
+- `WeekCalendars.WeekCalendar` and `Gantts.Gantt` report event and task
+  activation, moves and resizes. The model owns the schedule, including task
+  dependencies. `MonthCalendars.MonthCalendar` reports the visible month
+  and selected day and shows the supplied event dots.
+
+These widgets require the graphical profile. The Files and Planning gallery
+pages demonstrate their native controls and model updates.
+
 ## Expandable text
 
 `Fpas.Ui.ExpandableTexts.ExpandableText<TMsg>(Id, Text, Settings, OnToggle)`

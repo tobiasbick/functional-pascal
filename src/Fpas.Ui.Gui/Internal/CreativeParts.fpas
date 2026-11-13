@@ -1,0 +1,218 @@
+unit Fpas.Ui.Gui.Internal.CreativeParts;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Graphics as G, Fpas.Ui.ControlWells as Wells, System as Sys,
+  System.Collections.Generic as Lists;
+
+// Encodes a flag.
+// ## Parameters
+// - `Set`: Whether to set the flag.
+// - `Bit`: Native bit mask.
+// ## Returns
+// The mask or zero.
+public function Bits(Set: bool; Bit: int): int;
+begin
+  return if Set then
+    Bit
+  else
+    0
+  end if;
+end function;
+
+// Encodes an RGBA color.
+// ## Parameters
+// - `Color`: Straight-alpha color.
+// ## Returns
+// Packed native channels.
+public function Pack(Color: G.Color): uint;
+begin
+  return cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24);
+end function;
+
+// Decodes an RGBA color.
+// ## Parameters
+// - `Value`: Packed native channels.
+// ## Returns
+// Straight-alpha color.
+public function Unpack(Value: uint): G.Color;
+begin
+  return new G.Color(
+    cast<byte>(Value and 255U), cast<byte>((Value shr 8) and 255U),
+    cast<byte>((Value shr 16) and 255U), cast<byte>(Value shr 24)
+  );
+end function;
+
+// Encodes the pressed appearance.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The native active flag.
+public function ToolBits(Tool: Wells.Tool?): int;
+begin
+  return Bits(Tool <> null and Tool.Active, 4);
+end function;
+
+// Gets the action glyph.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The glyph or an empty string.
+public function Icon(Tool: Wells.Tool?): string;
+begin
+  return if Tool = null then
+    ''
+  else
+    Tool.Icon
+  end if;
+end function;
+
+// Gets the action name.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The tooltip or an empty string.
+public function Tooltip(Tool: Wells.Tool?): string;
+begin
+  return if Tool = null then
+    ''
+  else
+    Tool.Tooltip
+  end if;
+end function;
+
+// Builds indexed native part names.
+// ## Parameters
+// - `Count`: Number of indexed parts.
+// - `Last`: Optional trailing action name.
+// ## Returns
+// The part names in native order.
+public function Indexed(Count: int; Last: string := ''): array of string;
+begin
+  const Parts: Lists.List<string> := new Lists.List<string>(Count + Bits(Last <> '', 1));
+  for Index: int := 0 to Count - 1 do
+    Parts.Add(Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture));
+  end for;
+
+  if Last <> '' then
+    Parts.Add(Last);
+  end if;
+
+  return Parts.ToArray();
+end function;
+
+// Builds a common input mask for native parts.
+// ## Parameters
+// - `Count`: Number of parts.
+// - `Enabled`: Default input permission.
+// ## Returns
+// The per-part mask.
+public function Inputs(Count: int; Enabled: bool): array of bool;
+begin
+  const Values: array of bool := new bool[Count];
+  Sys.Array.Fill<bool>(Values, Enabled);
+  return Values;
+end function;
+
+function PartId(Id: string; Key: string): string;
+begin
+  return if Key = '' then
+    Id
+  else
+    Id + '/' + Key
+  end if;
+end function;
+
+// Finds a pending focus request for a native part.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Role`: Snapshot role.
+// - `Parts`: Part names in native order.
+// - `Accept`: Input permission by part.
+// - `Preferred`: Preferred part for a whole-widget request.
+// ## Returns
+// The native part index or minus one.
+public function Focus<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Parts: array of string; Accept: array of bool; Preferred: int): int;
+begin
+  for Index: int := 0 to Parts.Length - 1 do
+    const Part: string := PartId(Id, Parts[Index]);
+    const Native: string := C.Token(Role, Part);
+    if C.WantsFocus<TMsg>(Frame, Part, Native, Accept[Index])
+      or (Index = Preferred and C.WantsFocus<TMsg>(Frame, Id, Native, Accept[Index]))
+    then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Maps CUI part indices to snapshot tracking identities.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Role`: Snapshot role.
+// - `Parts`: Part names in native order.
+// ## Returns
+// The tracking mapper, or null while painting a closing view.
+public function Tracker<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Parts: array of string): Sys.Func<int, string>?;
+begin
+  if Frame.PaintingClosed then
+    return null;
+  end if;
+
+  return function(Index: int): string => C.Token(Role, PartId(Id, Parts[Index]));
+end function;
+
+// Records the outer widget's native rectangle.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Role`: Snapshot role.
+// - `Caption`: Visible label.
+// - `Enabled`: Input permission.
+// - `Value`: Snapshot value.
+public procedure Root<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Caption: string; Enabled: bool; Value: string);
+begin
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, Caption, Role, new Cui.CuiRectangle(), Enabled, Value := Value)
+  );
+end procedure;
+
+// Records a tracked child part.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Role`: Snapshot role.
+// - `Key`: Part name.
+// - `Caption`: Visible label.
+// - `Enabled`: Input permission.
+// - `Value`: Snapshot value.
+public procedure Part<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Key: string; Caption: string; Enabled: bool; Value: string);
+begin
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        PartId(Id, Key),
+        Caption,
+        Role,
+        new Cui.CuiRectangle(),
+        Enabled,
+        Value := Value
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

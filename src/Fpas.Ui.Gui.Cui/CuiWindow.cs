@@ -9,8 +9,13 @@ public sealed partial class CuiWindow : IDisposable
     [ThreadStatic]
     private static bool openGlWindow;
 
-    private enum Layout { Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter, Accordion, ExpandableCard, SwipeItem }
-    private readonly record struct LayoutScope(Layout Kind, int Node = -1);
+    private enum Layout
+    {
+        Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter,
+        Accordion, ExpandableCard, SwipeItem, Tree, VirtualList, VirtualRow, Reorder, ReorderItem,
+        Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard
+    }
+    private readonly record struct LayoutScope(Layout Kind, int Node = -1, object? Data = null);
 
     private readonly int ownerThread = Environment.CurrentManagedThreadId;
     private readonly nint context;

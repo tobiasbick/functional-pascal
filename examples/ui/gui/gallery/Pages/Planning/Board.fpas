@@ -1,0 +1,147 @@
+unit GuiGallery.Pages.Planning.Board;
+
+uses
+  GuiGallery.Pages.Planning.State as M, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Charts as Colors,
+  Fpas.Ui.Graphics as Graphics, Fpas.Ui.Kanbans as K, Fpas.Ui.Badges as Badges, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Avatars as Avatars, Fpas.Ui.ProgressBars as Progress, System as Sys, System.Collections.Generic as Lists;
+
+type Card = record
+  public Title: string;
+  public Tag: string;
+  public Owner: string;
+  public Tone: S.Tone;
+  public Comments: int;
+  public Files: int;
+  public Progress: float;
+end record;
+
+const Cards: array of Card := [
+  new Card(
+    'Audit the color tokens for contrast',
+    'Design',
+    'Maya Okafor',
+    S.Tone.Violet,
+    3,
+    0,
+    0.0F
+  ),
+  new Card('Virtualize the activity feed', 'Perf', 'Jonas Berg', S.Tone.Teal, 1, 2, 0.0F),
+  new Card('Dark mode screenshots for docs', 'Docs', 'Aiko Tanaka', S.Tone.Rose, 0, 4, 0.0F),
+  new Card('Keyboard nav in the date range picker', 'A11y', 'Priya Nair', S.Tone.Info, 5, 0, 0.6F),
+  new Card('IME composition on Windows', 'Platform', 'Daniel Mensah', S.Tone.Warning, 2, 1, 0.3F),
+  new Card('Spring presets', 'Motion', 'Rosa Delgado', S.Tone.Violet, 4, 0, 1.0F),
+  new Card('Glyph atlas eviction', 'Perf', 'Lena Fischer', S.Tone.Teal, 0, 0, 1.0F),
+  new Card('Retina screenshots', 'Docs', 'Aiko Tanaka', S.Tone.Rose, 1, 3, 1.0F)
+];
+
+const Columns: array of string := ['Backlog', 'In progress', 'Review', 'Done'];
+
+const Dots: array of Graphics.Color := [
+  new Graphics.Color($94, $A3, $B8), new Graphics.Color($3B, $82, $F6),
+  new Graphics.Color($F5, $9E, $0B), new Graphics.Color($22, $C5, $5E)
+];
+
+// Gets a card caption.
+// ## Parameters
+// - `Key`: Native card identity.
+// ## Returns
+// The original gallery title.
+public function Title(Key: int): string;
+begin
+  return Cards[Key - 1].Title;
+end function;
+
+// Gets a column caption.
+// ## Parameters
+// - `Index`: Zero-based column.
+// ## Returns
+// The original gallery title.
+public function ColumnTitle(Index: int): string;
+begin
+  return Columns[Index];
+end function;
+
+function Metric(Code: int; Count: int; Children: Lists.List<E.Element<M.Msg>>): bool;
+begin
+  if Count = 0 then
+    return false;
+  end if;
+
+  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32(Code)), S.Role.MutedGlyph));
+  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Count.ToString()), S.Role.Caption));
+  return true;
+end function;
+
+function Content(Key: int): E.Element<M.Msg>;
+begin
+  const Item: Card := Cards[Key - 1];
+  const Id: string := 'planning-card-' + Key.ToString();
+  const Children: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  Children.Add(
+    Badges.Badge<M.Msg>(
+      Id + '/tag',
+      Item.Tag,
+      new Badges.Options(Tone := Item.Tone, Size := B.Size.Small)
+    )
+  );
+  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Item.Title), S.Role.CompactLabel));
+  if Item.Progress > 0.0F and Item.Progress < 1.0F then
+    Children.Add(
+      Progress.ProgressBar<M.Msg>(
+        Id + '/progress',
+        Item.Progress,
+        new Progress.Options(Height := 4.0F)
+      )
+    );
+  end if;
+  const Footer: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  Footer.Add(Avatars.Avatar<M.Msg>(Id + '/owner', Item.Owner, new Avatars.Options(Size := 22.0F)));
+  Footer.Add(E.Spacer<M.Msg>());
+  discard Metric($E12D, Item.Files, Footer);
+  discard Metric($E117, Item.Comments, Footer);
+  if Item.Progress >= 1.0F then
+    Footer.Add(
+      E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32($E226)), S.Role.SuccessGlyph)
+    );
+  end if;
+
+  Children.Add(
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
+      Footer.ToArray()
+    )
+  );
+  return E.Column<M.Msg>(new L.Flow(Gap := G.Points(8), Clip := false), Children.ToArray());
+end function;
+
+// Draws the original four-column board.
+// ## Parameters
+// - `Model`: Card order.
+// ## Returns
+// The native board with composed card bodies.
+public function View(Model: M.Model): E.Element<M.Msg>;
+begin
+  const Result: Lists.List<K.Column<M.Msg>> := new Lists.List<K.Column<M.Msg>>();
+  for Column: int := 0 to Columns.Length - 1 do
+    const Items: Lists.List<K.Card<M.Msg>> := new Lists.List<K.Card<M.Msg>>();
+    for Key: int in Model.Columns[Column] do
+      Items.Add(new K.Card<M.Msg>(Key, Title(Key), Content(Key)));
+    end for;
+
+    Result.Add(
+      new K.Column<M.Msg>(
+        Columns[Column], Items.ToArray(), Colors.Color.Rgba(Dots[Column]),
+        if Column = 1 then
+          3
+        else
+          0
+        end if, 264.0F
+      )
+    );
+  end for;
+
+  return K.Kanban<M.Msg>('planning-board', Result.ToArray(), M.Msg.Board);
+end function;
+
+end unit;

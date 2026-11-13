@@ -275,3 +275,158 @@ it adds no hit-testing or rendering. It reports node and link activation,
 resolving native filtered link indices to original input positions when zero
 flows are hidden. Native tests retain the direct omission and protected result;
 managed tests exercise original link indices with software and OpenGL.
+
+<a id="cui-022"></a>
+
+## CUI-022 — Table headers and rows omit the keyboard focus ring
+
+Reproduced on Windows at `86d9781` with a sortable column and one selectable
+row. Tab moves native focus first to the header and then to the row. The
+software-rendered table is identical before and after each Tab because both
+elements register keyboard focus without drawing its indicator.
+
+The FPAS table adapter applies CUI's focus ring to the focused header or row
+when CUI marks focus visible. The focused `fpas_cui_collection_regressions`
+test compares the initial, header-focused and row-focused frames. Running the
+same executable with `upstream` exercises the unprotected calls.
+
+<a id="cui-023"></a>
+
+## CUI-023 — A scrolled virtual list can lose its visible range after shrinking
+
+Reproduced on Windows at `86d9781`. Render 100 rows at 36 points each in a
+140-point viewport, scroll to offset 2,000 and shrink the list to one row.
+The first frame after the change returns `[53,53)` for the only remaining row.
+CUI calculates the range using a scroll offset based on the previous height.
+
+The FPAS adapter seeds the current content height and clamps the native scroll
+offset and target before CUI calculates the visible range. The focused
+`fpas_cui_collection_regressions` test verifies `[0,1)` on that first frame
+and retains the direct reproduction in `upstream` mode.
+
+<a id="cui-024"></a>
+
+## CUI-024 — A closing command palette can still activate a command
+
+Reproduced on Windows at `86d9781` with motion enabled and one command.
+Draw the open palette, set its open flag to false, and press Enter on the first
+closing frame. Native CUI returns command index zero and consumes Enter while
+the exit animation is still visible.
+
+The FPAS palette adapter preserves the animation and protects the keyboard
+events while the palette is closing or cannot accept input. The focused
+`fpas_cui_collection_regressions` test verifies that the closing palette
+returns no selection and leaves Enter available. Its `upstream` mode retains
+the direct reproduction.
+
+<a id="cui-025"></a>
+
+## CUI-025 — A scrolled data grid can omit all remaining rows after shrinking
+
+Reproduced on Windows at `86d9781`. Render 100 rows at 40 points each in a
+160-point viewport, scroll down, then shrink the grid to one row. The first
+native frame reports `[1,1)`. This grid calculates its visible range before
+reconciling the old scroll geometry.
+
+The FPAS adapter clamps the native scroll offset and target before CUI computes
+the range. The focused `fpas_cui_grid_regressions` executable verifies
+`[0,1)` immediately and reproduces the omission with its `upstream` argument.
+
+<a id="cui-026"></a>
+
+## CUI-026 — Adding a filter does not open the new chip's value menu
+
+Reproduced on Windows at `86d9781`. Open Filter and choose Team. CUI adds the
+chip, but the value menu is absent until the chip is clicked separately. The
+native branch that says it opens the value list only pushes and pops an ID.
+
+The FPAS adapter observes the new active bit and opens the native popup on
+the following frame, when the chip exists. The focused
+`fpas_cui_grid_regressions` executable verifies that both the chip and its
+value menu appear after choosing the field. Its `upstream` mode reproduces
+the missing popup.
+
+<a id="cui-027"></a>
+
+## CUI-027 — JSON viewer accepts malformed numbers and string escapes
+
+Reproduced on Windows at `86d9781`. Direct `cui_json_view_ex` calls accept
+`1e`, `-`, `01`, `"\q"` and `"\u12x4"` as valid. The numeric scanner accepts
+number characters in any sequence, and the string scanner skips the character
+after a backslash without validating the escape.
+
+The FPAS adapter checks those token grammars before calling CUI. It uses the
+native error view and reports the malformed token's location. The native
+`fpas_cui_code_instruments` test checks both modes and accepts valid fractions,
+exponents and Unicode escapes.
+
+<a id="cui-028"></a>
+
+## CUI-028 — Dot chart activation before arrow input reports an invalid X coordinate
+
+Reproduced on Windows at `86d9781`. Focus a three-sample dot chart with an X axis
+from 6 to 30, leave the pointer outside, and press Enter. CUI reports activation
+with index minus one and X zero. The first arrow operation starts from the
+middle sample, but the activation path leaves the result at its initializer.
+The Instruments demo would insert an event outside its time axis.
+
+The FPAS adapter supplies the center sample for a keyboard activation without a
+native readout. `fpas_cui_code_instruments` verifies index one, X 18 and the
+middle value in this reproduction.
+
+<a id="cui-029"></a>
+
+## CUI-029 — Tab bar Right skips every remaining tab
+
+Reproduced on Windows at `86d9781`. Render the Motion tab bar with four
+tabs. Focus Home using Tab, then press Right once. CUI selects Profile and
+focuses it. Each subsequent item in the render loop sees the same key press
+after the previous item has handed it focus.
+
+The FPAS adapter resolves the arrow target once and presents the native bar
+with that selection. The focused `fpas_cui_motion` test checks Home → Search
+→ Home and verifies focus at each step. Its `upstream` mode reproduces the skip.
+
+<a id="cui-030"></a>
+
+## CUI-030 — Rolling number silently drops digits and affixes
+
+Reproduced on Windows at `86d9781`. Render `1234567890123456789012345` or
+`1 milliseconds per request` with `cui_number_roll`. The 25th digit and
+the final letters of the suffix disappear. The renderer measures the full
+text, while its fixed buffers keep only 24 rolling slots and 23 bytes
+per affix.
+
+FPAS draws complete native tabular text when a value exceeds these buffers.
+Values that fit retain native digit animation. `fpas_cui_motion` compares the
+rendered glyph geometry with native text for both reproductions.
+
+<a id="cui-031"></a>
+
+## CUI-031 — Gradient slider snapping pulls the value away from the endpoint
+
+Reproduced on Windows at `86d9781`. Focus a gradient slider with range 0–1
+and step 0.3. End returns 0.9. With the same range, passing a disabled slider
+the value 0.85 also returns 0.9 and reports a change. Native snapping runs
+even when the input path has no movement or explicitly requests an endpoint.
+
+The FPAS adapter applies the native step to pointer and arrow movement.
+It preserves passive model values and lets Home and End reach the endpoints.
+`fpas_cui_creative` checks End, the following idle frame, subsequent arrow
+input and a disabled value. Its `upstream` mode reproduces the mismatch.
+
+<a id="cui-032"></a>
+
+## CUI-032 — Read-only schedule items can ignore activation
+
+Reproduced on Windows at `86d9781`. Set `read_only` on a week calendar or
+Gantt chart, focus an item with Tab and press Enter. The function returns
+minus one. Both builders guard keyboard activation together with keyboard
+editing. The week calendar also skips the pointer release that would activate
+the appointment and clear the pending press.
+
+The FPAS adapters report keyboard activation of a focused, visible item while
+keeping native editing disabled. The week adapter also handles the release
+and distinguishes a click from a drag. `fpas_cui_planning` verifies activation
+and confirms that an arrow press leaves the event or task unchanged. Its
+`upstream` mode reproduces the missing activations.

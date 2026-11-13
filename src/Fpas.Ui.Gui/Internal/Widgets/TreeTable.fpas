@@ -1,0 +1,201 @@
+unit Fpas.Ui.Gui.Internal.Widgets.TreeTable;
+
+uses
+  Fpas.Ui.TreeTables as T, Fpas.Ui.DataGrids as D, Fpas.Ui.Tables as Tables, Fpas.Ui.Layout as L,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Internal.Widgets.DataGrid as G,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, System as Sys,
+  System.Collections.Generic as Lists;
+
+// Draws an indented native table cell.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current host frame.
+// - `Id`: Stable cell identity.
+// - `Label`: Literal cell caption.
+// - `Depth`: Indentation level.
+// - `Open`: Current expansion or null for a leaf.
+// - `Change`: Optional expansion callback.
+// - `Icon`: Optional CUI glyph.
+public procedure Cell<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
+begin
+  const Enabled: bool := Frame.AcceptInput and Open <> null and Change <> null;
+  var Expanded: int := if Open = null then
+    -1
+  else
+    if Open ?? false then
+      1
+    else
+      0
+    end if
+  end if;
+  const Toggled: bool := Frame.Window.TreeCell(
+    C.Token('tree-cell', Id), Label, Icon, Depth,
+    ref Expanded, Enabled, not Frame.PaintingClosed
+  );
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Label, 'tree-cell', new Cui.CuiRectangle(), Enabled,
+        Value := (Expanded > 0).ToString()
+      )
+    );
+  end if;
+
+  if Toggled then
+    case Change of
+      when is Sys.Func<bool, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Expanded > 0));
+      else
+    end case;
+  end if;
+end procedure;
+
+function Flags(Node: T.Node): uint;
+begin
+  return (if Node.HasChildren then
+    1U
+  else
+    0U
+  end if) +
+    (if Node.Open then
+      2U
+    else
+      0U
+    end if) + (if Node.Selected then
+      4U
+    else
+      0U
+    end if) +
+    (if Node.Loading then
+      8U
+    else
+      0U
+    end if);
+end function;
+
+// Presents the standalone native tree table.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current host frame.
+// - `Id`: Stable table identity.
+// - `Columns`: Column descriptors.
+// - `Nodes`: Tree nodes in model order.
+// - `Cursor`: Current keyboard node.
+// - `Order`: Current sort.
+// - `Change`: Maps a native result to a message.
+// - `Settings`: Viewport, guides and input settings.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options);
+  function Part(Index: int): string;
+  begin
+    return Id + '/node/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture);
+  end function;
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('tree-table', Id);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Labels: Lists.List<string> := new Lists.List<string>(Nodes.Length);
+  const Parents: array of int := new int[Nodes.Length];
+  const NativeFlags: array of uint := new uint[Nodes.Length];
+  for Index: int := 0 to Nodes.Length - 1 do
+    Labels.Add(Nodes[Index].Label);
+    Parents[Index] := Nodes[Index].Parent;
+    NativeFlags[Index] := Flags(Nodes[Index]);
+  end for;
+  const SortIndex: int := if Order = null then
+    -2
+  else
+    Order.Column
+  end if;
+  const Desc: int := if Order <> null and Order.Descending then
+    1
+  else
+    0
+  end if;
+  const State: array of int := [SortIndex, Desc, Cursor];
+  const Options: int := (if Enabled then
+    1
+  else
+    0
+  end if) + (if Settings.Guides then
+    2
+  else
+    0
+  end if) +
+    (if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+      8
+    else
+      0
+    end if);
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('tree-table-row', Part(Index))
+  end if;
+  Frame.Window.BeginTreeTable(
+    Token, G.Columns(Columns), Labels.ToArray(), Parents, NativeFlags, State,
+    Height.Kind, Height.Value, Settings.RowHeight, Options
+  );
+  var Index: int := Frame.Window.NextTreeTableRow(Track);
+  while Index >= 0 do
+    const Item: T.Node := Nodes[Index];
+    const Key: string := Part(Index);
+    const Chevron: string? := if Frame.PaintingClosed then
+      null
+    else
+      C.Token('tree-table-chevron', Key + '/toggle')
+    end if;
+    const Branch: bool := Frame.Window.TreeTableName(Item.Label, Item.Icon, Chevron);
+    if not Frame.PaintingClosed then
+      Frame.Controls.Add(
+        new App.Control(
+          Key, Item.Label, 'tree-table-row', new Cui.CuiRectangle(),
+          Enabled, Value := Item.Selected.ToString()
+        )
+      );
+      if Branch then
+        Frame.Controls.Add(
+          new App.Control(
+            Key + '/toggle', Item.Label, 'tree-table-chevron',
+            new Cui.CuiRectangle(), Enabled, Value := Item.Open.ToString()
+          )
+        );
+      end if;
+    end if;
+
+    for Text: string in Item.Cells do
+      Frame.Window.DataGridCell(Text);
+    end for;
+
+    Index := Frame.Window.NextTreeTableRow(Track);
+  end while;
+  const Result: Cui.CuiTreeTableEvents := Frame.Window.EndTreeTable();
+  C.Track<TMsg>(Frame, new App.Control(Id, '', 'tree-table', new Cui.CuiRectangle(), Enabled));
+  if not Enabled then
+    return;
+  end if;
+
+  var Changed: bool := State[0] <> SortIndex or State[1] <> Desc or State[2] <> Cursor
+    or Result.Activated >= 0 or Result.Load.Length <> 0;
+  const Proposed: array of T.Node := cast<array of T.Node>(Nodes.Clone());
+  for Row: int := 0 to Nodes.Length - 1 do
+    const Bits: uint := NativeFlags[Row];
+    if Flags(Nodes[Row]) <> Bits then
+      Changed := true;
+      Proposed[Row] := Nodes[Row] with
+        Open := (Bits and 2U) <> 0U;
+        Selected := (Bits and 4U) <> 0U;
+        Loading := (Bits and 8U) <> 0U;
+      end with;
+    end if;
+  end for;
+
+  if Changed then
+    Frame.Messages.Add(
+      Change(new T.Change(Proposed, State[2], G.Sort(State), Result.Activated, Result.Load))
+    );
+  end if;
+end procedure;
+
+end unit;

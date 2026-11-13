@@ -1,0 +1,76 @@
+unit GuiGallery.Pages.Creative.Update;
+
+uses
+  GuiGallery.Pages.Creative.State as S, Fpas.Ui.GradientSliders as Gradient,
+  Fpas.Ui.StepSliders as Steps, Fpas.Ui.PaletteStrips as Palette,
+  Fpas.Ui.OptionActions as Options, Fpas.Ui.SeedFields as Seeds;
+
+// Applies a proposal from the native Creative controls.
+// ## Parameters
+// - `State`: Current Creative controls state.
+// - `Message`: Proposed change.
+// ## Returns
+// The next state.
+public function Update(State: S.Model; Message: S.Msg): S.Model;
+begin
+  return case Message of
+    when S.Msg.RemoveTag(const Index: int): State with
+      Hidden := State.Hidden or (1 shl Index);
+    end with;
+    when S.Msg.RestoreTags: State with
+      Hidden := 0;
+    end with;
+    when S.Msg.Coffee(const Value: float): State with
+      Coffee := Value;
+    end with;
+    when S.Msg.Train(const Value: float): State with
+      Train := Value;
+    end with;
+    when S.Msg.Hue(const Event: Gradient.Event): State with
+      Hue := Event.Current;
+    end with;
+    when S.Msg.Kelvin(const Event: Gradient.Event): State with
+      Kelvin := Event.Current;
+      Picking := if Event.Action then
+        not State.Picking
+      else
+        State.Picking
+      end if;
+    end with;
+    when S.Msg.Opacity(const Event: Gradient.Event): State with
+      Opacity := Event.Current;
+    end with;
+    when S.Msg.Variations(const Event: Steps.Event): State with
+      Variations := Event.Current;
+      Generated := State.Generated + (if Event.Action then
+        1
+      else
+        0
+      end if);
+    end with;
+    when S.Msg.PaletteChanged(const Event: Palette.Event): State with
+      Swatches := Event.Swatches;
+      PaletteSeed := Event.Seed;
+    end with;
+    when S.Msg.Aspect(const Index: int): State with
+      Aspect := Index;
+    end with;
+    when S.Msg.Background(const Event: Options.Event): State with
+      Background := Event.Index;
+    end with;
+    when S.Msg.Format(const Event: Options.Event): State with
+      Format := Event.Index;
+      SavedAs := if Event.Action then
+        Event.Index
+      else
+        State.SavedAs
+      end if;
+    end with;
+    when S.Msg.Seed(const Event: Seeds.Event): State with
+      Seed := Event.Seed;
+      Fixed := Event.Locked;
+    end with;
+  end case;
+end function;
+
+end unit;

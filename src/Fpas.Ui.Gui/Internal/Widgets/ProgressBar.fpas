@@ -2,7 +2,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.ProgressBar;
 
 uses
   Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.ProgressBars as P, System.Globalization as Culture;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.ProgressBars as P, System.Globalization as Culture,
+  Fpas.Ui.Gui.Internal.Sizing as S;
 
 // Draws native progress without implementing interpolation or activity timers.
 // ## Type parameters
@@ -14,9 +15,11 @@ uses
 // - `Settings`: Native presentation options.
 public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: float; Settings: P.Options);
 begin
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.Progress(
     C.Token('progress', Id), Value, cast<int>(Settings.Tone),
-    Settings.Indeterminate, Settings.Height, Settings.Label, Settings.ShowValue, Settings.Dither
+    Settings.Indeterminate, Settings.Height, Settings.Label, Settings.ShowValue, Settings.Dither,
+    Width.Kind, Width.Value
   );
   if not Frame.PaintingClosed and Settings.Label <> '' then
     Frame.Labels.Add(Settings.Label);

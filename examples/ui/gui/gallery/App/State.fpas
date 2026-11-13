@@ -1,6 +1,12 @@
 unit GuiGallery.App.State;
 
 uses
+  GuiGallery.Pages.Instruments.State as Instruments,
+  GuiGallery.Pages.Motion.State as Motion,
+  GuiGallery.Pages.Creative.State as Creative,
+  GuiGallery.Pages.Files.State as Files,
+  GuiGallery.Pages.Planning.State as Planning,
+  GuiGallery.Pages.DataGrid.State as Grid,
   GuiGallery.Pages.MoreCharts.State as MoreCharts,
   GuiGallery.Pages.MoreCharts.Data as MoreChartsData,
   GuiGallery.Pages.Charts.State as Charts,
@@ -57,6 +63,20 @@ public type Page = enum: byte
   Charts;
   // Accepted extended visualizations.
   MoreCharts;
+  // Filter bar, editable data grid and tree tables.
+  DataGrid;
+  // Original syntax highlighting and JSON examples.
+  Code;
+  // Original caffeine readouts and chart controls.
+  Instruments;
+  // Motion effects and compact controls.
+  Motion;
+  // Creative controls and color settings.
+  CreativeControls;
+  // File browser and pickers.
+  Files;
+  // Project board and scheduling.
+  Planning;
 end enum;
 
 // Application state with one owner per feature.
@@ -99,10 +119,34 @@ public type Model = record
   public Charts: Charts.Model := new Charts.Model();
   // Deterministic data for the native More charts examples.
   public MoreCharts: MoreChartsData.Samples := MoreChartsData.Create();
+  // State owned by the data grid page.
+  public DataGrid: Grid.Model := new Grid.Model();
+  // State owned by the Instruments page.
+  public Instruments: Instruments.Model := new Instruments.Model();
+  // State owned by the Motion page.
+  public Motion: Motion.Model := new Motion.Model();
+  // State owned by the Creative controls page.
+  public Creative: Creative.Model := new Creative.Model();
+  // State owned by Files.
+  public Files: Files.Model := new Files.Model();
+  // State owned by Planning.
+  public Planning: Planning.Model := new Planning.Model();
 end record;
 
 // Application navigation and typed child messages.
 public type Msg = variant
+  // Route an input proposal to Instruments.
+  Instruments(Value: Instruments.Msg);
+  // Route an input proposal to Motion.
+  Motion(Value: Motion.Msg);
+  // Route a proposal to Creative controls.
+  Creative(Value: Creative.Msg);
+  // Routes file navigation and selection.
+  Files(Value: Files.Msg);
+  // Routes board and calendar changes.
+  Planning(Value: Planning.Msg);
+  // Route an input proposal to the data grid page.
+  DataGrid(Value: Grid.Msg);
   // Navigate to an accepted page.
   Show(Value: Page);
   // Open or close the navigation drawer.

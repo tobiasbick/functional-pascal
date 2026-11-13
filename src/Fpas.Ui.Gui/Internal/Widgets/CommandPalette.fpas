@@ -1,0 +1,86 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CommandPalette;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.CommandPalettes as P, Fpas.Ui.Gui.Internal.ModalFocus as F, System.Globalization as Culture;
+
+// Presents the native CommandPalette element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable modal identity.
+// - `Base`: View under the palette.
+// - `Open`: Current model visibility.
+// - `Commands`: Entries in native display order.
+// - `Change`: Maps a visibility proposal to a message.
+// - `Shortcut`: Whether primary+K toggles the palette.
+// - `Horizontal`: Parent layout axis.
+// - `Align`: Parent cross-axis alignment.
+// - `Visit`: Host traversal for the base view.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Base: E.Element<TMsg>; Open: bool; Commands: array of P.Command<TMsg>; Change: function(bool): TMsg; Shortcut: bool; Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Enabled: bool := Frame.Interactive and (Frame.ActiveModal = null or Frame.ActiveModal = Id);
+  const Toggle: bool := Shortcut and Enabled and not Frame.PaintingClosed
+    and Frame.Window.CommandPaletteShortcut();
+  Visit(
+    Base, Frame with
+      AcceptInput := Frame.AcceptInput and not Open and not Toggle;
+    end with, Horizontal, Align
+  );
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  if Open then
+    F.Enter<TMsg>(Frame, Id, E.Column<TMsg>(), null);
+  end if;
+
+  if Toggle then
+    Frame.Messages.Add(Change(not Open));
+  end if;
+  const Native: array of Cui.CuiPaletteCommand := new Cui.CuiPaletteCommand[Commands.Length];
+  for Index: int := 0 to Commands.Length - 1 do
+    const Item: P.Command<TMsg> := Commands[Index];
+    Native[Index] := new Cui.CuiPaletteCommand(Item.Title, Item.Icon, Item.Group, Item.Shortcut);
+  end for;
+  const Result: Cui.CuiPaletteResult := Frame.Window.CommandPalette(
+    C.Token('command-palette', Id), Open, Enabled and not Toggle, Native,
+    C.Token('palette-query', Id + '/query'),
+    function(Index: int): string => C.Token(
+      'palette-command',
+      Id + '/command/' + Index.ToString(Culture.CultureInfo.InvariantCulture)
+    )
+  );
+  if not Open then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, '', 'command-palette', new Cui.CuiRectangle(), false));
+  Frame.Controls.Add(
+    new App.Control(
+      Id + '/query',
+      'Type a command or search',
+      'palette-query',
+      new Cui.CuiRectangle(),
+      Enabled
+    )
+  );
+  for Index: int in Result.Shown do
+    Frame.Controls.Add(
+      new App.Control(
+        Id + '/command/' + Index.ToString(Culture.CultureInfo.InvariantCulture),
+        Commands[Index].Title, 'palette-command', new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end for;
+
+  if Enabled and not Toggle and not Result.Open then
+    Frame.Messages.Add(Change(false));
+    if Result.Selected >= 0 then
+      Frame.Messages.Add(Commands[Result.Selected].Message);
+    end if;
+  end if;
+end procedure;
+
+end unit;

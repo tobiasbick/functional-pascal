@@ -1,0 +1,132 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Table;
+
+uses
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Tables as T, Fpas.Ui.Gui.Internal.Sizing as S, System as Sys;
+
+// Presents the native Table element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable table identity.
+// - `Columns`: Column descriptors in display order.
+// - `Rows`: Rows in model-owned order.
+// - `Order`: Current model sort, when sorting is enabled.
+// - `OnSort`: Maps native sort proposals.
+// - `OnSelect`: Maps row activation by identity.
+// - `Settings`: Table sizing, appearance and input settings.
+// - `Visit`: Host traversal for composed cells.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of T.Column; Rows: array of T.Row<TMsg>; Order: T.Sort?; OnSort: Sys.Func<T.Sort, TMsg>?; OnSelect: Sys.Func<string, TMsg>?; Settings: T.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Native: array of Cui.CuiTableColumn := new Cui.CuiTableColumn[Columns.Length];
+  var Focus: int := -1;
+  for Index: int := 0 to Columns.Length - 1 do
+    const Column: T.Column := Columns[Index];
+    const Width: S.NativeExtent := S.Extent(Column.Width);
+    Native[Index] := new Cui.CuiTableColumn(
+      Column.Title, Width.Kind,
+      if Width.Kind = 1 then
+        Column.Grow
+      else
+        Width.Value
+      end if, cast<int>(Column.Align), Column.Sortable
+    );
+    const Header: string := T.HeaderId(Id, Index);
+    if C.WantsFocus<TMsg>(
+      Frame,
+      Header,
+      C.Token('table-header', Header),
+      Enabled and Column.Sortable and Order <> null
+    )
+    then
+      Focus := Index;
+    end if;
+  end for;
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('table-header', T.HeaderId(Id, Index))
+  end if;
+  const OldColumn: int := if Order = null then
+    -2
+  else
+    Order.Column
+  end if;
+  const OldDescending: bool := Order <> null and Order.Descending;
+  const Proposed: Cui.CuiTableSort := Frame.Window.BeginTable(
+    C.Token('table', Id), Native, Height.Kind, Height.Value, Settings.Striped, Settings.Compact,
+    OnSelect <> null, Enabled, OldColumn, OldDescending, Focus, Track
+  );
+  if Enabled and (Proposed.Column <> OldColumn or Proposed.Descending <> OldDescending) then
+    case OnSort of
+      when is Sys.Func<T.Sort, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(new T.Sort(Proposed.Column, Proposed.Descending)));
+      else
+    end case;
+  end if;
+
+  if not Frame.PaintingClosed then
+    for Index: int := 0 to Columns.Length - 1 do
+      Frame.Controls.Add(
+        new App.Control(
+          T.HeaderId(Id, Index), Columns[Index].Title, 'table-header',
+          new Cui.CuiRectangle(), Enabled and Order <> null and Columns[Index].Sortable
+        )
+      );
+    end for;
+  end if;
+
+  for Row: T.Row<TMsg> in Rows do
+    const Token: string := C.Token('table-row', Row.Id);
+    const RowEnabled: bool := Enabled and OnSelect <> null;
+    if Frame.Window.BeginTableRow(
+      Token,
+      Row.Selected,
+      Enabled,
+      C.WantsFocus<TMsg>(Frame, Row.Id, Token, RowEnabled),
+      not Frame.PaintingClosed
+    ) and RowEnabled
+    then
+      case OnSelect of
+        when is Sys.Func<string, TMsg> as Notify:
+          Frame.Messages.Add(Notify.Invoke(Row.Id));
+        else
+      end case;
+    end if;
+
+    if not Frame.PaintingClosed then
+      Frame.Controls.Add(
+        new App.Control(
+          Row.Id,
+          '',
+          'table-row',
+          new Cui.CuiRectangle(),
+          RowEnabled,
+          Value := Row.Selected.ToString()
+        )
+      );
+    end if;
+
+    for Cell: T.Cell<TMsg> in Row.Cells do
+      case Cell of
+        when T.Cell.Text(const Caption: string):
+          Frame.Window.TableCell(Caption);
+        when T.Cell.Content(const Nodes: array of E.Element<TMsg>):
+          Frame.Window.TableCell(null);
+          for Child: E.Element<TMsg> in Nodes do
+            Visit(Child, Frame, true, L.Alignment.Default);
+          end for;
+      end case;
+    end for;
+
+    Frame.Window.EndTableRow();
+  end for;
+
+  Frame.Window.EndTable();
+  C.Track<TMsg>(Frame, new App.Control(Id, '', 'table', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

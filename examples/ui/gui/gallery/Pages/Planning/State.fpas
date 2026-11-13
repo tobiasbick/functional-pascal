@@ -1,0 +1,55 @@
+unit GuiGallery.Pages.Planning.State;
+
+uses
+  Fpas.Ui.WeekCalendars as W, Fpas.Ui.Gantts as G, Fpas.Ui.MonthCalendars as M,
+  Fpas.Ui.Kanbans as K, Fpas.Ui.Styles as S, System as Sys;
+
+// State owned by the Planning page.
+public type Model = record
+  // Current day used for the visible examples.
+  public Today: Sys.DateOnly := Sys.DateOnly.FromDateTime(Sys.DateTime.Today);
+  // Card order in each column.
+  public Columns: array of array of int := [[1, 2, 3], [4, 5], [6], [7, 8]];
+  // The current week's appointments.
+  public Events: array of W.Appointment := [
+    new W.Appointment('Standup', 0, 9.5F, 9.75F, 'Zoom', S.Tone.Info),
+    new W.Appointment('Design review', 0, 11.0F, 12.5F, 'Room 2', S.Tone.Violet),
+    new W.Appointment('Lunch with Maya', 1, 12.5F, 13.5F, Tone := S.Tone.Success),
+    new W.Appointment('Standup', 1, 9.5F, 9.75F, 'Zoom', S.Tone.Info),
+    new W.Appointment('Release planning', 2, 10.0F, 11.5F, 'Room 1', S.Tone.Warning),
+    new W.Appointment('1:1 Jonas', 2, 10.5F, 11.0F, Tone := S.Tone.Rose),
+    new W.Appointment('Focus time', 2, 14.0F, 17.0F, 'No meetings', S.Tone.Teal),
+    new W.Appointment('Standup', 3, 9.5F, 9.75F, 'Zoom', S.Tone.Info),
+    new W.Appointment('Customer call', 3, 15.0F, 16.0F, 'Northlight', S.Tone.Danger),
+    new W.Appointment('Demo day', 4, 16.0F, 17.5F, 'All hands', S.Tone.Violet),
+    new W.Appointment('Gym', 5, 10.0F, 11.5F, Tone := S.Tone.Success)
+  ];
+  // Project timeline tasks.
+  public Tasks: array of G.Task := [
+    new G.Task('Research', 0, 5, 1.0F, 'Maya Okafor'),
+    new G.Task('Wireframes', 4, 10, 1.0F, 'Aiko Tanaka', 0),
+    new G.Task('Design system', 8, 17, 0.7F, 'Rosa Delgado', 1),
+    new G.Task('Core engine', 6, 20, 0.55F, 'Jonas Berg', 0),
+    new G.Task('Platform backends', 14, 26, 0.2F, 'Daniel Mensah', 3),
+    new G.Task('Beta', 27, 27, DependsOn := 4, Milestone := true),
+    new G.Task('Docs and launch', 28, 36, Owner := 'Priya Nair', DependsOn := 5)
+  ];
+  // Month navigated to by the user.
+  public Month: Sys.DateOnly? := null;
+  // Selected date.
+  public Selected: Sys.DateOnly? := null;
+end record;
+
+// Planning gallery proposals.
+public type Msg = variant
+  // Applies a board action.
+  Board(Event: K.Event);
+  // Applies a week action.
+  Week(Event: W.Event);
+  // Applies a timeline action.
+  Timeline(Event: G.Event);
+  // Applies a month action.
+  Month(Event: M.Event);
+end variant;
+
+end unit;

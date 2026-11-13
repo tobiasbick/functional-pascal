@@ -1,0 +1,38 @@
+unit Fpas.Ui.Waveforms;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+
+// Native options.
+public type Options = record
+  // Native width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Logical height.
+  public Height: float := 0.0F;
+  // Bar width or zero for the native default.
+  public Bar: float := 0.0F;
+  // Bar spacing or zero for the native default.
+  public Gap: float := 0.0F;
+  // Played bar color.
+  public Color: C.Color := C.Color.Automatic;
+  // Accept seek input.
+  public Enabled: bool := true;
+end record;
+
+// Draws the native CUI waveform.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Peaks`: Finite normalized peaks.
+// - `Progress`: Current progress or null for passive rendering.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function Waveform<TMsg>(Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func<float, TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Waveform(Id, Peaks, Progress, Change, Settings ?? new Options());
+end function;
+
+end unit;

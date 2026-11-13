@@ -1,0 +1,97 @@
+unit GuiGallery.Pages.Planning.Update;
+
+uses
+  GuiGallery.Pages.Planning.State as M, GuiGallery.Pages.Planning.Board as Board,
+  GuiGallery.Pages.Planning.View as View, Fpas.Ui.Kanbans as K, Fpas.Ui.WeekCalendars as W,
+  Fpas.Ui.Gantts as G, Fpas.Ui.MonthCalendars as Month, Fpas.Ui.Gui.Toasts as Toasts,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as Lists;
+
+function Move(Model: M.Model; Key: int; Source: int; Destination: int; Index: int): M.Model;
+begin
+  const Columns: array of array of int := cast<array of array of int>(Model.Columns.Clone());
+  const FromItems: Lists.List<int> := new Lists.List<int>(Columns[Source]);
+  if not FromItems.Remove(Key) then
+    return Model;
+  end if;
+  const ToItems: Lists.List<int> := if Source = Destination then
+    FromItems
+  else
+    new Lists.List<int>(Columns[Destination])
+  end if;
+  ToItems.Insert(Sys.Math.Clamp(Index, 0, ToItems.Count), Key);
+  Columns[Source] := FromItems.ToArray();
+  Columns[Destination] := ToItems.ToArray();
+  return Model with
+    Columns := Columns;
+  end with;
+end function;
+
+function Notify(Model: M.Model; Title: string; Detail: string := ''): A.Transition<M.Model, M.Msg>;
+begin
+  return new A.Transition<M.Model, M.Msg>(
+    Model,
+    [Toasts.Show<M.Msg>(Title, new Toasts.Options(Description := Detail))]
+  );
+end function;
+
+// Applies native board and calendar proposals.
+// ## Parameters
+// - `Model`: Current Planning state.
+// - `Message`: Proposed edit or activation.
+// ## Returns
+// Updated schedule and any activation toast.
+public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+begin
+  case Message of
+    when M.Msg.Board(K.Event.Add(const Column: int)):
+      return Notify(Model, 'New card', Board.ColumnTitle(Column));
+    when M.Msg.Board(K.Event.Activate(const Key: int)):
+      return Notify(Model, Board.Title(Key));
+    when M.Msg.Board(
+      K.Event.Move(const Key: int, const Source: int, const Destination: int, const Index: int)
+    ):
+      return new A.Transition<M.Model, M.Msg>(Move(Model, Key, Source, Destination, Index), []);
+    when M.Msg.Week(const Event: W.Event):
+      const Next: M.Model := Model with
+        Events := Event.Events;
+      end with;
+      if Event.Activated >= 0 then
+        const Item: W.Appointment := Event.Events[Event.Activated];
+        return Notify(Next, Item.Title, Item.Detail);
+      end if;
+
+      return new A.Transition<M.Model, M.Msg>(Next, []);
+    when M.Msg.Timeline(const Event: G.Event):
+      const Next: M.Model := Model with
+        Tasks := Event.Tasks;
+      end with;
+      if Event.Activated >= 0 then
+        const Item: G.Task := Event.Tasks[Event.Activated];
+        return Notify(
+          Next, Item.Name, if Item.Milestone then
+            'Milestone'
+          else
+            (Item.Finish - Item.Start).ToString() + ' days'
+          end if
+        );
+      end if;
+
+      return new A.Transition<M.Model, M.Msg>(Next, []);
+    when M.Msg.Month(const Event: Month.Event):
+      const Next: M.Model := Model with
+        Month := Event.Month;
+        Selected := Event.Selected;
+      end with;
+      if Event.Activated >= 0 then
+        return Notify(
+          Next,
+          View.MonthEvents(Model.Today)[Event.Activated].Title,
+          'Opened from the month calendar'
+        );
+      end if;
+
+      return new A.Transition<M.Model, M.Msg>(Next, []);
+  end case;
+end function;
+
+end unit;

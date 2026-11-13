@@ -1,0 +1,28 @@
+unit Fpas.Ui.Typewriters;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Motion as Motion, System as Sys;
+
+// Draws the native CUI typewriter.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Literal display text.
+// - `Replay`: Change this value to restart the effect.
+// - `Settings`: Optional native options.
+// - `OnComplete`: Optional message factory when the current text finishes.
+// ## Returns
+// The graphical widget.
+public function Typewriter<TMsg>(Id: string; Text: string; Replay: int := 0; Settings: Motion.TextOptions? := null; OnComplete: Sys.Func<TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Typewriter(
+    Id,
+    Text,
+    Replay,
+    Settings ?? new Motion.TextOptions(),
+    OnComplete
+  );
+end function;
+
+end unit;

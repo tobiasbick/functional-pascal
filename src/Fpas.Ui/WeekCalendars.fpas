@@ -1,0 +1,69 @@
+unit Fpas.Ui.WeekCalendars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// One timed event.
+public type Appointment = record
+  // Event title.
+  public Title: string;
+  // Day index from zero through six.
+  public Day: int;
+  // Start hour.
+  public Start: float;
+  // End hour.
+  public Finish: float;
+  // Optional second line.
+  public Detail: string := '';
+  // Event color.
+  public Tone: S.Tone := S.Tone.Neutral;
+end record;
+
+// Current week and events.
+public type Value = record
+  // First day of the week.
+  public Week: Sys.DateOnly;
+  // Events in stable order during interaction.
+  public Events: array of Appointment;
+end record;
+
+// Native week settings.
+public type Options = record
+  // First visible hour.
+  public StartHour: float := 7.0F;
+  // Last visible hour.
+  public EndHour: float := 21.0F;
+  // Points per hour, or zero for the default.
+  public HourHeight: float := 0.0F;
+  // Native height.
+  public Height: L.Extent := L.Extent.Content;
+  // Disables moving and resizing.
+  public ReadOnly: bool := false;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// A native week proposal.
+public type Event = record
+  // Proposed events.
+  public Events: array of Appointment;
+  // Activated event index, or minus one.
+  public Activated: int := -1;
+end record;
+
+// Presents the native week calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical widget.
+public function WeekCalendar<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.WeekCalendar(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

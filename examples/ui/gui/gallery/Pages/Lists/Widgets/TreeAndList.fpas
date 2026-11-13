@@ -1,0 +1,90 @@
+unit GuiGallery.Pages.Lists.Widgets.TreeAndList;
+
+uses
+  GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Trees as T, Fpas.Ui.ListItems as I, Fpas.Ui.Grids as Grid, Fpas.Ui.Cards as Cards,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+function File(Model: State.Model; Name: string; Icon: string := ''): E.Element<State.Msg>;
+begin
+  return T.Leaf<State.Msg>(
+    'file-' + Name, Name, function(): State.Msg => State.Msg.SelectFile(Name),
+    new T.Options(Icon := Icon, Selected := Model.File = Name)
+  );
+end function;
+
+// Builds the original tree and list examples side by side when space allows.
+// ## Parameters
+// - `Model`: Current tree expansion and selection.
+// ## Returns
+// The two responsive examples.
+public function View(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Grid.Grid<State.Msg>(
+    new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
+    E.Column<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Clip := false),
+      G.Heading<State.Msg>('Tree view'),
+      Cards.Card<State.Msg>(
+        'tree-card', [
+          T.Branch<State.Msg>(
+            'tree-src', 'src', Model.SourceOpen, [
+              T.Branch<State.Msg>(
+                'tree-components', 'components', Model.ComponentsOpen, [
+                  File(Model, 'button.c'),
+                  File(Model, 'dialog.c'),
+                  File(Model, 'slider.c'),
+                  File(Model, 'table.c')
+                ], State.Msg.SetComponents
+              ),
+              T.Branch<State.Msg>(
+                'tree-assets', 'assets', Model.AssetsOpen, [
+                  File(Model, 'logo.png', Sys.Char.ConvertFromUtf32($E0F6))
+                ], State.Msg.SetAssets
+              ),
+              File(Model, 'main.c')
+            ], State.Msg.SetSource
+          )
+        ], new Cards.Options(Padding := 10.0F, Gap := 1.0F)
+      )
+    ),
+    E.Column<State.Msg>(
+      new L.Flow(Gap := G.Points(12), Clip := false),
+      G.Heading<State.Msg>('List'),
+      Cards.Card<State.Msg>(
+        'list-card', [
+          I.ListItem<State.Msg>(
+            'design-review',
+            'Design review',
+            Settings := new I.Options(
+              Avatar := 'Jonas Berg',
+              Subtitle := 'Tomorrow at 10:00',
+              Trailing := '45m'
+            )
+          ),
+          I.ListItem<State.Msg>(
+            'release',
+            'Release 1.0',
+            Settings := new I.Options(
+              Avatar := 'Priya Nair',
+              Subtitle := 'Ship it',
+              Trailing := '2h',
+              Selected := true
+            )
+          ),
+          I.ListItem<State.Msg>(
+            'planning',
+            'Planning',
+            Settings := new I.Options(
+              Avatar := 'Tomas Rivera',
+              Subtitle := 'Q1 roadmap',
+              Trailing := '1h'
+            )
+          )
+        ], new Cards.Options(Padding := 8.0F, Gap := 2.0F)
+      )
+    )
+  );
+end function;
+
+end unit;

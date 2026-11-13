@@ -1,0 +1,87 @@
+unit GuiGallery.Pages.Creative.State;
+
+uses
+  Fpas.Ui.GradientSliders as Gradient,
+  Fpas.Ui.StepSliders as Steps, Fpas.Ui.PaletteStrips as Palette, Fpas.Ui.Graphics as G,
+  Fpas.Ui.OptionActions as Options, Fpas.Ui.SeedFields as Seeds;
+
+function DefaultPalette(): array of Palette.Swatch;
+begin
+  return [
+    new Palette.Swatch(new G.Color($EE, $F0, $F5)),
+    new Palette.Swatch(new G.Color($5C, $63, $70)),
+    new Palette.Swatch(new G.Color($37, $C6, $D0)),
+    new Palette.Swatch(new G.Color($1F, $3A, $5F)),
+    new Palette.Swatch(new G.Color($F2, $BD, $68))
+  ];
+end function;
+
+// Application state for the Creative controls page.
+public type Model = record
+  // Bit set for each removed small status tag.
+  public Hidden: int := 0;
+  // The Coffee share.
+  public Coffee: float := 0.37F;
+  // The Train share.
+  public Train: float := 0.8F;
+  // Current hue.
+  public Hue: float := 190.0F;
+  // White-balance temperature.
+  public Kelvin: float := 5600.0F;
+  // Opacity fraction.
+  public Opacity: float := 0.72F;
+  // Eyedropper pressed appearance.
+  public Picking: bool := false;
+  // Current variation count.
+  public Variations: int := 3;
+  // Number of times Generate was activated.
+  public Generated: int := 0;
+  // Palette colors and locks.
+  public Swatches: array of Palette.Swatch := DefaultPalette();
+  // Native shuffle state.
+  public PaletteSeed: uint? := 7U;
+  // Selected aspect ratio.
+  public Aspect: int := 1;
+  // Background visibility option.
+  public Background: int := 0;
+  // Export format option.
+  public Format: int := 0;
+  // Last exported format.
+  public SavedAs: int := -1;
+  // Current image seed.
+  public Seed: uint := 1234567890U;
+  // Whether the seed is locked.
+  public Fixed: bool? := false;
+end record;
+
+// Proposals from the Creative controls page.
+public type Msg = variant
+  // Removes a small status tag.
+  RemoveTag(Index: int);
+  // Restores all small status tags.
+  RestoreTags;
+  // Updates the Coffee ratio.
+  Coffee(Value: float);
+  // Updates the Train ratio.
+  Train(Value: float);
+  // Updates hue.
+  Hue(Event: Gradient.Event);
+  // Updates white balance or toggles the eyedropper.
+  Kelvin(Event: Gradient.Event);
+  // Updates opacity.
+  Opacity(Event: Gradient.Event);
+  // Updates variations or counts a Generate action.
+  Variations(Event: Steps.Event);
+  // Updates the palette and native shuffle state.
+  PaletteChanged(Event: Palette.Event);
+  // Selects an aspect ratio.
+  Aspect(Index: int);
+  // Selects background visibility.
+  Background(Event: Options.Event);
+  // Selects a format or marks it saved.
+  Format(Event: Options.Event);
+  // Applies a seed or lock proposal.
+  Seed(Event: Seeds.Event);
+end variant;
+
+end unit;

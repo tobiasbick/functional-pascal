@@ -1,0 +1,56 @@
+unit Fpas.Ui.FilePickers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.FileListings as F, System as Sys;
+
+// Kind of file selection.
+public type Mode = enum: byte
+  // Choose an existing file.
+  OpenFile;
+  // Choose an output name.
+  SaveFile;
+  // Choose a folder.
+  Folder;
+end enum;
+
+// Native picker options.
+public type Options = record
+  // Selection mode.
+  public Kind: Mode := Mode.OpenFile;
+  // Optional dialog title.
+  public Title: string := '';
+  // Initial folder. Empty starts in the current directory.
+  public Start: string := '';
+  // Initial save name.
+  public Name: string := '';
+  // Semicolon-separated file glob patterns.
+  public Filter: string := '';
+  // Optional explanation of the filter.
+  public FilterLabel: string := '';
+  // Optional listing callback. Empty means local disk.
+  public Source: Sys.Func<string, bool, F.Listing?>? := null;
+end record;
+
+// Result of closing the file picker.
+public type Event = record
+  // Chosen path, or null on dismissal.
+  public Path: string?;
+end record;
+
+// Presents the native file picker.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Open`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// - `Base`: Optional underlying view. It is drawn before the modal.
+// ## Returns
+// The graphical widget.
+public function FilePicker<TMsg>(Id: string; Open: bool; Change: function(Event): TMsg; Settings: Options? := null; Base: E.Element<TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.FilePicker(Id, Base, Open, Change, Settings ?? new Options());
+end function;
+
+end unit;

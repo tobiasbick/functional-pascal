@@ -1,0 +1,71 @@
+unit GuiGallery.Pages.Lists.Widgets.Invoices;
+
+uses
+  GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.VirtualLists as V, Fpas.Ui.Cards as C, Fpas.Ui.Elements as E,
+  Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, System as Sys, System.Globalization as Culture;
+
+function Row(Index: int): E.Element<State.Msg>;
+begin
+  const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
+  const Hash: long := (cast<long>(Index + 1) * 2654435761L) mod 4294967296L;
+  const Dollars: long := 40L + (Hash div 256L) mod 2400L;
+  const Cents: long := (Hash div 16L) mod 100L;
+  const Title: string := 'Invoice 2026-' + (10000 - Index).ToString('D5', Invariant);
+  const Amount: string := '$' + Dollars.ToString(Invariant) + '.' + Cents.ToString('D2', Invariant);
+  const Status: string := if (Hash div 1048576L) mod 5L = 0L then
+    'Due'
+  else
+    'Paid'
+  end if;
+  return E.Row<State.Msg>(
+    new L.Flow(
+      Gap := G.Points(12),
+      PaddingStart := G.Points(12),
+      PaddingEnd := G.Points(12),
+      Clip := false
+    ),
+    E.Styled<State.Msg>(E.Text<State.Msg>(Sys.Char.ConvertFromUtf32($E0CC)), S.Role.MutedIcon),
+    E.Size<State.Msg>(
+      E.Styled<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(Title), S.Role.SingleLine),
+        S.Role.Tabular
+      ),
+      new L.Flex(Basis := L.Extent.Fill)
+    ),
+    E.Styled<State.Msg>(
+      E.Styled<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(Amount), S.Role.SingleLine),
+        S.Role.SmallBody
+      ),
+      S.Role.Tabular
+    ),
+    E.Size<State.Msg>(
+      E.Styled<State.Msg>(
+        E.Styled<State.Msg>(E.Text<State.Msg>(Status), S.Role.Caption),
+        S.Role.SingleLine
+      ),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
+    )
+  );
+end function;
+
+// Presents the original ten-thousand-row invoice viewport.
+// ## Returns
+// A native card around the virtual list.
+public function View(): E.Element<State.Msg>;
+begin
+  return C.Card<State.Msg>(
+    'invoice-card', [
+      V.VirtualList<State.Msg>(
+        'invoices',
+        10000,
+        36.0F,
+        L.Extent.Fixed(L.Measure.Logical(220)),
+        Row
+      )
+    ], new C.Options(Padding := 6.0F)
+  );
+end function;
+
+end unit;

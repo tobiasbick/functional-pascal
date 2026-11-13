@@ -60,11 +60,12 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
         }
         return;
     }
-    cui_color color = role == 3 || role == 12 || role == 15 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
-        role == 4 ? CUI_C(ui, ACCENT) : role == 5 || role == 18 ? CUI_C(ui, TEXT_SECONDARY) : CUI_C(ui, FOREGROUND);
+    cui_color color = role == 3 || role == 12 || role == 15 || role == 22 ? CUI_C(ui, TEXT_MUTED) : role == 6 ? CUI_C(ui, DANGER) :
+        role == 4 ? CUI_C(ui, ACCENT) : role == 5 || role == 18 ? CUI_C(ui, TEXT_SECONDARY) :
+        role == 25 ? CUI_C(ui, SUCCESS) : CUI_C(ui, FOREGROUND);
     int label = (ui->nodes[node].flags & CUI_NF_TEXT) ? node : fpas_label_node(ui, node);
     if (label >= 0) {
-        ui->nodes[label].text_color = color;
+        if (role != 19 && role != 20 && role != 21) ui->nodes[label].text_color = color;
         if (role == 2 || role == 8 || role == 16 || role == 17) {
             const float size = ui->theme.heading[role == 17 ? 0 : role == 8 ? 1 : role == 16 ? 2 : 3];
             ui->nodes[label].font_size = cui__fs(ui, size);
@@ -84,9 +85,22 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
             ui->nodes[label].font = CUI_FONT_MEDIUM;
         } else if (role == 18) {
             ui->nodes[label].font_size = cui__fs(ui, 15);
-        } else if (role == 15) {
+        } else if (role == 19) {
+            ui->nodes[label].flags &= ~CUI_NF_WRAP;
+        } else if (role == 20) {
+            ui->nodes[label].flags |= CUI_NF_TABULAR;
+        } else if (role == 21) {
+            ui->nodes[label].font_size = cui__fs(ui, 13);
+        } else if (role == 23) {
+            ui->nodes[label].font = CUI_FONT_DISPLAY;
+            ui->nodes[label].font_size = cui__fs(ui, 26);
+        } else if (role == 24) {
+            ui->nodes[label].font = CUI_FONT_MEDIUM;
+            ui->nodes[label].font_size = cui__fs(ui, 13.5f);
+            ui->nodes[label].line_height = 1.35f;
+        } else if (role == 15 || role == 22 || role == 25) {
             ui->nodes[label].font = CUI_FONT_ICONS;
-            ui->nodes[label].font_size = 12;
+            ui->nodes[label].font_size = role == 22 ? 16 : role == 25 ? 14 : 12;
             ui->nodes[label].line_height = 1;
             ui->nodes[label].flags &= ~CUI_NF_WRAP;
             ui->nodes[label].self_align = CUI_ALIGN_CENTER;

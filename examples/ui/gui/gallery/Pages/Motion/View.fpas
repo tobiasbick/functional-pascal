@@ -1,0 +1,129 @@
+unit GuiGallery.Pages.Motion.View;
+
+uses
+  GuiGallery.Pages.Motion.State as M, GuiGallery.Pages.Motion.Controls as Controls,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
+  Fpas.Ui.Layout as L, Fpas.Ui.Motion as Motion, Fpas.Ui.Cards as Cards,
+  Fpas.Ui.Buttons as Buttons, Fpas.Ui.Loaders as Loaders, Fpas.Ui.ShimmerTexts as Shimmer,
+  Fpas.Ui.Typewriters as Typing, Fpas.Ui.TextReveals as Reveal, Fpas.Ui.WordRotations as Words,
+  Fpas.Ui.GradientTexts as Gradient, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.NumberRolls as Number,
+  System as Sys;
+
+function TextEffects(Revision: int): E.Element<M.Msg>;
+begin
+  return Cards.Card<M.Msg>(
+    'motion-text-card',
+    [
+      E.Row<M.Msg>(
+        new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
+        Loaders.Loader<M.Msg>(
+          'motion-thinking',
+          Loaders.Animation.Dots,
+          new Loaders.Options(Size := 22.0F)
+        ),
+        Shimmer.ShimmerText<M.Msg>(
+          'motion-shimmer', 'Thinking about your question…', new Motion.TextOptions(Size := 15.0F)
+        )
+      ),
+      Typing.Typewriter<M.Msg>(
+        'motion-typewriter',
+        'CUI draws a full frame in a fraction of a millisecond, so text can stream in as fast as it arrives.',
+        Revision, new Motion.TextOptions(Size := 15.0F, Caret := true)
+      ),
+      Reveal.TextReveal<M.Msg>(
+        'motion-reveal', 'The release build finished in 3 minutes 42 seconds.',
+        Revision, new Motion.TextOptions(Font := Motion.Font.Display, Size := 20.0F)
+      ),
+      E.Row<M.Msg>(
+        new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Clip := false),
+        E.Styled<M.Msg>(E.Text<M.Msg>('Deploying to'), S.Role.DisplayBody),
+        Words.WordRotate<M.Msg>(
+          'motion-words', ['staging.', 'eu-west.', 'us-east.', 'all regions.'], 2.2F,
+          new Motion.TextOptions(Font := Motion.Font.Display, Size := 26.0F)
+        )
+      ),
+      Buttons.Button<M.Msg>(
+        'motion-replay', 'Replay', M.Msg.Replay, new Buttons.Options(
+          ControlSize := Buttons.Size.Small, Icon := Sys.Char.ConvertFromUtf32($E148),
+          Variant := S.ButtonVariant.Outline
+        )
+      )
+    ],
+    new Cards.Options(Width := L.Extent.Fill, Padding := 20.0F, Gap := 18.0F)
+  );
+end function;
+
+function Card(Id: string; Title: string; Detail: string; Beam: bool): E.Element<M.Msg>;
+begin
+  return Spotlights.Spotlight<M.Msg>(
+    'motion-spot-' + Id,
+    [
+      E.Styled<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Title), S.Role.Introduction), S.Role.Strong),
+      E.Styled<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Detail), S.Role.SmallBody), S.Role.Secondary)
+    ],
+    new Spotlights.Options(Width := L.Extent.Fill, Beam := Beam)
+  );
+end function;
+
+function Loader(Id: string; Animation: Loaders.Animation): E.Element<M.Msg>;
+begin
+  return Loaders.Loader<M.Msg>(Id, Animation, new Loaders.Options(Size := 28.0F));
+end function;
+
+// Displays the Motion page and the supplemental rolling-number example.
+// ## Parameters
+// - `Model`: Current playback, animations and control settings.
+// ## Returns
+// Page content in the original order, followed by the supplemental example.
+public function View(Model: M.Model): array of E.Element<M.Msg>;
+begin
+  return [
+    G.Heading<M.Msg>(
+      'Text effects',
+      'A shimmer for pending work, a typewriter for streamed text, words that settle into place.'
+    ),
+    TextEffects(Model.Revision),
+    G.Heading<M.Msg>(
+      'Gradient text and spotlight cards',
+      'A light follows the pointer across a card and along its edge. A beam marks the one card that is live.'
+    ),
+    Gradient.GradientText<M.Msg>(
+      'motion-gradient',
+      'Kiln 2.4',
+      new Gradient.Options(Font := Motion.Font.Display, Size := 34.0F, Animate := true)
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(14), Align := L.Alignment.Stretch, Clip := false),
+      Card('software', 'Software', 'Plain C into a pixel buffer. No GPU needed.', false),
+      Card('opengl', 'OpenGL 3.3', 'The default on desktop. Deploying now.', true),
+      Card('custom', 'Your own', 'The core emits triangles; bring any GPU API.', false)
+    ),
+    G.Heading<M.Msg>('Loaders', 'Dots, bars, pulse, orbit and grid.'),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(36), Align := L.Alignment.Center, Clip := false),
+      Loader('motion-dots', Loaders.Animation.Dots),
+      Loader('motion-bars', Loaders.Animation.Bars),
+      Loader('motion-pulse', Loaders.Animation.Pulse),
+      Loader('motion-orbit', Loaders.Animation.Orbit),
+      Loader('motion-grid-loader', Loaders.Animation.Grid)
+    ),
+    G.Heading<M.Msg>('Dock', 'Icons grow as the pointer passes.'),
+    Controls.Dock(),
+    Controls.Compact(Model),
+    G.Heading<M.Msg>('Rolling number', 'Change the value to animate its digits.'),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := G.Points(14), Align := L.Alignment.Center, Clip := false),
+      Number.NumberRoll<M.Msg>(
+        'motion-roll', if Model.Alternate then
+          '$65,490'
+        else
+          '$64,210'
+        end if,
+        new Motion.TextOptions(Font := Motion.Font.Display, Size := 26.0F)
+      ),
+      Buttons.Button<M.Msg>('motion-roll-change', 'Change value', M.Msg.Roll)
+    )
+  ];
+end function;
+
+end unit;

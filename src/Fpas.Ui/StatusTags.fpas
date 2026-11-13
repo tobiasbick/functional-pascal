@@ -1,0 +1,61 @@
+unit Fpas.Ui.StatusTags;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
+
+// Native status presets.
+public type Status = enum: byte
+  // Shows Pending.
+  Pending;
+  // Shows In progress.
+  InProgress;
+  // Shows Submitted.
+  Submitted;
+  // Shows In review.
+  InReview;
+  // Shows Success.
+  Success;
+  // Shows Failed.
+  Failed;
+  // Shows Expired.
+  Expired;
+  // Uses the supplied icon and tone.
+  Custom;
+end enum;
+
+// Model-owned input.
+public type Value = record
+  // Caption, or empty for the native status name.
+  public Label: string := '';
+  // Status appearance.
+  public Preset: Status := Status.Pending;
+end record;
+
+// Native widget settings.
+public type Options = record
+  // Uses the compact tag.
+  public Small: bool := false;
+  // Optional replacement glyph.
+  public Icon: string := '';
+  // Optional replacement tone. Neutral uses the native preset.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Presents the CUI status tag.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Current model value.
+// - `Remove`: Optional message factory for removal.
+// - `Settings`: Optional native appearance and input settings.
+// ## Returns
+// The graphical widget.
+public function StatusTag<TMsg>(Id: string; Current: Value; Remove: Sys.Func<TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.StatusTag(Id, Current, Remove, Settings ?? new Options());
+end function;
+
+end unit;

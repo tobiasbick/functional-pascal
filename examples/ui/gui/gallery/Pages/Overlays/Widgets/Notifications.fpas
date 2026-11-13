@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Overlays.Widgets.Notifications;
 
 uses
   GuiGallery.Shared.State as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Switches as S, Fpas.Ui.Sheets as Sheet, GuiGallery.Shared.Sections as G;
+  Fpas.Ui.ListItems as I, Fpas.Ui.Styles as Style, Fpas.Ui.Switches as S, Fpas.Ui.Sheets as Sheet, GuiGallery.Shared.Sections as G;
 
 // Presents the three original notification preferences in the native right sheet.
 // ## Type parameters
@@ -37,6 +37,18 @@ begin
         'notifications-weekly', 'Weekly digest', Data.Bluetooth,
         function(Value: bool): TMsg => Messages(Demo.Msg.SetBluetooth(Value)),
         Description := 'A summary every Monday.'
+      ),
+      E.Divider<TMsg>(),
+      E.Styled<TMsg>(E.Text<TMsg>('Recent'), Style.Role.Label),
+      I.ListItem<TMsg>(
+        'recent-comment',
+        'Jonas commented on Release 1.0',
+        Settings := new I.Options(Avatar := 'Jonas Berg', Subtitle := '2 minutes ago')
+      ),
+      I.ListItem<TMsg>(
+        'recent-invitation',
+        'Priya invited you to Engines',
+        Settings := new I.Options(Avatar := 'Priya Nair', Subtitle := '1 hour ago')
       )
     ),
     Open,

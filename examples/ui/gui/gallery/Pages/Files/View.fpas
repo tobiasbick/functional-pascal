@@ -1,0 +1,208 @@
+unit GuiGallery.Pages.Files.View;
+
+uses
+  GuiGallery.Pages.Files.State as M, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
+  Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths,
+  Fpas.Ui.FileListings as Listings, System as Sys, System.IO as IO, System.Collections.Generic as Lists;
+
+function ExampleRoot(Path: string): Listings.Listing?;
+begin
+  if Path <> '.' then
+    return null;
+  end if;
+
+  return new Listings.Listing(
+    [
+      new Listings.Entry('assets', true, 0UL, 1730000000L),
+      new Listings.Entry('src', true, 13100UL, 1730086400L),
+      new Listings.Entry('README.md', false, 26200UL, 1730172800L),
+      new Listings.Entry('notes.txt', false, 39300UL, 1730259200L),
+      new Listings.Entry('cover.png', false, 52400UL, 1730345600L),
+      new Listings.Entry('report.pdf', false, 65500UL, 1730432000L)
+    ]
+  );
+end function;
+
+function ReadFolder(Path: string; Hidden: bool): Listings.Listing?;
+begin
+  try
+    const Result: Lists.List<Listings.Entry> := new Lists.List<Listings.Entry>();
+    const Folder: IO.DirectoryInfo := new IO.DirectoryInfo(Path);
+    for Child: IO.FileSystemInfo in Folder.EnumerateFileSystemInfos() do
+      const IsHidden: bool := Child.Name.StartsWith('.')
+        or (cast<int>(Child.Attributes) and cast<int>(IO.FileAttributes.Hidden)) <> 0;
+      if Hidden or not IsHidden then
+        const Modified: long := new Sys.DateTimeOffset(Child.LastWriteTimeUtc).ToUnixTimeSeconds();
+        case Child of
+          when is IO.FileInfo as File:
+            Result.Add(new Listings.Entry(Child.Name, false, cast<ulong>(File.Length), Modified));
+          else
+            Result.Add(new Listings.Entry(Child.Name, true, 0UL, Modified));
+        end case;
+      end if;
+    end for;
+
+    return new Listings.Listing(Result.ToArray());
+  catch Failure: IO.IOException do
+
+    return ExampleRoot(Path);
+  catch Failure: Sys.UnauthorizedAccessException do
+    return ExampleRoot(Path);
+  end try;
+end function;
+
+function Controls(Model: M.Model): E.Element<M.Msg>;
+begin
+  const Row: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  Row.Add(
+    B.Button<M.Msg>(
+      'files-open', 'Open…', M.Msg.Open,
+      new B.Options(Icon := Sys.Char.ConvertFromUtf32($E247))
+    )
+  );
+  Row.Add(
+    B.Button<M.Msg>(
+      'files-save', 'Save as…', M.Msg.Save,
+      new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2))
+    )
+  );
+  if Model.Chosen <> '' then
+    Row.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Model.Chosen), S.Role.Caption));
+  end if;
+
+  return E.Row<M.Msg>(
+    new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+    Row.ToArray()
+  );
+end function;
+
+function Original(Model: M.Model): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    G.Heading<M.Msg>('File browser', 'Double-click to open; type to jump; Backspace goes up.'),
+    Browser.FileBrowser<M.Msg>(
+      'files-browser', Model.Folder, M.Msg.Browse, new Browser.Options(
+        Height := L.Extent.Fixed(L.Measure.Logical(380)), Source := ReadFolder
+      )
+    ),
+    Controls(Model)
+  );
+end function;
+
+function Segments(Path: string): array of string;
+begin
+  const Parts: Lists.List<string> := new Lists.List<string>();
+  const Root: string := IO.Path.GetPathRoot(Path) ?? '';
+  if Root <> '' then
+    Parts.Add(Root);
+  end if;
+
+  const Relative: string := Path.Substring(Root.Length).Replace(Sys.Char.ConvertFromUtf32(92), '/');
+  for Part: string in Relative.Split(cast<char>(47)) do
+    if Part <> '' then
+      Parts.Add(Part);
+    end if;
+  end for;
+
+  if Parts.Count = 0 then
+    Parts.Add('.');
+  end if;
+
+  return Parts.ToArray();
+end function;
+
+function ChildFolders(Folder: string): array of string;
+begin
+  const Listing: Listings.Listing? := ReadFolder(Folder, false);
+  const Names: Lists.List<string> := new Lists.List<string>();
+  if Listing <> null then
+    for Entry: Listings.Entry in Listing.Entries do
+      if Entry.Directory then
+        Names.Add(Entry.Name);
+      end if;
+    end for;
+  end if;
+
+  Names.Sort(Sys.StringComparer.OrdinalIgnoreCase);
+  return Names.ToArray();
+end function;
+
+function Children(Path: array of string): array of array of string;
+begin
+  const Menus: Lists.List<array of string> := new Lists.List<array of string>();
+  var Folder: string := Path[0];
+  for Index: int := 0 to Path.Length - 2 do
+    Menus.Add(ChildFolders(Folder));
+    Folder := IO.Path.Combine(Folder, Path[Index + 1]);
+  end for;
+
+  return Menus.ToArray();
+end function;
+
+// Resolves a standalone path segment to its folder.
+// ## Parameters
+// - `Folder`: Browser folder.
+// - `Index`: Zero-based segment index.
+// ## Returns
+// Folder through the chosen segment.
+public function At(Folder: string; Index: int): string;
+begin
+  const Parts: array of string := Segments(Folder);
+  var Path: string := Parts[0];
+  for Slot: int := 1 to Sys.Math.Min(Index, Parts.Length - 1) do
+    Path := IO.Path.Combine(Path, Parts[Slot]);
+  end for;
+
+  return Path;
+end function;
+
+// Finds a menu item's directory in the standalone example.
+// ## Parameters
+// - `Folder`: Browser folder.
+// - `Parent`: Index of the menu's parent.
+// - `Child`: Index of the selected directory.
+// ## Returns
+// The proposed folder, or the existing folder if the listing changed.
+public function MenuPath(Folder: string; Parent: int; Child: int): string;
+begin
+  const Path: string := At(Folder, Parent);
+  const Names: array of string := ChildFolders(Path);
+  return if Child < Names.Length then
+    IO.Path.Combine(Path, Names[Child])
+  else
+    Folder
+  end if;
+end function;
+
+// Displays the native file browser, both dialogs and a standalone path bar.
+// ## Parameters
+// - `Model`: Current Files state.
+// ## Returns
+// Original browser section followed by the path bar example.
+public function View(Model: M.Model): array of E.Element<M.Msg>;
+begin
+  const Path: array of string := Segments(Model.Folder);
+  const Base: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    Original(Model),
+    G.Heading<M.Msg>('Path bar', 'Open a segment or its menu, or type a folder path.'),
+    Paths.PathBar<M.Msg>(
+      'files-path-bar', new Paths.Value(Path, Model.Folder, Children(Path)),
+      M.Msg.Path, new Paths.Options(Icon := Sys.Char.ConvertFromUtf32($E0D7))
+    )
+  );
+  return [
+    Picker.FilePicker<M.Msg>(
+      'files-open-picker', Model.Opening, M.Msg.Opened,
+      new Picker.Options(Source := ReadFolder), Base
+    ),
+    Picker.FilePicker<M.Msg>(
+      'files-save-picker', Model.Saving, M.Msg.Saved,
+      new Picker.Options(Kind := Picker.Mode.SaveFile, Name := 'untitled.txt', Source := ReadFolder)
+    )
+  ];
+end function;
+
+end unit;

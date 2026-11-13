@@ -1,0 +1,63 @@
+unit Fpas.Ui.Gui.Internal.Widgets.CodeBlock;
+
+uses
+  Fpas.Ui.CodeBlocks as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Presents the native CUI widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Code`: Literal source.
+// - `Settings`: Native presentation options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Code: string; Settings: W.Options);
+begin
+  const Token: string := C.Token('code-block', Id);
+  const CopyId: string := Id + '/copy';
+  const CopyToken: string := C.Token('code-copy', CopyId);
+  const Part: string? := if Frame.PaintingClosed then
+    null
+  else
+    CopyToken
+  end if;
+  const Flags: int := (if Settings.LineNumbers then
+    1
+  else
+    0
+  end if) +
+    (if Settings.NoHeader then
+      2
+    else
+      0
+    end if) + (if Frame.AcceptInput then
+      4
+    else
+      0
+    end if) +
+    (if C.WantsFocus<TMsg>(
+      Frame, CopyId, CopyToken, Frame.AcceptInput and not Settings.NoHeader
+        and (Settings.Title <> '' or Settings.Language <> '')
+    )
+    then
+      8
+    else
+      0
+    end if);
+  const Copy: bool := Frame.Window.CodeBlock(
+    Token, Code, Settings.Language, Settings.Title,
+    Settings.HighlightFrom, Settings.HighlightTo, Settings.MaxHeight, Settings.Size, Flags, Part
+  );
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, Settings.Title, 'code-block', new Cui.CuiRectangle(), false)
+  );
+  if Copy and not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(CopyId, 'Copy', 'code-copy', new Cui.CuiRectangle(), Frame.AcceptInput)
+    );
+  end if;
+end procedure;
+
+end unit;

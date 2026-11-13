@@ -1,0 +1,67 @@
+unit GuiGallery.Pages.Code.View;
+
+uses
+  GuiGallery.Shared.Sections as G, Fpas.Ui.CodeBlocks as Code, Fpas.Ui.JsonViews as Json,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+// Builds the pinned CUI Code examples.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Returns
+// Original code and JSON sections, followed by an SQL sample.
+public function View<TMsg>(): array of E.Element<TMsg>;
+begin
+  const Line: string := Sys.Char.ConvertFromUtf32(10);
+  const Counter: string := '#include <cui/cui.h>' + Line + Line +
+    '/* A counter with a button */' + Line + 'static int clicks = 0;' + Line + Line +
+    'void frame(cui_ctx *ui) {' + Line +
+    '    if (cui_button(ui, "Click me", .variant = CUI_BUTTON_PRIMARY)) clicks++;' + Line +
+    '    cui_textf(ui, "Clicked %d times", clicks);' + Line +
+    '    float ratio = clicks / 10.0f;   // grows with each click' + Line + '}' + Line;
+  const Fib: string := 'def fib(n: int) -> int:' + Line + '    # the slow way, on purpose' + Line +
+    '    if n < 2:' + Line + '        return n' + Line + '    return fib(n - 1) + fib(n - 2)' +
+    Line + Line + 'print([fib(k) for k in range(10)])' + Line;
+  const Shell: string := 'git clone https://github.com/yappologistic/CUI.git' + Line +
+    'cmake -S CUI -B build' + Line + 'cmake --build build' + Line +
+    './build/examples/gallery  # run it' + Line;
+  const Document: string := '{"name": "cui", "version": "1.1.0", "private": false, "downloads": 128400,' +
+    Line +
+    ' "platforms": ["windows", "macos", "linux"],' + Line +
+    ' "renderer": {"backend": "opengl", "fallback": "software", "vsync": true, "msaa": null},' +
+    Line +
+    ' "authors": [{"name": "Maya", "commits": 412}, {"name": "Jonas", "commits": 388}]}';
+  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+  return [
+    G.Heading<TMsg>(
+      'Code block',
+      'Highlighting for C, C++, JavaScript, TypeScript, Python, Rust, Go, JSON and shell.'
+    ),
+    Code.CodeBlock<TMsg>('c-sample', Counter, new Code.Options('c', 'counter.c', true, 7)),
+    E.Row<TMsg>(
+      new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start, Clip := false),
+      E.Size<TMsg>(
+        E.Column<TMsg>(
+          new L.Flow(Clip := false),
+          Code.CodeBlock<TMsg>('py', Fib, new Code.Options('python', 'fib.py'))
+        ), Fill
+      ),
+      E.Size<TMsg>(
+        E.Column<TMsg>(
+          new L.Flow(Clip := false),
+          Code.CodeBlock<TMsg>('sh', Shell, new Code.Options('shell'))
+        ), Fill
+      )
+    ),
+    G.Heading<TMsg>('JSON viewer', 'Collapsible, with counts. Click a brace to fold it.'),
+    Json.JsonView<TMsg>('json', Document, new Json.Options(2)),
+    Json.JsonView<TMsg>('broken', '{"ok": true, "oops": [1, 2,}'),
+    G.Heading<TMsg>('SQL'),
+    Code.CodeBlock<TMsg>(
+      'sql-sample', 'SELECT team, COUNT(*) AS members' + Line +
+        'FROM people' + Line + 'GROUP BY team' + Line + 'ORDER BY members DESC;' + Line,
+      new Code.Options('sql', 'teams.sql', true)
+    )
+  ];
+end function;
+
+end unit;

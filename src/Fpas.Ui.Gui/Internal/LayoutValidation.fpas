@@ -1,6 +1,9 @@
 unit Fpas.Ui.Gui.Internal.LayoutValidation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Gui.Internal.Sizing as Size;
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Tables as Tables,
+  Fpas.Ui.Kanbans as Boards,
+  Fpas.Ui.Validation as V, Fpas.Ui.Gui.Internal.Sizing as Size;
 
 // Checks native-specific layout limits before issuing widget calls.
 //
@@ -13,7 +16,24 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
   procedure Visit(Node: E.Element<TMsg>);
   begin
     case Node of
-      when E.Element.Tour(_, const Base: E.Element<TMsg>, _, _, _, _):
+      when E.Element.FilePicker(_, const Base: E.Element<TMsg>?, _, _, _):
+        if Base <> null then
+          Visit(Base);
+        end if;
+      when E.Element.Kanban(_, const Columns: array of Boards.Column<TMsg>, _, _):
+        for Column: Boards.Column<TMsg> in Columns do
+          for Card: Boards.Card<TMsg> in Column.Cards do
+            Visit(Card.Content);
+          end for;
+        end for;
+      when E.Element.Tour(
+        _,
+        const Base: E.Element<TMsg>,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.CommandPalette(_, const Base: E.Element<TMsg>, _, _, _, _):
         Visit(Base);
       when E.Element.Layered(
         const Children: array of E.Element<TMsg>,
@@ -48,14 +68,38 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end case;
 
         Visit(Child);
-      when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
+      when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+        _,
+        const Children: array of E.Element<TMsg>,
+        _
+      ), E.Element.Card(
         _,
         const Children: array of E.Element<TMsg>,
         _,
         _
-      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.TreeNode(
+        _,
+        _,
+        _,
+        const Children: array of E.Element<TMsg>,
+        _,
+        _,
+        _
+      ), E.Element.ReorderableList(_, const Children: array of E.Element<TMsg>, _, _, _):
         for Child: E.Element<TMsg> in Children do
           Visit(Child);
+        end for;
+      when E.Element.Table(_, _, const Rows: array of Tables.Row<TMsg>, _, _, _, _):
+        for Row: Tables.Row<TMsg> in Rows do
+          for Cell: Tables.Cell<TMsg> in Row.Cells do
+            case Cell of
+              when Tables.Cell.Content(const Children: array of E.Element<TMsg>):
+                for Child: E.Element<TMsg> in Children do
+                  Visit(Child);
+                end for;
+              else
+            end case;
+          end for;
         end for;
       when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
         Visit(Child);

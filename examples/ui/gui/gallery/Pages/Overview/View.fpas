@@ -18,11 +18,12 @@ uses
 // - `Model`: The workspace preview state.
 // - `Data`: Profile fields shared with other pages.
 // - `Browse`: Navigate to Buttons.
+// - `OpenPalette`: Opens the shared command palette.
 // - `Messages`: Wraps form messages for the application.
 // ## Returns
 // The Overview page.
 public function View<TMsg>(
-  Model: State.Model; Data: Demo.Model; Browse: TMsg; Messages: function(State.Msg): TMsg
+  Model: State.Model; Data: Demo.Model; Browse: TMsg; OpenPalette: TMsg; Messages: function(State.Msg): TMsg
 ): E.Element<TMsg>;
 begin
   const Hero: E.Element<TMsg> := E.Column<TMsg>(
@@ -34,14 +35,18 @@ begin
       ),
       S.Role.Introduction
     ),
-    E.Column<TMsg>(
-      G.Space<TMsg>(6),
+    E.Row<TMsg>(
+      new L.Flow(Gap := G.Points(8), PaddingTop := G.Points(6), Wrap := true),
       B.Button<TMsg>(
         'browse', 'Browse components', Browse,
         new B.Options(
           Variant := S.ButtonVariant.Primary,
           IconRight := Sys.Char.ConvertFromUtf32($E049)
         )
+      ),
+      B.Button<TMsg>(
+        'overview-palette', 'Open command palette', OpenPalette,
+        new B.Options(Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A))
       )
     )
   );

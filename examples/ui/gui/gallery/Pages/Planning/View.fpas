@@ -1,0 +1,89 @@
+unit GuiGallery.Pages.Planning.View;
+
+uses
+  GuiGallery.Pages.Planning.State as M, GuiGallery.Pages.Planning.Board as Board,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.WeekCalendars as W, Fpas.Ui.Gantts as Timeline,
+  Fpas.Ui.MonthCalendars as Month, System as Sys, System.Collections.Generic as Lists;
+
+// Original month appointments positioned relative to the current month.
+// ## Parameters
+// - `Today`: Date used for the examples.
+// ## Returns
+// The twelve original appointments.
+public function MonthEvents(Today: Sys.DateOnly): array of Month.Appointment;
+begin
+  const First: Sys.DateOnly := new Sys.DateOnly(Today.Year, Today.Month, 1);
+  const Names: array of string := [
+    'Standup', 'Design review', 'Offsite', '1:1', 'Release', 'Planning',
+    'Customer call', 'Lunch', 'Retro', 'Holiday', 'Demo', 'Board meeting'
+  ];
+  const Result: Lists.List<Month.Appointment> := new Lists.List<Month.Appointment>();
+  for Index: int := 0 to Names.Length - 1 do
+    const Start: Sys.DateOnly := First.AddDays((Index * 5) mod 27);
+    const Span: bool := Index = 2 or Index = 9;
+    const Finish: Sys.DateOnly? := if Span then
+      Start.AddDays(2)
+    else
+      null
+    end if;
+    Result.Add(
+      new Month.Appointment(
+        Names[Index], Start, Finish,
+        9.0F + cast<float>(Index mod 8), Span or Index = 4, cast<S.Tone>(1 + Index mod 8)
+      )
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Displays the original Planning sections.
+// ## Parameters
+// - `Model`: Current board and schedule.
+// ## Returns
+// Native examples in gallery order.
+public function View(Model: M.Model): array of E.Element<M.Msg>;
+begin
+  const Day: int := (cast<int>(Model.Today.DayOfWeek) + 6) mod 7;
+  const Monday: Sys.DateOnly := Model.Today.AddDays(-Day);
+  return [
+    G.Heading<M.Msg>(
+      'Kanban',
+      'Drag cards within and between columns. Columns can carry a work-in-progress limit.'
+    ),
+    Board.View(Model),
+    G.Heading<M.Msg>(
+      'Week calendar',
+      'Drag events to move them in 15 minute steps, or pull the bottom edge to resize.'
+    ),
+    W.WeekCalendar<M.Msg>(
+      'planning-week', new W.Value(Monday, Model.Events), M.Msg.Week,
+      new W.Options(
+        StartHour := 8.0F,
+        EndHour := 19.0F,
+        Height := L.Extent.Fixed(L.Measure.Logical(420))
+      )
+    ),
+    G.Heading<M.Msg>(
+      'Gantt',
+      'Drag bars to reschedule, pull either end to change the length. Curves follow dependencies.'
+    ),
+    Timeline.Gantt<M.Msg>(
+      'planning-gantt', new Timeline.Value(Monday.AddDays(-7), 42, Model.Tasks),
+      M.Msg.Timeline, new Timeline.Options(Today := 7 + Day)
+    ),
+    G.Heading<M.Msg>(
+      'Month calendar',
+      'Bars for days off and trips, timed events in time order, +N more when a day is full.'
+    ),
+    Month.MonthCalendar<M.Msg>(
+      'planning-month',
+      new Month.Value(Model.Month ?? Model.Today, MonthEvents(Model.Today), Model.Selected),
+      M.Msg.Month,
+      new Month.Options(Today := Model.Today)
+    )
+  ];
+end function;
+
+end unit;

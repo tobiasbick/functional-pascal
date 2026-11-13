@@ -1,0 +1,150 @@
+unit GuiGallery.Pages.Instruments.View;
+
+uses
+  GuiGallery.Pages.Instruments.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Readouts as R, Fpas.Ui.DotCharts as D,
+  Fpas.Ui.DotDisplays as Display, Fpas.Ui.EventTracks as T, Fpas.Ui.Charts as C,
+  System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
+
+function Dose(Time: double): float;
+begin
+  if Time <= 0.0 then
+    return 0.0F;
+  end if;
+  const Elimination: double := Sys.Math.Log(2.0) / 5.0;
+  const Absorption: double := Sys.Math.Log(2.0) / 0.25;
+  return cast<float>(95.0 * Absorption / (Absorption - Elimination) *
+    (Sys.Math.Exp(-Elimination * Time) - Sys.Math.Exp(-Absorption * Time)));
+end function;
+
+function TimeLabel(Time: double): string;
+begin
+  const Minutes: int := cast<int>(Sys.Math.Round(Time * 60.0));
+  const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
+  return (Minutes div 60).ToString(
+    'D2',
+    Invariant
+  ) + ':' + (Minutes mod 60).ToString('D2', Invariant);
+end function;
+
+// Builds the original CUI Instruments page.
+// ## Parameters
+// - `Model`: Current caffeine events.
+// ## Returns
+// Readouts, aligned chart and track, and the bedtime display.
+public function View(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  const Cups: array of double := Model.Cups.Times;
+  const Bands: Lists.List<D.Series> := new Lists.List<D.Series>(Cups.Length);
+  const Totals: array of double := new double[97];
+  var Bed: double := 0.0;
+  for Index: int := 0 to Cups.Length - 1 do
+    const Values: array of float := new float[97];
+    for Sample: int := 0 to Values.Length - 1 do
+      Values[Sample] := Dose(6.0 + cast<double>(Sample) / 4.0 - Cups[Index]);
+      Totals[Sample] := Totals[Sample] + cast<double>(Values[Sample]);
+    end for;
+
+    Bands.Add(new D.Series(Values, Index = Model.Cups.Selected));
+    Bed := Bed + cast<double>(Dose(23.0 - Cups[Index]));
+  end for;
+  var Peak: double := 0.0;
+  var PeakAt: double := 6.0;
+  for Index: int := 0 to Totals.Length - 1 do
+    if Totals[Index] > Peak then
+      Peak := Totals[Index];
+      PeakAt := 6.0 + cast<double>(Index) / 4.0;
+    end if;
+  end for;
+  const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
+  const BedValue: string := Bed.ToString('F0', Invariant);
+  const PeakValue: string := Peak.ToString('F0', Invariant);
+  const PeakTime: string := TimeLabel(PeakAt);
+  const High: bool := Bed > 50.0;
+  const State: string := if High then
+    'OVER'
+  else
+    'UNDER'
+  end if;
+  const CupLabel: string := if Cups.Length >= 5 or Cups.Length = 0 then
+    '5+'
+  else
+    Cups.Length.ToString(Invariant)
+  end if;
+  const Threshold: C.Annotation := new C.Annotation(C.AnnotationKind.Y, Y := 50.0, Label := '50');
+  const Notes: array of C.Annotation := if Cups.Length = 0 then
+    [Threshold]
+  else
+    [
+      Threshold,
+      new C.Annotation(
+        C.AnnotationKind.X,
+        X := 23.0,
+        Label := 'BED 23:00',
+        Detail := BedValue + ' MG STILL IN YOU'
+      ),
+      new C.Annotation(
+        C.AnnotationKind.X,
+        X := PeakAt,
+        Label := 'PEAK ' + PeakValue + ' MG',
+        Detail := PeakTime
+      )
+    ]
+  end if;
+  return [
+    G.Heading<S.Msg>(
+      'Readouts',
+      'A label, a value with its unit, and a line of context, in the monospaced font.'
+    ),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(40), Wrap := true, Align := L.Alignment.End),
+      R.Readout<S.Msg>(
+        'bed',
+        'AT BED',
+        BedValue,
+        new R.Options(
+          Unit := 'MG',
+          Detail := State + ' THE 50 MG LINE',
+          Size := R.Size.Large,
+          Accent := High
+        )
+      ),
+      R.Readout<S.Msg>('peak', 'PEAK', PeakValue, new R.Options(Unit := 'MG', Detail := PeakTime)),
+      R.Readout<S.Msg>(
+        'cup-count',
+        'CUPS',
+        CupLabel,
+        new R.Options(Detail := '95 MG EACH', Size := R.Size.Small)
+      )
+    ),
+    G.Heading<S.Msg>(
+      'Dot-matrix chart and event track',
+      'Drag a cup along the axis, click the chart to add one, double-click a cup to remove it.'
+    ),
+    E.Column<S.Msg>(
+      new L.Flow(Clip := false),
+      D.DotChart<S.Msg>(
+        'caffeine', Bands.ToArray(), 97, S.Msg.AddCup,
+        new D.Options(
+          Height := 240.0F, XMinimum := 6.0, XMaximum := 30.0, Units := D.AxisUnits.Hours,
+          Range := new C.ValueRange(0.0F, 260.0F), Unit := 'MG', Axis := false, Annotations := Notes
+        )
+      ),
+      T.EventTrack<S.Msg>(
+        'cups', Model.Cups, S.Msg.EditCups,
+        new T.Options(
+          Capacity := 8, Minimum := 6.0, Maximum := 30.0, Step := 0.25,
+          Units := D.AxisUnits.Hours, LabelStep := 6.0
+        )
+      )
+    ),
+    G.Heading<S.Msg>('Dot-matrix display', 'Text in a 5 by 7 dot font; a long line can scroll.'),
+    Display.DotDisplay<S.Msg>(
+      'bed-display',
+      State + ' THE LINE AT BEDTIME',
+      new Display.Options(Pitch := 3.0F, Accent := High)
+    )
+  ];
+end function;
+
+end unit;

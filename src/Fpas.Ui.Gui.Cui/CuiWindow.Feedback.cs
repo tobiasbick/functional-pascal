@@ -41,16 +41,20 @@ public sealed partial class CuiWindow
     /// <param name="label">Optional literal caption.</param>
     /// <param name="showValue">Whether to display the rounded percentage.</param>
     /// <param name="dither">Whether to draw the native ordered-dot fill.</param>
+    /// <param name="widthKind">Encoded native width extent kind.</param>
+    /// <param name="width">Logical width or percentage.</param>
     public void Progress(string id, float value, int tone = 0, bool indeterminate = false,
-        float height = 0, string label = "", bool showValue = false, bool dither = false)
+        float height = 0, string label = "", bool showValue = false, bool dither = false,
+        int widthKind = 0, float width = 0)
     {
         CheckFrame();
         Utf8.Validate(label, nameof(label));
         CheckProgressValue(value);
         CheckTone(tone);
         CheckFeedbackNumber(height, nameof(height));
+        CheckExtent(widthKind, width, nameof(width));
         NativeMethods.Progress(context, Stable(id), value, tone, indeterminate ? 1 : 0, height, label,
-            showValue ? 1 : 0, dither ? 1 : 0);
+            showValue ? 1 : 0, dither ? 1 : 0, widthKind, width);
     }
 
     /// <summary>Draws CUI's native activity spinner.</summary>

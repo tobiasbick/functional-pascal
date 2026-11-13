@@ -1,6 +1,39 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
+  Fpas.Ui.Gui.Internal.Widgets.PathBar as PathBarWidget, Fpas.Ui.Gui.Internal.Widgets.FileBrowser as FileBrowserWidget, Fpas.Ui.Gui.Internal.Widgets.FilePicker as FilePickerWidget, Fpas.Ui.Gui.Internal.Widgets.WeekCalendar as WeekCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.MonthCalendar as MonthCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.Gantt as GanttWidget, Fpas.Ui.Gui.Internal.Widgets.Kanban as KanbanWidget,
+  Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
+  Fpas.Ui.Gui.Internal.Widgets.StatusTag as StatusTagWidget, Fpas.Ui.Gui.Internal.Widgets.RatioSlider as RatioSliderWidget, Fpas.Ui.Gui.Internal.Widgets.GradientSlider as GradientSliderWidget, Fpas.Ui.Gui.Internal.Widgets.StepSlider as StepSliderWidget, Fpas.Ui.Gui.Internal.Widgets.PaletteStrip as PaletteStripWidget, Fpas.Ui.Gui.Internal.Widgets.AspectPicker as AspectPickerWidget, Fpas.Ui.Gui.Internal.Widgets.OptionAction as OptionActionWidget, Fpas.Ui.Gui.Internal.Widgets.SeedField as SeedFieldWidget,
+  Fpas.Ui.Motion as Motion, Fpas.Ui.ShimmerTexts as ShimmerTexts, Fpas.Ui.Typewriters as Typewriters, Fpas.Ui.TextReveals as TextReveals, Fpas.Ui.WordRotations as WordRotations, Fpas.Ui.NumberRolls as NumberRolls, Fpas.Ui.GradientTexts as GradientTexts, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.Loaders as Loaders, Fpas.Ui.Docks as Docks, Fpas.Ui.ControlTiles as ControlTiles, Fpas.Ui.NowPlaying as NowPlaying, Fpas.Ui.Waveforms as Waveforms, Fpas.Ui.TabBars as TabBars,
+  Fpas.Ui.Gui.Internal.Widgets.ShimmerText as ShimmerTextWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Typewriter as TypewriterWidget,
+  Fpas.Ui.Gui.Internal.Widgets.TextReveal as TextRevealWidget,
+  Fpas.Ui.Gui.Internal.Widgets.WordRotate as WordRotateWidget,
+  Fpas.Ui.Gui.Internal.Widgets.NumberRoll as NumberRollWidget,
+  Fpas.Ui.Gui.Internal.Widgets.GradientText as GradientTextWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Spotlight as SpotlightWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Loader as LoaderWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Dock as DockWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ControlTile as ControlTileWidget,
+  Fpas.Ui.Gui.Internal.Widgets.NowPlaying as NowPlayingWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Waveform as WaveformWidget,
+  Fpas.Ui.Gui.Internal.Widgets.TabBar as TabBarWidget,
+  Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.JsonViews as JsonViews, Fpas.Ui.Readouts as Readouts, Fpas.Ui.DotDisplays as DotDisplays, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks,
+  Fpas.Ui.Gui.Internal.Widgets.CodeBlock as CodeBlockWidget,
+  Fpas.Ui.Gui.Internal.Widgets.JsonView as JsonViewWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Readout as ReadoutWidget,
+  Fpas.Ui.Gui.Internal.Widgets.DotDisplay as DotDisplayWidget,
+  Fpas.Ui.Gui.Internal.Widgets.DotChart as DotChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.EventTrack as EventTrackWidget,
+  Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables,
+  Fpas.Ui.FilterBars as Filters, Fpas.Ui.DataGrids as DataGrids, Fpas.Ui.TreeTables as TreeTables,
+  Fpas.Ui.Gui.Internal.Widgets.FilterBar as FilterWidget, Fpas.Ui.Gui.Internal.Widgets.DataGrid as GridDataWidget,
+  Fpas.Ui.Gui.Internal.Widgets.TreeTable as TreeTableWidget,
+  Fpas.Ui.ReorderableLists as Reorders, Fpas.Ui.VirtualLists as Virtuals, Fpas.Ui.CommandPalettes as Palettes,
+  Fpas.Ui.Gui.Internal.Widgets.ListItem as ListItemWidget, Fpas.Ui.Gui.Internal.Widgets.Tree as TreeWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Table as TableWidget, Fpas.Ui.Gui.Internal.Widgets.VirtualList as VirtualWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ReorderableList as ReorderWidget, Fpas.Ui.Gui.Internal.Widgets.CommandPalette as PaletteWidget,
   Fpas.Ui.Sankeys as Sankeys,
   Fpas.Ui.BarLists as BarLists,
   Fpas.Ui.ActivityRings as ActivityRings,
@@ -649,6 +682,372 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         ButtonGroup.Draw<TMsg>(Current, Children, Visit);
       when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
         ActionFooterWidget.Draw<TMsg>(Current, Children, Visit);
+      when E.Element.ListItem(
+        const Id: string,
+        const Title: string,
+        const Activate: Sys.Func<TMsg>?,
+        const Settings: ListItems.Options
+      ):
+        ListItemWidget.Draw<TMsg>(Current, Id, Title, Activate, Settings);
+      when E.Element.TreeNode(
+        const Id: string,
+        const Label: string,
+        const Open: bool?,
+        const Children: array of E.Element<TMsg>,
+        const Change: Sys.Func<bool, TMsg>?,
+        const Activate: Sys.Func<TMsg>?,
+        const Settings: Trees.Options
+      ):
+        TreeWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Label,
+          Open,
+          Children,
+          Change,
+          Activate,
+          Settings,
+          Visit
+        );
+      when E.Element.Table(
+        const Id: string,
+        const Columns: array of Tables.Column,
+        const Rows: array of Tables.Row<TMsg>,
+        const Order: Tables.Sort?,
+        const OnSort: Sys.Func<Tables.Sort, TMsg>?,
+        const OnSelect: Sys.Func<string, TMsg>?,
+        const Settings: Tables.Options
+      ):
+        TableWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Columns,
+          Rows,
+          Order,
+          OnSort,
+          OnSelect,
+          Settings,
+          Visit
+        );
+      when E.Element.VirtualList(
+        const Id: string, const Count: int, const RowHeight: float, const Height: L.Extent,
+        const Build: function(int): E.Element<TMsg>
+      ):
+        VirtualWidget.Draw<TMsg>(Current, Id, Count, RowHeight, Height, Build, Visit);
+      when E.Element.FilterBar(
+        const Id: string,
+        const Fields: array of Filters.Field,
+        const Value: Filters.Value,
+        const Change: function(Filters.Value): TMsg,
+        const Capacity: int,
+        const Enabled: bool
+      ):
+        FilterWidget.Draw<TMsg>(Current, Id, Fields, Value, Change, Capacity, Enabled);
+      when E.Element.DataGrid(
+        const Id: string, const Columns: array of DataGrids.Column, const Count: int,
+        const Build: function(int): DataGrids.Row<TMsg>, const Value: DataGrids.Value,
+        const Change: function(DataGrids.Value): TMsg, const Settings: DataGrids.Options
+      ):
+        GridDataWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Columns,
+          Count,
+          Build,
+          Value,
+          Change,
+          Settings,
+          Visit
+        );
+      when E.Element.TreeCell(
+        const Id: string, const Label: string, const Depth: int, const Open: bool?,
+        const Change: Sys.Func<bool, TMsg>?, const Icon: string
+      ):
+        TreeTableWidget.Cell<TMsg>(Current, Id, Label, Depth, Open, Change, Icon);
+      when E.Element.TreeTable(
+        const Id: string, const Columns: array of DataGrids.Column,
+        const Nodes: array of TreeTables.Node, const Cursor: int, const Order: Tables.Sort?,
+        const Change: function(TreeTables.Change): TMsg, const Settings: TreeTables.Options
+      ):
+        TreeTableWidget.Draw<TMsg>(Current, Id, Columns, Nodes, Cursor, Order, Change, Settings);
+      when E.Element.ReorderableList(
+        const Id: string, const Items: array of E.Element<TMsg>, const Order: array of int,
+        const Change: function(array of int): TMsg, const Enabled: bool
+      ):
+        ReorderWidget.Draw<TMsg>(Current, Id, Items, Order, Change, Enabled, Visit);
+      when E.Element.CodeBlock(
+        const Id: string,
+        const Code: string,
+        const Settings: CodeBlocks.Options
+      ):
+        CodeBlockWidget.Draw<TMsg>(Current, Id, Code, Settings);
+      when E.Element.JsonView(
+        const Id: string,
+        const Json: string,
+        const Settings: JsonViews.Options
+      ):
+        JsonViewWidget.Draw<TMsg>(Current, Id, Json, Settings);
+      when E.Element.Readout(
+        const Id: string,
+        const Label: string,
+        const Value: string,
+        const Settings: Readouts.Options
+      ):
+        ReadoutWidget.Draw<TMsg>(Current, Id, Label, Value, Settings);
+      when E.Element.DotDisplay(
+        const Id: string,
+        const Text: string,
+        const Settings: DotDisplays.Options
+      ):
+        DotDisplayWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.DotChart(
+        const Id: string, const Bands: array of DotCharts.Series, const Count: int,
+        const Activate: Sys.Func<DotCharts.Hit, TMsg>?, const Settings: DotCharts.Options
+      ):
+        DotChartWidget.Draw<TMsg>(Current, Id, Bands, Count, Activate, Settings);
+      when E.Element.EventTrack(
+        const Id: string, const Value: EventTracks.Value,
+        const Change: function(EventTracks.Change): TMsg, const Settings: EventTracks.Options
+      ):
+        EventTrackWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.PathBar(
+        const Id: string,
+        const Value: PathBars.Value,
+        const Change: function(PathBars.Event): TMsg,
+        const Settings: PathBars.Options
+      ):
+        PathBarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.FileBrowser(
+        const Id: string,
+        const Folder: string,
+        const Change: function(FileBrowsers.Event): TMsg,
+        const Settings: FileBrowsers.Options
+      ):
+        FileBrowserWidget.Draw<TMsg>(Current, Id, Folder, Change, Settings);
+      when E.Element.FilePicker(
+        const Id: string,
+        const Base: E.Element<TMsg>?,
+        const Open: bool,
+        const Change: function(FilePickers.Event): TMsg,
+        const Settings: FilePickers.Options
+      ):
+        FilePickerWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Base,
+          Open,
+          Change,
+          Settings,
+          Horizontal,
+          Align,
+          Visit
+        );
+        return;
+      when E.Element.WeekCalendar(
+        const Id: string,
+        const Value: WeekCalendars.Value,
+        const Change: function(WeekCalendars.Event): TMsg,
+        const Settings: WeekCalendars.Options
+      ):
+        WeekCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.MonthCalendar(
+        const Id: string,
+        const Value: MonthCalendars.Value,
+        const Change: function(MonthCalendars.Event): TMsg,
+        const Settings: MonthCalendars.Options
+      ):
+        MonthCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.Gantt(
+        const Id: string,
+        const Value: Gantts.Value,
+        const Change: function(Gantts.Event): TMsg,
+        const Settings: Gantts.Options
+      ):
+        GanttWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+      when E.Element.Kanban(
+        const Id: string,
+        const Columns: array of Kanbans.Column<TMsg>,
+        const Change: function(Kanbans.Event): TMsg,
+        const Settings: Kanbans.Options
+      ):
+        KanbanWidget.Draw<TMsg>(Current, Id, Columns, Change, Settings, Visit);
+        return;
+      when E.Element.StatusTag(
+        const Id: string,
+        const Value: StatusTags.Value,
+        const Remove: Sys.Func<TMsg>?,
+        const Settings: StatusTags.Options
+      ):
+        StatusTagWidget.Draw<TMsg>(Current, Id, Value, Remove, Settings);
+        return;
+      when E.Element.RatioSlider(
+        const Id: string,
+        const Value: RatioSliders.Value,
+        const Change: function(float): TMsg,
+        const Settings: RatioSliders.Options
+      ):
+        RatioSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.GradientSlider(
+        const Id: string,
+        const Value: GradientSliders.Value,
+        const Change: function(GradientSliders.Event): TMsg,
+        const Settings: GradientSliders.Options
+      ):
+        GradientSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.StepSlider(
+        const Id: string,
+        const Value: StepSliders.Value,
+        const Change: function(StepSliders.Event): TMsg,
+        const Settings: StepSliders.Options
+      ):
+        StepSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.PaletteStrip(
+        const Id: string,
+        const Value: PaletteStrips.Value,
+        const Change: function(PaletteStrips.Event): TMsg,
+        const Settings: PaletteStrips.Options
+      ):
+        PaletteStripWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.AspectPicker(
+        const Id: string,
+        const Value: AspectPickers.Value,
+        const Change: function(int): TMsg,
+        const Settings: AspectPickers.Options
+      ):
+        AspectPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.OptionAction(
+        const Id: string,
+        const Value: OptionActions.Value,
+        const Change: function(OptionActions.Event): TMsg,
+        const Settings: OptionActions.Options
+      ):
+        OptionActionWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.SeedField(
+        const Id: string,
+        const Value: SeedFields.Value,
+        const Change: function(SeedFields.Event): TMsg,
+        const Settings: SeedFields.Options
+      ):
+        SeedFieldWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        return;
+      when E.Element.ShimmerText(
+        const Id: string,
+        const Text: string,
+        const Settings: Motion.TextOptions
+      ):
+        ShimmerTextWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.Typewriter(
+        const Id: string,
+        const Text: string,
+        const Replay: int,
+        const Settings: Motion.TextOptions,
+        const OnComplete: Sys.Func<TMsg>?
+      ):
+        TypewriterWidget.Draw<TMsg>(Current, Id, Text, Replay, Settings, OnComplete);
+      when E.Element.TextReveal(
+        const Id: string,
+        const Text: string,
+        const Replay: int,
+        const Settings: Motion.TextOptions
+      ):
+        TextRevealWidget.Draw<TMsg>(Current, Id, Text, Replay, Settings);
+      when E.Element.WordRotate(
+        const Id: string,
+        const Words: array of string,
+        const Interval: float,
+        const Settings: Motion.TextOptions
+      ):
+        WordRotateWidget.Draw<TMsg>(Current, Id, Words, Interval, Settings);
+      when E.Element.NumberRoll(
+        const Id: string,
+        const Text: string,
+        const Settings: Motion.TextOptions
+      ):
+        NumberRollWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.GradientText(
+        const Id: string,
+        const Text: string,
+        const Settings: GradientTexts.Options
+      ):
+        GradientTextWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.Spotlight(
+        const Id: string,
+        const Children: array of E.Element<TMsg>,
+        const Settings: Spotlights.Options
+      ):
+        SpotlightWidget.Draw<TMsg>(Current, Id, Children, Settings, Visit);
+      when E.Element.Loader(
+        const Id: string,
+        const Style: Loaders.Animation,
+        const Settings: Loaders.Options
+      ):
+        LoaderWidget.Draw<TMsg>(Current, Id, Style, Settings);
+      when E.Element.Dock(
+        const Id: string,
+        const Entries: array of Docks.Entry<TMsg>,
+        const Settings: Docks.Options
+      ):
+        DockWidget.Draw<TMsg>(Current, Id, Entries, Settings);
+        return;
+      when E.Element.ControlTile(
+        const Id: string,
+        const Label: string,
+        const On: bool,
+        const Change: function(bool): TMsg,
+        const Settings: ControlTiles.Options
+      ):
+        ControlTileWidget.Draw<TMsg>(Current, Id, Label, On, Change, Settings);
+        return;
+      when E.Element.NowPlaying(
+        const Id: string,
+        const Model: NowPlaying.Value,
+        const Change: function(NowPlaying.Event): TMsg,
+        const Settings: NowPlaying.Options
+      ):
+        NowPlayingWidget.Draw<TMsg>(Current, Id, Model, Change, Settings);
+      when E.Element.Waveform(
+        const Id: string,
+        const Peaks: array of float,
+        const Progress: float?,
+        const Change: Sys.Func<float, TMsg>?,
+        const Settings: Waveforms.Options
+      ):
+        WaveformWidget.Draw<TMsg>(Current, Id, Peaks, Progress, Change, Settings);
+      when E.Element.TabBar(
+        const Id: string,
+        const Items: array of TabBars.Item,
+        const Selected: int,
+        const Change: function(int): TMsg,
+        const Settings: TabBars.Options
+      ):
+        TabBarWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+      when E.Element.CommandPalette(
+        const Id: string,
+        const Base: E.Element<TMsg>,
+        const Open: bool,
+        const Commands: array of Palettes.Command<TMsg>,
+        const Change: function(bool): TMsg,
+        const Shortcut: bool
+      ):
+        PaletteWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Base,
+          Open,
+          Commands,
+          Change,
+          Shortcut,
+          Horizontal,
+          Align,
+          Visit
+        );
+        return;
       when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
         GridWidget.Draw<TMsg>(Current, Settings, Children, Visit);
       when E.Element.Card(

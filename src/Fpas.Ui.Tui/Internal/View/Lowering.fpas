@@ -577,6 +577,167 @@ public function Prepare<TMsg>(
         return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
+      when Ui.Element.ListItem(_, _, _, _), Ui.Element.TreeNode(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Table(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ReorderableList(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.VirtualList(_, _, _, _, _), Ui.Element.CommandPalette(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException(
+          'Native lists, trees, tables and command palettes require the graphical profile.'
+        );
+      when Ui.Element.FilterBar(_, _, _, _, _, _), Ui.Element.DataGrid(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.TreeCell(_, _, _, _, _, _), Ui.Element.TreeTable(_, _, _, _, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Native filters and data grids require the graphical profile.'
+        );
+      when Ui.Element.CodeBlock(_, _, _), Ui.Element.JsonView(_, _, _), Ui.Element.Readout(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.DotDisplay(_, _, _), Ui.Element.DotChart(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.EventTrack(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Native code and instrument widgets require the graphical profile.'
+        );
+      when Ui.Element.PathBar(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.FileBrowser(_, _, _, _), Ui.Element.FilePicker(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.WeekCalendar(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.MonthCalendar(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Gantt(_, _, _, _), Ui.Element.Kanban(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Native files and planning widgets require the graphical profile.'
+        );
+      when Ui.Element.StatusTag(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.RatioSlider(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.GradientSlider(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.StepSlider(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.PaletteStrip(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.AspectPicker(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.OptionAction(_, _, _, _), Ui.Element.SeedField(_, _, _, _):
+        raise new Sys.NotSupportedException(
+          'Native creative controls require the graphical profile.'
+        );
+      when Ui.Element.ShimmerText(_, _, _), Ui.Element.Typewriter(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.TextReveal(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.WordRotate(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.NumberRoll(
+        _,
+        _,
+        _
+      ), Ui.Element.GradientText(
+        _,
+        _,
+        _
+      ), Ui.Element.Spotlight(
+        _,
+        _,
+        _
+      ), Ui.Element.Loader(_, _, _), Ui.Element.Dock(_, _, _), Ui.Element.ControlTile(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.NowPlaying(_, _, _, _), Ui.Element.Waveform(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.TabBar(_, _, _, _, _):
+        raise new Sys.NotSupportedException('Native motion widgets require the graphical profile.');
       when Ui.Element.Tour(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Guided tours require the graphical profile.');
       when Ui.Element.Layered(_, _), Ui.Element.Spacer, Ui.Element.Gap(_):

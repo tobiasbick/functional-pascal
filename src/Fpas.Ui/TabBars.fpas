@@ -1,0 +1,42 @@
+unit Fpas.Ui.TabBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L;
+
+// Native item.
+public type Item = record
+  // CUI icon glyph.
+  public Icon: string;
+  // Literal tab label.
+  public Label: string;
+  // Badge count or zero to hide.
+  public Badge: int := 0;
+end record;
+
+// Native options.
+public type Options = record
+  // Native width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Show a label only on the selected item.
+  public LabelsOnSelection: bool := false;
+  // Accept selection.
+  public Enabled: bool := true;
+end record;
+
+// Draws the native CUI tab bar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Items`: Tabs in display order.
+// - `Selected`: Current zero-based selection.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function TabBar<TMsg>(Id: string; Items: array of Item; Selected: int; Change: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TabBar(Id, Items, Selected, Change, Settings ?? new Options());
+end function;
+
+end unit;

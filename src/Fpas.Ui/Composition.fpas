@@ -1,6 +1,14 @@
 unit Fpas.Ui.Composition;
 
 uses
+  Fpas.Ui.PathBars as PathBars, Fpas.Ui.FileBrowsers as FileBrowsers, Fpas.Ui.FilePickers as FilePickers, Fpas.Ui.WeekCalendars as WeekCalendars, Fpas.Ui.MonthCalendars as MonthCalendars, Fpas.Ui.Gantts as Gantts, Fpas.Ui.Kanbans as Kanbans,
+  Fpas.Ui.StatusTags as StatusTags, Fpas.Ui.RatioSliders as RatioSliders, Fpas.Ui.GradientSliders as GradientSliders, Fpas.Ui.StepSliders as StepSliders, Fpas.Ui.PaletteStrips as PaletteStrips, Fpas.Ui.AspectPickers as AspectPickers, Fpas.Ui.OptionActions as OptionActions, Fpas.Ui.SeedFields as SeedFields,
+  Fpas.Ui.Motion as Motion, Fpas.Ui.ShimmerTexts as ShimmerTexts, Fpas.Ui.Typewriters as Typewriters, Fpas.Ui.TextReveals as TextReveals, Fpas.Ui.WordRotations as WordRotations, Fpas.Ui.NumberRolls as NumberRolls, Fpas.Ui.GradientTexts as GradientTexts, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.Loaders as Loaders, Fpas.Ui.Docks as Docks, Fpas.Ui.ControlTiles as ControlTiles, Fpas.Ui.NowPlaying as NowPlaying, Fpas.Ui.Waveforms as Waveforms, Fpas.Ui.TabBars as TabBars,
+  Fpas.Ui.Charts as MotionColors,
+  Fpas.Ui.CodeBlocks as CodeBlocks, Fpas.Ui.JsonViews as JsonViews, Fpas.Ui.Readouts as Readouts, Fpas.Ui.DotDisplays as DotDisplays, Fpas.Ui.DotCharts as DotCharts, Fpas.Ui.EventTracks as EventTracks,
+  Fpas.Ui.ListItems as ListItems, Fpas.Ui.Trees as Trees, Fpas.Ui.Tables as Tables,
+  Fpas.Ui.FilterBars as Filters, Fpas.Ui.DataGrids as DataGrids, Fpas.Ui.TreeTables as TreeTables,
+  Fpas.Ui.ReorderableLists as Reorders, Fpas.Ui.VirtualLists as Virtuals, Fpas.Ui.CommandPalettes as Palettes,
   Fpas.Ui.Internal.Mapping.Visualizations as Visuals,
   Fpas.Ui.ShortcutRecorders as RecorderKeys,
   Fpas.Ui.Tours as Tours,
@@ -80,11 +88,129 @@ public function Map<TChild, TParent>(
   Value: E.Element<TChild>;
   Messages: function(TChild): TParent
 ): E.Element<TParent>;
+  function KanbanColumns(Columns: array of Kanbans.Column<TChild>): array of Kanbans.Column<TParent>;
+  begin
+    const Result: Lists.List<Kanbans.Column<TParent>> := new Lists.List<Kanbans.Column<TParent>>();
+    for Column: Kanbans.Column<TChild> in Columns do
+      const CardViews: Lists.List<Kanbans.Card<TParent>> := new Lists.List<Kanbans.Card<TParent>>();
+      for Card: Kanbans.Card<TChild> in Column.Cards do
+        CardViews.Add(
+          new Kanbans.Card<TParent>(
+            Card.Key,
+            Card.Title,
+            Map<TChild, TParent>(Card.Content, Messages)
+          )
+        );
+      end for;
+
+      Result.Add(
+        new Kanbans.Column<TParent>(
+          Column.Title,
+          CardViews.ToArray(),
+          Column.Dot,
+          Column.Limit,
+          Column.Width
+        )
+      );
+    end for;
+
+    return Result.ToArray();
+  end function;
+
+  function MapDock(Entries: array of Docks.Entry<TChild>): array of Docks.Entry<TParent>;
+  begin
+    const Result: Lists.List<Docks.Entry<TParent>> := new Lists.List<Docks.Entry<TParent>>(
+      Entries.Length
+    );
+    for Entry: Docks.Entry<TChild> in Entries do
+      Result.Add(
+        case Entry of
+          when Docks.Entry.Separator: Docks.Entry<TParent>.Separator;
+          when Docks.Entry.Item(
+            const Icon: string, const Label: string, const Message: TChild,
+            const Color: MotionColors.Color, const Running: bool, const Badge: int
+          ): Docks.Entry<TParent>.Item(Icon, Label, Messages(Message), Color, Running, Badge);
+        end case
+      );
+    end for;
+
+    return Result.ToArray();
+  end function;
   function Children(Values: array of E.Element<TChild>): array of E.Element<TParent>;
   begin
     const Result: Lists.List<E.Element<TParent>> := new Lists.List<E.Element<TParent>>();
     for Child: E.Element<TChild> in Values do
       Result.Add(Map<TChild, TParent>(Child, Messages));
+    end for;
+
+    return Result.ToArray();
+  end function;
+  function MapGridRow(Row: DataGrids.Row<TChild>): DataGrids.Row<TParent>;
+  begin
+    const Cells: Lists.List<DataGrids.Cell<TParent>> := new Lists.List<DataGrids.Cell<TParent>>(
+      Row.Cells.Length
+    );
+    for Cell: DataGrids.Cell<TChild> in Row.Cells do
+      Cells.Add(
+        case Cell of
+          when DataGrids.Cell.Text(const Caption: string): DataGrids.Cell<TParent>.Text(Caption);
+          when DataGrids.Cell.Content(
+            const Nodes: array of E.Element<TChild>
+          ): DataGrids.Cell<TParent>.Content(Children(Nodes));
+          when DataGrids.Cell.Editable(
+            const Caption: string, const Capacity: int,
+            const Commit: function(string): TChild, const Leading: array of E.Element<TChild>
+          ): DataGrids.Cell<TParent>.Editable(
+            Caption, Capacity,
+            function(Text: string): TParent => Messages(Commit(Text)), Children(Leading)
+          );
+        end case
+      );
+    end for;
+
+    return new DataGrids.Row<TParent>(Row.Id, Cells.ToArray());
+  end function;
+  function MapRows(Rows: array of Tables.Row<TChild>): array of Tables.Row<TParent>;
+  begin
+    const Result: Lists.List<Tables.Row<TParent>> := new Lists.List<Tables.Row<TParent>>(
+      Rows.Length
+    );
+    for Row: Tables.Row<TChild> in Rows do
+      const Cells: Lists.List<Tables.Cell<TParent>> := new Lists.List<Tables.Cell<TParent>>(
+        Row.Cells.Length
+      );
+      for Cell: Tables.Cell<TChild> in Row.Cells do
+        Cells.Add(
+          case Cell of
+            when Tables.Cell.Text(const Caption: string): Tables.Cell<TParent>.Text(Caption);
+            when Tables.Cell.Content(
+              const Nodes: array of E.Element<TChild>
+            ): Tables.Cell<TParent>.Content(Children(Nodes));
+          end case
+        );
+      end for;
+
+      Result.Add(new Tables.Row<TParent>(Row.Id, Cells.ToArray(), Row.Selected));
+    end for;
+
+    return Result.ToArray();
+  end function;
+
+  function MapCommands(Commands: array of Palettes.Command<TChild>): array of Palettes.Command<TParent>;
+  begin
+    const Result: Lists.List<Palettes.Command<TParent>> := new Lists.List<Palettes.Command<TParent>>(
+      Commands.Length
+    );
+    for Command: Palettes.Command<TChild> in Commands do
+      Result.Add(
+        new Palettes.Command<TParent>(
+          Command.Title,
+          Messages(Command.Message),
+          Command.Icon,
+          Command.Group,
+          Command.Shortcut
+        )
+      );
     end for;
 
     return Result.ToArray();
@@ -238,6 +364,426 @@ begin
       FSettings,
       Messages(FOnConfirm),
       Messages(FOnDismiss)
+    );
+    when E.Element.ListItem(
+      const Id: string,
+      const Title: string,
+      const Activate: Sys.Func<TChild>?,
+      const Settings: ListItems.Options
+    ): E.Element<TParent>.ListItem(
+      Id,
+      Title,
+      M.Factory<TChild, TParent>(Activate, Messages),
+      Settings
+    );
+    when E.Element.TreeNode(
+      const Id: string,
+      const Label: string,
+      const Open: bool?,
+      const Nodes: array of E.Element<TChild>,
+      const Change: Sys.Func<bool, TChild>?,
+      const Activate: Sys.Func<TChild>?,
+      const Settings: Trees.Options
+    ): E.Element<TParent>.TreeNode(
+      Id, Label, Open, Children(Nodes), M.Callback<bool, TChild, TParent>(Change, Messages),
+      M.Factory<TChild, TParent>(Activate, Messages), Settings
+    );
+    when E.Element.Table(
+      const Id: string,
+      const Columns: array of Tables.Column,
+      const Rows: array of Tables.Row<TChild>,
+      const Order: Tables.Sort?,
+      const OnSort: Sys.Func<Tables.Sort, TChild>?,
+      const Select: Sys.Func<string, TChild>?,
+      const Settings: Tables.Options
+    ): E.Element<TParent>.Table(
+      Id, Columns, MapRows(Rows), Order, M.Callback<Tables.Sort, TChild, TParent>(OnSort, Messages),
+      M.Callback<string, TChild, TParent>(Select, Messages), Settings
+    );
+    when E.Element.FilterBar(
+      const Id: string,
+      const Fields: array of Filters.Field,
+      const Current: Filters.Value,
+      const Change: function(Filters.Value): TChild,
+      const Capacity: int,
+      const Enabled: bool
+    ): E.Element<TParent>.FilterBar(
+      Id,
+      Fields,
+      Current,
+      function(Next: Filters.Value): TParent => Messages(Change(Next)),
+      Capacity,
+      Enabled
+    );
+    when E.Element.DataGrid(
+      const Id: string, const Columns: array of DataGrids.Column, const Count: int,
+      const Build: function(int): DataGrids.Row<TChild>, const Current: DataGrids.Value,
+      const Change: function(DataGrids.Value): TChild, const Settings: DataGrids.Options
+    ): E.Element<TParent>.DataGrid(
+      Id, Columns, Count, function(Index: int): DataGrids.Row<TParent> => MapGridRow(Build(Index)),
+      Current, function(Next: DataGrids.Value): TParent => Messages(Change(Next)), Settings
+    );
+    when E.Element.TreeCell(
+      const Id: string, const Label: string, const Depth: int, const Open: bool?,
+      const Change: Sys.Func<bool, TChild>?, const Icon: string
+    ): E.Element<TParent>.TreeCell(
+      Id,
+      Label,
+      Depth,
+      Open,
+      M.Callback<bool, TChild, TParent>(Change, Messages),
+      Icon
+    );
+    when E.Element.TreeTable(
+      const Id: string, const Columns: array of DataGrids.Column,
+      const Nodes: array of TreeTables.Node, const Cursor: int, const Order: Tables.Sort?,
+      const Change: function(TreeTables.Change): TChild, const Settings: TreeTables.Options
+    ): E.Element<TParent>.TreeTable(
+      Id, Columns, Nodes, Cursor, Order,
+      function(Next: TreeTables.Change): TParent => Messages(Change(Next)), Settings
+    );
+    when E.Element.ReorderableList(
+      const Id: string, const Items: array of E.Element<TChild>, const Order: array of int,
+      const Change: function(array of int): TChild, const Enabled: bool
+    ): E.Element<TParent>.ReorderableList(
+      Id,
+      Children(Items),
+      Order,
+      function(Value: array of int): TParent => Messages(Change(Value)),
+      Enabled
+    );
+    when E.Element.VirtualList(
+      const Id: string, const Count: int, const RowHeight: float, const Height: L.Extent,
+      const Build: function(int): E.Element<TChild>
+    ): E.Element<TParent>.VirtualList(
+      Id,
+      Count,
+      RowHeight,
+      Height,
+      function(Index: int): E.Element<TParent> => Map<TChild, TParent>(Build(Index), Messages)
+    );
+    when E.Element.CodeBlock(
+      const Id: string,
+      const Code: string,
+      const Settings: CodeBlocks.Options
+    ): E.Element<TParent>.CodeBlock(Id, Code, Settings);
+    when E.Element.JsonView(
+      const Id: string,
+      const Json: string,
+      const Settings: JsonViews.Options
+    ): E.Element<TParent>.JsonView(Id, Json, Settings);
+    when E.Element.Readout(
+      const Id: string,
+      const Label: string,
+      const Text: string,
+      const Settings: Readouts.Options
+    ): E.Element<TParent>.Readout(Id, Label, Text, Settings);
+    when E.Element.DotDisplay(
+      const Id: string,
+      const Text: string,
+      const Settings: DotDisplays.Options
+    ): E.Element<TParent>.DotDisplay(Id, Text, Settings);
+    when E.Element.DotChart(
+      const Id: string, const Bands: array of DotCharts.Series, const Count: int,
+      const Activate: Sys.Func<DotCharts.Hit, TChild>?, const Settings: DotCharts.Options
+    ): E.Element<TParent>.DotChart(
+      Id,
+      Bands,
+      Count,
+      M.Callback<DotCharts.Hit, TChild, TParent>(Activate, Messages),
+      Settings
+    );
+    when E.Element.EventTrack(
+      const Id: string, const Current: EventTracks.Value,
+      const Change: function(EventTracks.Change): TChild, const Settings: EventTracks.Options
+    ): E.Element<TParent>.EventTrack(
+      Id,
+      Current,
+      function(Next: EventTracks.Change): TParent => Messages(Change(Next)),
+      Settings
+    );
+    when E.Element.PathBar(
+      const Id: string,
+      const Value: PathBars.Value,
+      const Change: function(PathBars.Event): TChild,
+      const Settings: PathBars.Options
+    ): E.Element<TParent>.PathBar(
+      Id,
+      Value,
+      function(Event: PathBars.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.FileBrowser(
+      const Id: string,
+      const Folder: string,
+      const Change: function(FileBrowsers.Event): TChild,
+      const Settings: FileBrowsers.Options
+    ): E.Element<TParent>.FileBrowser(
+      Id,
+      Folder,
+      function(Event: FileBrowsers.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.FilePicker(
+      const Id: string,
+      const Base: E.Element<TChild>?,
+      const Open: bool,
+      const Change: function(FilePickers.Event): TChild,
+      const Settings: FilePickers.Options
+    ): E.Element<TParent>.FilePicker(
+      Id, if Base = null then
+        null
+      else
+        Map<TChild, TParent>(Base, Messages)
+      end if, Open, function(Event: FilePickers.Event): TParent => Messages(Change(Event)), Settings
+    );
+    when E.Element.WeekCalendar(
+      const Id: string,
+      const Value: WeekCalendars.Value,
+      const Change: function(WeekCalendars.Event): TChild,
+      const Settings: WeekCalendars.Options
+    ): E.Element<TParent>.WeekCalendar(
+      Id,
+      Value,
+      function(Event: WeekCalendars.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.MonthCalendar(
+      const Id: string,
+      const Value: MonthCalendars.Value,
+      const Change: function(MonthCalendars.Event): TChild,
+      const Settings: MonthCalendars.Options
+    ): E.Element<TParent>.MonthCalendar(
+      Id,
+      Value,
+      function(Event: MonthCalendars.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.Gantt(
+      const Id: string,
+      const Value: Gantts.Value,
+      const Change: function(Gantts.Event): TChild,
+      const Settings: Gantts.Options
+    ): E.Element<TParent>.Gantt(
+      Id,
+      Value,
+      function(Event: Gantts.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.Kanban(
+      const Id: string,
+      const Columns: array of Kanbans.Column<TChild>,
+      const Change: function(Kanbans.Event): TChild,
+      const Settings: Kanbans.Options
+    ): E.Element<TParent>.Kanban(
+      Id,
+      KanbanColumns(Columns),
+      function(Event: Kanbans.Event): TParent => Messages(Change(Event)),
+      Settings
+    );
+    when E.Element.StatusTag(
+      const Id: string,
+      const Current: StatusTags.Value,
+      const Remove: Sys.Func<TChild>?,
+      const Settings: StatusTags.Options
+    ): E.Element<TParent>.StatusTag(
+      Id,
+      Current,
+      M.Factory<TChild, TParent>(Remove, Messages),
+      Settings
+    );
+    when E.Element.RatioSlider(
+      const Id: string,
+      const Current: RatioSliders.Value,
+      const Change: function(float): TChild,
+      const Settings: RatioSliders.Options
+    ): E.Element<TParent>.RatioSlider(
+      Id,
+      Current,
+      function(Proposed: float): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.GradientSlider(
+      const Id: string,
+      const Current: GradientSliders.Value,
+      const Change: function(GradientSliders.Event): TChild,
+      const Settings: GradientSliders.Options
+    ): E.Element<TParent>.GradientSlider(
+      Id,
+      Current,
+      function(Proposed: GradientSliders.Event): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.StepSlider(
+      const Id: string,
+      const Current: StepSliders.Value,
+      const Change: function(StepSliders.Event): TChild,
+      const Settings: StepSliders.Options
+    ): E.Element<TParent>.StepSlider(
+      Id,
+      Current,
+      function(Proposed: StepSliders.Event): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.PaletteStrip(
+      const Id: string,
+      const Current: PaletteStrips.Value,
+      const Change: function(PaletteStrips.Event): TChild,
+      const Settings: PaletteStrips.Options
+    ): E.Element<TParent>.PaletteStrip(
+      Id,
+      Current,
+      function(Proposed: PaletteStrips.Event): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.AspectPicker(
+      const Id: string,
+      const Current: AspectPickers.Value,
+      const Change: function(int): TChild,
+      const Settings: AspectPickers.Options
+    ): E.Element<TParent>.AspectPicker(
+      Id,
+      Current,
+      function(Proposed: int): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.OptionAction(
+      const Id: string,
+      const Current: OptionActions.Value,
+      const Change: function(OptionActions.Event): TChild,
+      const Settings: OptionActions.Options
+    ): E.Element<TParent>.OptionAction(
+      Id,
+      Current,
+      function(Proposed: OptionActions.Event): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.SeedField(
+      const Id: string,
+      const Current: SeedFields.Value,
+      const Change: function(SeedFields.Event): TChild,
+      const Settings: SeedFields.Options
+    ): E.Element<TParent>.SeedField(
+      Id,
+      Current,
+      function(Proposed: SeedFields.Event): TParent => Messages(Change(Proposed)),
+      Settings
+    );
+    when E.Element.ShimmerText(
+      const Id: string,
+      const Text: string,
+      const Settings: Motion.TextOptions
+    ): E.Element<TParent>.ShimmerText(Id, Text, Settings);
+    when E.Element.Typewriter(
+      const Id: string,
+      const Text: string,
+      const Replay: int,
+      const Settings: Motion.TextOptions,
+      const OnComplete: Sys.Func<TChild>?
+    ): E.Element<TParent>.Typewriter(
+      Id,
+      Text,
+      Replay,
+      Settings,
+      M.Factory<TChild, TParent>(OnComplete, Messages)
+    );
+    when E.Element.TextReveal(
+      const Id: string,
+      const Text: string,
+      const Replay: int,
+      const Settings: Motion.TextOptions
+    ): E.Element<TParent>.TextReveal(Id, Text, Replay, Settings);
+    when E.Element.WordRotate(
+      const Id: string,
+      const Words: array of string,
+      const Interval: float,
+      const Settings: Motion.TextOptions
+    ): E.Element<TParent>.WordRotate(Id, Words, Interval, Settings);
+    when E.Element.NumberRoll(
+      const Id: string,
+      const Text: string,
+      const Settings: Motion.TextOptions
+    ): E.Element<TParent>.NumberRoll(Id, Text, Settings);
+    when E.Element.GradientText(
+      const Id: string,
+      const Text: string,
+      const Settings: GradientTexts.Options
+    ): E.Element<TParent>.GradientText(Id, Text, Settings);
+    when E.Element.Spotlight(
+      const Id: string,
+      const Items: array of E.Element<TChild>,
+      const Settings: Spotlights.Options
+    ): E.Element<TParent>.Spotlight(Id, Children(Items), Settings);
+    when E.Element.Loader(
+      const Id: string,
+      const Style: Loaders.Animation,
+      const Settings: Loaders.Options
+    ): E.Element<TParent>.Loader(Id, Style, Settings);
+    when E.Element.Dock(
+      const Id: string,
+      const Entries: array of Docks.Entry<TChild>,
+      const Settings: Docks.Options
+    ): E.Element<TParent>.Dock(Id, MapDock(Entries), Settings);
+    when E.Element.ControlTile(
+      const Id: string,
+      const Label: string,
+      const On: bool,
+      const Change: function(bool): TChild,
+      const Settings: ControlTiles.Options
+    ): E.Element<TParent>.ControlTile(
+      Id,
+      Label,
+      On,
+      function(Value: bool): TParent => Messages(Change(Value)),
+      Settings
+    );
+    when E.Element.NowPlaying(
+      const Id: string,
+      const Current: NowPlaying.Value,
+      const Change: function(NowPlaying.Event): TChild,
+      const Settings: NowPlaying.Options
+    ): E.Element<TParent>.NowPlaying(
+      Id,
+      Current,
+      function(Value: NowPlaying.Event): TParent => Messages(Change(Value)),
+      Settings
+    );
+    when E.Element.Waveform(
+      const Id: string,
+      const Peaks: array of float,
+      const Progress: float?,
+      const Change: Sys.Func<float, TChild>?,
+      const Settings: Waveforms.Options
+    ): E.Element<TParent>.Waveform(
+      Id,
+      Peaks,
+      Progress,
+      M.Callback<float, TChild, TParent>(Change, Messages),
+      Settings
+    );
+    when E.Element.TabBar(
+      const Id: string,
+      const Items: array of TabBars.Item,
+      const Selected: int,
+      const Change: function(int): TChild,
+      const Settings: TabBars.Options
+    ): E.Element<TParent>.TabBar(
+      Id,
+      Items,
+      Selected,
+      function(Value: int): TParent => Messages(Change(Value)),
+      Settings
+    );
+    when E.Element.CommandPalette(
+      const Id: string,
+      const Base: E.Element<TChild>,
+      const Open: bool,
+      const Commands: array of Palettes.Command<TChild>,
+      const Change: function(bool): TChild,
+      const Shortcut: bool
+    ): E.Element<TParent>.CommandPalette(
+      Id, Map<TChild, TParent>(Base, Messages), Open, MapCommands(Commands),
+      function(Value: bool): TParent => Messages(Change(Value)), Shortcut
     );
     when E.Element.Grid(
       const Settings: Grids.Options,

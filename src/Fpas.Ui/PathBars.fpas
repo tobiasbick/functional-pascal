@@ -1,0 +1,59 @@
+unit Fpas.Ui.PathBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Buttons as B;
+
+// Current path segments.
+public type Value = record
+  // Segments from the root to the current location.
+  public Segments: array of string;
+  // Optional draft for editing. Empty joins the segments.
+  public Text: string := '';
+  // Optional menu entries by parent segment.
+  public Children: array of array of string := [];
+end record;
+
+// Native path bar options.
+public type Options = record
+  // Leading glyph.
+  public Icon: string := '';
+  // Text mode placeholder.
+  public Placeholder: string := '';
+  // Native control size.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Accepts typed paths.
+  public Editable: bool := true;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// A path navigation proposal.
+public type Event = record
+  // Activated segment, or minus one.
+  public Segment: int := -1;
+  // Submitted path.
+  public Text: string? := null;
+  // Parent segment of a selected child.
+  public MenuSegment: int := -1;
+  // Selected child index.
+  public Child: int := -1;
+end record;
+
+// Presents the native path bar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical widget.
+public function PathBar<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.PathBar(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

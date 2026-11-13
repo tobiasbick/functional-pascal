@@ -1,0 +1,89 @@
+unit Fpas.Ui.Gantts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// Native task appearance.
+public type Status = enum: byte
+  // Derives state from progress and today.
+  Automatic;
+  // Finished work.
+  Done;
+  // Work in progress.
+  Active;
+  // Planned work.
+  Planned;
+end enum;
+
+// One scheduled task.
+public type Task = record
+  // Task caption.
+  public Name: string;
+  // First day offset.
+  public Start: int;
+  // End day offset.
+  public Finish: int;
+  // Completed fraction.
+  public Progress: float := 0.0F;
+  // Optional owner name.
+  public Owner: string := '';
+  // Dependency task index, or minus one.
+  public DependsOn: int := -1;
+  // Renders a milestone diamond.
+  public Milestone: bool := false;
+  // Optional color override.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Native task state.
+  public State: Status := Status.Automatic;
+end record;
+
+// Current timeline model.
+public type Value = record
+  // First timeline date.
+  public Origin: Sys.DateOnly;
+  // Number of timeline days.
+  public Days: int;
+  // Tasks in display order.
+  public Tasks: array of Task;
+end record;
+
+// Native timeline settings.
+public type Options = record
+  // Today offset, or zero to hide the marker.
+  public Today: int := 0;
+  // Width per day, or zero for default.
+  public DayWidth: float := 0.0F;
+  // Height per row, or zero for default.
+  public RowHeight: float := 0.0F;
+  // Native chart height.
+  public Height: L.Extent := L.Extent.Content;
+  // Disables rescheduling.
+  public ReadOnly: bool := false;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Native schedule proposal.
+public type Event = record
+  // Proposed task schedule.
+  public Tasks: array of Task;
+  // Activated task index, or minus one.
+  public Activated: int := -1;
+end record;
+
+// Presents the native Gantt chart.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical widget.
+public function Gantt<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Gantt(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

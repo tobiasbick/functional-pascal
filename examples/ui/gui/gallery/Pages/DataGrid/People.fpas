@@ -1,0 +1,126 @@
+unit GuiGallery.Pages.DataGrid.People;
+
+uses
+  Fpas.Ui.Tables as T, System as Sys, System.Collections.Generic as Lists,
+  System.Globalization as Culture;
+
+// One deterministic record from the original grid demo.
+public type Person = record
+  // Original display name.
+  public Name: string;
+  // Generated demonstration address.
+  public Email: string;
+  // Team badge.
+  public Team: string;
+  // Number of commits.
+  public Commits: int;
+  // Score in tenths of a point.
+  public Score: int;
+end record;
+
+const FirstNames: array of string := [
+  'Maya', 'Priya', 'Jonas', 'Lena', 'Sam', 'Tomas', 'Aiko', 'Daniel',
+  'Rosa', 'Omar', 'Elif', 'Ben', 'Nora', 'Kwame', 'Hana', 'Felix'
+];
+const LastNames: array of string := [
+  'Okafor', 'Nair', 'Berg', 'Fischer', 'Whitfield', 'Rivera', 'Tanaka', 'Mensah',
+  'Delgado', 'Haddad', 'Kaya', 'Carter', 'Lindqvist', 'Asante', 'Novak', 'Moreau'
+];
+const Teams: array of string := ['Engine', 'Design', 'Platform', 'Docs', 'Growth'];
+
+// Gets the number of example people.
+// ## Returns
+// The original 2,000-row model size.
+public function Count(): int;
+begin
+  return 2000;
+end function;
+
+// Converts a CUI icon codepoint into the native glyph string.
+// ## Parameters
+// - `Code`: CUI icon codepoint.
+// ## Returns
+// The glyph string.
+public function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+// Recreates one original person from their source index.
+// ## Parameters
+// - `Index`: Stable source index.
+// ## Returns
+// The corresponding demonstration record.
+public function At(Index: int): Person;
+begin
+  var Hash: uint := unchecked(cast<uint>(Index) * 2654435761u);
+  Hash := Hash xor (Hash shr 15);
+  Hash := unchecked(Hash * 2246822519u);
+  Hash := Hash xor (Hash shr 13);
+  const First: string := FirstNames[cast<int>(Hash mod 16u)];
+  const Last: string := LastNames[cast<int>((Hash shr 4) mod 16u)];
+  const Number: uint := ((Hash shr 8) mod 90u) + 10u;
+  const Email: string := (First + '.' + Last.Substring(0, 1) +
+    Number.ToString(Culture.CultureInfo.InvariantCulture) + '@example.com').ToLowerInvariant();
+  return new Person(
+    First + ' ' + Last, Email, Teams[cast<int>((Hash shr 12) mod 5u)],
+    cast<int>((Hash shr 16) mod 1400u) + 12, cast<int>((Hash shr 3) mod 1000u)
+  );
+end function;
+
+// Resolves a person's model-owned display name.
+// ## Parameters
+// - `Edits`: Committed names by original index.
+// - `Index`: Person index.
+// - `Original`: Original example name.
+// ## Returns
+// The name displayed by the grid.
+public function Name(Edits: Lists.Dictionary<int, string>; Index: int; Original: string): string;
+begin
+  var Edited: string := '';
+  if Edits.TryGetValue(Index, out Edited) then
+    return Edited;
+  end if;
+
+  return Original;
+end function;
+
+// Sorts source indices using the native demo's column order and stable ties.
+// ## Parameters
+// - `Sort`: Requested column and direction.
+// - `Edits`: Committed name overrides.
+// ## Returns
+// Display positions mapped to source indices.
+public function Order(Sort: T.Sort; Edits: Lists.Dictionary<int, string>): array of int;
+  function Compare(A: int; B: int): int;
+  begin
+    const Left: Person := At(A);
+    const Right: Person := At(B);
+    const Result: int := case Sort.Column of
+      when 0: Sys.String.CompareOrdinal(Name(Edits, A, Left.Name), Name(Edits, B, Right.Name));
+      when 2: Sys.String.CompareOrdinal(Left.Team, Right.Team);
+      when 3: Left.Commits.CompareTo(Right.Commits);
+      else Left.Score.CompareTo(Right.Score);
+    end case;
+    return if Result = 0 then
+      A.CompareTo(B)
+    elsif Sort.Descending then
+      -Result
+    else
+      Result
+    end if;
+  end function;
+begin
+  const Items: Lists.List<int> := new Lists.List<int>(Count());
+  for Index: int := 0 to Count() - 1 do
+    Items.Add(Index);
+  end for;
+
+  if Sort.Column >= 0 then
+    Items.Sort(Compare);
+  end if;
+
+  return Items.ToArray();
+end function;
+
+end unit;

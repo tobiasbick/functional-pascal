@@ -1,0 +1,61 @@
+unit GuiGallery.Pages.DataGrid.State;
+
+uses
+  Fpas.Ui.DataGrids as D, Fpas.Ui.FilterBars as F, Fpas.Ui.Tables as T,
+  Fpas.Ui.TreeTables as Tree, GuiGallery.Pages.DataGrid.People as People, System.Collections.Generic as Lists;
+
+// Model for the original grid and supplemental native tree table.
+public type Model = record
+  // Current search and option masks.
+  public Filter: F.Value := new F.Value([5u, 0u, 0u], '');
+  // Current sort and grid cursor.
+  public Grid: D.Value := new D.Value(Order := new T.Sort(3, true));
+  // Display positions mapped to stable person indices.
+  public Order: array of int := People.Order(
+    new T.Sort(3, true),
+    new Lists.Dictionary<int, string>()
+  );
+  // Selected person identities.
+  public Selected: array of bool := new bool[People.Count()];
+  // Edited names by stable person index.
+  public Names: Lists.Dictionary<int, string> := new Lists.Dictionary<int, string>();
+  // Expansion of the original src row.
+  public SourceOpen: bool := true;
+  // Expansion of the original ui row.
+  public UiOpen: bool := false;
+  // Native tree nodes and their current expansion and selection.
+  public TreeNodes: array of Tree.Node := [
+    new Tree.Node('src', Cells := ['42', '1.2 MB'], Icon := People.Icon($E0D7), Open := true),
+    new Tree.Node(
+      'ui',
+      Parent := 0,
+      Cells := ['18', '640 KB'],
+      Icon := People.Icon($E0D7),
+      HasChildren := true
+    ),
+    new Tree.Node('main.c', Parent := 0, Cells := ['1', '8 KB'], Icon := People.Icon($E0C0)),
+    new Tree.Node('README.md', Cells := ['1', '12 KB'], Icon := People.Icon($E0CC))
+  ];
+  // Native tree keyboard cursor.
+  public TreeCursor: int := -1;
+  // Most recently activated native node.
+  public Activated: string := '';
+end record;
+
+// Messages from the gallery controls.
+public type Msg = variant
+  // Change the filter example.
+  SetFilter(Value: F.Value);
+  // Apply native grid state.
+  SetGrid(Value: D.Value);
+  // Commit the displayed name of a person.
+  Rename(Index: int; Name: string);
+  // Expand or collapse src.
+  SetSource(Open: bool);
+  // Expand or collapse ui.
+  SetUi(Open: bool);
+  // Apply native tree-table changes and satisfy demo loads.
+  SetTree(Value: Tree.Change);
+end variant;
+
+end unit;

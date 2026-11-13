@@ -1,0 +1,41 @@
+unit GuiGallery.App.Palette;
+
+uses
+  GuiGallery.App.State as G, GuiGallery.Pages.Overlays.State as O, GuiGallery.Shared.State as S,
+  Fpas.Ui.CommandPalettes as P, Fpas.Ui.Elements as E, System as Sys;
+
+function Command(Title: string; Message: G.Msg; Icon: int; Group: string; Shortcut: string := ''): P.Command<G.Msg>;
+begin
+  return new P.Command<G.Msg>(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
+end function;
+
+// Presents the original searchable gallery commands.
+// ## Parameters
+// - `Open`: Current palette visibility.
+// - `Base`: The gallery below the modal.
+// ## Returns
+// The gallery with its command palette.
+public function Wrap(Open: bool; Base: E.Element<G.Msg>): E.Element<G.Msg>;
+begin
+  return P.CommandPalette<G.Msg>(
+    'gallery-palette', Base, Open, [
+      Command('Go to Overview', G.Msg.Show(G.Page.Overview), $E1C1, 'Navigation'),
+      Command('Go to Buttons', G.Msg.Show(G.Page.Buttons), $E1B4, 'Navigation'),
+      Command('Go to Inputs', G.Msg.Show(G.Page.Inputs), $E198, 'Navigation'),
+      Command('Go to Charts', G.Msg.Show(G.Page.Charts), $E2A5, 'Navigation'),
+      Command(
+        'Toggle dark mode',
+        G.Msg.Shared(S.Msg.ToggleAppearance),
+        $E11E,
+        'Preferences',
+        'Ctrl J'
+      ),
+      Command('Change accent color', G.Msg.Shared(S.Msg.NextAccent), $E1DD, 'Preferences'),
+      Command('New project', G.Msg.Show(G.Page.Feedback), $E13D, 'Actions', 'Ctrl N'),
+      Command('Invite teammate', G.Msg.Overlays(O.Msg.SetProfileDialog(true)), $E1A2, 'Actions'),
+      Command('Open settings', G.Msg.Overlays(O.Msg.SetSheet(true)), $E154, 'Actions', 'Ctrl ,')
+    ], function(Visible: bool): G.Msg => G.Msg.Overlays(O.Msg.SetPalette(Visible))
+  );
+end function;
+
+end unit;

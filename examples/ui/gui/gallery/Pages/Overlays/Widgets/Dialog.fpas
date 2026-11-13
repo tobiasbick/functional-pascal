@@ -45,6 +45,13 @@ begin
               Variant := S.ButtonVariant.Destructive,
               Icon := Sys.Char.ConvertFromUtf32($E18E)
             )
+          ),
+          B.Button<State.Msg>(
+            'overlay-palette', 'Command palette', State.Msg.SetPalette(true),
+            new B.Options(
+              Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A),
+              Tooltip := 'Search everything', Shortcut := 'Ctrl K'
+            )
           )
         )
       ]

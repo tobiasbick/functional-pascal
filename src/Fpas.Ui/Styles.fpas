@@ -40,6 +40,20 @@ public type Role = enum: byte
   DisplayTitle;
   // Graphical introductory text with CUI's secondary color at 15 logical points.
   Introduction;
+  // Graphical text without wrapping, preserving the applied font and color.
+  SingleLine;
+  // Graphical text with tabular digits, preserving the applied font and color.
+  Tabular;
+  // Graphical body text at thirteen logical points.
+  SmallBody;
+  // A muted CUI icon at sixteen logical points.
+  MutedIcon;
+  // Graphical text in CUI's display face at twenty-six logical points.
+  DisplayBody;
+  // Compact medium-weight graphical text at 13.5 logical points.
+  CompactLabel;
+  // A success-colored CUI glyph at fourteen logical points.
+  SuccessGlyph;
 end enum;
 
 // Native CUI semantic colors shared by graphical widgets.

@@ -1,0 +1,13 @@
+unit Fpas.Ui.ControlWells;
+
+// An action button next to a native well control.
+public type Tool = record
+  // Icon from the CUI icon font.
+  public Icon: string;
+  // Hover tooltip and accessible name.
+  public Tooltip: string := '';
+  // Shows the tool pressed.
+  public Active: bool := false;
+end record;
+
+end unit;

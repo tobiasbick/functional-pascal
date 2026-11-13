@@ -9,6 +9,8 @@ uses
 public type Model = record
   // Appearance shared by both selectors and the light/dark toggle.
   public Appearance: Switchers.Selection := Switchers.Selection.Light;
+  // Accent chosen by the command palette.
+  public Accent: Themes.Accent := Themes.Accent.Neutral;
   // Application-supplied appearance used by the System demo choice.
   public SystemAppearance: Themes.Mode := Themes.Mode.Light;
   // Email notifications preference.
@@ -33,6 +35,10 @@ end record;
 public type Msg = variant
   // Propose an appearance from the header or preview selector.
   SetAppearance(Value: Switchers.Selection);
+  // Toggle the current concrete light or dark theme.
+  ToggleAppearance;
+  // Advance to the next CUI accent.
+  NextAccent;
   // Simulate a change from the application's appearance provider.
   SetSystemAppearance(Value: Themes.Mode);
   // Set the email notifications preference.

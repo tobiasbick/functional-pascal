@@ -6,7 +6,11 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Accordions as A;
+  Fpas.Ui.Accordions as A, Fpas.Ui.Cards as Cards,
+  GuiGallery.Pages.Lists.Widgets.People as People,
+  GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList,
+  GuiGallery.Pages.Lists.Widgets.Tasks as Tasks,
+  GuiGallery.Pages.Lists.Widgets.Invoices as Invoices;
 
 function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element<State.Msg>;
 begin
@@ -17,20 +21,15 @@ begin
   );
 end function;
 
-// Shows the original three-question native accordion.
+// Reproduces the native Data display sections in their original order.
 //
 // ## Parameters
 // - `Model`: Model-owned expansion for each question.
 // ## Returns
-// The accepted Accordion section of the Lists page.
-public function View(Model: State.Model): E.Element<State.Msg>;
+// The Data display page sections.
+public function View(Model: State.Model): array of E.Element<State.Msg>;
 begin
-  const Inset: E.Element<State.Msg> := E.Size<State.Msg>(
-    E.Column<State.Msg>(),
-    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(20)))
-  );
-  const Items: E.Element<State.Msg> := E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(12)),
+  const Items: array of E.Element<State.Msg> := [
     Question(
       Model, 0, 'Is it really dependency free?',
       'Yes. The core is plain C99. Windows uses Win32, macOS uses Cocoa and Linux uses X11. Fonts and icons are embedded.'
@@ -43,17 +42,18 @@ begin
       Model, 2, 'Does it respect reduced motion?',
       'Every animation has a reduced motion path that keeps the final state and feedback.'
     )
-  );
-  return E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(16)), G.Heading<State.Msg>('Accordion'),
-    E.Styled<State.Msg>(
-      E.Column<State.Msg>(
-        new L.Flow(Padding := G.Points(4)),
-        E.Row<State.Msg>(Inset, E.Size<State.Msg>(Items, new L.Flex(Basis := L.Extent.Fill)), Inset)
-      ),
-      S.Role.OutlinedPanel
-    )
-  );
+  ];
+  return [
+    G.Heading<State.Msg>('Table', 'Sortable columns, row selection and components in cells.'),
+    People.View(Model),
+    TreeAndList.View(Model),
+    G.Heading<State.Msg>('Reorderable list', 'Drag a row. The others make room as you go.'),
+    Tasks.View(Model),
+    G.Heading<State.Msg>('Accordion'),
+    Cards.Card<State.Msg>('accordion-card', Items, new Cards.Options(PaddingY := 4.0F)),
+    G.Heading<State.Msg>('Virtual list', 'Ten thousand rows. Only the visible ones are built.'),
+    Invoices.View()
+  ];
 end function;
 
 end unit;

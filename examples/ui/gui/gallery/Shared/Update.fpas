@@ -19,6 +19,20 @@ begin
     when S.Msg.SetAppearance(const Value: Switchers.Selection): State with
       Appearance := Value;
     end with;
+    when S.Msg.ToggleAppearance: State with
+      Appearance := if Switchers.Resolve(
+        State.Appearance,
+        State.SystemAppearance
+      ) = Themes.Mode.Dark
+      then
+        Switchers.Selection.Light
+      else
+        Switchers.Selection.Dark
+      end if;
+    end with;
+    when S.Msg.NextAccent: State with
+      Accent := cast<Themes.Accent>((cast<int>(State.Accent) + 1) mod 8);
+    end with;
     when S.Msg.SetSystemAppearance(const Value: Themes.Mode): State with
       SystemAppearance := Value;
     end with;

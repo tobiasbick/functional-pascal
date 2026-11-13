@@ -1,0 +1,58 @@
+unit Fpas.Ui.Gui.Internal.Widgets.EventTrack;
+
+uses
+  Fpas.Ui.EventTracks as W, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Sizing as S, Fpas.Ui.Gui.Internal.ChartData as Charts;
+
+// Presents the native CUI widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned times and selected event.
+// - `Change`: Maps a native edit to a message.
+// - `Settings`: Native presentation options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: W.Value; Change: function(W.Change): TMsg; Settings: W.Options);
+begin
+  const Token: string := C.Token('event-track', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Native: Cui.CuiEventOptions := new Cui.CuiEventOptions(
+    Width.Kind,
+    Width.Value,
+    Settings.Capacity,
+    Settings.Minimum,
+    Settings.Maximum,
+    Settings.Step,
+    cast<int>(Settings.Units),
+    Charts.Format(Settings.Format),
+    Settings.LabelStep,
+    Settings.Add,
+    Settings.Remove,
+    Settings.Axis
+  );
+  const Result: Cui.CuiEventResult := Frame.Window.EventTrack(
+    Token, Current.Times, Current.Selected, Native,
+    Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled)
+  );
+  if Enabled and (Result.Changed or Result.Selected <> Current.Selected) then
+    Frame.Messages.Add(
+      Change(
+        new W.Change(
+          new W.Value(Result.Times, Result.Selected),
+          Result.Added, Result.Removed, Result.Dragging
+        )
+      )
+    );
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, '', 'event-track', new Cui.CuiRectangle(), Enabled,
+      Value := Result.Selected.ToString()
+    )
+  );
+end procedure;
+
+end unit;

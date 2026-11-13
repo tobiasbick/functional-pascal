@@ -19,6 +19,33 @@ uses
 public function TopModal<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>): string?;
 begin
   case Node of
+    when E.Element.FilePicker(
+      const Id: string,
+      const Base: E.Element<TMsg>?,
+      const Open: bool,
+      _,
+      _
+    ):
+      if Open then
+        return Id;
+      end if;
+
+      if Base <> null then
+        return TopModal<TMsg>(Base, Prepared);
+      end if;
+    when E.Element.CommandPalette(
+      const Id: string,
+      const Base: E.Element<TMsg>,
+      const Open: bool,
+      _,
+      _,
+      _
+    ):
+      return if Open then
+        Id
+      else
+        TopModal<TMsg>(Base, Prepared)
+      end if;
     when E.Element.Tour(_, const Base: E.Element<TMsg>, _, _, _, _):
       return TopModal<TMsg>(Base, Prepared);
     when E.Element.Sheet(
@@ -40,7 +67,11 @@ begin
     when E.Element.Layered(
       const Children: array of E.Element<TMsg>,
       _
-    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
+    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Card(
       _,
       const Children: array of E.Element<TMsg>,
       _,

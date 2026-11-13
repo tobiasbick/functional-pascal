@@ -1,0 +1,65 @@
+unit Fpas.Ui.Kanbans;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as Colors;
+
+// One card, with native drag and application-defined contents.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Card<TMsg> = record
+  // Stable nonnegative native card identity, unique on this board.
+  public Key: int;
+  // Accessible caption.
+  public Title: string;
+  // Graphical content.
+  public Content: E.Element<TMsg>;
+end record;
+
+// One board column.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Column<TMsg> = record
+  // Heading.
+  public Title: string;
+  // Cards in order.
+  public Cards: array of Card<TMsg>;
+  // Heading dot.
+  public Dot: Colors.Color := Colors.Color.Automatic;
+  // Work-in-progress limit. Zero hides the limit.
+  public Limit: int := 0;
+  // Logical width. Zero uses the native default.
+  public Width: float := 0.0F;
+end record;
+
+// Proposal from native board interaction.
+public type Event = variant
+  // Add button activated for this column.
+  Add(Column: int);
+  // Card clicked or activated.
+  Activate(Key: int);
+  // Card dropped at an index measured without the moved card.
+  Move(Key: int; FromColumn: int; ToColumn: int; Index: int);
+end variant;
+
+// Native board settings.
+public type Options = record
+  // Accepts card activation and moves.
+  public Enabled: bool := true;
+end record;
+
+// Presents the native Kanban board.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Columns`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical widget.
+public function Kanban<TMsg>(Id: string; Columns: array of Column<TMsg>; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Kanban(Id, Columns, Change, Settings ?? new Options());
+end function;
+
+end unit;

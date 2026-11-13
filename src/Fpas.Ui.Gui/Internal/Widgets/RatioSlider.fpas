@@ -1,0 +1,43 @@
+unit Fpas.Ui.Gui.Internal.Widgets.RatioSlider;
+
+uses
+  Fpas.Ui.RatioSliders as A, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.CreativeParts as W, Fpas.Ui.Gui.Internal.Sizing as S, System as Sys;
+
+// Presents the native ratio slider.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned value.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(float): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'ratio-slider';
+  const Token: string := C.Token(Role, Id);
+  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, [''], [Enabled], 0);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  var Next: float := Current.Ratio;
+  const Result: int := Frame.Window.RatioSlider(
+    Token, Current.First, Current.Second, ref Next,
+    cast<int>(Settings.Tone), Settings.Step, Settings.Height, Width.Kind, Width.Value,
+    W.Bits(Enabled, 1), Focus, null
+  );
+  if Result <> 0 then
+    Frame.Messages.Add(Change(Next));
+  end if;
+
+  W.Root<TMsg>(
+    Frame,
+    Id,
+    Role,
+    Current.First + ' / ' + Current.Second,
+    Enabled,
+    Next.ToString(Sys.Globalization.CultureInfo.InvariantCulture)
+  );
+end procedure;
+
+end unit;

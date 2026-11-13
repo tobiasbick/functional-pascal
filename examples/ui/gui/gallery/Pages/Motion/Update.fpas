@@ -1,0 +1,82 @@
+unit GuiGallery.Pages.Motion.Update;
+
+uses
+  GuiGallery.Pages.Motion.State as M, Fpas.Ui.NowPlaying as Player,
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Gui.Toasts as Toasts;
+
+function Advance(State: M.Model; Seconds: float): M.Model;
+begin
+  if not State.Track.Playing then
+    return State;
+  end if;
+  const Position: float := State.Track.Position + Seconds;
+  return State with
+    Track := State.Track with
+      Position := if Position > State.Track.Duration then
+        0.0F
+      else
+        Position
+      end if;
+    end with;
+  end with;
+end function;
+
+// Applies Motion widget proposals.
+// ## Parameters
+// - `State`: Current Motion model.
+// - `Message`: Proposed Motion action.
+// ## Returns
+// The next model and any toast.
+public function Update(State: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+begin
+  case Message of
+    when M.Msg.Files:
+      return new A.Transition<M.Model, M.Msg>(State, [Toasts.Show<M.Msg>('Files')]);
+    when M.Msg.Track(const Event: Player.Event):
+      return new A.Transition<M.Model, M.Msg>(
+        State with
+          Track := Event.Current;
+        end with,
+        if Event.Next then
+          [Toasts.Show<M.Msg>('Next track')]
+        else
+          []
+        end if
+      );
+    else
+      const Updated: M.Model := case Message of
+        when M.Msg.Replay: State with
+          Revision := State.Revision + 1;
+        end with;
+        when M.Msg.Wifi(const On: bool): State with
+          Wifi := On;
+        end with;
+        when M.Msg.Hotspot(const On: bool): State with
+          Hotspot := On;
+        end with;
+        when M.Msg.Focus(const On: bool): State with
+          Focus := On;
+        end with;
+        when M.Msg.AirShare(const On: bool): State with
+          AirShare := On;
+        end with;
+        when M.Msg.Dark(const On: bool): State with
+          Dark := On;
+        end with;
+        when M.Msg.Tab(const Index: int): State with
+          Tab := Index;
+        end with;
+        when M.Msg.Seek(const Progress: float): State with
+          Progress := Progress;
+        end with;
+        when M.Msg.Roll: State with
+          Alternate := not State.Alternate;
+        end with;
+        when M.Msg.Tick(const Seconds: float): Advance(State, Seconds);
+        else State;
+      end case;
+      return new A.Transition<M.Model, M.Msg>(Updated, []);
+  end case;
+end function;
+
+end unit;

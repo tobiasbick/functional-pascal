@@ -1,0 +1,105 @@
+unit GuiGallery.Pages.SmartInputs.Widgets.Editors;
+
+uses
+  GuiGallery.Pages.SmartInputs.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.InlineEdits as I,
+  Fpas.Ui.ScrubFields as Scrubs, Fpas.Ui.MoneyFields as M;
+
+// Builds the original inline title and owner examples.
+// ## Parameters
+// - `Model`: Confirmed gallery values.
+// ## Returns
+// The native inline-edit section.
+public function Inline(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  return [
+    G.Heading<S.Msg>(
+      'Inline edit',
+      'Click the text to edit it in place. Enter saves, Esc cancels.'
+    ),
+    E.Column<S.Msg>(
+      new L.Flow(Gap := G.Points(6), Clip := false),
+      I.InlineEdit<S.Msg>(
+        'title', Model.Title, S.Msg.SetTitle,
+        new I.Options(Face := I.Font.Display, FontSize := 26.0F, MaxUtf8Bytes := 127)
+      ),
+      I.InlineEdit<S.Msg>(
+        'owner', Model.Owner, S.Msg.SetOwner,
+        new I.Options(Placeholder := 'Add an owner', MaxUtf8Bytes := 63)
+      )
+    )
+  ];
+end function;
+
+// Builds the original opacity, radius and blur scrub fields.
+// ## Parameters
+// - `Model`: Model-owned numeric settings.
+// ## Returns
+// The native scrub section.
+public function Scrub(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  return [
+    G.Heading<S.Msg>(
+      'Scrub fields',
+      'Drag sideways to change the value, Shift for fine steps, click to type.'
+    ),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(12), Wrap := true),
+      Scrubs.ScrubField<S.Msg>(
+        'opacity', 'Opacity', Model.Opacity, 0.0F, 100.0F, S.Msg.SetOpacity,
+        new Scrubs.Options(Suffix := '%')
+      ),
+      Scrubs.ScrubField<S.Msg>(
+        'radius', 'Radius', Model.Radius, 0.0F, 48.0F, S.Msg.SetRadius,
+        new Scrubs.Options(Step := 0.5F, DecimalPlaces := 1, Suffix := 'px')
+      ),
+      Scrubs.ScrubField<S.Msg>(
+        'blur', 'Blur', Model.Blur, 0.0F, 80.0F, S.Msg.SetBlur,
+        new Scrubs.Options(Suffix := 'px', Width := L.Extent.Fixed(L.Measure.Logical(140)))
+      )
+    )
+  ];
+end function;
+
+// Builds the original USD amount and whole-euro salary inputs.
+// ## Parameters
+// - `Model`: Model-owned monetary amounts.
+// ## Returns
+// The native money section.
+public function Money(Model: S.Model): array of E.Element<S.Msg>;
+begin
+  return [
+    G.Heading<S.Msg>('Money', 'Grouped digits at rest, plain digits while typing.'),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
+      E.Size<S.Msg>(
+        E.Column<S.Msg>(
+          M.MoneyField<S.Msg>(
+            'amount',
+            Model.Amount,
+            S.Msg.SetAmount,
+            new M.Options(Label := 'Amount', Code := 'USD')
+          )
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(240))))
+      ),
+      E.Size<S.Msg>(
+        E.Column<S.Msg>(
+          M.MoneyField<S.Msg>(
+            'salary', Model.Salary, S.Msg.SetSalary,
+            new M.Options(
+              Label := 'Salary',
+              Symbol := '€',
+              Code := 'EUR',
+              DecimalPlaces := 0,
+              Hint := 'Gross per year'
+            )
+          )
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(240))))
+      )
+    )
+  ];
+end function;
+
+end unit;

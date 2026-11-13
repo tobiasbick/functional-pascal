@@ -1,0 +1,76 @@
+unit GuiGallery.Pages.MoreCharts.Widgets.Flows;
+
+uses
+  GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Pages.MoreCharts.Layout as Layout,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Sankeys as Sk,
+  Fpas.Ui.BarLists as Bars, Fpas.Ui.ActivityRings as Rings, Fpas.Ui.Charts as C,
+  Fpas.Ui.Cards as Cards, Fpas.Ui.Layout as L, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, System as Sys;
+
+// Builds the original Sankey card.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The native flow diagram.
+public function Sankey<TMsg>(): E.Element<TMsg>;
+begin
+  return Cards.Card<TMsg>(
+    'flow-card', [
+      Sk.Sankey<TMsg>(
+        'flow', [
+          new Sk.Node('Search'),
+          new Sk.Node('Social'),
+          new Sk.Node('Referral'),
+          new Sk.Node('Sign up'),
+          new Sk.Node('Bounced'),
+          new Sk.Node('Trial'),
+          new Sk.Node('Paid'),
+          new Sk.Node('Churned')
+        ], [
+          new Sk.Link(0, 3, 420.0F), new Sk.Link(1, 3, 260.0F), new Sk.Link(2, 3, 180.0F),
+          new Sk.Link(0, 4, 300.0F), new Sk.Link(1, 4, 220.0F), new Sk.Link(3, 5, 860.0F),
+          new Sk.Link(5, 6, 580.0F), new Sk.Link(5, 7, 280.0F)
+        ], new Sk.Options(Height := 280.0F)
+      )
+    ],
+    new Cards.Options(Padding := 18.0F, Width := L.Extent.Fill)
+  );
+end function;
+
+// Builds original animated ranks beside activity rings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Samples`: Current ranked-page amounts.
+// - `Shuffle`: Replaces the model amounts.
+// ## Returns
+// The native two-column section.
+public function Ranked<TMsg>(Samples: Data.Samples; Shuffle: TMsg): E.Element<TMsg>;
+begin
+  return Layout.Row<TMsg>(
+    Layout.Column<TMsg>(
+      1.4F, false,
+      G.Heading<TMsg>(
+        'Bar list',
+        'Ranked, keyed by label: press Shuffle and the rows slide to their new rank.'
+      ),
+      Bars.BarList<TMsg>('pages', Samples.Pages),
+      B.Button<TMsg>(
+        'shuffle-pages', 'Shuffle', Shuffle, new B.Options(
+          ControlSize := B.Size.Small,
+          Icon := Sys.Char.ConvertFromUtf32($E15E), Variant := S.ButtonVariant.Outline
+        )
+      )
+    ),
+    Layout.Column<TMsg>(
+      1.0F, true,
+      G.Heading<TMsg>('Activity rings', 'Past one, a ring keeps winding.'),
+      Rings.ActivityRings<TMsg>(
+        'rings',
+        [new C.Item('Move', 0.82F), new C.Item('Exercise', 1.24F), new C.Item('Stand', 0.58F)],
+        new Rings.Options(Size := 170.0F, Center := '82%', Caption := 'of goal')
+      )
+    )
+  );
+end function;
+
+end unit;

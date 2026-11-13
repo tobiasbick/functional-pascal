@@ -138,9 +138,29 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   Time shows the original 24-hour and 12-hour fields. Wheels and dial shows
   the three joined date wheels and the analog clock face. Ruler and histogram
   shows the Height and Temperature tapes and the Price range over 24 bins.
-- **Smart inputs** shows the original URL and weight fields with a prefix and
-  suffix and the original message field with an emoji popup. Selections
-  append to the message and keep recent emoji and the chosen skin tone.
+- **Smart inputs** reproduces the complete original page: inline roadmap and
+  owner editing, Opacity/Radius/Blur scrubbing, USD amount and whole-euro salary,
+  URL/weight affixes, palette/search shortcut recording and the message's emoji
+  popup. Inline text commits on Enter or blur and cancels on Escape. Scrubs
+  support native dragging, Shift precision, arrows and typing. Money groups
+  digits at rest. Recorders capture, cancel and clear native key combinations.
+  Emoji selections append to the message and retain recent emoji and skin tone.
+  The page uses the native gallery's flat container structure and clipping,
+  including the hanging inline text. Targeted content captures match CUI at
+  the same theme, viewport, scale and renderer.
+- **Charts** reproduces the original line/area chart, grouped bars, responsive
+  donut, stacked dither areas, storage pattern meter, stacked bars and CPU/Memory
+  gauges. Hover to inspect native values; Tab and arrows inspect meter parts.
+  Grayscale changes only the meter's palette. Native CUI owns drawing,
+  layout, legends, animation and local interaction.
+- **More charts** reproduces the complete original page: weekday/hour heatmap,
+  yearly activity, module treemap, release radar, signup funnel, frame-time split
+  bar, platform waffle, Sankey, ranked pages with Shuffle, activity rings, bubble
+  chart, three radial instruments and 2,000-period price chart. CUI owns layout,
+  labels, hover, animation and chart interaction. Wheel zooms the price chart;
+  dragging or Shift+wheel pans. Focus it for arrows, Home/End, plus/minus and zero.
+  Sample data follows the original native formulas and seed. Shuffle changes
+  only model amounts and retains native label-keyed rank animation.
 - **Capture** shows the original tall dropzone, two compact targets,
   Maya Okafor's profile photo, and the signature pad. Click to browse or
   drop an accepted file. The avatar shows the selected image. Draw on the pad

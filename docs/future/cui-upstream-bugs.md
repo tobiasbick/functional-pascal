@@ -193,3 +193,85 @@ The FPAS bridge lets the native close complete and waits for the pointer
 to leave the anchor before starting the next hover. The Disclosure gallery
 keeps the pointer over the link past the delay after pressing Escape and
 checks that the card stays closed.
+
+<a id="cui-017"></a>
+
+## CUI-017 — Scrub commits accept invalid numeric drafts
+
+Reproduced with direct `cui_scrub_ex` calls on Linux at `86d9781`.
+Focus a bounded scrub with Tab, start typing with Enter, replace the selected
+value with `nan` and press Enter. The proposed value becomes NaN, outside the
+finite model contract. The commit parses with `strtod` but checks only whether
+any prefix was consumed; trailing garbage and non-finite results are accepted.
+
+The FPAS bridge validates the complete committed draft, rejects non-finite
+results and restores the previous value and native edit paint. Valid numbers
+still use CUI's own clamping, keys and drag behavior. The native Smart inputs
+test retains the direct reproduction beside the protected adapter case.
+
+<a id="cui-018"></a>
+
+## CUI-018 — Money input accepts amounts exceeding its display capacity
+
+Reproduced with direct `cui_money_input_ex` calls on Linux at `86d9781`.
+Focus the field, select all, and type 63 nines. CUI accepts an amount above
+`1e60`. Its 64-byte text buffer must hold digits, grouping separators and the
+terminator. The grouping loop can fill that buffer before writing all digits,
+silently truncating the displayed amount.
+
+The FPAS bridge rejects a proposed amount when its fixed-precision grouped
+representation would exceed the native 63-byte text capacity. It restores the
+model amount and CUI's edit paint together. The native regression records the
+unprotected result and verifies the protected adapter; ordinary amount rendering
+remains pixel-identical to direct CUI calls.
+
+<a id="cui-019"></a>
+
+## CUI-019 — Large constant chart ranges produce non-finite geometry
+
+Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
+Use one series containing three `1e10f` samples with automatic bounds and reduced
+motion. After `cui_end_frame`, all 20 emitted vertices have non-finite positions.
+The automatic range expands a constant by one; that addition cannot advance
+this single-precision value. The resulting zero range makes the tick step and
+projected geometry invalid. Very small spans and overflowing stacked totals
+also require validation before painting.
+
+The FPAS binding checks that axis ticks can advance within a finite range and
+rejects unrepresentable data before calling CUI. An explicit wider range such
+as zero through `2e10f` renders the constant series using native CUI. This keeps
+the native scaling algorithm unchanged for representable ranges. The native
+chart test retains the direct NaN reproduction without rasterizing it; binding
+tests cover rejection, stacked overflow and the explicit-range alternative.
+
+<a id="cui-020"></a>
+
+## CUI-020 — A newly disabled candlestick still consumes a queued wheel
+
+Reproduced on Linux at `86d9781` with direct `cui_candlestick_ex` calls.
+Hover the chart until its wheel region is registered, queue a wheel event, then
+build the next frame inside `cui_push_disabled(ui, true)`. Its viewport still
+zooms because the wheel branch checks the old scroll target without checking
+whether the widget is disabled. Two otherwise identical disabled frames produce
+different pixels when only one receives that queued event.
+
+The FPAS bridge temporarily hides this chart's wheel target while building a
+disabled chart, then restores the target without consuming the input. Enabled
+wheel zoom, panning and keyboard controls remain native. The focused native test
+retains the direct reproduction and verifies pixel equality for the protected
+adapter.
+
+<a id="cui-021"></a>
+
+## CUI-021 — Sankey flow clicks are omitted from the return value
+
+Reproduced on Linux at `86d9781` with a two-node, one-positive-flow Sankey.
+Clicking its ribbon shows native flow hover but returns minus one.
+`cui_sankey_ex` computes both a node and link hit, then returns only the node
+index on a click.
+
+The FPAS bridge reads the current native hover result on that same native click;
+it adds no hit-testing or rendering. It reports node and link activation,
+resolving native filtered link indices to original input positions when zero
+flows are hidden. Native tests retain the direct omission and protected result;
+managed tests exercise original link indices with software and OpenGL.

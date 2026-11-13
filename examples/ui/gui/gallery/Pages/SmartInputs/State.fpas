@@ -1,12 +1,33 @@
 unit GuiGallery.Pages.SmartInputs.State;
 
-uses Fpas.Ui.EmojiPickers as Emojis;
+uses Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.ShortcutRecorders as Keys;
 
 // Maximum message length in UTF-8 bytes, excluding the native terminator.
 public const MessageCapacity: int := 159;
 
 // State owned by this gallery feature.
 public type Model = record
+  // Confirmed inline title.
+  public Title: string := 'Q3 roadmap';
+  // Confirmed inline owner.
+  public Owner: string := 'Jonas Berg';
+  // Scrubbable opacity percentage.
+  public Opacity: float := 80.0F;
+  // Scrubbable corner radius.
+  public Radius: float := 12.0F;
+  // Scrubbable blur radius.
+  public Blur: float := 24.0F;
+  // Dollar amount with fractional digits.
+  public Amount: double := 1249.5;
+  // Whole-euro annual salary.
+  public Salary: double := 98000.0;
+  // Original command-palette shortcut.
+  public PaletteKey: Keys.Combination := new Keys.Combination(
+    Keys.Key.P,
+    Keys.PrimaryModifier() or Keys.Modifier.Shift
+  );
+  // Initially unbound search shortcut.
+  public SearchKey: Keys.Combination := new Keys.Combination();
   // Editable part of the URL after its prefix.
   public Url: string := 'cui.dev';
   // Editable weight before the unit suffix.
@@ -21,6 +42,24 @@ end record;
 
 // Messages handled by this gallery feature.
 public type Msg = variant
+  // Commit an inline title.
+  SetTitle(Value: string);
+  // Commit an inline owner.
+  SetOwner(Value: string);
+  // Apply native opacity scrubbing.
+  SetOpacity(Value: float);
+  // Apply native radius scrubbing.
+  SetRadius(Value: float);
+  // Apply native blur scrubbing.
+  SetBlur(Value: float);
+  // Apply a dollar amount proposal.
+  SetAmount(Value: double);
+  // Apply an annual salary proposal.
+  SetSalary(Value: double);
+  // Apply the recorded palette shortcut.
+  SetPaletteKey(Value: Keys.Combination);
+  // Apply the recorded search shortcut.
+  SetSearchKey(Value: Keys.Combination);
   // Update the URL without its displayed prefix.
   SetUrl(Value: string);
   // Update the weight without its displayed unit.

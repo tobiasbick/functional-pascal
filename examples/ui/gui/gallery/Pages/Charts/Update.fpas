@@ -1,0 +1,22 @@
+unit GuiGallery.Pages.Charts.Update;
+
+uses GuiGallery.Pages.Charts.State as S, Fpas.Ui.Mvu.Application as M;
+
+// Updates the chart demonstration without taking ownership of native hover.
+// ## Parameters
+// - `State`: Current chart state.
+// - `Message`: Requested palette change.
+// ## Returns
+// Updated state and no commands.
+public function Update(State: S.Model; Message: S.Msg): M.Transition<S.Model, S.Msg>;
+begin
+  return case Message of
+    when S.Msg.SetGrayscale(const Value: bool): new M.Transition<S.Model, S.Msg>(
+      State with
+        Grayscale := Value;
+      end with, []
+    );
+  end case;
+end function;
+
+end unit;

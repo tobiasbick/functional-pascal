@@ -13,12 +13,12 @@ uses Fpas.Ui.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Menu as Popup, Fpas.Ui.Tui
 public function Flex(Value: L.Flex; Horizontal: bool := true): E.Flex;
 begin
   var Basis: int := -1;
-  var Grow: int := Value.Grow;
+  var Grow: float := Value.Grow;
   case Value.Basis of
     when L.Extent.Fixed(const Distance: L.Measure):
       Basis := Geometry.Cells(Distance, Horizontal);
     when L.Extent.Fill:
-      Grow := Sys.Math.Max(1, Grow);
+      Grow := Sys.Math.Max(1.0F, Grow);
     when L.Extent.Percent(_):
       raise new Sys.NotSupportedException('Percentage extents require the graphical profile.');
     else
@@ -286,11 +286,105 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException(
           'Time pickers, wheel pickers and time dials require the graphical profile.'
         );
+      when Ui.Element.Sankey(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.BarList(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ActivityRings(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ScatterChart(_, _, _, _), Ui.Element.RadialGauge(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Candlestick(_, _, _, _), Ui.Element.Heatmap(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.CalendarHeatmap(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Treemap(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.RadarChart(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Funnel(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.SplitBar(_, _, _, _), Ui.Element.Waffle(_, _, _, _):
+        raise new Sys.NotSupportedException('Visualizations require the graphical profile.');
+      when Ui.Element.LineChart(_, _, _), Ui.Element.BarChart(_, _, _), Ui.Element.DonutChart(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.Gauge(_, _, _, _), Ui.Element.PatternMeter(_, _, _):
+        raise new Sys.NotSupportedException(
+          'Charts and pattern meters require the graphical profile.'
+        );
       when Ui.Element.ColorPicker(_, _, _, _), Ui.Element.EmojiPicker(_, _, _, _):
         raise new Sys.NotSupportedException(
           'Color and emoji pickers require the graphical profile.'
         );
-      when Ui.Element.SelectInput(_, _, _, _, _), Ui.Element.NumberField(_, _, _, _, _, _):
+      when Ui.Element.InlineEdit(_, _, _, _), Ui.Element.ScrubField(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.MoneyField(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ShortcutRecorder(
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.ShortcutLabel(_), Ui.Element.SelectInput(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.NumberField(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
         raise new Sys.NotSupportedException(
           'Select and number fields require the graphical profile.'
         );

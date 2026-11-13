@@ -1,0 +1,37 @@
+unit Fpas.Ui.BarLists;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// Native bar-list presentation.
+public type Options = record
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Safe native amount format.
+  public Format: C.ValueFormat? := null;
+  // Maximum visible rows; zero shows all.
+  public MaximumRows: int := 0;
+  // Preserve input order instead of sorting by amount.
+  public KeepOrder: bool := false;
+  // Override all row colors; automatic retains native item colors.
+  public Color: C.Color := C.Color.Automatic;
+  // Allow native pointer input.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native bar-list.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Items`: Nonnegative amounts with unique literal labels.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+// ## Returns
+// A graphical element.
+public function BarList<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.BarList(Id, Items, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

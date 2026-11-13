@@ -1,0 +1,35 @@
+unit Fpas.Ui.SplitBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+
+// Native segmented bar settings.
+public type Options = record
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Bar height; zero uses CUI's default.
+  public Height: float := 0.0F;
+  // Safe numeric formatting; null uses native automatic formatting.
+  public Format: C.ValueFormat? := null;
+  // Show the native wrapping legend.
+  public Legend: bool := true;
+  // Allow native pointer interaction.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native split-bar with native layout, hover and animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional clicked input index callback; hover remains native.
+// ## Returns
+// A graphical element.
+public function SplitBar<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SplitBar(Id, Items, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

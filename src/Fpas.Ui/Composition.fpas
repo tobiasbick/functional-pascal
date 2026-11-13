@@ -1,6 +1,8 @@
 unit Fpas.Ui.Composition;
 
 uses
+  Fpas.Ui.Internal.Mapping.Visualizations as Visuals,
+  Fpas.Ui.ShortcutRecorders as RecorderKeys,
   Fpas.Ui.Tours as Tours,
   Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
   Fpas.Ui.Elements as E, Fpas.Ui.TableOfContents as Toc,
@@ -255,6 +257,79 @@ begin
       const Text: string,
       const Settings: Badges.Options
     ): E.Element<TParent>.Badge(Id, Text, Settings);
+    when E.Element.Sankey(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.BarList(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ActivityRings(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ScatterChart(_, _, _, _), E.Element.RadialGauge(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Candlestick(_, _, _, _), E.Element.Heatmap(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.CalendarHeatmap(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Treemap(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RadarChart(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Funnel(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.SplitBar(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Waffle(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.LineChart(_, _, _), E.Element.BarChart(_, _, _), E.Element.DonutChart(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Gauge(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PatternMeter(_, _, _): Visuals.Map<TChild, TParent>(Value, Messages);
     when E.Element.Metric(
       const Id: string,
       const Label: string,
@@ -542,6 +617,23 @@ begin
       _,
       _
     ): Actions.Map<TChild, TParent>(Value, Messages);
+    when E.Element.ShortcutLabel(
+      const Shortcut: RecorderKeys.Combination
+    ): E.Element<TParent>.ShortcutLabel(Shortcut);
+    when E.Element.InlineEdit(_, _, _, _), E.Element.ScrubField(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.MoneyField(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ShortcutRecorder(_, _, _, _): Editors.Map<TChild, TParent>(Value, Messages);
     when E.Element.TextField(
       _,
       _,

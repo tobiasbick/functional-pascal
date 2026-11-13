@@ -33,6 +33,13 @@ captured. Checkmarks record acceptance of the documented GUI API and examples.
 Record any remaining native options with their widget. Public APIs and
 composition primitives can exist while their gallery acceptance is open.
 
+Validate widget batches with builds of the affected libraries/gallery, focused
+native and binding tests, and strict gallery-content pixel comparisons at the
+same viewport, scale, theme, renderer and animation state. Integration tests,
+publishing, deployment and Native AOT runs are excluded unless the user requests
+them. Record confirmed CUI defects with a stable local ID, a direct reproduction
+and a small tested workaround in the FPAS bridge.
+
 Show only checked widgets in the GUI gallery and use it for acceptance tests
 of its visible pages and interactions. The GUI gallery is a clone of the pinned
 native CUI gallery: match its pages, examples, labels,
@@ -304,10 +311,34 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   numeric text. CUI validates finite drafts and refreshes committed or blurred
   text; native adapter regressions cover clamping, NaN and incomplete numbers.
   TUI: deferred; graphical profile required.
-- [ ] Inline edit (`cui_inline_edit`)
-- [ ] Scrub field (`cui_scrub`)
-- [ ] Money field (`cui_money_input`)
-- [ ] Shortcut recorder and shortcut label (`cui_shortcut_recorder`, `cui_shortcut_label`)
+- [x] Inline edit (`cui_inline_edit`): [API][fpas-smart-inputs]. Smart inputs
+  shows the original roadmap title and owner. CUI retains the draft; Enter or
+  blur proposes a model commit and Escape cancels. Native state, undo offsets,
+  focus and borrowed text survive frames and reconcile model replacements.
+  The public faces are Medium, Display and Mono; custom loaded fonts remain
+  part of the separate native font/resource API.
+- [x] Scrub field (`cui_scrub`): [API][fpas-smart-inputs]. Smart inputs shows
+  Opacity, Radius and Blur with their original widths, suffixes and steps.
+  CUI handles dragging, Shift precision, arrow keys and click-to-type. Invalid
+  commits are protected by [CUI-017](cui-upstream-bugs.md#cui-017).
+  Arbitrary native printf formats remain unexposed; the API uses DecimalPlaces.
+- [x] Money field (`cui_money_input`): [API][fpas-smart-inputs]. Smart inputs
+  shows the original USD amount and whole-euro salary with grouped resting
+  values and plain editing digits. The model uses double, with zero through
+  fifteen fractional digits. Greater native precision is unexposed.
+  Oversized proposals are protected by [CUI-018](cui-upstream-bugs.md#cui-018).
+- [x] Shortcut recorder and shortcut label (`cui_shortcut_recorder`,
+  `cui_shortcut_label`): [API][fpas-smart-inputs]. Smart inputs shows the original
+  palette and unbound search shortcuts. CUI owns recording, cancellation, clear,
+  modifier order and platform key names; passive labels use native keycaps.
+
+These four Smart inputs widgets were reviewed against `86d9781`. Targeted
+software/OpenGL binding tests cover draft retention, model proposals, rejection,
+focus, keys, pointer dragging and removal. Native tests compare 224 images
+exactly with direct CUI calls. The Smart inputs page content matches the pinned
+native gallery pixel for pixel in light/dark, wide/narrow software and OpenGL
+captures; the existing application branding and navigation are outside that
+page-content comparison.
 - [x] Tag input (`cui_tag_input`): [API][fpas-tag-input]. Inputs shows Topics
   with native tag entry, removal and per-event limit enforcement.
   TUI: deferred; graphical profile required.
@@ -630,32 +661,59 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 ### Charts and instruments
 
-- [ ] Line chart, including area mode (`cui_line_chart`)
-- [ ] Bar chart, including stacked mode (`cui_bar_chart`)
-- [ ] Donut chart (`cui_donut_chart`)
+- [x] Line/area chart, smoothing and stacked dither (`cui_line_chart`),
+  grouped/stacked bars (`cui_bar_chart`) and responsive donut
+  (`cui_donut_chart`): [API](../../src/Fpas.Ui/README.md#charts).
+  Charts reproduces their original data, labels, formatting and theme palette.
 - [ ] Sparkline (`cui_sparkline`)
-- [ ] Gauge (`cui_gauge`)
-- [ ] Heatmap (`cui_heatmap`)
-- [ ] Calendar heatmap (`cui_calendar_heatmap`)
-- [ ] Treemap (`cui_treemap`)
-- [ ] Radar chart (`cui_radar_chart`)
-- [ ] Funnel (`cui_funnel`)
-- [ ] Split bar (`cui_split_bar`)
-- [ ] Waffle (`cui_waffle`)
-- [ ] Sankey (`cui_sankey`)
-- [ ] Bar list (`cui_bar_list`)
-- [ ] Activity rings (`cui_activity_rings`)
-- [ ] Scatter chart, including bubble mode (`cui_scatter_chart`)
-- [ ] Radial gauge (`cui_radial_gauge`)
-- [ ] Candlestick chart (`cui_candlestick`)
+- [x] Gauge (`cui_gauge`): original CPU and Memory examples in Charts.
+- [x] Pattern meter (`cui_pattern_meter`): original storage parts, free capacity,
+  native hover/keyboard readout and Grayscale checkbox. CUI owns local selection;
+  the bridge only translates data, tracks focus and retires native state.
+  Focused native tests compare all five chart widgets without pixel tolerance;
+  binding tests check copied-data lifetime, validation and meter keyboard input.
+  Charts page content is pixel-identical to pinned CUI at scale 1, in light/dark
+  software/OpenGL captures at 1240x2200 and 600x2800. Comparisons exclude the
+  differing navigation chrome. Large unrepresentable automatic ranges are
+  guarded as [CUI-019](cui-upstream-bugs.md#cui-019).
+- [x] Heatmap (`cui_heatmap`), calendar heatmap (`cui_calendar_heatmap`),
+  treemap (`cui_treemap`), radar (`cui_radar_chart`), funnel (`cui_funnel`),
+  split bar (`cui_split_bar`) and waffle (`cui_waffle`):
+  [API](../../src/Fpas.Ui/README.md#visualizations). More charts reproduces the
+  original first seven examples, including their data, text, 1.3:1 column ratio,
+  palette, labels and native responsive behavior. CUI owns drawing and input;
+  the bridge supplies frame-owned text and optional activation/selection messages.
+  Calendar activation resolves a native visible-week index to the original date.
+  Focused checks cover native geometry and pixels, copied-data lifetime, disabled
+  input, model-owned treemap selection, calendar clipping and width changes.
+  The full More charts page is validated with native content captures at matching
+  theme, scale, viewport and renderer; application navigation is excluded.
+- [x] Sankey (`cui_sankey`), bar list (`cui_bar_list`), activity rings
+  (`cui_activity_rings`), scatter/bubble chart (`cui_scatter_chart`), radial
+  gauge (`cui_radial_gauge`) and candlestick/OHLC chart (`cui_candlestick`):
+  [API](../../src/Fpas.Ui/README.md#flows-ranks-and-instruments).
+  More charts reproduces the complete original page, including Shuffle,
+  native ring progress above one, bubble sizes, all three radial styles and
+  2,000 OHLC periods. CUI owns layout, animation, hit-testing, zoom, panning,
+  crosshair/keyboard input and following appended periods. The bridge only
+  translates data/events, owns deferred text and retires retained state.
+  Focused checks cover pixel/geometry parity, input-data lifetime, original
+  callback indices, native rank changes and released item/viewport allocations.
+  Full-page content matches the pinned native gallery with zero differing pixels
+  in light/dark themes, software/OpenGL renderers and 1240×4100/600×4800
+  viewports at scale one. The 640 native pixel/geometry comparisons and 19
+  managed binding cases also cover input and allocation retirement.
+  [CUI-020](cui-upstream-bugs.md#cui-020) and
+  [CUI-021](cui-upstream-bugs.md#cui-021) have direct native reproductions and
+  small protected adapter regressions.
 - [ ] Dot-matrix chart (`cui_dot_chart`)
 - [ ] Event track (`cui_event_track`)
 - [ ] Readout (`cui_readout`)
 - [ ] Dot-matrix display (`cui_dot_display`)
 
-Chart annotations (`cui_chart_annotation`) are an open feature of the dot-matrix,
-line, and bar charts. Verify thresholds, points, labels, and label collision
-handling with those demos.
+Line and bar charts expose native annotations through `Charts.Annotation`;
+focused native parity covers a threshold and point with labels and details.
+Chart annotations remain open for the dot-matrix chart and its gallery demos.
 
 Include axis formatting through `cui_axis_units`, including `CUI_AXIS_HOURS`:
 12.25 reads 12:15 and 30 reads 06:00 on the next day. Match these semantics
@@ -771,6 +829,7 @@ which remains a separate native build option.
 [fpas-context-menu]: ../../src/Fpas.Ui/README.md#context-menu
 [fpas-popovers]: ../../src/Fpas.Ui/README.md#popover-and-confirmation-popover
 [fpas-text-field]: ../../src/Fpas.Ui/README.md#text-field
+[fpas-smart-inputs]: ../../src/Fpas.Ui/README.md#smart-inputs
 [fpas-search-field]: ../../src/Fpas.Ui/README.md#search-field
 [fpas-text-area]: ../../src/Fpas.Ui/README.md#text-area
 [fpas-number-field]: ../../src/Fpas.Ui/README.md#number-field

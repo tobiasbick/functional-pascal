@@ -1,0 +1,49 @@
+unit Fpas.Ui.Gui.Internal.Widgets.MoneyField;
+
+uses
+  Fpas.Ui.MoneyFields as M, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Sizing as Size, System.Globalization as Culture;
+
+// Draws CUI's native grouped amount input and publishes model proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation context.
+// - `Id`: Stable field identity.
+// - `Value`: Finite model amount.
+// - `OnChange`: Maps a native amount proposal.
+// - `Settings`: Currency captions, precision and width.
+
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: double; OnChange: function(double): TMsg; Settings: M.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('money-field', Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Proposed: double := Frame.Window.MoneyField(
+    Token, Value, Settings.Label, Settings.Symbol, Settings.Code,
+    Settings.Hint, Settings.DecimalPlaces, Width.Kind, Width.Value, Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), not Frame.PaintingClosed
+  );
+  if Enabled and Proposed <> Value then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  for Caption: string in [Settings.Label, Settings.Symbol, Settings.Code, Settings.Hint] do
+    if Caption <> '' then
+      Frame.Labels.Add(Caption);
+    end if;
+  end for;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Settings.Label, 'money-field', new Cui.CuiRectangle(), Enabled,
+      Value := Proposed.ToString(Culture.CultureInfo.InvariantCulture)
+    )
+  );
+end procedure;
+
+end unit;

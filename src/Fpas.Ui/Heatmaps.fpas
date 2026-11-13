@@ -1,0 +1,52 @@
+unit Fpas.Ui.Heatmaps;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+
+// Native matrix heatmap settings.
+public type Options = record
+  // One caption per row, or empty to omit row labels.
+  public RowLabels: array of string := [];
+  // One caption per column, or empty to omit column labels. Empty entries are unlabeled.
+  public ColumnLabels: array of string := [];
+  // Logical cell size; zero fits the available width.
+  public CellSize: float := 0.0F;
+  // Null selects the native automatic range.
+  public Range: C.ValueRange? := null;
+  // Top color; automatic uses CUI's accent ramp.
+  public Color: C.Color := C.Color.Automatic;
+  // Safe numeric formatting; null uses native automatic formatting.
+  public Format: C.ValueFormat? := null;
+  // Content keeps CUI's default: fill, or fit when CellSize is explicit.
+  public Width: L.Extent := L.Extent.Content;
+  // Allow native pointer interaction.
+  public Enabled: bool := true;
+end record;
+
+// A zero-based input matrix position.
+public type Cell = record
+  // Row index.
+  public Row: int;
+  // Column index.
+  public Column: int;
+end record;
+
+// Draws CUI's native heatmap with native layout, hover and animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Values`: Finite samples in row-major order.
+// - `Rows`: Nonnegative row count.
+// - `Columns`: Nonnegative column count.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional clicked matrix cell callback; hover remains native.
+// ## Returns
+// A graphical element.
+public function Heatmap<TMsg>(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Options? := null; OnActivate: Sys.Func<Cell, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+requires Rows >= 0 and Columns >= 0;
+begin
+  return E.Element<TMsg>.Heatmap(Id, Values, Rows, Columns, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

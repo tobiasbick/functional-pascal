@@ -1,6 +1,22 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.Sankeys as Sankeys,
+  Fpas.Ui.BarLists as BarLists,
+  Fpas.Ui.ActivityRings as ActivityRings,
+  Fpas.Ui.ScatterCharts as ScatterCharts,
+  Fpas.Ui.RadialGauges as RadialGauges,
+  Fpas.Ui.Candlesticks as Candlesticks,
+  Fpas.Ui.Heatmaps as Heatmaps,
+  Fpas.Ui.CalendarHeatmaps as CalendarHeatmaps,
+  Fpas.Ui.Treemaps as Treemaps,
+  Fpas.Ui.RadarCharts as RadarCharts,
+  Fpas.Ui.Funnels as Funnels,
+  Fpas.Ui.SplitBars as SplitBars,
+  Fpas.Ui.Waffles as Waffles,
+  Fpas.Ui.Charts as Charts, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.PatternMeters as Patterns,
+  Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields,
+  Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys,
   Fpas.Ui.Tours as Tours,
   Fpas.Ui.EmojiPickers as EmojiPickers,
   Fpas.Ui.DatePickers as DatePickers,
@@ -144,6 +160,16 @@ public type Element<TMsg> = variant
   Hinted(Target: Element<TMsg>; Text: string; Shortcut: string);
   // Edit one graphical line with a model-owned value.
   TextField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextFields.Options; OnSubmit: Sys.Func<string, TMsg>?);
+  // Native inline text with a retained draft and model-owned commit.
+  InlineEdit(Id: string; Value: string; OnChange: function(string): TMsg; Settings: InlineEdits.Options);
+  // Native draggable numeric field with an optional typing mode.
+  ScrubField(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: ScrubFields.Options);
+  // Native grouped monetary display and plain-digit editor.
+  MoneyField(Id: string; Value: double; OnChange: function(double): TMsg; Settings: MoneyFields.Options);
+  // Native key-combination recorder with a model-owned value.
+  ShortcutRecorder(Id: string; Value: RecorderKeys.Combination; OnChange: function(RecorderKeys.Combination): TMsg; Settings: RecorderKeys.Options);
+  // Native platform key names displayed as keycaps.
+  ShortcutLabel(Value: RecorderKeys.Combination);
   // Edit one graphical search query with the native clear action.
   SearchField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: SearchFields.Options; OnSubmit: Sys.Func<string, TMsg>?);
   // Edit wrapping multiline graphical text.
@@ -194,7 +220,43 @@ public type Element<TMsg> = variant
   Card(Id: string; Children: array of Element<TMsg>; Settings: Cards.Options; OnActivate: Sys.Func<TMsg>?);
   // Draw a tinted or solid label.
   Badge(Id: string; Text: string; Settings: Badges.Options);
-  // Draw a metric tile with optional trend and sparkline.
+  // Display CUI's native sankey.
+  Sankey(Id: string; Nodes: array of Sankeys.Node; Links: array of Sankeys.Link; Settings: Sankeys.Options; OnActivate: Sys.Func<Sankeys.Selection, TMsg>?);
+  // Display CUI's native bar-list.
+  BarList(Id: string; Items: array of Charts.Item; Settings: BarLists.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display CUI's native activity-rings.
+  ActivityRings(Id: string; Items: array of Charts.Item; Settings: ActivityRings.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display CUI's native scatter-chart.
+  ScatterChart(Id: string; Series: array of ScatterCharts.Series; Settings: ScatterCharts.Options; OnActivate: Sys.Func<ScatterCharts.PointIndex, TMsg>?);
+  // Display CUI's native radial-gauge.
+  RadialGauge(Id: string; Value: float; Minimum: float; Maximum: float; Settings: RadialGauges.Options);
+  // Display CUI's native candlestick.
+  Candlestick(Id: string; Candles: array of Candlesticks.Candle; Settings: Candlesticks.Options; OnCursorChange: Sys.Func<int, TMsg>?);
+  // Display CUI's native heatmap.
+  Heatmap(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Heatmaps.Options; OnActivate: Sys.Func<Heatmaps.Cell, TMsg>?);
+  // Display CUI's native calendar-heatmap.
+  CalendarHeatmap(Id: string; Start: Sys.DateOnly; Values: array of float; Settings: CalendarHeatmaps.Options; OnActivate: Sys.Func<Sys.DateOnly, TMsg>?);
+  // Display CUI's native treemap.
+  Treemap(Id: string; Items: array of Charts.Item; Selected: int; OnSelect: Sys.Func<int, TMsg>?; Settings: Treemaps.Options);
+  // Display CUI's native radar-chart.
+  RadarChart(Id: string; Series: array of Charts.Series; Axes: array of string; Settings: RadarCharts.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display CUI's native funnel.
+  Funnel(Id: string; Items: array of Charts.Item; Settings: Funnels.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display CUI's native split-bar.
+  SplitBar(Id: string; Items: array of Charts.Item; Settings: SplitBars.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display CUI's native waffle.
+  Waffle(Id: string; Items: array of Charts.Item; Settings: Waffles.Options; OnActivate: Sys.Func<int, TMsg>?);
+  // Display a native line or area chart.
+  LineChart(Id: string; Series: array of Charts.Series; Settings: Charts.Options);
+  // Display a native grouped or stacked bar chart.
+  BarChart(Id: string; Series: array of Charts.Series; Settings: Charts.Options);
+  // Display a native responsive donut and its share legend.
+  DonutChart(Id: string; Values: array of float; Labels: array of string; Settings: Donuts.Options);
+  // Display a native animated fraction gauge.
+  Gauge(Id: string; Label: string; Value: float; Size: float);
+  // Display a native capacity bar with patterned segments and keyboard selection.
+  PatternMeter(Id: string; Parts: array of Patterns.Part; Settings: Patterns.Options);
+  // Display a native metric tile.
   Metric(Id: string; Label: string; Value: string; Settings: Metrics.Options);
   // Draw overlapping avatars and an overflow count.
   AvatarGroup(Id: string; Names: array of string; Settings: AvatarGroups.Options);

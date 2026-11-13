@@ -1,0 +1,71 @@
+unit GuiGallery.Pages.MoreCharts.Series;
+
+uses Fpas.Ui.Charts as C, Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.Candlesticks as Cs, System as Sys, System.Collections.Generic as Lists;
+
+// Creates the original native ranked-page amounts.
+// ## Returns
+// Stable labels and initial amounts in input order.
+public function Pages(): array of C.Item;
+begin
+  return [
+    new C.Item('/docs', 4820.0F),
+    new C.Item('/', 3920.0F),
+    new C.Item('/gallery', 2410.0F),
+    new C.Item('/blog/fast-ui-in-c', 1830.0F),
+    new C.Item('/download', 1210.0F),
+    new C.Item('/pricing', 640.0F)
+  ];
+end function;
+
+// Creates the native gallery's two deterministic bubble series.
+// ## Returns
+// Software and OpenGL frame-time samples.
+public function Scatter(): array of Sc.Series;
+begin
+  const A: Lists.List<Sc.Point> := new Lists.List<Sc.Point>(40);
+  const B: Lists.List<Sc.Point> := new Lists.List<Sc.Point>(40);
+  const Sa: array of float := new float[40];
+  const Sb: array of float := new float[40];
+  for Index: int := 0 to 39 do
+    const N: float := 200.0F + cast<float>(Index) * 95.0F;
+    A.Add(new Sc.Point(N, 0.08F + N * 0.00006F + cast<float>((Index * 37) mod 13) * 0.004F));
+    B.Add(
+      new Sc.Point(
+        N * 0.9F + 150.0F,
+        0.15F + N * 0.00011F + cast<float>((Index * 53) mod 17) * 0.006F
+      )
+    );
+    Sa[Index] := cast<float>(10 + (Index * 7) mod 40);
+    Sb[Index] := cast<float>(20 + (Index * 11) mod 50);
+  end for;
+
+  return [new Sc.Series('Software', A.ToArray(), Sa), new Sc.Series('OpenGL', B.ToArray(), Sb)];
+end function;
+
+// Creates the native gallery's 2,000 OHLC periods.
+// ## Returns
+// Deterministic prices and volume.
+public function Candles(): array of Cs.Candle;
+begin
+  const Result: Lists.List<Cs.Candle> := new Lists.List<Cs.Candle>(2000);
+  var Price: float := 64.0F;
+  for Index: int := 0 to 1999 do
+    const Open: float := Price;
+    const Close: float := Open * (1.0F + Sys.MathF.Sin(cast<float>(Index) * 0.37F) * 0.012F +
+      Sys.MathF.Cos(cast<float>(Index) * 0.043F) * 0.008F);
+    Result.Add(
+      new Cs.Candle(
+        Open,
+        Sys.MathF.Max(Open, Close) * 1.006F,
+        Sys.MathF.Min(Open, Close) * 0.994F,
+        Close,
+        2000.0F + cast<float>((Index * 7919) mod 900) * 10.0F
+      )
+    );
+    Price := Close;
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

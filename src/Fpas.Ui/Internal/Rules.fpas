@@ -122,8 +122,8 @@ begin
     end case;
   end if;
 
-  if Settings.Grow < 0 then
-    Reject(Location, 'Growth weights must be nonnegative.');
+  if not Sys.Single.IsFinite(Settings.Grow) or Settings.Grow < 0.0F then
+    Reject(Location, 'Growth weights must be finite and nonnegative.');
   end if;
 
   CheckExtent(Settings.Basis, Profile, Location + '/basis');

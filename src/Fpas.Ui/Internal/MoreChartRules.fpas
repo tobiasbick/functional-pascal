@@ -1,0 +1,220 @@
+unit Fpas.Ui.Internal.MoreChartRules;
+
+uses
+  Fpas.Ui.Sankeys as Sk, Fpas.Ui.BarLists as B, Fpas.Ui.ActivityRings as A,
+  Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.RadialGauges as G, Fpas.Ui.Candlesticks as Cs,
+  Fpas.Ui.Charts as C, Fpas.Ui.Internal.ChartRules as Common,
+  Fpas.Ui.Internal.VisualizationRules as Viz, Fpas.Ui.Internal.Rules as R,
+  Fpas.Ui.Validation as V, Fpas.Ui.Styles as Style, System as Sys, System.Collections.Generic as Lists;
+
+// Checks native Sankey data and layout.
+// ## Parameters
+// - `Nodes`: Input nodes.
+// - `Links`: Directed flows.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic path.
+public procedure Sankey(Nodes: array of Sk.Node; Links: array of Sk.Link; Settings: Sk.Options; At: string);
+begin
+  for Node: Sk.Node in Nodes do
+    R.CheckText(Node.Label, At);
+    Common.Color(Node.Color, At);
+  end for;
+  var Total: float := 0.0F;
+  for Link: Sk.Link in Links do
+    if Link.From < 0 or Link.From >= Nodes.Length or Link.To < 0 or Link.To >= Nodes.Length
+      or Link.From = Link.To
+    then
+      R.Reject(At, 'Sankey flows need different valid source and destination nodes.');
+    end if;
+
+    Common.Distance(Link.Value, At);
+    Total := Total + Link.Value;
+  end for;
+
+  Common.Distance(Total, At);
+  Common.Distance(Settings.Height, At);
+  Common.Distance(Settings.NodeWidth, At);
+  Common.Format(Settings.Format, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+end procedure;
+
+// Checks label-keyed native bar-list data.
+// ## Parameters
+// - `Items`: Amounts with unique labels.
+// - `Settings`: Native sorting and layout.
+// - `At`: Diagnostic path.
+public procedure BarList(Items: array of C.Item; Settings: B.Options; At: string);
+begin
+  Viz.Items(Items, At);
+  const Labels: Lists.HashSet<string> := new Lists.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: C.Item in Items do
+    if not Labels.Add(Item.Label) then
+      R.Reject(At, 'Bar-list labels must be unique native identities.');
+    end if;
+  end for;
+
+  if Settings.MaximumRows < 0 then
+    R.Reject(At, 'A bar-list row limit cannot be negative.');
+  end if;
+
+  Common.Format(Settings.Format, At);
+  Common.Color(Settings.Color, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+end procedure;
+
+// Checks native activity-ring data.
+// ## Parameters
+// - `Items`: Up to eight progress fractions.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic path.
+public procedure ActivityRings(Items: array of C.Item; Settings: A.Options; At: string);
+begin
+  Viz.Items(Items, At);
+  if Items.Length > 8 then
+    R.Reject(At, 'Activity rings support at most eight items.');
+  end if;
+
+  Common.Distance(Settings.Size, At);
+  Common.Distance(Settings.Thickness, At);
+  R.CheckText(Settings.Center, At);
+  R.CheckText(Settings.Caption, At);
+end procedure;
+
+// Checks native scatter series and bubble sizes.
+// ## Parameters
+// - `Series`: Finite coordinates and optional sizes.
+// - `Settings`: Native axes and layout.
+// - `At`: Diagnostic path.
+public procedure Scatter(Series: array of Sc.Series; Settings: Sc.Options; At: string);
+begin
+  for Item: Sc.Series in Series do
+    R.CheckText(Item.Name, At);
+    Common.Color(Item.Color, At);
+    if Item.Sizes.Length <> 0 and Item.Sizes.Length <> Item.Points.Length then
+      R.Reject(At, 'Bubble sizes must match their points.');
+    end if;
+
+    for Point: Sc.Point in Item.Points do
+      if not Sys.Single.IsFinite(Point.X) or not Sys.Single.IsFinite(Point.Y) then
+        R.Reject(At, 'Scatter coordinates must be finite.');
+      end if;
+    end for;
+
+    for Size: float in Item.Sizes do
+      Common.Distance(Size, At);
+    end for;
+  end for;
+
+  Common.Distance(Settings.Height, At);
+  Common.Format(Settings.XFormat, At);
+  Common.Format(Settings.YFormat, At);
+  R.CheckText(Settings.XLabel, At);
+  R.CheckText(Settings.YLabel, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+end procedure;
+
+// Checks native radial scale, bands and target.
+// ## Parameters
+// - `Value`: Finite reading.
+// - `Minimum`: Lower scale bound.
+// - `Maximum`: Upper scale bound.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic path.
+public procedure Radial(Value: float; Minimum: float; Maximum: float; Settings: G.Options; At: string);
+begin
+  if not Sys.Single.IsFinite(
+    Value
+  ) or not Sys.Single.IsFinite(Minimum) or not Sys.Single.IsFinite(Maximum)
+    or Maximum <= Minimum or not Sys.Single.IsFinite(Maximum - Minimum)
+  then
+    R.Reject(At, 'Invalid finite radial gauge scale.');
+  end if;
+
+  Common.Distance(Settings.Size, At);
+  Common.Distance(Settings.Sweep, At);
+  Common.Format(Settings.Format, At);
+  Common.Color(Settings.Color, At);
+  R.CheckText(Settings.Label, At);
+  R.CheckText(Settings.Unit, At);
+  R.CheckText(Settings.Detail, At);
+  if not Sys.Enum.IsDefined<G.Style>(
+    Settings.Style
+  ) or (Settings.Sweep <> 0.0F and (Settings.Sweep < 90.0F or Settings.Sweep > 300.0F))
+    or Settings.Bands.Length > 16
+  then
+    R.Reject(At, 'Invalid radial style, sweep or band count.');
+  end if;
+  const Target: float? := Settings.Target;
+  if Target <> null and not Sys.Single.IsFinite(Target ?? 0.0F) then
+    R.Reject(At, 'A radial target must be finite.');
+  end if;
+  var Previous: float := Minimum;
+  for Band: G.Band in Settings.Bands do
+    if not Sys.Single.IsFinite(
+      Band.To
+    ) or Band.To <= Previous or Band.To > Maximum or not Sys.Enum.IsDefined<Style.Tone>(Band.Tone)
+    then
+      R.Reject(At, 'Radial thresholds must increase within the scale.');
+    end if;
+
+    R.CheckText(Band.Name, At);
+    Previous := Band.To;
+  end for;
+end procedure;
+
+// Checks native OHLC periods and optional line overlays.
+// ## Parameters
+// - `Candles`: Finite OHLC periods.
+// - `Settings`: Native formatting, labels and overlays.
+// - `At`: Diagnostic path.
+public procedure Candles(Candles: array of Cs.Candle; Settings: Cs.Options; At: string);
+begin
+  var Volume: float := 0.0F;
+  for Item: Cs.Candle in Candles do
+    if not Sys.Single.IsFinite(
+      Item.Open
+    ) or not Sys.Single.IsFinite(Item.High) or not Sys.Single.IsFinite(Item.Low)
+      or not Sys.Single.IsFinite(Item.Close) or Item.Low > Sys.Math.Min(Item.Open, Item.Close)
+      or Item.High < Sys.Math.Max(Item.Open, Item.Close)
+    then
+      R.Reject(At, 'Invalid finite OHLC period.');
+    end if;
+
+    Common.Distance(Item.Volume, At);
+    Volume := Volume + Item.Volume;
+  end for;
+
+  Common.Distance(Volume, At);
+  Common.Distance(Settings.Height, At);
+  Common.Format(Settings.Format, At);
+  Common.Color(Settings.Up, At);
+  Common.Color(Settings.Down, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  if Settings.Labels.Length <> 0 and Settings.Labels.Length <> Candles.Length then
+    R.Reject(At, 'Time labels must match the candle count.');
+  end if;
+
+  for Label: string in Settings.Labels do
+    R.CheckText(Label, At);
+  end for;
+
+  if Settings.Overlays.Length > 4 then
+    R.Reject(At, 'A candle chart supports at most four overlays.');
+  end if;
+
+  for Overlay: C.Series in Settings.Overlays do
+    R.CheckText(Overlay.Name, At);
+    Common.Color(Overlay.Color, At);
+    if Overlay.Values.Length > Candles.Length then
+      R.Reject(At, 'An overlay cannot outgrow its candles.');
+    end if;
+
+    for Value: float in Overlay.Values do
+      if Sys.Single.IsInfinity(Value) then
+        R.Reject(At, 'Overlay samples must be finite or NaN gaps.');
+      end if;
+    end for;
+  end for;
+end procedure;
+
+end unit;

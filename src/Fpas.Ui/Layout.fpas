@@ -40,7 +40,7 @@ public type Flex = record
   public Maximum: Measure? := null;
   // CUI growth weight, allocated from zero. Fill uses at least one.
   // Fixed and percentage extents cannot grow; positive content weights become growing.
-  public Grow: int := 0;
+  public Grow: float := 0.0F;
   // Optional graphical width; explicit axes cannot mix with main-axis constraints.
   public Width: AxisSize? := null;
   // Optional graphical height; explicit axes cannot mix with main-axis constraints.

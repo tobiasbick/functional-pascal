@@ -1,6 +1,9 @@
 unit GuiGallery.Pages.SmartInputs.View;
 
 uses
+  System.Collections.Generic as Lists,
+  GuiGallery.Pages.SmartInputs.Widgets.Editors as Editors,
+  Fpas.Ui.ShortcutRecorders as Keys,
   GuiGallery.Pages.SmartInputs.State as State,
   GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage as EmojiMessage,
   GuiGallery.Shared.Sections as G,
@@ -8,43 +11,61 @@ uses
   Fpas.Ui.Layout as L,
   Fpas.Ui.TextFields as F;
 
-// Builds the accepted Smart inputs examples.
+// Builds the complete original Smart inputs page with native CUI widgets.
 //
 // ## Parameters
 // - `Model`: Editable field values and emoji preferences.
 // ## Returns
-// The Prefix and suffix and Emoji picker sections.
-public function View(Model: State.Model): E.Element<State.Msg>;
+// Inline edits, scrub and money fields, affixes, shortcut recording and emoji.
+public function View(Model: State.Model): array of E.Element<State.Msg>;
 begin
-  return E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(
-      'Prefix and suffix',
-      'Any text field can carry muted text before and after the value.'
-    ),
-    E.Row<State.Msg>(
-      new L.Flow(Gap := G.Points(12), Wrap := true),
-      E.Size<State.Msg>(
-        F.TextField<State.Msg>(
-          'input-url',
-          Model.Url,
-          State.Msg.SetUrl,
-          new F.Options(Prefix := 'https://', MaxUtf8Bytes := 95)
-        ),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
+  const Parts: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>();
+  Parts.AddRange(Editors.Inline(Model));
+  Parts.AddRange(Editors.Scrub(Model));
+  Parts.AddRange(Editors.Money(Model));
+  Parts.AddRange(
+    [
+      G.Heading<State.Msg>(
+        'Prefix and suffix',
+        'Any text field can carry muted text before and after the value.'
       ),
-      E.Size<State.Msg>(
-        F.TextField<State.Msg>(
-          'input-weight',
-          Model.Weight,
-          State.Msg.SetWeight,
-          new F.Options(Suffix := 'kg', MaxUtf8Bytes := 15)
+      E.Row<State.Msg>(
+        new L.Flow(Gap := G.Points(12), Wrap := true),
+        E.Size<State.Msg>(
+          F.TextField<State.Msg>(
+            'input-url',
+            Model.Url,
+            State.Msg.SetUrl,
+            new F.Options(Prefix := 'https://', MaxUtf8Bytes := 95)
+          ),
+          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
         ),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
+        E.Size<State.Msg>(
+          F.TextField<State.Msg>(
+            'input-weight',
+            Model.Weight,
+            State.Msg.SetWeight,
+            new F.Options(Suffix := 'kg', MaxUtf8Bytes := 15)
+          ),
+          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
+        )
+      ),
+      G.Heading<State.Msg>(
+        'Shortcut recorder',
+        'Click, then press a combination. Backspace clears.'
+      ),
+      E.Row<State.Msg>(
+        new L.Flow(Gap := G.Points(12), Wrap := true),
+        Keys.ShortcutRecorder<State.Msg>('palette-key', Model.PaletteKey, State.Msg.SetPaletteKey),
+        Keys.ShortcutRecorder<State.Msg>(
+          'search-key', Model.SearchKey, State.Msg.SetSearchKey,
+          new Keys.Options(Placeholder := 'Record shortcut')
+        )
       )
-    ),
-    EmojiMessage.View(Model)
+    ]
   );
+  Parts.AddRange(EmojiMessage.View(Model));
+  return Parts.ToArray();
 end function;
 
 end unit;

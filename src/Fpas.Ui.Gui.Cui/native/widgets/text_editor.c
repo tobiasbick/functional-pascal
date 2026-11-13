@@ -29,6 +29,18 @@ static void fpas_text_reset(cui_ctx *ui, cui_edit_state *edit, int length) {
     edit->show_password = false;
 }
 
+/* Refresh a rejected single-line numeric draft without replacing CUI's painter. */
+static void fpas_text_refresh(cui_ctx *ui, cui_id key, const char *text) {
+    const int length = (int)strlen(text);
+    cui_edit_state *edit = cui__state_lazy(ui, key, sizeof *edit, false);
+    if (edit) fpas_text_reset(ui, edit, length);
+    const int area = fpas_find(ui, key ^ 0xED17u);
+    if (area < 0) return;
+    cui__edit_paint *paint = ui->nodes[area].paint_data;
+    paint->buf = cui__frame_strdup(ui, text, length); paint->len = length;
+    paint->anchor = paint->cursor = length; paint->scroll_x = 0;
+}
+
 static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_t capacity,
     cui_input_opts options, bool multiline, int enabled, int focus, int *nodes, int *revealed,
     fpas_editor_draw draw) {

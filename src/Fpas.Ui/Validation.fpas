@@ -1,6 +1,26 @@
 unit Fpas.Ui.Validation;
 
 uses
+  Fpas.Ui.Sankeys as Sankeys,
+  Fpas.Ui.BarLists as BarLists,
+  Fpas.Ui.ActivityRings as ActivityRings,
+  Fpas.Ui.ScatterCharts as ScatterCharts,
+  Fpas.Ui.RadialGauges as RadialGauges,
+  Fpas.Ui.Candlesticks as Candlesticks,
+  Fpas.Ui.Internal.MoreChartRules as MoreRules,
+  Fpas.Ui.Heatmaps as Heatmaps,
+  Fpas.Ui.CalendarHeatmaps as CalendarHeatmaps,
+  Fpas.Ui.Treemaps as Treemaps,
+  Fpas.Ui.RadarCharts as RadarCharts,
+  Fpas.Ui.Funnels as Funnels,
+  Fpas.Ui.SplitBars as SplitBars,
+  Fpas.Ui.Waffles as Waffles,
+  Fpas.Ui.Internal.VisualizationRules as VizRules,
+  Fpas.Ui.Charts as Charts, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.PatternMeters as Patterns,
+  Fpas.Ui.Internal.ChartRules as ChartRules,
+  Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields,
+  Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys,
+  Fpas.Ui.Internal.SmartInputRules as SmartRules,
   Fpas.Ui.Tours as Tours,
   Fpas.Ui.ColorPickers as ColorPickers, Fpas.Ui.EmojiPickers as Emojis,
   Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers,
@@ -366,6 +386,51 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Index: int := 0 to Items.Length - 1 do
           discard Identify(Selects.OptionId(Id, Index), At + '/option');
         end for;
+      when E.Element.InlineEdit(
+        const Id: string,
+        const Current: string,
+        _,
+        const Settings: InlineEdits.Options
+      ):
+        const At: string := Identify(Id, Location + '/inline-edit');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SmartRules.Inline(Current, Settings, At);
+      when E.Element.ScrubField(
+        const Id: string,
+        const Label: string,
+        const Current: float,
+        const Minimum: float,
+        const Maximum: float,
+        _,
+        const Settings: ScrubFields.Options
+      ):
+        const At: string := Identify(Id, Location + '/scrub-field');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SmartRules.Scrub(Label, Current, Minimum, Maximum, Settings, At);
+      when E.Element.MoneyField(
+        const Id: string,
+        const Current: double,
+        _,
+        const Settings: MoneyFields.Options
+      ):
+        const At: string := Identify(Id, Location + '/money-field');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SmartRules.Money(Current, Settings, At);
+      when E.Element.ShortcutRecorder(
+        const Id: string,
+        const Current: RecorderKeys.Combination,
+        _,
+        const Settings: RecorderKeys.Options
+      ):
+        const At: string := Identify(Id, Location + '/shortcut-recorder');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        SmartRules.Shortcut(Current, Settings, At);
+        if Current.Key <> RecorderKeys.Key.None then
+          discard Identify(RecorderKeys.ClearId(Id), At + '/clear');
+        end if;
+      when E.Element.ShortcutLabel(const Current: RecorderKeys.Combination):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/shortcut-label');
+        SmartRules.Combination(Current, Location);
       when E.Element.NumberField(
         const Id: string, const Value: double, const Minimum: double, const Maximum: double, _,
         const Settings: NumberFields.Options
@@ -1089,6 +1154,171 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/badge');
         Rules.RequireProfile(Profile, Target.Graphical, At);
         SurfaceRules.Badge(Caption, Settings, At);
+      when E.Element.Sankey(
+        const Id: string,
+        const Nodes: array of Sankeys.Node,
+        const Links: array of Sankeys.Link,
+        const Settings: Sankeys.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/Sankey');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.Sankey(Nodes, Links, Settings, At);
+      when E.Element.BarList(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: BarLists.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/BarList');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.BarList(Items, Settings, At);
+      when E.Element.ActivityRings(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: ActivityRings.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/ActivityRings');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.ActivityRings(Items, Settings, At);
+      when E.Element.ScatterChart(
+        const Id: string,
+        const Series: array of ScatterCharts.Series,
+        const Settings: ScatterCharts.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/ScatterChart');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.Scatter(Series, Settings, At);
+      when E.Element.RadialGauge(
+        const Id: string,
+        const Value: float,
+        const Minimum: float,
+        const Maximum: float,
+        const Settings: RadialGauges.Options
+      ):
+        const At: string := Identify(Id, Location + '/RadialGauge');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.Radial(Value, Minimum, Maximum, Settings, At);
+      when E.Element.Candlestick(
+        const Id: string,
+        const Candles: array of Candlesticks.Candle,
+        const Settings: Candlesticks.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/Candlestick');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        MoreRules.Candles(Candles, Settings, At);
+      when E.Element.Heatmap(
+        const Id: string,
+        const Values: array of float,
+        const Rows: int,
+        const Columns: int,
+        const Settings: Heatmaps.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/Heatmap');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Heatmap(Values, Rows, Columns, Settings, At);
+      when E.Element.CalendarHeatmap(
+        const Id: string,
+        const Start: Sys.DateOnly,
+        const Values: array of float,
+        const Settings: CalendarHeatmaps.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/CalendarHeatmap');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.CalendarHeatmap(Start, Values, Settings, At);
+      when E.Element.Treemap(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Selected: int,
+        const OnSelect: Sys.Func<int, TMsg>?,
+        const Settings: Treemaps.Options
+      ):
+        const At: string := Identify(Id, Location + '/Treemap');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Treemap(Items, Selected, OnSelect <> null, Settings, At);
+      when E.Element.RadarChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Axes: array of string,
+        const Settings: RadarCharts.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/RadarChart');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Radar(Series, Axes, Settings, At);
+      when E.Element.Funnel(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: Funnels.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/Funnel');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Items(Items, At);
+        VizRules.Funnel(Settings, At);
+      when E.Element.SplitBar(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: SplitBars.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/SplitBar');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Items(Items, At);
+        VizRules.SplitBar(Settings, At);
+      when E.Element.Waffle(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: Waffles.Options,
+        _
+      ):
+        const At: string := Identify(Id, Location + '/Waffle');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        VizRules.Items(Items, At);
+        VizRules.Waffle(Settings, At);
+      when E.Element.LineChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Settings: Charts.Options
+      ), E.Element.BarChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Settings: Charts.Options
+      ):
+        const At: string := Identify(Id, Location + '/chart');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Chart(Series, Settings, At);
+      when E.Element.DonutChart(
+        const Id: string,
+        const Values: array of float,
+        const Labels: array of string,
+        const Settings: Donuts.Options
+      ):
+        const At: string := Identify(Id, Location + '/donut');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Donut(Values, Labels, Settings, At);
+      when E.Element.Gauge(
+        const Id: string,
+        const Label: string,
+        const Current: float,
+        const Size: float
+      ):
+        const At: string := Identify(Id, Location + '/gauge');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Gauge(Label, Current, Size, At);
+      when E.Element.PatternMeter(
+        const Id: string,
+        const Parts: array of Patterns.Part,
+        const Settings: Patterns.Options
+      ):
+        const At: string := Identify(Id, Location + '/patternMeter');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        ChartRules.Pattern(Parts, Settings, At);
       when E.Element.Metric(
         const Id: string,
         const Label: string,

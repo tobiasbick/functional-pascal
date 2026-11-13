@@ -1,0 +1,98 @@
+unit GuiGallery.Pages.MoreCharts.Widgets.Market;
+
+uses
+  GuiGallery.Pages.MoreCharts.Data as Data, Fpas.Ui.Elements as E, Fpas.Ui.ScatterCharts as Sc,
+  Fpas.Ui.RadialGauges as R, Fpas.Ui.Candlesticks as Cs, Fpas.Ui.Charts as C,
+  Fpas.Ui.Cards as Cards, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+
+// Builds the native bubble chart.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Samples`: Original series and bubble sizes.
+// ## Returns
+// The native scatter card.
+public function Scatter<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+begin
+  return Cards.Card<TMsg>(
+    'scatter-card', [
+      Sc.ScatterChart<TMsg>(
+        'scatter', Samples.Scatter,
+        new Sc.Options(
+          Height := 300.0F, XLabel := 'Nodes', YLabel := 'Frame time (ms)',
+          YFormat := new C.ValueFormat(DecimalPlaces := 2)
+        )
+      )
+    ], new Cards.Options(Padding := 18.0F, Width := L.Extent.Fill)
+  );
+end function;
+
+// Builds all three original native gauge styles.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// CPU, temperature and memory instruments.
+public function Gauges<TMsg>(): E.Element<TMsg>;
+begin
+  return Cards.Card<TMsg>(
+    'instruments-card', [
+      R.RadialGauge<TMsg>(
+        'cpu-radial', 64.0F, 0.0F, 100.0F, new R.Options(
+          Unit := '%',
+          Label := 'CPU',
+          Bands := [
+            new R.Band(60.0F, S.Tone.Success, 'Normal'),
+            new R.Band(85.0F, S.Tone.Warning, 'Busy'),
+            new R.Band(100.0F, S.Tone.Danger, 'Overloaded')
+          ],
+          Size := 180.0F
+        )
+      ),
+      R.RadialGauge<TMsg>(
+        'temp',
+        71.0F,
+        20.0F,
+        100.0F,
+        new R.Options(Unit := 'C', Label := 'GPU temperature', Target := 85.0F, Size := 180.0F)
+      ),
+      R.RadialGauge<TMsg>(
+        'mem', 0.62F * 32.0F, 0.0F, 32.0F, new R.Options(
+          Format := new C.ValueFormat(DecimalPlaces := 1),
+          Unit := 'GB',
+          Label := 'Memory',
+          Style := R.Style.Ring,
+          Detail := 'of 32 GB',
+          Size := 150.0F
+        )
+      )
+    ],
+    new Cards.Options(
+      Padding := 18.0F,
+      Width := L.Extent.Fill,
+      Horizontal := true,
+      Wrap := true,
+      Gap := 24.0F,
+      Align := L.Alignment.Center
+    )
+  );
+end function;
+
+// Builds the original 2,000-period native price viewport.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Samples`: Original deterministic OHLC periods.
+// ## Returns
+// The native candlestick card with its original caption.
+public function Price<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+begin
+  return Cards.Card<TMsg>(
+    'price-card', [
+      E.Styled<TMsg>(E.Text<TMsg>('Price, 2,000 periods'), S.Role.Label),
+      Cs.Candlestick<TMsg>('price', Samples.Candles, new Cs.Options(Height := 280.0F))
+    ],
+    new Cards.Options(Padding := 18.0F, Width := L.Extent.Fill, Gap := 10.0F)
+  );
+end function;
+
+end unit;

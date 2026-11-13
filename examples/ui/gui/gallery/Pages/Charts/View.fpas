@@ -1,0 +1,211 @@
+unit GuiGallery.Pages.Charts.View;
+
+uses
+  GuiGallery.Pages.Charts.State as State, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.LineCharts as Lines,
+  Fpas.Ui.BarCharts as Bars, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.Gauges as Gauges,
+  Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.Cards as Cards, Fpas.Ui.Grids as Grids,
+  Fpas.Ui.Layout as L, Fpas.Ui.Checkboxes as Checks;
+
+const Months: array of string := [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+];
+
+function Card(Id: string; Settings: Cards.Options; params Children: array of E.Element<State.Msg>): E.Element<State.Msg>;
+begin
+  return Cards.Card<State.Msg>(Id, Children, Settings);
+end function;
+
+function Line(): E.Element<State.Msg>;
+begin
+  return Card(
+    'revenue-card', new Cards.Options(),
+    Lines.LineChart<State.Msg>(
+      'revenue', [
+        new C.Series(
+          'Revenue',
+          [18.0F, 22.0F, 21.0F, 27.0F, 31.0F, 29.0F, 36.0F, 41.0F, 39.0F, 46.0F, 52.0F, 58.0F]
+        ),
+        new C.Series(
+          'Costs',
+          [12.0F, 13.0F, 15.0F, 14.0F, 18.0F, 19.0F, 21.0F, 22.0F, 24.0F, 25.0F, 27.0F, 29.0F]
+        )
+      ], new C.Options(
+        Labels := Months, Area := true, Smooth := true, Height := 240.0F,
+        Format := new C.ValueFormat(Prefix := '$', Suffix := 'k')
+      )
+    )
+  );
+end function;
+
+function Visits(): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(12), Clip := false),
+    G.Heading<State.Msg>('Bar chart'),
+    Card(
+      'visits-card', new Cards.Options(),
+      Bars.BarChart<State.Msg>(
+        'visits', [
+          new C.Series('Desktop', [42.0F, 51.0F, 38.0F, 64.0F, 58.0F, 71.0F]),
+          new C.Series('Mobile', [28.0F, 33.0F, 30.0F, 41.0F, 46.0F, 49.0F])
+        ], new C.Options(Labels := ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], Height := 200.0F)
+      )
+    )
+  );
+end function;
+
+function Platforms(): E.Element<State.Msg>;
+begin
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := G.Points(12), Clip := false),
+    G.Heading<State.Msg>('Donut chart'),
+    Card(
+      'platforms-card', new Cards.Options(Align := L.Alignment.Center),
+      Donuts.DonutChart<State.Msg>(
+        'platforms', [46.0F, 27.0F, 17.0F, 10.0F],
+        ['Windows', 'macOS', 'Linux', 'Other'], new Donuts.Options(
+          Height := 180.0F,
+          Format := new C.ValueFormat(Suffix := '%')
+        )
+      )
+    )
+  );
+end function;
+
+function Requests(): E.Element<State.Msg>;
+begin
+  return Card(
+    'requests-card', new Cards.Options(),
+    Lines.LineChart<State.Msg>(
+      'requests', [
+        new C.Series(
+          'API',
+          [22.0F, 19.0F, 17.0F, 21.0F, 30.0F, 38.0F, 41.0F, 37.0F, 34.0F, 39.0F, 33.0F, 26.0F],
+          C.Color.Palette(4)
+        ),
+        new C.Series(
+          'Web',
+          [18.0F, 15.0F, 13.0F, 16.0F, 24.0F, 33.0F, 36.0F, 40.0F, 38.0F, 42.0F, 35.0F, 28.0F],
+          C.Color.Palette(1)
+        )
+      ], new C.Options(
+        Labels := [
+          '00:00',
+          '02:00',
+          '04:00',
+          '06:00',
+          '08:00',
+          '10:00',
+          '12:00',
+          '14:00',
+          '16:00',
+          '18:00',
+          '20:00',
+          '22:00'
+        ],
+        Dither := true,
+        Stacked := true,
+        Smooth := true,
+        Height := 220.0F,
+        Format := new C.ValueFormat(Suffix := 'k')
+      )
+    )
+  );
+end function;
+
+function Storage(Model: State.Model): E.Element<State.Msg>;
+begin
+  return Card(
+    'storage-card', new Cards.Options(Gap := 24.0F),
+    Patterns.PatternMeter<State.Msg>(
+      'storage',
+      [
+        new Patterns.Part('Photos', 81.0F), new Patterns.Part('Video', 58.0F),
+        new Patterns.Part('Apps', 41.0F), new Patterns.Part('Docs', 32.0F)
+      ],
+      new Patterns.Options(
+        Total := 256.0F,
+        Label := 'Storage',
+        Unit := 'GB',
+        Grayscale := Model.Grayscale
+      )
+    ),
+    Checks.Checkbox<State.Msg>('grayscale', 'Grayscale', Model.Grayscale, State.Msg.SetGrayscale)
+  );
+end function;
+
+function Runs(): E.Element<State.Msg>;
+begin
+  return Card(
+    'runs-card', new Cards.Options(),
+    Bars.BarChart<State.Msg>(
+      'runs',
+      [
+        new C.Series('Passed', [112.0F, 124.0F, 131.0F, 128.0F, 140.0F, 152.0F, 149.0F, 161.0F]),
+        new C.Series('Retried', [9.0F, 11.0F, 8.0F, 12.0F, 10.0F, 9.0F, 13.0F, 8.0F]),
+        new C.Series('Failed', [4.0F, 6.0F, 3.0F, 5.0F, 7.0F, 4.0F, 6.0F, 3.0F])
+      ],
+      new C.Options(
+        Labels := ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+        Stacked := true,
+        Height := 200.0F
+      )
+    )
+  );
+end function;
+
+// Builds all eight examples from the native CUI Charts page.
+// ## Parameters
+// - `Model`: The pattern-meter palette choice.
+// ## Returns
+// Native chart sections in their original order.
+public function View(Model: State.Model): array of E.Element<State.Msg>;
+begin
+  const Grid: Grids.Options := new Grids.Options(
+    Columns := 2,
+    MinimumColumnWidth := 260.0F,
+    Gap := G.Points(16)
+  );
+  return [
+    G.Heading<State.Msg>(
+      'Line chart',
+      'Hover to inspect values. The crosshair glides between points.'
+    ),
+    Line(),
+    Grids.Grid<State.Msg>(Grid, Visits(), Platforms()),
+    G.Heading<State.Msg>(
+      'Dither area chart',
+      'Fills made of dots that thin out toward the base; stacked bands keep their own color.'
+    ),
+    Requests(),
+    G.Heading<State.Msg>(
+      'Pattern meter',
+      'Each part has a color and a density, so it reads in grayscale too. Hover a part or a legend entry.'
+    ),
+    Storage(Model),
+    G.Heading<State.Msg>('Stacked bars and gauges'),
+    Grids.Grid<State.Msg>(
+      Grid, Runs(),
+      Card(
+        'gauges-card',
+        new Cards.Options(Horizontal := true, Gap := 24.0F, Align := L.Alignment.Center),
+        Gauges.Gauge<State.Msg>('cpu', 'CPU', 0.42F, 130.0F),
+        Gauges.Gauge<State.Msg>('memory', 'Memory', 0.81F, 130.0F)
+      )
+    )
+  ];
+end function;
+
+end unit;

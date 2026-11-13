@@ -168,7 +168,7 @@ begin
   );
 
   A.Send(Session, State.Msg.Show(State.Page.SmartInputs));
-  Window.Resize(1000, 800);
+  Window.Resize(1000, 1280);
   Step(Session);
   Step(Session);
   A.Check(

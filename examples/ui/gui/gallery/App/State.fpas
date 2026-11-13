@@ -1,6 +1,9 @@
 unit GuiGallery.App.State;
 
 uses
+  GuiGallery.Pages.MoreCharts.State as MoreCharts,
+  GuiGallery.Pages.MoreCharts.Data as MoreChartsData,
+  GuiGallery.Pages.Charts.State as Charts,
   GuiGallery.Pages.Overview.State as Overview,
   GuiGallery.Pages.Buttons.State as Buttons,
   GuiGallery.Pages.Inputs.State as Inputs,
@@ -50,6 +53,10 @@ public type Page = enum: byte
   Reader;
   // Supplementary native layout primitives absent from the upstream pages.
   Layout;
+  // Native chart examples.
+  Charts;
+  // Accepted extended visualizations.
+  MoreCharts;
 end enum;
 
 // Application state with one owner per feature.
@@ -88,6 +95,10 @@ public type Model = record
   public Audio: Audio.Model := new Audio.Model();
   // State owned by the Capture page.
   public Capture: Capture.Model := new Capture.Model();
+  // State owned by the Charts page.
+  public Charts: Charts.Model := new Charts.Model();
+  // Deterministic data for the native More charts examples.
+  public MoreCharts: MoreChartsData.Samples := MoreChartsData.Create();
 end record;
 
 // Application navigation and typed child messages.
@@ -126,6 +137,10 @@ public type Msg = variant
   Audio(Value: Audio.Msg);
   // Route an action to the Capture slice.
   Capture(Value: Capture.Msg);
+  // Route an action to the More charts slice.
+  MoreCharts(Value: MoreCharts.Msg);
+  // Route an action to the Charts slice.
+  Charts(Value: Charts.Msg);
 end variant;
 
 end unit;

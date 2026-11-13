@@ -1,0 +1,52 @@
+unit Fpas.Ui.Gui.Internal.Widgets.BarList;
+
+uses
+  Fpas.Ui.BarLists as W, Fpas.Ui.Charts as Charts, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.ChartData as Common, Fpas.Ui.Gui.Internal.MoreChartData as Data,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents CUI's native bar-list.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Items`: Nonnegative amounts with unique literal labels.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Charts.Item; Settings: W.Options; OnActivate: Sys.Func<int, TMsg>?);
+begin
+  const Token: string := C.Token('bar-list', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Options: Cui.CuiBarListOptions := new Cui.CuiBarListOptions(
+    Width.Kind,
+    Width.Value,
+    Common.Format(Settings.Format),
+    Settings.MaximumRows,
+    Settings.KeepOrder,
+    Common.Color(Settings.Color)
+  );
+  const Clicked: int := Frame.Window.BarList(
+    Token,
+    Common.Items(Items),
+    Options,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Clicked >= 0 then
+    case OnActivate of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Clicked));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, 'BarList', 'bar-list', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

@@ -1,0 +1,37 @@
+unit Fpas.Ui.ActivityRings;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// Native activity-rings presentation.
+public type Options = record
+  // Diameter; zero uses CUI's default.
+  public Size: float := 0.0F;
+  // Ring thickness; zero uses CUI's default.
+  public Thickness: float := 0.0F;
+  // Literal center readout.
+  public Center: string := '';
+  // Literal caption below the center readout.
+  public Caption: string := '';
+  // Show the native side legend.
+  public Legend: bool := false;
+  // Allow native pointer input.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native activity-rings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Items`: Up to eight named nonnegative progress fractions.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+// ## Returns
+// A graphical element.
+public function ActivityRings<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ActivityRings(Id, Items, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

@@ -30,6 +30,10 @@ Its checked-in project uses source references for repository development;
 application packages deliver the managed libraries, native assets and notices.
 Users of those packages do not download CUI or build its C sources.
 
+[Smart inputs](../../../src/Fpas.Ui/README.md#smart-inputs) provides native
+inline editing, numeric scrubbing, money fields and shortcut recording/labels.
+Each keeps rendering and interaction in CUI and emits model-owned proposals.
+
 Native [accordions and expandable cards](../../../src/Fpas.Ui/README.md#accordion-and-expandable-card)
 use model-owned expansion. [Expandable text](../../../src/Fpas.Ui/README.md#expandable-text)
 keeps its local expansion in CUI. These widgets require the GUI host.
@@ -129,3 +133,25 @@ uses software for additional windows on that thread.
 - [GUI gallery](../../../examples/ui/gui/gallery/README.md)
 - [Native assets and local distribution feed](../../build/distribution.md#native-cui-assets)
 - [Terminal widget gallery](../../../examples/ui/tui/gallery/README.md)
+
+## Charts
+
+The [shared chart API](../../../src/Fpas.Ui/README.md#charts) exposes native
+line/area/dither, grouped/stacked bars, donuts, gauges and pattern meters.
+CUI owns their layout, palettes, animation and interaction. The
+[Charts page](../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
+reproduces the original eight examples, including the storage meter's
+Grayscale switch and native hover/keyboard readout.
+
+The [visualization API](../../../src/Fpas.Ui/README.md#visualizations) adds
+matrix/calendar heatmaps, treemap, radar, funnel, split bar and waffle.
+Their [More charts examples](../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
+use native CUI layout and interaction. Optional click callbacks report input
+indices, matrix positions or actual calendar dates; treemap selection is
+model-owned.
+
+[Flows, ranks and instruments](../../../src/Fpas.Ui/README.md#flows-ranks-and-instruments)
+add Sankey, animated bar lists, activity rings, scatter/bubble charts, radial
+gauges and candlestick/OHLC charts. CUI owns their rendering and interaction,
+including candlestick zoom, panning, keyboard inspection and volume. The GUI
+gallery's More charts page reproduces every original example.

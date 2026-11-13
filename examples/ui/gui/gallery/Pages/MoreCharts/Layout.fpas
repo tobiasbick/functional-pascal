@@ -1,0 +1,49 @@
+unit GuiGallery.Pages.MoreCharts.Layout;
+
+uses GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds the native gallery's full-width section row.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Children`: Sections in display order.
+// ## Returns
+// The native row.
+public function Row<TMsg>(params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+begin
+  return E.Size<TMsg>(
+    E.Row<TMsg>(
+      new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
+      Children
+    ),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+  );
+end function;
+
+// Builds a weighted native gallery column.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Weight`: Native positive growth weight.
+// - `Centered`: Center children on the cross axis.
+// - `Children`: Section content.
+// ## Returns
+// The native column.
+public function Column<TMsg>(Weight: float; Centered: bool; params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+begin
+  return E.Size<TMsg>(
+    E.Column<TMsg>(
+      new L.Flow(
+        Gap := G.Points(10), Clip := false,
+        Align := if Centered then
+          L.Alignment.Center
+        else
+          L.Alignment.Default
+        end if
+      ), Children
+    ),
+    new L.Flex(Basis := L.Extent.Fill, Grow := Weight)
+  );
+end function;
+
+end unit;

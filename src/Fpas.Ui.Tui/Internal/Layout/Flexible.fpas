@@ -51,7 +51,9 @@ end function;
 
 public function PreferredSize(Intrinsic: int; Rule: E.Flex): int;
 begin
-  if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0 then
+  if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1
+    or not Sys.Single.IsFinite(Rule.Grow) or Rule.Grow < 0.0F
+  then
     raise new Sys.ArgumentException('Invalid flex size rule.');
   end if;
 

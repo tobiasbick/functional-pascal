@@ -1,6 +1,44 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.Sankeys as Sankeys,
+  Fpas.Ui.BarLists as BarLists,
+  Fpas.Ui.ActivityRings as ActivityRings,
+  Fpas.Ui.ScatterCharts as ScatterCharts,
+  Fpas.Ui.RadialGauges as RadialGauges,
+  Fpas.Ui.Candlesticks as Candlesticks,
+  Fpas.Ui.Gui.Internal.Widgets.Sankey as SankeyWidget,
+  Fpas.Ui.Gui.Internal.Widgets.BarList as BarListWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ActivityRings as ActivityRingsWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ScatterChart as ScatterChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.RadialGauge as RadialGaugeWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Candlestick as CandlestickWidget,
+  Fpas.Ui.Heatmaps as Heatmaps,
+  Fpas.Ui.CalendarHeatmaps as CalendarHeatmaps,
+  Fpas.Ui.Treemaps as Treemaps,
+  Fpas.Ui.RadarCharts as RadarCharts,
+  Fpas.Ui.Funnels as Funnels,
+  Fpas.Ui.SplitBars as SplitBars,
+  Fpas.Ui.Waffles as Waffles,
+  Fpas.Ui.Gui.Internal.Widgets.Heatmap as HeatmapWidget,
+  Fpas.Ui.Gui.Internal.Widgets.CalendarHeatmap as CalendarHeatmapWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Treemap as TreemapWidget,
+  Fpas.Ui.Gui.Internal.Widgets.RadarChart as RadarChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Funnel as FunnelWidget,
+  Fpas.Ui.Gui.Internal.Widgets.SplitBar as SplitBarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Waffle as WaffleWidget,
+  Fpas.Ui.Charts as Charts, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.PatternMeters as Patterns,
+  Fpas.Ui.Gui.Internal.Widgets.LineChart as LineChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.BarChart as BarChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.DonutChart as DonutChartWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Gauge as GaugeWidget,
+  Fpas.Ui.Gui.Internal.Widgets.PatternMeter as PatternMeterWidget,
+  Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields,
+  Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys,
+  Fpas.Ui.Gui.Internal.Widgets.InlineEdit as InlineWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ScrubField as ScrubWidget,
+  Fpas.Ui.Gui.Internal.Widgets.MoneyField as MoneyWidget,
+  Fpas.Ui.Gui.Internal.Widgets.ShortcutRecorder as ShortcutWidget,
   Fpas.Ui.Tours as Tours, Fpas.Ui.Gui.Internal.Widgets.Tour as TourWidget,
   Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Gui.Internal.Widgets.EmojiPicker as EmojiPickerWidget,
   Fpas.Ui.Gui.Internal.Widgets.ColorPicker as ColorPickerWidget,
@@ -61,6 +99,39 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       when E.Element.Label(const Value: string):
         Current.Window.Text(Value);
         Current.Labels.Add(Value);
+      when E.Element.InlineEdit(
+        const Id: string,
+        const Value: string,
+        const Changed: function(string): TMsg,
+        const Settings: InlineEdits.Options
+      ):
+        InlineWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+      when E.Element.ScrubField(
+        const Id: string,
+        const Label: string,
+        const Value: float,
+        const Minimum: float,
+        const Maximum: float,
+        const Changed: function(float): TMsg,
+        const Settings: ScrubFields.Options
+      ):
+        ScrubWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Changed, Settings);
+      when E.Element.MoneyField(
+        const Id: string,
+        const Value: double,
+        const Changed: function(double): TMsg,
+        const Settings: MoneyFields.Options
+      ):
+        MoneyWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+      when E.Element.ShortcutRecorder(
+        const Id: string,
+        const Value: RecorderKeys.Combination,
+        const Changed: function(RecorderKeys.Combination): TMsg,
+        const Settings: RecorderKeys.Options
+      ):
+        ShortcutWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+      when E.Element.ShortcutLabel(const Value: RecorderKeys.Combination):
+        ShortcutWidget.Label<TMsg>(Current, Value);
       when E.Element.TextField(
         const Id: string, const Value: string, const OnChange: function(string): TMsg,
         const Settings: TextFields.Options, const OnSubmit: Sys.Func<string, TMsg>?
@@ -587,6 +658,136 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         CardWidget.Draw<TMsg>(Current, Id, Children, Settings, Activate, Visit);
       when E.Element.Badge(const Id: string, const Text: string, const Settings: Badges.Options):
         BadgeWidget.Draw<TMsg>(Current, Id, Text, Settings);
+      when E.Element.Sankey(
+        const Id: string,
+        const Nodes: array of Sankeys.Node,
+        const Links: array of Sankeys.Link,
+        const Settings: Sankeys.Options,
+        const OnActivate: Sys.Func<Sankeys.Selection, TMsg>?
+      ):
+        SankeyWidget.Draw<TMsg>(Current, Id, Nodes, Links, Settings, OnActivate);
+      when E.Element.BarList(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: BarLists.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        BarListWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+      when E.Element.ActivityRings(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: ActivityRings.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        ActivityRingsWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+      when E.Element.ScatterChart(
+        const Id: string,
+        const Series: array of ScatterCharts.Series,
+        const Settings: ScatterCharts.Options,
+        const OnActivate: Sys.Func<ScatterCharts.PointIndex, TMsg>?
+      ):
+        ScatterChartWidget.Draw<TMsg>(Current, Id, Series, Settings, OnActivate);
+      when E.Element.RadialGauge(
+        const Id: string,
+        const Value: float,
+        const Minimum: float,
+        const Maximum: float,
+        const Settings: RadialGauges.Options
+      ):
+        RadialGaugeWidget.Draw<TMsg>(Current, Id, Value, Minimum, Maximum, Settings);
+      when E.Element.Candlestick(
+        const Id: string,
+        const Candles: array of Candlesticks.Candle,
+        const Settings: Candlesticks.Options,
+        const OnCursorChange: Sys.Func<int, TMsg>?
+      ):
+        CandlestickWidget.Draw<TMsg>(Current, Id, Candles, Settings, OnCursorChange);
+      when E.Element.Heatmap(
+        const Id: string,
+        const Values: array of float,
+        const Rows: int,
+        const Columns: int,
+        const Settings: Heatmaps.Options,
+        const OnActivate: Sys.Func<Heatmaps.Cell, TMsg>?
+      ):
+        HeatmapWidget.Draw<TMsg>(Current, Id, Values, Rows, Columns, Settings, OnActivate);
+      when E.Element.CalendarHeatmap(
+        const Id: string,
+        const Start: Sys.DateOnly,
+        const Values: array of float,
+        const Settings: CalendarHeatmaps.Options,
+        const OnActivate: Sys.Func<Sys.DateOnly, TMsg>?
+      ):
+        CalendarHeatmapWidget.Draw<TMsg>(Current, Id, Start, Values, Settings, OnActivate);
+      when E.Element.Treemap(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Selected: int,
+        const OnSelect: Sys.Func<int, TMsg>?,
+        const Settings: Treemaps.Options
+      ):
+        TreemapWidget.Draw<TMsg>(Current, Id, Items, Selected, OnSelect, Settings);
+      when E.Element.RadarChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Axes: array of string,
+        const Settings: RadarCharts.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        RadarChartWidget.Draw<TMsg>(Current, Id, Series, Axes, Settings, OnActivate);
+      when E.Element.Funnel(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: Funnels.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        FunnelWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+      when E.Element.SplitBar(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: SplitBars.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        SplitBarWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+      when E.Element.Waffle(
+        const Id: string,
+        const Items: array of Charts.Item,
+        const Settings: Waffles.Options,
+        const OnActivate: Sys.Func<int, TMsg>?
+      ):
+        WaffleWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+      when E.Element.LineChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Settings: Charts.Options
+      ):
+        LineChartWidget.Draw<TMsg>(Current, Id, Series, Settings);
+      when E.Element.BarChart(
+        const Id: string,
+        const Series: array of Charts.Series,
+        const Settings: Charts.Options
+      ):
+        BarChartWidget.Draw<TMsg>(Current, Id, Series, Settings);
+      when E.Element.DonutChart(
+        const Id: string,
+        const Values: array of float,
+        const Labels: array of string,
+        const Settings: Donuts.Options
+      ):
+        DonutChartWidget.Draw<TMsg>(Current, Id, Values, Labels, Settings);
+      when E.Element.Gauge(
+        const Id: string,
+        const Label: string,
+        const Value: float,
+        const Diameter: float
+      ):
+        GaugeWidget.Draw<TMsg>(Current, Id, Label, Value, Diameter);
+      when E.Element.PatternMeter(
+        const Id: string,
+        const Parts: array of Patterns.Part,
+        const Settings: Patterns.Options
+      ):
+        PatternMeterWidget.Draw<TMsg>(Current, Id, Parts, Settings);
       when E.Element.Metric(
         const Id: string,
         const Label: string,

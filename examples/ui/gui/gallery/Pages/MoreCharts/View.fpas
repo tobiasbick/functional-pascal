@@ -1,0 +1,165 @@
+unit GuiGallery.Pages.MoreCharts.View;
+
+uses
+  GuiGallery.Pages.MoreCharts.Layout as Layout,
+  GuiGallery.Pages.MoreCharts.Widgets.Flows as Flows, GuiGallery.Pages.MoreCharts.Widgets.Market as Market,
+  GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Heatmaps as Heatmaps,
+  Fpas.Ui.CalendarHeatmaps as Calendars, Fpas.Ui.Treemaps as Treemaps,
+  Fpas.Ui.RadarCharts as Radar, Fpas.Ui.Funnels as Funnels, Fpas.Ui.SplitBars as Splits,
+  Fpas.Ui.Waffles as Waffles, Fpas.Ui.Cards as Cards, Fpas.Ui.Layout as L;
+
+function Matrix<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+begin
+  return Layout.Row<TMsg>(
+    Layout.Column<TMsg>(
+      1.0F, false,
+      G.Heading<TMsg>('Heatmap', 'Requests by weekday and hour.'),
+      Cards.Card<TMsg>(
+        'traffic-card', [
+          Heatmaps.Heatmap<TMsg>(
+            'traffic', Samples.Traffic, 7, 24, new Heatmaps.Options(
+              RowLabels := ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              ColumnLabels := [
+                '0h',
+                '',
+                '',
+                '3h',
+                '',
+                '',
+                '6h',
+                '',
+                '',
+                '9h',
+                '',
+                '',
+                '12h',
+                '',
+                '',
+                '15h',
+                '',
+                '',
+                '18h',
+                '',
+                '',
+                '21h',
+                '',
+                ''
+              ],
+              Format := new C.ValueFormat(Suffix := ' req')
+            )
+          )
+        ],
+        new Cards.Options(Padding := 18.0F, Width := L.Extent.Fill)
+      )
+    )
+  );
+end function;
+
+function Areas<TMsg>(): E.Element<TMsg>;
+begin
+  return Layout.Row<TMsg>(
+    Layout.Column<TMsg>(
+      1.3F, false,
+      G.Heading<TMsg>('Treemap', 'Bundle size by module.'),
+      Treemaps.Treemap<TMsg>(
+        'bundle', [
+          new C.Item('Layout', 55.0F),
+          new C.Item('Text', 42.0F),
+          new C.Item('Draw', 35.0F),
+          new C.Item('Controls', 31.0F),
+          new C.Item('Charts', 23.0F),
+          new C.Item('Overlays', 19.0F),
+          new C.Item('Platform', 16.0F),
+          new C.Item('Theme', 9.0F),
+          new C.Item('Icons', 7.0F),
+          new C.Item('Grid', 6.0F)
+        ], new Treemaps.Options(Height := 280.0F, Format := new C.ValueFormat(Suffix := ' KB'))
+      )
+    ),
+    Layout.Column<TMsg>(
+      1.0F, true,
+      G.Heading<TMsg>('Radar', 'Two releases across six qualities.'),
+      Radar.RadarChart<TMsg>(
+        'radar',
+        [
+          new C.Series('1.0', [82.0F, 64.0F, 90.0F, 58.0F, 75.0F, 88.0F]),
+          new C.Series('1.1', [70.0F, 85.0F, 72.0F, 80.0F, 60.0F, 79.0F])
+        ],
+        ['Speed', 'Size', 'Polish', 'Docs', 'Platforms', 'Tests'],
+        new Radar.Options(Size := 220.0F, Maximum := 100.0F)
+      )
+    )
+  );
+end function;
+
+function Shares<TMsg>(): E.Element<TMsg>;
+begin
+  return Layout.Row<TMsg>(
+    Layout.Column<TMsg>(
+      1.0F, false,
+      G.Heading<TMsg>('Funnel', 'Sign up conversion.'),
+      Funnels.Funnel<TMsg>(
+        'funnel', [
+          new C.Item('Visited', 12840.0F), new C.Item('Signed up', 4210.0F),
+          new C.Item('Activated', 2380.0F), new C.Item('Subscribed', 860.0F)
+        ]
+      )
+    ),
+    Layout.Column<TMsg>(
+      1.0F, false,
+      G.Heading<TMsg>('Split bar', 'Where the time goes.'),
+      Splits.SplitBar<TMsg>(
+        'split', [
+          new C.Item('Layout', 38.0F), new C.Item('Text', 24.0F), new C.Item('Paint', 21.0F),
+          new C.Item('Input', 9.0F), new C.Item('Other', 8.0F)
+        ], new Splits.Options(Format := new C.ValueFormat(Suffix := ' ms'))
+      ),
+      E.Gap<TMsg>(L.Measure.Logical(18)),
+      G.Heading<TMsg>('Waffle', 'Platforms of the last 100 installs.'),
+      Waffles.Waffle<TMsg>(
+        'waffle',
+        [new C.Item('Windows', 46.0F), new C.Item('macOS', 31.0F), new C.Item('Linux', 23.0F)],
+        new Waffles.Options(CellSize := 14.0F)
+      )
+    )
+  );
+end function;
+
+// Builds all widgets from the native More charts page.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Samples`: Original data and current ranked amounts.
+// - `Shuffle`: Replaces the ranked amounts.
+// ## Returns
+// The complete native More charts page.
+public function View<TMsg>(Samples: Data.Samples; Shuffle: TMsg): array of E.Element<TMsg>;
+begin
+  return [
+    Matrix<TMsg>(Samples),
+    G.Heading<TMsg>('Calendar heatmap', 'A year of activity, one square a day.'),
+    Cards.Card<TMsg>(
+      'activity-card', [
+        Calendars.CalendarHeatmap<TMsg>(
+          'activity',
+          Samples.Start,
+          Samples.Activity,
+          new Calendars.Options(Unit := 'contributions')
+        )
+      ],
+      new Cards.Options(Padding := 18.0F)
+    ),
+    Areas<TMsg>(),
+    Shares<TMsg>(),
+    G.Heading<TMsg>('Sankey', 'Where sign ups come from and where they end up.'),
+    Flows.Sankey<TMsg>(),
+    Flows.Ranked<TMsg>(Samples, Shuffle),
+    G.Heading<TMsg>('Scatter', 'Frame time against node count, sized by draw calls.'),
+    Market.Scatter<TMsg>(Samples),
+    Market.Gauges<TMsg>(),
+    Market.Price<TMsg>(Samples)
+  ];
+end function;
+
+end unit;

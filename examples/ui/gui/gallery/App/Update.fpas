@@ -1,6 +1,11 @@
 unit GuiGallery.App.Update;
 
 uses
+  GuiGallery.Pages.MoreCharts.Data as MoreChartsData,
+  GuiGallery.Pages.MoreCharts.State as MoreCharts,
+  GuiGallery.Pages.MoreCharts.Update as MoreChartsUpdate,
+  GuiGallery.Pages.Charts.State as Charts,
+  GuiGallery.Pages.Charts.Update as ChartsUpdate,
   GuiGallery.Pages.Overview.State as Overview,
   GuiGallery.Pages.Overview.Update as OverviewUpdate,
   GuiGallery.Pages.Buttons.State as Buttons,
@@ -66,6 +71,24 @@ end function;
 public function Update(State: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
 begin
   case Message of
+    when G.Msg.MoreCharts(const Value: MoreCharts.Msg):
+      const Child: Mvu.Transition<MoreChartsData.Samples, G.Msg> := C.MapTransition<MoreChartsData.Samples, MoreCharts.Msg, G.Msg>(
+        MoreChartsUpdate.Update(State.MoreCharts, Value), G.Msg.MoreCharts, 'more-charts'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          MoreCharts := Child.Model;
+        end with, Child.Commands
+      );
+    when G.Msg.Charts(const Value: Charts.Msg):
+      const Child: Mvu.Transition<Charts.Model, G.Msg> := C.MapTransition<Charts.Model, Charts.Msg, G.Msg>(
+        ChartsUpdate.Update(State.Charts, Value), G.Msg.Charts, 'charts'
+      );
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Charts := Child.Model;
+        end with, Child.Commands
+      );
     when G.Msg.Shared(const Value: Demo.Msg), G.Msg.Buttons(
       Buttons.Msg.Shared(const Value: Demo.Msg)
     ), G.Msg.Inputs(

@@ -1,0 +1,90 @@
+unit Fpas.Ui.Gui.Internal.MoreChartData;
+
+uses
+  Fpas.Ui.Sankeys as Sk, Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.Candlesticks as Cs,
+  Fpas.Ui.RadialGauges as R, Fpas.Ui.Gui.Cui as Native, System.Collections.Generic as Lists,
+  Fpas.Ui.Gui.Internal.ChartData as Common;
+
+// Converts named Sankey nodes.
+// ## Parameters
+// - `Values`: Input nodes.
+// ## Returns
+// Native nodes retaining input order.
+public function Nodes(Values: array of Sk.Node): array of Native.CuiSankeyNode;
+begin
+  const Result: Lists.List<Native.CuiSankeyNode> := new Lists.List<Native.CuiSankeyNode>();
+  for Item: Sk.Node in Values do
+    Result.Add(new Native.CuiSankeyNode(Item.Label, Common.Color(Item.Color)));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Converts directed flows.
+// ## Parameters
+// - `Values`: Input flows.
+// ## Returns
+// Native flow values.
+public function Links(Values: array of Sk.Link): array of Native.CuiSankeyLink;
+begin
+  const Result: Lists.List<Native.CuiSankeyLink> := new Lists.List<Native.CuiSankeyLink>();
+  for Item: Sk.Link in Values do
+    Result.Add(new Native.CuiSankeyLink(Item.From, Item.To, Item.Value));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Converts scatter data without changing native scale or point order.
+// ## Parameters
+// - `Values`: Input series.
+// ## Returns
+// Native scatter series.
+public function Scatter(Values: array of Sc.Series): array of Native.CuiScatterSeries;
+begin
+  const Result: Lists.List<Native.CuiScatterSeries> := new Lists.List<Native.CuiScatterSeries>();
+  for Item: Sc.Series in Values do
+    const Points: Lists.List<Native.CuiPlotPoint> := new Lists.List<Native.CuiPlotPoint>();
+    for Point: Sc.Point in Item.Points do
+      Points.Add(new Native.CuiPlotPoint(Point.X, Point.Y));
+    end for;
+
+    Result.Add(
+      new Native.CuiScatterSeries(Item.Name, Points.ToArray(), Item.Sizes, Common.Color(Item.Color))
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Converts OHLC periods.
+// ## Parameters
+// - `Values`: Input periods.
+// ## Returns
+// Native period values.
+public function Candles(Values: array of Cs.Candle): array of Native.CuiCandle;
+begin
+  const Result: Lists.List<Native.CuiCandle> := new Lists.List<Native.CuiCandle>();
+  for Item: Cs.Candle in Values do
+    Result.Add(new Native.CuiCandle(Item.Open, Item.High, Item.Low, Item.Close, Item.Volume));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Converts gauge thresholds.
+// ## Parameters
+// - `Values`: Input bands.
+// ## Returns
+// Native thresholds and tones.
+public function Bands(Values: array of R.Band): array of Native.CuiGaugeBand;
+begin
+  const Result: Lists.List<Native.CuiGaugeBand> := new Lists.List<Native.CuiGaugeBand>();
+  for Item: R.Band in Values do
+    Result.Add(new Native.CuiGaugeBand(Item.To, cast<int>(Item.Tone), Item.Name));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

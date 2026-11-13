@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.SplitBar;
+
+uses
+  Fpas.Ui.SplitBars as W, Fpas.Ui.Charts as Ch, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Sizing as Sizing, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents the native split-bar and forwards its activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Ch.Item; Settings: W.Options; OnActivate: Sys.Func<int, TMsg>?);
+begin
+  const Token: string := C.Token('split-bar', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
+  const Options: Cui.CuiSplitBarOptions := new Cui.CuiSplitBarOptions(
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Data.Format(Settings.Format),
+    Settings.Legend
+  );
+  const Clicked: int := Frame.Window.SplitBar(
+    Token,
+    Data.Items(Items),
+    Options,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Clicked >= 0 then
+    case OnActivate of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Clicked));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, 'SplitBar', 'split-bar', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

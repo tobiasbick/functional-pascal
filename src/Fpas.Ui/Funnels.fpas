@@ -1,0 +1,33 @@
+unit Fpas.Ui.Funnels;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+
+// Native conversion funnel settings.
+public type Options = record
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Base color; automatic selects the native accent.
+  public Color: C.Color := C.Color.Automatic;
+  // Safe numeric formatting; null uses native automatic formatting.
+  public Format: C.ValueFormat? := null;
+  // Allow native pointer interaction.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native funnel with native layout, hover and animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional clicked input index callback; hover remains native.
+// ## Returns
+// A graphical element.
+public function Funnel<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Funnel(Id, Items, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

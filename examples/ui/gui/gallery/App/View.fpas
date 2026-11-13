@@ -1,6 +1,11 @@
 unit GuiGallery.App.View;
 
 uses
+  GuiGallery.Pages.MoreCharts.State as MoreChartsState,
+  GuiGallery.Pages.MoreCharts.View as MoreCharts,
+  GuiGallery.Pages.Charts.State as ChartsState,
+  GuiGallery.Pages.Charts.View as Charts,
+  System.Collections.Generic as Collections,
   GuiGallery.Pages.Feedback.View as Feedback,
   GuiGallery.Pages.Layout.View as LayoutDemo,
   GuiGallery.Pages.Buttons.State as ButtonsState,
@@ -66,7 +71,9 @@ end function;
 
 function PageTitle(Page: State.Page): string;
 begin
-  return if Page = State.Page.SmartInputs then
+  return if Page = State.Page.MoreCharts then
+    'More charts'
+  elsif Page = State.Page.SmartInputs then
     'Smart inputs'
   else
     Page.ToString()
@@ -90,20 +97,29 @@ begin
     [
       new N.Section<State.Msg>(
         'Components', [
-          Destination(State.Page.Overview, $E1C1), Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Overview, $E1C1),
+          Destination(State.Page.Buttons, $E1B4),
           Destination(State.Page.Inputs, $E198),
-          Destination(State.Page.Selection, $E29A), Destination(State.Page.Navigation, $E09B),
+          Destination(State.Page.Selection, $E29A),
+          Destination(State.Page.Navigation, $E09B),
           Destination(State.Page.Lists, $E106),
-          Destination(State.Page.Overlays, $E529), Destination(State.Page.Feedback, $E059)
+          Destination(State.Page.Overlays, $E529),
+          Destination(State.Page.Feedback, $E059),
+          Destination(State.Page.Charts, $E2A5)
         ]
       ),
       new N.Section<State.Msg>(
         'Extended',
         [
-          Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
-          Destination(State.Page.Pickers, $E063), Destination(State.Page.Capture, $E19E),
-          Destination(State.Page.Disclosure, $E529), Destination(State.Page.Reader, $E0CC),
-          Destination(State.Page.Audio, $E55A), Destination(State.Page.Layout, $E529)
+          Destination(State.Page.Actions, $E09A),
+          Destination(State.Page.SmartInputs, $E172),
+          Destination(State.Page.Pickers, $E063),
+          Destination(State.Page.Capture, $E19E),
+          Destination(State.Page.Disclosure, $E529),
+          Destination(State.Page.Reader, $E0CC),
+          Destination(State.Page.MoreCharts, $E06B),
+          Destination(State.Page.Audio, $E55A),
+          Destination(State.Page.Layout, $E529)
         ]
       )
     ],
@@ -143,71 +159,106 @@ begin
   );
 end function;
 
-function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
+function Preview(Model: State.Model; Width: int): array of E.Element<State.Msg>;
 begin
   case Model.Active of
+    when State.Page.MoreCharts:
+      return MoreCharts.View<State.Msg>(
+        Model.MoreCharts,
+        State.Msg.MoreCharts(MoreChartsState.Msg.Shuffle)
+      );
+    when State.Page.Charts:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<ChartsState.Msg> in Charts.View(Model.Charts) do
+        Parts.Add(U.Map<ChartsState.Msg, State.Msg>(Item, State.Msg.Charts));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Layout:
-      return LayoutDemo.View<State.Msg>(State.Msg.Preview);
+      return [LayoutDemo.View<State.Msg>(State.Msg.Preview)];
     when State.Page.Feedback:
-      return Feedback.View<State.Msg>(
-        State.Msg.Shared(
-          Demo.Msg.Notify('Project created', new Toasts.Options(Appearance := Toasts.Tone.Success))
+      return [
+        Feedback.View<State.Msg>(
+          State.Msg.Shared(
+            Demo.Msg.Notify(
+              'Project created',
+              new Toasts.Options(Appearance := Toasts.Tone.Success)
+            )
+          )
         )
-      );
+      ];
     when State.Page.Overview:
-      return Overview.View<State.Msg>(
-        Model.Overview, Model.Shared, State.Msg.Show(State.Page.Buttons), State.Msg.Overview
-      );
+      return [
+        Overview.View<State.Msg>(
+          Model.Overview, Model.Shared, State.Msg.Show(State.Page.Buttons), State.Msg.Overview
+        )
+      ];
     when State.Page.Buttons:
-      return U.Map<ButtonsState.Msg, State.Msg>(
-        Buttons.View(Model.Buttons, Model.Shared, Width >= 600),
-        State.Msg.Buttons
-      );
+      return [
+        U.Map<ButtonsState.Msg, State.Msg>(
+          Buttons.View(Model.Buttons, Model.Shared, Width >= 600),
+          State.Msg.Buttons
+        )
+      ];
     when State.Page.Inputs:
-      return U.Map<InputsState.Msg, State.Msg>(
-        Inputs.View(Model.Inputs, Model.Shared),
-        State.Msg.Inputs
-      );
+      return [
+        U.Map<InputsState.Msg, State.Msg>(
+          Inputs.View(Model.Inputs, Model.Shared),
+          State.Msg.Inputs
+        )
+      ];
     when State.Page.Selection:
-      return U.Map<SelectionState.Msg, State.Msg>(
-        Selection.View(Model.Selection, Model.Shared, Width >= 536),
-        State.Msg.Selection
-      );
+      return [
+        U.Map<SelectionState.Msg, State.Msg>(
+          Selection.View(Model.Selection, Model.Shared, Width >= 536),
+          State.Msg.Selection
+        )
+      ];
     when State.Page.Navigation:
-      return U.Map<NavigationState.Msg, State.Msg>(
-        Navigation.View(Model.Navigation),
-        State.Msg.Navigation
-      );
+      return [
+        U.Map<NavigationState.Msg, State.Msg>(
+          Navigation.View(Model.Navigation),
+          State.Msg.Navigation
+        )
+      ];
     when State.Page.Lists:
-      return U.Map<ListsState.Msg, State.Msg>(Lists.View(Model.Lists), State.Msg.Lists);
+      return [U.Map<ListsState.Msg, State.Msg>(Lists.View(Model.Lists), State.Msg.Lists)];
     when State.Page.Overlays:
-      return U.Map<OverlaysState.Msg, State.Msg>(
-        Overlays.View(Model.Overlays, Model.Shared),
-        State.Msg.Overlays
-      );
+      return [
+        U.Map<OverlaysState.Msg, State.Msg>(
+          Overlays.View(Model.Overlays, Model.Shared),
+          State.Msg.Overlays
+        )
+      ];
     when State.Page.Actions:
-      return U.Map<ActionsState.Msg, State.Msg>(
-        Actions.View(Model.Actions, Model.Shared),
-        State.Msg.Actions
-      );
+      return [
+        U.Map<ActionsState.Msg, State.Msg>(
+          Actions.View(Model.Actions, Model.Shared),
+          State.Msg.Actions
+        )
+      ];
     when State.Page.SmartInputs:
-      return U.Map<SmartInputsState.Msg, State.Msg>(
-        SmartInputs.View(Model.SmartInputs),
-        State.Msg.SmartInputs
-      );
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Part: E.Element<SmartInputsState.Msg> in SmartInputs.View(Model.SmartInputs) do
+        Parts.Add(U.Map<SmartInputsState.Msg, State.Msg>(Part, State.Msg.SmartInputs));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Capture:
-      return U.Map<CaptureState.Msg, State.Msg>(Capture.View(Model.Capture), State.Msg.Capture);
+      return [U.Map<CaptureState.Msg, State.Msg>(Capture.View(Model.Capture), State.Msg.Capture)];
     when State.Page.Audio:
-      return U.Map<AudioState.Msg, State.Msg>(Audio.View(Model.Audio), State.Msg.Audio);
+      return [U.Map<AudioState.Msg, State.Msg>(Audio.View(Model.Audio), State.Msg.Audio)];
     when State.Page.Pickers:
-      return U.Map<PickersState.Msg, State.Msg>(Pickers.View(Model.Pickers), State.Msg.Pickers);
+      return [U.Map<PickersState.Msg, State.Msg>(Pickers.View(Model.Pickers), State.Msg.Pickers)];
     when State.Page.Reader:
-      return Reader.View<State.Msg>();
+      return [Reader.View<State.Msg>()];
     when State.Page.Disclosure:
-      return U.Map<DisclosureState.Msg, State.Msg>(
-        Disclosure.View(Model.Disclosure),
-        State.Msg.Disclosure
-      );
+      return [
+        U.Map<DisclosureState.Msg, State.Msg>(
+          Disclosure.View(Model.Disclosure),
+          State.Msg.Disclosure
+        )
+      ];
     else
       raise new Sys.InvalidOperationException('Unknown gallery page.');
   end case;
@@ -215,32 +266,32 @@ end function;
 
 function Content(Model: State.Model; Compact: bool; Inset: int; Width: int): E.Element<State.Msg>;
 begin
-  const PreviewContent: E.Element<State.Msg> := Preview(Model, Width);
-  const Gaps: L.Flow := new L.Flow(Gap := Gap(20), Clip := false);
-  const Titled: E.Element<State.Msg> := if Model.Active = State.Page.Overview then
-    PreviewContent
-  else
-    E.Column<State.Msg>(
-      Gaps,
-      E.Column<State.Msg>(
-        E.Styled<State.Msg>(E.Text<State.Msg>(PageTitle(Model.Active)), S.Role.PageTitle),
-        Space(8)
-      ),
-      PreviewContent
-    )
-  end if;
-  const Header: E.Element<State.Msg> := E.Row<State.Msg>(
-    new L.Flow(Gap := Gap(8), Align := L.Alignment.Center),
-    Icons.IconButton<State.Msg>(
-      'drawer-open', Sys.Char.ConvertFromUtf32($E115), 'Components', State.Msg.SetDrawer(true)
-    ),
-    E.Text<State.Msg>('FPas CUI')
-  );
-  var Page: E.Element<State.Msg> := Titled;
+  const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
   if Compact then
-    Page := E.Column<State.Msg>(Gaps, Header, Titled);
+    Parts.Add(
+      E.Row<State.Msg>(
+        new L.Flow(Gap := Gap(8), Align := L.Alignment.Center),
+        Icons.IconButton<State.Msg>(
+          'drawer-open',
+          Sys.Char.ConvertFromUtf32($E115),
+          'Components',
+          State.Msg.SetDrawer(true)
+        ),
+        E.Text<State.Msg>('FPas CUI')
+      )
+    );
   end if;
 
+  if Model.Active <> State.Page.Overview then
+    Parts.Add(
+      E.Column<State.Msg>(
+        new L.Flow(Gap := Gap(6), PaddingBottom := Gap(8), Clip := false),
+        E.Styled<State.Msg>(E.Text<State.Msg>(PageTitle(Model.Active)), S.Role.PageTitle)
+      )
+    );
+  end if;
+
+  Parts.AddRange(Preview(Model, Width));
   return E.ScrollView<State.Msg>(
     'main-' + Model.Active.ToString().ToLowerInvariant() + '-' +
     Model.NavigationRevision.ToString(),
@@ -249,7 +300,7 @@ begin
       E.Size<State.Msg>(
         E.Column<State.Msg>(
           new L.Flow(
-            Clip := false,
+            Gap := Gap(20), Clip := false,
             PaddingStart := Gap(Inset), PaddingEnd := Gap(Inset),
             PaddingTop := Gap(
               if Compact then
@@ -259,14 +310,14 @@ begin
               end if
             ), PaddingBottom := Gap(64)
           ),
-          Page
+          Parts.ToArray()
         ),
         new L.Flex(
           Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(920))
         )
       )
     ),
-    FadeEdges := Model.Active = State.Page.Overview or Model.Active = State.Page.Feedback
+    FadeEdges := true
   );
 end function;
 

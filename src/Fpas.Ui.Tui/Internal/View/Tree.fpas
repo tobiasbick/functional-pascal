@@ -11,7 +11,7 @@ public type Flex = record
   // Upper cell bound.
   public Maximum: int := int.MaxValue;
   // Share of extra cells.
-  public Grow: int := 0;
+  public Grow: float := 0.0F;
 end record;
 
 // Resolved stack spacing in terminal cells.

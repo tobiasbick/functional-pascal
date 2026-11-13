@@ -1,0 +1,23 @@
+unit Fpas.Ui.Gauges;
+
+uses Fpas.Ui.Elements as E;
+
+// Draws CUI's animated fraction gauge.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity, independent of the caption.
+// - `Label`: Literal caption.
+// - `Value`: Fraction from zero through one.
+// - `Size`: Logical diameter; zero selects CUI's default of 140.
+// ## Returns
+// A graphical element.
+public function Gauge<TMsg>(Id: string; Label: string; Value: float; Size: float := 0.0F): E.Element<TMsg>;
+requires Id <> '';
+requires Value >= 0.0F and Value <= 1.0F;
+requires Size >= 0.0F;
+begin
+  return E.Element<TMsg>.Gauge(Id, Label, Value, Size);
+end function;
+
+end unit;

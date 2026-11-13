@@ -1,0 +1,69 @@
+unit GuiGallery.Pages.MoreCharts.Data;
+
+uses
+  GuiGallery.Pages.MoreCharts.Series as Series, Fpas.Ui.Charts as C,
+  Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.Candlesticks as Cs, System as Sys;
+
+// Original native gallery sample data, captured once per application model.
+public type Samples = record
+  // First date in the activity series.
+  public Start: Sys.DateOnly;
+  // Requests by weekday and hour, in row-major order.
+  public Traffic: array of float;
+  // One sample for each of the most recent 364 days.
+  public Activity: array of float;
+  // Ranked page amounts with stable native labels.
+  public Pages: array of C.Item;
+  // Original Software and OpenGL bubble series.
+  public Scatter: array of Sc.Series;
+  // Original 2,000 OHLC periods.
+  public Candles: array of Cs.Candle;
+end record;
+
+// Creates the original deterministic heatmap sample series.
+// ## Returns
+// Native-gallery data for the current local date.
+public function Create(): Samples;
+begin
+  const Start: Sys.DateOnly := Sys.DateOnly.FromDateTime(Sys.DateTime.Today).AddDays(-363);
+  const Traffic: array of float := new float[168];
+  for Day: int := 0 to 6 do
+    for Hour: int := 0 to 23 do
+      const Work: float := if Day < 5 then
+        1.0F
+      else
+        0.45F
+      end if;
+      const H: float := cast<float>(Hour);
+      Traffic[Day * 24 + Hour] := Sys.MathF.Exp(
+        -Sys.MathF.Pow((H - 13.5F) / 4.2F, 2.0F)
+      ) * 90.0F * Work +
+        Sys.MathF.Exp(-Sys.MathF.Pow((H - 20.5F) / 2.0F, 2.0F)) * 35.0F +
+        cast<float>((Day * 31 + Hour * 17) mod 11);
+    end for;
+  end for;
+  const Activity: array of float := new float[364];
+  var Seed: uint := 7u;
+  const Epoch: Sys.DateOnly := new Sys.DateOnly(1970, 1, 1);
+  const BaseDay: int := Start.DayNumber - Epoch.DayNumber;
+  for Index: int := 0 to 363 do
+    Seed := unchecked(Seed * 1103515245u + 12345u);
+    const Weekday: int := (Index + (BaseDay mod 7 + 10) mod 7) mod 7;
+    const Sine: float := Sys.MathF.Sin(cast<float>(Index) / 40.0F);
+    const Base: float := (if Weekday >= 5 then
+      0.6F
+    else
+      3.2F
+    end if) * (0.6F + 0.4F * Sine * Sine);
+    const Random: float := cast<float>((Seed shr 16) mod 1000u) / 1000.0F;
+    Activity[Index] := if Random < 0.18F then
+      0.0F
+    else
+      Sys.MathF.Floor(Base * Random * 4.0F)
+    end if;
+  end for;
+
+  return new Samples(Start, Traffic, Activity, Series.Pages(), Series.Scatter(), Series.Candles());
+end function;
+
+end unit;

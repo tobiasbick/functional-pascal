@@ -1,6 +1,7 @@
 unit GuiGallery.Pages.SmartInputs.Update;
 
 uses
+  Fpas.Ui.ShortcutRecorders as Keys,
   Fpas.Ui.Mvu.Application as Mvu,
   GuiGallery.Pages.SmartInputs.State as S, Fpas.Ui.EmojiPickers as Emojis, System.Text as Text;
 
@@ -31,6 +32,33 @@ end function;
 public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
 begin
   const Next: S.Model := case Message of
+    when S.Msg.SetTitle(const Value: string): State with
+      Title := Value;
+    end with;
+    when S.Msg.SetOwner(const Value: string): State with
+      Owner := Value;
+    end with;
+    when S.Msg.SetOpacity(const Value: float): State with
+      Opacity := Value;
+    end with;
+    when S.Msg.SetRadius(const Value: float): State with
+      Radius := Value;
+    end with;
+    when S.Msg.SetBlur(const Value: float): State with
+      Blur := Value;
+    end with;
+    when S.Msg.SetAmount(const Value: double): State with
+      Amount := Value;
+    end with;
+    when S.Msg.SetSalary(const Value: double): State with
+      Salary := Value;
+    end with;
+    when S.Msg.SetPaletteKey(const Value: Keys.Combination): State with
+      PaletteKey := Value;
+    end with;
+    when S.Msg.SetSearchKey(const Value: Keys.Combination): State with
+      SearchKey := Value;
+    end with;
     when S.Msg.SetUrl(const Value: string): State with
       Url := Value;
     end with;

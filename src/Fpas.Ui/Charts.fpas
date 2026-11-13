@@ -1,0 +1,107 @@
+unit Fpas.Ui.Charts;
+
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;
+
+// Safe native numeric formatting. Percent signs in literals remain literal.
+public type ValueFormat = record
+  // Decimal places, from zero through six.
+  public DecimalPlaces: int := 0;
+  // Literal text before the number.
+  public Prefix: string := '';
+  // Literal text after the number.
+  public Suffix: string := '';
+end record;
+
+// Chart colors resolve against the current native theme every frame.
+public type Color = variant
+  // Select the series color by its position.
+  Automatic;
+  // Select a native theme series color, numbered one through six.
+  Palette(Index: int);
+  // Use an explicit straight-alpha color.
+  Rgba(Value: G.Color);
+end variant;
+
+// One named series. Native charts allow different sample counts.
+public type Series = record
+  // Legend caption.
+  public Name: string;
+  // Finite values, copied by CUI during presentation.
+  public Values: array of float;
+  // Theme palette or explicit color.
+  public Color: Color := Color.Automatic;
+end record;
+
+// A named amount used by native area, share and conversion visualizations.
+public type Item = record
+  // Literal caption.
+  public Label: string;
+  // Nonnegative finite amount.
+  public Value: float;
+  // Native palette entry or explicit fill.
+  public Color: Color := Color.Automatic;
+end record;
+
+// Native reference-line and point kinds.
+public type AnnotationKind = enum: byte
+  // Vertical line at a sample-index coordinate.
+  X;
+  // Horizontal line at a value coordinate.
+  Y;
+  // Mark a sample-index/value pair.
+  Point;
+end enum;
+
+// A native chart reference line or point.
+public type Annotation = record
+  // Geometry kind.
+  public Kind: AnnotationKind;
+  // Sample-index coordinate.
+  public X: double := 0.0;
+  // Value coordinate.
+  public Y: double := 0.0;
+  // Literal caption.
+  public Label: string := '';
+  // Literal second line; empty omits it.
+  public Detail: string := '';
+  // Use the theme accent.
+  public Accent: bool := false;
+end record;
+
+// Inclusive value-axis limits. Minimum must be less than Maximum.
+public type ValueRange = record
+  // Lower bound.
+  public Minimum: float;
+  // Upper bound.
+  public Maximum: float;
+end record;
+
+// Common options for native line and bar charts.
+public type Options = record
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Plot height; zero selects the native default of 220.
+  public Height: float := 0.0F;
+  // Optional sample captions. An empty array uses native index captions.
+  public Labels: array of string := [];
+  // Null selects CUI's automatic numeric formatting.
+  public Format: ValueFormat? := null;
+  // Draw grid lines.
+  public Grid: bool := true;
+  // Show a legend when multiple series are present.
+  public Legend: bool := true;
+  // Stack the series.
+  public Stacked: bool := false;
+  // Fill line charts.
+  public Area: bool := false;
+  // Smooth line charts.
+  public Smooth: bool := false;
+  // Dither line-chart areas.
+  public Dither: bool := false;
+  // Null selects an automatic value range.
+  public Range: ValueRange? := null;
+  // Native axis lines and point annotations.
+  public Annotations: array of Annotation := [];
+end record;
+
+end unit;

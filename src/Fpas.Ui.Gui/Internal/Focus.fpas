@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
-uses Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
+uses Fpas.Ui.Candlesticks as Candlesticks, Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields, Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys, Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOfContents as Toc, Fpas.Ui.Banners as Banners, Fpas.Ui.Checklists as Checklists, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures, Fpas.Ui.Knobs as Knobs, Fpas.Ui.Faders as Faders, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.RulerSliders as Rulers, Fpas.Ui.HistogramSliders as Histograms, Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers, Fpas.Ui.TimeDials as TimeDials, Fpas.Ui.DateRangePickers as RangePickers, Fpas.Ui.SpeedDials as Speed, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.MultiSelects as Multi, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ExpandableTexts as ExpandableTexts, Fpas.Ui.ExpandableCards as ExpandableCards, Fpas.Ui.Reactions as Reactions, Fpas.Ui.UserMenus as UserMenus, Fpas.Ui.Selects as Selects, Fpas.Ui.NumberFields as NumberFields, Fpas.Ui.TagInputs as TagInputs, Fpas.Ui.OneTimeCodes as OneTimeCodes, Fpas.Ui.SearchFields as SearchFields, Fpas.Ui.TextAreas as TextAreas, Fpas.Ui.Dialogs as Dialogs, Fpas.Ui.TextFields as TextFields, Fpas.Ui.Tabs as Tabs, Fpas.Ui.Breadcrumbs as Breadcrumbs, Fpas.Ui.RadioCards as RadioCards, Fpas.Ui.Sliders as Sliders, Fpas.Ui.RangeSliders as RangeSliders, Fpas.Ui.RadioGroups as RadioGroups, Fpas.Ui.ToggleGroups as ToggleGroups, Fpas.Ui.Menus as Menus, Fpas.Ui.SegmentedControls as Segmented, Fpas.Ui.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.StatusButtons as Status, Fpas.Ui.ConfirmButtons as Confirms, Fpas.Ui.SplitButtons as Split, Fpas.Ui.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as Icons, System as Sys;
 
 // Finds the first enabled focus stop in the active modal/view scope.
 //
@@ -17,6 +17,14 @@ uses Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOf
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.Candlestick(const Id: string, _, const Settings: Candlesticks.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.PatternMeter(const Id: string, _, const Settings: Patterns.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
     when E.Element.Tour(const Id: string, const Base: E.Element<TMsg>, _, const Current: int, _, _):
       if Current >= 0 then
         if Preferred = Id or Preferred = Id + '/next' then
@@ -96,6 +104,33 @@ begin
     when E.Element.SelectInput(const Id: string, _, _, _, const Settings: Selects.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
+      end if;
+    when E.Element.InlineEdit(const Id: string, _, _, const Settings: InlineEdits.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ScrubField(const Id: string, _, _, _, _, _, const Settings: ScrubFields.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.MoneyField(const Id: string, _, _, const Settings: MoneyFields.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ShortcutRecorder(
+      const Id: string,
+      const Value: RecorderKeys.Combination,
+      _,
+      const Settings: RecorderKeys.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Value.Key <> RecorderKeys.Key.None and Preferred = RecorderKeys.ClearId(Id) then
+          return Preferred;
+        end if;
       end if;
     when E.Element.NumberField(const Id: string, _, _, _, _, const Settings: NumberFields.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then

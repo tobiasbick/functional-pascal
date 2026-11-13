@@ -11,7 +11,7 @@ uses
 // - `Model`: Editable message, visibility and emoji preferences.
 // ## Returns
 // The original Emoji picker section.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): array of E.Element<State.Msg>;
 begin
   const Message: E.Element<State.Msg> := F.TextField<State.Msg>(
     'smart-message', Model.Message, State.Msg.SetMessage,
@@ -28,8 +28,7 @@ begin
     'smart-emoji-popup', Button, Picker, Model.EmojiOpen, State.Msg.SetEmojiOpen(false),
     new P.Options(Position := M.Placement.BottomEnd, Width := 340)
   );
-  return E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading<State.Msg>(
       'Emoji picker', 'Search by name, jump by group, pick a skin tone. Recent emoji come first.'
     ),
@@ -43,7 +42,7 @@ begin
         new L.Flex(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(480))
       )
     )
-  );
+  ];
 end function;
 
 end unit;

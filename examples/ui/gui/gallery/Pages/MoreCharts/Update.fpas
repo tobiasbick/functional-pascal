@@ -1,0 +1,31 @@
+unit GuiGallery.Pages.MoreCharts.Update;
+
+uses
+  GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Pages.MoreCharts.State as State,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Charts as C, System as Sys, System.Collections.Generic as Lists;
+
+// Replaces model values while CUI retains keyed rank animations.
+// ## Parameters
+// - `Model`: Current demonstration data.
+// - `Message`: Requested model action.
+// ## Returns
+// Updated amounts and no commands.
+public function Update(Model: Data.Samples; Message: State.Msg): M.Transition<Data.Samples, State.Msg>;
+begin
+  case Message of
+    when State.Msg.Shuffle:
+      const Pages: Lists.List<C.Item> := new Lists.List<C.Item>(Model.Pages.Length);
+      for Index: int := 0 to Model.Pages.Length - 1 do
+        const Old: C.Item := Model.Pages[Index];
+        Pages.Add(new C.Item(Old.Label, cast<float>(Sys.Random.Shared.Next(500, 5500)), Old.Color));
+      end for;
+
+      return new M.Transition<Data.Samples, State.Msg>(
+        Model with
+          Pages := Pages.ToArray();
+        end with, []
+      );
+  end case;
+end function;
+
+end unit;

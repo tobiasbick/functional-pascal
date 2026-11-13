@@ -1,0 +1,9 @@
+unit GuiGallery.Pages.MoreCharts.State;
+
+// Model changes in the native More charts demonstrations.
+public type Msg = variant
+  // Replace the ranked-page amounts; CUI animates the new ranks.
+  Shuffle;
+end variant;
+
+end unit;

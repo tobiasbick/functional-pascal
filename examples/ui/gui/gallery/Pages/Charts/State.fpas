@@ -1,0 +1,15 @@
+unit GuiGallery.Pages.Charts.State;
+
+// State owned by the native Charts gallery page.
+public type Model = record
+  // Draw the pattern meter with foreground dots.
+  public Grayscale: bool := false;
+end record;
+
+// Pattern-meter demonstration messages.
+public type Msg = variant
+  // Change the native meter palette.
+  SetGrayscale(Value: bool);
+end variant;
+
+end unit;

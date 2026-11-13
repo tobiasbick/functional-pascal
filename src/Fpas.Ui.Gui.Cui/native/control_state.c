@@ -1,10 +1,19 @@
 /* Keep companion-state ownership beside the CUI implementation that defines it. */
 typedef struct {
     cui_id first, second, popup;
+    cui_id focus;
     void (*on_forget)(cui_ctx *ui, cui_id key);
 } fpas_owned_state;
 
 static cui_id fpas_owner_key(cui_id key) { return key ^ 0x46504153u; }
+
+/* A compound editor keeps one public identity while its native editing field changes. */
+static bool fpas_has_focus(cui_ctx *ui, cui_id key) {
+    if (!key) return false;
+    if (ui->focus == key) return true;
+    fpas_owned_state *state = cui__state_lazy(ui, fpas_owner_key(key), sizeof *state, false);
+    return state && state->focus && ui->focus == state->focus;
+}
 
 /* Positional groups share CUI's index hash and 32-item focus range. */
 static void fpas_indexed_focus(cui_ctx *ui, cui_id group, int count, int focus) {

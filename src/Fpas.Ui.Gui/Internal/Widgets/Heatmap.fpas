@@ -1,0 +1,62 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Heatmap;
+
+uses
+  Fpas.Ui.Heatmaps as W, Fpas.Ui.Charts as Ch, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Sizing as Sizing, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents the native heatmap and forwards its activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Values`: Finite samples in row-major order.
+// - `Rows`: Nonnegative row count.
+// - `Columns`: Nonnegative column count.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Values: array of float; Rows: int; Columns: int; Settings: W.Options; OnActivate: Sys.Func<W.Cell, TMsg>?);
+begin
+  const Token: string := C.Token('heatmap', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
+  const Range: Ch.ValueRange? := Settings.Range;
+  const Options: Cui.CuiHeatmapOptions := new Cui.CuiHeatmapOptions(
+    Settings.RowLabels, Settings.ColumnLabels, Settings.CellSize,
+    if Range = null then
+      0.0F
+    else
+      Range.Minimum
+    end if, if Range = null then
+      0.0F
+    else
+      Range.Maximum
+    end if,
+    Data.Color(Settings.Color), Data.Format(Settings.Format), Width.Kind, Width.Value
+  );
+  const Clicked: int := Frame.Window.Heatmap(
+    Token,
+    Values,
+    Rows,
+    Columns,
+    Options,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Clicked >= 0 then
+    case OnActivate of
+      when is Sys.Func<W.Cell, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(new W.Cell(Clicked div Columns, Clicked mod Columns)));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, 'Heatmap', 'heatmap', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

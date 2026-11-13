@@ -128,7 +128,12 @@ public sealed partial class CuiWindow
     /// <summary>Reads focus from a tracked node after presentation.</summary>
     /// <param name="id">Tracked identity.</param>
     /// <returns>Whether the control has native focus.</returns>
-    public bool ControlFocused(string id) { CheckOpen(); return NativeMethods.Focused(context, trackedNodes[id]) != 0; }
+    public bool ControlFocused(string id)
+    {
+        CheckOpen();
+        _ = trackedNodes[id];
+        return NativeMethods.FocusKey(context, controlKeys[id]) != 0;
+    }
 
     /// <summary>Reads hover from a tracked node after presentation.</summary>
     /// <param name="id">Tracked identity.</param>

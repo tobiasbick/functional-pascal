@@ -1,0 +1,59 @@
+unit Fpas.Ui.Gui.Internal.Widgets.ScatterChart;
+
+uses
+  Fpas.Ui.ScatterCharts as W, Fpas.Ui.Charts as Charts, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.ChartData as Common, Fpas.Ui.Gui.Internal.MoreChartData as Data,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents CUI's native scatter-chart.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Series`: Finite points and optional matching bubble sizes.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Series: array of W.Series; Settings: W.Options; OnActivate: Sys.Func<W.PointIndex, TMsg>?);
+begin
+  const Token: string := C.Token('scatter-chart', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Options: Cui.CuiScatterOptions := new Cui.CuiScatterOptions(
+    Width.Kind, Width.Value, Settings.Height, Settings.XLabel, Settings.YLabel,
+    Common.Format(Settings.XFormat), Common.Format(Settings.YFormat), Settings.Legend
+  );
+  const Clicked: int := Frame.Window.ScatterChart(
+    Token,
+    Data.Scatter(Series),
+    Options,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Clicked >= 0 then
+    var Point: int := Clicked;
+    for Index: int := 0 to Series.Length - 1 do
+      if Point < Series[Index].Points.Length then
+        case OnActivate of
+          when is Sys.Func<W.PointIndex, TMsg> as Notify:
+            Frame.Messages.Add(Notify.Invoke(new W.PointIndex(Index, Point)));
+          else
+        end case;
+
+        break;
+      end if;
+
+      Point := Point - Series[Index].Points.Length;
+    end for;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(Id, 'ScatterChart', 'scatter-chart', new Cui.CuiRectangle(), Enabled)
+  );
+end procedure;
+
+end unit;

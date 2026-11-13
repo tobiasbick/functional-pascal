@@ -39,6 +39,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Tooltip attached to a single control | | | Yes |
 | Single-line text fields with labels, validation, affixes and password reveal | | | Yes |
 | Search field and wrapping multiline text area with affixes | | | Yes |
+| Inline editing, scrub and money fields, shortcut recording and native shortcut labels | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
@@ -78,7 +79,8 @@ with tabular digits.
 Layout follows the supported subset of CUI's box rules. Content uses the host's
 measured extent. Fill and positive Grow weights share the remaining space from
 zero, freezing children that reach their minimum or maximum. Fixed sizes never
-grow or shrink. GUI also supports `Extent.Percent(Value)` from zero through 100,
+grow or shrink. Grow accepts finite nonnegative fractional weights, for example
+1.3 and 1 for CUI's proportional columns. GUI also supports `Extent.Percent(Value)` from zero through 100,
 resolved by CUI against the parent's inner main-axis extent. Percentages cannot
 grow and respect explicit bounds. Terminal and portable profiles reject them.
 Content children shrink proportionally toward their minimum
@@ -892,6 +894,47 @@ actions in CUI's right-aligned row with an eight-point top inset and an
 eight-point gap. Cancel and Save can close a dialog through their ordinary
 application messages. Both elements require the Graphical profile.
 
+## Smart inputs
+
+These widgets require the graphical profile and call CUI directly:
+
+- `Fpas.Ui.InlineEdits.InlineEdit(Id, Value, OnChange, Settings)` edits a
+  confirmed string in place. CUI keeps the draft until Enter or focus loss
+  commits; Escape restores the value. `OnChange` receives only committed
+  proposals. Options select Medium, Display or Mono, logical font size,
+  placeholder, width and a UTF-8 capacity from one through 511 bytes.
+- `Fpas.Ui.ScrubFields.ScrubField(Id, Label, Value, Minimum, Maximum,
+  OnChange, Settings)` combines horizontal dragging, arrow keys and numeric
+  typing. A zero step selects one percent of the range. Shift makes dragging
+  ten times finer and arrow keys ten times larger, as in CUI. Valid typed
+  values clamp to the bounds; invalid and non-finite commits retain the model
+  value. Options expose zero through six decimal places, a suffix, a glyph
+  replacing the caption, and native width. Precision controls display rather
+  than quantizing typed values.
+- `Fpas.Ui.MoneyFields.MoneyField(Id, Value, OnChange, Settings)` uses an
+  ordinary double. At rest CUI groups digits with commas; editing uses plain
+  digits and a decimal point. This format is independent of the current CLR
+  culture. Options select literal label, symbol, currency code, hint, width
+  and zero through fifteen fractional digits. A grouped amount must fit CUI's
+  63-byte text capacity; oversized proposals retain the previous value.
+- `Fpas.Ui.ShortcutRecorders.ShortcutRecorder(Id, Value, OnChange, Settings)`
+  takes a `Combination` of typed `Key` and `Modifier` values. Combine modifiers
+  with `or`; `PrimaryModifier()` chooses Command on macOS and Control elsewhere.
+  Native recording starts with a click or focused Enter/Space. Escape cancels,
+  unmodified Backspace/Delete clears, and unmodified Tab leaves recording.
+  `ClearId(Id)` identifies the native clear button. `Label<TMsg>(Value)` draws
+  CUI keycaps using the same platform-specific shortcut formatter.
+
+Each interactive widget has `Enabled` and native content/fill/fixed/percentage
+`Width` options. Model values remain authoritative: replacing or rejecting a
+proposal reconciles the native editing state. Inline snapshots expose the draft;
+scrub and money snapshots expose invariant numeric values, and shortcut
+snapshots expose the native formatted label. Removing a widget releases its
+draft, edit history and companion state. The Smart inputs gallery reproduces
+the original CUI page. Numeric protections are documented as
+[CUI-017](../../docs/future/cui-upstream-bugs.md#cui-017) and
+[CUI-018](../../docs/future/cui-upstream-bugs.md#cui-018).
+
 ## Text field
 
 `Fpas.Ui.TextFields.TextField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
@@ -1071,6 +1114,130 @@ to address a row for focus.
 Use `FadeEdges := true` on a graphical `ScrollView` to fade the edges with
 hidden content. The [Reader page](../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
 combines the outline, anchors and edge fades.
+
+## Charts
+
+The Graphical profile exposes `LineCharts.LineChart`, `BarCharts.BarChart`,
+`DonutCharts.DonutChart`, `Gauges.Gauge` and `PatternMeters.PatternMeter`.
+CUI owns their geometry, legends, hover readouts, animation and rendering.
+The [Charts gallery](../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
+contains the original eight examples.
+
+Line and bar charts share `Charts.Series` and `Charts.Options`: sample labels,
+stacking, grid/legend visibility, optional fixed bounds and annotations.
+Line charts also accept area, smoothing and dither. Use `Color.Automatic`,
+`Color.Palette(1..6)` or `Color.Rgba`; palette colors follow the active theme.
+A null `Format` keeps native automatic formatting. `Charts.ValueFormat`
+specifies zero through six decimal places and literal prefix/suffix strings.
+For example `new Charts.ValueFormat(Prefix := '$', Suffix := 'k')` produces
+currency values in thousands. Percent signs in either literal remain literal.
+Annotation X coordinates are zero-based sample indices; empty labels/details
+omit their corresponding text line.
+
+Samples and annotations must be finite. Fixed bounds must increase; value
+ranges must permit CUI's single-precision axis ticks to advance.
+For very large constant samples, supply an explicit wider range; CUI's automatic
+one-unit expansion cannot represent their bounds. The bridge rejects this
+case before native painting. Donut shares and pattern parts must be nonnegative
+with a finite sum. Donut labels are empty or match the share count.
+Gauges accept fractions from zero through one.
+
+Pattern meters accept up to 32 named parts, a capacity, units, optional custom
+colors/densities and grayscale mode. CUI retains hover and keyboard selection:
+Tab focuses the bar; arrows, Home, End and Escape select or clear a part.
+The GUI snapshot value reports its selected index, or minus one. Removing the
+widget retires its native state and focus. `Options.Enabled` controls input.
+No model callback is needed for this local inspection state.
+
+## Visualizations
+
+`Heatmaps.Heatmap`, `CalendarHeatmaps.CalendarHeatmap`, `Treemaps.Treemap`,
+`RadarCharts.RadarChart`, `Funnels.Funnel`, `SplitBars.SplitBar` and
+`Waffles.Waffle` use native CUI drawing, layout, labels, legends, animation and
+hover. All require the Graphical profile. The [More charts gallery](../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
+reproduces their original examples and deterministic sample data.
+
+Treemap, funnel, split bar and waffle share `Charts.Item(Label, Value, Color)`.
+Amounts must be nonnegative with a finite sum. Palette colors and safe numeric
+formats use the same types as other charts.
+
+Heatmap samples use row-major order: `Values[Row * Columns + Column]`. Their
+length must equal rows times columns. Label arrays are empty or match their
+dimension; empty entries omit individual labels. A null range selects native
+bounds. `CellSize = 0` fits cells to the width. With the default Content width,
+an explicit cell size instead gives CUI its intrinsic grid width.
+
+Calendar heatmaps take a `System.DateOnly` start and one finite value per day;
+nonpositive amounts leave empty squares. Dates must remain within DateOnly's
+range. CUI shows the newest weeks that fit in a narrow container.
+An optional `OnActivate` callback receives the actual clicked date, including
+when older weeks are hidden. Heatmaps report a typed `Heatmaps.Cell`; radar,
+funnel, split bar and waffle report a zero-based input index.
+
+Treemap selection stays in the model. Supply `Selected` (minus one for none)
+and `OnSelect` together; clicking the selected tile proposes minus one.
+Without a callback the treemap retains native hover with selection disabled.
+Radar charts require at least three axes and one nonnegative sample per axis
+in each series. Zero `Maximum` selects native automatic scaling.
+
+Each widget's `Options.Enabled` controls pointer interaction. CUI keeps these
+widgets outside keyboard focus traversal; bindings add no keyboard behavior.
+Removing a widget retires its native animation and hover state.
+
+## Flows, ranks and instruments
+
+The Graphical profile also exposes `Sankeys.Sankey`, `BarLists.BarList`,
+`ActivityRings.ActivityRings`, `ScatterCharts.ScatterChart`,
+`RadialGauges.RadialGauge` and `Candlesticks.Candlestick`.
+The [More charts gallery](../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
+reproduces the complete native page. Layout, drawing, animation, hit-testing,
+chart viewports and keyboard controls belong to CUI.
+
+Sankey nodes have literal labels and optional native colors. Links name distinct
+source/destination input indices and nonnegative finite amounts; zero flows are
+hidden. `OnActivate` receives `Selection.Node(Index)` or `Selection.Link(Index)`
+using original input positions.
+
+Bar lists use `Charts.Item` with unique labels, which CUI uses as animation keys.
+Native sorting changes rank without changing the input indices reported by
+`OnActivate`. `MaximumRows` limits visible rows, and `KeepOrder` disables sorting.
+The gallery's Shuffle replaces model amounts; CUI animates the rows.
+Removed labels and retired lists release their native item states.
+
+Activity rings accept at most eight nonnegative progress fractions. Values
+above one keep winding, with native progress drawing capped at four turns.
+Optional center text, caption, thickness and legend stay native.
+
+Scatter series contain finite `Point(X, Y)` values. Empty `Sizes` draws dots;
+otherwise supply one nonnegative bubble size per point. Axis titles and
+`XFormat`/`YFormat` use safe chart formats. `OnActivate` reports a typed
+`PointIndex(Series, Point)` in original input order.
+
+Radial gauges take a finite value and increasing finite scale. CUI clamps the
+fill and displays the actual reading. `Style.Automatic` chooses segments when
+bands exist and an arc otherwise; explicit Arc, Segments and Ring are available.
+Up to sixteen increasing bands use semantic tones and optional status captions.
+The arc supports a target marker and limit captions; the ring supports detail
+text. `Format`, `Unit` and `Color` customize native presentation.
+
+Candlesticks take finite `Candle(Open, High, Low, Close, Volume)` periods.
+High/low must enclose open/close; volume is nonnegative. Optional time labels
+match the input count. Up to four `Charts.Series` overlays draw native lines;
+NaN overlay samples are gaps. `Ohlc` selects OHLC bars, and `Volume` controls
+the lower volume area. A null price format keeps CUI's two decimal places.
+
+CUI retains the candlestick viewport: wheel zooms around the pointer, dragging
+or Shift+wheel pans, and newly appended periods follow when the viewport is at
+the end. Focused Left/Right moves the crosshair (Shift moves ten), Home/End jumps
+to an endpoint, plus/minus zooms and zero fits all periods. CUI merges candles
+per pixel column when zoomed out. `OnCursorChange` optionally reports changes
+to the input index, with minus one on leaving inspection; snapshots expose the
+same index as their value. Keyboard inspection stays on its selected period
+when new data arrives. Retiring the chart releases its viewport and focus state.
+
+All interactive charts honor `Options.Enabled`. Radial gauges are passive.
+The local [CUI findings](../../docs/future/cui-upstream-bugs.md) describe guards
+for disabled candlestick wheels and omitted native Sankey link activations.
 
 ## Subview composition
 

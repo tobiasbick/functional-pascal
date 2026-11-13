@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Widgets.RadialGauge;
+
+uses
+  Fpas.Ui.RadialGauges as W, Fpas.Ui.Charts as Charts, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.ChartData as Common, Fpas.Ui.Gui.Internal.MoreChartData as Data,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Internal.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents CUI's native radial-gauge.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Value`: Finite reading; CUI clamps the fill to the range.
+// - `Minimum`: Inclusive lower scale limit.
+// - `Maximum`: Increasing upper scale limit.
+// - `Settings`: Native presentation.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: float; Minimum: float; Maximum: float; Settings: W.Options);
+begin
+  const Token: string := C.Token('radial-gauge', Id);
+
+  const Options: Cui.CuiRadialGaugeOptions := new Cui.CuiRadialGaugeOptions(
+    Settings.Label,
+    Settings.Unit,
+    Common.Format(Settings.Format),
+    Settings.Size,
+    Settings.Sweep,
+    Data.Bands(Settings.Bands),
+    Settings.ShowLimits,
+    Settings.Target,
+    cast<Cui.CuiGaugeStyle>(cast<int>(Settings.Style)),
+    Settings.Detail,
+    Common.Color(Settings.Color)
+  );
+  Frame.Window.RadialGauge(Token, Value, Minimum, Maximum, Options, not Frame.PaintingClosed);
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(Id, 'RadialGauge', 'radial-gauge', new Cui.CuiRectangle(), false)
+  );
+end procedure;
+
+end unit;

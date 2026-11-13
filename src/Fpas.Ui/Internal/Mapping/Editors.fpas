@@ -1,6 +1,8 @@
 unit Fpas.Ui.Internal.Mapping.Editors;
 
 uses
+  Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields,
+  Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys,
   Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
   Fpas.Ui.DatePickers as DatePickers,
   Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
@@ -29,6 +31,60 @@ uses
 public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
 begin
   case Value of
+    when E.Element.InlineEdit(
+      const Id: string,
+      const Current: string,
+      const Changed: function(string): TChild,
+      const Settings: InlineEdits.Options
+    ):
+      return E.Element<TParent>.InlineEdit(
+        Id,
+        Current,
+        function(Next: string): TParent => Messages(Changed(Next)),
+        Settings
+      );
+    when E.Element.ScrubField(
+      const Id: string,
+      const Label: string,
+      const Current: float,
+      const Minimum: float,
+      const Maximum: float,
+      const Changed: function(float): TChild,
+      const Settings: ScrubFields.Options
+    ):
+      return E.Element<TParent>.ScrubField(
+        Id,
+        Label,
+        Current,
+        Minimum,
+        Maximum,
+        function(Next: float): TParent => Messages(Changed(Next)),
+        Settings
+      );
+    when E.Element.MoneyField(
+      const Id: string,
+      const Current: double,
+      const Changed: function(double): TChild,
+      const Settings: MoneyFields.Options
+    ):
+      return E.Element<TParent>.MoneyField(
+        Id,
+        Current,
+        function(Next: double): TParent => Messages(Changed(Next)),
+        Settings
+      );
+    when E.Element.ShortcutRecorder(
+      const Id: string,
+      const Current: RecorderKeys.Combination,
+      const Changed: function(RecorderKeys.Combination): TChild,
+      const Settings: RecorderKeys.Options
+    ):
+      return E.Element<TParent>.ShortcutRecorder(
+        Id,
+        Current,
+        function(Next: RecorderKeys.Combination): TParent => Messages(Changed(Next)),
+        Settings
+      );
     when E.Element.TextField(
       const FId: string,
       const FValue: string,

@@ -1,0 +1,31 @@
+unit Fpas.Ui.Gui.Internal.Widgets.LineChart;
+
+uses
+  Fpas.Ui.Charts as Ch, Fpas.Ui.Gui.Internal.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws the native CUI line-chart.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Series`: Named finite samples.
+// - `Settings`: Native presentation.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Series: array of Ch.Series; Settings: Ch.Options);
+begin
+  const Token: string := C.Token('line-chart', Id);
+  Frame.Window.LineChart(
+    Token,
+    Data.Series(Series),
+    Data.Options(Settings),
+    not Frame.PaintingClosed
+  );
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, 'LineChart', 'line-chart', new Cui.CuiRectangle(), false));
+end procedure;
+
+end unit;

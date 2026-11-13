@@ -90,7 +90,7 @@ public sealed class GuiHostTests
             ("date-range", 1000, 1000), ("date-range-presets", 1000, 1000), ("date-range-stay", 1000, 1000),
             ("due-date", 1000, 1700), ("due-date-open", 1000, 1700), ("due-date-focused", 1000, 1700),
             ("brand-color", 1000, 1700), ("brand-color-open", 1000, 1700), ("brand-color-focused", 1000, 1700),
-            ("emoji-message", 1000, 800), ("emoji-open", 1000, 800),
+            ("emoji-message", 1000, 1280), ("emoji-open", 1000, 1280),
             ("time-wheels-dial", 1000, 1280), ("time-24-hour", 1000, 1280), ("time-12-hour", 1000, 1280),
             ("wheel-focused", 1000, 1280),
             ("ruler-histogram", 1000, 1600), ("ruler-focused", 1000, 1600), ("histogram-adjusted", 1000, 1600),

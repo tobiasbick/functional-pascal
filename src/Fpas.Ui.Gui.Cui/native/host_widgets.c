@@ -96,7 +96,7 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
         fpas_cui_node_role(ui, child, role);
 }
 
-int fpas_cui_focused(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && ui->nodes[node].id == ui->focus; }
+int fpas_cui_focused(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && fpas_has_focus(ui, ui->nodes[node].id); }
 int fpas_cui_hovered(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && ui->nodes[node].id == ui->hot; }
 
 unsigned int fpas_cui_node_key(cui_ctx *ui, int node) { return ui->nodes[node].id; }
@@ -113,7 +113,7 @@ void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, 
 
 unsigned int fpas_cui_modal_key(cui_ctx *ui) { return ui->current_layer; }
 
-int fpas_cui_focus_key(cui_ctx *ui, unsigned int key) { return key && ui->focus == key; }
+int fpas_cui_focus_key(cui_ctx *ui, unsigned int key) { return fpas_has_focus(ui, key); }
 
 void fpas_cui_host_begin(cui_ctx *ui) {
     ui->prev_modal_layer = 0;

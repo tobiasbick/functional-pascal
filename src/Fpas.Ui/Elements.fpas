@@ -1,6 +1,7 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.Tours as Tours,
   Fpas.Ui.EmojiPickers as EmojiPickers,
   Fpas.Ui.DatePickers as DatePickers,
   Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
@@ -201,6 +202,17 @@ public type Element<TMsg> = variant
   EmptyState(Id: string; Title: string; Settings: EmptyStates.Options; OnAction: Sys.Func<TMsg>?);
   // Lay children out along one axis in order.
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
+  // Place graphical children on top of each other using native CUI layout.
+  Layered(Children: array of Element<TMsg>; Settings: L.Flow);
+  // Draw a native model-controlled spotlight tour over its base view.
+  Tour(
+    Id: string; Base: Element<TMsg>; Steps: array of Tours.Step; Current: int;
+    OnChange: function(Tours.Change): TMsg; Settings: Tours.Options
+  );
+  // Insert a native flexible gap along the containing axis.
+  Spacer;
+  // Insert a native fixed gap along the containing axis.
+  Gap(Distance: L.Measure);
   // Adjust the allocation of one child.
   Sized(Child: Element<TMsg>; Settings: L.Flex);
   // Apply the host theme's semantic role to one child.
@@ -214,7 +226,7 @@ public type Element<TMsg> = variant
   // Clip one child to a vertical viewport with optional model-controlled scrolling.
   Scroll(
     Id: string; Child: Element<TMsg>; Position: L.ScrollPosition?;
-    OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool; FadeEdges: bool
+    OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool; FadeEdges: bool; Horizontal: bool
   );
   // Place a controlled, scrollable modal at one viewport edge.
   Sheet(
@@ -274,6 +286,28 @@ end function;
 public function Divider<TMsg>(Title: string := ''): Element<TMsg>;
 begin
   return Element<TMsg>.Separator(Title);
+end function;
+
+// Inserts CUI's flexible space along the containing axis.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// A GUI-only flexible gap.
+public function Spacer<TMsg>(): Element<TMsg>;
+begin
+  return Element<TMsg>.Spacer;
+end function;
+
+// Inserts CUI's fixed space along the containing axis.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Distance`: Nonnegative logical distance.
+// ## Returns
+// A GUI-only fixed gap.
+public function Gap<TMsg>(Distance: L.Measure): Element<TMsg>;
+begin
+  return Element<TMsg>.Gap(Distance);
 end function;
 
 // Arranges children horizontally with default spacing.
@@ -396,12 +430,13 @@ end function;
 // - `Child`: The scrollable content.
 // - `ShowScrollbar`: Whether to show an overflow indicator.
 // - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
+// - `Horizontal`: Also enable graphical horizontal scrolling; model positions remain vertical.
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true; FadeEdges: bool := false): Element<TMsg>;
+public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element<TMsg>;
 begin
-  return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges);
+  return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges, Horizontal);
 end function;
 
 // Displays a vertical viewport whose position belongs to the model.
@@ -416,12 +451,13 @@ end function;
 // - `OnScroll`: Maps a user scroll request and resolution to a message.
 // - `ShowScrollbar`: Whether to show an overflow indicator.
 // - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
+// - `Horizontal`: Also enable graphical horizontal scrolling; model positions remain vertical.
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false): Element<TMsg>;
+public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element<TMsg>;
 begin
-  return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar, FadeEdges);
+  return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar, FadeEdges, Horizontal);
 end function;
 
 // Applies terminal-specific RGB colors.

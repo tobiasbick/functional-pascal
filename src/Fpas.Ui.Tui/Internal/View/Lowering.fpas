@@ -483,6 +483,12 @@ public function Prepare<TMsg>(
         return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
+      when Ui.Element.Tour(_, _, _, _, _, _):
+        raise new Sys.NotSupportedException('Guided tours require the graphical profile.');
+      when Ui.Element.Layered(_, _), Ui.Element.Spacer, Ui.Element.Gap(_):
+        raise new Sys.NotSupportedException(
+          'Native layered stacks and spacing require the graphical profile.'
+        );
       when Ui.Element.TableOfContents(_, _, _, _, _), Ui.Element.ScrollAnchor(_):
         raise new Sys.NotSupportedException(
           'Table of contents and scroll anchors require the graphical profile.'
@@ -493,6 +499,7 @@ public function Prepare<TMsg>(
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
         const Bar: bool,
+        _,
         _
       ):
         case Scroll of

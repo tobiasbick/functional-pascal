@@ -1,6 +1,7 @@
 unit GalleryAudioContract;
 
 uses
+  Fpas.Ui.Tours as Tours,
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
@@ -69,6 +70,38 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
     Step(Session);
   end procedure;
+
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    Aim(Session, Id);
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+  end procedure;
+
+  procedure CheckTour(Session: Gui.Session<State.Msg>; Index: int; Title: string);
+  begin
+    A.Check(
+      A.Control(Session, 'audio-tour').Value = Index.ToString(),
+      'The native tour lost its selected step.'
+    );
+    A.Check(A.HasText(Session, Title), 'The original tour explanation is missing.');
+    A.Check(
+      A.Control(Session, Tours.CloseId('audio-tour')).Enabled,
+      'The native close action is missing.'
+    );
+  end procedure;
+
+  procedure CheckClosed(Session: Gui.Session<State.Msg>);
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      A.Check(Item.Role <> 'tour', 'A closed tour left its overlay in the snapshot.');
+    end for;
+  end procedure;
 begin
   var X: float := -1.0F;
   var Y: float := -1.0F;
@@ -116,6 +149,33 @@ begin
   Window.Resize(1201, 800);
   Step(Session);
   Step(Session);
+
+  Click(Session, 'audio-tour-open');
+  CheckTour(Session, 0, 'Turn a knob');
+  Session.CapturePng(Capture + '.audio-tour-knob.png');
+  Click(Session, Tours.NextId('audio-tour'));
+  CheckTour(Session, 1, 'Watch the levels');
+  Session.CapturePng(Capture + '.audio-tour-meter.png');
+  Click(Session, Tours.BackId('audio-tour'));
+  CheckTour(Session, 0, 'Turn a knob');
+  Click(Session, Tours.NextId('audio-tour'));
+  Focus(Session, Tours.NextId('audio-tour'));
+  Key(Session, 2);
+  CheckTour(Session, 2, 'Ride the faders');
+  Session.CapturePng(Capture + '.audio-tour-fader.png');
+  A.Check(
+    A.Control(Session, Tours.NextId('audio-tour')).Text = 'Done',
+    'The last step needs its native Done action.'
+  );
+  Click(Session, Tours.NextId('audio-tour'));
+  CheckClosed(Session);
+  Click(Session, 'audio-tour-open');
+  CheckTour(Session, 0, 'Turn a knob');
+  Key(Session, 3);
+  CheckClosed(Session);
+  Click(Session, 'audio-tour-open');
+  Click(Session, Tours.CloseId('audio-tour'));
+  CheckClosed(Session);
 
   Focus(Session, Cutoff);
   Key(Session, 5);

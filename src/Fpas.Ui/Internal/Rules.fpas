@@ -89,6 +89,39 @@ end procedure;
 // - `Location`: Diagnostic location.
 public procedure CheckFlex(Settings: L.Flex; Profile: V.Target; Location: string);
 begin
+  if Settings.Width <> null or Settings.Height <> null then
+    RequireProfile(Profile, V.Target.Graphical, Location);
+    case Settings.Basis of
+      when L.Extent.Content:
+      else
+        Reject(Location, 'Explicit axes cannot mix with main-axis constraints.');
+    end case;
+
+    if Settings.Minimum <> null or Settings.Maximum <> null or Settings.Grow <> 0 then
+      Reject(Location, 'Explicit axes cannot mix with main-axis constraints.');
+    end if;
+
+    case Settings.Width of
+      when is L.AxisSize as Axis:
+        CheckFlex(
+          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          Profile,
+          Location + '/width'
+        );
+      else
+    end case;
+
+    case Settings.Height of
+      when is L.AxisSize as Axis:
+        CheckFlex(
+          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          Profile,
+          Location + '/height'
+        );
+      else
+    end case;
+  end if;
+
   if Settings.Grow < 0 then
     Reject(Location, 'Growth weights must be nonnegative.');
   end if;
@@ -144,6 +177,34 @@ begin
   if Minimum > Maximum then
     Reject(Location, 'The minimum exceeds the maximum.');
   end if;
+end procedure;
+
+// Checks native per-edge padding and inherited reading direction.
+// ## Parameters
+// - `Settings`: Container options.
+// - `Profile`: Receiving capability profile.
+// - `Location`: Diagnostic path.
+public procedure CheckContainer(Settings: L.Flow; Profile: V.Target; Location: string);
+begin
+  if not Sys.Enum.IsDefined<L.Direction>(Settings.ReadingDirection) then
+    Reject(Location, 'Unknown reading direction.');
+  end if;
+
+  if Settings.ReadingDirection <> L.Direction.Inherit then
+    RequireProfile(Profile, V.Target.Graphical, Location);
+  end if;
+
+  for Inset: L.Spacing? in [
+    Settings.PaddingTop,
+    Settings.PaddingEnd,
+    Settings.PaddingBottom,
+    Settings.PaddingStart
+  ] do
+    if Inset <> null then
+      RequireProfile(Profile, V.Target.Graphical, Location);
+      CheckSpacing(Inset, Profile, Location);
+    end if;
+  end for;
 end procedure;
 
 // Checks the units of explicit spacing.

@@ -66,7 +66,7 @@ if(FPAS_CUI_BUILD_TESTS)
     target_link_libraries(fpas_cui_smoke PRIVATE fpas::cui)
     add_test(NAME fpas_cui_link_render COMMAND fpas_cui_smoke)
     set_tests_properties(fpas_cui_link_render PROPERTIES TIMEOUT 30)
-    foreach(widget IN ITEMS confirm_button status_button segmented icon_button menu disclosure feedback meter progress_ring timeline skeleton)
+    foreach(widget IN ITEMS confirm_button status_button segmented icon_button menu disclosure feedback meter progress_ring timeline skeleton layout_parity tour)
         add_executable(fpas_cui_${widget} tests/${widget}.c)
         set_target_properties(fpas_cui_${widget} PROPERTIES
             C_STANDARD 99 C_STANDARD_REQUIRED YES C_EXTENSIONS OFF)

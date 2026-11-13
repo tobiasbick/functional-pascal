@@ -27,6 +27,7 @@ static void fpas_route_text_area_wheel(cui_ctx *ui);
 #include "widgets/banner.c"
 #include "widgets/countdown.c"
 #include "widgets/checklist.c"
+#include "widgets/tour.c"
 #include "widgets/table_of_contents.c"
 #include "widgets/grid.c"
 #include "widgets/card.c"

@@ -69,6 +69,29 @@ begin
   end case;
 end function;
 
+// Applies native edge insets and inherited reading direction to a new container.
+// ## Parameters
+// - `Window`: Current drawing window, immediately after opening the container.
+// - `Settings`: Validated container options.
+// - `Layered`: Whether uniform padding still needs applying to a native stack.
+public procedure Container(Window: Cui.CuiWindow; Settings: L.Flow; Layered: bool := false);
+begin
+  if not Layered and Settings.PaddingTop = null and Settings.PaddingEnd = null
+    and Settings.PaddingBottom = null and Settings.PaddingStart = null
+    and Settings.ReadingDirection = L.Direction.Inherit
+  then
+    return;
+  end if;
+
+  Window.LayoutLast(
+    Spacing(Settings.PaddingTop ?? Settings.Padding),
+    Spacing(Settings.PaddingEnd ?? Settings.Padding),
+    Spacing(Settings.PaddingBottom ?? Settings.Padding),
+    Spacing(Settings.PaddingStart ?? Settings.Padding),
+    cast<int>(Settings.ReadingDirection)
+  );
+end procedure;
+
 // Applies CUI sizing directly after drawing one child.
 //
 // ## Parameters
@@ -77,6 +100,29 @@ end function;
 // - `Horizontal`: Parent axis.
 // - `Align`: Parent cross-axis alignment.
 public procedure Apply(Window: Cui.CuiWindow; Value: L.Flex; Horizontal: bool; Align: L.Alignment);
+  procedure Axis(Settings: L.AxisSize?; Width: bool);
+  begin
+    if Settings = null then
+      return;
+    end if;
+    const Basis: NativeExtent := Extent(Settings.Basis);
+    const Minimum: L.Measure? := Settings.Minimum;
+    const Maximum: L.Measure? := Settings.Maximum;
+    Window.SizeLast(
+      Width, Basis.Kind, Basis.Value,
+      if Minimum = null then
+        0.0F
+      else
+        Measure(Minimum)
+      end if,
+      if Maximum = null then
+        -1.0F
+      else
+        Measure(Maximum)
+      end if,
+      0, 0
+    );
+  end procedure;
 begin
   const Basis: NativeExtent := Extent(Value.Basis);
   var Minimum: float := 0;
@@ -102,6 +148,8 @@ begin
     Value.Grow,
     cast<int>(Align)
   );
+  Axis(Value.Width, true);
+  Axis(Value.Height, false);
 end procedure;
 
 end unit;

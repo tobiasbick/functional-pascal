@@ -26,9 +26,7 @@ end function;
 // An empty element with the requested height.
 public function Space<TMsg>(Amount: int): E.Element<TMsg>;
 begin
-  return E.Size<TMsg>(
-    E.Column<TMsg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Amount)))
-  );
+  return E.Gap<TMsg>(L.Measure.Logical(Amount));
 end function;
 
 // Builds a CUI gallery section heading with its top inset.

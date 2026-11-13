@@ -252,6 +252,7 @@ begin
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
           Active := Value;
+          NavigationRevision := State.NavigationRevision + 1;
           Drawer := false;
           Overlays := State.Overlays with
             Sheet := false;

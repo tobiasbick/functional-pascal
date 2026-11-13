@@ -1,6 +1,7 @@
 unit Fpas.Ui.Gui.Internal.Presentation;
 
 uses
+  Fpas.Ui.Tours as Tours, Fpas.Ui.Gui.Internal.Widgets.Tour as TourWidget,
   Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Gui.Internal.Widgets.EmojiPicker as EmojiPickerWidget,
   Fpas.Ui.Gui.Internal.Widgets.ColorPicker as ColorPickerWidget,
   Fpas.Ui.DatePickers as DatePickers, Fpas.Ui.Gui.Internal.Widgets.Calendar as CalendarWidget,
@@ -606,6 +607,33 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Action: Sys.Func<TMsg>?
       ):
         EmptyStateWidget.Draw<TMsg>(Current, Id, Title, Settings, Action);
+      when E.Element.Tour(
+        const Id: string,
+        const Base: E.Element<TMsg>,
+        const Steps: array of Tours.Step,
+        const CurrentStep: int,
+        const Changed: function(Tours.Change): TMsg,
+        const Settings: Tours.Options
+      ):
+        Visit(Base, Current, Horizontal, Align);
+        TourWidget.Draw<TMsg>(Current, Id, Steps, CurrentStep, Changed, Settings);
+        return;
+      when E.Element.Spacer:
+        Current.Window.Spacer();
+      when E.Element.Gap(const Distance: L.Measure):
+        Current.Window.Gap(Size.Measure(Distance));
+      when E.Element.Layered(const Children: array of E.Element<TMsg>, const Settings: L.Flow):
+        Current.Window.BeginLayers(
+          cast<int>(Settings.Align),
+          cast<int>(Settings.Justify),
+          Settings.Clip ?? false
+        );
+        Size.Container(Current.Window, Settings, true);
+        for Child: E.Element<TMsg> in Children do
+          Visit(Child, Current, false, Settings.Align);
+        end for;
+
+        Current.Window.EndGroup();
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Row: bool,
@@ -619,6 +647,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           false,
           Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast<int>(Settings.Justify)
         );
+        Size.Container(Current.Window, Settings);
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, Row, Settings.Align);
         end for;
@@ -653,7 +682,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Child: E.Element<TMsg>,
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
-        const Bar: bool, const FadeEdges: bool
+        const Bar: bool, const FadeEdges: bool, const HorizontalScroll: bool
       ):
         const Token: string := C.Token('scroll', Id);
         var Before: float := 0;
@@ -674,7 +703,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
 
         Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
         Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
-        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput, FadeEdges);
+        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput, FadeEdges, HorizontalScroll);
         Visit(Child, Current, false, L.Alignment.Stretch);
         Current.Window.EndScroll();
         var After: float := 0;

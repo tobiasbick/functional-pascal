@@ -1,0 +1,169 @@
+unit GalleryLayoutContract;
+
+uses
+  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.Update as Update,
+  GuiGallery.App.View as Gallery, GuiGallery.Shared.State as Shared,
+  Fpas.Ui.Elements as E, Fpas.Ui.Stacks as Stacks, Fpas.Ui.Layout as L,
+  Fpas.Ui.Composition as Composition, Fpas.Ui.Validation as V,
+  Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  System as Sys;
+
+procedure Validate();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Invalid layout was accepted.');
+  end procedure;
+begin
+  for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
+    Reject(E.Spacer<int>(), Profile, 'Graphical');
+    Reject(E.Gap<int>(L.Measure.Logical(8)), Profile, 'Graphical');
+    Reject(Stacks.Stack<int>(new L.Flow(), E.Text<int>('test')), Profile, 'Graphical');
+    Reject(
+      E.Row<int>(new L.Flow(ReadingDirection := L.Direction.RightToLeft)),
+      Profile,
+      'Graphical'
+    );
+    Reject(E.Column<int>(new L.Flow(PaddingTop := L.Spacing.None)), Profile, 'Graphical');
+    Reject(
+      E.Size<int>(E.Text<int>('test'), new L.Flex(Width := new L.AxisSize())),
+      Profile,
+      'Graphical'
+    );
+    Reject(E.ScrollView<int>('x', E.Text<int>('test'), Horizontal := true), Profile, 'Graphical');
+  end for;
+
+  Reject(E.Gap<int>(L.Measure.Logical(-1)), V.Target.Graphical, 'nonnegative');
+  Reject(E.Gap<int>(L.Measure.Cells(1)), V.Target.Graphical, 'terminal');
+  Reject(
+    E.Column<int>(new L.Flow(ReadingDirection := cast<L.Direction>(255))),
+    V.Target.Graphical,
+    'direction'
+  );
+  Reject(
+    E.Column<int>(new L.Flow(PaddingEnd := L.Spacing.Fixed(L.Measure.Logical(-1)))),
+    V.Target.Graphical,
+    'nonnegative'
+  );
+  Reject(Stacks.Stack<int>(new L.Flow(Wrap := true)), V.Target.Graphical, 'without wrapping');
+  Reject(
+    E.Size<int>(E.Text<int>('test'), new L.Flex(Basis := L.Extent.Fill, Width := new L.AxisSize())),
+    V.Target.Graphical,
+    'cannot mix'
+  );
+  Reject(
+    E.Size<int>(E.Text<int>('test'), new L.Flex(Grow := 1, Height := new L.AxisSize())),
+    V.Target.Graphical,
+    'cannot mix'
+  );
+  Reject(
+    E.Size<int>(
+      E.Text<int>('test'),
+      new L.Flex(
+        Width := new L.AxisSize(Minimum := L.Measure.Logical(20), Maximum := L.Measure.Logical(10))
+      )
+    ),
+    V.Target.Graphical,
+    'minimum exceeds'
+  );
+  Reject(
+    E.Size<int>(
+      E.Text<int>('test'),
+      new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Percent(101.0F)))
+    ),
+    V.Target.Graphical,
+    'percentage'
+  );
+  Reject(
+    E.Size<int>(
+      E.Text<int>('test'),
+      new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Cells(4))))
+    ),
+    V.Target.Graphical,
+    'terminal'
+  );
+end procedure;
+
+// Verifies the public layout primitives and resets a reselected page's native viewport.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+// - `Capture`: Prefix for actual gallery captures.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+  end procedure;
+  procedure Step(Session: Gui.Session<State.Msg>);
+  begin
+    A.Check(Session.Step(), 'Layout gallery closed.');
+  end procedure;
+begin
+  Validate();
+  discard V.Prepare<State.Msg>(
+    Composition.Map<int, State.Msg>(
+      Stacks.Stack<int>(new L.Flow(), E.Spacer<int>(), E.Gap<int>(L.Measure.Logical(4))),
+      function(Value: int): State.Msg => State.Msg.Preview
+    ), V.Target.Graphical
+  );
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Wheel: float := 0.0F;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Layout', 1100, 1050, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Layout), Update.Update, Gallery.Build, Window, 32, Inject,
+    ThemeFor := Update.ThemeFor
+  );
+  Step(Session);
+  const Back: Cui.CuiRectangle := A.Control(Session, 'layout-back').Bounds;
+  const Front: Cui.CuiRectangle := A.Control(Session, 'layout-front').Bounds;
+  A.Check(
+    Front.X >= Back.X and Front.Y >= Back.Y and Front.X + Front.Width <= Back.X + Back.Width + 0.6F,
+    'The native layered children do not overlap.'
+  );
+  A.Check(
+    A.Control(Session, 'ltr-start').Bounds.X < A.Control(Session, 'ltr-end').Bounds.X,
+    'LTR row was mirrored.'
+  );
+  A.Check(
+    A.Control(Session, 'rtl-start').Bounds.X > A.Control(Session, 'rtl-end').Bounds.X,
+    'RTL row did not mirror.'
+  );
+  Session.CapturePng(Capture + '.layout.png');
+  A.Send(Session, State.Msg.Shared(Shared.Msg.SetAppearance(Switchers.Selection.Dark)));
+  Session.CapturePng(Capture + '.layout-dark.png');
+  Window.Resize(500, 650);
+  Step(Session);
+  Step(Session);
+  Session.CapturePng(Capture + '.layout-narrow.png');
+  X := 300.0F;
+  Y := 250.0F;
+  Wheel := -20.0F;
+  Step(Session);
+  Step(Session);
+  A.Check(A.Control(Session, 'main-layout-0').Value <> '0', 'The layout page did not scroll.');
+  A.Send(Session, State.Msg.Show(State.Page.Layout));
+  A.Check(
+    A.Control(Session, 'main-layout-1').Value = '0',
+    'Reselecting the active page kept its old scroll position.'
+  );
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Layout));
+  A.Check(
+    A.Control(Session, 'main-layout-3').Value = '0',
+    'Returning to the page did not start at the top.'
+  );
+end procedure;
+
+end unit;

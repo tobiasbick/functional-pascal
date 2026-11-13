@@ -19,6 +19,8 @@ uses
 public function TopModal<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>): string?;
 begin
   case Node of
+    when E.Element.Tour(_, const Base: E.Element<TMsg>, _, _, _, _):
+      return TopModal<TMsg>(Base, Prepared);
     when E.Element.Sheet(
       const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
       const Open: bool, _, _
@@ -35,7 +37,10 @@ begin
       else
         Inner
       end if;
-    when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
+    when E.Element.Layered(
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Card(
       _,
       const Children: array of E.Element<TMsg>,
       _,
@@ -106,7 +111,7 @@ begin
       end if;
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return TopModal<TMsg>(Child, Prepared);
-    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _):
+    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _, _):
       return TopModal<TMsg>(Child, Prepared);
     when E.Element.Deferred(const Id: string, _):
       return TopModal<TMsg>(Prepared.Subviews[Id].Tree, Prepared);

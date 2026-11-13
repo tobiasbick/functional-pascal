@@ -6,6 +6,7 @@
 #include "widgets/banner.h"
 #include "widgets/countdown.h"
 #include "widgets/checklist.h"
+#include "widgets/tour.h"
 #include "widgets/table_of_contents.h"
 #include "widgets/grid.h"
 #include "widgets/card.h"

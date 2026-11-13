@@ -118,20 +118,15 @@ exercised by the chips in the [GUI gallery][gui-gallery-test]. Reader uses
 `ScrollView` with native edge fades. Selecting a different page starts at the
 top, including when returning to a previously scrolled page.
 
-The [CUI layout reference][layout] and [native gallery][gallery] also use
-features outside that shared subset. The following layout work targets the GUI;
-terminal equivalents are deferred.
-
-- [ ] Stack layout with layered children, independent width/height constraints
-  and per-edge padding. Native percentages are available through
-  `Layout.Extent.Percent` for main-axis sizing, button width and skeleton width.
-- [ ] Flexible spacer and fixed gap parity.
-- [ ] Horizontal scrolling in the shared FPAS API and CUI-equivalent viewport
-  control. The low-level native scroll binding supports both axes; shared
-  `ScrollView` is vertical. Virtual list and split view have separate entries.
-- [ ] Reset the gallery content scroll position when reselecting the active
-  destination. The native gallery also resets in this case.
-- [ ] Reading direction and logical start/end layout for right-to-left content.
+Beyond that shared subset, GUI exposes native layered stacks, independent width/height constraints,
+per-edge padding, flexible and fixed gaps, and inherited LTR/RTL layout.
+`ScrollView` optionally scrolls horizontally as well as vertically, with native
+clipping and edge fades. Its model-owned position remains vertical, matching
+CUI's scroll-to API. The gallery resets its viewport for every destination
+selection, including the active destination. The supplementary Layout page
+demonstrates these primitives in light, dark and narrow captures.
+See the [graphical layout API][fpas-native-layout] and [CUI layout reference][layout] for CUI's directional
+limits; mirrored layout does not add text shaping or bidirectional editing.
 
 ### Native keyboard limits
 
@@ -481,7 +476,13 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
   model proposals, keyboard/pointer input, closing content and responsive views.
   Native pixel comparisons cover all three widgets in light/dark and narrow/wide
   configurations. Gallery captures cover Lists and Disclosure.
-- [ ] Guided tour (`cui_tour`)
+- [x] Guided tour (`cui_tour`): [API][fpas-tour]. Audio shows the original
+  three-step tour of the Cutoff knob, master meter and Bass fader. CUI owns
+  the spotlight, card, positioning, animation and input. Software/OpenGL tests
+  cover Next, Back, Done, Escape, closing, reopening, focus, model proposals
+  and state retirement. Native pixel comparisons cover light/dark themes,
+  centered/targeted cards, all three steps, widths and spotlight options.
+  Custom captions and step-count formatting remain unexposed native options.
 
 ### Feedback and progress
 
@@ -636,8 +637,8 @@ Include axis formatting through `cui_axis_units`, including `CUI_AXIS_HOURS`:
 12.25 reads 12:15 and 30 reads 06:00 on the next day. Match these semantics
 in the GUI chart bindings. For right-to-left views, readout and dot-display
 placement follow reading direction while chart and event-track time axes remain left to
-right. Arabic-script labels require CUI's optional static-text shaping support;
-track that native build option with the GUI RTL layout work.
+right. Arabic-script labels require CUI's optional static-text shaping support,
+which remains a separate native build option.
 
 ### Conversation and media
 
@@ -708,6 +709,7 @@ track that native build option with the GUI RTL layout work.
 [vendor]: ../../third-party/cui/UPSTREAM.md
 [fpas-themes]: ../../src/Fpas.Ui/Themes.fpas
 [fpas-layout]: ../../src/Fpas.Ui/README.md#layout-and-style
+[fpas-native-layout]: ../../src/Fpas.Ui/README.md#native-graphical-layout
 [sidebar]: ../../src/Fpas.Ui/README.md#sidebar-navigation
 [fpas-sheet]: ../../src/Fpas.Ui/README.md#sheet-and-drawer
 [fpas-icon-button]: ../../src/Fpas.Ui/README.md#icon-button
@@ -720,6 +722,7 @@ track that native build option with the GUI RTL layout work.
 [fpas-sliders]: ../../src/Fpas.Ui/README.md#slider-and-range-slider
 [fpas-ruler-histogram]: ../../src/Fpas.Ui/README.md#ruler-and-histogram-sliders
 [fpas-audio]: ../../src/Fpas.Ui/README.md#audio-controls
+[fpas-tour]: ../../src/Fpas.Ui/README.md#guided-tour
 [fpas-capture]: ../../src/Fpas.Ui/README.md#capture-controls
 [fpas-surfaces]: ../../src/Fpas.Ui/README.md#native-grids-and-surfaces
 [fpas-reader]: ../../src/Fpas.Ui/README.md#table-of-contents-and-scroll-anchors

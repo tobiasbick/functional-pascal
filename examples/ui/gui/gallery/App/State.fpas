@@ -48,12 +48,16 @@ public type Page = enum: byte
   Capture;
   // Anchored sections and the native table of contents.
   Reader;
+  // Supplementary native layout primitives absent from the upstream pages.
+  Layout;
 end enum;
 
 // Application state with one owner per feature.
 public type Model = record
   // Active gallery page.
   public Active: Page := Page.Overview;
+  // New viewport identity for every navigation selection, including the active page.
+  public NavigationRevision: int := 0;
   // Visibility of the compact navigation drawer.
   public Drawer: bool := false;
   // Demo values shared by several pages.

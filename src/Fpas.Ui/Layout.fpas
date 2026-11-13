@@ -20,6 +20,16 @@ public type Extent = variant
   Percent(Value: float);
 end variant;
 
+// Explicit constraints on one graphical axis.
+public type AxisSize = record
+  // Native preferred extent.
+  public Basis: Extent := Extent.Content;
+  // Optional lower bound in logical units.
+  public Minimum: Measure? := null;
+  // Optional upper bound in logical units.
+  public Maximum: Measure? := null;
+end record;
+
 // Main-axis constraints and allocation weights.
 public type Flex = record
   // The basis for allocation before distributing free space.
@@ -31,6 +41,10 @@ public type Flex = record
   // CUI growth weight, allocated from zero. Fill uses at least one.
   // Fixed and percentage extents cannot grow; positive content weights become growing.
   public Grow: int := 0;
+  // Optional graphical width; explicit axes cannot mix with main-axis constraints.
+  public Width: AxisSize? := null;
+  // Optional graphical height; explicit axes cannot mix with main-axis constraints.
+  public Height: AxisSize? := null;
 end record;
 
 // Cross-axis placement inside a stack.
@@ -75,7 +89,17 @@ public type Spacing = variant
   Fixed(Value: Measure);
 end variant;
 
-// Layout settings shared by rows and columns.
+// Inherited reading direction for native graphical layout and text.
+public type Direction = enum: byte
+  // Inherit the containing layout; the root defaults to left to right.
+  Inherit;
+  // Lay out from left to right.
+  LeftToRight;
+  // Mirror horizontal flow, start/end alignment and padding.
+  RightToLeft;
+end enum;
+
+// Layout settings shared by rows, columns and graphical layered stacks.
 public type Flow = record
   // The separation between consecutive children.
   public Gap: Spacing := Spacing.None;
@@ -89,6 +113,16 @@ public type Flow = record
   public Clip: bool? := null;
   // Graphical main-axis distribution. Start is portable.
   public Justify: Justification := Justification.Start;
+  // Optional graphical top inset, overriding Padding, including an explicit zero.
+  public PaddingTop: Spacing? := null;
+  // Optional graphical logical end inset, overriding Padding.
+  public PaddingEnd: Spacing? := null;
+  // Optional graphical bottom inset, overriding Padding.
+  public PaddingBottom: Spacing? := null;
+  // Optional graphical logical start inset, overriding Padding.
+  public PaddingStart: Spacing? := null;
+  // Native inherited reading direction. Explicit directions require GUI.
+  public ReadingDirection: Direction := Direction.Inherit;
 end record;
 
 // An application-facing size class for responsive views.

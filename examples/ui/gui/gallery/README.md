@@ -143,7 +143,16 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   and a stereo master meter. The six mixer faders show stereo peaks and Kick
   carries the original dB marks. The demo signal runs while Audio is selected.
   The two cards wrap when the available width cannot fit them side by side.
-- The sidebar changes pages. At narrow widths, open it with the **Components**
+  Take the tour opens the original three native spotlight steps for Cutoff,
+  the master meter and Bass. CUI owns the card and spotlight; Back, Next, Done,
+  close and Escape propose the model's next step. Reopening starts at the first
+  step. The gallery verifies pointer navigation and focused Enter activation.
+- **Layout** supplements the original gallery with native overlapping children,
+  independent sizes, per-edge padding, mirrored LTR/RTL rows, flexible/fixed
+  spacing and a horizontally scrolling card strip.
+- The sidebar changes pages and resets the content position even when selecting
+  the active destination. CUI centers and bounds the content column and applies
+  its individual edge insets. At narrow widths, open it with the **Components**
   icon. Selecting a page dismisses the drawer.
   Theme segments use Tab, Left/Right, Enter, Space or the pointer; selection
   updates the model and its shared palette.

@@ -13,7 +13,16 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
   procedure Visit(Node: E.Element<TMsg>);
   begin
     case Node of
-      when E.Element.Stack(const Children: array of E.Element<TMsg>, _, const Settings: L.Flow):
+      when E.Element.Tour(_, const Base: E.Element<TMsg>, _, _, _, _):
+        Visit(Base);
+      when E.Element.Layered(
+        const Children: array of E.Element<TMsg>,
+        const Settings: L.Flow
+      ), E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        _,
+        const Settings: L.Flow
+      ):
         discard Size.Spacing(Settings.Gap);
         discard Size.Spacing(Settings.Padding);
         for Child: E.Element<TMsg> in Children do
@@ -91,6 +100,7 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         _,
         const Child: E.Element<TMsg>,
         const Position: L.ScrollPosition?,
+        _,
         _,
         _,
         _

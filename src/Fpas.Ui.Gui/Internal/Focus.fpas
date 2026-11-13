@@ -17,6 +17,22 @@ uses Fpas.Ui.Cards as Cards, Fpas.Ui.EmptyStates as EmptyStates, Fpas.Ui.TableOf
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.Tour(const Id: string, const Base: E.Element<TMsg>, _, const Current: int, _, _):
+      if Current >= 0 then
+        if Preferred = Id or Preferred = Id + '/next' then
+          return Id + '/next';
+        end if;
+
+        if Preferred = Id + '/close' then
+          return Id + '/close';
+        end if;
+
+        if Current > 0 and Preferred = Id + '/back' then
+          return Id + '/back';
+        end if;
+      end if;
+
+      return First<TMsg>(Base, Prepared, Preferred);
     when E.Element.TimePicker(const Id: string, _, _, const Settings: TimePickers.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -473,7 +489,10 @@ begin
           return Found;
         end if;
       end for;
-    when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Stack(
+    when E.Element.Layered(
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       _,
       _
@@ -580,7 +599,7 @@ begin
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Framed(const Child: E.Element<TMsg>, _):
       return First<TMsg>(Child, Prepared, Preferred);
-    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _):
+    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _, _):
       return First<TMsg>(Child, Prepared, Preferred);
     when E.Element.Sheet(
       const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,

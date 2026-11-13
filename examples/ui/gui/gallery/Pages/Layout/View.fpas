@@ -1,0 +1,79 @@
+unit GuiGallery.Pages.Layout.View;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Stacks as Stacks,
+  Fpas.Ui.Skeletons as Skeletons, Fpas.Ui.Badges as Badges, Fpas.Ui.Buttons as Buttons,
+  Fpas.Ui.Styles as S, GuiGallery.Shared.Sections as G,
+  System.Collections.Generic as Lists;
+
+function DirectionRow<TMsg>(Id: string; Direction: L.Direction; Message: TMsg): E.Element<TMsg>;
+begin
+  return E.Row<TMsg>(
+    new L.Flow(
+      Padding := G.Points(12), PaddingStart := G.Points(24),
+      ReadingDirection := Direction, Clip := false
+    ),
+    Buttons.Button<TMsg>(Id + '-start', 'Start', Message),
+    E.Gap<TMsg>(L.Measure.Logical(12)), E.Spacer<TMsg>(),
+    Buttons.Button<TMsg>(Id + '-end', 'End', Message)
+  );
+end function;
+
+// Shows native layout primitives that have no dedicated upstream gallery page.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Message`: Harmless activation for the direction examples.
+// ## Returns
+// Layered, mirrored and horizontally scrolling examples, all laid out by CUI.
+public function View<TMsg>(Message: TMsg): E.Element<TMsg>;
+begin
+  const Tiles: Lists.List<E.Element<TMsg>> := new Lists.List<E.Element<TMsg>>();
+  for Index: int := 1 to 6 do
+    Tiles.Add(
+      E.Size<TMsg>(
+        G.Card<TMsg>(
+          8,
+          [E.Text<TMsg>('Card ' + Index.ToString()), E.Text<TMsg>('Scroll sideways')]
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(180))))
+      )
+    );
+  end for;
+
+  return E.Column<TMsg>(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    G.Heading<TMsg>('Layered stack', 'CUI places both children in the same native container.'),
+    E.Size<TMsg>(
+      Stacks.Stack<TMsg>(
+        new L.Flow(
+          Align := L.Alignment.End, Justify := L.Justification.End,
+          Padding := G.Points(12), PaddingTop := L.Spacing.None
+        ),
+        Skeletons.Skeleton<TMsg>('layout-back', Height := 140.0F),
+        Badges.Badge<TMsg>('layout-front', 'On top', new Badges.Options(Tone := S.Tone.Info))
+      ),
+      new L.Flex(
+        Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(420)),
+        Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(160)))
+      )
+    ),
+    G.Heading<TMsg>(
+      'Reading direction',
+      'Start/end padding and native spacing mirror with the container.'
+    ),
+    DirectionRow<TMsg>('ltr', L.Direction.LeftToRight, Message),
+    DirectionRow<TMsg>('rtl', L.Direction.RightToLeft, Message),
+    G.Heading<TMsg>('Horizontal scrolling', 'Use a horizontal wheel or drag the native scrollbar.'),
+    E.Size<TMsg>(
+      E.ScrollView<TMsg>(
+        'layout-horizontal',
+        E.Row<TMsg>(new L.Flow(Gap := G.Points(12), Clip := false), Tiles.ToArray()),
+        FadeEdges := true, Horizontal := true
+      ),
+      new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(150))))
+    )
+  );
+end function;
+
+end unit;

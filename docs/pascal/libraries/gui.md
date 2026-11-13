@@ -43,6 +43,8 @@ The [timeline item](../../../src/Fpas.Ui/README.md#timeline-item) supplies nativ
 activity entries with literal time captions, descriptions, icons and connectors.
 The [skeleton](../../../src/Fpas.Ui/README.md#skeleton) uses native loading shimmer
 and CUI's reduced-motion behavior, with fill, fixed or percentage width.
+The [guided tour](../../../src/Fpas.Ui/README.md#guided-tour) adds native
+spotlights and explanation cards to model-selected controls.
 
 ## Model, update and view
 
@@ -65,6 +67,9 @@ uses portable `Layout.Measure.Logical`; the terminal adapter translates those
 distances to cells. Layout follows the [shared CUI rules](../../../src/Fpas.Ui/README.md#layout-and-style).
 GUI additionally accepts `Layout.Extent.Percent` for main-axis sizing and button
 or skeleton width. CUI resolves the percentage against the parent's inner extent.
+The [graphical layout extensions](../../../src/Fpas.Ui/README.md#native-graphical-layout)
+include overlapping children, independent dimensions, per-edge padding,
+LTR/RTL flow, native spacing and horizontal scrolling.
 Both hosts accept `Fpas.Ui.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
 and the same `ThemeFor(Model)` callback. Set a fixed theme with `Gui.Options.Theme`.
 Palette customization and terminal approximations are described in

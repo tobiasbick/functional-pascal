@@ -1,6 +1,8 @@
 program PublishedGallery;
 
 uses
+  GalleryTourContract as TourContract,
+  GalleryLayoutContract as LayoutContract,
   GalleryActionsPickersContract as ActionsPickersContract,
   GalleryDateRangeContract as DateRangeContract,
   GalleryDateCalendarContract as DateCalendarContract,
@@ -71,7 +73,7 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 15, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 16, 'Only the confirmed gallery destinations should be visible.');
   A.Check(
     A.Control(Session, 'navigation', 'pickers').Text = 'Pickers'
     and A.Control(Session, 'navigation', 'reader').Text = 'Reader'
@@ -180,6 +182,7 @@ end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  TourContract.Verify();
   VerifyDesktop(Renderer, Capture);
   VerifyDrawer(Renderer);
   ActionsContract.Verify(Renderer, Capture);
@@ -210,6 +213,7 @@ begin
   DisclosureContract.Verify(Renderer, Capture);
   DisclosureFeedbackContract.Verify(Renderer, Capture);
   FeedbackContract.Verify(Renderer, Capture);
+  LayoutContract.Verify(Renderer, Capture);
   SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);

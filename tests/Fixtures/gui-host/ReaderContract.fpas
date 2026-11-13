@@ -66,7 +66,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Destination.Y.ToString()
     );
     A.Check(
-      A.Control(Session, 'main-reader').Value = '0',
+      A.Control(Session, 'main-reader-0').Value = '0',
       'The surrounding page should stay in place.'
     );
   end procedure;
@@ -125,7 +125,10 @@ begin
     A.Control(Session, 'install').Bounds.Y < Viewport.Y,
     'Wheel input must move the inner article.'
   );
-  A.Check(A.Control(Session, 'main-reader').Value = '0', 'Wheel input moved the surrounding page.');
+  A.Check(
+    A.Control(Session, 'main-reader-0').Value = '0',
+    'Wheel input moved the surrounding page.'
+  );
   Window.CapturePng(Capture + '.reader-scrolled.png');
 
   // Enter activates the focused Install row again after the wheel moved past it.

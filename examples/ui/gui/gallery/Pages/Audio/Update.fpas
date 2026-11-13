@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Audio.Update;
 
-uses GuiGallery.Pages.Audio.State as S;
+uses GuiGallery.Pages.Audio.State as S, Fpas.Ui.Tours as T;
 
 function SetGain(Model: S.Model; Channel: int; Value: float): S.Model;
 begin
@@ -20,6 +20,14 @@ end function;
 public function Update(Model: S.Model; Message: S.Msg): S.Model;
 begin
   return case Message of
+    when S.Msg.StartTour: Model with
+      TourStep := 0;
+      TourAction := T.Event.None;
+    end with;
+    when S.Msg.Tour(const Change: T.Change): Model with
+      TourStep := Change.Step;
+      TourAction := Change.Action;
+    end with;
     when S.Msg.SetCutoff(const Value: float): Model with
       Cutoff := Value;
     end with;

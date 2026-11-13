@@ -2,6 +2,7 @@ unit GuiGallery.App.View;
 
 uses
   GuiGallery.Pages.Feedback.View as Feedback,
+  GuiGallery.Pages.Layout.View as LayoutDemo,
   GuiGallery.Pages.Buttons.State as ButtonsState,
   GuiGallery.Pages.Buttons.View as Buttons,
   GuiGallery.Pages.Inputs.State as InputsState,
@@ -102,7 +103,7 @@ begin
           Destination(State.Page.Actions, $E09A), Destination(State.Page.SmartInputs, $E172),
           Destination(State.Page.Pickers, $E063), Destination(State.Page.Capture, $E19E),
           Destination(State.Page.Disclosure, $E529), Destination(State.Page.Reader, $E0CC),
-          Destination(State.Page.Audio, $E55A)
+          Destination(State.Page.Audio, $E55A), Destination(State.Page.Layout, $E529)
         ]
       )
     ],
@@ -145,6 +146,8 @@ end function;
 function Preview(Model: State.Model; Width: int): E.Element<State.Msg>;
 begin
   case Model.Active of
+    when State.Page.Layout:
+      return LayoutDemo.View<State.Msg>(State.Msg.Preview);
     when State.Page.Feedback:
       return Feedback.View<State.Msg>(
         State.Msg.Shared(
@@ -239,26 +242,29 @@ begin
   end if;
 
   return E.ScrollView<State.Msg>(
-    'main-' + Model.Active.ToString().ToLowerInvariant(),
+    'main-' + Model.Active.ToString().ToLowerInvariant() + '-' +
+    Model.NavigationRevision.ToString(),
     E.Row<State.Msg>(
-      new L.Flow(Align := L.Alignment.Start),
-      Space(Inset),
+      new L.Flow(Align := L.Alignment.Start, Justify := L.Justification.Center, Clip := false),
       E.Size<State.Msg>(
         E.Column<State.Msg>(
-          new L.Flow(Clip := false),
-          Space(
-            if Compact then
-              12
-            else
-              36
-            end if
+          new L.Flow(
+            Clip := false,
+            PaddingStart := Gap(Inset), PaddingEnd := Gap(Inset),
+            PaddingTop := Gap(
+              if Compact then
+                12
+              else
+                36
+              end if
+            ), PaddingBottom := Gap(64)
           ),
-          Page,
-          Space(64)
+          Page
         ),
-        Fill
-      ),
-      Space(Inset)
+        new L.Flex(
+          Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(920))
+        )
+      )
     ),
     FadeEdges := Model.Active = State.Page.Overview or Model.Active = State.Page.Feedback
   );
@@ -284,16 +290,18 @@ begin
   else
     Width - SidebarWidth - 1
   end if;
-  const Inset: int := (if Compact then
+  const Inset: int := if Compact then
     16
   else
     40
-  end if) + Sys.Math.Max(
-    0,
-    (Available - 920) div 2
-  );
+  end if;
   const Pages: E.Element<State.Msg> := NavigationItems(Model.Active);
-  const Main: E.Element<State.Msg> := Content(Model, Compact, Inset, Available - 2 * Inset);
+  const Main: E.Element<State.Msg> := Content(
+    Model,
+    Compact,
+    Inset,
+    Sys.Math.Min(Available, 920) - 2 * Inset
+  );
   const Body: E.Element<State.Msg> := if Compact then
     Sheets.Sheet<State.Msg>(
       'drawer',

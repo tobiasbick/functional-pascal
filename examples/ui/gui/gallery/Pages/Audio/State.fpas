@@ -1,5 +1,7 @@
 unit GuiGallery.Pages.Audio.State;
 
+uses Fpas.Ui.Tours as Tours;
+
 // Editable synth and mixer values, plus the phase of the synthetic signal.
 public type Model = record
   // Cutoff in Hz.
@@ -14,10 +16,18 @@ public type Model = record
   public Gains: array of float := [-4.0F, -9.0F, 0.0F, -15.0F, -6.0F, -2.0F];
   // Synthetic signal phase, measured in sixtieths of a second.
   public Phase: int := 1;
+  // Model-owned native tour step, minus one when closed.
+  public TourStep: int := -1;
+  // Most recent native navigation proposal.
+  public TourAction: Tours.Event := Tours.Event.None;
 end record;
 
 // Changes to the audio examples.
 public type Msg = variant
+  // Open the original three-step tour.
+  StartTour;
+  // Apply a native tour navigation proposal.
+  Tour(Value: Tours.Change);
   // Set the cutoff in Hz.
   SetCutoff(Value: float);
   // Set the normalized resonance.

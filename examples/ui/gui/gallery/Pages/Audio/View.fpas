@@ -1,6 +1,7 @@
 unit GuiGallery.Pages.Audio.View;
 
 uses
+  Fpas.Ui.Tours as Tours, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Menus as Menus,
   GuiGallery.Pages.Audio.State as A, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Knobs as K, Fpas.Ui.Faders as F, Fpas.Ui.LevelMeters as M,
@@ -83,10 +84,41 @@ begin
     ),
     S.Role.OutlinedPanel
   );
-  return E.Row<A.Msg>(
-    new L.Flow(Gap := G.Points(16), Wrap := true, Align := L.Alignment.Start),
-    Synth(Model),
-    Mixer
+  const Base: E.Element<A.Msg> := E.Column<A.Msg>(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    Buttons.Button<A.Msg>(
+      'audio-tour-open', 'Take the tour', A.Msg.StartTour,
+      new Buttons.Options(
+        Variant := S.ButtonVariant.Outline,
+        Icon := Sys.Char.ConvertFromUtf32($E412)
+      )
+    ),
+    E.Row<A.Msg>(
+      new L.Flow(Gap := G.Points(16), Wrap := true, Align := L.Alignment.Start),
+      Synth(Model),
+      Mixer
+    )
+  );
+  return Tours.Tour<A.Msg>(
+    'audio-tour', Base,
+    [
+      new Tours.Step(
+        Target := 'audio-cutoff', Title := 'Turn a knob',
+        Body := 'Drag up and down. Hold Shift for fine steps, double-click to reset.'
+      ),
+      new Tours.Step(
+        Target := 'audio-master', Title := 'Watch the levels',
+        Body := 'Bars fall back after each peak; the mark above them holds the peak a moment.',
+        Position := Menus.Placement.TopStart
+      ),
+      new Tours.Step(
+        Target := 'audio-bass',
+        Title := 'Ride the faders',
+        Body := 'Click a fader, then use the wheel or the arrow keys.',
+        Position := Menus.Placement.LeftStart
+      )
+    ],
+    Model.TourStep, A.Msg.Tour
   );
 end function;
 

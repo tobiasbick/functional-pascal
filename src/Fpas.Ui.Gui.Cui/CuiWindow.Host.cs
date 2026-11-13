@@ -163,10 +163,11 @@ public sealed partial class CuiWindow
     /// <param name="showScrollbar">Whether to show its scrollbar.</param>
     /// <param name="enabled">Whether user input is accepted.</param>
     /// <param name="fadeEdges">Whether to fade edges with hidden content.</param>
-    public void BeginViewport(string id, bool showScrollbar, bool enabled, bool fadeEdges)
+    /// <param name="horizontal">Also allow native horizontal scrolling; vertical requests remain vertical.</param>
+    public void BeginViewport(string id, bool showScrollbar, bool enabled, bool fadeEdges, bool horizontal = false)
     {
         CheckFrame();
-        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0, fadeEdges ? 1 : 0);
+        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0, fadeEdges ? 1 : 0, horizontal ? 1 : 0);
         scrollNodes[id] = node;
         layouts.Add(new(Layout.Scroll, Node: node));
     }

@@ -5,7 +5,7 @@
 
 /** Opens a layout group using native CUI.
  * @param ui Owner context.
- * @param horizontal Row when nonzero.
+ * @param horizontal Column zero, row one, layered stack two.
  * @param padding Logical inset.
  * @param gap Logical separation.
  * @param align Shared alignment ordinal.
@@ -22,6 +22,9 @@ CUI_API int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, 
  * @param ui Owner context.
  * @param node Frame-local group. */
 CUI_API void fpas_cui_group_end(cui_ctx *ui, int node);
+/** Sets physical top/bottom and logical start/end padding and native inherited direction.
+ * Call immediately after beginning the container, before layout resolution. */
+CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
  * @param ui Owner context.
  * @param node Frame-local node.
@@ -106,7 +109,7 @@ CUI_API void fpas_cui_theme_read(cui_ctx *ui, uint32_t *colors);
 CUI_API int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled);
 
 /* Opens the same viewport with optional native edge fades. */
-CUI_API int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges);
+CUI_API int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges, int horizontal);
 /** Reads a tracked viewport's current offset and range.
  * @param ui Owner context.
  * @param node Tracked viewport node.

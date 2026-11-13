@@ -109,6 +109,8 @@ public sealed class GuiHostTests
             ("notification-switches", 1100, 1700), ("disclosure-undo", 1100, 1800),
             ("disclosure-undo-toast", 1100, 1800),
             ("accordion", 1100, 760), ("audio", 1201, 800), ("audio-wrap", 900, 800),
+            ("audio-tour-knob", 1201, 800), ("audio-tour-meter", 1201, 800), ("audio-tour-fader", 1201, 800),
+            ("layout", 1100, 1050), ("layout-dark", 1100, 1050), ("layout-narrow", 500, 650),
             ("feedback", 1100, 1700), ("feedback-dark", 1100, 1700), ("feedback-narrow", 500, 1800)
         })
         {

@@ -1,6 +1,7 @@
 unit Fpas.Ui.Validation;
 
 uses
+  Fpas.Ui.Tours as Tours,
   Fpas.Ui.ColorPickers as ColorPickers, Fpas.Ui.EmojiPickers as Emojis,
   Fpas.Ui.Calendars as Calendars, Fpas.Ui.DatePickers as DatePickers,
   Fpas.Ui.Internal.AudioRules as AudioRules,
@@ -1117,6 +1118,61 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if Action <> null then
           discard Identify(EmptyStates.ActionId(Id), At + '/action');
         end if;
+      when E.Element.Tour(
+        const Id: string, const Base: E.Element<TMsg>, const Steps: array of Tours.Step,
+        const Current: int, _, const Settings: Tours.Options
+      ):
+        const At: string := Identify(Id, Location + '/tour');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Steps.Length = 0 or Current < -1 or Current >= Steps.Length then
+          Rules.Reject(
+            At,
+            'A tour needs steps and a selected step from minus one through count minus one.'
+          );
+        end if;
+
+        FeedbackRules.Nonnegative(Settings.Width, At + '/width');
+        FeedbackRules.Nonnegative(Settings.Padding, At + '/padding');
+        for Item: Tours.Step in Steps do
+          Rules.CheckText(Item.Target, At + '/target');
+          Rules.CheckText(Item.Title, At + '/title');
+          Rules.CheckText(Item.Body, At + '/body');
+          if not Sys.Enum.IsDefined<Menus.Placement>(Item.Position) then
+            Rules.Reject(At, 'Unknown tour placement.');
+          end if;
+        end for;
+
+        Visit(Base, At + '/base');
+        if Current >= 0 then
+          discard Identify(Tours.CloseId(Id), At + '/close');
+          discard Identify(Tours.NextId(Id), At + '/next');
+          if Current > 0 then
+            discard Identify(Tours.BackId(Id), At + '/back');
+          end if;
+        end if;
+      when E.Element.Spacer:
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/spacer');
+      when E.Element.Gap(const Distance: L.Measure):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/gap');
+        discard Rules.CheckMeasure(Distance, Profile, Location + '/gap');
+      when E.Element.Layered(const Children: array of E.Element<TMsg>, const Flow: L.Flow):
+        Rules.RequireProfile(Profile, Target.Graphical, Location + '/layers');
+        Rules.CheckContainer(Flow, Profile, Location + '/layers');
+        Rules.CheckSpacing(Flow.Gap, Profile, Location + '/layers');
+        Rules.CheckSpacing(Flow.Padding, Profile, Location + '/layers');
+        if Flow.Wrap or not Sys.Enum.IsDefined<L.Alignment>(
+          Flow.Align
+        ) or not Sys.Enum.IsDefined<L.Justification>(Flow.Justify)
+        then
+          Rules.Reject(
+            Location,
+            'Layered stacks require valid alignment and justification without wrapping.'
+          );
+        end if;
+
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], Location + '/layers[' + Index.ToString() + ']');
+        end for;
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
         const Horizontal: bool,
@@ -1127,6 +1183,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         else
           '/column'
         end if);
+        Rules.CheckContainer(Flow, Profile, At);
         if Flow.Clip <> null then
           Rules.RequireProfile(Profile, Target.Graphical, Location + '/clip');
         end if;
@@ -1212,11 +1269,16 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             Rules.Reject(At, 'A scroll anchor needs an enclosing scroll viewport.');
         end case;
       when E.Element.Scroll(
-        const Id: string, const Child: E.Element<TMsg>, const Position: L.ScrollPosition?,
-        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?, _, const FadeEdges: bool
+        const Id: string,
+        const Child: E.Element<TMsg>,
+        const Position: L.ScrollPosition?,
+        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?,
+        _,
+        const FadeEdges: bool,
+        const Horizontal: bool
       ):
         const At: string := Identify(Id, Location + '/scroll');
-        if FadeEdges then
+        if FadeEdges or Horizontal then
           Rules.RequireProfile(Profile, Target.Graphical, At);
         end if;
 

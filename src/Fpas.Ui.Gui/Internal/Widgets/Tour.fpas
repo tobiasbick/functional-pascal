@@ -1,0 +1,107 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Tour;
+
+uses
+  Fpas.Ui.Tours as T, Fpas.Ui.Gui.Internal.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+
+function PartId(Id: string; Slot: int): string;
+begin
+  return case Slot of
+    when 0: T.CloseId(Id);
+    when 1: T.BackId(Id);
+    else T.NextId(Id);
+  end case;
+end function;
+
+function Role(Slot: int): string;
+begin
+  return case Slot of
+    when 0: 'tour-close';
+    when 1: 'tour-back';
+    else 'tour-next';
+  end case;
+end function;
+
+// Draws native tour overlays after their base view without supplying layout or painting.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable tour identity.
+// - `Steps`: Native spotlight targets and literal explanations.
+// - `Current`: Model-owned step, minus one when closed.
+// - `OnChange`: Maps native step proposals to messages.
+// - `Settings`: Native card and spotlight options.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Steps: array of T.Step;
+  Current: int; OnChange: function(T.Change): TMsg; Settings: T.Options
+);
+begin
+  if Current < 0 or Frame.PaintingClosed then
+    return;
+  end if;
+  const Targets: Lists.List<string> := new Lists.List<string>(Steps.Length);
+  const Titles: Lists.List<string> := new Lists.List<string>(Steps.Length);
+  const Bodies: Lists.List<string> := new Lists.List<string>(Steps.Length);
+  const Positions: array of int := new int[Steps.Length];
+  for Index: int := 0 to Steps.Length - 1 do
+    var Target: string := '';
+    Titles.Add(Steps[Index].Title);
+    Bodies.Add(Steps[Index].Body);
+    Positions[Index] := cast<int>(Steps[Index].Position);
+    for Control: App.Control in Frame.Controls do
+      if Control.Id = Steps[Index].Target and Control.Key = '' then
+        Target := C.Token(Control.Role, Control.Id);
+        break;
+      end if;
+    end for;
+
+    Targets.Add(Target);
+  end for;
+  var Focus: int := 0;
+  for Slot: int := 0 to 2 do
+    if (Slot <> 1 or Current > 0) and C.WantsFocus<TMsg>(
+      Frame,
+      PartId(Id, Slot), C.Token(Role(Slot), PartId(Id, Slot)), Frame.AcceptInput
+    )
+    then
+      Focus := Slot + 1;
+    end if;
+  end for;
+  const Result: Cui.CuiTourResult := Frame.Window.Tour(
+    C.Token('tour', Id), Targets.ToArray(), Titles.ToArray(), Bodies.ToArray(),
+    Positions, Current, Settings.Width, Settings.Padding, Settings.BlockTarget,
+    function(Slot: int): string => C.Token(Role(Slot), PartId(Id, Slot)), Focus
+  );
+  if Result.Event <> 0 and Frame.AcceptInput then
+    Frame.Messages.Add(OnChange(new T.Change(Result.Step, cast<T.Event>(Result.Event))));
+  end if;
+
+  Frame.Labels.Add(Steps[Current].Title);
+  Frame.Labels.Add(Steps[Current].Body);
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Steps[Current].Title, 'tour', new Cui.CuiRectangle(), false,
+      Value := Current.ToString()
+    )
+  );
+  for Slot: int in Result.VisibleParts do
+    const Caption: string := if Slot = 0 then
+      'End the tour'
+    elsif Slot = 1 then
+      'Back'
+    elsif Current = Steps.Length - 1 then
+      'Done'
+    else
+      'Next'
+    end if;
+    Frame.Controls.Add(
+      new App.Control(
+        PartId(Id, Slot), Caption, Role(Slot),
+        new Cui.CuiRectangle(), Frame.AcceptInput
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

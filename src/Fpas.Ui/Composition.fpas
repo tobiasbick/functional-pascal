@@ -1,6 +1,7 @@
 unit Fpas.Ui.Composition;
 
 uses
+  Fpas.Ui.Tours as Tours,
   Fpas.Ui.Avatars as Avatars, Fpas.Ui.HoverCards as HoverCards,
   Fpas.Ui.Elements as E, Fpas.Ui.TableOfContents as Toc,
   Fpas.Ui.Grids as Grids, Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges,
@@ -276,6 +277,23 @@ begin
       Settings,
       M.Factory<TChild, TParent>(Action, Messages)
     );
+    when E.Element.Tour(
+      const Id: string,
+      const Base: E.Element<TChild>,
+      const Steps: array of Tours.Step,
+      const Current: int,
+      const Changed: function(Tours.Change): TChild,
+      const Settings: Tours.Options
+    ): E.Element<TParent>.Tour(
+      Id, Map<TChild, TParent>(Base, Messages), Steps, Current,
+      function(Value: Tours.Change): TParent => Messages(Changed(Value)), Settings
+    );
+    when E.Element.Spacer: E.Element<TParent>.Spacer;
+    when E.Element.Gap(const Distance: L.Measure): E.Element<TParent>.Gap(Distance);
+    when E.Element.Layered(
+      const FChildren: array of E.Element<TChild>,
+      const FSettings: L.Flow
+    ): E.Element<TParent>.Layered(Children(FChildren), FSettings);
     when E.Element.Stack(
       const FChildren: array of E.Element<TChild>,
       const FHorizontal: bool,
@@ -305,13 +323,13 @@ begin
       const FChild: E.Element<TChild>,
       const FPosition: L.ScrollPosition?,
       const FOnScroll: Sys.Func<L.ScrollChange, TChild>?,
-      const FShowScrollbar: bool, const FFadeEdges: bool
+      const FShowScrollbar: bool, const FFadeEdges: bool, const FHorizontal: bool
     ): E.Element<TParent>.Scroll(
       FId,
       Map<TChild, TParent>(FChild, Messages),
       FPosition,
       M.Callback<L.ScrollChange, TChild, TParent>(FOnScroll, Messages),
-      FShowScrollbar, FFadeEdges
+      FShowScrollbar, FFadeEdges, FHorizontal
     );
     when E.Element.Sheet(
       const FId: string,

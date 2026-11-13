@@ -6,7 +6,7 @@ int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, 
 
 int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, float gap,
                             int align, int framed, int wrap, int clip, int justify) {
-    const cui_box options = { .dir = horizontal ? CUI_ROW : CUI_COLUMN,
+    const cui_box options = { .dir = (cui_dir)horizontal,
         .pad = padding, .gap = gap, .align = (cui_align)align, .justify = (cui_justify)justify,
         .border = framed ? 1 : 0, .clip = clip != 0, .wrap = wrap != 0 };
     cui_box_begin(ui, &options);
@@ -17,6 +17,12 @@ void fpas_cui_group_end(cui_ctx *ui, int node) {
     cui_box_end(ui);
     ui->last_node = node;
     ui->last_id = ui->nodes[node].id;
+}
+
+void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction) {
+    cui_node *n = &ui->nodes[node];
+    n->pad[0] = top; n->pad[1] = end; n->pad[2] = bottom; n->pad[3] = start;
+    n->direction = (uint8_t)direction;
 }
 
 void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float basis,
@@ -115,7 +121,6 @@ void fpas_cui_host_begin(cui_ctx *ui) {
 }
 
 static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
-    (void)data;
     cui_scroll_state *state = cui_state(ui, node->id, sizeof *state);
     state->content_w = node->content_w; state->content_h = node->content_h;
     state->view_w = node->rect.w; state->view_h = node->rect.h;
@@ -130,14 +135,18 @@ static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
         state->bar_t = bar;
         ui->hit_count = hit_count;
     }
-    cui__paint_add_hit(ui, node->id, cui__rect_intersect(node->rect, clip), CUI_NF_SCROLL_Y);
+    /* Keep native scroll flags through measurement and placement. Only hide
+       the automatic scrollbar paint after children and native edge fades. */
+    node->flags &= ~(CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y);
+    cui__paint_add_hit(ui, node->id, cui__rect_intersect(node->rect, clip),
+        CUI_NF_SCROLL_Y | (data ? CUI_NF_SCROLL_X : 0));
 }
 
 int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled) {
-    return fpas_cui_viewport_ex(ui, id, scrollbar, enabled, 0);
+    return fpas_cui_viewport_ex(ui, id, scrollbar, enabled, 0, 0);
 }
 
-int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges) {
+int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges, int horizontal) {
     const cui_id key = cui_make_id(ui, id);
     cui_scroll_state *state = cui_state(ui, key, sizeof *state);
     state->fade = fade_edges ? cui__backdrop(ui) : cui__rgba(0, 0, 0, 0);
@@ -145,18 +154,17 @@ int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled
     float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
     /* CUI-007 (docs/future/cui-upstream-bugs.md#cui-007):
        A vertical viewport must leave horizontal wheel input for swipe rows. */
-    ui->scroll_dx = 0;
+    if (!horizontal || !enabled) ui->scroll_dx = 0;
     if (!enabled) ui->scroll_dy = 0;
     cui_push_disabled(ui, !enabled);
-    int node = cui__scroll_begin_ex(ui, key, &options, false);
+    int node = cui__scroll_begin_ex(ui, key, &options, horizontal != 0);
     cui_pop_disabled(ui);
     ui->scroll_dx = wheel_x;
     if (!enabled) ui->scroll_dy = wheel_y;
     if (!scrollbar) {
-        ui->nodes[node].flags &= ~CUI_NF_SCROLL_Y;
-        ui->nodes[node].flags |= CUI_NF_CLIP;
-        if (fade_edges) ui->nodes[node].flags |= CUI_NF_PAINT_AFTER;
+        ui->nodes[node].flags |= CUI_NF_CLIP | CUI_NF_PAINT_AFTER;
         ui->nodes[node].paint = fpas_hidden_scroll;
+        ui->nodes[node].paint_data = horizontal ? ui : NULL;
     }
     return node;
 }

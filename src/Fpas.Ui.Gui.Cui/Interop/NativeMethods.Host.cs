@@ -5,6 +5,15 @@ namespace Fpas.Ui.Gui.Cui.Interop;
 
 internal static partial class NativeMethods
 {
+    [LibraryImport(Library, EntryPoint = "cui_spacer")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Spacer(nint context);
+    [LibraryImport(Library, EntryPoint = "cui_gap")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Gap(nint context, float distance);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_box_details")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void BoxDetails(nint context, int node, float top, float end, float bottom, float start, int direction);
     [LibraryImport(Library, EntryPoint = "cui_separator")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Separator(nint context);
@@ -13,7 +22,7 @@ internal static partial class NativeMethods
     internal static partial uint ModalKey(nint context);
     [LibraryImport(Library, EntryPoint = "fpas_cui_viewport_ex", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled, int fadeEdges);
+    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled, int fadeEdges, int horizontal);
     [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_metrics")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollMetrics(nint context, int node, out float offset, out float maximum);

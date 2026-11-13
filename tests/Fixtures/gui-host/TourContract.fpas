@@ -1,0 +1,61 @@
+unit GalleryTourContract;
+
+uses
+  Fpas.Ui.Tours as T, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
+  Fpas.Ui.Menus as M, GalleryHostAssertions as A, System as Sys;
+
+// Checks tour preflight before native calls can create an overlay.
+public procedure Verify();
+  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Invalid tour was accepted.');
+  end procedure;
+  function View(Steps: array of T.Step; Current: int; Settings: T.Options): E.Element<int>;
+  begin
+    return E.Element<int>.Tour(
+      'tour', E.Text<int>('Base'), Steps, Current,
+      function(Change: T.Change): int => Change.Step, Settings
+    );
+  end function;
+begin
+  const Steps: array of T.Step := [new T.Step(Title := 'Title', Body := 'Body')];
+  const Settings: T.Options := new T.Options();
+  Reject(View(Steps, -1, Settings), V.Target.Terminal, 'Graphical');
+  Reject(View(Steps, 0, Settings), V.Target.Portable, 'Graphical');
+  Reject(View([], -1, Settings), V.Target.Graphical, 'needs steps');
+  Reject(View(Steps, -2, Settings), V.Target.Graphical, 'selected step');
+  Reject(View(Steps, 1, Settings), V.Target.Graphical, 'selected step');
+  Reject(
+    View([new T.Step(Title := 'x' + Sys.Char.MinValue)], 0, Settings),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    View([new T.Step(Body := 'x' + Sys.Char.MinValue)], 0, Settings),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    View([new T.Step(Target := 'x' + Sys.Char.MinValue)], 0, Settings),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    View([new T.Step(Position := cast<M.Placement>(255))], 0, Settings),
+    V.Target.Graphical,
+    'placement'
+  );
+  for Value: float in [-1.0F, Sys.Single.NaN, Sys.Single.PositiveInfinity] do
+    Reject(View(Steps, 0, new T.Options(Width := Value)), V.Target.Graphical, 'finite');
+    Reject(View(Steps, 0, new T.Options(Padding := Value)), V.Target.Graphical, 'finite');
+  end for;
+end procedure;
+
+end unit;

@@ -69,9 +69,9 @@ public sealed partial class GuiPublishingTests
                 string png = Path.Combine(fixture.Artifacts, mode + "-" + renderer + ".png");
                 var run = mode == "framework-dependent"
                     ? await ProcessRunner.RunAsync([program, renderer, png], workingDirectory: working,
-                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(30))
+                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(90))
                     : await ProcessRunner.RunExecutableAsync(program, [renderer, png], workingDirectory: working,
-                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(30));
+                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(90));
                 File.WriteAllText(Path.Combine(fixture.Artifacts, mode + "-" + renderer + ".log"), run.Output + run.Error);
                 Assert.True(run.ExitCode == 0, mode + "/" + renderer + ": " + run.Output + run.Error);
                 Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, run.Output);

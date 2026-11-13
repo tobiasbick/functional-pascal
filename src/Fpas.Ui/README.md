@@ -55,12 +55,14 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Inline links, avatars and hover cards | | | Yes |
 | Dropzones, avatar uploads and signature pads | | | Yes |
 | Audio knobs, faders and level meters | | | Yes |
+| Guided tour with native spotlight and model-owned step | | | Yes |
 | Selection chips, whole-star ratings and wrapping rows | | | Yes |
 | CUI content/fill, weighted growth, automatic shrinkage, alignment and spacing | Yes | Yes | Yes |
 | Host-owned vertical scrolling and controlled start/end | Yes | Yes | Yes |
 | Fixed basis, bounds, spacing and scroll offsets in cells | | Yes | |
 | Fixed basis, bounds, spacing and scroll offsets in logical units | Yes | Yes | Yes |
 | Percentage basis and button or skeleton width | | | Yes |
+| Independent width/height, layered stacks, edge padding, reading direction and horizontal scrolling | | | Yes |
 | Semantic style roles and typed cached subviews | Yes | Yes | Yes |
 | `CellStyled` colors, screens, shortcuts and exact viewport | | Yes | |
 
@@ -122,6 +124,51 @@ using Start, Center, End, Between or Around.
 These controls and non-default justification require the graphical profile.
 Overview demonstrates the metrics and team grid. Feedback demonstrates the
 two-column cards, status badges, avatar group and empty-state action.
+
+## Guided tour
+
+`Fpas.Ui.Tours.Tour(Id, Base, Steps, Current, OnChange, Settings)` draws CUI's
+native spotlight and explanation card over a base view. The model owns `Current`:
+minus one closes the tour; other values select a zero-based step. Each step has
+an application control `Target`, literal `Title` and `Body`, and a native popup
+`Position`. An empty or currently absent target centers the card.
+
+`OnChange` receives a `Tours.Change` with the proposed step and native action:
+Next, Back, Done or Skipped. Rejecting the proposal leaves the selected model
+step authoritative. Options set logical card `Width`, spotlight `Padding` and
+`BlockTarget`; zero dimensions select CUI's defaults. CUI owns positioning,
+spotlight animation, viewport fitting, pointer blocking and keyboard navigation.
+Its native Back/Next/Done captions and step-count format use the defaults.
+
+The `tour` snapshot reports the selected index in `Value`. `Tours.CloseId`,
+`BackId` and `NextId` identify the native actions for inspection and focus;
+the forward action becomes Done on the last step. Removing the tour releases
+its native state. This widget requires GUI. Audio demonstrates the original
+three-step tour of its Cutoff knob, master meter and Bass fader.
+
+## Native graphical layout
+
+`Fpas.Ui.Stacks.Stack(Flow, Children)` layers children in paint order. `Align`
+places them horizontally and `Justify` vertically. `Elements.Spacer()` and
+`Elements.Gap(Measure.Logical(N))` use CUI's flexible and fixed spacing.
+
+For independent dimensions, pass `Flex.Width` and/or `Flex.Height` as
+`Layout.AxisSize` records, each with `Basis`, `Minimum` and `Maximum`. These
+explicit axes cannot mix with main-axis `Basis`, bounds or growth. Percentages
+resolve inside CUI. An omitted axis preserves the widget's native preference.
+
+`Flow.PaddingTop`, `PaddingEnd`, `PaddingBottom` and `PaddingStart` override
+uniform padding, including an explicit zero. `Flow.ReadingDirection` inherits
+by default or selects `LeftToRight`/`RightToLeft`. CUI mirrors flow and logical
+start/end spacing; its documented widget and text-editing limits still apply.
+This does not enable optional static-text shaping or bidirectional editing.
+
+`Elements.ScrollView(..., Horizontal := true)` enables native horizontal
+scrolling in addition to vertical scrolling. `Position` and `OnScroll` remain
+vertical, as in CUI's scroll-to API. Both axes use native clipping and edge
+fades, with or without visible scrollbars. These layout extensions require GUI;
+portable and terminal profiles reject them. The Layout gallery demonstrates
+the native behavior.
 
 ## Shared themes
 

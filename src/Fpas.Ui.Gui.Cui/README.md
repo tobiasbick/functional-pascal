@@ -58,7 +58,8 @@ xvfb-run -a -s '-screen 0 1400x1000x24 -nolisten tcp -noreset' \
 `FpasCuiCMakeCommand` selects a non-default CMake executable;
 `FpasCuiCMakeArguments` supplies local CMake configuration such as X11 paths.
 Build outputs stay in `obj/native/<rid>/<configuration>/shared/`. The source
-build accepts matching `linux-x64`/`win-x64` hosts.
+build accepts matching `linux-x64`/`win-x64` hosts using the .NET SDK's portable
+host RID, including distribution-specific SDKs such as Arch Linux.
 The [distribution SDK](../../docs/build/distribution.md#native-cui-assets)
 includes both native library variants and their notices for its RID.
 
@@ -94,8 +95,8 @@ Add a normal package reference in the FPAS or CLR project that uses CUI:
 
 The package's `buildTransitive` targets reach the final executable through
 project and package references. They select `RuntimeIdentifier`, or the .NET
-SDK's host RID when it is unset. The build reports unsupported RIDs and packages
-missing the selected native asset.
+SDK's portable host RID when it is unset. The build reports unsupported RIDs
+and packages missing the selected native asset.
 
 An ordinary build and the framework-dependent, apphost and self-contained
 publish modes copy the shared library beside the application. The `single-file`

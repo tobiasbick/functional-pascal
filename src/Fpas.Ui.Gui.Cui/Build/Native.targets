@@ -2,7 +2,7 @@
   <PropertyGroup>
     <FpasCuiCMakeCommand Condition="'$(FpasCuiCMakeCommand)' == ''">cmake</FpasCuiCMakeCommand>
     <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FpasCuiNativeRid>
-    <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</FpasCuiNativeRid>
+    <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</FpasCuiNativeRid>
     <FpasCuiNativeLinkage Condition="'$(FpasCuiNativeLinkage)' == ''">shared</FpasCuiNativeLinkage>
     <FpasCuiBuildShared Condition="'$(FpasCuiNativeLinkage)' == 'shared'">ON</FpasCuiBuildShared>
     <FpasCuiBuildShared Condition="'$(FpasCuiNativeLinkage)' == 'static'">OFF</FpasCuiBuildShared>
@@ -28,8 +28,8 @@
            Text="Native AOT publishing requires a PackageReference to Fpas.Ui.Gui.Cui from the distribution feed. Replace the source ProjectReference to obtain the transitive static link inputs." />
     <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64. Requested $(FpasCuiNativeRid)." />
     <Error Condition="'$(FpasCuiBuildShared)' == ''" Text="CUI native linkage must be shared or static. Requested $(FpasCuiNativeLinkage)." />
-    <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkRuntimeIdentifier)'"
-           Text="CUI cannot build $(FpasCuiNativeRid) assets on $(NETCoreSdkRuntimeIdentifier). Build on the matching host with its native toolchain." />
+    <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkPortableRuntimeIdentifier)'"
+           Text="CUI cannot build $(FpasCuiNativeRid) assets on $(NETCoreSdkPortableRuntimeIdentifier). Build on the matching host with its native toolchain." />
     <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; -S &quot;$(MSBuildProjectDirectory)/native&quot; -B &quot;$(FpasCuiNativeBuildDirectory)&quot; -DFPAS_CUI_BUILD_CONFIGURATION=$(Configuration) -DBUILD_SHARED_LIBS=$(FpasCuiBuildShared) -DFPAS_CUI_BUILD_TESTS=OFF -DFPAS_CUI_OUTPUT_DIRECTORY=&quot;$(FpasCuiNativeOutput)&quot; $(FpasCuiCMakeArguments)" />
     <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; --build &quot;$(FpasCuiNativeBuildDirectory)&quot; --config $(Configuration) --parallel" />
   </Target>

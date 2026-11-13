@@ -7,7 +7,7 @@
           Condition="'$(DesignTimeBuild)' != 'true' and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'WinExe')">
     <PropertyGroup>
       <_FpasCuiPackageRid>$(RuntimeIdentifier)</_FpasCuiPackageRid>
-      <_FpasCuiPackageRid Condition="'$(_FpasCuiPackageRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</_FpasCuiPackageRid>
+      <_FpasCuiPackageRid Condition="'$(_FpasCuiPackageRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</_FpasCuiPackageRid>
       <_FpasCuiShared Condition="'$(_FpasCuiPackageRid)' == 'win-x64'">fpas_cui.dll</_FpasCuiShared>
       <_FpasCuiArchive Condition="'$(_FpasCuiPackageRid)' == 'win-x64'">fpas_cui.lib</_FpasCuiArchive>
       <_FpasCuiShared Condition="'$(_FpasCuiPackageRid)' == 'linux-x64'">libfpas_cui.so</_FpasCuiShared>

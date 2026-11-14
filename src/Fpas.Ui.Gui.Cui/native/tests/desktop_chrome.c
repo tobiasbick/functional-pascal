@@ -135,7 +135,9 @@ static void dock(cui_ctx *ui) {
         if (frame < 4) CHECK(!open);
     }
     CHECK(open && visible && tabs[2] >= 0);
-    CHECK(fpas_cui_dockspace_save(ui, "workspace", before, sizeof before) == strlen(before));
+    const size_t length = fpas_cui_dockspace_save(ui, "workspace", before, sizeof before);
+    CHECK(length > 0 && length < sizeof before);
+    CHECK(length == strlen(before));
     CHECK(strstr(before, "*Log") != NULL);
     CHECK(!fpas_cui_dockspace_load(ui, "workspace", "dock1 nonsense"));
     fpas_cui_dockspace_save(ui, "workspace", after, sizeof after);

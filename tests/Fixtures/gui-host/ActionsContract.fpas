@@ -228,8 +228,8 @@ begin
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
       Session,
-      'theme'
-    ).Value = 'dark',
+      'theme', '1'
+    ).Value = 'true',
     'A preview choice must update the shared application theme and header selector.'
   );
   A.Check(
@@ -253,8 +253,9 @@ begin
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Dark and A.Control(
       Session,
-      'theme'
-    ).Value = 'system'
+      'theme', '1'
+    ).Value = 'true'
+    and A.Control(Session, 'theme-preview', 'system').Value = 'true'
     and A.Control(Session, 'theme-preview', 'system').Focused,
     'A provider change must update the theme while retaining System and its focus.'
   );
@@ -277,7 +278,7 @@ begin
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Light
     and A.Control(Session, 'theme-toggle').Focused
-    and A.Control(Session, 'theme').Value = 'light',
+    and A.Control(Session, 'theme', '0').Value = 'true',
     'The toggle updates the model and retains focus across glyph changes.'
   );
   Key(Session, 6);
@@ -290,7 +291,8 @@ begin
   Focus(Session, 'theme-toggle');
   Key(Session, 2);
   A.Check(
-    A.Control(Session, 'theme').Value = 'dark',
+    A.Control(Session, 'theme', '1').Value = 'true'
+    and A.Control(Session, 'theme-preview', 'dark').Value = 'true',
     'Toggling System proposes an explicit opposite appearance.'
   );
   Session.CapturePng(Capture + '.theme-toggle.png');

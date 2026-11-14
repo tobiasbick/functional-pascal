@@ -30,6 +30,9 @@ begin
         Switchers.Selection.Dark
       end if;
     end with;
+    when S.Msg.SetAccent(const Value: Themes.Accent): State with
+      Accent := Value;
+    end with;
     when S.Msg.NextAccent: State with
       Accent := cast<Themes.Accent>((cast<int>(State.Accent) + 1) mod 8);
     end with;

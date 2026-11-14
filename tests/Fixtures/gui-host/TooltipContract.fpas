@@ -119,8 +119,7 @@ begin
       1.4,
     'A cold tooltip must open above its anchor while the host is idle.'
   );
-  Session.CapturePng(Capture + '.tooltips.png');
-
+  // CUI's warm interval is 400 ms. Encode the screenshot after the handoff.
   Point(Italic.Bounds);
   Step(Session);
   const Warm: Gui.Control? := Find(Session, 'native-tooltip');
@@ -128,6 +127,7 @@ begin
     Warm <> null and Warm.Text = 'Italic  ·  Ctrl I',
     'A nearby tooltip must open on warm handoff.'
   );
+  Session.CapturePng(Capture + '.tooltips.png');
   Button := 1;
   discard Window.TryWake();
   Step(Session);

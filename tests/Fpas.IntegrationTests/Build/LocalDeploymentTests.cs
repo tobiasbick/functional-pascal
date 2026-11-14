@@ -49,7 +49,9 @@ public sealed partial class LocalDeploymentTests
             var shell = OperatingSystem.IsWindows()
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
             string[] arguments = OperatingSystem.IsWindows() ? ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script] : [script];
-            var deployed = await ProcessRunner.RunExecutableAsync(shell, arguments, workingDirectory: consumer, environment: environment, timeLimit: TimeSpan.FromMinutes(5));
+            // A clean distribution builds both optimized native CUI libraries before packaging.
+            var deployed = await ProcessRunner.RunExecutableAsync(shell, arguments, workingDirectory: consumer,
+                environment: environment, timeLimit: TimeSpan.FromMinutes(15));
             Assert.True(deployed.ExitCode == 0, deployed.Output + deployed.Error);
             string[] expected = run == 0 ? [Path.GetFileName(launcher)] : ["keep", Path.GetFileName(launcher)];
             Assert.Equal(expected.Order(),

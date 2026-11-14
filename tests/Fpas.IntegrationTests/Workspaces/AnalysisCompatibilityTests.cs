@@ -66,7 +66,7 @@ public sealed class AnalysisCompatibilityTests(SdkPackageFixture sdk) : IClassFi
             solution.Root!.Add(new XElement("Project", new XAttribute("Path", name + "/" + name + ".fpasproj")));
         }
         solution.Save(solutionPath);
-        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(4));
         var context = await WorkspaceLoader.LoadAsync(new(solutionPath), deadline.Token);
         Assert.Empty(context.Issues);
         Assert.Equal(3, context.Projects.Count);
@@ -75,7 +75,8 @@ public sealed class AnalysisCompatibilityTests(SdkPackageFixture sdk) : IClassFi
         Assert.Contains(context.Projects.Single(input => input.Request.AssemblyName == "Game").Request.References, reference => Path.GetFileName(reference) == "FSharp.Core.dll");
         Assert.False(File.Exists(project.File("First/bin/Debug/net10.0/First.dll")));
         Assert.False(File.Exists(project.File("Second/bin/Debug/net10.0/Second.dll")));
-        await using var live = new LiveWorkspace(new(solutionPath));
+        // Each pass through the mixed graph can launch several MSBuild processes.
+        await using var live = new LiveWorkspace(new(solutionPath), new(WorkTimeout: TimeSpan.FromMinutes(2)));
         var snapshot = await live.AnalyzeAsync(deadline.Token);
         Assert.True(snapshot.Analysis.Success, string.Join(';', snapshot.Analysis.Context.Issues.Select(issue => issue.Message)));
         Assert.Equal(context.Projects.Select(input => input.Path).Order(), snapshot.Analysis.Context.Projects.Select(input => input.Path).Order());

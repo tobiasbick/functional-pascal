@@ -9,7 +9,7 @@ uses
 public type Model = record
   // Appearance shared by both selectors and the light/dark toggle.
   public Appearance: Switchers.Selection := Switchers.Selection.Light;
-  // Accent chosen by the command palette.
+  // Accent shared by the sidebar and command palette.
   public Accent: Themes.Accent := Themes.Accent.Neutral;
   // Application-supplied appearance used by the System demo choice.
   public SystemAppearance: Themes.Mode := Themes.Mode.Light;
@@ -33,10 +33,12 @@ end record;
 
 // Messages handled by this gallery feature.
 public type Msg = variant
-  // Propose an appearance from the header or preview selector.
+  // Propose an appearance from the sidebar or preview selector.
   SetAppearance(Value: Switchers.Selection);
   // Toggle the current concrete light or dark theme.
   ToggleAppearance;
+  // Select a CUI accent from the sidebar.
+  SetAccent(Value: Themes.Accent);
   // Advance to the next CUI accent.
   NextAccent;
   // Simulate a change from the application's appearance provider.

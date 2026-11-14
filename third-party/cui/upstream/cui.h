@@ -854,7 +854,8 @@ typedef struct cui_select_opts {
     bool disabled;
     cui_size width;
 } cui_select_opts;
-/* A searchable select returns focus to its trigger when its search closes. */
+/* Enter opens the list or picks the highlighted item. A searchable select
+ * returns focus to its trigger when its list closes. */
 CUI_API bool cui_select_ex(cui_ctx *ui, const char *id, const char *const *items, int count, int *index, const cui_select_opts *opts);
 
 typedef struct cui_date { int year, month, day; } cui_date;   /* month 1..12 */

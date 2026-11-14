@@ -142,7 +142,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
             end function;
             end unit;
             """;
-        var source = text.Replace("\n", "\r\n", StringComparison.Ordinal);
+        var source = text.ReplaceLineEndings("\r\n");
         File.WriteAllText(project.File("Game/Bridge.fpas"), source);
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
         var context = await WorkspaceLoader.LoadAsync(new(project.File("Game/Game.fpasproj")), deadline.Token);

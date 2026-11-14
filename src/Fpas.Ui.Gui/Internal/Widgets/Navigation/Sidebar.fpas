@@ -17,6 +17,10 @@ begin
   const Group: string := C.Token('sidebar', Id);
   State.Window.BeginSidebar(Group, Active <> null);
   for Section: N.Section<TMsg> in Sections do
+    if Section.GapBefore > 0 then
+      State.Window.Gap(cast<float>(Section.GapBefore));
+    end if;
+
     if Section.Title <> '' then
       State.Window.SidebarHeading(Section.Title);
       State.Labels.Add(Section.Title);

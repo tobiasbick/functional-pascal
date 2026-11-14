@@ -35,6 +35,14 @@ Known missing baseline work and deferred extensions are listed in
 [language gaps](docs/future/language-gaps.md). The
 [coverage map](tests/coverage.md) identifies verified language and build behavior.
 
+## Desktop GUI
+
+FPas includes a declarative desktop GUI based on [CUI](https://github.com/yappologistic/CUI).
+The [FPas widget gallery](examples/ui/gui/gallery/README.md) shows native controls,
+layout, and themes in a Functional Pascal application.
+
+![FPas GUI based on CUI, showing the widget gallery overview and its theme controls](examples/ui/gui/gallery/gallery.png)
+
 ## Quickstart
 
 ### Build from source

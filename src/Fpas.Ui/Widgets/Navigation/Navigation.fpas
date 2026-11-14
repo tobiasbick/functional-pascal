@@ -30,6 +30,8 @@ public type Section<TMsg> = record
   public Title: string;
   // Destinations in display and focus order.
   public Items: array of Item<TMsg>;
+  // Extra space before the heading in logical points. Positive values require GUI.
+  public GapBefore: int := 0;
 end record;
 
 // Builds a sidebar with a single model-owned active destination.

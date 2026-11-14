@@ -18,6 +18,8 @@ Keep the identifiers stable.
 
 ## CUI-006 — Expandable text loses keyboard focus after toggling
 
+- Upstream: [Issue #81](https://github.com/yappologistic/CUI/issues/81) · [PR #82](https://github.com/yappologistic/CUI/pull/82)
+
 Reproduced on Linux with direct `cui_expandable_text_ex` calls at `c8baf35`.
 Draw text long enough to exceed two collapsed lines. Press Tab to focus
 Show more, then Enter to expand. On the next frame, the link becomes Show less
@@ -37,6 +39,8 @@ explicit focus requests. No workaround, upstream issue or fix is planned.
 
 ## CUI-007 — A vertical scroll view consumes horizontal swipe input
 
+- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
+
 Reproduced on Windows at `c8baf35`. Draw a swipe row inside a native
 `cui_scroll_begin` viewport with `horizontal = false` and enough content to
 scroll vertically. Move the pointer onto the row and send `WM_MOUSEHWHEEL`.
@@ -51,6 +55,8 @@ the row reveals its action while the viewport keeps its vertical position.
 
 ## CUI-008 — A speed dial action pops the caller's disabled scope
 
+- Upstream: [Issue #81](https://github.com/yappologistic/CUI/issues/81) · [PR #82](https://github.com/yappologistic/CUI/pull/82)
+
 Reproduced on Windows with direct `cui_speed_dial_ex` calls at `c8baf35`.
 Activate a focused action while the dial is open inside an enabled
 `cui_push_disabled(ui, false)` scope. The dial returns the action index and
@@ -64,6 +70,8 @@ scope and pops it only if CUI left it on the stack.
 <a id="cui-009"></a>
 
 ## CUI-009 — A scroll view consumes vertical input before the wheel picker or ruler
+
+- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
 
 Reproduced on Windows at `c8baf35` in the native Pickers gallery. Move the
 pointer onto the day wheel in Wheels and dial and send one vertical scroll
@@ -85,6 +93,8 @@ each axis reaches the tape.
 <a id="cui-010"></a>
 
 ## CUI-010 — A wheel picker or ruler loses its scale on keyboard focus
+
+- Upstream: [Issue #83](https://github.com/yappologistic/CUI/issues/83) · [PR #84](https://github.com/yappologistic/CUI/pull/84)
 
 Reproduced on Windows at `c8baf35` using a single native wheel picker with
 three month names. Press Tab. The focus ring appears, but the selection band
@@ -111,6 +121,8 @@ Disclosure gallery verifies both in its focused capture.
 
 ## CUI-011 — Ruler wheel snapping can exceed the upper bound
 
+- Upstream: [Issue #83](https://github.com/yappologistic/CUI/issues/83) · [PR #84](https://github.com/yappologistic/CUI/pull/84)
+
 Reproduced on Windows at `c8baf35` with a standalone ruler, bounds 0 to 1.6,
 step 1, and current value 1. One downward wheel line yields 2. The native
 wheel branch clamps before rounding to a tick, so rounding can move the
@@ -123,6 +135,8 @@ scrolls farther, and compares the displayed value with the baseline.
 <a id="cui-012"></a>
 
 ## CUI-012 — Date and color pickers omit their keyboard focus rings
+
+- Upstream: [Issue #83](https://github.com/yappologistic/CUI/issues/83) · [PR #84](https://github.com/yappologistic/CUI/pull/84)
 
 Reproduced on Windows at `c8baf35` with a standalone native date picker.
 Press Tab to focus the field. Its pixels are identical to the unfocused
@@ -145,6 +159,8 @@ Disclosure gallery checks the focus pixels and link activation.
 
 ## CUI-013 — Color picker retains stale HSV after a model change
 
+- Upstream: [Issue #83](https://github.com/yappologistic/CUI/issues/83) · [PR #84](https://github.com/yappologistic/CUI/pull/84)
+
 Reproduced on Windows at `c8baf35`. Open a native color picker at `#7747FF`,
 replace its supplied color with `#FF0000`, then move hue to 120 degrees.
 The native picker returns `#47FF47`, using the old saturation. A hue-only
@@ -157,6 +173,8 @@ with an updated RGB value and a non-opaque alpha channel.
 <a id="cui-014"></a>
 
 ## CUI-014 — Avatar image loading fails with Unicode paths on Windows
+
+- Upstream: [Issue #77](https://github.com/yappologistic/CUI/issues/77) · [PR #78](https://github.com/yappologistic/CUI/pull/78)
 
 At `c8baf35` the shell and file dialog pass UTF-8 paths. The default
 bundled image decoder opens them through the narrow Windows file API.
@@ -172,6 +190,8 @@ with a differently colored image.
 
 ## CUI-015 — Disabled file targets claim shell drops
 
+- Upstream: [Issue #77](https://github.com/yappologistic/CUI/issues/77) · [PR #78](https://github.com/yappologistic/CUI/pull/78)
+
 At `c8baf35` a standalone dropzone returns one accepted file from
 `cui_input_file_drop` even inside `cui_push_disabled`. Dropzone and avatar
 upload claim through the same native helper, which has no disabled check.
@@ -183,6 +203,8 @@ a disabled dropzone delivers no file action.
 <a id="cui-016"></a>
 
 ## CUI-016 — Hover card reopens after Escape over its anchor
+
+- Upstream: [Issue #81](https://github.com/yappologistic/CUI/issues/81) · [PR #82](https://github.com/yappologistic/CUI/pull/82)
 
 At `c8baf35`, keep the pointer over the native @jonas example until
 the card opens. Press Escape while leaving the pointer in place. The popup
@@ -197,6 +219,8 @@ checks that the card stays closed.
 <a id="cui-017"></a>
 
 ## CUI-017 — Scrub commits accept invalid numeric drafts
+
+- Upstream: [Issue #79](https://github.com/yappologistic/CUI/issues/79) · [PR #80](https://github.com/yappologistic/CUI/pull/80)
 
 Reproduced with direct `cui_scrub_ex` calls on Linux at `86d9781`.
 Focus a bounded scrub with Tab, start typing with Enter, replace the selected
@@ -213,6 +237,8 @@ test retains the direct reproduction beside the protected adapter case.
 
 ## CUI-018 — Money input accepts amounts exceeding its display capacity
 
+- Upstream: [Issue #79](https://github.com/yappologistic/CUI/issues/79) · [PR #80](https://github.com/yappologistic/CUI/pull/80)
+
 Reproduced with direct `cui_money_input_ex` calls on Linux at `86d9781`.
 Focus the field, select all, and type 63 nines. CUI accepts an amount above
 `1e60`. Its 64-byte text buffer must hold digits, grouping separators and the
@@ -228,6 +254,8 @@ remains pixel-identical to direct CUI calls.
 <a id="cui-019"></a>
 
 ## CUI-019 — Large constant chart ranges produce non-finite geometry
+
+- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. Retest this reproduction on upstream `master` once the PR is resolved.
 
 Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
 Use one series containing three `1e10f` samples with automatic bounds and reduced
@@ -248,6 +276,8 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 ## CUI-020 — A newly disabled candlestick still consumes a queued wheel
 
+- Upstream: [Issue #85](https://github.com/yappologistic/CUI/issues/85) · [PR #86](https://github.com/yappologistic/CUI/pull/86)
+
 Reproduced on Linux at `86d9781` with direct `cui_candlestick_ex` calls.
 Hover the chart until its wheel region is registered, queue a wheel event, then
 build the next frame inside `cui_push_disabled(ui, true)`. Its viewport still
@@ -265,6 +295,8 @@ adapter.
 
 ## CUI-021 — Sankey flow clicks are omitted from the return value
 
+- Upstream: [Issue #71](https://github.com/yappologistic/CUI/issues/71) · [PR #72](https://github.com/yappologistic/CUI/pull/72)
+
 Reproduced on Linux at `86d9781` with a two-node, one-positive-flow Sankey.
 Clicking its ribbon shows native flow hover but returns minus one.
 `cui_sankey_ex` computes both a node and link hit, then returns only the node
@@ -280,6 +312,8 @@ managed tests exercise original link indices with software and OpenGL.
 
 ## CUI-022 — Table headers and rows omit the keyboard focus ring
 
+- Upstream: [Issue #67](https://github.com/yappologistic/CUI/issues/67) · [PR #70](https://github.com/yappologistic/CUI/pull/70)
+
 Reproduced on Windows at `86d9781` with a sortable column and one selectable
 row. Tab moves native focus first to the header and then to the row. The
 software-rendered table is identical before and after each Tab because both
@@ -294,6 +328,8 @@ same executable with `upstream` exercises the unprotected calls.
 
 ## CUI-023 — A scrolled virtual list can lose its visible range after shrinking
 
+- Upstream: [Issue #67](https://github.com/yappologistic/CUI/issues/67) · [PR #70](https://github.com/yappologistic/CUI/pull/70)
+
 Reproduced on Windows at `86d9781`. Render 100 rows at 36 points each in a
 140-point viewport, scroll to offset 2,000 and shrink the list to one row.
 The first frame after the change returns `[53,53)` for the only remaining row.
@@ -307,6 +343,8 @@ and retains the direct reproduction in `upstream` mode.
 <a id="cui-024"></a>
 
 ## CUI-024 — A closing command palette can still activate a command
+
+- Upstream: [Issue #81](https://github.com/yappologistic/CUI/issues/81) · [PR #82](https://github.com/yappologistic/CUI/pull/82)
 
 Reproduced on Windows at `86d9781` with motion enabled and one command.
 Draw the open palette, set its open flag to false, and press Enter on the first
@@ -323,6 +361,8 @@ the direct reproduction.
 
 ## CUI-025 — A scrolled data grid can omit all remaining rows after shrinking
 
+- Upstream: [Issue #67](https://github.com/yappologistic/CUI/issues/67) · [PR #70](https://github.com/yappologistic/CUI/pull/70)
+
 Reproduced on Windows at `86d9781`. Render 100 rows at 40 points each in a
 160-point viewport, scroll down, then shrink the grid to one row. The first
 native frame reports `[1,1)`. This grid calculates its visible range before
@@ -335,6 +375,8 @@ the range. The focused `fpas_cui_grid_regressions` executable verifies
 <a id="cui-026"></a>
 
 ## CUI-026 — Adding a filter does not open the new chip's value menu
+
+- Upstream: [Issue #67](https://github.com/yappologistic/CUI/issues/67) · [PR #70](https://github.com/yappologistic/CUI/pull/70)
 
 Reproduced on Windows at `86d9781`. Open Filter and choose Team. CUI adds the
 chip, but the value menu is absent until the chip is clicked separately. The
@@ -350,6 +392,8 @@ the missing popup.
 
 ## CUI-027 — JSON viewer accepts malformed numbers and string escapes
 
+- Upstream: [Issue #68](https://github.com/yappologistic/CUI/issues/68) · [PR #69](https://github.com/yappologistic/CUI/pull/69)
+
 Reproduced on Windows at `86d9781`. Direct `cui_json_view_ex` calls accept
 `1e`, `-`, `01`, `"\q"` and `"\u12x4"` as valid. The numeric scanner accepts
 number characters in any sequence, and the string scanner skips the character
@@ -363,6 +407,8 @@ exponents and Unicode escapes.
 <a id="cui-028"></a>
 
 ## CUI-028 — Dot chart activation before arrow input reports an invalid X coordinate
+
+- Upstream: [Issue #71](https://github.com/yappologistic/CUI/issues/71) · [PR #72](https://github.com/yappologistic/CUI/pull/72)
 
 Reproduced on Windows at `86d9781`. Focus a three-sample dot chart with an X axis
 from 6 to 30, leave the pointer outside, and press Enter. CUI reports activation
@@ -378,6 +424,8 @@ middle value in this reproduction.
 
 ## CUI-029 — Tab bar Right skips every remaining tab
 
+- Upstream: [Issue #81](https://github.com/yappologistic/CUI/issues/81) · [PR #82](https://github.com/yappologistic/CUI/pull/82)
+
 Reproduced on Windows at `86d9781`. Render the Motion tab bar with four
 tabs. Focus Home using Tab, then press Right once. CUI selects Profile and
 focuses it. Each subsequent item in the render loop sees the same key press
@@ -390,6 +438,8 @@ with that selection. The focused `fpas_cui_motion` test checks Home → Search
 <a id="cui-030"></a>
 
 ## CUI-030 — Rolling number silently drops digits and affixes
+
+- Upstream: [Issue #79](https://github.com/yappologistic/CUI/issues/79) · [PR #80](https://github.com/yappologistic/CUI/pull/80)
 
 Reproduced on Windows at `86d9781`. Render `1234567890123456789012345` or
 `1 milliseconds per request` with `cui_number_roll`. The 25th digit and
@@ -405,6 +455,8 @@ rendered glyph geometry with native text for both reproductions.
 
 ## CUI-031 — Gradient slider snapping pulls the value away from the endpoint
 
+- Upstream: [Issue #83](https://github.com/yappologistic/CUI/issues/83) · [PR #84](https://github.com/yappologistic/CUI/pull/84)
+
 Reproduced on Windows at `86d9781`. Focus a gradient slider with range 0–1
 and step 0.3. End returns 0.9. With the same range, passing a disabled slider
 the value 0.85 also returns 0.9 and reports a change. Native snapping runs
@@ -418,6 +470,8 @@ input and a disabled value. Its `upstream` mode reproduces the mismatch.
 <a id="cui-032"></a>
 
 ## CUI-032 — Read-only schedule items can ignore activation
+
+- Upstream: [Issue #75](https://github.com/yappologistic/CUI/issues/75) · [PR #76](https://github.com/yappologistic/CUI/pull/76)
 
 Reproduced on Windows at `86d9781`. Set `read_only` on a week calendar or
 Gantt chart, focus an item with Tab and press Enter. The function returns
@@ -435,6 +489,8 @@ and confirms that an arrow press leaves the event or task unchanged. Its
 
 ## CUI-033 — Typing indicator animates with reduced motion
 
+- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
+
 Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
 `cui_typing_indicator` over successive frames. Its dots still advance and
 `cui_needs_redraw` stays true once layout has settled.
@@ -446,6 +502,8 @@ the redraw state from widgets already built in the frame.
 <a id="cui-034"></a>
 
 ## CUI-034 — Running task glyphs animate with reduced motion
+
+- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
 
 Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
 `cui_agent_plan` with a step in `CUI_TASK_RUNNING`. The glyph keeps rotating
@@ -460,6 +518,8 @@ continuous redraw. The adapter regression verifies that redraw stops.
 
 ## CUI-035 — Running jobs and tests animate with reduced motion
 
+- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
+
 Reproduced on Windows at `86d9781`. Enable reduced motion and render a
 `cui_pipeline` job or a `cui_test_explorer` item in `CUI_JOB_RUNNING`.
 The arc still uses the animation clock and keeps `cui_needs_redraw` true.
@@ -470,6 +530,8 @@ reproduces the native redraw request. The regular test verifies that it stops.
 <a id="cui-036"></a>
 
 ## CUI-036 — Trace measurements do not set view_changed
+
+- Upstream: [Issue #71](https://github.com/yappologistic/CUI/issues/71) · [PR #72](https://github.com/yappologistic/CUI/pull/72)
 
 Reproduced on Windows at `86d9781`. Shift-drag in the plot of
 `cui_trace_view` without changing the time window or vertical scroll.
@@ -484,6 +546,8 @@ notification. The regular test verifies the FPAS proposal.
 
 ## CUI-037 — Disabled node editor accepts wheel zoom
 
+- Upstream: [Issue #85](https://github.com/yappologistic/CUI/issues/85) · [PR #86](https://github.com/yappologistic/CUI/pull/86)
+
 Reproduced on Windows at `86d9781`. Build a node editor under
 `cui_push_disabled(ui, true)`, move the pointer into the canvas and scroll.
 The native view's zoom and pan change even though the editor is disabled.
@@ -496,6 +560,8 @@ view and that enabled wheel zoom and dragging still work.
 <a id="cui-038"></a>
 
 ## CUI-038 — A disabled veil intercepts clicks
+
+- Upstream: [Issue #85](https://github.com/yappologistic/CUI/issues/85) · [PR #86](https://github.com/yappologistic/CUI/pull/86)
 
 Reproduced on Windows at `86d9781`. Overlay a covered `cui_veil` on an
 interactive canvas and disable the veil with `cui_push_disabled(ui, true)`.
@@ -513,6 +579,8 @@ uncovered canvas.
 
 ## CUI-039 — Disabled flame graph and timeline accept wheel zoom
 
+- Upstream: [Issue #85](https://github.com/yappologistic/CUI/issues/85) · [PR #86](https://github.com/yappologistic/CUI/pull/86)
+
 Reproduced on Windows at `86d9781`. Draw a flame graph or timeline inside
 `cui_push_disabled(ui, true)`, move the pointer over the plot and scroll up.
 Both widgets shrink the visible range. They read the raw scroll target
@@ -527,6 +595,8 @@ adapters.
 <a id="cui-040"></a>
 
 ## CUI-040 — Split divider can report an invalid ratio at small sizes
+
+- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
 
 Reproduced on Windows at `86d9781`. Draw a 100-point horizontal split with
 the default 120-point minimum in each pane. After the first frames, drag
@@ -544,6 +614,8 @@ adapter and separately verifies resizing when the pane minimums fit.
 
 ## CUI-041 — Disabling a time histogram leaves its drag active
 
+- Upstream: [Issue #85](https://github.com/yappologistic/CUI/issues/85) · [PR #86](https://github.com/yappologistic/CUI/pull/86)
+
 Reproduced on Windows at `86d9781`. Begin dragging a selection in the time
 histogram. While holding the mouse button, draw it under `cui_push_disabled`
 and move the pointer. CUI continues updating the selection from its stored
@@ -557,6 +629,8 @@ disabled frame and re-enabling the widget with the button still held.
 <a id="cui-042"></a>
 
 ## CUI-042 — Query builder normalizes read-only rules in place
+
+- Upstream: [Issue #75](https://github.com/yappologistic/CUI/issues/75) · [PR #76](https://github.com/yappologistic/CUI/pull/76)
 
 Reproduced on Windows at `86d9781`. Draw a read-only query builder with zero
 rules. CUI inserts a root group, changes the count and reports an edit.

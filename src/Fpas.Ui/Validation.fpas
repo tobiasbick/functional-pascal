@@ -1775,6 +1775,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
         for Section: N.Section<TMsg> in Sections do
           Rules.CheckText(Section.Title, At + '/heading');
+          if Section.GapBefore <> 0 then
+            Rules.RequireProfile(Profile, Target.Graphical, At + '/heading gap');
+            discard Rules.CheckMeasure(
+              L.Measure.Logical(Section.GapBefore),
+              Profile,
+              At + '/heading gap'
+            );
+          end if;
+
           for Item: N.Item<TMsg> in Section.Items do
             Rules.CheckKey(Keys, Item.Key, At);
             const ItemAt: string := Identify(N.ItemId(Id, Item.Key), At + '/item');

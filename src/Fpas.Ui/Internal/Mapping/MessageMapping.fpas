@@ -145,7 +145,7 @@ begin
       );
     end for;
 
-    Result.Add(new N.Section<TParent>(Original.Title, Items.ToArray()));
+    Result.Add(new N.Section<TParent>(Original.Title, Items.ToArray(), Original.GapBefore));
   end for;
 
   return Result.ToArray();

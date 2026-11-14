@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream snapshot after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`86d9781bbc3c35c264ec46287ad89c1d86a4c4de`](https://github.com/yappologistic/CUI/commit/86d9781bbc3c35c264ec46287ad89c1d86a4c4de) |
+| Commit | [`a8f71c05be29eb441bf3ff72dba67b279e68384f`](https://github.com/yappologistic/CUI/commit/a8f71c05be29eb441bf3ff72dba67b279e68384f) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -15,8 +15,8 @@ That commit is identical to upstream `master` at the time of this update.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `70947695ffdb92a9fa90677758489fe4febca6985b77616ec6042261a8617ff0` |
-| `cui.h` | `73137288220b10b52182434468e33ee35a199f99b6505310d149f79a338575c9` |
+| `cui.c` | `3a3650864335abf6a4cfc8609532df903a4b270e473846794bac408db1dff924` |
+| `cui.h` | `e725933e9022064317af4d53a16eeb536c5875a157c0bfe767de60e631521fa9` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -24,17 +24,17 @@ from the unmodified upstream sources here.
 
 ## Snapshot verification
 
-The copied pair was checked byte for byte against the generated files. License
-inputs and theme token order are unchanged; the shared series palettes were
-updated to match the new upstream colors. All sixteen exported light/dark accent
-palettes were checked against this snapshot's native theme builder.
+The copied pair matches the generated files byte for byte. This revision
+updates select keyboard handling, number-field reconciliation, and input
+method positioning. The source changes leave license inputs, theme tokens,
+and palette definitions unchanged.
 
-Verification on Linux x64: the native CTest suite passed all 16 tests, including
-exact calendar and widget pixel comparisons and regressions for the five applied
-input fixes. Their FPAS workarounds have been removed. The CLR binding suite
-passed 105 tests with two Windows-only cases skipped. The gallery built without
-warnings and was captured in light/dark themes at wide and narrow widths.
-Integration, deployment, publishing and Native AOT checks were excluded.
+The FPAS native CTest suite passed in Debug and Release on Windows x64 and
+Linux x64. Both distribution scripts produced a working launcher and embedded
+SDK. The packaged CUI probe ran in all five publish modes on both hosts.
+The packaged FPAS gallery ran all five modes with both renderers on Windows
+and Linux. The X11 gallery input test passed under Xvfb.
+
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 
 ## License inventory

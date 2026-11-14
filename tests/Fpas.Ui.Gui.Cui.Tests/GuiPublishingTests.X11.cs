@@ -38,7 +38,7 @@ public sealed partial class GuiPublishingTests
             await Read(frame => frame.Has("save"));
             await Click("format-bold");
             await Read(frame => frame.Find("format-bold").Value == "true");
-            await Click("theme", "dark");
+            await Click("theme", "1");
             await Read(frame => frame.Dark);
             input.Resize(520, 900);
             await Read(frame => frame.Width == 520 && frame.Height == 900 && frame.Dark &&

@@ -64,14 +64,16 @@ public sealed partial class GuiPublishingTests
                 Assert.DoesNotContain("coreclr", imports, StringComparison.OrdinalIgnoreCase);
                 Assert.Contains(OperatingSystem.IsWindows() ? "opengl32.dll" : "libX11.so.6", imports, StringComparison.OrdinalIgnoreCase);
             }
+            // The gallery exercises every page and encodes screenshots in the software renderer.
+            var galleryDeadline = TimeSpan.FromMinutes(3);
             foreach (string renderer in new[] { "software", "opengl" })
             {
                 string png = Path.Combine(fixture.Artifacts, mode + "-" + renderer + ".png");
                 var run = mode == "framework-dependent"
                     ? await ProcessRunner.RunAsync([program, renderer, png], workingDirectory: working,
-                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(90))
+                        environment: runEnvironment, timeLimit: galleryDeadline)
                     : await ProcessRunner.RunExecutableAsync(program, [renderer, png], workingDirectory: working,
-                        environment: runEnvironment, timeLimit: TimeSpan.FromSeconds(90));
+                        environment: runEnvironment, timeLimit: galleryDeadline);
                 File.WriteAllText(Path.Combine(fixture.Artifacts, mode + "-" + renderer + ".log"), run.Output + run.Error);
                 Assert.True(run.ExitCode == 0, mode + "/" + renderer + ": " + run.Output + run.Error);
                 Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, run.Output);

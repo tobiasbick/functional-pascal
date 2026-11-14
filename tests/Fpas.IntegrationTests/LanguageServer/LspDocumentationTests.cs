@@ -10,7 +10,7 @@ namespace Fpas.IntegrationTests.LanguageServer;
 /// <param name="sdk">The isolated SDK package fixture used by external consumers.</param>
 public sealed class LspDocumentationTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
-    private const string Markdown = """
+    private static readonly string Markdown = """
         Returns the supplied value.
 
         ## Parameters
@@ -23,7 +23,7 @@ public sealed class LspDocumentationTests(SdkPackageFixture sdk) : IClassFixture
         ```text
           List<int> & text
         ```
-        """;
+        """.ReplaceLineEndings("\n");
 
     /// <summary>Preserve the same Markdown across consumers and recovery edits.</summary>
     /// <param name="newline">The original source line ending.</param>
@@ -40,7 +40,7 @@ public sealed class LspDocumentationTests(SdkPackageFixture sdk) : IClassFixture
         var declaration = comments + "\n" + """
             public function Answer(Value: int): int;
             begin return Value; end function;
-            """;
+            """.ReplaceLineEndings("\n");
         const string caller = "public function Run(): int; begin return Answer(42); end function;";
         var source = ("unit Demo.Bridge;\n" + (declarationAfterUse ? caller + "\n" + declaration : declaration + "\n" + caller) + "\nend unit;").Replace("\n", newline, StringComparison.Ordinal);
         var path = directory.File("Game/Bridge.fpas"); File.WriteAllText(path, source);

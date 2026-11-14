@@ -275,7 +275,8 @@ the prior focus if it is still available.
 ## Sidebar navigation
 
 `Fpas.Ui.Widgets.Navigation.Navigation.Sidebar` takes ordered sections of keyed destinations and
-the active key from the model. An empty section title omits the heading. Keys
+the active key from the model. An empty section title omits the heading.
+In GUI, `Section.GapBefore` adds logical spacing before a section. Keys
 are unique across sections. Each enabled destination is a focus stop. Tab and
 Shift+Tab move focus, while a click, Enter or Space sends the item's message.
 Focus can move independently of the active page. A null active key clears the
@@ -1153,7 +1154,7 @@ requires a separate activation. Both popovers require the Graphical profile.
 ## Tooltip
 
 `Fpas.Ui.Widgets.Overlays.Tooltips.Tooltip<TMsg>(Target, Text, Shortcut)` attaches native
-pointer help to one button, checkbox, switch, radio button, chip or slider.
+pointer help to a single control, such as a button, checkbox, slider or canvas.
 The target retains its layout, focus and activation. The optional shortcut
 appears as a key hint. Bind the gesture separately in the application.
 

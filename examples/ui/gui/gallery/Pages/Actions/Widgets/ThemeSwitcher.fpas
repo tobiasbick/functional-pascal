@@ -10,7 +10,7 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
 
-// Shows the same controlled appearance selector used by the gallery header.
+// Shows the original appearance selector with its System choice and light/dark toggle.
 //
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.

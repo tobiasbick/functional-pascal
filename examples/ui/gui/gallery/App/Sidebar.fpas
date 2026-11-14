@@ -1,0 +1,269 @@
+unit GuiGallery.App.Sidebar;
+
+uses
+  Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L,
+  Fpas.Ui.Graphics as G,
+  Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
+  Fpas.Ui.Widgets.Containers.Stacks as Stacks,
+  Fpas.Ui.Widgets.Feedback.Badges as Badges,
+  Fpas.Ui.Widgets.Motion.Motion as Motion,
+  Fpas.Ui.Widgets.Navigation.Navigation as N,
+  Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  GuiGallery.App.State as State,
+  GuiGallery.App.Update as Update,
+  GuiGallery.Shared.Sections as Layout,
+  GuiGallery.Shared.State as Shared,
+  System as Sys,
+  System.Collections.Generic as Collections;
+
+// The gallery brand used by the window, compact bar and drawer.
+public const Title: string := 'FPas GUI based on CUI';
+
+// Width of the desktop sidebar in logical points.
+public const Width: int := 240;
+
+// Swatch colors used by the CUI Gallery, in CUI accent order.
+const AccentColors: array of G.Color := [
+  new G.Color($55, $55, $55), new G.Color($77, $47, $FF),
+  new G.Color($05, $62, $EF), new G.Color($00, $86, $4B),
+  new G.Color($F3, $AD, $20), new G.Color($C2, $53, $00),
+  new G.Color($D1, $40, $3A), new G.Color($D2, $32, $86)
+];
+
+// Returns the visible title of a gallery destination.
+// ## Parameters
+// - `Page`: Gallery destination.
+// ## Returns
+// The title used by the sidebar and the page header.
+public function PageTitle(Page: State.Page): string;
+begin
+  return if Page = State.Page.Lists then
+    'Data display'
+  elsif Page = State.Page.Social then
+    'Social and media'
+  elsif Page = State.Page.DeveloperTools then
+    'Developer tools'
+  elsif Page = State.Page.MoreDeveloperTools then
+    'More developer tools'
+  elsif Page = State.Page.MoreCharts then
+    'More charts'
+  elsif Page = State.Page.CanvasAndBars then
+    'Canvas and bars'
+  elsif Page = State.Page.CreativeControls then
+    'Creative controls'
+  elsif Page = State.Page.DataGrid then
+    'Data grid'
+  elsif Page = State.Page.Desktop then
+    'App chrome'
+  elsif Page = State.Page.EditingTools then
+    'Editing tools'
+  elsif Page = State.Page.Display then
+    'Text and display'
+  elsif Page = State.Page.SmartInputs then
+    'Smart inputs'
+  else
+    Page.ToString()
+  end if;
+end function;
+
+function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
+begin
+  return new N.Item<State.Msg>(
+    Page.ToString().ToLowerInvariant(),
+    PageTitle(Page),
+    State.Msg.Show(Page),
+    Icon := Sys.Char.ConvertFromUtf32(Icon)
+  );
+end function;
+
+function NavigationItems(Page: State.Page): E.Element<State.Msg>;
+begin
+  return N.Sidebar<State.Msg>(
+    'navigation',
+    [
+      new N.Section<State.Msg>(
+        'Components', [
+          Destination(State.Page.Overview, $E1C1),
+          Destination(State.Page.Buttons, $E1B4),
+          Destination(State.Page.Inputs, $E198),
+          Destination(State.Page.Selection, $E29A),
+          Destination(State.Page.Navigation, $E09B),
+          Destination(State.Page.Overlays, $E529),
+          Destination(State.Page.Feedback, $E059),
+          Destination(State.Page.Lists, $E0AD),
+          Destination(State.Page.Charts, $E2A5)
+        ]
+      ),
+      new N.Section<State.Msg>(
+        'Extended',
+        [
+          Destination(State.Page.Actions, $E09A),
+          Destination(State.Page.SmartInputs, $E172),
+          Destination(State.Page.Pickers, $E063),
+          Destination(State.Page.Capture, $E19E),
+          Destination(State.Page.Disclosure, $E529),
+          Destination(State.Page.Reader, $E0CC),
+          Destination(State.Page.DataGrid, $E0E9),
+          Destination(State.Page.Code, $E093),
+          Destination(State.Page.Social, $E117),
+          Destination(State.Page.Planning, $E1D0),
+          Destination(State.Page.MoreCharts, $E06B),
+          Destination(State.Page.Motion, $E038),
+          Destination(State.Page.AI, $E117),
+          Destination(State.Page.Audio, $E55A),
+          Destination(State.Page.Files, $E0D7),
+          Destination(State.Page.DeveloperTools, $E20A),
+          Destination(State.Page.MoreDeveloperTools, $E20C),
+          Destination(State.Page.Instruments, $E2A5),
+          Destination(State.Page.CreativeControls, $E1DD),
+          Destination(State.Page.CanvasAndBars, $E529),
+          Destination(State.Page.Voice, $E118),
+          Destination(State.Page.Layout, $E529),
+          Destination(State.Page.Display, $E198),
+          Destination(State.Page.EditingTools, $E20A),
+          Destination(State.Page.Desktop, $E20A)
+        ],
+        GapBefore := 10
+      )
+    ],
+    Page.ToString().ToLowerInvariant()
+  );
+end function;
+
+function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element<State.Msg>;
+  function Swatch(Index: int): E.Element<State.Msg>;
+  begin
+    const Accent: Themes.Accent := cast<Themes.Accent>(Index);
+    const Name: string := Accent.ToString().ToLowerInvariant();
+    const Dot: Canvases.Shape := Canvases.Shape.Circle(11.0F, 11.0F, 7.0F, AccentColors[Index]);
+    const Shapes: array of Canvases.Shape := if Accent = Model.Accent then
+      [
+        Canvases.Shape.Circle(11.0F, 11.0F, 11.0F, Colors.Foreground),
+        Canvases.Shape.Circle(11.0F, 11.0F, 9.0F, Colors.SurfaceMuted),
+        Dot
+      ]
+    else
+      [Dot]
+    end if;
+    const Extent: L.Extent := L.Extent.Fixed(L.Measure.Logical(22));
+    return Tips.Tooltip<State.Msg>(
+      Canvases.Canvas<State.Msg>(
+        'accent-' + Name, Shapes,
+        function(_Event: Canvases.Event): State.Msg => State.Msg.Shared(
+          Shared.Msg.SetAccent(Accent)
+        ),
+        new Canvases.Options(Width := Extent, Height := Extent)
+      ),
+      Name
+    );
+  end function;
+begin
+  const Swatches: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+  for Index: int := 0 to AccentColors.Length - 1 do
+    Swatches.Add(Swatch(Index));
+  end for;
+
+  return E.Column<State.Msg>(
+    new L.Flow(Gap := Layout.Points(12), Padding := Layout.Points(8)),
+    Segments.SegmentedControl<State.Msg>(
+      'theme',
+      [
+        new Segments.Item('Light', Icon := Sys.Char.ConvertFromUtf32($E178)),
+        new Segments.Item('Dark', Icon := Sys.Char.ConvertFromUtf32($E11E))
+      ],
+      cast<int>(Switchers.Resolve(Model.Appearance, Model.SystemAppearance)),
+      function(Index: int): State.Msg => State.Msg.Shared(
+        Shared.Msg.SetAppearance(cast<Switchers.Selection>(Index))
+      ),
+      new Segments.Options(ControlSize := Buttons.Size.Small, FullWidth := true)
+    ),
+    E.Row<State.Msg>(new L.Flow(Justify := L.Justification.Between), Swatches.ToArray())
+  );
+end function;
+
+function Brand(Colors: Themes.Palette): E.Element<State.Msg>;
+begin
+  const Side: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(28)));
+  const Row: E.Element<State.Msg> := E.Row<State.Msg>(
+    new L.Flow(
+      Gap := Layout.Points(10), PaddingStart := Layout.Points(8), PaddingEnd := Layout.Points(8),
+      PaddingTop := Layout.Points(6), Align := L.Alignment.Start
+    ),
+    E.Size<State.Msg>(
+      Stacks.Stack<State.Msg>(
+        new L.Flow(
+          Align := L.Alignment.Center, Justify := L.Justification.Center,
+          Background := Colors.Foreground, CornerRadius := 9.0F
+        ),
+        E.FormattedText<State.Msg>('F', Motion.Font.Display, 16.0F, Colors.Background)
+      ),
+      new L.Flex(Width := Side, Height := Side)
+    ),
+    E.FormattedText<State.Msg>(Title, Motion.Font.Medium, 15.0F, Colors.Foreground),
+    E.Spacer<State.Msg>(),
+    E.Size<State.Msg>(
+      E.Row<State.Msg>(
+        Badges.Badge<State.Msg>(
+          'cui-version',
+          'v1.4',
+          new Badges.Options(Size := Buttons.Size.Small)
+        )
+      ),
+      new L.Flex(Height := Side)
+    )
+  );
+  return E.Size<State.Msg>(Row, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(52))));
+end function;
+
+// Displays the gallery brand beside the drawer opener.
+// ## Parameters
+// - `Model`: Gallery state supplying the active theme.
+// ## Returns
+// The title in the compact header.
+public function HeaderText(Model: State.Model): E.Element<State.Msg>;
+begin
+  return E.FormattedText<State.Msg>(
+    Title, Motion.Font.Medium, 15.0F, Update.ThemeFor(Model).Colors.Foreground
+  );
+end function;
+
+// Builds the scrollable destinations and the appearance controls for either presentation.
+// ## Parameters
+// - `Model`: Current destination, appearance and accent.
+// - `DrawerViewportHeight`: Window height for compact mode, or null for the desktop sidebar.
+// ## Returns
+// The gallery sidebar content.
+public function Build(Model: State.Model; DrawerViewportHeight: int? := null): E.Element<State.Msg>;
+begin
+  const Colors: Themes.Palette := Update.ThemeFor(Model).Colors;
+  const Navigation: E.Element<State.Msg> := E.Size<State.Msg>(
+    E.ScrollView<State.Msg>('navigation-scroll', NavigationItems(Model.Active)),
+    new L.Flex(Basis := L.Extent.Fill)
+  );
+  const Footer: E.Element<State.Msg> := ThemeControl(Model.Shared, Colors);
+  case DrawerViewportHeight of
+    when is int as Height:
+      // The sheet body scrolls. Bound the inner column so its footer remains visible.
+      // CUI uses 16 points for outer margins, 48 for panel padding, and 46 for the header and gap.
+      return E.Size<State.Msg>(
+        E.Column<State.Msg>(new L.Flow(Gap := Layout.Points(2)), Navigation, Footer),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Sys.Math.Max(0, Height - 110))))
+      );
+    else
+  end case;
+
+  return E.Column<State.Msg>(
+    new L.Flow(
+      Padding := Layout.Points(12), Gap := Layout.Points(2), Background := Colors.SurfaceMuted
+    ),
+    Brand(Colors), Navigation, Footer
+  );
+end function;
+
+end unit;

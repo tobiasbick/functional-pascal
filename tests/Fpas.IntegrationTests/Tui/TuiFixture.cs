@@ -1,5 +1,6 @@
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
+using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Tui;
 
@@ -63,8 +64,13 @@ internal static class TuiFixture
         var library = program.FilePath("Fpas.Ui.dll");
         var folder = Path.Combine(AppContext.BaseDirectory, "Fixtures", "ui", "lib");
         var sources = Directory.GetFiles(folder, "*.fpas", SearchOption.AllDirectories);
-        var compiled = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", .. sources,
-            "--output", library, "--target", "library", "--reference-dir", TestEnvironment.ReferenceDirectory]);
+        string[] arguments = [.. sources, "--output", library, "--target", "library",
+            "--reference-dir", TestEnvironment.ReferenceDirectory];
+        // The shared UI has enough sources to exceed the Windows process command-line limit.
+        var response = program.FilePath("ui-compile.json");
+        File.WriteAllText(response, JsonSerializer.Serialize(arguments));
+        var compiled = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile",
+            "--response-file", response], timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
         return library;
     }

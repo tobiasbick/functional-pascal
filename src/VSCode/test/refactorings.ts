@@ -57,10 +57,17 @@ export async function refactorings(data: Fixture): Promise<void> {
   await select('Compute(Value: int; Extra');
   assert.equal(await command('addParameter', parameter), true);
   assert.match(preview().document.getText(), /Extra := /);
+  const previewUri = preview().document.uri.toString();
   assert.equal(await command('applyRefactoring'), true);
   assert.match(source.document.getText(), /Compute\(Step\(1\), Extra := Step\(2\), Added := 99\)/);
   assert.match(source.document.getText(), /Compute\(Step\(3\), Extra := Step\(4\), Added := 99\)/);
   assert.equal(await readFile(data.refactorSource, 'utf8'), original);
+  const previewTab = vscode.window.tabGroups.all.flatMap(group => group.tabs).find(tab =>
+    tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === previewUri);
+  assert(previewTab, 'The checked refactoring preview is open.');
+  assert(await vscode.window.tabGroups.close(previewTab));
+  // In the full workflow, the preceding debugger scenarios can leave the terminal panel open.
+  await run('workbench.action.closePanel');
   source = await editor(data.refactorSource);
   assert.equal(vscode.window.activeTextEditor?.document, source.document);
   await run('workbench.action.focusActiveEditorGroup');

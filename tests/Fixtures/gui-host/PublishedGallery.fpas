@@ -72,7 +72,7 @@ begin
   A.Check(Session.Step(), 'Gallery did not present.');
   A.Check(Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software), 'Unexpected renderer.');
   A.Check(A.HasText(Session, 'Components for FPas'), 'Overview is the initial page.');
-  A.Check(A.HasText(Session, 'FPas CUI'), 'The gallery brand is missing.');
+  A.Check(A.HasText(Session, 'FPas GUI based on CUI'), 'The gallery brand is missing.');
   var Pages: int := 0;
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = 'navigation' then
@@ -80,7 +80,7 @@ begin
     end if;
   end for;
 
-  A.Check(Pages = 33, 'Only the confirmed gallery destinations should be visible.');
+  A.Check(Pages = 34, 'All gallery destinations should be present.');
   A.Check(
     A.Control(Session, 'navigation', 'pickers').Text = 'Pickers'
     and A.Control(Session, 'navigation', 'reader').Text = 'Reader'
@@ -91,11 +91,25 @@ begin
   const Overview: Gui.Control := A.Control(Session, 'navigation', 'overview');
   const Buttons: Gui.Control := A.Control(Session, 'navigation', 'buttons');
   A.Check(
-    Overview.Bounds.X = 12 and Overview.Bounds.Y >= 98 and Overview.Bounds.Y < 110,
+    Overview.Bounds.X = 12 and Overview.Bounds.Y >= 100 and Overview.Bounds.Y < 104,
     'The sidebar starts below the gallery brand.'
   );
   A.Check(Buttons.Bounds.Y > Overview.Bounds.Y, 'Gallery navigation is in page order.');
   A.Check(Buttons.Bounds.Width = 216, 'Gallery navigation uses the desktop sidebar width.');
+  const Appearance: Cui.CuiRectangle := A.Control(Session, 'theme').Bounds;
+  const Neutral: Cui.CuiRectangle := A.Control(Session, 'accent-neutral').Bounds;
+  const Rose: Cui.CuiRectangle := A.Control(Session, 'accent-rose').Bounds;
+  A.Check(
+    Appearance.Width = 200 and Appearance.Height = 30
+    and A.Control(Session, 'theme', '0').Text = 'Light'
+    and A.Control(Session, 'theme', '1').Text = 'Dark',
+    'The sidebar needs the full-width Light and Dark selector.'
+  );
+  A.Check(
+    Neutral.Y = Appearance.Y + Appearance.Height + 12
+    and Rose.Y = Neutral.Y and Rose.X > Neutral.X and Rose.Width = 22,
+    'The accent row belongs below the appearance selector.'
+  );
 
   A.Send(Session, State.Msg.Show(State.Page.Buttons));
   A.Check(
@@ -126,8 +140,13 @@ begin
   );
   Session.CapturePng(Capture);
 
+  A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAccent(Themes.Accent.Violet)));
   A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAppearance(Switchers.Selection.Dark)));
   A.Check(Session.Snapshot().Theme.Appearance = Themes.Mode.Dark, 'Theme did not change.');
+  A.Check(
+    Session.Snapshot().Theme.AccentFamily = Themes.Accent.Violet,
+    'Dark discarded the accent.'
+  );
   A.Send(Session, State.Msg.Show(State.Page.Overlays));
   A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetSheet(true)));
   A.Check(A.Control(Session, 'sheet/close').Focused, 'The sheet close action owns focus.');
@@ -154,6 +173,11 @@ begin
   A.Send(Compact, State.Msg.SetDrawer(true));
   A.Check(A.Control(Compact, 'drawer/close').Focused, 'The drawer close action owns focus.');
   A.Check(not A.Control(Compact, 'drawer-open').Enabled, 'The drawer did not disable the page.');
+  const Accent: Gui.Control := A.Control(Compact, 'accent-rose');
+  A.Check(
+    Accent.Enabled and Accent.Bounds.Y + Accent.Bounds.Height <= Compact.Snapshot().Size.Height,
+    'The drawer must keep its accent controls visible.'
+  );
   A.Send(Compact, State.Msg.Show(State.Page.Overlays));
   A.Check(A.HasText(Compact, 'Overlays'), 'The drawer did not select the destination.');
 end procedure;

@@ -64,16 +64,14 @@ uses
   GuiGallery.App.State as State,
   GuiGallery.Shared.State as Demo,
   Fpas.Ui.Composition as U,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  GuiGallery.App.Sidebar as Sidebar,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Navigation.Navigation as N,
   Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Styles as S,
   System as Sys;
 
-const SidebarWidth: int := 240;
 const DrawerBreakpoint: int := 760;
 
 function Gap(Units: int): L.Spacing;
@@ -87,137 +85,6 @@ begin
 end function;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-
-function Space(Units: int): E.Element<State.Msg>;
-begin
-  return E.Size<State.Msg>(E.Column<State.Msg>(), Fixed(Units));
-end function;
-
-function PageTitle(Page: State.Page): string;
-begin
-  return if Page = State.Page.Lists then
-    'Data display'
-  elsif Page = State.Page.Social then
-    'Social and media'
-  elsif Page = State.Page.DeveloperTools then
-    'Developer tools'
-  elsif Page = State.Page.MoreDeveloperTools then
-    'More developer tools'
-  elsif Page = State.Page.MoreCharts then
-    'More charts'
-  elsif Page = State.Page.CanvasAndBars then
-    'Canvas and bars'
-  elsif Page = State.Page.CreativeControls then
-    'Creative controls'
-  elsif Page = State.Page.DataGrid then
-    'Data grid'
-  elsif Page = State.Page.Desktop then
-    'App chrome'
-  elsif Page = State.Page.EditingTools then
-    'Editing tools'
-  elsif Page = State.Page.Display then
-    'Text and display'
-  elsif Page = State.Page.SmartInputs then
-    'Smart inputs'
-  else
-    Page.ToString()
-  end if;
-end function;
-
-function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
-begin
-  return new N.Item<State.Msg>(
-    Page.ToString().ToLowerInvariant(),
-    PageTitle(Page),
-    State.Msg.Show(Page),
-    Icon := Sys.Char.ConvertFromUtf32(Icon)
-  );
-end function;
-
-function NavigationItems(Page: State.Page): E.Element<State.Msg>;
-begin
-  return N.Sidebar<State.Msg>(
-    'navigation',
-    [
-      new N.Section<State.Msg>(
-        'Components', [
-          Destination(State.Page.Overview, $E1C1),
-          Destination(State.Page.Buttons, $E1B4),
-          Destination(State.Page.Inputs, $E198),
-          Destination(State.Page.Selection, $E29A),
-          Destination(State.Page.Navigation, $E09B),
-          Destination(State.Page.Lists, $E106),
-          Destination(State.Page.Overlays, $E529),
-          Destination(State.Page.Feedback, $E059),
-          Destination(State.Page.Charts, $E2A5)
-        ]
-      ),
-      new N.Section<State.Msg>(
-        'Extended',
-        [
-          Destination(State.Page.Actions, $E09A),
-          Destination(State.Page.SmartInputs, $E172),
-          Destination(State.Page.Pickers, $E063),
-          Destination(State.Page.Capture, $E19E),
-          Destination(State.Page.Disclosure, $E529),
-          Destination(State.Page.Reader, $E0CC),
-          Destination(State.Page.DataGrid, $E0E9),
-          Destination(State.Page.Code, $E093),
-          Destination(State.Page.Social, $E117),
-          Destination(State.Page.Planning, $E1D0),
-          Destination(State.Page.MoreCharts, $E06B),
-          Destination(State.Page.Motion, $E038),
-          Destination(State.Page.AI, $E117),
-          Destination(State.Page.Audio, $E55A),
-          Destination(State.Page.Files, $E0D7),
-          Destination(State.Page.DeveloperTools, $E20A),
-          Destination(State.Page.MoreDeveloperTools, $E20C),
-          Destination(State.Page.Instruments, $E2A5),
-          Destination(State.Page.CreativeControls, $E1DD),
-          Destination(State.Page.CanvasAndBars, $E529),
-          Destination(State.Page.Voice, $E118),
-          Destination(State.Page.Layout, $E529),
-          Destination(State.Page.Display, $E198),
-          Destination(State.Page.EditingTools, $E20A),
-          Destination(State.Page.Desktop, $E20A)
-        ]
-      )
-    ],
-    Page.ToString().ToLowerInvariant()
-  );
-end function;
-
-function ThemeControl(Model: State.Model): E.Element<State.Msg>;
-begin
-  return Switchers.ThemeSwitcher<State.Msg>(
-    'theme',
-    Model.Shared.Appearance,
-    function(Value: Switchers.Selection): State.Msg => State.Msg.Shared(
-      Demo.Msg.SetAppearance(Value)
-    ),
-    new Switchers.Options(WithSystem := true)
-  );
-end function;
-
-function Sidebar(Model: State.Model; Pages: E.Element<State.Msg>): E.Element<State.Msg>;
-begin
-  return E.Styled<State.Msg>(
-    E.Column<State.Msg>(
-      new L.Flow(Padding := Gap(12), Gap := Gap(2), Align := L.Alignment.Stretch),
-      E.Column<State.Msg>(
-        new L.Flow(Padding := Gap(8)),
-        E.Styled<State.Msg>(E.Text<State.Msg>('FPas CUI'), S.Role.Heading)
-      ),
-      Space(11),
-      E.Size<State.Msg>(
-        E.ScrollView<State.Msg>('navigation-scroll', Pages, ShowScrollbar := false),
-        Fill
-      ),
-      E.Column<State.Msg>(new L.Flow(Padding := Gap(8)), ThemeControl(Model))
-    ),
-    S.Role.MutedPanel
-  );
-end function;
 
 function Preview(Model: State.Model; Width: int): array of E.Element<State.Msg>;
 begin
@@ -472,7 +339,7 @@ begin
           'Components',
           State.Msg.SetDrawer(true)
         ),
-        E.Text<State.Msg>('FPas CUI')
+        Sidebar.HeaderText(Model)
       )
     );
   end if;
@@ -481,7 +348,7 @@ begin
     Parts.Add(
       E.Column<State.Msg>(
         new L.Flow(Gap := Gap(6), PaddingBottom := Gap(8), Clip := false),
-        E.Styled<State.Msg>(E.Text<State.Msg>(PageTitle(Model.Active)), S.Role.PageTitle)
+        E.Styled<State.Msg>(E.Text<State.Msg>(Sidebar.PageTitle(Model.Active)), S.Role.PageTitle)
       )
     );
   end if;
@@ -534,14 +401,13 @@ begin
   const Available: int := if Compact then
     Width
   else
-    Width - SidebarWidth - 1
+    Width - Sidebar.Width - 1
   end if;
   const Inset: int := if Compact then
     16
   else
     40
   end if;
-  const Pages: E.Element<State.Msg> := NavigationItems(Model.Active);
   const Main: E.Element<State.Msg> := Content(
     Model,
     Compact,
@@ -552,16 +418,16 @@ begin
     Sheets.Sheet<State.Msg>(
       'drawer',
       Main,
-      E.Column<State.Msg>(new L.Flow(Gap := Gap(8)), Pages, ThemeControl(Model)),
+      Sidebar.Build(Model, Viewport.LogicalHeight ?? 820),
       Model.Drawer,
-      new Sheets.Options('FPas CUI', Edge := Sheets.Side.Left, Size := 280),
+      new Sheets.Options(Sidebar.Title, Edge := Sheets.Side.Left, Size := 280),
       State.Msg.SetDrawer(false)
     )
   else
     E.Size<State.Msg>(
       E.Row<State.Msg>(
         new L.Flow(Align := L.Alignment.Stretch),
-        E.Size<State.Msg>(Sidebar(Model, Pages), Fixed(SidebarWidth)),
+        E.Size<State.Msg>(Sidebar.Build(Model), Fixed(Sidebar.Width)),
         E.Size<State.Msg>(E.Styled<State.Msg>(E.Column<State.Msg>(), S.Role.Divider), Fixed(1)),
         E.Size<State.Msg>(Main, Fill)
       ),

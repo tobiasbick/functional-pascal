@@ -57,7 +57,7 @@ end function;
 public function HasAnchor<TMsg>(Node: E.Element<TMsg>; Subviews: Lists.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>): bool;
 begin
   case Node of
-    when E.Element.LinkAction(_, _, _, _):
+    when E.Element.LinkAction(_, _, _, _), E.Element.Canvas(_, _, _, _):
       return true;
     when E.Element.CheckboxAction(
       _,

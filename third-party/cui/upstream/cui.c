@@ -51161,6 +51161,13 @@ void cui_menu_label(cui_ctx *ui, const char *text) {
 
 typedef struct { float hover, focus; char query[96]; } cui__select_state;
 
+/* The search field hands the keyboard back to the trigger once the list is closed. */
+static void cui__select_refocus(cui_ctx *ui, cui_id trigger, cui_id search, bool search_open, bool disabled) {
+    if (ui->focus != search || search_open) return;
+    ui->focus = disabled ? 0 : trigger;
+    ui->edit = NULL;
+}
+
 /** Hand focus back to the trigger when its search editor is dismissed. */
 bool cui_select_ex(cui_ctx *ui, const char *id_str, const char *const *items, int count, int *index, const cui_select_opts *o) {
     cui_select_opts d;
@@ -51182,7 +51189,7 @@ bool cui_select_ex(cui_ctx *ui, const char *id_str, const char *const *items, in
         if (!open) {
             cui__menu_nav *nav = cui_state(ui, pid ^ 0x4E4156u, sizeof *nav);
             nav->highlight = *index;
-            if (o->searchable && r.keyboard_activate) ui->kpressed[CUI_KEY_ENTER] = 0;
+            if (r.keyboard_activate) ui->kpressed[CUI_KEY_ENTER] = 0;   /* the Enter that opens the list does not also pick */
         }
     }
     if (p && !p->open && r.focus_visible && (cui_key_pressed(ui, CUI_KEY_DOWN) || cui_key_pressed(ui, CUI_KEY_UP))) {
@@ -51240,7 +51247,11 @@ bool cui_select_ex(cui_ctx *ui, const char *id_str, const char *const *items, in
     cui_push_id_int(ui, (int)pid);
     cui_id sid = cui_make_id(ui, "#q");
     cui_pop_id(ui);
-    if (cui__popup_begin(ui, pid, id, CUI_PLACE_BOTTOM_START, 0, 6, 0, true)) {
+    bool building = cui__popup_begin(ui, pid, id, CUI_PLACE_BOTTOM_START, 0, 6, 0, true);
+    /* Esc or a click outside closed it just now: refocus before the field is built,
+     * because while the list animates out the field is disabled and drops the focus */
+    cui__select_refocus(ui, id, sid, p && p->open && o->searchable, disabled);
+    if (building) {
         if (o->searchable) {
             cui_input_opts io;
             memset(&io, 0, sizeof io);
@@ -51286,10 +51297,7 @@ bool cui_select_ex(cui_ctx *ui, const char *id_str, const char *const *items, in
         cui__scroll_end_ex(ui);
         cui__popup_end(ui);
     }
-    if (ui->focus == sid && (!p || !p->open || !o->searchable)) {
-        ui->focus = disabled ? 0 : id;
-        ui->edit = NULL;
-    }
+    cui__select_refocus(ui, id, sid, p && p->open && o->searchable, disabled);   /* an item was picked */
     return *index != old;
 }
 
@@ -65164,6 +65172,13 @@ static void cui__edit_follow_caret(cui__edit_frame *c, const cui__edit_result *r
     if (ui->platform.set_text_input_rect) {
         cui_rect cr = area;
         if (!c->multiline) cr.x = area.x + cui__x_at(ui, &c->measure, c->buf, len, e->cursor) - e->scroll_x;
+        else if (c->nlines > 0) {   /* the caret's line, so the candidate list opens under it, not under the whole area */
+            int ln = cui__line_of(c->lines, c->nlines, e->cursor);
+            const cui_text_layout_line *L = &c->lines[ln];
+            cr.x = area.x + cui__text_width(ui, c->font, c->size, c->buf + L->start, e->cursor - L->start, false);
+            cr.y = area.y + (float)ln * c->line_h - e->scroll_y;
+            cr.h = c->line_h;
+        }
         cr.w = 1;
         ui->platform.set_text_input_rect(ui->platform.user, cr);
     }
@@ -65499,8 +65514,6 @@ bool cui_number_ex(cui_ctx *ui, const char *id_str, double *value, double min, d
     memset(&io, 0, sizeof io);
     io.disabled = o->disabled;
     int f = cui__text_field(ui, id, st->text, sizeof st->text, &io, false, CUI__FIELD_BOXED, NULL);
-    int area = ui->nodes[ui->nodes[row].first].first;
-    /* find the field node (id) to add steppers inside its row */
     if (f & CUI_CHANGED) {
         char *end = NULL;
         double v = strtod(st->text, &end);
@@ -65548,14 +65561,10 @@ bool cui_number_ex(cui_ctx *ui, const char *id_str, double *value, double min, d
         if (strcmp(st->text, canonical) != 0) {
             const int len = (int)strlen(canonical);
             memcpy(st->text, canonical, (size_t)len + 1);
-            /* Layout already captured the draft. Keep its text and caret in sync. */
             cui_edit_state *edit = cui_state(ui, id, sizeof *edit);
             edit->cursor = edit->anchor = len;
             edit->scroll_x = 0;
-            cui__edit_paint *paint = ui->nodes[area].paint_data;
-            paint->buf = cui__frame_strdup(ui, st->text, len);
-            paint->len = paint->cursor = paint->anchor = len;
-            paint->scroll_x = 0;
+            cui_request_redraw(ui);   /* the field was built with the draft: show the value next frame, even when idle */
         }
     }
     st->last = *value;
@@ -77724,8 +77733,8 @@ void cui__plat_gl_release(cui_app *app) { (void)app; }   /* not used: these keep
 
 /* ==== src/platform/cui_app_win32.c ==== */
 /* Win32 backend (Windows 7 and later). Per-monitor DPI awareness, WGL
- * OpenGL 3.3 with a GDI software fallback, UTF-16 text input, clipboard,
- * dark title bars and smooth live resizing. */
+ * OpenGL 3.3 with a GDI software fallback, UTF-16 text input with the IME
+ * placed at the caret, clipboard, dark title bars and smooth live resizing. */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -77736,6 +77745,7 @@ void cui__plat_gl_release(cui_app *app) { (void)app; }   /* not used: these keep
 #include <windows.h>
 #include <windowsx.h>
 #include <shellapi.h>
+#include <imm.h>
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
@@ -77766,6 +77776,9 @@ typedef struct {
     float scale;
     bool tracking;
     WCHAR high_surrogate;
+    RECT ime_caret;        /* the focused text field's caret in client pixels, where the IME opens */
+    bool ime_caret_set;
+    int sys_caret_h;       /* height of our hidden system caret, 0 while there is none */
     HCURSOR cursors[CUI_CURSOR_COUNT];
     cui_cursor cursor;
     bool in_size_move;
@@ -77936,6 +77949,62 @@ static const char *cui__win32_get_clip(void *user) {
     return result;
 }
 
+/* Tells the input method where the caret is: the composition window starts at
+ * the caret and the candidate list opens under the line without covering it.
+ * IMEs differ in what they read, so each form is set. Chinese IMEs running
+ * through TSF take the candidate position, Japanese and Korean IMEs the
+ * excluded rectangle, and older IMEs, magnifiers and screen readers follow the
+ * system caret, which stays hidden: CUI draws its own. */
+static void cui__win32_place_ime(cui__win32 *w) {
+    if (!w->ime_caret_set) return;
+    RECT c = w->ime_caret;
+    if (GetFocus() == w->hwnd) {
+        int h = (int)(c.bottom - c.top);
+        if (w->sys_caret_h != h) {
+            if (w->sys_caret_h) DestroyCaret();
+            w->sys_caret_h = CreateCaret(w->hwnd, NULL, 1, h) ? h : 0;
+        }
+        if (w->sys_caret_h) SetCaretPos(c.left, c.top);
+    }
+    HIMC imc = ImmGetContext(w->hwnd);
+    if (!imc) return;   /* no IME for this window or this keyboard layout */
+    COMPOSITIONFORM comp;
+    memset(&comp, 0, sizeof comp);
+    comp.dwStyle = CFS_POINT;
+    comp.ptCurrentPos.x = c.left;
+    comp.ptCurrentPos.y = c.top;
+    ImmSetCompositionWindow(imc, &comp);
+    CANDIDATEFORM cand;
+    memset(&cand, 0, sizeof cand);
+    cand.dwIndex = 0;
+    cand.dwStyle = CFS_CANDIDATEPOS;
+    cand.ptCurrentPos.x = c.left;
+    cand.ptCurrentPos.y = c.bottom;
+    ImmSetCandidateWindow(imc, &cand);
+    cand.dwStyle = CFS_EXCLUDE;
+    cand.ptCurrentPos.y = c.top;
+    cand.rcArea = c;
+    ImmSetCandidateWindow(imc, &cand);
+    ImmReleaseContext(w->hwnd, imc);
+}
+
+/* CUI calls this every frame a text field has focus, with the caret in window
+ * points; the IME is told only when the caret moved. */
+static void cui__win32_text_input_rect(void *user, cui_rect caret) {
+    cui_app *app = user;
+    cui__win32 *w = cui__w(app);
+    float s = w->scale;
+    RECT r;
+    r.left = (LONG)floorf(caret.x * s);
+    r.top = (LONG)floorf(caret.y * s);
+    r.right = r.left + CUI_MAX(1, (LONG)ceilf(caret.w * s));
+    r.bottom = r.top + CUI_MAX(1, (LONG)ceilf(caret.h * s));
+    if (w->ime_caret_set && EqualRect(&r, &w->ime_caret)) return;
+    w->ime_caret = r;
+    w->ime_caret_set = true;
+    cui__win32_place_ime(w);
+}
+
 static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     cui_app *app = (cui_app *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     if (!app) {
@@ -78067,8 +78136,20 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         cui_input_text(ui, buf);
         return 0;
     }
-    case WM_SETFOCUS: cui_input_focus(ui, true); return 0;
-    case WM_KILLFOCUS: cui_input_focus(ui, false); return 0;
+    /* Text committed in an IME arrives as WM_CHAR, one UTF-16 unit at a time:
+     * DefWindowProcW turns the result string of WM_IME_COMPOSITION into
+     * WM_IME_CHAR and those into WM_CHAR, so neither is read here. */
+    case WM_IME_STARTCOMPOSITION:
+        if (w) cui__win32_place_ime(w);
+        break;
+    case WM_SETFOCUS:
+        if (w) cui__win32_place_ime(w);
+        cui_input_focus(ui, true);
+        return 0;
+    case WM_KILLFOCUS:
+        if (w && w->sys_caret_h) { DestroyCaret(); w->sys_caret_h = 0; }
+        cui_input_focus(ui, false);
+        return 0;
     case WM_SETCURSOR:
         if (w && LOWORD(lp) == HTCLIENT) { SetCursor(w->cursors[w->cursor]); return TRUE; }
         break;
@@ -78135,6 +78216,7 @@ bool cui__plat_init(cui_app *app) {
     pi.set_clipboard = cui__win32_set_clip;
     pi.get_clipboard = cui__win32_get_clip;
     pi.set_cursor = cui__win32_set_cursor;
+    pi.set_text_input_rect = cui__win32_text_input_rect;
     cui_set_platform(app->ui, &pi);
     return true;
 }
@@ -78367,6 +78449,7 @@ static cui_key cui__mac_key(NSEvent *e) {
 @interface CUIView : NSView <NSTextInputClient>
 @property (nonatomic, assign) cui_app *app;
 @property (nonatomic, strong) NSTrackingArea *tracking;
+@property (nonatomic, assign) NSRect caret;   /* the focused text field's caret in view points, for the input method */
 @end
 
 @implementation CUIView
@@ -78474,7 +78557,7 @@ static cui_key cui__mac_key(NSEvent *e) {
 - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText { return @[]; }
 - (NSRect)firstRectForCharacterRange:(NSRange)r actualRange:(NSRangePointer)a {
     (void)r; (void)a;
-    NSRect local = NSMakeRect(0, 0, 1, 1);
+    NSRect local = NSIsEmptyRect(self.caret) ? NSMakeRect(0, 0, 1, 1) : self.caret;
     return [self.window convertRectToScreen:[self convertRect:local toView:nil]];
 }
 - (NSUInteger)characterIndexForPoint:(NSPoint)p { (void)p; return NSNotFound; }
@@ -78511,6 +78594,18 @@ static void cui__mac_wake(void) {
 @end
 
 static CUIPlat *cui__p(cui_app *app) { return (__bridge CUIPlat *)app->plat; }
+
+/* CUI calls this every frame a text field has focus, with the caret in window
+ * points, top-left origin, the same space as the flipped view. The input method
+ * reads it back through firstRectForCharacterRange and is told when it moves. */
+static void cui__mac_text_input_rect(void *user, cui_rect caret) {
+    cui_app *app = user;
+    CUIView *v = cui__p(app).view;
+    NSRect r = NSMakeRect(caret.x, caret.y, caret.w < 1 ? 1 : caret.w, caret.h < 1 ? 1 : caret.h);
+    if (NSEqualRects(r, v.caret)) return;
+    v.caret = r;
+    [v.inputContext invalidateCharacterCoordinates];
+}
 
 static void cui__mac_set_cursor(void *user, cui_cursor c) {
     cui_app *app = user;
@@ -78605,6 +78700,7 @@ bool cui__plat_init(cui_app *app) {
         pi.set_clipboard = cui__mac_set_clip;
         pi.get_clipboard = cui__mac_get_clip;
         pi.set_cursor = cui__mac_set_cursor;
+        pi.set_text_input_rect = cui__mac_text_input_rect;
         cui_set_platform(app->ui, &pi);
     }
     return true;

@@ -4,7 +4,7 @@ uses
   Fpas.Ui.Gui.Internal.EditingToolPresentation as EditingTools,
   Fpas.Ui.Gui.Internal.SourceToolPresentation as SourceTools,
   Fpas.Ui.Gui.Internal.DisplayPresentation as Display,
-  Fpas.Ui.Gui.Internal.CanvasPresentation as Canvas,
+  Fpas.Ui.Gui.Internal.ChromePresentation as Chrome, Fpas.Ui.Gui.Internal.CanvasPresentation as Canvas,
   Fpas.Ui.Gui.Internal.DeveloperPresentation as DeveloperPresentation,
   Fpas.Ui.VoiceWaves as VoiceWaves, Fpas.Ui.VoiceNotes as VoiceNotes, Fpas.Ui.VoiceSessions as VoiceSessions, Fpas.Ui.Composers as Composers, Fpas.Ui.VoiceOrbs as VoiceOrbs, Fpas.Ui.Reasonings as Reasonings, Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.AgentPlans as AgentPlans, Fpas.Ui.AgentStatuses as AgentStatuses, Fpas.Ui.SourceLists as SourceLists, Fpas.Ui.Citations as Citations, Fpas.Ui.ContextMeters as ContextMeters, Fpas.Ui.ResponseActions as ResponseActions, Fpas.Ui.PromptSuggestions as PromptSuggestions, Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Voice as Voice, Fpas.Ui.Sources as Sources,
   Fpas.Ui.Gui.Internal.Widgets.VoiceWave as VoiceWaveWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceNote as VoiceNoteWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceSession as VoiceSessionWidget, Fpas.Ui.Gui.Internal.Widgets.Composer as ComposerWidget, Fpas.Ui.Gui.Internal.Widgets.VoiceOrb as VoiceOrbWidget, Fpas.Ui.Gui.Internal.Widgets.Reasoning as ReasoningWidget, Fpas.Ui.Gui.Internal.Widgets.ToolCall as ToolCallWidget, Fpas.Ui.Gui.Internal.Widgets.AgentPlan as AgentPlanWidget, Fpas.Ui.Gui.Internal.Widgets.AgentStatus as AgentStatusWidget, Fpas.Ui.Gui.Internal.Widgets.SourceList as SourceListWidget, Fpas.Ui.Gui.Internal.Widgets.Citation as CitationWidget, Fpas.Ui.Gui.Internal.Widgets.ContextMeter as ContextMeterWidget, Fpas.Ui.Gui.Internal.Widgets.ResponseActions as ResponseActionsWidget, Fpas.Ui.Gui.Internal.Widgets.PromptSuggestions as PromptSuggestionsWidget, Fpas.Ui.Gui.Internal.Widgets.ModelPicker as ModelPickerWidget,
@@ -333,6 +333,21 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _
       ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
         Canvas.Draw<TMsg>(Current, Node, Visit);
+      when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Dockspace(_, _, _, _), E.Element.SplitView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        Chrome.Draw<TMsg>(Current, Node, Visit);
       when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
         _,
         _,

@@ -1,0 +1,157 @@
+unit GuiGallery.Pages.Desktop.Update;
+
+uses
+  GuiGallery.Pages.Desktop.State as S, Fpas.Ui.DocumentTabs as D, Fpas.Ui.Toolbars as T,
+  Fpas.Ui.PropertyInspectors as P, System as Sys, System.Collections.Generic as Lists;
+
+function Documents(Model: S.Model; Change: D.Change): S.Model;
+begin
+  const Tabs: Lists.List<D.Tab> := new Lists.List<D.Tab>(Model.Tabs);
+  var Selected: int := Change.Selected;
+  var Close: int := Change.Close;
+  if Change.MoveFrom >= 0 then
+    const Item: D.Tab := Tabs[Change.MoveFrom];
+    Tabs.RemoveAt(Change.MoveFrom);
+    Tabs.Insert(Change.MoveTo, Item);
+    if Close = Change.MoveFrom then
+      Close := Change.MoveTo;
+    elsif Change.MoveFrom < Close and Close <= Change.MoveTo then
+      Close := Close - 1;
+    elsif Change.MoveTo <= Close and Close < Change.MoveFrom then
+      Close := Close + 1;
+    end if;
+  end if;
+
+  if Close >= 0 and Tabs.Count > 1 then
+    Tabs.RemoveAt(Close);
+    if Selected > Close or Selected >= Tabs.Count then
+      Selected := Sys.Math.Max(0, Selected - 1);
+    end if;
+  end if;
+
+  return Model with
+    Tabs := Tabs.ToArray();
+    Selected := Selected;
+  end with;
+end function;
+
+// Accepts native UI proposals for the examples.
+// ## Parameters
+// - `Model`: Current editor and dock state.
+// - `Message`: Native action or proposed state.
+// ## Returns
+// Updated gallery state.
+public function Update(Model: S.Model; Message: S.Msg): S.Model;
+begin
+  case Message of
+    when S.Msg.Tabs(const Value: D.Change):
+      return Documents(Model, Value);
+    when S.Msg.Command(const Key: string):
+      return case Key of
+        when 'sidebar': Model with
+          Sidebar := not Model.Sidebar;
+        end with;
+        when 'minimap': Model with
+          Minimap := not Model.Minimap;
+        end with;
+        when 'wrap': Model with
+          Wrap := not Model.Wrap;
+        end with;
+        when 'spaces': Model with
+          Spaces := (Model.Spaces + 1) mod 3;
+        end with;
+        when 'encoding': Model with
+          Encoding := 1 - Model.Encoding;
+        end with;
+        when 'pier-1', 'pier-2', 'crate-1', 'crate-2': Model with
+          Object := Key;
+        end with;
+        when 'clear-log': Model with
+          Log := [];
+        end with;
+        when 'language': Model with
+          Language := (Model.Language + 1) mod 3;
+        end with;
+        else Model;
+      end case;
+    when S.Msg.Tool(const Change: T.Event):
+      return case Change.Index of
+        when 5: Model with
+          Bold := Change.Value <> 0;
+        end with;
+        when 6: Model with
+          Italic := Change.Value <> 0;
+        end with;
+        when 7: Model with
+          Underline := Change.Value <> 0;
+        end with;
+        when 8: Model with
+          List := Change.Value <> 0;
+        end with;
+        else Model;
+      end case;
+    when S.Msg.Panel(const Index: int, const Open: bool):
+      const Mask: int := 1 shl Index;
+      const Closed: int := if Open then
+        Model.Closed and not Mask
+      else
+        Model.Closed or Mask
+      end if;
+      return Model with
+        Closed := Closed;
+      end with;
+    when S.Msg.DockTool(const Change: T.Event):
+      if Change.Index = 5 then
+        return Model with
+          Closed := 0;
+          Revision := Model.Revision + 1;
+        end with;
+      end if;
+
+      return Update(Model, S.Msg.Panel(Change.Index, Change.Value <> 0));
+    when S.Msg.Branch(const Key: string, const Open: bool):
+      return case Key of
+        when 'root': Model with
+          Root := Open;
+        end with;
+        when 'pier': Model with
+          Pier := Open;
+        end with;
+        else Model with
+          Lights := Open;
+        end with;
+      end case;
+    when S.Msg.Asset(const Name: string):
+      return Model with
+        Asset := Name;
+      end with;
+    when S.Msg.Property(const Change: P.Event):
+      const Groups: array of P.Group := cast<array of P.Group>(Model.Properties.Clone());
+      case Change of
+        when P.Event.Expansion(const Index: int, const Open: bool):
+          Groups[Index] := Groups[Index] with
+            Open := Open;
+          end with;
+        when P.Event.Edit(const Index: int, const Row: int, const Value: P.Value):
+          const Rows: array of P.Property := cast<array of P.Property>(Groups[
+            Index
+          ].Properties.Clone());
+          Rows[Row] := Rows[Row] with
+            Current := Value;
+          end with;
+          Groups[Index] := Groups[Index] with
+            Properties := Rows;
+          end with;
+      end case;
+
+      return Model with
+        Properties := Groups;
+      end with;
+    when S.Msg.Resize(const Ratio: float):
+      return Model with
+        Ratio := Ratio;
+      end with;
+  end case;
+end function;
+
+end unit;

@@ -2,7 +2,7 @@ unit Fpas.Ui.Gui.Internal.LayoutValidation;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Tables as Tables,
-  Fpas.Ui.Kanbans as Boards,
+  Fpas.Ui.Kanbans as Boards, Fpas.Ui.Dockspaces as Dock,
   Fpas.Ui.Validation as V, Fpas.Ui.Gui.Internal.Sizing as Size;
 
 // Checks native-specific layout limits before issuing widget calls.
@@ -34,6 +34,20 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         if Base <> null then
           Visit(Base);
         end if;
+      when E.Element.SplitView(
+        _,
+        _,
+        const First: E.Element<TMsg>,
+        const Second: E.Element<TMsg>,
+        _,
+        _
+      ):
+        Visit(First);
+        Visit(Second);
+      when E.Element.Dockspace(_, const Panels: array of Dock.Panel<TMsg>, _, _):
+        for Panel: Dock.Panel<TMsg> in Panels do
+          Visit(Panel.Content);
+        end for;
       when E.Element.Kanban(_, const Columns: array of Boards.Column<TMsg>, _, _):
         for Column: Boards.Column<TMsg> in Columns do
           for Card: Boards.Card<TMsg> in Column.Cards do

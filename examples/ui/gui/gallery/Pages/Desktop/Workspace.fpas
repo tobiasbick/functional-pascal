@@ -1,0 +1,232 @@
+unit GuiGallery.Pages.Desktop.Workspace;
+
+uses
+  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme,
+  Fpas.Ui.Dockspaces as Dock, Fpas.Ui.Toolbars as Tools, Fpas.Ui.Trees as Tree,
+  Fpas.Ui.ListItems as Item, Fpas.Ui.LogConsoles as Log, Fpas.Ui.PropertyInspectors as Property,
+  Fpas.Ui.Motion as Text, Fpas.Ui.Canvases as Canvas, System.Collections.Generic as Lists;
+
+const Titles: array of string := ['Scene tree', 'Assets', 'Viewport', 'Log', 'Inspector'];
+const Icons: array of string := ['', '', '', '', ''];
+
+function Layout(Compact: bool): string;
+begin
+  return if Compact then
+    'dock1 v0.56([*Viewport,Scene tree,Assets],[*Inspector,Log])'
+  else
+    'dock1 h0.22([*Scene tree,Assets],h0.6(v0.62([*Viewport],[*Log]),[*Inspector]))'
+  end if;
+end function;
+
+function Open(Model: S.Model; Index: int): bool;
+begin
+  return (Model.Closed and (1 shl Index)) = 0;
+end function;
+
+function SceneTree(Model: S.Model): E.Element<S.Msg>;
+begin
+  const Box: Tree.Options := new Tree.Options(Icon := '');
+  return E.Column<S.Msg>(
+    new L.Flow(Padding := G.Points(8)),
+    Tree.Branch<S.Msg>(
+      'harbor',
+      'harbor_town',
+      Model.Root,
+      [
+        Tree.Leaf<S.Msg>('terrain', 'Terrain', Settings := Box),
+        Tree.Branch<S.Msg>(
+          'pier',
+          'Pier',
+          Model.Pier,
+          [
+            Tree.Leaf<S.Msg>(
+              'pier-1', 'pier_01', function(): S.Msg => S.Msg.Command('pier-1'), Box with
+                Selected := Model.Object = 'pier-1';
+              end with
+            ),
+            Tree.Leaf<S.Msg>(
+              'pier-2', 'pier_02', function(): S.Msg => S.Msg.Command('pier-2'), Box with
+                Selected := Model.Object = 'pier-2';
+              end with
+            ),
+            Tree.Leaf<S.Msg>(
+              'crate-1', 'crate_large_01', function(): S.Msg => S.Msg.Command('crate-1'), Box with
+                Selected := Model.Object = 'crate-1';
+              end with
+            ),
+            Tree.Leaf<S.Msg>(
+              'crate-2', 'crate_large_02', function(): S.Msg => S.Msg.Command('crate-2'), Box with
+                Selected := Model.Object = 'crate-2';
+              end with
+            )
+          ],
+          function(Value: bool): S.Msg => S.Msg.Branch('pier', Value),
+          new Tree.Options(Icon := '')
+        ),
+        Tree.Branch<S.Msg>(
+          'lights',
+          'Lights',
+          Model.Lights,
+          [
+            Tree.Leaf<S.Msg>('sun', 'sun', Settings := new Tree.Options(Icon := ''))
+          ],
+          function(Value: bool): S.Msg => S.Msg.Branch('lights', Value),
+          new Tree.Options(Icon := '')
+        )
+      ],
+      function(Value: bool): S.Msg => S.Msg.Branch('root', Value),
+      new Tree.Options(Icon := Icons[0])
+    )
+  );
+end function;
+
+function Assets(Model: S.Model): E.Element<S.Msg>;
+begin
+  const Names: array of string := [
+    'barrel_d.png', 'crate_large.obj', 'dock_planks.mat',
+    'gull_call.ogg', 'harbor_town.scene', 'water_surface.frag'
+  ];
+  const Glyphs: array of string := ['', '', '', '', '', ''];
+  const Sizes: array of string := ['16.0 MB', '412 KB', '3 KB', '88 KB', '1.2 MB', '6 KB'];
+  const Rows: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
+  for Index: int := 0 to Names.Length - 1 do
+    const Name: string := Names[Index];
+    Rows.Add(
+      Item.ListItem<S.Msg>(
+        'asset-' + Name, Name, function(): S.Msg => S.Msg.Asset(Name),
+        new Item.Options(
+          Trailing := Sizes[Index],
+          Icon := Glyphs[Index],
+          Selected := Model.Asset = Name
+        )
+      )
+    );
+  end for;
+
+  return E.ScrollView<S.Msg>(
+    'dock-assets',
+    E.Column<S.Msg>(new L.Flow(Padding := G.Points(6)), Rows.ToArray())
+  );
+end function;
+
+function Viewport(Colors: Theme.Palette): E.Element<S.Msg>;
+begin
+  const Lines: Lists.List<Canvas.Shape> := new Lists.List<Canvas.Shape>();
+  for Step: int := -8 to 8 do
+    Lines.Add(
+      Canvas.Shape.Line(
+        130.0F + cast<float>(Step) * 14.0F, 58.0F,
+        130.0F + cast<float>(Step) * 120.0F, 190.0F, 1.0F, Colors.Border
+      )
+    );
+  end for;
+
+  for Step: int := 1 to 6 do
+    const Y: float := 58.0F + cast<float>(Step * Step) * (132.0F / 36.0F);
+    Lines.Add(Canvas.Shape.Line(0.0F, Y, 760.0F, Y, 1.0F, Colors.Border));
+  end for;
+
+  Lines.Add(Canvas.Shape.Rectangle(95.0F, 101.0F, 46.0F, 45.0F, 0.0F, Colors.Accent));
+  Lines.Add(Canvas.Shape.Rectangle(96.5F, 102.5F, 43.0F, 42.0F, 0.0F, Colors.SurfaceRaised));
+  return E.Column<S.Msg>(
+    new L.Flow(Background := Colors.SurfaceMuted),
+    E.Column<S.Msg>(
+      new L.Flow(Padding := G.Points(10)),
+      E.FormattedText<S.Msg>('Perspective', Text.Font.Medium, 12.0F, Colors.TextSecondary)
+    ),
+    Canvas.Canvas<S.Msg>(
+      'dock-viewport',
+      Lines.ToArray(),
+      function(Value: Canvas.Event): S.Msg => S.Msg.Command('viewport'),
+      new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(154)), Enabled := false)
+    ),
+    E.Column<S.Msg>(
+      new L.Flow(Padding := G.Points(10)),
+      E.FormattedText<S.Msg>('1280 x 720  16.4 ms', Text.Font.Mono, 11.0F, Colors.TextMuted)
+    )
+  );
+end function;
+
+function Panel(Model: S.Model; Index: int; Body: E.Element<S.Msg>): Dock.Panel<S.Msg>;
+begin
+  return new Dock.Panel<S.Msg>(
+    Titles[Index],
+    Titles[Index],
+    Body,
+    Icons[Index],
+    Open := Open(Model, Index),
+    OnOpenChanged := function(Value: bool): S.Msg => S.Msg.Panel(Index, Value)
+  );
+end function;
+
+// Builds the CUI docking example with native panel tabs and layout reset.
+// ## Parameters
+// - `Model`: Current panel visibility and sample contents.
+// - `Colors`: Current CUI palette.
+// - `Compact`: Whether to use the stacked reference layout.
+// ## Returns
+// Toolbar and interactive workspace.
+public function View(Model: S.Model; Colors: Theme.Palette; Compact: bool): E.Element<S.Msg>;
+begin
+  const Actions: Lists.List<Tools.Item> := new Lists.List<Tools.Item>();
+  for Index: int := 0 to Titles.Length - 1 do
+    Actions.Add(
+      Tools.Item.Button(
+        new Tools.Button(Icons[Index], Tooltip := Titles[Index], Toggle := Open(Model, Index))
+      )
+    );
+  end for;
+
+  Actions.Add(Tools.Item.Spacer);
+  Actions.Add(Tools.Item.Button(new Tools.Button('', Label := 'Reset layout')));
+  const Initial: string := Layout(Compact);
+  const Restore: Dock.Restore? := if Model.Revision = 0 then
+    null
+  else
+    new Dock.Restore(Model.Revision, Initial)
+  end if;
+  return E.Column<S.Msg>(
+    new L.Flow(Background := Colors.Surface, CornerRadius := 14.0F),
+    E.Column<S.Msg>(
+      new L.Flow(Background := Colors.SurfaceMuted, CornerRadius := 13.0F),
+      Tools.Toolbar<S.Msg>('dock-tools', Actions.ToArray(), S.Msg.DockTool)
+    ),
+    Dock.Dockspace<S.Msg>(
+      'workspace', [
+        Panel(Model, 0, SceneTree(Model)),
+        Panel(Model, 1, Assets(Model)),
+        Panel(Model, 2, Viewport(Colors)),
+        Panel(
+          Model,
+          3,
+          Log.LogConsole<S.Msg>(
+            'dock-log',
+            Model.Log,
+            S.Msg.Command('clear-log'),
+            new Log.Options(Height := -1.0F)
+          )
+        ),
+        Panel(
+          Model, 4, E.ScrollView<S.Msg>(
+            'dock-properties', E.Column<S.Msg>(
+              new L.Flow(
+                Padding := G.Points(4),
+                PaddingStart := G.Points(12),
+                PaddingEnd := G.Points(12)
+              ),
+              Property.PropertyInspector<S.Msg>(
+                'dock-inspector', Model.Properties, S.Msg.Property
+              )
+            )
+          )
+        )
+      ], new Dock.Options(
+        Height := L.Extent.Fixed(L.Measure.Logical(456)), InitialLayout := Initial,
+        Shortcuts := true, Load := Restore
+      )
+    )
+  );
+end function;
+
+end unit;

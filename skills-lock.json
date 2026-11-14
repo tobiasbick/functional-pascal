@@ -1,18 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "cli-for-agents": {
       "source": "cursor/plugins",
       "sourceType": "github",
       "skillPath": "cli-for-agent/skills/cli-for-agents/SKILL.md",
-      "computedHash": "dea509e7a742d98d2b5957521977720ba6a39c440b9fc33c98b690893fe71f0a"
+      "computedHash": "5df9f6410070f67a43a2ee7f7b424ec490bfdb581996c9aaa4cb2acb2c2b51d6"
     },
     "unslop": {
       "source": "cursor/plugins",
       "ref": "main",
       "sourceType": "github",
       "skillPath": "pstack/skills/unslop/SKILL.md",
-      "computedHash": "4069ec6c10a0228152079f52706221dc469a9e30a3040398eefd1e9c18fe6cf2"
+      "computedHash": "204151f4d5cb9adf24f81e4b4f4142b91077d332e71c78511ce7a6a6083660da"
     }
   }
 }

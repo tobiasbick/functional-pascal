@@ -18,6 +18,7 @@ uses
   GalleryDisplayContract as DisplayContract,
   GallerySourceToolsContract as SourceToolsContract,
   GalleryEditingToolsContract as EditingToolsContract,
+  GalleryDesktopChromeContract as DesktopChromeContract,
   GuiGallery.App.Update as GalleryUpdate,
   GuiGallery.Shared.State as SliceShared,
   GuiGallery.Pages.Buttons.State as SliceButtons,
@@ -223,6 +224,7 @@ begin
   DisplayContract.Verify(Renderer, Capture);
   SourceToolsContract.Verify(Renderer, Capture);
   EditingToolsContract.Verify(Renderer, Capture);
+  DesktopChromeContract.Verify(Renderer, Capture);
   LayoutContract.Verify(Renderer, Capture);
   SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);

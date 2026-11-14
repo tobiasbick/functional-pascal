@@ -1,0 +1,125 @@
+unit Fpas.Ui.Internal.Mapping.Chrome;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.MenuBars as M, Fpas.Ui.StatusBars as S,
+  Fpas.Ui.DocumentTabs as D, Fpas.Ui.Dockspaces as Dock, Fpas.Ui.SplitViews as Split,
+  Fpas.Ui.Internal.MessageMapping as Mapping, System as Sys, System.Collections.Generic as Lists;
+
+// Rebinds desktop chrome messages and maps its child controls.
+// ## Type parameters
+// - `TChild`: Original message type.
+// - `TParent`: Mapped message type.
+// ## Parameters
+// - `Node`: Native chrome element.
+// - `Messages`: Message translation.
+// - `Child`: Child-element translation.
+// ## Returns
+// Desktop chrome with mapped messages.
+public function Map<TChild, TParent>(Node: E.Element<TChild>; Messages: function(TChild): TParent; Child: function(E.Element<TChild>): E.Element<TParent>): E.Element<TParent>;
+begin
+  case Node of
+    when E.Element.MenuBar(
+      const Id: string,
+      const Items: array of M.Menu<TChild>,
+      const Hide: bool
+    ):
+      const Mapped: Lists.List<M.Menu<TParent>> := new Lists.List<M.Menu<TParent>>(Items.Length);
+      for Index: int := 0 to Items.Length - 1 do
+        const Item: M.Menu<TChild> := Items[Index];
+        Mapped.Add(
+          new M.Menu<TParent>(
+            Item.Key, Item.Label, Mapping.Menu<TChild, TParent>(Item.Entries, Messages),
+            Item.Mnemonic, Item.Width, Item.Enabled
+          )
+        );
+      end for;
+
+      return E.Element<TParent>.MenuBar(Id, Mapped.ToArray(), Hide);
+    when E.Element.DocumentTabs(
+      const Id: string, const Tabs: array of D.Tab, const Selected: int,
+      const Change: function(D.Change): TChild, const Settings: D.Options
+    ):
+      return E.Element<TParent>.DocumentTabs(
+        Id,
+        Tabs,
+        Selected,
+        function(Value: D.Change): TParent => Messages(Change(Value)),
+        Settings
+      );
+    when E.Element.StatusBar(
+      const Id: string,
+      const Items: array of S.Item<TChild>,
+      const Hide: bool
+    ):
+      const Mapped: Lists.List<S.Item<TParent>> := new Lists.List<S.Item<TParent>>(Items.Length);
+      for Index: int := 0 to Items.Length - 1 do
+        Mapped.Add(
+          case Items[Index] of
+            when S.Item.Text(const Value: S.Label): S.Item<TParent>.Text(Value);
+            when S.Item.Action(
+              const Key: string,
+              const Value: S.Label,
+              const Tip: string,
+              const Enabled: bool,
+              const Clicked: TChild
+            ): S.Item<TParent>.Action(Key, Value, Tip, Enabled, Messages(Clicked));
+            when S.Item.Progress(
+              const Value: float,
+              const Caption: string,
+              const Width: float,
+              const Indeterminate: bool
+            ): S.Item<TParent>.Progress(Value, Caption, Width, Indeterminate);
+            when S.Item.Spacer: S.Item<TParent>.Spacer;
+          end case
+        );
+      end for;
+
+      return E.Element<TParent>.StatusBar(Id, Mapped.ToArray(), Hide);
+    when E.Element.SplitView(
+      const Id: string,
+      const Ratio: float,
+      const First: E.Element<TChild>,
+      const Second: E.Element<TChild>,
+      const Change: function(float): TChild,
+      const Settings: Split.Options
+    ):
+      return E.Element<TParent>.SplitView(
+        Id, Ratio, Child(First), Child(Second),
+        function(Value: float): TParent => Messages(Change(Value)), Settings
+      );
+    when E.Element.Dockspace(
+      const Id: string,
+      const Panels: array of Dock.Panel<TChild>,
+      const Settings: Dock.Options,
+      const Change: Sys.Func<string, TChild>?
+    ):
+      const Mapped: Lists.List<Dock.Panel<TParent>> := new Lists.List<Dock.Panel<TParent>>(
+        Panels.Length
+      );
+      for Index: int := 0 to Panels.Length - 1 do
+        const Panel: Dock.Panel<TChild> := Panels[Index];
+        Mapped.Add(
+          new Dock.Panel<TParent>(
+            Panel.Key,
+            Panel.Title,
+            Child(Panel.Content),
+            Panel.Icon,
+            Panel.Dirty,
+            Panel.Open,
+            Mapping.Callback<bool, TChild, TParent>(Panel.OnOpenChanged, Messages)
+          )
+        );
+      end for;
+
+      return E.Element<TParent>.Dockspace(
+        Id,
+        Mapped.ToArray(),
+        Settings,
+        Mapping.Callback<string, TChild, TParent>(Change, Messages)
+      );
+    else
+      raise new Sys.ArgumentException('Expected a desktop chrome element.');
+  end case;
+end function;
+
+end unit;

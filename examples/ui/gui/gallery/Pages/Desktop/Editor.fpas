@@ -1,0 +1,217 @@
+unit GuiGallery.Pages.Desktop.Editor;
+
+uses
+  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.Styles as Style,
+  Fpas.Ui.MenuBars as Bar, Fpas.Ui.Menus as M, Fpas.Ui.StatusBars as Status,
+  Fpas.Ui.DocumentTabs as Docs, Fpas.Ui.Toolbars as Tools, Fpas.Ui.Motion as Glyphs,
+  System as Sys, System.Collections.Generic as Lists;
+
+function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry<S.Msg>;
+begin
+  return M.Entry<S.Msg>.Action(
+    new M.Item<S.Msg>(
+      Key, Label, S.Msg.Command(Key),
+      Shortcut := Hint, Enabled := Enabled, Checked := Checked
+    )
+  );
+end function;
+
+function Menus(Model: S.Model): E.Element<S.Msg>;
+begin
+  return Bar.MenuBar<S.Msg>(
+    'desktop-menu', [
+      new Bar.Menu<S.Msg>(
+        'file', 'File', [
+          Action('new', 'New file', 'Ctrl N'),
+          Action('open', 'Open…', 'Ctrl O'),
+          M.Entry<S.Msg>.Separator,
+          Action(
+            'save',
+            'Save',
+            'Ctrl S'
+          ),
+          Action('save-as', 'Save as…', 'Ctrl Shift S'),
+          M.Entry<S.Msg>.Separator,
+          Action('close', 'Close window', 'Ctrl Shift W')
+        ]
+      ),
+      new Bar.Menu<S.Msg>(
+        'edit', 'Edit', [
+          Action('undo', 'Undo', 'Ctrl Z'),
+          Action('redo', 'Redo', 'Ctrl Shift Z', false),
+          M.Entry<S.Msg>.Separator,
+          Action(
+            'cut',
+            'Cut',
+            'Ctrl X'
+          ),
+          Action('copy', 'Copy', 'Ctrl C'),
+          Action('paste', 'Paste', 'Ctrl V'),
+          M.Entry<S.Msg>.Separator,
+          Action('find', 'Find…', 'Ctrl F')
+        ]
+      ),
+      new Bar.Menu<S.Msg>(
+        'view', 'View', [
+          Action('sidebar', 'Sidebar', Checked := Model.Sidebar),
+          Action('minimap', 'Minimap', Checked := Model.Minimap),
+          Action('wrap', 'Word wrap', Checked := Model.Wrap), M.Entry<S.Msg>.Separator,
+          Action('zoom-in', 'Zoom in', 'Ctrl ='), Action('zoom-out', 'Zoom out', 'Ctrl −')
+        ]
+      ),
+      new Bar.Menu<S.Msg>(
+        'go', 'Go', [
+          Action('go-file', 'Go to file…', 'Ctrl P'), Action('go-line', 'Go to line…', 'Ctrl G')
+        ]
+      ),
+      new Bar.Menu<S.Msg>(
+        'help',
+        'Help',
+        [Action('keys', 'Keyboard shortcuts', 'Ctrl K'), Action('notes', 'Release notes')]
+      )
+    ]
+  );
+end function;
+
+function Tool(
+  Icon: int; Tip: string := ''; Shortcut: string := ''; Toggle: bool? := null;
+  Disabled: bool := false; Label: string? := null
+): Tools.Item;
+begin
+  return Tools.Item.Button(
+    new Tools.Button(Sys.Char.ConvertFromUtf32(Icon), Label, Tip, Shortcut, Toggle, Disabled)
+  );
+end function;
+
+function Toolbar(Model: S.Model): E.Element<S.Msg>;
+begin
+  return Tools.Toolbar<S.Msg>(
+    'desktop-tools', [
+      Tool($E13D, 'New file', 'Ctrl N'),
+      Tool($E247, 'Open', 'Ctrl O'),
+      Tool($E14D, 'Save', 'Ctrl S'),
+      Tools.Item.Separator,
+      Tool($E2A1, 'Undo', 'Ctrl Z'),
+      Tool($E2A0, 'Redo', Disabled := true),
+      Tools.Item.Separator,
+      Tool(
+        $E05D,
+        'Bold',
+        'Ctrl B',
+        Model.Bold
+      ),
+      Tool($E0FB, 'Italic', 'Ctrl I', Model.Italic),
+      Tool($E19A, 'Underline', 'Ctrl U', Model.Underline),
+      Tools.Item.Separator,
+      Tool($E106, 'Bulleted list', Toggle := Model.List),
+      Tool($E102, 'Insert link', 'Ctrl K'),
+      Tool($E0F6, 'Insert image'),
+      Tools.Item.Spacer,
+      Tool(
+        $E13C,
+        Label := 'Preview'
+      ),
+      Tool($E156, Label := 'Share')
+    ], S.Msg.Tool
+  );
+end function;
+
+function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item<S.Msg>;
+begin
+  return Status.Item<S.Msg>.Action(
+    Key,
+    new Status.Label(Text, Icon),
+    Tip,
+    true,
+    S.Msg.Command(Key)
+  );
+end function;
+
+function Statusbar(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+begin
+  const Spaces: array of string := ['2', '4', '8'];
+  const Encodings: array of string := ['UTF-8', 'UTF-16'];
+  const Languages: array of string := ['Markdown', 'C', 'Plain text'];
+  return E.Column<S.Msg>(
+    new L.Flow(Background := Colors.SurfaceMuted),
+    Status.StatusBar<S.Msg>(
+      'desktop-status', [
+        Item('branch', 'main', 'Switch branch', ''),
+        Status.Item<S.Msg>.Text(new Status.Label('Saved', '', Style.Tone.Success)),
+        Status.Item<S.Msg>.Progress(0.62F, 'Indexing 62%', 0.0F, false),
+        Status.Item<S.Msg>.Spacer,
+        Item('line', 'Ln 48, Col 17', 'Go to line'),
+        Item('spaces', 'Spaces: ' + Spaces[Model.Spaces]),
+        Item('encoding', Encodings[Model.Encoding]),
+        Item('language', Languages[Model.Language]),
+        Item('notifications', '', 'Notifications', '')
+      ]
+    )
+  );
+end function;
+
+function Code(Colors: Theme.Palette): E.Element<S.Msg>;
+begin
+  const Lines: array of string := [
+    'static tile *cache_lookup(tile_cache *c, uint32_t key) {',
+    '    uint32_t slot = key & (c->capacity - 1);',
+    '    while (c->tiles[slot].key != key) {',
+    '        if (!c->tiles[slot].used) return NULL;',
+    '        slot = (slot + 1) & (c->capacity - 1);',
+    '    }',
+    '    return &c->tiles[slot];',
+    '}'
+  ];
+  const Rows: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
+  for Index: int := 0 to Lines.Length - 1 do
+    Rows.Add(
+      E.Row<S.Msg>(
+        new L.Flow(Gap := G.Points(18)),
+        E.Size<S.Msg>(
+          E.Column<S.Msg>(
+            new L.Flow(Align := L.Alignment.End), E.FormattedText<S.Msg>(
+              (41 + Index).ToString(),
+              Glyphs.Font.Mono,
+              12.0F,
+              Colors.TextMuted
+            )
+          ),
+          new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(18))))
+        ),
+        E.FormattedText<S.Msg>(Lines[Index], Glyphs.Font.Mono, 12.0F, Colors.Foreground)
+      )
+    );
+  end for;
+
+  return E.Column<S.Msg>(
+    new L.Flow(
+      Padding := G.Points(14), PaddingStart := G.Points(16),
+      PaddingEnd := G.Points(16), Gap := G.Points(3)
+    ), Rows.ToArray()
+  );
+end function;
+
+// Builds the CUI app-chrome documentation example.
+// ## Parameters
+// - `Model`: Active document, toolbar and status values.
+// - `Colors`: Current CUI palette.
+// ## Returns
+// Editor chrome and sample code.
+public function View(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Background := Colors.Surface, CornerRadius := 14.0F),
+    E.Column<S.Msg>(
+      new L.Flow(Background := Colors.SurfaceMuted, CornerRadius := 13.0F),
+      Menus(Model), Toolbar(Model),
+      Docs.DocumentTabs<S.Msg>(
+        'desktop-documents', Model.Tabs, Model.Selected, S.Msg.Tabs,
+        new Docs.Options(Shortcuts := true)
+      )
+    ),
+    Code(Colors), Statusbar(Model, Colors)
+  );
+end function;
+
+end unit;

@@ -68,29 +68,11 @@ public sealed partial class CuiWindow
             throw new InvalidOperationException("Draw the context menu target first.");
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(icon, nameof(icon));
-        ArgumentNullException.ThrowIfNull(entries);
         if (variant is < 0 or 3 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (placement is < 0 or > 9) throw new ArgumentOutOfRangeException(nameof(placement));
-        if (!float.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width));
-        if (trackingIds is not null && trackingIds.Length != entries.Length + 1)
-            throw new ArgumentException("Supply the trigger and one identity per menu entry.", nameof(trackingIds));
-        string[] keys = new string[entries.Length], labels = new string[entries.Length],
-            icons = new string[entries.Length], shortcuts = new string[entries.Length];
-        int[] flags = new int[entries.Length], nodes = new int[entries.Length + 1];
-        var unique = new HashSet<string>(StringComparer.Ordinal);
-        for (int i = 0; i < entries.Length; i++)
-        {
-            CuiMenuEntry entry = entries[i];
-            ArgumentNullException.ThrowIfNull(entry);
-            if (!Enum.IsDefined(entry.Kind)) throw new ArgumentException("Unknown menu row kind.", nameof(entries));
-            if (entry.Kind == CuiMenuEntryKind.Action && !unique.Add(entry.Key))
-                throw new ArgumentException("Menu command keys must be unique.", nameof(entries));
-            keys[i] = entry.Kind == CuiMenuEntryKind.Action ? Stable(entry.Key) : "";
-            labels[i] = entry.Label; icons[i] = entry.Icon; shortcuts[i] = entry.Shortcut;
-            Utf8.Validate(labels[i], nameof(entries)); Utf8.Validate(icons[i], nameof(entries));
-            Utf8.Validate(shortcuts[i], nameof(entries));
-            flags[i] = (int)entry.Kind | (entry.Enabled ? 0 : 4) | (entry.Danger ? 8 : 0) | (entry.Checked ? 16 : 0);
-        }
+        CheckFeedbackNumber(width, nameof(width));
+        var (keys, labels, icons, shortcuts, flags) = PackMenuEntries(entries, trackingIds);
+        int[] nodes = new int[entries.Length + 1];
         int choice, open, highlighted;
         uint owner = 0;
         string key = Stable(id);
@@ -113,5 +95,31 @@ public sealed partial class CuiWindow
                     else TrackControl(trackingIds[i], nodes[i]);
                 }
         return new CuiMenuResult(choice, open != 0, highlighted);
+    }
+
+    private static (string[] Keys, string[] Labels, string[] Icons, string[] Shortcuts, int[] Flags)
+        PackMenuEntries(CuiMenuEntry[] entries, string[]? trackingIds)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        if (trackingIds is not null && trackingIds.Length != entries.Length + 1)
+            throw new ArgumentException("Supply the trigger and one identity per menu entry.", nameof(trackingIds));
+        string[] keys = new string[entries.Length], labels = new string[entries.Length],
+            icons = new string[entries.Length], shortcuts = new string[entries.Length];
+        int[] flags = new int[entries.Length];
+        var unique = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < entries.Length; i++)
+        {
+            CuiMenuEntry entry = entries[i];
+            ArgumentNullException.ThrowIfNull(entry);
+            if (!Enum.IsDefined(entry.Kind)) throw new ArgumentException("Unknown menu row kind.", nameof(entries));
+            if (entry.Kind == CuiMenuEntryKind.Action && !unique.Add(entry.Key))
+                throw new ArgumentException("Menu command keys must be unique.", nameof(entries));
+            keys[i] = entry.Kind == CuiMenuEntryKind.Action ? Stable(entry.Key) : "";
+            labels[i] = entry.Label; icons[i] = entry.Icon; shortcuts[i] = entry.Shortcut;
+            Utf8.Validate(labels[i], nameof(entries)); Utf8.Validate(icons[i], nameof(entries));
+            Utf8.Validate(shortcuts[i], nameof(entries));
+            flags[i] = (int)entry.Kind | (entry.Enabled ? 0 : 4) | (entry.Danger ? 8 : 0) | (entry.Checked ? 16 : 0);
+        }
+        return (keys, labels, icons, shortcuts, flags);
     }
 }

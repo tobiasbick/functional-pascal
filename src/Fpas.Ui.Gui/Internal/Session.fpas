@@ -124,7 +124,12 @@ requires Capacity > 0;
   function Context(Candidate: V.Prepared<TMsg>; Accept: bool): C.State<TMsg>;
   begin
     const Last: App.Frame? := Published;
-    const Modal: string? := F.TopModal<TMsg>(Candidate.Tree, Candidate);
+    const Previous: array of App.Control := if Last = null then
+      []
+    else
+      Last.Controls
+    end if;
+    const Modal: string? := F.TopModal<TMsg>(Candidate.Tree, Candidate, Previous);
     return new C.State<TMsg>(
       Window,
       Candidate,
@@ -134,11 +139,7 @@ requires Capacity > 0;
       Focus,
       Modals,
       new Generic.HashSet<string>(),
-      if Last = null then
-        []
-      else
-        Last.Controls
-      end if,
+      Previous,
       Accept and Modal = null,
       Accept,
       Modal

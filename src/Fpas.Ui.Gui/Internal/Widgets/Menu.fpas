@@ -4,35 +4,33 @@ uses
   Fpas.Ui.Menus as M, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Context as C, System.Collections.Generic as Lists, Fpas.Ui.UserMenus as U;
 
-// Shares native command conversion, dispatch and inspection between menus.
+// Converted native menu rows and optional inspection identities.
+public type Rows = record
+  // Commands and decorations in source order.
+  public Entries: array of Cui.CuiMenuEntry;
+  // Trigger and command identities when inspecting this frame.
+  public Tokens: (array of string)?;
+end record;
+
+// Converts commands for native dropdowns, context menus and bar menus.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
-// - `State`: Current frame, input permission and message queue.
+// - `Role`: Trigger role.
 // - `Id`: Trigger identity.
-// - `Label`: Accessible name; dropdowns also use it as caption and tooltip.
-// - `Entries`: Ordered native menu content.
-// - `Settings`: Options for a dropdown trigger.
-// - `Enabled`: Whether this menu accepts input.
-// - `Account`: Options for a user menu trigger. With neither option the menu attaches to the previous component.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Entries: array of M.Entry<TMsg>; Settings: M.Options?; Enabled: bool; Account: U.Options? := null);
+// - `Entries`: Original menu rows.
+// - `Track`: Whether to track native nodes.
+// ## Returns
+// Native entries and optional identities.
+public function Prepare<TMsg>(Role: string; Id: string; Entries: array of M.Entry<TMsg>; Track: bool): Rows;
 begin
-  const Accept: bool := Enabled and State.AcceptInput;
-  const Role: string := if Account <> null then
-    'user-menu'
-  elsif Settings = null then
-    'context-menu'
-  else
-    'menu'
-  end if;
-  const Token: string := C.Token(Role, Id);
-  const Rows: Lists.List<Cui.CuiMenuEntry> := new Lists.List<Cui.CuiMenuEntry>();
+  const Native: Lists.List<Cui.CuiMenuEntry> := new Lists.List<Cui.CuiMenuEntry>();
   const Tokens: Lists.List<string> := new Lists.List<string>();
-  Tokens.Add(Token);
+  Tokens.Add(C.Token(Role, Id));
   for Entry: M.Entry<TMsg> in Entries do
     case Entry of
       when M.Entry.Action(const Item: M.Item<TMsg>):
-        Rows.Add(
+        Native.Add(
           new Cui.CuiMenuEntry(
             Cui.CuiMenuEntryKind.Action,
             Item.Key,
@@ -46,51 +44,36 @@ begin
         );
         Tokens.Add(C.Token('menu-item', M.ItemId(Id, Item.Key)));
       when M.Entry.Label(const Text: string):
-        Rows.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Label, '', Text));
+        Native.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Label, '', Text));
         Tokens.Add('');
       when M.Entry.Separator:
-        Rows.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Separator, '', ''));
+        Native.Add(new Cui.CuiMenuEntry(Cui.CuiMenuEntryKind.Separator, '', ''));
         Tokens.Add('');
     end case;
   end for;
-  const Result: Cui.CuiMenuResult := if Account <> null then
-    State.Window.UserMenu(
-      Token, Label, Account.Detail, Account.Status, Account.Compact, Rows.ToArray(),
-      cast<int>(Account.Position), Account.Width, Accept,
-      C.WantsFocus<TMsg>(State, Id, Token, Accept),
-      if State.PaintingClosed then
-        null
-      else
-        Tokens.ToArray()
-      end if
-    )
-  elsif Settings = null then
-    State.Window.ContextMenu(
-      Token, Rows.ToArray(), Accept, if State.PaintingClosed then
-        null
-      else
-        Tokens.ToArray()
-      end if
-    )
-  else
-    State.Window.Menu(
-      Token,
-      Label,
-      Settings.Icon,
-      Rows.ToArray(),
-      cast<int>(Settings.Variant),
-      cast<int>(Settings.Position),
-      Settings.Width,
-      Settings.IconOnly,
-      Accept,
-      C.WantsFocus<TMsg>(State, Id, Token, Accept),
-      if State.PaintingClosed then
-        null
-      else
-        Tokens.ToArray()
-      end if
-    )
-  end if;
+
+  return new Rows(
+    Native.ToArray(), if Track then
+      Tokens.ToArray()
+    else
+      null
+    end if
+  );
+end function;
+
+// Forwards the selected command and publishes menu inspection data.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Presentation context.
+// - `Role`: Trigger role.
+// - `Id`: Trigger identity.
+// - `Label`: Trigger caption.
+// - `Entries`: Original menu rows.
+// - `Accept`: Whether the trigger accepts input.
+// - `Result`: Native popup state.
+public procedure Report<TMsg>(State: C.State<TMsg>; Role: string; Id: string; Label: string; Entries: array of M.Entry<TMsg>; Accept: bool; Result: Cui.CuiMenuResult);
+begin
   if Result.Choice >= 0 then
     case Entries[Result.Choice] of
       when M.Entry.Action(const Item: M.Item<TMsg>):
@@ -139,6 +122,58 @@ begin
       end case;
     end for;
   end if;
+end procedure;
+
+// Shares native command conversion, dispatch and inspection between menus.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current frame, input permission and message queue.
+// - `Id`: Trigger identity.
+// - `Label`: Accessible name; dropdowns also use it as caption and tooltip.
+// - `Entries`: Ordered native menu content.
+// - `Settings`: Options for a dropdown trigger.
+// - `Enabled`: Whether this menu accepts input.
+// - `Account`: Options for a user menu trigger. With neither option the menu attaches to the previous component.
+public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Entries: array of M.Entry<TMsg>; Settings: M.Options?; Enabled: bool; Account: U.Options? := null);
+begin
+  const Accept: bool := Enabled and State.AcceptInput;
+  const Role: string := if Account <> null then
+    'user-menu'
+  elsif Settings = null then
+    'context-menu'
+  else
+    'menu'
+  end if;
+  const Token: string := C.Token(Role, Id);
+  const Prepared: Rows := Prepare<TMsg>(Role, Id, Entries, not State.PaintingClosed);
+  const Result: Cui.CuiMenuResult := if Account <> null then
+    State.Window.UserMenu(
+      Token, Label, Account.Detail, Account.Status, Account.Compact, Prepared.Entries,
+      cast<int>(Account.Position), Account.Width, Accept,
+      C.WantsFocus<TMsg>(State, Id, Token, Accept),
+      Prepared.Tokens
+    )
+  elsif Settings = null then
+    State.Window.ContextMenu(
+      Token, Prepared.Entries, Accept, Prepared.Tokens
+    )
+  else
+    State.Window.Menu(
+      Token,
+      Label,
+      Settings.Icon,
+      Prepared.Entries,
+      cast<int>(Settings.Variant),
+      cast<int>(Settings.Position),
+      Settings.Width,
+      Settings.IconOnly,
+      Accept,
+      C.WantsFocus<TMsg>(State, Id, Token, Accept),
+      Prepared.Tokens
+    )
+  end if;
+  Report<TMsg>(State, Role, Id, Label, Entries, Accept, Result);
 end procedure;
 
 end unit;

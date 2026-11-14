@@ -4,7 +4,7 @@ uses
   Fpas.Ui.Internal.EditingToolValidation as EditingTools,
   Fpas.Ui.Internal.SourceToolValidation as SourceTools,
   Fpas.Ui.Internal.DisplayValidation as Display,
-  Fpas.Ui.Internal.CanvasValidation as Canvas,
+  Fpas.Ui.Internal.ChromeValidation as Chrome, Fpas.Ui.Internal.CanvasValidation as Canvas,
   Fpas.Ui.Internal.DeveloperValidation as Developer,
   Fpas.Ui.Internal.VoiceAndAiValidation as VoiceAndAi,
   Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
@@ -2151,6 +2151,21 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _
       ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
         Canvas.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+      when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Dockspace(_, _, _, _), E.Element.SplitView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        Chrome.Check<TMsg>(Node, Location, Profile, Identify, Visit);
       when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
         _,
         _,

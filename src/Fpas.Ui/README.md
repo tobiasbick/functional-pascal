@@ -1519,6 +1519,33 @@ All interactive charts honor `Options.Enabled`. Radial gauges are passive.
 The local [CUI findings](../../docs/future/cui-upstream-bugs.md) describe guards
 for disabled candlestick wheels and omitted native Sankey link activations.
 
+## Desktop chrome
+
+The **App chrome** page demonstrates the native graphical menu bar, document
+tabs, status bar, docking workspace and split view.
+
+- `MenuBars.MenuBar` uses ordinary `Menus.Entry` commands. Titles can override
+  their mnemonic and popup width. F10, Alt and arrow navigation belong to CUI.
+  The shortcut text beside a command is a display hint.
+- `DocumentTabs.DocumentTabs` takes keyed documents, a selected index and a
+  callback. Apply the proposed move before updating the selected index. A
+  simultaneous close refers to the original index, so resolve it by document
+  key before applying a move. Window-wide shortcuts are opt-in.
+- `StatusBars.StatusBar` takes text, keyed actions, progress and spacers. CUI
+  chooses which items fit, and the callback on each action remains model-owned.
+- `Dockspaces.Dockspace` takes all panels on every frame, including closed and
+  inactive panels. CUI draws the selected panel in each leaf and owns resizing,
+  placement and tab drag. A panel with an `OnOpenChanged` callback can be closed.
+  For persistence, store `OnLayoutChanged` in the model, pass the stored value
+  as `KnownLayout`, and use a new `Restore.Revision` to load saved `dock1` text.
+  The text refers to panel keys. Supply a stable workspace ID for its lifetime.
+- `SplitViews.SplitView` accepts two children, a ratio from zero to one and
+  optional minima. The resize callback proposes a new ratio. Pass an explicit
+  height when placing a split or workspace inside a scrolling column.
+
+The menu, status and tab constructors take captions and keys separately.
+Captions are single-line and reserve CUI's `##` delimiter. The terminal
+profile rejects these native desktop elements in preflight.
 ## Subview composition
 
 `Fpas.Ui.Composition.Map<TChild, TParent>(Tree, Messages)` embeds a child view

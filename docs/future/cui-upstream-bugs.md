@@ -523,3 +523,19 @@ discard any ongoing drag. The timeline also suppresses a middle-button pan
 start. `fpas_cui_editing_tools native` reproduces both zooms with direct CUI
 calls. The regular test verifies that the original range is preserved by the
 adapters.
+
+<a id="cui-040"></a>
+
+## CUI-040 — Split divider can report an invalid ratio at small sizes
+
+Reproduced on Windows at `86d9781`. Draw a 100-point horizontal split with
+the default 120-point minimum in each pane. After the first frames, drag
+the divider. CUI clamps the position between 120 and −20 even though
+the lower limit exceeds the upper limit. The resulting ratio can be
+above 1 or below 0. The panes can also overflow the split's width.
+
+The FPAS Split View adapter scales both minimums proportionally when
+they cannot fit, after reserving the native one-point divider. The
+`fpas_cui_desktop_chrome native` test reproduces the invalid ratio with
+direct CUI calls. The regular test verifies a bounded ratio through the
+adapter and separately verifies resizing when the pane minimums fit.

@@ -55,6 +55,42 @@ result with the existing `async` and `await using` code. Extract the library if
 both call sites carry less cancellation and cleanup logic and their tests can
 exercise the workflow with fewer real process launches.
 
+## Library contracts
+
+- A layer builds a service from its typed dependencies. Compose layers to supply
+  the environment for a workflow. Acquire dependencies before their consumers
+  and release them after those consumers. If acquisition fails partway through,
+  release the resources already acquired.
+- A scope owns child scopes, tasks, and cleanup actions. A child scope can close
+  while its parent and siblings remain active. Closing a scope requests
+  cancellation in that scope and its children. Wait for tasks to finish before
+  releasing resources they use. Each registered cleanup runs once, including
+  after failure or cancellation. Callers can also cancel and await an individual
+  task.
+- An event stream preserves the producer's event order and distinguishes normal
+  completion, producer failure, and cancellation. A reader that continues reading
+  receives buffered events before it sees a producer failure. Cancellation must
+  wake readers waiting for data and producers waiting for space. Use the existing
+  [bounded channel and task ownership patterns](../pascal/libraries/channels.md).
+
+## Test producer
+
+After the process pilot, run a test producer in a child scope. Give it a resource
+from a layer and have it write a known sequence to a bounded channel. Coordinate
+the producer and reader with explicit signals so the test controls when either
+can proceed.
+
+- On success, the reader receives the full sequence in order and sees completion.
+- On producer failure, the reader receives the buffered events in order before
+  it sees the failure.
+- For cancellation, close the child scope with a blocked producer in one run and
+  a blocked reader in another. Both runs unblock and join the tasks. The parent
+  scope and a sibling scope remain usable.
+
+For each outcome, check that the resource is released once after the tasks finish.
+Also check that a layer acquisition failure releases any resources acquired
+earlier in the same build.
+
 ## Compiler questions
 
 An effect value gives callers a way to compose work and choose when to run it.
@@ -71,6 +107,5 @@ ordinary FPAS routines and delegates.
   calls whose effects are unknown. Preserve checked guarantees across FPAS
   assemblies, delegates, and protocol dispatch.
 
-Use examples from the pilot to distinguish problems the library solves from
-guarantees that need compiler checking. Syntax decisions require separate
-approval.
+Use the process pilot and the test producer to identify guarantees that need
+compiler checking. Syntax decisions require separate approval.

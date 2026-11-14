@@ -1,6 +1,7 @@
 unit Fpas.Ui.Gui.Internal.Focus;
 
 uses
+  Fpas.Ui.StatusBars as StatusBar, Fpas.Ui.DocumentTabs as Docs,
   Fpas.Ui.Veils as Veil, Fpas.Ui.Terminals as TerminalWidget,
   Fpas.Ui.Gui.Internal.AiFocus as AiFocus, Fpas.Ui.ResultCards as ResultCards,
   Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
@@ -836,6 +837,32 @@ begin
           return Id;
         end if;
       end if;
+    when E.Element.SplitView(_, _, const Left: E.Element<TMsg>, const Right: E.Element<TMsg>, _, _):
+      return First<TMsg>(Left, Prepared, Preferred) ?? First<TMsg>(Right, Prepared, Preferred);
+    when E.Element.DocumentTabs(
+      const Id: string,
+      const Documents: array of Docs.Tab,
+      const Selected: int,
+      _,
+      _
+    ):
+      if Selected >= 0 then
+        const Part: string := Menus.ItemId(Id, Documents[Selected].Key);
+        if Preferred = null or Preferred = Id or Preferred = Part then
+          return Part;
+        end if;
+      end if;
+    when E.Element.StatusBar(const Id: string, const Items: array of StatusBar.Item<TMsg>, _):
+      for Item: StatusBar.Item<TMsg> in Items do
+        case Item of
+          when StatusBar.Item.Action(const Key: string, _, _, const Enabled: bool, _):
+            const Part: string := Menus.ItemId(Id, Key);
+            if Enabled and (Preferred = null or Preferred = Part) then
+              return Part;
+            end if;
+          else
+        end case;
+      end for;
     when E.Element.Layered(
       const Children: array of E.Element<TMsg>,
       _

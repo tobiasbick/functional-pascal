@@ -23,6 +23,8 @@ uses
   Fpas.Ui.CanvasControls as CanvasControls,
   Fpas.Ui.ResultCards as ResultCards,
   Fpas.Ui.SelectionBars as SelectionBars,
+  Fpas.Ui.MenuBars as MenuBars, Fpas.Ui.DocumentTabs as Documents, Fpas.Ui.StatusBars as StatusBars,
+  Fpas.Ui.Dockspaces as Dockspaces, Fpas.Ui.SplitViews as SplitViews,
   Fpas.Ui.Toolbars as Toolbars,
   Fpas.Ui.NodeEditors as NodeEditors,
   Fpas.Ui.ProblemsPanels as ProblemsPanels,
@@ -462,6 +464,16 @@ public type Element<TMsg> = variant
   ResultCard(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: ResultCards.Options);
   // Native CUI SelectionBar element.
   SelectionBar(Id: string; Selected: array of bool; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element<TMsg>; Settings: SelectionBars.Options);
+  // Native desktop menu bar.
+  MenuBar(Id: string; Menus: array of MenuBars.Menu<TMsg>; HideBorder: bool);
+  // Native closable, reorderable document tabs.
+  DocumentTabs(Id: string; Tabs: array of Documents.Tab; Selected: int; Changed: function(Documents.Change): TMsg; Settings: Documents.Options);
+  // Native status bar with messages and actions.
+  StatusBar(Id: string; Items: array of StatusBars.Item<TMsg>; HideBorder: bool);
+  // Native split view with a draggable divider.
+  SplitView(Id: string; Ratio: float; First: Element<TMsg>; Second: Element<TMsg>; Changed: function(float): TMsg; Settings: SplitViews.Options);
+  // Native docking workspace with movable panels.
+  Dockspace(Id: string; Panels: array of Dockspaces.Panel<TMsg>; Settings: Dockspaces.Options; Changed: Sys.Func<string, TMsg>?);
   // Native CUI Toolbar element.
   Toolbar(Id: string; Items: array of Toolbars.Item; Changed: function(Toolbars.Event): TMsg; Settings: Toolbars.Options);
   // Native CUI NodeEditor element.

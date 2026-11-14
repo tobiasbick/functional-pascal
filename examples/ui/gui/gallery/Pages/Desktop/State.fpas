@@ -1,0 +1,147 @@
+unit GuiGallery.Pages.Desktop.State;
+
+uses Fpas.Ui.DocumentTabs as D, Fpas.Ui.Toolbars as T, Fpas.Ui.LogConsoles as Log, Fpas.Ui.PropertyInspectors as P, Fpas.Ui.Graphics as Color;
+
+// Editor and workspace sample state.
+public type Model = record
+  // Open editor documents.
+  public Tabs: array of D.Tab := [
+    new D.Tab('readme', 'README.md', '', 'docs/README.md'),
+    new D.Tab('source', 'tile_cache.c', '', 'src/tile_cache.c', true),
+    new D.Tab('header', 'tile_cache.h', '', 'src/tile_cache.h'),
+    new D.Tab('changes', 'CHANGELOG.md', '', 'CHANGELOG.md', true)
+  ];
+  // Selected document index.
+  public Selected: int := 1;
+  // Visible editor preferences, in View menu order.
+  public Sidebar: bool := true;
+  // Whether the Minimap command is checked.
+  public Minimap: bool := false;
+  // Whether Word wrap is checked.
+  public Wrap: bool := true;
+  // Native toolbar toggles.
+  public Bold: bool := true;
+  // Active italic tool.
+  public Italic: bool := false;
+  // Active underline tool.
+  public Underline: bool := false;
+  // Active list tool.
+  public List: bool := true;
+  // Indent size choice.
+  public Spaces: int := 1;
+  // UTF-8 or UTF-16 choice.
+  public Encoding: int := 0;
+  // Document language choice.
+  public Language: int := 0;
+  // Scene-tree expansion.
+  public Root: bool := true;
+  // Pier expansion.
+  public Pier: bool := true;
+  // Light expansion.
+  public Lights: bool := false;
+  // Selected object.
+  public Object: string := 'crate-2';
+  // Selected asset.
+  public Asset: string := 'crate_large.obj';
+  // Workspace log.
+  public Log: array of Log.Entry := [
+    new Log.Entry(Log.Level.Info, 50527.120, 'Loading project harbor_town (412 assets)'),
+    new Log.Entry(Log.Level.Debug, 50527.203, 'Asset cache hit rate 91.4% (376 of 412)'),
+    new Log.Entry(Log.Level.Trace, 50527.564, 'vfs: mounted /content/packs/base.pak (218 MB)'),
+    new Log.Entry(Log.Level.Info, 50528.203, 'Compiling shaders: 64 variants on 8 threads'),
+    new Log.Entry(Log.Level.Debug, 50528.937, 'terrain_blend.frag: 3 permutations, 1.8 ms each'),
+    new Log.Entry(
+      Log.Level.Warning,
+      50529.949,
+      'water_surface.frag:118: implicit float to half conversion'
+    ),
+    new Log.Entry(Log.Level.Info, 50530.154, 'Shaders compiled in 2.41 s'),
+    new Log.Entry(Log.Level.Trace, 50530.454, 'gpu: uploaded 37 textures, 148.2 MB resident'),
+    new Log.Entry(Log.Level.Info, 50531.032, 'Baking navmesh for 3 regions'),
+    new Log.Entry(Log.Level.Debug, 50531.888, 'navmesh: harbor 18,204 polys, market 9,377 polys'),
+    new Log.Entry(
+      Log.Level.Warning,
+      50532.839,
+      'Texture props/barrel_d.png is 4096x4096; streaming budget is 2048'
+    ),
+    new Log.Entry(Log.Level.Info, 50532.983, 'Lightmaps: 12 of 12 atlases up to date'),
+    new Log.Entry(
+      Log.Level.Error,
+      50533.405,
+      'Missing material ''dock_planks_wet'' on mesh pier_03.obj (using fallback)'
+    ),
+    new Log.Entry(Log.Level.Debug, 50533.922, 'audio: 96 voices, 48 kHz, latency 10.7 ms'),
+    new Log.Entry(Log.Level.Info, 50534.717, 'Entering play mode'),
+    new Log.Entry(
+      Log.Level.Trace,
+      50535.790,
+      'frame 1: 14.2 ms (update 3.1, render 9.8, present 1.3)'
+    ),
+    new Log.Entry(Log.Level.Info, 50535.873, 'Spawned 214 entities in harbor'),
+    new Log.Entry(
+      Log.Level.Warning,
+      50536.234,
+      'Physics step took 21.4 ms (budget 16.6 ms) after the crane collision'
+    ),
+    new Log.Entry(Log.Level.Debug, 50536.873, 'Streaming in market district, 31 cells'),
+    new Log.Entry(Log.Level.Info, 50537.607, 'Autosave written to saves/slot_2.sav (1.2 MB)')
+  ];
+  // Inspector groups for the selected crate.
+  public Properties: array of P.Group := [
+    new P.Group(
+      'Transform', [
+        new P.Property(
+          'Position',
+          P.Value.Vector([12.5F, 0.0F, -4.25F]),
+          Step := 0.05F,
+          Digits := 2
+        ),
+        new P.Property('Rotation', P.Value.Vector([0.0F, 45.0F, 0.0F]), Step := 1.0F, Digits := 0)
+      ]
+    ),
+    new P.Group(
+      'Material', [
+        new P.Property('Shader', P.Value.Choice(['Standard PBR', 'Unlit', 'Toon', 'Glass'], 0)),
+        new P.Property('Base color', P.Value.Color(new Color.Color(194, 106, 61, 255))),
+        new P.Property(
+          'Roughness',
+          P.Value.Number(0.42F),
+          Minimum := 0.0F,
+          Maximum := 1.0F,
+          Step := 0.01F
+        ),
+        new P.Property('Cast shadows', P.Value.Boolean(true))
+      ]
+    )
+  ];
+  // First pane share in the separate split example.
+  public Ratio: float := 0.35F;
+  // Bitset of closed dock panels.
+  public Closed: int := 0;
+  // Requested dock layout reset.
+  public Revision: int := 0;
+end record;
+
+// Native proposals for the desktop examples.
+public type Msg = variant
+  // Change editor menu or status state.
+  Command(Key: string);
+  // Accept a selection, close or reorder.
+  Tabs(Change: D.Change);
+  // Accept an editor toolbar action.
+  Tool(Change: T.Event);
+  // Change dock panel visibility.
+  Panel(Index: int; Open: bool);
+  // Accept a dock toolbar toggle or reset.
+  DockTool(Change: T.Event);
+  // Change expansion of a scene branch.
+  Branch(Key: string; Open: bool);
+  // Select one asset.
+  Asset(Name: string);
+  // Accept an inspector proposal.
+  Property(Change: P.Event);
+  // Accept the new divider position.
+  Resize(Ratio: float);
+end variant;
+
+end unit;

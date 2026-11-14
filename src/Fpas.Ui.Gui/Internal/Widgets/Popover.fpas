@@ -32,7 +32,7 @@ begin
   end if;
 
   const ContainsModal: bool := Frame.Interactive and Frame.ActiveModal <> null
-    and F.TopModal<TMsg>(Content, Frame.Prepared) = Frame.ActiveModal;
+    and F.TopModal<TMsg>(Content, Frame.Prepared, Frame.Previous) = Frame.ActiveModal;
   const Result: int := Frame.Window.BeginPopover(
     C.Token('popover', Id), cast<int>(Settings.Position), cast<float>(Settings.Width),
     cast<float>(Settings.Padding), cast<float>(Settings.Gap),

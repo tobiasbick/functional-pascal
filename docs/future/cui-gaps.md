@@ -98,6 +98,13 @@ gallery also needs them.
   without a pixel tolerance. Keep strict whole-page parity open until the
   composition differences are resolved.
 
+- [ ] Match the supplementary App chrome composition to CUI's documentation
+  captures. At 1100 and 550 logical points, scale one, Software and OpenGL show
+  remaining differences in the editor code and status alignment, the Docking
+  viewport illustration and frame, and the boundary pixels of Split view.
+  The direct native widget comparison is exact. Keep the assembled examples
+  open until their corresponding regions also match.
+
 ### Native window identity
 
 - [ ] Expose the Linux application ID through GUI options, the managed window,
@@ -507,7 +514,9 @@ checks that the slider wells stack in one column.
 - [x] Bottom tab bar (`cui_tab_bar`): [API][fpas-motion]. Motion shows the four
   original tabs and Inbox badge. The Windows keyboard test checks that Right
   moves one tab and transfers focus. FPAS works around CUI-029.
-- [ ] Menu bar and menus (`cui_menu_bar`, `cui_menu_bar_menu`)
+- [x] Menu bar and menus (`cui_menu_bar`, `cui_menu_bar_menu`): App chrome uses
+  the CUI documentation's File, Edit, View, Go and Help menus. The gallery
+  checks Alt+V and Enter, and the native test exercises F10 and Down.
 - [x] Toolbar and toolbar buttons (`cui_toolbar`, `cui_toolbar_button`,
   `cui_toolbar_spacer`, `cui_toolbar_separator`). Include grouped and floating
   styles, overflow menus, groups, radio sets, primary actions, cycle pickers,
@@ -515,10 +524,27 @@ checks that the slider wells stack in one column.
   `cui_toolbar_primary`, `cui_toolbar_cycle`, `cui_flyout_mark`). Canvas and
   bars shows the grouped and floating examples. The native test advances a
   cycle control. [API](../../src/Fpas.Ui/README.md#canvas-and-bars)
-- [ ] Document tabs (`cui_doc_tabs`)
-- [ ] Status bar and its items (`cui_status_bar`, `cui_status_bar_text`, `cui_status_bar_item`, `cui_status_bar_progress`, `cui_status_bar_spacer`)
-- [ ] Docking workspace and panels (`cui_dockspace`, `cui_dock_panel`)
-- [ ] Split view (`cui_split`)
+- [x] Document tabs (`cui_doc_tabs`): the App chrome editor shows the native
+  strip with dirty markers and tooltips. The Windows gallery checks selecting,
+  moving and closing the same document with the keyboard.
+- [x] Status bar and its items (`cui_status_bar`, `cui_status_bar_text`,
+  `cui_status_bar_item`, `cui_status_bar_progress`, `cui_status_bar_spacer`):
+  the editor displays the branch, indexing progress and clickable status items.
+  The Windows gallery switches encoding through the keyed native item.
+- [x] Docking workspace and panels (`cui_dockspace`, `cui_dock_panel`): App chrome
+  shows the reference panel arrangement, panel toggles and layout reset. Tests
+  cover native drag, close, reopen, layout serialization and invalid restore.
+- [x] Split view (`cui_split`): App chrome includes a resizable two-pane example.
+  The Windows tests drag the divider and verify [CUI-040](cui-upstream-bugs.md#cui-040)
+  when pane minimums exceed the allocated width.
+
+The [desktop chrome APIs](../../src/Fpas.Ui/README.md#desktop-chrome) require
+the graphical profile. The native Windows test compares all five widgets with
+direct CUI at 740 and 360 points, in light and dark, with zero differing pixels.
+The Windows gallery contract exercises keyboard and pointer input in Software
+and OpenGL. The supplementary page uses CUI's documentation examples as its
+reference. Whole-example composition differences are tracked under strict
+gallery pixel parity.
 
 ### Overlays and disclosure
 
@@ -878,7 +904,10 @@ additional SQL sample is outside the original Code comparison.
 
 Line and bar charts expose native annotations through `Charts.Annotation`;
 focused native parity covers a threshold and point with labels and details.
-Chart annotations remain open for the dot-matrix chart and its gallery demos.
+The dot-matrix chart uses the same annotation API. Direct Windows tests compare
+X and Y references, an accented point, and label details pixel for pixel.
+At 1100 × 1390, the Instruments content matches in both Software and OpenGL,
+including the threshold, bedtime and peak annotations.
 
 Include axis formatting through `cui_axis_units`, including `CUI_AXIS_HOURS`:
 12.25 reads 12:15 and 30 reads 06:00 on the next day. Match these semantics

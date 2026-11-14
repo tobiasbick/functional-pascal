@@ -1,0 +1,38 @@
+unit Fpas.Ui.Gui.Internal.Widgets.MenuBar;
+
+uses
+  Fpas.Ui.Gui.Internal.CreativeParts as P, Fpas.Ui.MenuBars as B, Fpas.Ui.Menus as M, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as C,
+  Fpas.Ui.Gui.Internal.Widgets.Menu as Menu;
+
+// Draws native bar titles and their menus.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation and input context.
+// - `Id`: Stable bar identity.
+// - `Menus`: Titles and their commands.
+// - `HideBorder`: Omit the bottom hairline.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Menus: array of B.Menu<TMsg>; HideBorder: bool);
+begin
+  Frame.Window.BeginMenuBar(C.Token('menu-bar', Id), not HideBorder, Frame.AcceptInput);
+  for Item: B.Menu<TMsg> in Menus do
+    const TitleId: string := M.ItemId(Id, Item.Key);
+    const Enabled: bool := Frame.AcceptInput and Item.Enabled;
+    const Rows: Menu.Rows := Menu.Prepare<TMsg>(
+      'menu-bar-menu',
+      TitleId,
+      Item.Entries,
+      not Frame.PaintingClosed
+    );
+    const Result: Cui.CuiMenuResult := Frame.Window.MenuBarMenu(
+      Item.Key, Item.Label, Item.Mnemonic, Item.Width, Enabled, Rows.Entries, Rows.Tokens
+    );
+    Menu.Report<TMsg>(Frame, 'menu-bar-menu', TitleId, Item.Label, Item.Entries, Enabled, Result);
+  end for;
+
+  Frame.Window.EndMenuBar();
+  P.Root<TMsg>(Frame, Id, 'menu-bar', '', Menus.Length > 0 and Frame.AcceptInput, '');
+end procedure;
+
+end unit;

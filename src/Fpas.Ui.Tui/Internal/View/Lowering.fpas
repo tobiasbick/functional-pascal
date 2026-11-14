@@ -748,6 +748,21 @@ public function Prepare<TMsg>(
         _
       ), Ui.Element.Toolbar(_, _, _, _), Ui.Element.NodeEditor(_, _, _, _, _, _):
         raise new Sys.NotSupportedException('Canvas widgets require the graphical host.');
+      when Ui.Element.MenuBar(_, _, _), Ui.Element.DocumentTabs(
+        _,
+        _,
+        _,
+        _,
+        _
+      ), Ui.Element.StatusBar(_, _, _), Ui.Element.Dockspace(_, _, _, _), Ui.Element.SplitView(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ):
+        raise new Sys.NotSupportedException('Desktop chrome requires the graphical host.');
       when Ui.Element.Markdown(_, _, _, _), Ui.Element.CodeEditor(_, _, _, _), Ui.Element.DiffView(
         _,
         _,

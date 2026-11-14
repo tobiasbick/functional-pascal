@@ -1,6 +1,7 @@
 unit GuiGallery.App.Update;
 
 uses
+  GuiGallery.Pages.Desktop.State as Desktop, GuiGallery.Pages.Desktop.Update as DesktopUpdate,
   GuiGallery.Pages.EditingTools.State as Editing, GuiGallery.Pages.EditingTools.Update as EditUpdate,
   Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Terminals as TerminalWidget,
   GuiGallery.Pages.Code.State as CodePage, GuiGallery.Pages.Code.Update as CodeUpdate,
@@ -180,6 +181,12 @@ begin
         State with
           Planning := Child.Model;
         end with, Child.Commands
+      );
+    when G.Msg.Desktop(const Value: Desktop.Msg):
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State with
+          Desktop := DesktopUpdate.Update(State.Desktop, Value);
+        end with, []
       );
     when G.Msg.Canvas(const Value: Canvas.Msg):
       return new Mvu.Transition<G.Model, G.Msg>(

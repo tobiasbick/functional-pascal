@@ -1,6 +1,7 @@
 unit GuiGallery.App.View;
 
 uses
+  GuiGallery.Pages.Desktop.State as DesktopState, GuiGallery.Pages.Desktop.View as DesktopView,
   GuiGallery.Pages.EditingTools.State as EditState, GuiGallery.Pages.EditingTools.View as EditView,
   GuiGallery.Pages.Ai.State as AiState, GuiGallery.Pages.Ai.View as Ai,
   GuiGallery.Pages.Voice.State as VoiceState, GuiGallery.Pages.Voice.View as Voice, GuiGallery.App.Update as AppUpdate,
@@ -110,6 +111,8 @@ begin
     'Creative controls'
   elsif Page = State.Page.DataGrid then
     'Data grid'
+  elsif Page = State.Page.Desktop then
+    'App chrome'
   elsif Page = State.Page.EditingTools then
     'Editing tools'
   elsif Page = State.Page.Display then
@@ -175,7 +178,8 @@ begin
           Destination(State.Page.Voice, $E118),
           Destination(State.Page.Layout, $E529),
           Destination(State.Page.Display, $E198),
-          Destination(State.Page.EditingTools, $E20A)
+          Destination(State.Page.EditingTools, $E20A),
+          Destination(State.Page.Desktop, $E20A)
         ]
       )
     ],
@@ -329,6 +333,17 @@ begin
       const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
       for Item: E.Element<ChartsState.Msg> in Charts.View(Model.Charts) do
         Parts.Add(U.Map<ChartsState.Msg, State.Msg>(Item, State.Msg.Charts));
+      end for;
+
+      return Parts.ToArray();
+    when State.Page.Desktop:
+      const Parts: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+      for Item: E.Element<DesktopState.Msg> in DesktopView.View(
+        Model.Desktop,
+        AppUpdate.ThemeFor(Model).Colors,
+        Width
+      ) do
+        Parts.Add(U.Map<DesktopState.Msg, State.Msg>(Item, State.Msg.Desktop));
       end for;
 
       return Parts.ToArray();

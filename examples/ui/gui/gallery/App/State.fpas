@@ -1,6 +1,7 @@
 unit GuiGallery.App.State;
 
 uses
+  GuiGallery.Pages.Desktop.State as Desktop,
   GuiGallery.Pages.EditingTools.State as Editing,
   GuiGallery.Pages.Code.State as CodePage,
   GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Voice.State as VoicePage,
@@ -101,6 +102,8 @@ public type Page = enum: byte
   Display;
   // Inspector, profiler and animation editors.
   EditingTools;
+  // Native desktop chrome and docking.
+  Desktop;
 end enum;
 
 // Application state with one owner per feature.
@@ -153,6 +156,8 @@ public type Model = record
   public Creative: Creative.Model := new Creative.Model();
   // State owned by Canvas and bars.
   public Canvas: Canvas.Model := new Canvas.Model();
+  // Desktop chrome and workspace state.
+  public Desktop: Desktop.Model := new Desktop.Model();
   // Native animation and inspection examples.
   public Editing: Editing.Model := new Editing.Model();
   // Editable examples on Code.
@@ -187,6 +192,8 @@ public type Msg = variant
   AI(Value: Ai.Msg);
   // Routes voice and recorder actions.
   Voice(Value: VoicePage.Msg);
+  // Accept an editor or dock interaction.
+  Desktop(Value: Desktop.Msg);
   // Route an input proposal to Instruments.
   Instruments(Value: Instruments.Msg);
   // Route an input proposal to Motion.

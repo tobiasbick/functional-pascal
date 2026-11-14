@@ -1,0 +1,170 @@
+unit GalleryDesktopChromeContract;
+
+uses
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
+  GuiGallery.Pages.Desktop.State as Desktop, GalleryHostAssertions as A,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Toolbars as Toolbar,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.ShortcutRecorders as Keys;
+
+procedure Run(Renderer: Cui.CuiRenderer; Root: string; Width: int; Page: State.Page);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button <> 0 then
+      Window.SetLeftButton(Button > 0);
+      Button := 0;
+    end if;
+
+    if Key <> Keys.Key.None then
+      Window.SetKey(cast<int>(Key), true, Modifiers);
+      Window.SetKey(cast<int>(Key), false, Modifiers);
+      Key := Keys.Key.None;
+      Modifiers := 0;
+    end if;
+  end procedure;
+
+  function Observe(Model: State.Model; Value: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  begin
+    const Next: Mvu.Transition<State.Model, State.Msg> := Update.Update(Model, Value);
+    Last := Next.Model.Desktop;
+    if Focus then
+      return new Mvu.Transition<State.Model, State.Msg>(
+        Next.Model,
+        [Mvu.Focus<State.Msg>('desktop-documents')]
+      );
+    end if;
+
+    return Next;
+  end function;
+
+  procedure Draw(Session: Gui.Session<State.Msg>; Count: int := 4);
+  begin
+    for Frame: int := 1 to Count do
+      A.Check(Session.Step(), 'The gallery closed.');
+    end for;
+  end procedure;
+begin
+  var Key: Keys.Key := Keys.Key.None;
+  var Modifiers: int := 0;
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := 0;
+  var Focus: bool := false;
+  var Last: Desktop.Model := new Desktop.Model();
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI', Width, 1390, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := Page),
+    Observe,
+    Gallery.Build,
+    Window,
+    64,
+    Inject,
+    ThemeFor := Update.ThemeFor
+  );
+  Draw(Session, 12);
+  A.Check(
+    Renderer <> Cui.CuiRenderer.OpenGl or not Window.IsSoftware,
+    'OpenGL capture fell back to software.'
+  );
+  Session.CapturePng(
+    Root + '-' + Page.ToString().ToLowerInvariant() + '-' + Width.ToString() + '.png'
+  );
+  if Page <> State.Page.Desktop or Width < 900 then
+    return;
+  end if;
+
+  const Status: Cui.CuiRectangle := A.Control(Session, 'desktop-status/encoding').Bounds;
+  A.Check(Status.Width > 0.0F, 'The native status item has geometry.');
+  X := Status.X + Status.Width * 0.5F;
+  Y := Status.Y + Status.Height * 0.5F;
+  Draw(Session);
+  Button := 1;
+  Draw(Session);
+  Button := -1;
+  Draw(Session);
+  A.Check(Last.Encoding = 1, 'A click on the status item switches encoding.');
+  A.Check(
+    A.Control(Session, 'desktop-status/encoding').Text = 'UTF-16',
+    'The encoding change updates the same keyed item.'
+  );
+  X := -1.0F;
+  Y := -1.0F;
+
+  Key := Keys.Key.V;
+  Modifiers := cast<int>(Keys.Modifier.Alt);
+  Draw(Session);
+  A.Check(A.Control(Session, 'desktop-menu/view').Value = 'true', 'Alt+V opens View.');
+  Session.CapturePng(Root + '-view-open.png');
+  Key := Keys.Key.Enter;
+  Draw(Session);
+  A.Check(not Last.Sidebar, 'Enter toggles the first View command.');
+  Focus := true;
+  A.Send(Session, State.Msg.Preview);
+  Focus := false;
+  Draw(Session);
+  Key := Keys.Key.Right;
+  Draw(Session);
+  A.Check(Last.Selected = 2, 'Right selects the next document.');
+  Key := Keys.Key.Left;
+  Modifiers := cast<int>(Keys.Modifier.Shift);
+  Draw(Session);
+  A.Check(Last.Selected = 1 and Last.Tabs[1].Key = 'header', 'Shift+Left moves the selected tab.');
+  Key := Keys.Key.W;
+  Modifiers := cast<int>(Keys.Modifier.Control);
+  Draw(Session);
+  A.Check(
+    Last.Tabs.Length = 3 and Last.Tabs[1].Key = 'source',
+    'Ctrl+W closes the moved document.'
+  );
+
+  const Dock: Cui.CuiRectangle := A.Control(Session, 'workspace/Scene tree').Bounds;
+  A.Check(
+    Dock.Width > 0.0F and A.HasText(Session, 'Perspective'),
+    'The docking reference presents its active panels.'
+  );
+  X := Dock.X + Dock.Width - 14.0F;
+  Y := Dock.Y + Dock.Height * 0.5F;
+  Draw(Session);
+  Button := 1;
+  Draw(Session);
+  Button := -1;
+  Draw(Session);
+  A.Check((Last.Closed and 1) <> 0, 'Closing the native scene tab updates the model.');
+  A.Check(not A.HasText(Session, 'harbor_town'), 'A closed scene-panel does not build its body.');
+  A.Send(Session, State.Msg.Desktop(Desktop.Msg.DockTool(new Toolbar.Event(5, 0))));
+  Draw(Session);
+  A.Check(
+    A.Control(Session, 'workspace/Scene tree').Bounds.Width > 0.0F,
+    'Reset restores the scene panel.'
+  );
+
+  const Split: Cui.CuiRectangle := A.Control(Session, 'desktop-split').Bounds;
+  X := Split.X + (Split.Width - 1.0F) * Last.Ratio;
+  Y := Split.Y + 40.0F;
+  Draw(Session);
+  Button := 1;
+  Draw(Session);
+  X := Split.X + Split.Width * 0.60F;
+  Draw(Session);
+  Button := -1;
+  Draw(Session);
+  A.Check(
+    Last.Ratio > 0.59F and Last.Ratio < 0.61F,
+    'Dragging the split divider updates the model.'
+  );
+end procedure;
+
+// Captures desktop chrome and existing chart annotations, and exercises native proposals.
+// ## Parameters
+// - `Renderer`: Windows renderer under test.
+// - `Root`: Capture path prefix.
+public procedure Verify(Renderer: Cui.CuiRenderer; Root: string);
+begin
+  Run(Renderer, Root, 1100, State.Page.Desktop);
+  Run(Renderer, Root, 550, State.Page.Desktop);
+  Run(Renderer, Root, 1100, State.Page.Instruments);
+end procedure;
+
+end unit;

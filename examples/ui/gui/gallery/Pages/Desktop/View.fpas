@@ -1,0 +1,44 @@
+unit GuiGallery.Pages.Desktop.View;
+
+uses
+  GuiGallery.Pages.Desktop.State as S, GuiGallery.Pages.Desktop.Editor as Editor,
+  GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.SplitViews as Split;
+
+// Builds the native desktop chrome page from CUI's reference examples.
+// ## Parameters
+// - `Model`: Editor and workspace state.
+// - `Colors`: Current CUI palette.
+// - `Width`: Window width in logical points.
+// ## Returns
+// Editor chrome, docking and a standalone split view.
+public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array of E.Element<S.Msg>;
+begin
+  return [
+    G.Heading<S.Msg>(
+      'App chrome',
+      'Menu bar, toolbar, document tabs and status bar around an editor.'
+    ),
+    Editor.View(Model, Colors),
+    G.Heading<S.Msg>('Docking', 'Drag a tab to dock it, or drag a divider to resize its pane.'),
+    Workspace.View(Model, Colors, Width < 620),
+    G.Heading<S.Msg>('Split view', 'Drag the divider between the two panes.'),
+    Split.SplitView<S.Msg>(
+      'desktop-split', Model.Ratio,
+      E.Column<S.Msg>(
+        new L.Flow(Padding := G.Points(16), Background := Colors.SurfaceMuted),
+        E.Text<S.Msg>('Notes')
+      ),
+      E.Column<S.Msg>(
+        new L.Flow(Padding := G.Points(16), Background := Colors.Surface),
+        E.Text<S.Msg>('Selected note')
+      ),
+      S.Msg.Resize, new Split.Options(
+        Height := L.Extent.Fixed(L.Measure.Logical(128)),
+        MinimumFirst := 96.0F, MinimumSecond := 120.0F, Vertical := Width < 440
+      )
+    )
+  ];
+end function;
+
+end unit;

@@ -4,7 +4,7 @@ uses
   Fpas.Ui.Internal.Mapping.EditingTools as EditingTools,
   Fpas.Ui.Internal.Mapping.SourceTools as SourceTools,
   Fpas.Ui.Internal.Mapping.Display as Display,
-  Fpas.Ui.Internal.Mapping.Canvas as Canvas,
+  Fpas.Ui.Internal.Mapping.Chrome as Chrome, Fpas.Ui.Internal.Mapping.Canvas as Canvas,
   Fpas.Ui.Internal.Mapping.DeveloperTools as Developer,
   Fpas.Ui.VoiceWaves as VoiceWaves, Fpas.Ui.VoiceNotes as VoiceNotes, Fpas.Ui.VoiceSessions as VoiceSessions, Fpas.Ui.Composers as Composers, Fpas.Ui.VoiceOrbs as VoiceOrbs, Fpas.Ui.Reasonings as Reasonings, Fpas.Ui.ToolCalls as ToolCalls, Fpas.Ui.AgentPlans as AgentPlans, Fpas.Ui.AgentStatuses as AgentStatuses, Fpas.Ui.SourceLists as SourceLists, Fpas.Ui.Citations as Citations, Fpas.Ui.ContextMeters as ContextMeters, Fpas.Ui.ResponseActions as ResponseActions, Fpas.Ui.PromptSuggestions as PromptSuggestions, Fpas.Ui.ModelPickers as ModelPickers, Fpas.Ui.Voice as Voice, Fpas.Ui.Sources as Sources,
   Fpas.Ui.Graphics as MediaColor, Fpas.Ui.MediaImages as Media, Fpas.Ui.Carousels as Carousels, Fpas.Ui.CardStacks as CardStacks, Fpas.Ui.ImageViewers as ImageViewers, Fpas.Ui.ImageCroppers as ImageCroppers, Fpas.Ui.ImageComparisons as ImageComparisons,
@@ -1244,6 +1244,24 @@ begin
     ): E.Element<TParent>.CommandPalette(
       Id, Map<TChild, TParent>(Base, Messages), Open, MapCommands(Commands),
       function(Value: bool): TParent => Messages(Change(Value)), Shortcut
+    );
+    when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Dockspace(_, _, _, _), E.Element.SplitView(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Chrome.Map<TChild, TParent>(
+      Value,
+      Messages,
+      function(Part: E.Element<TChild>): E.Element<TParent> => Map<TChild, TParent>(Part, Messages)
     );
     when E.Element.Grid(
       const Settings: Grids.Options,

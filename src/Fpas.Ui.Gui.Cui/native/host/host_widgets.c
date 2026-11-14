@@ -184,16 +184,15 @@ int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled
     cui_scroll_state *state = cui_state(ui, key, sizeof *state);
     state->fade = fade_edges ? cui__backdrop(ui) : cui__rgba(0, 0, 0, 0);
     const cui_box options = { .width = CUI_FILL, .height = CUI_FILL };
-    float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
-    /* CUI-007 (docs/future/cui-upstream-bugs.md#cui-007):
-       A vertical viewport must leave horizontal wheel input for swipe rows. */
-    if (!horizontal || !enabled) ui->scroll_dx = 0;
-    if (!enabled) ui->scroll_dy = 0;
+    const float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
+    if (!enabled) ui->scroll_dx = ui->scroll_dy = 0;
     cui_push_disabled(ui, !enabled);
     int node = cui__scroll_begin_ex(ui, key, &options, horizontal != 0);
     cui_pop_disabled(ui);
-    ui->scroll_dx = wheel_x;
-    if (!enabled) ui->scroll_dy = wheel_y;
+    if (!enabled) {
+        ui->scroll_dx = wheel_x;
+        ui->scroll_dy = wheel_y;
+    }
     if (!scrollbar) {
         ui->nodes[node].flags |= CUI_NF_CLIP | CUI_NF_PAINT_AFTER;
         ui->nodes[node].paint = fpas_hidden_scroll;

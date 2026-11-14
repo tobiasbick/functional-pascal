@@ -11,14 +11,9 @@ int fpas_cui_dropzone(cui_ctx *ui, const char *id, const char *title, const char
         .accept = accept, .icon = icon ? cui__frame_strdup(ui, icon, -1) : NULL,
         .height = height, .compact = compact != 0
     };
-    /* CUI-015 (docs/future/cui-upstream-bugs.md#cui-015): native drop
-       claiming bypasses disabled scopes. Preserve the event for other targets. */
-    const bool claimed = ui->drop_claimed, drag = ui->drag_hover;
-    if (!allowed) { ui->drop_claimed = true; ui->drag_hover = false; }
     cui_push_disabled(ui, !enabled);
     const int event = cui_dropzone_ex(ui, id, &options);
     cui_pop_disabled(ui);
-    if (!allowed) { ui->drop_claimed = claimed; ui->drag_hover = drag; }
     *node = ui->last_node = fpas_find(ui, key);
     fpas_own(ui, key, key ^ 0x1C0u, 0, 0);
     return allowed ? event : 0;

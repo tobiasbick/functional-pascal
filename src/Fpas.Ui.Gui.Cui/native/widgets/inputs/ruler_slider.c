@@ -1,16 +1,7 @@
 #include "../../fpas_cui.h"
 
-static cui_id fpas_ruler_scroll_key(cui_id track) { return track ^ 0x52554C52u; }
-
-static void fpas_paint_ruler_slider(cui_ctx *ui, cui_node *node, void *data) {
-    cui__paint_ruler(ui, node, data);
-    /* CUI-009 (docs/future/cui-upstream-bugs.md#cui-009): give the tape the wheel
-       event before an enclosing viewport consumes it. */
-    cui__paint_wheel_hit(ui, fpas_ruler_scroll_key(node->id), cui__xform_rect(ui, node->rect));
-}
-
 static void fpas_paint_focused_ruler_slider(cui_ctx *ui, cui_node *node, void *data) {
-    fpas_paint_ruler_slider(ui, node, data);
+    cui__paint_ruler(ui, node, data);
     cui__draw_focus_ring(ui, node->rect, node->radius, 1.0f);
 }
 
@@ -57,7 +48,7 @@ int fpas_cui_ruler_slider(cui_ctx *ui, const char *id, const char *label, float 
     if (!allowed) ui->nodes[root].opacity = CUI__DISABLED;
     *track = fpas_find(ui, key);
     ui->last_id = key;
-    fpas_own(ui, key, group, fpas_ruler_scroll_key(key), 0);
+    fpas_own(ui, key, group, key ^ CUI__VERTICAL_WHEEL_STATE, 0);
     cui_node *tape = &ui->nodes[*track];
     if (allowed && changed && isfinite(next))
         next = fpas_ruler_bound(ui, group, root, tape, next, minimum, maximum, options.format);
@@ -73,8 +64,6 @@ int fpas_cui_ruler_slider(cui_ctx *ui, const char *id, const char *label, float 
         };
         tape->paint = fpas_paint_focused_ruler_slider;
         tape->paint_data = paint;
-    } else if (allowed) {
-        tape->paint = fpas_paint_ruler_slider;
     }
 
     if (!allowed || !changed || !isfinite(next) || next == *value) return 0;

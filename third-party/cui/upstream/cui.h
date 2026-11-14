@@ -1041,7 +1041,8 @@ typedef struct cui_progress_opts {
 } cui_progress_opts;
 CUI_API void cui_progress_ex(cui_ctx *ui, float value, const cui_progress_opts *opts);
 /* Spinner: says that something is happening, for as long as you call it. `size` is its
- * height in points (20 when 0). The default style is a ring with a sweeping arc; the others
+ * height in points (20 when 0). The default style is a ring with a sweeping arc
+ * that holds still with reduced motion. The other styles
  * are drawn in dots on an 8x8 ordered dither, one point a dot below 32 points tall and two
  * from there, and each fits a kind of wait:
  *
@@ -1281,7 +1282,7 @@ CUI_API int cui_pattern_meter_ex(cui_ctx *ui, const char *id, const cui_meter_pa
 
 /* Images */
 CUI_API cui_texture cui_image_create(cui_ctx *ui, int w, int h, const void *rgba);
-CUI_API cui_texture cui_image_load(cui_ctx *ui, const char *path, int *w, int *h);   /* PNG/JPEG via stb_image */
+CUI_API cui_texture cui_image_load(cui_ctx *ui, const char *path, int *w, int *h);   /* UTF-8 path, PNG/JPEG via stb_image */
 CUI_API void cui_image_destroy(cui_ctx *ui, cui_texture tex);
 typedef struct cui_image_opts {
     int _;
@@ -2043,7 +2044,7 @@ typedef struct cui_chat_opts {
 } cui_chat_opts;
 CUI_API void cui_chat_message_ex(cui_ctx *ui, const char *text, const cui_chat_opts *opts);
 CUI_API void cui_chat_divider(cui_ctx *ui, const char *label);       /* "Today" */
-CUI_API void cui_typing_indicator(cui_ctx *ui, const char *name);    /* bouncing dots */
+CUI_API void cui_typing_indicator(cui_ctx *ui, const char *name);    /* bouncing dots, still with reduced motion */
 
 /* Comment with replies. depth indents replies under a connector line.
  * Returns CUI_COMMENT_LIKE or CUI_COMMENT_REPLY flags for what was clicked;
@@ -2525,7 +2526,8 @@ typedef struct cui_tool_call_opts {
 } cui_tool_call_opts;
 CUI_API void cui_tool_call_ex(cui_ctx *ui, const char *id, const char *name, const cui_tool_call_opts *opts);
 
-/* Agent plan: steps with their status on a connected rail, and progress. */
+/* Agent plan: steps with their status on a connected rail, and progress.
+ * Reduced motion holds the running glyph still, including in tool calls. */
 typedef struct cui_plan_step {
     const char *title;         /* the step's text; shimmers while the step is running */
     const char *detail;        /* smaller muted line under the title (red when the step failed); may be `NULL` */

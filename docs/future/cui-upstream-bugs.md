@@ -35,22 +35,6 @@ cannot give this internal link a stable identity through its public options.
 FPAS retains native behavior and provides `ExpandableTexts.ToggleId(Id)` for
 explicit focus requests. No workaround, upstream issue or fix is planned.
 
-<a id="cui-007"></a>
-
-## CUI-007 — A vertical scroll view consumes horizontal swipe input
-
-- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
-
-Reproduced on Windows at `c8baf35`. Draw a swipe row inside a native
-`cui_scroll_begin` viewport with `horizontal = false` and enough content to
-scroll vertically. Move the pointer onto the row and send `WM_MOUSEHWHEEL`.
-The native scroll view clears both wheel axes before the row reads
-`scroll_dx`, so the row stays closed.
-
-The FPAS vertical viewport preserves the horizontal axis for its children.
-The Windows native regression sends the same window message and checks that
-the row reveals its action while the viewport keeps its vertical position.
-
 <a id="cui-008"></a>
 
 ## CUI-008 — A speed dial action pops the caller's disabled scope
@@ -66,29 +50,6 @@ The dial pushes its own scope only if it starts drawing closed, but checks
 its current open state when deciding whether to pop. Choosing an action
 changes that state during drawing. The FPAS binding supplies a temporary
 scope and pops it only if CUI left it on the stack.
-
-<a id="cui-009"></a>
-
-## CUI-009 — A scroll view consumes vertical input before the wheel picker or ruler
-
-- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
-
-Reproduced on Windows at `c8baf35` in the native Pickers gallery. Move the
-pointer onto the day wheel in Wheels and dial and send one vertical scroll
-line. The day stays at 14. The enclosing native scroll view clears the
-event before `cui_wheel_picker_ex` sees it, including when the whole page fits
-in the viewport.
-
-The FPAS wheel adapter registers its clipped bounds as a vertical scroll
-target. CUI still consumes the event and changes the wheel index. The GUI
-gallery regression sends the same input and verifies that the day moves
-from 14 to 15.
-
-The ruler has the same routing defect. A native `cui_ruler_slider_ex` at
-172 advances to 173 on one downward wheel line when used by itself and
-stays at 172 inside a native vertical scroll view. The FPAS ruler adapter
-registers its native tape for both wheel axes. The gallery checks that
-each axis reaches the tape.
 
 <a id="cui-010"></a>
 
@@ -169,36 +130,6 @@ edit of the new fully saturated red should yield `#00FF00`.
 The FPAS adapter reconciles CUI's HSV state when the application replaces
 the color or rejects a proposal. The Inputs gallery verifies the hue edit
 with an updated RGB value and a non-opaque alpha channel.
-
-<a id="cui-014"></a>
-
-## CUI-014 — Avatar image loading fails with Unicode paths on Windows
-
-- Upstream: [Issue #77](https://github.com/yappologistic/CUI/issues/77) · [PR #78](https://github.com/yappologistic/CUI/pull/78)
-
-At `c8baf35` the shell and file dialog pass UTF-8 paths. The default
-bundled image decoder opens them through the narrow Windows file API.
-A standalone Windows CUI program fails to load a valid PNG named
-`画像.png`. The FPAS shell-drop regression reproduced the failure
-after CUI successfully delivered the same path to a dropzone.
-
-The FPAS build enables `STBI_WINDOWS_UTF8` for the bundled decoder. The
-Windows test drops the Unicode-named PNG on an avatar and then replaces it
-with a differently colored image.
-
-<a id="cui-015"></a>
-
-## CUI-015 — Disabled file targets claim shell drops
-
-- Upstream: [Issue #77](https://github.com/yappologistic/CUI/issues/77) · [PR #78](https://github.com/yappologistic/CUI/pull/78)
-
-At `c8baf35` a standalone dropzone returns one accepted file from
-`cui_input_file_drop` even inside `cui_push_disabled`. Dropzone and avatar
-upload claim through the same native helper, which has no disabled check.
-
-The FPAS adapters hide drop and drag input from a disabled target for the
-duration of its draw. The Windows test posts a shell drop and verifies that
-a disabled dropzone delivers no file action.
 
 <a id="cui-016"></a>
 
@@ -388,22 +319,6 @@ the following frame, when the chip exists. The focused
 value menu appear after choosing the field. Its `upstream` mode reproduces
 the missing popup.
 
-<a id="cui-027"></a>
-
-## CUI-027 — JSON viewer accepts malformed numbers and string escapes
-
-- Upstream: [Issue #68](https://github.com/yappologistic/CUI/issues/68) · [PR #69](https://github.com/yappologistic/CUI/pull/69)
-
-Reproduced on Windows at `86d9781`. Direct `cui_json_view_ex` calls accept
-`1e`, `-`, `01`, `"\q"` and `"\u12x4"` as valid. The numeric scanner accepts
-number characters in any sequence, and the string scanner skips the character
-after a backslash without validating the escape.
-
-The FPAS adapter checks those token grammars before calling CUI. It uses the
-native error view and reports the malformed token's location. The native
-`fpas_cui_code_instruments` test checks both modes and accepts valid fractions,
-exponents and Unicode escapes.
-
 <a id="cui-028"></a>
 
 ## CUI-028 — Dot chart activation before arrow input reports an invalid X coordinate
@@ -485,48 +400,6 @@ and distinguishes a click from a drag. `fpas_cui_planning` verifies activation
 and confirms that an arrow press leaves the event or task unchanged. Its
 `upstream` mode reproduces the missing activations.
 
-<a id="cui-033"></a>
-
-## CUI-033 — Typing indicator animates with reduced motion
-
-- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
-
-Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
-`cui_typing_indicator` over successive frames. Its dots still advance and
-`cui_needs_redraw` stays true once layout has settled.
-
-The FPAS adapter keeps the native dots at their initial phase and preserves
-the redraw state from widgets already built in the frame.
-`fpas_cui_social upstream` reproduces the continuous redraw request.
-
-<a id="cui-034"></a>
-
-## CUI-034 — Running task glyphs animate with reduced motion
-
-- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
-
-Reproduced on Windows at `86d9781`. Enable reduced motion, then build a
-`cui_agent_plan` with a step in `CUI_TASK_RUNNING`. The glyph keeps rotating
-and `cui_needs_redraw` stays true after the layout settles. The same native
-glyph is used by running tool calls.
-
-The FPAS adapters keep CUI's glyph at its initial phase and preserve animation
-requests from earlier widgets. `fpas_cui_voice_ai upstream` reproduces the
-continuous redraw. The adapter regression verifies that redraw stops.
-
-<a id="cui-035"></a>
-
-## CUI-035 — Running jobs and tests animate with reduced motion
-
-- Upstream: [Issue #65](https://github.com/yappologistic/CUI/issues/65) · [PR #66](https://github.com/yappologistic/CUI/pull/66)
-
-Reproduced on Windows at `86d9781`. Enable reduced motion and render a
-`cui_pipeline` job or a `cui_test_explorer` item in `CUI_JOB_RUNNING`.
-The arc still uses the animation clock and keeps `cui_needs_redraw` true.
-The FPAS adapters paint the same arc at its initial phase and preserve any
-redraw request made by another control. `fpas_cui_developer_tools upstream`
-reproduces the native redraw request. The regular test verifies that it stops.
-
 <a id="cui-036"></a>
 
 ## CUI-036 — Trace measurements do not set view_changed
@@ -591,24 +464,6 @@ discard any ongoing drag. The timeline also suppresses a middle-button pan
 start. `fpas_cui_editing_tools native` reproduces both zooms with direct CUI
 calls. The regular test verifies that the original range is preserved by the
 adapters.
-
-<a id="cui-040"></a>
-
-## CUI-040 — Split divider can report an invalid ratio at small sizes
-
-- Upstream: [Issue #73](https://github.com/yappologistic/CUI/issues/73) · [PR #74](https://github.com/yappologistic/CUI/pull/74)
-
-Reproduced on Windows at `86d9781`. Draw a 100-point horizontal split with
-the default 120-point minimum in each pane. After the first frames, drag
-the divider. CUI clamps the position between 120 and −20 even though
-the lower limit exceeds the upper limit. The resulting ratio can be
-above 1 or below 0. The panes can also overflow the split's width.
-
-The FPAS Split View adapter scales both minimums proportionally when
-they cannot fit, after reserving the native one-point divider. The
-`fpas_cui_desktop_chrome native` test reproduces the invalid ratio with
-direct CUI calls. The regular test verifies a bounded ratio through the
-adapter and separately verifies resizing when the pane minimums fit.
 
 <a id="cui-041"></a>
 

@@ -342,8 +342,7 @@ page-content comparison.
 - [x] Wheel picker (`cui_wheel_picker`): [API][fpas-time-controls]. Pickers
   shows the original three joined date wheels. The gallery verifies keyboard
   wrapping, wheel input, dragging and visible captions on keyboard focus.
-  Native workarounds: [CUI-009](future/cui-upstream-bugs.md#cui-009) and
-  [CUI-010](future/cui-upstream-bugs.md#cui-010).
+  Native workaround: [CUI-010](future/cui-upstream-bugs.md#cui-010).
 - [x] Color picker (`cui_color_picker`): [API][fpas-color-emoji]. Inputs shows
   the original Brand color field. The gallery verifies presets, hue editing
   after a model change, alpha preservation, and keyboard focus and dismissal.
@@ -364,8 +363,8 @@ page-content comparison.
 - [x] Ruler slider (`cui_ruler_slider`): [API][fpas-ruler-histogram]. Pickers
   shows the original Height and Temperature tapes. The gallery verifies
   dragging, both wheel axes, Shift+arrow and visible ticks with keyboard focus.
-  Native workarounds: [CUI-009](future/cui-upstream-bugs.md#cui-009),
-  [CUI-010](future/cui-upstream-bugs.md#cui-010) and [CUI-011](future/cui-upstream-bugs.md#cui-011).
+  Native workarounds: [CUI-010](future/cui-upstream-bugs.md#cui-010) and
+  [CUI-011](future/cui-upstream-bugs.md#cui-011).
 - [x] Histogram slider (`cui_histogram_slider`): [API][fpas-ruler-histogram].
   Pickers shows the original 24-bin Price example and verifies both endpoints.
   Windows captures of the complete page at rest and after price adjustment
@@ -384,12 +383,10 @@ page-content comparison.
 - [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. Capture shows the original
   tall and compact targets. Windows tests verify accepted and rejected shell
   drops and confirmation and cancellation in the native file dialog.
-  Native workaround: [CUI-015](future/cui-upstream-bugs.md#cui-015).
   TUI: graphical profile required.
 - [x] Avatar upload (`cui_avatar_upload`): [API][fpas-capture]. Capture shows the
   original profile photo control. Windows verifies Unicode file paths and
-  replacement of the rendered image. Native workarounds:
-  [CUI-014](future/cui-upstream-bugs.md#cui-014) and [CUI-015](future/cui-upstream-bugs.md#cui-015).
+  replacement of the rendered image.
   TUI: graphical profile required.
 - [x] Signature pad (`cui_signature_pad`): [API][fpas-capture]. Capture shows
   the original 520 by 180 pad and verifies native ink, stroke boundaries,
@@ -478,8 +475,7 @@ checks that the slider wells stack in one column.
   shows the reference panel arrangement, panel toggles and layout reset. Tests
   cover native drag, close, reopen, layout serialization and invalid restore.
 - [x] Split view (`cui_split`): App chrome includes a resizable two-pane example.
-  The Windows tests drag the divider and verify [CUI-040](future/cui-upstream-bugs.md#cui-040)
-  when pane minimums exceed the allocated width.
+  The Windows tests drag the divider with pane minimums that exceed the allocated width.
 
 The [desktop chrome APIs](../src/Fpas.Ui/README.md#desktop-chrome) require
 the graphical profile. The native Windows test compares all five widgets with
@@ -703,7 +699,7 @@ is tracked under code and tool panels. [Files API][fpas-files-planning]
   verifies clipboard contents and focus after the copy button changes glyph.
 - [x] JSON viewer (`cui_json_view`): the Code page reproduces the expandable
   document and native parse error. Windows checks cover folding and invalid
-  text, including [CUI-027](future/cui-upstream-bugs.md#cui-027).
+  numbers and string escapes.
 - [x] Markdown view (`cui_markdown`): original release notes, task checkboxes,
   links and streaming replay. The native test verifies keyboard activation and
   UTF-8 task offsets.
@@ -781,8 +777,7 @@ Software and OpenGL comparisons covered three scroll positions per page with
 the same animation clock. Focused tests cover trace folding and measurement,
 regex results, histogram selection and clearing, reduced motion, and URL
 and query-parameter synchronization.
-The native workarounds are tracked in [CUI-035](future/cui-upstream-bugs.md#cui-035)
-and [CUI-036](future/cui-upstream-bugs.md#cui-036).
+The native trace measurement workaround is tracked in [CUI-036](future/cui-upstream-bugs.md#cui-036).
 
 ### Charts and instruments
 
@@ -867,7 +862,7 @@ which remains a separate native build option.
   task proposals remain part of the open Markdown work.
 - [x] Chat divider (`cui_chat_divider`): the original Today divider.
 - [x] Typing indicator (`cui_typing_indicator`): Jonas and the native dots.
-  The adapter stops the animation with reduced motion. [CUI-033](future/cui-upstream-bugs.md#cui-033)
+  The dots stay still with reduced motion.
 - [x] Comment (`cui_comment`): the original three threaded comments.
   Windows checks cover pointer and keyboard likes and Reply events.
 - [x] Presence (`cui_presence`): the original overlapping avatars with away
@@ -989,7 +984,7 @@ follows the original page content.
 - [x] Tool call (`cui_tool_call`): the original search and file calls, including
   expandable native JSON payloads for Search.
 - [x] Agent plan (`cui_agent_plan`): the original research plan and its step
-  states. Running glyphs honor reduced motion. [CUI-034](future/cui-upstream-bugs.md#cui-034)
+  states. Running glyphs honor reduced motion.
 - [x] Agent status (`cui_agent_status`): the original busy report-reading pill.
 - [x] Source list (`cui_source_list`): the original horizontally scrolling cards.
 - [x] Citation (`cui_citation`): the three original inline source previews.

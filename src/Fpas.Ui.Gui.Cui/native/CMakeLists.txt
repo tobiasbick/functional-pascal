@@ -40,9 +40,8 @@ else()
         -Wno-unused-parameter -Wno-missing-field-initializers)
 endif()
 if(WIN32)
-    # CUI-014 (docs/future/cui-upstream-bugs.md#cui-014): the shell and dialog
-    # supply UTF-8 paths to the bundled image decoder.
-    target_compile_definitions(cui PRIVATE STBI_WINDOWS_UTF8 STBIW_WINDOWS_UTF8)
+    # Capture passes UTF-8 output paths to the bundled PNG writer.
+    target_compile_definitions(cui PRIVATE STBIW_WINDOWS_UTF8)
     target_link_libraries(cui PUBLIC user32 gdi32 opengl32 shell32 imm32 dwmapi comdlg32 ole32)
 else()
     find_package(X11 REQUIRED)

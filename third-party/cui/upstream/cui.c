@@ -437,6 +437,7 @@ typedef char cui__hit_flags_above_node_flags[(unsigned)CUI_HIT_WHEEL_UP > (unsig
 /* A vertical delta reserved for one hit while the normal route handles X. */
 enum { CUI__VERTICAL_WHEEL_STATE = 0x57484559u };
 typedef struct { uint64_t frame; float delta; } cui__vertical_wheel;
+float cui__take_vertical_wheel(cui_ctx *ui, cui_id id);
 
 typedef struct cui_interact {
     bool hovered, pressed, clicked, right_clicked, double_clicked, focused, active, released, keyboard_activate;
@@ -2233,16 +2234,19 @@ static void cui__paint_status(cui_ctx *ui, cui_node *n, void *data) {
     }
 }
 
+/** Draw a task glyph, with a still arc for running tasks under reduced motion. */
 static void cui__status_node(cui_ctx *ui, cui_task_status s, float size) {
     int n = cui__leaf(ui, 0, CUI_PX(size), CUI_PX(size));
     cui__st_paint *p = cui__frame_alloc(ui, sizeof *p);
-    p->s = s; p->t = (float)fmod(ui->time, 1000.0);
+    bool animate = s == CUI_TASK_RUNNING && ui->theme.motion > 0;
+    p->s = s;
+    p->t = animate ? (float)fmod(ui->time, 1000.0) : 0;
     p->c = s == CUI_TASK_DONE ? (ui->accent == CUI_ACCENT_NEUTRAL ? CUI_C(ui, SUCCESS) : CUI_C(ui, ACCENT)) : cui__ai_accent(ui);
     p->ring = CUI_C(ui, BORDER_STRONG);
     ui->nodes[n].paint = cui__paint_status;
     ui->nodes[n].paint_data = p;
     ui->nodes[n].self_align = CUI_ALIGN_CENTER;
-    if (s == CUI_TASK_RUNNING) ui->animating = true;
+    if (animate) ui->animating = true;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -8073,17 +8077,64 @@ typedef struct { const char *s; int n, i; cui__jnode *nodes; int count, cap; con
 static void cui__jws(cui__jparse *p) { while (p->i < p->n && (p->s[p->i] == ' ' || p->s[p->i] == '\t' || p->s[p->i] == '\n' || p->s[p->i] == '\r')) p->i++; }
 static bool cui__jfail(cui__jparse *p, const char *msg) { if (!p->err) { p->err = msg; p->err_at = p->i; } return false; }
 
+/** Consume a JSON escape, including the four digits of a Unicode escape. */
+static bool cui__jescape(cui__jparse *p) {
+    if (++p->i >= p->n) return cui__jfail(p, "incomplete string escape");
+    char escape = p->s[p->i];
+    if (escape != 'u' && !strchr("\"\\/bfnrt", escape)) return cui__jfail(p, "invalid string escape");
+    p->i++;
+    if (escape != 'u') return true;
+    for (int k = 0; k < 4; k++, p->i++) {
+        if (p->i >= p->n || !strchr("0123456789abcdefABCDEF", p->s[p->i]))
+            return cui__jfail(p, "expected four hexadecimal digits in Unicode escape");
+    }
+    return true;
+}
+
+/** Scan a JSON string and return its original byte range without the quotes. */
 static bool cui__jstring(cui__jparse *p, int *start, int *len) {
     if (p->i >= p->n || p->s[p->i] != '"') return cui__jfail(p, "expected a string");
     int st = ++p->i;
     while (p->i < p->n && p->s[p->i] != '"') {
-        if (p->s[p->i] == '\\') p->i++;
-        else if ((unsigned char)p->s[p->i] < 0x20) return cui__jfail(p, "control character in string");
-        p->i++;
+        if (p->s[p->i] == '\\') {
+            if (!cui__jescape(p)) return false;
+        } else {
+            if ((unsigned char)p->s[p->i] < 0x20) return cui__jfail(p, "control character in string");
+            p->i++;
+        }
     }
     if (p->i >= p->n) return cui__jfail(p, "unterminated string");
     *start = st; *len = p->i - st;
     p->i++;
+    return true;
+}
+
+/** JSON numbers use ASCII digits regardless of the current locale. */
+static bool cui__jdigit(const cui__jparse *p) {
+    return p->i < p->n && p->s[p->i] >= '0' && p->s[p->i] <= '9';
+}
+
+/** Validate the integer, optional fraction, and optional exponent in a JSON number. */
+static bool cui__jnumber(cui__jparse *p) {
+    if (p->s[p->i] == '-') p->i++;
+    if (!cui__jdigit(p)) return cui__jfail(p, "expected an integer digit");
+    if (p->s[p->i] == '0') {
+        p->i++;
+        if (cui__jdigit(p)) return cui__jfail(p, "leading zero in number");
+    } else {
+        do { p->i++; } while (cui__jdigit(p));
+    }
+    if (p->i < p->n && p->s[p->i] == '.') {
+        p->i++;
+        if (!cui__jdigit(p)) return cui__jfail(p, "expected a fractional digit");
+        do { p->i++; } while (cui__jdigit(p));
+    }
+    if (p->i < p->n && (p->s[p->i] == 'e' || p->s[p->i] == 'E')) {
+        p->i++;
+        if (p->i < p->n && (p->s[p->i] == '+' || p->s[p->i] == '-')) p->i++;
+        if (!cui__jdigit(p)) return cui__jfail(p, "expected an exponent digit");
+        do { p->i++; } while (cui__jdigit(p));
+    }
     return true;
 }
 
@@ -8098,6 +8149,7 @@ static int cui__jnew(cui__jparse *p, int parent, int depth, int key_start, int k
     return p->count++;
 }
 
+/** Parse one JSON value and attach its children and original token ranges. */
 static int cui__jvalue(cui__jparse *p, int parent, int depth, int key_start, int key_len) {
     if (depth > 64) { cui__jfail(p, "nested too deeply"); return -1; }
     cui__jws(p);
@@ -8143,9 +8195,7 @@ static int cui__jvalue(cui__jparse *p, int parent, int depth, int key_start, int
         return me;
     }
     if (c == '-' || (c >= '0' && c <= '9')) {
-        p->i++;
-        while (p->i < p->n && ((p->s[p->i] >= '0' && p->s[p->i] <= '9') || p->s[p->i] == '.' || p->s[p->i] == 'e' || p->s[p->i] == 'E' ||
-                               p->s[p->i] == '+' || p->s[p->i] == '-')) p->i++;
+        if (!cui__jnumber(p)) return -1;
         p->nodes[me].type = JV_NUM;
     } else if (!strncmp(p->s + p->i, "true", 4) || !strncmp(p->s + p->i, "null", 4)) {
         p->nodes[me].type = p->s[p->i] == 't' ? JV_BOOL : JV_NULL;
@@ -9752,6 +9802,7 @@ cui_state_entry *cui__state_entry(cui_ctx *ui, cui_id id) {
     } else {
         CUI__GROW(ui, ui->states, ui->state_count, ui->state_cap, 1);
         idx = ui->state_count++;
+        memset(&ui->states[idx], 0, sizeof ui->states[idx]);   /* the rehash below reads every slot up to the count */
         if (ui->state_count > ui->bucket_count) cui__state_rehash(ui, ui->bucket_count * 2);
     }
     e = &ui->states[idx];
@@ -10002,7 +10053,22 @@ void cui__set_cursor(cui_ctx *ui, cui_cursor c) { ui->cursor = c; }
 /* Interaction                                                              */
 /* ------------------------------------------------------------------------ */
 
-/** Choose the deepest compatible wheel target before building any widgets. */
+/** Consume the vertical input routed to a control independently of the horizontal axis. */
+float cui__take_vertical_wheel(cui_ctx *ui, cui_id id) {
+    if (ui->scroll_target == id) {
+        float delta = ui->scroll_dy;
+        ui->scroll_dy = 0;
+        return delta;
+    }
+    cui__vertical_wheel *vertical = cui__state_lazy(ui, id ^ CUI__VERTICAL_WHEEL_STATE, sizeof *vertical, false);
+    if (!vertical || vertical->frame != ui->frame) return 0;
+    float delta = vertical->delta;
+    vertical->delta = 0;
+    return delta;
+}
+
+/** Resolve pointer hits against the previous layout, and choose the deepest compatible wheel target
+ * before any widget is built. */
 static void cui__compute_hot(cui_ctx *ui) {
     ui->hot = 0; ui->hot_layer = 0; ui->scroll_target = 0;
     if (!ui->mouse_inside) return;
@@ -13038,7 +13104,7 @@ void cui_table_cell(cui_ctx *ui) {
 void cui_table_cell_text(cui_ctx *ui, const char *text) {
     cui_table_cell(ui);
     struct cui_table_build *t = ui->building.table;
-    bool right = t && t->col - 1 < t->ncols && t->cols[t->col - 1].align == CUI_TEXT_RIGHT;
+    bool right = t && t->col >= 1 && t->col - 1 < t->ncols && t->cols[t->col - 1].align == CUI_TEXT_RIGHT;
     int tx = cui__text_node(ui, text, -1, CUI_FONT_BODY, cui__fs(ui, ui->theme.text_body), CUI_C(ui, FOREGROUND), false);
     ui->nodes[tx].line_height = 1.3f;
     if (right) ui->nodes[tx].flags |= CUI_NF_TABULAR;
@@ -16830,7 +16896,7 @@ cui_blame_result cui_blame_ex(cui_ctx *ui, const char *id_str, const char *const
         int c = line_commit ? line_commit[i] : -1;
         if (c < 0 || c >= commit_count) c = -1;
         int pc = i > 0 && line_commit ? line_commit[i - 1] : -2;
-        bool run_start = i == 0 || pc != line_commit[i];
+        bool run_start = i == 0 || pc != (line_commit ? line_commit[i] : -1);
         cui_id rid = cui__hash(&i, sizeof i, id ^ 0xB1A4u);
         cui_id gid = rid ^ 0x6u;
         cui_interact gi = cui__interact(ui, gid, 0);
@@ -21332,15 +21398,17 @@ void cui__draw_check(cui_ctx *ui, cui_rect r, float t, float thick, cui_color c)
     cui_draw_polyline(ui, pts, n, thick, c, false);
 }
 
+/** Paint the arc spinner and request frames only while it is moving. */
 void cui__draw_spinner(cui_ctx *ui, cui_vec2 c, float radius, float thick, cui_color col) {
-    float t = (float)ui->time;
+    bool motion = ui->theme.motion > 0;
+    float t = motion ? (float)ui->time : 0;
     col = cui_color_of(ui, col);
     cui_color track = cui_alpha(col, 0.18f);
     cui_draw_arc(ui, c, radius, 0, 2 * CUI_PI, thick, track);
     float head = t * 5.2f;
     float len = 1.2f + 0.9f * sinf(t * 2.4f);
     cui_draw_arc(ui, c, radius, head, head + len, thick, col);
-    ui->animating = true;
+    if (motion) ui->animating = true;
 }
 
 void cui__draw_focus_ring(cui_ctx *ui, cui_rect r, cui_corners rad, float alpha) {
@@ -25909,8 +25977,10 @@ void cui_reorder_begin(cui_ctx *ui, const char *id_str, int *order, int count) {
     /* start a drag once the pointer moves a few points */
     if (st->pending && ui->mdown[0] && fabsf(ui->my - st->press_y) > 4 && b->have_rects) {
         st->pending = false;
-        st->from = st->to = st->press_pos;
-        st->grab = st->press_y - b->slot_top[st->from];
+        if (st->press_pos < b->count) {   /* the list may have shrunk since the press */
+            st->from = st->to = st->press_pos;
+            st->grab = st->press_y - b->slot_top[st->from];
+        }
     }
     if (!ui->mdown[0]) st->pending = false;
     if (st->from >= 0 && b->have_rects) {
@@ -26063,7 +26133,7 @@ int cui_fs_list(void *user, const char *path, cui_file_entry *out, int cap, char
     do {
         if (!wcscmp(fd.cFileName, L".") || !wcscmp(fd.cFileName, L"..")) continue;
         if (!hidden && ((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || fd.cFileName[0] == L'.')) continue;
-        if (count >= cap) break;
+        if (count >= cap || used >= names_cap) break;   /* with no room left the call below would only measure */
         int len = WideCharToMultiByte(CP_UTF8, 0, fd.cFileName, -1, names + used, (int)(names_cap - used), NULL, NULL);
         if (len <= 0) break;   /* out of name space */
         cui_file_entry *e = &out[count++];
@@ -34539,7 +34609,7 @@ void cui_data_grid_cell(cui_ctx *ui) {
 void cui_data_grid_cell_text(cui_ctx *ui, const char *text) {
     cui_data_grid_cell(ui);
     struct cui_grid_build *b = ui->building.grid;
-    bool right = b && b->col - 1 < b->ncols && b->cols[b->col - 1].align == CUI_TEXT_RIGHT;
+    bool right = b && b->col >= 1 && b->col - 1 < b->ncols && b->cols[b->col - 1].align == CUI_TEXT_RIGHT;
     /* single line text: cut short, it shows the whole value on hover */
     cui_text_opts to;
     memset(&to, 0, sizeof to);
@@ -35514,6 +35584,9 @@ static cui_hex_result cui__hex_view_ex_body(cui_ctx *ui, const char *id_str, con
 #endif
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
+#ifndef STBI_WINDOWS_UTF8
+#define STBI_WINDOWS_UTF8    /* CUI file dialogs and drops supply UTF-8 paths. */
+#endif
 #if defined(__GNUC__) || defined(__clang__)
 /* stb_image declares stbi_load_gif_from_memory even with GIF off; that warning
  * is reported at the end of the file, so it stays silenced for the whole file */
@@ -43536,6 +43609,7 @@ unsigned char *cui__png_decode(const unsigned char *data, int len, int *w, int *
 }
 void cui__png_free(unsigned char *px) { stbi_image_free(px); }
 
+/** Load an image from the UTF-8 path supplied by the application or window backend. */
 cui_texture cui_image_load(cui_ctx *ui, const char *path, int *w, int *h) {
     int iw = 0, ih = 0, comp = 0;
     unsigned char *px = stbi_load(path, &iw, &ih, &comp, 4);
@@ -43549,6 +43623,7 @@ cui_texture cui_image_load(cui_ctx *ui, const char *path, int *w, int *h) {
 #else
 unsigned char *cui__png_decode(const unsigned char *data, int len, int *w, int *h) { (void)data; (void)len; (void)w; (void)h; return NULL; }
 void cui__png_free(unsigned char *px) { (void)px; }
+/** Report that loading is unavailable in builds without the bundled decoder. */
 cui_texture cui_image_load(cui_ctx *ui, const char *path, int *w, int *h) {
     (void)ui; (void)path; (void)w; (void)h;
     return 0;
@@ -53672,6 +53747,7 @@ static void cui__paint_wheel(cui_ctx *ui, cui_node *n, void *data) {
     cui_pop_clip(ui);
 }
 
+/** Build a wheel picker and apply input routed to its drum. */
 bool cui_wheel_picker_ex(cui_ctx *ui, const char *id_str, const char *const *items, int count, int *index, const cui_wheel_opts *o) {
     cui_wheel_opts d;
     memset(&d, 0, sizeof d);
@@ -53725,8 +53801,9 @@ bool cui_wheel_picker_ex(cui_ctx *ui, const char *id_str, const char *const *ite
             st->vel = 0;
         }
     }
-    if (r.hovered && ui->scroll_dy != 0 && !st->dragging) {
-        st->wheel_acc -= ui->scroll_dy;
+    float wheel = r.hovered && !st->dragging ? cui__take_vertical_wheel(ui, id) : 0;
+    if (wheel != 0) {
+        st->wheel_acc -= wheel;
         int steps = (int)st->wheel_acc;
         if (steps == 0) steps = st->wheel_acc > 0 ? 1 : -1;
         st->wheel_acc = 0;
@@ -53734,7 +53811,6 @@ bool cui_wheel_picker_ex(cui_ctx *ui, const char *id_str, const char *const *ite
         if (o->loop) { k %= count; if (k < 0) k += count; target += (float)steps; }
         else { k = CUI_CLAMP(k, 0, count - 1); target = (float)k; }
         *index = k;
-        ui->scroll_dy = 0;
     }
     if (ui->focus == id) {
         int dk = 0;
@@ -53761,6 +53837,10 @@ bool cui_wheel_picker_ex(cui_ctx *ui, const char *id_str, const char *const *ite
     p->fg = CUI_C(ui, FOREGROUND);
     p->dim = CUI_C(ui, TEXT_MUTED);
     p->font_size = cui__fs(ui, ui->theme.text_body + 2);
+    if (!cui_is_disabled(ui) && !st->dragging && count > 1) {
+        if (o->loop || *index > 0) n->flags |= CUI_HIT_WHEEL_UP;
+        if (o->loop || *index < count - 1) n->flags |= CUI_HIT_WHEEL_DOWN;
+    }
     n->paint = cui__paint_wheel;
     n->paint_data = p;
     cui__focus_ring(ui, node, r.focus_visible ? 1.0f : 0.0f);
@@ -53969,6 +54049,7 @@ static void cui__paint_ruler(cui_ctx *ui, cui_node *n, void *data) {
     cui_draw_polygon(ui, tri, 3, p->marker);
 }
 
+/** Build a ruler slider, taking vertical wheel input before the enclosing view. */
 bool cui_ruler_slider_ex(cui_ctx *ui, const char *label, float *value, float min, float max, const cui_ruler_opts *o) {
     cui_ruler_opts d;
     memset(&d, 0, sizeof d);
@@ -54004,12 +54085,13 @@ bool cui_ruler_slider_ex(cui_ctx *ui, const char *label, float *value, float min
             target = *value;
         }
     }
-    if (r.hovered && (ui->scroll_dx != 0 || ui->scroll_dy != 0) && !st->dragging) {
-        float dv = (ui->scroll_dx != 0 ? -ui->scroll_dx : -ui->scroll_dy) * step;
+    float wheel = r.hovered && !st->dragging ? cui__take_vertical_wheel(ui, rid) : 0;
+    if (r.hovered && (ui->scroll_dx != 0 || wheel != 0) && !st->dragging) {
+        float dv = (wheel != 0 ? -wheel : -ui->scroll_dx) * step;
         *value = cui__clampf(*value + (dv > 0 ? CUI_MAX(dv, step) : CUI_MIN(dv, -step)), min, max);
         *value = roundf((*value - min) / step) * step + min;
         target = *value;
-        ui->scroll_dx = ui->scroll_dy = 0;
+        if (wheel == 0) ui->scroll_dx = 0;
     }
     if (ui->focus == rid) {
         float k = (ui->mods & CUI_MOD_SHIFT) ? major : 1;
@@ -54042,6 +54124,10 @@ bool cui_ruler_slider_ex(cui_ctx *ui, const char *label, float *value, float min
     int tape = cui__leaf(ui, rid, CUI_FILL, CUI_PX(52));
     ui->nodes[tape].self_align = CUI_ALIGN_STRETCH;
     cui__mark_interactive(ui, tape, CUI_IF_FOCUSABLE | CUI_IF_DRAG);
+    if (!cui_is_disabled(ui) && !st->dragging) {
+        if (*value > min) ui->nodes[tape].flags |= CUI_HIT_WHEEL_UP;
+        if (*value < max) ui->nodes[tape].flags |= CUI_HIT_WHEEL_DOWN;
+    }
     if (r.hovered || st->dragging) cui__set_cursor(ui, CUI_CURSOR_RESIZE_EW);
     cui__ruler_paint *p = cui__frame_alloc(ui, sizeof *p);
     p->value = st->shown.x; p->min = min; p->max = max; p->step = step; p->spacing = spacing; p->major = major; p->format = fmt;
@@ -54085,6 +54171,7 @@ bool cui_histogram_slider_ex(cui_ctx *ui, const char *label, const float *bins, 
     memset(&d, 0, sizeof d);
     if (!o) o = &d;
     if (max <= min) max = min + 1;
+    if (bin_count < 0 || !bins) bin_count = 0;   /* a negative count would become a huge size below */
     const char *fmt = o->format ? o->format : "%.0f";
     cui_id id = cui_make_id(ui, label) ^ 0x4157u;
     int col = cui__node_new(ui, id);
@@ -54115,7 +54202,7 @@ bool cui_histogram_slider_ex(cui_ctx *ui, const char *label, const float *bins, 
     ui->nodes[bars].self_align = CUI_ALIGN_STRETCH;
     cui__hist_paint *p = cui__frame_alloc(ui, sizeof *p);
     p->bins = cui__frame_alloc(ui, sizeof(float) * (size_t)CUI_MAX(1, bin_count));
-    memcpy((float *)p->bins, bins, sizeof(float) * (size_t)bin_count);
+    if (bin_count > 0) memcpy((float *)p->bins, bins, sizeof(float) * (size_t)bin_count);
     p->n = bin_count; p->lo_t = anim[0]; p->hi_t = anim[1]; p->tmax = tmax;
     p->on = cui__emphasis(ui);
     p->off = CUI_C(ui, CONTROL_TRACK);
@@ -54326,10 +54413,10 @@ bool cui_path_has_extension(const char *path, const char *accept) {
     return false;
 }
 
-/* Claims this frame's drop if it landed inside r. Returns accepted count. */
+/** Claim this frame's drop only for an enabled target. */
 static int cui__claim_drop(cui_ctx *ui, cui_rect r, const char *accept, int *rejected) {
     *rejected = 0;
-    if (ui->drop_count == 0 || ui->drop_claimed || r.w <= 0) return 0;
+    if (cui_is_disabled(ui) || ui->drop_count == 0 || ui->drop_claimed || r.w <= 0) return 0;
     if (!cui__rect_contains(r, ui->drop_x, ui->drop_y)) return 0;
     ui->drop_claimed = true;
     int ok = 0;
@@ -54400,6 +54487,7 @@ static void cui__paint_dropzone(cui_ctx *ui, cui_node *n, void *data) {
 
 typedef struct { float hover, drag; cui_spring lift; double done_at; int done_count, rejected; } cui__drop_state;
 
+/** Build a dropzone and show drag feedback only while it can accept a drop. */
 int cui_dropzone_ex(cui_ctx *ui, const char *id_str, const cui_dropzone_opts *o) {
     cui_dropzone_opts d;
     memset(&d, 0, sizeof d);
@@ -54411,7 +54499,7 @@ int cui_dropzone_ex(cui_ctx *ui, const char *id_str, const cui_dropzone_opts *o)
     int rejected = 0;
     int got = cui__claim_drop(ui, pr, o->accept, &rejected);
     if (got || rejected) { st->done_at = ui->time; st->done_count = got; st->rejected = rejected; }
-    bool over = ui->drag_hover && cui__rect_contains(pr, ui->drag_x, ui->drag_y);
+    bool over = !cui_is_disabled(ui) && ui->drag_hover && cui__rect_contains(pr, ui->drag_x, ui->drag_y);
     cui__tween(ui, &st->hover, r.hovered ? 1.0f : 0.0f, CUI__T_HOVER);
     cui__tween(ui, &st->drag, over ? 1.0f : 0.0f, CUI__T_STATE);
     cui__spring(ui, &st->lift, over ? 1.0f : 0.0f, CUI_SPRING_SNAPPY);
@@ -54489,6 +54577,7 @@ static void cui__paint_avatar_overlay(cui_ctx *ui, cui_node *n, void *data) {
         cui_draw_rect_border(ui, cui__rect_inset(r, -4), CUI_CORNERS(rad + 4), cui__rgba(0, 0, 0, 0), cui_alpha(p->ring, p->ring_t), 2);
 }
 
+/** Build an avatar image target that only accepts drops while enabled. */
 int cui_avatar_upload(cui_ctx *ui, const char *id_str, const char *name, cui_texture *image, float size) {
     if (size <= 0) size = 88;
     cui_id id = cui_make_id(ui, id_str);
@@ -54509,7 +54598,7 @@ int cui_avatar_upload(cui_ctx *ui, const char *id_str, const char *name, cui_tex
         }
     }
     if (r.clicked) result = -1;
-    bool over = ui->drag_hover && cui__rect_contains(pr, ui->drag_x, ui->drag_y);
+    bool over = !cui_is_disabled(ui) && ui->drag_hover && cui__rect_contains(pr, ui->drag_x, ui->drag_y);
     cui__tween(ui, &st->hover, (r.hovered || over) ? 1.0f : 0.0f, CUI__T_HOVER);
     cui__tween(ui, &st->drag, over ? 1.0f : 0.0f, CUI__T_STATE);
     if (st->pop.x == 0) st->pop.x = 1;
@@ -55943,7 +56032,8 @@ static int cui__rx_cont(cui__rx_m *M, int i, const cui__rx_k *k) {
         break;
     }
     case RK_GROUP_END: {
-        int g = R->node[k->node].group;
+        int g = R->node[k->node].group;   /* -1 for a non-capturing (?: ) group */
+        if (g < 0) { r = cui__rx_cont(M, i, k->next); break; }
         int old = M->cap[g][1];
         M->cap[g][1] = i;
         r = cui__rx_cont(M, i, k->next);
@@ -56017,12 +56107,12 @@ static int cui__rx_match(cui__rx_m *M, int node, int i, const cui__rx_k *k) {
         for (int a = 0; a < n->nkid && !r && !M->abort; a++) r = cui__rx_match(M, R->kid[n->kid + a], i, k);
         break;
     case RX_GROUP: {
-        int g = n->group;
-        int o0 = M->cap[g][0], o1 = M->cap[g][1];
-        M->cap[g][0] = i;
+        int g = n->group;   /* -1 for a non-capturing (?: ) group */
+        int o0 = g >= 0 ? M->cap[g][0] : 0, o1 = g >= 0 ? M->cap[g][1] : 0;
+        if (g >= 0) M->cap[g][0] = i;
         cui__rx_k end = { RK_GROUP_END, node, 0, 0, k };
         r = cui__rx_match(M, R->kid[n->kid], i, &end);
-        if (!r) { M->cap[g][0] = o0; M->cap[g][1] = o1; }
+        if (!r && g >= 0) { M->cap[g][0] = o0; M->cap[g][1] = o1; }
         break;
     }
     case RX_REPEAT: {
@@ -57570,6 +57660,7 @@ static void cui__paint_typing(cui_ctx *ui, cui_node *n, void *data) {
     }
 }
 
+/** Draw typing dots that hold still when motion is reduced. */
 void cui_typing_indicator(cui_ctx *ui, const char *name) {
     int row = cui__node_new(ui, 0);
     ui->nodes[row].dir = CUI_ROW; ui->nodes[row].gap = 8; ui->nodes[row].align = CUI_ALIGN_END; ui->nodes[row].pad[0] = 8;
@@ -57586,7 +57677,9 @@ void cui_typing_indicator(cui_ctx *ui, const char *name) {
     cui__open(ui, bubble);
     int dots = cui__leaf(ui, 0, CUI_PX(28), CUI_PX(12));
     cui__dots_paint *p = cui__frame_alloc(ui, sizeof *p);
-    p->time = ui->time; p->c = CUI_C(ui, TEXT_SECONDARY);
+    bool motion = ui->theme.motion > 0;
+    p->time = motion ? ui->time : 0;
+    p->c = CUI_C(ui, TEXT_SECONDARY);
     ui->nodes[dots].paint = cui__paint_typing;
     ui->nodes[dots].paint_data = p;
     cui__close(ui);
@@ -57596,7 +57689,7 @@ void cui_typing_indicator(cui_ctx *ui, const char *name) {
         ui->nodes[t].self_align = CUI_ALIGN_CENTER;
     }
     cui__close(ui);
-    ui->animating = true;
+    if (motion) ui->animating = true;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -57828,10 +57921,11 @@ const char *cui__mmss(cui_ctx *ui, float s) {
 int cui__utc_offset(int64_t t64) {
     time_t t = (time_t)t64;
     struct tm lt, gt;
+    /* a time out of range for struct tm fails and leaves both unset: treat it as UTC */
 #if defined(_WIN32)
-    localtime_s(&lt, &t); gmtime_s(&gt, &t);
+    if (localtime_s(&lt, &t) != 0 || gmtime_s(&gt, &t) != 0) return 0;
 #else
-    localtime_r(&t, &lt); gmtime_r(&t, &gt);
+    if (!localtime_r(&t, &lt) || !gmtime_r(&t, &gt)) return 0;
 #endif
     int d = (lt.tm_year - gt.tm_year) * 366 + (lt.tm_yday - gt.tm_yday);
     if (d > 1) d = -1;
@@ -64212,6 +64306,11 @@ static void cui__atlas_grow(cui_ctx *ui) {
 static bool cui__atlas_pack(cui_ctx *ui, int w, int h, int *ox, int *oy) {
     for (;;) {
         if (ui->pack_x + w + 1 > ui->atlas_w) { ui->pack_x = 1; ui->pack_y += ui->pack_row_h + 1; ui->pack_row_h = 0; }
+        if (ui->pack_x + w + 1 > ui->atlas_w) {   /* wider than a whole row: grow, or it would spill past the row end */
+            if (ui->atlas_w >= CUI_ATLAS_MAX) return false;
+            cui__atlas_grow(ui);
+            continue;
+        }
         if (ui->pack_y + h + 1 <= ui->atlas_h) break;
         if (ui->atlas_w >= CUI_ATLAS_MAX) return false;
         cui__atlas_grow(ui);
@@ -64240,6 +64339,7 @@ static cui_glyph *cui__glyph_get(cui_ctx *ui, cui_font font, int gi, float px_si
     int x0, y0, x1, y1;
     stbtt_GetGlyphBitmapBoxSubpixel(&fd->info, gi, scale, scale, shift, 0, &x0, &y0, &x1, &y1);
     int w = x1 - x0, hgt = y1 - y0;
+    if (w > CUI_ATLAS_MAX - 2 || hgt > CUI_ATLAS_MAX - 2) return NULL;   /* can never fit, so no atlas reset either */
     int ax = 0, ay = 0;
     if (w > 0 && hgt > 0) {
         if (!cui__atlas_pack(ui, w, hgt, &ax, &ay)) { ui->atlas_reset_pending = true; return NULL; }
@@ -64282,16 +64382,18 @@ static int cui__glyph_ord_cmp(const void *a, const void *b) {
 static void cui__atlas_compact(cui_ctx *ui) {
     uint32_t now = (uint32_t)ui->frame;
     size_t area = 0;
-    int live = 0;
+    int live = 0, maxw = 0;
     for (int i = 0; i < ui->glyph_count; i++) {
         cui_glyph *g = &ui->glyphs[i];
         if (now - g->stamp > CUI__ATLAS_KEEP) continue;
         area += (size_t)(g->w + 1) * (size_t)(g->h + 1);
+        if (g->w > maxw) maxw = g->w;
         live++;
     }
     int nw = ui->atlas_w;
     while (nw > CUI_ATLAS_MIN && area * 2 <= (size_t)(nw / 2) * (size_t)(nw / 2)) nw /= 2;
-    if (nw == ui->atlas_w) return;
+    while (nw < maxw + 2) nw *= 2;   /* the widest glyph kept must fit in a row */
+    if (nw >= ui->atlas_w) return;
     cui__glyph_ord *ord = cui__alloc(ui, sizeof *ord * (size_t)CUI_MAX(live, 1));
     cui_glyph *ng = cui__alloc(ui, sizeof *ng * (size_t)CUI_MAX(live, 1));
     uint8_t *na = cui__alloc(ui, (size_t)nw * (size_t)nw);
@@ -64799,20 +64901,6 @@ static void cui__paint_scrollable_edit(cui_ctx *ui, cui_node *n, void *data) {
     }
 }
 
-/** Take this editor's vertical delta after the enclosing view has handled X. */
-static float cui__textarea_wheel_delta(cui_ctx *ui, cui_id area) {
-    if (ui->scroll_target == area) {
-        float delta = ui->scroll_dy;
-        ui->scroll_dy = 0;
-        return delta;
-    }
-    cui__vertical_wheel *vertical = cui__state_lazy(ui, area ^ CUI__VERTICAL_WHEEL_STATE, sizeof *vertical, false);
-    if (!vertical || vertical->frame != ui->frame) return 0;
-    float delta = vertical->delta;
-    vertical->delta = 0;
-    return delta;
-}
-
 /* ---- editing primitives ---- */
 
 static bool cui__is_word(unsigned char c) { return c >= 128 || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
@@ -65302,7 +65390,7 @@ int cui__text_field(cui_ctx *ui, cui_id id, char *buf, size_t cap, const cui_inp
     bool password = o->password && !e->show_password;
     cui__edit_result er = cui__edit_logic(ui, id, e, buf, cap, multiline, password, o->read_only || disabled, area,
                                           font, size, line_h, rf);
-    float wheel = multiline && !disabled && area.h > 0 ? cui__textarea_wheel_delta(ui, area_id) : 0;
+    float wheel = multiline && !disabled && area.h > 0 ? cui__take_vertical_wheel(ui, area_id) : 0;
     if (wheel != 0) {
         /* wheel scrolls the text whether or not the field has focus */
         cui_text_layout_line *wl = NULL;
@@ -73384,6 +73472,7 @@ cui_canvas_result cui_canvas(cui_ctx *ui, const char *id_str, cui_size w, cui_si
 
 #define CUI__BAR_ZONE 12.0f
 
+/** Open a scroll area and consume only the wheel axes the area can use. */
 int cui__scroll_begin_ex(cui_ctx *ui, cui_id id, const cui_box *box, bool horizontal) {
     cui_scroll_state *st = cui_state(ui, id, sizeof *st);
     cui_rect pr = cui__prev_rect(ui, id);
@@ -73392,11 +73481,19 @@ int cui__scroll_begin_ex(cui_ctx *ui, cui_id id, const cui_box *box, bool horizo
     if (ui->scroll_target == id && (ui->scroll_dy != 0 || ui->scroll_dx != 0)) {
         float line = 44;
         float dy = ui->scroll_dy, dx = ui->scroll_dx;
-        if ((ui->mods & CUI_MOD_SHIFT) && horizontal && dx == 0) { dx = dy; dy = 0; }
-        if (max_y > 0) st->ty -= dy * line;
-        if (horizontal && max_x > 0) st->tx -= dx * line;
-        st->last_activity = ui->time;
-        ui->scroll_dy = ui->scroll_dx = 0;   /* consumed */
+        bool sideways = (ui->mods & CUI_MOD_SHIFT) && horizontal && dx == 0;
+        if (sideways) { dx = dy; dy = 0; }
+        if (dy != 0 && max_y > 0) {
+            st->ty -= dy * line;
+            st->last_activity = ui->time;
+            ui->scroll_dy = 0;
+        }
+        if (dx != 0 && horizontal && max_x > 0) {
+            st->tx -= dx * line;
+            st->last_activity = ui->time;
+            if (sideways) ui->scroll_dy = 0;
+            else ui->scroll_dx = 0;
+        }
     }
     /* scrollbar dragging */
     cui_id bar_id = id ^ 0x5C5C5C5Cu;
@@ -73562,6 +73659,7 @@ static void cui__paint_split(cui_ctx *ui, cui_node *n, void *data) {
     ((cui__split_state *)data)->rtl = n->rtl;
 }
 
+/** Open a split with pane minimums that can fit the available main axis. */
 void cui_split_begin(cui_ctx *ui, const char *id_str, float *ratio, const cui_split_opts *o) {
     cui_split_opts d;
     memset(&d, 0, sizeof d);
@@ -73578,10 +73676,18 @@ void cui_split_begin(cui_ctx *ui, const char *id_str, float *ratio, const cui_sp
     cui_interact r = cui__interact(ui, hid, CUI_IF_DRAG);
     cui__split_state *st = cui_state(ui, hid, sizeof *st);
     float total = o->vertical ? pr.h : pr.w;
-    if (r.active && ui->mdown[0] && total > 0) {
+    cui_size extent = o->vertical ? o->height : o->width;
+    if (extent.kind == CUI_SIZE_FIXED) total = extent.value;
+    float available = CUI_MAX(0, total - 1);   /* the divider takes one point */
+    if ((total > 0 || extent.kind == CUI_SIZE_FIXED) && b->min1 + b->min2 > available) {
+        float fraction = b->min1 / (b->min1 + b->min2);
+        b->min1 = available * fraction;
+        b->min2 = available - b->min1;
+    }
+    if (r.active && ui->mdown[0] && available > 0) {
         float pos = o->vertical ? ui->my - pr.y : st->rtl ? pr.x + pr.w - ui->mx : ui->mx - pr.x;
-        pos = cui__clampf(pos, b->min1, total - b->min2);
-        *ratio = pos / total;
+        pos = cui__clampf(pos, b->min1, CUI_MAX(b->min1, available - b->min2));
+        *ratio = pos / available;
     }
     if (r.hovered || r.active) cui__set_cursor(ui, o->vertical ? CUI_CURSOR_RESIZE_NS : CUI_CURSOR_RESIZE_EW);
     cui__tween(ui, &st->hover, (r.hovered || r.active) ? 1.0f : 0.0f, CUI__T_HOVER);
@@ -73732,6 +73838,10 @@ static cui_texture cui__sw_tex_create(void *user, int w, int h, cui_texture_form
         slot = r->tex_count++;
     }
     cui__sw_tex *t = &r->tex[slot];
+    if (w < 1 || h < 1) {   /* an empty texture would clamp sample coordinates to -1: make it one blank texel */
+        w = h = 1;
+        pixels = NULL;
+    }
     cui__sw_note_change(r, (cui_texture)(slot + 1), 0, 0, w, h);
     t->w = w; t->h = h; t->fmt = fmt; t->used = true;
     size_t bytes = (size_t)w * (size_t)h * (size_t)fmt;
@@ -73748,11 +73858,13 @@ static void cui__sw_tex_update(void *user, cui_texture tex, int x, int y, int w,
     cui__sw_tex *t = &r->tex[slot];
     cui__sw_note_change(r, tex, x, y, x + w, y + h);
     int bpp = (int)t->fmt;
+    int cx0 = x < 0 ? 0 : x, cx1 = x + w > t->w ? t->w : x + w;   /* clip to the texture: the rect may hang over an edge */
+    if (cx1 <= cx0) return;
     const uint8_t *src = pixels;
     for (int row = 0; row < h; row++) {
         if (y + row < 0 || y + row >= t->h) continue;
-        memcpy(t->data + ((size_t)(y + row) * (size_t)t->w + (size_t)x) * (size_t)bpp,
-               src + (size_t)row * (size_t)stride, (size_t)w * (size_t)bpp);
+        memcpy(t->data + ((size_t)(y + row) * (size_t)t->w + (size_t)cx0) * (size_t)bpp,
+               src + (size_t)row * (size_t)stride + (size_t)(cx0 - x) * (size_t)bpp, (size_t)(cx1 - cx0) * (size_t)bpp);
     }
 }
 
@@ -77147,13 +77259,16 @@ static bool cui__posix_file_dialog(const cui_file_dialog_opts *o, char *out, siz
         char types[300] = "";
         if (o->filter && *o->filter) {
             size_t k = (size_t)snprintf(types, sizeof types, " of type {");
-            for (const char *p = o->filter; *p && k + 8 < sizeof types;) {
+            for (const char *p = o->filter; *p;) {
                 const char *e = strchr(p, ';');
                 size_t l = e ? (size_t)(e - p) : strlen(p);
+                /* the separator, the quoted name, the closing brace and the terminator must all fit */
+                size_t need = (p == o->filter ? 0 : 2) + 1 + l + 1 + 1 + 1;
+                if (k + need > sizeof types) { types[0] = 0; break; }   /* omit the filter rather than send a broken script */
                 k += (size_t)snprintf(types + k, sizeof types - k, "%s\"%.*s\"", p == o->filter ? "" : ", ", (int)l, p);
                 p = e ? e + 1 : p + l;
             }
-            snprintf(types + k, sizeof types - k, "}");
+            if (types[0]) snprintf(types + k, sizeof types - k, "}");
         }
         snprintf(script, sizeof script, "POSIX path of (choose file with prompt \"%s\"%s)", title, types);
     }
@@ -77198,6 +77313,7 @@ static bool cui__posix_file_dialog(const cui_file_dialog_opts *o, char *out, siz
                 k += (size_t)snprintf(spec + k, sizeof spec - k, "%s*.%.*s", k ? " " : "", (int)l, p);
                 p = e ? e + 1 : p + l;
             }
+            if (k >= sizeof spec) k = sizeof spec - 1;   /* snprintf returns the length it wanted, which can pass the end */
             snprintf(spec + k, sizeof spec - k, "|%s", o->filter_name ? o->filter_name : "Files");
             cui__shell_quote(filter, sizeof filter, spec);
         }

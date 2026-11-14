@@ -1,25 +1,7 @@
 #include "../../fpas_cui.h"
 
-static cui_id fpas_wheel_scroll_key(cui_id key) { return key ^ 0x57484545u; }
-
-static void fpas_paint_wheel_picker(cui_ctx *ui, cui_node *node, void *data) {
-    cui__paint_wheel(ui, node, data);
-
-    /* CUI-009 (docs/future/cui-upstream-bugs.md#cui-009): register the wheel as
-       the vertical scroll target before an enclosing viewport consumes the event. */
-    const cui_id key = fpas_wheel_scroll_key(node->id);
-    cui_scroll_state *scroll = cui_state(ui, key, sizeof *scroll);
-    scroll->view_h = node->rect.h;
-    scroll->content_h = scroll->view_h + 1;
-    const cui_rect pixels = ui->dl.clip_stack[ui->dl.clip_depth - 1];
-    const float scale = ui->scale;
-    const cui_rect clip = {pixels.x / scale, pixels.y / scale, pixels.w / scale, pixels.h / scale};
-    const cui_rect bounds = cui__xform_rect(ui, node->rect);
-    cui__paint_add_hit(ui, key, cui__rect_intersect(bounds, clip), CUI_NF_SCROLL_Y);
-}
-
 static void fpas_paint_focused_wheel_picker(cui_ctx *ui, cui_node *node, void *data) {
-    fpas_paint_wheel_picker(ui, node, data);
+    cui__paint_wheel(ui, node, data);
     cui__draw_focus_ring(ui, node->rect, node->radius, 1.0f);
 }
 
@@ -62,9 +44,7 @@ int fpas_cui_wheel_picker(cui_ctx *ui, const char *id, const char *const *items,
         };
         wheel->paint_data = paint;
         wheel->paint = fpas_paint_focused_wheel_picker;
-    } else if (allowed) {
-        wheel->paint = fpas_paint_wheel_picker;
     }
-    fpas_own(ui, key, fpas_wheel_scroll_key(key), 0, 0);
+    fpas_own(ui, key, key ^ CUI__VERTICAL_WHEEL_STATE, 0, 0);
     return allowed ? selected : index;
 }

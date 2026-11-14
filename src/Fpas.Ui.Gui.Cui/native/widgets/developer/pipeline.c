@@ -8,7 +8,6 @@ void fpas_cui_pipeline(cui_ctx *ui, const char *id, const char *const * stages, 
     cui_push_disabled(ui, !enabled);
     cui_pipeline_result r = cui_pipeline_ex(ui,id,stages,stages_count,jobs,jobs_count,&o);
     cui_pop_disabled(ui);
-    fpas_dev_reduce_spinners(ui, root);
     if (ui->node_count == root) cui__leaf(ui, key, CUI_FIT, CUI_FIT);
     fpas_creative_node(ui, root, key);
     out->index=selection;

@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream snapshot after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`a8f71c05be29eb441bf3ff72dba67b279e68384f`](https://github.com/yappologistic/CUI/commit/a8f71c05be29eb441bf3ff72dba67b279e68384f) |
+| Commit | [`5d3d253ac4a537d0fbf87d445b425a9d574ca418`](https://github.com/yappologistic/CUI/commit/5d3d253ac4a537d0fbf87d445b425a9d574ca418) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -15,8 +15,8 @@ That commit is identical to upstream `master` at the time of this update.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `3a3650864335abf6a4cfc8609532df903a4b270e473846794bac408db1dff924` |
-| `cui.h` | `e725933e9022064317af4d53a16eeb536c5875a157c0bfe767de60e631521fa9` |
+| `cui.c` | `da6253f955b3778e8caedfc3420cc485932c063baed5ae41c41dfceef7e2a421` |
+| `cui.h` | `95a6478aaa5eb3d6e65a2ea6e092faa64ed19ca8c9725cb0777d716c93d9b409` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -24,16 +24,14 @@ from the unmodified upstream sources here.
 
 ## Snapshot verification
 
-The copied pair matches the generated files byte for byte. This revision
-updates select keyboard handling, number-field reconciliation, and input
-method positioning. The source changes leave license inputs, theme tokens,
-and palette definitions unchanged.
+The copied pair matches the generated files byte for byte. This snapshot includes
+the reduced-motion, JSON validation, nested wheel routing and split-pane,
+and Windows image path and disabled file-drop fixes. Upstream's license inputs,
+theme builder, and theme-token declarations are unchanged.
 
-The FPAS native CTest suite passed in Debug and Release on Windows x64 and
-Linux x64. Both distribution scripts produced a working launcher and embedded
-SDK. The packaged CUI probe ran in all five publish modes on both hosts.
-The packaged FPAS gallery ran all five modes with both renderers on Windows
-and Linux. The X11 gallery input test passed under Xvfb.
+After removing the corresponding local workarounds, the native consumer suite
+passed all 37 tests on Windows and all 35 tests on Linux under WSL. The upstream
+regression suite built against this source pair also passed on both systems.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 

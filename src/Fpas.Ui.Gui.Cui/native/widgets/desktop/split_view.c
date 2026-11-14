@@ -5,31 +5,16 @@ float fpas_cui_split_view_begin(cui_ctx *ui, const char *id, float ratio, int ve
     float first, float second, int width_kind, float width, int height_kind, float height, int enabled) {
     cui_split_opts opts = { .vertical = vertical != 0, .min_first = first, .min_second = second,
         .width = fpas_extent(width_kind, width), .height = fpas_extent(height_kind, height) };
-    /* CUI-040 (docs/future/cui-upstream-bugs.md#cui-040): proportional
-       minimums keep the divider inside its parent when both minima cannot fit. */
-    const cui_rect bounds = cui__prev_rect(ui, cui_make_id(ui, id));
-    const float axis = vertical ? bounds.h : bounds.w;
-    const cui_size extent = vertical ? opts.height : opts.width;
-    const float planned = extent.kind == CUI_SIZE_FIXED ? extent.value : axis;
-    const float available = planned > 0 ? CUI_MAX(0.002f, planned - 1.0f) : 0;
-    const double min_first = first > 0 ? first : 120;
-    const double min_second = second > 0 ? second : 120;
-    const double total = min_first + min_second;
-    if (available > 0 && total > available) {
-        opts.min_first = CUI_MAX(0.001f, (float)(available * min_first / total));
-        opts.min_second = CUI_MAX(0.001f, (float)(available * min_second / total));
-    }
-
     float *value = cui__frame_alloc(ui, sizeof *value);
     *value = ratio;
-    const bool allowed = enabled && !cui_is_disabled(ui) && axis > 1.0f && planned > 1.0f;
+    const bool allowed = enabled && !cui_is_disabled(ui);
     fpas_chrome_input input;
     if (!allowed) fpas_chrome_pause(ui, &input);
     cui_push_disabled(ui, !allowed);
     cui_split_begin(ui, id, value, &opts);
     cui_pop_disabled(ui);
     if (!allowed) fpas_chrome_resume(ui, &input);
-    return cui__clampf(*value, 0, 1);
+    return *value;
 }
 
 void fpas_cui_split_view_next(cui_ctx *ui, int enabled) {

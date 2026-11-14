@@ -1,0 +1,62 @@
+unit GuiDocCaptures.Chapters;
+
+uses GuiGallery.App.State as Gallery, System as Sys;
+
+// Resolves the gallery page that presents a chapter's first widgets.
+// ## Parameters
+// - `Chapter`: The directory name of a supported handbook chapter.
+// ## Returns
+// The gallery page to open at the start of capture.
+public function PageForChapter(Chapter: string): Gallery.Page;
+begin
+  var Page: Gallery.Page := Gallery.Page.Buttons;
+  case Chapter of
+    when 'actions':
+    when 'selection':
+      Page := Gallery.Page.Selection;
+    when 'navigation':
+      Page := Gallery.Page.Navigation;
+    when 'inputs':
+      Page := Gallery.Page.Inputs;
+    when 'pickers':
+      Page := Gallery.Page.Pickers;
+    when 'overlays':
+      Page := Gallery.Page.Overlays;
+    when 'disclosure':
+      Page := Gallery.Page.Disclosure;
+    when 'feedback':
+      Page := Gallery.Page.Feedback;
+    when 'data-display':
+      Page := Gallery.Page.Lists;
+    when 'charts':
+      Page := Gallery.Page.Charts;
+    when 'more-charts':
+      Page := Gallery.Page.MoreCharts;
+    else
+      raise new Sys.ArgumentException('Unknown capture chapter: ' + Chapter);
+  end case;
+
+  return Page;
+end function;
+
+// Selects the viewport height that fits the gallery examples for a chapter.
+// ## Parameters
+// - `Page`: Initial gallery page.
+// ## Returns
+// Height in logical points at scale one.
+public function ViewportHeight(Page: Gallery.Page): int;
+begin
+  return if Page = Gallery.Page.MoreCharts then
+    4100
+  elsif Page = Gallery.Page.Charts or Page = Gallery.Page.Disclosure or Page = Gallery.Page.Feedback
+    or Page = Gallery.Page.Lists
+  then
+    2260
+  elsif Page = Gallery.Page.Inputs or Page = Gallery.Page.Pickers then
+    1900
+  else
+    1540
+  end if;
+end function;
+
+end unit;

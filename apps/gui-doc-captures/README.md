@@ -16,7 +16,9 @@ python apps/gui-doc-captures/crop.py .temp-data/ui-selection docs/ui/selection/i
 ```
 
 The chapter argument accepts `actions` (the default), `selection`, `navigation`,
-`inputs`, `pickers`, `overlays`, `disclosure`, `feedback` or `data-display`.
+`inputs`, `pickers`, `overlays`, `disclosure`, `feedback`, `data-display`,
+`charts` or `more-charts`. More charts scrolls the gallery to capture the
+lower examples.
 Use a fresh capture directory for each run and crop into the chapter's
 `images` folder. Review the output at its original size.
 The crop keeps the widget and its open menu entries. If a capture is blank

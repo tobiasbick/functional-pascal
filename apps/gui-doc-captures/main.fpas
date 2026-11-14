@@ -3,11 +3,13 @@ program GuiDocCaptures;
 uses
   GuiDocCaptures.Regions as Regions, GuiDocCaptures.SelectionAndNavigation as Guides,
   GuiDocCaptures.Presented as Presented, GuiDocCaptures.FeedbackAndDataDisplay as Collections,
+  GuiDocCaptures.Chapters as Chapters, GuiDocCaptures.Charts as Charts,
   GuiGallery.App.State as Gallery,
   GuiGallery.App.Update as Update, GuiGallery.App.View as View,
   GuiGallery.Pages.Actions.State as Actions, GuiGallery.Pages.Inputs.State as Inputs,
   GuiGallery.Pages.Overlays.State as Overlays, GuiGallery.Pages.Disclosure.State as Disclosure,
   GuiGallery.Pages.Feedback.State as Feedback,
+  GuiGallery.Pages.Charts.State as ChartState,
   GuiGallery.Shared.State as Demo,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
@@ -34,6 +36,11 @@ requires Output <> '';
   procedure Inject();
   begin
     Window.MovePointer(X, Y);
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+
     if Button >= 0 then
       Window.SetLeftButton(Button = 1);
       Button := -1;
@@ -391,28 +398,7 @@ requires Output <> '';
     Presented.CaptureToast(Session, Output, 'undo-toast', '3 conversations archived');
   end procedure;
 begin
-  var Page: Gallery.Page := Gallery.Page.Buttons;
-  case Chapter of
-    when 'actions':
-    when 'selection':
-      Page := Gallery.Page.Selection;
-    when 'navigation':
-      Page := Gallery.Page.Navigation;
-    when 'inputs':
-      Page := Gallery.Page.Inputs;
-    when 'pickers':
-      Page := Gallery.Page.Pickers;
-    when 'overlays':
-      Page := Gallery.Page.Overlays;
-    when 'disclosure':
-      Page := Gallery.Page.Disclosure;
-    when 'feedback':
-      Page := Gallery.Page.Feedback;
-    when 'data-display':
-      Page := Gallery.Page.Lists;
-    else
-      raise new Sys.ArgumentException('Unknown capture chapter: ' + Chapter);
-  end case;
+  const Page: Gallery.Page := Chapters.PageForChapter(Chapter);
 
   discard IO.Directory.CreateDirectory(Output);
   Sys.Environment.SetEnvironmentVariable('CUI_SCALE', '1');
@@ -421,17 +407,10 @@ begin
   var Y: float := -1.0F;
   var Button: int := -1;
   var RightButton: int := -1;
+  var Wheel: float := 0.0F;
   var KeyCode: int := 0;
   var FocusId: string := '';
-  const Height: int := if Page = Gallery.Page.Disclosure or Page = Gallery.Page.Feedback
-    or Page = Gallery.Page.Lists
-  then
-    2260
-  elsif Page = Gallery.Page.Inputs or Page = Gallery.Page.Pickers then
-    1900
-  else
-    1540
-  end if;
+  const Height: int := Chapters.ViewportHeight(Page);
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas widget documentation', 1240, Height, Cui.CuiRenderer.Software, true
   );
@@ -469,6 +448,19 @@ begin
       Collections.CaptureFeedback(Session, Output);
     when Gallery.Page.Lists:
       Collections.CaptureDataDisplay(Session, Output);
+    when Gallery.Page.Charts:
+      Charts.CaptureCharts(Session, Output);
+      Send(Session, Gallery.Msg.Charts(ChartState.Msg.SetGrayscale(true)));
+      Charts.CaptureGrayscale(Session, Output);
+    when Gallery.Page.MoreCharts:
+      Charts.CaptureMoreChartsTop(Session, Output);
+      X := 1200.0F;
+      Y := 600.0F;
+      Wheel := -60.0F;
+      Step(Session);
+      Step(Session);
+      Leave(Session);
+      Charts.CaptureMoreChartsBottom(Session, Output);
     else
       raise new Sys.InvalidOperationException('No capture steps for ' + Page.ToString());
   end case;
@@ -478,7 +470,7 @@ begin
   const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
   if Arguments.Length < 2 or Arguments.Length > 3 or Arguments[1] = '' then
     raise new Sys.ArgumentException(
-      'Pass an output directory and optionally actions, selection, navigation, inputs, pickers, overlays, disclosure, feedback or data-display.'
+      'Pass an output directory and optionally a handbook chapter name.'
     );
   end if;
 

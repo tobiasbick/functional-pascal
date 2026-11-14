@@ -33,7 +33,9 @@ the next view shows it. Close sends a command that ends the application.
 | Inline previews, expanding content, onboarding, undo and reveal controls | [Disclosure](disclosure/README.md) |
 | Alerts, progress indicators, loading placeholders and status labels | [Feedback](feedback/README.md) |
 | Tables, trees, lists and accordion sections | [Data display](data-display/README.md) |
-| Text display, data grids, charts and other areas | [Widget inventory by area](../cui-widget-inventory.md#widget-inventory) |
+| Line and bar charts, donuts, gauges and sparklines | [Charts](charts/README.md) |
+| Heatmaps, flow diagrams, rankings and instruments | [More charts](more-charts/README.md) |
+| Text display, data grids and other areas | [Widget inventory by area](../cui-widget-inventory.md#widget-inventory) |
 | Shared layout, styles, themes and API contracts | [FPAS widget reference](../../src/Fpas.Ui/README.md) |
 
 The widget pages show the FPAS gallery at scale 1 with the software renderer.

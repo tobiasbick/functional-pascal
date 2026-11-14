@@ -799,6 +799,9 @@ The native trace measurement workaround is tracked in [CUI-036](future/cui-upstr
 
 ### Charts and instruments
 
+See [Charts](ui/charts/README.md) and [More charts](ui/more-charts/README.md)
+for gallery screenshots, FPAS examples and widget options.
+
 - [x] Line/area chart, smoothing and stacked dither (`cui_line_chart`),
   grouped/stacked bars (`cui_bar_chart`) and responsive donut
   (`cui_donut_chart`): [API](../src/Fpas.Ui/README.md#charts).

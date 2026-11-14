@@ -5,6 +5,8 @@ typedef char fpas_theme_token_count_must_match[(CUI_TOKEN_COUNT == 35) ? 1 : -1]
 
 void fpas_cui_resolve_layout(cui_ctx *ui) { cui__layout(ui); }
 
+int fpas_cui_system_dark(void) { return cui__plat_system_dark(); }
+
 void fpas_cui_theme_read(cui_ctx *ui, uint32_t *colors) {
     for (int token = 1; token < CUI_TOKEN_COUNT; token++) {
         cui_color c = ui->theme.colors[token];

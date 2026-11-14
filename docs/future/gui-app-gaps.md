@@ -83,14 +83,19 @@ through the documented SDK workflow.
   saved size and update the title when it opens another file. Leave native
   handle and backend access for a concrete platform integration such as a tray
   icon. [CUI window API][window-api]
+- [ ] Expose window placement through the GUI host so apps can read it before
+  closing and restore it at startup. Placement includes the screen position
+  and size of the normal window and whether it was maximized. CUI exposes the
+  current logical size and a native window handle. Reading and applying
+  placement requires platform support. Verify that a window can close and
+  reopen in both normal and maximized states on Windows and X11, and that
+  unmaximizing returns it to its saved normal bounds. [CUI window API][window-api]
 
 ## Appearance and accessibility
 
-- [ ] Make the GUI's System choice follow the OS appearance on Windows and
-  apply changes to the model-selected palette. Verify startup, a live OS
-  change and switching back to an explicit Light or Dark choice. Document
-  the fallback for X11, where the pinned CUI backend only has a limited
-  startup hint. [CUI app options][app-options]
+- [ ] Read the Linux desktop appearance and receive live changes. CUI's X11
+  backend supplies a dark `GTK_THEME` hint. The GUI host needs a change
+  notification to update an idle window. [CUI app options][app-options]
 - [ ] Expose reduced motion through the public GUI API. The native binding
   already has `SetReducedMotion`. Verify it with a running animation. Expose
   font-role overrides and fallback fonts where an application needs them.

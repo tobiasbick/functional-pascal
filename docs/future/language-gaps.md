@@ -6,6 +6,14 @@ Record concrete maintenance blockers in task-specific documents under
 `docs/future/`; current toolchain procedures belong in the
 [development workflow](../build/development.md).
 
+## SDK and build gaps
+
+- [ ] Compile `.resx` files in FPAS projects and embed their resources in the
+  emitted assembly. Support culture-specific satellite assemblies and verify
+  that `ResourceManager` loads the selected culture and falls back to the
+  neutral language in build and publish outputs. An `EmbeddedResource` item
+  currently fails with `FP5001`.
+
 ## Scope boundary
 
 Source event declarations, expression-tree conversion, user-authored class

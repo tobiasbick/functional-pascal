@@ -35,8 +35,9 @@ use the same topics and expose the `fpas_cui_` symbols.
 - TrackLastControl and composite tracking expose geometry, focus and hover.
   ForgetControl releases retained state and owned popup/feedback state for
   disappearing controls. Private state keys stay in the native bridge.
-- SetTheme/ReadTheme transfer the shared semantic palette. Reduced motion is
-  controlled independently of palette changes.
+- SetTheme/ReadTheme transfer the shared semantic palette. SystemDark reads
+  CUI's platform appearance and returns null when it is unavailable.
+  Reduced motion is controlled independently of palette changes.
 - DeferClose, CloseRequested and WakeWhenCompleted support asynchronous cleanup.
   SetResizeRenderer roots an owner-thread cached-view callback until detachment;
   failures are surfaced after the native pump returns.

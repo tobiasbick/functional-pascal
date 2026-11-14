@@ -76,6 +76,9 @@ include overlapping children, independent dimensions, per-edge padding,
 LTR/RTL flow, native spacing and horizontal scrolling.
 Both hosts accept `Fpas.Ui.Widgets.Theming.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
 and the same `ThemeFor(Model)` callback. Set a fixed theme with `Gui.Options.Theme`.
+For a desktop System choice, use `Gui.StartThemed` or `Gui.RunThemed` to resolve
+the palette from the model and CUI's system appearance. The view receives the
+resolved theme. See [system appearance](../../../src/Fpas.Ui.Gui/README.md#system-appearance).
 Palette customization and terminal approximations are described in
 [shared themes](../../../src/Fpas.Ui/README.md#shared-themes).
 

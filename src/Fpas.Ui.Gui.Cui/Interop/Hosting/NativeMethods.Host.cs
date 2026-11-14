@@ -77,6 +77,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_theme")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void SetTheme(nint context, int dark, int accent, uint* colors);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_system_dark")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int SystemDark();
     [LibraryImport(Library, EntryPoint = "fpas_cui_theme_read")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void ReadTheme(nint context, uint* colors);

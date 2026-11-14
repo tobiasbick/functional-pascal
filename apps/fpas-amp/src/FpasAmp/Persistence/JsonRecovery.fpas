@@ -1,0 +1,127 @@
+// Extracts complete JSON values from damaged FPas-Amp files.
+unit FpasAmp.Persistence.JsonRecovery;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields,
+  System as Sys,
+  System.Collections.Generic as C,
+  System.Text.Json as J,
+  System.Text.RegularExpressions as R;
+
+// A quoted token consumes its escapes and runs to the end of the input if cut short.
+const Tokens: R.Regex := new R.Regex(
+  '"(?:[^"\\]|\\[\s\S])*(?:"|\\?\z)|[{}\[\],]',
+  R.RegexOptions.NonBacktracking
+);
+const Member: R.Regex := new R.Regex(
+  '^\s*("(?:[^"\\]|\\[\s\S])*")\s*:',
+  R.RegexOptions.NonBacktracking
+);
+
+function Entries(Input: string; Opening: string): array of string;
+begin
+  const Text: string := Input.TrimStart();
+  const Parts: C.List<string> := new C.List<string>();
+  if not Text.StartsWith(Opening, Sys.StringComparison.Ordinal) then
+    return Parts.ToArray();
+  end if;
+
+  const Ends: C.Stack<string> := new C.Stack<string>();
+  var Start: int := 1;
+  var Finish: int := Text.Length;
+  var Token: R.Match := Tokens.Match(Text, Start);
+  while Token.Success do
+    const Mark: string := Token.Value;
+    if Mark = '{' then
+      Ends.Push('}');
+    elsif Mark = '[' then
+      Ends.Push(']');
+    elsif Mark = '}' or Mark = ']' then
+      if Ends.Count = 0 or Ends.Peek() <> Mark then
+        Finish := Token.Index;
+        break;
+      end if;
+
+      discard Ends.Pop();
+    elsif Mark = ',' and Ends.Count = 0 then
+      Parts.Add(Text.Substring(Start, Token.Index - Start));
+      Start := Token.Index + 1;
+    end if;
+
+    Token := Token.NextMatch();
+  end while;
+
+  Parts.Add(Text.Substring(Start, Finish - Start));
+  return Parts.ToArray();
+end function;
+
+function Parsed(Text: string): J.JsonElement?;
+begin
+  try
+    return J.JsonElement.Parse(Text);
+  catch Failure: J.JsonException do
+    return null;
+  end try;
+end function;
+
+function RecoverArray(Text: string): J.JsonElement?;
+begin
+  if not Text.TrimStart().StartsWith('[', Sys.StringComparison.Ordinal) then
+    return null;
+  end if;
+  const Items: C.List<J.JsonElement> := new C.List<J.JsonElement>();
+  for Part: string in Entries(Text, '[') do
+    const Item: J.JsonElement? := Parsed(Part);
+    if Item <> null then
+      Items.Add(Item.Value);
+    end if;
+  end for;
+
+  return J.JsonSerializer.SerializeToElement<C.List<J.JsonElement>>(Items);
+end function;
+
+// Recovers independently parseable root properties. The named array can also
+// contribute complete entries when it contains malformed JSON.
+//
+// ## Parameters
+// - `ArrayKey`: Root array property eligible for entry-by-entry recovery.
+// - `Text`: Original JSON text.
+// ## Returns
+// An object containing the recoverable properties.
+public function Recover(Text: string; ArrayKey: string): J.JsonElement;
+begin
+  const Values: C.Dictionary<string, J.JsonElement> := new C.Dictionary<string, J.JsonElement>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>();
+  for Part: string in Entries(Text, '{') do
+    const Header: R.Match := Member.Match(Part);
+    if not Header.Success then
+      continue;
+    end if;
+    const KeyToken: J.JsonElement? := Parsed(Header.Groups[1].Value);
+    if KeyToken = null then
+      continue;
+    end if;
+    const Key: string? := Fields.StringValue(KeyToken.Value);
+    if Key = null then
+      continue;
+    end if;
+
+    if not Seen.Add(Key) then
+      discard Values.Remove(Key);
+      continue;
+    end if;
+    const Raw: string := Part.Substring(Header.Length);
+    const Value: J.JsonElement? := Parsed(Raw) ?? if Key = ArrayKey then
+      RecoverArray(Raw)
+    else
+      null
+    end if;
+    if Value <> null then
+      Values.Add(Key, Value.Value);
+    end if;
+  end for;
+
+  return J.JsonSerializer.SerializeToElement<C.Dictionary<string, J.JsonElement>>(Values);
+end function;
+
+end unit;

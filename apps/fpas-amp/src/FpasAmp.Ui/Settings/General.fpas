@@ -1,0 +1,90 @@
+// General appearance controls.
+unit FpasAmp.Ui.Settings.General;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys, System.Collections.Generic as C;
+
+function Swatch(Theme: Themes.Theme; Accent: Themes.Accent): E.Element<M.Msg>;
+begin
+  const Name: string := Accent.ToString();
+  const Color: G.Color := Themes.Light(Accent).Colors.Accent;
+  const Dot: Canvas.Shape := Canvas.Shape.Circle(14.0F, 14.0F, 10.0F, Color);
+  const Shapes: array of Canvas.Shape := if Theme.AccentFamily = Accent then
+    [
+      Canvas.Shape.Circle(14.0F, 14.0F, 14.0F, Theme.Colors.Foreground),
+      Canvas.Shape.Circle(14.0F, 14.0F, 12.0F, Theme.Colors.Surface),
+      Dot
+    ]
+  else
+    [Dot]
+  end if;
+  const Side: L.Extent := L.Extent.Fixed(L.Measure.Logical(28));
+  return Tips.Tooltip<M.Msg>(
+    Canvas.Canvas<M.Msg>(
+      'accent-' + Name.ToLowerInvariant(),
+      Shapes,
+      function(_Event: Canvas.Event): M.Msg => M.Msg.SetAccent(Accent),
+      new Canvas.Options(Width := Side, Height := Side)
+    ),
+    Name
+  );
+end function;
+
+// Builds the appearance and accent cards.
+//
+// ## Parameters
+// - `Settings`: The current preferences.
+// - `Theme`: The current palette.
+// ## Returns
+// The general settings tab.
+public function View(Settings: M.Preferences; Theme: Themes.Theme): E.Element<M.Msg>;
+begin
+  const Colors: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  for Accent: Themes.Accent in Sys.Enum.GetValues<Themes.Accent>() do
+    Colors.Add(Swatch(Theme, Accent));
+  end for;
+  const Options: Cards.Options := new Cards.Options(
+    Width := L.Extent.Fill,
+    Padding := 20.0F,
+    Gap := 14.0F
+  );
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Align := L.Alignment.Stretch),
+    Cards.Card<M.Msg>(
+      'appearance-card',
+      [
+        Texts.Text<M.Msg>('Appearance', Texts.Appearance.HeadingThree),
+        Segments.SegmentedControl<M.Msg>(
+          'appearance',
+          [
+            new Segments.Item('Light', Sys.Char.ConvertFromUtf32($E178)),
+            new Segments.Item('Dark', Sys.Char.ConvertFromUtf32($E11E)),
+            new Segments.Item('System', Sys.Char.ConvertFromUtf32($E11D))
+          ],
+          cast<int>(M.Appearance(Settings)),
+          function(Index: int): M.Msg => M.Msg.SetAppearance(cast<Switchers.Selection>(Index))
+        )
+      ],
+      Options
+    ),
+    Cards.Card<M.Msg>(
+      'accent-card',
+      [
+        Texts.Text<M.Msg>('Accent color', Texts.Appearance.HeadingThree),
+        E.Row<M.Msg>(
+          new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
+          Colors.ToArray()
+        ),
+        Texts.Text<M.Msg>(Theme.AccentFamily.ToString(), Texts.Appearance.Secondary)
+      ],
+      Options
+    )
+  );
+end function;
+
+end unit;

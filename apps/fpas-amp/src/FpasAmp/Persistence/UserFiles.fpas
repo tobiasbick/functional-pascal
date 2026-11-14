@@ -1,0 +1,226 @@
+// Reads and replaces FPas-Amp's per-user JSON files.
+unit FpasAmp.Persistence.UserFiles;
+
+uses
+  FpasAmp.Persistence.JsonRecovery as Recovery,
+  System as Sys,
+  System.IO as IO,
+  System.Text as Text,
+  System.Text.Json as J,
+  System.Threading as Threads;
+
+const Utf8: Text.UTF8Encoding := new Text.UTF8Encoding(false, true);
+// An invalid byte produces a control character, so JSON cannot silently change
+// a name or path by accepting a replacement character inside a string.
+const DamagedUtf8: Text.Encoding := Text.Encoding.GetEncoding(
+  65001, Text.EncoderFallback.ExceptionFallback, new Text.DecoderReplacementFallback(#31.ToString())
+);
+
+// A decoded document and its validation result.
+//
+// ## Type parameters
+// - `T`: The file's typed contents.
+public type Decoded<T> = record
+  // Values recovered from the document, with defaults where needed.
+  public Value: T;
+  // Whether all required data was valid.
+  public Valid: bool;
+end record;
+
+// Returns the .NET application data directory for FPas-Amp without creating it.
+//
+// ## Returns
+// The absolute path shared by settings and window state.
+public function DirectoryPath(): string;
+ensures (Path: string): Path.Length > 0;
+begin
+  const Base: string := Sys.Environment.GetFolderPath(
+    Sys.Environment.SpecialFolder.ApplicationData, Sys.Environment.SpecialFolderOption.DoNotVerify
+  );
+  if not IO.Path.IsPathFullyQualified(Base) then
+    raise new IO.IOException('Could not resolve the user application data directory.');
+  end if;
+
+  return IO.Path.Combine(Base, 'fpas-amp');
+end function;
+
+function Serialization(): J.JsonSerializerOptions;
+begin
+  const Options: J.JsonSerializerOptions := new J.JsonSerializerOptions();
+  Options.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
+  Options.WriteIndented := true;
+  return Options;
+end function;
+
+function LockFiles(): Threads.Mutex;
+begin
+  var Options: Threads.NamedWaitHandleOptions := new Threads.NamedWaitHandleOptions();
+  Options.CurrentUserOnly := true;
+  Options.CurrentSessionOnly := false;
+  const Lock: Threads.Mutex := new Threads.Mutex(false, 'FPas-Amp.UserFiles', Options);
+  try
+    discard Lock.WaitOne();
+  catch Failure: Threads.AbandonedMutexException do
+    // WaitOne has still acquired the lock. Replacement only publishes complete files.
+  catch do
+    Lock.Dispose();
+    raise;
+  end try;
+
+  return Lock;
+end function;
+
+procedure WriteNew(Path: string; Bytes: array of byte);
+begin
+  using const Stream: IO.FileStream := new IO.FileStream(
+    Path,
+    IO.FileMode.CreateNew,
+    IO.FileAccess.Write,
+    IO.FileShare.None
+  );
+  Stream.Write(Bytes, 0, Bytes.Length);
+  Stream.Flush(true);
+end procedure;
+
+procedure Publish(Path: string; Bytes: array of byte; Overwrite: bool);
+begin
+  discard IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Path) ?? '');
+  const Temporary: string := Path + '.' + Sys.Guid.NewGuid().ToString('N') + '.tmp';
+  try
+    WriteNew(Temporary, Bytes);
+    IO.File.Move(Temporary, Path, Overwrite);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+procedure Replace<T>(Path: string; Value: T);
+begin
+  Publish(Path, J.JsonSerializer.SerializeToUtf8Bytes<T>(Value, Serialization()), true);
+end procedure;
+
+function Read(Path: string): (array of byte)?;
+begin
+  try
+    return IO.File.ReadAllBytes(Path);
+  catch Failure: IO.FileNotFoundException do
+    return null;
+  catch Failure: IO.DirectoryNotFoundException do
+    return null;
+  end try;
+end function;
+
+function DecodeFile<T>(Bytes: array of byte; Decode: function(J.JsonElement): Decoded<T>; ArrayKey: string): Decoded<T>;
+begin
+  var TextValue: string := '';
+  var ValidEncoding: bool := true;
+  try
+    TextValue := Utf8.GetString(Bytes);
+  catch Failure: Text.DecoderFallbackException do
+    TextValue := DamagedUtf8.GetString(Bytes);
+    ValidEncoding := false;
+  end try;
+
+  TextValue := TextValue.TrimStart(cast<char>($FEFF));
+  try
+    const Result: Decoded<T> := Decode(J.JsonElement.Parse(TextValue));
+    return new Decoded<T>(Result.Value, Result.Valid and ValidEncoding);
+  catch Failure: J.JsonException do
+    return new Decoded<T>(Decode(Recovery.Recover(TextValue, ArrayKey)).Value, false);
+  end try;
+end function;
+
+procedure Backup(Path: string; Bytes: array of byte);
+begin
+  Publish(Path + '.corrupt-' + Sys.Guid.NewGuid().ToString('N') + '.bak', Bytes, false);
+end procedure;
+
+// Reads a JSON file and writes a repaired document after securing the original bytes.
+//
+// ## Type parameters
+// - `T`: The file's typed contents.
+// ## Parameters
+// - `Path`: Absolute JSON file path.
+// - `Defaults`: Values returned for an absent or unreadable file.
+// - `Decode`: Validates a JSON value and returns the usable data.
+// - `ArrayKey`: Root array property eligible for entry-by-entry recovery.
+// ## Returns
+// The loaded, recovered, or default values. I/O failures are reported to standard error.
+public function Load<T>(Path: string; Defaults: T; Decode: function(J.JsonElement): Decoded<T>; ArrayKey: string := ''): T;
+requires Path.Length > 0;
+begin
+  if not IO.Path.IsPathFullyQualified(Path) then
+    raise new Sys.ArgumentException('Expected an absolute FPas-Amp file path.');
+  end if;
+
+  using const Lock: Threads.Mutex := LockFiles();
+  try
+    const Bytes: (array of byte)? := Read(Path);
+    if Bytes = null then
+      return Defaults;
+    end if;
+    const Result: Decoded<T> := DecodeFile<T>(Bytes, Decode, ArrayKey);
+    if not Result.Valid then
+      try
+        Backup(Path, Bytes);
+        Replace<T>(Path, Result.Value);
+      catch Failure: IO.IOException do
+        Sys.Console.Error.WriteLine(
+          'FPas-Amp could not repair ' + IO.Path.GetFileName(Path) + ': ' + Failure.Message
+        );
+      catch Failure: Sys.UnauthorizedAccessException do
+        Sys.Console.Error.WriteLine(
+          'FPas-Amp could not repair ' + IO.Path.GetFileName(Path) + ': ' + Failure.Message
+        );
+      end try;
+    end if;
+
+    return Result.Value;
+  catch Failure: IO.IOException do
+    Sys.Console.Error.WriteLine(
+      'FPas-Amp could not read ' + IO.Path.GetFileName(Path) + ': ' + Failure.Message
+    );
+    return Defaults;
+  catch Failure: Sys.UnauthorizedAccessException do
+    Sys.Console.Error.WriteLine(
+      'FPas-Amp could not read ' + IO.Path.GetFileName(Path) + ': ' + Failure.Message
+    );
+    return Defaults;
+  finally
+    Lock.ReleaseMutex();
+  end try;
+end function;
+
+// Validates typed values and safely replaces the JSON file.
+//
+// ## Type parameters
+// - `T`: The file's typed contents.
+// ## Parameters
+// - `Path`: Absolute JSON file path.
+// - `Value`: The values to save.
+// - `Decode`: The same validation used when loading.
+public procedure Save<T>(Path: string; Value: T; Decode: function(J.JsonElement): Decoded<T>);
+requires Path.Length > 0;
+begin
+  if not IO.Path.IsPathFullyQualified(Path) then
+    raise new Sys.ArgumentException('Expected an absolute FPas-Amp file path.');
+  end if;
+
+  if not Decode(J.JsonSerializer.SerializeToElement<T>(Value, Serialization())).Valid then
+    raise new Sys.ArgumentException('Cannot save invalid FPas-Amp data.');
+  end if;
+
+  using const Lock: Threads.Mutex := LockFiles();
+  try
+    const Original: (array of byte)? := Read(Path);
+    if Original <> null and not DecodeFile<T>(Original, Decode, '').Valid then
+      Backup(Path, Original);
+    end if;
+
+    Replace<T>(Path, Value);
+  finally
+    Lock.ReleaseMutex();
+  end try;
+end procedure;
+
+end unit;

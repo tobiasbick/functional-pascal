@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="Any CPU" />
+    <ProjectType Name="FPAS" Extension=".fpasproj" TypeId="{5D4B15AB-1024-4803-9015-4F069B13DE5A}">
+      <Platform Project="AnyCPU" />
+    </ProjectType>
+  </Configurations>
+  <Project Path="src/FpasAmp/FpasAmp.fpasproj" />
+  <Project Path="src/FpasAmp.Ui/FpasAmp.Ui.fpasproj" />
+</Solution>

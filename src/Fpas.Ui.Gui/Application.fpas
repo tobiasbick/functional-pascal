@@ -221,4 +221,65 @@ begin
   end while;
 end procedure;
 
+// Creates a GUI session that observes the desktop appearance and supplies the
+// same resolved theme to native widgets and the declarative view.
+//
+// ## Type parameters
+// - `TModel`: Application model.
+// - `TMsg`: Typed messages.
+// ## Parameters
+// - `InitialModel`: The model before any transitions.
+// - `Update`: The shared MVU transition.
+// - `View`: Builds a view from the model, viewport and resolved theme.
+// - `Settings`: Window and mailbox configuration.
+// - `ThemeFor`: Resolves a theme from the model and system appearance, which is null when unavailable.
+// ## Returns
+// The owned session. Its first Step resolves the theme and presents the initial view.
+public function StartThemed<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme
+): Session<TMsg>;
+requires Settings.Width > 0;
+requires Settings.Height > 0;
+requires Settings.Capacity > 0;
+begin
+  return Host.StartThemed<TModel, TMsg>(
+    InitialModel, Update, View,
+    new Cui.CuiWindow(Settings.Title, Settings.Width, Settings.Height, Settings.Renderer),
+    Settings.Capacity, null, Settings.Theme, ThemeFor, true
+  );
+end function;
+
+// Runs a system-aware GUI session until native or application close.
+//
+// ## Type parameters
+// - `TModel`: Application model.
+// - `TMsg`: Typed messages.
+// ## Parameters
+// - `InitialModel`: The initial model.
+// - `Update`: The shared MVU transition.
+// - `View`: Builds a view from the model, viewport and resolved theme.
+// - `Settings`: Window and mailbox configuration.
+// - `ThemeFor`: Resolves a theme from the model and system appearance, which is null when unavailable.
+public procedure RunThemed<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme
+);
+requires Settings.Width > 0;
+requires Settings.Height > 0;
+requires Settings.Capacity > 0;
+begin
+  using const Running: Session<TMsg> := StartThemed<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Settings,
+    ThemeFor
+  );
+  while Running.Step() do
+  end while;
+end procedure;
+
 end unit;

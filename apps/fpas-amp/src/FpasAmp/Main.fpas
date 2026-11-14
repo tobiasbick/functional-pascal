@@ -1,0 +1,28 @@
+// FPas-Amp desktop entry point.
+program FpasAmp;
+
+uses
+  FpasAmp.Persistence.UserFiles as Files,
+  FpasAmp.Settings as Settings,
+  FpasAmp.Ui.Settings.Model as Model,
+  FpasAmp.Ui.Shell as Shell,
+  FpasAmp.WindowState as State;
+
+procedure Main();
+begin
+  const Directory: string := Files.DirectoryPath();
+  const Preferences: Model.Preferences := Settings.Load(Directory);
+  const Window: State.Placement := State.Load(Directory);
+  Shell.Run(
+    Window.Width, Window.Height, Preferences,
+    procedure(Value: Model.Preferences) begin
+      Settings.Save(Directory, Value);
+    end procedure
+  );
+end procedure;
+
+begin
+  Main();
+end;
+
+end program;

@@ -163,4 +163,31 @@ begin
   Axis(Value.Height, false);
 end procedure;
 
+// Builds the responsive viewport from the window's logical dimensions.
+//
+// ## Parameters
+// - `Size`: The native window's measured size.
+// ## Returns
+// The responsive width and height classes and logical dimensions.
+public function Viewport(Size: Cui.CuiSize): L.Viewport;
+begin
+  return new L.Viewport(
+    if Size.Width < 600 then
+      L.SizeClass.Compact
+    elsif Size.Width < 1200 then
+      L.SizeClass.Regular
+    else
+      L.SizeClass.Expanded
+    end if,
+    if Size.Height < 400 then
+      L.SizeClass.Compact
+    elsif Size.Height < 900 then
+      L.SizeClass.Regular
+    else
+      L.SizeClass.Expanded
+    end if,
+    cast<int>(Size.Width), cast<int>(Size.Height)
+  );
+end function;
+
 end unit;

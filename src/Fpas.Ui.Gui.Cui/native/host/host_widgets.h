@@ -98,6 +98,10 @@ CUI_API void fpas_cui_resolve_layout(cui_ctx *ui);
  * @param accent Validated CUI accent family ordinal.
  * @param colors Packed RGBA bytes in semantic token order, excluding NONE. */
 CUI_API void fpas_cui_theme(cui_ctx *ui, int dark, int accent, const uint32_t *colors);
+
+/** Reads the platform's application appearance through CUI.
+ * @return -1 if unknown, 0 for light, or 1 for dark. */
+CUI_API int fpas_cui_system_dark(void);
 /** Copies the active semantic palette, excluding NONE, as packed RGBA bytes.
  * @param ui Owner context.
  * @param colors Receives CUI_TOKEN_COUNT - 1 colors. */

@@ -1,0 +1,89 @@
+// Stores the desktop window state.
+unit FpasAmp.WindowState;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields,
+  FpasAmp.Persistence.UserFiles as Files,
+  System.IO as IO,
+  System.Text.Json as J;
+
+// The window's normal bounds and last maximized state.
+public type Placement = record
+  // Normal window width in logical units.
+  public Width: int := 1000;
+  // Normal window height in logical units.
+  public Height: int := 680;
+  // Normal left coordinate, when known.
+  public X: int? := null;
+  // Normal top coordinate, when known.
+  public Y: int? := null;
+  // Whether the window was maximized.
+  public Maximized: bool := false;
+end record;
+
+const FileName: string := 'state.json';
+
+function Coordinate(Root: J.JsonElement; Key: string; ref Valid: bool): int?;
+begin
+  const Field: J.JsonElement := Fields.Field(Root, Key);
+  const Value: int? := Fields.IntegerValue(Field);
+  if Value = null and Field.ValueKind <> J.JsonValueKind.Null then
+    Valid := false;
+  end if;
+
+  return Value;
+end function;
+
+function Dimension(Root: J.JsonElement; Key: string; Fallback: int; ref Valid: bool): int;
+begin
+  const Value: int := Fields.IntegerValue(Fields.Field(Root, Key)) ?? 0;
+  if Value <= 0 then
+    Valid := false;
+    return Fallback;
+  end if;
+
+  return Value;
+end function;
+
+function Decode(Root: J.JsonElement): Files.Decoded<Placement>;
+begin
+  const Defaults: Placement := new Placement();
+  var Valid: bool := true;
+  const Width: int := Dimension(Root, 'width', Defaults.Width, ref Valid);
+  const Height: int := Dimension(Root, 'height', Defaults.Height, ref Valid);
+  const X: int? := Coordinate(Root, 'x', ref Valid);
+  const Y: int? := Coordinate(Root, 'y', ref Valid);
+  const Maximized: bool? := Fields.BooleanValue(Fields.Field(Root, 'maximized'));
+  return new Files.Decoded<Placement>(
+    new Placement(Width, Height, X, Y, Maximized ?? Defaults.Maximized),
+    Valid and Maximized <> null
+  );
+end function;
+
+// Loads the window placement and repairs a damaged state file when possible.
+//
+// ## Parameters
+// - `Directory`: Absolute directory for the user's files.
+// ## Returns
+// The placement with positive dimensions.
+public function Load(Directory: string): Placement;
+requires Directory.Length > 0;
+ensures (Value: Placement): Value.Width > 0 and Value.Height > 0;
+begin
+  return Files.Load<Placement>(IO.Path.Combine(Directory, FileName), new Placement(), Decode);
+end function;
+
+// Validates and saves the normal bounds and maximized state.
+//
+// ## Parameters
+// - `Directory`: Absolute directory for the user's files.
+// - `Value`: Placement with positive normal dimensions.
+public procedure Save(Directory: string; Value: Placement);
+requires Directory.Length > 0;
+requires Value.Width > 0;
+requires Value.Height > 0;
+begin
+  Files.Save<Placement>(IO.Path.Combine(Directory, FileName), Value, Decode);
+end procedure;
+
+end unit;

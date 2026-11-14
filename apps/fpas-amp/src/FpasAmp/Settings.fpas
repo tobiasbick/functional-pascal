@@ -1,0 +1,147 @@
+// Stores the user's music sources and appearance preferences.
+unit FpasAmp.Settings;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields,
+  FpasAmp.Persistence.UserFiles as Files,
+  FpasAmp.Ui.Settings.Model as Model,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys,
+  System.Collections.Generic as C,
+  System.IO as IO,
+  System.Text.Json as J,
+  System.Text.RegularExpressions as R;
+
+const DefaultAppearance: string := 'system';
+
+const SourcesKey: string := 'musicSources';
+const ExtensionPattern: R.Regex := new R.Regex('\A\.[A-Za-z0-9]+\z');
+
+const FileName: string := 'settings.json';
+
+function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet<string>; ref Valid: bool): Model.MusicSource?;
+begin
+  const Folder: string := Fields.StringValue(Fields.Field(Item, 'path')) ?? '';
+  if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast<char>(0)) then
+    Valid := false;
+    return null;
+  end if;
+
+  var Id: string := Fields.StringValue(Fields.Field(Item, 'id')) ?? '';
+  if Sys.String.IsNullOrWhiteSpace(Id) or not UsedIds.Add(Id) then
+    Valid := false;
+    Id := Sys.Guid.NewGuid().ToString('N');
+    discard UsedIds.Add(Id);
+  end if;
+  var Name: string := Fields.StringValue(Fields.Field(Item, 'name')) ?? '';
+  if Sys.String.IsNullOrWhiteSpace(Name) then
+    Valid := false;
+    Name := Folder;
+  end if;
+  const Offline: bool? := Fields.BooleanValue(Fields.Field(Item, 'offline'));
+  if Offline = null then
+    Valid := false;
+  end if;
+
+  const Extensions: C.List<string> := new C.List<string>();
+  const ExtensionList: J.JsonElement := Fields.Field(Item, 'extensions');
+  if ExtensionList.ValueKind = J.JsonValueKind.Array then
+    const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
+    for Entry: J.JsonElement in ExtensionList.EnumerateArray() do
+      const Extension: string := Fields.StringValue(Entry) ?? '';
+      if ExtensionPattern.IsMatch(Extension) and Seen.Add(Extension) then
+        Extensions.Add(Extension);
+      else
+        Valid := false;
+      end if;
+    end for;
+  else
+    Valid := false;
+  end if;
+
+  return new Model.MusicSource(Id, Name, Folder, Offline ?? false, Extensions.ToArray());
+end function;
+
+function DecodeChoice<T>(Root: J.JsonElement; Name: string; Fallback: string; ref Valid: bool): string;
+where T: struct, Sys.Enum;
+begin
+  if Root.ValueKind <> J.JsonValueKind.Object then
+    return Fallback;
+  end if;
+
+  var Field: J.JsonElement := new J.JsonElement();
+  if not Root.TryGetProperty(Name, out Field) then
+    return Fallback;
+  end if;
+
+  const Text: string := Fields.StringValue(Fields.Field(Root, Name)) ?? '';
+  var Choice: T := new T();
+  if Sys.Enum.TryParse<T>(Text, true, out Choice) then
+    const ChoiceName: string := Sys.Enum.GetName<T>(Choice) ?? '';
+    if Text <> '' and Text = ChoiceName.ToLowerInvariant() then
+      return Text;
+    end if;
+  end if;
+
+  Valid := false;
+  return Fallback;
+end function;
+
+function Decode(Root: J.JsonElement): Files.Decoded<Model.Preferences>;
+begin
+  const Items: J.JsonElement := Fields.Field(Root, SourcesKey);
+  var Valid: bool := Items.ValueKind = J.JsonValueKind.Array;
+  const Sources: C.List<Model.MusicSource> := new C.List<Model.MusicSource>();
+  if Valid then
+    const UsedIds: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+    for Item: J.JsonElement in Items.EnumerateArray() do
+      const Source: Model.MusicSource? := DecodeSource(Item, UsedIds, ref Valid);
+      if Source <> null then
+        Sources.Add(Source);
+      end if;
+    end for;
+  end if;
+
+  const Appearance: string := DecodeChoice<Switchers.Selection>(
+    Root,
+    'appearance',
+    DefaultAppearance,
+    ref Valid
+  );
+  const Accent: string := DecodeChoice<Themes.Accent>(Root, 'accent', 'neutral', ref Valid);
+  return new Files.Decoded<Model.Preferences>(
+    new Model.Preferences(Sources.ToArray(), Appearance, Accent),
+    Valid
+  );
+end function;
+
+// Loads the preferences and repairs a damaged settings file when possible.
+//
+// ## Parameters
+// - `Directory`: Absolute directory for the user's files.
+// ## Returns
+// The preferences, defaulting to no sources, system appearance and a neutral accent.
+public function Load(Directory: string): Model.Preferences;
+requires Directory.Length > 0;
+begin
+  return Files.Load<Model.Preferences>(
+    IO.Path.Combine(Directory, FileName),
+    new Model.Preferences([]),
+    Decode,
+    SourcesKey
+  );
+end function;
+
+// Validates and saves the music sources and appearance preferences.
+//
+// ## Parameters
+// - `Directory`: Absolute directory for the user's files.
+// - `Value`: Preferences with unique source IDs, absolute paths and valid appearance choices.
+public procedure Save(Directory: string; Value: Model.Preferences);
+requires Directory.Length > 0;
+begin
+  Files.Save<Model.Preferences>(IO.Path.Combine(Directory, FileName), Value, Decode);
+end procedure;
+
+end unit;

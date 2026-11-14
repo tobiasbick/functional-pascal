@@ -1,27 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
-
-function Viewport(Size: Cui.CuiSize): L.Viewport;
-begin
-  return new L.Viewport(
-    if Size.Width < 600 then
-      L.SizeClass.Compact
-    elsif Size.Width < 1200 then
-      L.SizeClass.Regular
-    else
-      L.SizeClass.Expanded
-    end if,
-    if Size.Height < 400 then
-      L.SizeClass.Compact
-    elsif Size.Height < 900 then
-      L.SizeClass.Regular
-    else
-      L.SizeClass.Expanded
-    end if,
-    cast<int>(Size.Width), cast<int>(Size.Height)
-  );
-end function;
+uses Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 // Takes ownership of a native window and drives shared MVU transitions on its creating thread.
 //
@@ -32,20 +11,23 @@ end function;
 // ## Parameters
 // - `InitialModel`: Initial state.
 // - `Update`: Shared transition and effect commands.
-// - `View`: Declarative view with responsive size classes.
+// - `View`: Declarative view with responsive size classes and the resolved theme.
 // - `Window`: New owned window.
 // - `Capacity`: Positive mailbox capacity.
 // - `BeforeDraw`: Owner input injection for integration fixtures.
 // - `Theme`: Initial shared theme.
-// - `ThemeFor`: Optional model-owned theme selector.
+// - `ThemeFor`: Selects a theme from the model and the available system appearance.
+// - `ReadSystemAppearance`: Whether native appearance changes invalidate the view.
 //
 // ## Returns
 // The manually driven session.
-public function Start<TModel, TMsg>(
+public function StartThemed<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): E.Element<TMsg>; Window: Cui.CuiWindow; Capacity: int;
-  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>;
+  Window: Cui.CuiWindow; Capacity: int; BeforeDraw: Sys.Action?;
+  Theme: Themes.Theme; ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
+  ReadSystemAppearance: bool
 ): App.Session<TMsg>;
 requires Capacity > 0;
   procedure CheckOwner();
@@ -335,21 +317,36 @@ requires Capacity > 0;
       if Size.Width <> PreviousSize.Width or Size.Height <> PreviousSize.Height then
         Dirty := true;
       end if;
+
+      if Cleanup = null and ReadSystemAppearance then
+        const Dark: bool? := Window.SystemDark;
+        const Appearance: Themes.Mode? := if Dark = null then
+          null
+        elsif Dark.Value then
+          Themes.Mode.Dark
+        else
+          Themes.Mode.Light
+        end if;
+        if Appearance <> SystemAppearance then
+          SystemAppearance := Appearance;
+          Dirty := true;
+        end if;
+      end if;
       var Candidate: V.Prepared<TMsg>? := Prepared;
       if Cleanup = null and (Dirty or Candidate = null) then
         const Model: TModel := Core.Model();
-        case ThemeFor of
-          when is Sys.Func<TModel, Themes.Theme> as SelectTheme:
-            CurrentTheme := SelectTheme.Invoke(Model);
-          else
-        end case;
+        CurrentTheme := ThemeFor(Model, SystemAppearance);
 
         Window.SetTheme(
           CurrentTheme.Appearance = Themes.Mode.Dark,
           cast<int>(CurrentTheme.AccentFamily),
           Themes.Rgba(CurrentTheme)
         );
-        Candidate := V.Prepare<TMsg>(View(Model, Viewport(Size)), V.Target.Graphical, Prepared);
+        Candidate := V.Prepare<TMsg>(
+          View(Model, Sizing.Viewport(Size), CurrentTheme),
+          V.Target.Graphical,
+          Prepared
+        );
         LayoutValidation.Check<TMsg>(Candidate);
       end if;
 
@@ -393,7 +390,8 @@ begin
   var Driving: bool := false;
   var Dirty: bool := true;
   var BrokenView: bool := false;
-  var CurrentTheme: Themes.Theme := Theme ?? new Themes.Theme();
+  var CurrentTheme: Themes.Theme := Theme;
+  var SystemAppearance: Themes.Mode? := null;
   var FrameId: long := 0L;
   var Published: App.Frame? := null;
   var Prepared: V.Prepared<TMsg>? := null;
@@ -449,6 +447,50 @@ begin
     Stop();
     raise;
   end try;
+end function;
+
+// Takes ownership of a native window using the application's model-owned theme.
+//
+// ## Type parameters
+// - `TModel`: Application model.
+// - `TMsg`: Typed messages.
+// ## Parameters
+// - `InitialModel`: Initial state.
+// - `Update`: Shared transition and effect commands.
+// - `View`: Declarative view with responsive size classes.
+// - `Window`: New owned window.
+// - `Capacity`: Positive mailbox capacity.
+// - `BeforeDraw`: Owner input injection for integration fixtures.
+// - `Theme`: Initial shared theme.
+// - `ThemeFor`: Optional model-owned theme selector.
+// ## Returns
+// The manually driven session.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): E.Element<TMsg>; Window: Cui.CuiWindow; Capacity: int;
+  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
+): App.Session<TMsg>;
+requires Capacity > 0;
+begin
+  const InitialTheme: Themes.Theme := Theme ?? new Themes.Theme();
+  return StartThemed<TModel, TMsg>(
+    InitialModel, Update,
+    function(Model: TModel; Size: L.Viewport; _Theme: Themes.Theme): E.Element<TMsg> => View(
+      Model,
+      Size
+    ),
+    Window, Capacity, BeforeDraw, InitialTheme,
+    function(Model: TModel; _Appearance: Themes.Mode?): Themes.Theme begin
+      case ThemeFor of
+        when is Sys.Func<TModel, Themes.Theme> as SelectTheme:
+          return SelectTheme.Invoke(Model);
+        else
+          return InitialTheme;
+      end case;
+    end function,
+    false
+  );
 end function;
 
 end unit;

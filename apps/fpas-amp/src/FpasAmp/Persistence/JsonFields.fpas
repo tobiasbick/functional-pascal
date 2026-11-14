@@ -1,0 +1,81 @@
+// Reads unambiguous fields from FPas-Amp JSON objects.
+unit FpasAmp.Persistence.JsonFields;
+
+uses System as Sys, System.Text.Json as J;
+
+// Looks up a property by its exact name.
+//
+// ## Parameters
+// - `Root`: The value to inspect.
+// - `Name`: The expected property name.
+// ## Returns
+// The unique property value, or an undefined element when absent or ambiguous.
+public function Field(Root: J.JsonElement; Name: string): J.JsonElement;
+begin
+  var Result: J.JsonElement := new J.JsonElement();
+  if Root.ValueKind = J.JsonValueKind.Object then
+    for Property: J.JsonProperty in Root.EnumerateObject() do
+      if Property.NameEquals(Name) then
+        if Result.ValueKind <> J.JsonValueKind.Undefined then
+          return new J.JsonElement();
+        end if;
+
+        Result := Property.Value;
+      end if;
+    end for;
+  end if;
+
+  return Result;
+end function;
+
+// Reads a string value with valid Unicode.
+//
+// ## Parameters
+// - `Value`: The JSON value to inspect.
+// ## Returns
+// The decoded string, or null for an invalid string or a different kind.
+public function StringValue(Value: J.JsonElement): string?;
+begin
+  if Value.ValueKind = J.JsonValueKind.String then
+    try
+      return Value.GetString();
+    catch Failure: Sys.InvalidOperationException do
+      return null;
+    end try;
+  end if;
+
+  return null;
+end function;
+
+// Reads a Boolean value.
+//
+// ## Parameters
+// - `Value`: The JSON value to inspect.
+// ## Returns
+// The Boolean, or null for a different kind.
+public function BooleanValue(Value: J.JsonElement): bool?;
+begin
+  if Value.ValueKind = J.JsonValueKind.True or Value.ValueKind = J.JsonValueKind.False then
+    return Value.GetBoolean();
+  end if;
+
+  return null;
+end function;
+
+// Reads an exact 32-bit integer.
+//
+// ## Parameters
+// - `Value`: The JSON value to inspect.
+// ## Returns
+// The integer, or null when the value cannot be represented.
+public function IntegerValue(Value: J.JsonElement): int?;
+begin
+  var Number: int := 0;
+  if Value.ValueKind = J.JsonValueKind.Number and Value.TryGetInt32(out Number) then
+    return Number;
+  end if;
+
+  return null;
+end function;
+
+end unit;

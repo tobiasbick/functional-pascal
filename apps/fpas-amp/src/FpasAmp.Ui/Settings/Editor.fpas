@@ -1,0 +1,122 @@
+// Editor for the name and formats of a music source.
+unit FpasAmp.Ui.Settings.Editor;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.ActionFooters as Footers, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Inputs.Selects as Selects,
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  System as Sys, System.Collections.Generic as C;
+
+const CommonFormats: array of string := [
+  '.flac',
+  '.mp3',
+  '.m4a',
+  '.wav',
+  '.ogg',
+  '.opus',
+  '.aac',
+  '.aiff',
+  '.wma'
+];
+
+function FormatSelector(Selected: array of string): E.Element<M.Msg>;
+begin
+  const Names: C.List<string> := new C.List<string>(CommonFormats);
+  const Listed: C.HashSet<string> := new C.HashSet<string>(
+    CommonFormats,
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  const Enabled: C.HashSet<string> := new C.HashSet<string>(
+    Selected,
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  for Extension: string in Selected do
+    if Listed.Add(Extension) then
+      Names.Add(Extension);
+    end if;
+  end for;
+  const Items: C.List<Selects.Item> := new C.List<Selects.Item>(Names.Count);
+  const Active: array of bool := new bool[Names.Count];
+  for Index: int := 0 to Names.Count - 1 do
+    Items.Add(new Selects.Item(Names[Index].Substring(1).ToUpperInvariant()));
+    Active[Index] := Enabled.Contains(Names[Index]);
+  end for;
+
+  return Multi.MultiSelect<M.Msg>(
+    'source-formats', Items.ToArray(), Active,
+    function(Flags: array of bool): M.Msg begin
+      const Formats: C.List<string> := new C.List<string>();
+      for Index: int := 0 to Flags.Length - 1 do
+        if Flags[Index] then
+          Formats.Add(Names[Index]);
+        end if;
+      end for;
+
+      return M.Msg.SetFormats(Formats.ToArray());
+    end function,
+    new Multi.Options(Label := 'Formats', Placeholder := 'Select formats')
+  );
+end function;
+
+// Presents the editor for the current source draft.
+//
+// ## Parameters
+// - `Base`: The settings page behind the editor.
+// - `Draft`: The current name, folder and selected formats.
+// - `SaveFailed`: Whether the last save should be reported in the editor.
+// ## Returns
+// The settings page with the editor open.
+public function View(Base: E.Element<M.Msg>; Draft: M.MusicSource; SaveFailed: bool): E.Element<M.Msg>;
+begin
+  const Content: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+    [
+      Texts.Text<M.Msg>(Draft.Path, Texts.Appearance.Secondary),
+      Fields.TextField<M.Msg>(
+        'source-name',
+        Draft.Name,
+        M.Msg.SetName,
+        new Fields.Options(Label := 'Name')
+      ),
+      FormatSelector(Draft.Extensions)
+    ]
+  );
+  if SaveFailed then
+    Content.Add(
+      Alerts.Alert<M.Msg>(
+        'source-save-error',
+        'Could not save settings. Try again.',
+        new Alerts.Options(Tone := S.Tone.Danger)
+      )
+    );
+  end if;
+
+  Content.Add(
+    Footers.ActionFooter<M.Msg>(
+      B.Button<M.Msg>(
+        'source-cancel',
+        'Cancel',
+        M.Msg.CancelEdit,
+        new B.Options(Variant := S.ButtonVariant.Outline)
+      ),
+      B.Button<M.Msg>(
+        'source-save', 'Save', M.Msg.SaveSource,
+        new B.Options(
+          Variant := S.ButtonVariant.Primary,
+          Enabled := not Sys.String.IsNullOrWhiteSpace(Draft.Name)
+        )
+      )
+    )
+  );
+  return Dialogs.Dialog<M.Msg>(
+    'edit-source', Base,
+    E.Column<M.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(14)), Align := L.Alignment.Stretch),
+      Content.ToArray()
+    ),
+    true, new Dialogs.Options('Music source', InitialFocus := 'source-name'), M.Msg.CancelEdit
+  );
+end function;
+
+end unit;

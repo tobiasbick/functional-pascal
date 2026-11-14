@@ -1,0 +1,172 @@
+// The FPas-Amp desktop window.
+unit FpasAmp.Ui.Shell;
+
+uses
+  FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.General as General,
+  FpasAmp.Ui.Settings.Library as Library, FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Ui.Settings.Update as Updates,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Layout as L,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+
+const DisplayName: string := 'FPas-Amp';
+const SettingsLabel: string := 'Settings';
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Fixed(Width: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Width)));
+end function;
+
+function SettingsPage(Current: M.State; Tab: int; Theme: Themes.Theme; Padding: int): E.Element<M.Msg>;
+begin
+  const Header: E.Element<M.Msg> := Tabs.Tabs<M.Msg>(
+    'settings-tabs', [new Tabs.Item('General'), new Tabs.Item('Library')], Tab, M.Msg.SelectTab
+  );
+  const Body: E.Element<M.Msg> := if Tab = 0 then
+    General.View(Current.Settings, Theme)
+  else
+    Library.View(Current.Settings.MusicSources)
+  end if;
+  const Content: array of E.Element<M.Msg> := if Current.SaveFailed and Current.Draft = null then
+    [
+      Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne),
+      Header,
+      Alerts.Alert<M.Msg>(
+        'settings-save-error', 'Could not save settings. Try again.',
+        new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
+        function(): M.Msg => M.Msg.DismissError
+      ),
+      Body
+    ]
+  else
+    [Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne), Header, Body]
+  end if;
+  return E.ScrollView<M.Msg>(
+    'settings-scroll',
+    E.Column<M.Msg>(
+      new L.Flow(Padding := Points(Padding), Gap := Points(20), Align := L.Alignment.Stretch),
+      Content
+    )
+  );
+end function;
+
+function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<M.Msg>;
+begin
+  const Compact: bool := Viewport.Width = L.SizeClass.Compact;
+  const Tab: int? := Current.Tab;
+  const Sidebar: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(
+      Padding := Points(12),
+      Gap := Points(16),
+      Align := L.Alignment.Stretch,
+      Background := Theme.Colors.SurfaceMuted
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Padding := Points(4)),
+      Texts.Text<M.Msg>(DisplayName, Texts.Appearance.HeadingThree)
+    ),
+    E.Spacer<M.Msg>(),
+    Nav.Sidebar<M.Msg>(
+      'navigation', [
+        new Nav.Section<M.Msg>(
+          '', [
+            new Nav.Item<M.Msg>(
+              'settings',
+              SettingsLabel,
+              M.Msg.OpenSettings,
+              Icon := Sys.Char.ConvertFromUtf32($E154)
+            )
+          ]
+        )
+      ],
+      if Tab <> null then
+        'settings'
+      else
+        null
+      end if
+    )
+  );
+  const Main: E.Element<M.Msg> := if Tab = null then
+    E.Column<M.Msg>()
+  else
+    SettingsPage(
+      Current, Tab.Value, Theme, if Compact then
+        16
+      else
+        32
+      end if
+    )
+  end if;
+  const Base: E.Element<M.Msg> := E.Size<M.Msg>(
+    E.Row<M.Msg>(
+      new L.Flow(Align := L.Alignment.Stretch),
+      E.Size<M.Msg>(
+        Sidebar, Fixed(
+          if Compact then
+            138
+          else
+            206
+          end if
+        )
+      ),
+      E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1)),
+      E.Size<M.Msg>(Main, Fill)
+    ),
+    Fill
+  );
+  if Current.PickingFolder then
+    return Picker.FilePicker<M.Msg>(
+      'music-folder-picker', true, M.Msg.FolderResult,
+      new Picker.Options(
+        Kind := Picker.Mode.Folder, Title := 'Choose a music folder',
+        Start := Sys.Environment.GetFolderPath(Sys.Environment.SpecialFolder.MyMusic)
+      ),
+      Base
+    );
+  end if;
+  const Draft: M.MusicSource? := Current.Draft;
+  return if Draft = null then
+    Base
+  else
+    Editor.View(Base, Draft, Current.SaveFailed)
+  end if;
+end function;
+
+// Opens the desktop shell and runs it until the window closes.
+//
+// ## Parameters
+// - `Width`: Positive initial window width in logical units.
+// - `Height`: Positive initial window height in logical units.
+// - `Settings`: Validated preferences loaded at startup.
+// - `Save`: Persists a new set of validated preferences.
+public procedure Run(Width: int; Height: int; Settings: M.Preferences; Save: procedure(M.Preferences));
+requires Width > 0;
+requires Height > 0;
+begin
+  const Initial: M.State := new M.State(Settings);
+  Gui.RunThemed<M.State, M.Msg>(
+    Initial,
+    function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> => new Mvu.Transition<M.State, M.Msg>(
+      Updates.Apply(Current, Message, Save),
+      []
+    ),
+    View,
+    new Gui.Options(
+      Title := DisplayName,
+      Width := Width,
+      Height := Height,
+      Theme := M.Theme(Initial, null)
+    ),
+    M.Theme
+  );
+end procedure;
+
+end unit;

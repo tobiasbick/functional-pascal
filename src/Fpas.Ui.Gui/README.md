@@ -16,6 +16,16 @@ work, request focus and exit. Close stops admission, cancels work and keeps
 pumping the frozen view until cleanup finishes. Dispose joins cleanup. Step,
 Snapshot and disposal must not be reentered from callbacks.
 
+## System appearance
+
+`StartThemed` and `RunThemed` pass the CUI-reported light or dark mode to
+`ThemeFor(Model, SystemAppearance)`. The mode is `null` when CUI has no value.
+Select the palette using the application's appearance preference and accent.
+The host applies the returned theme to CUI and passes it to the declarative
+view. Windows appearance changes wake the window and rebuild the view without
+an application message. CUI's X11 backend can report a dark `GTK_THEME` hint.
+It supplies no live desktop appearance notification.
+
 ## Widgets and input
 
 The [shared reference](../Fpas.Ui/README.md) owns options and interaction contracts:
@@ -101,7 +111,8 @@ delimiter.
 
 ## Invalidation and inspection
 
-Transitions and size changes rebuild the view. Ordinary repaints reuse its
+Transitions, size changes and observed system appearance changes rebuild the
+view. Ordinary repaints reuse its
 prepared tree and never restart effects. Typed caches advance after successful
 presentation. Width classes are Compact below 600, Regular below 1200, then
 Expanded; height thresholds are 400 and 900 logical units. Include relevant

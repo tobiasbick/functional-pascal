@@ -194,6 +194,16 @@ public sealed partial class CuiWindow
         usedModals.Add(id);
     }
 
+    /// <summary>Gets the platform's app appearance, or null if CUI cannot determine it.</summary>
+    public bool? SystemDark
+    {
+        get
+        {
+            CheckOpen();
+            return NativeMethods.SystemDark() switch { 0 => false, 1 => true, _ => null };
+        }
+    }
+
     /// <summary>Applies the shared theme's semantic palette atomically.</summary>
     /// <param name="dark">Whether to use dark typography and elevation defaults.</param>
     /// <param name="accent">CUI accent family: neutral=0 through rose=7.</param>

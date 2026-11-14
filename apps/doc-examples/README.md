@@ -12,8 +12,9 @@ fence instructions, reports, limits, contexts and companion projects.
 
 Build the Debug compiler and pack its SDK with the
 [source quickstart](../../README.md#build-from-source). The application is a
-net10.0 FPAS consumer with a project reference to Fpas.Processes.Workflows. Run from the
-repository root after setting [FPAS_REFERENCE_DIR](../../docs/build/development.md#direct-compiler-invocation).
+net10.0 FPAS consumer with project references to Fpas.Processes.Workflows and
+Fpas.Ui.Gui. Run from the repository root after setting
+[FPAS_REFERENCE_DIR](../../docs/build/development.md#direct-compiler-invocation).
 
 ```sh
 cli=src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll
@@ -24,9 +25,10 @@ dotnet "$cli" run apps/doc-examples/DocExamples.fpasproj --no-build -- \
   --document docs/pascal/language/types/records.md --json
 ```
 
-The full selection also requires explicit xUnit references for the native testing
-guide. The build writes DocExamples.sdk.txt beside the application to identify
-the compiler from the SDK that built it. Keep this sidecar when copying a build.
+The default selection includes the UI handbook and uses the UI and managed
+GUI assemblies copied by the build. The native testing guide requires explicit
+xUnit references.
+Keep `DocExamples.sdk.txt` when copying the build. It identifies the SDK compiler.
 
 ## Source layout
 

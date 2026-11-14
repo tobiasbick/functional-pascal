@@ -131,6 +131,7 @@ uses software for additional windows on that thread.
 
 ## See also
 
+- [UI handbook and illustrated widget pages](../../ui/README.md)
 - [Shared widgets and capability profiles](../../../src/Fpas.Ui/README.md)
 - [GUI host lifecycle and inspection](../../../src/Fpas.Ui.Gui/README.md)
 - [GUI gallery](../../../examples/ui/gui/gallery/README.md)

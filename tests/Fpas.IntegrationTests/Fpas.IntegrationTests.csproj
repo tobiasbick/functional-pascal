@@ -10,6 +10,7 @@
     <None Include="../../src/Fpas.Workflows/*.fpas" Link="Fixtures/workflows/lib/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/workflows/*.fpas" Link="Fixtures/workflows/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/ui/**/*.md" Link="Fixtures/repository/docs/ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../README.md" Link="Fixtures/repository/README.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/build/standalone-sdk.md" Link="Fixtures/standalone-sdk.md" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -24,13 +25,15 @@
     <ProjectReference Include="../../src/Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../../src/Fpas.Debugging/Fpas.Debugging.csproj" />
     <ProjectReference Include="../../src/Fpas.Workspaces/Fpas.Workspaces.csproj" />
+    <ProjectReference Include="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" AdditionalProperties="FpasCuiSkipSourceBuild=true" />
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
     <None Include="../../examples/basics/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/numerics/mandelbrot/main.fpas;../../examples/numerics/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Tui/**/*.fpas" Exclude="../../src/Fpas.Ui.Tui/bin/**/*;../../src/Fpas.Ui.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui/**/*.fpas" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/Fpas.Ui.fpasproj" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" Exclude="../../src/Fpas.Ui.Gui/bin/**/*;../../src/Fpas.Ui.Gui/obj/**/*" Link="Fixtures/gui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -66,7 +69,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

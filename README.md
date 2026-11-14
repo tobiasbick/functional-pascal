@@ -38,6 +38,8 @@ Known missing baseline work and deferred extensions are listed in
 ## Desktop GUI
 
 FPas includes a declarative desktop GUI based on [CUI](https://github.com/yappologistic/CUI).
+The [UI handbook](docs/ui/README.md) starts with a runnable app and illustrated
+widget examples.
 The [FPas widget gallery](examples/ui/gui/gallery/README.md) shows native controls,
 layout, and themes in a Functional Pascal application.
 

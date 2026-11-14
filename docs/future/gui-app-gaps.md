@@ -109,6 +109,16 @@ through the documented SDK workflow.
   separately. [CUI limitations][limitations] ·
   [FPAS platform limits](../pascal/libraries/gui.md#publishing-and-platform-limits)
 
+## Widget documentation captures
+
+- [ ] Crop the widget documentation captures in FPAS. The current capture
+  project drives the real gallery, writes full PNGs through `Session.CapturePng`
+  and records crop bounds from the presented snapshot. It uses Pillow for
+  decoding, cropping and writing those PNGs because the shared .NET runtime
+  and the FPAS GUI API have no portable bitmap crop operation. Verify the
+  replacement against the same scale-one frame and crop bounds.
+  [Capture workflow](../../apps/gui-doc-captures/README.md)
+
 ## Deferred window chrome
 
 The [optional title bar](cui-titlebar.md) has a separate plan. The local CUI

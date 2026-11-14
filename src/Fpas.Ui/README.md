@@ -1,5 +1,8 @@
 # Fpas.Ui
 
+See the [UI handbook](../../docs/ui/README.md) for runnable examples and
+illustrated widget pages.
+
 Fpas.Ui defines the declarative view used by the GUI and TUI adapters.
 It is an FPAS library with ordinary .NET 10 records, variants and
 delegates. It can be used with [Fpas.Ui.Mvu](../Fpas.Ui.Mvu/README.md) and has no

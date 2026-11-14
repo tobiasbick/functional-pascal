@@ -1,9 +1,9 @@
 # Documentation examples
 
 The FPAS application [doc-examples](../../../apps/doc-examples/) checks Pascal
-fences in the repository README, handbook and agent reference. Markdown remains
-the source; generated files are inspection artifacts. Integration tests build
-the application with a fresh packaged SDK and invoke it automatically.
+fences in the repository README, Pascal handbook, agent reference and UI
+handbook. Integration tests build the application with a fresh packaged SDK
+and invoke it automatically.
 
 Complete examples are compiled with portable PDB and XML documentation.
 LanguageSpecificationTests uses those assemblies for its existing output,
@@ -40,9 +40,16 @@ it looks under `DOTNET_ROOT` and then on `PATH`. `--reference` is repeatable.
 `--contexts` overrides the default `apps/doc-examples/contexts` directory. Quote
 paths with spaces.
 
---document is repeatable and replaces the default selection. --root selects the
-repository and resolves document/include paths. --output must name a new directory;
-default .temp-data/doc-examples/run-ID. Existing output is never overwritten.
+`--document` is repeatable and replaces the default selection. By default, the
+checker recursively reads Markdown under `docs/pascal` and `docs/ui` and reads the
+repository README. When `docs/ui` is present, the default run uses `Fpas.Ui.dll`
+and the managed `Fpas.Ui.Mvu.dll`, `Fpas.Ui.Gui.dll` and
+`Fpas.Ui.Gui.Cui.dll` built beside the checker. An explicit `--reference` to
+one of these filenames takes precedence. For a targeted run on a widget page,
+pass the required assemblies with `--reference`.
+
+`--root` selects the repository and resolves document and include paths.
+`--output` takes a new directory and defaults to `.temp-data/doc-examples/run-ID`.
 --jobs accepts 1..8, default 4. --timeout accepts 1..3600 seconds per child process,
 default 10. Each stdout/stderr stream is bounded to 512 KiB. stdin is closed.
 Cancellation/deadlines terminate and join owned children.

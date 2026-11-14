@@ -22,7 +22,7 @@ workflow to work on the compiler/toolchain.
 | Proposals, deferred work and open gaps | [Future documents](future/README.md) |
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
-| Desktop GUI, shared widgets and terminal UI | [GUI handbook](pascal/libraries/gui.md), [terminal host](../src/Fpas.Ui.Tui/README.md) |
+| Desktop GUI, shared widgets and terminal UI | [UI handbook](ui/README.md), [terminal host](../src/Fpas.Ui.Tui/README.md) |
 | Implemented CUI widgets, gallery acceptance and terminal coverage | [CUI widget inventory](cui-widget-inventory.md) |
 | GUI host, desktop publishing and application tutorial gaps | [Desktop GUI application gaps](future/gui-app-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |

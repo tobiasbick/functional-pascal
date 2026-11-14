@@ -147,13 +147,40 @@ begin
   end if;
 
   if Documents.Count = 0 then
+    const Docs: string := IO.Path.Combine(Root, 'docs');
     Documents.AddRange(
       IO.Directory.GetFiles(
-        IO.Path.Combine(Root, 'docs', 'pascal'),
-        '*.md',
-        IO.SearchOption.AllDirectories
+        IO.Path.Combine(Docs, 'pascal'), '*.md', IO.SearchOption.AllDirectories
       )
     );
+    const UiDocs: string := IO.Path.Combine(Docs, 'ui');
+    if IO.Directory.Exists(UiDocs) then
+      Documents.AddRange(IO.Directory.GetFiles(UiDocs, '*.md', IO.SearchOption.AllDirectories));
+      for Assembly: string in [
+        'Fpas.Ui.dll',
+        'Fpas.Ui.Mvu.dll',
+        'Fpas.Ui.Gui.dll',
+        'Fpas.Ui.Gui.Cui.dll'
+      ] do
+        if not ExtraReferences.Exists(
+          function(Reference: string): bool => S.String.Equals(
+            IO.Path.GetFileName(Reference), Assembly, S.StringComparison.OrdinalIgnoreCase
+          )
+        )
+        then
+          const BuiltReference: string := IO.Path.Combine(S.AppContext.BaseDirectory, Assembly);
+          if not IO.File.Exists(BuiltReference) then
+            raise new IO.FileNotFoundException(
+              'Build DocExamples.fpasproj to supply ' + Assembly,
+              BuiltReference
+            );
+          end if;
+
+          ExtraReferences.Add(BuiltReference);
+        end if;
+      end for;
+    end if;
+
     Documents.Add(IO.Path.Combine(Root, 'README.md'));
   end if;
 

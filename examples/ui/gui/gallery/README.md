@@ -10,6 +10,8 @@ a centered content column, and a left drawer below 760 logical points. The
 sidebar and drawer share the Light and Dark selector and eight CUI accent
 swatches. The gallery shows the accepted widget examples from the
 [CUI inventory](../../../../docs/cui-widget-inventory.md).
+See the [UI handbook](../../../../docs/ui/README.md) for widget examples and
+screenshots.
 
 ## Source structure
 

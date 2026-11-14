@@ -13,6 +13,16 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
     private const string Body = "pascal fragment context=body";
     private static string Fence(string info, string source) => "```" + info + "\n" + source + "\n```\n";
 
+    [Fact]
+    public async Task Default_selection_compiles_ui_handbook_examples()
+    {
+        var document = Path.Combine(checker.Repository, "docs", "ui", "actions", "button.md");
+        var report = await checker.RepositoryReport();
+        Assert.Contains(report.GetProperty("results").EnumerateArray(), item =>
+            item.GetProperty("document").GetString() == document &&
+            item.GetProperty("compile").GetString() == "passed");
+    }
+
     public static IEnumerable<object[]> Scenarios()
     {
         yield return ["program", Fence("pascal", Program), true, ""];

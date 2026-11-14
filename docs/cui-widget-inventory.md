@@ -179,6 +179,9 @@ contract checks the keycap and inline code text and clicks a swatch.
 
 ### Actions and selection
 
+See the illustrated [Actions](ui/actions/README.md) and
+[Selection](ui/selection/README.md) chapters for examples, options and interaction.
+
 - [x] Button (`cui_button`): [API][fpas-button]. TUI: implemented; explicit terminal
   glyphs, static busy mark, one- or two-row sizes.
 - [x] Icon button (`cui_icon_button`): [API][fpas-icon-button]. TUI: implemented;
@@ -246,6 +249,9 @@ contract checks the keycap and inline code text and clicks a swatch.
   test toggles Wi-Fi and checks the model proposal.
 
 ### Inputs and pickers
+
+See [Inputs](ui/inputs/README.md) and [Pickers](ui/pickers/README.md) for
+gallery screenshots, FPAS examples and widget options.
 
 - [x] Text field, including password mode, prefix, and suffix (`cui_input`):
   [API][fpas-text-field]. Inputs shows the responsive text fields. Smart inputs
@@ -426,6 +432,9 @@ checks that the slider wells stack in one column.
 
 ### Navigation and app chrome
 
+The [Navigation chapter](ui/navigation/README.md) shows the sidebar, tabs,
+breadcrumb, pagination and stepper.
+
 - [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`): [API][sidebar].
   TUI: implemented; top-aligned cell rows, labels and badges. Icons are omitted.
   [GUI][gui-gallery-test] and [TUI][tui-gallery-test] gallery tests
@@ -486,6 +495,9 @@ reference. Whole-example composition differences are tracked under strict
 gallery pixel parity.
 
 ### Overlays and disclosure
+
+See [Overlays](ui/overlays/README.md) and [Disclosure](ui/disclosure/README.md)
+for gallery screenshots, FPAS examples and widget options.
 
 - [x] Dropdown menu and its items (`cui_menu`, `cui_menu_item`, `cui_menu_label`,
   `cui_menu_separator`): [API][fpas-menu]. Both galleries show the original
@@ -563,6 +575,9 @@ gallery pixel parity.
 
 ### Feedback and progress
 
+See [Feedback](ui/feedback/README.md) for gallery screenshots, FPAS examples
+and widget options.
+
 - [x] Toast, including timed undo toast (`cui_toast`, `cui_toast_action_clicked`):
   [API][fpas-toast]. Overlays shows the four native examples and a timed Undo.
   Disclosure shows the original Archive 3 conversations trigger and draining
@@ -633,6 +648,9 @@ gallery pixel parity.
   The graphical profile is required.
 
 ### Lists, tables, and files
+
+The [Data display chapter](ui/data-display/README.md) covers the gallery's
+table, tree, list items, reorderable list, accordion and virtual list.
 
 - [x] List item (`cui_list_item`): [API][fpas-data-display]. Data display
   shows the original file list. The Notifications sheet shows its Recent rows.

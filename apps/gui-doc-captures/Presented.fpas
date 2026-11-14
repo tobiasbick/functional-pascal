@@ -1,0 +1,50 @@
+unit GuiDocCaptures.Presented;
+
+uses
+  GuiDocCaptures.Regions as Regions, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui, System as Sys,
+  System.Threading as Threads, System.Diagnostics as Diagnostics;
+
+// Advances frames until a delayed native control supplies usable bounds.
+// ## Parameters
+// - `Session`: Gallery session receiving the pointer input.
+// - `Id`: Control identity to wait for.
+public procedure AwaitVisible(Session: Gui.Session<Gallery.Msg>; Id: string);
+begin
+  const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+  while Time.Elapsed.TotalSeconds < 2.0 do
+    if not Session.Step() then
+      raise new Sys.InvalidOperationException('The gallery closed during capture.');
+    end if;
+
+    for Control: Gui.Control in Session.Snapshot().Controls do
+      if Control.Id = Id and Control.Bounds.Width > 0.0F and Control.Bounds.Height > 0.0F then
+        return;
+      end if;
+    end for;
+
+    Threads.Thread.Sleep(15);
+  end while;
+
+  raise new Sys.InvalidOperationException('No presented overlay for ' + Id);
+end procedure;
+
+// Captures a visible native toast identified by its title.
+// ## Parameters
+// - `Session`: Gallery session with a presented toast.
+// - `Output`: Directory for the full-frame image and crop bounds.
+// - `Name`: Basename of the screenshot.
+// - `Title`: Gallery toast title.
+public procedure CaptureToast(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Title: string);
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Role = 'toast' and Control.Text = Title then
+      Regions.Capture(Session, Output, Name, new Regions.Insets(), Control.Id);
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing gallery toast: ' + Title);
+end procedure;
+
+end unit;

@@ -14,7 +14,8 @@ public sealed class DocExamplesFixture : IAsyncLifetime
     private readonly SdkPackageFixture sdk = new();
     private readonly object gate = new();
     private Task<JsonElement>? repositoryReport;
-    internal string Application => directory.File("Application/bin/Debug/net10.0/DocExamples.dll");
+    private string ApplicationDirectory => directory.File("apps/doc-examples");
+    internal string Application => Path.Combine(ApplicationDirectory, "bin/Debug/net10.0/DocExamples.dll");
     internal string Repository => directory.File("Repository");
     internal string SdkVersion => sdk.Version;
     internal string Feed => sdk.Feed;
@@ -22,15 +23,16 @@ public sealed class DocExamplesFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await sdk.InitializeAsync();
-        Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures/doc-examples"), directory.File("Application"));
-        var project = directory.File("Application/DocExamples.fpasproj");
+        Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures/doc-examples"), ApplicationDirectory);
+        var project = Path.Combine(ApplicationDirectory, "DocExamples.fpasproj");
         var xml = XDocument.Load(project);
         xml.Root!.SetAttributeValue("Sdk", "Fpas.NET.Sdk/" + sdk.Version);
-        xml.Descendants("ProjectReference").Single().SetAttributeValue("Include",
-            "../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj");
         var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
         WorkflowProjects.Copy(repository, directory.File("src"), sdk.Version);
         xml.Save(project);
+        StageUiProject("ui", "Fpas.Ui");
+        StageUiProject("mvu", "Fpas.Ui.Mvu");
+        StageUiProject("gui", "Fpas.Ui.Gui");
         new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
             new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", sdk.Feed)))))
             .Save(directory.File("NuGet.Config"));
@@ -41,9 +43,24 @@ public sealed class DocExamplesFixture : IAsyncLifetime
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         Assert.True(File.Exists(Application));
         Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures/specification"), Path.Combine(Repository, "docs/pascal"));
+        Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures/repository/docs/ui"), Path.Combine(Repository, "docs/ui"));
         Directory.CreateDirectory(Repository);
         File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures/repository/README.md"), Path.Combine(Repository, "README.md"));
-        Copy(directory.File("Application/contexts"), Path.Combine(Repository, "apps/doc-examples/contexts"));
+        Copy(Path.Combine(ApplicationDirectory, "contexts"), Path.Combine(Repository, "apps/doc-examples/contexts"));
+    }
+
+    private void StageUiProject(string fixture, string name)
+    {
+        var target = directory.File("src/" + name);
+        Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", fixture, "lib"), target);
+        var path = Path.Combine(target, name + ".fpasproj");
+        var project = XDocument.Load(path);
+        project.Root!.SetAttributeValue("Sdk", "Fpas.NET.Sdk/" + sdk.Version);
+        var binding = project.Descendants("ProjectReference").SingleOrDefault(reference =>
+            Path.GetFileName((string?)reference.Attribute("Include")) == "Fpas.Ui.Gui.Cui.csproj");
+        binding?.ReplaceWith(new XElement("Reference", new XAttribute("Include", "Fpas.Ui.Gui.Cui"),
+            new XElement("HintPath", typeof(Fpas.Ui.Gui.Cui.CuiWindow).Assembly.Location)));
+        project.Save(path);
     }
 
     internal string[] Arguments(string root, params string[] options)

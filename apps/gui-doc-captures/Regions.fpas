@@ -1,0 +1,109 @@
+unit GuiDocCaptures.Regions;
+
+uses
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  GuiGallery.App.State as Gallery, System as Sys, System.IO as IO,
+  System.Collections.Generic as Generic;
+
+// Adjustments to the default crop margins for native captions and panel edges.
+public type Insets = record
+  // Pixels added on the left. Negative values trim the crop.
+  public Left: int := 0;
+  // Pixels added at the top. Negative values trim the crop.
+  public Top: int := 0;
+  // Pixels added on the right. Negative values trim the crop.
+  public Right: int := 0;
+  // Pixels added at the bottom. Negative values trim the crop.
+  public Bottom: int := 0;
+end record;
+
+// Captures the union of named gallery controls in one presented frame.
+// ## Parameters
+// - `Session`: Presented gallery session.
+// - `Output`: Directory for full-frame PNGs and crop coordinates.
+// - `Name`: Basename of the documented widget.
+// - `Padding`: Adjustments to the crop margins for native captions or panel edges.
+// - `Ids`: Controls to include. Use `Id/Key` for a keyed part with a shared ID.
+public procedure Capture(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string;
+  Padding: Insets; params Ids: array of string
+);
+begin
+  const Frame: Gui.Frame := Session.Snapshot();
+  var Left: float := cast<float>(Frame.Size.Width);
+  var Top: float := cast<float>(Frame.Size.Height);
+  var Right: float := 0.0F;
+  var Bottom: float := 0.0F;
+  for Id: string in Ids do
+    var Found: bool := false;
+    for Control: Gui.Control in Frame.Controls do
+      const Bounds: Cui.CuiRectangle := Control.Bounds;
+      if (Control.Id = Id or (Control.Key <> '' and Control.Id + '/' + Control.Key = Id))
+        and Bounds.Width > 0.0F and Bounds.Height > 0.0F
+      then
+        Left := Sys.Math.Min(Left, Bounds.X);
+        Top := Sys.Math.Min(Top, Bounds.Y);
+        Right := Sys.Math.Max(Right, Bounds.X + Bounds.Width);
+        Bottom := Sys.Math.Max(Bottom, Bounds.Y + Bounds.Height);
+        Found := true;
+      end if;
+    end for;
+
+    if not Found then
+      raise new Sys.InvalidOperationException('No rendered bounds for ' + Id);
+    end if;
+  end for;
+
+  if Left < 0.0F or Top < 0.0F or Right > Frame.Size.Width or Bottom > Frame.Size.Height then
+    raise new Sys.InvalidOperationException('Region is outside the viewport: ' + Name);
+  end if;
+
+  const Rectangle: array of int := [
+    Sys.Math.Max(0, cast<int>(Sys.Math.Floor(Left)) - 8 - Padding.Left),
+    Sys.Math.Max(0, cast<int>(Sys.Math.Floor(Top)) - 8 - Padding.Top),
+    Sys.Math.Min(
+      cast<int>(Frame.Size.Width),
+      cast<int>(Sys.Math.Ceiling(Right)) + 8 + Padding.Right
+    ),
+    Sys.Math.Min(
+      cast<int>(Frame.Size.Height),
+      cast<int>(Sys.Math.Ceiling(Bottom)) + 8 + Padding.Bottom
+    )
+  ];
+  const Target: string := IO.Path.Combine(Output, Name);
+  Session.CapturePng(Target + '.png');
+  IO.File.WriteAllText(Target + '.crop', Sys.String.Join<int>(',', Rectangle));
+end procedure;
+
+// Captures a compound control and its visible native parts.
+// ## Parameters
+// - `Session`: Presented gallery session.
+// - `Output`: Directory for full-frame PNGs and crop coordinates.
+// - `Name`: Basename of the documented widget.
+// - `Id`: Identity shared by the root and descendant control IDs.
+// - `Padding`: Adjustments to the crop margins for native captions or panel edges.
+public procedure CaptureParts(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Id: string; Padding: Insets
+);
+requires Id <> '';
+begin
+  const Parts: Generic.List<string> := new Generic.List<string>();
+  var HasDescendant: bool := false;
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    const Child: bool := Control.Id.StartsWith(Id + '/', Sys.StringComparison.Ordinal);
+    if (Child or Control.Id = Id) and Control.Bounds.Width > 0.0F and Control.Bounds.Height >
+      0.0F
+    then
+      Parts.Add(Control.Id);
+      HasDescendant := HasDescendant or Child;
+    end if;
+  end for;
+
+  if not HasDescendant then
+    raise new Sys.InvalidOperationException('No visible native parts for ' + Id);
+  end if;
+
+  Capture(Session, Output, Name, Padding, Parts.ToArray());
+end procedure;
+
+end unit;

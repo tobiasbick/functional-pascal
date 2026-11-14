@@ -1,6 +1,6 @@
 program HeadlessContract;
 
-uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
 type Msg = variant
   Start;

@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Audio.Waveform;
+
+uses
+  Fpas.Ui.Widgets.Audio.Waveforms as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, System as Sys;
+
+// Presents the native widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Peaks`: Waveform samples.
+// - `Progress`: Optional seek position.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native appearance and input options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func<float, TMsg>?; Settings: W.Options);
+begin
+  const Token: string := C.Token('waveform', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Progress <> null and Change <>
+    null;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Flags: int := (if Enabled then
+    1
+  else
+    0
+  end if) +
+    (if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+      2
+    else
+      0
+    end if);
+  const Proposed: float? := Frame.Window.Waveform(
+    Token, Peaks, Progress, Width.Kind, Width.Value,
+    Settings.Height, Settings.Bar, Settings.Gap, Colors.Color(Settings.Color), Flags
+  );
+  if Enabled and Proposed <> Progress then
+    case Change of
+      when is Sys.Func<float, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Proposed ?? 0.0F));
+      else
+    end case;
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, '', 'waveform', new Cui.CuiRectangle(), Enabled,
+      Value := (Proposed ?? 0.0F).ToString(Sys.Globalization.CultureInfo.InvariantCulture)
+    )
+  );
+end procedure;
+
+end unit;

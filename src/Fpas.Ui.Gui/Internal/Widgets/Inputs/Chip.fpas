@@ -1,0 +1,48 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Chip;
+
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Presents CUI's chip and forwards proposed selection changes.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable identity.
+// - `Label`: Literal caption.
+// - `Selected`: Model-owned selection.
+// - `OnChange`: Maps proposed selection to a message.
+// - `Icon`: Optional glyph in the unselected state.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Selected: bool;
+  OnChange: function(bool): TMsg; Icon: string; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('chip', Id);
+  if Frame.Window.Chip(
+    Token,
+    Label,
+    Icon,
+    Selected,
+    Allowed,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed)
+  )
+  then
+    Frame.Messages.Add(OnChange(not Selected));
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Label, 'chip', new Cui.CuiRectangle(), Allowed,
+      Value := if Selected then
+        'true'
+      else
+        'false'
+      end if
+    )
+  );
+end procedure;
+
+end unit;

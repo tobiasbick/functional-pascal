@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Lists.Update;
 
 uses
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tables as T, Fpas.Ui.Gui.Toasts as Toasts,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Gui.Toasts as Toasts,
   GuiGallery.Pages.Lists.State as S;
 
 // Applies a message to this feature and describes its effects.

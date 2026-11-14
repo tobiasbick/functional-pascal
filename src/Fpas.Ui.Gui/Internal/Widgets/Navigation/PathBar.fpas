@@ -1,0 +1,65 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Navigation.PathBar;
+
+uses
+  Fpas.Ui.Widgets.Navigation.PathBars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Navigation as CuiNavigation, Fpas.Ui.Gui.Internal.Layout.Sizing as S, System.Collections.Generic as Lists;
+
+// Presents the native path bar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'path-bar';
+  const Token: string := C.Token(Role, Id);
+  const Parts: Lists.List<string> := new Lists.List<string>();
+  var Focus: int := -1;
+  for Index: int := 0 to Current.Segments.Length - 1 do
+    const Key: string := Index.ToString();
+    Parts.Add(Key);
+    Parts.Add('menu-' + Key);
+    if C.WantsFocus<TMsg>(Frame, Id + '/' + Key, C.Token(Role, Id + '/' + Key), Enabled) then
+      Focus := Index;
+    end if;
+  end for;
+
+  Parts.Add('edit');
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Flags: int := P.Bits(Enabled, 1) + P.Bits(Settings.Editable, 2) + P.Bits(
+    Current.Children.Length > 0,
+    4
+  );
+  const Result: CuiNavigation.CuiPathResult := Frame.Window.PathBar(
+    Token, Current.Segments, Current.Children, Current.Text,
+    Settings.Icon, Settings.Placeholder, cast<int>(Settings.ControlSize), Width.Kind, Width.Value,
+    Flags, Focus, P.Tracker<TMsg>(Frame, Id, Role, Parts.ToArray())
+  );
+  if Enabled and (Result.Segment >= 0 or Result.Text <> null or Result.Child >= 0) then
+    Frame.Messages.Add(
+      Change(new A.Event(Result.Segment, Result.Text, Result.MenuSegment, Result.Child))
+    );
+  end if;
+
+  if not Frame.PaintingClosed then
+    P.Part<TMsg>(Frame, Id, Role, '', '', false, Current.Text);
+    for Index: int := 0 to Parts.Count - 1 do
+      const Part: string := Parts[Index];
+      if Result.Parts[Index] then
+        const Caption: string := if Index < Parts.Count - 1 then
+          Current.Segments[Index div 2]
+        else
+          ''
+        end if;
+        P.Part<TMsg>(Frame, Id, Role, Part, Caption, Enabled, '');
+      end if;
+    end for;
+  end if;
+end procedure;
+
+end unit;

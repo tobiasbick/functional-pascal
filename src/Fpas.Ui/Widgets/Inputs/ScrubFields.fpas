@@ -1,0 +1,49 @@
+unit Fpas.Ui.Widgets.Inputs.ScrubFields;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native draggable number-field presentation.
+public type Options = record
+  // Increment; zero selects one percent of the range.
+  public Step: float := 0.0F;
+  // Number of fractional digits, zero through six.
+  public DecimalPlaces: int := 0;
+  // Literal suffix after the number.
+  public Suffix: string := '';
+  // Native glyph replacing the caption.
+  public Icon: string := '';
+  // Native content, fill, fixed or percentage width.
+  public Width: L.Extent := L.Extent.Content;
+  // Whether pointer and keyboard input are accepted.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's scrub field, with native drag, fine steps and numeric typing.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Finite model value within the bounds.
+// - `Minimum`: Finite inclusive lower bound.
+// - `Maximum`: Finite inclusive upper bound greater than Minimum.
+// - `OnChange`: Maps a native value proposal to a message.
+// - `Settings`: Optional native increment, precision, width and display settings.
+// ## Returns
+// A graphical model-controlled scrub field.
+public function ScrubField<TMsg>(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+requires Minimum < Maximum;
+begin
+  return E.Element<TMsg>.ScrubField(
+    Id,
+    Label,
+    Value,
+    Minimum,
+    Maximum,
+    OnChange,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

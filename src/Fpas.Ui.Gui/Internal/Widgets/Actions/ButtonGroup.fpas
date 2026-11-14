@@ -1,0 +1,28 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.ButtonGroup;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Draws existing buttons inside a native CUI button group.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current frame context.
+// - `Children`: Validated buttons in drawing and focus order.
+// - `Visit`: Shared host traversal for an individual button.
+public procedure Draw<TMsg>(
+  State: C.State<TMsg>; Children: array of E.Element<TMsg>;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  State.Window.BeginButtonGroup();
+  try
+    for Child: E.Element<TMsg> in Children do
+      Visit(Child, State, true, L.Alignment.Default);
+    end for;
+  finally
+    State.Window.EndButtonGroup();
+  end try;
+end procedure;
+
+end unit;

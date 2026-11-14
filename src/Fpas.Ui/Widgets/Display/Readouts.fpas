@@ -1,0 +1,49 @@
+unit Fpas.Ui.Widgets.Display.Readouts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Collections.Tables as T;
+
+// Native instrument value size.
+public type Size = enum: byte
+  // Native 28-point value.
+  Medium;
+  // Native 17-point value.
+  Small;
+  // Native 44-point value.
+  Large;
+end enum;
+
+// Native readout appearance.
+public type Options = record
+  // Optional unit next to the value.
+  public Unit: string := '';
+  // Optional context below the value.
+  public Detail: string := '';
+  // Size of the value.
+  public Size: Size := Size.Medium;
+  // Semantic value color.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Use the theme accent.
+  public Accent: bool := false;
+  // Alignment within the readout.
+  public Align: T.Alignment := T.Alignment.Left;
+  // Native width.
+  public Width: L.Extent := L.Extent.Content;
+end record;
+
+// Draws the native CUI readout.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Label`: Instrument label.
+// - `Value`: Displayed value.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Readout<TMsg>(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Readout(Id, Label, Value, Settings ?? new Options());
+end function;
+
+end unit;

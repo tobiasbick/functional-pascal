@@ -1,0 +1,57 @@
+unit Fpas.Ui.Internal.Validation.CollectionRules;
+
+uses Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Validation as V, System as Sys;
+
+// Checks the native column settings.
+// ## Parameters
+// - `Columns`: Columns in display order.
+// - `Order`: Current optional sort.
+// - `At`: Diagnostic location.
+public procedure Table(Columns: array of T.Column; Order: T.Sort?; At: string);
+begin
+  if Columns.Length = 0 then
+    R.Reject(At, 'A table needs at least one column.');
+  end if;
+
+  if Order <> null and (Order.Column < -1 or Order.Column >= Columns.Length) then
+    R.Reject(At, 'The sort index must name a column or be minus one.');
+  end if;
+
+  if Order <> null and Order.Column >= 0 and not Columns[Order.Column].Sortable then
+    R.Reject(At, 'The active sort must name a sortable column.');
+  end if;
+
+  for Column: T.Column in Columns do
+    R.CheckText(Column.Title, At + '/header');
+    R.CheckExtent(Column.Width, V.Target.Graphical, At + '/width');
+    if not Sys.Enum.IsDefined<T.Alignment>(
+      Column.Align
+    ) or not Sys.Single.IsFinite(Column.Grow) or Column.Grow <= 0.0F
+    then
+      R.Reject(At, 'A table column needs a known alignment and a finite positive weight.');
+    end if;
+  end for;
+end procedure;
+
+// Checks that the native reorder array is a permutation.
+// ## Parameters
+// - `Count`: Number of child elements.
+// - `Order`: Model-owned display order.
+// - `At`: Diagnostic location.
+public procedure Reorder(Count: int; Order: array of int; At: string);
+begin
+  if Count < 1 or Count > 256 or Order.Length <> Count then
+    R.Reject(At, 'A reorderable list needs one to 256 items and a matching order.');
+  end if;
+
+  const Seen: array of bool := new bool[Count];
+  for Index: int in Order do
+    if Index < 0 or Index >= Count or Seen[Index] then
+      R.Reject(At, 'The display order must be a permutation.');
+    end if;
+
+    Seen[Index] := true;
+  end for;
+end procedure;
+
+end unit;

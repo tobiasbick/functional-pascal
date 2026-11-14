@@ -1,0 +1,26 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.ActionFooter;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Draws children in CUI's native right-aligned footer row.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Children`: Footer actions in display order.
+// - `Visit`: Host traversal for each action.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Children: array of E.Element<TMsg>;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  Frame.Window.BeginActionFooter();
+  for Child: E.Element<TMsg> in Children do
+    Visit(Child, Frame, true, L.Alignment.Default);
+  end for;
+
+  Frame.Window.EndActionFooter();
+end procedure;
+
+end unit;

@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Desktop.View;
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Pages.Desktop.Editor as Editor,
   GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.SplitViews as Split;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Desktop.SplitViews as Split;
 
 // Builds the native desktop chrome page from CUI's reference examples.
 // ## Parameters

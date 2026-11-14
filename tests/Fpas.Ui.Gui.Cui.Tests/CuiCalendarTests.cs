@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Pickers;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks tracked calendar parts and focus across the native view modes.</summary>

@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Actions;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks explicit presentation, finalized first-frame geometry and native close.</summary>

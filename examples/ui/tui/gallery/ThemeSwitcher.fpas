@@ -1,9 +1,9 @@
 unit Gallery.ThemeSwitcher;
 
 uses
-  Fpas.Ui.ThemeToggles as Toggles,
-  Gallery.State as State, Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Themes as Themes,
-  Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
+  Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
+  Gallery.State as State, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
 
 // Shows the same controlled appearance selector used by the gallery header.
 //

@@ -3,8 +3,8 @@ unit GalleryDisclosureFeedbackContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, GuiGallery.Pages.Disclosure.State as D,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Banners as B, Fpas.Ui.Checklists as C,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Feedback.Banners as B, Fpas.Ui.Widgets.Feedback.Checklists as C,
   System as Sys, System.Threading as Threads;
 
 // Exercises the original banner, countdowns and onboarding examples.

@@ -1,0 +1,58 @@
+unit Fpas.Ui.Widgets.Inputs.Selects;
+
+uses Fpas.Ui.Elements as E;
+
+// A choice in a native select list.
+public type Item = record
+  // The visible label and filter text.
+  public Label: string;
+  // An optional CUI glyph.
+  public Icon: string := '';
+end record;
+
+// Presentation and input settings for a graphical select.
+public type Options = record
+  // Caption above the trigger.
+  public Label: string := '';
+  // Caption for an unselected trigger. Empty uses CUI's Select placeholder.
+  public Placeholder: string := '';
+  // Show a search field in the list.
+  public Searchable: bool := false;
+  // Allow pointer and keyboard interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's select, with an optional search field.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Items`: Nonempty list in display order.
+// - `Selected`: Current zero-based index, or minus one for no selection.
+// - `OnChange`: Maps a selected index to a message.
+// - `Settings`: Optional caption, search and input settings.
+// ## Returns
+// A graphical select with model-owned selection.
+public function Select<TMsg>(
+  Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
+  Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SelectInput(Id, Items, Selected, OnChange, Settings ?? new Options());
+end function;
+
+// Gets the snapshot identity of an option.
+//
+// ## Parameters
+// - `Id`: Select identity.
+// - `Index`: Position in the unfiltered options.
+// ## Returns
+// The option's control ID while its row is visible.
+public function OptionId(Id: string; Index: int): string;
+begin
+  return Id + '/option/' + Index.ToString();
+end function;
+
+end unit;

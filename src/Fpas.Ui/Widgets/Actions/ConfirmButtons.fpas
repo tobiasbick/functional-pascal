@@ -1,0 +1,40 @@
+unit Fpas.Ui.Widgets.Actions.ConfirmButtons;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+
+// Presentation and input options for a two-step confirmation.
+public type Options = record
+  // Caption shown after the first activation.
+  public ConfirmLabel: string := 'Click to confirm';
+  // Positive confirmation window in milliseconds, starting at the first activation.
+  public TimeoutMilliseconds: int := 3000;
+  // Optional native glyph before the resting caption.
+  public Icon: string := '';
+  // Terminal equivalent of the resting glyph; empty omits it.
+  public TerminalIcon: string := '';
+  // Resting appearance; the confirmation uses the destructive style.
+  public Variant: S.ButtonVariant := S.ButtonVariant.Secondary;
+  // Requested control size.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Whether the control accepts input and focus.
+  public Enabled: bool := true;
+end record;
+
+// Builds an action that needs two activations within a bounded interval.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity independent of both captions.
+// - `Label`: Literal resting caption.
+// - `Message`: Proposed once when the second activation confirms.
+// - `Settings`: Confirmation caption, timeout, appearance and input permission.
+// ## Returns
+// A portable confirmation button. Escape, an outside click or timeout disarms it.
+public function ConfirmButton<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ConfirmAction(Id, Label, Message, Settings ?? new Options());
+end function;
+
+end unit;

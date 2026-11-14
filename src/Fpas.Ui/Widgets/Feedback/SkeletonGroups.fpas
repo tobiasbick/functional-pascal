@@ -1,0 +1,30 @@
+unit Fpas.Ui.Widgets.Feedback.SkeletonGroups;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native skeletongroup options.
+public type Options = record
+  // Native width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Spacing, or zero for the native default.
+  public Gap: float := 0.0F;
+  // Use a shared sweep of ordered dots.
+  public Dither: bool := false;
+end record;
+
+// Builds a native group of placeholders with a shared animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Children`: Placeholder views in native layout order.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function SkeletonGroup<TMsg>(Id: string; Children: array of E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SkeletonGroup(Id, Children, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,6 +1,6 @@
 program EffectContract;
 
-uses Fpas.Ui.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   StartOriginal;

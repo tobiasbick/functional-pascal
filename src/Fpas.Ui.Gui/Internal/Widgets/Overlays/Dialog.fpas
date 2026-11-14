@@ -1,0 +1,70 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Dialog;
+
+uses
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Input.Modal as Modal, Fpas.Ui.Widgets.Overlays.Dialogs as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Draws a centered native dialog over its base view.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Dialog identity.
+// - `Base`: View behind the dialog.
+// - `Content`: Dialog body and footer.
+// - `Open`: Model-owned visibility.
+// - `Settings`: Dialog options.
+// - `Dismiss`: Proposed closure message.
+// - `Horizontal`: Parent layout axis.
+// - `Align`: Parent layout alignment.
+// - `Visit`: Host traversal for the base and dialog content.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>;
+  Open: bool; Settings: D.Options; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+  function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;
+  begin
+    const Result: int := Frame.Window.BeginDialog(
+      C.Token('dialog', Id), Settings.Title, Settings.Description, cast<float>(Settings.Width),
+      Open, Enabled, Settings.Persistent, Settings.CloseButton, FocusClose, CloseToken
+    );
+    if Open and (Result and 1) <> 0 then
+      Frame.Controls.Add(
+        new App.Control(Id, Settings.Title, 'dialog', new Cui.CuiRectangle(), false)
+      );
+    end if;
+
+    return Result;
+  end function;
+  procedure EndNative();
+  begin
+    Frame.Window.EndDialog();
+  end procedure;
+begin
+  const Close: string? := if Settings.CloseButton then
+    D.CloseId(Id)
+  else
+    null
+  end if;
+  Modal.Draw<TMsg>(
+    Frame,
+    Id,
+    Base,
+    Content,
+    Open,
+    Settings.Title,
+    Settings.Description,
+    Settings.InitialFocus,
+    Close,
+    Dismiss,
+    Horizontal,
+    Align,
+    Visit,
+    BeginNative,
+    EndNative
+  );
+end procedure;
+
+end unit;

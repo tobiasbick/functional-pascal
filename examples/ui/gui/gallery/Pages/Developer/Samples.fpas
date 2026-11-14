@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Developer.Samples;
 
-uses Fpas.Ui.ProblemsPanels as P, Fpas.Ui.Pipelines as J, Fpas.Ui.Keymaps as K, Fpas.Ui.CommitGraphs as C, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.TraceViewers as T, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.ShortcutRecorders as Keys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Widgets.Developer.ProblemsPanels as P, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.Keymaps as K, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys, System.Collections.Generic as Lists;
 
 // Original gallery sample data.
 public const Diagnostics: array of P.Diagnostic := [

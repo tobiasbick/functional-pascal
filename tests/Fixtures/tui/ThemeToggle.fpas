@@ -1,9 +1,9 @@
 program ThemeToggleContract;
 
 uses
-  Fpas.Ui.Buttons as UiButtons, Fpas.Ui.ThemeToggles as Toggles, Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles, Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);

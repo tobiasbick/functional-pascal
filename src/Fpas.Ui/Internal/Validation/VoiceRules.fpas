@@ -1,0 +1,102 @@
+unit Fpas.Ui.Internal.Validation.VoiceRules;
+
+uses
+  Fpas.Ui.Widgets.Audio.Voice as V, Fpas.Ui.Widgets.Ai.Composers as C, Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Internal.Validation.ChartRules as Chart,
+  Fpas.Ui.Internal.Validation.AiRules as Ai, System as Sys, System.Text as Text;
+
+// Checks normalized levels and the silence marker.
+// ## Parameters
+// - `Values`: Samples to render.
+// - `At`: Diagnostic location.
+public procedure Levels(Values: array of float; At: string);
+begin
+  for Level: float in Values do
+    if not Sys.Single.IsFinite(Level) or Level < V.Silent or Level > 1.0F then
+      R.Reject(At, 'Voice levels must be between -1 and one.');
+    end if;
+  end for;
+end procedure;
+
+// Checks a timeline and its speaker tags.
+// ## Parameters
+// - `Value`: Signal to render.
+// - `At`: Diagnostic location.
+public procedure Signal(Value: V.Signal; At: string);
+begin
+  Levels(Value.Levels, At);
+  const Tags: (array of byte)? := Value.Owners;
+  if Tags <> null then
+    if Tags.Length <> Value.Levels.Length then
+      R.Reject(At, 'A voice signal needs one speaker tag per level.');
+    end if;
+
+    for Tag: byte in Tags do
+      Owner(cast<V.Owner>(Tag), At);
+    end for;
+  end if;
+end procedure;
+
+// Checks the native speaker tag.
+// ## Parameters
+// - `Value`: Current speaker.
+// - `At`: Diagnostic location.
+public procedure Owner(Value: V.Owner; At: string);
+begin
+  if not Sys.Enum.IsDefined<V.Owner>(Value) then
+    R.Reject(At, 'Unknown voice owner.');
+  end if;
+end procedure;
+
+// Checks the native activity.
+// ## Parameters
+// - `Value`: Current activity.
+// - `At`: Diagnostic location.
+public procedure Activity(Value: V.Activity; At: string);
+begin
+  if not Sys.Enum.IsDefined<V.Activity>(Value) then
+    R.Reject(At, 'Unknown voice activity.');
+  end if;
+end procedure;
+
+// Checks an optional progress or loudness fraction.
+// ## Parameters
+// - `Value`: The fraction when present.
+// - `At`: Diagnostic location.
+public procedure Fraction(Value: float?; At: string);
+begin
+  const FractionValue: float := Value ?? 0.0F;
+  if not Sys.Single.IsFinite(FractionValue) or FractionValue < 0.0F or FractionValue > 1.0F then
+    R.Reject(At, 'Voice progress and loudness must be between zero and one.');
+  end if;
+end procedure;
+
+// Checks the text and recording modes.
+// ## Parameters
+// - `Value`: Draft, attachments and recording preview.
+// - `Settings`: Layout and text capacity.
+// - `At`: Diagnostic location.
+public procedure Composer(Value: C.Value; Settings: C.Options; At: string);
+begin
+  R.CheckText(Value.Draft, At);
+  R.CheckText(Settings.Placeholder, At);
+  if Settings.MaxUtf8Bytes < 1 or Settings.MaxUtf8Bytes > 1048576 or Settings.MaxLines < 0
+    or Text.Encoding.UTF8.GetByteCount(Value.Draft) > Settings.MaxUtf8Bytes or Value.Draft.Contains(
+    Sys.Convert.ToChar(13)
+  )
+  then
+    R.Reject(At, 'The composer draft must fit its UTF-8 capacity and use LF line endings.');
+  end if;
+
+  for Attachment: string in Value.Attachments do
+    R.CheckText(Attachment, At);
+  end for;
+
+  Ai.Models(Value.Models, Value.Selected, At);
+  const Take: C.Recording? := Value.Take;
+  if Take <> null then
+    Levels(Take.Levels, At);
+    Chart.Distance(Take.Seconds, At);
+  end if;
+end procedure;
+
+end unit;

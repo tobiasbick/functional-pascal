@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram;
 
 uses
   GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.RulerSliders as R, Fpas.Ui.HistogramSliders as H, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Inputs.RulerSliders as R, Fpas.Ui.Widgets.Inputs.HistogramSliders as H, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // Shows the original measurement rulers and price histogram.

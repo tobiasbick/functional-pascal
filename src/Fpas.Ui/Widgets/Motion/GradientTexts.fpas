@@ -1,0 +1,36 @@
+unit Fpas.Ui.Widgets.Motion.GradientTexts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as Motion;
+
+// Native options.
+public type Options = record
+  // Typeface.
+  public Font: Motion.Font := Motion.Font.Body;
+  // Logical size.
+  public Size: float := 0.0F;
+  // Native width.
+  public Width: L.Extent := L.Extent.Content;
+  // First gradient color.
+  public From: C.Color := C.Color.Automatic;
+  // Second gradient color.
+  public To: C.Color := C.Color.Automatic;
+  // Animate the gradient.
+  public Animate: bool := false;
+end record;
+
+// Draws the native CUI gradient text.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Literal display text.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function GradientText<TMsg>(Id: string; Text: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.GradientText(Id, Text, Settings ?? new Options());
+end function;
+
+end unit;

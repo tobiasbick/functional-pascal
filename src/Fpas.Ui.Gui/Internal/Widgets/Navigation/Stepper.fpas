@@ -1,0 +1,29 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Stepper;
+
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Draws the native stepper as a read-only progress indicator.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current native frame.
+// - `Id`: Stable stepper identity.
+// - `Steps`: Validated literal captions.
+// - `Current`: Model-owned step index or the count when complete.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Steps: array of string; Current: int);
+begin
+  Frame.Window.Stepper(Steps, Current);
+  const Caption: string := if Current = Steps.Length then
+    'All steps complete'
+  else
+    Steps[Current]
+  end if;
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Caption, 'stepper', new Cui.CuiRectangle(), false, Value := Current.ToString()
+    )
+  );
+end procedure;
+
+end unit;

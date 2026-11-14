@@ -1,0 +1,52 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Audio.ControlTile;
+
+uses
+  Fpas.Ui.Widgets.Audio.ControlTiles as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+
+// Presents the native widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Label`: Tile caption.
+// - `On`: Toggle value.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native appearance and input options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: W.Options);
+begin
+  const Token: string := C.Token('control-tile', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Flags: int := (if Settings.Wide then
+    1
+  else
+    0
+  end if) + (if Enabled then
+    2
+  else
+    0
+  end if) +
+    (if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+      4
+    else
+      0
+    end if);
+  const Active: bool := Frame.Window.ControlTile(
+    Token, Label, Settings.Icon, Settings.Detail, On,
+    Width.Kind, Width.Value, Colors.Color(Settings.Color), Flags
+  );
+  if Enabled and Active <> On then
+    Frame.Messages.Add(Change(Active));
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Label, 'control-tile', new Cui.CuiRectangle(), Enabled,
+      Value := Active.ToString()
+    )
+  );
+end procedure;
+
+end unit;

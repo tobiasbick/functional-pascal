@@ -2,9 +2,9 @@ unit GuiGallery.Pages.Voice.View;
 
 uses
   GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Cards as Cards, Fpas.Ui.Voice as V,
-  Fpas.Ui.VoiceNotes as Notes, Fpas.Ui.VoiceSessions as Calls, Fpas.Ui.VoiceWaves as Waves, Fpas.Ui.VoiceOrbs as Orbs,
-  Fpas.Ui.Composers as Editor, System as Sys, System.Collections.Generic as Lists;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Audio.Voice as V,
+  Fpas.Ui.Widgets.Audio.VoiceNotes as Notes, Fpas.Ui.Widgets.Audio.VoiceSessions as Calls, Fpas.Ui.Widgets.Audio.VoiceWaves as Waves, Fpas.Ui.Widgets.Audio.VoiceOrbs as Orbs,
+  Fpas.Ui.Widgets.Ai.Composers as Editor, System as Sys, System.Collections.Generic as Lists;
 
 const Clip: array of float := Script.Clip();
 

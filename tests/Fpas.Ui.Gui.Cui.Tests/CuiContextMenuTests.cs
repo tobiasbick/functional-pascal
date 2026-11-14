@@ -1,3 +1,6 @@
+using Fpas.Ui.Gui.Cui.Widgets.Actions;
+using Fpas.Ui.Gui.Cui.Widgets.Overlays;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks context menus delegated to CUI on existing target nodes.</summary>

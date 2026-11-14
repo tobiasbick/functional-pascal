@@ -1,0 +1,155 @@
+unit Fpas.Ui.Internal.Validation.SourceToolValidation;
+
+uses
+  Fpas.Ui.Widgets.Display.Markdowns as Markdowns,
+  Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors,
+  Fpas.Ui.Widgets.Developer.DiffViews as DiffViews,
+  Fpas.Ui.Widgets.Developer.HexViews as HexViews,
+  Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles,
+  Fpas.Ui.Widgets.Developer.Terminals as Terminals,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Validation.Rules as R,
+  Fpas.Ui.Internal.Validation.ChartRules as C, Fpas.Ui.Styles as S, System as Sys;
+
+procedure Height(Value: float; Path: string);
+begin
+  if Value <> -1.0F then
+    C.Distance(Value, Path);
+  end if;
+end procedure;
+
+// Checks and registers a native source tool.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Source tool element.
+// - `Location`: Parent diagnostic path.
+// - `Profile`: Target capabilities.
+// - `Identify`: Registers a widget identity.
+public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string);
+begin
+  R.RequireProfile(Profile, V.Target.Graphical, Location);
+  case Node of
+    when E.Element.Markdown(
+      const Id: string,
+      const Text: string,
+      _,
+      const Settings: Markdowns.Options
+    ):
+      const Path: string := Identify(Id, Location + '/Markdown');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      R.CheckText(Text, Path);
+    when E.Element.CodeEditor(
+      const Id: string,
+      const Text: string,
+      _,
+      const Settings: CodeEditors.Options
+    ):
+      const Path: string := Identify(Id, Location + '/CodeEditor');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      Height(Settings.Height, Path);
+      R.CheckText(Text, Path);
+      R.CheckText(Settings.Language, Path);
+      R.CheckText(Settings.Placeholder, Path);
+      if Settings.Capacity <= Sys.Text.Encoding.UTF8.GetByteCount(
+        Text
+      ) or Settings.TabSize < 1 or Settings.TabSize > 16
+      then
+        R.Reject(Path, 'Code editor capacity or tab size is invalid.');
+      end if;
+    when E.Element.DiffView(
+      const Id: string,
+      const Before: string,
+      const After: string,
+      const Current: int,
+      _,
+      const Settings: DiffViews.Options
+    ):
+      const Path: string := Identify(Id, Location + '/DiffView');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      Height(Settings.Height, Path);
+      R.CheckText(Before, Path);
+      R.CheckText(After, Path);
+      R.CheckText(Settings.Language, Path);
+      R.CheckText(Settings.OldTitle, Path);
+      R.CheckText(Settings.NewTitle, Path);
+      if Current < -1 or Settings.Context < 0 then
+        R.Reject(Path, 'Diff selection or context is invalid.');
+      end if;
+    when E.Element.HexView(
+      const Id: string,
+      const Data: array of byte,
+      const Selected: HexViews.Selection,
+      _,
+      const Settings: HexViews.Options
+    ):
+      const Path: string := Identify(Id, Location + '/HexView');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      Height(Settings.Height, Path);
+      if Selected.Start < 0 or Selected.Start > Data.Length or Selected.Length < 0
+        or Selected.Length > Data.Length - Selected.Start or Selected.Cursor < 0
+        or Selected.Cursor > Sys.Math.Max(0, Data.Length - 1)
+      then
+        R.Reject(Path, 'Hex selection is outside the data.');
+      end if;
+
+      if Settings.GoTo < -1 or Settings.GoTo >= Data.Length then
+        R.Reject(Path, 'Hex goto is outside the data.');
+      end if;
+
+      if Settings.BytesPerRow <> 8 and Settings.BytesPerRow <> 16 and Settings.BytesPerRow <>
+        32
+      then
+        R.Reject(Path, 'Hex rows must contain 8, 16 or 32 bytes.');
+      end if;
+
+      for Mark: HexViews.Mark in Settings.Marks do
+        if Mark.Start < 0 or Mark.Start > Data.Length or Mark.Length < 0 or Mark.Length >
+          Data.Length - Mark.Start
+          or not Sys.Enum.IsDefined<S.Tone>(Mark.Tone)
+        then
+          R.Reject(Path, 'Invalid hex highlight.');
+        end if;
+
+        R.CheckText(Mark.Label, Path);
+      end for;
+    when E.Element.LogConsole(
+      const Id: string,
+      const Entries: array of LogConsoles.Entry,
+      _,
+      const Settings: LogConsoles.Options
+    ):
+      const Path: string := Identify(Id, Location + '/LogConsole');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      Height(Settings.Height, Path);
+      for Entry: LogConsoles.Entry in Entries do
+        R.CheckText(Entry.Text, Path);
+        if not Sys.Enum.IsDefined<LogConsoles.Level>(
+          Entry.Severity
+        ) or not Sys.Double.IsFinite(Entry.Time) or Entry.Time < 0.0
+        then
+          R.Reject(Path, 'Invalid log severity or timestamp.');
+        end if;
+      end for;
+    when E.Element.Terminal(
+      const Id: string,
+      const Output: string,
+      _,
+      _,
+      const Settings: Terminals.Options
+    ):
+      const Path: string := Identify(Id, Location + '/Terminal');
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Size, Path);
+      Height(Settings.Height, Path);
+      R.CheckText(Output, Path);
+      R.CheckText(Settings.Prompt, Path);
+    else
+  end case;
+end procedure;
+
+end unit;

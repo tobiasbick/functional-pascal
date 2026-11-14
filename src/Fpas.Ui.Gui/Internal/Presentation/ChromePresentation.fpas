@@ -1,0 +1,57 @@
+unit Fpas.Ui.Gui.Internal.Presentation.ChromePresentation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Widgets.Desktop.MenuBars as M, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.StatusBars as S,
+  Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Desktop.SplitViews as Split, System as Sys,
+  Fpas.Ui.Gui.Internal.Widgets.Desktop.MenuBar as MenuBar, Fpas.Ui.Gui.Internal.Widgets.Desktop.DocumentTabs as DocumentTabs,
+  Fpas.Ui.Gui.Internal.Widgets.Desktop.StatusBar as StatusBar, Fpas.Ui.Gui.Internal.Widgets.Desktop.Dockspace as Dockspace,
+  Fpas.Ui.Gui.Internal.Widgets.Desktop.SplitView as SplitView;
+
+// Presents desktop chrome through its native adapters.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Node`: Native chrome element.
+// - `Visit`: Presents child content in native pane scopes.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  case Node of
+    when E.Element.MenuBar(const Id: string, const Items: array of M.Menu<TMsg>, const Hide: bool):
+      MenuBar.Draw<TMsg>(Frame, Id, Items, Hide);
+    when E.Element.DocumentTabs(
+      const Id: string,
+      const Tabs: array of D.Tab,
+      const Selected: int,
+      const Change: function(D.Change): TMsg,
+      const Settings: D.Options
+    ):
+      DocumentTabs.Draw<TMsg>(Frame, Id, Tabs, Selected, Change, Settings);
+    when E.Element.StatusBar(
+      const Id: string,
+      const Items: array of S.Item<TMsg>,
+      const Hide: bool
+    ):
+      StatusBar.Draw<TMsg>(Frame, Id, Items, Hide);
+    when E.Element.SplitView(
+      const Id: string,
+      const Ratio: float,
+      const First: E.Element<TMsg>,
+      const Second: E.Element<TMsg>,
+      const Change: function(float): TMsg,
+      const Settings: Split.Options
+    ):
+      SplitView.Draw<TMsg>(Frame, Id, Ratio, First, Second, Change, Settings, Visit);
+    when E.Element.Dockspace(
+      const Id: string,
+      const Panels: array of Dock.Panel<TMsg>,
+      const Settings: Dock.Options,
+      const Change: Sys.Func<string, TMsg>?
+    ):
+      Dockspace.Draw<TMsg>(Frame, Id, Panels, Settings, Change, Visit);
+    else
+  end case;
+end procedure;
+
+end unit;

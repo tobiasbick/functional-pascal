@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.SmartInputs.State;
 
-uses Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 
 // Maximum message length in UTF-8 bytes, excluding the native terminator.
 public const MessageCapacity: int := 159;

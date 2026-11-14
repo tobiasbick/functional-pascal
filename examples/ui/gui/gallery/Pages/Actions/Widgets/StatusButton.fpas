@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Actions.Widgets.StatusButton;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Actions.State as State,
-  Fpas.Ui.StatusButtons as Work,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
   Fpas.Ui.Elements as E,
   System as Sys;
 

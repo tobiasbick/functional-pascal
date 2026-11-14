@@ -1,0 +1,60 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar;
+
+uses
+  Fpas.Ui.Widgets.Canvas.FormatBars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System.Collections.Generic as Lists;
+
+// Presents CUI's native FormatBar widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Format`: Current selection format.
+// - `Changed`: Maps native proposals to messages.
+// - `Settings`: Native widget settings.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Format: D.Value; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'format-bar';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  var Value: CuiCanvas.CuiTextFormat := new CuiCanvas.CuiTextFormat(
+    cast<int>(Format.Color),
+    cast<byte>(P.Bits(Format.Bold, 1)),
+    cast<byte>(P.Bits(Format.Underline, 1)),
+    cast<byte>(P.Bits(Format.Link, 1)),
+    Format.Style,
+    Format.Size,
+    Format.Alignment,
+    Format.List
+  );
+  const Styles: Lists.List<CuiCanvas.CuiTextStyle> := new Lists.List<CuiCanvas.CuiTextStyle>(
+    Settings.Styles.Length
+  );
+  for Style: D.Style in Settings.Styles do
+    Styles.Add(
+      new CuiCanvas.CuiTextStyle(Style.Name, Style.Size, Style.PreviewSize, cast<int>(Style.Font))
+    );
+  end for;
+  const Tones: Lists.List<int> := new Lists.List<int>(Settings.Colors.Length);
+  for Tone: S.Tone in Settings.Colors do
+    Tones.Add(cast<int>(Tone));
+  end for;
+  const Event: int := Frame.Window.FormatBar(
+    Token, ref Value, Styles.ToArray(), Tones.ToArray(),
+    Settings.Footer, Settings.FooterKeys, Settings.DeleteQuestion,
+    P.Bits(Enabled, 1) or P.Bits(Settings.HideDelete, 2) or P.Bits(Settings.HideMore, 4)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Value.Size.ToString());
+  if Event <> 0 then
+    const Next: D.Value := new D.Value(
+      cast<S.Tone>(Value.Color), Value.Bold <> 0, Value.Underline <> 0,
+      Value.Link <> 0, Value.Style, Value.Size, Value.Alignment, Value.List
+    );
+    Frame.Messages.Add(
+      Changed(new D.Event(Next, (Event and 2) <> 0, (Event and 4) <> 0, (Event and 8) <> 0))
+    );
+  end if;
+end procedure;
+
+end unit;

@@ -3,9 +3,9 @@ unit GallerySkeletonContract;
 uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update,
   GalleryHostAssertions as A, Fpas.Ui.Elements as E, Fpas.Ui.Composition as U,
-  Fpas.Ui.Skeletons as Skel, Fpas.Ui.Spinners as Spin, Fpas.Ui.Buttons as Buttons,
+  Fpas.Ui.Widgets.Feedback.Skeletons as Skel, Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Validation as V,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Cui as Cui, System as Sys;
 
 procedure Validate();

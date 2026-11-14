@@ -1,0 +1,144 @@
+unit Fpas.Ui.Gui.Internal.Data.ScheduleData;
+
+uses
+  Fpas.Ui.Widgets.Planning.WeekCalendars as W, Fpas.Ui.Widgets.Planning.MonthCalendars as M, Fpas.Ui.Widgets.Planning.Gantts as G,
+  Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, System as Sys, System.Collections.Generic as Lists;
+
+// Encodes an optional CLR date.
+// ## Parameters
+// - `Value`: Date or null.
+// ## Returns
+// Day number, or minus one.
+public function Day(Value: Sys.DateOnly?): int;
+begin
+  case Value of
+    when is Sys.DateOnly as DayValue:
+      return DayValue.DayNumber;
+    else
+      return -1;
+  end case;
+end function;
+
+// Decodes an optional CUI day.
+// ## Parameters
+// - `Number`: Day number, or minus one.
+// ## Returns
+// The date when present.
+public function Date(Number: int): Sys.DateOnly?;
+begin
+  return if Number < 0 then
+    null
+  else
+    Sys.DateOnly.FromDayNumber(Number)
+  end if;
+end function;
+
+// Encodes week appointments.
+// ## Parameters
+// - `Items`: Application events in display order.
+// ## Returns
+// Binding values.
+public function Week(Items: array of W.Appointment): array of CuiPlanning.CuiWeekEvent;
+begin
+  const Result: array of CuiPlanning.CuiWeekEvent := new CuiPlanning.CuiWeekEvent[Items.Length];
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: W.Appointment := Items[Index];
+    Result[Index] := new CuiPlanning.CuiWeekEvent(
+      Item.Title,
+      Item.Detail,
+      Item.Day,
+      Item.Start,
+      Item.Finish,
+      cast<int>(Item.Tone)
+    );
+  end for;
+
+  return Result;
+end function;
+
+// Applies native week times to the model values.
+// ## Parameters
+// - `Values`: Native proposals.
+// - `Items`: Original events.
+// ## Returns
+// Appointments with the proposed times.
+public function WeekChanges(Values: array of CuiPlanning.CuiWeekEvent; Items: array of W.Appointment): array of W.Appointment;
+begin
+  const Result: Lists.List<W.Appointment> := new Lists.List<W.Appointment>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    Result.Add(
+      Items[Index] with
+        Day := Values[Index].Day;
+        Start := Values[Index].Start;
+        Finish := Values[Index].Finish;
+      end with
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Encodes month appointments.
+// ## Parameters
+// - `Items`: Application events in display order.
+// ## Returns
+// Binding values.
+public function Month(Items: array of M.Appointment): array of CuiPlanning.CuiMonthEvent;
+begin
+  const Result: array of CuiPlanning.CuiMonthEvent := new CuiPlanning.CuiMonthEvent[Items.Length];
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: M.Appointment := Items[Index];
+    Result[Index] := new CuiPlanning.CuiMonthEvent(
+      Item.Title,
+      Item.Start.DayNumber,
+      Day(Item.Finish),
+      Item.Time,
+      Item.AllDay,
+      cast<int>(Item.Tone)
+    );
+  end for;
+
+  return Result;
+end function;
+
+// Encodes timeline tasks.
+// ## Parameters
+// - `Items`: Application tasks in display order.
+// ## Returns
+// Binding values.
+public function Gantt(Items: array of G.Task): array of CuiPlanning.CuiGanttTask;
+begin
+  const Result: array of CuiPlanning.CuiGanttTask := new CuiPlanning.CuiGanttTask[Items.Length];
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: G.Task := Items[Index];
+    Result[Index] := new CuiPlanning.CuiGanttTask(
+      Item.Name, Item.Owner, Item.Start, Item.Finish, Item.Progress,
+      cast<int>(Item.Tone), Item.DependsOn, Item.Milestone, cast<int>(Item.State)
+    );
+  end for;
+
+  return Result;
+end function;
+
+// Applies native timeline offsets to model values.
+// ## Parameters
+// - `Values`: Native proposals.
+// - `Items`: Original tasks.
+// ## Returns
+// Tasks with the proposed schedule.
+public function GanttChanges(Values: array of CuiPlanning.CuiGanttTask; Items: array of G.Task): array of G.Task;
+begin
+  const Result: Lists.List<G.Task> := new Lists.List<G.Task>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    Result.Add(
+      Items[Index] with
+        Start := Values[Index].Start;
+        Finish := Values[Index].Finish;
+      end with
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

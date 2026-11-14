@@ -1,0 +1,74 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Media.Carousel;
+
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;
+
+// Presents CUI's native Carousel widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Slides`: Composed slides in order.
+// - `Index`: Current slide index.
+// - `Changed`: Maps a native change to a message.
+// - `Settings`: Native widget options.
+// - `Visit`: Presents composed children.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Slides: array of E.Element<TMsg>; Index: int; Changed: function(int): TMsg; Settings: Carousels.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Role: string := 'carousel';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(
+    Frame,
+    Id + '/viewport',
+    C.Token(Role, Id + '/viewport'),
+    Enabled
+  )
+    or C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Names: Lists.List<string> := new Lists.List<string>(Slides.Length + 1);
+  Names.Add('viewport');
+  for Part: int := 0 to Slides.Length - 1 do
+    Names.Add('dot-' + Part.ToString(Sys.Globalization.CultureInfo.InvariantCulture));
+  end for;
+  const Parts: array of string := Names.ToArray();
+
+  Frame.Window.BeginCarousel(
+    Token,
+    Slides.Length,
+    Index,
+    Settings.Height,
+    Settings.Gap,
+    Settings.AutoAdvance,
+    P.Bits(Enabled, 1) or P.Bits(
+      Settings.HideArrows,
+      2
+    ) or P.Bits(Settings.HideDots, 4) or P.Bits(Settings.Loop, 8),
+    Focus
+  );
+  for Slide: int := 0 to Slides.Length - 1 do
+    Frame.Window.BeginCarouselSlide();
+    Visit(
+      Slides[Slide], Frame with
+        AcceptInput := Enabled and Slide = Index;
+        Interactive := Frame.Interactive and Settings.Enabled and Slide = Index;
+        PaintingClosed := Frame.PaintingClosed or not Settings.Enabled or not (Slide = Index);
+      end with, false, L.Alignment.Default
+    );
+    Frame.Window.EndCarouselSlide();
+  end for;
+
+  const Next: int := Frame.Window.EndCarousel(P.Tracker<TMsg>(Frame, Id, Role, Parts));
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Index.ToString());
+  P.Part<TMsg>(Frame, Id, Role, Parts[0], '', Enabled, '');
+  if not Settings.HideDots and Slides.Length > 1 then
+    for Part: int := 1 to Slides.Length do
+      P.Part<TMsg>(Frame, Id, Role, Parts[Part], '', Enabled, '');
+    end for;
+  end if;
+
+  if Enabled and Next <> Index then
+    Frame.Messages.Add(Changed(Next));
+  end if;
+end procedure;
+
+end unit;

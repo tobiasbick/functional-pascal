@@ -1,0 +1,28 @@
+unit Fpas.Ui.Widgets.Media.AvatarGroups;
+
+uses Fpas.Ui.Elements as E;
+
+// Native avatar-group settings.
+public type Options = record
+  // Number of avatars before the overflow count.
+  public MaximumVisible: int := 4;
+  // Logical avatar diameter.
+  public Size: float := 32.0F;
+end record;
+
+// Draws overlapping initials and an overflow count using CUI.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable inspection identity.
+// - `Names`: Names in display order. Supply at least one.
+// - `Settings`: Optional diameter and display limit.
+// ## Returns
+// The graphical element.
+public function AvatarGroup<TMsg>(Id: string; Names: array of string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.AvatarGroup(Id, Names, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,67 @@
+unit Fpas.Ui.Widgets.Feedback.Spinners;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+
+// Native activity spinner styles.
+public type Style = enum: byte
+  // Sweeping ring.
+  Arc;
+  // Dotted ring with a trailing head.
+  Comet;
+  // Animated matrix of dots.
+  DotMatrix;
+  // Tile filling and draining.
+  FillDrain;
+  // Sweeping radar dial.
+  Radar;
+  // Rippling rings.
+  Ripple;
+  // Streaming up chevrons.
+  Upload;
+  // Streaming down chevrons.
+  Download;
+  // Chevrons in both directions.
+  Transfer;
+  // Orbiting dots.
+  Orbit;
+  // Bouncing dots.
+  Bounce;
+  // Scanning line.
+  Scan;
+  // Pulsing disc.
+  Pulse;
+  // Rotating spiral.
+  Spiral;
+  // Slow noise in a tile.
+  Plasma;
+end enum;
+
+// Native spinner presentation options.
+public type Options = record
+  // Animation geometry.
+  public Animation: Style := Style.Arc;
+  // Ink color.
+  public Color: Charts.Color := Charts.Color.Automatic;
+  // Track color.
+  public Track: Charts.Color := Charts.Color.Automatic;
+  // Use the current theme background as ink on an inverse surface.
+  public Inverse: bool := false;
+end record;
+
+// Builds CUI's native activity spinner.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable spinner identity.
+// - `Size`: Diameter in logical points; zero uses CUI's default.
+// - `Settings`: Optional native style and colors.
+// ## Returns
+// A GUI-only spinner whose drawing and animation belong to CUI.
+public function Spinner<TMsg>(Id: string; Size: float := 0.0F; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+requires Size >= 0.0F;
+begin
+  return E.Element<TMsg>.Spinner(Id, Size, Settings);
+end function;
+
+end unit;

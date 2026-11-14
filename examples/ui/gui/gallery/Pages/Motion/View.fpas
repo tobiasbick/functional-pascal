@@ -3,10 +3,10 @@ unit GuiGallery.Pages.Motion.View;
 uses
   GuiGallery.Pages.Motion.State as M, GuiGallery.Pages.Motion.Controls as Controls,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
-  Fpas.Ui.Layout as L, Fpas.Ui.Motion as Motion, Fpas.Ui.Cards as Cards,
-  Fpas.Ui.Buttons as Buttons, Fpas.Ui.Loaders as Loaders, Fpas.Ui.ShimmerTexts as Shimmer,
-  Fpas.Ui.Typewriters as Typing, Fpas.Ui.TextReveals as Reveal, Fpas.Ui.WordRotations as Words,
-  Fpas.Ui.GradientTexts as Gradient, Fpas.Ui.Spotlights as Spotlights, Fpas.Ui.NumberRolls as Number,
+  Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as Motion, Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Feedback.Loaders as Loaders, Fpas.Ui.Widgets.Motion.ShimmerTexts as Shimmer,
+  Fpas.Ui.Widgets.Motion.Typewriters as Typing, Fpas.Ui.Widgets.Motion.TextReveals as Reveal, Fpas.Ui.Widgets.Motion.WordRotations as Words,
+  Fpas.Ui.Widgets.Motion.GradientTexts as Gradient, Fpas.Ui.Widgets.Motion.Spotlights as Spotlights, Fpas.Ui.Widgets.Motion.NumberRolls as Number,
   System as Sys;
 
 function TextEffects(Revision: int): E.Element<M.Msg>;

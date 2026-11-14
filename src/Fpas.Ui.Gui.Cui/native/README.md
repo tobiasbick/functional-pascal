@@ -4,13 +4,13 @@ Build the private native `fpas_cui` module from the pinned
 [CUI source pair](../../../third-party/cui/UPSTREAM.md). The FPAS CMake target
 links the platform libraries. `fpas_cui.c` includes the generated `cui.c` and
 the adapters that access its private types in the same translation unit.
-`bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
+`host/bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
 [`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, text
 buttons, navigation, sheets, scrolling and themes. Check the lifetime
 of borrowed strings and other inputs for each adapter.
 
-Reuse native CUI primitives before adding adapters. Required adapters live in
-`widgets/`; `fpas_cui.c` includes them after the shared helpers to contain
+Reuse native CUI primitives before adding adapters. Group adapters by topic in
+`widgets/<topic>/`; `fpas_cui.c` includes them after the shared helpers to contain
 private CUI types within the native bridge. Managed bindings are partial files
 on `CuiWindow` and `NativeMethods`. Compositions need no additional C entry point.
 
@@ -26,19 +26,19 @@ cells and the title/page arrows, or twelve month/year choices and those three
 header controls. Their adapters use CUI's stable navigation IDs across views.
 Range calendars retain their separate native navigation IDs.
 
-`widgets/button.c` passes the portable button options to CUI and replaces
+`widgets/actions/button.c` passes the portable button options to CUI and replaces
 its label text after creating the native label slot. This keeps literal
 `##` text, leading and trailing icons, and loading spinners independent of
 the stable identity.
 
-`widgets/confirm_button.c` and `widgets/status_button.c` delegate interaction and
-animated faces to CUI. Their shared `widgets/morph_button.c` helper restores
+`widgets/actions/confirm_button.c` and `widgets/actions/status_button.c` delegate interaction and
+animated faces to CUI. Their shared `widgets/actions/morph_button.c` helper restores
 literal captions and measures their full width independently of CUI's label-ID
 syntax. Removed controls release the corresponding native animation state.
 
-`widgets/segmented.c` calls CUI's segment control and exposes its group and
+`widgets/actions/segmented.c` calls CUI's segment control and exposes its group and
 segment nodes. The managed theme switcher supplies CUI's sun/moon/monitor
-icons. Theme toggle uses `widgets/icon_button.c`, which calls CUI's native
+icons. Theme toggle uses `widgets/actions/icon_button.c`, which calls CUI's native
 icon-button primitive with an identity independent of its glyph and tooltip.
 Both propose appearances without mutating the model-owned palette.
 
@@ -48,15 +48,15 @@ measurement to keep literal text independent of CUI's label-ID syntax. The
 native segment test compares adapter and direct-CUI pixels for every size,
 with and without icons and full-width allocation.
 
-`widgets/copy_button.c` delegates drawing, clipboard submission and confirmation
+`widgets/actions/copy_button.c` delegates drawing, clipboard submission and confirmation
 timing to CUI's native copy button. The adapter supplies input permissions,
 focus requests and confirmation state for the managed host.
 
-`widgets/split_button.c` uses CUI's composite and popup with literal captions
+`widgets/actions/split_button.c` uses CUI's composite and popup with literal captions
 and keyed inspection. CUI handles keyboard selection. The adapter releases the
 popup when its control disappears from the view.
 
-`widgets/menu.c` calls CUI's menu begin/item/label/separator
+`widgets/overlays/menu.c` calls CUI's menu begin/item/label/separator
 primitives and exposes keyed commands, input permission, inspection and literal
 captions. CUI owns rendering, placement and navigation. The native menu test
 compares its open-popup pixels with direct CUI calls for text/icon triggers,
@@ -69,7 +69,7 @@ Context-popup ownership is separate from the target's widget state. Context
 menus use the same command conversion, rows, inspection and retirement paths
 as dropdowns. The pixel test also compares a context popup with direct CUI.
 
-`control_state.c` owns native companion-state and popup retirement. A single
+`host/control_state.c` owns native companion-state and popup retirement. A single
 forget operation retires a removed control; changing a control's kind retires
 its former companion state. Managed code does not encode private state keys.
 

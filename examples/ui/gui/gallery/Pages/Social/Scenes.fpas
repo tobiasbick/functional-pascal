@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Social.Scenes;
 
-uses Fpas.Ui.MediaImages as Media, System as Sys;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media, System as Sys;
 
 function Channel(Value: float): byte;
 begin

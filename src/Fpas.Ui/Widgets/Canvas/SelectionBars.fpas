@@ -1,0 +1,56 @@
+unit Fpas.Ui.Widgets.Canvas.SelectionBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+
+// An action offered for selected items.
+public type Action = record
+  // Native CUI icon glyph.
+  public Icon: string;
+  // Visible action caption.
+  public Label: string;
+  // Semantic action color.
+  public Tone: S.Tone := S.Tone.Neutral;
+end record;
+
+// Selection bar settings.
+public type Options = record
+  // Keeps the selection when Escape is pressed.
+  public NoEscape: bool := false;
+  // Whether the bar accepts actions.
+  public Enabled: bool := true;
+end record;
+
+// Selection bar action.
+public type Event = record
+  // Zero-based action index, or minus one when clearing.
+  public Index: int;
+  // Whether the bar cleared the selection.
+  public Clear: bool;
+end record;
+
+// Builds the native SelectionBar element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Selected`: Model-owned selection flags.
+// - `Actions`: Available actions in display order.
+// - `Changed`: Maps actions and clearing to messages.
+// - `Child`: Content that anchors the floating bar.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function SelectionBar<TMsg>(Id: string; Selected: array of bool; Actions: array of Action; Changed: function(Event): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SelectionBar(
+    Id,
+    Selected,
+    Actions,
+    Changed,
+    Child,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

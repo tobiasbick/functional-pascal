@@ -1,0 +1,47 @@
+unit Fpas.Ui.Widgets.Inputs.InlineEdits;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Built-in text faces supported by native inline editing.
+public type Font = enum: byte
+  // Native medium-weight body face.
+  Medium = 1;
+  // Native display face.
+  Display;
+  // Native monospace face.
+  Mono;
+end enum;
+
+// Native inline editor presentation and capacity.
+public type Options = record
+  // Literal text displayed for an empty value.
+  public Placeholder: string := '';
+  // Face used both at rest and while editing.
+  public Face: Font := Font.Medium;
+  // Logical text size; zero selects the native body size.
+  public FontSize: float := 0.0F;
+  // Maximum UTF-8 value length, excluding terminator, from one through 511.
+  public MaxUtf8Bytes: int := 255;
+  // Native content, fill, fixed or percentage width.
+  public Width: L.Extent := L.Extent.Content;
+  // Whether editing accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Builds text that CUI edits in place; Enter or blur commits, Escape cancels.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Value`: Confirmed single-line model text.
+// - `OnChange`: Maps a committed text proposal to a message.
+// - `Settings`: Optional native presentation, width and UTF-8 capacity.
+// ## Returns
+// A graphical inline editor retaining its draft until commit or cancellation.
+public function InlineEdit<TMsg>(Id: string; Value: string; OnChange: function(string): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.InlineEdit(Id, Value, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

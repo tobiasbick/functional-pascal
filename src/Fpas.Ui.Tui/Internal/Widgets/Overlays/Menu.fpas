@@ -1,0 +1,304 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu;
+
+uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as C;
+
+// Owns the one open command menu in a terminal session.
+public type State = record
+  // Current menu ID, or an empty string.
+  public Id: function(): string;
+  // Toggles the requested menu and closes any previous one.
+  public Toggle: procedure(string);
+  // Closes the current menu.
+  public Close: procedure();
+end record;
+
+// Creates session-owned menu visibility.
+//
+// ## Returns
+// A closed menu tracker.
+public function Create(): State;
+  procedure Toggle(Id: string);
+  begin
+    Current := if Current = Id then
+      ''
+    else
+      Id
+    end if;
+  end procedure;
+begin
+  var Current: string := '';
+  return new State(
+    function(): string => Current, Toggle, procedure() begin
+      Current := '';
+    end procedure
+  );
+end function;
+
+// Opens or closes a session-owned popup.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
+  // Trigger and popup identity.
+  public Id: string;
+  // Session-owned popup visibility.
+  public Menus: State;
+
+  // Toggles visibility without proposing an application message.
+  // ## Returns
+  // No application action.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    self.Menus.Toggle(self.Id);
+    return A.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+// Closes the popup before proposing a command message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Choice<TMsg> = record implements A.IActivatable<TMsg>
+  // Application command message.
+  public Message: TMsg;
+  // Session-owned dismissal.
+  public Close: procedure();
+
+  // Dismisses and proposes the command.
+  // ## Returns
+  // The command's message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    self.Close();
+    return A.Result<TMsg>.Send(self.Message);
+  end function;
+end record;
+
+// Lowers command rows shared by dropdowns and split buttons.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Trigger identity used to qualify command keys.
+// - `Entries`: Validated commands and decorations.
+// - `Menus`: Session visibility tracker.
+// - `Theme`: Current semantic palette.
+// ## Returns
+// A vertical menu with literal captions and display-only shortcut hints.
+public function Rows<TMsg>(Id: string; Entries: array of M.Entry<TMsg>; Menus: State; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const Children: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  for Entry: M.Entry<TMsg> in Entries do
+    case Entry of
+      when M.Entry.Action(const Item: M.Item<TMsg>):
+        const Caption: string := (if Item.TerminalIcon = '' then
+          ''
+        else
+          Item.TerminalIcon + ' '
+        end if) +
+          Item.Label + (if Item.Shortcut = '' then
+            ''
+          else
+            '  ' + Item.Shortcut
+          end if) +
+          (if Item.Checked then
+            '  ✓'
+          else
+            ''
+          end if);
+        Children.Add(
+          E.Element<TMsg>.Action(
+            M.ItemId(Id, Item.Key), new Choice<TMsg>(Item.Message, Menus.Close), Item.Enabled,
+            new E.ActionView(
+              Caption,
+              Name := Item.Label,
+              Role := 'menu-item',
+              Variant := S.ButtonVariant.Ghost,
+              ArrowFocus := true,
+              FillWidth := true,
+              Center := false,
+              Foreground := if Item.Danger then
+                Theme.Colors.Danger
+              else
+                null
+              end if
+            )
+          )
+        );
+      when M.Entry.Label(const Text: string):
+        Children.Add(
+          E.Element<TMsg>.Decorated(
+            E.Element<TMsg>.Label(Text),
+            new T.Style(
+              Th.Rgb(
+                Theme.Colors.TextMuted,
+                Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0)
+              ),
+              Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0)
+            )
+          )
+        );
+      when M.Entry.Separator:
+        Children.Add(E.Element<TMsg>.Separator(''));
+    end case;
+  end for;
+
+  return E.Element<TMsg>.Stack(Children.ToArray(), false, new E.Flow());
+end function;
+
+// Resolves an initial focus stop, ignoring noninteractive and disabled rows.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Trigger identity.
+// - `Entries`: Ordered content.
+// ## Returns
+// The first enabled command identity, or empty when no command is enabled.
+public function Initial<TMsg>(Id: string; Entries: array of M.Entry<TMsg>): string;
+begin
+  for Entry: M.Entry<TMsg> in Entries do
+    case Entry of
+      when M.Entry.Action(const Item: M.Item<TMsg>):
+        if Item.Enabled then
+          return M.ItemId(Id, Item.Key);
+        end if;
+      else
+    end case;
+  end for;
+
+  return '';
+end function;
+
+// Defers a popup until the base and any enclosing sheet have been laid out.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Pending<TMsg> = record
+  // Popup scope and trigger ID.
+  public Id: string;
+  // Scope containing the trigger.
+  public Parent: string;
+  // Trigger anchor in viewport cells.
+  public Anchor: F.Rect;
+  // Lowered menu rows.
+  public Content: E.Element<TMsg>;
+  // Initial menu focus.
+  public Initial: string;
+  // Host-owned close action.
+  public Close: procedure();
+  // Preferred placement relative to the trigger.
+  public Position: M.Placement;
+  // Explicit total popup width in cells, or zero for content sizing.
+  public Width: int;
+end record;
+
+// Fits a popup at the preferred native placement and paints its cell frame.
+//
+// ## Parameters
+// - `Operations`: Paint operations after the base view.
+// - `Screen`: Terminal viewport.
+// - `Anchor`: Trigger bounds.
+// - `Width`: Preferred menu width.
+// - `Height`: Preferred menu height.
+// - `Colors`: Popup surface colors.
+// - `Theme`: Current semantic theme.
+// - `Position`: Preferred native placement, fitted or flipped at the viewport edge.
+// - `FixedWidth`: Explicit total popup width in cells, or zero for content sizing.
+// ## Returns
+// Whole menu panel and its inner content area.
+public function Place(
+  Operations: C.List<D.Operation>; Screen: F.Rect; Anchor: F.Rect;
+  Width: int; Height: int; Colors: T.Style; Theme: Th.Theme; Position: M.Placement; FixedWidth: int
+): array of F.Rect;
+begin
+  const Across: int := Sys.Math.Min(
+    Screen.Width,
+    if FixedWidth > 0 then
+      Sys.Math.Max(23, FixedWidth)
+    else
+      Sys.Math.Max(
+        Anchor.Width,
+        Width + 2
+      )
+    end if
+  );
+  const Below: int := Sys.Math.Max(0, Screen.Y + Screen.Height - Anchor.Y - Anchor.Height);
+  const Above: int := Sys.Math.Max(0, Anchor.Y - Screen.Y);
+  const Up: bool := Position = M.Placement.TopStart or Position = M.Placement.Top or Position =
+    M.Placement.TopEnd;
+  const Side: bool := Position = M.Placement.RightStart or Position = M.Placement.LeftStart
+    or Position = M.Placement.Right or Position = M.Placement.Left;
+  const Down: bool := if Up then
+    Above < Height + 2 and Below > Above
+  else
+    Below >= Height + 2 or Below >= Above
+  end if;
+  const Rows: int := Sys.Math.Min(
+    Height + 2,
+    Sys.Math.Max(
+      1, if Side then
+        Screen.Height
+      else
+        if Down then
+          Below
+        else
+          Above
+        end if
+      end if
+    )
+  );
+  var Left: int := Anchor.X;
+  if Position = M.Placement.BottomEnd or Position = M.Placement.TopEnd then
+    Left := Anchor.X + Anchor.Width - Across;
+  elsif Position = M.Placement.Bottom or Position = M.Placement.Top then
+    Left := Anchor.X + (Anchor.Width - Across) div 2;
+  elsif Side then
+    const Right: bool := Position = M.Placement.RightStart or Position = M.Placement.Right;
+    const RightSpace: int := Screen.X + Screen.Width - Anchor.X - Anchor.Width;
+    const LeftSpace: int := Anchor.X - Screen.X;
+    const UseRight: bool := if Right then
+      RightSpace >= Across or RightSpace >= LeftSpace
+    else
+      LeftSpace < Across and RightSpace > LeftSpace
+    end if;
+    Left := if UseRight then
+      Anchor.X + Anchor.Width
+    else
+      Anchor.X - Across
+    end if;
+  end if;
+  const X: int := Sys.Math.Clamp(
+    Left,
+    Screen.X,
+    Screen.X + Screen.Width - Across
+  );
+  const Y: int := Sys.Math.Clamp(
+    if Side then
+      Anchor.Y + (if Position = M.Placement.Right or Position =
+        M.Placement.Left
+      then
+        (Anchor.Height - Rows) div 2
+      else
+        0
+      end if)
+    else
+      if Down then
+        Anchor.Y + Anchor.Height
+      else
+        Anchor.Y - Rows
+      end if
+    end if,
+    Screen.Y, Screen.Y + Screen.Height - Rows
+  );
+  const Panel: F.Rect := new F.Rect(X, Y, Across, Rows);
+  const Edge: int := if Across >= 4 and Rows >= 3 then
+    1
+  else
+    0
+  end if;
+  D.Fill(Operations, Panel, Colors);
+  if Edge = 1 then
+    D.Border(Operations, Panel, Panel, '', Colors, Theme.Widgets);
+  end if;
+
+  return [Panel, new F.Rect(X + Edge, Y + Edge, Across - 2 * Edge, Rows - 2 * Edge)];
+end function;
+
+end unit;

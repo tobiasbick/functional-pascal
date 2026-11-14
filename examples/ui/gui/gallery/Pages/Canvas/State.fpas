@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.Canvas.State;
 
 uses
-  Fpas.Ui.FormatBars as F, Fpas.Ui.NodeEditors as N, Fpas.Ui.CanvasControls as C,
-  Fpas.Ui.Toolbars as T, Fpas.Ui.SelectionBars as B, Fpas.Ui.Styles as S;
+  Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Editors.NodeEditors as N, Fpas.Ui.Widgets.Canvas.CanvasControls as C,
+  Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.SelectionBars as B, Fpas.Ui.Styles as S;
 
 // Position of a node in the canvas example.
 public type Position = record

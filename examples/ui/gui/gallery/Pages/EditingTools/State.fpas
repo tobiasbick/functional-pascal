@@ -2,8 +2,8 @@ unit GuiGallery.Pages.EditingTools.State;
 
 uses
   GuiGallery.Pages.EditingTools.Samples as Sample, GuiGallery.Pages.EditingTools.Capture as Capture,
-  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.FlameGraphs as F, Fpas.Ui.CurveEditors as C,
-  Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T;
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as I, Fpas.Ui.Widgets.Editors.FlameGraphs as F, Fpas.Ui.Widgets.Editors.CurveEditors as C,
+  Fpas.Ui.Widgets.Editors.GradientEditors as G, Fpas.Ui.Widgets.Editors.TimelineEditors as T;
 
 // Editable samples from the original CUI component gallery.
 public type Model = record

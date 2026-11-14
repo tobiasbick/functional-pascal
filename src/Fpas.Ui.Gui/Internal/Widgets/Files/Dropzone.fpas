@@ -1,0 +1,61 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Files.Dropzone;
+
+uses
+  Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles,
+  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+
+// Draws the native drop target and forwards file actions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable drop target identity.
+// - `OnDrop`: Maps accepted files to a message.
+// - `OnBrowse`: Optional browse message factory.
+// - `Settings`: Native display and input settings.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; OnDrop: function(array of string): TMsg;
+  OnBrowse: Sys.Func<TMsg>?; Settings: D.Options
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'dropzone';
+  const Token: string := C.Token(Role, Id);
+  const Result: CuiFiles.CuiDropzoneResult := Frame.Window.Dropzone(
+    Token,
+    Settings.Title,
+    Settings.Description,
+    Settings.Accept,
+    Settings.Icon,
+    Settings.Height,
+    Settings.Compact,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed
+  );
+  if Result.Paths.Length > 0 then
+    Frame.Messages.Add(OnDrop(Result.Paths));
+  elsif Result.Browse then
+    case OnBrowse of
+      when is Sys.Func<TMsg> as Browse:
+        Frame.Messages.Add(Browse.Invoke());
+      else
+    end case;
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, if Settings.Title = '' then
+          'Drop files here'
+        else
+          Settings.Title
+        end if,
+        Role, new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

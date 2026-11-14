@@ -1,0 +1,131 @@
+unit Fpas.Ui.Internal.Validation.EditorRules;
+
+uses
+  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Widgets.Inputs.SearchFields as S, Fpas.Ui.Widgets.Inputs.TextAreas as A,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Validation as V,
+  System as Sys, System.Text as Text;
+
+procedure CheckValue(Value: string; Capacity: int; Size: B.Size; Password: bool; Multiline: bool; At: string);
+begin
+  R.CheckText(Value, At + '/value');
+  if Multiline then
+    if Value.Contains(cast<char>(13)) then
+      R.Reject(At, 'A text area requires LF line endings.');
+    end if;
+  elsif Value.Contains(cast<char>(10)) or Value.Contains(cast<char>(13)) then
+    R.Reject(At, 'A single-line editor requires a single-line value.');
+  end if;
+
+  if Capacity <= 0 or Capacity >= Sys.Array.MaxLength or (Password and Capacity > 341) then
+    R.Reject(At, 'A text editor requires a valid UTF-8 capacity, at most 341 bytes for passwords.');
+  end if;
+
+  if Text.Encoding.UTF8.GetByteCount(Value) > Capacity then
+    R.Reject(At, 'The text editor value exceeds its UTF-8 capacity.');
+  end if;
+
+  if not Sys.Enum.IsDefined<B.Size>(Size) then
+    R.Reject(At, 'The text editor requires a valid control size.');
+  end if;
+end procedure;
+
+procedure CheckChrome(
+  Label: string; Placeholder: string; Icon: string; Hint: string; Error: string;
+  Prefix: string; Suffix: string; At: string
+);
+begin
+  R.CheckText(Label, At + '/label');
+  R.CheckText(Placeholder, At + '/placeholder');
+  R.CheckText(Icon, At + '/icon');
+  R.CheckText(Hint, At + '/hint');
+  R.CheckText(Error, At + '/error');
+  R.CheckText(Prefix, At + '/prefix');
+  R.CheckText(Suffix, At + '/suffix');
+end procedure;
+
+// Validates a graphical text field and reserves its native action identities.
+//
+// ## Parameters
+// - `Id`: Stable editor identity.
+// - `Value`: Current model text.
+// - `Settings`: Native presentation and input options.
+// - `Profile`: Requested capability profile.
+// - `Location`: Parent view path.
+// - `Identify`: Registers a stable ID at a diagnostic path.
+public procedure CheckTextField(
+  Id: string; Value: string; Settings: F.Options;
+  Profile: V.Target; Location: string; Identify: function(string, string): string
+);
+begin
+  const Path: string := Location + '/textField';
+  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  const At: string := Identify(Id, Path);
+  if Settings.Clearable then
+    discard Identify(F.ClearId(Id), At + '/clear');
+  end if;
+
+  if Settings.Password then
+    discard Identify(F.RevealId(Id), At + '/reveal');
+  end if;
+
+  CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, Settings.Password, false, At);
+  CheckChrome(
+    Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
+    Settings.Prefix, Settings.Suffix, At
+  );
+end procedure;
+
+// Validates a graphical search field and reserves its native action identities.
+//
+// ## Parameters
+// - `Id`: Stable editor identity.
+// - `Value`: Current model text.
+// - `Settings`: Native presentation and input options.
+// - `Profile`: Requested capability profile.
+// - `Location`: Parent view path.
+// - `Identify`: Registers a stable ID at a diagnostic path.
+public procedure CheckSearchField(
+  Id: string; Value: string; Settings: S.Options;
+  Profile: V.Target; Location: string; Identify: function(string, string): string
+);
+begin
+  const Path: string := Location + '/searchField';
+  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  const At: string := Identify(Id, Path);
+  discard Identify(S.ClearId(Id), At + '/clear');
+  CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, false, false, At);
+  CheckChrome(
+    Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
+    Settings.Prefix, Settings.Suffix, At
+  );
+end procedure;
+
+// Validates a graphical text area and reserves its native action identities.
+//
+// ## Parameters
+// - `Id`: Stable editor identity.
+// - `Value`: Current model text.
+// - `Settings`: Native presentation and input options.
+// - `Profile`: Requested capability profile.
+// - `Location`: Parent view path.
+// - `Identify`: Registers a stable ID at a diagnostic path.
+public procedure CheckTextArea(
+  Id: string; Value: string; Settings: A.Options;
+  Profile: V.Target; Location: string; Identify: function(string, string): string
+);
+begin
+  const Path: string := Location + '/textArea';
+  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  const At: string := Identify(Id, Path);
+  if Settings.Clearable then
+    discard Identify(A.ClearId(Id), At + '/clear');
+  end if;
+
+  CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, false, true, At);
+  CheckChrome(
+    Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
+    Settings.Prefix, Settings.Suffix, At
+  );
+end procedure;
+
+end unit;

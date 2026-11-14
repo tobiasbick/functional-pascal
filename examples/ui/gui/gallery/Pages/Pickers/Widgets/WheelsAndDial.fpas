@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Pickers.Widgets.WheelsAndDial;
 
 uses
   GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.TimeDials as D, Fpas.Ui.WheelPickers as W, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Pickers.TimeDials as D, Fpas.Ui.Widgets.Pickers.WheelPickers as W, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, System.Globalization as Culture, System.Collections.Generic as Generic;
 
 function Numbered(First: int; Count: int): array of string;

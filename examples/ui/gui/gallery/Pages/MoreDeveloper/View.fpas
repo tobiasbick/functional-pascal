@@ -3,7 +3,7 @@ unit GuiGallery.Pages.MoreDeveloper.View;
 uses
   GuiGallery.Pages.MoreDeveloper.State as M, GuiGallery.Pages.MoreDeveloper.Samples as D, GuiGallery.Shared.Sections as Section,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.TestExplorers as T, Fpas.Ui.StackTraces as S, Fpas.Ui.Blames as B, Fpas.Ui.Coverages as C, Fpas.Ui.RegexTesters as R, Fpas.Ui.RequestBars as H, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.ResponseStatuses as Status, Fpas.Ui.ApiExplorers as A, Fpas.Ui.FeatureFlagEditors as F, Fpas.Ui.Uptimes as U, Fpas.Ui.TimeHistograms as G, System as Sys;
+  Fpas.Ui.Widgets.Developer.TestExplorers as T, Fpas.Ui.Widgets.Developer.StackTraces as S, Fpas.Ui.Widgets.Developer.Blames as B, Fpas.Ui.Widgets.Developer.Coverages as C, Fpas.Ui.Widgets.Developer.RegexTesters as R, Fpas.Ui.Widgets.Developer.RequestBars as H, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.ResponseStatuses as Status, Fpas.Ui.Widgets.Developer.ApiExplorers as A, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F, Fpas.Ui.Widgets.Developer.Uptimes as U, Fpas.Ui.Widgets.Charts.TimeHistograms as G, System as Sys;
 
 function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
 begin

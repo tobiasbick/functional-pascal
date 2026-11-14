@@ -1,0 +1,110 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.EmojiPicker;
+
+uses
+  Fpas.Ui.Widgets.Pickers.EmojiPickers as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys;
+
+const GroupNames: array of string := [
+  'Recent', 'Smileys & emotion', 'People & body', 'Animals & nature', 'Food & drink',
+  'Travel & places', 'Activities', 'Objects', 'Symbols', 'Flags'
+];
+
+function Identity(Id: string; Part: int): string;
+begin
+  return case Part of
+    when 0: P.SearchId(Id);
+    when 1: P.GridId(Id);
+    when 2: P.ToneSelectorId(Id);
+    else if Part < 9 then
+      P.ToneId(Id, Part - 3)
+    else
+      P.GroupId(Id, Part - 9)
+    end if;
+  end case;
+end function;
+
+function Token(Id: string; Part: int): string;
+begin
+  return C.Token('emoji-part', Identity(Id, Part));
+end function;
+
+// Draws the native emoji picker and publishes selection and tone proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Picker identity.
+// - `Value`: Model-owned history and tone.
+// - `OnChange`: Maps native changes to a message.
+// - `Settings`: Layout, labels and input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: P.State; OnChange: function(P.Change): TMsg;
+  Settings: P.Options
+);
+begin
+  const Accept: bool := Settings.Enabled and Frame.AcceptInput;
+  const Role: string := 'emoji-picker';
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Token(Id, Part)
+  end if;
+  const Focus: int := if Settings.Search and C.WantsFocus<TMsg>(
+    Frame,
+    P.SearchId(Id),
+    Token(Id, 0),
+    Accept
+  )
+  then
+    1
+  elsif C.WantsFocus<TMsg>(Frame, P.GridId(Id), Token(Id, 1), Accept) then
+    2
+  else
+    0
+  end if;
+  const Result: CuiPickers.CuiEmojiPickerResult := Frame.Window.EmojiPicker(
+    C.Token(Role, Id), Value.Recent, Value.Tone, Settings.Width, Settings.Height, Settings.Size,
+    Settings.Placeholder, Settings.EmptyText, Settings.Hint, Settings.Search, Settings.Preview,
+    Settings.ToneSelector, Accept, Focus, Track
+  );
+  if Result.Emoji <> null or Result.Recent <> Value.Recent or Result.Tone <> Value.Tone then
+    Frame.Messages.Add(
+      OnChange(new P.Change(new P.State(Result.Recent, Result.Tone), Result.Emoji))
+    );
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id, 'Emoji picker', Role, new Cui.CuiRectangle(), Accept, Value := Value.Recent
+    )
+  );
+  for Part: int in Result.VisibleParts do
+    const Caption: string := case Part of
+      when 0: 'Search emoji';
+      when 1: 'Emoji grid';
+      when 2: 'Skin tone';
+      else if Part < 9 then
+        'Skin tone ' + (Part - 3).ToString()
+      else
+        GroupNames[Part - 9]
+      end if;
+    end case;
+    Frame.Controls.Add(
+      new App.Control(
+        Identity(Id, Part), Caption, 'emoji-part', new Cui.CuiRectangle(), Accept,
+        Value := if Part = 2 then
+          Value.Tone.ToString()
+        else
+          ''
+        end if
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

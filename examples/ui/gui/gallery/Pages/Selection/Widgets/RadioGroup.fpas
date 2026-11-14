@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Selection.Widgets.RadioGroup;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.RadioGroups as R,
+  Fpas.Ui.Widgets.Inputs.RadioGroups as R,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
 

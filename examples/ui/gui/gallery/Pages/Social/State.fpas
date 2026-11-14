@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Social.State;
 
-uses Fpas.Ui.Comments as Comments, Fpas.Ui.ImageViewers as Viewer, Fpas.Ui.ImageCroppers as Cropper, Fpas.Ui.CardStacks as Deck;
+uses Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Media.ImageViewers as Viewer, Fpas.Ui.Widgets.Media.ImageCroppers as Cropper, Fpas.Ui.Widgets.Containers.CardStacks as Deck;
 
 // Current values for the conversation and presence examples.
 public type Model = record

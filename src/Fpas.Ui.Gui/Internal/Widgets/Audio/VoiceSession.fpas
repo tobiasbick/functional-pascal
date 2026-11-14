@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceSession;
+
+uses
+  Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Audio.Voice as Voice, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi,
+  Fpas.Ui.Gui.Cui.Widgets.Audio as CuiAudio, Fpas.Ui.Gui.Internal.Data.AiData as Data, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+
+// Presents CUI's native VoiceSession.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable session identity.
+// - `Mode`: Current conversation activity.
+// - `Signal`: The shared timeline.
+// - `Muted`: Microphone state, or null to omit the button.
+// - `Changed`: Maps a call action.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Mode: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(VoiceSessions.Event): TMsg; Settings: VoiceSessions.Options);
+begin
+  const Role: string := 'voice-session';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Keys: array of string := ['mute', 'end'];
+  const Focus: int := P.Focus<TMsg>(
+    Frame, Id, Role, Keys, [Enabled and Muted <> null, Enabled and not Settings.HideEnd],
+    if Muted <> null then
+      0
+    else
+      1
+    end if
+  );
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Labels: CuiAi.CuiVoiceSessionText := new CuiAi.CuiVoiceSessionText(
+    Settings.Label, Settings.Transcript, Settings.Upcoming,
+    cast<int>(Settings.Speaker), Settings.You, Settings.Assistant
+  );
+  const Result: CuiAudio.CuiVoiceSessionResult := Frame.Window.VoiceSession(
+    Token, cast<int>(Mode), Signal.Levels, Signal.Owners,
+    Labels, Muted, Width.Kind, Width.Value, P.Bits(Enabled, 1) or P.Bits(Settings.HideEnd, 2),
+    Focus, P.Tracker<TMsg>(Frame, Id, Role, Keys)
+  );
+  P.Root<TMsg>(Frame, Id, Role, Settings.Label, false, Mode.ToString());
+  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  if (Result.Events and 1) <> 0 then
+    Frame.Messages.Add(Changed(VoiceSessions.Event.Mute(Result.Muted)));
+  end if;
+
+  if (Result.Events and 2) <> 0 then
+    Frame.Messages.Add(Changed(VoiceSessions.Event.EndCall));
+  end if;
+end procedure;
+
+end unit;

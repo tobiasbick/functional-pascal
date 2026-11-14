@@ -1,0 +1,33 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.ResponseStatus;
+
+uses Fpas.Ui.Widgets.Developer.ResponseStatuses as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui as Cui;
+
+// Presents the native ResponseStatus widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Status`: Status supplied to the widget.
+// - `Seconds`: Seconds supplied to the widget.
+// - `Bytes`: Bytes supplied to the widget.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Status: int; Seconds: double; Bytes: double; Settings: D.Options);
+begin
+  const Role: string := 'response-status';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  discard Frame.Window.ResponseStatus(
+    Token,
+    Status,
+    Seconds,
+    Bytes,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

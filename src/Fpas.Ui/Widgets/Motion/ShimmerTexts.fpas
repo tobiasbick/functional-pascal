@@ -1,0 +1,20 @@
+unit Fpas.Ui.Widgets.Motion.ShimmerTexts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.Motion as Motion;
+
+// Draws the native CUI shimmer text.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Literal display text.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function ShimmerText<TMsg>(Id: string; Text: string; Settings: Motion.TextOptions? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ShimmerText(Id, Text, Settings ?? new Motion.TextOptions());
+end function;
+
+end unit;

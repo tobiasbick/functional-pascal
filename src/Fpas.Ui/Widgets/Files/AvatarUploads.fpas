@@ -1,0 +1,30 @@
+unit Fpas.Ui.Widgets.Files.AvatarUploads;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Extensions accepted by CUI for avatar image drops.
+public const ImageExtensions: string := 'png;jpg;jpeg;bmp;gif;tga';
+
+// Builds a native avatar that can replace its image from a file.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable avatar identity.
+// - `Name`: Name used for initials.
+// - `Path`: Model-owned image path. Null shows initials.
+// - `OnDrop`: Maps a successfully decoded drop to a message. Accept by storing the path.
+// - `OnBrowse`: Optional message factory for opening a file dialog.
+// - `Size`: Logical diameter. Zero selects the native default.
+// - `Enabled`: Whether the avatar accepts input.
+// ## Returns
+// The graphical uploadable avatar.
+public function AvatarUpload<TMsg>(
+  Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg;
+  OnBrowse: Sys.Func<TMsg>? := null; Size: float := 88.0F; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.AvatarUpload(Id, Name, Path, OnDrop, OnBrowse, Size, Enabled);
+end function;
+
+end unit;

@@ -1,0 +1,80 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Navigation.TabBar;
+
+uses
+  Fpas.Ui.Widgets.Navigation.TabBars as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, System.Collections.Generic as Lists, System as Sys;
+
+// Presents the native widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Items`: Tab descriptors.
+// - `Selected`: Selected index.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native appearance and input options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of W.Item; Selected: int; Change: function(int): TMsg; Settings: W.Options);
+begin
+  const Token: string := C.Token('tab-bar', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Badges: array of int := new int[Items.Length];
+  var Focus: int := -1;
+  for Index: int := 0 to Items.Length - 1 do
+    Icons.Add(Items[Index].Icon);
+    Labels.Add(Items[Index].Label);
+    Badges[Index] := Items[Index].Badge;
+    const Part: string := Id + '/' + Index.ToString();
+    if C.WantsFocus<TMsg>(Frame, Part, C.Token('tab-bar-item', Part), Enabled)
+      or (Index = Selected and C.WantsFocus<TMsg>(
+      Frame,
+      Id,
+      C.Token('tab-bar-item', Part),
+      Enabled
+    ))
+    then
+      Focus := Index;
+    end if;
+  end for;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Flags: int := (if Settings.LabelsOnSelection then
+    1
+  else
+    0
+  end if) + (if Enabled then
+    2
+  else
+    0
+  end if);
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => C.Token('tab-bar-item', Id + '/' + Index.ToString())
+  end if;
+  const Next: int := Frame.Window.TabBar(
+    Token, Icons.ToArray(), Labels.ToArray(), Badges, Selected,
+    Width.Kind, Width.Value, Flags, Focus, Track
+  );
+  if Enabled and Next <> Selected then
+    Frame.Messages.Add(Change(Next));
+  end if;
+
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, '', 'tab-bar', new Cui.CuiRectangle(), false, Value := Next.ToString())
+  );
+  if not Frame.PaintingClosed then
+    for Index: int := 0 to Items.Length - 1 do
+      Frame.Controls.Add(
+        new App.Control(
+          Id + '/' + Index.ToString(), Items[Index].Label, 'tab-bar-item',
+          new Cui.CuiRectangle(), Enabled, Value := (Index = Next).ToString()
+        )
+      );
+    end for;
+  end if;
+end procedure;
+
+end unit;

@@ -1,0 +1,23 @@
+unit Fpas.Ui.Widgets.Collections.VirtualLists;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Uses CUI to realize only the visible rows and its overscan.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable list identity.
+// - `Count`: Total row count.
+// - `RowHeight`: Fixed logical height of a row.
+// - `Height`: Viewport extent.
+// - `BuildRow`: Pure view factory called for each visible or overscan index.
+//   Interactive children must use IDs unique across the view.
+// ## Returns
+// The graphical element.
+public function VirtualList<TMsg>(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): E.Element<TMsg>): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.VirtualList(Id, Count, RowHeight, Height, BuildRow);
+end function;
+
+end unit;

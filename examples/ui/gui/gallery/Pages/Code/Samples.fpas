@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Code.Samples;
 
-uses Fpas.Ui.LogConsoles as Log, System as Sys;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys;
 
 function Lines(Values: array of string): string;
 begin

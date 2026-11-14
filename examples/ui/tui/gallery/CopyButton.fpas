@@ -1,7 +1,7 @@
 unit Gallery.CopyButton;
 
 uses
-  Gallery.State as State, Fpas.Ui.CopyButtons as Copy, Fpas.Ui.Elements as E,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // Displays a command with a copy action.

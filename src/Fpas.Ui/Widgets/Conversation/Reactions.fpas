@@ -1,0 +1,49 @@
+unit Fpas.Ui.Widgets.Conversation.Reactions;
+
+uses Fpas.Ui.Elements as E;
+
+// One model-owned reaction in a native group.
+public type Item = record
+  // Accessible name used for inspection.
+  public Label: string;
+  // CUI icon-font glyph.
+  public Icon: string;
+  // Nonnegative count, below MaxValue when inactive so it can be incremented.
+  public Count: int;
+  // Whether the current user has reacted.
+  public Active: bool := false;
+end record;
+
+// Gets the identity of a reaction within its group.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Index`: Zero-based reaction position.
+// ## Returns
+// The group identity followed by the index.
+public function ItemId(Id: string; Index: int): string;
+requires Id <> '';
+requires Index >= 0;
+begin
+  return Id + '/' + Index.ToString();
+end function;
+
+// Shows CUI's reaction pills and animated counts.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: Nonempty list of reactions in positional identity order.
+// - `OnChange`: Maps the changed index and proposed item to a message.
+// - `Enabled`: Whether the group accepts input.
+// ## Returns
+// A graphical group whose values are controlled by the application model.
+public function Reactions<TMsg>(
+  Id: string; Items: array of Item; OnChange: function(int, Item): TMsg; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+requires Items.Length > 0;
+begin
+  return E.Element<TMsg>.ReactionGroup(Id, Items, OnChange, Enabled);
+end function;
+
+end unit;

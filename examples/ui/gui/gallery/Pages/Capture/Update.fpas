@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Capture.Update;
 
 uses
-  GuiGallery.Pages.Capture.State as S, Fpas.Ui.AvatarUploads as A,
+  GuiGallery.Pages.Capture.State as S, Fpas.Ui.Widgets.Files.AvatarUploads as A,
   Fpas.Ui.Gui.FileDialogs as Dialogs, Fpas.Ui.Mvu.Application as Mvu;
 
 // Records accepted files and requests the native file dialog on browse.

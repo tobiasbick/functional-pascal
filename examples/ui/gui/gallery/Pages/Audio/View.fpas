@@ -1,10 +1,10 @@
 unit GuiGallery.Pages.Audio.View;
 
 uses
-  Fpas.Ui.Tours as Tours, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Menus as Menus,
+  Fpas.Ui.Widgets.Overlays.Tours as Tours, Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Overlays.Menus as Menus,
   GuiGallery.Pages.Audio.State as A, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Knobs as K, Fpas.Ui.Faders as F, Fpas.Ui.LevelMeters as M,
+  Fpas.Ui.Widgets.Audio.Knobs as K, Fpas.Ui.Widgets.Audio.Faders as F, Fpas.Ui.Widgets.Audio.LevelMeters as M,
   System as Sys;
 
 function Peak(Phase: int; Track: int; Channel: int): float;

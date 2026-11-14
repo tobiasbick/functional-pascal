@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.TextAreas as Area;
+  Fpas.Ui.Widgets.Inputs.TextAreas as Area;
 
 // Builds the full-width multiline field under the Inputs grid.
 //

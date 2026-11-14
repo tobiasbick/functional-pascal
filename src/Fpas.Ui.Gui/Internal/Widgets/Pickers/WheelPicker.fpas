@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker;
+
+uses
+  Fpas.Ui.Widgets.Pickers.WheelPickers as W, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Draws the native wheel and publishes selection proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable wheel identity.
+// - `Items`: Captions in selection order.
+// - `Selected`: Model-owned zero-based index.
+// - `OnChange`: Maps a proposed index to a message.
+// - `Settings`: Wheel presentation and input settings.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of string; Selected: int;
+  OnChange: function(int): TMsg; Settings: W.Options
+);
+begin
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
+  const Role: string := 'wheel-picker';
+  const Token: string := C.Token(Role, Id);
+  const Proposed: int := Frame.Window.WheelPicker(
+    Token,
+    Items,
+    Selected,
+    Settings.Width,
+    Settings.Rows,
+    Settings.Loop,
+    Settings.JoinLeft,
+    Settings.JoinRight,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed
+  );
+  if Proposed <> Selected then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Items[Selected], Role, new Cui.CuiRectangle(), Enabled, Value := Selected.ToString()
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

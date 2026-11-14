@@ -3,9 +3,9 @@ unit GalleryTextAreaContract;
 uses
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App,
-  Fpas.Ui.TextAreas as A,
+  Fpas.Ui.Widgets.Inputs.TextAreas as A,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   System as Sys;

@@ -2,11 +2,11 @@ unit GuiGallery.Pages.Canvas.View;
 
 uses
   GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Motion as M,
-  Fpas.Ui.FormatBars as F, Fpas.Ui.Toolbars as T, Fpas.Ui.CanvasControls as C, Fpas.Ui.LiveCursors as Live,
-  Fpas.Ui.PresencePills as P, Fpas.Ui.SelectionRings as R, Fpas.Ui.NodeEditors as N,
-  Fpas.Ui.ResultCards as Result, Fpas.Ui.SelectionBars as Bulk, Fpas.Ui.Checkboxes as Check,
-  Fpas.Ui.Themes as Theme, System as Sys, System.Collections.Generic as Lists;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M,
+  Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Canvas.LiveCursors as Live,
+  Fpas.Ui.Widgets.Canvas.PresencePills as P, Fpas.Ui.Widgets.Canvas.SelectionRings as R, Fpas.Ui.Widgets.Editors.NodeEditors as N,
+  Fpas.Ui.Widgets.Canvas.ResultCards as Result, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Inputs.Checkboxes as Check,
+  Fpas.Ui.Widgets.Theming.Themes as Theme, System as Sys, System.Collections.Generic as Lists;
 
 function Glyph(Code: int): string;
 begin

@@ -4,7 +4,7 @@ uses
   Gallery.DropdownMenu as Dropdown,
   Gallery.SegmentedControl as Segmented,
   Gallery.State as State, Gallery.ButtonGroup as Group, Gallery.CopyButton as Copy, Gallery.HoldButton as Hold,
-  Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as I, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as I, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);

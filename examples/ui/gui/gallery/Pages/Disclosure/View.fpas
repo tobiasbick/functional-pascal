@@ -10,13 +10,13 @@ uses
   GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm,
   GuiGallery.Pages.Disclosure.Widgets.HoverCard as Hover,
   GuiGallery.Pages.Disclosure.Widgets.Veil as Veil,
-  Fpas.Ui.Themes as Theme,
+  Fpas.Ui.Widgets.Theming.Themes as Theme,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B,
-  Fpas.Ui.ExpandableTexts as T,
-  Fpas.Ui.ExpandableCards as C,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Containers.ExpandableTexts as T,
+  Fpas.Ui.Widgets.Containers.ExpandableCards as C,
   System as Sys;
 
 function Cards(Model: State.Model): E.Element<State.Msg>;

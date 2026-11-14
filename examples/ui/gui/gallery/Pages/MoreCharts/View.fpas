@@ -4,10 +4,10 @@ uses
   GuiGallery.Pages.MoreCharts.Layout as Layout,
   GuiGallery.Pages.MoreCharts.Widgets.Flows as Flows, GuiGallery.Pages.MoreCharts.Widgets.Market as Market,
   GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.Heatmaps as Heatmaps,
-  Fpas.Ui.CalendarHeatmaps as Calendars, Fpas.Ui.Treemaps as Treemaps,
-  Fpas.Ui.RadarCharts as Radar, Fpas.Ui.Funnels as Funnels, Fpas.Ui.SplitBars as Splits,
-  Fpas.Ui.Waffles as Waffles, Fpas.Ui.Cards as Cards, Fpas.Ui.Layout as L;
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
+  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as Calendars, Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
+  Fpas.Ui.Widgets.Charts.RadarCharts as Radar, Fpas.Ui.Widgets.Charts.Funnels as Funnels, Fpas.Ui.Widgets.Charts.SplitBars as Splits,
+  Fpas.Ui.Widgets.Charts.Waffles as Waffles, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Layout as L;
 
 function Matrix<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
 begin

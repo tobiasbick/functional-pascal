@@ -1,0 +1,43 @@
+unit Fpas.Ui.Gui.Internal.Data.CurveData;
+
+uses
+  Fpas.Ui.Widgets.Editors.CurveEditors as W, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Converts one curve key for CUI.
+// ## Parameters
+// - `Value`: Model key.
+// ## Returns
+// Native position, handles and mode.
+public function Pack(Value: W.Key): CuiEditors.CuiCurveKey;
+begin
+  return new CuiEditors.CuiCurveKey(
+    Value.X,
+    Value.Y,
+    Value.InX,
+    Value.InY,
+    Value.OutX,
+    Value.OutY,
+    cast<byte>(Value.Interpolation)
+  );
+end function;
+
+// Converts one edited key to FPAS.
+// ## Parameters
+// - `Value`: Native key.
+// ## Returns
+// The proposed model key.
+public function Read(Value: CuiEditors.CuiCurveKey): W.Key;
+begin
+  return new W.Key(
+    Value.X,
+    Value.Y,
+    Value.InX,
+    Value.InY,
+    Value.OutX,
+    Value.OutY,
+    cast<W.Mode>(Value.Mode)
+  );
+end function;
+
+end unit;

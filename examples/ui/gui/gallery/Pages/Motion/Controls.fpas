@@ -2,10 +2,10 @@ unit GuiGallery.Pages.Motion.Controls;
 
 uses
   GuiGallery.Pages.Motion.State as M, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Docks as Docking,
-  Fpas.Ui.ControlTiles as Tiles, Fpas.Ui.Grids as Grids, Fpas.Ui.Charts as Colors, Fpas.Ui.Graphics as Graphics,
-  Fpas.Ui.NowPlaying as Player, Fpas.Ui.TabBars as Tabs, Fpas.Ui.Waveforms as Waves,
-  Fpas.Ui.Cards as Cards, Fpas.Ui.IconButtons as Icons, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Docks as Docking,
+  Fpas.Ui.Widgets.Audio.ControlTiles as Tiles, Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Charts.Charts as Colors, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.Widgets.Audio.NowPlaying as Player, Fpas.Ui.Widgets.Navigation.TabBars as Tabs, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Actions.IconButtons as Icons, System as Sys;
 
 function Glyph(Code: int): string;
 begin

@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Files.Folders;
 
 uses
-  Fpas.Ui.FileListings as Listings, System as Sys, System.IO as IO,
+  Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO,
   System.Collections.Generic as Lists;
 
 function ExampleRoot(Path: string): Listings.Listing?;

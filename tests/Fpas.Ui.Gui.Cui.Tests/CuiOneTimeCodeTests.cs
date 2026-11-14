@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Inputs;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks delivery of CUI's completion event through the managed result.</summary>

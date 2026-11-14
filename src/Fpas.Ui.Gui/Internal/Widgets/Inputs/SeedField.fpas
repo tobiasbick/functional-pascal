@@ -1,0 +1,60 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SeedField;
+
+uses
+  Fpas.Ui.Widgets.Inputs.SeedFields as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as W;
+
+// Presents the native seed field.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned value.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'seed-field';
+  const Token: string := C.Token(Role, Id);
+  const Locked: bool := Current.Locked ?? false;
+  const Parts: array of string := ['dice', 'lock'];
+  const Accept: array of bool := [Enabled and not Locked, Enabled and Current.Locked <> null];
+  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, Accept, W.Bits(Locked, 1));
+  var Seed: uint := Current.Seed;
+  var Lock: int := W.Bits(Locked, 1);
+  const Flags: int := W.Bits(Enabled, 1) + W.Bits(Settings.Plain, 8);
+  const HasLock: bool := Current.Locked <> null;
+  const Result: int := Frame.Window.SeedField(
+    Token,
+    Current.Label,
+    ref Seed,
+    ref Lock,
+    HasLock,
+    Settings.Display,
+    Settings.RandomText,
+    Settings.FixedText,
+    Flags,
+    Focus,
+    W.Tracker<TMsg>(Frame, Id, Role, Parts)
+  );
+  if Result <> 0 then
+    const Proposed: bool? := if Current.Locked <> null then
+      Lock <> 0
+    else
+      null
+    end if;
+    Frame.Messages.Add(
+      Change(new A.Event(Seed, Proposed, (Result and 1) <> 0, (Result and 2) <> 0))
+    );
+  end if;
+
+  W.Root<TMsg>(Frame, Id, Role, Current.Label, false, Seed.ToString());
+  W.Part<TMsg>(Frame, Id, Role, 'dice', 'New seed', Accept[0], '');
+  if Current.Locked <> null then
+    W.Part<TMsg>(Frame, Id, Role, 'lock', 'Keep this seed', Accept[1], (Lock <> 0).ToString());
+  end if;
+end procedure;
+
+end unit;

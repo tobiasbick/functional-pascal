@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.EditingTools.Capture;
 
-uses Fpas.Ui.FlameGraphs as F, System.Collections.Generic as C;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as F, System.Collections.Generic as C;
 
 function Order(A: F.Span; B: F.Span): int;
 begin

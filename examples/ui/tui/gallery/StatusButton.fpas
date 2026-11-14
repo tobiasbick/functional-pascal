@@ -1,7 +1,7 @@
 unit Gallery.StatusButton;
 
 uses
-  Gallery.State as State, Fpas.Ui.StatusButtons as Work, Fpas.Ui.Buttons as B,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.StatusButtons as Work, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
 
 // Shows CUI's inline save feedback with explicit model transitions.

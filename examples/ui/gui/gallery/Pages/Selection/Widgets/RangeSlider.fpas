@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.RangeSliders as R;
+  Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
 // Builds the native Selection page's two-endpoint price slider.
 //

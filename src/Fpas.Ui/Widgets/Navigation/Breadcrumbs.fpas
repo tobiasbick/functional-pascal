@@ -1,0 +1,38 @@
+unit Fpas.Ui.Widgets.Navigation.Breadcrumbs;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a graphical breadcrumb trail. Its final item names the current location.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable trail identity.
+// - `Items`: Nonempty path of literal captions.
+// - `OnNavigate`: Maps a clicked ancestor's zero-based position to a message.
+// - `Enabled`: Whether ancestor links accept input.
+// ## Returns
+// The native trail with an informational final item.
+public function Breadcrumb<TMsg>(
+  Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.BreadcrumbTrail(Id, Items, OnNavigate, Enabled);
+end function;
+
+// Returns the focus identity of a breadcrumb ancestor.
+//
+// ## Parameters
+// - `Id`: Trail identity.
+// - `Index`: Zero-based path position.
+// ## Returns
+// The trail identity followed by the positional suffix.
+public function ItemId(Id: string; Index: int): string;
+requires Id <> '';
+requires Index >= 0;
+begin
+  return Id + '/' + Index.ToString();
+end function;
+
+end unit;

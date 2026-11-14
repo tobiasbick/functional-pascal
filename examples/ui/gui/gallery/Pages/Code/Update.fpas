@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.Code.Update;
 
 uses
-  GuiGallery.Pages.Code.State as M, Fpas.Ui.Markdowns as Markdown, Fpas.Ui.CodeEditors as Editor,
-  Fpas.Ui.DiffViews as Diff, Fpas.Ui.HexViews as Hex,
+  GuiGallery.Pages.Code.State as M, Fpas.Ui.Widgets.Display.Markdowns as Markdown, Fpas.Ui.Widgets.Editors.CodeEditors as Editor,
+  Fpas.Ui.Widgets.Developer.DiffViews as Diff, Fpas.Ui.Widgets.Developer.HexViews as Hex,
   Fpas.Ui.Mvu.Application as A, GuiGallery.Pages.Motion.Clock as Clock,
   System as Sys, System.Globalization as Locale, System.Text as Text;
 

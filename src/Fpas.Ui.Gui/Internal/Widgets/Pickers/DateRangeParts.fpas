@@ -1,0 +1,151 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts;
+
+uses
+  Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Widgets.Pickers.DateRangePickers as P,
+  Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  System as Sys;
+
+// Encodes the start for the CUI boundary.
+// ## Parameters
+// - `Value`: Controlled date range.
+// ## Returns
+// The start day number, or minus one when absent.
+public function StartDay(Value: R.Value): int;
+begin
+  return case Value of
+    when R.Value.Empty: -1;
+    when R.Value.Started(const Day: Sys.DateOnly), R.Value.Complete(
+      const Day: Sys.DateOnly,
+      _
+    ): Day.DayNumber;
+  end case;
+end function;
+
+// Encodes the end for the CUI boundary.
+// ## Parameters
+// - `Value`: Controlled date range.
+// ## Returns
+// The end day number, or minus one when absent.
+public function EndDay(Value: R.Value): int;
+begin
+  return case Value of
+    when R.Value.Complete(_, const Day: Sys.DateOnly): Day.DayNumber;
+    else -1;
+  end case;
+end function;
+
+function Kind(Part: int): string;
+begin
+  return if Part >= 0 then
+    'range-day'
+  elsif Part >= -7 then
+    'range-preset'
+  else
+    'range-month'
+  end if;
+end function;
+
+function Identity(Id: string; Part: int): string;
+begin
+  return if Part >= 0 then
+    R.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
+  elsif Part >= -7 then
+    P.PresetId(Id, -Part - 1)
+  else
+    R.MonthId(Id, Part = -9)
+  end if;
+end function;
+
+// Maps a tracked CUI part to the host's native token.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Part`: Native day number or part code.
+// ## Returns
+// The tracking token used in the current frame.
+public function Token(Id: string; Part: int): string;
+begin
+  return C.Token(Kind(Part), Identity(Id, Part));
+end function;
+
+function Iso(Day: int): string;
+begin
+  return Sys.DateOnly.FromDayNumber(Day).ToString(
+    'yyyy-MM-dd',
+    Sys.Globalization.CultureInfo.InvariantCulture
+  );
+end function;
+
+function Caption(Part: int): string;
+begin
+  if Part >= 0 then
+    return Iso(Part);
+  end if;
+  const Presets: array of string := [
+    'Today', 'Yesterday', 'Last 7 days', 'Last 30 days', 'This month', 'Last month', 'This year'
+  ];
+  return if Part >= -7 then
+    Presets[-Part - 1]
+  elsif Part = -8 then
+    'Previous month'
+  else
+    'Next month'
+  end if;
+end function;
+
+// Publishes a range proposal and native snapshot controls.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current host drawing state.
+// - `Id`: Calendar or picker identity.
+// - `Label`: Accessible name of the root.
+// - `Role`: Root snapshot role.
+// - `Value`: Model-owned selection used for this frame.
+// - `Enabled`: Whether these controls accept input.
+// - `Result`: CUI proposal and visible parts.
+// - `OnChange`: Maps the proposal to an application message.
+public procedure Publish<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Role: string; Value: R.Value; Enabled: bool;
+  Result: CuiPickers.CuiDateRangeResult; OnChange: function(R.Value): TMsg
+);
+begin
+  if Result.Changed then
+    const Selection: R.Value := if Result.Start < 0 then
+      R.Value.Empty
+    elsif Result.End < 0 then
+      R.Value.Started(Sys.DateOnly.FromDayNumber(Result.Start))
+    else
+      R.Value.Complete(
+        Sys.DateOnly.FromDayNumber(Result.Start),
+        Sys.DateOnly.FromDayNumber(Result.End)
+      )
+    end if;
+    Frame.Messages.Add(OnChange(Selection));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+  const First: int := StartDay(Value);
+  const Last: int := EndDay(Value);
+  const Display: string := if First < 0 then
+    ''
+  elsif Last < 0 then
+    Iso(First)
+  else
+    Iso(First) + '..' + Iso(Last)
+  end if;
+  Frame.Controls.Add(
+    new App.Control(Id, Label, Role, new Cui.CuiRectangle(), Enabled, Value := Display)
+  );
+  for Part: int in Result.VisibleParts do
+    Frame.Controls.Add(
+      new App.Control(
+        Identity(Id, Part), Caption(Part), Kind(Part), new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

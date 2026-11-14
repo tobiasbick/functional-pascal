@@ -1,6 +1,6 @@
 unit Fpas.Ui.TerminalExtensions.Views;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, System as Sys;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, System as Sys;
 
 // Composes terminal content, layers and application shortcuts.
 //

@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Disclosure.Widgets.Countdown;
 
 uses
   GuiGallery.Pages.Disclosure.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Countdowns as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+  Fpas.Ui.Widgets.Feedback.Countdowns as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
 // Shows the original standard and compact countdowns.
 // ## Parameters

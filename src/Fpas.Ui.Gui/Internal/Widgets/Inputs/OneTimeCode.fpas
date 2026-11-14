@@ -1,0 +1,66 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode;
+
+uses
+  Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Styles as S, System as Sys;
+
+// Draws the code boxes and sends change before completion.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable code input identity.
+// - `Value`: Current model code.
+// - `OnChange`: Maps a native edit to a message.
+// - `Settings`: Label, length and input permission.
+// - `OnComplete`: Optional action receiving the newly entered complete code.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: O.Options; OnComplete: Sys.Func<string, TMsg>?
+);
+begin
+  const Allowed: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('one-time-code', Id);
+  if Settings.Label <> '' then
+    Frame.Window.BeginGroup(false, 0, 8, 1, false);
+    Frame.Window.Text(Settings.Label);
+    Frame.Window.StyleLast(cast<int>(S.Role.Label));
+  end if;
+  const Result: CuiInputs.CuiOneTimeCodeResult := Frame.Window.OneTimeCode(
+    Token, Value, Settings.Length, Allowed,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), not Frame.PaintingClosed
+  );
+  const Proposed: string := Result.Value;
+  if Settings.Label <> '' then
+    Frame.Window.EndGroup();
+  end if;
+
+  if Allowed and Proposed <> Value then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if Allowed and Result.Completed then
+    case OnComplete of
+      when is Sys.Func<string, TMsg> as Complete:
+        Frame.Messages.Add(Complete.Invoke(Proposed));
+      else
+    end case;
+  end if;
+
+  if not Frame.PaintingClosed then
+    if Settings.Label <> '' then
+      Frame.Labels.Add(Settings.Label);
+    end if;
+
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Settings.Label, 'one-time-code', new Cui.CuiRectangle(), Allowed,
+        Value := Proposed.Length.ToString()
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

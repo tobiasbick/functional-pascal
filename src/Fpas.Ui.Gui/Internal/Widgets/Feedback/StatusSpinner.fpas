@@ -1,0 +1,29 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusSpinner;
+
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
+
+// Draws the native status spinner and its result transition.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Status`: Current work state.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Status: Buttons.Status; Settings: W.Options);
+begin
+  const Role: string := 'status-spinner';
+  const Token: string := C.Token(Role, Id);
+  const Visible: bool := Frame.Window.StatusSpinner(
+    Token, cast<int>(Status), Settings.Size, Colors.Color(Settings.Color), Settings.Keep
+  );
+  P.Root<TMsg>(
+    Frame, Id, Role, '', false, if Visible then
+      Status.ToString()
+    else
+      ''
+    end if
+  );
+end procedure;
+
+end unit;

@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Feedback.State;
 
-uses Fpas.Ui.StatusButtons as Work;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
 
 // Model for the status spinner example.
 public type Model = record

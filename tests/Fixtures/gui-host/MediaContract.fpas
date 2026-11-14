@@ -3,8 +3,8 @@ unit GalleryMediaContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.Update as U,
   GuiGallery.App.View as View, GuiGallery.Pages.Social.State as Social, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.CardStacks as Cards, System as Sys, System.IO as IO;
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Containers.CardStacks as Cards, System as Sys, System.IO as IO;
 
 // Exercises each media example through native input and captures the initial page.
 // ## Parameters

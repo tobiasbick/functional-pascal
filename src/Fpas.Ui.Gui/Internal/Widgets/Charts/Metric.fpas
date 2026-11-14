@@ -1,0 +1,27 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Charts.Metric;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Charts.Metrics as M, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+
+// Draws the native metric card, trend and sparkline.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable metric identity.
+// - `Label`: Literal caption.
+// - `Reading`: Formatted value.
+// - `Settings`: Native appearance and trend.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Reading: string; Settings: M.Options);
+begin
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  Frame.Window.Metric(
+    Label, Reading, Settings.Delta, Settings.DeltaLabel, Settings.Spark, Settings.Icon,
+    Width.Kind, Width.Value, Settings.LowerIsBetter
+  );
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(Id, Label, 'metric', new Cui.CuiRectangle(), false, Value := Reading)
+  );
+end procedure;
+
+end unit;

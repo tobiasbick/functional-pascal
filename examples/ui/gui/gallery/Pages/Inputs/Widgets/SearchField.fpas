@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.SearchFields as Search;
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 
 // Builds the search box alongside the password field in the Inputs card.
 //

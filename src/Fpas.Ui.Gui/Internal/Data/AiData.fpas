@@ -1,0 +1,52 @@
+unit Fpas.Ui.Gui.Internal.Data.AiData;
+
+uses
+  Fpas.Ui.Widgets.Ai.ModelPickers as M, Fpas.Ui.Widgets.Ai.Sources as S, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  System.Collections.Generic as Lists;
+
+// Converts the list of available models to CUI descriptors.
+// ## Parameters
+// - `Values`: Model choices.
+// ## Returns
+// The descriptors in the supplied order.
+public function Models(Values: array of M.Item): array of CuiAi.CuiModelItem;
+begin
+  const Items: Lists.List<CuiAi.CuiModelItem> := new Lists.List<CuiAi.CuiModelItem>(Values.Length);
+  for Value: M.Item in Values do
+    Items.Add(new CuiAi.CuiModelItem(Value.Name, Value.Detail, Value.Badge, Value.Icon));
+  end for;
+
+  return Items.ToArray();
+end function;
+
+// Converts a source to its CUI descriptor.
+// ## Parameters
+// - `Value`: Displayed document.
+// ## Returns
+// The native card and hover preview descriptor.
+public function Source(Value: S.Item): CuiAi.CuiSourceItem;
+begin
+  return new CuiAi.CuiSourceItem(Value.Url, Value.Title, Value.Snippet);
+end function;
+
+// Publishes controls present in the native tree.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Parent identity.
+// - `Role`: Snapshot role.
+// - `Names`: Native part keys.
+// - `Visible`: Presence flags in the same order.
+// - `Enabled`: Whether the parts accept input.
+public procedure Parts<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Names: array of string; Visible: array of bool; Enabled: bool);
+begin
+  for Index: int := 0 to Names.Length - 1 do
+    if Visible[Index] then
+      P.Part<TMsg>(Frame, Id, Role, Names[Index], Names[Index], Enabled, '');
+    end if;
+  end for;
+end procedure;
+
+end unit;

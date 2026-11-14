@@ -1,0 +1,66 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.Button;
+
+uses Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws a native button and routes its activation.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current drawing context.
+// - `Id`: Stable control identity.
+// - `Label`: Literal visible label.
+// - `Message`: Proposed activation message.
+// - `Settings`: Model-owned input and appearance options.
+public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: B.Options);
+begin
+  const Enabled: bool := Settings.Enabled and State.AcceptInput;
+  const Token: string := C.Token('button', Id);
+  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Enabled);
+  const Width: float := case Settings.Width of
+    when L.Extent.Fixed(const Distance: L.Measure): S.Measure(Distance);
+    else -1.0f;
+  end case;
+  const Fill: bool := case Settings.Width of
+    when L.Extent.Fill: true;
+    else false;
+  end case;
+  const Color: G.Color? := Settings.Color;
+  const Rgba: uint := if Color = null then
+    0u
+    // CUI reserves all-zero RGBA for its default. Hidden RGB is immaterial at zero alpha.
+  elsif Color.Alpha = 0 then
+    1u
+  else
+    cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
+  end if;
+  if State.Window.Button(
+    Token, Label, cast<int>(Settings.Variant), cast<int>(Settings.ControlSize),
+    Enabled, Settings.Loading, Settings.Selected, Focus, Settings.Icon, Settings.IconRight,
+    Settings.Tooltip, Settings.Shortcut, Fill, Width, Rgba
+  )
+  then
+    State.Messages.Add(Message);
+  end if;
+
+  case Settings.Width of
+    when L.Extent.Percent(const Percent: float):
+      State.Window.SizeLast(true, 3, Percent, 0, -1, 0, 0);
+    else
+  end case;
+
+  const Value: string := if Settings.Loading then
+    'loading'
+  elsif Settings.Selected then
+    'true'
+  else
+    ''
+  end if;
+  C.Track<TMsg>(
+    State,
+    new App.Control(Id, Label, 'button', new Cui.CuiRectangle(), Enabled, Value := Value)
+  );
+end procedure;
+
+end unit;

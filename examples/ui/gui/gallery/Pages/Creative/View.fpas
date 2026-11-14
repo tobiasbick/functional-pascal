@@ -3,10 +3,10 @@ unit GuiGallery.Pages.Creative.View;
 uses
   GuiGallery.Pages.Creative.State as M, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as Colors,
-  Fpas.Ui.Charts as Chart, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Grids as Grid, Fpas.Ui.ControlWells as W,
-  Fpas.Ui.StatusTags as Tags, Fpas.Ui.RatioSliders as Ratio, Fpas.Ui.GradientSliders as Gradient,
-  Fpas.Ui.StepSliders as Step, Fpas.Ui.PaletteStrips as Palette, Fpas.Ui.AspectPickers as Aspect,
-  Fpas.Ui.OptionActions as Options, Fpas.Ui.SeedFields as Seeds, System as Sys, System.Collections.Generic as Lists;
+  Fpas.Ui.Widgets.Charts.Charts as Chart, Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Audio.ControlWells as W,
+  Fpas.Ui.Widgets.Feedback.StatusTags as Tags, Fpas.Ui.Widgets.Inputs.RatioSliders as Ratio, Fpas.Ui.Widgets.Inputs.GradientSliders as Gradient,
+  Fpas.Ui.Widgets.Inputs.StepSliders as Step, Fpas.Ui.Widgets.Pickers.PaletteStrips as Palette, Fpas.Ui.Widgets.Pickers.AspectPickers as Aspect,
+  Fpas.Ui.Widgets.Actions.OptionActions as Options, Fpas.Ui.Widgets.Inputs.SeedFields as Seeds, System as Sys, System.Collections.Generic as Lists;
 
 const TagNames: array of string := [
   'Pending',

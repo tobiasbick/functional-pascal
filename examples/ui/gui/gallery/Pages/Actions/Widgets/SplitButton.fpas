@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Actions.State as State,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.SplitButtons as Split,
+  Fpas.Ui.Widgets.Actions.SplitButtons as Split,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,

@@ -1,3 +1,4 @@
+using Fpas.Ui.Gui.Cui.Widgets.Files;
 using Fpas.Tests.Support;
 
 namespace Fpas.Ui.Gui.Cui.Tests;

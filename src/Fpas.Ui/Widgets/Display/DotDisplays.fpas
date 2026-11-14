@@ -1,0 +1,38 @@
+unit Fpas.Ui.Widgets.Display.DotDisplays;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Charts.Charts as C;
+
+// Native dot-matrix display settings.
+public type Options = record
+  // Distance between dots in logical points, or zero for the default.
+  public Pitch: float := 0.0F;
+  // Color of lit dots.
+  public Color: C.Color := C.Color.Automatic;
+  // Use the theme accent.
+  public Accent: bool := false;
+  // Show dim dots.
+  public Dim: bool := true;
+  // Scroll a line wider than its viewport.
+  public Marquee: bool := false;
+  // Alignment in a wider viewport.
+  public Align: T.Alignment := T.Alignment.Left;
+  // Native width.
+  public Width: L.Extent := L.Extent.Content;
+end record;
+
+// Draws the native CUI dot display.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Literal text to display.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function DotDisplay<TMsg>(Id: string; Text: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DotDisplay(Id, Text, Settings ?? new Options());
+end function;
+
+end unit;

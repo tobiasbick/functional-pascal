@@ -1,0 +1,59 @@
+unit Fpas.Ui.Widgets.Actions.SegmentedControls;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B;
+
+// One positional choice. Array order defines identity, matching native CUI.
+public type Item = record
+  // Literal caption and accessible name; required even for icon-only choices.
+  public Label: string;
+  // Optional CUI icon-font glyph.
+  public Icon: string := '';
+  // Optional cell-based equivalent of Icon; empty keeps the label in the TUI.
+  public TerminalIcon: string := '';
+  // Hide the GUI caption; requires an icon. TUI keeps the readable label.
+  public IconOnly: bool := false;
+end record;
+
+// Native segment sizing and input permission, shared by both hosts.
+public type Options = record
+  // Medium, small or large, matching CUI's control sizes.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Fill the available horizontal allocation with equally sized choices.
+  public FullWidth: bool := false;
+  // Whether the selector accepts pointer and keyboard input.
+  public Enabled: bool := true;
+end record;
+
+// Creates a controlled, single-selection CUI segment group.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: One through 32 choices, in stable positional order.
+// - `Selected`: Model-owned index into Items.
+// - `OnChange`: Maps a different user choice to an application message.
+// - `Settings`: Native size, horizontal fill and input permission.
+// ## Returns
+// A selector which proposes changes without changing the model itself.
+public function SegmentedControl<TMsg>(Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Segments(Id, Items, Selected, OnChange, Settings ?? new Options());
+end function;
+
+// Gets a positional segment's stable identity for application focus requests.
+//
+// ## Parameters
+// - `Id`: Group identity.
+// - `Index`: Nonnegative position of the choice.
+// ## Returns
+// The group ID followed by / and the zero-based index.
+public function ItemId(Id: string; Index: int): string;
+requires Id <> '';
+requires Index >= 0;
+begin
+  return Id + '/' + Index.ToString();
+end function;
+
+end unit;

@@ -1,0 +1,21 @@
+unit Fpas.Ui.Gui.Internal.Data.MotionData;
+
+uses
+  Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors,
+  Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion;
+
+// Converts common animated-text settings.
+// ## Parameters
+// - `Value`: Validated effect options.
+// ## Returns
+// Native layout and effect options.
+public function Options(Value: M.TextOptions): CuiMotion.CuiMotionText;
+begin
+  const Width: S.NativeExtent := S.Extent(Value.Width);
+  return new CuiMotion.CuiMotionText(
+    cast<int>(Value.Font), Width.Kind, Width.Value, Colors.Color(Value.Color),
+    Value.Size, Value.Speed, Value.Delay, Value.NoWrap, Value.Caret
+  );
+end function;
+
+end unit;

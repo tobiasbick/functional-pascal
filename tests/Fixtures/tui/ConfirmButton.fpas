@@ -1,9 +1,9 @@
 program ConfirmButtonContract;
 
 uses
-  Fpas.Ui.ConfirmButtons as Confirm, Fpas.Ui.Buttons as Buttons, Fpas.Ui.Styles as Styles,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Sheets as Sheets,
-  Fpas.Ui.Tui.Internal.Widgets.ConfirmButton as Tracking,
+  Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm, Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Styles as Styles,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
+  Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as Tracking,
   Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as Keys,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.Console as Console,
   System.Diagnostics as Diagnostics, System.Threading as Threads;

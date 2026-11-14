@@ -1,0 +1,60 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Containers.Card;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Containers.Cards as K, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, System as Sys;
+
+// Draws a native card and presents its children inside it.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable card identity.
+// - `Children`: Card contents.
+// - `Settings`: Presentation and input settings.
+// - `Activate`: Optional card activation message factory.
+// - `Visit`: Presents one child in the layout.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Children: array of E.Element<TMsg>; Settings: K.Options; Activate: Sys.Func<TMsg>?; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Token: string := C.Token('card', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Activate <> null;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Height: Size.NativeExtent := Size.Extent(Settings.Height);
+  const Clicked: bool := Frame.Window.BeginCard(
+    Token,
+    Width.Kind,
+    Width.Value,
+    Height.Kind,
+    Height.Value,
+    Settings.MinimumWidth,
+    Settings.MaximumWidth,
+    Settings.Padding,
+    Settings.PaddingX,
+    Settings.PaddingY,
+    Settings.Gap,
+    Settings.Horizontal,
+    cast<int>(Settings.Align),
+    Settings.Wrap,
+    Settings.Muted,
+    Settings.Selected,
+    Activate <>
+    null,
+    Enabled,
+    Focus
+  );
+  for Child: E.Element<TMsg> in Children do
+    Visit(Child, Frame, Settings.Horizontal, Settings.Align);
+  end for;
+
+  Frame.Window.EndCard();
+  C.Track<TMsg>(Frame, new App.Control(Id, '', 'card', new Cui.CuiRectangle(), Enabled));
+
+  if Enabled and Clicked then
+    case Activate of
+      when is Sys.Func<TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke());
+      else
+    end case;
+  end if;
+end procedure;
+
+end unit;

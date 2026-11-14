@@ -1,0 +1,21 @@
+unit Fpas.Ui.Widgets.Display.Links;
+
+uses Fpas.Ui.Elements as E;
+
+// Builds a native inline link that proposes an application action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable link identity.
+// - `Label`: Literal caption.
+// - `OnActivate`: Message proposed on pointer or keyboard activation.
+// - `Enabled`: Whether the link accepts input.
+// ## Returns
+// The graphical link.
+public function Link<TMsg>(Id: string; Label: string; OnActivate: TMsg; Enabled: bool := true): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.LinkAction(Id, Label, OnActivate, Enabled);
+end function;
+
+end unit;

@@ -1,0 +1,61 @@
+unit Fpas.Ui.Widgets.Developer.ProblemsPanels;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native Problems widget.
+public type Diagnostic = record
+  // Severity supplied to CUI.
+  public Severity: int;
+  // Message supplied to CUI.
+  public Message: string;
+  // File supplied to CUI.
+  public File: string?;
+  // Line supplied to CUI.
+  public Line: int;
+  // Column supplied to CUI.
+  public Column: int;
+  // Source supplied to CUI.
+  public Source: string?;
+  // Code supplied to CUI.
+  public Code: string?;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selected: int;
+  // Activated zero-based index, or minus one.
+  public Activated: int;
+  // Shown supplied to CUI.
+  public Shown: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Hide Toolbar supplied to CUI.
+  public HideToolbar: bool := false;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native Problems widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Diagnostics`: Model-owned diagnostics data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Problems<TMsg>(Id: string; Diagnostics: array of Diagnostic; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Problems(Id, Diagnostics, Changed, Settings ?? new Options());
+end function;
+
+end unit;

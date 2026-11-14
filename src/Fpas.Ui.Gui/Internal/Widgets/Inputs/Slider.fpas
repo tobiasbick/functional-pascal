@@ -1,0 +1,61 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Slider;
+
+uses
+  Fpas.Ui.Widgets.Inputs.Sliders as S, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Globalization as Culture;
+
+// Presents CUI's slider and forwards only input proposals.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Model-owned value.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `OnChange`: Maps an adjusted value to a message.
+// - `Settings`: Increment, value display and input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
+  OnChange: function(float): TMsg; Settings: S.Options
+);
+begin
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('slider', Id);
+  var Proposed: float := Value;
+  if Frame.Window.Slider(
+    Token,
+    Label,
+    Value,
+    Minimum,
+    Maximum,
+    Settings.Step,
+    Settings.ShowValue,
+    Settings.DecimalPlaces,
+    Settings.Percent,
+    Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    if Frame.PaintingClosed then
+      null
+    else
+      Token
+    end if,
+    out Proposed
+  )
+  then
+    Frame.Messages.Add(OnChange(Proposed));
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Label, 'slider', new Cui.CuiRectangle(), Enabled,
+        Value := Value.ToString(Culture.CultureInfo.InvariantCulture)
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

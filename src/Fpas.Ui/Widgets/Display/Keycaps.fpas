@@ -1,0 +1,17 @@
+unit Fpas.Ui.Widgets.Display.Keycaps;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a native CUI keycap element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Keys`: Space-separated key labels, for example Ctrl Shift P.
+// ## Returns
+// A graphical element.
+public function Keycap<TMsg>(Keys: string): E.Element<TMsg>;
+begin
+  return E.Element<TMsg>.Keycap(Keys);
+end function;
+
+end unit;

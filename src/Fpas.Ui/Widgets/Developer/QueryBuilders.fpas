@@ -1,0 +1,68 @@
+unit Fpas.Ui.Widgets.Developer.QueryBuilders;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native QueryBuilder widget.
+public type Field = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Kind supplied to CUI.
+  public Kind: int;
+  // Choices supplied to CUI.
+  public Choices: array of string;
+end record;
+
+// Data for the native QueryBuilder widget.
+public type Rule = record
+  // Nesting depth, starting at zero.
+  public Depth: int;
+  // Group supplied to CUI.
+  public Group: bool;
+  // Any supplied to CUI.
+  public Any: bool;
+  // Field supplied to CUI.
+  public Field: int;
+  // Operator supplied to CUI.
+  public Operator: int;
+  // Value supplied to CUI.
+  public Value: string;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Rules supplied to CUI.
+  public Rules: array of Rule;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Maximum entries or UTF-8 bytes, as applicable.
+  public Capacity: int := 32;
+  // Max Depth supplied to CUI.
+  public MaxDepth: int := 0;
+  // Disallow edits.
+  public ReadOnly: bool := false;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native QueryBuilder widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Fields`: Model-owned fields data.
+// - `Rules`: Model-owned rules data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function QueryBuilder<TMsg>(Id: string; Fields: array of Field; Rules: array of Rule; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.QueryBuilder(Id, Fields, Rules, Changed, Settings ?? new Options());
+end function;
+
+end unit;

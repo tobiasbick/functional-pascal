@@ -1,0 +1,35 @@
+unit Fpas.Ui.Widgets.Charts.Waffles;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+
+// Native waffle dimensions and presentation.
+public type Options = record
+  // Logical square size; zero uses CUI's default.
+  public CellSize: float := 0.0F;
+  // Squares per row, from one through 60.
+  public Columns: int := 10;
+  // Rows of squares, from one through 60.
+  public Rows: int := 10;
+  // Safe numeric formatting; null uses native automatic formatting.
+  public Format: C.ValueFormat? := null;
+  // Allow native pointer interaction.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native waffle with native layout, hover and animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional clicked input index callback; hover remains native.
+// ## Returns
+// A graphical element.
+public function Waffle<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Waffle(Id, Items, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

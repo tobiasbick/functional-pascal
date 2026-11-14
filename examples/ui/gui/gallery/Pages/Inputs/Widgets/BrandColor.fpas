@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Inputs.Widgets.BrandColor;
 
 uses
   GuiGallery.Pages.Inputs.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.ColorPickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+  Fpas.Ui.Widgets.Pickers.ColorPickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // Shows the original Brand color label and swatch.
 // ## Parameters

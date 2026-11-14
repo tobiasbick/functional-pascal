@@ -1,0 +1,30 @@
+unit Fpas.Ui.Widgets.Containers.Grids;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native CUI grid settings.
+public type Options = record
+  // Maximum number of columns.
+  public Columns: int := 1;
+  // Minimum logical column width before CUI wraps to fewer columns. Zero keeps the column count fixed.
+  public MinimumColumnWidth: float := 0.0F;
+  // Spacing between cells.
+  public Gap: L.Spacing := L.Spacing.None;
+  // Inset on all edges.
+  public Padding: L.Spacing := L.Spacing.None;
+end record;
+
+// Arranges children in equal-width columns and lets CUI resolve row heights.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Settings`: Native column and spacing settings.
+// - `Children`: Elements in reading order.
+// ## Returns
+// The graphical element.
+public function Grid<TMsg>(Settings: Options; params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+begin
+  return E.Element<TMsg>.Grid(Settings, Children);
+end function;
+
+end unit;

@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Selection.State;
 
 uses
-  Fpas.Ui.RangeSliders as R,
+  Fpas.Ui.Widgets.Inputs.RangeSliders as R,
   GuiGallery.Shared.State as Demo;
 
 // State owned by this gallery feature.

@@ -3,7 +3,7 @@ unit GalleryRulerHistogramContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App;
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App;
 
 // Exercises the ruler tapes and price interval in the original Pickers page.
 // ## Parameters

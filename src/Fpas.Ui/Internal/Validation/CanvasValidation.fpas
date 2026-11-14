@@ -1,0 +1,305 @@
+unit Fpas.Ui.Internal.Validation.CanvasValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Validation.Rules as R,
+  Fpas.Ui.Internal.Validation.MediaRules as MediaRules, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Internal.Validation.ChartRules as C,
+  Fpas.Ui.Widgets.Canvas.LiveCursors as Live, Fpas.Ui.Widgets.Canvas.FormatBars as Format, Fpas.Ui.Widgets.Canvas.CanvasControls as Rail,
+  Fpas.Ui.Widgets.Canvas.PresencePills as Presence, Fpas.Ui.Widgets.Canvas.SelectionRings as Ring, Fpas.Ui.Widgets.Canvas.ResultCards as Card,
+  Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes,
+  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as Lists;
+
+procedure Text(Value: string?; At: string);
+begin
+  R.CheckText(Value ?? '', At);
+end procedure;
+
+procedure Finite(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) then
+    R.Reject(At, 'Canvas values must be finite.');
+  end if;
+end procedure;
+
+procedure View(Value: Nodes.View; At: string);
+begin
+  Finite(Value.X, At);
+  Finite(Value.Y, At);
+  C.Distance(Value.Zoom, At);
+end procedure;
+
+procedure People(Items: array of Live.Person; At: string);
+begin
+  const Names: Lists.HashSet<string> := new Lists.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: Live.Person in Items do
+    Text(Item.Name, At);
+    Text(Item.Says, At);
+    Finite(Item.X, At);
+    Finite(Item.Y, At);
+    if Item.Name = '' or not Names.Add(Item.Name) then
+      R.Reject(At, 'Collaborator names must be nonempty and unique.');
+    end if;
+  end for;
+end procedure;
+
+procedure Choice(Count: int; Index: int; At: string);
+begin
+  if Count <= 0 or Index < 0 or Index >= Count then
+    R.Reject(At, 'The selected index must identify an available option.');
+  end if;
+end procedure;
+
+procedure ToolbarItems(Items: array of Tools.Item; At: string; Grouped: bool);
+begin
+  for Item: Tools.Item in Items do
+    case Item of
+      when Tools.Item.Button(
+        const Button: Tools.Button
+      ), Tools.Item.Primary(const Button: Tools.Button):
+        Text(Button.Icon, At);
+        Text(Button.Label, At);
+        Text(Button.Tooltip, At);
+        Text(Button.Shortcut, At);
+      when Tools.Item.Radio(
+        const Icons: array of string,
+        const Labels: array of string,
+        const Index: int
+      ):
+        Choice(Icons.Length, Index, At);
+        if Icons.Length <> Labels.Length or Icons.Length > 32 then
+          R.Reject(At, 'A toolbar radio needs at most 32 icons and one label per icon.');
+        end if;
+
+        for Icon: string in Icons do
+          Text(Icon, At);
+        end for;
+
+        for Label: string in Labels do
+          Text(Label, At);
+        end for;
+      when Tools.Item.Cycle(const Labels: array of string, const Index: int, const Tooltip: string):
+        Choice(Labels.Length, Index, At);
+        Text(Tooltip, At);
+        for Label: string in Labels do
+          Text(Label, At);
+        end for;
+      when Tools.Item.Group(const Children: array of Tools.Item):
+        if Grouped then
+          R.Reject(At, 'Native toolbar groups cannot nest.');
+        end if;
+
+        ToolbarItems(Children, At, true);
+      else
+    end case;
+  end for;
+end procedure;
+
+// Checks the public values and children of a canvas widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Element`: Widget to validate.
+// - `Location`: Parent diagnostic path.
+// - `Profile`: Target capabilities.
+// - `Identify`: Registers the widget ID.
+// - `Visit`: Checks embedded content.
+public procedure Check<TMsg>(Element: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
+  function At(Id: string; Role: string): string;
+  begin
+    const Path: string := Identify(Id, Location + '/' + Role);
+    R.RequireProfile(Profile, V.Target.Graphical, Path);
+    return Path;
+  end function;
+begin
+  case Element of
+    when E.Element.FormatBar(
+      const Id: string,
+      const Value: Format.Value,
+      _,
+      const Settings: Format.Options
+    ):
+      const Path: string := At(Id, 'format-bar');
+      Choice(
+        if Settings.Styles.Length = 0 then
+          4
+        else
+          Settings.Styles.Length
+        end if, Value.Style, Path
+      );
+      Choice(4, Value.Alignment, Path);
+      Choice(4, Value.List, Path);
+      C.Distance(Value.Size, Path);
+      for Style: Format.Style in Settings.Styles do
+        Text(Style.Name, Path);
+        C.Distance(Style.Size, Path);
+        C.Distance(Style.PreviewSize, Path);
+      end for;
+
+      Text(Settings.Footer, Path);
+      Text(Settings.FooterKeys, Path);
+      Text(Settings.DeleteQuestion, Path);
+    when E.Element.LiveCursors(
+      const Id: string,
+      const Users: array of Live.Person,
+      const Child: E.Element<TMsg>,
+      const Settings: Live.Options
+    ):
+      const Path: string := At(Id, 'live-cursors');
+      People(Users, Path);
+      case Settings.View of
+        when is Nodes.View as Transform:
+          View(Transform, Path);
+        else
+      end case;
+
+      Visit(Child, Path);
+    when E.Element.PresencePill(
+      const Id: string,
+      const Users: array of Live.Person,
+      const Settings: Presence.Options
+    ):
+      const Path: string := At(Id, 'presence-pill');
+      People(Users, Path);
+      C.Distance(Settings.Size, Path);
+      if Settings.MaxVisible < 0 then
+        R.Reject(Path, 'The avatar limit must be nonnegative.');
+      end if;
+    when E.Element.SelectionRing(
+      const Id: string,
+      const Child: E.Element<TMsg>,
+      const Settings: Ring.Options
+    ):
+      const Path: string := At(Id, 'selection-ring');
+      Text(Settings.Name, Path);
+      C.Distance(Settings.Radius, Path);
+      Visit(Child, Path);
+    when E.Element.CanvasControls(
+      const Id: string,
+      const Transform: Nodes.View,
+      const Toggles: array of Rail.Toggle,
+      _,
+      const Child: E.Element<TMsg>,
+      const Settings: Rail.Options
+    ):
+      const Path: string := At(Id, 'canvas-controls');
+      View(Transform, Path);
+      var Last: float := 0.0F;
+      for Step: float in Settings.Steps do
+        Finite(Step, Path);
+        if Step <= Last then
+          R.Reject(Path, 'Zoom presets must be positive and increasing.');
+        end if;
+
+        Last := Step;
+      end for;
+
+      for Toggle: Rail.Toggle in Toggles do
+        Text(Toggle.Icon, Path);
+        Text(Toggle.Label, Path);
+      end for;
+
+      case Settings.Content of
+        when is Rail.Bounds as Bounds:
+          Finite(Bounds.X, Path);
+          Finite(Bounds.Y, Path);
+          C.Distance(Bounds.Width, Path);
+          C.Distance(Bounds.Height, Path);
+        else
+      end case;
+
+      Visit(Child, Path);
+    when E.Element.ResultCard(
+      const Id: string,
+      const Image: Media.Source,
+      const Title: string,
+      _,
+      const Settings: Card.Options
+    ):
+      const Path: string := At(Id, 'result-card');
+      MediaRules.Image(Image, Path);
+      Text(Title, Path);
+      Text(Settings.Caption, Path);
+      Text(Settings.Badge, Path);
+      R.CheckExtent(Settings.Width, Profile, Path);
+      C.Distance(Settings.Aspect, Path);
+    when E.Element.SelectionBar(
+      const Id: string,
+      _,
+      const Actions: array of Bulk.Action,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ):
+      const Path: string := At(Id, 'selection-bar');
+      for Action: Bulk.Action in Actions do
+        Text(Action.Icon, Path);
+        Text(Action.Label, Path);
+      end for;
+
+      Visit(Child, Path);
+    when E.Element.Toolbar(
+      const Id: string,
+      const Items: array of Tools.Item,
+      _,
+      const Settings: Tools.Options
+    ):
+      const Path: string := At(Id, 'toolbar');
+      Choice(3, Settings.Style, Path);
+      ToolbarItems(Items, Path, false);
+    when E.Element.NodeEditor(
+      const Id: string,
+      const Transform: Nodes.View,
+      const Items: array of Nodes.Node<TMsg>,
+      const Links: array of Nodes.Link,
+      _,
+      const Settings: Nodes.Options
+    ):
+      const Path: string := At(Id, 'node-editor');
+      View(Transform, Path);
+      C.Distance(Settings.MinimumZoom, Path);
+      C.Distance(Settings.MaximumZoom, Path);
+      R.CheckExtent(Settings.Width, Profile, Path);
+      R.CheckExtent(Settings.Height, Profile, Path);
+      const Ids: Lists.HashSet<int> := new Lists.HashSet<int>();
+      const Pins: Lists.Dictionary<int, Nodes.Pin> := new Lists.Dictionary<int, Nodes.Pin>();
+      for Item: Nodes.Node<TMsg> in Items do
+        if not Ids.Add(Item.Id) then
+          R.Reject(Path, 'Node IDs must be unique.');
+        end if;
+
+        Text(Item.Title, Path);
+        Text(Item.Icon, Path);
+        Finite(Item.X, Path);
+        Finite(Item.Y, Path);
+        C.Distance(Item.Width, Path);
+        for Pin: Nodes.Pin in Item.Pins do
+          Text(Pin.Label, Path);
+          if not Pins.TryAdd(Pin.Id, Pin) then
+            R.Reject(Path, 'Pin IDs must be unique.');
+          end if;
+        end for;
+
+        case Item.Body of
+          when is E.Element<TMsg> as Body:
+            Visit(Body, Path);
+          else
+        end case;
+      end for;
+
+      Ids.Clear();
+      for Link: Nodes.Link in Links do
+        if not Ids.Add(
+          Link.Id
+        ) or not Pins.ContainsKey(Link.FromPin) or not Pins.ContainsKey(Link.ToPin)
+        then
+          R.Reject(Path, 'Links need unique IDs and existing pins.');
+        end if;
+
+        if not Pins[Link.FromPin].Output or Pins[Link.ToPin].Output then
+          R.Reject(Path, 'A link must connect an output to an input.');
+        end if;
+      end for;
+    else
+  end case;
+end procedure;
+
+end unit;

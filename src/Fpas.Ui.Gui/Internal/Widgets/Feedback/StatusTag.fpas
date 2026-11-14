@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusTag;
+
+uses
+  Fpas.Ui.Widgets.Feedback.StatusTags as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, System as Sys;
+
+const DefaultLabels: array of string := [
+  'Pending',
+  'In progress',
+  'Submitted',
+  'In review',
+  'Success',
+  'Failed',
+  'Expired',
+  ''
+];
+
+// Presents the native status tag.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned value.
+// - `Remove`: Optional removal message factory.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Remove: Sys.Func<TMsg>?; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Remove <> null;
+  const Role: string := 'status-tag';
+  const Token: string := C.Token(Role, Id);
+  const Flags: int := W.Bits(Settings.Small, 1) + W.Bits(Remove <> null, 2) + W.Bits(Enabled, 4);
+  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, [''], [Enabled], 0);
+  const Result: int := Frame.Window.StatusTag(
+    Token, Current.Label, cast<int>(Current.Preset),
+    Settings.Icon, cast<int>(Settings.Tone), Flags, Focus, null
+  );
+  if Result <> 0 then
+    case Remove of
+      when is Sys.Func<TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke());
+      else
+    end case;
+  end if;
+  const Caption: string := if Current.Label <> '' then
+    Current.Label
+  else
+    DefaultLabels[cast<int>(Current.Preset)]
+  end if;
+  W.Root<TMsg>(Frame, Id, Role, Caption, Enabled, '');
+end procedure;
+
+end unit;

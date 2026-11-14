@@ -1,0 +1,93 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.SplitButton;
+
+uses
+  Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Actions as CuiActions,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Collections.Generic as Lists;
+
+// Draws CUI's split control and forwards the chosen action.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current GUI frame.
+// - `Id`: Main action identity.
+// - `Label`: Main action caption.
+// - `Message`: Message proposed by the main half.
+// - `Items`: Keyed menu actions.
+// - `Settings`: Shared appearance and input options.
+public procedure Draw<TMsg>(
+  State: C.State<TMsg>; Id: string; Label: string; Message: TMsg;
+  Items: array of Split.Item<TMsg>; Settings: Split.Options
+);
+begin
+  const Enabled: bool := Settings.Enabled and State.AcceptInput;
+  const Menu: string := Split.MenuId(Id);
+  const Token: string := C.Token('split-button', Id);
+  const MenuToken: string := C.Token('split-menu', Menu);
+  const Focus: int := if C.WantsFocus<TMsg>(State, Id, Token, Enabled) then
+    1
+  elsif C.WantsFocus<TMsg>(State, Menu, MenuToken, Enabled) then
+    2
+  else
+    0
+  end if;
+  const Labels: Lists.List<string> := new Lists.List<string>();
+  const Icons: Lists.List<string> := new Lists.List<string>();
+  const Tokens: Lists.List<string> := new Lists.List<string>();
+  Tokens.Add(Token);
+  Tokens.Add(MenuToken);
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: Split.Item<TMsg> := Items[Index];
+    Labels.Add(Item.Label);
+    Icons.Add(Item.Icon);
+    Tokens.Add(C.Token('menu-item', Split.ItemId(Id, Item.Key)));
+  end for;
+
+  const Result: CuiActions.CuiSplitButtonResult := State.Window.SplitButton(
+    Token, Label, Settings.Icon, Labels.ToArray(), Icons.ToArray(),
+    if State.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if,
+    cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled, Focus
+  );
+  if Result.Choice = 0 then
+    State.Messages.Add(Message);
+  elsif Result.Choice > 0 then
+    State.Messages.Add(Items[Result.Choice - 1].Message);
+  end if;
+
+  if State.PaintingClosed then
+    return;
+  end if;
+
+  State.Controls.Add(new App.Control(Id, Label, 'split-button', new Cui.CuiRectangle(), Enabled));
+  State.Controls.Add(
+    new App.Control(
+      Menu, 'More options', 'split-menu', new Cui.CuiRectangle(), Enabled,
+      Value := if Result.Open then
+        'true'
+      else
+        'false'
+      end if
+    )
+  );
+  if Result.Open then
+    for Index: int := 0 to Items.Length - 1 do
+      const Item: Split.Item<TMsg> := Items[Index];
+      State.Controls.Add(
+        new App.Control(
+          Split.ItemId(Id, Item.Key), Item.Label, 'menu-item', new Cui.CuiRectangle(), Enabled,
+          Value := if Index = Result.Highlighted then
+            'true'
+          else
+            'false'
+          end if
+        )
+      );
+    end for;
+  end if;
+end procedure;
+
+end unit;

@@ -1,0 +1,55 @@
+unit Fpas.Ui.Widgets.Actions.StatusButtons;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+
+// Model-owned work states in CUI's native order.
+public type Status = enum: byte
+  // The action may be started.
+  Idle;
+  // Work is in progress; activation is suppressed.
+  Busy;
+  // Work completed successfully; activation remains suppressed.
+  Success;
+  // Work failed; activation remains suppressed.
+  Error;
+end enum;
+
+// Presentation and input options for an action with inline work feedback.
+public type Options = record
+  // Busy caption; null appends an ellipsis to the resting caption.
+  public BusyLabel: string? := null;
+  // Caption shown on success.
+  public SuccessLabel: string := 'Done';
+  // Caption shown on failure.
+  public ErrorLabel: string := 'Failed';
+  // Optional native glyph before the resting caption.
+  public Icon: string := '';
+  // Terminal equivalent of the resting glyph; empty omits it.
+  public TerminalIcon: string := '';
+  // Resting appearance. Default resolves to primary.
+  public Variant: S.ButtonVariant := S.ButtonVariant.Primary;
+  // Requested control size.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Whether the control accepts focus and idle activation.
+  public Enabled: bool := true;
+end record;
+
+// Builds a button whose work feedback is controlled entirely by the model.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity independent of state and captions.
+// - `Label`: Literal resting caption.
+// - `State`: Current model-owned work state.
+// - `Message`: Proposed only when activated while idle.
+// - `Settings`: Feedback captions, appearance and input permission.
+// ## Returns
+// A portable status button. The application owns every state transition and reset.
+public function StatusButton<TMsg>(Id: string; Label: string; State: Status; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.StatusAction(Id, Label, State, Message, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,0 +1,49 @@
+unit Fpas.Ui.Widgets.Canvas.LiveCursors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+
+// A collaborator displayed by the cursor overlay or presence pill.
+public type Person = record
+  // Stable collaborator name.
+  public Name: string;
+  // Fallback theme tone.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Horizontal position from the canvas origin.
+  public X: float := 0.0F;
+  // Vertical position from the canvas origin.
+  public Y: float := 0.0F;
+  // Optional cursor speech bubble.
+  public Says: string? := null;
+  // Whether to show a speaking indicator.
+  public Speaking: bool := false;
+  // Whether the cursor is hidden and the avatar dimmed.
+  public Away: bool := false;
+  // Explicit color, or null to use the tone.
+  public Color: G.Color? := null;
+end record;
+
+// Cursor overlay settings.
+public type Options = record
+  // Canvas transform, or null for component coordinates.
+  public View: N.View? := null;
+  // Moves cursors directly to their new positions.
+  public NoGlide: bool := false;
+end record;
+
+// Builds the native LiveCursors element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `People`: Current collaborators.
+// - `Child`: Component under the cursors.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function LiveCursors<TMsg>(Id: string; People: array of Person; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.LiveCursors(Id, People, Child, Settings ?? new Options());
+end function;
+
+end unit;

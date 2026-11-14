@@ -1,6 +1,6 @@
 unit Gallery.HoldButton;
 
-uses Gallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.HoldButtons as Holds, System as Sys;
+uses Gallery.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, System as Sys;
 
 // Shows the CUI hold-to-confirm demo with a harmless confirmation counter.
 //

@@ -1,9 +1,9 @@
 unit GuiGallery.Pages.Code.State;
 
 uses
-  GuiGallery.Pages.Code.Samples as Sample, Fpas.Ui.Markdowns as Markdown,
-  Fpas.Ui.CodeEditors as Editor, Fpas.Ui.DiffViews as Diff,
-  Fpas.Ui.HexViews as Hex, Fpas.Ui.LogConsoles as Log;
+  GuiGallery.Pages.Code.Samples as Sample, Fpas.Ui.Widgets.Display.Markdowns as Markdown,
+  Fpas.Ui.Widgets.Editors.CodeEditors as Editor, Fpas.Ui.Widgets.Developer.DiffViews as Diff,
+  Fpas.Ui.Widgets.Developer.HexViews as Hex, Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 
 // State for the editable examples on Code.
 public type Model = record

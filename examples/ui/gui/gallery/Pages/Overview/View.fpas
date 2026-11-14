@@ -3,11 +3,11 @@ unit GuiGallery.Pages.Overview.View;
 uses
   GuiGallery.Pages.Overview.State as State,
   GuiGallery.Pages.Overview.Widgets.Workspace as Workspace, GuiGallery.Pages.Overview.Widgets.Team as Team,
-  GuiGallery.Shared.State as Demo, Fpas.Ui.Grids as Grid, Fpas.Ui.Metrics as Metrics,
+  GuiGallery.Shared.State as Demo, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Charts.Metrics as Metrics,
   Fpas.Ui.Composition as U, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
   GuiGallery.Shared.Sections as G,
   System as Sys;
 

@@ -7,7 +7,7 @@ uses
   GuiGallery.App.View as View,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Toasts as Toasts,
   System as Sys,
   System.Diagnostics as Diagnostics,

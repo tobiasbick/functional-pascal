@@ -1,0 +1,71 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.HexView;
+
+uses
+  Fpas.Ui.Widgets.Developer.HexViews as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
+  Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
+
+// Renders the native HexView and dispatches its proposals.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Data`: Immutable byte buffer.
+// - `Selected`: Current selection and cursor.
+// - `Changed`: Maps selection and editing proposals.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Data: array of byte; Selected: D.Selection; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'hex-view';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Marks: Lists.List<CuiDeveloper.CuiHexMark> := new Lists.List<CuiDeveloper.CuiHexMark>(
+    Settings.Marks.Length
+  );
+  for Mark: D.Mark in Settings.Marks do
+
+    Marks.Add(
+      new CuiDeveloper.CuiHexMark(Mark.Start, Mark.Length, cast<int>(Mark.Tone), Mark.Label)
+    );
+  end for;
+  const Result: CuiDeveloper.CuiHexViewEvent? := Frame.Window.HexView(
+    Token,
+    Data,
+    Selected.Start,
+    Selected.Length,
+    Selected.Cursor,
+    Marks.ToArray(),
+    Settings.BaseAddress,
+    Settings.GoTo,
+    Settings.BytesPerRow,
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Settings.Size,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Editable, 2) or P.Bits(not Settings.ShowAscii, 4)
+    or P.Bits(not Settings.ShowHeader, 8) or P.Bits(Focus, 16)
+  );
+  if Enabled then
+    case Result of
+      when is CuiDeveloper.CuiHexViewEvent as Event:
+        Frame.Messages.Add(
+          Changed(
+            new D.Event(
+              new D.Selection(Event.Start, Event.Length, Event.Cursor),
+              Event.Data,
+              Event.EditOffset,
+              Event.EditLength
+            )
+          )
+        );
+      else
+    end case;
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

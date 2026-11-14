@@ -1,0 +1,31 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Counter;
+
+uses Fpas.Ui.Widgets.Feedback.Counters as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, System as Sys, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+
+// Draws the native rolling numeric counter.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Value`: Current numeric value.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: double; Settings: W.Options);
+begin
+  const Role: string := 'counter';
+  const Token: string := C.Token(Role, Id);
+  Frame.Window.Counter(
+    Token, Value, Colors.Format(Settings.Format), Settings.Size,
+    Colors.Color(Settings.Color), Settings.GroupThousands
+  );
+  P.Root<TMsg>(
+    Frame,
+    Id,
+    Role,
+    '',
+    false,
+    Value.ToString(Sys.Globalization.CultureInfo.InvariantCulture)
+  );
+end procedure;
+
+end unit;

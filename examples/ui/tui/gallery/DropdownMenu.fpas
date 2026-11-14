@@ -1,6 +1,6 @@
 unit Gallery.DropdownMenu;
 
-uses Gallery.State as State, Fpas.Ui.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+uses Gallery.State as State, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
 function Icon(Code: int): string;
 begin

@@ -1,7 +1,7 @@
 unit Gallery.ConfirmButton;
 
 uses
-  Gallery.State as State, Fpas.Ui.ConfirmButtons as Confirm, Fpas.Ui.Elements as E,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 // Shows CUI's two-step destructive action with a harmless confirmation counter.

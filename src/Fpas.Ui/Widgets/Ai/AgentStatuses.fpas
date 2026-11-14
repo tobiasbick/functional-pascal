@@ -1,0 +1,30 @@
+unit Fpas.Ui.Widgets.Ai.AgentStatuses;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Current execution status.
+  public Status: TaskStates.Status := TaskStates.Status.Pending;
+  // Elapsed seconds.
+  public Seconds: float := 0.0F;
+  // Optional native icon.
+  public Icon: string := '';
+end record;
+
+// Builds the native AgentStatus widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Label`: Status label.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function AgentStatus<TMsg>(Id: string; Label: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.AgentStatus(Id, Label, Settings ?? new Options());
+end function;
+
+end unit;

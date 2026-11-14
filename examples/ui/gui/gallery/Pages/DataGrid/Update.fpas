@@ -2,7 +2,7 @@ unit GuiGallery.Pages.DataGrid.Update;
 
 uses
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
-  Fpas.Ui.DataGrids as D, Fpas.Ui.FilterBars as F, Fpas.Ui.Tables as T, Fpas.Ui.TreeTables as Tree,
+  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as Tree,
   System.Collections.Generic as Lists;
 
 function Grid(State: S.Model; Value: D.Value): S.Model;

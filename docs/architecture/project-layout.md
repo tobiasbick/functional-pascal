@@ -107,15 +107,28 @@ src/
     Fpas.Core.csproj
   Fpas.Ui.Gui.Cui/
     Build/
+    Hosting/
     Interop/
-    Text/
+    Layout/
+    Widgets/<Topic>/
     native/
+      host/
+      widgets/<topic>/
   Fpas.Ui.Gui/
     Application.fpas
     Internal/
+      Data/
+      Hosting/
+      Input/
+      Layout/
+      Presentation/
+      Widgets/<Topic>/
   Fpas.Ui.Mvu/
   Fpas.Ui/
+    Internal/
+    Widgets/<Topic>/
   Fpas.Ui.Tui/
+    Internal/Widgets/<Topic>/
 sdk/
   Fpas.NET.Sdk/
     Fpas.NET.Sdk.csproj

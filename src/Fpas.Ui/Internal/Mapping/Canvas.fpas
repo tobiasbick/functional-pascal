@@ -1,15 +1,15 @@
 unit Fpas.Ui.Internal.Mapping.Canvas;
 
 uses
-  Fpas.Ui.FormatBars as FormatBars,
-  Fpas.Ui.LiveCursors as LiveCursors,
-  Fpas.Ui.PresencePills as PresencePills,
-  Fpas.Ui.SelectionRings as SelectionRings,
-  Fpas.Ui.CanvasControls as CanvasControls,
-  Fpas.Ui.ResultCards as ResultCards,
-  Fpas.Ui.SelectionBars as SelectionBars,
-  Fpas.Ui.Toolbars as Toolbars,
-  Fpas.Ui.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.MediaImages as Media,
+  Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars,
+  Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors,
+  Fpas.Ui.Widgets.Canvas.PresencePills as PresencePills,
+  Fpas.Ui.Widgets.Canvas.SelectionRings as SelectionRings,
+  Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls,
+  Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards,
+  Fpas.Ui.Widgets.Canvas.SelectionBars as SelectionBars,
+  Fpas.Ui.Widgets.Desktop.Toolbars as Toolbars,
+  Fpas.Ui.Widgets.Editors.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.MediaImages as Media,
   System as Sys, System.Collections.Generic as Lists;
 
 function MapNodes<TChild, TParent>(Items: array of NodeEditors.Node<TChild>; Child: function(E.Element<TChild>): E.Element<TParent>): array of NodeEditors.Node<TParent>;

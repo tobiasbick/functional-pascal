@@ -1,10 +1,10 @@
 unit Gallery.View;
 
 uses
-  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Gallery.State as G, Gallery.Buttons as Buttons, Gallery.Actions as Actions, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Navigation as N, Fpas.Ui.Sheets as Sheets, Fpas.Ui.IconButtons as Icons,
-  Fpas.Ui.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T,
+  Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
   System as Sys;
 

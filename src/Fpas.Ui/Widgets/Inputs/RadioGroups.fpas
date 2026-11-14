@@ -1,0 +1,58 @@
+unit Fpas.Ui.Widgets.Inputs.RadioGroups;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// One positional choice in a graphical radio group.
+public type Item = record
+  // Literal caption.
+  public Label: string;
+  // Optional secondary caption.
+  public Description: string := '';
+  // Whether the item accepts selection.
+  public Enabled: bool := true;
+end record;
+
+// Composes native CUI radio rows around a single model-owned choice.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: Nonempty choices in stable positional order.
+// - `Selected`: Selected index, or minus one when no item is selected.
+// - `OnChange`: Maps a different choice to a message.
+// - `Enabled`: Whether the group accepts input.
+// - `Gap`: Distance between rows, defaulting to CUI's ten logical points.
+// ## Returns
+// A radio group for the graphical profile.
+public function RadioGroup<TMsg>(
+  Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
+  Enabled: bool := true; Gap: L.Spacing? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Radios(
+    Id,
+    Items,
+    Selected,
+    OnChange,
+    Enabled,
+    Gap ?? L.Spacing.Fixed(L.Measure.Logical(10))
+  );
+end function;
+
+// Gets a positional radio row's stable focus and inspection identity.
+//
+// ## Parameters
+// - `Id`: Group identity.
+// - `Index`: Nonnegative choice index.
+// ## Returns
+// The group ID followed by / and the zero-based index.
+public function ItemId(Id: string; Index: int): string;
+requires Id <> '';
+requires Index >= 0;
+begin
+  return Id + '/' + Index.ToString();
+end function;
+
+end unit;

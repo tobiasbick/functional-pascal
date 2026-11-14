@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Overlays.State as State,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Gui.Toasts as Toasts;

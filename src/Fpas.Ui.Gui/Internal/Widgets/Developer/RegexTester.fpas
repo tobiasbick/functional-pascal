@@ -1,0 +1,46 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.RegexTester;
+
+uses Fpas.Ui.Widgets.Developer.RegexTesters as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+
+// Presents the native RegexTester widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Pattern`: Pattern supplied to the widget.
+// - `Sample`: Sample supplied to the widget.
+// - `Modifiers`: Modifiers supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'regex-tester';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: CuiDeveloper.CuiRegexProposal := Frame.Window.RegexTester(
+    Token,
+    Pattern,
+    Sample,
+    Modifiers,
+    Settings.PatternCapacity,
+    Settings.TextCapacity,
+    Settings.Height,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Matches.ToString());
+  if Enabled and (Result.Pattern <> Pattern or Result.Sample <> Sample or Result.Modifiers <>
+    Modifiers)
+  then
+    Frame.Messages.Add(
+      Changed(
+        new D.Event(Result.Pattern, Result.Sample, Result.Modifiers, Result.Valid, Result.Matches)
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

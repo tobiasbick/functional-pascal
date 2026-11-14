@@ -1,11 +1,11 @@
 unit Fpas.Ui.Internal.Mapping.EditingTools;
 
 uses
-  Fpas.Ui.PropertyInspectors as PropertyInspectors,
-  Fpas.Ui.FlameGraphs as FlameGraphs,
-  Fpas.Ui.CurveEditors as CurveEditors,
-  Fpas.Ui.GradientEditors as GradientEditors,
-  Fpas.Ui.TimelineEditors as TimelineEditors,
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors,
+  Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs,
+  Fpas.Ui.Widgets.Editors.CurveEditors as CurveEditors,
+  Fpas.Ui.Widgets.Editors.GradientEditors as GradientEditors,
+  Fpas.Ui.Widgets.Editors.TimelineEditors as TimelineEditors,
   Fpas.Ui.Elements as E, System as Sys;
 
 // Maps native editing tool proposals.

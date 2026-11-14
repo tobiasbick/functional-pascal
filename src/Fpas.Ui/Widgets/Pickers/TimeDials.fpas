@@ -1,0 +1,50 @@
+unit Fpas.Ui.Widgets.Pickers.TimeDials;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Gets a dial selector's identity.
+// ## Parameters
+// - `Id`: Stable dial identity.
+// - `Minutes`: Whether to identify the minutes selector.
+// ## Returns
+// The selector identity.
+public function SelectorId(Id: string; Minutes: bool): string;
+begin
+  return Id + (if Minutes then
+    '/minutes'
+  else
+    '/hours'
+  end if);
+end function;
+
+// Gets the dial's clock face identity.
+// ## Parameters
+// - `Id`: Stable dial identity.
+// ## Returns
+// The identity of the interactive face.
+public function FaceId(Id: string): string;
+begin
+  return Id + '/face';
+end function;
+
+// Builds CUI's analog hour and minute dial.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable dial identity.
+// - `Value`: Model-owned time at minute precision.
+// - `OnChange`: Maps a proposed time to a message.
+// - `Size`: Face diameter in logical points. Zero selects CUI's default.
+// - `Enabled`: Whether the dial accepts input.
+// ## Returns
+// The graphical time dial.
+public function TimeDial<TMsg>(
+  Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
+  Size: float := 0.0F; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TimeDial(Id, Value, OnChange, Size, Enabled);
+end function;
+
+end unit;

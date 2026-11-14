@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.Calendar;
+
+uses
+  Fpas.Ui.Widgets.Pickers.Calendars as Calendar, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts as Parts, System as Sys;
+
+// Draws the native single-date calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing state.
+// - `Id`: Calendar identity.
+// - `Value`: Model-owned selection.
+// - `OnChange`: Maps a selected date to a message.
+// - `Enabled`: Whether day and month controls accept input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg;
+  Enabled: bool
+);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Role: string := 'calendar';
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
+  const Previous: string := Calendar.MonthId(Id, false);
+  const Following: string := Calendar.MonthId(Id, true);
+  const Focus: int := if C.WantsFocus<TMsg>(Frame, Previous, Parts.Token(Id, -8), Accept) then
+    1
+  elsif C.WantsFocus<TMsg>(Frame, Following, Parts.Token(Id, -9), Accept) then
+    2
+  elsif C.WantsFocus<TMsg>(Frame, Calendar.TitleId(Id), Parts.Token(Id, -10), Accept) then
+    3
+  else
+    0
+  end if;
+  const Result: CuiPickers.CuiCalendarResult := Frame.Window.Calendar(
+    C.Token(Role, Id), Value, Accept, Focus, Track
+  );
+  Parts.Publish<TMsg>(Frame, Id, 'Calendar', Role, Value, Accept, Result, OnChange);
+end procedure;
+
+end unit;

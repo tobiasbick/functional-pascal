@@ -2,8 +2,8 @@ unit GuiGallery.Pages.Actions.Commands;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.StatusButtons as Work,
-  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Gui.Toasts as Toasts,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
+  Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Gui.Toasts as Toasts,
   System as Sys,
   GuiGallery.Pages.Actions.State as S,
   System.Threading as Threads,

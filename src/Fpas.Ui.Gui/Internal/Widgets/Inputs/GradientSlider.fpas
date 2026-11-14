@@ -1,0 +1,70 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider;
+
+uses
+  Fpas.Ui.Widgets.Inputs.GradientSliders as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, Fpas.Ui.Widgets.Audio.ControlWells as Wells, Fpas.Ui.Gui.Internal.Data.ChartData as Chart, System as Sys;
+
+// Presents the native gradient slider.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned value.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'gradient-slider';
+  const Token: string := C.Token(Role, Id);
+  const Tool: Wells.Tool? := Settings.Tool;
+  const Parts: array of string := ['track', 'tool'];
+  const Accept: array of bool := [Enabled, Enabled and Tool <> null];
+  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, Accept, 0);
+  const Positions: array of float := new float[Settings.Stops.Length];
+  const Colors: array of uint := new uint[Settings.Stops.Length];
+  for Index: int := 0 to Settings.Stops.Length - 1 do
+    Positions[Index] := Settings.Stops[Index].Position;
+    Colors[Index] := W.Pack(Settings.Stops[Index].Color);
+  end for;
+  var Next: float := Current.Current;
+  var Sample: uint := 0U;
+  const Flags: int := W.Bits(Enabled, 1) + W.Bits(
+    Settings.Swatch,
+    2
+  ) + W.ToolBits(Tool) + W.Bits(Settings.Plain, 8);
+  const Result: int := Frame.Window.GradientSlider(
+    Token,
+    Current.Label,
+    ref Next,
+    Current.Minimum,
+    Current.Maximum,
+    cast<int>(Settings.Kind),
+    Positions,
+    Colors,
+    Chart.Color(Settings.Color),
+    Settings.Step,
+    Chart.Format(Settings.Format),
+    Settings.Display,
+    W.Icon(Tool),
+    W.Tooltip(Tool),
+    Flags,
+    Focus,
+    W.Tracker<TMsg>(Frame, Id, Role, Parts),
+    out Sample
+  );
+  if Result <> 0 then
+    Frame.Messages.Add(
+      Change(new A.Event(Next, W.Unpack(Sample), (Result and 1) <> 0, (Result and 2) <> 0))
+    );
+  end if;
+  const Reading: string := Next.ToString(Sys.Globalization.CultureInfo.InvariantCulture);
+  W.Root<TMsg>(Frame, Id, Role, Current.Label, false, Reading);
+  W.Part<TMsg>(Frame, Id, Role, 'track', Current.Label, Enabled, Reading);
+  if Tool <> null then
+    W.Part<TMsg>(Frame, Id, Role, 'tool', Tool.Tooltip, Enabled, '');
+  end if;
+end procedure;
+
+end unit;

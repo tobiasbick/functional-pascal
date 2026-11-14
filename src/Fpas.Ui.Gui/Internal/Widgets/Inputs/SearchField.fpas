@@ -1,0 +1,47 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SearchField;
+
+uses
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs, Fpas.Ui.Gui.Internal.Input.Editor as Editor,
+  Fpas.Ui.Widgets.Inputs.SearchFields as F, System as Sys;
+
+// Draws CUI's native search field with the model's current value.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable editor identity.
+// - `Value`: Model-owned text.
+// - `OnChange`: Maps a native edit to a message.
+// - `Settings`: Presentation, capacity and input options.
+// - `OnSubmit`: Optional Enter action.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: F.Options; OnSubmit: Sys.Func<string, TMsg>?
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('search-field', Id);
+  const Native: CuiInputs.CuiEditorOptions := new CuiInputs.CuiEditorOptions(
+    Settings.Label,
+    Settings.Placeholder,
+    Settings.Icon,
+    Settings.Hint,
+    Settings.Error,
+    Settings.Prefix,
+    Settings.Suffix,
+    cast<int>(Settings.ControlSize),
+    Settings.ReadOnly,
+    Settings.MaxUtf8Bytes
+  );
+  const Result: CuiInputs.CuiTextFieldResult := Frame.Window.SearchField(
+    Token, Value, Native, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed, C.Token('button', F.ClearId(Id))
+  );
+  Editor.Publish<TMsg>(
+    Frame, Id, 'search-field', Value, Result, OnChange, OnSubmit, Enabled,
+    Settings.Label, Settings.Hint, Settings.Error, Settings.Prefix, Settings.Suffix
+  );
+end procedure;
+
+end unit;

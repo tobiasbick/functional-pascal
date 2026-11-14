@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Voice.Script;
 
-uses Fpas.Ui.Voice as V, System as Sys;
+uses Fpas.Ui.Widgets.Audio.Voice as V, System as Sys;
 
 type Turn = record
   public Speaker: V.Owner;

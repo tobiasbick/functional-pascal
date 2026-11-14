@@ -3,8 +3,8 @@ unit GuiGallery.Pages.DataGrid.View;
 uses
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
   GuiGallery.Shared.Sections as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.FilterBars as F, Fpas.Ui.DataGrids as D, Fpas.Ui.Tables as T, Fpas.Ui.TreeTables as TT,
-  Fpas.Ui.Avatars as A, Fpas.Ui.Badges as B, Fpas.Ui.ProgressBars as Progress, Fpas.Ui.Styles as Style,
+  Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
+  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, Fpas.Ui.Styles as Style,
   System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
 
 function Points(Value: int): L.Extent;

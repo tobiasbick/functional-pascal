@@ -1,0 +1,23 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Overlays.UserMenu;
+
+uses
+  Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu as Menu, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Overlays.UserMenus as U;
+
+// Draws the native account trigger and shares command dispatch with CUI menus.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context and message queue.
+// - `Id`: Stable account trigger identity.
+// - `Name`: Account display name.
+// - `Entries`: Ordered commands and decorations.
+// - `Settings`: Account details and popup options.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Name: string; Entries: array of M.Entry<TMsg>; Settings: U.Options
+);
+begin
+  Menu.Draw<TMsg>(Frame, Id, Name, Entries, null, Settings.Enabled, Settings);
+end procedure;
+
+end unit;

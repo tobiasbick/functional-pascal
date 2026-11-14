@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Files.State;
 
-uses GuiGallery.Pages.Files.Terminal as Shell, Fpas.Ui.Terminals as Terminal, Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths;
+uses GuiGallery.Pages.Files.Terminal as Shell, Fpas.Ui.Widgets.Developer.Terminals as Terminal, Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths;
 
 // File gallery state.
 public type Model = record

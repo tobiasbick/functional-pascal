@@ -2,9 +2,9 @@ unit GuiGallery.Pages.Overview.Widgets.Workspace;
 
 uses
   GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.TextFields as T, Fpas.Ui.Checkboxes as C,
-  Fpas.Ui.Buttons as B, System as Sys;
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as T, Fpas.Ui.Widgets.Inputs.Checkboxes as C,
+  Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
 // Builds the original workspace form.
 // ## Parameters

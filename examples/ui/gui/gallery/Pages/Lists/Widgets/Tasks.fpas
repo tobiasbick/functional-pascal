@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.Lists.Widgets.Tasks;
 
 uses
-  GuiGallery.Pages.Lists.State as State, Fpas.Ui.ReorderableLists as R, Fpas.Ui.Elements as E,
-  Fpas.Ui.Badges as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+  GuiGallery.Pages.Lists.State as State, Fpas.Ui.Widgets.Collections.ReorderableLists as R, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 function Row(Id: string; Title: string; Label: string; Tone: S.Tone): E.Element<State.Msg>;
 begin

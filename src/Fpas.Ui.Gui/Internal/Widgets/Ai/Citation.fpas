@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Ai.Citation;
+
+uses Fpas.Ui.Widgets.Ai.Citations as Citations, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Ai.Sources as Sources, System as Sys, Fpas.Ui.Gui.Internal.Data.AiData as Data;
+
+// Presents CUI's native Citation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable widget identity.
+// - `Number`: Displayed citation number when there is no domain.
+// - `Source`: Optional source and hover preview.
+// - `Activate`: Optional activation.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Number: int; Source: Sources.Item?; Activate: Sys.Func<TMsg>?; Settings: Citations.Options);
+begin
+  const Role: string := 'citation';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Clicked: bool := Frame.Window.Citation(
+    Token, Number, if Source = null then
+      null
+    else
+      Data.Source(Source)
+    end if,
+    P.Bits(Enabled, 1) or P.Bits(Focus, 2)
+  );
+  P.Root<TMsg>(
+    Frame, Id, Role, if Source = null then
+      Number.ToString()
+    else
+      Source.Title
+    end if, Enabled, ''
+  );
+  if Clicked then
+    case Activate of
+      when is Sys.Func<TMsg> as Callback:
+        Frame.Messages.Add(Callback.Invoke());
+      else
+    end case;
+  end if;
+end procedure;
+
+end unit;

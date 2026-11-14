@@ -1,0 +1,47 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Media.ImageCropper;
+
+uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data, Fpas.Ui.Gui.Cui as Cui;
+
+// Presents CUI's native ImageCropper widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Image`: Image to display.
+// - `Crop`: Current crop bounds.
+// - `Changed`: Maps a native change to a message.
+// - `Settings`: Native widget options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Image: Media.Source; Crop: ImageCroppers.Value; Changed: function(ImageCroppers.Value): TMsg; Settings: ImageCroppers.Options);
+begin
+  const Role: string := 'image-cropper';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  var Next: Cui.CuiRectangle := new Cui.CuiRectangle();
+  Next.X := Crop.X;
+  Next.Y := Crop.Y;
+  Next.Width := Crop.Width;
+  Next.Height := Crop.Height;
+  const Proposed: bool := Frame.Window.ImageCropper(
+    Token,
+    Data.Convert(Image),
+    ref Next,
+    Width.Kind,
+    Width.Value,
+    Height.Kind,
+    Height.Value,
+    Settings.Aspect,
+    Settings.MinimumSize,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Round, 2),
+    Focus
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Crop.Width.ToString());
+  if Enabled and Proposed then
+    Frame.Messages.Add(Changed(new ImageCroppers.Value(Next.X, Next.Y, Next.Width, Next.Height)));
+  end if;
+end procedure;
+
+end unit;

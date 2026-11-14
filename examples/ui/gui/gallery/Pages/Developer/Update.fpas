@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Developer.Update;
 
-uses GuiGallery.Pages.Developer.State as M, Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys;
+uses GuiGallery.Pages.Developer.State as M, Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys;
 
 function Trace(Model: M.Model; Value: T.Event): M.Model;
 begin

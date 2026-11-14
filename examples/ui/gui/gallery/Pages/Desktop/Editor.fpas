@@ -2,9 +2,9 @@ unit GuiGallery.Pages.Desktop.Editor;
 
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.Styles as Style,
-  Fpas.Ui.MenuBars as Bar, Fpas.Ui.Menus as M, Fpas.Ui.StatusBars as Status,
-  Fpas.Ui.DocumentTabs as Docs, Fpas.Ui.Toolbars as Tools, Fpas.Ui.Motion as Glyphs,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Styles as Style,
+  Fpas.Ui.Widgets.Desktop.MenuBars as Bar, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Desktop.StatusBars as Status,
+  Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Motion.Motion as Glyphs,
   System as Sys, System.Collections.Generic as Lists;
 
 function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry<S.Msg>;

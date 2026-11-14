@@ -48,12 +48,12 @@ uses
   GuiGallery.App.View as View,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.ThemeSwitchers as Switchers,
-  Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
   System as Sys,
   System.Console as Console,
   System.Text as Text,
-  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App;
 
 function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session<State.Msg>;

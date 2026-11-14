@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Disclosure.Widgets.Checklist;
 
 uses
-  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Checklists as K,
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Widgets.Feedback.Checklists as K,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
 // Shows the original workspace onboarding card.

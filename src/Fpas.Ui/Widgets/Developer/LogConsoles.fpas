@@ -1,0 +1,59 @@
+unit Fpas.Ui.Widgets.Developer.LogConsoles;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native log severity.
+public type Level = enum: byte
+  // Fine-grained diagnostic.
+  Trace;
+  // Debug information.
+  Debug;
+  // Informational message.
+  Info;
+  // Warning.
+  Warning;
+  // Error.
+  Error;
+end enum;
+
+// One timestamped log line.
+public type Entry = record
+  // Severity filter category.
+  public Severity: Level;
+  // Seconds used by the native timestamp column.
+  public Time: double;
+  // Literal line content.
+  public Text: string;
+end record;
+
+// Native LogConsole configuration.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Logical height, zero for the native default or minus one to fill.
+  public Height: float := 0.0F;
+  // Font size, or zero for the native default.
+  public Size: float := 0.0F;
+  // Show timestamps.
+  public Timestamps: bool := false;
+  // Show native filters and log actions.
+  public Toolbar: bool := true;
+end record;
+
+// Creates a graphical LogConsole.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Entries`: Immutable log lines in arrival order.
+// - `Cleared`: Message proposed when the native Clear button is used.
+// - `Settings`: Native presentation options.
+// ## Returns
+// A graphical view element.
+public function LogConsole<TMsg>(Id: string; Entries: array of Entry; Cleared: TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.LogConsole(Id, Entries, Cleared, Settings ?? new Options());
+end function;
+
+end unit;

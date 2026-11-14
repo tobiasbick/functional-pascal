@@ -56,15 +56,16 @@ work.
 
 ### Widget source layout
 
-Give each new widget a dedicated source file for its FPAS interface and one
-GUI implementation file in `Fpas.Ui.Gui/Internal/Widgets`. Match the unit name
-to its location, such as `Fpas.Ui.Gui.Internal.Widgets.Sheet`. Add native code under
-`src/Fpas.Ui.Gui.Cui/native/widgets` and managed interop only when existing
-bindings cannot express the widget. Native widgets with identical begin/end
-contracts may share their traversal adapter while keeping separate public units.
-A composition needs no dedicated C entry
-point: theme switcher and theme toggle use the segment and icon-button
-primitives. Shared dispatch, layout translation, focus and input stay with
+Give each widget a dedicated FPAS unit in `src/Fpas.Ui/Widgets/<Topic>`
+and a GUI implementation in `src/Fpas.Ui.Gui/Internal/Widgets/<Topic>`.
+Use the directory hierarchy in the unit name, for example
+`Fpas.Ui.Gui.Internal.Widgets.Overlays.Sheet`. Put native C adapters in
+`src/Fpas.Ui.Gui.Cui/native/widgets/<topic>` and group the managed binding
+and interop by the same topic. Add bindings when the widget needs behavior
+outside the existing primitives. Adapters with identical begin/end contracts
+can share traversal while keeping separate public units. Theme switcher and
+theme toggle compose native segment and icon-button primitives.
+Shared dispatch, layout translation, focus and input stay with
 their host. No new terminal implementation file is required.
 
 ## Reference
@@ -114,7 +115,7 @@ gallery also needs them.
 
 ### Theme compatibility
 
-GUI and TUI already share [`Fpas.Ui.Themes`][fpas-themes]. The contract has
+GUI and TUI already share [`Fpas.Ui.Widgets.Theming.Themes`][fpas-themes]. The contract has
 light and dark modes, eight CUI accents, semantic RGBA colors, custom palette
 overrides, and a model-driven `ThemeFor` callback. GUI passes the palette to
 native CUI. TUI derives its widget and focus styles from the same tokens and
@@ -193,7 +194,7 @@ text fallbacks. Its sidebar omits icons while showing labels and badges.
 
 - [x] Text, including heading, label, secondary, muted, and inline code
   (`cui_text`, `cui_heading`, `cui_label`, `cui_secondary`, `cui_muted`, `cui_code`).
-  `Fpas.Ui.Texts` exposes the native roles used on Text and display.
+  `Fpas.Ui.Widgets.Display.Texts` exposes the native roles used on Text and display.
   `Elements.Text` remains available in the portable profile.
 - [x] Link (`cui_link`). [API][fpas-hover-card]. Disclosure verifies pointer
   and keyboard activation of the original @jonas link and its visible focus
@@ -1086,7 +1087,7 @@ model picker and legacy voice orb follow the original content.
 [emoji]: https://www.unicode.org/reports/tr51/
 [width]: https://www.unicode.org/reports/tr11/
 [vendor]: ../../third-party/cui/UPSTREAM.md
-[fpas-themes]: ../../src/Fpas.Ui/Themes.fpas
+[fpas-themes]: ../../src/Fpas.Ui/Widgets/Theming/Themes.fpas
 [fpas-layout]: ../../src/Fpas.Ui/README.md#layout-and-style
 [fpas-native-layout]: ../../src/Fpas.Ui/README.md#native-graphical-layout
 [sidebar]: ../../src/Fpas.Ui/README.md#sidebar-navigation

@@ -3,9 +3,9 @@ unit GuiGallery.Pages.Social.Media;
 uses
   GuiGallery.Pages.Social.State as S, GuiGallery.Pages.Social.Scenes as Scene,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Graphics as Color, Fpas.Ui.Motion as M, Fpas.Ui.Carousels as Carousels,
-  Fpas.Ui.CardStacks as Stacks, Fpas.Ui.ImageViewers as Viewers, Fpas.Ui.ImageCroppers as Croppers,
-  Fpas.Ui.ImageComparisons as Comparisons, Fpas.Ui.MediaImages as Images, System.Collections.Generic as Lists;
+  Fpas.Ui.Graphics as Color, Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Widgets.Media.Carousels as Carousels,
+  Fpas.Ui.Widgets.Containers.CardStacks as Stacks, Fpas.Ui.Widgets.Media.ImageViewers as Viewers, Fpas.Ui.Widgets.Media.ImageCroppers as Croppers,
+  Fpas.Ui.Widgets.Media.ImageComparisons as Comparisons, Fpas.Ui.Widgets.Media.MediaImages as Images, System.Collections.Generic as Lists;
 
 function Points(Amount: int): L.Extent;
 begin

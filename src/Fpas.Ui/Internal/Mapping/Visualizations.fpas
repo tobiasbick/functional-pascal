@@ -1,21 +1,21 @@
 unit Fpas.Ui.Internal.Mapping.Visualizations;
 
 uses
-  Fpas.Ui.Sankeys as Sankeys,
-  Fpas.Ui.BarLists as BarLists,
-  Fpas.Ui.ActivityRings as ActivityRings,
-  Fpas.Ui.ScatterCharts as ScatterCharts,
-  Fpas.Ui.RadialGauges as RadialGauges,
-  Fpas.Ui.Candlesticks as Candlesticks,
-  Fpas.Ui.Heatmaps as Heatmaps,
-  Fpas.Ui.CalendarHeatmaps as CalendarHeatmaps,
-  Fpas.Ui.Treemaps as Treemaps,
-  Fpas.Ui.RadarCharts as RadarCharts,
-  Fpas.Ui.Funnels as Funnels,
-  Fpas.Ui.SplitBars as SplitBars,
-  Fpas.Ui.Waffles as Waffles,
-  Fpas.Ui.Charts as Charts, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.PatternMeters as Patterns,
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.MessageMapping as M, System as Sys;
+  Fpas.Ui.Widgets.Charts.Sankeys as Sankeys,
+  Fpas.Ui.Widgets.Charts.BarLists as BarLists,
+  Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings,
+  Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts,
+  Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges,
+  Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks,
+  Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
+  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps,
+  Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
+  Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts,
+  Fpas.Ui.Widgets.Charts.Funnels as Funnels,
+  Fpas.Ui.Widgets.Charts.SplitBars as SplitBars,
+  Fpas.Ui.Widgets.Charts.Waffles as Waffles,
+  Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts, Fpas.Ui.Widgets.Charts.PatternMeters as Patterns,
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
 
 // Maps native chart activation callbacks without invoking them.
 // ## Type parameters

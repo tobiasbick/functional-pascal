@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.Desktop.Update;
 
 uses
-  GuiGallery.Pages.Desktop.State as S, Fpas.Ui.DocumentTabs as D, Fpas.Ui.Toolbars as T,
-  Fpas.Ui.PropertyInspectors as P, System as Sys, System.Collections.Generic as Lists;
+  GuiGallery.Pages.Desktop.State as S, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T,
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as P, System as Sys, System.Collections.Generic as Lists;
 
 function Documents(Model: S.Model; Change: D.Change): S.Model;
 begin

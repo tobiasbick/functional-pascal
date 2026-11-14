@@ -1,0 +1,62 @@
+unit Fpas.Ui.Widgets.Charts.Sankeys;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// One input node in a native Sankey diagram.
+public type Node = record
+  // Literal caption.
+  public Label: string;
+  // Optional native node color.
+  public Color: C.Color := C.Color.Automatic;
+end record;
+
+// One directed native flow.
+public type Link = record
+  // Source node input index.
+  public From: int;
+  // Destination node input index, different from From.
+  public To: int;
+  // Finite nonnegative amount; zero hides the link.
+  public Value: float;
+end record;
+
+// A clicked native node or original input link.
+public type Selection = variant
+  // Node input index.
+  Node(Index: int);
+  // Link input index, including positions of hidden zero flows.
+  Link(Index: int);
+end variant;
+
+// Native sankey presentation.
+public type Options = record
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height; zero uses CUI's default.
+  public Height: float := 0.0F;
+  // Node bar width; zero uses CUI's default.
+  public NodeWidth: float := 0.0F;
+  // Safe native amount format.
+  public Format: C.ValueFormat? := null;
+  // Allow native pointer input.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's native sankey.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Nodes`: Named nodes in input order.
+// - `Links`: Directed nonnegative flows; zero flows are hidden.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+// ## Returns
+// A graphical element.
+public function Sankey<TMsg>(Id: string; Nodes: array of Node; Links: array of Link; Settings: Options? := null; OnActivate: Sys.Func<Selection, TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Sankey(Id, Nodes, Links, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

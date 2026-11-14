@@ -1,0 +1,90 @@
+unit Fpas.Ui.Widgets.Editors.CurveEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Interpolation of the outgoing curve segment.
+public type Mode = enum: byte
+  // Automatic tangents.
+  Smooth;
+  // Explicit handles.
+  Free;
+  // Straight segment.
+  Linear;
+  // Hold until the next key.
+  Step;
+end enum;
+
+// Curve key and relative handles.
+public type Key = record
+  // Horizontal coordinate, also used as seconds by Timeline.
+  public X: float;
+  // Value.
+  public Y: float;
+  // Incoming horizontal offset.
+  public InX: float := 0.0F;
+  // Incoming vertical offset.
+  public InY: float := 0.0F;
+  // Outgoing horizontal offset.
+  public OutX: float := 0.0F;
+  // Outgoing vertical offset.
+  public OutY: float := 0.0F;
+  // Interpolation.
+  public Interpolation: Mode := Mode.Smooth;
+end record;
+
+// Proposed curve and selection.
+public type Event = record
+  // Keys in their resulting order.
+  public Keys: array of Key;
+  // Selected key, or minus one.
+  public Selected: int;
+  // Inserted index, or minus one.
+  public Added: int;
+  // Removed index in the previous curve, or minus one.
+  public Removed: int;
+end record;
+
+// Native CurveEditor settings.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Plot height, or zero for the native default.
+  public Height: float := 0.0F;
+  // Maximum number of keys.
+  public Capacity: int := 32;
+  // Horizontal minimum.
+  public XMinimum: float := 0.0F;
+  // Horizontal maximum.
+  public XMaximum: float := 1.0F;
+  // Vertical minimum.
+  public YMinimum: float := 0.0F;
+  // Vertical maximum.
+  public YMaximum: float := 1.0F;
+  // Horizontal readout label.
+  public XLabel: string := '';
+  // Vertical readout label.
+  public YLabel: string := '';
+  // Always snap dragging to the grid.
+  public Snap: bool := false;
+  // Optional horizontal playhead position.
+  public Playhead: float? := null;
+end record;
+
+// Creates a graphical CurveEditor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Keys`: Curve keys sorted by X.
+// - `Selected`: Selected key, or minus one.
+// - `Changed`: Maps a native proposal to a message.
+// - `Settings`: Native layout and behavior options.
+// ## Returns
+// A graphical element.
+public function CurveEditor<TMsg>(Id: string; Keys: array of Key; Selected: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.CurveEditor(Id, Keys, Selected, Changed, Settings ?? new Options());
+end function;
+
+end unit;

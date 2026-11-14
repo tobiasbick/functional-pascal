@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Charts.Funnel;
+
+uses
+  Fpas.Ui.Widgets.Charts.Funnels as W, Fpas.Ui.Widgets.Charts.Charts as Ch, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents the native funnel and forwards its activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `OnActivate`: Optional native click callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Ch.Item; Settings: W.Options; OnActivate: Sys.Func<int, TMsg>?);
+begin
+  const Token: string := C.Token('funnel', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
+  const Options: CuiCharts.CuiFunnelOptions := new CuiCharts.CuiFunnelOptions(
+    Width.Kind,
+    Width.Value,
+    Data.Color(Settings.Color),
+    Data.Format(Settings.Format)
+  );
+  const Clicked: int := Frame.Window.Funnel(
+    Token,
+    Data.Items(Items),
+    Options,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Clicked >= 0 then
+    case OnActivate of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Clicked));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(new App.Control(Id, 'Funnel', 'funnel', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

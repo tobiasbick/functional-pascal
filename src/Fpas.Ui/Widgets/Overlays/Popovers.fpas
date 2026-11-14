@@ -1,0 +1,39 @@
+unit Fpas.Ui.Widgets.Overlays.Popovers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+
+// Placement and spacing of a native popover.
+public type Options = record
+  // Preferred position relative to the trigger. CUI flips it to fit.
+  public Position: M.Placement := M.Placement.BottomStart;
+  // Width in logical points. Zero sizes to the content and anchor.
+  public Width: int := 0;
+  // Inset in logical points. Zero uses CUI's default of 16.
+  public Padding: int := 0;
+  // Space between children in logical points. Zero uses CUI's default of 10.
+  public Gap: int := 0;
+end record;
+
+// Attaches a model-controlled, nonmodal panel to a button.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable panel identity.
+// - `Trigger`: Button that anchors the panel. Its activation may toggle Open.
+// - `Content`: Panel contents, including any actions that close it.
+// - `Open`: Whether the model opens the panel.
+// - `OnDismiss`: Proposed message on Escape or a press outside.
+// - `Settings`: Optional placement and sizing.
+// ## Returns
+// A graphical view with the trigger's original layout.
+public function Popover<TMsg>(
+  Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>; Open: bool;
+  OnDismiss: TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Popover(Id, Trigger, Content, Open, OnDismiss, Settings ?? new Options());
+end function;
+
+end unit;

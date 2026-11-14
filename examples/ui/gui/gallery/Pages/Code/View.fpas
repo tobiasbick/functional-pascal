@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Code.View;
 
 uses
-  GuiGallery.Shared.Sections as G, Fpas.Ui.CodeBlocks as Code, Fpas.Ui.JsonViews as Json,
+  GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Developer.CodeBlocks as Code, Fpas.Ui.Widgets.Developer.JsonViews as Json,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
 // Builds the pinned CUI Code examples.

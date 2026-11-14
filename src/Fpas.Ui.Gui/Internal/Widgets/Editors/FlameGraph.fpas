@@ -1,0 +1,60 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Editors.FlameGraph;
+
+uses
+  Fpas.Ui.Widgets.Editors.FlameGraphs as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  System.Collections.Generic as Lists;
+
+// Presents a native FlameGraph.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Spans`: Spans in draw order.
+// - `Current`: Current range and selection.
+// - `Changed`: Maps a native proposal.
+// - `Settings`: Native layout and behavior options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Spans: array of D.Span; Current: D.View; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'flame-graph';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Native: Lists.List<CuiEditors.CuiFlameSpan> := new Lists.List<CuiEditors.CuiFlameSpan>(
+    Spans.Length
+  );
+  for Span: D.Span in Spans do
+    Native.Add(
+      new CuiEditors.CuiFlameSpan(Span.Name, Span.Start, Span.Finish, Span.Depth, Span.ColorKey)
+    );
+  end for;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Result: CuiEditors.CuiFlameRange? := Frame.Window.FlameGraph(
+    Token,
+    Native.ToArray(),
+    new CuiEditors.CuiFlameRange(Current.Start, Current.Finish, Current.Scroll, Current.Selected),
+    Settings.MinimumRange,
+    Settings.Height,
+    Settings.RowHeight,
+    Width.Kind,
+    Width.Value,
+    P.Bits(Enabled, 1) or P.Bits(Focus, 2)
+  );
+  case Result of
+    when is CuiEditors.CuiFlameRange as Range:
+      Frame.Messages.Add(
+        Changed(
+          new D.Event(
+            new D.View(Range.Start, Range.End, Range.Scroll, Range.Selected),
+            Range.Zoomed
+          )
+        )
+      );
+    else
+  end case;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

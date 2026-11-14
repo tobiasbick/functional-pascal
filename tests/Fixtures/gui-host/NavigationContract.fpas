@@ -7,13 +7,13 @@ uses
   GuiGallery.App.View as View,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.Tabs as Tabs,
-  Fpas.Ui.Breadcrumbs as Breadcrumbs,
-  Fpas.Ui.Paginations as Paginations,
-  Fpas.Ui.Steppers as Steppers,
+  Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
+  Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs,
+  Fpas.Ui.Widgets.Navigation.Paginations as Paginations,
+  Fpas.Ui.Widgets.Navigation.Steppers as Steppers,
   Fpas.Ui.Validation as V,
   System as Sys;
 

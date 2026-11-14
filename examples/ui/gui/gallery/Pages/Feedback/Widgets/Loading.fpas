@@ -2,9 +2,9 @@ unit GuiGallery.Pages.Feedback.Widgets.Loading;
 
 uses
   GuiGallery.Shared.Sections as G, GuiGallery.Pages.Feedback.State as M,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Cards as Cards,
-  Fpas.Ui.Spinners as Spin, Fpas.Ui.StatusSpinners as Status, Fpas.Ui.StatusButtons as Work,
-  Fpas.Ui.Skeletons as Skeleton, Fpas.Ui.SkeletonGroups as Group, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Feedback.StatusSpinners as Status, Fpas.Ui.Widgets.Actions.StatusButtons as Work,
+  Fpas.Ui.Widgets.Feedback.Skeletons as Skeleton, Fpas.Ui.Widgets.Feedback.SkeletonGroups as Group, Fpas.Ui.Widgets.Actions.Buttons as B,
   System.Collections.Generic as Lists;
 
 // Recreates the native skeleton group's shared dither sweep.

@@ -1,0 +1,54 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.TextField;
+
+uses
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs, Fpas.Ui.Gui.Internal.Input.Editor as Editor,
+  Fpas.Ui.Widgets.Inputs.TextFields as F, System as Sys;
+
+// Draws a native editor and delivers its edit before its optional submission.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable field identity.
+// - `Value`: Model-owned text.
+// - `OnChange`: Maps a native edit to a message.
+// - `Settings`: Presentation, capacity and input options.
+// - `OnSubmit`: Optional Enter action.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: F.Options; OnSubmit: Sys.Func<string, TMsg>?
+);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token('text-field', Id);
+  const Clear: string := F.ClearId(Id);
+  const Reveal: string := F.RevealId(Id);
+  const Native: CuiInputs.CuiTextFieldOptions := new CuiInputs.CuiTextFieldOptions(
+    Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
+    Settings.Prefix, Settings.Suffix, cast<int>(Settings.ControlSize), Settings.Password,
+    Settings.Clearable, Settings.ReadOnly, Settings.MaxUtf8Bytes
+  );
+  const Result: CuiInputs.CuiTextFieldResult := Frame.Window.TextField(
+    Token, Value, Native, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    not Frame.PaintingClosed, C.Token('button', Clear), C.Token('button', Reveal)
+  );
+  Editor.Publish<TMsg>(
+    Frame,
+    Id,
+    'text-field',
+    Value,
+    Result,
+    OnChange,
+    OnSubmit,
+    Enabled,
+    Settings.Label,
+    Settings.Hint,
+    Settings.Error,
+    Settings.Prefix,
+    Settings.Suffix,
+    Settings.Password
+  );
+end procedure;
+
+end unit;

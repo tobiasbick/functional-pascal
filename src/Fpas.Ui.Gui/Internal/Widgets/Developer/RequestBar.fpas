@@ -1,0 +1,38 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.RequestBar;
+
+uses Fpas.Ui.Widgets.Developer.RequestBars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+
+// Presents the native RequestBar widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Method`: Method supplied to the widget.
+// - `Url`: Url supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Method: int; Url: string; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'request-bar';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: CuiDeveloper.CuiRequestProposal := Frame.Window.RequestBar(
+    Token,
+    Method,
+    Url,
+    Settings.Capacity,
+    Settings.Loading,
+    Settings.Placeholder,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Url);
+  if Enabled and (Result.Method <> Method or Result.Url <> Url or Result.Send or Result.Cancel) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Method, Result.Url, Result.Send, Result.Cancel)));
+  end if;
+end procedure;
+
+end unit;

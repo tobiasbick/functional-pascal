@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Navigation.Widgets.Tabs;
 uses
   GuiGallery.Pages.Navigation.State as State,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Tabs as T,
+  Fpas.Ui.Widgets.Navigation.Tabs as T,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,

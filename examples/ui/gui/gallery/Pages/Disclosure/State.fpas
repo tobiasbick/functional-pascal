@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Disclosure.State;
 
-uses Fpas.Ui.Checklists as K, System as Sys;
+uses Fpas.Ui.Widgets.Feedback.Checklists as K, System as Sys;
 
 // Initial duration in the original Countdown example.
 public const InitialSeconds: double := 193338.0;

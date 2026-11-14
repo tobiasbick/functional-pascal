@@ -1,0 +1,62 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Overlays.ConfirmPopover;
+
+uses
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Draws the native confirmation popover and routes its result.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Panel identity.
+// - `Trigger`: Anchor button.
+// - `Open`: Model-owned visibility.
+// - `Settings`: Question, captions, and placement.
+// - `Confirm`: Proposed affirmative action.
+// - `Dismiss`: Proposed cancellation.
+// - `Horizontal`: Axis containing the trigger.
+// - `Align`: Alignment of the trigger.
+// - `Visit`: Host traversal for the trigger.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Trigger: E.Element<TMsg>; Open: bool; Settings: P.Options;
+  Confirm: TMsg; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
+  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+);
+begin
+  Visit(Trigger, Frame, Horizontal, Align);
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  const CancelId: string := P.CancelId(Id);
+  const ConfirmId: string := P.ConfirmId(Id);
+  const Result: int := Frame.Window.ConfirmPopover(
+    C.Token('confirm-popover', Id), Settings.Title, Settings.Description,
+    Settings.ConfirmLabel, Settings.CancelLabel, cast<int>(Settings.Position), Settings.Danger,
+    Open, Frame.AcceptInput, C.Token('button', CancelId), C.Token('button', ConfirmId)
+  );
+  if (Result and 1) <> 0 then
+    Frame.Messages.Add(Confirm);
+  elsif (Result and 2) <> 0 then
+    Frame.Messages.Add(Dismiss);
+  elsif (Result and 4) <> 0 then
+    Frame.Labels.Add(Settings.Title);
+    if Settings.Description <> '' then
+      Frame.Labels.Add(Settings.Description);
+    end if;
+
+    Frame.Controls.Add(
+      new App.Control(Id, Settings.Title, 'confirm-popover', new Cui.CuiRectangle(), false)
+    );
+    Frame.Controls.Add(
+      new App.Control(CancelId, Settings.CancelLabel, 'button', new Cui.CuiRectangle(), true)
+    );
+    Frame.Controls.Add(
+      new App.Control(ConfirmId, Settings.ConfirmLabel, 'button', new Cui.CuiRectangle(), true)
+    );
+  end if;
+end procedure;
+
+end unit;

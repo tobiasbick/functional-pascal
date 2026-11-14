@@ -1,0 +1,40 @@
+unit Fpas.Ui.Widgets.Audio.VoiceWaves;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Audio.Voice as Voice, Fpas.Ui.Widgets.Charts.Charts as Charts, System as Sys;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Dot spacing, or zero for the native default.
+  public Pitch: float := 0.0F;
+  // Keyboard seek fraction, or zero for the native default.
+  public Step: float := 0.0F;
+  // Fit the entire clip instead of scrolling live.
+  public Clip: bool := false;
+  // Speaker when the signal has no tags.
+  public Owner: Voice.Owner := Voice.Owner.You;
+  // Optional ink override.
+  public Color: Charts.Color := Charts.Color.Automatic;
+  // Allows seeking.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's native VoiceWave.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable waveform identity.
+// - `Signal`: Ordered levels and optional speaker tags.
+// - `Progress`: Current played fraction, or null for passive rendering.
+// - `Changed`: Maps a seek proposal.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function VoiceWave<TMsg>(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func<float, TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.VoiceWave(Id, Signal, Progress, Changed, Settings ?? new Options());
+end function;
+
+end unit;

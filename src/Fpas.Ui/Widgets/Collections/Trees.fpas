@@ -1,0 +1,57 @@
+unit Fpas.Ui.Widgets.Collections.Trees;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Appearance and input for a native tree row.
+public type Options = record
+  // Optional glyph overriding the native file or folder icon.
+  public Icon: string := '';
+  // Whether to show the selection.
+  public Selected: bool := false;
+  // Whether the row accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Builds an expandable native tree branch.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable branch identity.
+// - `Label`: Literal title.
+// - `Open`: Current expansion.
+// - `Children`: Nested tree rows.
+// - `OnChange`: Maps the proposed expansion to a message.
+// - `Settings`: Optional row appearance.
+// ## Returns
+// The graphical element.
+public function Branch<TMsg>(Id: string; Label: string; Open: bool; Children: array of E.Element<TMsg>; OnChange: function(bool): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TreeNode(
+    Id,
+    Label,
+    Open,
+    Children,
+    OnChange,
+    null,
+    Settings ?? new Options()
+  );
+end function;
+
+// Builds a native tree leaf.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable leaf identity.
+// - `Label`: Literal title.
+// - `OnActivate`: Optional selection message factory.
+// - `Settings`: Optional row appearance.
+// ## Returns
+// The graphical element.
+public function Leaf<TMsg>(Id: string; Label: string; OnActivate: Sys.Func<TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TreeNode(Id, Label, null, [], null, OnActivate, Settings ?? new Options());
+end function;
+
+end unit;

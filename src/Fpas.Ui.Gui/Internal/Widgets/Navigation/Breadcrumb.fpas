@@ -1,0 +1,67 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Breadcrumb;
+
+uses
+  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Collections.Generic as Lists;
+
+// Draws CUI's breadcrumb and publishes ancestor activations.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable trail identity.
+// - `Items`: Validated path captions.
+// - `OnNavigate`: Maps an activated ancestor to a message.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Tokens: Lists.List<string> := new Lists.List<string>();
+  Tokens.Add(C.Token('breadcrumb', Id));
+  var Focus: int := 0;
+  for Index: int := 0 to Items.Length - 1 do
+    const Token: string := C.Token('crumb', Id, Index.ToString());
+    Tokens.Add(Token);
+    if Index < Items.Length - 1 and (C.WantsFocus<TMsg>(Frame, B.ItemId(Id, Index), Token, Allowed)
+      or C.WantsFocus<TMsg>(Frame, Id, Token, Allowed, Index = 0))
+    then
+      Focus := Index + 1;
+    end if;
+  end for;
+  const Proposal: int := Frame.Window.Breadcrumb(
+    Tokens[0], Items, Allowed, Focus, if Frame.PaintingClosed then
+      null
+    else
+      Tokens.ToArray()
+    end if
+  );
+  if Proposal >= 0 then
+    Frame.Messages.Add(OnNavigate(Proposal));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(Id, 'Breadcrumb', 'breadcrumb', new Cui.CuiRectangle(), false)
+  );
+  for Index: int := 0 to Items.Length - 1 do
+    const Current: bool := Index = Items.Length - 1;
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Items[Index], 'crumb', new Cui.CuiRectangle(), Allowed and not Current,
+        Key := Index.ToString(), Value := if Current then
+          'current'
+        else
+          ''
+        end if
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

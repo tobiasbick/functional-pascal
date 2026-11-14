@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Ai.Update;
 
 uses
-  GuiGallery.Pages.Ai.State as S, Fpas.Ui.Composers as Composer, Fpas.Ui.ResponseActions as Response,
+  GuiGallery.Pages.Ai.State as S, Fpas.Ui.Widgets.Ai.Composers as Composer, Fpas.Ui.Widgets.Ai.ResponseActions as Response,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Toasts as Toasts, System.Collections.Generic as Lists;
 
 function ApplyEditor(Value: Composer.Value; Change: Composer.Event): Composer.Value;

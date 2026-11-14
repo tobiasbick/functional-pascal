@@ -1,0 +1,32 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeToggle;
+
+uses Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Internal.Theming.ThemeToggles as Parts, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws a native sun/moon action without changing the host's palette directly.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame context.
+// - `Id`: Stable action identity.
+// - `Appearance`: Model-owned concrete light/dark appearance.
+// - `OnChange`: Maps an activated proposal to a message.
+// - `Enabled`: Whether input and focus are permitted.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('theme-toggle', Id);
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Accept);
+  if Frame.Window.ThemeToggle(Token, Appearance = Themes.Mode.Dark, Accept, Focus) then
+    Frame.Messages.Add(OnChange(Parts.Opposite(Appearance)));
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Parts.Label(Appearance), 'theme-toggle',
+      new Cui.CuiRectangle(), Accept, Value := Appearance.ToString().ToLowerInvariant()
+    )
+  );
+end procedure;
+
+end unit;

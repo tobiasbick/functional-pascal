@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.Voice.Update;
 
 uses
-  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, Fpas.Ui.Voice as V,
-  Fpas.Ui.VoiceNotes as Notes, Fpas.Ui.VoiceSessions as Calls, Fpas.Ui.Composers as Editor,
+  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, Fpas.Ui.Widgets.Audio.Voice as V,
+  Fpas.Ui.Widgets.Audio.VoiceNotes as Notes, Fpas.Ui.Widgets.Audio.VoiceSessions as Calls, Fpas.Ui.Widgets.Ai.Composers as Editor,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Cui as Cui,
   System as Sys, System.Collections.Generic as Lists;
 

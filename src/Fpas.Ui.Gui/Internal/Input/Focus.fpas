@@ -1,0 +1,1064 @@
+unit Fpas.Ui.Gui.Internal.Input.Focus;
+
+uses
+  Fpas.Ui.Widgets.Desktop.StatusBars as StatusBar, Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs,
+  Fpas.Ui.Widgets.Overlays.Veils as Veil, Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget,
+  Fpas.Ui.Gui.Internal.Input.AiFocus as AiFocus, Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards,
+  Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Widgets.Containers.CardStacks as CardStacks, Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers, Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons,
+  Fpas.Ui.Widgets.Conversation.Comments as Comments,
+  Fpas.Ui.Gui.Internal.Input.CreativeFocus as Creative, Fpas.Ui.Widgets.Audio.ControlTiles as Tiles, Fpas.Ui.Widgets.Navigation.Docks as Docks, Fpas.Ui.Widgets.Audio.NowPlaying as Player, Fpas.Ui.Widgets.Audio.Waveforms as Waves, Fpas.Ui.Widgets.Navigation.TabBars as Bars, Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks, Fpas.Ui.Widgets.Charts.DotCharts as DotCharts, Fpas.Ui.Widgets.Charts.EventTracks as EventTracks, Fpas.Ui.Widgets.Collections.DataGrids as DataGrid, Fpas.Ui.Widgets.Collections.TreeTables as TreeTable, Fpas.Ui.Widgets.Collections.ListItems as ListItems, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks, Fpas.Ui.Widgets.Charts.PatternMeters as Patterns, Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits, Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields, Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates, Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Widgets.Files.Dropzones as Dropzones, Fpas.Ui.Widgets.Files.SignaturePads as Signatures, Fpas.Ui.Widgets.Audio.Knobs as Knobs, Fpas.Ui.Widgets.Audio.Faders as Faders, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Widgets.Pickers.Calendars as Calendars, Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers, Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers, Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms, Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers, Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers, Fpas.Ui.Widgets.Pickers.TimeDials as TimeDials, Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers, Fpas.Ui.Widgets.Actions.SpeedDials as Speed, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts, Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards, Fpas.Ui.Widgets.Conversation.Reactions as Reactions, Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs, Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes, Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.TextFields as TextFields, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs, Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards, Fpas.Ui.Widgets.Inputs.Sliders as Sliders, Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders, Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups, Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons, System as Sys;
+
+// Finds the first enabled focus stop in the active modal/view scope.
+//
+// ## Type parameters
+// - `TMsg`: Message type.
+//
+// ## Parameters
+// - `Node`: Prepared subtree.
+// - `Prepared`: Resolved cached subviews.
+// - `Preferred`: Optional enabled ID to locate instead of the first stop.
+//
+// ## Returns
+// Its application ID, or null.
+public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
+begin
+  case Node of
+    when E.Element.VoiceWave(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.VoiceNote(_, _, _, _, _), E.Element.VoiceSession(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Composer(_, _, _, _), E.Element.VoiceOrb(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Reasoning(_, _, _), E.Element.ToolCall(_, _, _), E.Element.SourceList(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Citation(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ContextMeter(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PromptSuggestions(_, _, _, _), E.Element.ModelPicker(_, _, _, _, _):
+      return AiFocus.First<TMsg>(Node, Preferred);
+    when E.Element.Comment(const Id: string, _, _, _, _, const Settings: Comments.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id or Preferred = Id + '/like' then
+          return Id + '/like';
+        elsif Preferred = Id + '/reply' then
+          return Id + '/reply';
+        end if;
+      end if;
+    when E.Element.StatusTag(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.RatioSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.GradientSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.StepSlider(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.PaletteStrip(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.AspectPicker(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.OptionAction(_, _, _, _), E.Element.SeedField(_, _, _, _):
+      return Creative.First<TMsg>(Node, Preferred);
+    when E.Element.ControlTile(const Id: string, _, _, _, const Settings: Tiles.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Waveform(
+      const Id: string,
+      _,
+      const Progress: float?,
+      const Change: Sys.Func<float, TMsg>?,
+      const Settings: Waves.Options
+    ):
+      if Settings.Enabled and Progress <> null and Change <> null and (Preferred = null
+        or Preferred = Id)
+      then
+        return Id;
+      end if;
+    when E.Element.NowPlaying(const Id: string, _, _, const Settings: Player.Options):
+      if Settings.Enabled then
+        for Part: string in [Id + '/previous', Id + '/toggle', Id + '/next'] do
+          if Preferred = null or Preferred = Part then
+            return Part;
+          end if;
+        end for;
+
+        if Preferred = Id then
+          return Id + '/toggle';
+        end if;
+      end if;
+    when E.Element.TabBar(
+      const Id: string,
+      const Items: array of Bars.Item,
+      const Selected: int,
+      _,
+      const Settings: Bars.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id + '/' + Selected.ToString();
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Part: string := Id + '/' + Index.ToString();
+          if Preferred = Part then
+            return Part;
+          end if;
+        end for;
+      end if;
+    when E.Element.Dock(
+      const Id: string,
+      const Entries: array of Docks.Entry<TMsg>,
+      const Settings: Docks.Options
+    ):
+      if Settings.Enabled then
+        for Index: int := 0 to Entries.Length - 1 do
+          case Entries[Index] of
+            when Docks.Entry.Item(_, _, _, _, _, _):
+              const Part: string := Id + '/' + Index.ToString();
+              if Preferred = null or Preferred = Id or Preferred = Part then
+                return Part;
+              end if;
+            else
+          end case;
+        end for;
+      end if;
+    when E.Element.Candlestick(const Id: string, _, const Settings: Candlesticks.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.PatternMeter(const Id: string, _, const Settings: Patterns.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.CommandPalette(_, const Base: E.Element<TMsg>, const Open: bool, _, _, _):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+    when E.Element.CodeBlock(const Id: string, _, const Settings: CodeBlocks.Options):
+      const Copy: string := Id + '/copy';
+      if not Settings.NoHeader and (Settings.Title <> '' or Settings.Language <> '')
+        and (Preferred = null or Preferred = Id or Preferred = Copy)
+      then
+        return Copy;
+      end if;
+    when E.Element.DotChart(const Id: string, _, _, _, const Settings: DotCharts.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.EventTrack(const Id: string, _, _, const Settings: EventTracks.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.FilterBar(const Id: string, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.DataGrid(const Id: string, _, _, _, _, _, const Settings: DataGrid.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TreeTable(const Id: string, _, _, _, _, _, const Settings: TreeTable.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ListItem(const Id: string, _, _, const Settings: ListItems.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TreeNode(
+      const Id: string,
+      _,
+      const Open: bool?,
+      const Children: array of E.Element<TMsg>,
+      _,
+      _,
+      const Settings: Trees.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      if Open ?? false then
+        for Child: E.Element<TMsg> in Children do
+          const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+          if Found <> null then
+            return Found;
+          end if;
+        end for;
+      end if;
+    when E.Element.Table(
+      const Id: string,
+      const Columns: array of Tables.Column,
+      const Rows: array of Tables.Row<TMsg>,
+      const Order: Tables.Sort?,
+      _,
+      const OnSelect: Sys.Func<string, TMsg>?,
+      const Settings: Tables.Options
+    ):
+      if Settings.Enabled and Order <> null then
+        for Index: int := 0 to Columns.Length - 1 do
+          const Header: string := Tables.HeaderId(Id, Index);
+          if Columns[Index].Sortable and (Preferred = null or Preferred = Header) then
+            return Header;
+          end if;
+        end for;
+      end if;
+
+      for Row: Tables.Row<TMsg> in Rows do
+        if Settings.Enabled and OnSelect <> null and (Preferred = null or Preferred = Row.Id) then
+          return Row.Id;
+        end if;
+
+        for Cell: Tables.Cell<TMsg> in Row.Cells do
+          case Cell of
+            when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
+              for Child: E.Element<TMsg> in Nodes do
+                const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+                if Found <> null then
+                  return Found;
+                end if;
+              end for;
+            else
+          end case;
+        end for;
+      end for;
+    when E.Element.ReorderableList(
+      _,
+      const Items: array of E.Element<TMsg>,
+      const Order: array of int,
+      _,
+      _
+    ):
+      for Index: int in Order do
+        const Found: string? := First<TMsg>(Items[Index], Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      end for;
+    when E.Element.Tour(const Id: string, const Base: E.Element<TMsg>, _, const Current: int, _, _):
+      if Current >= 0 then
+        if Preferred = Id or Preferred = Id + '/next' then
+          return Id + '/next';
+        end if;
+
+        if Preferred = Id + '/close' then
+          return Id + '/close';
+        end if;
+
+        if Current > 0 and Preferred = Id + '/back' then
+          return Id + '/back';
+        end if;
+      end if;
+
+      return First<TMsg>(Base, Prepared, Preferred);
+    when E.Element.TimePicker(const Id: string, _, _, const Settings: TimePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.WheelPicker(const Id: string, _, _, _, const Settings: WheelPickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TimeDial(const Id: string, _, _, _, const Enabled: bool):
+      if Enabled then
+        const Hours: string := TimeDials.SelectorId(Id, false);
+        const Minutes: string := TimeDials.SelectorId(Id, true);
+        if Preferred = null or Preferred = Id or Preferred = Hours then
+          return Hours;
+        end if;
+
+        if Preferred = Minutes then
+          return Minutes;
+        end if;
+      end if;
+    when E.Element.ColorPicker(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.EmojiPicker(const Id: string, _, _, const Settings: Emojis.Options):
+      if Settings.Enabled then
+        const Search: string := Emojis.SearchId(Id);
+        const Grid: string := Emojis.GridId(Id);
+        if Settings.Search and (Preferred = null or Preferred = Id or Preferred = Search) then
+          return Search;
+        end if;
+
+        if Preferred = null or Preferred = Id or Preferred = Grid then
+          return Grid;
+        end if;
+      end if;
+    when E.Element.Calendar(const Id: string, _, _, const Enabled: bool):
+      if Enabled then
+        const Previous: string := Calendars.MonthId(Id, false);
+        const Following: string := Calendars.MonthId(Id, true);
+        if Preferred = null or Preferred = Id or Preferred = Previous then
+          return Previous;
+        end if;
+
+        if Preferred = Following then
+          return Following;
+        end if;
+      end if;
+    when E.Element.DatePicker(const Id: string, _, _, const Settings: DatePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RangePicker(const Id: string, _, _, const Settings: RangePickers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.MultiSelectInput(const Id: string, _, _, _, const Settings: Multi.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SelectInput(const Id: string, _, _, _, const Settings: Selects.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.InlineEdit(const Id: string, _, _, const Settings: InlineEdits.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ScrubField(const Id: string, _, _, _, _, _, const Settings: ScrubFields.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.MoneyField(const Id: string, _, _, const Settings: MoneyFields.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ShortcutRecorder(
+      const Id: string,
+      const Value: RecorderKeys.Combination,
+      _,
+      const Settings: RecorderKeys.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Value.Key <> RecorderKeys.Key.None and Preferred = RecorderKeys.ClearId(Id) then
+          return Preferred;
+        end if;
+      end if;
+    when E.Element.NumberField(const Id: string, _, _, _, _, const Settings: NumberFields.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TextField(const Id: string, _, _, const Settings: TextFields.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SearchField(const Id: string, _, _, const Settings: SearchFields.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TextArea(const Id: string, _, _, const Settings: TextAreas.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TagInput(const Id: string, _, _, const Settings: TagInputs.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.OneTimeCodeInput(
+      const Id: string,
+      _,
+      _,
+      const Settings: OneTimeCodes.Options,
+      _
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.CopyAction(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.HoldAction(const Id: string, _, _, const Settings: Holds.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ConfirmAction(const Id: string, _, _, const Settings: Confirms.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.StatusAction(const Id: string, _, _, _, const Settings: Status.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ThemeFlip(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Segments(
+      const Id: string,
+      const Items: array of Segmented.Item,
+      const Selected: int,
+      _,
+      const Settings: Segmented.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return Segmented.ItemId(Id, Selected);
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Segmented.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.Toggles(
+      const Id: string,
+      const Items: array of ToggleGroups.Item,
+      _,
+      _,
+      const Settings: ToggleGroups.Options
+    ):
+      if Settings.Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := ToggleGroups.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item or (Preferred = Id and Index = 0) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.TabStrip(
+      const Id: string,
+      const Items: array of Tabs.Item,
+      const Selected: int,
+      _,
+      const Settings: Tabs.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return Tabs.ItemId(Id, Selected);
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Tabs.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.BreadcrumbTrail(
+      const Id: string,
+      const Items: array of string,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 2 do
+          const Item: string := Breadcrumbs.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item or (Preferred = Id and Index = 0) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.PaginationAction(const Id: string, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.CheckboxAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool,
+      _, _
+    ), E.Element.SwitchAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool
+    ), E.Element.RadioAction(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Enabled: bool
+    ), E.Element.ChipAction(const Id: string, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Radios(
+      const Id: string,
+      const Items: array of RadioGroups.Item,
+      _,
+      _,
+      const Enabled: bool,
+      _
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := RadioGroups.ItemId(Id, Index);
+          if Items[Index].Enabled and (Preferred = null or Preferred = Item) then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.SliderAction(const Id: string, _, _, _, _, _, const Settings: Sliders.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.LinkAction(const Id: string, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.HoverCard(_, const Trigger: E.Element<TMsg>, _, _):
+      return First<TMsg>(Trigger, Prepared, Preferred);
+    when E.Element.Banner(
+      const Id: string, _, const Open: bool, const Dismiss: Sys.Func<TMsg>?,
+      const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+    ):
+      if Open and Settings.Enabled then
+        if Action <> null and (Preferred = null or Preferred = Banners.ActionId(Id)) then
+          return Banners.ActionId(Id);
+        end if;
+
+        if Dismiss <> null and (Preferred = null or Preferred = Banners.DismissId(Id)) then
+          return Banners.DismissId(Id);
+        end if;
+      end if;
+    when E.Element.TableOfContents(
+      const Id: string,
+      _,
+      const Items: array of Toc.Item,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Toc.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.Checklist(
+      const Id: string,
+      const Steps: array of Checklists.Step,
+      _,
+      _,
+      const Settings: Checklists.Options
+    ):
+      if Settings.Enabled then
+        var FirstPending: bool := true;
+        for Index: int := 0 to Steps.Length - 1 do
+          const Item: string := Checklists.StepId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+
+          if FirstPending and not Steps[Index].Done then
+            FirstPending := false;
+            const Action: string := Checklists.ActionId(Id, Index);
+            if Steps[Index].ActionLabel <> '' and Preferred = Action then
+              return Action;
+            end if;
+          end if;
+        end for;
+      end if;
+    when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.AvatarUpload(const Id: string, _, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SignaturePad(const Id: string, _, const Settings: Signatures.Options):
+      const Clear: string := Signatures.ClearId(Id);
+      if Settings.Enabled and Preferred = Clear then
+        return Clear;
+      end if;
+    when E.Element.Knob(const Id: string, _, _, _, _, _, const Settings: Knobs.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Fader(const Id: string, _, _, _, _, _, const Settings: Faders.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RulerSlider(const Id: string, _, _, _, _, _, const Settings: Rulers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.HistogramSlider(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      const Settings: Histograms.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RangeSliderAction(const Id: string, _, _, _, _, _, const Enabled: bool):
+      if Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Cards(
+      const Id: string,
+      const Items: array of RadioCards.Item,
+      const Selected: int,
+      _,
+      const Settings: RadioCards.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = Id then
+          return RadioCards.ItemId(Id, Sys.Math.Max(0, Selected));
+        end if;
+
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := RadioCards.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.ThemeChoice(const Id: string, _, _, const Settings: ThemeSwitchers.Options):
+      if Settings.Enabled then
+        for Index: int := 0 to (if Settings.WithSystem then
+          2
+        else
+          1
+        end if) do
+          const Item: string := ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index));
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.ReactionGroup(
+      const Id: string,
+      const Items: array of Reactions.Item,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Index: int := 0 to Items.Length - 1 do
+          const Item: string := Reactions.ItemId(Id, Index);
+          if Preferred = null or Preferred = Item then
+            return Item;
+          end if;
+        end for;
+      end if;
+    when E.Element.SpeedDialAction(const Id: string, _, _, const Settings: Speed.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SwipeRow(
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _,
+      _,
+      const Settings: Swipe.Options
+    ):
+      if Settings.Enabled then
+        return First<TMsg>(Child, Prepared, Preferred);
+      end if;
+    when E.Element.AccountMenu(const Id: string, _, _, const Settings: UserMenus.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Dropdown(const Id: string, _, _, const Settings: Menus.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.SplitAction(const Id: string, _, _, _, const Settings: Split.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        elsif Preferred = Split.MenuId(Id) then
+          return Preferred;
+        end if;
+      end if;
+    when E.Element.ButtonAction(const Id: string, _, _, const Settings: B.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.IconAction(const Id: string, _, _, _, const Settings: Icons.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Sidebar(
+      const Id: string,
+      const Sections: array of N.Section<TMsg>,
+      _,
+      const Enabled: bool
+    ):
+      if Enabled then
+        for Section: N.Section<TMsg> in Sections do
+          for Item: N.Item<TMsg> in Section.Items do
+            const ItemId: string := N.ItemId(Id, Item.Key);
+            if Item.Enabled and (Preferred = null or Preferred = ItemId) then
+              return ItemId;
+            end if;
+          end for;
+        end for;
+      end if;
+    when E.Element.EmptyState(
+      const Id: string,
+      _,
+      const Settings: EmptyStates.Options,
+      const Action: Sys.Func<TMsg>?
+    ):
+      const Part: string := EmptyStates.ActionId(Id);
+      if Settings.Enabled and Action <> null and (Preferred = null or Preferred = Part) then
+        return Part;
+      end if;
+    when E.Element.Card(
+      const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options,
+      const Activate: Sys.Func<TMsg>?
+    ):
+      if Settings.Enabled and Activate <> null and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      for Child: E.Element<TMsg> in Children do
+        const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      end for;
+    when E.Element.Carousel(
+      const Id: string,
+      const Slides: array of E.Element<TMsg>,
+      const Index: int,
+      _,
+      const Settings: Carousels.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Preferred = Id + '/viewport' then
+          return Preferred;
+        end if;
+
+        return First<TMsg>(Slides[Index], Prepared, Preferred);
+      end if;
+    when E.Element.CardStack(
+      const Id: string,
+      const DeckItems: array of E.Element<TMsg>,
+      _,
+      const Settings: CardStacks.Options
+    ):
+      if Settings.Enabled and DeckItems.Length > 0 then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Preferred = Id + '/top' then
+          return Preferred;
+        end if;
+
+        return First<TMsg>(DeckItems[0], Prepared, Preferred);
+      end if;
+    when E.Element.ImageViewer(const Id: string, _, _, _, const Settings: ImageViewers.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
+    when E.Element.ImageCropper(const Id: string, _, _, _, const Settings: ImageCroppers.Options):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
+    when E.Element.ImageCompare(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      const Settings: ImageComparisons.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+      end if;
+    when E.Element.SplitView(_, _, const Left: E.Element<TMsg>, const Right: E.Element<TMsg>, _, _):
+      return First<TMsg>(Left, Prepared, Preferred) ?? First<TMsg>(Right, Prepared, Preferred);
+    when E.Element.DocumentTabs(
+      const Id: string,
+      const Documents: array of Docs.Tab,
+      const Selected: int,
+      _,
+      _
+    ):
+      if Selected >= 0 then
+        const Part: string := Menus.ItemId(Id, Documents[Selected].Key);
+        if Preferred = null or Preferred = Id or Preferred = Part then
+          return Part;
+        end if;
+      end if;
+    when E.Element.StatusBar(const Id: string, const Items: array of StatusBar.Item<TMsg>, _):
+      for Item: StatusBar.Item<TMsg> in Items do
+        case Item of
+          when StatusBar.Item.Action(const Key: string, _, _, const Enabled: bool, _):
+            const Part: string := Menus.ItemId(Id, Key);
+            if Enabled and (Preferred = null or Preferred = Part) then
+              return Part;
+            end if;
+          else
+        end case;
+      end for;
+    when E.Element.Layered(
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ), E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.ButtonGroup(
+      const Children: array of E.Element<TMsg>
+    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+      _,
+      const Children: array of E.Element<TMsg>,
+      _
+    ):
+      for Child: E.Element<TMsg> in Children do
+        const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      end for;
+    when E.Element.Contextual(
+      _,
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Accordion(
+      const Id: string,
+      _,
+      const Open: bool,
+      _,
+      const Content: E.Element<TMsg>,
+      const Enabled: bool
+    ):
+      if Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Open then
+          return First<TMsg>(Content, Prepared, Preferred);
+        end if;
+      end if;
+    when E.Element.ExpandableCard(
+      const Id: string,
+      _,
+      const Open: bool,
+      _,
+      const Content: E.Element<TMsg>,
+      const Settings: ExpandableCards.Options
+    ):
+      if Settings.Enabled then
+        if Preferred = null or Preferred = Id then
+          return Id;
+        end if;
+
+        if Open then
+          return First<TMsg>(Content, Prepared, Preferred);
+        end if;
+      end if;
+    when E.Element.Alert(const Id: string, _, const Settings: Alerts.Options, _):
+      // A dismissed alert has no native focus target, so only honor explicit requests.
+      if Settings.Dismissible and Settings.Enabled and (Preferred = Id or Preferred =
+        Alerts.DismissId(
+        Id
+      ))
+      then
+        return Alerts.DismissId(Id);
+      end if;
+    when E.Element.ExpandableText(const Id: string, _, const Settings: ExpandableTexts.Options, _):
+      // The native link may not exist until layout decides whether the text overflows.
+      if Settings.Enabled and (Preferred = Id or Preferred =
+        ExpandableTexts.ToggleId(
+        Id
+      ))
+      then
+        return ExpandableTexts.ToggleId(Id);
+      end if;
+    when E.Element.Popover(
+      _,
+      const Trigger: E.Element<TMsg>,
+      const Content: E.Element<TMsg>,
+      const Open: bool,
+      _,
+      _
+    ):
+      const Found: string? := First<TMsg>(Trigger, Prepared, Preferred);
+      if Found <> null or not Open then
+        return Found;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.Dialog(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, const Settings: Dialogs.Options, _
+    ):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+      const Close: string := Dialogs.CloseId(Id);
+      if Settings.CloseButton and (Preferred = null or Preferred = Close) then
+        return Close;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
+      return First<TMsg>(Trigger, Prepared, Preferred);
+    when E.Element.Sized(const Child: E.Element<TMsg>, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Styled(const Child: E.Element<TMsg>, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Framed(const Child: E.Element<TMsg>, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.Sheet(
+      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Open: bool, _, _
+    ):
+      if not Open then
+        return First<TMsg>(Base, Prepared, Preferred);
+      end if;
+      const Close: string := Sheets.CloseId(Id);
+      if Preferred = null or Preferred = Close then
+        return Close;
+      end if;
+
+      return First<TMsg>(Content, Prepared, Preferred);
+    when E.Element.LiveCursors(
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.SelectionRing(_, const Child: E.Element<TMsg>, _), E.Element.CanvasControls(
+      _,
+      _,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.SelectionBar(_, _, _, _, const Child: E.Element<TMsg>, _):
+      return First<TMsg>(Child, Prepared, Preferred);
+    when E.Element.ResultCard(const Id: string, _, _, _, const Settings: ResultCards.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.FlameGraph(
+      const Id: string,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TimelineEditor(const Id: string, _, _, _, _):
+      if Preferred = null or Preferred = Id then
+        return Id;
+      end if;
+    when E.Element.CodeEditor(const Id: string, _, _, _), E.Element.DiffView(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.HexView(const Id: string, _, _, _, _):
+      if Preferred = null or Preferred = Id then
+        return Id;
+      end if;
+    when E.Element.Terminal(const Id: string, _, _, _, const Settings: TerminalWidget.Options):
+      if Settings.Input and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Veil(
+      const Id: string,
+      const Revealed: bool,
+      _,
+      const Child: E.Element<TMsg>,
+      const Settings: Veil.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+
+      if Settings.Enabled and Revealed then
+        return First<TMsg>(Child, Prepared, Preferred);
+      end if;
+    when E.Element.Deferred(const Id: string, _):
+      return First<TMsg>(Prepared.Subviews[Id].Tree, Prepared, Preferred);
+    else
+  end case;
+
+  return null;
+end function;
+
+end unit;

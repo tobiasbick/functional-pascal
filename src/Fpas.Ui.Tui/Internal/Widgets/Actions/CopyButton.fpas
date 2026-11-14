@@ -1,0 +1,148 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton;
+
+uses Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, System as Sys, System.Collections.Generic as C;
+
+// Clipboard and transient copy feedback owned by one terminal session.
+public type State = record
+  // Whether the session has a clipboard provider.
+  public Available: bool;
+  // Submits text for an ID and starts its confirmation interval on success.
+  public Submit: function(string, string): bool;
+  // Reports whether an ID is still showing its confirmation.
+  public Recent: function(string): bool;
+  // Retires expired confirmations and reports whether a repaint is needed.
+  public Expire: function(): bool;
+end record;
+
+// Creates the clipboard feedback owner.
+//
+// ## Parameters
+// - `WriteClipboard`: Optional terminal clipboard transport.
+// ## Returns
+// Session-local feedback and activation operations.
+public function Create(WriteClipboard: Sys.Action<string>?): State;
+  function Submit(Id: string; Text: string): bool;
+  begin
+    case WriteClipboard of
+      when is Sys.Action<string> as Writer:
+        Writer.Invoke(Text);
+        Deadlines[Id] := Sys.Environment.TickCount64 + 1600L;
+        return true;
+      else
+        return false;
+    end case;
+  end function;
+
+  function Recent(Id: string): bool;
+  begin
+    var Until: long := 0L;
+    return Deadlines.TryGetValue(Id, out Until) and Until > Sys.Environment.TickCount64;
+  end function;
+
+  function Expire(): bool;
+  begin
+    if Deadlines.Count = 0 then
+      return false;
+    end if;
+
+    const Now: long := Sys.Environment.TickCount64;
+    const Expired: C.List<string> := new C.List<string>();
+    for Item: C.KeyValuePair<string, long> in Deadlines do
+      if Item.Value <= Now then
+        Expired.Add(Item.Key);
+      end if;
+    end for;
+
+    for Id: string in Expired do
+      discard Deadlines.Remove(Id);
+    end for;
+
+    return Expired.Count > 0;
+  end function;
+begin
+  const Deadlines: C.Dictionary<string, long> := new C.Dictionary<string, long>(
+    Sys.StringComparer.Ordinal
+  );
+  return new State(WriteClipboard <> null, Submit, Recent, Expire);
+end function;
+
+// Clipboard action routed through the terminal's normal button activation path.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+type Action<TMsg> = record implements A.IActivatable<TMsg>
+  // Stable identity of the copy button.
+  public Id: string;
+  // Text from the presented view.
+  public Text: string;
+  // Optional notification after submitting the text.
+  public OnCopied: Sys.Func<TMsg>?;
+  // Owner session's clipboard and feedback operations.
+  public Clipboard: State;
+
+  // Submits the clipboard text and optionally proposes a message.
+  //
+  // ## Returns
+  // The notification or an action without a model message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    const Copied: bool := self.Clipboard.Submit(self.Id, self.Text);
+    if Copied then
+      case self.OnCopied of
+        when is Sys.Func<TMsg> as Notify:
+          return A.Result<TMsg>.Send(Notify.Invoke());
+        else
+      end case;
+    end if;
+
+    return A.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+// Resolves the terminal copy button using current feedback.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Text`: Literal clipboard text.
+// - `OnCopied`: Optional notification after submitting the text.
+// - `Enabled`: Model-owned input permission.
+// - `Clipboard`: Owner session's clipboard and feedback operations.
+// - `Success`: Theme foreground for the confirmation.
+// ## Returns
+// A terminal copy action with fixed copy/check geometry.
+public function Lower<TMsg>(
+  Id: string; Text: string; OnCopied: Sys.Func<TMsg>?; Enabled: bool; Clipboard: State; Success: G.Color
+): E.Element<TMsg>;
+begin
+  const Recent: bool := Clipboard.Recent(Id);
+  const Label: string := if Recent then
+    'Copied'
+  else
+    'Copy'
+  end if;
+  return E.Element<TMsg>.Action(
+    Id, new Action<TMsg>(Id, Text, OnCopied, Clipboard), Enabled and Clipboard.Available,
+    new E.ActionView(
+      if Recent then
+        '✓'
+      else
+        'Copy'
+      end if, Name := Label, Role := 'copy-button',
+      Value := if Recent then
+        'copied'
+      else
+        ''
+      end if, Variant := S.ButtonVariant.Ghost,
+      ArrowFocus := false, MinimumWidth := 6, Hint := Label,
+      Foreground := if Recent then
+        Success
+      else
+        null
+      end if
+    )
+  );
+end function;
+
+end unit;

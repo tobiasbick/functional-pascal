@@ -1,0 +1,52 @@
+unit Fpas.Ui.Widgets.Editors.GradientEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+
+// Color at a ramp position.
+public type Stop = record
+  // Position between zero and one.
+  public Position: float;
+  // Straight RGBA, including opacity.
+  public Tint: G.Color;
+end record;
+
+// Proposed ramp and selection.
+public type Event = record
+  // Updated gradient stops.
+  public Stops: array of Stop;
+  // Selected stop, or minus one.
+  public Selected: int;
+  // Inserted index, or minus one.
+  public Added: int;
+  // Removed index in the previous ramp, or minus one.
+  public Removed: int;
+end record;
+
+// Native GradientEditor settings.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Ramp height, or zero for the native default.
+  public Height: float := 0.0F;
+  // Maximum number of stops.
+  public Capacity: int := 16;
+end record;
+
+// Creates a graphical GradientEditor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Stops`: Gradient stops in ascending order.
+// - `Selected`: Selected stop, or minus one.
+// - `Changed`: Maps a native proposal to a message.
+// - `Settings`: Native layout and behavior options.
+// ## Returns
+// A graphical element.
+public function GradientEditor<TMsg>(Id: string; Stops: array of Stop; Selected: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.GradientEditor(Id, Stops, Selected, Changed, Settings ?? new Options());
+end function;
+
+end unit;

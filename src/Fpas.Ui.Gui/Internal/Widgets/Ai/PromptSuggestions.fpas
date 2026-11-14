@@ -1,0 +1,41 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Ai.PromptSuggestions;
+
+uses Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, System.Collections.Generic as Lists;
+
+// Presents CUI's native PromptSuggestions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable widget identity.
+// - `Items`: Suggestions in display order.
+// - `Changed`: Maps the selected index.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of PromptSuggestions.Item; Changed: function(int): TMsg; Settings: PromptSuggestions.Options);
+begin
+  const Role: string := 'prompt-suggestions';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Native: Lists.List<CuiAi.CuiSuggestion> := new Lists.List<CuiAi.CuiSuggestion>(
+    Items.Length
+  );
+  for Item: PromptSuggestions.Item in Items do
+    Native.Add(new CuiAi.CuiSuggestion(Item.Title, Item.Detail, Item.Icon));
+  end for;
+  const Keys: array of string := P.Indexed(Items.Length);
+  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Picked: int := Frame.Window.PromptSuggestions(
+    Token, Native.ToArray(), Settings.Columns, Enabled, Focus,
+    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  for Index: int := 0 to Items.Length - 1 do
+    P.Part<TMsg>(Frame, Id, Role, Keys[Index], Items[Index].Title, Enabled, '');
+  end for;
+
+  if Picked >= 0 then
+    Frame.Messages.Add(Changed(Picked));
+  end if;
+end procedure;
+
+end unit;

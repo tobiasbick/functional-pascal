@@ -1,0 +1,186 @@
+unit Fpas.Ui.Internal.Validation.ChartRules;
+
+uses
+  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.DonutCharts as D, Fpas.Ui.Widgets.Charts.PatternMeters as P,
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, System as Sys;
+
+// Validates a finite nonnegative chart dimension.
+// ## Parameters
+// - `Value`: Logical distance.
+// - `At`: Diagnostic location.
+public procedure Distance(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F then
+    R.Reject(At, 'Chart dimensions must be finite and nonnegative.');
+  end if;
+end procedure;
+
+// Validates a safe native number format.
+// ## Parameters
+// - `Value`: Optional format.
+// - `At`: Diagnostic location.
+public procedure Format(Value: C.ValueFormat?; At: string);
+begin
+  if Value = null then
+    return;
+  end if;
+
+  R.CheckText(Value.Prefix, At);
+  R.CheckText(Value.Suffix, At);
+  if Value.DecimalPlaces < 0 or Value.DecimalPlaces > 6 then
+    R.Reject(At, 'Chart decimal places must be between zero and six.');
+  end if;
+end procedure;
+
+// Validates a native chart palette reference.
+// ## Parameters
+// - `Value`: Chart color.
+// - `At`: Diagnostic location.
+public procedure Color(Value: C.Color; At: string);
+begin
+  case Value of
+    when C.Color.Palette(const Index: int):
+      if Index < 1 or Index > 6 then
+        R.Reject(At, 'A chart palette index is one through six.');
+      end if;
+    else
+      begin
+      end;
+  end case;
+end procedure;
+
+// Validates the data and options of native line and bar charts.
+// ## Parameters
+// - `Series`: Named finite samples.
+// - `Settings`: Native chart options.
+// - `At`: Diagnostic location.
+public procedure Chart(Series: array of C.Series; Settings: C.Options; At: string);
+begin
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Distance(Settings.Height, At);
+  Format(Settings.Format, At);
+  for Item: C.Series in Series do
+    R.CheckText(Item.Name, At);
+    Color(Item.Color, At);
+    for Value: float in Item.Values do
+      if not Sys.Single.IsFinite(Value) then
+        R.Reject(At, 'Chart samples must be finite.');
+      end if;
+    end for;
+  end for;
+
+  for Label: string in Settings.Labels do
+    R.CheckText(Label, At);
+  end for;
+  const Range: C.ValueRange? := Settings.Range;
+  if Range <> null then
+    if not Sys.Single.IsFinite(Range.Minimum) or not Sys.Single.IsFinite(Range.Maximum)
+      or Range.Minimum >= Range.Maximum or not Sys.Single.IsFinite(Range.Maximum - Range.Minimum)
+    then
+      R.Reject(At, 'Chart bounds must be finite and increasing.');
+    end if;
+  end if;
+
+  for Item: C.Annotation in Settings.Annotations do
+    R.CheckText(Item.Label, At);
+    R.CheckText(Item.Detail, At);
+    if not Sys.Enum.IsDefined<C.AnnotationKind>(
+      Item.Kind
+    ) or not Sys.Double.IsFinite(Item.X) or not Sys.Double.IsFinite(Item.Y)
+    then
+      R.Reject(At, 'Invalid chart annotation.');
+    end if;
+  end for;
+end procedure;
+
+// Validates nonnegative shares with a finite total.
+// ## Parameters
+// - `Values`: Native shares.
+// - `At`: Diagnostic location.
+public procedure Shares(Values: array of float; At: string);
+begin
+  var Sum: float := 0.0F;
+  for Value: float in Values do
+    Distance(Value, At);
+    Sum := Sum + Value;
+  end for;
+
+  Distance(Sum, At);
+end procedure;
+
+// Validates native donut data and its matching captions.
+// ## Parameters
+// - `Values`: Nonnegative shares.
+// - `Labels`: Captions or an empty array.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic location.
+public procedure Donut(Values: array of float; Labels: array of string; Settings: D.Options; At: string);
+begin
+  Shares(Values, At);
+  if Labels.Length <> 0 and Labels.Length <> Values.Length then
+    R.Reject(At, 'Supply one caption per share or no captions.');
+  end if;
+
+  for Label: string in Labels do
+    R.CheckText(Label, At);
+  end for;
+
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Distance(Settings.Height, At);
+  Format(Settings.Format, At);
+end procedure;
+
+// Validates a fraction gauge.
+// ## Parameters
+// - `Label`: Literal caption.
+// - `Value`: Fraction.
+// - `Size`: Logical diameter.
+// - `At`: Diagnostic location.
+public procedure Gauge(Label: string; Value: float; Size: float; At: string);
+begin
+  R.CheckText(Label, At);
+  Distance(Size, At);
+  Distance(Value, At);
+  if Value > 1.0F then
+    R.Reject(At, 'A gauge fraction cannot exceed one.');
+  end if;
+end procedure;
+
+// Validates CUI's bounded list of pattern-meter parts.
+// ## Parameters
+// - `Parts`: At most 32 nonnegative amounts.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic location.
+public procedure Pattern(Parts: array of P.Part; Settings: P.Options; At: string);
+begin
+  if Parts.Length > 32 then
+    R.Reject(At, 'A pattern meter supports at most 32 parts.');
+  end if;
+  var Sum: float := 0.0F;
+  for Item: P.Part in Parts do
+    R.CheckText(Item.Name, At);
+    Color(Item.Color, At);
+    Distance(Item.Value, At);
+    Distance(Item.Density, At);
+    if Item.Density > 1.0F then
+      R.Reject(At, 'A pattern density cannot exceed one.');
+    end if;
+
+    Sum := Sum + Item.Value;
+  end for;
+
+  Distance(Sum, At);
+  Distance(Settings.Total, At);
+  Distance(Settings.Height, At);
+  Format(Settings.Format, At);
+  R.CheckText(Settings.Label, At);
+  R.CheckText(Settings.Unit, At);
+  const FreeLabel: string? := Settings.FreeLabel;
+  if FreeLabel <> null then
+    R.CheckText(FreeLabel, At);
+  end if;
+
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+end procedure;
+
+end unit;

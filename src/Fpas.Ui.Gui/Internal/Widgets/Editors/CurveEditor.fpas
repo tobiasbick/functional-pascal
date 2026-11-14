@@ -1,0 +1,63 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Editors.CurveEditor;
+
+uses
+  Fpas.Ui.Widgets.Editors.CurveEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  Fpas.Ui.Gui.Internal.Data.CurveData as KeyData, System.Collections.Generic as Lists;
+
+// Presents a native CurveEditor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Keys`: Keys, sorted by X.
+// - `Selected`: Current key selection.
+// - `Changed`: Maps a native proposal.
+// - `Settings`: Native layout and behavior options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Keys: array of D.Key; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'curve-editor';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Native: array of CuiEditors.CuiCurveKey := new CuiEditors.CuiCurveKey[Keys.Length];
+  for Index: int := 0 to Keys.Length - 1 do
+    Native[Index] := KeyData.Pack(Keys[Index]);
+  end for;
+  const Marker: float? := Settings.Playhead;
+  const Result: CuiEditors.CuiCurveEdit? := Frame.Window.CurveEditor(
+    Token,
+    Native,
+    Settings.Capacity,
+    Selected,
+    Settings.XMinimum,
+    Settings.XMaximum,
+    Settings.YMinimum,
+    Settings.YMaximum,
+    Settings.XLabel,
+    Settings.YLabel,
+    Settings.Height,
+    Width.Kind,
+    Width.Value,
+    Marker ??
+    0.0F,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Snap, 2) or P.Bits(Marker <> null, 4)
+  );
+  case Result of
+    when is CuiEditors.CuiCurveEdit as Edit:
+      const NewKeys: Lists.List<D.Key> := new Lists.List<D.Key>(Edit.Keys.Length);
+      for Item: CuiEditors.CuiCurveKey in Edit.Keys do
+        NewKeys.Add(KeyData.Read(Item));
+      end for;
+
+      Frame.Messages.Add(
+        Changed(new D.Event(NewKeys.ToArray(), Edit.Selected, Edit.Added, Edit.Removed))
+      );
+    else
+  end case;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

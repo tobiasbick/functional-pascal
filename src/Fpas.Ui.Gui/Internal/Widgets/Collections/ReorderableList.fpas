@@ -1,0 +1,46 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Collections.ReorderableList;
+
+uses
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+// Presents the native ReorderableList element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable list identity.
+// - `Items`: Items indexed in canonical order.
+// - `Order`: Model-owned permutation.
+// - `Change`: Maps a proposed order to a message.
+// - `Enabled`: Whether the list accepts dragging.
+// - `Visit`: Host traversal for each reorder row.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of E.Element<TMsg>; Order: array of int; Change: function(array of int): TMsg; Enabled: bool; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Accept: bool := Frame.AcceptInput and Enabled;
+  const Proposed: array of int := Frame.Window.BeginReorder(
+    C.Token('reorderable-list', Id),
+    Order,
+    Accept
+  );
+  for Position: int := 0 to Proposed.Length - 1 do
+    const Index: int := Proposed[Position];
+    Frame.Window.BeginReorderItem(Position, Accept);
+    Visit(Items[Index], Frame, true, L.Alignment.Default);
+    Frame.Window.EndReorderItem();
+    C.Track<TMsg>(
+      Frame, new App.Control(
+        Id, '', 'reorder-row', new Cui.CuiRectangle(), Accept,
+        Value := Position.ToString(), Key := Index.ToString()
+      )
+    );
+  end for;
+
+  if Frame.Window.EndReorder() and Accept then
+    Frame.Messages.Add(Change(Proposed));
+  end if;
+
+  C.Track<TMsg>(Frame, new App.Control(Id, '', 'reorderable-list', new Cui.CuiRectangle(), Accept));
+end procedure;
+
+end unit;

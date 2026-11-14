@@ -1,0 +1,56 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.FeatureFlags;
+
+uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
+
+function PackFlag(Items: array of D.Flag): array of CuiDeveloper.CuiDevFlag;
+begin
+  const Native: Lists.List<CuiDeveloper.CuiDevFlag> := new Lists.List<CuiDeveloper.CuiDevFlag>(
+    Items.Length
+  );
+  for Entry: D.Flag in Items do
+    Native.Add(new CuiDeveloper.CuiDevFlag(Entry.Key, Entry.Description, Entry.On, Entry.Rollout));
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native FeatureFlags widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Entries`: Entries supplied to the widget.
+// - `Environments`: Environments supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Entries: array of D.Flag; Environments: array of string; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'feature-flags';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: CuiDeveloper.CuiFlagProposal? := Frame.Window.FeatureFlags(
+    Token,
+    PackFlag(Entries),
+    Environments,
+    Settings.Height,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  if not Enabled then
+    return;
+  end if;
+
+  case Result of
+    when is CuiDeveloper.CuiFlagProposal as Proposal:
+      Frame.Messages.Add(
+        Changed(new D.Event(Proposal.Index, Proposal.Environment, Proposal.On, Proposal.Rollout))
+      );
+    else
+  end case;
+end procedure;
+
+end unit;

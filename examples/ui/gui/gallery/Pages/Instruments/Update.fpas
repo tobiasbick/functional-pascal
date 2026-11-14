@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Instruments.Update;
 
 uses
-  GuiGallery.Pages.Instruments.State as S, Fpas.Ui.EventTracks as E, Fpas.Ui.DotCharts as D,
+  GuiGallery.Pages.Instruments.State as S, Fpas.Ui.Widgets.Charts.EventTracks as E, Fpas.Ui.Widgets.Charts.DotCharts as D,
   System as Sys;
 
 // Applies one native instrument interaction.

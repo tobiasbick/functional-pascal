@@ -1,0 +1,58 @@
+unit Fpas.Ui.Widgets.Developer.RegexTesters;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Pattern supplied to CUI.
+  public Pattern: string;
+  // Sample supplied to CUI.
+  public Sample: string;
+  // Modifiers supplied to CUI.
+  public Modifiers: int;
+  // Whether the current input is valid.
+  public Valid: bool;
+  // Matches supplied to CUI.
+  public Matches: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Pattern Capacity supplied to CUI.
+  public PatternCapacity: int := 127;
+  // Text Capacity supplied to CUI.
+  public TextCapacity: int := 1023;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native RegexTester widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Pattern`: Model-owned pattern data.
+// - `Sample`: Model-owned sample data.
+// - `Modifiers`: Model-owned modifiers data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function RegexTester<TMsg>(Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RegexTester(
+    Id,
+    Pattern,
+    Sample,
+    Modifiers,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

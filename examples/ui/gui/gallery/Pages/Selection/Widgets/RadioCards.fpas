@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.RadioCards as R,
+  Fpas.Ui.Widgets.Inputs.RadioCards as R,
   System as Sys;
 
 // Builds the save destination choices from the native Selection page.

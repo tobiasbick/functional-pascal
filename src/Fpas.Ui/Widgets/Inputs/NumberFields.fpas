@@ -1,0 +1,70 @@
+unit Fpas.Ui.Widgets.Inputs.NumberFields;
+
+uses Fpas.Ui.Elements as E;
+
+// Presentation and input settings for a graphical number field.
+public type Options = record
+  // Caption above the editor.
+  public Label: string := '';
+  // Muted unit text before the step buttons.
+  public Suffix: string := '';
+  // Finite positive increment of the buttons and arrow keys.
+  public Step: double := 1.0;
+  // Display zero through fifteen decimal places.
+  public DecimalPlaces: int := 0;
+  // Allow pointer and keyboard editing.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's numeric editor with increment and decrement buttons.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Value`: Finite model value within the inclusive bounds.
+// - `Minimum`: Finite lower bound.
+// - `Maximum`: Finite upper bound. Both bounds must fit the native display buffer.
+// - `OnChange`: Maps a proposed bounded value to a message.
+// - `Settings`: Optional caption, suffix, increment and precision.
+// ## Returns
+// A graphical number field with a model-owned value.
+public function NumberField<TMsg>(
+  Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg;
+  Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.NumberField(
+    Id,
+    Value,
+    Minimum,
+    Maximum,
+    OnChange,
+    Settings ?? new Options()
+  );
+end function;
+
+// Gets the native decrease button's snapshot identity.
+//
+// ## Parameters
+// - `Id`: Number field identity.
+// ## Returns
+// The decrease button's control ID.
+public function DecreaseId(Id: string): string;
+begin
+  return Id + '/decrease';
+end function;
+
+// Gets the native increase button's snapshot identity.
+//
+// ## Parameters
+// - `Id`: Number field identity.
+// ## Returns
+// The increase button's control ID.
+public function IncreaseId(Id: string): string;
+begin
+  return Id + '/increase';
+end function;
+
+end unit;

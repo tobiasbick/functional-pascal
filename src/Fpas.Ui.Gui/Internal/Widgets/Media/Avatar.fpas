@@ -1,0 +1,36 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Media.Avatar;
+
+uses
+  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Draws native initials or a decoded image and optional presence.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable avatar identity.
+// - `Name`: Name used for initials.
+// - `Settings`: Native size, presence and image options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Name: string; Settings: A.Options);
+begin
+  const Role: string := 'avatar';
+  const Image: bool := Frame.Window.Avatar(
+    C.Token(Role, Id), Name, Settings.ImagePath, Settings.Status, Settings.Size, Settings.Square,
+    not Frame.PaintingClosed
+  );
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(
+      new App.Control(
+        Id, Name, Role, new Cui.CuiRectangle(), false,
+        Value := if Image then
+          Settings.ImagePath ?? ''
+        else
+          ''
+        end if
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

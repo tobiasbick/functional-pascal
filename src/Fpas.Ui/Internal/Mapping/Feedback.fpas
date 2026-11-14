@@ -1,8 +1,8 @@
 unit Fpas.Ui.Internal.Mapping.Feedback;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Banners as Banners, Fpas.Ui.Countdowns as Countdowns,
-  Fpas.Ui.Checklists as Checklists, Fpas.Ui.Internal.MessageMapping as M, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns,
+  Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
 
 // Maps native feedback widgets into the parent message space.
 // ## Type parameters

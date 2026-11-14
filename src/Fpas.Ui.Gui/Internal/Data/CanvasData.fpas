@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.Internal.Data.CanvasData;
+
+uses
+  Fpas.Ui.Widgets.Canvas.LiveCursors as Live, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas,
+  Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, System.Collections.Generic as Lists;
+
+// Packs collaborators for the native canvas controls.
+// ## Parameters
+// - `Items`: Current collaborators.
+// ## Returns
+// Native collaborator data in the same order.
+public function People(Items: array of Live.Person): array of CuiCanvas.CuiLivePerson;
+begin
+  const Native: Lists.List<CuiCanvas.CuiLivePerson> := new Lists.List<CuiCanvas.CuiLivePerson>(
+    Items.Length
+  );
+  for Item: Live.Person in Items do
+    var Color: uint := 0U;
+    case Item.Color of
+      when is G.Color as Value:
+        Color := P.Pack(Value);
+      else
+    end case;
+
+    Native.Add(
+      new CuiCanvas.CuiLivePerson(
+        Item.Name,
+        cast<int>(Item.Tone),
+        Item.X,
+        Item.Y,
+        Item.Says,
+        Item.Speaking,
+        Item.Away,
+        Color
+      )
+    );
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Converts a canvas transform.
+// ## Parameters
+// - `Value`: The model's current view.
+// ## Returns
+// The native pan and zoom.
+public function View(Value: Nodes.View): CuiEditors.CuiNodeView;
+begin
+  return new CuiEditors.CuiNodeView(Value.X, Value.Y, Value.Zoom);
+end function;
+
+end unit;

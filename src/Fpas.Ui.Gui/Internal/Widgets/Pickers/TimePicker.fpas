@@ -1,0 +1,110 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.TimePicker;
+
+uses
+  Fpas.Ui.Widgets.Pickers.TimePickers as P, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys, System.Globalization as Culture;
+
+function ChoiceId(Id: string; Choice: int): string;
+begin
+  return if Choice < 24 then
+    P.HourId(Id, Choice)
+  elsif Choice < 84 then
+    P.MinuteId(Id, Choice - 24)
+  else
+    P.PeriodId(Id, Choice = 85)
+  end if;
+end function;
+
+function Caption(Choice: int; TwelveHour: bool): string;
+begin
+  if Choice >= 84 then
+    return if Choice = 85 then
+      'PM'
+    else
+      'AM'
+    end if;
+  end if;
+
+  if Choice >= 24 then
+    return (Choice - 24).ToString('00', Culture.CultureInfo.InvariantCulture);
+  end if;
+
+  if TwelveHour then
+    return if Choice = 0 then
+      '12'
+    else
+      Choice.ToString()
+    end if;
+  end if;
+
+  return Choice.ToString('00', Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Draws the native time picker and publishes time proposals and popup choices.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable picker identity.
+// - `Value`: Model-owned time.
+// - `OnChange`: Maps a proposed time to a message.
+// - `Settings`: Field presentation and input settings.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
+  Settings: P.Options
+);
+begin
+  const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
+  const Role: string := 'time-picker';
+  const Token: string := C.Token(Role, Id);
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Choice: int): string => C.Token('time-choice', ChoiceId(Id, Choice))
+  end if;
+  const Result: CuiPickers.CuiTimePickerResult := Frame.Window.TimePicker(
+    Token, Value, Settings.Label, Settings.Width, Settings.TwelveHour, Settings.MinuteStep,
+    Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), Track
+  );
+  if Result.Value.Ticks <> Value.Ticks then
+    Frame.Messages.Add(OnChange(Result.Value));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  if Settings.Label <> '' then
+    Frame.Labels.Add(Settings.Label);
+  end if;
+  const Text: string := if Settings.Label = '' then
+    'Time'
+  else
+    Settings.Label
+  end if;
+  const Format: string := if Settings.TwelveHour then
+    'h:mm tt'
+  else
+    'HH:mm'
+  end if;
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Text, Role, new Cui.CuiRectangle(), Enabled,
+      Value := Value.ToString(Format, Culture.CultureInfo.InvariantCulture)
+    )
+  );
+  for Choice: int in Result.Choices do
+    Frame.Controls.Add(
+      new App.Control(
+        ChoiceId(Id, Choice),
+        Caption(Choice, Settings.TwelveHour),
+        'time-choice',
+        new Cui.CuiRectangle(),
+        Enabled
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

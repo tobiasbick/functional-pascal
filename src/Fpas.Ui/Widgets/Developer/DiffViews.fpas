@@ -1,0 +1,57 @@
+unit Fpas.Ui.Widgets.Developer.DiffViews;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Current native diff state.
+public type Event = record
+  // Selected change, or minus one.
+  public Current: int;
+  // Number of change blocks.
+  public Count: int;
+  // Whether the viewer is showing an inline diff.
+  public Inline: bool;
+end record;
+
+// Native DiffView configuration.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Logical height, zero for the native default or minus one to fill.
+  public Height: float := 0.0F;
+  // Font size, or zero for the native default.
+  public Size: float := 0.0F;
+  // Syntax highlighting language.
+  public Language: string := 'text';
+  // Heading of the previous file.
+  public OldTitle: string := '';
+  // Heading of the current file.
+  public NewTitle: string := '';
+  // Request inline rather than split layout.
+  public Inline: bool := false;
+  // Unchanged lines kept beside each change.
+  public Context: int := 3;
+  // Fold long runs of unchanged lines.
+  public Fold: bool := true;
+  // Ignore differing line terminators.
+  public IgnoreLineEndings: bool := false;
+end record;
+
+// Creates a graphical DiffView.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Before`: Previous source.
+// - `After`: Updated source.
+// - `Current`: Selected change, or minus one.
+// - `Changed`: Maps diff and selection updates.
+// - `Settings`: Native presentation options.
+// ## Returns
+// A graphical view element.
+public function DiffView<TMsg>(Id: string; Before: string; After: string; Current: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DiffView(Id, Before, After, Current, Changed, Settings ?? new Options());
+end function;
+
+end unit;

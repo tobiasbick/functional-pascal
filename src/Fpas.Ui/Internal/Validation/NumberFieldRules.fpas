@@ -1,0 +1,43 @@
+unit Fpas.Ui.Internal.Validation.NumberFieldRules;
+
+uses Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Internal.Validation.Rules as R, System as Sys, System.Globalization as Culture;
+
+// Validates the number field's model and native display capacity.
+//
+// ## Parameters
+// - `Value`: Current model value.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `Settings`: Presentation and step options.
+// - `At`: Diagnostic path.
+public procedure Check(Value: double; Minimum: double; Maximum: double; Settings: N.Options; At: string);
+begin
+  R.CheckText(Settings.Label, At + '/label');
+  R.CheckText(Settings.Suffix, At + '/suffix');
+  if not Sys.Double.IsFinite(Minimum) or not Sys.Double.IsFinite(Maximum)
+    or not Sys.Double.IsFinite(Value) or Minimum > Maximum or Value < Minimum or Value > Maximum
+  then
+    R.Reject(At, 'A number field needs a finite value within finite ordered bounds.');
+  end if;
+
+  if not Sys.Double.IsFinite(Settings.Step) or Settings.Step <= 0.0
+    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 15
+  then
+    R.Reject(
+      At,
+      'A number field needs a finite positive step and zero through fifteen decimal places.'
+    );
+  end if;
+
+  const Provider: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
+  const Format: string := 'F' + Settings.DecimalPlaces.ToString(Provider);
+  if Minimum.ToString(
+    Format,
+    Provider
+  ).Length >= 64 or Maximum.ToString(Format, Provider).Length >= 64
+  then
+    R.Reject(At, 'The number field bounds exceed its native display capacity.');
+  end if;
+end procedure;
+
+end unit;

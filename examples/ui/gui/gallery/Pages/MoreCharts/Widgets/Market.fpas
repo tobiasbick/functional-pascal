@@ -1,9 +1,9 @@
 unit GuiGallery.Pages.MoreCharts.Widgets.Market;
 
 uses
-  GuiGallery.Pages.MoreCharts.Data as Data, Fpas.Ui.Elements as E, Fpas.Ui.ScatterCharts as Sc,
-  Fpas.Ui.RadialGauges as R, Fpas.Ui.Candlesticks as Cs, Fpas.Ui.Charts as C,
-  Fpas.Ui.Cards as Cards, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+  GuiGallery.Pages.MoreCharts.Data as Data, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.ScatterCharts as Sc,
+  Fpas.Ui.Widgets.Charts.RadialGauges as R, Fpas.Ui.Widgets.Charts.Candlesticks as Cs, Fpas.Ui.Widgets.Charts.Charts as C,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // Builds the native bubble chart.
 // ## Type parameters

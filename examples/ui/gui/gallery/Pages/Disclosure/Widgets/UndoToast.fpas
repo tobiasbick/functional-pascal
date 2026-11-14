@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Disclosure.Widgets.UndoToast;
 
 uses
   GuiGallery.Pages.Disclosure.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Buttons as B, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
 // Builds the original timed Undo toast trigger.
 // ## Returns

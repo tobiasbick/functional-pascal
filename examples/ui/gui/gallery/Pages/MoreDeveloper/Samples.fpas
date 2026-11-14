@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.MoreDeveloper.Samples;
 
-uses Fpas.Ui.TestExplorers as X, Fpas.Ui.StackTraces as S, Fpas.Ui.Coverages as CV, Fpas.Ui.Blames as B, Fpas.Ui.ApiExplorers as A, Fpas.Ui.Uptimes as U, Fpas.Ui.TimeHistograms as H, Fpas.Ui.FeatureFlagEditors as F, System as Sys;
+uses Fpas.Ui.Widgets.Developer.TestExplorers as X, Fpas.Ui.Widgets.Developer.StackTraces as S, Fpas.Ui.Widgets.Developer.Coverages as CV, Fpas.Ui.Widgets.Developer.Blames as B, Fpas.Ui.Widgets.Developer.ApiExplorers as A, Fpas.Ui.Widgets.Developer.Uptimes as U, Fpas.Ui.Widgets.Charts.TimeHistograms as H, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F, System as Sys;
 
 // Original gallery sample data.
 public const Tests: array of X.Item := [

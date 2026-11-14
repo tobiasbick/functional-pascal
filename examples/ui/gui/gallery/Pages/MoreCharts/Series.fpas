@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.MoreCharts.Series;
 
-uses Fpas.Ui.Charts as C, Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.Candlesticks as Cs, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.ScatterCharts as Sc, Fpas.Ui.Widgets.Charts.Candlesticks as Cs, System as Sys, System.Collections.Generic as Lists;
 
 // Creates the original native ranked-page amounts.
 // ## Returns

@@ -1,0 +1,33 @@
+unit Fpas.Ui.Widgets.Charts.DonutCharts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L;
+
+// Native responsive donut presentation.
+public type Options = record
+  // Content width lets CUI shrink the donut or place its legend below it.
+  public Width: L.Extent := L.Extent.Content;
+  // Maximum diameter; zero selects the native default of 180.
+  public Height: float := 0.0F;
+  // Null selects automatic native numeric formatting.
+  public Format: C.ValueFormat? := null;
+  // Show the native share legend.
+  public Legend: bool := true;
+end record;
+
+// Draws CUI's responsive donut and share legend.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Values`: Nonnegative shares with a finite sum.
+// - `Labels`: One caption per share, or an empty array for no legend.
+// - `Settings`: Native presentation.
+// ## Returns
+// A graphical element.
+public function DonutChart<TMsg>(Id: string; Values: array of float; Labels: array of string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DonutChart(Id, Values, Labels, Settings ?? new Options());
+end function;
+
+end unit;

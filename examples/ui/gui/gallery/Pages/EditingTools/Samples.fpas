@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.EditingTools.Samples;
 
 uses
-  Fpas.Ui.CurveEditors as C, Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T,
-  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.Graphics as Color, System as Sys;
+  Fpas.Ui.Widgets.Editors.CurveEditors as C, Fpas.Ui.Widgets.Editors.GradientEditors as G, Fpas.Ui.Widgets.Editors.TimelineEditors as T,
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as I, Fpas.Ui.Graphics as Color, System as Sys;
 
 // The original crate material and transform properties.
 public const Inspector: array of I.Group := [

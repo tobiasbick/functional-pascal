@@ -2,9 +2,9 @@ unit GuiGallery.Pages.Planning.Board;
 
 uses
   GuiGallery.Pages.Planning.State as M, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Charts as Colors,
-  Fpas.Ui.Graphics as Graphics, Fpas.Ui.Kanbans as K, Fpas.Ui.Badges as Badges, Fpas.Ui.Buttons as B,
-  Fpas.Ui.Avatars as Avatars, Fpas.Ui.ProgressBars as Progress, System as Sys, System.Collections.Generic as Lists;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Charts.Charts as Colors,
+  Fpas.Ui.Graphics as Graphics, Fpas.Ui.Widgets.Planning.Kanbans as K, Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Media.Avatars as Avatars, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, System as Sys, System.Collections.Generic as Lists;
 
 type Card = record
   public Title: string;

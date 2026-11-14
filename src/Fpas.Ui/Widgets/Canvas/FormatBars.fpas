@@ -1,0 +1,85 @@
+unit Fpas.Ui.Widgets.Canvas.FormatBars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M;
+
+// Current text formatting.
+public type Value = record
+  // Theme tone of the selected text.
+  public Color: S.Tone;
+  // Whether the selection is bold.
+  public Bold: bool;
+  // Whether the selection is underlined.
+  public Underline: bool;
+  // Whether the selection is a link.
+  public Link: bool;
+  // Zero-based text style.
+  public Style: int;
+  // Size displayed in the readout.
+  public Size: float;
+  // Native alignment from left (0) to justify (3).
+  public Alignment: int;
+  // Native list style from none (0) to checklist (3).
+  public List: int;
+end record;
+
+// A style in the native preview menu.
+public type Style = record
+  // Display name.
+  public Name: string;
+  // Size applied to the selection.
+  public Size: float;
+  // Size of the menu preview.
+  public PreviewSize: float;
+  // Font used in the preview.
+  public Font: M.Font;
+end record;
+
+// Format-bar settings.
+public type Options = record
+  // Custom styles, or empty for the defaults.
+  public Styles: array of Style := [];
+  // Custom tone grid, or empty for the defaults.
+  public Colors: array of S.Tone := [];
+  // Footer override, or null for the native default.
+  public Footer: string? := null;
+  // Footer keycaps, or null for the native default.
+  public FooterKeys: string? := null;
+  // Confirmation caption, or null for the native default.
+  public DeleteQuestion: string? := null;
+  // Omits the delete action.
+  public HideDelete: bool := false;
+  // Omits the extra action.
+  public HideMore: bool := false;
+  // Whether the bar accepts input.
+  public Enabled: bool := true;
+end record;
+
+// A native format-bar proposal.
+public type Event = record
+  // Proposed format.
+  public Format: Value;
+  // The link action was activated.
+  public ToggleLink: bool;
+  // Deletion was confirmed.
+  public Delete: bool;
+  // The extra action was activated.
+  public More: bool;
+end record;
+
+// Builds the native FormatBar element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Format`: Current selection format.
+// - `Changed`: Maps native proposals to messages.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function FormatBar<TMsg>(Id: string; Format: Value; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.FormatBar(Id, Format, Changed, Settings ?? new Options());
+end function;
+
+end unit;

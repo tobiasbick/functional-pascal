@@ -1,0 +1,253 @@
+unit Fpas.Ui.Gui.Internal.Presentation.DeveloperPresentation;
+
+uses
+  Fpas.Ui.Widgets.Developer.ProblemsPanels as ProblemsPanels,
+  Fpas.Ui.Widgets.Developer.Pipelines as Pipelines,
+  Fpas.Ui.Widgets.Developer.Keymaps as Keymaps,
+  Fpas.Ui.Widgets.Developer.CommitGraphs as CommitGraphs,
+  Fpas.Ui.Widgets.Developer.DependencyGraphs as DependencyGraphs,
+  Fpas.Ui.Widgets.Developer.NetworkWaterfalls as NetworkWaterfalls,
+  Fpas.Ui.Widgets.Developer.TraceViewers as TraceViewers,
+  Fpas.Ui.Widgets.Developer.TestExplorers as TestExplorers,
+  Fpas.Ui.Widgets.Developer.StackTraces as StackTraces,
+  Fpas.Ui.Widgets.Developer.ResponseStatuses as ResponseStatuses,
+  Fpas.Ui.Widgets.Developer.Uptimes as Uptimes,
+  Fpas.Ui.Widgets.Charts.TimeHistograms as TimeHistograms,
+  Fpas.Ui.Widgets.Developer.Coverages as Coverages,
+  Fpas.Ui.Widgets.Developer.Blames as Blames,
+  Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers,
+  Fpas.Ui.Widgets.Developer.KeyValueEditors as KeyValueEditors,
+  Fpas.Ui.Widgets.Developer.QueryBuilders as QueryBuilders,
+  Fpas.Ui.Widgets.Pickers.SchedulePickers as SchedulePickers,
+  Fpas.Ui.Widgets.Developer.RegexTesters as RegexTesters,
+  Fpas.Ui.Widgets.Developer.RequestBars as RequestBars,
+  Fpas.Ui.Widgets.Developer.FeatureFlagEditors as FeatureFlagEditors,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Problems as ProblemsWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Pipeline as PipelineWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Keymap as KeymapWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.CommitGraph as CommitGraphWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.DependencyGraph as DependencyGraphWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.NetworkWaterfall as NetworkWaterfallWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.TraceViewer as TraceViewerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.TestExplorer as TestExplorerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.StackTrace as StackTraceWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.ResponseStatus as ResponseStatusWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Uptime as UptimeWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Charts.TimeHistogram as TimeHistogramWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Coverage as CoverageWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.Blame as BlameWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.ApiExplorer as ApiExplorerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.KeyValueEditor as KeyValueEditorWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder as QueryBuilderWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Pickers.SchedulePicker as SchedulePickerWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.RegexTester as RegexTesterWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.RequestBar as RequestBarWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Developer.FeatureFlags as FeatureFlagsWidget,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys;
+
+// Presents a prepared developer widget through its CUI adapter.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Node`: Developer widget.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+begin
+  case Node of
+    when E.Element.Problems(
+      const Id: string,
+      const Diagnostics: array of ProblemsPanels.Diagnostic,
+      const Changed: function(ProblemsPanels.Event): TMsg,
+      const Settings: ProblemsPanels.Options
+    ):
+      ProblemsWidget.Draw<TMsg>(Frame, Id, Diagnostics, Changed, Settings);
+    when E.Element.Pipeline(
+      const Id: string,
+      const Stages: array of string,
+      const Jobs: array of Pipelines.Job,
+      const Selection: int,
+      const Changed: function(Pipelines.Event): TMsg,
+      const Settings: Pipelines.Options
+    ):
+      PipelineWidget.Draw<TMsg>(Frame, Id, Stages, Jobs, Selection, Changed, Settings);
+    when E.Element.Keymap(
+      const Id: string,
+      const Bindings: array of Keymaps.Binding,
+      const Categories: array of string,
+      const Modifiers: int,
+      const Changed: function(Keymaps.Event): TMsg,
+      const Settings: Keymaps.Options
+    ):
+      KeymapWidget.Draw<TMsg>(Frame, Id, Bindings, Categories, Modifiers, Changed, Settings);
+    when E.Element.CommitGraph(
+      const Id: string,
+      const Commits: array of CommitGraphs.Commit,
+      const Selection: int,
+      const Changed: function(CommitGraphs.Event): TMsg,
+      const Settings: CommitGraphs.Options
+    ):
+      CommitGraphWidget.Draw<TMsg>(Frame, Id, Commits, Selection, Changed, Settings);
+    when E.Element.DependencyGraph(
+      const Id: string,
+      const Vertices: array of DependencyGraphs.Vertex,
+      const Edges: array of DependencyGraphs.Edge,
+      const Selection: int,
+      const Changed: function(DependencyGraphs.Event): TMsg,
+      const Settings: DependencyGraphs.Options
+    ):
+      DependencyGraphWidget.Draw<TMsg>(Frame, Id, Vertices, Edges, Selection, Changed, Settings);
+    when E.Element.NetworkWaterfall(
+      const Id: string,
+      const Requests: array of NetworkWaterfalls.Request,
+      const Selection: int,
+      const Changed: function(NetworkWaterfalls.Event): TMsg,
+      const Settings: NetworkWaterfalls.Options
+    ):
+      NetworkWaterfallWidget.Draw<TMsg>(Frame, Id, Requests, Selection, Changed, Settings);
+    when E.Element.TraceViewer(
+      const Id: string,
+      const Tracks: array of TraceViewers.Track,
+      const Spans: array of TraceViewers.Span,
+      const Markers: array of TraceViewers.Marker,
+      const Value: TraceViewers.View,
+      const Selection: int,
+      const Changed: function(TraceViewers.Event): TMsg,
+      const Settings: TraceViewers.Options
+    ):
+      TraceViewerWidget.Draw<TMsg>(
+        Frame,
+        Id,
+        Tracks,
+        Spans,
+        Markers,
+        Value,
+        Selection,
+        Changed,
+        Settings
+      );
+    when E.Element.TestExplorer(
+      const Id: string,
+      const Entries: array of TestExplorers.Item,
+      const Changed: function(TestExplorers.Event): TMsg,
+      const Settings: TestExplorers.Options
+    ):
+      TestExplorerWidget.Draw<TMsg>(Frame, Id, Entries, Changed, Settings);
+    when E.Element.StackTrace(
+      const Id: string,
+      const Frames: array of StackTraces.Frame,
+      const Changed: function(StackTraces.Event): TMsg,
+      const Settings: StackTraces.Options
+    ):
+      StackTraceWidget.Draw<TMsg>(Frame, Id, Frames, Changed, Settings);
+    when E.Element.ResponseStatus(
+      const Id: string,
+      const Status: int,
+      const Seconds: double,
+      const Bytes: double,
+      const Settings: ResponseStatuses.Options
+    ):
+      ResponseStatusWidget.Draw<TMsg>(Frame, Id, Status, Seconds, Bytes, Settings);
+    when E.Element.Uptime(
+      const Id: string,
+      const Services: array of Uptimes.Service,
+      const LastDay: Sys.DateOnly,
+      const Settings: Uptimes.Options
+    ):
+      UptimeWidget.Draw<TMsg>(Frame, Id, Services, LastDay, Settings);
+    when E.Element.TimeHistogram(
+      const Id: string,
+      const Start: double,
+      const Bucket: double,
+      const Buckets: int,
+      const SeriesData: array of TimeHistograms.Series,
+      const Value: TimeHistograms.Range,
+      const Changed: function(TimeHistograms.Event): TMsg,
+      const Settings: TimeHistograms.Options
+    ):
+      TimeHistogramWidget.Draw<TMsg>(
+        Frame,
+        Id,
+        Start,
+        Bucket,
+        Buckets,
+        SeriesData,
+        Value,
+        Changed,
+        Settings
+      );
+    when E.Element.Coverage(
+      const Id: string,
+      const ReportFiles: array of Coverages.File,
+      const Changed: function(Coverages.Event): TMsg,
+      const Settings: Coverages.Options
+    ):
+      CoverageWidget.Draw<TMsg>(Frame, Id, ReportFiles, Changed, Settings);
+    when E.Element.Blame(
+      const Id: string,
+      const Lines: array of string,
+      const LineCommits: array of int,
+      const Revisions: array of Blames.Revision,
+      const Changed: function(Blames.Event): TMsg,
+      const Settings: Blames.Options
+    ):
+      BlameWidget.Draw<TMsg>(Frame, Id, Lines, LineCommits, Revisions, Changed, Settings);
+    when E.Element.ApiExplorer(
+      const Id: string,
+      const Endpoints: array of ApiExplorers.Endpoint,
+      const Selection: int,
+      const Changed: function(ApiExplorers.Event): TMsg,
+      const Settings: ApiExplorers.Options
+    ):
+      ApiExplorerWidget.Draw<TMsg>(Frame, Id, Endpoints, Selection, Changed, Settings);
+    when E.Element.KeyValueEditor(
+      const Id: string,
+      const Pairs: array of KeyValueEditors.Pair,
+      const Changed: function(KeyValueEditors.Event): TMsg,
+      const Settings: KeyValueEditors.Options
+    ):
+      KeyValueEditorWidget.Draw<TMsg>(Frame, Id, Pairs, Changed, Settings);
+    when E.Element.QueryBuilder(
+      const Id: string,
+      const Fields: array of QueryBuilders.Field,
+      const RulesData: array of QueryBuilders.Rule,
+      const Changed: function(QueryBuilders.Event): TMsg,
+      const Settings: QueryBuilders.Options
+    ):
+      QueryBuilderWidget.Draw<TMsg>(Frame, Id, Fields, RulesData, Changed, Settings);
+    when E.Element.SchedulePicker(
+      const Id: string,
+      const Expression: string,
+      const Changed: function(SchedulePickers.Event): TMsg,
+      const Settings: SchedulePickers.Options
+    ):
+      SchedulePickerWidget.Draw<TMsg>(Frame, Id, Expression, Changed, Settings);
+    when E.Element.RegexTester(
+      const Id: string,
+      const Pattern: string,
+      const Sample: string,
+      const Modifiers: int,
+      const Changed: function(RegexTesters.Event): TMsg,
+      const Settings: RegexTesters.Options
+    ):
+      RegexTesterWidget.Draw<TMsg>(Frame, Id, Pattern, Sample, Modifiers, Changed, Settings);
+    when E.Element.RequestBar(
+      const Id: string,
+      const Method: int,
+      const Url: string,
+      const Changed: function(RequestBars.Event): TMsg,
+      const Settings: RequestBars.Options
+    ):
+      RequestBarWidget.Draw<TMsg>(Frame, Id, Method, Url, Changed, Settings);
+    when E.Element.FeatureFlags(
+      const Id: string,
+      const Entries: array of FeatureFlagEditors.Flag,
+      const Environments: array of string,
+      const Changed: function(FeatureFlagEditors.Event): TMsg,
+      const Settings: FeatureFlagEditors.Options
+    ):
+      FeatureFlagsWidget.Draw<TMsg>(Frame, Id, Entries, Environments, Changed, Settings);
+    else
+  end case;
+end procedure;
+
+end unit;

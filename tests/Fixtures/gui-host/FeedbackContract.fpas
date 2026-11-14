@@ -3,10 +3,10 @@ unit GalleryFeedbackContract;
 uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
   GuiGallery.Shared.State as Shared, GalleryHostAssertions as A, Fpas.Ui.Elements as E,
-  Fpas.Ui.Composition as U, Fpas.Ui.Menus as Menus, Fpas.Ui.Alerts as Alerts, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
-  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings, Fpas.Ui.TimelineItems as Timeline,
-  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.ThemeSwitchers as Switchers,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Composition as U, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Feedback.ProgressBars as P, Fpas.Ui.Widgets.Feedback.Spinners as Spin,
+  Fpas.Ui.Widgets.Charts.Meters as Meters, Fpas.Ui.Widgets.Feedback.ProgressRings as Rings, Fpas.Ui.Widgets.Planning.TimelineItems as Timeline,
+  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys;
 
 procedure Validate();

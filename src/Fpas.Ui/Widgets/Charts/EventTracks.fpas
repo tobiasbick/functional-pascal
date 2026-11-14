@@ -1,0 +1,69 @@
+unit Fpas.Ui.Widgets.Charts.EventTracks;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.DotCharts as D;
+
+// Model-owned events and selection.
+public type Value = record
+  // Sorted event times.
+  public Times: array of double;
+  // Selected index, or minus one.
+  public Selected: int := -1;
+end record;
+
+// Native mutation proposed in a frame.
+public type Change = record
+  // Proposed event times and selection.
+  public Current: Value;
+  // New event index, or minus one.
+  public Added: int;
+  // Former removed index, or minus one.
+  public Removed: int;
+  // Whether an event is being dragged.
+  public Dragging: bool;
+end record;
+
+// Native event track settings.
+public type Options = record
+  // Logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Maximum number of events.
+  public Capacity: int := 32;
+  // Axis start.
+  public Minimum: double := 0.0;
+  // Axis end.
+  public Maximum: double := 1.0;
+  // Snap step, or zero for continuous input.
+  public Step: double := 0.0;
+  // Axis units.
+  public Units: D.AxisUnits := D.AxisUnits.Number;
+  // Safe numeric label format.
+  public Format: C.ValueFormat? := null;
+  // Label distance or zero for automatic spacing.
+  public LabelStep: double := 0.0;
+  // Allow adding events.
+  public Add: bool := true;
+  // Allow removing events.
+  public Remove: bool := true;
+  // Show the axis.
+  public Axis: bool := true;
+  // Accept user input.
+  public Enabled: bool := true;
+end record;
+
+// Draws the native CUI event track.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned events and selection.
+// - `OnChange`: Maps a proposed native change.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function EventTrack<TMsg>(Id: string; Current: Value; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.EventTrack(Id, Current, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

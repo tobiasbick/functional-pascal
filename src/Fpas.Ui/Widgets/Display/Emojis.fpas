@@ -1,0 +1,18 @@
+unit Fpas.Ui.Widgets.Display.Emojis;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a native CUI emoji element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Glyph`: Emoji sequence to display.
+// - `Size`: Logical emoji size. Zero uses the default.
+// ## Returns
+// A graphical element.
+public function Emoji<TMsg>(Glyph: string; Size: float := 0.0F): E.Element<TMsg>;
+begin
+  return E.Element<TMsg>.Emoji(Glyph, Size);
+end function;
+
+end unit;

@@ -3,9 +3,9 @@ unit GalleryDesktopChromeContract;
 uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
   GuiGallery.Pages.Desktop.State as Desktop, GalleryHostAssertions as A,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Toolbars as Toolbar,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.ShortcutRecorders as Keys;
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Desktop.Toolbars as Toolbar,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 
 procedure Run(Renderer: Cui.CuiRenderer; Root: string; Width: int; Page: State.Page);
   procedure Inject();

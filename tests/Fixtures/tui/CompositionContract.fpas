@@ -2,9 +2,9 @@ program CompositionContract;
 
 uses
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as M,
-  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Buttons as B,
-  Fpas.Ui.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
-  Fpas.Ui.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
+  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
   System as Sys, System.Console as Console, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
 

@@ -1,3 +1,4 @@
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Tests;

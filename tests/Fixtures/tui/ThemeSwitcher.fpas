@@ -1,7 +1,7 @@
 program ThemeSwitcherContract;
 
 uses
-  Fpas.Ui.Buttons as UiButtons, Fpas.Ui.ThemeSwitchers as S, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Widgets.Theming.ThemeSwitchers as S, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Tui.Application as Tui, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;

@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Lists.Widgets.TreeAndList;
 
 uses
   GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Trees as T, Fpas.Ui.ListItems as I, Fpas.Ui.Grids as Grid, Fpas.Ui.Cards as Cards,
+  Fpas.Ui.Widgets.Collections.Trees as T, Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
 function File(Model: State.Model; Name: string; Icon: string := ''): E.Element<State.Msg>;

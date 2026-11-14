@@ -1,0 +1,94 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Navigation.TableOfContents;
+
+uses
+  Fpas.Ui.Widgets.Navigation.TableOfContents as T, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, System as Sys,
+  System.Collections.Generic as Lists;
+
+function ItemToken(Id: string; Index: int): string;
+begin
+  return C.Token('toc-item', T.ItemId(Id, Index));
+end function;
+
+// Draws the native outline and exposes the current anchor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable outline identity.
+// - `ScrollId`: Target viewport identity.
+// - `Items`: Ordered outline entries.
+// - `Changed`: Optional active anchor change message.
+// - `Enabled`: Whether entries accept input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; ScrollId: string; Items: array of T.Item;
+  Changed: Sys.Func<string, TMsg>?; Enabled: bool
+);
+begin
+  const Accept: bool := Frame.AcceptInput and Enabled;
+  const Titles: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Anchors: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Levels: array of int := new int[Items.Length];
+  var Focus: int := 0;
+  for Index: int := 0 to Items.Length - 1 do
+    const Entry: T.Item := Items[Index];
+    Titles.Add(Entry.Title);
+    Anchors.Add(Entry.Anchor);
+    Levels[Index] := Entry.Level;
+    if C.WantsFocus<TMsg>(Frame, T.ItemId(Id, Index), ItemToken(Id, Index), Accept) then
+      Focus := Index + 1;
+    end if;
+  end for;
+
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Index: int): string => ItemToken(Id, Index)
+  end if;
+  const Token: string := C.Token('table-of-contents', Id);
+  const Active: int := Frame.Window.TableOfContents(
+    Token,
+    C.Token('scroll', ScrollId),
+    Titles.ToArray(),
+    Anchors.ToArray(),
+    Levels,
+    Accept,
+    Focus,
+    Track
+  );
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  const Anchor: string := Anchors[Active];
+  if Frame.AcceptInput then
+    case Changed of
+      when is Sys.Func<string, TMsg> as Notify:
+        for Prior: App.Control in Frame.Previous do
+          if Prior.Id = Id and Prior.Role = 'table-of-contents' and Prior.Value <> Anchor then
+            Frame.Messages.Add(Notify.Invoke(Anchor));
+            break;
+          end if;
+        end for;
+      else
+    end case;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(Id, '', 'table-of-contents', new Cui.CuiRectangle(), Accept, Value := Anchor)
+  );
+  for Index: int := 0 to Items.Length - 1 do
+    Frame.Controls.Add(
+      new App.Control(
+        T.ItemId(Id, Index), Titles[Index], 'toc-item', new Cui.CuiRectangle(), Accept,
+        Value := if Index = Active then
+          'true'
+        else
+          'false'
+        end if
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

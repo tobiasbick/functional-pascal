@@ -1,0 +1,96 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Ai.Composer;
+
+uses Fpas.Ui.Widgets.Ai.Composers as Composers, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, Fpas.Ui.Gui.Internal.Data.AiData as Data, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+
+// Presents CUI's native Composer.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable composer identity.
+// - `Content`: The model-owned draft, attachments, selection and recording.
+// - `Changed`: Maps an edit or native action.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
+begin
+  const Role: string := 'composer';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Take: Composers.Recording? := Content.Take;
+  const Keys: array of string := ['editor', 'send', 'record', 'cancel'];
+  const Focus: int := P.Focus<TMsg>(
+    Frame, Id, Role, Keys,
+    [
+      Enabled and Take = null,
+      Enabled,
+      Enabled and Take = null and Settings.Microphone,
+      Enabled and Take <> null
+    ],
+    if Take = null then
+      0
+    else
+      1
+    end if
+  );
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Layout: CuiAi.CuiComposerOptions := new CuiAi.CuiComposerOptions(
+    Settings.Placeholder, Settings.MaxUtf8Bytes,
+    Settings.MaxLines, Width.Kind, Width.Value, if Take = null then
+      0.0F
+    else
+      Take.Seconds
+    end if
+  );
+  const Result: CuiAi.CuiComposerResult := Frame.Window.Composer(
+    Token, Content.Draft, Content.Attachments,
+    Data.Models(Content.Models), Content.Selected, if Take = null then
+      null
+    else
+      Take.Levels
+    end if, Layout,
+    P.Bits(Enabled, 1) or P.Bits(
+      Content.Busy,
+      2
+    ) or P.Bits(Settings.Microphone, 4) or P.Bits(Take <> null, 8),
+    Focus, P.Tracker<TMsg>(Frame, Id, Role, Keys)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', false, Content.Draft);
+  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  if Enabled and Result.Draft <> Content.Draft then
+    Frame.Messages.Add(Changed(Composers.Event.Edit(Result.Draft)));
+  end if;
+
+  if (Result.Events and 1) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Send(Result.Draft)));
+  end if;
+
+  if (Result.Events and 2) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Stop));
+  end if;
+
+  if (Result.Events and 4) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Attach));
+  end if;
+
+  if (Result.Events and 8) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Remove(Result.Removed)));
+  end if;
+
+  if (Result.Events and 16) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Select(Result.Selected)));
+  end if;
+
+  if (Result.Events and 32) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Record));
+  end if;
+
+  if (Result.Events and 64) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.Cancel));
+  end if;
+
+  if (Result.Events and 128) <> 0 then
+    Frame.Messages.Add(Changed(Composers.Event.SendVoice));
+  end if;
+end procedure;
+
+end unit;

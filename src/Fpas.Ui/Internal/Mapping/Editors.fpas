@@ -1,22 +1,22 @@
 unit Fpas.Ui.Internal.Mapping.Editors;
 
 uses
-  Fpas.Ui.InlineEdits as InlineEdits, Fpas.Ui.ScrubFields as ScrubFields,
-  Fpas.Ui.MoneyFields as MoneyFields, Fpas.Ui.ShortcutRecorders as RecorderKeys,
-  Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
-  Fpas.Ui.DatePickers as DatePickers,
-  Fpas.Ui.TimePickers as TimePickers, Fpas.Ui.WheelPickers as WheelPickers,
-  Fpas.Ui.DateRanges as Dates, Fpas.Ui.DateRangePickers as RangePickers,
-  Fpas.Ui.MultiSelects as Multi,
+  Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits, Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields,
+  Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys,
+  Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers,
+  Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers, Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers,
+  Fpas.Ui.Widgets.Pickers.DateRanges as Dates, Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.Internal.MessageMapping as M,
-  Fpas.Ui.Selects as Selects,
-  Fpas.Ui.NumberFields as NumberFields,
-  Fpas.Ui.TagInputs as TagInputs,
-  Fpas.Ui.OneTimeCodes as OneTimeCodes,
-  Fpas.Ui.SearchFields as SearchFields,
-  Fpas.Ui.TextAreas as TextAreas,
-  Fpas.Ui.TextFields as TextFields,
+  Fpas.Ui.Internal.Mapping.MessageMapping as M,
+  Fpas.Ui.Widgets.Inputs.Selects as Selects,
+  Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields,
+  Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs,
+  Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes,
+  Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields,
+  Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas,
+  Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
   System as Sys;
 
 // Translates a validated family of UI nodes without changing presentation.

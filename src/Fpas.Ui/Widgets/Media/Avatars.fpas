@@ -1,0 +1,32 @@
+unit Fpas.Ui.Widgets.Media.Avatars;
+
+uses Fpas.Ui.Elements as E;
+
+// Image, shape and presence settings for a native avatar.
+public type Options = record
+  // Logical diameter. Zero uses CUI's default of 32.
+  public Size: float := 32.0F;
+  // Optional image file path. Missing or undecodable images show initials.
+  public ImagePath: string? := null;
+  // Presence dot. Empty hides it. Online, busy and away use native colors.
+  public Status: string := '';
+  // Draw a rounded square.
+  public Square: bool := false;
+end record;
+
+// Displays initials or an image using CUI's native avatar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable avatar identity.
+// - `Name`: Name used for initials and their color.
+// - `Settings`: Optional image, size, shape and presence.
+// ## Returns
+// The graphical avatar.
+public function Avatar<TMsg>(Id: string; Name: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Avatar(Id, Name, Settings ?? new Options());
+end function;
+
+end unit;

@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Developer.State;
 
-uses GuiGallery.Pages.Developer.Samples as Samples, Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys, Fpas.Ui.ShortcutRecorders as Shortcuts, Fpas.Ui.ProblemsPanels as P;
+uses GuiGallery.Pages.Developer.Samples as Samples, Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Shortcuts, Fpas.Ui.Widgets.Developer.ProblemsPanels as P;
 
 // State of the Developer tools examples.
 public type Model = record

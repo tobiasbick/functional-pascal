@@ -1,0 +1,70 @@
+unit Fpas.Ui.Widgets.Developer.ApiExplorers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native ApiExplorer widget.
+public type Parameter = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Location supplied to CUI.
+  public Location: string;
+  // Type supplied to CUI.
+  public Type: string;
+  // Required supplied to CUI.
+  public Required: bool;
+  // Description supplied to CUI.
+  public Description: string?;
+end record;
+
+// Data for the native ApiExplorer widget.
+public type Endpoint = record
+  // Method supplied to CUI.
+  public Method: string;
+  // Path supplied to CUI.
+  public Path: string;
+  // Summary supplied to CUI.
+  public Summary: string?;
+  // Tag supplied to CUI.
+  public Tag: string?;
+  // Deprecated supplied to CUI.
+  public Deprecated: bool;
+  // Parameters supplied to CUI.
+  public Parameters: array of Parameter;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selection: int;
+  // Endpoint to try, or minus one.
+  public TryIt: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native ApiExplorer widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Endpoints`: Model-owned endpoints data.
+// - `Selection`: Selected zero-based index, or minus one.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ApiExplorer<TMsg>(Id: string; Endpoints: array of Endpoint; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ApiExplorer(Id, Endpoints, Selection, Changed, Settings ?? new Options());
+end function;
+
+end unit;

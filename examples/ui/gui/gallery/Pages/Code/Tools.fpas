@@ -3,12 +3,12 @@ unit GuiGallery.Pages.Code.Tools;
 uses
   GuiGallery.Pages.Code.State as M, GuiGallery.Pages.Code.Samples as Sample,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Motion as F,
-  Fpas.Ui.Themes as Theme, Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B, Fpas.Ui.IconButtons as I, Fpas.Ui.SegmentedControls as Seg,
-  Fpas.Ui.TextFields as Field, Fpas.Ui.Markdowns as Markdown,
-  Fpas.Ui.CodeEditors as Editor, Fpas.Ui.DiffViews as Diff,
-  Fpas.Ui.HexViews as Hex, Fpas.Ui.LogConsoles as Log, System as Sys, System.Linq as Linq;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as F,
+  Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as I, Fpas.Ui.Widgets.Actions.SegmentedControls as Seg,
+  Fpas.Ui.Widgets.Inputs.TextFields as Field, Fpas.Ui.Widgets.Display.Markdowns as Markdown,
+  Fpas.Ui.Widgets.Editors.CodeEditors as Editor, Fpas.Ui.Widgets.Developer.DiffViews as Diff,
+  Fpas.Ui.Widgets.Developer.HexViews as Hex, Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys, System.Linq as Linq;
 
 function Join(First: array of E.Element<M.Msg>; Second: array of E.Element<M.Msg>): array of E.Element<M.Msg>;
 begin

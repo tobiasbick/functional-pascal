@@ -2,11 +2,11 @@ unit GuiGallery.Pages.Actions.Widgets.ThemeSwitcher;
 
 uses
   GuiGallery.Shared.State as Demo,
-  Fpas.Ui.ThemeToggles as Toggles,
+  Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
   GuiGallery.Pages.Actions.State as State,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.ThemeSwitchers as Switchers,
-  Fpas.Ui.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
 

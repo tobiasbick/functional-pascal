@@ -1,0 +1,99 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Dockspace;
+
+uses
+  Fpas.Ui.Widgets.Desktop.Dockspaces as D, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
+  Fpas.Ui.Gui.Cui as Cui,
+  System as Sys;
+
+// Presents native docking and builds only the visible body of a leaf.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation and input context.
+// - `Id`: Stable workspace identity.
+// - `Panels`: Every panel, including closed or inactive tabs.
+// - `Settings`: Native dimensions and layout requests.
+// - `Changed`: Optional receiver for serialized layout changes.
+// - `Visit`: Presents the body of a visible panel.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Panels: array of D.Panel<TMsg>; Settings: D.Options; Changed: Sys.Func<string, TMsg>?; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Token: string := C.Token('dockspace', Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Height: Size.NativeExtent := Size.Extent(Settings.Height);
+  const Restore: D.Restore? := Settings.Load;
+  if Restore <> null and Frame.AcceptInput then
+    Frame.Window.RestoreDockLayout(Token, Restore.Revision, Restore.Layout);
+  end if;
+
+  Frame.Window.BeginDockspace(
+    Token, new CuiDesktop.CuiDockspaceOptions(
+      Width.Kind,
+      Width.Value,
+      Height.Kind,
+      Height.Value,
+      Settings.MinimumWidth,
+      Settings.MinimumHeight,
+      Settings.Shortcuts,
+      Settings.InitialLayout
+    ), Frame.AcceptInput
+  );
+  for Panel: D.Panel<TMsg> in Panels do
+    const PanelId: string := M.ItemId(Id, Panel.Key);
+    const Track: string? := if Frame.PaintingClosed then
+      null
+    else
+      C.Token('dock-panel', PanelId)
+    end if;
+    const Result: CuiDesktop.CuiDockPanelResult := Frame.Window.BeginDockPanel(
+      Panel.Key,
+      Panel.Title,
+      Panel.Icon,
+      Panel.Dirty,
+      Panel.Open,
+      Panel.OnOpenChanged <> null,
+      Track
+    );
+    if Result.HasTab and not Frame.PaintingClosed then
+      Frame.Controls.Add(
+        new App.Control(
+          PanelId, Panel.Title, 'dock-panel', new Cui.CuiRectangle(),
+          Frame.AcceptInput, Value := if Result.Visible then
+            'True'
+          else
+            'False'
+          end if
+        )
+      );
+    end if;
+
+    if not Frame.PaintingClosed and Result.Open <> Panel.Open then
+      case Panel.OnOpenChanged of
+        when is Sys.Func<bool, TMsg> as Notify:
+          Frame.Messages.Add(Notify.Invoke(Result.Open));
+        else
+      end case;
+    end if;
+
+    if Result.Visible then
+      Visit(Panel.Content, Frame, false, L.Alignment.Default);
+      Frame.Window.EndDockPanel();
+    end if;
+  end for;
+
+  Frame.Window.EndDockspace();
+  P.Root<TMsg>(Frame, Id, 'dockspace', '', Frame.AcceptInput, '');
+  if Frame.AcceptInput and not Frame.PaintingClosed then
+    case Changed of
+      when is Sys.Func<string, TMsg> as Notify:
+        const Layout: string := Frame.Window.ReadDockLayout(Token);
+        if Layout <> '' and Layout <> Settings.KnownLayout then
+          Frame.Messages.Add(Notify.Invoke(Layout));
+        end if;
+      else
+    end case;
+  end if;
+end procedure;
+
+end unit;

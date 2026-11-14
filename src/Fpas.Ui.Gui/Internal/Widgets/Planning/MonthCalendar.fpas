@@ -1,0 +1,68 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Planning.MonthCalendar;
+
+uses
+  Fpas.Ui.Widgets.Planning.MonthCalendars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Data.ScheduleData as D, System as Sys;
+
+// Presents the native month calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'month-calendar';
+  const Parts: array of string := ['grid', 'previous', 'next', 'today'];
+  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Parts, P.Inputs(4, Enabled), 0);
+  const Month: int := new Sys.DateOnly(Current.Month.Year, Current.Month.Month, 1).DayNumber;
+  const Result: CuiPlanning.CuiMonthResult := Frame.Window.MonthCalendar(
+    C.Token(Role, Id),
+    Month,
+    D.Day(Current.Selected),
+    D.Month(Current.Events),
+    Settings.FirstWeekday,
+    Settings.CellHeight,
+    Settings.MonthNames,
+    Settings.DayNames,
+    D.Day(Settings.Today),
+    P.Bits(Enabled, 1) + P.Bits(Settings.Hour12, 2),
+    Focus + 1,
+    P.Tracker<TMsg>(Frame, Id, Role, Parts)
+  );
+  if Enabled and (Result.Flags <> 0 or Result.Activated >= 0) then
+    Frame.Messages.Add(
+      Change(
+        new A.Event(
+          Sys.DateOnly.FromDayNumber(Result.Month),
+          D.Date(Result.Selected),
+          Result.Activated,
+          (Result.Flags and 1) <> 0,
+          (Result.Flags and 2) <> 0,
+          (Result.Flags and 4) <> 0
+        )
+      )
+    );
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', false, Result.Month.ToString());
+  for Index: int := 0 to Parts.Length - 1 do
+    if Result.Parts[Index] then
+      P.Part<TMsg>(
+        Frame,
+        Id,
+        Role,
+        Parts[Index],
+        Parts[Index],
+        Enabled,
+        Result.Selected.ToString()
+      );
+    end if;
+  end for;
+end procedure;
+
+end unit;

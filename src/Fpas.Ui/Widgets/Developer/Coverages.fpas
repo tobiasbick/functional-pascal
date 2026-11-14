@@ -1,0 +1,61 @@
+unit Fpas.Ui.Widgets.Developer.Coverages;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native Coverage widget.
+public type File = record
+  // Path supplied to CUI.
+  public Path: string;
+  // Lines supplied to CUI.
+  public Lines: int;
+  // Lines Hit supplied to CUI.
+  public LinesHit: int;
+  // Branches supplied to CUI.
+  public Branches: int;
+  // Branches Hit supplied to CUI.
+  public BranchesHit: int;
+  // Functions supplied to CUI.
+  public Functions: int;
+  // Functions Hit supplied to CUI.
+  public FunctionsHit: int;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Activated zero-based index, or minus one.
+  public Activated: int;
+  // Lines supplied to CUI.
+  public Lines: float;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Low supplied to CUI.
+  public Low: float := 0.0F;
+  // High supplied to CUI.
+  public High: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native Coverage widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Files`: Model-owned files data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Coverage<TMsg>(Id: string; Files: array of File; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Coverage(Id, Files, Changed, Settings ?? new Options());
+end function;
+
+end unit;

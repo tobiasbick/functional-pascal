@@ -1,0 +1,68 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Desktop.StatusBar;
+
+uses
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Desktop.StatusBars as S, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Draws the native status bar and forwards actions admitted by the frame.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation and input context.
+// - `Id`: Stable bar identity.
+// - `Items`: Status messages, actions and progress in order.
+// - `HideBorder`: Omit the top hairline.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of S.Item<TMsg>; HideBorder: bool);
+begin
+  Frame.Window.BeginStatusBar(C.Token('status-bar', Id), not HideBorder);
+  for Item: S.Item<TMsg> in Items do
+    case Item of
+      when S.Item.Text(const Label: S.Label):
+        Frame.Window.StatusBarText(Label.Text, Label.Icon, cast<int>(Label.Tone));
+      when S.Item.Action(
+        const Key: string,
+        const Label: S.Label,
+        const Tip: string,
+        const Enabled: bool,
+        const Message: TMsg
+      ):
+        const Action: string := M.ItemId(Id, Key);
+        const Role: string := 'status-bar-item';
+        const Token: string := C.Token(Role, Action);
+        const Accept: bool := Frame.AcceptInput and Enabled;
+        const Result: CuiDesktop.CuiStatusBarResult := Frame.Window.StatusBarItem(
+          Key, Label.Text, Label.Icon, cast<int>(Label.Tone), Tip,
+          Accept, C.WantsFocus<TMsg>(Frame, Action, Token, Accept),
+          if Frame.PaintingClosed then
+            null
+          else
+            Token
+          end if
+        );
+        if Result.Shown and not Frame.PaintingClosed then
+          Frame.Controls.Add(
+            new App.Control(Action, Label.Text, Role, new Cui.CuiRectangle(), Accept)
+          );
+        end if;
+
+        if Accept and Result.Clicked then
+          Frame.Messages.Add(Message);
+        end if;
+      when S.Item.Progress(
+        const Value: float,
+        const Label: string,
+        const Width: float,
+        const Indeterminate: bool
+      ):
+        Frame.Window.StatusBarProgress(Value, Label, Width, Indeterminate);
+      when S.Item.Spacer:
+        Frame.Window.StatusBarSpacer();
+    end case;
+  end for;
+
+  Frame.Window.EndStatusBar();
+  P.Root<TMsg>(Frame, Id, 'status-bar', '', Frame.AcceptInput, '');
+end procedure;
+
+end unit;

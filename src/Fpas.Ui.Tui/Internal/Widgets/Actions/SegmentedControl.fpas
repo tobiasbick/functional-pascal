@@ -1,0 +1,122 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl;
+
+uses
+  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as Style,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.Widgets.Developer.Terminal as T, System.Collections.Generic as Lists;
+
+type Action<TMsg> = record implements A.IActivatable<TMsg>, A.IArrowFocus
+  // Focus identities in positional order.
+  public Stops: array of string;
+  // This choice's ordinal.
+  public Index: int;
+  // Model-owned selected ordinal.
+  public Selected: int;
+  // Mapper invoked only for a different user choice.
+  public Change: function(int): TMsg;
+
+  // Proposes only a different choice; the model owns acceptance.
+  // ## Returns
+  // A message or no action for the selected position.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return if self.Index = self.Selected then
+      A.Result<TMsg>.NoAction
+    else
+      A.Result<TMsg>.Send(self.Change(self.Index))
+    end if;
+  end function;
+
+  // Finds a neighboring segment without wrapping.
+  // ## Parameters
+  // - `Direction`: Minus one for Left or one for Right.
+  // ## Returns
+  // Its focus identity, or null at the boundary.
+  public function Neighbor(Direction: int): string?;
+  begin
+    const Next: int := self.Index + Direction;
+    return if Next < 0 or Next >= self.Stops.Length then
+      null
+    else
+      self.Stops[Next]
+    end if;
+  end function;
+end record;
+
+// Reproduces CUI segment interaction with joined terminal cells.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Group identity.
+// - `Items`: Validated choices.
+// - `Selected`: Model-owned position.
+// - `OnChange`: Maps a different activation to a message.
+// - `Settings`: Size, horizontal fill and input permission.
+// - `Theme`: Current semantic palette.
+// - `Colors`: Inherited terminal styling.
+// - `Ids`: Optional named identities for a specialized composition.
+// - `Role`: Snapshot role for the choices.
+// ## Returns
+// Joined focusable choices with native CUI's arrow and selection semantics.
+public function Lower<TMsg>(
+  Id: string; Items: array of S.Item; Selected: int; OnChange: function(int): TMsg;
+  Settings: S.Options; Theme: Th.Theme; Colors: T.Style; Ids: array of string;
+  Role: string := 'segment'
+): E.Element<TMsg>;
+begin
+  const Stops: Lists.List<string> := new Lists.List<string>();
+  for Index: int := 0 to Items.Length - 1 do
+    Stops.Add(
+      if Ids.Length = 0 then
+        S.ItemId(Id, Index)
+      else
+        Ids[Index]
+      end if
+    );
+  end for;
+  const Names: array of string := Stops.ToArray();
+  const Children: Lists.List<E.Element<TMsg>> := new Lists.List<E.Element<TMsg>>();
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: S.Item := Items[Index];
+    const Caption: string := (if Item.TerminalIcon = '' then
+      ''
+    else
+      Item.TerminalIcon + ' '
+    end if) + Item.Label;
+    Children.Add(
+      E.Element<TMsg>.Action(
+        Names[Index], new Action<TMsg>(Names, Index, Selected, OnChange),
+        Settings.Enabled, new E.ActionView(
+          Caption, Name := Item.Label, Role := Role,
+          Value := if Index = Selected then
+            'true'
+          else
+            'false'
+          end if,
+          Variant := if Index = Selected then
+            Style.ButtonVariant.Active
+          else
+            Style.ButtonVariant.Ghost
+          end if,
+          ArrowFocus := false, FillWidth := Settings.FullWidth,
+          Padding := if Settings.ControlSize = B.Size.Large then
+            2
+          else
+            1
+          end if,
+          Height := if Settings.ControlSize = B.Size.Large then
+            2
+          else
+            1
+          end if
+        )
+      )
+    );
+  end for;
+
+  return Group.Lower<TMsg>(Children.ToArray(), Theme, Colors, Settings.FullWidth);
+end function;
+
+end unit;

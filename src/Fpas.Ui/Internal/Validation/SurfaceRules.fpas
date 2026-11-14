@@ -1,0 +1,131 @@
+unit Fpas.Ui.Internal.Validation.SurfaceRules;
+
+uses
+  Fpas.Ui.Widgets.Containers.Grids as G, Fpas.Ui.Widgets.Containers.Cards as C, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Charts.Metrics as M,
+  Fpas.Ui.Widgets.Media.AvatarGroups as A, Fpas.Ui.Widgets.Containers.EmptyStates as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Validation.Rules as Rules, System as Sys;
+
+procedure CheckDistance(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F then
+    Rules.Reject(At, 'The distance must be finite and nonnegative.');
+  end if;
+end procedure;
+
+// Checks CUI grid settings.
+// ## Parameters
+// - `Settings`: Requested column count, minimum and spacing.
+// - `At`: Diagnostic location.
+public procedure Grid(Settings: G.Options; At: string);
+begin
+  if Settings.Columns < 1 then
+    Rules.Reject(At, 'A grid needs at least one column.');
+  end if;
+
+  CheckDistance(Settings.MinimumColumnWidth, At + '/minimumColumnWidth');
+  Rules.CheckSpacing(Settings.Gap, V.Target.Graphical, At + '/gap');
+  Rules.CheckSpacing(Settings.Padding, V.Target.Graphical, At + '/padding');
+end procedure;
+
+// Checks native card dimensions and alignment.
+// ## Parameters
+// - `Settings`: Requested card presentation.
+// - `At`: Diagnostic location.
+public procedure Card(Settings: C.Options; At: string);
+begin
+  Rules.CheckExtent(Settings.Width, V.Target.Graphical, At + '/width');
+  Rules.CheckExtent(Settings.Height, V.Target.Graphical, At + '/height');
+  CheckDistance(Settings.MinimumWidth, At + '/minimumWidth');
+  CheckDistance(Settings.MaximumWidth, At + '/maximumWidth');
+  CheckDistance(Settings.Padding, At + '/padding');
+  CheckDistance(Settings.PaddingX, At + '/paddingX');
+  CheckDistance(Settings.PaddingY, At + '/paddingY');
+  CheckDistance(Settings.Gap, At + '/gap');
+  if Settings.MaximumWidth > 0.0F and Settings.MinimumWidth > Settings.MaximumWidth then
+    Rules.Reject(At, 'The minimum exceeds the maximum width.');
+  end if;
+
+  if not Sys.Enum.IsDefined<L.Alignment>(
+    Settings.Align
+  ) or (Settings.Wrap and not Settings.Horizontal)
+  then
+    Rules.Reject(At, 'A card needs a known alignment. Only horizontal cards wrap.');
+  end if;
+end procedure;
+
+// Checks the badge caption and native style options.
+// ## Parameters
+// - `Text`: Literal caption.
+// - `Settings`: Native badge settings.
+// - `At`: Diagnostic location.
+public procedure Badge(Text: string; Settings: B.Options; At: string);
+begin
+  Rules.CheckText(Text, At);
+  Rules.CheckText(Settings.Icon, At + '/icon');
+  if not Sys.Enum.IsDefined<S.Tone>(
+    Settings.Tone
+  ) or not Sys.Enum.IsDefined<Buttons.Size>(Settings.Size)
+  then
+    Rules.Reject(At, 'Unknown badge tone or size.');
+  end if;
+end procedure;
+
+// Checks metric text, trend and sparkline samples.
+// ## Parameters
+// - `Label`: Tile caption.
+// - `Reading`: Formatted value.
+// - `Settings`: Native metric settings.
+// - `At`: Diagnostic location.
+public procedure Metric(Label: string; Reading: string; Settings: M.Options; At: string);
+begin
+  Rules.CheckText(Label, At + '/label');
+  Rules.CheckText(Reading, At + '/value');
+  Rules.CheckText(Settings.DeltaLabel, At + '/deltaLabel');
+  Rules.CheckText(Settings.Icon, At + '/icon');
+  Rules.CheckExtent(Settings.Width, V.Target.Graphical, At + '/width');
+  if not Sys.Single.IsFinite(Settings.Delta) then
+    Rules.Reject(At, 'A metric delta must be finite.');
+  end if;
+
+  for Sample: float in Settings.Spark do
+    if not Sys.Single.IsFinite(Sample) then
+      Rules.Reject(At, 'Sparkline samples must be finite.');
+    end if;
+  end for;
+end procedure;
+
+// Checks the names and dimensions of an avatar group.
+// ## Parameters
+// - `Names`: Names in display order.
+// - `Settings`: Native avatar group settings.
+// - `At`: Diagnostic location.
+public procedure AvatarGroup(Names: array of string; Settings: A.Options; At: string);
+begin
+  if Names.Length = 0 or Settings.MaximumVisible < 1 or Settings.Size <= 0.0F then
+    Rules.Reject(At, 'An avatar group needs names and a positive visible count and size.');
+  end if;
+
+  CheckDistance(Settings.Size, At + '/size');
+  for Name: string in Names do
+    Rules.CheckText(Name, At + '/name');
+  end for;
+end procedure;
+
+// Checks the heading and optional native action.
+// ## Parameters
+// - `Title`: Literal heading.
+// - `Settings`: Native empty state settings.
+// - `HasAction`: Whether a message factory was supplied.
+// - `At`: Diagnostic location.
+public procedure EmptyState(Title: string; Settings: E.Options; HasAction: bool; At: string);
+begin
+  Rules.CheckText(Title, At + '/title');
+  Rules.CheckText(Settings.Icon, At + '/icon');
+  Rules.CheckText(Settings.Description, At + '/description');
+  Rules.CheckText(Settings.ActionLabel, At + '/action');
+  if (Settings.ActionLabel <> '') <> HasAction then
+    Rules.Reject(At, 'Supply both an action caption and a message factory.');
+  end if;
+end procedure;
+
+end unit;

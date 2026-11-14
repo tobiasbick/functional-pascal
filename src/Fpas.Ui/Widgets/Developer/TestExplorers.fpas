@@ -1,0 +1,65 @@
+unit Fpas.Ui.Widgets.Developer.TestExplorers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native TestExplorer widget.
+public type Item = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Nesting depth, starting at zero.
+  public Depth: int;
+  // Status supplied to CUI.
+  public Status: int;
+  // Duration in seconds, or negative when unavailable.
+  public Duration: float;
+  // Message supplied to CUI.
+  public Message: string?;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selected: int;
+  // Activated zero-based index, or minus one.
+  public Activated: int;
+  // Run supplied to CUI.
+  public Run: int;
+  // Run All supplied to CUI.
+  public RunAll: bool;
+  // Passed supplied to CUI.
+  public Passed: int;
+  // Failed supplied to CUI.
+  public Failed: int;
+  // Skipped supplied to CUI.
+  public Skipped: int;
+  // Total supplied to CUI.
+  public Total: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native TestExplorer widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Entries`: Model-owned entries data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function TestExplorer<TMsg>(Id: string; Entries: array of Item; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TestExplorer(Id, Entries, Changed, Settings ?? new Options());
+end function;
+
+end unit;

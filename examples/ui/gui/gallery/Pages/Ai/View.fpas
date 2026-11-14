@@ -2,12 +2,12 @@ unit GuiGallery.Pages.Ai.View;
 
 uses
   GuiGallery.Pages.Ai.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme, Fpas.Ui.Motion as Motion,
-  Fpas.Ui.ChatMessages as Chat, Fpas.Ui.Reasonings as Reason, Fpas.Ui.ToolCalls as Tools,
-  Fpas.Ui.TaskStates as Task, Fpas.Ui.AgentStatuses as Status, Fpas.Ui.AgentPlans as Plan,
-  Fpas.Ui.Sources as Sources, Fpas.Ui.Citations as Citations, Fpas.Ui.SourceLists as Lists,
-  Fpas.Ui.ResponseActions as Response, Fpas.Ui.ContextMeters as Context, Fpas.Ui.Typewriters as Typing,
-  Fpas.Ui.Composers as Editor, Fpas.Ui.ModelPickers as Picker, Fpas.Ui.PromptSuggestions as Suggestions, System as Sys, System.Collections.Generic as Generic;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Motion.Motion as Motion,
+  Fpas.Ui.Widgets.Conversation.ChatMessages as Chat, Fpas.Ui.Widgets.Ai.Reasonings as Reason, Fpas.Ui.Widgets.Ai.ToolCalls as Tools,
+  Fpas.Ui.Widgets.Feedback.TaskStates as Task, Fpas.Ui.Widgets.Ai.AgentStatuses as Status, Fpas.Ui.Widgets.Ai.AgentPlans as Plan,
+  Fpas.Ui.Widgets.Ai.Sources as Sources, Fpas.Ui.Widgets.Ai.Citations as Citations, Fpas.Ui.Widgets.Ai.SourceLists as Lists,
+  Fpas.Ui.Widgets.Ai.ResponseActions as Response, Fpas.Ui.Widgets.Ai.ContextMeters as Context, Fpas.Ui.Widgets.Motion.Typewriters as Typing,
+  Fpas.Ui.Widgets.Ai.Composers as Editor, Fpas.Ui.Widgets.Ai.ModelPickers as Picker, Fpas.Ui.Widgets.Ai.PromptSuggestions as Suggestions, System as Sys, System.Collections.Generic as Generic;
 
 function Icon(Code: int): string;
 begin

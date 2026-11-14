@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Actions.Widgets.ConfirmButton;
 
 uses
   GuiGallery.Pages.Actions.State as State,
-  Fpas.Ui.ConfirmButtons as Confirm,
+  Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm,
   Fpas.Ui.Elements as E,
   System as Sys;
 

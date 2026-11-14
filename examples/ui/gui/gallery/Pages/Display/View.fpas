@@ -3,10 +3,10 @@ unit GuiGallery.Pages.Display.View;
 uses
   GuiGallery.App.State as State, GuiGallery.Shared.Sections as G,
   GuiGallery.Pages.Canvas.Picture as Picture,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme,
-  Fpas.Ui.Graphics as Color, Fpas.Ui.Motion as M,
-  Fpas.Ui.Texts as T, Fpas.Ui.Icons as I, Fpas.Ui.Emojis as Em,
-  Fpas.Ui.Keycaps as K, Fpas.Ui.Images as Image, Fpas.Ui.Canvases as C, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
+  Fpas.Ui.Graphics as Color, Fpas.Ui.Widgets.Motion.Motion as M,
+  Fpas.Ui.Widgets.Display.Texts as T, Fpas.Ui.Widgets.Display.Icons as I, Fpas.Ui.Widgets.Display.Emojis as Em,
+  Fpas.Ui.Widgets.Display.Keycaps as K, Fpas.Ui.Widgets.Media.Images as Image, Fpas.Ui.Widgets.Canvas.Canvases as C, System as Sys;
 
 const Swatches: array of Color.Color := [
   new Color.Color($55, $55, $55), new Color.Color($77, $47, $FF),

@@ -3,10 +3,10 @@ unit GuiGallery.Pages.Feedback.View;
 uses
   GuiGallery.Pages.Feedback.State as Model, GuiGallery.Pages.Feedback.Widgets.Loading as Loading,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Alerts as A, Fpas.Ui.ProgressBars as P, Fpas.Ui.Spinners as Spin,
-  Fpas.Ui.Meters as Meters, Fpas.Ui.ProgressRings as Rings,
-  Fpas.Ui.TimelineItems as Timeline, Fpas.Ui.Skeletons as Skel, System as Sys,
-  Fpas.Ui.Cards as Cards, Fpas.Ui.Grids as Grid, Fpas.Ui.EmptyStates as Empty,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Feedback.Alerts as A, Fpas.Ui.Widgets.Feedback.ProgressBars as P, Fpas.Ui.Widgets.Feedback.Spinners as Spin,
+  Fpas.Ui.Widgets.Charts.Meters as Meters, Fpas.Ui.Widgets.Feedback.ProgressRings as Rings,
+  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Feedback.Skeletons as Skel, System as Sys,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   GuiGallery.Pages.Feedback.Widgets.BadgesAndAvatars as BadgesAndAvatars;
 
 // Reproduces the accepted native CUI Feedback examples.

@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Lists.Widgets.Invoices;
 
 uses
   GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.VirtualLists as V, Fpas.Ui.Cards as C, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Collections.VirtualLists as V, Fpas.Ui.Widgets.Containers.Cards as C, Fpas.Ui.Elements as E,
   Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, System as Sys, System.Globalization as Culture;
 
 function Row(Index: int): E.Element<State.Msg>;

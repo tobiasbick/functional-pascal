@@ -1,0 +1,29 @@
+unit Fpas.Ui.Widgets.Developer.Terminal;
+
+uses System as Sys;
+
+// Exact dimensions for an explicitly terminal-specific responsive subtree.
+public type Viewport = record
+  // Available terminal columns.
+  public Columns: int;
+  // Available terminal rows.
+  public Rows: int;
+end record;
+
+// Optional terminal color overrides using 24-bit RGB values.
+public type Style = record
+  // The foreground color or null to inherit.
+  public Foreground: int? := null;
+  // The background color or null to inherit.
+  public Background: int? := null;
+end record;
+
+// One styled glyph for a terminal canvas.
+public type Cell = record
+  // The glyph or text fragment to paint.
+  public Text: string;
+  // The cell's color overrides.
+  public Colors: Style;
+end record;
+
+end unit;

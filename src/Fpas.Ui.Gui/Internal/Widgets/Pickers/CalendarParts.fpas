@@ -1,0 +1,117 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts;
+
+uses
+  Fpas.Ui.Widgets.Pickers.Calendars as Calendar, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys, System.Globalization as Culture;
+
+function Kind(Part: int): string;
+begin
+  return if Part >= 0 then
+    'calendar-day'
+  elsif Part <= -200000 then
+    'calendar-year-choice'
+  elsif Part <= -100 then
+    'calendar-month-choice'
+  elsif Part = -10 then
+    'calendar-title'
+  else
+    'calendar-month'
+  end if;
+end function;
+
+function Identity(Id: string; Part: int): string;
+begin
+  return if Part >= 0 then
+    Calendar.DayId(Id, Sys.DateOnly.FromDayNumber(Part))
+  elsif Part <= -200000 then
+    Calendar.YearChoiceId(Id, -Part - 200000)
+  elsif Part <= -100 then
+    Calendar.MonthChoiceId(Id, (-Part - 100) div 12, (-Part - 100) mod 12 + 1)
+  elsif Part = -10 then
+    Calendar.TitleId(Id)
+  else
+    Calendar.MonthId(Id, Part = -9)
+  end if;
+end function;
+
+// Maps a native calendar part to its snapshot token.
+// ## Parameters
+// - `Id`: Calendar or picker identity.
+// - `Part`: Native day number or navigation code.
+// ## Returns
+// The native tracking token for this frame.
+public function Token(Id: string; Part: int): string;
+begin
+  return C.Token(Kind(Part), Identity(Id, Part));
+end function;
+
+function Iso(Day: Sys.DateOnly): string;
+begin
+  return Day.ToString('yyyy-MM-dd', Culture.CultureInfo.InvariantCulture);
+end function;
+
+function Caption(Part: int): string;
+begin
+  return if Part >= 0 then
+    Iso(Sys.DateOnly.FromDayNumber(Part))
+  elsif Part <= -200000 then
+    (-Part - 200000).ToString()
+  elsif Part <= -100 then
+    Culture.CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(
+      (-Part - 100) mod 12 + 1
+    )
+  elsif Part = -10 then
+    'Choose a month and year'
+  elsif Part = -8 then
+    'Previous page'
+  else
+    'Next page'
+  end if;
+end function;
+
+// Publishes selection changes and the native calendar parts.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing state.
+// - `Id`: Calendar or picker identity.
+// - `Label`: Caption of the control.
+// - `Role`: Root snapshot role.
+// - `Value`: Model-owned selection.
+// - `Enabled`: Whether the control accepts input.
+// - `Result`: Native selection and visible parts.
+// - `OnChange`: Maps a chosen date to a message.
+public procedure Publish<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Role: string; Value: Sys.DateOnly?; Enabled: bool;
+  Result: CuiPickers.CuiCalendarResult; OnChange: function(Sys.DateOnly): TMsg
+);
+begin
+  const Chosen: Sys.DateOnly? := Result.Value;
+  if Chosen <> null and Chosen <> Value then
+    Frame.Messages.Add(OnChange(Chosen ?? Sys.DateOnly.MinValue));
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+  const Display: string := if Value = null then
+    ''
+  else
+    Iso(Value ?? Sys.DateOnly.MinValue)
+  end if;
+  Frame.Controls.Add(
+    new App.Control(
+      Id, Label, Role, new Cui.CuiRectangle(), Enabled, Value := Display
+    )
+  );
+  for Part: int in Result.VisibleParts do
+    Frame.Controls.Add(
+      new App.Control(
+        Identity(Id, Part), Caption(Part), Kind(Part), new Cui.CuiRectangle(), Enabled
+      )
+    );
+  end for;
+end procedure;
+
+end unit;

@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Pickers.State;
 
-uses Fpas.Ui.DateRanges as R, Fpas.Ui.RangeSliders as Range, System as Sys;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Widgets.Inputs.RangeSliders as Range, System as Sys;
 
 // State owned by the extended Pickers page.
 public type Model = record

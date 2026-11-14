@@ -1,0 +1,83 @@
+unit Fpas.Ui.Widgets.Ai.Composers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Ai.ModelPickers as Models;
+
+// Application-provided recording preview.
+public type Recording = record
+  // Measured levels, newest last.
+  public Levels: array of float;
+  // Elapsed seconds.
+  public Seconds: float;
+end record;
+
+// Model-owned composer state.
+public type Value = record
+  // Current multiline draft.
+  public Draft: string := '';
+  // Attached file names in order.
+  public Attachments: array of string := [];
+  // Available native models.
+  public Models: array of Models.Item := [];
+  // Selected model index.
+  public Selected: int := 0;
+  // Show Stop while generating a response.
+  public Busy: bool := false;
+  // Present the recorder while a take is active.
+  public Take: Recording? := null;
+end record;
+
+// Native composer proposals.
+public type Event = variant
+  // Change the draft.
+  Edit(Draft: string);
+  // Submit the current draft.
+  Send(Draft: string);
+  // Stop generation.
+  Stop;
+  // Request an attachment.
+  Attach;
+  // Remove an attachment by index.
+  Remove(Index: int);
+  // Select a model by index.
+  Select(Index: int);
+  // Start a voice take.
+  Record;
+  // Cancel the voice take.
+  Cancel;
+  // Submit the voice take.
+  SendVoice;
+end variant;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Preferred composer width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Empty editor caption.
+  public Placeholder: string := '';
+  // Maximum visible lines, or zero for the default.
+  public MaxLines: int := 0;
+  // Maximum draft size, excluding the terminator.
+  public MaxUtf8Bytes: int := 511;
+  // Show a record action in text mode.
+  public Microphone: bool := false;
+  // Allows composer actions and editing.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's native Composer.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable composer identity.
+// - `Content`: The model-owned draft, attachments, selection and recording.
+// - `Changed`: Maps an edit or native action.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Composer<TMsg>(Id: string; Content: Value; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Composer(Id, Content, Changed, Settings ?? new Options());
+end function;
+
+end unit;

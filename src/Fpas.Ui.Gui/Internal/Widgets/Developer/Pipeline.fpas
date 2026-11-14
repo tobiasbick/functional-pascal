@@ -1,0 +1,57 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.Pipeline;
+
+uses Fpas.Ui.Widgets.Developer.Pipelines as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
+
+function PackJob(Items: array of D.Job): array of CuiDeveloper.CuiDevJob;
+begin
+  const Native: Lists.List<CuiDeveloper.CuiDevJob> := new Lists.List<CuiDeveloper.CuiDevJob>(
+    Items.Length
+  );
+  for Entry: D.Job in Items do
+    Native.Add(
+      new CuiDeveloper.CuiDevJob(
+        Entry.Name,
+        Entry.Stage,
+        Entry.Status,
+        Entry.Duration,
+        Entry.AllowFailure
+      )
+    );
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native Pipeline widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Stages`: Stages supplied to the widget.
+// - `Jobs`: Jobs supplied to the widget.
+// - `Selection`: Selection supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Stages: array of string; Jobs: array of D.Job; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'pipeline';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: CuiDeveloper.CuiDevResult := Frame.Window.Pipeline(
+    Token,
+    Stages,
+    PackJob(Jobs),
+    Selection,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  if Enabled and (Result.Index <> Selection or Result.Action >= 0) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action)));
+  end if;
+end procedure;
+
+end unit;

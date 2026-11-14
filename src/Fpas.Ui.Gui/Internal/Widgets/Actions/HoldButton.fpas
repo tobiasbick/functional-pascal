@@ -1,0 +1,36 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.HoldButton;
+
+uses Fpas.Ui.Widgets.Actions.HoldButtons as H, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Draws the native hold action and proposes its message when it completes.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current frame context.
+// - `Id`: Stable control identity.
+// - `Label`: Visible caption.
+// - `Message`: Message proposed once per completed hold.
+// - `Settings`: Hold duration and appearance.
+public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: H.Options);
+begin
+  const Enabled: bool := Settings.Enabled and State.AcceptInput;
+  const Token: string := C.Token('hold-button', Id);
+  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Enabled);
+  if State.Window.HoldButton(
+    Token,
+    Label,
+    Settings.Icon,
+    Settings.DurationMilliseconds,
+    cast<int>(Settings.Variant),
+    Enabled,
+    Focus
+  )
+  then
+    State.Messages.Add(Message);
+  end if;
+
+  C.Track<TMsg>(State, new App.Control(Id, Label, 'hold-button', new Cui.CuiRectangle(), Enabled));
+end procedure;
+
+end unit;

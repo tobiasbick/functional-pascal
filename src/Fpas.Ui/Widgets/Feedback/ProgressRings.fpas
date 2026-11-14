@@ -1,0 +1,25 @@
+unit Fpas.Ui.Widgets.Feedback.ProgressRings;
+
+uses Fpas.Ui.Elements as E;
+
+// Builds CUI's circular progress with its native percentage, caption and interpolation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity, independent of the caption and surrounding layout.
+// - `Label`: Optional literal caption inside the ring.
+// - `Value`: Finite progress fraction from zero through one.
+// - `Size`: Finite nonnegative logical diameter; zero uses CUI's 96-point default.
+// ## Returns
+// A GUI-only progress ring; CUI owns its drawing, numeric formatting and animation.
+public function ProgressRing<TMsg>(
+  Id: string; Label: string; Value: float; Size: float := 0.0F
+): E.Element<TMsg>;
+requires Id <> '';
+requires Value >= 0.0F and Value <= 1.0F;
+requires Size >= 0.0F;
+begin
+  return E.Element<TMsg>.ProgressRing(Id, Label, Value, Size);
+end function;
+
+end unit;

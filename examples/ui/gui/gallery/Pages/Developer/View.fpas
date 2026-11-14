@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Developer.View;
 uses
   GuiGallery.Pages.Developer.State as M, GuiGallery.Pages.Developer.Samples as D, GuiGallery.Shared.Sections as Section,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.TraceViewers as T, Fpas.Ui.NetworkWaterfalls as W, Fpas.Ui.DependencyGraphs as G, Fpas.Ui.CommitGraphs as C, Fpas.Ui.Pipelines as J, Fpas.Ui.ProblemsPanels as P, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.QueryBuilders as Q, Fpas.Ui.SchedulePickers as S, Fpas.Ui.Keymaps as Keys, Fpas.Ui.Motion as Font, Fpas.Ui.Themes as Themes, Fpas.Ui.Gui.Internal.Widgets.QueryBuilder as NativeQuery;
+  Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.ProblemsPanels as P, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys, Fpas.Ui.Widgets.Motion.Motion as Font, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder as NativeQuery;
 
 function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
 begin

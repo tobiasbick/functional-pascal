@@ -74,7 +74,7 @@ or skeleton width. CUI resolves the percentage against the parent's inner extent
 The [graphical layout extensions](../../../src/Fpas.Ui/README.md#native-graphical-layout)
 include overlapping children, independent dimensions, per-edge padding,
 LTR/RTL flow, native spacing and horizontal scrolling.
-Both hosts accept `Fpas.Ui.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
+Both hosts accept `Fpas.Ui.Widgets.Theming.Themes.Theme`, for example `Themes.Dark(Themes.Accent.Blue)`,
 and the same `ThemeFor(Model)` callback. Set a fixed theme with `Gui.Options.Theme`.
 Palette customization and terminal approximations are described in
 [shared themes](../../../src/Fpas.Ui/README.md#shared-themes).

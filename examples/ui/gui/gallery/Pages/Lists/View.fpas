@@ -6,7 +6,7 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Accordions as A, Fpas.Ui.Cards as Cards,
+  Fpas.Ui.Widgets.Containers.Accordions as A, Fpas.Ui.Widgets.Containers.Cards as Cards,
   GuiGallery.Pages.Lists.Widgets.People as People,
   GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList,
   GuiGallery.Pages.Lists.Widgets.Tasks as Tasks,

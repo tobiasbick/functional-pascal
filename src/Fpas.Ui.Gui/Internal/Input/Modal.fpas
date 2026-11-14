@@ -1,0 +1,89 @@
+unit Fpas.Ui.Gui.Internal.Input.Modal;
+
+uses
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Input.ModalFocus as Focus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  System.Collections.Generic as Lists;
+
+// Presents the base and a native modal with shared input and focus rules.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Drawing context.
+// - `Id`: Stable modal identity.
+// - `Base`: View under the modal.
+// - `Content`: Prepared modal body.
+// - `Open`: Model-owned visibility.
+// - `Title`: Native heading.
+// - `Description`: Optional supporting text.
+// - `Initial`: Preferred focus on opening.
+// - `Close`: Application identity of the native close button, if present.
+// - `Dismiss`: Proposed closure message.
+// - `Horizontal`: Parent layout axis.
+// - `Align`: Parent layout alignment.
+// - `Visit`: Host traversal for the base and modal content.
+// - `BeginNative`: Begins the native modal with input, focus and close tracking.
+// - `EndNative`: Finishes the native modal.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>;
+  Open: bool; Title: string; Description: string; Initial: string?; Close: string?; Dismiss: TMsg;
+  Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment);
+  BeginNative: function(bool, bool, string): int; EndNative: procedure()
+);
+begin
+  Visit(
+    Base, Frame with
+      AcceptInput := Frame.AcceptInput and not Open;
+    end with, Horizontal, Align
+  );
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  if Open then
+    Focus.Enter<TMsg>(Frame, Id, Content, Initial, Close);
+  end if;
+  const Enabled: bool := Open and Frame.Interactive and Frame.ActiveModal = Id;
+  const Inside: C.State<TMsg> := Frame with
+    AcceptInput := Enabled;
+    PaintingClosed := not Open;
+    Labels := if Open then
+      Frame.Labels
+    else
+      new Lists.List<string>()
+    end if;
+  end with;
+  var FocusClose: bool := false;
+  var CloseToken: string := '';
+  if Close <> null then
+    CloseToken := C.Token('button', Close);
+    FocusClose := C.WantsFocus<TMsg>(Inside, Close, CloseToken, Enabled);
+  end if;
+  const Result: int := BeginNative(Enabled, FocusClose, CloseToken);
+  if Enabled and (Result and 2) <> 0 then
+    Frame.Messages.Add(Dismiss);
+  end if;
+
+  if (Result and 1) = 0 then
+    return;
+  end if;
+
+  if Open then
+    Frame.Labels.Add(Title);
+    if Description <> '' then
+      Frame.Labels.Add(Description);
+    end if;
+
+    if Close <> null then
+      Frame.Controls.Add(
+        new App.Control(Close, 'Close', 'button', new Cui.CuiRectangle(), Enabled)
+      );
+    end if;
+  end if;
+
+  Visit(Content, Inside, false, L.Alignment.Stretch);
+  EndNative();
+end procedure;
+
+end unit;

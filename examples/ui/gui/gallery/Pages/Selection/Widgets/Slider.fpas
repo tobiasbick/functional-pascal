@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.Sliders as S;
+  Fpas.Ui.Widgets.Inputs.Sliders as S;
 
 // Builds the continuous volume slider from the Selection page.
 //

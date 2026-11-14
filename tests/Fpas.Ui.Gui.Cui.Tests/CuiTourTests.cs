@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Overlays;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks native tour proposals, overlay ownership and managed input validation.</summary>

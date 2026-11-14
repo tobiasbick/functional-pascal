@@ -1,0 +1,20 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Conversation.TypingIndicator;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P;
+
+// Draws the native typing indicator.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Name`: Name shown as an avatar.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Name: string);
+begin
+  const Role: string := 'typing-indicator';
+  const Token: string := C.Token(Role, Id);
+  Frame.Window.TypingIndicator(Token, Name);
+  P.Root<TMsg>(Frame, Id, Role, Name, false, '');
+end procedure;
+
+end unit;

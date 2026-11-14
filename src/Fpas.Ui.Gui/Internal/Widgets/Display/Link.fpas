@@ -1,0 +1,34 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Display.Link;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+
+// Draws CUI's inline link and forwards activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation state.
+// - `Id`: Stable link identity.
+// - `Label`: Literal caption.
+// - `Activate`: Message proposed by the link.
+// - `Enabled`: Whether to accept input.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Activate: TMsg; Enabled: bool);
+begin
+  const Accept: bool := Frame.AcceptInput and Enabled;
+  const Token: string := C.Token('link', Id);
+  if Frame.Window.Link(
+    Token,
+    Label,
+    Accept,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Accept),
+    not Frame.PaintingClosed
+  )
+  then
+    Frame.Messages.Add(Activate);
+  end if;
+
+  if not Frame.PaintingClosed then
+    Frame.Controls.Add(new App.Control(Id, Label, 'link', new Cui.CuiRectangle(), Accept));
+  end if;
+end procedure;
+
+end unit;

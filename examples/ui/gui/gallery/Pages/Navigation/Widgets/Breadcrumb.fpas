@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Navigation.Widgets.Breadcrumb;
 
 uses
   GuiGallery.Pages.Navigation.State as State,
-  Fpas.Ui.Breadcrumbs as B,
+  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B,
   Fpas.Ui.Elements as E;
 
 // Builds the sample path from the Navigation page.

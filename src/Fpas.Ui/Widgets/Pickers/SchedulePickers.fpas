@@ -1,0 +1,47 @@
+unit Fpas.Ui.Widgets.Pickers.SchedulePickers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Expression supplied to CUI.
+  public Expression: string;
+  // Whether the current input is valid.
+  public Valid: bool;
+  // Next run as Unix seconds, or zero.
+  public Next: long;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Maximum entries or UTF-8 bytes, as applicable.
+  public Capacity: int := 63;
+  // Now supplied to CUI.
+  public Now: long := 0L;
+  // Use UTC timestamps.
+  public Utc: bool := false;
+  // Next Count supplied to CUI.
+  public NextCount: int := 3;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native SchedulePicker widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Expression`: Model-owned expression data.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function SchedulePicker<TMsg>(Id: string; Expression: string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.SchedulePicker(Id, Expression, Changed, Settings ?? new Options());
+end function;
+
+end unit;

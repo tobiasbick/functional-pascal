@@ -1,0 +1,27 @@
+unit Fpas.Ui.Widgets.Inputs.RadioButtons;
+
+uses Fpas.Ui.Elements as E;
+
+// Creates a model-controlled radio button for the graphical profile.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption for the interactive row.
+// - `Selected`: Current model-owned value.
+// - `OnSelect`: Maps selection of an unselected item to an application message.
+// - `Description`: Optional secondary text below the caption.
+// - `Enabled`: Whether the row accepts input.
+// ## Returns
+// The graphical control that proposes changes to the model.
+public function RadioButton<TMsg>(
+  Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg;
+  Description: string := ''; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RadioAction(Id, Label, Selected, OnSelect, Description, Enabled);
+end function;
+
+end unit;

@@ -1,10 +1,10 @@
 unit GalleryAudioContract;
 
 uses
-  Fpas.Ui.Tours as Tours,
+  Fpas.Ui.Widgets.Overlays.Tours as Tours,
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
   System.Threading as Threads, System.Globalization as Culture;
 
 // Exercises the original synth and mixer in the published gallery.

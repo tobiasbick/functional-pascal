@@ -1,0 +1,27 @@
+unit Fpas.Ui.Widgets.Containers.Accordions;
+
+uses Fpas.Ui.Elements as E;
+
+// Builds CUI's graphical accordion with model-owned expansion.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable header identity, independent of its title.
+// - `Title`: Literal header caption.
+// - `Open`: Model-owned expansion state.
+// - `OnChange`: Maps a proposed expansion state to a message.
+// - `Content`: Body, also drawn without input during CUI's closing animation.
+// - `Enabled`: Whether the header and body accept input.
+// ## Returns
+// A GUI-only native accordion.
+public function Accordion<TMsg>(
+  Id: string; Title: string; Open: bool;
+  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Accordion(Id, Title, Open, OnChange, Content, Enabled);
+end function;
+
+end unit;

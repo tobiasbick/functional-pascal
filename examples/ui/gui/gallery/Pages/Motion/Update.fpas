@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Motion.Update;
 
 uses
-  GuiGallery.Pages.Motion.State as M, Fpas.Ui.NowPlaying as Player,
+  GuiGallery.Pages.Motion.State as M, Fpas.Ui.Widgets.Audio.NowPlaying as Player,
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Gui.Toasts as Toasts;
 
 function Advance(State: M.Model; Seconds: float): M.Model;

@@ -1,0 +1,101 @@
+unit Fpas.Ui.Internal.Validation.AudioRules;
+
+uses Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Audio.LevelMeters as M, System as Sys;
+
+function ValidSize(Value: float): bool;
+begin
+  return Sys.Single.IsFinite(Value) and Value >= 0.0F;
+end function;
+
+procedure CheckLevels(Peaks: array of float; MinimumCount: int; At: string);
+begin
+  if Peaks.Length < MinimumCount or Peaks.Length > 8 then
+    R.Reject(At, 'An audio meter supports up to eight channels.');
+  end if;
+
+  for Peak: float in Peaks do
+    if not Sys.Single.IsFinite(Peak) or Peak < 0.0F then
+      R.Reject(At, 'Audio channel peaks must be finite and nonnegative.');
+    end if;
+  end for;
+end procedure;
+
+// Validates the shared numeric and caption settings of an audio control.
+// ## Parameters
+// - `Step`: Continuous when zero, otherwise the increment.
+// - `Reset`: Value to clamp and restore on reset.
+// - `DecimalPlaces`: Display precision.
+// - `UnitLabel`: Literal unit caption.
+// - `Span`: Distance between validated bounds.
+// - `At`: Diagnostic path.
+public procedure CheckDial(Step: float; Reset: float; DecimalPlaces: int; UnitLabel: string; Span: float; At: string);
+begin
+  if not ValidSize(Step) or not Sys.Single.IsFinite(Reset)
+    or (Step > 0.0F and not Sys.Single.IsFinite(Span / Step))
+    or DecimalPlaces < 0 or DecimalPlaces > 6
+  then
+    R.Reject(At, 'Invalid audio control increment, reset or display precision.');
+  end if;
+
+  R.CheckText(UnitLabel, At + '/unit');
+end procedure;
+
+// Validates knob diameter and logarithmic range.
+// ## Parameters
+// - `Size`: Logical diameter.
+// - `LogScale`: Whether the knob uses a logarithmic scale.
+// - `Minimum`: Validated lower bound.
+// - `Maximum`: Validated upper bound.
+// - `At`: Diagnostic path.
+public procedure CheckKnob(Size: float; LogScale: bool; Minimum: float; Maximum: float; At: string);
+begin
+  if not ValidSize(Size) or (LogScale and (Minimum <= 0.0F or not Sys.Single.IsFinite(
+    Maximum / Minimum
+  )))
+  then
+    R.Reject(At, 'A knob needs a finite diameter and positive finite logarithmic range.');
+  end if;
+end procedure;
+
+// Validates fader length, scale and optional meter channels.
+// ## Parameters
+// - `Length`: Logical track length.
+// - `Ticks`: Values marked along the track.
+// - `Peaks`: Optional linear peaks beside the track.
+// - `Minimum`: Validated lower bound.
+// - `Maximum`: Validated upper bound.
+// - `At`: Diagnostic path.
+public procedure CheckFader(Length: float; Ticks: array of float; Peaks: array of float; Minimum: float; Maximum: float; At: string);
+begin
+  if not ValidSize(Length) or Ticks.Length > 32 then
+    R.Reject(At, 'A fader needs a finite length and at most 32 ticks.');
+  end if;
+
+  for Tick: float in Ticks do
+    if not Sys.Single.IsFinite(Tick) or Tick < Minimum or Tick > Maximum then
+      R.Reject(At, 'Fader ticks must be finite values within the bounds.');
+    end if;
+  end for;
+
+  CheckLevels(Peaks, 0, At);
+end procedure;
+
+// Validates audio levels and the native meter settings.
+// ## Parameters
+// - `Peaks`: Linear channel peaks.
+// - `Settings`: Meter geometry, scale and ballistics.
+// - `At`: Diagnostic path.
+public procedure CheckMeter(Peaks: array of float; Settings: M.Options; At: string);
+begin
+  CheckLevels(Peaks, 1, At);
+  if not Sys.Single.IsFinite(Settings.MinimumDb) or Settings.MinimumDb >= 0.0F
+    or not Sys.Single.IsFinite(Settings.MaximumDb) or Settings.MaximumDb <= Settings.MinimumDb
+    or not Sys.Single.IsFinite(Settings.MaximumDb - Settings.MinimumDb)
+    or not ValidSize(Settings.Length) or not ValidSize(Settings.Thickness)
+    or not Sys.Single.IsFinite(Settings.Hold) or not ValidSize(Settings.Decay)
+  then
+    R.Reject(At, 'Invalid level meter dimensions, dB scale or ballistics.');
+  end if;
+end procedure;
+
+end unit;

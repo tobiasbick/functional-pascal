@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Pickers.Widgets.Time;
 
 uses
   GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.TimePickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+  Fpas.Ui.Widgets.Pickers.TimePickers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
 // Shows the original two time fields.
 // ## Parameters

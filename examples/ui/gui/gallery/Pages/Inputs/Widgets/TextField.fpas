@@ -8,8 +8,8 @@ uses
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.Grids as Grid,
-  Fpas.Ui.TextFields as F,
+  Fpas.Ui.Widgets.Containers.Grids as Grid,
+  Fpas.Ui.Widgets.Inputs.TextFields as F,
   System as Sys,
   System.Text as Text;
 

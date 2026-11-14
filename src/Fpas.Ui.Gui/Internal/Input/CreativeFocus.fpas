@@ -1,0 +1,120 @@
+unit Fpas.Ui.Gui.Internal.Input.CreativeFocus;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, System as Sys,
+  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+
+function Pick(Id: string; Preferred: string?; Keys: array of string; Accept: array of bool; Initial: int): string?;
+begin
+  if Preferred = null or Preferred = Id then
+    return if Accept[Initial] then
+      Id + '/' + Keys[Initial]
+    else
+      null
+    end if;
+  end if;
+
+  for Index: int := 0 to Keys.Length - 1 do
+    const Part: string := Id + '/' + Keys[Index];
+    if Accept[Index] and Preferred = Part then
+      return Part;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+// Resolves the preferred focus stop of a Creative controls widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Validated widget.
+// - `Preferred`: Requested widget or part ID.
+// ## Returns
+// A native-facing part ID, or null when no part can accept focus.
+public function First<TMsg>(Node: E.Element<TMsg>; Preferred: string?): string?;
+begin
+  case Node of
+    when E.Element.StatusTag(
+      const Id: string,
+      _,
+      const Remove: Sys.Func<TMsg>?,
+      const Settings: StatusTags.Options
+    ):
+      if Settings.Enabled and Remove <> null and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RatioSlider(const Id: string, _, _, const Settings: RatioSliders.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.GradientSlider(const Id: string, _, _, const Settings: GradientSliders.Options):
+      if Settings.Enabled then
+        return Pick(Id, Preferred, ['track', 'tool'], [true, Settings.Tool <> null], 0);
+      end if;
+    when E.Element.StepSlider(const Id: string, _, _, const Settings: StepSliders.Options):
+      if Settings.Enabled then
+        return Pick(Id, Preferred, ['track', 'tool'], [true, Settings.Tool <> null], 0);
+      end if;
+    when E.Element.PaletteStrip(
+      const Id: string,
+      const Current: PaletteStrips.Value,
+      _,
+      const Settings: PaletteStrips.Options
+    ):
+      if Settings.Enabled then
+        const Keys: array of string := P.Indexed(Current.Swatches.Length, 'shuffle');
+        const Accept: array of bool := P.Inputs(Keys.Length, true);
+        Accept[Keys.Length - 1] := not Settings.NoShuffle;
+        return Pick(Id, Preferred, Keys, Accept, 0);
+      end if;
+    when E.Element.AspectPicker(
+      const Id: string,
+      const Current: AspectPickers.Value,
+      _,
+      const Settings: AspectPickers.Options
+    ):
+      if Settings.Enabled then
+        const Count: int := if Settings.Ratios.Length = 0 then
+          6
+        else
+          Settings.Ratios.Length
+        end if;
+        const Total: int := Count + P.Bits(Settings.Custom, 1);
+        return Pick(Id, Preferred, P.Indexed(Total), P.Inputs(Total, true), Current.Index);
+      end if;
+    when E.Element.OptionAction(
+      const Id: string,
+      const Current: OptionActions.Value,
+      _,
+      const Settings: OptionActions.Options
+    ):
+      if Settings.Enabled then
+        const Keys: array of string := P.Indexed(Current.Items.Length, 'tool');
+        const Accept: array of bool := P.Inputs(Keys.Length, true);
+        Accept[Keys.Length - 1] := Settings.ActionEnabled;
+        return Pick(Id, Preferred, Keys, Accept, Current.Index);
+      end if;
+    when E.Element.SeedField(
+      const Id: string,
+      const Current: SeedFields.Value,
+      _,
+      const Settings: SeedFields.Options
+    ):
+      if Settings.Enabled then
+        const Locked: bool := Current.Locked ?? false;
+        return Pick(
+          Id,
+          Preferred,
+          ['dice', 'lock'],
+          [not Locked, Current.Locked <> null],
+          P.Bits(Locked, 1)
+        );
+      end if;
+    else
+  end case;
+
+  return null;
+end function;
+
+end unit;

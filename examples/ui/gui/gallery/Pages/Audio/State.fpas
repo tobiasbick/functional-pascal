@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Audio.State;
 
-uses Fpas.Ui.Tours as Tours;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
 
 // Editable synth and mixer values, plus the phase of the synthetic signal.
 public type Model = record

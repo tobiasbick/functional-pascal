@@ -1,0 +1,86 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Planning.Kanban;
+
+uses
+  Fpas.Ui.Widgets.Planning.Kanbans as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+
+// Presents the native Kanban board.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Columns`: Model-owned input.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+// - `Visit`: GUI traversal for composed content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of A.Column<TMsg>; Change: function(A.Event): TMsg; Settings: A.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Role: string := 'kanban';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  Frame.Window.BeginKanban(Token, Enabled);
+  for Index: int := 0 to Columns.Length - 1 do
+    const Column: A.Column<TMsg> := Columns[Index];
+    const ColumnKey: string := 'column-' + Index.ToString();
+    const AddKey: string := 'add-' + Index.ToString();
+    const TrackColumn: string? := if Frame.PaintingClosed then
+      null
+    else
+      C.Token(Role, Id + '/' + ColumnKey)
+    end if;
+    const TrackAdd: string? := if Frame.PaintingClosed then
+      null
+    else
+      C.Token(Role, Id + '/' + AddKey)
+    end if;
+    const Add: bool := Frame.Window.BeginKanbanColumn(
+      Column.Title, Column.Cards.Length, Colors.Color(Column.Dot),
+      Column.Limit, Column.Width, TrackColumn, TrackAdd
+    );
+    P.Part<TMsg>(Frame, Id, Role, ColumnKey, Column.Title, false, '');
+    P.Part<TMsg>(Frame, Id, Role, AddKey, 'Add card', Enabled, '');
+    if Add and Enabled then
+      Frame.Messages.Add(Change(A.Event.Add(Index)));
+    end if;
+
+    for Card: A.Card<TMsg> in Column.Cards do
+      const Key: string := 'card-' + Card.Key.ToString();
+      const Native: string := C.Token(Role, Id + '/' + Key);
+      const Track: string? := if Frame.PaintingClosed then
+        null
+      else
+        Native
+      end if;
+      const Focus: bool := C.WantsFocus<TMsg>(Frame, Id + '/' + Key, Native, Enabled);
+      const Click: bool := Frame.Window.BeginKanbanCard(Card.Key, Focus, Track);
+      P.Part<TMsg>(Frame, Id, Role, Key, Card.Title, Enabled, Index.ToString());
+      if Click and Enabled then
+        Frame.Messages.Add(Change(A.Event.Activate(Card.Key)));
+      end if;
+
+      Visit(
+        Card.Content, Frame with
+          AcceptInput := Enabled;
+        end with, false, L.Alignment.Default
+      );
+      Frame.Window.EndKanbanCard();
+    end for;
+
+    Frame.Window.EndKanbanColumn();
+  end for;
+  const Move: CuiPlanning.CuiKanbanMove? := Frame.Window.EndKanban();
+  if Enabled then
+    case Move of
+      when is CuiPlanning.CuiKanbanMove as Proposal:
+        Frame.Messages.Add(
+          Change(A.Event.Move(Proposal.Key, Proposal.FromColumn, Proposal.ToColumn, Proposal.Index))
+        );
+      else
+    end case;
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+end procedure;
+
+end unit;

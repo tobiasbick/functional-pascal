@@ -3,7 +3,7 @@ unit GuiGallery.App.Update;
 uses
   GuiGallery.Pages.Desktop.State as Desktop, GuiGallery.Pages.Desktop.Update as DesktopUpdate,
   GuiGallery.Pages.EditingTools.State as Editing, GuiGallery.Pages.EditingTools.Update as EditUpdate,
-  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Terminals as TerminalWidget,
+  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget,
   GuiGallery.Pages.Code.State as CodePage, GuiGallery.Pages.Code.Update as CodeUpdate,
   GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Ai.Update as AiUpdate,
   GuiGallery.Pages.Voice.State as Voice, GuiGallery.Pages.Voice.Update as VoiceUpdate,
@@ -65,8 +65,8 @@ uses
   GuiGallery.Shared.Update as DemoUpdate,
   Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Mvu.Composition as C,
-  Fpas.Ui.ThemeSwitchers as Switchers,
-  Fpas.Ui.Themes as Themes;
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // Resolves the application theme from its shared appearance state.
 // ## Parameters

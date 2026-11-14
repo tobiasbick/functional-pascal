@@ -3,8 +3,8 @@ unit GalleryColorEmojiContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, GuiGallery.Pages.Inputs.State as Inputs,
-  Fpas.Ui.ColorPickers as Colors, Fpas.Ui.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Widgets.Pickers.ColorPickers as Colors, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Graphics as Graphics,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App, System as Sys;
 
 // Exercises the native Brand color and emoji message examples.

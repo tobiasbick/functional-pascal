@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Overlays.Widgets.DeleteDialog;
 
 uses
   GuiGallery.Pages.Overlays.State as State, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B, Fpas.Ui.Dialogs as D, Fpas.Ui.ActionFooters as F;
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.Dialogs as D, Fpas.Ui.Widgets.Actions.ActionFooters as F;
 
 // Wraps the active page with the shared project deletion confirmation.
 // ## Type parameters

@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionBar;
+
+uses
+  Fpas.Ui.Widgets.Canvas.SelectionBars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System.Collections.Generic as Lists;
+
+// Presents CUI's native SelectionBar widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Selected`: Model-owned selection flags.
+// - `Actions`: Available actions in display order.
+// - `Changed`: Maps actions and clearing to messages.
+// - `Child`: Content that anchors the floating bar.
+// - `Settings`: Native widget settings.
+// - `Visit`: Presents embedded content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Selected: array of bool; Actions: array of D.Action; Changed: function(D.Event): TMsg; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  Visit(Child, Frame, false, L.Alignment.Default);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Items: Lists.List<CuiCanvas.CuiSelectionAction> := new Lists.List<CuiCanvas.CuiSelectionAction>(
+    Actions.Length
+  );
+  for Action: D.Action in Actions do
+    Items.Add(new CuiCanvas.CuiSelectionAction(Action.Icon, Action.Label, cast<int>(Action.Tone)));
+  end for;
+  const Index: int := Frame.Window.SelectionBar(
+    C.Token('selection-bar', Id),
+    Selected,
+    Items.ToArray(),
+    Enabled,
+    Settings.NoEscape
+  );
+  if Index <> -1 then
+    Frame.Messages.Add(
+      Changed(
+        new D.Event(
+          if Index = -2 then
+            -1
+          else
+            Index
+          end if, Index = -2
+        )
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

@@ -1,7 +1,7 @@
 unit Gallery.ButtonGroup;
 
 uses
-  Gallery.State as State, Fpas.Ui.Buttons as B, Fpas.Ui.ButtonGroups as Groups,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.ButtonGroups as Groups,
   Fpas.Ui.Elements as E, System as Sys;
 
 function FormatButton(

@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Buttons.Widgets.CopyButton;
 
 uses
   GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.CopyButtons as Copy,
+  Fpas.Ui.Widgets.Actions.CopyButtons as Copy,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S;

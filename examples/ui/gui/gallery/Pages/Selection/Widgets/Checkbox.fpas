@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Selection.Widgets.Checkbox;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.Checkboxes as C,
+  Fpas.Ui.Widgets.Inputs.Checkboxes as C,
   Fpas.Ui.Elements as E;
 
 // Builds the three checkboxes from the native Selection page.

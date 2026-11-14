@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Disclosure.Update;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Checklists as K,
+  GuiGallery.Pages.Disclosure.State as S, Fpas.Ui.Widgets.Feedback.Checklists as K,
   Fpas.Ui.Gui.Toasts as Toasts, System as Sys;
 
 function WithStep(State: S.Model; Index: int; Done: bool): S.Model;

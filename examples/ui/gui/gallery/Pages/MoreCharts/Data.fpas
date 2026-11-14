@@ -1,8 +1,8 @@
 unit GuiGallery.Pages.MoreCharts.Data;
 
 uses
-  GuiGallery.Pages.MoreCharts.Series as Series, Fpas.Ui.Charts as C,
-  Fpas.Ui.ScatterCharts as Sc, Fpas.Ui.Candlesticks as Cs, System as Sys;
+  GuiGallery.Pages.MoreCharts.Series as Series, Fpas.Ui.Widgets.Charts.Charts as C,
+  Fpas.Ui.Widgets.Charts.ScatterCharts as Sc, Fpas.Ui.Widgets.Charts.Candlesticks as Cs, System as Sys;
 
 // Original native gallery sample data, captured once per application model.
 public type Samples = record

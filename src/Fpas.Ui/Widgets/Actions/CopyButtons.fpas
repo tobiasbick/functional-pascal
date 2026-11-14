@@ -1,0 +1,24 @@
+unit Fpas.Ui.Widgets.Actions.CopyButtons;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Builds a copy button with a stable ID and a brief confirmation after a clipboard request.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Text`: Literal text submitted to the clipboard.
+// - `OnCopied`: Optional message factory invoked after submitting the text.
+// - `Enabled`: Whether the control accepts input.
+// ## Returns
+// A portable copy button.
+public function CopyButton<TMsg>(
+  Id: string; Text: string; OnCopied: Sys.Func<TMsg>? := null; Enabled: bool := true
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.CopyAction(Id, Text, OnCopied, Enabled);
+end function;
+
+end unit;

@@ -2,10 +2,10 @@ unit GuiGallery.Pages.Desktop.Workspace;
 
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Theme,
-  Fpas.Ui.Dockspaces as Dock, Fpas.Ui.Toolbars as Tools, Fpas.Ui.Trees as Tree,
-  Fpas.Ui.ListItems as Item, Fpas.Ui.LogConsoles as Log, Fpas.Ui.PropertyInspectors as Property,
-  Fpas.Ui.Motion as Text, Fpas.Ui.Canvases as Canvas, System.Collections.Generic as Lists;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
+  Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Collections.Trees as Tree,
+  Fpas.Ui.Widgets.Collections.ListItems as Item, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as Property,
+  Fpas.Ui.Widgets.Motion.Motion as Text, Fpas.Ui.Widgets.Canvas.Canvases as Canvas, System.Collections.Generic as Lists;
 
 const Titles: array of string := ['Scene tree', 'Assets', 'Viewport', 'Log', 'Inspector'];
 const Icons: array of string := ['', '', '', '', ''];

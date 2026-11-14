@@ -3,11 +3,11 @@ unit GalleryLayoutContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.Update as Update,
   GuiGallery.App.View as Gallery, GuiGallery.Shared.State as Shared,
-  Fpas.Ui.Elements as E, Fpas.Ui.Stacks as Stacks, Fpas.Ui.Layout as L,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.Stacks as Stacks, Fpas.Ui.Layout as L,
   Fpas.Ui.Composition as Composition, Fpas.Ui.Validation as V,
   Fpas.Ui.Styles as Styles,
-  Fpas.Ui.ThemeSwitchers as Switchers, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   System as Sys;
 
 procedure Validate();

@@ -1,0 +1,28 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Feedback.SkeletonGroup;
+
+uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Builds a native group of placeholders with a shared animation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Children`: Placeholder views in native layout order.
+// - `Settings`: Native options.
+// - `Visit`: Presents each composed child.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Children: array of E.Element<TMsg>; Settings: W.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Role: string := 'skeleton-group';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  Frame.Window.BeginSkeletonGroup(Token, Width.Kind, Width.Value, Settings.Gap, Settings.Dither);
+  for Child: E.Element<TMsg> in Children do
+    Visit(Child, Frame, false, L.Alignment.Default);
+  end for;
+
+  Frame.Window.EndSkeletonGroup();
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+end procedure;
+
+end unit;

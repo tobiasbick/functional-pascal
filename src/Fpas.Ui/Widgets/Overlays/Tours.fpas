@@ -1,0 +1,102 @@
+unit Fpas.Ui.Widgets.Overlays.Tours;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+
+// One native spotlight and explanation in a guided tour.
+public type Step = record
+  // Application control ID; empty or currently absent targets center the card.
+  public Target: string := '';
+  // Optional literal heading.
+  public Title: string := '';
+  // Optional literal supporting text.
+  public Body: string := '';
+  // Preferred side of the target; CUI fits the card inside the window.
+  public Position: M.Placement := M.Placement.BottomStart;
+end record;
+
+// Native tour navigation result.
+public type Event = enum: byte
+  // No user action.
+  None;
+  // Advance to the next step.
+  Next;
+  // Return to the preceding step.
+  Back;
+  // Complete the final step.
+  Done;
+  // End the tour without completing it.
+  Skipped;
+end enum;
+
+// Proposed model update after native navigation.
+public type Change = record
+  // Zero-based next step, or minus one when closed.
+  public Step: int;
+  // The native action that proposed the change.
+  public Action: Event;
+end record;
+
+// Native spotlight and explanation-card settings.
+public type Options = record
+  // Logical card width; zero selects CUI's 300-point default.
+  public Width: float := 0.0F;
+  // Logical space around the target; zero selects CUI's 6-point default.
+  public Padding: float := 0.0F;
+  // Also block pointer input inside the spotlight.
+  public BlockTarget: bool := false;
+end record;
+
+// Draws a model-controlled native guided tour over its base view.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable tour identity.
+// - `Base`: View containing the target controls.
+// - `Steps`: Ordered explanations; at least one step is required.
+// - `Current`: Zero-based selected step, or minus one to close.
+// - `OnChange`: Maps a native navigation proposal to a message.
+// - `Settings`: Optional native card and spotlight settings.
+// ## Returns
+// The base view with CUI-owned spotlight, card, buttons and navigation.
+public function Tour<TMsg>(
+  Id: string; Base: E.Element<TMsg>; Steps: array of Step;
+  Current: int; OnChange: function(Change): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+requires Steps.Length > 0;
+requires Current >= -1 and Current < Steps.Length;
+begin
+  return E.Element<TMsg>.Tour(Id, Base, Steps, Current, OnChange, Settings ?? new Options());
+end function;
+
+// Gets the inspection and focus identity of the native close button.
+// ## Parameters
+// - `Id`: Tour identity.
+// ## Returns
+// The close action ID.
+public function CloseId(Id: string): string;
+begin
+  return Id + '/close';
+end function;
+
+// Gets the inspection and focus identity of the native Back button.
+// ## Parameters
+// - `Id`: Tour identity.
+// ## Returns
+// The Back action ID, present after the first step.
+public function BackId(Id: string): string;
+begin
+  return Id + '/back';
+end function;
+
+// Gets the inspection and focus identity of the native Next or Done button.
+// ## Parameters
+// - `Id`: Tour identity.
+// ## Returns
+// The forward action ID.
+public function NextId(Id: string): string;
+begin
+  return Id + '/next';
+end function;
+
+end unit;

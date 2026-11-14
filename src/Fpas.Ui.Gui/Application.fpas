@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Application;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Themes as Themes, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record

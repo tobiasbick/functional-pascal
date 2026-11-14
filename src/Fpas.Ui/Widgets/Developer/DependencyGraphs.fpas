@@ -1,0 +1,70 @@
+unit Fpas.Ui.Widgets.Developer.DependencyGraphs;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native DependencyGraph widget.
+public type Vertex = record
+  // Label supplied to CUI.
+  public Label: string;
+  // Detail supplied to CUI.
+  public Detail: string?;
+  // Tone supplied to CUI.
+  public Tone: int;
+end record;
+
+// Data for the native DependencyGraph widget.
+public type Edge = record
+  // From supplied to CUI.
+  public From: int;
+  // To supplied to CUI.
+  public To: int;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selection: int;
+  // Clicked zero-based index, or minus one.
+  public Clicked: int;
+  // Activated zero-based index, or minus one.
+  public Activated: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height supplied to CUI.
+  public Height: float := 0.0F;
+  // Top Down supplied to CUI.
+  public TopDown: bool := false;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native DependencyGraph widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Vertices`: Model-owned vertices data.
+// - `Edges`: Model-owned edges data.
+// - `Selection`: Selected zero-based index, or minus one.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function DependencyGraph<TMsg>(Id: string; Vertices: array of Vertex; Edges: array of Edge; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DependencyGraph(
+    Id,
+    Vertices,
+    Edges,
+    Selection,
+    Changed,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

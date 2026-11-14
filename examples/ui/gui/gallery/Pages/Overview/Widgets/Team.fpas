@@ -2,8 +2,8 @@ unit GuiGallery.Pages.Overview.Widgets.Team;
 
 uses
   GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Cards as Cards, Fpas.Ui.Badges as Badges, Fpas.Ui.Avatars as Avatars,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Media.Avatars as Avatars,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
   System as Sys, System.Collections.Generic as Lists;
 
 type Person = record

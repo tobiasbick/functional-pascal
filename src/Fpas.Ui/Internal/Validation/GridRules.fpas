@@ -1,0 +1,89 @@
+unit Fpas.Ui.Internal.Validation.GridRules;
+
+uses
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Collections.DataGrids as G, Fpas.Ui.Widgets.Collections.TreeTables as T,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, System as Sys;
+
+// Checks UTF-8 text and its native buffer capacity.
+// ## Parameters
+// - `Text`: Current model text.
+// - `Capacity`: Buffer size including the terminator.
+// - `Maximum`: Native maximum buffer size.
+// - `At`: Diagnostic path.
+public procedure TextBuffer(Text: string; Capacity: int; Maximum: int; At: string);
+begin
+  R.CheckText(Text, At);
+  if Capacity < 2 or Capacity > Maximum or Sys.Text.Encoding.UTF8.GetByteCount(
+    Text
+  ) >= Capacity
+  then
+    R.Reject(At, 'Text must fit its native UTF-8 buffer.');
+  end if;
+end procedure;
+
+// Validates columns, sort and viewport constraints before drawing.
+// ## Parameters
+// - `Columns`: Ordered column definitions.
+// - `Count`: Total logical row count.
+// - `Order`: Model-owned sort.
+// - `Height`: Viewport extent.
+// - `RowHeight`: Row height in logical points.
+// - `At`: Diagnostic path.
+public procedure Grid(Columns: array of G.Column; Count: int; Order: Tables.Sort?; Height: L.Extent; RowHeight: float; At: string);
+begin
+  R.CheckExtent(Height, V.Target.Graphical, At + '/height');
+  if Columns.Length < 1 or Columns.Length > 32 then
+    R.Reject(At, 'A native data grid needs one to 32 columns.');
+  end if;
+
+  if Count < 0 or not Sys.Single.IsFinite(RowHeight) or RowHeight < 1.0F
+    or (cast<double>(Count) + 1.0) * cast<double>(RowHeight) >= int.MaxValue
+  then
+    R.Reject(At, 'The logical row count and height must fit the native viewport.');
+  end if;
+
+  if Order <> null and (Order.Column < -1 or Order.Column >= Columns.Length
+    or (Order.Column >= 0 and not Columns[Order.Column].Sortable))
+  then
+    R.Reject(At, 'Sort must name a sortable column or be minus one.');
+  end if;
+
+  for Column: G.Column in Columns do
+    R.CheckText(Column.Title, At + '/header');
+    if not Sys.Single.IsFinite(Column.Width) or Column.Width < 0.0F
+      or not Sys.Enum.IsDefined<Tables.Alignment>(
+      Column.Align
+    ) or Column.Priority < 0 or Column.Priority > 255
+    then
+      R.Reject(At, 'Invalid native column width, alignment or priority.');
+    end if;
+  end for;
+end procedure;
+
+// Checks tree relationships and the row widths.
+// ## Parameters
+// - `Nodes`: Model tree in parent-first order.
+// - `Columns`: Expected number of columns.
+// - `Cursor`: Model cursor index or minus one.
+// - `At`: Diagnostic path.
+public procedure Tree(Nodes: array of T.Node; Columns: int; Cursor: int; At: string);
+begin
+  if Cursor < -1 or Cursor >= Nodes.Length then
+    R.Reject(At, 'The tree cursor must name a node or be minus one.');
+  end if;
+
+  for Index: int := 0 to Nodes.Length - 1 do
+    const Node: T.Node := Nodes[Index];
+    if Node.Parent < -1 or Node.Parent >= Index or Node.Cells.Length <> Columns - 1 then
+      R.Reject(At, 'Parents must precede children and each node must fill the columns.');
+    end if;
+
+    R.CheckText(Node.Label, At + '/name');
+    R.CheckText(Node.Icon, At + '/icon');
+    for Value: string in Node.Cells do
+      R.CheckText(Value, At + '/cell');
+    end for;
+  end for;
+end procedure;
+
+end unit;

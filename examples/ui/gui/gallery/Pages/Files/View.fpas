@@ -1,10 +1,10 @@
 unit GuiGallery.Pages.Files.View;
 
 uses
-  GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Terminals as Terminal, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Buttons as B,
-  Fpas.Ui.FileBrowsers as Browser, Fpas.Ui.FilePickers as Picker, Fpas.Ui.PathBars as Paths,
-  Fpas.Ui.FileListings as Listings, System as Sys, System.IO as IO, System.Collections.Generic as Lists;
+  GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Widgets.Developer.Terminals as Terminal, GuiGallery.Shared.Sections as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
+  Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO, System.Collections.Generic as Lists;
 
 function Controls(Model: M.Model): E.Element<M.Msg>;
 begin

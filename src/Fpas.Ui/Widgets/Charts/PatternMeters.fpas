@@ -1,0 +1,57 @@
+unit Fpas.Ui.Widgets.Charts.PatternMeters;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L;
+
+// One capacity-bar segment.
+public type Part = record
+  // Literal legend caption.
+  public Name: string;
+  // Nonnegative amount.
+  public Value: float;
+  // Theme series or explicit color.
+  public Color: C.Color := C.Color.Automatic;
+  // Zero selects CUI's density sequence; otherwise a fraction through one.
+  public Density: float := 0.0F;
+end record;
+
+// Native pattern-meter presentation and keyboard admission.
+public type Options = record
+  // Zero uses the sum; a positive capacity includes free space.
+  public Total: float := 0.0F;
+  // Literal header.
+  public Label: string := '';
+  // Literal amount suffix.
+  public Unit: string := '';
+  // Null selects native automatic amount formatting.
+  public Format: C.ValueFormat? := null;
+  // Null uses CUI's default; empty hides free space in the legend.
+  public FreeLabel: string? := null;
+  // Use foreground dots instead of series colors.
+  public Grayscale: bool := false;
+  // Show the native wrapping legend.
+  public Legend: bool := true;
+  // Bar height; zero selects the native default of 18.
+  public Height: float := 0.0F;
+  // Preferred logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Allow native pointer and keyboard selection.
+  public Enabled: bool := true;
+end record;
+
+// Draws CUI's capacity bar. CUI owns hover, keyboard selection and readout.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity.
+// - `Parts`: At most 32 named nonnegative amounts.
+// - `Settings`: Native presentation and keyboard admission.
+// ## Returns
+// A graphical element.
+public function PatternMeter<TMsg>(Id: string; Parts: array of Part; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+requires Parts.Length <= 32;
+begin
+  return E.Element<TMsg>.PatternMeter(Id, Parts, Settings ?? new Options());
+end function;
+
+end unit;

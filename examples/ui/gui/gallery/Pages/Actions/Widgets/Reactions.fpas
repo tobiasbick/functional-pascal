@@ -4,7 +4,7 @@ uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Actions.State as State,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.Reactions as R;
+  Fpas.Ui.Widgets.Conversation.Reactions as R;
 
 // Shows the native reaction group in the Actions page.
 // ## Parameters

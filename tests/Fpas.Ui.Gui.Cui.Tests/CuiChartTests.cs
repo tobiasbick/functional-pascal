@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Focused chart binding, copied-data and native keyboard contracts.</summary>

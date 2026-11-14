@@ -1,0 +1,67 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Charts.Treemap;
+
+uses
+  Fpas.Ui.Widgets.Charts.Treemaps as W, Fpas.Ui.Widgets.Charts.Charts as Ch, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents the native treemap and forwards its activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Items`: Named nonnegative amounts.
+// - `Selected`: Selected input item, or minus one. Requires `OnSelect` when set.
+// - `OnSelect`: Optional native selection proposal; null disables selection.
+// - `Settings`: Native presentation.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Ch.Item; Selected: int; OnSelect: Sys.Func<int, TMsg>?; Settings: W.Options);
+begin
+  const Token: string := C.Token('treemap', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
+  const Options: CuiCharts.CuiTreemapOptions := new CuiCharts.CuiTreemapOptions(
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Data.Format(Settings.Format)
+  );
+  const Selection: int? := if OnSelect = null then
+    null
+  else
+    Selected
+  end if;
+  const Result: CuiCharts.CuiTreemapResult := Frame.Window.Treemap(
+    Token,
+    Data.Items(Items),
+    Options,
+    Selection,
+    Enabled,
+    not Frame.PaintingClosed
+  );
+  if Enabled and Result.Selected <> Selected then
+    case OnSelect of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Result.Selected));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id,
+      'Treemap',
+      'treemap',
+      new Cui.CuiRectangle(),
+      Enabled,
+      Value := Result.Selected.ToString()
+    )
+  );
+end procedure;
+
+end unit;

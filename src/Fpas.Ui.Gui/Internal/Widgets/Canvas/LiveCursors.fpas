@@ -1,0 +1,27 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Canvas.LiveCursors;
+
+uses
+  Fpas.Ui.Widgets.Canvas.LiveCursors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.NodeEditors as N, Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
+
+// Presents CUI's native LiveCursors widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `People`: Current collaborators.
+// - `Child`: Component under the cursors.
+// - `Settings`: Native widget settings.
+// - `Visit`: Presents embedded content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; People: array of D.Person; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  Visit(Child, Frame, false, L.Alignment.Default);
+  const Transform: N.View := Settings.View ?? new N.View();
+  Frame.Window.LiveCursors(
+    C.Token('live-cursors', Id), Data.People(People), Settings.View <> null,
+    Data.View(Transform), Settings.NoGlide
+  );
+end procedure;
+
+end unit;

@@ -4,6 +4,14 @@ Low-level .NET 10 binding for the pinned [CUI dependency](../../third-party/cui/
 It supports the FPAS GUI host and interop fixtures. Applications use the
 [Fpas.Ui.Gui](../Fpas.Ui.Gui/README.md) MVU/declarative host.
 
+## Source layout
+
+`Widgets/<Topic>` and `Interop/<Topic>` group the managed adapters and
+marshalling code. Widget data uses `Fpas.Ui.Gui.Cui.Widgets.<Topic>`.
+The `CuiWindow` and `NativeMethods` partial types each share one namespace
+across their topic files. The native C adapters in `native/widgets/<topic>`
+use the same topics and expose the `fpas_cui_` symbols.
+
 ## Available binding
 
 - CuiWindow owns a native context and window on its creating UI thread.

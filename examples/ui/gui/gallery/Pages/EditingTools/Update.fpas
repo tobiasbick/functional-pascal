@@ -2,8 +2,8 @@ unit GuiGallery.Pages.EditingTools.Update;
 
 uses
   GuiGallery.Pages.EditingTools.State as M, GuiGallery.Pages.Motion.Clock as Clock,
-  Fpas.Ui.PropertyInspectors as I, Fpas.Ui.FlameGraphs as F, Fpas.Ui.CurveEditors as C,
-  Fpas.Ui.GradientEditors as G, Fpas.Ui.TimelineEditors as T,
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as I, Fpas.Ui.Widgets.Editors.FlameGraphs as F, Fpas.Ui.Widgets.Editors.CurveEditors as C,
+  Fpas.Ui.Widgets.Editors.GradientEditors as G, Fpas.Ui.Widgets.Editors.TimelineEditors as T,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as Lists;
 
 function Inspector(Groups: array of I.Group; Value: I.Event): array of I.Group;

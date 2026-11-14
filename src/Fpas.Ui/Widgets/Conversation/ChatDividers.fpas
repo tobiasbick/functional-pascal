@@ -1,0 +1,19 @@
+unit Fpas.Ui.Widgets.Conversation.ChatDividers;
+
+uses Fpas.Ui.Elements as E;
+
+// Draws a native labeled conversation divider.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Label`: Divider caption.
+// ## Returns
+// The graphical element.
+public function ChatDivider<TMsg>(Id: string; Label: string): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ChatDivider(Id, Label);
+end function;
+
+end unit;

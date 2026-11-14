@@ -1,0 +1,80 @@
+unit Fpas.Ui.Widgets.Actions.SplitButtons;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+
+// One keyed action in a split button's menu.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Item<TMsg> = record
+  // Stable key within the menu.
+  public Key: string;
+  // Literal caption.
+  public Label: string;
+  // Message proposed when the item is chosen.
+  public Message: TMsg;
+  // Optional CUI icon.
+  public Icon: string := '';
+  // Optional terminal equivalent of the icon.
+  public TerminalIcon: string := '';
+end record;
+
+// Shared appearance and input options for both halves of a split button.
+public type Options = record
+  // CUI button variant. The default is primary.
+  public Variant: S.ButtonVariant := S.ButtonVariant.Primary;
+  // CUI control size.
+  public ControlSize: B.Size := B.Size.Medium;
+  // Optional CUI icon for the main action.
+  public Icon: string := '';
+  // Optional terminal icon for the main action.
+  public TerminalIcon: string := '';
+  // Whether either half accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Derives the focus ID for the menu trigger.
+//
+// ## Parameters
+// - `Id`: Main action ID.
+// ## Returns
+// The menu trigger's stable ID.
+public function MenuId(Id: string): string;
+begin
+  return Id + '/menu';
+end function;
+
+// Derives a menu item's identity from its key.
+//
+// ## Parameters
+// - `Id`: Main action ID.
+// - `Key`: Stable item key.
+// ## Returns
+// The item's stable ID.
+public function ItemId(Id: string; Key: string): string;
+begin
+  return MenuId(Id) + '/' + Key;
+end function;
+
+// Builds a primary action with a menu of related actions.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable ID for the main action.
+// - `Label`: Main action caption.
+// - `Message`: Message proposed by the main half.
+// - `Items`: Nonempty ordered menu with unique item keys.
+// - `Settings`: Optional control size, appearance and input settings.
+// ## Returns
+// The portable split button.
+public function SplitButton<TMsg>(
+  Id: string; Label: string; Message: TMsg; Items: array of Item<TMsg>; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+requires Items.Length > 0;
+begin
+  return E.Element<TMsg>.SplitAction(Id, Label, Message, Items, Settings ?? new Options());
+end function;
+
+end unit;

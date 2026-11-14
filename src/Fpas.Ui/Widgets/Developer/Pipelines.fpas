@@ -1,0 +1,53 @@
+unit Fpas.Ui.Widgets.Developer.Pipelines;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Data for the native Pipeline widget.
+public type Job = record
+  // Name supplied to CUI.
+  public Name: string;
+  // Stage supplied to CUI.
+  public Stage: int;
+  // Status supplied to CUI.
+  public Status: int;
+  // Duration in seconds, or negative when unavailable.
+  public Duration: float;
+  // Allow Failure supplied to CUI.
+  public AllowFailure: bool;
+end record;
+
+// Action or changed value reported by the native widget.
+public type Event = record
+  // Selected zero-based index, or minus one.
+  public Selection: int;
+  // Clicked zero-based index, or minus one.
+  public Clicked: int;
+end record;
+
+// Native layout and interaction options.
+public type Options = record
+  // Native preferred layout width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Whether the widget accepts interaction.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native Pipeline widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Stages`: Model-owned stages data.
+// - `Jobs`: Model-owned jobs data.
+// - `Selection`: Selected zero-based index, or minus one.
+// - `Changed`: Maps an action or edit to a message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function Pipeline<TMsg>(Id: string; Stages: array of string; Jobs: array of Job; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Pipeline(Id, Stages, Jobs, Selection, Changed, Settings ?? new Options());
+end function;
+
+end unit;

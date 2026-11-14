@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Social.Update;
 
-uses GuiGallery.Pages.Social.State as S, Fpas.Ui.Comments as Comments, Fpas.Ui.ImageViewers as Viewer, Fpas.Ui.ImageCroppers as Cropper, Fpas.Ui.CardStacks as Deck, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Gui.Toasts as Toasts;
+uses GuiGallery.Pages.Social.State as S, Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Media.ImageViewers as Viewer, Fpas.Ui.Widgets.Media.ImageCroppers as Cropper, Fpas.Ui.Widgets.Containers.CardStacks as Deck, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Gui.Toasts as Toasts;
 
 // Applies changes to the social examples.
 // ## Parameters

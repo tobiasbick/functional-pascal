@@ -1,0 +1,58 @@
+unit Fpas.Ui.Widgets.Desktop.DocumentTabs;
+
+uses Fpas.Ui.Elements as E;
+
+// An open document in the native tab strip.
+public type Tab = record
+  // Stable key within the strip.
+  public Key: string;
+  // Visible name.
+  public Title: string;
+  // Optional CUI icon glyph.
+  public Icon: string := '';
+  // Optional detailed tooltip.
+  public Tooltip: string := '';
+  // Whether to show an unsaved-changes dot.
+  public Dirty: bool := false;
+end record;
+
+// Native tab strip behavior.
+public type Options = record
+  // Enable window-wide document shortcuts.
+  public Shortcuts: bool := false;
+  // Whether the user can ask to close a tab.
+  public Closable: bool := true;
+  // Whether the user can reorder tabs.
+  public Reorderable: bool := true;
+end record;
+
+// Native proposals from one frame. All indices are zero-based.
+public type Change = record
+  // Proposed selected index after applying the move, or minus one.
+  public Selected: int;
+  // Index to close in the original order, or minus one.
+  public Close: int;
+  // Source index of a move, or minus one.
+  public MoveFrom: int;
+  // Destination index of a move, or minus one.
+  public MoveTo: int;
+end record;
+
+// Draws the native strip for selecting, closing and moving documents.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable strip identity.
+// - `Tabs`: Documents in display order.
+// - `Selected`: Current index, or minus one when there is no selection.
+// - `OnChange`: Maps a native proposal to a message. The model applies the changes.
+// - `Settings`: Optional native behavior.
+// ## Returns
+// A graphical element.
+public function DocumentTabs<TMsg>(Id: string; Tabs: array of Tab; Selected: int; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DocumentTabs(Id, Tabs, Selected, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

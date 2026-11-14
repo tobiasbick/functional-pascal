@@ -7,9 +7,9 @@ uses
   GuiGallery.App.View as View,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Selects as S,
-  Fpas.Ui.NumberFields as N,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Widgets.Inputs.Selects as S,
+  Fpas.Ui.Widgets.Inputs.NumberFields as N,
   Fpas.Ui.Validation as V,
   Fpas.Ui.Elements as E,
   System as Sys;

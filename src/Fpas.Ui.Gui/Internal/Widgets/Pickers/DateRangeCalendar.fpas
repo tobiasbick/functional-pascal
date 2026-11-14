@@ -1,0 +1,35 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeCalendar;
+
+uses
+  Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts as Parts, System as Sys;
+
+// Draws a native inline range calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable calendar identity.
+// - `Value`: Model-owned range.
+// - `OnChange`: Maps a range proposal to a message.
+// - `Months`: Number of consecutive months.
+// - `Enabled`: Whether the calendar accepts input.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
+  Months: int; Enabled: bool
+);
+begin
+  const Accept: bool := Enabled and Frame.AcceptInput;
+  const Role: string := 'date-range-calendar';
+  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+    null
+  else
+    function(Part: int): string => Parts.Token(Id, Part)
+  end if;
+  const Result: CuiPickers.CuiDateRangeResult := Frame.Window.RangeCalendar(
+    C.Token(Role, Id), Parts.StartDay(Value), Parts.EndDay(Value), Months, Accept, Track
+  );
+  Parts.Publish<TMsg>(Frame, Id, 'Date range calendar', Role, Value, Accept, Result, OnChange);
+end procedure;
+
+end unit;

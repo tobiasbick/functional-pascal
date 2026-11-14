@@ -1,6 +1,8 @@
 unit GuiGallery.Pages.MoreDeveloper.Update;
 
-uses GuiGallery.Pages.MoreDeveloper.State as M, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.RegexTesters as R, Fpas.Ui.RequestBars as H, Fpas.Ui.KeyValueEditors as K, Fpas.Ui.ApiExplorers as A, Fpas.Ui.FeatureFlagEditors as F, Fpas.Ui.TimeHistograms as G, System.Collections.Generic as Lists;
+uses
+  GuiGallery.Pages.MoreDeveloper.State as M, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Developer.RegexTesters as R, Fpas.Ui.Widgets.Developer.RequestBars as H, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.ApiExplorers as A, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F, Fpas.Ui.Widgets.Charts.TimeHistograms as G, System.Collections.Generic as Lists;
 
 function Request(Model: M.Model; Value: H.Event): M.Model;
 begin
@@ -10,7 +12,7 @@ begin
     end with;
   end if;
   const Pairs: Lists.List<K.Pair> := new Lists.List<K.Pair>();
-  for Entry: Cui.CuiDevPair in Cui.CuiWindow.UrlParameters(Value.Url, 8) do
+  for Entry: CuiDeveloper.CuiDevPair in Cui.CuiWindow.UrlParameters(Value.Url, 8) do
     Pairs.Add(new K.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
   end for;
 
@@ -23,9 +25,11 @@ end function;
 
 function Parameters(Model: M.Model; Value: K.Event): M.Model;
 begin
-  const Pairs: Lists.List<Cui.CuiDevPair> := new Lists.List<Cui.CuiDevPair>(Value.Pairs.Length);
+  const Pairs: Lists.List<CuiDeveloper.CuiDevPair> := new Lists.List<CuiDeveloper.CuiDevPair>(
+    Value.Pairs.Length
+  );
   for Entry: K.Pair in Value.Pairs do
-    Pairs.Add(new Cui.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
+    Pairs.Add(new CuiDeveloper.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
   end for;
 
   return Model with

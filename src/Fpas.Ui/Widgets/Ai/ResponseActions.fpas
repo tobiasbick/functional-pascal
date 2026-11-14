@@ -1,0 +1,45 @@
+unit Fpas.Ui.Widgets.Ai.ResponseActions;
+
+uses Fpas.Ui.Elements as E;
+
+// Actions from the native response toolbar.
+public type Event = variant
+  // CUI copied the supplied text.
+  Copy;
+  // Generate another response.
+  Regenerate;
+  // Apply the proposed vote.
+  Vote(Value: int);
+  // Share the response.
+  Share;
+end variant;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Text to copy, or null to omit Copy.
+  public CopyText: string? := null;
+  // Omit the Regenerate button.
+  public HideRegenerate: bool := false;
+  // Omit the Share button.
+  public HideShare: bool := false;
+  // Allow response actions.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native ResponseActions widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Vote`: Current vote: minus one, zero or one. Null leaves votes momentary.
+// - `Changed`: Maps a native action.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ResponseActions<TMsg>(Id: string; Vote: int?; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ResponseActions(Id, Vote, Changed, Settings ?? new Options());
+end function;
+
+end unit;

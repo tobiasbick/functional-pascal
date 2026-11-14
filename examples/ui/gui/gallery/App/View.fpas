@@ -64,12 +64,12 @@ uses
   GuiGallery.App.State as State,
   GuiGallery.Shared.State as Demo,
   Fpas.Ui.Composition as U,
-  Fpas.Ui.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.Navigation as N,
-  Fpas.Ui.Sheets as Sheets,
-  Fpas.Ui.IconButtons as Icons,
+  Fpas.Ui.Widgets.Navigation.Navigation as N,
+  Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Styles as S,
   System as Sys;
 

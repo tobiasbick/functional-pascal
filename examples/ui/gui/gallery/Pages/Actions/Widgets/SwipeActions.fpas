@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Actions.Widgets.SwipeActions;
 
 uses
   GuiGallery.Pages.Actions.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   System as Sys;
 
 function Row(Id: string; Title: string): E.Element<State.Msg>;

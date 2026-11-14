@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Overlays;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Checks native dropdown commands, keyed captions and lifecycle.</summary>

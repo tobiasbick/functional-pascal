@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Navigation.Widgets.Pagination;
 
 uses
   GuiGallery.Pages.Navigation.State as State,
-  Fpas.Ui.Paginations as P,
+  Fpas.Ui.Widgets.Navigation.Paginations as P,
   Fpas.Ui.Elements as E;
 
 // Builds the original twelve-page pager.

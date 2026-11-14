@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Themes;
 
-uses Fpas.Ui.Terminal as T, Fpas.Ui.Themes as Shared, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Widgets.Theming.Themes as Shared, Fpas.Ui.Graphics as G;
 
 // Terminal colors for one semantic button variant.
 public type ButtonAppearance = record

@@ -1,6 +1,6 @@
 program RenderingContract;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin

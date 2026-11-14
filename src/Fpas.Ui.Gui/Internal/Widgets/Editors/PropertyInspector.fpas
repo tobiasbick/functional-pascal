@@ -1,0 +1,110 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Editors.PropertyInspector;
+
+uses
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  System.Collections.Generic as Lists, Fpas.Ui.Graphics as G;
+
+function Pack(Row: D.Property): CuiEditors.CuiProperty;
+begin
+  var Kind: int := 0;
+  var Integer: int := 0;
+  var Values: array of float := [];
+  var Text: string? := null;
+  var Color: uint := 0U;
+  var Choices: array of string := [];
+  case Row.Current of
+    when D.Value.Number(const Value: float):
+      Values := [Value];
+    when D.Value.Integer(const Value: int):
+      Kind := 1;
+      Integer := Value;
+    when D.Value.Text(const Value: string):
+      Kind := 2;
+      Text := Value;
+    when D.Value.Boolean(const Value: bool):
+      Kind := 3;
+      Integer := P.Bits(Value, 1);
+    when D.Value.Choice(const Items: array of string, const Selected: int):
+      Kind := 4;
+      Integer := Selected;
+      Choices := Items;
+    when D.Value.Color(const Value: G.Color):
+      Kind := 5;
+      Color := P.Pack(Value);
+    when D.Value.Vector(const Value: array of float):
+      Kind := 6;
+      Values := Value;
+  end case;
+
+  return new CuiEditors.CuiProperty(
+    Row.Label, Kind, Integer, Values, Text, Color, Choices, Row.Minimum, Row.Maximum,
+    Row.Step, Row.Digits, Row.Suffix, Row.Placeholder, Row.Tooltip, Row.Capacity,
+    P.Bits(Row.Enabled, 1) or P.Bits(Row.Checkbox, 2)
+  );
+end function;
+
+function Read(Edit: CuiEditors.CuiPropertyEdit; Previous: D.Value): D.Value;
+begin
+  return case Previous of
+    when D.Value.Number(_): D.Value.Number(Edit.Values[0]);
+    when D.Value.Integer(_): D.Value.Integer(Edit.Integer);
+    when D.Value.Text(_): D.Value.Text(Edit.Text ?? '');
+    when D.Value.Boolean(_): D.Value.Boolean(Edit.Integer <> 0);
+    when D.Value.Choice(const Items: array of string, _): D.Value.Choice(Items, Edit.Integer);
+    when D.Value.Color(_): D.Value.Color(P.Unpack(Edit.Color));
+    when D.Value.Vector(_): D.Value.Vector(Edit.Values);
+  end case;
+end function;
+
+// Presents a native PropertyInspector.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Groups`: Groups and native property rows.
+// - `Changed`: Maps a native proposal.
+// - `Settings`: Native layout and behavior options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Groups: array of D.Group; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'property-inspector';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Native: Lists.List<CuiEditors.CuiPropertyGroup> := new Lists.List<CuiEditors.CuiPropertyGroup>(
+    Groups.Length
+  );
+  for Group: D.Group in Groups do
+    const Rows: Lists.List<CuiEditors.CuiProperty> := new Lists.List<CuiEditors.CuiProperty>(
+      Group.Properties.Length
+    );
+    for Row: D.Property in Group.Properties do
+      Rows.Add(Pack(Row));
+    end for;
+
+    Native.Add(
+      new CuiEditors.CuiPropertyGroup(Group.Title, Rows.ToArray(), Group.Open, Group.Collapsible)
+    );
+  end for;
+
+  for Edit: CuiEditors.CuiPropertyEdit in Frame.Window.PropertyInspector(
+    Token,
+    Native.ToArray(),
+    Settings.LabelWidth,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  ) do
+    if Edit.Row < 0 then
+      Frame.Messages.Add(Changed(D.Event.Expansion(Edit.Group, Edit.Open)));
+    else
+      const Old: D.Value := Groups[Edit.Group].Properties[Edit.Row].Current;
+      Frame.Messages.Add(Changed(D.Event.Edit(Edit.Group, Edit.Row, Read(Edit, Old))));
+    end if;
+  end for;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

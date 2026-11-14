@@ -65,6 +65,13 @@ and package names follow these identities. FPAS units use the mapping above;
 for example, `Fpas.Ui.Mvu.Application` is the static unit container in namespace
 `Fpas.Ui.Mvu`. Namespace nesting does not introduce assembly dependencies: the
 MVU runtime is independent of widgets and the TUI has no GUI/CUI dependency.
+Widget contracts use `Fpas.Ui.Widgets.<Topic>.<Unit>`. For example, the button
+contract is the static CLR type `Fpas.Ui.Widgets.Actions.Buttons`, and its
+options record is `Fpas.Ui.Widgets.Actions.Buttons+Options`. The CUI binding
+uses `Fpas.Ui.Gui.Cui.Widgets.<Topic>` for widget data and
+`Fpas.Ui.Gui.Cui.Interop.<Topic>` for internal native representations. The
+`Fpas.Ui.Gui.Cui.CuiWindow` partial type owns the window context and its widget
+methods across the topic source files.
 
 The same container rule applies to a qualified program name. Visibility is checked
 at both source and metadata boundaries. Public nested types in accessible

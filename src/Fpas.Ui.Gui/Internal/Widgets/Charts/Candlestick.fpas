@@ -1,0 +1,72 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Charts.Candlestick;
+
+uses
+  Fpas.Ui.Widgets.Charts.Candlesticks as W, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
+  Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Data.ChartData as Common, Fpas.Ui.Gui.Internal.Data.MoreChartData as Data,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
+
+// Presents CUI's native candlestick.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable identity.
+// - `Candles`: Finite OHLC periods with nonnegative volume.
+// - `Settings`: Native presentation.
+// - `OnCursorChange`: Optional native crosshair change callback.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Candles: array of W.Candle; Settings: W.Options; OnCursorChange: Sys.Func<int, TMsg>?);
+begin
+  const Token: string := C.Token('candlestick', Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Options: CuiCharts.CuiCandlestickOptions := new CuiCharts.CuiCandlestickOptions(
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Settings.Labels,
+    Common.Format(Settings.Format),
+    Common.Series(Settings.Overlays),
+    Settings.Volume,
+    Settings.Ohlc,
+    Common.Color(Settings.Up),
+    Common.Color(Settings.Down)
+  );
+  const Cursor: int := Frame.Window.Candlestick(
+    Token, Data.Candles(Candles), Options, Enabled,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), not Frame.PaintingClosed
+  );
+  const Reading: string := Cursor.ToString();
+  var Previous: string := '-1';
+  for Control: App.Control in Frame.Previous do
+    if Control.Id = Id and Control.Role = 'candlestick' then
+      Previous := Control.Value;
+      break;
+    end if;
+  end for;
+
+  if Enabled and Previous <> Reading then
+    case OnCursorChange of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Cursor));
+      else
+    end case;
+  end if;
+
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
+  Frame.Controls.Add(
+    new App.Control(
+      Id,
+      'Candlestick',
+      'candlestick',
+      new Cui.CuiRectangle(),
+      Enabled,
+      Value := Reading
+    )
+  );
+end procedure;
+
+end unit;

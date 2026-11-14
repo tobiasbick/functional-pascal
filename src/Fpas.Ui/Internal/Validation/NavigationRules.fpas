@@ -1,0 +1,92 @@
+unit Fpas.Ui.Internal.Validation.NavigationRules;
+
+uses
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs,
+  Fpas.Ui.Validation as V, System as Sys;
+
+procedure Caption(Value: string; Location: string);
+begin
+  R.CheckText(Value, Location);
+  if Sys.String.IsNullOrWhiteSpace(Value) then
+    R.Reject(Location, 'A navigation item needs a caption.');
+  end if;
+end procedure;
+
+// Validates a graphical tab strip and registers its focus identities.
+//
+// ## Parameters
+// - `Id`: Stable strip identity.
+// - `Items`: Positional tab captions and glyphs.
+// - `Selected`: Current zero-based index.
+// - `Settings`: Native variant and width options.
+// - `Profile`: Receiving host profile.
+// - `Location`: Control path for diagnostics.
+// - `Identify`: Validates and registers a unique view identity.
+public procedure CheckTabs(
+  Id: string; Items: array of Tabs.Item; Selected: int; Settings: Tabs.Options;
+  Profile: V.Target; Location: string; Identify: function(string, string): string
+);
+begin
+  const At: string := Identify(Id, Location + '/tabs');
+  R.RequireProfile(Profile, V.Target.Graphical, At);
+  if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
+    or not Sys.Enum.IsDefined<Tabs.Variant>(Settings.Appearance)
+  then
+    R.Reject(At, 'Tabs need one through 32 choices, a selected index and a valid appearance.');
+  end if;
+
+  for Index: int := 0 to Items.Length - 1 do
+    const Part: string := Identify(Tabs.ItemId(Id, Index), At + '/tab');
+    Caption(Items[Index].Label, Part + '/label');
+    R.CheckText(Items[Index].Icon, Part + '/icon');
+  end for;
+end procedure;
+
+// Validates a graphical breadcrumb trail and registers its positional identities.
+//
+// ## Parameters
+// - `Id`: Stable trail identity.
+// - `Items`: Literal path captions.
+// - `Profile`: Receiving host profile.
+// - `Location`: Control path for diagnostics.
+// - `Identify`: Validates and registers a unique view identity.
+public procedure CheckBreadcrumb(
+  Id: string; Items: array of string; Profile: V.Target;
+  Location: string; Identify: function(string, string): string
+);
+begin
+  const At: string := Identify(Id, Location + '/breadcrumb');
+  R.RequireProfile(Profile, V.Target.Graphical, At);
+  if Items.Length = 0 then
+    R.Reject(At, 'A breadcrumb needs at least one path item.');
+  end if;
+
+  for Index: int := 0 to Items.Length - 1 do
+    const Part: string := Identify(Breadcrumbs.ItemId(Id, Index), At + '/item');
+    Caption(Items[Index], Part + '/label');
+  end for;
+end procedure;
+
+// Validates a graphical stepper's captions and progress.
+//
+// ## Parameters
+// - `Steps`: Literal step captions in display order.
+// - `Current`: Current index, or the count when all steps are complete.
+// - `Profile`: Receiving host profile.
+// - `Location`: Control path for diagnostics.
+public procedure CheckStepper(Steps: array of string; Current: int; Profile: V.Target; Location: string);
+begin
+  R.RequireProfile(Profile, V.Target.Graphical, Location);
+  if Steps.Length = 0 or Current < 0 or Current > Steps.Length then
+    R.Reject(
+      Location,
+      'A stepper needs at least one step and progress between zero and the step count.'
+    );
+  end if;
+
+  for Index: int := 0 to Steps.Length - 1 do
+    Caption(Steps[Index], Location + '/step/' + Index.ToString());
+  end for;
+end procedure;
+
+end unit;

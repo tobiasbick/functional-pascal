@@ -1,0 +1,76 @@
+unit Fpas.Ui.Widgets.Canvas.CanvasControls;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+
+// Bounds in canvas coordinates for the fit action.
+public type Bounds = record
+  // Left edge.
+  public X: float;
+  // Top edge.
+  public Y: float;
+  // Content width.
+  public Width: float;
+  // Content height.
+  public Height: float;
+end record;
+
+// One additional canvas toggle.
+public type Toggle = record
+  // Native CUI icon glyph.
+  public Icon: string;
+  // Tooltip caption.
+  public Label: string;
+  // Current pressed state.
+  public On: bool;
+end record;
+
+// Canvas rail settings.
+public type Options = record
+  // Bounds for fit, or null to report the action alone.
+  public Content: Bounds? := null;
+  // Ascending zoom presets, or empty for the defaults.
+  public Steps: array of float := [];
+  // Omits the fit action.
+  public HideFit: bool := false;
+  // Places the rail at the logical start edge.
+  public StartSide: bool := false;
+  // Whether the rail accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Proposed canvas transform or toggle change.
+public type Event = record
+  // Proposed canvas transform.
+  public Viewport: N.View;
+  // Toggle states in the supplied order.
+  public Toggles: array of bool;
+  // Whether fit was activated.
+  public Fit: bool;
+end record;
+
+// Builds the native CanvasControls element.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Viewport`: Current pan and zoom.
+// - `Toggles`: Additional toggle buttons.
+// - `Changed`: Maps native proposals to messages.
+// - `Child`: Canvas underneath the rail.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function CanvasControls<TMsg>(Id: string; Viewport: N.View; Toggles: array of Toggle; Changed: function(Event): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.CanvasControls(
+    Id,
+    Viewport,
+    Toggles,
+    Changed,
+    Child,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

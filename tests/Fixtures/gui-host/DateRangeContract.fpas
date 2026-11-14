@@ -2,8 +2,8 @@ unit GalleryDateRangeContract;
 
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, Fpas.Ui.DateRanges as R, Fpas.Ui.DateRangePickers as P,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  GuiGallery.App.Update as G, Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Widgets.Pickers.DateRangePickers as P,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App, System as Sys;
 
 // Checks the native date range section through the real Pickers page.

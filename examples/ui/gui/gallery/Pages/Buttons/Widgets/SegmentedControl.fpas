@@ -3,8 +3,8 @@ unit GuiGallery.Pages.Buttons.Widgets.SegmentedControl;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.SegmentedControls as S,
-  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   System as Sys;

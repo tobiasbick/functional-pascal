@@ -1,0 +1,53 @@
+unit Fpas.Ui.Widgets.Inputs.RulerSliders;
+
+uses Fpas.Ui.Elements as E;
+
+// Presentation and input settings for a native ruler.
+public type Options = record
+  // Positive value between adjacent ticks.
+  public Step: float := 1.0F;
+  // Number of ticks between labels and steps taken by Shift+arrow.
+  public MajorEvery: int := 10;
+  // Logical points between ticks, at least one.
+  public Spacing: float := 9.0F;
+  // Logical width. Zero fills the available width.
+  public Width: float := 0.0F;
+  // Display precision from zero through six decimal places.
+  public DecimalPlaces: int := 0;
+  // Optional unit caption beside the value.
+  public UnitLabel: string := '';
+  // Whether the ruler accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Builds CUI's ruler with a fixed marker and a movable tape.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Value`: Model-owned value within the bounds.
+// - `Minimum`: Finite inclusive lower bound.
+// - `Maximum`: Finite inclusive upper bound greater than Minimum.
+// - `OnChange`: Maps a proposed value to a message.
+// - `Settings`: Optional ticks, dimensions, value display and input permission.
+// ## Returns
+// The graphical ruler slider.
+public function RulerSlider<TMsg>(
+  Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
+  OnChange: function(float): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RulerSlider(
+    Id,
+    Label,
+    Value,
+    Minimum,
+    Maximum,
+    OnChange,
+    Settings ?? new Options()
+  );
+end function;
+
+end unit;

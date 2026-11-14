@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.Files.Terminal;
 
 uses
-  GuiGallery.Pages.Files.Folders as Files, Fpas.Ui.FileListings as Listing,
+  GuiGallery.Pages.Files.Folders as Files, Fpas.Ui.Widgets.Files.FileListings as Listing,
   System as Sys, System.Globalization as Locale, System.Text as Text;
 
 // Initial ANSI output of the CUI shell example.

@@ -1,0 +1,35 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip;
+
+uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays, Fpas.Ui.Gui.Application as App;
+
+// Attaches pointer help to the just-drawn anchor.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Caption`: Literal tooltip text.
+// - `Shortcut`: Optional shortcut hint.
+public procedure Attach<TMsg>(Frame: C.State<TMsg>; Caption: string; Shortcut: string);
+begin
+  if Frame.AcceptInput then
+    Frame.Window.Tooltip(Caption, Shortcut);
+  end if;
+end procedure;
+
+// Publishes the tooltip drawn by CUI at the end of the frame.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Completed drawing context.
+public procedure Collect<TMsg>(Frame: C.State<TMsg>);
+begin
+  case Frame.Window.VisibleTooltip() of
+    when is CuiOverlays.CuiTooltipFrame as Tip:
+      Frame.Controls.Add(new App.Control('native-tooltip', Tip.Text, 'tooltip', Tip.Bounds, false));
+    else
+  end case;
+end procedure;
+
+end unit;

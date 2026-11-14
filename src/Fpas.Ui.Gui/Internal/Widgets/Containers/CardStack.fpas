@@ -1,0 +1,70 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Containers.CardStack;
+
+uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Presents CUI's native CardStack widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Cards`: Composed cards from top to bottom.
+// - `Changed`: Maps a native change to a message.
+// - `Settings`: Native widget options.
+// - `Visit`: Presents composed children.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Cards: array of E.Element<TMsg>; Changed: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Role: string := 'card-stack';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Cards.Length > 0;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id + '/top', C.Token(Role, Id + '/top'), Enabled)
+    or C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  Frame.Window.BeginCardStack(
+    Token,
+    Cards.Length,
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Settings.Visible,
+    Enabled,
+    Focus
+  );
+  for Card: int := 0 to Cards.Length - 1 do
+    Frame.Window.BeginCardStackItem(Card);
+    Visit(
+      Cards[Card], Frame with
+        AcceptInput := Enabled and Card = 0;
+        Interactive := Frame.Interactive and Settings.Enabled and Card = 0;
+        PaintingClosed := Frame.PaintingClosed or not Settings.Enabled or not (Card = 0);
+      end with, false, L.Alignment.Default
+    );
+    Frame.Window.EndCardStackItem();
+  end for;
+
+  const Next: int := Frame.Window.EndCardStack(
+    if Frame.PaintingClosed or Cards.Length = 0 then
+      null
+    else
+      C.Token(Role, Id + '/top')
+    end if
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  if Cards.Length > 0 then
+    P.Part<TMsg>(Frame, Id, Role, 'top', '', Enabled, '');
+  end if;
+
+  if Enabled and Next <> 0 then
+    Frame.Messages.Add(
+      Changed(
+        if Next < 0 then
+          CardStacks.Direction.Left
+        else
+          CardStacks.Direction.Right
+        end if
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

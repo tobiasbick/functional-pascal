@@ -1,0 +1,76 @@
+unit Fpas.Ui.Widgets.Pickers.TimePickers;
+
+uses Fpas.Ui.Elements as E, System as Sys;
+
+// Presentation and input settings for the native time field.
+public type Options = record
+  // Optional caption above the field.
+  public Label: string := '';
+  // Logical field width. Zero selects CUI's default.
+  public Width: float := 0.0F;
+  // Whether to show the hour with AM and PM.
+  public TwelveHour: bool := false;
+  // Increment of the choices in the minutes column, from one to sixty.
+  public MinuteStep: int := 5;
+  // Whether the picker accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Gets an hour choice's identity while the popup is open.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Hour`: Zero-based hour, where zero displays as 12 in twelve-hour mode.
+// ## Returns
+// The hour choice identity.
+public function HourId(Id: string; Hour: int): string;
+requires Hour >= 0 and Hour < 24;
+begin
+  return Id + '/hour/' + Hour.ToString();
+end function;
+
+// Gets a minute choice's identity while the popup is open.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Minute`: Minute of the hour offered by the current step.
+// ## Returns
+// The minute choice identity.
+public function MinuteId(Id: string; Minute: int): string;
+requires Minute >= 0 and Minute < 60;
+begin
+  return Id + '/minute/' + Minute.ToString();
+end function;
+
+// Gets a period choice's identity in the twelve-hour popup.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Afternoon`: Whether to identify PM.
+// ## Returns
+// The period choice identity.
+public function PeriodId(Id: string; Afternoon: bool): string;
+begin
+  return Id + (if Afternoon then
+    '/pm'
+  else
+    '/am'
+  end if);
+end function;
+
+// Builds CUI's time field with scrolling hour and minute columns.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Value`: Model-owned time at minute precision.
+// - `OnChange`: Maps a proposed time to a message.
+// - `Settings`: Optional label, width, format, minute step and input permission.
+// ## Returns
+// The graphical time picker.
+public function TimePicker<TMsg>(
+  Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TimePicker(Id, Value, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

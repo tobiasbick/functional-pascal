@@ -1,7 +1,7 @@
 unit GuiGallery.Pages.DataGrid.People;
 
 uses
-  Fpas.Ui.Tables as T, System as Sys, System.Collections.Generic as Lists,
+  Fpas.Ui.Widgets.Collections.Tables as T, System as Sys, System.Collections.Generic as Lists,
   System.Globalization as Culture;
 
 // One deterministic record from the original grid demo.

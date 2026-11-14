@@ -1,7 +1,7 @@
 unit Gallery.SplitButton;
 
 uses
-  Gallery.State as State, Fpas.Ui.SplitButtons as Split, Fpas.Ui.Elements as E,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 function Items(): array of Split.Item<State.Msg>;

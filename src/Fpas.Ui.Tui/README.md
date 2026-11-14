@@ -64,7 +64,7 @@ plus cell text and colors. The gallery's headless-control mode supports the
 
 ## Themes and examples
 
-Use Fpas.Ui.Themes.Light/Dark and the same ThemeFor callback as GUI. Terminal
+Use Fpas.Ui.Widgets.Theming.Themes.Light/Dark and the same ThemeFor callback as GUI. Terminal
 styles derive from the shared palette, with alpha composited over cell
 backgrounds. Include relevant theme values in cached-subview dependencies.
 See [shared themes](../Fpas.Ui/README.md#shared-themes) and the

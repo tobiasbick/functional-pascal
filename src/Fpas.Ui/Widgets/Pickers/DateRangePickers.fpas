@@ -1,0 +1,49 @@
+unit Fpas.Ui.Widgets.Pickers.DateRangePickers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.DateRanges as R;
+
+// Presentation and input settings for the native date range field.
+public type Options = record
+  // Optional caption above the field.
+  public Label: string := '';
+  // Caption for an empty range. Empty selects CUI's default.
+  public Placeholder: string := '';
+  // Logical field width. Zero selects CUI's default.
+  public Width: float := 0.0F;
+  // Whether to show the relative date presets.
+  public Presets: bool := true;
+  // Whether the picker accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Gets the identity of a native preset.
+// ## Parameters
+// - `Id`: Picker identity.
+// - `Index`: CUI's zero-based preset order, starting with Today and Yesterday.
+// ## Returns
+// The preset identity while the popup is open.
+public function PresetId(Id: string; Index: int): string;
+requires Index >= 0 and Index < 7;
+begin
+  return Id + '/preset/' + Index.ToString();
+end function;
+
+// Builds the native date range field and its responsive calendar popup.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Value`: Model-owned range or partial selection.
+// - `OnChange`: Maps a native proposal to a message.
+// - `Settings`: Optional caption, width, presets and input permission.
+// ## Returns
+// A graphical range picker with CUI-owned popup layout and interaction.
+public function DateRangePicker<TMsg>(
+  Id: string; Value: R.Value; OnChange: function(R.Value): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.RangePicker(Id, Value, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

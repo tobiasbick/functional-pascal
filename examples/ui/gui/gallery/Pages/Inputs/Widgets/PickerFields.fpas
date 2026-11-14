@@ -6,9 +6,9 @@ uses
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.Grids as Grid,
-  Fpas.Ui.Selects as S,
-  Fpas.Ui.NumberFields as N, Fpas.Ui.DatePickers as D;
+  Fpas.Ui.Widgets.Containers.Grids as Grid,
+  Fpas.Ui.Widgets.Inputs.Selects as S,
+  Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Widgets.Pickers.DatePickers as D;
 
 const Countries: array of S.Item := [
   new S.Item('Canada'), new S.Item('Denmark'), new S.Item('Germany'), new S.Item('Iran'),

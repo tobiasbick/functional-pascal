@@ -7,12 +7,12 @@ uses
   GuiGallery.App.View as View,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App,
   Fpas.Ui.Validation as V,
-  Fpas.Ui.Popovers as P,
-  Fpas.Ui.ConfirmPopovers as Q,
-  Fpas.Ui.Buttons as B,
+  Fpas.Ui.Widgets.Overlays.Popovers as P,
+  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Q,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Elements as E,
   System as Sys;
 

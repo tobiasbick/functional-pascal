@@ -1,0 +1,226 @@
+unit Fpas.Ui.Internal.Validation.CreativeRules;
+
+uses
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Internal.Validation.ChartRules as Chart,
+  Fpas.Ui.Validation as V, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Audio.ControlWells as W, System as Sys,
+  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+
+procedure Tone(Value: S.Tone; At: string);
+begin
+  if not Sys.Enum.IsDefined<S.Tone>(Value) then
+    R.Reject(At, 'Unknown native tone.');
+  end if;
+end procedure;
+
+procedure Fraction(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F or Value > 1.0F then
+    R.Reject(At, 'Expected a finite fraction between zero and one.');
+  end if;
+end procedure;
+
+procedure Texts(Values: array of string; At: string);
+begin
+  for Text: string in Values do
+    R.CheckText(Text, At);
+  end for;
+end procedure;
+
+procedure Tool(Value: W.Tool?; At: string);
+begin
+  if Value <> null then
+    R.CheckText(Value.Icon, At);
+    R.CheckText(Value.Tooltip, At);
+    if Value.Icon = '' then
+      R.Reject(At, 'A control well action needs an icon.');
+    end if;
+  end if;
+end procedure;
+
+// Validates the status tag before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure StatusTag(Current: StatusTags.Value; Settings: StatusTags.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Icon, At);
+  if not Sys.Enum.IsDefined<StatusTags.Status>(Current.Preset) then
+    R.Reject(At, 'Unknown native tag status.');
+  end if;
+
+  Tone(Settings.Tone, At);
+end procedure;
+
+// Validates the ratio slider before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure RatioSlider(Current: RatioSliders.Value; Settings: RatioSliders.Options; At: string);
+begin
+  R.CheckText(Current.First, At);
+  R.CheckText(Current.Second, At);
+  Fraction(Current.Ratio, At);
+  Fraction(Settings.Step, At);
+  Chart.Distance(Settings.Height, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Tone(Settings.Tone, At);
+end procedure;
+
+// Validates the gradient slider before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure GradientSlider(Current: GradientSliders.Value; Settings: GradientSliders.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Settings.Tool, At);
+  Chart.Color(Settings.Color, At);
+  Chart.Distance(Settings.Step, At);
+  Chart.Format(Settings.Format, At);
+  if not Sys.Single.IsFinite(Current.Current) or not Sys.Single.IsFinite(Current.Minimum)
+    or not Sys.Single.IsFinite(
+    Current.Maximum - Current.Minimum
+  ) or Current.Maximum <= Current.Minimum
+    or Current.Current < Current.Minimum or Current.Current > Current.Maximum
+  then
+    R.Reject(At, 'The gradient value must be inside a finite increasing range.');
+  end if;
+
+  if not Sys.Enum.IsDefined<GradientSliders.Track>(Settings.Kind) then
+    R.Reject(At, 'Unknown gradient track.');
+  end if;
+  var Previous: float := -1.0F;
+  for Stop: GradientSliders.Stop in Settings.Stops do
+    Fraction(Stop.Position, At);
+    if Stop.Position < Previous then
+      R.Reject(At, 'Custom gradient stops must be sorted.');
+    end if;
+
+    Previous := Stop.Position;
+  end for;
+end procedure;
+
+// Validates the step slider before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure StepSlider(Current: StepSliders.Value; Settings: StepSliders.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Settings.Tool, At);
+  const Range: long := cast<long>(Current.Maximum) - Current.Minimum;
+  if Range < 1L or Range > 16777216L or Current.Current < Current.Minimum or Current.Current >
+    Current.Maximum
+  then
+    R.Reject(
+      At,
+      'A step slider needs an in-range value and stop indices representable as single-precision numbers.'
+    );
+  end if;
+
+  if Settings.Labels.Length <> 0 and Settings.Labels.Length <> Range + 1L then
+    R.Reject(At, 'A step slider needs one label per stop.');
+  end if;
+
+  Texts(Settings.Labels, At);
+  R.CheckText(Settings.Prefix, At);
+  R.CheckText(Settings.Suffix, At);
+end procedure;
+
+// Validates the palette strip before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure PaletteStrip(Current: PaletteStrips.Value; Settings: PaletteStrips.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Chart.Distance(Settings.Height, At);
+  if Current.Swatches.Length < 1 or Current.Swatches.Length > 16 then
+    R.Reject(At, 'A palette strip needs one through sixteen swatches.');
+  end if;
+end procedure;
+
+// Validates the aspect ratio picker before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure AspectPicker(Current: AspectPickers.Value; Settings: AspectPickers.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  R.CheckText(Settings.CustomLabel, At);
+  const Count: int := if Settings.Ratios.Length = 0 then
+    6
+  else
+    Settings.Ratios.Length
+  end if;
+  const Total: int := Count + (if Settings.Custom then
+    1
+  else
+    0
+  end if);
+  if Count > 32 or Current.Index < 0 or Current.Index >= Total then
+    R.Reject(At, 'The aspect selection must name one of up to 32 ratios or Custom.');
+  end if;
+
+  for Ratio: AspectPickers.Ratio in Settings.Ratios do
+    R.CheckText(Ratio.Label, At);
+    const Base: double := if Settings.Base = 0 then
+      1080.0
+    else
+      cast<double>(Settings.Base)
+    end if;
+    if Ratio.Width <= 0 or Ratio.Height <= 0
+      or Base * Sys.Math.Max(
+      Ratio.Width,
+      Ratio.Height
+    ) / Sys.Math.Min(Ratio.Width, Ratio.Height) >= 2147483647.0
+    then
+      R.Reject(At, 'An aspect choice needs positive dimensions and a representable size.');
+    end if;
+  end for;
+end procedure;
+
+// Validates the option field with action before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure OptionAction(Current: OptionActions.Value; Settings: OptionActions.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Current.Tool, At);
+  if Current.Items.Length < 1 or Current.Items.Length > 32 or Current.Index < 0 or Current.Index >=
+    Current.Items.Length
+  then
+    R.Reject(At, 'The option selection must name one of one through 32 choices.');
+  end if;
+
+  Texts(Current.Items, At);
+end procedure;
+
+// Validates the seed field before graphical presentation.
+// ## Parameters
+// - `Current`: Model-owned input.
+// - `Settings`: Native settings.
+// - `At`: Diagnostic path.
+public procedure SeedField(Current: SeedFields.Value; Settings: SeedFields.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  R.CheckText(Settings.RandomText, At);
+  R.CheckText(Settings.FixedText, At);
+end procedure;
+
+end unit;

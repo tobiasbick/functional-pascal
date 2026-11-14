@@ -1,0 +1,98 @@
+unit Fpas.Ui.Widgets.Collections.TreeTables;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.DataGrids as G,
+  System as Sys;
+
+// A node in the tree table's model array.
+public type Node = record
+  // Literal label, also used for type-ahead.
+  public Label: string;
+  // Parent index, or minus one. A parent precedes its children.
+  public Parent: int := -1;
+  // One text value for each column after the name.
+  public Cells: array of string := [];
+  // Optional CUI glyph.
+  public Icon: string := '';
+  // Whether a chevron is shown before any children are loaded.
+  public HasChildren: bool := false;
+  // Whether the node is expanded.
+  public Open: bool := false;
+  // Whether the node is selected.
+  public Selected: bool := false;
+  // Whether the node is waiting for children.
+  public Loading: bool := false;
+end record;
+
+// Native tree-table options.
+public type Options = record
+  // Tree table viewport height.
+  public Height: L.Extent := L.Extent.Fill;
+  // Height of each row in logical points.
+  public RowHeight: float := 32.0F;
+  // Draw indentation guides.
+  public Guides: bool := false;
+  // Whether the tree table accepts input.
+  public Enabled: bool := true;
+end record;
+
+// The native result for one frame. Node indices refer to the supplied array.
+public type Change = record
+  // Nodes with proposed expansion, selection and loading flags.
+  public Nodes: array of Node;
+  // Proposed keyboard cursor, or minus one.
+  public Cursor: int;
+  // Proposed sort, if sorting is enabled.
+  public Order: T.Sort?;
+  // Activated node, or minus one.
+  public Activated: int;
+  // Nodes requesting lazy children.
+  public Load: array of int;
+end record;
+
+// Draws the virtual native tree table.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable table identity.
+// - `Columns`: Columns, with the name first.
+// - `Nodes`: Nodes in sibling order, with parents before their children.
+// - `Cursor`: Current keyboard cursor or minus one.
+// - `Order`: Current sort or null to disable sorting.
+// - `OnChange`: Maps native interaction to an application message.
+// - `Settings`: Optional viewport and input configuration.
+// ## Returns
+// The graphical tree table.
+public function TreeTable<TMsg>(Id: string; Columns: array of G.Column; Nodes: array of Node; Cursor: int; Order: T.Sort?; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TreeTable(
+    Id,
+    Columns,
+    Nodes,
+    Cursor,
+    Order,
+    OnChange,
+    Settings ?? new Options()
+  );
+end function;
+
+// Draws the native indented tree cell inside a table cell.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable cell identity.
+// - `Label`: Literal caption.
+// - `Depth`: Indentation level.
+// - `Open`: Current expansion, or null for a leaf.
+// - `OnChange`: Optional expansion mapper for a branch.
+// - `Icon`: Optional CUI glyph.
+// ## Returns
+// The graphical tree cell.
+public function TreeCell<TMsg>(Id: string; Label: string; Depth: int; Open: bool? := null; OnChange: Sys.Func<bool, TMsg>? := null; Icon: string := ''): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TreeCell(Id, Label, Depth, Open, OnChange, Icon);
+end function;
+
+end unit;

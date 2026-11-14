@@ -1,0 +1,60 @@
+unit Fpas.Ui.Gui.Internal.Presentation.DisplayPresentation;
+
+uses
+  Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Media.Images as Images,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
+  Fpas.Ui.Widgets.Overlays.Veils as Veils, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Layout as L,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Widgets.Display.NativeText as NativeTextWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Display.Icon as IconWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Display.Emoji as EmojiWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Display.Keycap as KeycapWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Media.Image as ImageWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas as CanvasWidget,
+  Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil as VeilWidget;
+
+// Presents the native display elements.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Node`: Native display element.
+// - `Visit`: Renders the veil's content.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  case Node of
+    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
+      NativeTextWidget.Draw<TMsg>(Frame, Text, Role);
+    when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
+      IconWidget.Draw<TMsg>(Frame, Glyph, Size, Color);
+    when E.Element.Emoji(const Glyph: string, const Size: float):
+      EmojiWidget.Draw<TMsg>(Frame, Glyph, Size);
+    when E.Element.Keycap(const Keys: string):
+      KeycapWidget.Draw<TMsg>(Frame, Keys);
+    when E.Element.Image(
+      const Id: string,
+      const Source: Media.Source,
+      const Settings: Images.Options
+    ):
+      ImageWidget.Draw<TMsg>(Frame, Id, Source, Settings);
+    when E.Element.Canvas(
+      const Id: string,
+      const Drawing: array of Canvases.Shape,
+      const Clicked: function(Canvases.Event): TMsg,
+      const Settings: Canvases.Options
+    ):
+      CanvasWidget.Draw<TMsg>(Frame, Id, Drawing, Clicked, Settings);
+    when E.Element.Veil(
+      const Id: string,
+      const Revealed: bool,
+      const Changed: function(bool): TMsg,
+      const Child: E.Element<TMsg>,
+      const Settings: Veils.Options
+    ):
+      VeilWidget.Draw<TMsg>(Frame, Id, Revealed, Changed, Child, Settings, Visit);
+    else
+  end case;
+end procedure;
+
+end unit;

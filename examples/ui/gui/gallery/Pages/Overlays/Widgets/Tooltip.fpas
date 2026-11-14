@@ -4,8 +4,8 @@ uses
   GuiGallery.Pages.Overlays.State as State,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
-  Fpas.Ui.IconButtons as Icons,
-  Fpas.Ui.Tooltips as Tips,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
   Fpas.Ui.Layout as L,
   System as Sys;
 

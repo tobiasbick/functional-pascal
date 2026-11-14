@@ -1,0 +1,54 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Checkbox;
+
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Presents native CUI's checkbox and queues its proposed change.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `Checked`: Current model-owned value.
+// - `OnChange`: Maps native activation to an application message.
+// - `Description`: Optional secondary caption.
+// - `Enabled`: Model-owned input permission.
+// - `Indeterminate`: Draw a dash in place of the check mark while checked.
+// - `HideLabel`: Whether to render only the checkbox.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
+  Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('checkbox', Id);
+  if Frame.Window.Checkbox(
+    Token,
+    Label,
+    Description,
+    Checked,
+    Allowed,
+    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
+    Indeterminate,
+    HideLabel
+  )
+  then
+    Frame.Messages.Add(OnChange(not Checked));
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Label, 'checkbox', new Cui.CuiRectangle(), Allowed,
+      Value := if Indeterminate and Checked then
+        'mixed'
+      elsif Checked then
+        'true'
+      else
+        'false'
+      end if
+    )
+  );
+end procedure;
+
+end unit;

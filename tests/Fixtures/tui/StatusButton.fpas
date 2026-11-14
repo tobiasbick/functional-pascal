@@ -1,9 +1,9 @@
 program StatusButtonContract;
 
 uses
-  Fpas.Ui.StatusButtons as Work, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E,
-  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Themes as Themes,
-  Fpas.Ui.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Work, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as Keys,
   Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Mvu.Application as Mvu,
   System as Sys, System.Console as Console;
 

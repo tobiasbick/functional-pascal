@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Selection.Widgets.Chip;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.Chips as Chips,
+  Fpas.Ui.Widgets.Inputs.Chips as Chips,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
 

@@ -7,10 +7,10 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B,
-  Fpas.Ui.Checkboxes as Checks,
-  Fpas.Ui.Sliders as Sliders,
-  Fpas.Ui.Popovers as P,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks,
+  Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
+  Fpas.Ui.Widgets.Overlays.Popovers as P,
   System as Sys;
 
 // Builds the Filters button and the CUI gallery's filter controls.

@@ -1,0 +1,50 @@
+unit Fpas.Ui.Widgets.Feedback.Alerts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
+
+// Native inline-alert presentation and input options.
+public type Options = record
+  // Supporting text below the title.
+  public Description: string := '';
+  // Semantic surface and icon color.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Optional CUI icon-font glyph; empty selects the native tone icon.
+  public Icon: string := '';
+  // Whether CUI supplies its native dismiss action.
+  public Dismissible: bool := false;
+  // Whether the dismiss action accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Builds an inline alert whose dismissal state belongs to CUI.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity; removing the element releases its dismissal state.
+// - `Title`: Literal alert heading.
+// - `Settings`: Native text, tone, icon and dismissal options.
+// - `OnDismiss`: Optional notification delivered once after native dismissal.
+// ## Returns
+// A GUI-only alert, hidden after dismissal until removed and reinserted.
+public function Alert<TMsg>(
+  Id: string; Title: string; Settings: Options? := null;
+  OnDismiss: Sys.Func<TMsg>? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Alert(Id, Title, Settings ?? new Options(), OnDismiss);
+end function;
+
+// Gets the application identity of the optional native dismiss action.
+// ## Parameters
+// - `Id`: Alert identity.
+// ## Returns
+// The identity followed by /dismiss.
+public function DismissId(Id: string): string;
+requires Id <> '';
+begin
+  return Id + '/dismiss';
+end function;
+
+end unit;

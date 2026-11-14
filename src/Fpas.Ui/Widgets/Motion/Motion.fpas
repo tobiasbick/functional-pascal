@@ -1,0 +1,37 @@
+unit Fpas.Ui.Widgets.Motion.Motion;
+
+uses Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C;
+
+// Built-in CUI typeface for text and text effects.
+public type Font = enum: byte
+  // Body face.
+  Body;
+  // Medium weight.
+  Medium;
+  // Display face.
+  Display;
+  // Monospaced face.
+  Mono;
+end enum;
+
+// Native options shared by CUI text effects.
+public type TextOptions = record
+  // Built-in typeface.
+  public Font: Font := Font.Body;
+  // Logical font size or zero for the native default.
+  public Size: float := 0.0F;
+  // Text color.
+  public Color: C.Color := C.Color.Automatic;
+  // Native width for wrapping effects.
+  public Width: L.Extent := L.Extent.Content;
+  // Keep wrapping effects on a single line.
+  public NoWrap: bool := false;
+  // Effect speed or zero for the native default.
+  public Speed: float := 0.0F;
+  // Delay in seconds for typing and reveal.
+  public Delay: float := 0.0F;
+  // Show the typewriter caret.
+  public Caret: bool := false;
+end record;
+
+end unit;

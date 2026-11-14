@@ -1,0 +1,42 @@
+unit Fpas.Ui.Widgets.Feedback.Loaders;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;
+
+// Native loader animation.
+public type Animation = enum: byte
+  // Three animated dots.
+  Dots;
+  // Animated bars.
+  Bars;
+  // A pulsing mark.
+  Pulse;
+  // An orbiting dot.
+  Orbit;
+  // A grid of animated dots.
+  Grid;
+end enum;
+
+// Native options.
+public type Options = record
+  // Logical size or zero for the native default.
+  public Size: float := 0.0F;
+  // Loader color.
+  public Color: C.Color := C.Color.Automatic;
+end record;
+
+// Draws the native CUI loader.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Style`: Native loader animation.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function Loader<TMsg>(Id: string; Style: Animation; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Loader(Id, Style, Settings ?? new Options());
+end function;
+
+end unit;

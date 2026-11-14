@@ -2,8 +2,8 @@ unit GuiGallery.Pages.Planning.Update;
 
 uses
   GuiGallery.Pages.Planning.State as M, GuiGallery.Pages.Planning.Board as Board,
-  GuiGallery.Pages.Planning.View as View, Fpas.Ui.Kanbans as K, Fpas.Ui.WeekCalendars as W,
-  Fpas.Ui.Gantts as G, Fpas.Ui.MonthCalendars as Month, Fpas.Ui.Gui.Toasts as Toasts,
+  GuiGallery.Pages.Planning.View as View, Fpas.Ui.Widgets.Planning.Kanbans as K, Fpas.Ui.Widgets.Planning.WeekCalendars as W,
+  Fpas.Ui.Widgets.Planning.Gantts as G, Fpas.Ui.Widgets.Planning.MonthCalendars as Month, Fpas.Ui.Gui.Toasts as Toasts,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as Lists;
 
 function Move(Model: M.Model; Key: int; Source: int; Destination: int; Index: int): M.Model;

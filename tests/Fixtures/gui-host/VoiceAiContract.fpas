@@ -3,7 +3,7 @@ unit GalleryVoiceAiContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as G, GuiGallery.App.Update as U, GuiGallery.App.View as V,
   GuiGallery.Pages.Voice.State as VoicePage, GuiGallery.Pages.Voice.Update as VoiceUpdate,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO;
 
 procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);

@@ -1,0 +1,40 @@
+unit Fpas.Ui.Widgets.Navigation.Docks;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;
+
+// An item or separator in a native dock.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Entry<TMsg> = variant
+  // An icon and label with an activation message.
+  Item(Icon: string; Label: string; Activate: TMsg; Color: C.Color; Running: bool; Badge: int);
+  // A separator between items.
+  Separator;
+end variant;
+
+// Native options.
+public type Options = record
+  // Base icon size or zero for the native default.
+  public Size: float := 0.0F;
+  // Maximum enlargement or zero for the native default.
+  public Magnify: float := 0.0F;
+  // Accept input.
+  public Enabled: bool := true;
+end record;
+
+// Draws the native CUI dock.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Entries`: Dock items and separators.
+// - `Settings`: Optional native options.
+// ## Returns
+// The graphical widget.
+public function Dock<TMsg>(Id: string; Entries: array of Entry<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Dock(Id, Entries, Settings ?? new Options());
+end function;
+
+end unit;

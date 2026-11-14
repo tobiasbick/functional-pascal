@@ -1,0 +1,41 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Desktop.SplitView;
+
+uses
+  Fpas.Ui.Widgets.Desktop.SplitViews as S, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+
+// Presents both panes inside CUI's native split.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation and input context.
+// - `Id`: Stable split identity.
+// - `Ratio`: First pane's share.
+// - `First`: First pane content.
+// - `Second`: Second pane content.
+// - `Changed`: Maps a divider move to a message.
+// - `Settings`: Native layout and orientation.
+// - `Visit`: Presents a child in a pane.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Ratio: float; First: E.Element<TMsg>; Second: E.Element<TMsg>; Changed: function(float): TMsg; Settings: S.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+begin
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Height: Size.NativeExtent := Size.Extent(Settings.Height);
+  const Value: float := Frame.Window.BeginSplitView(
+    C.Token('split-view', Id), Ratio,
+    new CuiDesktop.CuiSplitViewOptions(
+      Width.Kind, Width.Value, Height.Kind, Height.Value,
+      Settings.Vertical, Settings.MinimumFirst, Settings.MinimumSecond
+    ), Frame.AcceptInput
+  );
+  Visit(First, Frame, false, L.Alignment.Default);
+  Frame.Window.NextSplitPane(Frame.AcceptInput);
+  Visit(Second, Frame, false, L.Alignment.Default);
+  Frame.Window.EndSplitView();
+  P.Root<TMsg>(Frame, Id, 'split-view', '', Frame.AcceptInput, Value.ToString());
+  if Frame.AcceptInput and Value <> Ratio then
+    Frame.Messages.Add(Changed(Value));
+  end if;
+end procedure;
+
+end unit;

@@ -3,8 +3,8 @@ unit GalleryActionsPickersContract;
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, GuiGallery.Pages.Actions.State as Actions,
-  Fpas.Ui.SpeedDials as Dial, Fpas.Ui.SwipeActions as Swipe, Fpas.Ui.Selects as Selects,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  Fpas.Ui.Widgets.Actions.SpeedDials as Dial, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Widgets.Inputs.Selects as Selects,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App, System.Threading as Threads;
 
 // Exercises CUI's swipe rows, speed dial and Languages picker through the gallery.

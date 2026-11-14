@@ -3,8 +3,8 @@ unit GuiGallery.Pages.Disclosure.Widgets.Veil;
 uses
   GuiGallery.Pages.Disclosure.State as State, GuiGallery.Pages.Canvas.Picture as Picture,
   GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Motion as M,
-  Fpas.Ui.Themes as Theme, Fpas.Ui.Buttons as B, Fpas.Ui.Veils as V, Fpas.Ui.Images as I;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M,
+  Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.Veils as V, Fpas.Ui.Widgets.Media.Images as I;
 
 function SampleKey(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
 begin

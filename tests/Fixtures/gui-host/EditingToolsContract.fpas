@@ -2,9 +2,9 @@ unit GalleryEditingToolsContract;
 
 uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
-  GalleryHostAssertions as A, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Context as Context,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.ShortcutRecorders as Keys;
+  GalleryHostAssertions as A, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as Context,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 
 procedure CapturePage(Renderer: Cui.CuiRenderer; Root: string; Width: int);
   procedure Inject();

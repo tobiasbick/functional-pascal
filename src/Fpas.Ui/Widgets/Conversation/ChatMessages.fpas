@@ -1,0 +1,40 @@
+unit Fpas.Ui.Widgets.Conversation.ChatMessages;
+
+uses Fpas.Ui.Elements as E;
+
+// Native chatmessage options.
+public type Options = record
+  // Use the outgoing bubble.
+  public Mine: bool := false;
+  // Sender name.
+  public Author: string := '';
+  // Optional time caption.
+  public Time: string := '';
+  // Optional delivery or read receipt.
+  public Status: string := '';
+  // Continue the previous bubble group.
+  public Grouped: bool := false;
+  // Show the avatar or receipt for the final bubble.
+  public LastInGroup: bool := false;
+  // Optional avatar image file.
+  public Avatar: string := '';
+  // Render the body as native Markdown without link or task actions.
+  public Markdown: bool := false;
+end record;
+
+// Draws a native conversation bubble.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Message body.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function ChatMessage<TMsg>(Id: string; Text: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ChatMessage(Id, Text, Settings ?? new Options());
+end function;
+
+end unit;

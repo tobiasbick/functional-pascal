@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Capture.View;
 uses
   GuiGallery.Pages.Capture.State as C, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Dropzones as D, Fpas.Ui.AvatarUploads as A, Fpas.Ui.SignaturePads as P,
+  Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Widgets.Files.AvatarUploads as A, Fpas.Ui.Widgets.Files.SignaturePads as P,
   System as Sys, System.Collections.Generic as Lists;
 
 function Target(Id: string; Settings: D.Options): E.Element<C.Msg>;

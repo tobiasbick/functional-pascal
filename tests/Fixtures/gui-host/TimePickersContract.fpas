@@ -2,8 +2,8 @@ unit GalleryTimePickersContract;
 
 uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, Fpas.Ui.TimePickers as P, Fpas.Ui.TimeDials as D,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Session as Host,
+  GuiGallery.App.Update as G, Fpas.Ui.Widgets.Pickers.TimePickers as P, Fpas.Ui.Widgets.Pickers.TimeDials as D,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as App;
 
 // Exercises the original Time and Wheels and dial sections.

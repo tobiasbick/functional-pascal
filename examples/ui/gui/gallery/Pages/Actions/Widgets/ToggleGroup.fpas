@@ -6,7 +6,7 @@ uses
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.ToggleGroups as T,
+  Fpas.Ui.Widgets.Actions.ToggleGroups as T,
   System as Sys;
 
 // Shows CUI's icon formatting group and exclusive alignment group.

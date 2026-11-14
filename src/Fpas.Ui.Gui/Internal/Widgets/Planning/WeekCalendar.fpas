@@ -1,0 +1,63 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar;
+
+uses
+  Fpas.Ui.Widgets.Planning.WeekCalendars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ScheduleData as D, System as Sys;
+
+// Presents the native week calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Presentation state.
+// - `Id`: Application identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+begin
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Role: string := 'week-calendar';
+  const Items: array of A.Appointment := Current.Events;
+  const Keys: array of string := P.Indexed(Items.Length);
+  const Data: array of CuiPlanning.CuiWeekEvent := D.Week(Items);
+  const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Result: CuiPlanning.CuiWeekResult := Frame.Window.WeekCalendar(
+    C.Token(Role, Id),
+    Current.Week.DayNumber,
+    Data,
+    Settings.StartHour,
+    Settings.EndHour,
+    Settings.HourHeight,
+    Height.Kind,
+    Height.Value,
+    P.Bits(Enabled, 1) + P.Bits(Settings.ReadOnly, 2),
+    P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0),
+    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+  );
+  const Edited: (array of CuiPlanning.CuiWeekEvent)? := Result.Events;
+  if Enabled and (Edited <> null or Result.Activated >= 0) then
+    const Proposed: array of A.Appointment := if Edited = null then
+      Items
+    else
+      D.WeekChanges(Edited, Items)
+    end if;
+    Frame.Messages.Add(Change(new A.Event(Proposed, Result.Activated)));
+  end if;
+
+  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  for Index: int := 0 to Keys.Length - 1 do
+    if Result.Parts[Index] then
+      P.Part<TMsg>(
+        Frame,
+        Id,
+        Role,
+        Keys[Index],
+        Items[Index].Title,
+        Enabled,
+        Data[Index].Start.ToString(Sys.Globalization.CultureInfo.InvariantCulture)
+      );
+    end if;
+  end for;
+end procedure;
+
+end unit;

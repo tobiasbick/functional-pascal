@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Instruments.State;
 
-uses Fpas.Ui.DotCharts as Chart, Fpas.Ui.EventTracks as Track;
+uses Fpas.Ui.Widgets.Charts.DotCharts as Chart, Fpas.Ui.Widgets.Charts.EventTracks as Track;
 
 // Retained state of the original caffeine example.
 public type Model = record

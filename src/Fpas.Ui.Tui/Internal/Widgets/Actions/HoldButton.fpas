@@ -1,0 +1,142 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton;
+
+uses Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys;
+
+// Tracks the terminal session's one active left-button hold.
+public type State = record
+  // Begins a hold with the given control ID, duration and input timestamp.
+  public Press: procedure(string, int, long);
+  // Consumes a release and checks its input timestamp against the press.
+  public Release: function(string, int, long): bool;
+  // Discards any outstanding hold.
+  public Cancel: procedure();
+  // Gets the active control ID, or an empty string.
+  public ActiveId: function(): string;
+  // Gets the currently displayed percentage for a control.
+  public Progress: function(string): int;
+  // Samples progress and reports whether to repaint.
+  public Refresh: function(): bool;
+end record;
+
+// Creates a hold tracker owned by one terminal session.
+//
+// ## Returns
+// An idle tracker with a monotonic clock.
+public function Create(): State;
+  function Percent(): int;
+  begin
+    if Id = '' then
+      return 0;
+    end if;
+
+    const Elapsed: long := Sys.Math.Clamp(
+      Sys.Environment.TickCount64 - Started,
+      0L,
+      cast<long>(Duration)
+    );
+    return cast<int>(Elapsed * 100L div cast<long>(Duration));
+  end function;
+
+  procedure Press(ControlId: string; Milliseconds: int; ReceivedAt: long);
+  begin
+    Id := ControlId;
+    Started := ReceivedAt;
+    Duration := Milliseconds;
+    Shown := 0;
+  end procedure;
+
+  procedure Cancel();
+  begin
+    Id := '';
+  end procedure;
+
+  function Release(ControlId: string; Milliseconds: int; ReceivedAt: long): bool;
+  begin
+    const Confirmed: bool := Id <> '' and Id = ControlId and Duration = Milliseconds
+      and ReceivedAt - Started >= cast<long>(Duration);
+    Cancel();
+    return Confirmed;
+  end function;
+
+  function Refresh(): bool;
+  begin
+    const Next: int := Percent();
+    const Changed: bool := Next <> Shown;
+    Shown := Next;
+    return Changed;
+  end function;
+begin
+  var Id: string := '';
+  var Started: long := 0L;
+  var Duration: int := 0;
+  var Shown: int := 0;
+  return new State(
+    Press, Release, Cancel, function(): string => Id,
+    function(ControlId: string): int => if Id = ControlId then
+      Shown
+    else
+      0
+    end if,
+    Refresh
+  );
+end function;
+
+// Resolves a portable hold button to a terminal action.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Visible caption.
+// - `Message`: Message proposed after confirmation.
+// - `Settings`: Hold duration and appearance.
+// - `Tracking`: Session-owned pointer state.
+// ## Returns
+// A terminal action whose activation requires a timed pointer release.
+public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Holds.Options; Tracking: State): E.Element<TMsg>;
+begin
+  const Progress: int := Tracking.Progress(Id);
+  const Caption: string := if Settings.TerminalIcon = '' then
+    Label
+  else
+    Settings.TerminalIcon + ' ' + Label
+  end if;
+  const Variant: S.ButtonVariant := if Settings.Variant =
+    S.ButtonVariant.Default
+  then
+    S.ButtonVariant.Destructive
+  else
+    Settings.Variant
+  end if;
+  return E.Element<TMsg>.Action(
+    Id, new A.Direct<TMsg>(Message), Settings.Enabled,
+    new E.ActionView(
+      Caption,
+      Name := Label,
+      Role := 'hold-button',
+      Value := Progress.ToString(),
+      Variant := Variant,
+      ArrowFocus := false,
+      Hint := 'Hold the left mouse button, then release',
+      HoldMilliseconds := Settings.DurationMilliseconds,
+      HoldProgress := Progress
+    )
+  );
+end function;
+
+// Tints the filled portion of a button without changing its text.
+//
+// ## Parameters
+// - `Style`: Resolved button colors.
+// - `Background`: Terminal background under a transparent button.
+// ## Returns
+// The filled button colors.
+public function FillStyle(Style: T.Style; Background: int): T.Style;
+begin
+  return new T.Style(
+    Style.Foreground,
+    Th.Rgb(new G.Color(0, 0, 0, 56), Style.Background ?? Background)
+  );
+end function;
+
+end unit;

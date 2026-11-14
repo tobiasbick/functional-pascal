@@ -6,8 +6,8 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B,
-  Fpas.Ui.ConfirmPopovers as P,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P,
   System as Sys;
 
 // Builds the native inline branch-confirmation example.

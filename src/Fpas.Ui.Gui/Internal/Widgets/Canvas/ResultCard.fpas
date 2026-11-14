@@ -1,0 +1,34 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard;
+
+uses
+  Fpas.Ui.Widgets.Canvas.ResultCards as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Images, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+
+// Presents CUI's native ResultCard widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Image`: Picture displayed in the card.
+// - `Title`: Caption title.
+// - `Activate`: Message on card activation.
+// - `Settings`: Native widget settings.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: D.Options);
+begin
+  const Role: string := 'result-card';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Picked: bool := Frame.Window.ResultCard(
+    Token, Images.Convert(Image), Title, Settings.Caption, Settings.Badge,
+    cast<int>(Settings.BadgeTone), Width.Kind, Width.Value, Settings.Aspect, Enabled, Focus
+  );
+  P.Root<TMsg>(Frame, Id, Role, Title, Enabled, '');
+  if Picked then
+    Frame.Messages.Add(Activate);
+  end if;
+end procedure;
+
+end unit;

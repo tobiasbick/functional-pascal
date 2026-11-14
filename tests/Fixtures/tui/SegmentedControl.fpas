@@ -2,7 +2,7 @@ program SegmentedControlContract;
 
 uses
   Fpas.Ui.Layout as L,
-  Fpas.Ui.SegmentedControls as S, Fpas.Ui.Buttons as B, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Elements as E,
   Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui,
   Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Console as Console,
   System.Collections.Generic as Lists;

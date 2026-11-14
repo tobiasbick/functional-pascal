@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceNote;
+
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Audio as CuiAudio, Fpas.Ui.Gui.Internal.Data.AiData as Data, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+
+// Presents CUI's native VoiceNote.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable message identity.
+// - `Levels`: The clip's measured levels.
+// - `Playback`: Model-owned transport state.
+// - `Changed`: Maps a transport proposal.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
+begin
+  const Role: string := 'voice-note';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Keys: array of string := ['play', 'seek', 'speed'];
+  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Result: CuiAudio.CuiVoiceNoteResult := Frame.Window.VoiceNote(
+    Token,
+    Levels,
+    Playback.Duration,
+    Playback.Position,
+    Playback.Speed,
+    Playback.Playing,
+    Width.Kind,
+    Width.Value,
+    P.Bits(Enabled, 1) or P.Bits(Settings.Mine, 2),
+    Focus,
+    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', false, Playback.Position.ToString());
+  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  if (Result.Events and 1) <> 0 then
+    Frame.Messages.Add(Changed(VoiceNotes.Event.Toggle(Result.Playing)));
+  end if;
+
+  if (Result.Events and 8) <> 0 then
+    Frame.Messages.Add(Changed(VoiceNotes.Event.Seek(Result.Position)));
+  end if;
+
+  if (Result.Events and 16) <> 0 then
+    Frame.Messages.Add(Changed(VoiceNotes.Event.Speed(Result.Speed)));
+  end if;
+end procedure;
+
+end unit;

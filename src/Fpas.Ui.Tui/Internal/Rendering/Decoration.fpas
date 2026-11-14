@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Tui.Internal.Widgets.HoldButton as Hold, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;

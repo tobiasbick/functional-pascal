@@ -1,0 +1,35 @@
+unit Fpas.Ui.Widgets.Overlays.HoverCards;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+
+// Placement, sizing and input settings for a native hover card.
+public type Options = record
+  // Preferred position relative to the trigger. CUI flips it to fit.
+  public Position: M.Placement := M.Placement.BottomStart;
+  // Width in logical points. Zero uses CUI's default of 300.
+  public Width: float := 300.0F;
+  // Delay in seconds. Zero uses CUI's default of 0.45.
+  public Delay: float := 0.45F;
+  // Whether the trigger may open the card.
+  public Enabled: bool := true;
+end record;
+
+// Anchors a native hover card to an interactive control.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable card identity.
+// - `Trigger`: A single native interactive control, such as a link.
+// - `Content`: Nonmodal view shown in the card.
+// - `Settings`: Optional placement, sizing and input settings.
+// ## Returns
+// The trigger in its original layout, with CUI-managed hover content.
+public function HoverCard<TMsg>(
+  Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.HoverCard(Id, Trigger, Content, Settings ?? new Options());
+end function;
+
+end unit;

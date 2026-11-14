@@ -1,0 +1,82 @@
+unit Fpas.Ui.Widgets.Theming.ThemeSwitchers;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+
+// Model-owned appearance choices, in CUI's native order.
+public type Selection = enum: byte
+  // Use the light appearance.
+  Light;
+  // Use the dark appearance.
+  Dark;
+  // Let the application's appearance provider select light or dark.
+  System;
+end enum;
+
+// Input and available-choice settings for a compact appearance selector.
+public type Options = record
+  // Include the application's system appearance choice.
+  public WithSystem: bool := false;
+  // Whether all segments accept input and focus.
+  public Enabled: bool := true;
+end record;
+
+// Creates a controlled theme selector without changing the host's palette directly.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Selected`: Model-owned selection; System requires WithSystem.
+// - `OnChange`: Maps a different user selection to an application message.
+// - `Settings`: Availability of System and input permission.
+// ## Returns
+// A small segmented selector for either host, with independent focus stops.
+public function ThemeSwitcher<TMsg>(Id: string; Selected: Selection; OnChange: function(Selection): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ThemeChoice(Id, Selected, OnChange, Settings ?? new Options());
+end function;
+
+// Gets a segment's stable application identity for focus requests.
+//
+// ## Parameters
+// - `Id`: The selector's group identity.
+// - `Choice`: The segment to address.
+// ## Returns
+// The group ID followed by /light, /dark or /system.
+public function ItemId(Id: string; Choice: Selection): string;
+requires Id <> '';
+begin
+  case Choice of
+    when Selection.Light:
+      return Id + '/light';
+    when Selection.Dark:
+      return Id + '/dark';
+    when Selection.System:
+      return Id + '/system';
+    else
+      raise new Sys.ArgumentOutOfRangeException('Choice');
+  end case;
+end function;
+
+// Resolves a chosen appearance without probing the operating system or terminal.
+//
+// ## Parameters
+// - `Selected`: Model-owned choice.
+// - `SystemAppearance`: Light or dark from the application's appearance provider.
+// ## Returns
+// The concrete mode to use in the application's ThemeFor callback.
+public function Resolve(Selected: Selection; SystemAppearance: Themes.Mode): Themes.Mode;
+requires cast<int>(Selected) >= 0 and cast<int>(Selected) <= 2;
+requires cast<int>(SystemAppearance) >= 0 and cast<int>(SystemAppearance) <= 1;
+begin
+  return if Selected = Selection.System then
+    SystemAppearance
+  elsif Selected = Selection.Dark then
+    Themes.Mode.Dark
+  else
+    Themes.Mode.Light
+  end if;
+end function;
+
+end unit;

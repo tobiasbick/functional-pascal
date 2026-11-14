@@ -1,0 +1,48 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Motion.Typewriter;
+
+uses
+  Fpas.Ui.Widgets.Motion.Typewriters as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Data.MotionData as Common, Fpas.Ui.Widgets.Motion.Motion as Motion, System as Sys;
+
+// Presents the native widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation frame.
+// - `Id`: Stable widget identity.
+// - `Text`: Display text.
+// - `Replay`: Animation revision.
+// - `Settings`: Native appearance and input options.
+// - `OnComplete`: Optional message factory for completion.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: Sys.Func<TMsg>?);
+begin
+  const Token: string := C.Token('typewriter', Id);
+  const Progress: CuiMotion.CuiTypewriterResult := Frame.Window.Typewriter(
+    Token,
+    Text,
+    Replay,
+    Common.Options(Settings)
+  );
+  if Progress.Completed and not Frame.PaintingClosed then
+    case OnComplete of
+      when is Sys.Func<TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke());
+      else
+    end case;
+  end if;
+
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(
+      Id,
+      Text,
+      'typewriter',
+      new Cui.CuiRectangle(),
+      false,
+      Value := Progress.Done.ToString()
+    )
+  );
+end procedure;
+
+end unit;

@@ -1,0 +1,57 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Developer.KeyValueEditor;
+
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists, System as Sys;
+
+function PackPair(Items: array of D.Pair): array of CuiDeveloper.CuiDevPair;
+begin
+  const Native: Lists.List<CuiDeveloper.CuiDevPair> := new Lists.List<CuiDeveloper.CuiDevPair>(
+    Items.Length
+  );
+  for Entry: D.Pair in Items do
+    Native.Add(new CuiDeveloper.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
+  end for;
+
+  return Native.ToArray();
+end function;
+
+// Presents the native KeyValueEditor widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI presentation frame.
+// - `Id`: Stable widget identity.
+// - `Pairs`: Pairs supplied to the widget.
+// - `Changed`: Maps a native proposal to an application message.
+// - `Settings`: Native layout and interaction options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Pairs: array of D.Pair; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'key-value-editor';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Before: array of CuiDeveloper.CuiDevPair := PackPair(Pairs);
+  const Result: array of CuiDeveloper.CuiDevPair := Frame.Window.KeyValueEditor(
+    Token,
+    Before,
+    Settings.Capacity,
+    Settings.KeyPlaceholder,
+    Settings.ValuePlaceholder,
+    Settings.HideToggles,
+    Settings.HideSecrets,
+    Settings.ReadOnly,
+    Width.Kind,
+    Width.Value,
+    Enabled
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  if Enabled and not Sys.Object.ReferenceEquals(Result, Before) then
+    const Values: Lists.List<D.Pair> := new Lists.List<D.Pair>(Result.Length);
+    for Entry: CuiDeveloper.CuiDevPair in Result do
+      Values.Add(new D.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
+    end for;
+
+    Frame.Messages.Add(Changed(new D.Event(Values.ToArray())));
+  end if;
+end procedure;
+
+end unit;

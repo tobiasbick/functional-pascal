@@ -1,0 +1,185 @@
+unit Fpas.Ui.Internal.Validation.VisualizationRules;
+
+uses
+  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.Heatmaps as H, Fpas.Ui.Widgets.Charts.CalendarHeatmaps as Calendar,
+  Fpas.Ui.Widgets.Charts.Treemaps as T, Fpas.Ui.Widgets.Charts.RadarCharts as Ra, Fpas.Ui.Widgets.Charts.Funnels as F,
+  Fpas.Ui.Widgets.Charts.SplitBars as S, Fpas.Ui.Widgets.Charts.Waffles as W, Fpas.Ui.Internal.Validation.ChartRules as Common,
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Validation as V, System as Sys;
+
+procedure Samples(Values: array of float; Nonnegative: bool; At: string);
+begin
+  for Value: float in Values do
+    if not Sys.Single.IsFinite(Value) or (Nonnegative and Value < 0.0F) then
+      R.Reject(At, 'Invalid finite visualization sample.');
+    end if;
+  end for;
+end procedure;
+
+procedure Labels(Values: array of string; Count: int; At: string);
+begin
+  if Values.Length <> 0 and Values.Length <> Count then
+    R.Reject(At, 'Labels must be empty or match their dimension.');
+  end if;
+
+  for Value: string in Values do
+    R.CheckText(Value, At);
+  end for;
+end procedure;
+
+// Validates named amounts shared by native visualizations.
+// ## Parameters
+// - `Items`: Named nonnegative amounts.
+// - `At`: Diagnostic location.
+public procedure Items(Items: array of C.Item; At: string);
+begin
+  var Total: float := 0.0F;
+  for Item: C.Item in Items do
+    R.CheckText(Item.Label, At);
+    Common.Distance(Item.Value, At);
+    Common.Color(Item.Color, At);
+    Total := Total + Item.Value;
+  end for;
+
+  Common.Distance(Total, At);
+end procedure;
+
+// Validates a row-major matrix and native heatmap options.
+// ## Parameters
+// - `Values`: Finite matrix samples.
+// - `Rows`: Matrix rows.
+// - `Columns`: Matrix columns.
+// - `Settings`: Native scale and labels.
+// - `At`: Diagnostic location.
+public procedure Heatmap(Values: array of float; Rows: int; Columns: int; Settings: H.Options; At: string);
+begin
+  if Rows < 0 or Columns < 0 or cast<long>(Rows) * cast<long>(Columns) <>
+    cast<long>(Values.Length)
+  then
+    R.Reject(At, 'Heatmap samples must match rows times columns.');
+  end if;
+
+  Samples(Values, false, At);
+  Labels(Settings.RowLabels, Rows, At);
+  Labels(Settings.ColumnLabels, Columns, At);
+  Common.Distance(Settings.CellSize, At);
+  Common.Color(Settings.Color, At);
+  Common.Format(Settings.Format, At);
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  const Range: C.ValueRange? := Settings.Range;
+  if Range <> null then
+    if not Sys.Single.IsFinite(Range.Minimum) or not Sys.Single.IsFinite(Range.Maximum)
+      or Range.Minimum >= Range.Maximum or not Sys.Single.IsFinite(Range.Maximum - Range.Minimum)
+    then
+      R.Reject(At, 'Heatmap bounds must be finite and increasing.');
+    end if;
+  end if;
+end procedure;
+
+// Validates daily calendar samples and their date range.
+// ## Parameters
+// - `Start`: First sample date.
+// - `Values`: Daily finite amounts.
+// - `Settings`: Native presentation.
+// - `At`: Diagnostic location.
+public procedure CalendarHeatmap(Start: Sys.DateOnly; Values: array of float; Settings: Calendar.Options; At: string);
+begin
+  Samples(Values, false, At);
+  if cast<long>(Start.DayNumber) + cast<long>(Values.Length) - 1 >
+    cast<long>(Sys.DateOnly.MaxValue.DayNumber)
+  then
+    R.Reject(At, 'Calendar heatmap dates exceed the supported range.');
+  end if;
+  var Total: float := 0.0F;
+  for Value: float in Values do
+    Total := Total + Sys.Math.Max(0.0F, Value);
+  end for;
+
+  Common.Distance(Total, At);
+  Common.Distance(Settings.CellSize, At);
+  Common.Color(Settings.Color, At);
+  Common.Format(Settings.Format, At);
+  R.CheckText(Settings.Unit, At);
+end procedure;
+
+// Validates native treemap data and model-owned selection.
+// ## Parameters
+// - `Values`: Named amounts.
+// - `Selected`: Selected index or minus one.
+// - `Selectable`: Whether a selection callback is present.
+// - `Settings`: Native dimensions.
+// - `At`: Diagnostic location.
+public procedure Treemap(Values: array of C.Item; Selected: int; Selectable: bool; Settings: T.Options; At: string);
+begin
+  Items(Values, At);
+  if Selected < -1 or Selected >= Values.Length or (not Selectable and Selected <> -1) then
+    R.Reject(At, 'Treemap selection needs a valid input index and a callback.');
+  end if;
+
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Common.Distance(Settings.Height, At);
+  Common.Format(Settings.Format, At);
+end procedure;
+
+// Validates native radar axes and their series.
+// ## Parameters
+// - `Series`: Named nonnegative samples.
+// - `Axes`: At least three captions.
+// - `Settings`: Native scale and presentation.
+// - `At`: Diagnostic location.
+public procedure Radar(Series: array of C.Series; Axes: array of string; Settings: Ra.Options; At: string);
+begin
+  if Axes.Length < 3 then
+    R.Reject(At, 'A radar chart needs at least three axes.');
+  end if;
+
+  Labels(Axes, Axes.Length, At);
+  for Item: C.Series in Series do
+    R.CheckText(Item.Name, At);
+    Common.Color(Item.Color, At);
+    Samples(Item.Values, true, At);
+    if Item.Values.Length <> Axes.Length then
+      R.Reject(At, 'Radar samples must match the axis count.');
+    end if;
+  end for;
+
+  Common.Distance(Settings.Size, At);
+  Common.Distance(Settings.Maximum, At);
+  Common.Format(Settings.Format, At);
+end procedure;
+
+// Validates native funnel presentation.
+// ## Parameters
+// - `Settings`: Native width, color and format.
+// - `At`: Diagnostic location.
+public procedure Funnel(Settings: F.Options; At: string);
+begin
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Common.Color(Settings.Color, At);
+  Common.Format(Settings.Format, At);
+end procedure;
+
+// Validates native split-bar presentation.
+// ## Parameters
+// - `Settings`: Native bar dimensions and format.
+// - `At`: Diagnostic location.
+public procedure SplitBar(Settings: S.Options; At: string);
+begin
+  R.CheckExtent(Settings.Width, V.Target.Graphical, At);
+  Common.Distance(Settings.Height, At);
+  Common.Format(Settings.Format, At);
+end procedure;
+
+// Validates the native waffle grid.
+// ## Parameters
+// - `Settings`: Square dimensions and format.
+// - `At`: Diagnostic location.
+public procedure Waffle(Settings: W.Options; At: string);
+begin
+  Common.Distance(Settings.CellSize, At);
+  Common.Format(Settings.Format, At);
+  if Settings.Columns < 1 or Settings.Columns > 60 or Settings.Rows < 1 or Settings.Rows > 60 then
+    R.Reject(At, 'Waffle dimensions must be one through 60.');
+  end if;
+end procedure;
+
+end unit;

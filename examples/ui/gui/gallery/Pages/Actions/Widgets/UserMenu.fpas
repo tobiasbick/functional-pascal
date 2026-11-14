@@ -4,8 +4,8 @@ uses
   GuiGallery.Pages.Actions.State as State,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
-  Fpas.Ui.Menus as M,
-  Fpas.Ui.UserMenus as U,
+  Fpas.Ui.Widgets.Overlays.Menus as M,
+  Fpas.Ui.Widgets.Overlays.UserMenus as U,
   System as Sys;
 
 function Command(Key: string; Name: string; Icon: int; Shortcut: string := ''): M.Entry<State.Msg>;

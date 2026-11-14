@@ -1,0 +1,39 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Ai.ContextMeter;
+
+uses Fpas.Ui.Widgets.Ai.ContextMeters as ContextMeters, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts, System.Collections.Generic as Lists, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+
+// Presents CUI's native ContextMeter.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current presentation context.
+// - `Id`: Stable widget identity.
+// - `Used`: Current context size.
+// - `Limit`: Context capacity.
+// - `Breakdown`: Optional usage breakdown.
+// - `Settings`: Native options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
+begin
+  const Role: string := 'context-meter';
+  const Token: string := C.Token(Role, Id);
+  const Enabled: bool := Frame.AcceptInput;
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Native: Lists.List<CuiCharts.CuiVizItem> := new Lists.List<CuiCharts.CuiVizItem>(
+    Breakdown.Length
+  );
+  for Part: ContextMeters.Part in Breakdown do
+    Native.Add(new CuiCharts.CuiVizItem(Part.Label, Part.Amount, Colors.Color(Part.Color)));
+  end for;
+
+  Frame.Window.ContextMeter(
+    Token,
+    Used,
+    Limit,
+    Native.ToArray(),
+    Settings.Unit,
+    P.Bits(Enabled, 1) or P.Bits(Focus, 2)
+  );
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Used.ToString());
+end procedure;
+
+end unit;

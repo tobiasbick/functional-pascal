@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Planning.TimelineItem;
+
+uses
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Planning.TimelineItems as T;
+
+// Draws CUI's activity entry and exposes its literal text for inspection.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current drawing context.
+// - `Id`: Stable item identity.
+// - `Title`: Literal heading.
+// - `Settings`: Native text, icon, tone and final-item options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Title: string; Settings: T.Options);
+begin
+  Frame.Window.TimelineItem(
+    C.Token('timeline-item', Id), Title, Settings.Time,
+    Settings.Description, Settings.Icon, cast<int>(Settings.Tone), Settings.Last
+  );
+  if not Frame.PaintingClosed then
+    Frame.Labels.Add(Title);
+    if Settings.Time <> '' then
+      Frame.Labels.Add(Settings.Time);
+    end if;
+
+    if Settings.Description <> '' then
+      Frame.Labels.Add(Settings.Description);
+    end if;
+  end if;
+
+  C.Track<TMsg>(
+    Frame,
+    new App.Control(
+      Id,
+      Title,
+      'timeline-item',
+      new Cui.CuiRectangle(),
+      false,
+      Value := Settings.Time
+    )
+  );
+end procedure;
+
+end unit;

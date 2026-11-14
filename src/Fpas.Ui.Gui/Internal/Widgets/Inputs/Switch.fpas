@@ -1,0 +1,43 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Switch;
+
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Presents native CUI's switch and queues its proposed change.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current frame and message queue.
+// - `Id`: Stable control identity.
+// - `Label`: Literal caption.
+// - `On`: Current model-owned value.
+// - `OnChange`: Maps native activation to an application message.
+// - `Description`: Optional secondary caption.
+// - `Enabled`: Model-owned input permission.
+public procedure Draw<TMsg>(
+  Frame: C.State<TMsg>; Id: string; Label: string; On: bool; OnChange: function(bool): TMsg;
+  Description: string; Enabled: bool
+);
+begin
+  const Allowed: bool := Enabled and Frame.AcceptInput;
+  const Token: string := C.Token('switch', Id);
+  if Frame.Window.Switch(
+    Token, Label, Description, On, Allowed, C.WantsFocus<TMsg>(Frame, Id, Token, Allowed)
+  )
+  then
+    Frame.Messages.Add(OnChange(not On));
+  end if;
+
+  C.Track<TMsg>(
+    Frame, new App.Control(
+      Id, Label, 'switch', new Cui.CuiRectangle(), Allowed,
+      Value := if On then
+        'true'
+      else
+        'false'
+      end if
+    )
+  );
+end procedure;
+
+end unit;

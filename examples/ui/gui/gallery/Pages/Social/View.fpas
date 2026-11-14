@@ -2,10 +2,10 @@ unit GuiGallery.Pages.Social.View;
 
 uses
   GuiGallery.Pages.Social.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Cards as Cards,
-  Fpas.Ui.ChatMessages as Chat, Fpas.Ui.ChatDividers as Divider, Fpas.Ui.TypingIndicators as Typing,
-  Fpas.Ui.Comments as Comments, Fpas.Ui.Presences as Presence, Fpas.Ui.Counters as Counter,
-  Fpas.Ui.Tickers as Ticker, Fpas.Ui.Buttons as B, Fpas.Ui.Charts as Charts,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Conversation.ChatMessages as Chat, Fpas.Ui.Widgets.Conversation.ChatDividers as Divider, Fpas.Ui.Widgets.Conversation.TypingIndicators as Typing,
+  Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Conversation.Presences as Presence, Fpas.Ui.Widgets.Feedback.Counters as Counter,
+  Fpas.Ui.Widgets.Feedback.Tickers as Ticker, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Charts.Charts as Charts,
   Fpas.Ui.Graphics as Color, GuiGallery.Pages.Social.Media as Media, System as Sys, System.Collections.Generic as Lists;
 
 function ChatColumn(): E.Element<S.Msg>;

@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Editors.GradientEditor;
+
+uses
+  Fpas.Ui.Widgets.Editors.GradientEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  System.Collections.Generic as Lists;
+
+// Presents a native GradientEditor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Id`: Stable widget identity.
+// - `Stops`: Stops, ordered by position.
+// - `Selected`: Current stop selection.
+// - `Changed`: Maps a native proposal.
+// - `Settings`: Native layout and behavior options.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Stops: array of D.Stop; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+begin
+  const Role: string := 'gradient-editor';
+  const Token: string := C.Token(Role, Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Enabled: bool := Frame.AcceptInput;
+  const Native: array of CuiEditors.CuiGradientStop := new CuiEditors.CuiGradientStop[Stops.Length];
+  for Index: int := 0 to Stops.Length - 1 do
+    Native[Index] := new CuiEditors.CuiGradientStop(
+      Stops[Index].Position,
+      P.Pack(Stops[Index].Tint)
+    );
+  end for;
+  const Result: CuiEditors.CuiGradientEdit? := Frame.Window.GradientEditor(
+    Token, Native, Settings.Capacity, Selected,
+    Width.Kind, Width.Value, Settings.Height, Enabled
+  );
+  case Result of
+    when is CuiEditors.CuiGradientEdit as Edit:
+      const Ramp: Lists.List<D.Stop> := new Lists.List<D.Stop>(Edit.Stops.Length);
+      for Stop: CuiEditors.CuiGradientStop in Edit.Stops do
+        Ramp.Add(new D.Stop(Stop.Position, P.Unpack(Stop.Rgba)));
+      end for;
+
+      Frame.Messages.Add(
+        Changed(new D.Event(Ramp.ToArray(), Edit.Selected, Edit.Added, Edit.Removed))
+      );
+    else
+  end case;
+
+  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+end procedure;
+
+end unit;

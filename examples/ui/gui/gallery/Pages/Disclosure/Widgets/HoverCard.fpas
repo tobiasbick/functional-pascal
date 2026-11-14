@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Disclosure.Widgets.HoverCard;
 
 uses
   GuiGallery.Pages.Disclosure.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Avatars as A, Fpas.Ui.Links as Link, Fpas.Ui.HoverCards as H,
+  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Display.Links as Link, Fpas.Ui.Widgets.Overlays.HoverCards as H,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 function Details(): E.Element<State.Msg>;

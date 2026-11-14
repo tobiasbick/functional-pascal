@@ -1,0 +1,32 @@
+unit Fpas.Ui.Widgets.Feedback.Counters;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+
+// Native counter options.
+public type Options = record
+  // Optional safe numeric formatting.
+  public Format: Charts.ValueFormat? := null;
+  // Text size, or zero for the native default.
+  public Size: float := 0.0F;
+  // Text color.
+  public Color: Charts.Color := Charts.Color.Automatic;
+  // Separate thousands with commas.
+  public GroupThousands: bool := false;
+end record;
+
+// Draws the native rolling numeric counter.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Value`: Current numeric value.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Counter<TMsg>(Id: string; Value: double; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Counter(Id, Value, Settings ?? new Options());
+end function;
+
+end unit;

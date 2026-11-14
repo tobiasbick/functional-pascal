@@ -1,0 +1,64 @@
+unit Fpas.Ui.Internal.Validation.DeveloperValidation;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Internal.Validation.DeveloperInspectorValidation as Inspectors, Fpas.Ui.Internal.Validation.DeveloperReportValidation as Reports;
+
+// Validates the developer widget's native inputs.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Developer widget.
+// - `Location`: Current diagnostic path.
+// - `Profile`: Target capabilities.
+// - `Identify`: Registers widget IDs.
+public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string);
+begin
+  case Node of
+    when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Keymap(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.CommitGraph(_, _, _, _, _), E.Element.DependencyGraph(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.NetworkWaterfall(_, _, _, _, _), E.Element.TraceViewer(
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.TestExplorer(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.StackTrace(_, _, _, _), E.Element.ResponseStatus(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Uptime(_, _, _, _):
+      Inspectors.Check<TMsg>(Node, Location, Profile, Identify);
+    else
+      Reports.Check<TMsg>(Node, Location, Profile, Identify);
+  end case;
+end procedure;
+
+end unit;

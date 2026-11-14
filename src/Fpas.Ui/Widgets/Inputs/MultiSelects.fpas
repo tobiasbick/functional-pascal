@@ -1,0 +1,39 @@
+unit Fpas.Ui.Widgets.Inputs.MultiSelects;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+
+// Presentation and input options for a native multi-select.
+public type Options = record
+  // Optional field caption.
+  public Label: string := '';
+  // Caption for the empty field. Empty uses CUI's placeholder.
+  public Placeholder: string := '';
+  // Show CUI's search input in the popup.
+  public Searchable: bool := false;
+  // Visible chip limit. Zero uses CUI's default of three.
+  public MaxChips: int := 0;
+  // Whether the picker accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Builds a native picker with checkboxes and removable selection chips.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Items`: Nonempty list of choices in display order.
+// - `Selected`: Model-owned selection flag for each choice.
+// - `OnChange`: Maps a fresh selection proposal to a message.
+// - `Settings`: Optional caption, filtering and chip display settings.
+// ## Returns
+// A graphical multi-select with CUI-owned popup state.
+public function MultiSelect<TMsg>(
+  Id: string; Items: array of S.Item; Selected: array of bool;
+  OnChange: function(array of bool): TMsg; Settings: Options? := null
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.MultiSelectInput(Id, Items, Selected, OnChange, Settings ?? new Options());
+end function;
+
+end unit;

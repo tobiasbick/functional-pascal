@@ -1,0 +1,67 @@
+unit Fpas.Ui.Widgets.Navigation.Navigation;
+
+uses Fpas.Ui.Elements as E;
+
+// A keyed destination in a sidebar.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+public type Item<TMsg> = record
+  // Stable key, unique across all sections in the sidebar.
+  public Key: string;
+  // Literal visible caption.
+  public Label: string;
+  // Message sent when the user activates the destination.
+  public Message: TMsg;
+  // Whether the destination accepts focus and activation.
+  public Enabled: bool := true;
+  // Optional glyph from the GUI host's icon font. The terminal omits it.
+  public Icon: string := '';
+  // Optional text shown alongside the label.
+  public Badge: string := '';
+end record;
+
+// A group of destinations under an optional heading.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+public type Section<TMsg> = record
+  // Literal section heading. An empty title omits the heading.
+  public Title: string;
+  // Destinations in display and focus order.
+  public Items: array of Item<TMsg>;
+end record;
+
+// Builds a sidebar with a single model-owned active destination.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: Unique sidebar ID.
+// - `Sections`: Sections in display order. Item keys are unique across sections.
+// - `ActiveKey`: Key highlighted by the model, or null for no selection.
+// - `Enabled`: Whether the sidebar accepts input.
+//
+// ## Returns
+// A view that can be sized or placed in a scroll viewport by the caller.
+public function Sidebar<TMsg>(Id: string; Sections: array of Section<TMsg>; ActiveKey: string?; Enabled: bool := true): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Sidebar(Id, Sections, ActiveKey, Enabled);
+end function;
+
+// Derives the application focus ID of a sidebar destination.
+//
+// ## Parameters
+// - `Id`: Sidebar ID.
+// - `Key`: Destination key.
+//
+// ## Returns
+// The focus ID accepted by both hosts.
+public function ItemId(Id: string; Key: string): string;
+begin
+  return Id + '/' + Key;
+end function;
+
+end unit;

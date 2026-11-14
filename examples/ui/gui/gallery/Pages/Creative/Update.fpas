@@ -1,9 +1,9 @@
 unit GuiGallery.Pages.Creative.Update;
 
 uses
-  GuiGallery.Pages.Creative.State as S, Fpas.Ui.GradientSliders as Gradient,
-  Fpas.Ui.StepSliders as Steps, Fpas.Ui.PaletteStrips as Palette,
-  Fpas.Ui.OptionActions as Options, Fpas.Ui.SeedFields as Seeds;
+  GuiGallery.Pages.Creative.State as S, Fpas.Ui.Widgets.Inputs.GradientSliders as Gradient,
+  Fpas.Ui.Widgets.Inputs.StepSliders as Steps, Fpas.Ui.Widgets.Pickers.PaletteStrips as Palette,
+  Fpas.Ui.Widgets.Actions.OptionActions as Options, Fpas.Ui.Widgets.Inputs.SeedFields as Seeds;
 
 // Applies a proposal from the native Creative controls.
 // ## Parameters

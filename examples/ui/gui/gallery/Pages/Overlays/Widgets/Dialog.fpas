@@ -8,11 +8,11 @@ uses
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S,
-  Fpas.Ui.Buttons as B,
-  Fpas.Ui.Dialogs as D,
-  Fpas.Ui.ActionFooters as F,
-  Fpas.Ui.TextFields as TextFields,
-  Fpas.Ui.Switches as Switches,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Overlays.Dialogs as D,
+  Fpas.Ui.Widgets.Actions.ActionFooters as F,
+  Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
+  Fpas.Ui.Widgets.Inputs.Switches as Switches,
   System as Sys;
 
 // Shows the original dialog and sheet triggers on Overlays.

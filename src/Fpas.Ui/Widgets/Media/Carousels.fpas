@@ -1,0 +1,40 @@
+unit Fpas.Ui.Widgets.Media.Carousels;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Native carousel options.
+public type Options = record
+  // Logical slide height, or zero for the native default.
+  public Height: float := 0.0F;
+  // Logical separation between slides, or zero for the native default.
+  public Gap: float := 0.0F;
+  // Seconds before advancing, or zero to disable automatic advance.
+  public AutoAdvance: float := 0.0F;
+  // Hide the native arrow buttons.
+  public HideArrows: bool := false;
+  // Hide the native page dots.
+  public HideDots: bool := false;
+  // Wrap manual navigation at the ends.
+  public Loop: bool := false;
+  // Allow selection changes and automatic advance.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native graphical carousel.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Slides`: Slide bodies in display order.
+// - `Index`: The model's current slide index.
+// - `Change`: Maps the proposed slide index.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function Carousel<TMsg>(Id: string; Slides: array of E.Element<TMsg>; Index: int; Change: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Carousel(Id, Slides, Index, Change, Settings ?? new Options());
+end function;
+
+end unit;

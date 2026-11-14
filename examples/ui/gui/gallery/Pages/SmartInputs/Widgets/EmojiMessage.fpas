@@ -2,9 +2,9 @@ unit GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage;
 
 uses
   GuiGallery.Pages.SmartInputs.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TextFields as F,
-  Fpas.Ui.EmojiPickers as Emoji, Fpas.Ui.IconButtons as B, Fpas.Ui.Popovers as P,
-  Fpas.Ui.Menus as M, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.TextFields as F,
+  Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji, Fpas.Ui.Widgets.Actions.IconButtons as B, Fpas.Ui.Widgets.Overlays.Popovers as P,
+  Fpas.Ui.Widgets.Overlays.Menus as M, System as Sys;
 
 // Shows the original Smart inputs message field with the native emoji palette.
 // ## Parameters

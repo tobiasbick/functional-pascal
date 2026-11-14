@@ -1,7 +1,7 @@
 unit Gallery.SegmentedControl;
 
 uses
-  Gallery.State as State, Fpas.Ui.SegmentedControls as S, Fpas.Ui.Buttons as B,
+  Gallery.State as State, Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
 // Adapts the upstream view and date-range segments to terminal cells.

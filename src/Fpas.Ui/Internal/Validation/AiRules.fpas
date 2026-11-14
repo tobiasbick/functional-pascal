@@ -1,0 +1,55 @@
+unit Fpas.Ui.Internal.Validation.AiRules;
+
+uses
+  Fpas.Ui.Widgets.Ai.ModelPickers as M, Fpas.Ui.Widgets.Ai.Sources as S, Fpas.Ui.Widgets.Feedback.TaskStates as T,
+  Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Internal.Validation.ChartRules as Chart, System as Sys;
+
+// Checks the task status and displayed text.
+// ## Parameters
+// - `Status`: Current task status.
+// - `Seconds`: Elapsed time.
+// - `Captions`: Literal display text.
+// - `At`: Diagnostic location.
+public procedure Task(Status: T.Status; Seconds: float; Captions: array of string; At: string);
+begin
+  if not Sys.Enum.IsDefined<T.Status>(Status) then
+    R.Reject(At, 'Unknown task status.');
+  end if;
+
+  Chart.Distance(Seconds, At);
+  for Caption: string in Captions do
+    R.CheckText(Caption, At);
+  end for;
+end procedure;
+
+// Checks the text of a source card.
+// ## Parameters
+// - `Value`: Displayed document.
+// - `At`: Diagnostic location.
+public procedure Source(Value: S.Item; At: string);
+begin
+  R.CheckText(Value.Url, At);
+  R.CheckText(Value.Title, At);
+  R.CheckText(Value.Snippet, At);
+end procedure;
+
+// Checks the native model list and selection.
+// ## Parameters
+// - `Values`: Available model choices.
+// - `Selected`: Selected index, or zero for an empty list.
+// - `At`: Diagnostic location.
+public procedure Models(Values: array of M.Item; Selected: int; At: string);
+begin
+  if Selected < 0 or Selected >= Sys.Math.Max(1, Values.Length) then
+    R.Reject(At, 'Invalid selected model index.');
+  end if;
+
+  for Item: M.Item in Values do
+    R.CheckText(Item.Name, At);
+    R.CheckText(Item.Detail, At);
+    R.CheckText(Item.Badge, At);
+    R.CheckText(Item.Icon, At);
+  end for;
+end procedure;
+
+end unit;

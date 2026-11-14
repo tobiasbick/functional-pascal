@@ -1,0 +1,87 @@
+unit Fpas.Ui.Widgets.Inputs.GradientSliders;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Audio.ControlWells as W;
+
+// Built-in native gradient tracks.
+public type Track = enum: byte
+  // Full hue circle.
+  Hue;
+  // Warm to cool white balance.
+  Temperature;
+  // Transparent to opaque color.
+  Opacity;
+end enum;
+
+// A native gradient stop.
+public type Stop = record
+  // Normalized position along the track.
+  public Position: float;
+  // Color at this position.
+  public Color: G.Color;
+end record;
+
+// Model-owned input.
+public type Value = record
+  // Well caption. A leading ## hides it.
+  public Label: string;
+  // Current value.
+  public Current: float;
+  // Lower endpoint.
+  public Minimum: float;
+  // Upper endpoint.
+  public Maximum: float;
+end record;
+
+// Native widget settings.
+public type Options = record
+  // Built-in track.
+  public Kind: Track := Track.Hue;
+  // Custom stops in ascending order. Empty uses the built-in track.
+  public Stops: array of Stop := [];
+  // Color used for the opacity track.
+  public Color: C.Color := C.Color.Automatic;
+  // Snap interval, or zero for continuous input.
+  public Step: float := 0.0F;
+  // Optional numeric format. An explicit display caption takes precedence.
+  public Format: C.ValueFormat? := null;
+  // Optional value caption.
+  public Display: string := '';
+  // Shows the color under the thumb.
+  public Swatch: bool := false;
+  // Optional action next to the track.
+  public Tool: W.Tool? := null;
+  // Omits the surrounding well.
+  public Plain: bool := false;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// Native proposal.
+public type Event = record
+  // Proposed value.
+  public Current: float;
+  // Color under the thumb.
+  public Color: G.Color;
+  // Value changed.
+  public Changed: bool;
+  // Tool was activated.
+  public Action: bool;
+end record;
+
+// Presents the CUI gradient slider.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Current model value.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native appearance and input settings.
+// ## Returns
+// The graphical widget.
+public function GradientSlider<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.GradientSlider(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

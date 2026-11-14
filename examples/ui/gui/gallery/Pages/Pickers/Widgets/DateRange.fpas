@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Pickers.Widgets.DateRange;
 
 uses
   GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.DateRangePickers as P, Fpas.Ui.DateRangeCalendars as C,
+  Fpas.Ui.Widgets.Pickers.DateRangePickers as P, Fpas.Ui.Widgets.Pickers.DateRangeCalendars as C,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // Shows the two original CUI date range fields and inline calendar.

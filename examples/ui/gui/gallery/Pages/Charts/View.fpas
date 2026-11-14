@@ -1,12 +1,12 @@
 unit GuiGallery.Pages.Charts.View;
 
 uses
-  Fpas.Ui.Sparklines as Sparklines,
+  Fpas.Ui.Widgets.Charts.Sparklines as Sparklines,
   GuiGallery.Pages.Charts.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Charts as C, Fpas.Ui.LineCharts as Lines,
-  Fpas.Ui.BarCharts as Bars, Fpas.Ui.DonutCharts as Donuts, Fpas.Ui.Gauges as Gauges,
-  Fpas.Ui.PatternMeters as Patterns, Fpas.Ui.Cards as Cards, Fpas.Ui.Grids as Grids,
-  Fpas.Ui.Layout as L, Fpas.Ui.Checkboxes as Checks;
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.LineCharts as Lines,
+  Fpas.Ui.Widgets.Charts.BarCharts as Bars, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts, Fpas.Ui.Widgets.Charts.Gauges as Gauges,
+  Fpas.Ui.Widgets.Charts.PatternMeters as Patterns, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Containers.Grids as Grids,
+  Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
 
 const Months: array of string := [
   'Jan',

@@ -1,0 +1,59 @@
+unit Fpas.Ui.Widgets.Editors.CodeEditors;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+
+// Editing and caret state reported by CUI.
+public type Event = record
+  // Edited text, or null when the text did not change.
+  public Text: string?;
+  // One-based caret line.
+  public Line: int;
+  // One-based caret column.
+  public Column: int;
+  // Number of lines.
+  public LineCount: int;
+  // Whether an edit exceeded the UTF-8 capacity.
+  public Refused: bool;
+end record;
+
+// Native CodeEditor configuration.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Logical height, zero for the native default or minus one to fill.
+  public Height: float := 0.0F;
+  // Font size, or zero for the native default.
+  public Size: float := 0.0F;
+  // CUI syntax language, such as sql or c.
+  public Language: string := 'text';
+  // Text shown for empty source.
+  public Placeholder: string := '';
+  // Capacity in UTF-8 bytes, including the terminator.
+  public Capacity: int := 65536;
+  // Number of columns per indentation level.
+  public TabSize: int := 4;
+  // Indent with tabs.
+  public UseTabs: bool := false;
+  // Show the line number gutter.
+  public LineNumbers: bool := true;
+  // Allow selection and find while preventing edits.
+  public ReadOnly: bool := false;
+end record;
+
+// Creates a graphical CodeEditor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Text`: Model-owned source code.
+// - `Changed`: Maps editing and caret proposals.
+// - `Settings`: Native presentation options.
+// ## Returns
+// A graphical view element.
+public function CodeEditor<TMsg>(Id: string; Text: string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.CodeEditor(Id, Text, Changed, Settings ?? new Options());
+end function;
+
+end unit;

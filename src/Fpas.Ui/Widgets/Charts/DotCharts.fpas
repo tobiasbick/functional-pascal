@@ -1,0 +1,84 @@
+unit Fpas.Ui.Widgets.Charts.DotCharts;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C, System as Sys;
+
+// Format native axis labels.
+public type AxisUnits = enum: byte
+  // Use a numeric format.
+  Number;
+  // Use time of day in hours, wrapping after 24.
+  Hours;
+end enum;
+
+// One band of stacked dot-matrix samples.
+public type Series = record
+  // Equally spaced samples.
+  public Values: array of float;
+  // Highlight this series.
+  public Accent: bool := false;
+end record;
+
+// Activation of a native dot chart.
+public type Hit = record
+  // X coordinate at activation.
+  public X: double;
+  // Closest sample index, or minus one outside the plot.
+  public Index: int;
+  // Stacked value at the sample.
+  public Value: float;
+end record;
+
+// Native dot chart presentation and input.
+public type Options = record
+  // Logical width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height or zero for the native default.
+  public Height: float := 0.0F;
+  // X-axis start.
+  public XMinimum: double := 0.0;
+  // X-axis end, equal to the start for an index axis.
+  public XMaximum: double := 0.0;
+  // Units used by the X axis.
+  public Units: AxisUnits := AxisUnits.Number;
+  // Safe X label format.
+  public XFormat: C.ValueFormat? := null;
+  // Distance between axis labels, or zero for automatic spacing.
+  public XStep: double := 0.0;
+  // Optional fixed range for stacked values.
+  public Range: C.ValueRange? := null;
+  // Safe format for stacked values.
+  public Format: C.ValueFormat? := null;
+  // Optional value unit.
+  public Unit: string := '';
+  // Native dot spacing, or zero for default.
+  public Pitch: float := 0.0F;
+  // Draw the dim grid dots.
+  public Grid: bool := true;
+  // Show the horizontal axis.
+  public Axis: bool := true;
+  // Show the native pointer and keyboard readout.
+  public Readout: bool := true;
+  // Reference lines and points in axis units.
+  public Annotations: array of C.Annotation := [];
+  // Accept pointer and keyboard input.
+  public Enabled: bool := true;
+end record;
+
+// Draws the native CUI dot chart.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Bands`: Stacked series in display order.
+// - `Count`: Sample count of each series, retained for an empty chart.
+// - `OnActivate`: Maps native activation to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical element.
+public function DotChart<TMsg>(Id: string; Bands: array of Series; Count: int; OnActivate: Sys.Func<Hit, TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.DotChart(Id, Bands, Count, OnActivate, Settings ?? new Options());
+end function;
+
+end unit;

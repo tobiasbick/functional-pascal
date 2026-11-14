@@ -1,9 +1,9 @@
 unit GuiGallery.Pages.Actions.State;
 
 uses
-  Fpas.Ui.StatusButtons as Work,
-  Fpas.Ui.Reactions as React,
-  Fpas.Ui.SwipeActions as Swipe,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
+  Fpas.Ui.Widgets.Conversation.Reactions as React,
+  Fpas.Ui.Widgets.Actions.SwipeActions as Swipe,
   System as Sys,
   GuiGallery.Shared.State as Demo;
 

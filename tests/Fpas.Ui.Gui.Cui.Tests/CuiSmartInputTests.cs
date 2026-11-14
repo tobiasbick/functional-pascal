@@ -1,3 +1,5 @@
+using Fpas.Ui.Gui.Cui.Widgets.Inputs;
+
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Exercises native edit transitions across the four Smart inputs bindings.</summary>

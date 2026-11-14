@@ -1,0 +1,38 @@
+unit Fpas.Ui.Widgets.Ai.ToolCalls;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
+
+// Native presentation and interaction options.
+public type Options = record
+  // Current execution status.
+  public Status: TaskStates.Status := TaskStates.Status.Pending;
+  // Optional native icon.
+  public Icon: string := '';
+  // Summary beside the name.
+  public Detail: string := '';
+  // Input shown when expanded.
+  public Input: string := '';
+  // Output or error shown when expanded.
+  public Output: string := '';
+  // Elapsed seconds.
+  public Seconds: float := 0.0F;
+  // Allow opening the details.
+  public Enabled: bool := true;
+end record;
+
+// Builds the native ToolCall widget.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Name`: Displayed tool name.
+// - `Settings`: Optional native settings.
+// ## Returns
+// A graphical element.
+public function ToolCall<TMsg>(Id: string; Name: string; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.ToolCall(Id, Name, Settings ?? new Options());
+end function;
+
+end unit;

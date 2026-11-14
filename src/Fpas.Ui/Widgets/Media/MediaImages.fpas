@@ -1,0 +1,12 @@
+unit Fpas.Ui.Widgets.Media.MediaImages;
+
+// A CUI picture source. In-memory pixels are retained by reference and must
+// remain unchanged while a view uses them. Supply a new array to update it.
+public type Source = variant
+  // Decode an image file.
+  File(Path: string);
+  // Upload tightly packed straight-alpha RGBA pixels, four bytes per pixel.
+  Rgba(Width: int; Height: int; Pixels: array of byte);
+end variant;
+
+end unit;

@@ -1,8 +1,8 @@
 unit GalleryTourContract;
 
 uses
-  Fpas.Ui.Tours as T, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
-  Fpas.Ui.Menus as M, GalleryHostAssertions as A, System as Sys;
+  Fpas.Ui.Widgets.Overlays.Tours as T, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
+  Fpas.Ui.Widgets.Overlays.Menus as M, GalleryHostAssertions as A, System as Sys;
 
 // Checks tour preflight before native calls can create an overlay.
 public procedure Verify();

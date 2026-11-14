@@ -1,0 +1,53 @@
+unit Fpas.Ui.Widgets.Containers.Cards;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+
+// Presentation and input settings for a CUI card.
+public type Options = record
+  // Preferred width.
+  public Width: L.Extent := L.Extent.Content;
+  // Preferred height.
+  public Height: L.Extent := L.Extent.Content;
+  // Minimum logical width, or zero for the native default.
+  public MinimumWidth: float := 0.0F;
+  // Maximum logical width, or zero for the native default.
+  public MaximumWidth: float := 0.0F;
+  // Logical inset on all sides. Zero uses the native default.
+  public Padding: float := 0.0F;
+  // Horizontal inset override. Zero inherits Padding.
+  public PaddingX: float := 0.0F;
+  // Vertical inset override. Zero inherits Padding.
+  public PaddingY: float := 0.0F;
+  // Logical space between children. Zero uses the native default.
+  public Gap: float := 0.0F;
+  // Arrange children in a row.
+  public Horizontal: bool := false;
+  // Cross-axis alignment.
+  public Align: L.Alignment := L.Alignment.Default;
+  // Allow a horizontal card to wrap its children.
+  public Wrap: bool := false;
+  // Use a muted borderless surface.
+  public Muted: bool := false;
+  // Use an accent border.
+  public Selected: bool := false;
+  // Whether the card itself accepts activation.
+  public Enabled: bool := true;
+end record;
+
+// Draws a native card and makes it interactive when an activation callback is supplied.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable card identity.
+// - `Children`: The card contents.
+// - `Settings`: Optional presentation settings.
+// - `OnActivate`: Optional message factory for pointer or keyboard activation.
+// ## Returns
+// The graphical element.
+public function Card<TMsg>(Id: string; Children: array of E.Element<TMsg>; Settings: Options? := null; OnActivate: Sys.Func<TMsg>? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.Card(Id, Children, Settings ?? new Options(), OnActivate);
+end function;
+
+end unit;

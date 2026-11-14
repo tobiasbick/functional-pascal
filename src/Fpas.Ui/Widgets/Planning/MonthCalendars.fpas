@@ -1,0 +1,81 @@
+unit Fpas.Ui.Widgets.Planning.MonthCalendars;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
+
+// A timed, all-day or multi-day event.
+public type Appointment = record
+  // Event title.
+  public Title: string;
+  // First day.
+  public Start: Sys.DateOnly;
+  // Optional inclusive final day.
+  public Finish: Sys.DateOnly? := null;
+  // Time for a timed event, in hours.
+  public Time: float := 9.0F;
+  // Shows a full-day bar.
+  public AllDay: bool := false;
+  // Event color.
+  public Tone: S.Tone := S.Tone.Neutral;
+end record;
+
+// Current calendar model.
+public type Value = record
+  // Month to display. The day is ignored.
+  public Month: Sys.DateOnly;
+  // Events available to the calendar.
+  public Events: array of Appointment;
+  // Selected day.
+  public Selected: Sys.DateOnly? := null;
+end record;
+
+// Native month settings.
+public type Options = record
+  // First weekday, from Monday zero through Sunday six.
+  public FirstWeekday: int := 0;
+  // Cell height, or zero for the native default.
+  public CellHeight: float := 0.0F;
+  // Optional twelve month names.
+  public MonthNames: array of string := [];
+  // Optional seven weekday names, Monday first.
+  public DayNames: array of string := [];
+  // Uses a 12-hour clock.
+  public Hour12: bool := false;
+  // Optional override of the current date.
+  public Today: Sys.DateOnly? := null;
+  // Accepts input.
+  public Enabled: bool := true;
+end record;
+
+// A native calendar proposal.
+public type Event = record
+  // Proposed displayed month.
+  public Month: Sys.DateOnly;
+  // Proposed selected day.
+  public Selected: Sys.DateOnly? := null;
+  // Activated event index.
+  public Activated: int := -1;
+  // A day was selected.
+  public DayClicked: bool := false;
+  // The selected day was activated.
+  public DayActivated: bool := false;
+  // The displayed month changed.
+  public MonthChanged: bool := false;
+end record;
+
+// Presents the native month calendar.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable widget identity.
+// - `Current`: Model-owned input.
+// - `Change`: Maps a native proposal to an application message.
+// - `Settings`: Optional native settings.
+// ## Returns
+// The graphical widget.
+public function MonthCalendar<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.MonthCalendar(Id, Current, Change, Settings ?? new Options());
+end function;
+
+end unit;

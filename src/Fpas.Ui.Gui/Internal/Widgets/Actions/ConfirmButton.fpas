@@ -1,0 +1,47 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Actions.ConfirmButton;
+
+uses
+  Fpas.Ui.Widgets.Actions.ConfirmButtons as Buttons, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Actions as CuiActions,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+
+// Draws native confirmation and proposes a message only after its second activation.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current frame context.
+// - `Id`: Stable control identity.
+// - `Label`: Literal resting caption.
+// - `Message`: Proposed confirmation message.
+// - `Settings`: Confirmation caption, timeout, appearance and input permission.
+public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: Buttons.Options);
+begin
+  const Enabled: bool := Settings.Enabled and State.AcceptInput;
+  const Token: string := C.Token('confirm-button', Id);
+  const Result: CuiActions.CuiConfirmButtonResult := State.Window.ConfirmButton(
+    Token, Label, Settings.ConfirmLabel, Settings.Icon, Settings.TimeoutMilliseconds,
+    cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled,
+    C.WantsFocus<TMsg>(State, Id, Token, Enabled)
+  );
+  if Result.Confirmed then
+    State.Messages.Add(Message);
+  end if;
+
+  C.Track<TMsg>(
+    State, new App.Control(
+      Id, if Result.Armed then
+        Settings.ConfirmLabel
+      else
+        Label
+      end if,
+      'confirm-button', new Cui.CuiRectangle(), Enabled,
+      Value := if Result.Armed then
+        'armed'
+      else
+        ''
+      end if
+    )
+  );
+end procedure;
+
+end unit;

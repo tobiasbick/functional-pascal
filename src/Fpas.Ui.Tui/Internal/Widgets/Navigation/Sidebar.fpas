@@ -1,0 +1,55 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar;
+
+uses Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A, System.Collections.Generic as C;
+
+// Lowers the sidebar into terminal headings and direct actions.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Sidebar identity.
+// - `Sections`: Headings and destinations in focus order.
+// - `Active`: Model-owned active key.
+// - `Enabled`: Input permission for the sidebar.
+// ## Returns
+// A stack of full-width terminal destinations.
+public function Lower<TMsg>(Id: string; Sections: array of N.Section<TMsg>; Active: string?; Enabled: bool): E.Element<TMsg>;
+begin
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  for Section: N.Section<TMsg> in Sections do
+    if Section.Title <> '' then
+      Rows.Add(E.Element<TMsg>.Label(' ' + Section.Title));
+    end if;
+
+    for Item: N.Item<TMsg> in Section.Items do
+      const Selected: bool := Active = Item.Key;
+      const Caption: string := if Item.Badge = '' then
+        Item.Label
+      else
+        Item.Label + ' [' + Item.Badge + ']'
+      end if;
+      Rows.Add(
+        E.Element<TMsg>.Action(
+          N.ItemId(Id, Item.Key), new A.Direct<TMsg>(Item.Message), Enabled and Item.Enabled,
+          new E.ActionView(
+            Caption, Role := 'navigation', Value := if Selected then
+              'true'
+            else
+              'false'
+            end if,
+            Variant := if Selected then
+              S.ButtonVariant.Secondary
+            else
+              S.ButtonVariant.Ghost
+            end if,
+            ArrowFocus := false
+          )
+        )
+      );
+    end for;
+  end for;
+
+  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow(Align := L.Alignment.Stretch));
+end function;
+
+end unit;

@@ -1,0 +1,17 @@
+unit Fpas.Ui.Widgets.Feedback.TaskStates;
+
+// Native task state shared by tool calls and agent steps.
+public type Status = enum: byte
+  // Waiting to start.
+  Pending;
+  // Running.
+  Running;
+  // Finished successfully.
+  Done;
+  // Finished with an error.
+  Failed;
+  // Intentionally skipped.
+  Skipped;
+end enum;
+
+end unit;

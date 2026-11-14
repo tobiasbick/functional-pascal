@@ -23,7 +23,7 @@ if(MSVC AND NOT BUILD_SHARED_LIBS)
     set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
 endif()
 
-add_library(cui fpas_cui.c wakeup.c)
+add_library(cui fpas_cui.c host/wakeup.c)
 add_library(fpas::cui ALIAS cui)
 target_include_directories(cui PUBLIC "${FPAS_CUI_UPSTREAM_DIR}")
 set_target_properties(cui PROPERTIES

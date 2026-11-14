@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Actions.Widgets.SpeedDial;
 
 uses
   GuiGallery.Pages.Actions.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.SpeedDials as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.SpeedDials as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   System as Sys;
 
 // Shows the CUI gallery's floating Create actions.

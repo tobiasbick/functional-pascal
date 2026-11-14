@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Lists.State;
 
-uses Fpas.Ui.Tables as T;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
 
 // State owned by this gallery feature.
 public type Model = record

@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Buttons.Widgets.DropdownMenu;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.Menus as M,
+  Fpas.Ui.Widgets.Overlays.Menus as M,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   System as Sys;

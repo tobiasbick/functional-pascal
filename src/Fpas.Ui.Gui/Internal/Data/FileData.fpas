@@ -1,0 +1,45 @@
+unit Fpas.Ui.Gui.Internal.Data.FileData;
+
+uses Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles, System as Sys;
+
+// Bridges an optional FPAS directory provider to the call-scoped CUI callback.
+// ## Parameters
+// - `Source`: Application listing callback or null for local disk.
+// ## Returns
+// The native binding's listing callback.
+public function Provider(Source: Sys.Func<string, bool, F.Listing?>?): Sys.Func<string, bool, (array of CuiFiles.CuiFileEntry)?>?;
+  function Read(List: Sys.Func<string, bool, F.Listing?>; Path: string; Hidden: bool): (array of CuiFiles.CuiFileEntry)?;
+  begin
+    const Listing: F.Listing? := List.Invoke(Path, Hidden);
+    if Listing = null then
+      return null;
+    end if;
+    const Result: array of CuiFiles.CuiFileEntry := new CuiFiles.CuiFileEntry[
+      Listing.Entries.Length
+    ];
+    for Index: int := 0 to Result.Length - 1 do
+      const Entry: F.Entry := Listing.Entries[Index];
+      Result[Index] := new CuiFiles.CuiFileEntry(
+        Entry.Name,
+        Entry.Directory,
+        Entry.Size,
+        Entry.Modified
+      );
+    end for;
+
+    return Result;
+  end function;
+begin
+  case Source of
+    when is Sys.Func<string, bool, F.Listing?> as List:
+      return function(Path: string; Hidden: bool): (array of CuiFiles.CuiFileEntry)? => Read(
+        List,
+        Path,
+        Hidden
+      );
+    else
+      return null;
+  end case;
+end function;
+
+end unit;

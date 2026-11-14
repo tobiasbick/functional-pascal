@@ -1,8 +1,8 @@
 unit Fpas.Ui.Internal.Mapping.Capture;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Dropzones as Dropzones, Fpas.Ui.SignaturePads as Signatures,
-  Fpas.Ui.Internal.MessageMapping as M, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.Dropzones as Dropzones, Fpas.Ui.Widgets.Files.SignaturePads as Signatures,
+  Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
 
 // Maps the native capture controls into a parent message space.
 // ## Type parameters

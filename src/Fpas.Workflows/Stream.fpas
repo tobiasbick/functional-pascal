@@ -1,0 +1,75 @@
+// Bounded, ordered event streams with structured producer lifetime.
+unit Fpas.Workflows.Streams;
+
+uses
+  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S,
+  System.Threading as Threads, System.Threading.Channels as Channels,
+  System.Threading.Tasks as Tasks;
+
+// Describes a producer. Each subscription creates a fresh bounded channel.
+//
+// ## Type parameters
+// - `A`: Event type.
+// - `E`: Expected producer failure type.
+// - `R`: Environment required by the producer.
+public type Stream<A, E, R> = record
+  Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>;
+
+  // Stores a producer for later subscription.
+  //
+  // ## Parameters
+  // - `Produce`: Producer that awaits each write in publication order.
+  //
+  // ## Returns
+  // The deferred stream.
+  public static function Create(Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>): Stream<A, E, R>;
+  begin
+    return new Stream<A, E, R>(Produce);
+  end function;
+
+  // Runs a producer and consumes each event before observing producer completion.
+  //
+  // ## Parameters
+  // - `Capacity`: Positive maximum number of buffered events.
+  // - `Receive`: Asynchronous handler for one event, with the subscription token.
+  //
+  // ## Returns
+  // A workflow returning the producer outcome after draining the channel and
+  // joining the producer. Cancellation interrupts channel waits.
+  public function Consume(Capacity: int; Receive: function(A, Threads.CancellationToken): Tasks.Task): W.Workflow<W.Completion, E, R>;
+  requires Capacity > 0;
+    function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>;
+      async function Read(Lifetime: S.Scope): Tasks.Task<W.Outcome<W.Completion, E>>;
+        async function Write(Producer: S.Scope): Tasks.Task<W.Outcome<W.Completion, E>>;
+          function Publish(Value: A): Tasks.Task;
+          begin
+            return Pipe.Writer.WriteAsync(Value, Producer.Token).AsTask();
+          end function;
+        begin
+          try
+            return await self.Produce(Environment, Publish, Producer.Token).ConfigureAwait(false);
+          finally
+            discard Pipe.Writer.TryComplete();
+          end try;
+        end function;
+      begin
+        const Pipe: Channels.Channel<A> := Channels.Channel.CreateBounded<A>(Capacity);
+        const Producer: S.Child<W.Outcome<W.Completion, E>> := Lifetime.Fork<W.Outcome<W.Completion, E>>(
+          Write
+        );
+        while await Pipe.Reader.WaitToReadAsync(Lifetime.Token).ConfigureAwait(false) do
+          const Value: A := await Pipe.Reader.ReadAsync(Lifetime.Token).ConfigureAwait(false);
+          await Receive(Value, Lifetime.Token).ConfigureAwait(false);
+        end while;
+
+        return await Producer.Join.ConfigureAwait(false);
+      end function;
+    begin
+      return S.Scope.Use<W.Outcome<W.Completion, E>>(Read, Cancellation);
+    end function;
+  begin
+    return W.Workflow<W.Completion, E, R>.Defer(Execute);
+  end function;
+end record;
+
+end unit;

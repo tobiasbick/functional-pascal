@@ -14,6 +14,8 @@ program AgentStart;
 uses System as Sys, System.Console as Console;
 
 function Double(Value: int): int;
+requires Value >= int.MinValue div 2 and Value <= int.MaxValue div 2;
+ensures (Answer: int): Answer = Value * 2;
 begin
   return Value * 2;
 end function;
@@ -55,6 +57,11 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
   and exhaustive matching. Use CLR nullability and exceptions for absence/failure.
 - Tasks and cancellation use ordinary .NET APIs. Resources use `using const` or
   `await using const`; cleanup runs when the enclosing lexical scope exits.
+- At entry routines, state caller obligations with `requires` and guarantees on
+  successful return with `ensures`. Examples include a program's main routine
+  and public library operations.
+- Use `Fpas.Workflows` for deferred composition of asynchronous work with typed
+  outcomes, dependencies, or shared execution policies.
 
 ## Read for the task
 
@@ -65,7 +72,7 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Routines, parameters, delegates, closures, inference, and contracts | [Functions](functions.md) |
 | Matching, nullability, exceptions, and resource lifetime | [Patterns, errors, and resources](patterns-errors.md) |
 | .NET APIs, interfaces, events, attributes, and CLR representation | [Interop](interop.md) |
-| Async functions, tasks, cancellation, and shared state | [Concurrency](concurrency.md) |
+| Async functions, cancellation, shared state, and composable effects | [Concurrency](concurrency.md) |
 | Build, test, inspect APIs, debug, profile, or change the compiler | [Tools](tools.md) |
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
 | Change CUI integration or prepare an upstream contribution | [CUI workflow](../../cui-contributions.md) |

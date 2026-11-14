@@ -1,0 +1,175 @@
+async program WorkflowLifetimes;
+
+uses
+  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, Fpas.Workflows.Layers as L,
+  System as Sys, System.Collections.Generic as C, System.Threading as T,
+  System.Threading.Tasks as Tasks;
+
+procedure Check(Condition: bool; Message: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Message);
+  end if;
+end procedure;
+
+async function VerifyLayers(): Tasks.Task;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    Events.Add('acquire ' + Value.ToString());
+    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Success(Value));
+  end function;
+
+  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    if Value < 0 then
+      return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Failure('unavailable'));
+    end if;
+
+    return Acquire(Value + 1, Token);
+  end function;
+
+  function Release(Value: int): Tasks.Task;
+  begin
+    Events.Add('release ' + Value.ToString());
+    return Tasks.Task.CompletedTask;
+  end function;
+
+  function Use(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    Events.Add('use ' + Value.ToString());
+    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Success(Value));
+  end function;
+begin
+  const Events: C.List<string> := new C.List<string>();
+  const First: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
+    W.Workflow<int, string, int>.Defer(Acquire),
+    Release
+  );
+  const Next: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
+    W.Workflow<int, string, int>.Defer(AcquireDependent),
+    Release
+  );
+  const Program: W.Workflow<int, string, int> := L.Provide(
+    W.Workflow<int, string, int>.Defer(Use),
+    First.ThenBuild(Next)
+  );
+
+  Check(Events.Count = 0, 'Building layers acquired a dependency');
+  case await Program.Run(1, T.CancellationToken.None) of
+    when W.Outcome.Success(const Value: int):
+      Check(Value = 2, 'The workflow did not receive its dependency');
+    when W.Outcome.Failure(_):
+      Check(false, 'Composition failed unexpectedly');
+  end case;
+
+  Check(
+    Sys.String.Join(',', Events) = 'acquire 1,acquire 2,use 2,release 2,release 1',
+    'Incorrect layer lifetime order'
+  );
+  Events.Clear();
+  case await Program.Run(-1, T.CancellationToken.None) of
+    when W.Outcome.Success(_):
+      Check(false, 'Partial acquisition unexpectedly succeeded');
+    when W.Outcome.Failure(const Reason: string):
+      Check(Reason = 'unavailable', 'Acquisition failure was lost');
+  end case;
+
+  Check(
+    Sys.String.Join(',', Events) = 'acquire -1,release -1',
+    'Partial acquisition leaked or ran dependent work'
+  );
+end function;
+
+async function VerifyChild(): Tasks.Task;
+  async function Use(Parent: S.Scope): Tasks.Task<int>;
+    async function First(Child: S.Scope): Tasks.Task<int>;
+    begin
+      try
+        Started.SetResult();
+        await Tasks.Task.Delay(T.Timeout.Infinite, Child.Token);
+      finally
+        Cleaned := true;
+      end try;
+
+      return 0;
+    end function;
+
+    async function Other(Child: S.Scope): Tasks.Task<int>;
+    begin
+      await SiblingMayFinish.Task.WaitAsync(Child.Token);
+      return 7;
+    end function;
+  begin
+    Parent.OnClose(
+      function(): Tasks.Task begin
+        Check(Cleaned, 'Parent released its resource before the child joined');
+        Released := Released + 1;
+        return Tasks.Task.CompletedTask;
+      end function
+    );
+    const Child: S.Child<int> := Parent.Fork<int>(First);
+    const Sibling: S.Child<int> := Parent.Fork<int>(Other);
+    await Started.Task;
+    await Child.Cancel();
+    try
+      discard await Child.Join;
+      Check(false, 'The child ignored cancellation');
+    catch Failure: Sys.OperationCanceledException do
+      Check(Cleaned, 'Join completed before the child cleaned up');
+    end try;
+
+    Check(not Parent.Token.IsCancellationRequested, 'Child cancellation propagated to the parent');
+    SiblingMayFinish.SetResult();
+    return await Sibling.Join;
+  end function;
+begin
+  const Started: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const SiblingMayFinish: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  var Released: int := 0;
+  var Cleaned: bool := false;
+  Check((await S.Scope.Use<int>(Use, T.CancellationToken.None)) = 7, 'Sibling did not finish');
+  Check(Released = 1, 'Resource was not released exactly once');
+end function;
+
+async function VerifyFaults(): Tasks.Task;
+  function Use(Scope: S.Scope): Tasks.Task<int>;
+  begin
+    Scope.OnClose(
+      function(): Tasks.Task begin
+        Released := Released + 1;
+        return Tasks.Task.CompletedTask;
+      end function
+    );
+    Scope.OnClose(
+      function(): Tasks.Task begin
+        raise new Sys.InvalidOperationException('cleanup');
+      end function
+    );
+    raise new Sys.InvalidOperationException('body');
+  end function;
+begin
+  var Released: int := 0;
+  try
+    discard await S.Scope.Use<int>(Use, T.CancellationToken.None);
+    Check(false, 'Scope failures were swallowed');
+  catch Failure: Sys.AggregateException do
+    Check(Failure.InnerExceptions.Count = 2, 'One of the failures was lost');
+    Check(Failure.InnerExceptions[0].Message = 'body', 'Body failure was lost');
+    Check(Failure.InnerExceptions[1].Message = 'cleanup', 'Cleanup failure was lost');
+  end try;
+
+  Check(Released = 1, 'A failing finalizer prevented later cleanup');
+end function;
+
+begin
+  await VerifyLayers();
+  await VerifyChild();
+  await VerifyFaults();
+  Sys.Console.WriteLine('Workflow contracts verified');
+end;
+
+end program;

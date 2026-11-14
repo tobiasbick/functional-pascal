@@ -1,0 +1,104 @@
+// Bounded parallel execution of deferred workflows.
+unit Fpas.Workflows.Parallel;
+
+uses
+  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, System as Sys,
+  System.Collections.Generic as C,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// Executes workflows with a bounded number of workers and returns results in input order.
+//
+// ## Type parameters
+// - `A`: Success type of each workflow.
+// - `E`: Shared expected failure type.
+// - `R`: Shared environment type.
+//
+// ## Parameters
+// - `Work`: The workflows to execute. The array is copied when composing.
+// - `Concurrency`: Positive maximum number of simultaneous executions.
+//
+// ## Returns
+// A deferred workflow. A failure stops admission, requests cancellation of the
+// other workers, and waits for them to finish. Unexpected faults remain task faults.
+public function All<A, E, R>(Work: array of W.Workflow<A, E, R>; Concurrency: int): W.Workflow<array of A, E, R>;
+requires Concurrency > 0;
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<array of A, E>>;
+    async function RunWorkers(Lifetime: S.Scope): Tasks.Task<W.Outcome<array of A, E>>;
+      async function Worker(Child: S.Scope): Tasks.Task<W.Completion>;
+      begin
+        try
+          await Ready.Task.WaitAsync(Child.Token).ConfigureAwait(false);
+          while not Lifetime.Token.IsCancellationRequested and not Failure.Task.IsCompleted do
+            const Slot: long := Threads.Interlocked.Increment(ref Cursor[0]);
+            if Slot >= Inputs.Length then
+              break;
+            end if;
+
+            const Index: int := cast<int>(Slot);
+            const Result: W.Outcome<A, E> := await Inputs[Index].Run(
+              Environment,
+              Child.Token
+            ).ConfigureAwait(false);
+            case Result of
+              when W.Outcome.Success(_):
+                Values[Index] := Result;
+              when W.Outcome.Failure(const Reason: E):
+                if Failure.TrySetResult(W.Outcome.Failure(Reason)) then
+                  discard Lifetime.Cancel();
+                end if;
+
+                break;
+            end case;
+          end while;
+        catch Cancelled: Sys.OperationCanceledException when Child.Token.IsCancellationRequested
+          and Cancelled.CancellationToken = Child.Token do
+        catch Fault: Sys.Exception do
+          discard Lifetime.Cancel();
+          raise;
+        end try;
+
+        return W.Completion.Done;
+      end function;
+    begin
+      const Values: array of W.Outcome<A, E>? := new W.Outcome<A, E>?[Inputs.Length];
+      const Failure: Tasks.TaskCompletionSource<W.Outcome<array of A, E>> := new Tasks.TaskCompletionSource<W.Outcome<array of A, E>>();
+      const Cursor: array of long := [-1L];
+      // Let the workers wait until the parent has registered the full group.
+      const Ready: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+        Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+      );
+      const Workers: C.List<Tasks.Task> := new C.List<Tasks.Task>();
+      for Index: int := 1 to Sys.Math.Min(Concurrency, Inputs.Length) do
+        Workers.Add(Lifetime.Fork<W.Completion>(Worker).Join);
+      end for;
+
+      Ready.SetResult();
+
+      await Tasks.Task.WhenAll(Workers).ConfigureAwait(false);
+      Cancellation.ThrowIfCancellationRequested();
+      if Failure.Task.IsCompleted then
+        return await Failure.Task.ConfigureAwait(false);
+      end if;
+      const Ordered: C.List<A> := new C.List<A>(Inputs.Length);
+      for Result: W.Outcome<A, E>? in Values do
+        case Result of
+          when W.Outcome.Success(const Value: A):
+            Ordered.Add(Value);
+          else
+            raise new Sys.InvalidOperationException(
+              'A workflow did not produce a successful value'
+            );
+        end case;
+      end for;
+
+      return W.Outcome.Success(Ordered.ToArray());
+    end function;
+  begin
+    return S.Scope.Use<W.Outcome<array of A, E>>(RunWorkers, Cancellation);
+  end function;
+begin
+  const Inputs: array of W.Workflow<A, E, R> := cast<array of W.Workflow<A, E, R>>(Work.Clone());
+  return W.Workflow<array of A, E, R>.Defer(Execute);
+end function;
+
+end unit;

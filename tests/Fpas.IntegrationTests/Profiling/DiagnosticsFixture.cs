@@ -1,6 +1,5 @@
 using System.Xml.Linq;
 using Fpas.IntegrationTests.Build;
-using Fpas.Processes;
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Profiling;
@@ -35,9 +34,10 @@ public sealed class DiagnosticsFixture : IAsyncLifetime
             new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", sdk.Feed)))))
             .Save(directory.File("NuGet.Config"));
         var project = directory.File("Measure/Measure.fpasproj"); var xml = XDocument.Load(project);
-        xml.Descendants("ProjectReference").Remove();
-        xml.Root!.Add(new XElement("ItemGroup", new XElement("Reference", new XAttribute("Include", "Fpas.Processes"),
-            new XElement("HintPath", typeof(OwnedProcess).Assembly.Location)))); xml.Save(project);
+        xml.Descendants("ProjectReference").Single().SetAttributeValue("Include",
+            "../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj");
+        xml.Save(project);
+        WorkflowProjects.Copy(Repository, directory.File("src"), sdk.Version);
         foreach (var name in new[] { "Workload", "Measure" })
         {
             var built = await ProcessRunner.RunAsync(["build", directory.File($"{name}/{name}.fpasproj"), "-c", Configuration, "-warnaserror"],

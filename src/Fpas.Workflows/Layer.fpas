@@ -1,0 +1,127 @@
+// Acquisition and release of typed dependencies.
+unit Fpas.Workflows.Layers;
+
+uses
+  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, System as Sys,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// Builds a dependency for the lifetime of a scope.
+//
+// ## Type parameters
+// - `A`: Dependency supplied by this layer.
+// - `E`: Expected acquisition failure.
+// - `R`: Environment needed to acquire the dependency.
+public type Layer<A, E, R> = record
+  Acquire: function(R, S.Scope): Tasks.Task<W.Outcome<A, E>>;
+
+  // Couples an acquisition with its release.
+  //
+  // ## Parameters
+  // - `Work`: Workflow that acquires the dependency.
+  // - `Release`: Cleanup for a successfully acquired value.
+  //
+  // ## Returns
+  // The deferred layer.
+  public static function Create(Work: W.Workflow<A, E, R>; Release: function(A): Tasks.Task): Layer<A, E, R>;
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<A, E>>;
+    begin
+      const Result: W.Outcome<A, E> := await Work.Run(
+        Environment,
+        Lifetime.Token
+      ).ConfigureAwait(false);
+      case Result of
+        when W.Outcome.Success(const Value: A):
+          try
+            Lifetime.OnClose(function(): Tasks.Task => Release(Value));
+          catch Registration: Sys.Exception do
+            try
+              await Release(Value).ConfigureAwait(false);
+            catch Cleanup: Sys.Exception do
+              raise new Sys.AggregateException(
+                'Could not register or release a dependency',
+                [Registration, Cleanup]
+              );
+            end try;
+
+            raise;
+          end try;
+        when W.Outcome.Failure(_):
+      end case;
+
+      return Result;
+    end function;
+  begin
+    return new Layer<A, E, R>(Build);
+  end function;
+
+  // Builds and registers this dependency in an open scope.
+  //
+  // ## Parameters
+  // - `Environment`: Dependencies for acquisition.
+  // - `Lifetime`: Owner of the acquired dependency.
+  //
+  // ## Returns
+  // A task containing the dependency or the expected acquisition failure.
+  public function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<A, E>>;
+  begin
+    return self.Acquire(Environment, Lifetime);
+  end function;
+
+  // Builds a dependent layer after this layer succeeds.
+  //
+  // ## Type parameters
+  // - `B`: Dependency produced by the second layer.
+  //
+  // ## Parameters
+  // - `Next`: Layer using this layer's value as its environment.
+  //
+  // ## Returns
+  // The composed layer, with dependencies released in reverse acquisition order.
+  public function ThenBuild<B>(Next: Layer<B, E, A>): Layer<B, E, R>;
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<B, E>>;
+    begin
+      case await self.Build(Environment, Lifetime).ConfigureAwait(false) of
+        when W.Outcome.Success(const Value: A):
+          return await Next.Build(Value, Lifetime).ConfigureAwait(false);
+        when W.Outcome.Failure(const Reason: E):
+          return W.Outcome.Failure(Reason);
+      end case;
+    end function;
+  begin
+    return new Layer<B, E, R>(Build);
+  end function;
+end record;
+
+// Supplies a scoped dependency to a workflow.
+//
+// ## Type parameters
+// - `A`: Dependency supplied by the layer.
+// - `B`: Success type of the workflow.
+// - `E`: Shared expected failure type.
+// - `R`: Environment required by the layer.
+//
+// ## Parameters
+// - `Work`: Workflow receiving the dependency.
+// - `Dependencies`: Layer supplying the dependency.
+//
+// ## Returns
+// A deferred workflow that releases the dependency before returning.
+public function Provide<A, B, E, R>(Work: W.Workflow<B, E, A>; Dependencies: Layer<A, E, R>): W.Workflow<B, E, R>;
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<B, E>>;
+    async function Use(Lifetime: S.Scope): Tasks.Task<W.Outcome<B, E>>;
+    begin
+      case await Dependencies.Build(Environment, Lifetime).ConfigureAwait(false) of
+        when W.Outcome.Success(const Value: A):
+          return await Work.Run(Value, Lifetime.Token).ConfigureAwait(false);
+        when W.Outcome.Failure(const Reason: E):
+          return W.Outcome.Failure(Reason);
+      end case;
+    end function;
+  begin
+    return S.Scope.Use<W.Outcome<B, E>>(Use, Cancellation);
+  end function;
+begin
+  return W.Workflow<B, E, R>.Defer(Execute);
+end function;
+
+end unit;

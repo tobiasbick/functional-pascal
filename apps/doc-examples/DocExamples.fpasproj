@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/**/*.fpas" />
-    <ProjectReference Include="../../src/Fpas.Processes/Fpas.Processes.csproj" />
+    <ProjectReference Include="../../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj" />
   </ItemGroup>
   <Target Name="WriteDocExamplesSdkIdentity" AfterTargets="Build">
     <WriteLinesToFile File="$(TargetDir)DocExamples.sdk.txt" Lines="$(FpasCompilerPath)" Overwrite="true" WriteOnlyWhenDifferent="true" />

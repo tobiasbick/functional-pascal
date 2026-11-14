@@ -1,0 +1,162 @@
+// Workflows for capturing output from an owned process tree.
+unit Fpas.Processes.Workflows.Capture;
+
+uses
+  Fpas.Processes.OwnedProcess as Owned, Fpas.Workflows.Operations as W,
+  Fpas.Workflows.Policies as Policies, Fpas.Workflows.Scopes as S,
+  Fpas.Workflows.Layers as Layers, System as Sys, System.Collections.Generic as C,
+  System.IO as IO, System.Text as Text, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+// A completed process and its captured streams.
+public type Captured = record
+  // Exit code of the direct child.
+  public ExitCode: int;
+  // UTF-8 decoded standard output.
+  public Output: string;
+  // UTF-8 decoded standard error.
+  public Error: string;
+end record;
+
+// The expected failure of a capture.
+public type CaptureFailure = enum
+  // The deadline elapsed before capture finished.
+  Deadline;
+end enum;
+
+// Inputs to one execution of the capture workflow.
+public type Request = record
+  // Absolute path of the executable.
+  public Executable: string;
+  // Arguments passed directly to the executable.
+  public Arguments: array of string;
+  // Working directory.
+  public Directory: string;
+  // Overrides applied to the child's inherited environment.
+  public Environment: C.IReadOnlyDictionary<string, string>? := null;
+end record;
+
+async function Drain(Stream: IO.Stream; Limit: int; Cancellation: Threads.CancellationToken): Tasks.Task<string>;
+begin
+  const Buffer: array of byte := new byte[4096];
+  using const Bytes: IO.MemoryStream := new IO.MemoryStream();
+  while true do
+    const Count: int := await Stream.ReadAsync(
+      Buffer,
+      0,
+      Buffer.Length,
+      Cancellation
+    ).ConfigureAwait(false);
+    if Count = 0 then
+      break;
+    end if;
+
+    if Bytes.Length + Count > Limit then
+      const Bound: string := if Limit mod 1024 = 0 then
+        (Limit div 1024).ToString() + ' KiB'
+      else
+        Limit.ToString() + ' bytes'
+      end if;
+      raise new IO.InvalidDataException('Child output exceeded ' + Bound);
+    end if;
+
+    Bytes.Write(Buffer, 0, Count);
+  end while;
+
+  Bytes.Position := 0;
+  using const Reader: IO.StreamReader := new IO.StreamReader(Bytes, Text.Encoding.UTF8);
+  return Reader.ReadToEnd();
+end function;
+
+function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<Owned, CaptureFailure>>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Child: Owned := Owned.Start(
+    Request.Executable,
+    Request.Arguments,
+    Request.Directory,
+    Request.Environment
+  );
+  return Tasks.Task.FromResult<W.Outcome<Owned, CaptureFailure>>(W.Outcome.Success(Child));
+end function;
+
+// Builds a workflow that captures stdout, stderr, and exit status.
+//
+// ## Parameters
+// - `TimeoutSeconds`: Positive deadline in seconds, covering startup and capture.
+// - `Limit`: Positive raw byte limit per output stream.
+//
+// ## Returns
+// A deferred capture that joins the readers and terminates the owned tree
+// before returning. Launch and stream failures fault its task.
+public function Read(TimeoutSeconds: int; Limit: int): W.Workflow<Captured, CaptureFailure, Request>;
+requires TimeoutSeconds > 0;
+requires Limit > 0;
+  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<Captured, CaptureFailure>>;
+    async function Collect(Lifetime: S.Scope): Tasks.Task<W.Outcome<Captured, CaptureFailure>>;
+      function Stdout(Reader: S.Scope): Tasks.Task<string>;
+      begin
+        return Drain(Child.Output, Limit, Reader.Token);
+      end function;
+
+      function Stderr(Reader: S.Scope): Tasks.Task<string>;
+      begin
+        return Drain(Child.Error, Limit, Reader.Token);
+      end function;
+
+      async function Wait(Observer: S.Scope): Tasks.Task<int>;
+      begin
+        await Child.WaitForExit(Observer.Token).ConfigureAwait(false);
+        const Code: int := Child.ExitCode;
+        // Descendants may retain both pipe handles after the direct child exits.
+        await Child.TerminateAsync().ConfigureAwait(false);
+        return Code;
+      end function;
+    begin
+      Child.Input.Dispose();
+      try
+        const Output: S.Child<string> := Lifetime.Fork<string>(Stdout);
+        const Error: S.Child<string> := Lifetime.Fork<string>(Stderr);
+        const Exit: S.Child<int> := Lifetime.Fork<int>(Wait);
+        const Pending: C.List<Tasks.Task> := new C.List<Tasks.Task>(
+          [Exit.Join, Output.Join, Error.Join]
+        );
+        while Pending.Count > 0 do
+          const Finished: Tasks.Task := await Tasks.Task.WhenAny(Pending).ConfigureAwait(false);
+          await Finished.ConfigureAwait(false);
+          discard Pending.Remove(Finished);
+        end while;
+
+        return W.Outcome.Success(
+          new Captured(await Exit.Join, await Output.Join, await Error.Join)
+        );
+      catch Failure: Sys.Exception do
+        try
+          await Child.TerminateAsync().ConfigureAwait(false);
+        catch Cleanup: Sys.Exception when not Sys.Object.ReferenceEquals(Failure, Cleanup) do
+          raise new Sys.AggregateException(
+            'Process capture and termination failed',
+            [Failure, Cleanup]
+          );
+        end try;
+
+        raise;
+      end try;
+    end function;
+  begin
+    return S.Scope.Use<W.Outcome<Captured, CaptureFailure>>(Collect, Cancellation);
+  end function;
+begin
+  const Dependency: Layers.Layer<Owned, CaptureFailure, Request> := Layers.Layer<Owned, CaptureFailure, Request>.Create(
+    W.Workflow<Owned, CaptureFailure, Request>.Defer(Start),
+    function(Child: Owned): Tasks.Task => Child.DisposeAsync().AsTask()
+  );
+  return Policies.WithDeadline(
+    Layers.Provide(W.Workflow<Captured, CaptureFailure, Owned>.Defer(Capture), Dependency),
+    Sys.TimeSpan.FromSeconds(TimeoutSeconds),
+    function(): CaptureFailure => CaptureFailure.Deadline,
+    Sys.TimeProvider.System
+  );
+end function;
+
+end unit;

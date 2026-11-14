@@ -1,0 +1,115 @@
+// Deadlines and retries for deferred operations.
+unit Fpas.Workflows.Policies;
+
+uses
+  Fpas.Workflows.Operations as W, System as Sys, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+// Applies a cooperative time limit to one workflow execution.
+//
+// ## Type parameters
+// - `A`: Success type.
+// - `E`: Expected failure type.
+// - `R`: Environment type.
+//
+// ## Parameters
+// - `Work`: The workflow to limit.
+// - `Duration`: The time available to the workflow.
+// - `Expired`: Creates an expected failure after the deadline.
+// - `Clock`: Time provider for the deadline.
+//
+// ## Returns
+// The deferred workflow. It waits for work and cleanup to finish even after
+// expiry. Caller cancellation takes precedence over deadline expiry.
+public function WithDeadline<A, E, R>(
+  Work: W.Workflow<A, E, R>; Duration: Sys.TimeSpan; Expired: function(): E; Clock: Sys.TimeProvider
+): W.Workflow<A, E, R>;
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<A, E>>;
+  begin
+    using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
+      Duration,
+      Clock
+    );
+    using const Linked: Threads.CancellationTokenSource := Threads.CancellationTokenSource.CreateLinkedTokenSource(
+      Cancellation,
+      Deadline.Token
+    );
+    try
+      const Result: W.Outcome<A, E> := await Work.Run(
+        Environment,
+        Linked.Token
+      ).ConfigureAwait(false);
+      Linked.Token.ThrowIfCancellationRequested();
+      return Result;
+    catch Failure: Sys.OperationCanceledException when Failure.CancellationToken = Linked.Token do
+      Cancellation.ThrowIfCancellationRequested();
+      if not Deadline.IsCancellationRequested then
+        raise;
+      end if;
+
+      return W.Outcome.Failure(Expired());
+    end try;
+  end function;
+begin
+  if Duration <= Sys.TimeSpan.Zero then
+    raise new Sys.ArgumentOutOfRangeException('Duration');
+  end if;
+
+  return W.Workflow<A, E, R>.Defer(Execute);
+end function;
+
+// Re-executes an operation after selected expected failures.
+//
+// ## Type parameters
+// - `A`: Success type.
+// - `E`: Expected failure type.
+// - `R`: Environment type.
+//
+// ## Parameters
+// - `Work`: The operation. Each attempt runs it again with the same environment.
+// - `Attempts`: Positive maximum number of executions including the first.
+// - `Delay`: Receives the failure and one-based attempt number. A missing delay stops retries.
+// - `Clock`: Time provider used for retry delays.
+//
+// ## Returns
+// The deferred retry policy.
+public function Retry<A, E, R>(
+  Work: W.Workflow<A, E, R>; Attempts: int; Delay: function(E, int): Sys.TimeSpan?; Clock: Sys.TimeProvider
+): W.Workflow<A, E, R>;
+requires Attempts > 0;
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<A, E>>;
+  begin
+    var Attempt: int := 1;
+    while true do
+      const Result: W.Outcome<A, E> := await Work.Run(
+        Environment,
+        Cancellation
+      ).ConfigureAwait(false);
+      case Result of
+        when W.Outcome.Success(_):
+          return Result;
+        when W.Outcome.Failure(const Reason: E):
+          if Attempt = Attempts then
+            return Result;
+          end if;
+
+          Cancellation.ThrowIfCancellationRequested();
+          const Wait: Sys.TimeSpan? := Delay(Reason, Attempt);
+          if Wait = null then
+            return Result;
+          end if;
+
+          if Wait.Value < Sys.TimeSpan.Zero then
+            raise new Sys.ArgumentOutOfRangeException('Delay');
+          end if;
+
+          await Tasks.Task.Delay(Wait.Value, Clock, Cancellation).ConfigureAwait(false);
+          Attempt := Attempt + 1;
+      end case;
+    end while;
+  end function;
+begin
+  return W.Workflow<A, E, R>.Defer(Execute);
+end function;
+
+end unit;

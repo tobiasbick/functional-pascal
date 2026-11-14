@@ -62,9 +62,13 @@ constructor constraint. An unknown T needs a matching imported interface for
 numeric operators. For example, where T: N.INumber<T>; permits T.Zero,
 T.CreateChecked(Value), and arithmetic through constrained static CLR dispatch.
 
-After where clauses, place requires clauses followed by ensures clauses, then
-local routine declarations and begin. Conditions are read-only bool expressions over permitted inputs/captures
-and built-in operations. Arbitrary calls, CLR getters, foreign operators, and
+Use `requires` for caller obligations and `ensures` for guarantees on successful
+return. Put contracts on entry routines, such as a program's main routine or a
+public library operation. Let internal helpers rely on the conditions checked at
+entry. After where clauses, place requires clauses followed by ensures clauses,
+then local routine declarations and begin. Conditions are read-only bool
+expressions over permitted inputs and captures using built-in operations.
+Arbitrary calls, CLR getters, foreign operators, and
 generated aggregate equality are disallowed. A typed ensures binding names the
 result only in that clause. It must have exactly the result type.
 

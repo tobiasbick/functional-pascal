@@ -26,8 +26,10 @@ public sealed class DocExamplesFixture : IAsyncLifetime
         var project = directory.File("Application/DocExamples.fpasproj");
         var xml = XDocument.Load(project);
         xml.Root!.SetAttributeValue("Sdk", "Fpas.NET.Sdk/" + sdk.Version);
-        xml.Descendants("ProjectReference").Single().ReplaceWith(new XElement("Reference", new XAttribute("Include", "Fpas.Processes"),
-            new XElement("HintPath", typeof(Fpas.Processes.OwnedProcess).Assembly.Location)));
+        xml.Descendants("ProjectReference").Single().SetAttributeValue("Include",
+            "../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj");
+        var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
+        WorkflowProjects.Copy(repository, directory.File("src"), sdk.Version);
         xml.Save(project);
         new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
             new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", sdk.Feed)))))

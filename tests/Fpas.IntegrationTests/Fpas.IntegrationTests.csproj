@@ -7,6 +7,8 @@
     <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <None Include="../../apps/doc-examples/**/*" Exclude="../../apps/doc-examples/bin/**/*;../../apps/doc-examples/obj/**/*" Link="Fixtures/doc-examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Workflows/*.fpas" Link="Fixtures/workflows/lib/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/workflows/*.fpas" Link="Fixtures/workflows/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../README.md" Link="Fixtures/repository/README.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/build/standalone-sdk.md" Link="Fixtures/standalone-sdk.md" CopyToOutputDirectory="PreserveNewest" />

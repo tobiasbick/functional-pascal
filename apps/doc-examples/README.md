@@ -12,7 +12,7 @@ fence instructions, reports, limits, contexts and companion projects.
 
 Build the Debug compiler and pack its SDK with the
 [source quickstart](../../README.md#build-from-source). The application is a
-net10.0 FPAS consumer with a project reference to Fpas.Processes. Run from the
+net10.0 FPAS consumer with a project reference to Fpas.Processes.Workflows. Run from the
 repository root after setting [FPAS_REFERENCE_DIR](../../docs/build/development.md#direct-compiler-invocation).
 
 ```sh
@@ -33,7 +33,6 @@ the compiler from the SDK that built it. Keep this sidecar when copying a build.
 - src/model.fpas defines immutable inputs, mappings and reports.
 - src/markdown.fpas validates fences and instructions.
 - src/preparation.fpas expands explicit contexts and companions with source maps.
-- src/processes.fpas owns bounded processes, streams and cancellation.
 - src/diagnostics.fpas maps compiler diagnostics to their actual origins.
 - src/validation.fpas performs compilation, manifest and execution checks.
 - src/main.fpas owns selection, batching, reporting and cancellation.

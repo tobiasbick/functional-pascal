@@ -2,11 +2,31 @@ unit DocExamples.Validation;
 
 uses
   DocExamples.Model as M, DocExamples.Preparation as Preparation,
-  DocExamples.Diagnostics as Diagnostics, DocExamples.Processes as Processes,
+  DocExamples.Diagnostics as Diagnostics, Fpas.Processes.Workflows.Capture as Capture,
+  Fpas.Workflows.Operations as W,
   System as S, System.IO as IO, System.Text.Json as J,
   System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
 
-procedure Save(Directory: string; Stage: string; Result: M.Captured);
+async function Run(Options: M.Options; Arguments: array of string; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<Capture.Captured>;
+begin
+  const Environment: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  Environment['MSBUILDDISABLENODEREUSE'] := '1';
+  Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
+  const Request: Capture.Request := new Capture.Request(
+    Options.Dotnet,
+    Arguments,
+    Directory,
+    Environment
+  );
+  case await Capture.Read(Options.Timeout, 524288).Run(Request, Cancellation) of
+    when W.Outcome.Success(const Result: Capture.Captured):
+      return Result;
+    when W.Outcome.Failure(_):
+      raise new S.TimeoutException('Process exceeded the example timeout');
+  end case;
+end function;
+
+procedure Save(Directory: string; Stage: string; Result: Capture.Captured);
 begin
   IO.File.WriteAllText(IO.Path.Combine(Directory, Stage + '.json'), Result.Output);
   IO.File.WriteAllText(IO.Path.Combine(Directory, Stage + '.stderr.txt'), Result.Error);
@@ -74,7 +94,7 @@ begin
       ]
     );
 
-    const Compiled: M.Captured := await Processes.Run(
+    const Compiled: Capture.Captured := await Run(
       Options,
       Arguments.ToArray(),
       Directory,
@@ -119,7 +139,7 @@ begin
       Outcome := Outcome with
         Stage := 'manifest';
       end with;
-      const Built: M.Captured := await Processes.Run(
+      const Built: Capture.Captured := await Run(
         Options,
         [
           Options.Compiler,
@@ -165,7 +185,7 @@ begin
 
     var Target: string := Prepared.Assembly;
     if Prepared.Manifest.Length > 0 then
-      const Located: M.Captured := await Processes.Run(
+      const Located: Capture.Captured := await Run(
         Options,
         ['msbuild', Prepared.Manifest, '-nologo', '-getProperty:TargetPath'],
         Directory,
@@ -200,7 +220,7 @@ begin
       end for;
     end if;
 
-    const Executed: M.Captured := await Processes.Run(
+    const Executed: Capture.Captured := await Run(
       Options,
       [Target],
       Directory,
@@ -208,7 +228,7 @@ begin
     );
     IO.File.WriteAllText(
       IO.Path.Combine(Directory, 'run.json'),
-      J.JsonSerializer.Serialize<M.Captured>(Executed)
+      J.JsonSerializer.Serialize<Capture.Captured>(Executed)
     );
 
     var Passed: bool := false;
@@ -238,10 +258,7 @@ begin
       end if;
     end with;
   catch Failure: S.OperationCanceledException do
-    Cancellation.ThrowIfCancellationRequested();
-    return Outcome with
-      Message := 'Process exceeded the example timeout';
-    end with;
+    raise;
   catch Failure: S.Exception do
     return Outcome with
       Message := Failure.Message;

@@ -1,6 +1,7 @@
 # Async functions, tasks, and cancellation
 
-Read this before starting concurrent work, awaiting APIs, or sharing state.
+Read this before starting concurrent work, awaiting APIs, sharing state, or
+composing asynchronous effects.
 
 ## Calling and awaiting
 
@@ -42,6 +43,32 @@ const selects IAsyncDisposable and awaits each disposal before completing a
 scope exit. Sync/async resources share reverse acquisition order. Return, loop
 exit, failure, and cancellation all preserve applicable cleanup. Await is allowed
 in supported catch/finally bodies, but not exception filters.
+
+## Composable effects
+
+Use [Fpas.Workflows](../libraries/workflows.md) when asynchronous work needs
+deferred composition, typed dependencies and failures, or shared policies such
+as retry and timeout. Use ordinary `async`, `await`, and `await using` for direct
+CLR calls and lexical resource lifetimes.
+
+Add a project reference to
+[Fpas.Workflows.fpasproj](../../../src/Fpas.Workflows/Fpas.Workflows.fpasproj).
+`Workflow<A, E, R>` describes a success value `A`, an expected failure `E`,
+and a required environment `R`. Wrap a body with `Defer`. Compose it with
+`Map` and `AndThen`, then call `Run` with the environment and caller token.
+Match `Outcome.Success` and `Outcome.Failure`. Unexpected CLR exceptions and
+cooperative cancellation propagate through the task.
+
+Use layers for scoped dependencies, `Scope.Use` and `Fork` for child tasks that
+must be joined before cleanup, `Parallel.All` for bounded parallelism, and
+`Stream.Consume` for bounded event delivery with backpressure. Forward the
+scope token to its work. `WithDeadline` requests cancellation and awaits cleanup.
+
+Use `requires` and `ensures` at workflow entry routines. Report expected execution
+failures through `Outcome.Failure`. Returning that variant completes the task
+normally and runs applicable postconditions.
+
+## Async example
 
 ```pascal
 async program AgentAsync;

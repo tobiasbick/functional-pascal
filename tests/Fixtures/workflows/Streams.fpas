@@ -1,0 +1,129 @@
+async program WorkflowStreams;
+
+uses
+  Fpas.Workflows.Operations as W, Fpas.Workflows.Layers as L, Fpas.Workflows.Streams as Streams,
+  System as Sys, System.Collections.Generic as C, System.Threading as T,
+  System.Threading.Tasks as Tasks;
+
+procedure Check(Condition: bool; Message: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Message);
+  end if;
+end procedure;
+
+async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: bool): Tasks.Task;
+  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task<W.Outcome<C.List<int>, string>>;
+  begin
+    return Tasks.Task.FromResult<W.Outcome<C.List<int>, string>>(W.Outcome.Success(Events));
+  end function;
+
+  function Release(Resource: C.List<int>): Tasks.Task;
+  begin
+    Check(ProducerJoined, 'The stream dependency was released before the producer stopped');
+    Check(Sys.Object.ReferenceEquals(Resource, Events), 'The wrong dependency was released');
+    Released := Released + 1;
+    return Tasks.Task.CompletedTask;
+  end function;
+
+  async function Produce(
+    Resource: C.List<int>; Publish: function(int): Tasks.Task; Token: T.CancellationToken
+  ): Tasks.Task<W.Outcome<W.Completion, string>>;
+  begin
+    Check(
+      Sys.Object.ReferenceEquals(Resource, Events),
+      'The producer did not receive its dependency'
+    );
+    try
+      if CancelWhileReading then
+        Waiting.SetResult();
+        await Tasks.Task.Delay(T.Timeout.Infinite, Token);
+      else
+        await Publish(1);
+        await Publish(2);
+        if CancelWhileWriting then
+          const Blocked: Tasks.Task := Publish(3);
+          Check(not Blocked.IsCompleted, 'The third write ignored the bounded capacity');
+          Waiting.SetResult();
+          await Blocked;
+        end if;
+      end if;
+
+      if Fail then
+        return W.Outcome.Failure('producer failure');
+      end if;
+
+      return W.Outcome.Success(W.Completion.Done);
+    finally
+      ProducerJoined := true;
+    end try;
+  end function;
+
+  async function Receive(Value: int; Token: T.CancellationToken): Tasks.Task;
+  begin
+    Events.Add(Value);
+    if CancelWhileWriting then
+      await Tasks.Task.Delay(T.Timeout.Infinite, Token);
+    end if;
+  end function;
+begin
+  const Events: C.List<int> := new C.List<int>();
+  const Waiting: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  var ProducerJoined: bool := false;
+  var Released: int := 0;
+  const Dependency: L.Layer<C.List<int>, string, bool> := L.Layer<C.List<int>, string, bool>.Create(
+    W.Workflow<C.List<int>, string, bool>.Defer(Acquire), Release
+  );
+  const Plan: W.Workflow<W.Completion, string, bool> := L.Provide(
+    Streams.Stream<int, string, C.List<int>>.Create(Produce).Consume(1, Receive), Dependency
+  );
+  using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
+  const Run: Tasks.Task<W.Outcome<W.Completion, string>> := Plan.Run(false, Cancellation.Token);
+  if CancelWhileWriting or CancelWhileReading then
+    await Waiting.Task;
+    Cancellation.Cancel();
+    try
+      discard await Run;
+      Check(false, 'Cancellation left the stream successful');
+    catch Error: Sys.OperationCanceledException do
+      Check(
+        Error.CancellationToken = Cancellation.Token,
+        'Stream cancellation lost the subscriber token'
+      );
+    end try;
+
+    Check(
+      Events.Count = (if CancelWhileWriting then
+        1
+      else
+        0
+      end if), 'The stream emitted too many events during cancellation'
+    );
+  else
+    case await Run of
+      when W.Outcome.Success(_):
+        Check(not Fail, 'The producer failure was swallowed');
+      when W.Outcome.Failure(const Reason: string):
+        Check(Fail and (Reason = 'producer failure'), 'Unexpected producer failure');
+    end case;
+
+    Check(
+      (Events.Count = 2) and (Events[0] = 1) and (Events[1] = 2),
+      'The stream lost or reordered buffered events'
+    );
+  end if;
+
+  Check(ProducerJoined and (Released = 1), 'Subscription cleanup did not finish exactly once');
+end function;
+
+begin
+  await Verify(false, false, false);
+  await Verify(true, false, false);
+  await Verify(false, true, false);
+  await Verify(false, false, true);
+  Sys.Console.WriteLine('Workflow contracts verified');
+end;
+
+end program;

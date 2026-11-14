@@ -1,0 +1,62 @@
+// Optional workflow spans using the .NET diagnostics listener model.
+unit Fpas.Workflows.Tracing;
+
+uses
+  Fpas.Workflows.Operations as W, System as Sys, System.Diagnostics as Diagnostics,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// Traces one workflow execution, including its awaited cleanup.
+//
+// ## Type parameters
+// - `A`: Success type.
+// - `E`: Expected failure type.
+// - `R`: Environment type.
+//
+// ## Parameters
+// - `Work`: The workflow to trace.
+// - `Source`: The activity source owned by the application.
+// - `Name`: The operation name used for each execution.
+//
+// ## Returns
+// The deferred workflow with a span when a listener requests one.
+public function Trace<A, E, R>(
+  Work: W.Workflow<A, E, R>; Source: Diagnostics.ActivitySource; Name: string
+): W.Workflow<A, E, R>;
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<A, E>>;
+  begin
+    using const Span: Diagnostics.Activity? := Source.StartActivity(Name);
+    try
+      const Result: W.Outcome<A, E> := await Work.Run(
+        Environment,
+        Cancellation
+      ).ConfigureAwait(false);
+      if Span <> null then
+        case Result of
+          when W.Outcome.Success(_):
+            discard Span.SetStatus(Diagnostics.ActivityStatusCode.Ok);
+          when W.Outcome.Failure(_):
+            discard Span.SetStatus(Diagnostics.ActivityStatusCode.Error, 'expected failure');
+        end case;
+      end if;
+
+      return Result;
+    catch Failure: Sys.OperationCanceledException when Cancellation.IsCancellationRequested
+      and Failure.CancellationToken = Cancellation do
+      if Span <> null then
+        discard Span.SetTag('workflow.cancelled', true);
+      end if;
+
+      raise;
+    catch Failure: Sys.Exception do
+      if Span <> null then
+        discard Span.SetStatus(Diagnostics.ActivityStatusCode.Error, 'unexpected failure');
+      end if;
+
+      raise;
+    end try;
+  end function;
+begin
+  return W.Workflow<A, E, R>.Defer(Execute);
+end function;
+
+end unit;

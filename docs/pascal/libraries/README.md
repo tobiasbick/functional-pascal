@@ -16,6 +16,7 @@ the referenced package version determine which overloads are available.
 | HTTP request/response lifetime, bounded text, and cancellation | [HTTP](http.md) |
 | Semaphore ownership and Task success/fault/cancellation | [Task coordination](task-coordination.md) |
 | Bounded queues, backpressure, completion, and joined workers | [Channels](channels.md) |
+| Deferred workflows, typed failures, dependencies, and scoped tasks | [Workflows](workflows.md) |
 | Native desktop windows, MVU widgets, effects and publishing | [Desktop GUI](gui.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |
 

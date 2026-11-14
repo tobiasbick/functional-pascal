@@ -53,12 +53,6 @@ public type Prepared = record
   public Manifest: string;
 end record;
 
-public type Captured = record
-  public ExitCode: int;
-  public Output: string;
-  public Error: string;
-end record;
-
 public type Outcome = record
   public Document: string;
   public Line: int;

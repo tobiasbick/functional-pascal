@@ -1,0 +1,226 @@
+// Structured lifetime for child tasks and asynchronous cleanup.
+unit Fpas.Workflows.Scopes;
+
+uses
+  System as Sys, System.Collections.Generic as C,
+  System.Runtime.CompilerServices as Runtime, System.Runtime.ExceptionServices as Errors,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// A child started in a scope.
+//
+// ## Type parameters
+// - `A`: The child's result type.
+public type Child<A> = record
+  // The result task. It completes after the child's own cleanup.
+  public Join: Tasks.Task<A>;
+  // Requests cancellation of this child and returns its cancellation callback task.
+  public Cancel: function(): Tasks.Task;
+end record;
+
+// Owns child scopes and finalizers for one invocation of Use.
+public type Scope = record
+  // Pass this token to work that belongs to this scope.
+  public Token: Threads.CancellationToken;
+  Gate: object;
+  Closed: Runtime.StrongBox<bool>;
+  Children: C.List<Tasks.Task>;
+  Finalizers: C.List<function(): Tasks.Task>;
+  Request: Sys.Lazy<Tasks.Task>;
+
+  static function Open(Source: Threads.CancellationTokenSource): Scope;
+  begin
+    return new Scope(
+      Source.Token, new object(), new Runtime.StrongBox<bool>(false),
+      new C.List<Tasks.Task>(), new C.List<function(): Tasks.Task>(),
+      new Sys.Lazy<Tasks.Task>(Source.CancelAsync)
+    );
+  end function;
+
+  procedure CheckOpen();
+  begin
+    if self.Closed.Value then
+      raise new Sys.InvalidOperationException('The workflow scope has closed');
+    end if;
+  end procedure;
+
+  // Registers cleanup before returning the acquired resource to callers.
+  // Finalizers run in reverse registration order after children have joined.
+  //
+  // ## Parameters
+  // - `Release`: Asynchronous cleanup, which must use its own cancellation policy.
+  public procedure OnClose(Release: function(): Tasks.Task);
+  begin
+    Threads.Monitor.Enter(self.Gate);
+    try
+      self.CheckOpen();
+      self.Finalizers.Add(Release);
+    finally
+      Threads.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Requests cancellation of the scope and its descendants.
+  //
+  // ## Returns
+  // A shared task that observes cancellation callbacks. Use joins the children.
+  public function Cancel(): Tasks.Task;
+  begin
+    return self.Request.Value;
+  end function;
+
+  // Starts work on the thread pool in a linked child scope.
+  //
+  // ## Type parameters
+  // - `A`: The child's result type.
+  //
+  // ## Parameters
+  // - `Work`: The body that owns work and cleanup in the child scope.
+  //
+  // ## Returns
+  // A handle for joining or cancelling the child independently.
+  public function Fork<A>(Work: function(Scope): Tasks.Task<A>): Child<A>;
+  begin
+    Threads.Monitor.Enter(self.Gate);
+    try
+      self.CheckOpen();
+      self.Token.ThrowIfCancellationRequested();
+      const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+      const Nested: Scope := Scope.Open(Source);
+      const Parent: Threads.CancellationToken := self.Token;
+      const Running: Tasks.Task<A> := Tasks.TaskExtensions.Unwrap<A>(
+        Tasks.Task.Run<Tasks.Task<A>>(
+          function(): Tasks.Task<A> => Nested.Execute<A>(Work, Source, Parent)
+        )
+      );
+      self.Children.Add(Running);
+      return new Child<A>(Running, Nested.Cancel);
+    finally
+      Threads.Monitor.Exit(self.Gate);
+    end try;
+  end function;
+
+  async function Execute<A>(
+    Work: function(Scope): Tasks.Task<A>; Source: Threads.CancellationTokenSource; Parent: Threads.CancellationToken
+  ): Tasks.Task<A>;
+    procedure CancelFromParent();
+    begin
+      discard self.Cancel();
+    end procedure;
+
+    async function Invoke(): Tasks.Task<A>;
+    begin
+      self.Token.ThrowIfCancellationRequested();
+      return await Work(self).ConfigureAwait(false);
+    end function;
+  begin
+    using const Ownership: Threads.CancellationTokenSource := Source;
+    using const Registration: Threads.CancellationTokenRegistration := Parent.Register(
+      CancelFromParent
+    );
+    const Body: Tasks.Task<A> := Invoke();
+    var Primary: Sys.Exception? := null;
+    try
+      discard await Body.ConfigureAwait(false);
+    catch Failure: Sys.Exception do
+      Primary := Failure;
+    end try;
+
+    const Faults: C.List<Sys.Exception> := new C.List<Sys.Exception>();
+    await self.Close(Faults).ConfigureAwait(false);
+    if Faults.Count > 0 then
+      if Primary <> null and not Faults.Contains(Primary) then
+        Faults.Insert(0, Primary);
+      end if;
+
+      if Faults.Count = 1 and Primary <> null then
+        Errors.ExceptionDispatchInfo.Capture(Primary).Throw();
+      end if;
+
+      const Combined: Sys.AggregateException := new Sys.AggregateException(
+        'Workflow scope failed',
+        Faults
+      );
+      if Body.IsCompletedSuccessfully then
+        Combined.Data['Fpas.Workflows.CompletedValue'] := cast<object?>(Body.Result);
+      end if;
+
+      raise Combined;
+    end if;
+
+    if Primary is Sys.OperationCanceledException then
+      const Cancelled: Sys.OperationCanceledException := cast<Sys.OperationCanceledException>(Primary);
+      if Cancelled.CancellationToken = self.Token then
+        Parent.ThrowIfCancellationRequested();
+      end if;
+    end if;
+
+    return await Body.ConfigureAwait(false);
+  end function;
+
+  async function Close(Faults: C.List<Sys.Exception>): Tasks.Task;
+  begin
+    Threads.Monitor.Enter(self.Gate);
+    try
+      self.Closed.Value := true;
+    finally
+      Threads.Monitor.Exit(self.Gate);
+    end try;
+
+    const Cancelled: Tasks.Task := self.Cancel();
+    await Observe(Cancelled, Faults, false).ConfigureAwait(false);
+    for Work: Tasks.Task in self.Children do
+      await Observe(Work, Faults, true).ConfigureAwait(false);
+    end for;
+
+    self.Children.Clear();
+
+    for Index: int := self.Finalizers.Count - 1 downto 0 do
+      try
+        await self.Finalizers[Index]().ConfigureAwait(false);
+      catch Failure: Sys.Exception do
+        Faults.Add(Failure);
+      end try;
+    end for;
+
+    self.Finalizers.Clear();
+  end function;
+
+  // Runs a body in a scope linked to the caller, then closes the scope.
+  //
+  // ## Type parameters
+  // - `A`: The body's result type.
+  //
+  // ## Parameters
+  // - `Work`: The body executed in the new scope.
+  // - `Cancellation`: The caller's cancellation token.
+  //
+  // ## Returns
+  // The body result after all owned children and finalizers finish.
+  public static function Use<A>(Work: function(Scope): Tasks.Task<A>; Cancellation: Threads.CancellationToken): Tasks.Task<A>;
+  begin
+    const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+    return Scope.Open(Source).Execute<A>(Work, Source, Cancellation);
+  end function;
+end record;
+
+async function Observe(Work: Tasks.Task; Faults: C.List<Sys.Exception>; IgnoreCancellation: bool): Tasks.Task;
+begin
+  try
+    await Work.ConfigureAwait(false);
+  catch Failure: Sys.Exception do
+    const Aggregate: Sys.AggregateException? := Work.Exception;
+    if Aggregate <> null then
+      for Fault: Sys.Exception in Aggregate.InnerExceptions do
+        if not Faults.Contains(Fault) then
+          Faults.Add(Fault);
+        end if;
+      end for;
+    else
+      if not IgnoreCancellation then
+        Faults.Add(Failure);
+      end if;
+    end if;
+  end try;
+end function;
+
+end unit;

@@ -84,6 +84,8 @@ src/
     Documentation/
   Fpas.Processes/
     Terminal/
+  Fpas.Processes.Workflows/
+  Fpas.Workflows/
   Fpas.Deployment/
   Fpas.SdkResolver/
   Fpas.Debugging/
@@ -204,6 +206,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, explicit preparation policy, immutable text snapshots, checked edits and compiler-backed analysis/refactoring services |
 | `Fpas.LanguageServer` | Stdio LSP lifecycle, bounded protocol transport, document synchronization and diagnostics over the shared live workspace |
 | `Fpas.Processes` | Linux process-group/subreaper, Windows jobs and private native PTY/ConPTY ownership |
+| `Fpas.Processes.Workflows` | FPAS capture workflow for owned processes with deadlines and bounded output |
+| `Fpas.Workflows` | FPAS workflow composition, typed dependencies and outcomes, structured tasks and streams |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
@@ -252,6 +256,8 @@ src, sdk, and tests without introducing separate solutions for each component.
   Fpas.SdkResolver runs inside those processes and resolves package SDKs from the
   installed cache without downloads. Its MSBuild framework reference is supplied
   by that host and is not shipped with the CLI.
+- The documentation checker and Measure use `Fpas.Processes.Workflows` for
+  process capture. The adapter depends on `Fpas.Workflows` and `Fpas.Processes`.
 - Fpas.Debugging references process ownership and packaged DbgShim assets; it has
   no dependency on Fpas.Compiler or Fpas.Core. Native interfaces, symbols, values,
   evaluation, supervision and frontends have separate topic directories.

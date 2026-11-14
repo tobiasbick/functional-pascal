@@ -5,6 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Shared/*.fpas" />
-    <ProjectReference Include="../../../src/Fpas.Processes/Fpas.Processes.csproj" />
+    <ProjectReference Include="../../../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj" />
   </ItemGroup>
 </Project>

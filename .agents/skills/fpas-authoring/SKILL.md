@@ -19,6 +19,7 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 | Records, variants, domains, generics, units, and globals | [Types and units](../../../docs/pascal/agents/types.md) |
 | Matching, nullable flow, exceptions, and resource cleanup | [Patterns and resources](../../../docs/pascal/agents/patterns-errors.md) |
 | Tasks, await, cancellation, and shared state | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
+| Composable effects, typed failures, scoped dependencies, and streams | [Workflows](../../../docs/pascal/agents/concurrency.md#composable-effects) |
 | Actual .NET APIs, events, attributes, and public signatures | [Interop](../../../docs/pascal/agents/interop.md) |
 | Compiler commands and API/runtime inspection | [Tools](../../../docs/pascal/agents/tools.md) |
 | Source comments and API documentation | [Comment rules and Markdown sections](../../../docs/pascal/language/basics/comments.md) |
@@ -37,6 +38,17 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
    Document public declarations with adjacent `//` Markdown comments. Use the
    documented sections for parameters and returns; `///` and XML tags are not
    source documentation markup.
+
+   Use `requires` for caller obligations and `ensures` for guarantees on successful
+   return at entry routines, including a program's main routine and public library
+   operations. Internal helpers rely on the conditions checked at entry.
+
+   Use `Fpas.Workflows` when asynchronous work benefits from deferred composition,
+   typed failures or dependencies, or shared retry, deadline, and cancellation
+   policies. `Workflow<A, E, R>` describes success, expected failure, and required
+   environment. Compose steps first, then call `Run` with the environment and caller
+   token. Use ordinary `async` and `await` for a direct .NET call.
+
 4. Compile through the current CLR toolchain using the
    [development workflow](../../../docs/build/development.md). Use `fpas compile`
    for explicit sources and the SDK for projects. Before committing, format changed

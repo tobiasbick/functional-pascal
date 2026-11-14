@@ -1,0 +1,11 @@
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" />
+    <ProjectReference Include="../Fpas.Workflows/Fpas.Workflows.fpasproj" />
+  </ItemGroup>
+</Project>

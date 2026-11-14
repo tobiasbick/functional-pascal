@@ -288,10 +288,9 @@ end;
 end program;
 ```
 
-### Mandelbrot and .NET API Examples
+### .NET API Examples
 
-The [Mandelbrot project](examples/numerics/mandelbrot/README.md) renders a console image
-using numeric calculations and loops. Other executable projects cover
+Executable projects cover
 [files](examples/io/read-file/README.md), [LINQ and collections](examples/io/directory-inventory/README.md),
 [records](examples/types/inventory-model/README.md), [generic variants](examples/types/generic-tree/README.md),
 [events](examples/interop/events/README.md), and [JSON attributes](examples/interop/attributes/README.md).

@@ -2,8 +2,10 @@ async program DiagnosticsMeasure;
 
 uses
   System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
-  Diagnostics.MeasureOptions as Arguments, Diagnostics.MeasureProcesses as Processes,
-  Diagnostics.Samples as Samples, Fpas.Processes.OwnedProcess as Owned;
+  Diagnostics.MeasureOptions as Arguments, Fpas.Processes.Workflows.Capture as Capture,
+  Fpas.Workflows.Operations as W, System.Threading.Tasks as Tasks,
+  System.Collections.Generic as C,
+  Diagnostics.Samples as Samples;
 
 procedure Help();
 begin
@@ -21,6 +23,19 @@ begin
   );
 end procedure;
 
+async function Measure(
+  Target: W.Workflow<Capture.Captured, Capture.CaptureFailure, Capture.Request>;
+  Request: Capture.Request; Cancellation: Threading.CancellationToken
+): Tasks.Task<Capture.Captured>;
+begin
+  case await Target.Run(Request, Cancellation) of
+    when W.Outcome.Success(const Captured: Capture.Captured):
+      return Captured;
+    when W.Outcome.Failure(_):
+      raise new Sys.TimeoutException('Measurement timed out');
+  end case;
+end function;
+
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
@@ -35,11 +50,19 @@ begin
     else
       const Options: Arguments.Options := Arguments.Read(Args);
       Samples.Validate(Options.Output, Options.Label, Options.Environment);
-      Owned.Validate(Options.Executable);
+      const Environment: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+      Environment['MSBUILDDISABLENODEREUSE'] := '1';
+      Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
+      const Request: Capture.Request := new Capture.Request(
+        Options.Executable, Options.Arguments, Options.Directory, Environment
+      );
+      const CaptureTarget: W.Workflow<Capture.Captured, Capture.CaptureFailure, Capture.Request> := Capture.Read(
+        Options.Timeout, 65536
+      );
       const Values: array of double := new double[Options.Count];
       for Index: int := 0 to Options.Warmup + Options.Count - 1 do
         const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
-        const Result: Processes.Result := await Processes.Run(Options, Cancellation.Token);
+        const Result: Capture.Captured := await Measure(CaptureTarget, Request, Cancellation.Token);
         const Milliseconds: double := Clock.Elapsed.TotalMilliseconds;
         if Result.ExitCode <> 0 or not Result.Output.Contains(
           Options.Contains,

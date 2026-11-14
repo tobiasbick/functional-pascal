@@ -53,9 +53,8 @@ dynamic binding, operator declarations, or compiler plug-ins. An unsupported
 metadata signature produces a diagnostic identifying the unsupported feature.
 This scope does not promise access to every possible .NET API.
 
-Finish this baseline before adding language extensions. The
-[language gaps](../../future/language-gaps.md) track confirmed missing work and
-deferred proposals for compiler-checked purity and deep immutability.
+Finish this baseline before adding language extensions. Track confirmed omissions
+in [language gaps](../../future/language-gaps.md).
 
 The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects,
 `.slnx` solutions, standard dependency restore, and cross-language project

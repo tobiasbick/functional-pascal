@@ -1,6 +1,8 @@
 # Optional CUI title bar
 
-Proposal only; native title-bar behavior has not been implemented or tested.
+FPAS integration is open. The local CUI prototype at `00eddec` implements
+experimental Win32 and X11 title bars. The vendored CUI revision lacks that
+API. See the [desktop GUI application gaps](gui-app-gaps.md) for priorities.
 
 ## Goal and design
 
@@ -12,10 +14,10 @@ Proposal only; native title-bar behavior has not been implemented or tested.
   functions. Avoid Windows App SDK, WinUI/XAML and Windows App Runtime
   dependencies. Microsoft's TitleBar control is a design reference, not a
   component to embed. Keep effects such as Mica outside the initial scope.
-- Candidate API: `cui_app_try_enable_titlebar(app)` returns whether native
-  integration was activated for that window. Names and activation timing remain
-  open. A DLL-presence check alone is insufficient; check the backend's actual
-  capabilities and initialization results. Perform setup once, outside rendering.
+- The prototype requests a custom frame with `cui_app_create_titlebar` or
+  `cui_app_run_titlebar`. Query `cui_app_titlebar_info` for backend support and
+  frame metrics. Check the actual initialization result before choosing the
+  FPAS layout. Use the ordinary system frame if activation fails.
 - Keep the system frame as the default. Failed activation must leave it intact;
   the application chooses a fallback layout, such as an ordinary toolbar.
 - Preserve existing CUI APIs, public struct layouts and default behavior. Add

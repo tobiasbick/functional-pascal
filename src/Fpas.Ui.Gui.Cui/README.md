@@ -21,7 +21,7 @@ use the same topics and expose the `fpas_cui_` symbols.
 - NextFrame pumps events and begins a frame. Close layouts in reverse order;
   Present completes the view and exposes finalized control rectangles.
   CapturePng writes the presented view to an existing directory.
-- See the [CUI widget inventory](../../docs/future/cui-gaps.md#widget-inventory)
+- See the [CUI widget inventory](../../docs/cui-widget-inventory.md#widget-inventory)
   for widget coverage and gallery acceptance. Stable identities are separate
   from literal labels. The FPAS host maps native interaction results to model
   proposals. Theme actions compose native segments and icon buttons.

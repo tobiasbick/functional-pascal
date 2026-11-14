@@ -127,5 +127,5 @@ The GUI gallery contract exercises both renderers. Set `FPAS_TEST_GUI_AOT=1`
 to include the publishing tests for all five modes, including single-file and
 Native AOT. Linux window tests require a display.
 
-The [CUI inventory](../../docs/future/cui-gaps.md#acceptance) tracks GUI gallery
-acceptance and records existing TUI coverage.
+The [CUI inventory](../../docs/cui-widget-inventory.md#acceptance) records GUI
+gallery acceptance and existing TUI coverage.

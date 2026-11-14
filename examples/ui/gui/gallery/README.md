@@ -9,7 +9,7 @@ The gallery follows CUI's desktop composition with a full-height 240-point sideb
 a centered content column, and a left drawer below 760 logical points. The
 sidebar and drawer share the Light and Dark selector and eight CUI accent
 swatches. The gallery shows the accepted widget examples from the
-[CUI inventory](../../../../docs/future/cui-gaps.md).
+[CUI inventory](../../../../docs/cui-widget-inventory.md).
 
 ## Source structure
 

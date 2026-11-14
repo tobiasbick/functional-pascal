@@ -8,8 +8,8 @@ dotnet build examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 dotnet examples/ui/tui/gallery/bin/Debug/net10.0/TuiWidgetGallery.dll
 ```
 
-The terminal version adapts the CUI gallery to cells. It has the same four
-pages and shows the widgets checked in the [CUI inventory](../../../../docs/future/cui-gaps.md).
+The terminal version adapts the CUI gallery to cells. Its four pages show
+the terminal subset recorded in the [CUI inventory](../../../../docs/cui-widget-inventory.md).
 
 - **Overview** introduces the gallery and links to Buttons.
 - **Buttons** shows variants, sizes, icons, states, the formatting group, copy,

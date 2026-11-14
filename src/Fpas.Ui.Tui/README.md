@@ -70,5 +70,5 @@ backgrounds. Include relevant theme values in cached-subview dependencies.
 See [shared themes](../Fpas.Ui/README.md#shared-themes) and the
 [TUI gallery](../../examples/ui/tui/gallery/README.md).
 
-Only widgets checked in the [CUI inventory](../../docs/future/cui-gaps.md) and
-selected for terminal use are implemented.
+The [CUI inventory](../../docs/cui-widget-inventory.md) records the implemented
+terminal widgets and their behavior.

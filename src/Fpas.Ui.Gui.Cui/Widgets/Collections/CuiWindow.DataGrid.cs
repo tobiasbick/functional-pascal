@@ -49,10 +49,11 @@ public sealed partial class CuiWindow
             handle = NativeMethods.DataGridBegin(context, Stable(id), titles, w, f, titles.Length,
                 rows, mask, s, heightKind, height, rowHeight, options, range, h);
         var shown = new bool[columns.Length];
-        if (headerId is not null)
-            for (int index = 0; index < headers.Length; index++)
-                if (shown[index] = headers[index] >= 0)
-                    TrackControl(headerId(index), headers[index]);
+        for (int index = 0; index < headers.Length; index++)
+        {
+            shown[index] = headers[index] >= 0;
+            if (shown[index] && headerId is not null) TrackControl(headerId(index), headers[index]);
+        }
         var frame = new CuiGridFrame(range[0], range[1], selection, state, shown);
         layouts.Add(new(Layout.DataGrid, range[2], new GridOutput(handle, frame)));
         return frame;

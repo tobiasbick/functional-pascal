@@ -82,6 +82,7 @@ internal sealed partial class Binder
         object? value;
         try { value = ConstantValue.Evaluate(expression); }
         catch (OverflowException) { throw source.Error("FP3024", "The pattern constant is outside its type's range.", syntax.Position); }
+        catch (DivideByZeroException) { throw source.Error("FP3024", "Division by zero in a pattern constant.", syntax.Position); }
         catch (InvalidOperationException) { throw source.Error("FP3024", "A literal or CLR metadata constant is required in a constant pattern.", syntax.Position); }
         if (value is double number && double.IsNaN(number) || value is float single && float.IsNaN(single))
             throw source.Error("FP3024", "NaN never matches a numeric constant pattern; use a guard or fallback.", syntax.Position);

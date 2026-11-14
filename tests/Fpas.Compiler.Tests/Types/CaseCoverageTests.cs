@@ -37,6 +37,8 @@ public sealed class CaseCoverageTests
     [InlineData("discard case 1.0 of when is int as N: N; else 0; end case;", "FP3025")]
     [InlineData("discard case 1 of when null..2: 0; else 1; end case;", "FP3024")]
     [InlineData("discard case 1 of when -(-2147483648): 0; else 1; end case;", "FP3024")]
+    [InlineData("discard case 1 of when (1 div 0): 0; else 1; end case;", "FP3024")]
+    [InlineData("discard case 1 of when (1 mod 0)..2: 0; else 1; end case;", "FP3024")]
     [InlineData("discard case 1 of when 0..10: 0; when 2..4: 1; else 2; end case;", "FP3025")]
     [InlineData("discard case 1 of when -2147483648..2147483647: 0; end case;", "FP3025")]
     [InlineData("discard case cast<object>('x') of when is object as O: 0; when is string as S: 1; else 2; end case;", "FP3025")]

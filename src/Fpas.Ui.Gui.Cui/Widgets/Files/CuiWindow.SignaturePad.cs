@@ -31,11 +31,8 @@ public sealed partial class CuiWindow
         int changed = NativeMethods.SignaturePad(context, stable, Optional(placeholder), height, rgba,
             enabled ? 1 : 0, focusClear ? 1 : 0, out int node, out int clear);
         clearVisible = clear >= 0;
-        if (track)
-        {
-            TrackControl(id, node);
-            if (clearVisible && clearId is not null) TrackControl(clearId, clear);
-        }
+        if (track) TrackControl(id, node);
+        if (clearVisible && clearId is not null) TrackControl(clearId, clear);
         if (!readChanges || changed == 0) return null;
 
         lock (signaturePointsLock)

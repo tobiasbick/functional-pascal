@@ -7,7 +7,7 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Editors;
 /// <param name="Label">Row label.</param>
 /// <param name="Kind">Native value kind.</param>
 /// <param name="Integer">Integer, boolean or selection.</param>
-/// <param name="Values">Number or vector data.</param>
+/// <param name="Values">Number or vector data, with at most four components.</param>
 /// <param name="Text">Text value.</param>
 /// <param name="Color">Packed color.</param>
 /// <param name="Choices">Enum choices.</param>
@@ -42,11 +42,13 @@ public sealed record CuiPropertyEdit(int Group, int Row, bool Open, int Integer,
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeProperty
 {
+    internal const int MaxComponents = 4;
+
     internal byte* Label, Suffix, Placeholder, Tooltip, Text;
     internal byte** Choices;
     internal int Kind, Integer, Count, Capacity, Digits, Flags, Changed;
     internal float Minimum, Maximum, Step;
-    internal fixed float Values[4];
+    internal fixed float Values[MaxComponents];
     internal uint Rgba;
 }
 

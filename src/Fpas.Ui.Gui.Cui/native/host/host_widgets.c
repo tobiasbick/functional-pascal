@@ -131,7 +131,7 @@ void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
 }
 
 int fpas_cui_focused(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && fpas_has_focus(ui, ui->nodes[node].id); }
-int fpas_cui_hovered(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && ui->nodes[node].id == ui->hot; }
+int fpas_cui_hovered(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count && fpas_has_hover(ui, ui->nodes[node].id); }
 
 unsigned int fpas_cui_node_key(cui_ctx *ui, int node) { return ui->nodes[node].id; }
 

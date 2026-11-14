@@ -42,15 +42,14 @@ public sealed partial class CuiWindow
         fixed (int* parts = nodes)
             open = NativeMethods.Select(context, stable, items, icons, items.Length, ref selected,
                 Optional(label), Optional(placeholder), searchable ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, parts) != 0;
-        if (trackOption is null) return new(selected, open, []);
-        TrackControl(id, nodes[0]);
+        if (trackOption is not null) TrackControl(id, nodes[0]);
         if (!open) return new(selected, false, []);
 
         List<int> visible = [];
         for (int index = 0; index < items.Length; ++index)
         {
             if (nodes[index + 1] < 0) continue;
-            TrackControl(trackOption(index), nodes[index + 1]);
+            if (trackOption is not null) TrackControl(trackOption(index), nodes[index + 1]);
             visible.Add(index);
         }
         return new(selected, true, visible.ToArray());

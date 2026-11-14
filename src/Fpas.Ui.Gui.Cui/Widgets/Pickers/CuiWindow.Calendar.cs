@@ -22,7 +22,7 @@ public sealed partial class CuiWindow
         int* parts = stackalloc int[SingleCalendarParts];
         int* nodes = stackalloc int[SingleCalendarParts];
         int proposed = NativeMethods.Calendar(context, Stable(id), value?.DayNumber ?? -1,
-            enabled ? 1 : 0, focus, out int root, trackPart is null ? null : parts, nodes, out int count);
+            enabled ? 1 : 0, focus, out int root, parts, nodes, out int count);
         return new(proposed < 0 ? null : DateOnly.FromDayNumber(proposed),
             TrackCalendarParts(id, root, parts, nodes, count, trackPart));
     }
@@ -30,9 +30,11 @@ public sealed partial class CuiWindow
     private unsafe int[] TrackCalendarParts(string id, int root, int* parts, int* nodes, int count,
         Func<int, string>? trackPart)
     {
-        if (trackPart is null) return [];
-        TrackControl(id, root);
-        for (int i = 0; i < count; ++i) TrackControl(trackPart(parts[i]), nodes[i]);
+        if (trackPart is not null)
+        {
+            TrackControl(id, root);
+            for (int i = 0; i < count; ++i) TrackControl(trackPart(parts[i]), nodes[i]);
+        }
         return new ReadOnlySpan<int>(parts, count).ToArray();
     }
 }

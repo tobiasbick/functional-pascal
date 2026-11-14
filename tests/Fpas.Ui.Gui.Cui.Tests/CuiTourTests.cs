@@ -19,6 +19,8 @@ public sealed class CuiTourTests
         int mouse = -1, key = 0;
         Draw(); var initial = Draw();
         Assert.Equal(new[] { 0, 2 }, initial.VisibleParts);
+        Assert.Equal(initial.VisibleParts, Draw(track: false).VisibleParts);
+        Draw();
         Assert.Equal(120, window.GetControlRectangle("base").Height);
         var next = Click(2);
         Assert.Equal(1, next.Event); Assert.Equal(1, next.Step); Assert.Equal(0, step);
@@ -49,7 +51,7 @@ public sealed class CuiTourTests
             x = y = -1;
             return result;
         }
-        CuiTourResult Draw()
+        CuiTourResult Draw(bool track = true)
         {
             Assert.True(window.NextFrame());
             window.MovePointer(x, y);
@@ -60,7 +62,7 @@ public sealed class CuiTourTests
             window.EndGroup(); window.TrackLastControl("base");
             var result = window.Tour("tour", ["target", "target", "absent"],
                 ["First##literal λ", "Second", "Centered"], ["First body", "Second body", "Last body"],
-                [0, 3, 7], step, trackPart: slot => "part-" + slot, focusPart: focus);
+                [0, 3, 7], step, trackPart: track ? slot => "part-" + slot : null, focusPart: focus);
             window.SizeLast(false, 2, 120, 0, -1, 0, 0);
             GC.Collect(); // Native frame storage owns all borrowed UTF-8 strings until presentation.
             window.Present();

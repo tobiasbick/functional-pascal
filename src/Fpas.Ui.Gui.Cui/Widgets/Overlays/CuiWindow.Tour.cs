@@ -54,9 +54,12 @@ public sealed partial class CuiWindow
                 ref proposed, width, padding, blockTarget ? 1 : 0, focusPart, out node, out key, nodes);
         TrackControl(id, node, key);
         List<int> visible = [];
-        if (identities.Length > 0)
-            for (int slot = 0; slot < 3; ++slot)
-                if (parts[slot] >= 0) { TrackControl(identities[slot], parts[slot]); visible.Add(slot); }
+        for (int slot = 0; slot < parts.Length; ++slot)
+        {
+            if (parts[slot] < 0) continue;
+            if (trackPart is not null) TrackControl(identities[slot], parts[slot]);
+            visible.Add(slot);
+        }
         return new(proposed, action, visible.ToArray());
     }
 }

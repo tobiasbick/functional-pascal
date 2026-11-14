@@ -112,6 +112,69 @@ static void histogram(void) {
     cui_destroy(ui);
 }
 
+static void histogram_disable_drag(void) {
+    cui_ctx *ui = create();
+    if (!ui) { check(false, "Could not open histogram context."); return; }
+    const float counts[] = { 1, 3, 2, 4 };
+    const cui_histogram_series series[] = {
+        { "Events", counts, CUI_TONE_INFO }, { "Warnings", counts, CUI_TONE_WARNING }
+    };
+    for (int frame = 0; frame < 7; ++frame) {
+        if (frame == 2) {
+            cui_input_mouse_move(ui, 160, 38);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        }
+        if (frame == 3) cui_input_mouse_move(ui, 350, 38);
+        if (frame == 4 || frame == 5) cui_input_mouse_move(ui, 600, 38);
+        if (frame == 6) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        cui_begin_frame(ui, 0.016f);
+        fpas_dev_result result;
+        cui_push_disabled(ui, frame == 4);
+        fpas_cui_time_histogram(ui, "histogram", 100, 60, 4, series, 2,
+            0, 0, 150, 1, 1, 0, 1, &result);
+        cui_pop_disabled(ui);
+        const int node = fpas_cui_last_node(ui);
+        cui_end_frame(ui);
+        if (!frame) check(fpas_cui_node_rect(ui, node).h > 150,
+            "The histogram rectangle must include the series legend below its 150-point plot.");
+        if (frame == 3) {
+            check(result.flags, "The histogram drag must begin while enabled.");
+            check(fpas_cui_hovered(ui, node), "The tracked histogram must report hover over its plot.");
+        }
+        if (frame >= 4) check(!result.flags && result.x == 0 && result.y == 0,
+            "Disabling the histogram must cancel its drag, including after re-enabling it.");
+    }
+    cui_destroy(ui);
+}
+
+static void query_builder_disabled(void) {
+    cui_ctx *ui = create();
+    if (!ui) { check(false, "Could not open query builder context."); return; }
+    const char *choices[] = { "Open", "Closed" };
+    const cui_query_field field = { .name = "Status", .type = CUI_QUERY_CHOICE,
+        .choices = choices, .choice_count = 2 };
+    cui_query_node empty[2] = {0}, rules[2] = {{ .group = true }, { .depth = 1 }};
+    int empty_count = 0, count = 2;
+    fpas_dev_result result;
+    cui_begin_frame(ui, 0.016f);
+    cui_push_disabled(ui, true);
+    fpas_cui_query_builder(ui, "empty", &field, 1, empty, &empty_count, 2, 3, 0, 1, 0, 1, &result);
+    check(!result.flags && empty_count == 0,
+        "An empty query must stay empty while its enclosing group is disabled.");
+    cui_pop_disabled(ui);
+    fpas_cui_query_builder(ui, "read-only", &field, 1, rules, &count, 2, 3, 1, 1, 0, 1, &result);
+    check(!result.flags && count == 2 && rules[1].value[0] == '\0',
+        "A read-only query must preserve an empty choice value.");
+    cui_end_frame(ui);
+
+    cui_begin_frame(ui, 0.016f);
+    fpas_cui_query_builder(ui, "empty", &field, 1, empty, &empty_count, 2, 3, 0, 1, 0, 1, &result);
+    check(result.flags && empty_count == 1 && empty[0].group,
+        "An editable query may initialize its root group.");
+    cui_end_frame(ui);
+    cui_destroy(ui);
+}
+
 static bool spinner_stops(bool adapter) {
     cui_ctx *ui = create();
     if (!ui) return false;
@@ -144,6 +207,8 @@ int main(int argc, char **argv) {
     trace(true);
     regex();
     histogram();
+    histogram_disable_drag();
+    query_builder_disabled();
     check(spinner_stops(true), "Running jobs and tests must stop requesting frames under reduced motion.");
     return failures != 0;
 }

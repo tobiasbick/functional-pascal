@@ -41,20 +41,19 @@ public sealed partial class CuiWindow
         }
 
         var proposed = (int[])completed.Clone();
-        var nodes = trackPart is null ? [] : new int[slots];
+        var nodes = new int[slots];
         int action, node;
         fixed (int* flags = proposed, parts = nodes)
             action = NativeMethods.Checklist(context, Stable(id), Optional(title), Optional(description),
                 titles, descriptions, actions, flags, count, enabled ? 1 : 0, focus, out node, parts);
 
-        if (trackPart is null) return new(action, proposed, []);
-        TrackControl(id, node);
+        if (trackPart is not null) TrackControl(id, node);
         List<int> visible = [];
         for (int index = 0; index < count; ++index)
         {
-            TrackControl(trackPart(index * 2), nodes[index * 2]);
+            if (trackPart is not null) TrackControl(trackPart(index * 2), nodes[index * 2]);
             if (nodes[index * 2 + 1] < 0) continue;
-            TrackControl(trackPart(index * 2 + 1), nodes[index * 2 + 1]);
+            if (trackPart is not null) TrackControl(trackPart(index * 2 + 1), nodes[index * 2 + 1]);
             visible.Add(index);
         }
         return new(action, proposed, visible.ToArray());

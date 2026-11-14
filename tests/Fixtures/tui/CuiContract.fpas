@@ -196,6 +196,52 @@ begin
   end for;
 end procedure;
 
+procedure SheetFocus();
+  function View(State: int): E.Element<int>;
+  begin
+    const First: E.Element<int> := Sheets.Sheet<int>(
+      'first', E.Column<int>(B.Button<int>('other', 'Other', 0), B.Button<int>('open', 'Open', 1)),
+      E.Column<int>(B.Button<int>('inside-first', 'Replace', 2), B.Button<int>('nest', 'Nest', 3)),
+      State = 1 or State = 3, new Sheets.Options('First', InitialFocus := 'inside-first'), 0
+    );
+    return Sheets.Sheet<int>(
+      'second', First, B.Button<int>('inside-second', 'Remove first', 2), State = 2 or State = 3,
+      new Sheets.Options('Second', InitialFocus := 'inside-second'), if State = 3 then
+        1
+      else
+        0
+      end if
+    );
+  end function;
+  procedure Send(Session: Tui.HeadlessSession; Event: Tui.Input; Expected: string);
+  begin
+    discard Session.Send(Event);
+    discard Session.Step();
+    for Control: Tui.ControlSnapshot in Session.Snapshot().Controls do
+      if Control.Id = Expected and Control.Focused then
+        return;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('Expected sheet focus on ' + Expected + '.');
+  end procedure;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 64, 16);
+  const Escape: Tui.Input := Tui.Input.KeyPress(Keys.Key.Escape, Keys.KeyModifiers.None);
+  Send(Session, Tui.Input.Focus('open'), 'open');
+  Send(Session, Tui.Input.Activate('open'), 'inside-first');
+  Send(Session, Tui.Input.Activate('inside-first'), 'inside-second');
+  Send(Session, Escape, 'open');
+
+  Send(Session, Tui.Input.Activate('open'), 'inside-first');
+  Send(Session, Tui.Input.Focus('nest'), 'nest');
+  Send(Session, Tui.Input.Activate('nest'), 'inside-second');
+  Send(Session, Escape, 'nest');
+  Send(Session, Tui.Input.Activate('nest'), 'inside-second');
+  Send(Session, Tui.Input.Activate('inside-second'), 'inside-second');
+  Send(Session, Escape, 'open');
+end procedure;
+
 procedure IconAction();
   function View(State: int): E.Element<int>;
   begin
@@ -444,6 +490,7 @@ begin
   SemanticColors();
   LogicalDistances();
   SheetPlacement();
+  SheetFocus();
   IconAction();
   ButtonAction();
   JoinedButtons();

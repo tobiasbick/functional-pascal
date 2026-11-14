@@ -64,6 +64,8 @@ public type Layout<TMsg> = record
   public Allocations: array of F.AllocationMemo;
   // Last successful shared preflight/cache, retained by the owner.
   public Prepared: Validation.Prepared<TMsg>? := null;
+  // Open modal and popup IDs, including those below the active scope.
+  public Scopes: array of string := [];
 end record;
 
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;

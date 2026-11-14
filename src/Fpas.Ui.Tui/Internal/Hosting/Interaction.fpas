@@ -90,22 +90,26 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end if;
     end if;
 
+    if Previous <> null then
+      for Id: string in Previous.Scopes do
+        if Sys.Array.IndexOf<string>(Layout.Scopes, Id) < 0 then
+          discard Saved.Remove(Id);
+        end if;
+      end for;
+    end if;
+
     if Scope <> FocusScope then
       HoldTracking.Cancel();
       Captured := '';
       MiddleCaptured := '';
       CapturedScrim := false;
       Hover := '';
-      if FocusScope <> '' and Saved.ContainsKey(
-        FocusScope
-      ) and (Scope = '' or Saved.ContainsKey(Scope))
-      then
-        Focus := Saved[FocusScope];
-        discard Saved.Remove(FocusScope);
-      else
-        if Scope <> '' then
-          Saved[Scope] := Focus;
-        end if;
+      // Remember a scope's own focus only while the scope remains open.
+      if FocusScope = '' or Sys.Array.IndexOf<string>(Layout.Scopes, FocusScope) >= 0 then
+        Saved[FocusScope] := Focus;
+      end if;
+
+      if not Saved.TryGetValue(Scope, out Focus) then
         const Modal: A.Scope<TMsg>? := Layout.Active;
         Focus := if Modal = null then
           ''

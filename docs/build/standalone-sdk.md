@@ -15,6 +15,7 @@ below instead build a development package with an explicit walkthrough version.
 When using the exported package, replace `0.1.0-local.1` in the consumer SDK
 identifiers with the version in the exported package filename.
 
+For a source build, install the [solution build prerequisites](development.md).
 From the compiler checkout, restore and build the toolchain, then pack it:
 
 ```sh

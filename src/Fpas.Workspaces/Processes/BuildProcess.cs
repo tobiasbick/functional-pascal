@@ -11,6 +11,9 @@ public sealed record BuildResult(int ExitCode, string Output, string Error, bool
     public bool DiagnosticsTruncated { get; init; }
 }
 
+/// <summary>Receives live process output without buffering or truncation.</summary>
+/// <param name="StandardOutput">Writer for standard output.</param>
+/// <param name="StandardError">Writer for standard error.</param>
 public sealed record ProcessOutput(TextWriter StandardOutput, TextWriter StandardError);
 
 public static class BuildProcess
@@ -48,9 +51,11 @@ public static class BuildProcess
             int count;
             while ((count = await reader.ReadAsync(buffer, captureCancellation ? CancellationToken.None : token)) > 0)
             {
-                var bytes = Encoding.UTF8.GetByteCount(buffer.AsSpan(0, count));
-                if (Interlocked.Add(ref outputBytes, bytes) > outputLimit) continue;
-                if (destination is null) result!.Append(buffer, 0, count);
+                if (destination is null)
+                {
+                    var bytes = Encoding.UTF8.GetByteCount(buffer.AsSpan(0, count));
+                    if (Interlocked.Add(ref outputBytes, bytes) <= outputLimit) result!.Append(buffer, 0, count);
+                }
                 else
                 {
                     try { destination.Write(buffer, 0, count); }

@@ -1,0 +1,50 @@
+unit GalleryGridRenameContract;
+
+uses
+  GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.Update as U,
+  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T,
+  System as Sys;
+
+// Checks that a name edit preserves sorting and row identity in the gallery grid.
+public procedure Verify();
+begin
+  const Initial: S.Model := new S.Model();
+  const NameSort: T.Sort := new T.Sort(0, false);
+  const Ascending: S.Model := U.Update(
+    Initial,
+    S.Msg.SetGrid(new D.Value(Order := NameSort), Initial.Order)
+  );
+  const Last: int := Ascending.Order.Length - 1;
+  const Person: int := Ascending.Order[Last];
+  const Editing: S.Model := U.Update(
+    Ascending,
+    S.Msg.SetGrid(new D.Value(Order := NameSort, Cursor := Last, Anchor := 0), Ascending.Order)
+  );
+  const Renamed: S.Model := U.Update(Editing, S.Msg.Rename(Person, 'Aardvark'));
+  if Renamed.Order[0] <> Person or Renamed.Grid.Cursor <> 0 or Renamed.Grid.Anchor <> 1 then
+    raise new Sys.InvalidOperationException(
+      'Name sort, cursor or anchor did not follow the edited row.'
+    );
+  end if;
+
+  const Mask: array of bool := new bool[Ascending.Order.Length];
+  Mask[Last] := true;
+  const Proposed: S.Model := U.Update(
+    Renamed,
+    S.Msg.SetGrid(new D.Value(Mask, NameSort, Last, 0), Ascending.Order)
+  );
+  if not Proposed.Selected[Person] or Proposed.Grid.Cursor <> 0 or Proposed.Grid.Anchor <> 1 then
+    raise new Sys.InvalidOperationException(
+      'Queued selection must use the order that produced it.'
+    );
+  end if;
+
+  const StillSorted: S.Model := U.Update(Initial, S.Msg.Rename(Person, 'Zebra'));
+  for Index: int := 0 to Initial.Order.Length - 1 do
+    if StillSorted.Order[Index] <> Initial.Order[Index] then
+      raise new Sys.InvalidOperationException('Renaming must preserve an unrelated sort order.');
+    end if;
+  end for;
+end procedure;
+
+end unit;

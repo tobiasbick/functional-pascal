@@ -26,7 +26,7 @@ public sealed partial class CuiWindow
         int* nodes = stackalloc int[SingleCalendarParts];
         int proposed = NativeMethods.DatePicker(context, Stable(id), value?.DayNumber ?? -1,
             Optional(label), Optional(placeholder), width, enabled ? 1 : 0, focus ? 1 : 0,
-            out int root, trackPart is null ? null : parts, nodes, out int count);
+            out int root, parts, nodes, out int count);
         return new(proposed < 0 ? null : DateOnly.FromDayNumber(proposed),
             TrackCalendarParts(id, root, parts, nodes, count, trackPart));
     }

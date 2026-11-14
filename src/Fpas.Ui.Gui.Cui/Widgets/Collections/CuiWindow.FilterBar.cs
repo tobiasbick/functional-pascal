@@ -55,10 +55,12 @@ public sealed partial class CuiWindow
                 fields.Length, masks, text, buffer?.Length ?? 0, enabled ? 1 : 0, focus ? 1 : 0, nodes);
 
         var available = new bool[parts.Length - 1];
-        if (partId is not null)
-            for (int k = 1; k < parts.Length; k++)
-                if (available[k - 1] = parts[k] >= 0)
-                    TrackControl(partId(k - 1), parts[k]);
+        for (int k = 0; k < available.Length; k++)
+        {
+            int node = parts[k + 1];
+            available[k] = node >= 0;
+            if (available[k] && partId is not null) TrackControl(partId(k), node);
+        }
         return new(changed != 0, buffer is null ? null : ReadGridText(buffer), available);
     }
 }

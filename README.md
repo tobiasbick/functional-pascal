@@ -41,6 +41,8 @@ Known missing baseline work and deferred extensions are listed in
 
 Install a stable .NET 10 SDK satisfying [global.json](global.json). It selects
 10.0.100 or a later installed 10.0 feature band and excludes preview SDKs.
+Install the [native CUI build prerequisites](src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites)
+for the full solution build.
 From the root of this CLR checkout, build the toolchain and package its local SDK:
 
 ```sh

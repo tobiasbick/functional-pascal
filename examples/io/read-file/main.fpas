@@ -10,6 +10,7 @@ begin
     Console.Write(Reader.ReadToEnd());
   catch Failure: IO.IOException do
     Console.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 1;
   finally
     Console.WriteLine('Read attempt finished');
   end try;

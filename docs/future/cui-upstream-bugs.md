@@ -539,3 +539,31 @@ they cannot fit, after reserving the native one-point divider. The
 `fpas_cui_desktop_chrome native` test reproduces the invalid ratio with
 direct CUI calls. The regular test verifies a bounded ratio through the
 adapter and separately verifies resizing when the pane minimums fit.
+
+<a id="cui-041"></a>
+
+## CUI-041 — Disabling a time histogram leaves its drag active
+
+Reproduced on Windows at `86d9781`. Begin dragging a selection in the time
+histogram. While holding the mouse button, draw it under `cui_push_disabled`
+and move the pointer. CUI continues updating the selection from its stored
+drag mode. The drag can also continue when the widget is re-enabled before
+the button is released.
+
+The FPAS adapter cancels the drag and releases the plot's mouse capture when
+the widget becomes disabled. The native developer-tools test covers the
+disabled frame and re-enabling the widget with the button still held.
+
+<a id="cui-042"></a>
+
+## CUI-042 — Query builder normalizes read-only rules in place
+
+Reproduced on Windows at `86d9781`. Draw a read-only query builder with zero
+rules. CUI inserts a root group, changes the count and reports an edit.
+With an existing choice condition and an empty value, it writes the first
+choice to the rule and reports an edit even when the controls are read-only.
+
+FPAS draws read-only and effectively disabled query builders with a frame-local
+copy of the rules, so normalization cannot alter the caller's data or emit an
+edit. The native developer-tools test covers empty rules, empty choice values
+and root initialization after re-enabling editing.

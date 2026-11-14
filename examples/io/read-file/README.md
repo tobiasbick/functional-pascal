@@ -3,8 +3,8 @@
 ReadFile.fpasproj copies sample.txt into the output directory. main.fpas locates
 it through System.AppContext.BaseDirectory, opens System.IO.StreamReader, reads
 the text, and disposes the reader through a blockless using const declaration.
-An IOException is handled through ordinary CLR catch semantics; finally runs
-after the reader's cleanup.
+The program prints an `IOException` message and sets exit code 1. The `finally`
+block reports completion after the reader's cleanup, including on failure.
 
 After the [local SDK bootstrap](../../../docs/build/development.md#build-an-fpas-application):
 

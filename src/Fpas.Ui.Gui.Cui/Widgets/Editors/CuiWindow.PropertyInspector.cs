@@ -26,7 +26,12 @@ public sealed partial class CuiWindow
             var item = groups[index];
             var rows = new NativeProperty[item.Properties.Length];
             for (int row = 0; row < rows.Length; row++)
-                rows[row] = PackProperty(item.Properties[row], memory);
+            {
+                var property = item.Properties[row];
+                if (property.Values.Length > NativeProperty.MaxComponents)
+                    throw new ArgumentException($"A property can contain at most {NativeProperty.MaxComponents} numeric components.", nameof(groups));
+                rows[row] = PackProperty(property, memory);
+            }
             native[index] = new() { Title = memory.Text(item.Title), Properties = memory.Copy<NativeProperty>(rows),
                 Count = rows.Length, Open = item.Open ? 1 : 0, Collapsible = item.Collapsible ? 1 : 0 };
         }
@@ -64,8 +69,7 @@ public sealed partial class CuiWindow
             Digits = value.Digits, Flags = value.Flags, Minimum = value.Minimum, Maximum = value.Maximum,
             Step = value.Step, Rgba = value.Color
         };
-        for (int index = 0; index < value.Values.Length; index++)
-            native.Values[index] = value.Values[index];
+        value.Values.AsSpan().CopyTo(new Span<float>(native.Values, NativeProperty.MaxComponents));
         if (value.Kind == 2)
         {
             var buffer = new byte[value.Capacity];

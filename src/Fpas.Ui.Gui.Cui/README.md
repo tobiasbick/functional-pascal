@@ -21,11 +21,10 @@ use the same topics and expose the `fpas_cui_` symbols.
 - NextFrame pumps events and begins a frame. Close layouts in reverse order;
   Present completes the view and exposes finalized control rectangles.
   CapturePng writes the presented view to an existing directory.
-- The binding exposes the accepted button family, theme selectors/toggles,
-  sidebar and sheet widgets. Stable identities are separate from literal labels.
-  Native interaction results become model proposals in the FPAS host.
-  Theme actions compose native segments and icon buttons without a separate
-  widget engine or palette mutation.
+- See the [CUI widget inventory](../../docs/future/cui-gaps.md#widget-inventory)
+  for widget coverage and gallery acceptance. Stable identities are separate
+  from literal labels. The FPAS host maps native interaction results to model
+  proposals. Theme actions compose native segments and icon buttons.
 - Text, headings, separators, box sizing, styles and scrolling are composition
   foundations. The host supplies shared layout constraints to CUI.
 - Accordion and expandable-card scopes call CUI's native begin/end pairs;

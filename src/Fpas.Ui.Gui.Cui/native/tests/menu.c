@@ -65,6 +65,62 @@ static bool parity(bool icon_only, int placement, float width, bool contextual) 
     return valid;
 }
 
+static bool user_menu_rename(bool compact) {
+    const int w = 640, h = 320;
+    const size_t bytes = (size_t)w * h * 4;
+    unsigned char *actual = malloc(bytes), *expected = malloc(bytes);
+    if (!actual || !expected) { free(actual); free(expected); return false; }
+    bool valid = true;
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        if (!renderer) { valid = false; break; }
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
+        cui_ctx *ui = cui_create(&settings);
+        if (!ui) { cui_sw_destroy(renderer); valid = false; break; }
+        cui_set_viewport(ui, w, h, 1);
+        cui_set_reduced_motion(ui, true);
+        const char *keys[] = { "profile" }, *labels[] = { "Profile" }, *empty[] = { "" };
+        const int flags[] = { 0 };
+        for (int frame = 0; frame < 6; ++frame) {
+            cui_begin_frame(ui, 0.04f);
+            cui_input_mouse_move(ui, 40, 42);
+            if (frame == 2) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+            if (frame == 3) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+            if (frame >= 4) cui_input_mouse_move(ui, -1, -1);
+            cui_column(ui, .width = CUI_FILL, .pad = 24) {
+                if (pass) {
+                    int nodes[2], open, highlight;
+                    fpas_cui_user_menu(ui, "account", frame < 4 ? "Daniel Carter" : "Maya ### Ortiz",
+                        "Account", "online", keys, labels, empty, empty, flags, 1,
+                        CUI_PLACE_BOTTOM_START, 0, compact, 1, 0, nodes, &open, &highlight);
+                    if (frame >= 3 && (!open || !fpas_cui_focused(ui, nodes[0]))) {
+                        fprintf(stderr, "Renaming an account must preserve its open menu and trigger focus.\n");
+                        valid = false;
+                    }
+                } else {
+                    const cui_user_menu_opts options = { .detail = "Account", .status = "online",
+                        .placement = CUI_PLACE_BOTTOM_START, .compact = compact };
+                    if (cui_user_menu_begin(ui, "Maya ### Ortiz", &options)) {
+                        cui_menu_item(ui, "Profile");
+                        cui_user_menu_end(ui);
+                    }
+                }
+            }
+            cui_end_frame(ui);
+            cui_sw_render(renderer, cui_get_draw_data(ui), pass ? actual : expected, w, h, w * 4, CUI_SW_RGBA);
+        }
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    if (valid && memcmp(actual, expected, bytes) != 0) {
+        fprintf(stderr, "The renamed account must match CUI's text, avatar and popup.\n");
+        valid = false;
+    }
+    free(actual);
+    free(expected);
+    return valid;
+}
+
 int main(void) {
     bool valid = true;
     for (int icon = 0; icon < 2; ++icon)
@@ -73,5 +129,7 @@ int main(void) {
                 valid = parity(icon != 0, place ? CUI_PLACE_TOP_END : CUI_PLACE_BOTTOM_START, sized ? 260 : 0, false) && valid;
     valid = parity(false, CUI_PLACE_BOTTOM_START, 0, true) && valid;
     if (!valid) fprintf(stderr, "Menu adapter pixels differ from native CUI.\n");
+    valid = user_menu_rename(false) && valid;
+    valid = user_menu_rename(true) && valid;
     return valid ? 0 : 1;
 }

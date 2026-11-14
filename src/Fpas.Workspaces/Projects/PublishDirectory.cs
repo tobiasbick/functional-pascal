@@ -7,7 +7,7 @@ using Fpas.Workspaces.Processes;
 namespace Fpas.Workspaces.Projects;
 
 public sealed record PublishedFile(string Path, long Bytes, string Sha256);
-internal sealed record PublishManifest(int Version, PublishedFile[] Files);
+internal sealed record PublishManifest(int Version, PublishedFile[] Files, string[]? EmptyDirectories = null);
 public sealed record PublishResult(BuildResult Build, IReadOnlyList<PublishedFile> Files);
 
 public static class PublishDirectory
@@ -48,9 +48,9 @@ public static class PublishDirectory
             {
                 Fpas.Deployment.PublishSignature.Sign(stage, options.Certificate, options.CertificatePasswordEnvironment ?? "");
             }
-            var files = await Inventory(stage, token);
-            if (files.Length == 0) throw new IOException("Publish produced no files.");
-            var manifest = JsonSerializer.SerializeToUtf8Bytes(new(1, files), PublishManifestJson.Default.PublishManifest);
+            var inventory = await Inventory(stage, token);
+            if (inventory.Files.Length == 0) throw new IOException("Publish produced no files.");
+            var manifest = JsonSerializer.SerializeToUtf8Bytes(inventory, PublishManifestJson.Default.PublishManifest);
             if (manifest.Length > 4 * 1024 * 1024) throw new IOException("Publish ownership manifest exceeds 4 MiB.");
             await File.WriteAllBytesAsync(Path.Combine(stage, Manifest), manifest, token);
             await Check(destination, token);
@@ -58,7 +58,7 @@ public static class PublishDirectory
             if (Directory.Exists(destination)) Directory.Move(destination, backup);
             try { Directory.Move(stage, destination); committed = true; }
             catch { if (Directory.Exists(backup)) Directory.Move(backup, destination); throw; }
-            return new(built, files);
+            return new(built, inventory.Files);
         }
         finally
         {
@@ -89,23 +89,26 @@ public static class PublishDirectory
             throw new ContextFailure("output_conflict", "Choose an empty output directory or an unchanged directory previously published by fpas.");
         var recorded = JsonSerializer.Deserialize(await File.ReadAllTextAsync(manifest, token), PublishManifestJson.Default.PublishManifest);
         var current = await Inventory(destination, token);
-        if (recorded is not { Version: 1, Files: not null } || !recorded.Files.SequenceEqual(current))
-            throw new ContextFailure("output_conflict", "Publish output contains added, changed or missing files; choose a new output directory.");
+        if (recorded is not { Version: 1, Files: not null } || !recorded.Files.SequenceEqual(current.Files) ||
+            !(recorded.EmptyDirectories ?? []).SequenceEqual(current.EmptyDirectories ?? []))
+            throw new ContextFailure("output_conflict", "Publish output contains added, changed or missing entries; choose a new output directory.");
     }
 
-    private static async Task<PublishedFile[]> Inventory(string root, CancellationToken token)
+    private static async Task<PublishManifest> Inventory(string root, CancellationToken token)
     {
         var files = new List<PublishedFile>();
-        foreach (var path in CheckedFiles(root, token))
+        var emptyDirectories = new List<string>();
+        foreach (var path in CheckedFiles(root, token, emptyDirectories))
         {
             if (path == Path.Combine(root, Manifest)) continue;
             await using var stream = File.OpenRead(path);
             files.Add(new(Path.GetRelativePath(root, path).Replace('\\', '/'), stream.Length, Convert.ToHexString(await SHA256.HashDataAsync(stream, token))));
         }
-        return files.OrderBy(file => file.Path, StringComparer.Ordinal).ToArray();
+        return new(1, files.OrderBy(file => file.Path, StringComparer.Ordinal).ToArray(),
+            emptyDirectories.Order(StringComparer.Ordinal).ToArray());
     }
 
-    private static List<string> CheckedFiles(string root, CancellationToken token)
+    private static List<string> CheckedFiles(string root, CancellationToken token, List<string>? emptyDirectories = null)
     {
         if ((File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
             throw new IOException("Publish directories must not contain symbolic links.");
@@ -114,8 +117,10 @@ public static class PublishDirectory
         var pending = new Queue<string>(); pending.Enqueue(root);
         while (pending.TryDequeue(out var folder))
         {
+            var empty = true;
             foreach (var path in Directory.EnumerateFileSystemEntries(folder).Order(StringComparer.Ordinal))
             {
+                empty = false;
                 token.ThrowIfCancellationRequested();
                 var attributes = File.GetAttributes(path);
                 if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Publish directories must not contain symbolic links.");
@@ -127,6 +132,7 @@ public static class PublishDirectory
                     files.Add(path);
                 }
             }
+            if (empty && folder != root) emptyDirectories?.Add(Path.GetRelativePath(root, folder).Replace('\\', '/'));
         }
         return files;
     }

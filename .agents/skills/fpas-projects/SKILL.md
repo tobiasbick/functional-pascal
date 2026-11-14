@@ -28,9 +28,10 @@ sources and invokes the direct CIL compiler. Follow
 
 1. Use a `fpas init` template when it fits the new project or solution. For
    existing projects, inspect the current SDK selection and source items.
-   Package the local SDK before restoring a consumer. When repacking the same
-   version, evict that version from the target NuGet cache before restoring.
-   Use isolated caches for concurrent tests.
+   Confirm the configured feed has the selected SDK version. If testing a changed
+   toolchain, package its matching SDK before restoring the consumer. When
+   repacking the same version, evict it from the target NuGet cache before
+   restoring. Use isolated caches for concurrent tests.
 2. Set net10.0, AnyCPU, and OutputType Exe or Library. Executables contain exactly
    one program plus optional units; libraries contain units without a program.
    Each source header defines its identity, independent of filename/order.

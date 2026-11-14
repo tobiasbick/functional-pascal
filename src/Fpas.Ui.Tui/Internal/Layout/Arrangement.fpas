@@ -221,6 +221,7 @@ public function Arrange<TMsg>(
         const Layer: Sheet.Placement<TMsg> := Sheet.Arrange<TMsg>(
           Operations, Screen, Id, Settings, Size, Colors, Theme, Dismiss, FocusReturn
         );
+        Scopes.Add(Id);
         Active := Layer.Scope;
         AddControl(Layer.Close);
         Visit(Content, Layer.Body, Layer.Body, Id, Colors);
@@ -272,6 +273,7 @@ begin
     Previous.Allocations
   end if;
   const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
+  const Scopes: Generic.List<string> := new Generic.List<string>();
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
@@ -312,6 +314,7 @@ begin
       Scroll[Pending.Id] := 0;
     end if;
 
+    Scopes.Add(Pending.Id);
     Active := new A.Scope<TMsg>(
       Pending.Id, Pending.Initial, null, [], Bounds[0], Dismiss := Pending.Close
     );
@@ -331,7 +334,7 @@ begin
   const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, Theme.Text);
   return new A.Layout<TMsg>(
     Surface.Lines, Surface.Cells, Controls.ToArray(), Active, GlobalKeys, Regions.ToArray(),
-    Surface.Rows, Allocations.ToArray()
+    Surface.Rows, Allocations.ToArray(), Scopes := Scopes.ToArray()
   );
 end function;
 

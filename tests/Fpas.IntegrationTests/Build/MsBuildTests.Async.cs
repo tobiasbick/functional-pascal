@@ -129,7 +129,8 @@ public sealed partial class MsBuildTests
                 else if (mode == 3) gate.SetCanceled(new CancellationToken(true));
                 else gate.SetResult(7);
                 try { Require(await cleanup == 7 && mode == 0); }
-                catch (ArgumentException error) { Require(error.Message == (mode == 1 ? "cleanup" : "body")); }
+                catch (ArgumentException error) when (mode is 1 or 2)
+                { Require(error.Message == (mode == 1 ? "cleanup" : "body")); }
                 catch (OperationCanceledException) { Require(mode == 3 && cleanup.IsCanceled); }
                 Require(state[0] == 3214);
             }

@@ -50,9 +50,9 @@ for the task.
 - Fix errors and code organization issues when you encounter them. Do not
   dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.
-- Keep plans and gap inventories limited to open work. Remove completed entries
-  and delete fully completed documents; current contracts and usage belong in
-  their owning references.
+- Keep plans and open-work lists limited to pending work. Remove completed
+  entries and delete finished plans. Keep acceptance checkmarks in the full CUI
+  widget inventory. Document current contracts and usage in their owning references.
 - When replacing a build under the same `Fpas.NET.Sdk` version, evict that
   version from the target NuGet cache. Use isolated caches for concurrent tests.
 

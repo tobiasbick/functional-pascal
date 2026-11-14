@@ -18,5 +18,10 @@ public sealed class CuiTagInputTests
         var result = window.TagInput("tags", tags, "", "", 1, 255, enabled: true, focus: false, removeControl: null);
         window.Present();
         Assert.Equal(["one"], result.Tags);
+        Assert.True(window.NextFrame());
+        var drawn = window.TagInput("tags", result.Tags, "", "", 1, 255,
+            enabled: true, focus: false, removeControl: null);
+        window.Present();
+        Assert.Equal(1, drawn.RemoveCount);
     }
 }

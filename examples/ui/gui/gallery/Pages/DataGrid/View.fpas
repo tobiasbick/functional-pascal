@@ -141,7 +141,8 @@ begin
       ], Model.Order.Length, function(Position: int): D.Row<S.Msg> => GridRow(Model, Position),
       Model.Grid with
         Selected := Mask;
-      end with, S.Msg.SetGrid, new D.Options(Height := Points(420))
+      end with, function(Value: D.Value): S.Msg => S.Msg.SetGrid(Value, Model.Order),
+      new D.Options(Height := Points(420))
     ),
     E.Styled<S.Msg>(
       E.Text<S.Msg>(

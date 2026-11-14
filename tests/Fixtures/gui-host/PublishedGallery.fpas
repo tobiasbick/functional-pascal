@@ -3,6 +3,7 @@ program PublishedGallery;
 uses
   GalleryTourContract as TourContract,
   GalleryLayoutContract as LayoutContract,
+  GalleryGridRenameContract as GridRenameContract,
   GalleryActionsPickersContract as ActionsPickersContract,
   GalleryDateRangeContract as DateRangeContract,
   GalleryDateCalendarContract as DateCalendarContract,
@@ -188,6 +189,7 @@ end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  GridRenameContract.Verify();
   TourContract.Verify();
   VerifyDesktop(Renderer, Capture);
   VerifyDrawer(Renderer);

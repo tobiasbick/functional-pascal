@@ -13,11 +13,14 @@ public sealed class CuiLayoutOptionsTests
     [InlineData(CuiRenderer.OpenGl, true)]
     public void InsetsAndNativeSpacingFollowReadingDirection(CuiRenderer renderer, bool rtl)
     {
-        using var window = new CuiWindow("Native spacing", 400, 160, renderer, continuous: true);
-        foreach (int width in new[] { 400, 280, 400 })
+        const int height = 300;
+        using var window = new CuiWindow("Native spacing", 520, height, renderer, continuous: true);
+        // CUI's default minimum window size is 360 × 280 logical units.
+        foreach (int width in new[] { 520, 380, 520 })
         {
-            window.Resize(width, 160);
+            window.Resize(width, height);
             Draw(); Draw();
+            Assert.Equal(width, window.Size.Width);
             var first = window.GetControlRectangle("first");
             var last = window.GetControlRectangle("last");
             Assert.Equal(rtl ? width - 100 : 40, first.X);

@@ -123,8 +123,9 @@ a live window, a successful presentation and an existing destination directory.
 See [development](../../docs/build/development.md), the
 [native prerequisites](../Fpas.Ui.Gui.Cui/native/README.md#prerequisites) and the
 [binding verification](../Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
-The GUI gallery contract exercises both renderers and all five publish modes,
-including single-file and NativeAOT. Linux window tests require a display.
+The GUI gallery contract exercises both renderers. Set `FPAS_TEST_GUI_AOT=1`
+to include the publishing tests for all five modes, including single-file and
+Native AOT. Linux window tests require a display.
 
-Only widgets checked in the [CUI inventory](../../docs/future/cui-gaps.md) are
-implemented. Future widgets are added through that inventory.
+The [CUI inventory](../../docs/future/cui-gaps.md#acceptance) tracks GUI gallery
+acceptance and records existing TUI coverage.

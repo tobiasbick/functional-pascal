@@ -98,6 +98,30 @@ public sealed class CuiCaptureTests
         }
     }
 
+    /// <summary>Tracks the Clear button independently of the signature pad.</summary>
+    [GuiFact]
+    public void SignatureClearCanBeTrackedWithoutTrackingThePad()
+    {
+        using var window = new CuiWindow("Signature clear", 380, 240, CuiRenderer.Software, continuous: true);
+        for (int frame = 0; frame < 2; frame++)
+        {
+            Assert.True(window.NextFrame());
+            if (frame == 1)
+            {
+                window.MovePointer(44, 72);
+                window.SetLeftButton(true);
+            }
+            window.BeginColumn(12);
+            window.SignaturePad("signature", "", 180, 0, enabled: true, focusClear: false,
+                track: false, readChanges: false, clearId: "clear", out bool clearVisible);
+            window.EndColumn();
+            window.Present();
+            Assert.Equal(frame == 1, clearVisible);
+        }
+
+        Assert.True(window.GetControlRectangle("clear").Width > 0);
+    }
+
     /// <summary>The owner window's common dialog returns a Unicode file selection and handles cancellation.</summary>
     [WindowsGuiFact]
     public void WindowsFileDialogSelectsAndCancels()

@@ -46,8 +46,8 @@ end record;
 public type Msg = variant
   // Change the filter example.
   SetFilter(Value: F.Value);
-  // Apply native grid state.
-  SetGrid(Value: D.Value);
+  // Apply native grid state in the display order that produced it.
+  SetGrid(Value: D.Value; Rows: array of int);
   // Commit the displayed name of a person.
   Rename(Index: int; Name: string);
   // Expand or collapse src.

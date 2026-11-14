@@ -34,14 +34,16 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 3. Keep case-sensitive names, lowercase keywords, explicit types, and named
    terminators. Consume returned values or use discard. Use CLR nullability and
    exceptions; define application variants for domain outcomes.
-   Document FPAS declarations with adjacent `//` Markdown comments. Use the
+   Document public declarations with adjacent `//` Markdown comments. Use the
    documented sections for parameters and returns; `///` and XML tags are not
    source documentation markup.
 4. Compile through the current CLR toolchain using the
    [development workflow](../../../docs/build/development.md). Use `fpas compile`
-   for explicit sources and the SDK for projects. Format changed sources with
-   `fpas fmt`. Use [`fpas fmt --check`](../../../docs/pascal/tools/fmt-style.md#command)
-   to verify style during a read-only review.
+   for explicit sources and the SDK for projects. Before committing, format changed
+   `.fpas` files with `fpas fmt` and verify them with
+   [`fpas fmt --check`](../../../docs/pascal/tools/fmt-style.md#command).
+   During read-only reviews, run the check on complete sources. Validate example
+   includes and context fragments through their documentation examples.
 5. Select the tests that exercise the changed behavior. Use the compiler and
    integration suites for toolchain regressions. For FPAS test projects, run
    [native framework tests](../../../docs/pascal/tools/testing.md) with `fpas test`.
@@ -56,7 +58,8 @@ result. Keep related bindings and operations together, including in tests.
 `fpas fmt` preserves authored sections before `const` and `var`; inspect the result
 for readability.
 
-The documentation checker compiles README and handbook examples.
+The documentation checker compiles examples from the repository README, handbook,
+and agent reference.
 LanguageSpecificationTests runs the complete programs and checks their behavior.
 Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)
 and [reference maintenance](../../../docs/pascal/agents/maintenance.md).

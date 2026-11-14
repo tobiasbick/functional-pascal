@@ -3,15 +3,32 @@ unit GuiGallery.Pages.DataGrid.Update;
 uses
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
   Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as Tree,
-  System.Collections.Generic as Lists;
+  System as Sys, System.Collections.Generic as Lists;
 
-function Grid(State: S.Model; Value: D.Value): S.Model;
+function RowPosition(Index: int; Before: array of int; After: array of int): int;
+begin
+  return if Index < 0 or Index >= Before.Length then
+    -1
+  else
+    Sys.Array.IndexOf<int>(After, Before[Index])
+  end if;
+end function;
+
+function Rebase(Value: D.Value; Before: array of int; After: array of int): D.Value;
+begin
+  return Value with
+    Cursor := RowPosition(Value.Cursor, Before, After);
+    Anchor := RowPosition(Value.Anchor, Before, After);
+  end with;
+end function;
+
+function Grid(State: S.Model; Value: D.Value; Rows: array of int): S.Model;
 begin
   const Selected: array of bool := new bool[P.Count()];
   const Mask: (array of bool)? := Value.Selected;
   if Mask <> null then
-    for Index: int := 0 to State.Order.Length - 1 do
-      Selected[State.Order[Index]] := Mask[Index];
+    for Index: int := 0 to Rows.Length - 1 do
+      Selected[Rows[Index]] := Mask[Index];
     end for;
   end if;
   const Before: T.Sort? := State.Grid.Order;
@@ -21,8 +38,10 @@ begin
   return State with
     Grid := if Reorder then
       new D.Value(Order := Sort)
-    else
+    elsif Sys.Object.ReferenceEquals(Rows, State.Order) then
       Value
+    else
+      Rebase(Value, Rows, State.Order)
     end if;
     Order := if Reorder and Sort <> null then
       P.Order(Sort, State.Names)
@@ -69,11 +88,21 @@ begin
       return State with
         Filter := Value;
       end with;
-    when S.Msg.SetGrid(const Value: D.Value):
-      return Grid(State, Value);
+    when S.Msg.SetGrid(const Value: D.Value, const Rows: array of int):
+      return Grid(State, Value, Rows);
     when S.Msg.Rename(const Index: int, const Name: string):
       const Names: Lists.Dictionary<int, string> := new Lists.Dictionary<int, string>(State.Names);
       Names[Index] := Name;
+      const Sort: T.Sort? := State.Grid.Order;
+      if Sort <> null and Sort.Column = 0 then
+        const Rows: array of int := P.Order(Sort, Names);
+        return State with
+          Names := Names;
+          Order := Rows;
+          Grid := Rebase(State.Grid, State.Order, Rows);
+        end with;
+      end if;
+
       return State with
         Names := Names;
       end with;

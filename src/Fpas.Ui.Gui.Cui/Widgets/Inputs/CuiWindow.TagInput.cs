@@ -45,14 +45,11 @@ public sealed partial class CuiWindow
                 maxTags, enabled ? 1 : 0, focus ? 1 : 0, tags.Length, nodes);
 
         int removals = 0;
-        if (removeControl is not null)
+        if (removeControl is not null) TrackControl(id, nodes[0]);
+        for (int index = 0; index < tags.Length && nodes[index + 1] >= 0; index++)
         {
-            TrackControl(id, nodes[0]);
-            for (int index = 0; index < tags.Length && nodes[index + 1] >= 0; index++)
-            {
-                TrackControl(removeControl(index), nodes[index + 1]);
-                removals++;
-            }
+            if (removeControl is not null) TrackControl(removeControl(index), nodes[index + 1]);
+            removals++;
         }
 
         string proposed = Utf8.Encoding.GetString(buffer[..buffer.IndexOf((byte)0)]);

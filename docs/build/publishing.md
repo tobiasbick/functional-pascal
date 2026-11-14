@@ -70,12 +70,12 @@ after success. Mode changes remove stale runtime files. Build failure, timeout o
 cancellation preserve the previous delivery. Failed filesystem rollback retains
 the previous-directory backup instead of deleting it.
 
-`.fpas-publish.json` contains relative paths, sizes and hashes, without source
-machine paths or credentials. Added, changed or missing files cause
-`output_conflict`; choose another destination. Symbolic links and more than 20000
-files are refused. Ownership manifests are limited to 4 MiB; CMS signatures to
-8 MiB. Do not modify the destination or run programs from it during
-replacement.
+`.fpas-publish.json` contains relative file paths, sizes, hashes and empty
+directory paths, without source machine paths or credentials. Added, changed or
+missing entries cause `output_conflict`; choose another destination. Symbolic
+links and more than 20000 files are refused. Ownership manifests are limited
+to 4 MiB and CMS signatures to 8 MiB. Do not modify the destination or run
+programs from it during replacement.
 
 ## Direct SDK publication
 

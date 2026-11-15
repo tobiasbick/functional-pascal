@@ -87,8 +87,8 @@ VM keeps the builds, the diagnostic programs and the raw outputs of every run.
 - [ ] macOS: the Cocoa code was written without a Mac. Upstream CI builds it
   and runs the smoke tests; window behavior on macOS is untested, as the pull
   request says.
-- [ ] Follow the upstream review of pull request #95. Its head `f259305`
-  contains the fixes for the first CodeRabbit review and is merged into the
+- [ ] Follow the upstream review of pull request #95. Its head `6203abd`
+  contains the fixes for both CodeRabbit reviews and is merged into the
   vendored `fpas-cui` branch. Two findings stay unchanged with a reply in the
   pull request: X11 reports no place for a window opened maximized until it
   is restored, and the SDL2 backend keeps window units under `CUI_SCALE`.

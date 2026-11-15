@@ -78427,7 +78427,9 @@ bool cui__plat_init(cui_app *app) {
     glfwSetWindowSizeCallback(g->win, cb_geometry);
     g->normal_w = app->desc.width;
     g->normal_h = app->desc.height;
-    if (pl && pl->has_position && cui__glfw_positions() && cui__glfw_on_screen(pl->x, pl->y, g->normal_w)) {
+    int screen_w, screen_h;   /* the size in screen coordinates, the units of a saved place */
+    glfwGetWindowSize(g->win, &screen_w, &screen_h);
+    if (pl && pl->has_position && cui__glfw_positions() && cui__glfw_on_screen(pl->x, pl->y, screen_w)) {
         glfwGetError(NULL);
         glfwSetWindowPos(g->win, pl->x, pl->y);   /* still hidden: it opens there */
         if (glfwGetError(NULL) == GLFW_NO_ERROR) {
@@ -78482,6 +78484,7 @@ void cui__plat_gl_swap(cui_app *app) {
     if (g->maximize_after_frame) {
         g->maximize_after_frame = false;
         if (!g->normal_pos_known) cui__glfw_note_position(g);   /* the place the system chose */
+        cui__glfw_note_size(g);   /* and the size, which the window system may have changed */
         glfwMaximizeWindow(g->win);
     }
 }

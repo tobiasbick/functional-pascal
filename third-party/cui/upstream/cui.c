@@ -570,6 +570,11 @@ struct cui_ctx {
     int click_count;
     double last_click_time;
     float last_click_x, last_click_y;
+    struct {
+        int count;
+        bool restarted;
+        float first_x, first_y, last_x, last_y;
+    } pending_clicks;               /* input collected before the frame clock advances */
     float scroll_dx, scroll_dy;
     bool kdown[CUI_KEY_COUNT];
     uint8_t kpressed[CUI_KEY_COUNT];
@@ -9966,17 +9971,41 @@ void cui_input_mouse_move(cui_ctx *ui, float x, float y) {
 
 void cui_input_mouse_leave(cui_ctx *ui) { ui->mouse_inside = false; ui->mx = -1e6f; ui->my = -1e6f; cui__poke(ui); }
 
+/** Classify pending presses against the current frame's clock, including batched clicks. */
+static void cui__flush_clicks(cui_ctx *ui) {
+    if (!ui->pending_clicks.count) return;
+    float dx = ui->pending_clicks.first_x - ui->last_click_x;
+    float dy = ui->pending_clicks.first_y - ui->last_click_y;
+    if (!ui->pending_clicks.restarted && ui->time - ui->last_click_time < 0.4 && dx * dx + dy * dy < 25)
+        ui->click_count += ui->pending_clicks.count;
+    else ui->click_count = ui->pending_clicks.count;
+    ui->last_click_time = ui->time;
+    ui->last_click_x = ui->pending_clicks.last_x;
+    ui->last_click_y = ui->pending_clicks.last_y;
+    ui->pending_clicks.count = 0;
+    ui->pending_clicks.restarted = false;
+}
+
 void cui_input_mouse_button(cui_ctx *ui, cui_mouse_button b, bool down) {
     if ((int)b < 0 || (int)b > 2) return;
     cui__poke(ui);
     if (down && !ui->mdown[b]) {
         ui->mpressed[b] = true;
         if (b == CUI_MOUSE_LEFT) {
-            double t = ui->time;
-            float dx = ui->mx - ui->last_click_x, dy = ui->my - ui->last_click_y;
-            if (t - ui->last_click_time < 0.4 && dx * dx + dy * dy < 25) ui->click_count++;
-            else ui->click_count = 1;
-            ui->last_click_time = t; ui->last_click_x = ui->mx; ui->last_click_y = ui->my;
+            if (!ui->pending_clicks.count) {
+                ui->pending_clicks.first_x = ui->mx;
+                ui->pending_clicks.first_y = ui->my;
+            } else {
+                float dx = ui->mx - ui->pending_clicks.last_x, dy = ui->my - ui->pending_clicks.last_y;
+                if (dx * dx + dy * dy >= 25) {
+                    ui->pending_clicks.count = 0;
+                    ui->pending_clicks.restarted = true;
+                }
+            }
+            ui->pending_clicks.count++;
+            ui->pending_clicks.last_x = ui->mx;
+            ui->pending_clicks.last_y = ui->my;
+            if (ui->in_frame) cui__flush_clicks(ui);
         }
     }
     if (!down && ui->mdown[b]) ui->mreleased[b] = true;
@@ -10259,6 +10288,7 @@ void cui_begin_frame(cui_ctx *ui, float dt) {
     ui->in_frame = true;
     ui->dt = CUI_MIN(dt, 0.25f);
     ui->time += dt;
+    cui__flush_clicks(ui);
     ui->frame++;
     ui->animating = false;
     ui->wakeup = -1;
@@ -26695,12 +26725,12 @@ static void cui__fb_build_places(cui__fb_frame *f) {
     const char *const *places = o->places;
     if (!places && !s->places_init) cui__fb_default_places(ui, s);
     int np = places ? o->place_count : s->places_n;
-    int selected_volume = -1;
+    int selected_place = -1;
     size_t longest = 0;
     if (!places) for (int k = 0; k < np; k++) {
         const cui__fb_place *p = &s->places[k];
         size_t len = strlen(p->path);
-        if (p->volume && len > longest && cui__fb_below(f->path, p->path)) { selected_volume = k; longest = len; }
+        if (len > longest && cui__fb_below(f->path, p->path)) { selected_place = k; longest = len; }
     }
     cui_scroll_opts so;
     memset(&so, 0, sizeof so);
@@ -26725,7 +26755,7 @@ static void cui__fb_build_places(cui__fb_frame *f) {
         if (places) { const char *sl = pp + strlen(pp); while (sl > pp && !cui__is_sep(sl[-1])) sl--; if (*sl) label = sl; }
         cui_id pid = cui__hash_str(pp, f->id ^ 0x91ACu);
         cui_interact pr2 = cui__interact(ui, pid, CUI_IF_FOCUSABLE);
-        bool here = !places && s->places[k].volume ? k == selected_volume : !strcmp(pp, f->path);
+        bool here = places ? !strcmp(pp, f->path) : k == selected_place;
         if (pr2.clicked || pr2.keyboard_activate) f->go_to = pp;
         int row = cui__node_new(ui, pid);
         cui_node *rn = &ui->nodes[row];

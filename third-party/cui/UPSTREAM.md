@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Source fork branch [`fpas-cui`](https://github.com/tobiasbick/CUI/tree/fpas-cui), combining upstream PRs [#95](https://github.com/yappologistic/CUI/pull/95) and [#97](https://github.com/yappologistic/CUI/pull/97) on [`6e6b353`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`c220f58f5d2f89be10d20913c0047fcc40518f40`](https://github.com/tobiasbick/CUI/commit/c220f58f5d2f89be10d20913c0047fcc40518f40) |
+| Commit | [`ddceed18db3184855112104fc1e2b1c45cab1317`](https://github.com/tobiasbick/CUI/commit/ddceed18db3184855112104fc1e2b1c45cab1317) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -13,14 +13,15 @@ The amalgamated C source and public header are the unchanged output of
 `python3 tools/amalgamate.py` on Linux in the source fork at the pinned commit.
 The `fpas-cui` branch combines contributions that FPAS uses before they land
 upstream: window state and placement from `window-state`, and the native drive
-sidebar and filter-height fix from `codex/file-picker-drives`. Each contribution
-has its own upstream PR. Once upstream contains these changes, pin an upstream
-commit again; keep unmerged contributions on `fpas-cui` in the meantime.
+sidebar and filter-height fix from `codex/file-picker-drives`. The latter also
+contains the fixes for exclusive sidebar selection and double-click timing after
+idle in PR #97. Once upstream contains these changes, pin an upstream commit
+again; keep unmerged contributions on `fpas-cui` in the meantime.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `d25204104d842e9024d084cdc1d212e546e1fd6169cb57ef75cb8aff34f0be9b` |
-| `cui.h` | `df7f4a4af56749096521a2061644d80196adcf0a5ab142bb3eb7bee137c5a92a` |
+| `cui.c` | `04f6b9075dfe43d51148acc5ae27ff08eacd055c1f05daceb06b8188f883b026` |
+| `cui.h` | `f7645be5df38b694e3b608461e70a2ad140942fcc6d1993a2b7cb2bf0169dcc8` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -34,15 +35,20 @@ read-only widgets, numeric editors, focus and popups, pickers, and disabled
 widgets, the window state and placement API of pull request #95, and the
 file-picker changes of pull request #97. The browser matches the filter and
 path heights, lists native drives or volumes in a scrollable sidebar, and
-refreshes them on reload or picker opening. The upstream license inputs and
-theme builder are unchanged.
+refreshes them on reload or picker opening. It highlights only the most specific
+enclosing place or volume. Pending mouse presses use the receiving frame's clock,
+so the first double-click after idle opens the folder reliably. The upstream
+license inputs and theme builder are unchanged.
 
 The native integration suite passed 37 tests on Windows and 35 on Linux under
-WSL. The 19 selected .NET GUI tests passed on Windows, covering window placement,
-host layout, collection tracking and themes. FPas-Amp builds against this pair.
-The file-picker contribution passed the full upstream suites on Windows
-(22 tests), Linux (24 tests) and Linux with ASan/UBSan (24 tests). Its neutral
-before/after captures and platform verification are linked from PR #97.
+WSL. The 21 selected .NET GUI tests passed on Windows, covering window placement,
+host layout, collection tracking, themes and the FPAS gallery with software and
+OpenGL rendering. The terminal CUI contract test passed, and FPas-Amp builds
+against this pair.
+The file-picker follow-up passed the full upstream suites on Windows (22 tests)
+and Linux (24 tests), plus the three focused core/file-browser/mount-fixture tests
+under ASan/UBSan. Neutral Home captures cover the exclusive selection in light
+and dark mode. PR #97 links the original before/after captures and verification.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 

@@ -1707,7 +1707,8 @@ CUI_API void cui_path_bar_menu_end(cui_ctx *ui);
  * system's own). The browser lists a folder (name,
  * date modified and size; folders first, any column sorts), with back,
  * forward and up, a path bar you can type into, a filter field and a
- * scrollable sidebar of places and native drives/volumes. Double-click or
+ * scrollable sidebar of places and native drives/volumes; the default sidebar
+ * highlights only the most specific enclosing place or volume. Double-click or
  * Enter opens a folder or picks a file; Backspace goes up, Alt+Left and
  * Alt+Right go back and forward, F5 reloads the folder and native sidebar,
  * and typing a letter jumps to the next name that starts with it.

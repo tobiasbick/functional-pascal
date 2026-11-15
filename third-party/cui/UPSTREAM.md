@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Source fork branch [`fpas-cui`](https://github.com/tobiasbick/CUI/tree/fpas-cui), combining upstream PRs [#95](https://github.com/yappologistic/CUI/pull/95) and [#97](https://github.com/yappologistic/CUI/pull/97) on [`6e6b353`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`07df572ed9c93dfa7802180d172b721bed0c0b4f`](https://github.com/tobiasbick/CUI/commit/07df572ed9c93dfa7802180d172b721bed0c0b4f) |
+| Commit | [`c220f58f5d2f89be10d20913c0047fcc40518f40`](https://github.com/tobiasbick/CUI/commit/c220f58f5d2f89be10d20913c0047fcc40518f40) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 

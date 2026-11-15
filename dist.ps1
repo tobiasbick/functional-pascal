@@ -33,11 +33,18 @@ try {
     $cachePath = $cacheInfo.Substring('global-packages: '.Length)
     if (-not [System.IO.Path]::IsPathRooted($cachePath)) { throw 'NuGet package cache must be an absolute path.' }
     $cacheRoot = [System.IO.Path]::GetFullPath($cachePath)
+    # Reused MSBuild nodes keep the cached build tasks loaded: Windows refuses to delete them,
+    # and the nodes would go on running the old tasks after the refresh.
+    dotnet build-server shutdown | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Stopping the .NET build servers failed (exit code $LASTEXITCODE)." }
     foreach ($packageId in @('fpas.net.sdk', 'fpas.ui.gui.cui')) {
         $packageCache = [System.IO.Path]::GetFullPath((Join-Path $cacheRoot $packageId))
         $versionCache = [System.IO.Path]::GetFullPath((Join-Path $packageCache $sdkVersion.ToLowerInvariant()))
         if ([System.IO.Path]::GetDirectoryName($versionCache) -ne $packageCache) { throw 'Invalid package cache target.' }
-        if (Test-Path -LiteralPath $versionCache) { Remove-Item -LiteralPath $versionCache -Recurse -Force }
+        if (Test-Path -LiteralPath $versionCache) {
+            try { Remove-Item -LiteralPath $versionCache -Recurse -Force }
+            catch { throw "Another process still uses $versionCache, such as an editor's build server. Close it and run dist.ps1 again. $_" }
+        }
     }
     Write-Host "Deployed self-contained single-file bin/fpas.exe with embedded Fpas.NET.Sdk $sdkVersion."
     Write-Host "Refreshed the local Fpas.NET.Sdk and Fpas.Ui.Gui.Cui $sdkVersion caches; consumers restore from the feed."

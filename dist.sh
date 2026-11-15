@@ -24,6 +24,8 @@ cache_info=$(dotnet nuget locals global-packages --list --force-english-output)
 case "$cache_info" in 'global-packages: '*) cache_root=${cache_info#global-packages: };; *) printf '%s\n' 'Unable to locate the NuGet package cache.' >&2; exit 1;; esac
 case "$cache_root" in /*) ;; *) printf '%s\n' 'NuGet package cache must be an absolute path.' >&2; exit 1;; esac
 cache_version=$(printf '%s' "$sdk_version" | tr '[:upper:]' '[:lower:]')
+# Reused MSBuild nodes keep the cached build tasks loaded and would go on running the old ones.
+dotnet build-server shutdown >/dev/null
 rm -rf -- "$cache_root/fpas.net.sdk/$cache_version" "$cache_root/fpas.ui.gui.cui/$cache_version"
 printf '%s\n' "Deployed self-contained single-file bin/fpas with embedded Fpas.NET.Sdk $sdk_version." \
     "Refreshed the local Fpas.NET.Sdk and Fpas.Ui.Gui.Cui $sdk_version caches; consumers restore from the feed."

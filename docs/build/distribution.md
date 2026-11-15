@@ -28,7 +28,10 @@ On demand, the executable creates `fpas-assets/` beside itself for embedded asse
 that require real files. Copying that directory to another installation is unnecessary.
 The scripts preserve unrelated files in `bin/`. They write the matching SDK and
 GUI binding packages to `sdk/feed/` and evict those versions from the active
-NuGet cache.
+NuGet cache. Before the eviction they stop the .NET build servers, whose reused
+MSBuild nodes keep the cached build tasks loaded. A build server of another
+program, such as an editor, can still hold them on Windows; close it and run
+the script again.
 
 Publication uses compressed, self-contained .NET single-file deployment without
 trimming. Native AOT requires trimming and does not support the dynamic code used

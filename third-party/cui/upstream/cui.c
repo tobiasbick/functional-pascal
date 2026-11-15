@@ -26163,6 +26163,9 @@ bool cui_reorder_end(cui_ctx *ui) {
 #if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
 #define _POSIX_C_SOURCE 200809L
 #endif
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#endif
 #include <time.h>
 
 #if defined(_WIN32)
@@ -26170,6 +26173,11 @@ bool cui_reorder_end(cui_ctx *ui) {
 #elif !defined(__wasm__) && !defined(__EMSCRIPTEN__) && !defined(CUI_NO_FILESYSTEM)
 #include <dirent.h>
 #include <sys/stat.h>
+#if defined(__linux__)
+#include <mntent.h>
+#elif defined(__APPLE__)
+#include <sys/mount.h>
+#endif
 #endif
 
 
@@ -26364,6 +26372,12 @@ static const char *cui__file_date(cui_ctx *ui, int64_t t, time_t now) {
 /* ------------------------------------------------------------------------ */
 
 typedef struct {
+    char path[CUI__FB_PATH], label[320];
+    const char *icon;
+    bool volume;
+} cui__fb_place;
+
+typedef struct {
     char loaded[CUI__FB_PATH];
     cui_file_entry *ent; int n, cap;
     char *names; size_t ncap;
@@ -26375,11 +26389,15 @@ typedef struct {
     char hist[CUI__FB_HIST][CUI__FB_PATH]; int hn, hpos;
     char typed[32]; int typed_n; double typed_at;
     bool error, init, reload, scroll_to_sel;
+    cui__fb_place *places;
+    int places_n, places_cap;
+    bool places_init;
 } cui__fb_state;
 
 static void cui__fb_dtor(cui_ctx *ui, void *data) {
     cui__fb_state *s = data;
     cui__free(ui, s->ent); cui__free(ui, s->names); cui__free(ui, s->order);
+    cui__free(ui, s->places);
     s->ent = NULL; s->names = NULL; s->order = NULL;
 }
 
@@ -26466,26 +26484,117 @@ static void cui__fb_go(cui__fb_state *s, char *path, size_t cap, const char *to,
     snprintf(path, cap, "%s", to);
 }
 
-static void cui__fb_default_places(char (*out)[CUI__FB_PATH], const char **labels, int *n) {
+/** Add a complete, unique path; never expose a truncated navigation target. */
+static void cui__fb_add_place(cui_ctx *ui, cui__fb_state *s, const char *path, const char *label, const char *icon, bool volume) {
+    if (!path || !*path || strlen(path) >= CUI__FB_PATH) return;
+    for (int i = 0; i < s->places_n; i++) if (!strcmp(s->places[i].path, path)) return;
+    if (s->places_n == s->places_cap) {
+        int cap = s->places_cap ? s->places_cap * 2 : 16;
+        cui__fb_place *p = cui__alloc(ui, (size_t)cap * sizeof *p);
+        if (!p) return;
+        if (s->places_n) memcpy(p, s->places, (size_t)s->places_n * sizeof *p);
+        cui__free(ui, s->places); s->places = p; s->places_cap = cap;
+    }
+    cui__fb_place *p = &s->places[s->places_n++];
+    snprintf(p->path, sizeof p->path, "%s", path);
+    snprintf(p->label, sizeof p->label, "%s", label);
+    p->icon = icon; p->volume = volume;
+}
+
+/** Compare an ancestor on a path boundary, accepting both Windows separators. */
+static bool cui__fb_below(const char *path, const char *root) {
+    size_t n = strlen(root);
+    if (!n) return false;
+    for (size_t i = 0; i < n; i++) {
+        if (!path[i]) return false;
+#if defined(_WIN32)
+        if (cui__is_sep(path[i]) && cui__is_sep(root[i])) continue;
+        if (cui__ascii_lower(path[i]) != cui__ascii_lower(root[i])) return false;
+#else
+        if (path[i] != root[i]) return false;
+#endif
+    }
+    return cui__is_sep(root[n - 1]) || !path[n] || cui__is_sep(path[n]);
+}
+
+#if defined(__linux__) && !defined(CUI_NO_FILESYSTEM)
+/** Leave kernel, runtime and container mounts out of the user-facing list. */
+static bool cui__fb_user_mount(const struct mntent *m) {
+    const char *p = m->mnt_dir, *type = m->mnt_type;
+    static const char *const system[] = { "/dev", "/proc", "/sys", "/boot", "/usr", "/var/lib", "/var/run", "/snap", "/mnt/wsl", "/mnt/wslg" };
+    static const char *const pseudo[] = { "proc", "sysfs", "devtmpfs", "devpts", "cgroup", "cgroup2", "securityfs", "pstore", "debugfs", "tracefs", "configfs", "mqueue", "hugetlbfs", "rpc_pipefs", "binfmt_misc", "fusectl", "nsfs", "efivarfs", "bpf", "autofs", "overlay", "squashfs", "fuse.portal", "fuse.gvfsd-fuse" };
+    if (p[0] != '/' || !strcmp(p, "/")) return false;
+    for (size_t i = 0; i < sizeof system / sizeof system[0]; i++) if (cui__fb_below(p, system[i])) return false;
+    if (cui__fb_below(p, "/run") && !cui__fb_below(p, "/run/media")) return false;
+    for (size_t i = 0; i < sizeof pseudo / sizeof pseudo[0]; i++) if (!strcmp(type, pseudo[i])) return false;
+    if (cui__fb_below(p, "/media") || cui__fb_below(p, "/run/media") || cui__fb_below(p, "/mnt")) return true;
+    return !strncmp(m->mnt_fsname, "/dev/", 5) || !strcmp(type, "nfs") || !strcmp(type, "nfs4") ||
+        !strcmp(type, "cifs") || !strcmp(type, "smb3") || !strncmp(type, "fuse.", 5);
+}
+#endif
+
+/** Snapshot native drives/mounts on first use or refresh, without extra libraries. */
+static void cui__fb_default_places(cui_ctx *ui, cui__fb_state *s) {
     const char *home = getenv("HOME");
 #if defined(_WIN32)
     if (!home) home = getenv("USERPROFILE");
 #endif
-    *n = 0;
+    s->places_n = 0; s->places_init = true;
     if (home && *home) {
         static const char *sub[] = { NULL, "Desktop", "Documents", "Downloads" };
         static const char *lab[] = { "Home", "Desktop", "Documents", "Downloads" };
         for (int k = 0; k < 4; k++) {
-            if (sub[k]) cui__path_join(out[*n], CUI__FB_PATH, home, sub[k]);
-            else snprintf(out[*n], CUI__FB_PATH, "%s", home);
-            labels[*n] = lab[k];
-            (*n)++;
+            char path[CUI__FB_PATH];
+            if (strlen(home) + (sub[k] ? strlen(sub[k]) + 1 : 0) >= sizeof path) continue;
+            if (sub[k]) cui__path_join(path, sizeof path, home, sub[k]);
+            else snprintf(path, sizeof path, "%s", home);
+            cui__fb_add_place(ui, s, path, lab[k], k == 0 ? CUI_ICON_HOUSE : k == 3 ? CUI_ICON_DOWNLOAD : CUI_ICON_FOLDER, false);
         }
     }
-#if defined(_WIN32)
-    snprintf(out[*n], CUI__FB_PATH, "C:\\"); labels[*n] = "C:\\"; (*n)++;
-#else
-    snprintf(out[*n], CUI__FB_PATH, "/"); labels[*n] = "Computer"; (*n)++;
+#if defined(_WIN32) && !defined(CUI_NO_FILESYSTEM)
+    DWORD drives = GetLogicalDrives();
+    for (int k = 0; k < 26; k++) {
+        if (!(drives & ((DWORD)1 << k))) continue;
+        wchar_t root[] = L"A:\\", name[256] = { 0 };
+        char path[] = "A:\\", label[320], utf8[256] = { 0 };
+        root[0] += (wchar_t)k; path[0] += (char)k;
+        UINT type = GetDriveTypeW(root);
+        /* Disconnected network drives must not trigger a remote label lookup.
+         * Empty removable drives must not display a system error dialog. */
+        DWORD previous;
+        if (type != DRIVE_REMOTE && SetThreadErrorMode(SEM_FAILCRITICALERRORS, &previous)) {
+            if (GetVolumeInformationW(root, name, 256, NULL, NULL, NULL, NULL, 0) &&
+                !WideCharToMultiByte(CP_UTF8, 0, name, -1, utf8, sizeof utf8, NULL, NULL)) utf8[0] = 0;
+            SetThreadErrorMode(previous, NULL);
+        }
+        const char *fallback = type == DRIVE_REMOTE ? "Network" : type == DRIVE_REMOVABLE ? "Removable drive" : type == DRIVE_CDROM ? "Optical drive" : "Local disk";
+        snprintf(label, sizeof label, "%s (%c:)", *utf8 ? utf8 : fallback, path[0]);
+        cui__fb_add_place(ui, s, path, label, type == DRIVE_REMOTE ? CUI_ICON_LINK : CUI_ICON_MONITOR, true);
+    }
+#elif !defined(__wasm__) && !defined(__EMSCRIPTEN__) && !defined(CUI_NO_FILESYSTEM)
+    cui__fb_add_place(ui, s, "/", "File system", CUI_ICON_MONITOR, true);
+#if defined(__linux__)
+    FILE *mounts = setmntent("/proc/self/mounts", "r");
+    if (mounts) {
+        struct mntent *m;
+        while ((m = getmntent(mounts)) != NULL) {
+            if (!cui__fb_user_mount(m)) continue;
+            const char *label = strrchr(m->mnt_dir, '/');
+            cui__fb_add_place(ui, s, m->mnt_dir, label && label[1] ? label + 1 : m->mnt_dir, CUI_ICON_MONITOR, true);
+        }
+        endmntent(mounts);
+    }
+#elif defined(__APPLE__)
+    struct statfs *mounts;
+    int count = getmntinfo(&mounts, MNT_NOWAIT);
+    for (int k = 0; k < count; k++) {
+        const char *path = mounts[k].f_mntonname;
+        if ((mounts[k].f_flags & MNT_DONTBROWSE) || !strcmp(path, "/") ||
+            cui__fb_below(path, "/System") || cui__fb_below(path, "/dev")) continue;
+        const char *label = strrchr(path, '/');
+        cui__fb_add_place(ui, s, path, label && label[1] ? label + 1 : path, CUI_ICON_MONITOR, true);
+    }
+#endif
 #endif
 }
 
@@ -26560,7 +26669,7 @@ static void cui__fb_build_toolbar(cui__fb_frame *f) {
     if (!f->tiny) {
         cui_input_opts io;
         memset(&io, 0, sizeof io);
-        io.placeholder = "Filter"; io.icon = CUI_ICON_SEARCH; io.width = CUI_PX(f->narrow ? 120 : 180); io.clearable = true;
+        io.placeholder = "Filter"; io.icon = CUI_ICON_SEARCH; io.width = CUI_PX(f->narrow ? 120 : 180); io.clearable = true; io.size = CUI_SIZE_SM;
         cui_input_ex(ui, "filter", s->query, sizeof s->query, &io);
     }
     bo.tooltip = "Reload (F5)";
@@ -26568,27 +26677,55 @@ static void cui__fb_build_toolbar(cui__fb_frame *f) {
     cui__close(ui);
 }
 
-/* the places beside the list: the app's, or home, desktop, documents, downloads and the root */
+/** Render a muted sidebar group heading. */
+static void cui__fb_places_heading(cui_ctx *ui, const char *label) {
+    cui_box box;
+    memset(&box, 0, sizeof box);
+    box.width = CUI_FILL; box.pad_x = 8; box.pad_y = 6;
+    cui_box_begin(ui, &box);
+    cui__text_node(ui, label, -1, CUI_FONT_MEDIUM, cui__fs(ui, ui->theme.text_xs), CUI_C(ui, TEXT_SECONDARY), false);
+    cui_box_end(ui);
+}
+
+/** Build a scrollable sidebar of custom places or native places and volumes. */
 static void cui__fb_build_places(cui__fb_frame *f) {
     cui_ctx *ui = f->ui;
     const cui_file_browser_opts *o = f->o;
-    char (*dplaces)[CUI__FB_PATH] = cui__frame_alloc(ui, sizeof(char[CUI__FB_PATH]) * 6);
-    const char *dlabels[6];
-    int np = 0;
+    cui__fb_state *s = f->s;
     const char *const *places = o->places;
-    if (!places) {
-        cui__fb_default_places(dplaces, dlabels, &np);
-    } else np = CUI_MIN(o->place_count, 6);
-    int side = cui__node_new(ui, 0);
-    ui->nodes[side].w = CUI_PX(150); ui->nodes[side].gap = 1;
-    cui__open(ui, side);
+    if (!places && !s->places_init) cui__fb_default_places(ui, s);
+    int np = places ? o->place_count : s->places_n;
+    int selected_volume = -1;
+    size_t longest = 0;
+    if (!places) for (int k = 0; k < np; k++) {
+        const cui__fb_place *p = &s->places[k];
+        size_t len = strlen(p->path);
+        if (p->volume && len > longest && cui__fb_below(f->path, p->path)) { selected_volume = k; longest = len; }
+    }
+    cui_scroll_opts so;
+    memset(&so, 0, sizeof so);
+    so.id = "places"; so.width = CUI_PX(180); so.height = CUI_FILL; so.gap = 1;
+    cui_scroll_begin(ui, &so);
+    bool volumes = false;
+    if (np > 0 && (places || !s->places[0].volume)) cui__fb_places_heading(ui, "Places");
     for (int k = 0; k < np; k++) {
-        const char *pp = places ? places[k] : dplaces[k];
-        const char *label = places ? pp : dlabels[k];
+        const char *pp = places ? places[k] : s->places[k].path;
+        if (!pp || !*pp) continue;
+        const char *label = places ? pp : s->places[k].label;
+        if (!places && s->places[k].volume && !volumes) {
+#if defined(_WIN32)
+            cui__fb_places_heading(ui, "Drives");
+#elif defined(__APPLE__)
+            cui__fb_places_heading(ui, "Volumes");
+#else
+            cui__fb_places_heading(ui, "Devices");
+#endif
+            volumes = true;
+        }
         if (places) { const char *sl = pp + strlen(pp); while (sl > pp && !cui__is_sep(sl[-1])) sl--; if (*sl) label = sl; }
         cui_id pid = cui__hash_str(pp, f->id ^ 0x91ACu);
         cui_interact pr2 = cui__interact(ui, pid, CUI_IF_FOCUSABLE);
-        bool here = !strcmp(pp, f->path);
+        bool here = !places && s->places[k].volume ? k == selected_volume : !strcmp(pp, f->path);
         if (pr2.clicked || pr2.keyboard_activate) f->go_to = pp;
         int row = cui__node_new(ui, pid);
         cui_node *rn = &ui->nodes[row];
@@ -26600,13 +26737,13 @@ static void cui__fb_build_places(cui__fb_frame *f) {
         cui__focus_ring(ui, row, pr2.focus_visible ? 1.0f : 0.0f);
         if (pr2.hovered) cui__set_cursor(ui, CUI_CURSOR_HAND);
         cui__open(ui, row);
-        const char *icon = !places && k == 0 ? CUI_ICON_HOUSE : !places && k == np - 1 ? CUI_ICON_MONITOR : !places && k == 3 ? CUI_ICON_DOWNLOAD : CUI_ICON_FOLDER;
+        const char *icon = places ? CUI_ICON_FOLDER : s->places[k].icon;
         cui__icon_node(ui, icon, 15, here ? CUI_C(ui, FOREGROUND) : CUI_C(ui, TEXT_SECONDARY));
         int t = cui__text_node(ui, label, -1, here ? CUI_FONT_MEDIUM : CUI_FONT_BODY, cui__fs(ui, ui->theme.text_sm), CUI_C(ui, FOREGROUND), false);
         ui->nodes[t].w = CUI_FILL; ui->nodes[t].line_height = 1.3f;
         cui__close(ui);
     }
-    cui__close(ui);
+    cui_scroll_end(ui);
 }
 
 /* the column titles: a click sorts by that column, again reverses it */
@@ -26790,6 +26927,7 @@ cui_file_browser_result cui_file_browser_ex(cui_ctx *ui, const char *id_str, cha
     if (!s->init) { s->sel = -1; s->init = true; }
     char before[CUI__FB_PATH];
     snprintf(before, sizeof before, "%s", path);
+    if (s->reload) s->places_init = false;
     if (s->reload || strcmp(s->loaded, path) != 0) { cui__fb_load(ui, s, path, o); s->reload = false; }
     cui__fb_order(ui, s, o);
     cui_push_id(ui, id_str ? id_str : "files");
@@ -26857,7 +26995,8 @@ bool cui_file_picker_ex(cui_ctx *ui, const char *id_str, bool *open, char *out, 
     cui_id id = cui_make_id(ui, id_str ? id_str : "file-dialog");
     cui__fp_state *s = cui_state(ui, id, sizeof *s);
     if (!*open) { s->init = false; }
-    if (*open && !s->init) {
+    bool opening = *open && !s->init;
+    if (opening) {
         snprintf(s->path, sizeof s->path, "%s", o->start && *o->start ? o->start : ".");
         snprintf(s->name, sizeof s->name, "%s", o->name ? o->name : "");
         s->init = true;
@@ -26873,6 +27012,10 @@ bool cui_file_picker_ex(cui_ctx *ui, const char *id_str, bool *open, char *out, 
         memset(&bo, 0, sizeof bo);
         bo.height = CUI_PX(CUI_MIN(400.0f, ui->vh - 260));
         bo.filter = o->filter; bo.folders_only = o->folders; bo.list = o->list; bo.list_user = o->list_user;
+        if (opening) {
+            cui__fb_state *bs = cui_state(ui, cui_make_id(ui, "browser"), sizeof *bs);
+            bs->reload = true;
+        }
         cui_file_browser_result r = cui_file_browser_ex(ui, "browser", s->path, sizeof s->path, &bo);
         /* save: selecting a file puts its name in the field */
         uint32_t selh = r.selected ? cui__hash_str(r.selected, 0x5E1u) : 0;

@@ -4,21 +4,23 @@
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
-| Revision | Source fork branch `window-state`, proposed upstream in [pull request #95](https://github.com/yappologistic/CUI/pull/95), on upstream [`6e6b353`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`a18f6616ba466a95ec6e9d64f4fef859d51930fd`](https://github.com/tobiasbick/CUI/commit/a18f6616ba466a95ec6e9d64f4fef859d51930fd) |
+| Revision | Source fork branch [`fpas-cui`](https://github.com/tobiasbick/CUI/tree/fpas-cui), combining upstream PRs [#95](https://github.com/yappologistic/CUI/pull/95) and [#97](https://github.com/yappologistic/CUI/pull/97) on [`6e6b353`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
+| Commit | [`07df572ed9c93dfa7802180d172b721bed0c0b4f`](https://github.com/tobiasbick/CUI/commit/07df572ed9c93dfa7802180d172b721bed0c0b4f) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
 The amalgamated C source and public header are the unchanged output of
 `python3 tools/amalgamate.py` on Linux in the source fork at the pinned commit.
-That commit adds window state and placement to upstream `master` at `6e6b353`
-and is not part of upstream yet. Once upstream contains the change, pin the
-upstream commit again.
+The `fpas-cui` branch combines contributions that FPAS uses before they land
+upstream: window state and placement from `window-state`, and the native drive
+sidebar and filter-height fix from `codex/file-picker-drives`. Each contribution
+has its own upstream PR. Once upstream contains these changes, pin an upstream
+commit again; keep unmerged contributions on `fpas-cui` in the meantime.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `58478ed4de7346a210fdb4128744f96afd5e4578d7799637f2435b39400d83fe` |
-| `cui.h` | `c9c3ff679e0b574380dcc26163a3741f0c7d9d642cc4555097867f1f11a17585` |
+| `cui.c` | `d25204104d842e9024d084cdc1d212e546e1fd6169cb57ef75cb8aff34f0be9b` |
+| `cui.h` | `df7f4a4af56749096521a2061644d80196adcf0a5ab142bb3eb7bee137c5a92a` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -29,13 +31,18 @@ from the unmodified upstream sources here.
 The copied pair matches the generated files byte for byte. This snapshot
 includes the seven groups of fixes for collection widgets, chart interactions,
 read-only widgets, numeric editors, focus and popups, pickers, and disabled
-widgets, plus the window state and placement API of pull request #95. The
-upstream license inputs and theme builder are unchanged.
+widgets, the window state and placement API of pull request #95, and the
+file-picker changes of pull request #97. The browser matches the filter and
+path heights, lists native drives or volumes in a scrollable sidebar, and
+refreshes them on reload or picker opening. The upstream license inputs and
+theme builder are unchanged.
 
 The native integration suite passed 37 tests on Windows and 35 on Linux under
-WSL. Five upstream test suites built against the amalgamation passed on both
-platforms. The 25 selected .NET GUI tests passed on both platforms, including
-the gallery with software and OpenGL renderers.
+WSL. The 19 selected .NET GUI tests passed on Windows, covering window placement,
+host layout, collection tracking and themes. FPas-Amp builds against this pair.
+The file-picker contribution passed the full upstream suites on Windows
+(22 tests), Linux (24 tests) and Linux with ASan/UBSan (24 tests). Its neutral
+before/after captures and platform verification are linked from PR #97.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 

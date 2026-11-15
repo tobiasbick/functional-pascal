@@ -1707,9 +1707,10 @@ CUI_API void cui_path_bar_menu_end(cui_ctx *ui);
  * system's own). The browser lists a folder (name,
  * date modified and size; folders first, any column sorts), with back,
  * forward and up, a path bar you can type into, a filter field and a
- * sidebar of places. Double-click or Enter opens a folder or picks a file;
- * Backspace goes up, Alt+Left and Alt+Right go back and forward, F5
- * reloads, and typing a letter jumps to the next name that starts with it.
+ * scrollable sidebar of places and native drives/volumes. Double-click or
+ * Enter opens a folder or picks a file; Backspace goes up, Alt+Left and
+ * Alt+Right go back and forward, F5 reloads the folder and native sidebar,
+ * and typing a letter jumps to the next name that starts with it.
  * A folder is read when you enter it (or reload), not every frame, and only
  * the rows in view are built.
  *
@@ -1739,8 +1740,8 @@ typedef struct cui_file_browser_opts {
     bool folders_only;         /* lists folders and leaves the files out */
     bool hidden;               /* show hidden files */
     bool no_places;            /* the sidebar of places */
-    const char *const *places; /* full paths for the sidebar, each shown by its last part; at most 6 */
-    int place_count;           /* entries in `places`; with `places` NULL the sidebar shows home, desktop, documents, downloads and the root */
+    const char *const *places; /* full paths for the scrollable sidebar, each shown by its last part */
+    int place_count;           /* entries in `places`; when places is NULL: home, desktop, documents, downloads and native drives/mounts */
     cui_file_list_fn list;     /* function that lists a folder; set it to browse something other than the local disk */
     void *list_user;           /* passed to `list` as its first argument; `list` defaults to cui_fs_list, the local disk */
     int max_entries;           /* default 20,000 */

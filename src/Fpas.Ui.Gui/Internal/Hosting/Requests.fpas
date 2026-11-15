@@ -1,0 +1,51 @@
+unit Fpas.Ui.Gui.Internal.Hosting.Requests;
+
+uses
+  Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.FileDialogs as Files,
+  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Windows as Windows, System as Sys,
+  System.Collections.Generic as Generic;
+
+// Carries out one graphical host extension on the owner thread.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Value`: The extension payload from a host command.
+// - `Window`: The owned native window.
+// - `Pending`: Receives messages the request produces, such as read results.
+// - `PendingToasts`: Receives toast requests for the next frame.
+public procedure Apply<TMsg>(
+  Value: Sys.Object; Window: Cui.CuiWindow; Pending: Generic.Queue<TMsg>;
+  PendingToasts: Generic.Queue<Toasts.Request<TMsg>>
+);
+begin
+  case Value of
+    when is Windows.StateRequest<TMsg> as Change:
+      case Change.Target of
+        when Cui.CuiWindowState.Maximized:
+          Window.Maximize();
+        when Cui.CuiWindowState.Minimized:
+          Window.Minimize();
+        else
+          Window.Restore();
+      end case;
+    when is Windows.MoveRequest<TMsg> as Move:
+      Window.MoveTo(Move.X, Move.Y);
+    when is Windows.PlacementRequest<TMsg> as Placement:
+      Pending.Enqueue(Placement.OnRead(Window.Placement));
+    when is Clipboard.WriteRequest<TMsg> as Write:
+      Window.WriteClipboardText(Write.Text);
+    when is Clipboard.ReadRequest<TMsg> as Read:
+      Pending.Enqueue(Read.OnRead(Window.ReadClipboardText()));
+    when is Files.OpenRequest<TMsg> as Dialog:
+      const Path: string? := Window.OpenFile(Dialog.Title, Dialog.FilterName, Dialog.Accept);
+      if Path <> null then
+        Pending.Enqueue(Dialog.OnSelected(Path));
+      end if;
+    when is Toasts.Request<TMsg> as Notification:
+      PendingToasts.Enqueue(Notification);
+    else
+      raise new Sys.NotSupportedException('Unknown graphical host request.');
+  end case;
+end procedure;
+
+end unit;

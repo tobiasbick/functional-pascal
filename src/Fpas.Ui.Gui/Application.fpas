@@ -16,25 +16,16 @@ public type Options = record
   public Capacity: int := 128;
   // Initial native theme, unless selected from the model.
   public Theme: Themes.Theme := new Themes.Theme();
-  // Request a maximized window at startup on window managers that support it.
-  public StartMaximized: bool := false;
+  // A saved placement to open at, maximized if it was; its size replaces Width
+  // and Height. Null lets the system choose the place.
+  public Placement: Cui.CuiWindowPlacement? := null;
 end record;
 
 function CreateWindow(Settings: Options): Cui.CuiWindow;
 begin
-  const Window: Cui.CuiWindow := new Cui.CuiWindow(
-    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer
+  return new Cui.CuiWindow(
+    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer, false, Settings.Placement
   );
-  try
-    if Settings.StartMaximized then
-      Window.Maximize();
-    end if;
-
-    return Window;
-  catch Error: Sys.Exception do
-    Window.Dispose();
-    raise;
-  end try;
 end function;
 
 // A detached description of a presented graphical control.
@@ -85,6 +76,7 @@ public type Session<TMsg> = record implements Sys.IDisposable
   Software: function(): bool;
   Capture: procedure(string);
   Release: procedure();
+  Place: function(): Cui.CuiWindowPlacement;
 
   // Wraps the host implementation's operations.
   //
@@ -96,16 +88,17 @@ public type Session<TMsg> = record implements Sys.IDisposable
   // - `Software`: Reports actual renderer selection on the owner.
   // - `Capture`: Writes the presented native frame on the owner.
   // - `Release`: Stops and releases the session on the owner.
+  // - `Place`: Reads the window placement on the owner, or the one kept when the window closed.
   //
   // ## Returns
   // The owned session.
   public static function Create(
     Process: function(): bool; Enqueue: function(TMsg): Core.Admission;
     Read: function(): Frame; Status: function(): bool; Software: function(): bool;
-    Release: procedure(); Capture: procedure(string)
+    Release: procedure(); Capture: procedure(string); Place: function(): Cui.CuiWindowPlacement
   ): Session<TMsg>;
   begin
-    return new Session<TMsg>(Process, Enqueue, Read, Status, Software, Capture, Release);
+    return new Session<TMsg>(Process, Enqueue, Read, Status, Software, Capture, Release, Place);
   end function;
 
   // Processes admitted messages and presents one frame, waiting for native input when idle.
@@ -165,6 +158,17 @@ public type Session<TMsg> = record implements Sys.IDisposable
   begin
     self.Capture(Path);
   end procedure;
+
+  // Reads the window's normal size and place and whether it is or comes back
+  // maximized. After Step returns false it returns the placement the window had
+  // when it closed, so an application can save it before Dispose.
+  //
+  // ## Returns
+  // The placement to pass as `Options.Placement` at the next start.
+  public function Placement(): Cui.CuiWindowPlacement;
+  begin
+    return self.Place();
+  end function;
 
   // Stops admission and destroys native resources on the creating thread.
   public procedure Dispose();

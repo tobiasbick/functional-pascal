@@ -1,6 +1,6 @@
 unit GuiGallery.Pages.Desktop.State;
 
-uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as P, Fpas.Ui.Graphics as Color;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as P, Fpas.Ui.Graphics as Color;
 
 // Editor and workspace sample state.
 public type Model = record
@@ -122,6 +122,8 @@ public type Model = record
   public Revision: int := 0;
   // Text returned by the last clipboard read.
   public PastedText: string := '';
+  // Placement returned by the last read, or null before the first read.
+  public Placement: Cui.CuiWindowPlacement? := null;
 end record;
 
 // Native proposals for the desktop examples.
@@ -146,6 +148,16 @@ public type Msg = variant
   Resize(Ratio: float);
   // Maximize the gallery window.
   Maximize;
+  // Minimize the gallery window.
+  Minimize;
+  // Undo a maximize or a minimize.
+  Restore;
+  // Move the gallery window to a fixed place.
+  MoveWindow;
+  // Read the window's normal size, place and state.
+  ReadPlacement;
+  // Show the placement returned by the host.
+  PlacementRead(Value: Cui.CuiWindowPlacement);
   // Copy the sample file path.
   CopyPath;
   // Read plain text from the system clipboard.

@@ -2,26 +2,64 @@ unit GuiGallery.Pages.Desktop.HostActions;
 
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles,
+  Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Path copied by the clipboard example.
 public const SamplePath: string := 'projects/atlas/notes.md';
+// Left edge the move example places the window content at.
+public const MoveX: int := 120;
+// Top edge the move example places the window content at.
+public const MoveY: int := 120;
+
+// Describes a window placement as an application would save it.
+// ## Parameters
+// - `Value`: The placement read from the host.
+// ## Returns
+// The saved state, normal size and place.
+public function Describe(Value: Cui.CuiWindowPlacement): string;
+begin
+  const Size: string := Value.Width.ToString() + ' x ' + Value.Height.ToString();
+  const Place: string := if Value.HasPosition then
+    'at ' + Value.X.ToString() + ', ' + Value.Y.ToString()
+  else
+    'place chosen by the system'
+  end if;
+  return Value.State.ToString() + ', normal size ' + Size + ' ' + Place;
+end function;
 
 // Displays the gallery's window and clipboard actions.
 // ## Parameters
-// - `Model`: Current clipboard preview.
+// - `Model`: Current placement and clipboard preview.
 // ## Returns
-// The actions and the text from the last paste.
+// The actions with the last placement and the text from the last paste.
 public function View(Model: S.Model): E.Element<S.Msg>;
 begin
+  const Placement: Cui.CuiWindowPlacement? := Model.Placement;
   return G.Card<S.Msg>(
     12, [
+      E.Row<S.Msg>(
+        new L.Flow(Gap := G.Points(8), Wrap := true),
+        B.Button<S.Msg>('desktop-maximize', 'Maximize window', S.Msg.Maximize),
+        B.Button<S.Msg>('desktop-minimize', 'Minimize', S.Msg.Minimize),
+        B.Button<S.Msg>('desktop-restore', 'Restore', S.Msg.Restore),
+        B.Button<S.Msg>(
+          'desktop-move', 'Move to ' + MoveX.ToString() + ', ' + MoveY.ToString(), S.Msg.MoveWindow
+        ),
+        B.Button<S.Msg>('desktop-placement', 'Read placement', S.Msg.ReadPlacement)
+      ),
+      E.Text<S.Msg>(
+        if Placement = null then
+          'Placement not read'
+        else
+          Describe(Placement.Value)
+        end if
+      ),
       E.Styled<S.Msg>(E.Text<S.Msg>(SamplePath), Styles.Role.Secondary),
       E.Row<S.Msg>(
         new L.Flow(Gap := G.Points(8), Wrap := true),
         B.Button<S.Msg>('desktop-copy-path', 'Copy path', S.Msg.CopyPath),
-        B.Button<S.Msg>('desktop-paste-text', 'Paste text', S.Msg.PasteText),
-        B.Button<S.Msg>('desktop-maximize', 'Maximize window', S.Msg.Maximize)
+        B.Button<S.Msg>('desktop-paste-text', 'Paste text', S.Msg.PasteText)
       ),
       E.Text<S.Msg>(
         if Model.PastedText = '' then

@@ -2,6 +2,7 @@
 unit FpasAmp.WindowState;
 
 uses
+  Fpas.Ui.Gui.Cui as Cui,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   System.IO as IO,
@@ -13,9 +14,9 @@ public type Placement = record
   public Width: int := 1000;
   // Normal window height in logical units.
   public Height: int := 680;
-  // Normal left coordinate, when known.
+  // Left edge of the normal window's content in desktop coordinates, when known.
   public X: int? := null;
-  // Normal top coordinate, when known.
+  // Top edge of the normal window's content in desktop coordinates, when known.
   public Y: int? := null;
   // Whether the window was maximized.
   public Maximized: bool := false;
@@ -85,5 +86,69 @@ requires Value.Height > 0;
 begin
   Files.Save<Placement>(IO.Path.Combine(Directory, FileName), Value, Decode);
 end procedure;
+
+// Converts a stored placement for the GUI host.
+//
+// ## Parameters
+// - `Value`: Placement with positive normal dimensions.
+// ## Returns
+// The host placement; without both coordinates the system chooses the place.
+public function ToWindow(Value: Placement): Cui.CuiWindowPlacement;
+requires Value.Width > 0;
+requires Value.Height > 0;
+begin
+  const X: int? := Value.X;
+  const Y: int? := Value.Y;
+  const Known: bool := X <> null and Y <> null;
+  var Window: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+  if Known then
+    Window.X := X.Value;
+    Window.Y := Y.Value;
+  end if;
+
+  Window.Width := Value.Width;
+  Window.Height := Value.Height;
+  Window.State := if Value.Maximized then
+    Cui.CuiWindowState.Maximized
+  else
+    Cui.CuiWindowState.Normal
+  end if;
+  Window.HasPosition := Known;
+  return Window;
+end function;
+
+// Converts the host placement of a closed window for storage.
+//
+// ## Parameters
+// - `Value`: The placement the GUI host reported when the window closed.
+// ## Returns
+// The stored placement; coordinates are null where the system reports none.
+public function FromWindow(Value: Cui.CuiWindowPlacement): Placement;
+begin
+  const Defaults: Placement := new Placement();
+  return new Placement(
+    if Value.Width > 0 then
+      Value.Width
+    else
+      Defaults.Width
+    end if,
+    if Value.Height > 0 then
+      Value.Height
+    else
+      Defaults.Height
+    end if,
+    if Value.HasPosition then
+      Value.X
+    else
+      null
+    end if,
+    if Value.HasPosition then
+      Value.Y
+    else
+      null
+    end if,
+    Value.State = Cui.CuiWindowState.Maximized
+  );
+end function;
 
 end unit;

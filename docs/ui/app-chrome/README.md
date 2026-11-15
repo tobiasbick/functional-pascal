@@ -2,7 +2,8 @@
 
 The gallery places menus, tools, tabs and a status bar around an editor.
 A second example shows dockable panes and a third shows a two-pane split.
-These widgets require the GUI host.
+A fourth changes and reads the window's state and placement.
+These widgets and commands require the GUI host.
 
 | Widget | When to use it |
 | --- | --- |
@@ -11,6 +12,7 @@ These widgets require the GUI host.
 | [Status bar](status-bar.md) | Present progress, state and clickable status items. |
 | [Docking workspace](dockspace.md) | Arrange tabbed panels and save the layout. |
 | [Split view](split-view.md) | Resize two panes with a divider. |
+| [Window state and placement](window.md) | Maximize, minimize, restore or move the window and reopen it where it was. |
 | [Toolbar](../canvas-and-bars/toolbar.md) | Arrange editing commands, toggle state and primary actions. |
 
 ## See also

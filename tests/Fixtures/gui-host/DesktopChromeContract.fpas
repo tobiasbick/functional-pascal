@@ -154,6 +154,28 @@ begin
     Last.Ratio > 0.59F and Last.Ratio < 0.61F,
     'Dragging the split divider updates the model.'
   );
+
+  A.Send(Session, State.Msg.Desktop(Desktop.Msg.ReadPlacement));
+  Draw(Session);
+  A.Check(Last.Placement <> null, 'Reading the placement returns it to the update.');
+  const Opened: Cui.CuiWindowPlacement := Last.Placement.Value;
+  A.Check(
+    Opened.State = Cui.CuiWindowState.Normal and Opened.Width = Width and Opened.Height = 1390,
+    'The placement reports the normal window at its opening size.'
+  );
+  A.Check(
+    Session.Placement().Width = Opened.Width,
+    'The session reads the same placement outside an update.'
+  );
+  A.Send(Session, State.Msg.Desktop(Desktop.Msg.MoveWindow));
+  Draw(Session, 12);
+  A.Send(Session, State.Msg.Desktop(Desktop.Msg.ReadPlacement));
+  Draw(Session);
+  const Moved: Cui.CuiWindowPlacement := Last.Placement.Value;
+  A.Check(
+    not Moved.HasPosition or (Moved.X = 120 and Moved.Y = 120),
+    'Moving the window places its content where the command asked.'
+  );
 end procedure;
 
 // Captures desktop chrome and existing chart annotations, and exercises native proposals.

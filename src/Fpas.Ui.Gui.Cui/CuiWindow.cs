@@ -34,10 +34,19 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="height">Positive logical height.</param>
     /// <param name="renderer">Requested rendering backend.</param>
     /// <param name="continuous">Whether to request frames while idle; intended for bounded tests.</param>
+    /// <param name="placement">
+    /// A saved placement to open at, whose size replaces <paramref name="width"/> and <paramref name="height"/>;
+    /// null lets the system choose the place.
+    /// </param>
     public CuiWindow(string title, int width = 640, int height = 480,
-        CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false)
+        CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false, CuiWindowPlacement? placement = null)
     {
         Utf8.Validate(title, nameof(title));
+        if (placement is { } saved)
+        {
+            if (!Enum.IsDefined(saved.State)) throw new ArgumentOutOfRangeException(nameof(placement));
+            (width, height) = (saved.Width, saved.Height);
+        }
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         if (!Enum.IsDefined(renderer)) throw new ArgumentOutOfRangeException(nameof(renderer));
@@ -48,7 +57,10 @@ public sealed partial class CuiWindow : IDisposable
                 throw new InvalidOperationException("A CUI OpenGL window already owns this thread's OpenGL context.");
             renderer = CuiRenderer.Software;
         }
-        app = NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0);
+        app = placement is { } at
+            ? NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0,
+                1, at.X, at.Y, at.HasPosition ? 1 : 0, at.State == CuiWindowState.Maximized ? 1 : 0)
+            : NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0, 0, 0, 0, 0, 0);
         if (app == 0) throw new InvalidOperationException("CUI could not create a window. Check the native display connection.");
         wakeTarget = NativeMethods.OpenWakeTarget(app);
         if (wakeTarget == 0)

@@ -5,7 +5,7 @@ uses
   FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.General as General,
   FpasAmp.Ui.Settings.Library as Library, FpasAmp.Ui.Settings.Model as M,
   FpasAmp.Ui.Settings.Update as Updates,
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Layout as L,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Layout as L,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
@@ -143,30 +143,31 @@ end function;
 // Opens the desktop shell and runs it until the window closes.
 //
 // ## Parameters
-// - `Width`: Positive initial window width in logical units.
-// - `Height`: Positive initial window height in logical units.
+// - `Window`: Saved normal size and place, and whether the window was maximized.
+//   The native window rejects a size below one logical unit.
 // - `Settings`: Validated preferences loaded at startup.
 // - `Save`: Persists a new set of validated preferences.
-public procedure Run(Width: int; Height: int; Settings: M.Preferences; Save: procedure(M.Preferences));
-requires Width > 0;
-requires Height > 0;
+// ## Returns
+// The window's placement when it closed, to restore at the next start.
+public function Run(
+  Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences)
+): Cui.CuiWindowPlacement;
 begin
   const Initial: M.State := new M.State(Settings);
-  Gui.RunThemed<M.State, M.Msg>(
+  using const Session: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
     Initial,
     function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> => new Mvu.Transition<M.State, M.Msg>(
       Updates.Apply(Current, Message, Save),
       []
     ),
     View,
-    new Gui.Options(
-      Title := DisplayName,
-      Width := Width,
-      Height := Height,
-      Theme := M.Theme(Initial, null)
-    ),
+    new Gui.Options(Title := DisplayName, Theme := M.Theme(Initial, null), Placement := Window),
     M.Theme
   );
-end procedure;
+  while Session.Step() do
+  end while;
+
+  return Session.Placement();
+end function;
 
 end unit;

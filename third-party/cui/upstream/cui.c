@@ -77004,6 +77004,7 @@ struct cui_app {
     const char *screenshot_path;  /* CUI_SCREENSHOT: save a PNG and quit */
     int screenshot_frames;
     int frames;
+    cui_window_placement placement;   /* the copy desc.placement points to, when one was given */
 };
 
 /* Implemented by each backend. */
@@ -77036,6 +77037,14 @@ void cui__app_live_frame(cui_app *app);               /* run one frame from insi
 void cui__app_set_clipboard_cache(cui_app *app, const char *utf8);
 
 void cui__plat_maximize(cui_app *app);
+void cui__plat_minimize(cui_app *app);
+void cui__plat_restore(cui_app *app);
+cui_window_state cui__plat_window_state(cui_app *app);
+void cui__plat_set_position(cui_app *app, int x, int y);
+/* Fills in the normal size and place, and the state: maximized also for a minimized window that
+ * comes back maximized. desc.placement, when set, has already set desc.width and desc.height;
+ * cui__plat_init places the window and cui__plat_show opens it maximized. */
+void cui__plat_placement(cui_app *app, cui_window_placement *out);
 
 #endif
 
@@ -77069,6 +77078,19 @@ cui_app *cui_app_create(const cui_app_desc *desc) {
     if (d->height <= 0) d->height = 720;
     if (d->min_width <= 0) d->min_width = 360;
     if (d->min_height <= 0) d->min_height = 280;
+    if (d->placement) {
+        /* backends read the size from width and height, and only a maximized state at opening */
+        app->placement = *d->placement;
+        d->placement = &app->placement;
+        cui_window_placement *p = &app->placement;
+        if (p->width > 0) d->width = p->width;
+        if (p->height > 0) d->height = p->height;
+        if (d->width < d->min_width) d->width = d->min_width;
+        if (d->height < d->min_height) d->height = d->min_height;
+        p->width = d->width;
+        p->height = d->height;
+        if (p->state != CUI_WINDOW_MAXIMIZED || d->fixed_size) p->state = CUI_WINDOW_NORMAL;
+    }
     cui_theme_mode mode = d->theme;
     if (d->follow_system_theme) {
         int dark = cui__plat_system_dark();
@@ -77374,6 +77396,23 @@ void cui_app_maximize(cui_app *app) {
     if (app && !app->desc.fixed_size) cui__plat_maximize(app);
 }
 
+void cui_app_minimize(cui_app *app) { app = cui__app_or_current(app); if (app) cui__plat_minimize(app); }
+void cui_app_restore(cui_app *app) { app = cui__app_or_current(app); if (app) cui__plat_restore(app); }
+void cui_app_set_position(cui_app *app, int x, int y) { app = cui__app_or_current(app); if (app) cui__plat_set_position(app, x, y); }
+
+cui_window_state cui_app_window_state(cui_app *app) {
+    app = cui__app_or_current(app);
+    return app ? cui__plat_window_state(app) : CUI_WINDOW_NORMAL;
+}
+
+bool cui_app_placement(cui_app *app, cui_window_placement *out) {
+    app = cui__app_or_current(app);
+    if (!app || !out) return false;
+    memset(out, 0, sizeof *out);
+    cui__plat_placement(app, out);
+    return true;
+}
+
 /* ==== src/platform/cui_dialogs.c ==== */
 /* Native file dialogs and URL opening, shared by every backend on a given
  * operating system: Win32 common dialogs, AppleScript on macOS, and zenity or
@@ -77637,6 +77676,11 @@ typedef struct {
     SDL_Cursor *cursors[CUI_CURSOR_COUNT];
     cui_cursor cursor;
     SDL_Surface *surface;
+    /* SDL keeps no normal size and place for a maximized window: noted while it is normal */
+    int normal_x, normal_y, normal_w, normal_h;
+    bool normal_pos_known;
+    bool was_maximized;   /* the state before a minimize, which SDL's restore forgets on X11 */
+    double hold_place_until;   /* after a restore from minimized: keep the window at its normal place */
 } cui__sdl;
 
 static cui__sdl *cui__s(cui_app *app) { return app->plat; }
@@ -77685,6 +77729,21 @@ static void cui__sdl_text_input_rect(void *user, cui_rect caret) {
     if (!SDL_IsTextInputActive()) SDL_StartTextInput();
 }
 
+/* Wayland tells a window nothing about where it is and lets it choose nothing. */
+static bool cui__sdl_positions(void) {
+    const char *driver = SDL_GetCurrentVideoDriver();
+    return !driver || strcmp(driver, "wayland") != 0;
+}
+
+/* True when the top edge of a window at x, y of width w is on a display. */
+static bool cui__sdl_on_screen(int x, int y, int w) {
+    for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
+        SDL_Rect r;
+        if (SDL_GetDisplayBounds(i, &r) == 0 && x < r.x + r.w && x + w > r.x && y >= r.y && y < r.y + r.h) return true;
+    }
+    return false;
+}
+
 bool cui__plat_init(cui_app *app) {
     /* The app ID becomes WM_CLASS (X11) and the app_id (Wayland). SDL2 reads it
      * from these variables in SDL_Init, Wayland falling back to the X11 one;
@@ -77721,10 +77780,21 @@ bool cui__plat_init(cui_app *app) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     }
-    s->win = SDL_CreateWindow(app->title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, app->desc.width, app->desc.height, flags);
+    const cui_window_placement *pl = app->desc.placement;
+    int left = SDL_WINDOWPOS_CENTERED, top = SDL_WINDOWPOS_CENTERED;
+    if (pl && pl->has_position && cui__sdl_positions() && cui__sdl_on_screen(pl->x, pl->y, app->desc.width)) {
+        left = pl->x;
+        top = pl->y;
+        s->normal_x = left;
+        s->normal_y = top;
+        s->normal_pos_known = true;
+    }
+    s->normal_w = app->desc.width;
+    s->normal_h = app->desc.height;
+    s->win = SDL_CreateWindow(app->title, left, top, app->desc.width, app->desc.height, flags);
     if (!s->win && (flags & SDL_WINDOW_OPENGL)) {
         flags &= ~(Uint32)SDL_WINDOW_OPENGL;
-        s->win = SDL_CreateWindow(app->title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, app->desc.width, app->desc.height, flags);
+        s->win = SDL_CreateWindow(app->title, left, top, app->desc.width, app->desc.height, flags);
     }
     if (!s->win) { free(s); app->plat = NULL; return false; }
     SDL_SetWindowMinimumSize(s->win, app->desc.min_width, app->desc.min_height);
@@ -77748,7 +77818,15 @@ bool cui__plat_init(cui_app *app) {
     return true;
 }
 
-void cui__plat_show(cui_app *app) { SDL_ShowWindow(cui__s(app)->win); }
+void cui__plat_show(cui_app *app) {
+    cui__sdl *s = cui__s(app);
+    SDL_ShowWindow(s->win);
+    /* X11: SDL learns the frame's size once the window is mapped, and only then places the
+     * content where it was asked to; a maximized window gets its normal place first */
+    const cui_window_placement *pl = app->desc.placement;
+    if (s->normal_pos_known) SDL_SetWindowPosition(s->win, s->normal_x, s->normal_y);
+    if (pl && pl->state == CUI_WINDOW_MAXIMIZED) SDL_MaximizeWindow(s->win);
+}
 
 void cui__plat_shutdown(cui_app *app) {
     cui__sdl *s = cui__s(app);
@@ -77896,6 +77974,22 @@ void cui__plat_wait(cui_app *app, double timeout) {
         if (ms < 0 ? SDL_WaitEvent(&e) : SDL_WaitEventTimeout(&e, ms)) cui__sdl_event(app, &e);
     }
     while (SDL_PollEvent(&e)) cui__sdl_event(app, &e);
+    /* after the whole batch, so a state change that came with a resize is already seen */
+    cui__sdl *s = cui__s(app);
+    Uint32 flags = SDL_GetWindowFlags(s->win);
+    if (!(flags & SDL_WINDOW_MINIMIZED)) s->was_maximized = (flags & SDL_WINDOW_MAXIMIZED) != 0;
+    if (!(flags & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_HIDDEN))) {
+        SDL_GetWindowSize(s->win, &s->normal_w, &s->normal_h);
+        if (s->hold_place_until > cui__plat_now()) {
+            /* SDL 3 on KWin X11 puts a window it restores from minimized a title bar lower */
+            int x, y;
+            SDL_GetWindowPosition(s->win, &x, &y);
+            if (x != s->normal_x || y != s->normal_y) SDL_SetWindowPosition(s->win, s->normal_x, s->normal_y);
+        } else if (cui__sdl_positions()) {
+            SDL_GetWindowPosition(s->win, &s->normal_x, &s->normal_y);
+            s->normal_pos_known = true;
+        }
+    }
 }
 
 bool cui__plat_present_part(cui_app *app, const void *bgra, int w, int h, int stride, int x, int y, int pw, int ph) {
@@ -77913,6 +78007,37 @@ void cui__plat_maximize(cui_app *app) {
     cui__sdl *s = cui__s(app);
     if (s && s->win) SDL_MaximizeWindow(s->win);
 }
+
+void cui__plat_minimize(cui_app *app) { SDL_MinimizeWindow(cui__s(app)->win); }
+
+void cui__plat_restore(cui_app *app) {
+    cui__sdl *s = cui__s(app);
+    bool minimized = (SDL_GetWindowFlags(s->win) & SDL_WINDOW_MINIMIZED) != 0;
+    SDL_RestoreWindow(s->win);
+    if (minimized && s->was_maximized) SDL_MaximizeWindow(s->win);
+    else if (minimized && s->normal_pos_known && cui__sdl_positions()) s->hold_place_until = cui__plat_now() + 0.5;
+}
+
+cui_window_state cui__plat_window_state(cui_app *app) {
+    Uint32 flags = SDL_GetWindowFlags(cui__s(app)->win);
+    return (flags & SDL_WINDOW_MINIMIZED) ? CUI_WINDOW_MINIMIZED : (flags & SDL_WINDOW_MAXIMIZED) ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
+
+void cui__plat_set_position(cui_app *app, int x, int y) {
+    if (cui__sdl_positions()) SDL_SetWindowPosition(cui__s(app)->win, x, y);
+}
+
+void cui__plat_placement(cui_app *app, cui_window_placement *out) {
+    cui__sdl *s = cui__s(app);
+    out->x = s->normal_x;
+    out->y = s->normal_y;
+    out->width = s->normal_w;
+    out->height = s->normal_h;
+    out->has_position = s->normal_pos_known;
+    Uint32 flags = SDL_GetWindowFlags(s->win);
+    bool maximized = (flags & SDL_WINDOW_MAXIMIZED) || ((flags & SDL_WINDOW_MINIMIZED) && s->was_maximized);
+    out->state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
 #elif defined(CUI_PLATFORM_GLFW)
 
 /* ==== src/platform/cui_app_glfw.c ==== */
@@ -77924,6 +78049,14 @@ typedef struct {
     GLFWwindow *win;
     GLFWcursor *cursors[CUI_CURSOR_COUNT];
     cui_cursor cursor;
+    /* GLFW keeps no normal size and place for a maximized window: noted while it is normal,
+     * in screen coordinates */
+    int normal_x, normal_y, normal_w, normal_h;
+    bool normal_pos_known;
+    bool geometry_changed;   /* moved or resized: note them after the batch */
+    float points;            /* points per screen coordinate, kept for a minimized window's empty framebuffer */
+    bool was_maximized;      /* the state before a minimize */
+    bool maximize_after_frame;   /* opening maximized: once the first frame is shown */
 } cui__glfw;
 
 static cui__glfw *cui__g(cui_app *app) { return app->plat; }
@@ -78017,6 +78150,28 @@ static void cb_char(GLFWwindow *w, unsigned int cp) {
 static void cb_focus(GLFWwindow *w, int f) { cui_input_focus(cui__glfw_app(w)->ui, f != 0); }
 static void cb_close(GLFWwindow *w) { cui__glfw_app(w)->running = false; }
 static void cb_refresh(GLFWwindow *w) { cui_request_redraw(cui__glfw_app(w)->ui); }
+static void cb_geometry(GLFWwindow *w, int a, int b) { (void)a; (void)b; cui__g(cui__glfw_app(w))->geometry_changed = true; }
+
+/* Wayland tells a window nothing about where it is and lets it choose nothing. */
+static bool cui__glfw_positions(void) {
+#if GLFW_VERSION_MAJOR > 3 || GLFW_VERSION_MINOR >= 4
+    return glfwGetPlatform() != GLFW_PLATFORM_WAYLAND;
+#else
+    return true;
+#endif
+}
+
+/* True when the top edge of a window at x, y of width w is in a monitor's work area. */
+static bool cui__glfw_on_screen(int x, int y, int w) {
+    int count = 0;
+    GLFWmonitor **monitors = glfwGetMonitors(&count);
+    for (int i = 0; i < count; i++) {
+        int mx, my, mw, mh;
+        glfwGetMonitorWorkarea(monitors[i], &mx, &my, &mw, &mh);
+        if (x < mx + mw && x + w > mx && y >= my && y < my + mh) return true;
+    }
+    return false;
+}
 static void cb_drop(GLFWwindow *w, int count, const char **paths) {
     double x = 0, y = 0;
     glfwGetCursorPos(w, &x, &y);
@@ -78039,6 +78194,7 @@ bool cui__plat_init(cui_app *app) {
     glfwWindowHint(GLFW_RESIZABLE, app->desc.fixed_size ? GLFW_FALSE : GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+    const cui_window_placement *pl = app->desc.placement;
     if (app->desc.app_id) {   /* WM_CLASS on X11, app_id on Wayland; other systems ignore these */
         glfwWindowHintString(GLFW_X11_CLASS_NAME, app->desc.app_id);
         glfwWindowHintString(GLFW_X11_INSTANCE_NAME, app->desc.app_id);
@@ -78060,6 +78216,15 @@ bool cui__plat_init(cui_app *app) {
     glfwSetWindowCloseCallback(g->win, cb_close);
     glfwSetWindowRefreshCallback(g->win, cb_refresh);
     glfwSetDropCallback(g->win, cb_drop);
+    glfwSetWindowPosCallback(g->win, cb_geometry);
+    glfwSetWindowSizeCallback(g->win, cb_geometry);
+    glfwGetWindowSize(g->win, &g->normal_w, &g->normal_h);
+    if (pl && pl->has_position && cui__glfw_positions() && cui__glfw_on_screen(pl->x, pl->y, g->normal_w)) {
+        glfwSetWindowPos(g->win, pl->x, pl->y);   /* still hidden: it opens there */
+        g->normal_x = pl->x;
+        g->normal_y = pl->y;
+        g->normal_pos_known = true;
+    }
     int shapes[CUI_CURSOR_COUNT] = { GLFW_ARROW_CURSOR, GLFW_HAND_CURSOR, GLFW_IBEAM_CURSOR, GLFW_HRESIZE_CURSOR,
                                      GLFW_VRESIZE_CURSOR, GLFW_ARROW_CURSOR, GLFW_ARROW_CURSOR };
     for (int i = 0; i < CUI_CURSOR_COUNT; i++) g->cursors[i] = glfwCreateStandardCursor(shapes[i]);
@@ -78073,7 +78238,15 @@ bool cui__plat_init(cui_app *app) {
     return true;
 }
 
-void cui__plat_show(cui_app *app) { glfwShowWindow(cui__g(app)->win); }
+void cui__plat_show(cui_app *app) {
+    cui__glfw *g = cui__g(app);
+    glfwShowWindow(g->win);
+    /* maximized after one frame at the normal size: a Wayland compositor (KWin) keeps a size to
+     * restore to only for a window that showed a picture at it, and GLFW_MAXIMIZED at creation
+     * or a maximize before the first frame leaves the maximized size after a restore */
+    const cui_window_placement *pl = app->desc.placement;
+    g->maximize_after_frame = pl && pl->state == CUI_WINDOW_MAXIMIZED;
+}
 
 void cui__plat_shutdown(cui_app *app) {
     cui__glfw *g = cui__g(app);
@@ -78092,7 +78265,14 @@ bool cui__plat_gl_create(cui_app *app, bool vsync) {
 }
 
 void *cui__plat_gl_proc(const char *name) { return (void *)glfwGetProcAddress(name); }
-void cui__plat_gl_swap(cui_app *app) { glfwSwapBuffers(cui__g(app)->win); }
+void cui__plat_gl_swap(cui_app *app) {
+    cui__glfw *g = cui__g(app);
+    glfwSwapBuffers(g->win);
+    if (g->maximize_after_frame) {
+        g->maximize_after_frame = false;
+        glfwMaximizeWindow(g->win);
+    }
+}
 
 void cui__plat_present(cui_app *app, const void *bgra, int w, int h, int stride) {
     /* GLFW windows always have a GL context; the software path is not used */
@@ -78116,11 +78296,35 @@ void cui__plat_set_title(cui_app *app, const char *title) { glfwSetWindowTitle(c
 void cui__plat_set_size(cui_app *app, int w, int h) { glfwSetWindowSize(cui__g(app)->win, w, h); }
 void *cui__plat_native(cui_app *app) { return cui__g(app)->win; }
 
+/* Screen coordinates are pixels on Windows and X11 but points on macOS and Wayland: the
+ * framebuffer tells which. A minimized window's framebuffer can be empty, so the last
+ * ratio is kept. */
+static void cui__glfw_note_points(cui__glfw *g) {
+    int ww, wh, fw, fh;
+    float s = 1;
+    glfwGetWindowSize(g->win, &ww, &wh);
+    glfwGetFramebufferSize(g->win, &fw, &fh);
+    cui__glfw_scale(g->win, &s);
+    if (ww > 0 && fw > 0 && s > 0) g->points = (float)fw / (float)ww / s;
+}
+
 void cui__plat_wait(cui_app *app, double timeout) {
-    (void)app;
     if (timeout < 0) glfwWaitEvents();
     else if (timeout > 0) glfwWaitEventsTimeout(timeout);
     else glfwPollEvents();
+    /* after the whole batch, so a state change that came with a resize is already seen */
+    cui__glfw *g = cui__g(app);
+    cui_window_state state = cui__plat_window_state(app);
+    if (state != CUI_WINDOW_MINIMIZED) g->was_maximized = state == CUI_WINDOW_MAXIMIZED;
+    if (g->geometry_changed && state == CUI_WINDOW_NORMAL && glfwGetWindowAttrib(g->win, GLFW_VISIBLE)) {
+        g->geometry_changed = false;
+        glfwGetWindowSize(g->win, &g->normal_w, &g->normal_h);
+        cui__glfw_note_points(g);
+        if (cui__glfw_positions()) {
+            glfwGetWindowPos(g->win, &g->normal_x, &g->normal_y);
+            g->normal_pos_known = true;
+        }
+    }
 }
 
 bool cui__plat_present_part(cui_app *app, const void *bgra, int w, int h, int stride, int x, int y, int pw, int ph) {
@@ -78140,6 +78344,33 @@ void cui__plat_gl_release(cui_app *app) { (void)app; }   /* not used: these keep
 void cui__plat_maximize(cui_app *app) {
     cui__glfw *g = cui__g(app);
     if (g && g->win) glfwMaximizeWindow(g->win);
+}
+
+void cui__plat_minimize(cui_app *app) { glfwIconifyWindow(cui__g(app)->win); }
+void cui__plat_restore(cui_app *app) { glfwRestoreWindow(cui__g(app)->win); }
+
+cui_window_state cui__plat_window_state(cui_app *app) {
+    GLFWwindow *win = cui__g(app)->win;
+    return glfwGetWindowAttrib(win, GLFW_ICONIFIED) ? CUI_WINDOW_MINIMIZED
+         : glfwGetWindowAttrib(win, GLFW_MAXIMIZED) ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
+
+void cui__plat_set_position(cui_app *app, int x, int y) {
+    if (cui__glfw_positions()) glfwSetWindowPos(cui__g(app)->win, x, y);
+}
+
+void cui__plat_placement(cui_app *app, cui_window_placement *out) {
+    cui__glfw *g = cui__g(app);
+    cui__glfw_note_points(g);
+    float points = g->points > 0 ? g->points : 1.0f;   /* sizes in points, as cui_app_size reports them */
+    out->x = g->normal_x;
+    out->y = g->normal_y;
+    out->width = (int)((float)g->normal_w * points + 0.5f);
+    out->height = (int)((float)g->normal_h * points + 0.5f);
+    out->has_position = g->normal_pos_known;
+    cui_window_state state = cui__plat_window_state(app);
+    bool maximized = state == CUI_WINDOW_MAXIMIZED || (state == CUI_WINDOW_MINIMIZED && g->was_maximized);
+    out->state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
 }
 #elif defined(_WIN32)
 
@@ -78604,7 +78835,14 @@ bool cui__plat_init(cui_app *app) {
     WCHAR title[256];
     MultiByteToWideChar(CP_UTF8, 0, app->title, -1, title, 256);
     app->plat = w;
-    w->hwnd = CreateWindowExW(0, wc.lpszClassName, title, style, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top,
+    const cui_window_placement *pl = app->desc.placement;
+    int left = CW_USEDEFAULT, top = CW_USEDEFAULT;
+    if (pl && pl->has_position) {
+        /* only a place whose title bar is on a monitor: one that was unplugged leaves it to Windows */
+        RECT caption = { pl->x + r.left, pl->y + r.top, pl->x + r.right, pl->y };
+        if (MonitorFromRect(&caption, MONITOR_DEFAULTTONULL)) { left = caption.left; top = caption.top; }
+    }
+    w->hwnd = CreateWindowExW(0, wc.lpszClassName, title, style, left, top, r.right - r.left, r.bottom - r.top,
                               NULL, NULL, inst, app);
     if (!w->hwnd) { free(w); app->plat = NULL; return false; }
     DragAcceptFiles(w->hwnd, TRUE);   /* files dropped from Explorer arrive as WM_DROPFILES */
@@ -78614,6 +78852,8 @@ bool cui__plat_init(cui_app *app) {
         AdjustWindowRectEx(&r2, style, FALSE, 0);
         SetWindowPos(w->hwnd, NULL, 0, 0, r2.right - r2.left, r2.bottom - r2.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
+    /* the frame was measured at the primary monitor's DPI: place the content exactly */
+    if (left != CW_USEDEFAULT) cui__plat_set_position(app, pl->x, pl->y);
     RECT cr;
     GetClientRect(w->hwnd, &cr);
     w->width = cr.right; w->height = cr.bottom;
@@ -78635,7 +78875,8 @@ bool cui__plat_init(cui_app *app) {
 
 void cui__plat_show(cui_app *app) {
     cui__win32 *w = cui__w(app);
-    ShowWindow(w->hwnd, SW_SHOWDEFAULT);
+    const cui_window_placement *pl = app->desc.placement;
+    ShowWindow(w->hwnd, pl && pl->state == CUI_WINDOW_MAXIMIZED ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT);
     UpdateWindow(w->hwnd);
 }
 
@@ -78774,6 +79015,74 @@ void cui__plat_maximize(cui_app *app) {
     cui__win32 *w = cui__w(app);
     if (w && w->hwnd) ShowWindow(w->hwnd, SW_SHOWMAXIMIZED);
 }
+
+void cui__plat_minimize(cui_app *app) { ShowWindow(cui__w(app)->hwnd, SW_MINIMIZE); }
+void cui__plat_restore(cui_app *app) { ShowWindow(cui__w(app)->hwnd, SW_RESTORE); }
+
+cui_window_state cui__plat_window_state(cui_app *app) {
+    HWND hwnd = cui__w(app)->hwnd;
+    return IsIconic(hwnd) ? CUI_WINDOW_MINIMIZED : IsZoomed(hwnd) ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
+
+/* The frame around the content at the window's DPI; left and top are negative. */
+static RECT cui__win32_frame(HWND hwnd) {
+    RECT r = { 0, 0, 0, 0 };
+    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
+    if (cui__AdjustWindowRectExForDpi && cui__GetDpiForWindow) cui__AdjustWindowRectExForDpi(&r, style, FALSE, 0, cui__GetDpiForWindow(hwnd));
+    else AdjustWindowRectEx(&r, style, FALSE, 0);
+    return r;
+}
+
+/* Window placements are in workspace coordinates: screen coordinates less the taskbars along
+ * the top and the left of the window's monitor. */
+static POINT cui__win32_workspace_offset(const RECT *r) {
+    POINT o = { 0, 0 };
+    MONITORINFO mi;
+    mi.cbSize = sizeof mi;
+    if (GetMonitorInfoW(MonitorFromRect(r, MONITOR_DEFAULTTONEAREST), &mi)) {
+        o.x = mi.rcWork.left - mi.rcMonitor.left;
+        o.y = mi.rcWork.top - mi.rcMonitor.top;
+    }
+    return o;
+}
+
+void cui__plat_set_position(cui_app *app, int x, int y) {
+    HWND hwnd = cui__w(app)->hwnd;
+    RECT f = cui__win32_frame(hwnd);
+    if (!IsIconic(hwnd) && !IsZoomed(hwnd)) {
+        SetWindowPos(hwnd, NULL, x + f.left, y + f.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        return;
+    }
+    /* move the normal rectangle: the window keeps its state and goes there when restored */
+    WINDOWPLACEMENT wp;
+    wp.length = sizeof wp;
+    if (!GetWindowPlacement(hwnd, &wp)) return;
+    RECT r = wp.rcNormalPosition;
+    RECT moved = { x + f.left, y + f.top, x + f.left + (r.right - r.left), y + f.top + (r.bottom - r.top) };
+    POINT o = cui__win32_workspace_offset(&moved);
+    OffsetRect(&moved, -o.x, -o.y);
+    wp.rcNormalPosition = moved;
+    wp.showCmd = IsIconic(hwnd) ? SW_SHOWMINNOACTIVE : SW_SHOWMAXIMIZED;
+    SetWindowPlacement(hwnd, &wp);
+}
+
+void cui__plat_placement(cui_app *app, cui_window_placement *out) {
+    cui__win32 *w = cui__w(app);
+    /* the normal rectangle, which also outlasts a snap to half the screen, as Windows' own
+     * windows remember it */
+    WINDOWPLACEMENT wp;
+    wp.length = sizeof wp;
+    if (!GetWindowPlacement(w->hwnd, &wp)) return;
+    RECT r = wp.rcNormalPosition, f = cui__win32_frame(w->hwnd);
+    POINT o = cui__win32_workspace_offset(&r);
+    out->x = r.left + o.x - f.left;
+    out->y = r.top + o.y - f.top;
+    out->width = (int)((float)(r.right - r.left - (f.right - f.left)) / w->scale + 0.5f);
+    out->height = (int)((float)(r.bottom - r.top - (f.bottom - f.top)) / w->scale + 0.5f);
+    out->has_position = true;
+    bool maximized = IsZoomed(w->hwnd) || (IsIconic(w->hwnd) && (wp.flags & WPF_RESTORETOMAXIMIZED));
+    out->state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
 #elif defined(__APPLE__)
 #ifndef __OBJC__
 #error "CUI on macOS: compile this file as Objective-C (-x objective-c -fobjc-arc), or define CUI_NO_APP"
@@ -78800,6 +79109,11 @@ void cui__plat_maximize(cui_app *app) {
 @property (nonatomic, strong) NSOpenGLContext *gl;
 @property (nonatomic, assign) cui_app *app;
 @property (nonatomic, assign) cui_cursor cursor;
+/* AppKit keeps the size and place a zoomed window returns to to itself: noted while normal */
+@property (nonatomic, assign) NSRect normal;      /* content rectangle, screen coordinates */
+@property (nonatomic, assign) BOOL holdNormal;    /* zooming: the frames on the way are not normal */
+@property (nonatomic, assign) BOOL wasZoomed;     /* the state before a miniaturize */
+- (void)noteNormal;
 @end
 
 static void *cui__mac_libgl;
@@ -78999,8 +79313,26 @@ static void cui__mac_wake(void) {
     cui__mac_wake();
     return NSTerminateCancel;
 }
+- (void)noteNormal {
+    if (self.holdNormal) {
+        if (self.window.isZoomed) self.holdNormal = NO;
+        return;
+    }
+    if (!self.window.isZoomed && !self.window.isMiniaturized) self.normal = [self.window contentRectForFrameRect:self.window.frame];
+}
+- (BOOL)windowShouldZoom:(NSWindow *)w toFrame:(NSRect)frame {
+    (void)frame;
+    if (!w.isZoomed) {
+        self.normal = [w contentRectForFrameRect:w.frame];
+        self.holdNormal = YES;
+    }
+    return YES;
+}
+- (void)windowDidMove:(NSNotification *)n { (void)n; [self noteNormal]; }
+- (void)windowWillMiniaturize:(NSNotification *)n { (void)n; self.wasZoomed = self.window.isZoomed; }
 - (void)windowDidResize:(NSNotification *)n {
     (void)n;
+    [self noteNormal];
     if (self.gl) [self.gl update];
     cui_request_redraw(self.app->ui);
     if (self.window.inLiveResize) cui__app_live_frame(self.app);
@@ -79101,7 +79433,19 @@ bool cui__plat_init(cui_app *app) {
         if (@available(macOS 10.14, *)) {
             w.appearance = [NSAppearance appearanceNamed:app->desc.theme == CUI_THEME_DARK ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua];
         }
-        [w center];
+        const cui_window_placement *pl = app->desc.placement;
+        BOOL placed = NO;
+        if (pl && pl->has_position) {
+            /* placements count y down from the top of the main screen, AppKit up from its bottom */
+            CGFloat top = NSScreen.screens.count ? NSScreen.screens[0].frame.size.height : 0;
+            NSRect content = NSMakeRect(pl->x, top - pl->y - app->desc.height, app->desc.width, app->desc.height);
+            NSRect outer = [w frameRectForContentRect:content];
+            NSRect caption = NSMakeRect(outer.origin.x, NSMaxY(content), outer.size.width, NSMaxY(outer) - NSMaxY(content));
+            for (NSScreen *screen in NSScreen.screens)
+                if (NSIntersectsRect(screen.visibleFrame, caption)) placed = YES;
+            if (placed) [w setFrame:outer display:NO];
+        }
+        if (!placed) [w center];
         CUIView *v = [[CUIView alloc] initWithFrame:frame];
         v.app = app;
         v.wantsBestResolutionOpenGLSurface = YES;
@@ -79110,6 +79454,7 @@ bool cui__plat_init(cui_app *app) {
         [w makeFirstResponder:v];
         p.window = w;
         p.view = v;
+        p.normal = [w contentRectForFrameRect:w.frame];
         app->plat = (__bridge_retained void *)p;
         cui_platform_iface pi;
         memset(&pi, 0, sizeof pi);
@@ -79127,6 +79472,8 @@ void cui__plat_show(cui_app *app) {
     CUIPlat *p = cui__p(app);
     [p.window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
+    const cui_window_placement *pl = app->desc.placement;
+    if (pl && pl->state == CUI_WINDOW_MAXIMIZED && !p.window.isZoomed) [p.window zoom:nil];
 }
 
 void cui__plat_shutdown(cui_app *app) {
@@ -79232,6 +79579,40 @@ void cui__plat_wait(cui_app *app, double timeout) {
     }
 }
 
+void cui__plat_minimize(cui_app *app) { [cui__p(app).window miniaturize:nil]; }
+
+void cui__plat_restore(cui_app *app) {
+    NSWindow *w = cui__p(app).window;
+    if (w.isMiniaturized) [w deminiaturize:nil];
+    else if (w.isZoomed) [w zoom:nil];
+}
+
+cui_window_state cui__plat_window_state(cui_app *app) {
+    NSWindow *w = cui__p(app).window;
+    return w.isMiniaturized ? CUI_WINDOW_MINIMIZED : w.isZoomed ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
+
+static CGFloat cui__mac_main_top(void) { return NSScreen.screens.count ? NSScreen.screens[0].frame.size.height : 0; }
+
+void cui__plat_set_position(cui_app *app, int x, int y) {
+    NSWindow *w = cui__p(app).window;
+    NSRect content = [w contentRectForFrameRect:w.frame];
+    content.origin = NSMakePoint(x, cui__mac_main_top() - y - content.size.height);
+    [w setFrameOrigin:[w frameRectForContentRect:content].origin];
+}
+
+void cui__plat_placement(cui_app *app, cui_window_placement *out) {
+    CUIPlat *p = cui__p(app);
+    NSRect r = p.normal;
+    bool maximized = p.window.isZoomed || (p.window.isMiniaturized && p.wasZoomed);
+    out->state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+    out->x = (int)lround(r.origin.x);
+    out->y = (int)lround(cui__mac_main_top() - NSMaxY(r));
+    out->width = (int)lround(r.size.width);
+    out->height = (int)lround(r.size.height);
+    out->has_position = true;
+}
+
 #pragma clang diagnostic pop
 
 bool cui__plat_present_part(cui_app *app, const void *bgra, int w, int h, int stride, int x, int y, int pw, int ph) {
@@ -79324,6 +79705,7 @@ typedef struct {
     bool ime_spot_set;
     unsigned long event_mask;
     Atom wm_delete, wm_protocols, net_wm_name, utf8_string, clipboard, targets, cui_sel, net_wm_icon_name;
+    Atom wm_state, net_wm_state, net_wm_maximized_horz, net_wm_maximized_vert, net_wm_hidden, net_active_window;
     Cursor cursors[CUI_CURSOR_COUNT];
     cui_cursor current_cursor;
     int width, height;     /* pixels */
@@ -79343,6 +79725,10 @@ typedef struct {
     char *clip_owned;
     char *clip_read;
     bool mapped;
+    /* X11 keeps no normal size and place for a maximized window: noted while it is normal */
+    int normal_x, normal_y, normal_w, normal_h;   /* content origin on the root window, size in pixels */
+    bool normal_pos_known;
+    bool geometry_changed;                        /* a ConfigureNotify came: note them after the batch */
     /* drag and drop (XDND) */
     Atom xdnd_aware, xdnd_enter, xdnd_position, xdnd_status, xdnd_leave, xdnd_drop, xdnd_finished,
          xdnd_selection, xdnd_action_copy, uri_list, cui_xdnd;
@@ -79510,8 +79896,17 @@ bool cui__plat_init(cui_app *app) {
     x->event_mask = swa.event_mask;
     x->width = (int)(app->desc.width * x->scale);
     x->height = (int)(app->desc.height * x->scale);
-    x->win = XCreateWindow(x->dpy, root, 0, 0, (unsigned)x->width, (unsigned)x->height, 0, x->depth, InputOutput, x->visual,
-                           CWColormap | CWBorderPixel | CWBackPixel | CWEventMask, &swa);
+    x->normal_w = x->width;
+    x->normal_h = x->height;
+    const cui_window_placement *pl = app->desc.placement;
+    if (pl && pl->has_position && pl->y >= 0 && pl->y < DisplayHeight(x->dpy, x->screen) &&
+        pl->x < DisplayWidth(x->dpy, x->screen) && pl->x + x->width > 0) {
+        x->normal_x = pl->x;   /* on the screen: a place on a monitor that was unplugged is left to the window manager */
+        x->normal_y = pl->y;
+        x->normal_pos_known = true;
+    }
+    x->win = XCreateWindow(x->dpy, root, x->normal_x, x->normal_y, (unsigned)x->width, (unsigned)x->height, 0, x->depth, InputOutput,
+                           x->visual, CWColormap | CWBorderPixel | CWBackPixel | CWEventMask, &swa);
     if (!x->win) { XCloseDisplay(x->dpy); free(x); app->plat = NULL; return false; }
     x->wm_protocols = XInternAtom(x->dpy, "WM_PROTOCOLS", False);
     x->wm_delete = XInternAtom(x->dpy, "WM_DELETE_WINDOW", False);
@@ -79521,6 +79916,12 @@ bool cui__plat_init(cui_app *app) {
     x->clipboard = XInternAtom(x->dpy, "CLIPBOARD", False);
     x->targets = XInternAtom(x->dpy, "TARGETS", False);
     x->cui_sel = XInternAtom(x->dpy, "CUI_SELECTION", False);
+    x->wm_state = XInternAtom(x->dpy, "WM_STATE", False);
+    x->net_wm_state = XInternAtom(x->dpy, "_NET_WM_STATE", False);
+    x->net_wm_maximized_horz = XInternAtom(x->dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    x->net_wm_maximized_vert = XInternAtom(x->dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    x->net_wm_hidden = XInternAtom(x->dpy, "_NET_WM_STATE_HIDDEN", False);
+    x->net_active_window = XInternAtom(x->dpy, "_NET_ACTIVE_WINDOW", False);
     XSetWMProtocols(x->dpy, x->win, &x->wm_delete, 1);
     /* accept files dragged from file managers (XDND version 5) */
     x->xdnd_aware = XInternAtom(x->dpy, "XdndAware", False);
@@ -79540,7 +79941,14 @@ bool cui__plat_init(cui_app *app) {
     }
     XSizeHints *hints = XAllocSizeHints();
     if (hints) {
-        hints->flags = PMinSize;
+        /* static gravity: positions name the content's corner, not the window manager's frame */
+        hints->flags = PMinSize | PWinGravity;
+        hints->win_gravity = StaticGravity;
+        if (x->normal_pos_known) {
+            hints->flags |= USPosition;
+            hints->x = x->normal_x;
+            hints->y = x->normal_y;
+        }
         hints->min_width = (int)(app->desc.min_width * x->scale);
         hints->min_height = (int)(app->desc.min_height * x->scale);
         if (app->desc.fixed_size) {
@@ -79593,8 +80001,27 @@ bool cui__plat_init(cui_app *app) {
     return true;
 }
 
+/* True while an EWMH window manager runs: it names its check window on the root. */
+static bool cui__x11_has_ewmh(cui__x11 *x) {
+    Atom check = XInternAtom(x->dpy, "_NET_SUPPORTING_WM_CHECK", False), type;
+    int format;
+    unsigned long count, after;
+    unsigned char *data = NULL;
+    bool found = XGetWindowProperty(x->dpy, RootWindow(x->dpy, x->screen), check, 0, 1, False, XA_WINDOW, &type, &format,
+                                    &count, &after, &data) == Success && data && count == 1;
+    if (data) XFree(data);
+    return found;
+}
+
 void cui__plat_show(cui_app *app) {
     cui__x11 *x = cui__x(app);
+    const cui_window_placement *pl = app->desc.placement;
+    if (pl && pl->state == CUI_WINDOW_MAXIMIZED && cui__x11_has_ewmh(x)) {
+        /* EWMH: a window that is not mapped yet asks for its state with the property. Without a
+         * window manager to carry it out, the property would only claim a maximized window. */
+        Atom maximized[2] = { x->net_wm_maximized_horz, x->net_wm_maximized_vert };
+        XChangeProperty(x->dpy, x->win, x->net_wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char *)maximized, 2);
+    }
     XMapWindow(x->dpy, x->win);
     XFlush(x->dpy);
     x->mapped = true;
@@ -79719,6 +80146,12 @@ void cui__plat_set_size(cui_app *app, int w, int h) {
 }
 
 void *cui__plat_native(cui_app *app) { return (void *)(uintptr_t)cui__x(app)->win; }
+
+/* Where the content's top-left corner is on the root window. */
+static void cui__x11_content_origin(cui__x11 *x, int *px, int *py) {
+    Window child;
+    if (!XTranslateCoordinates(x->dpy, x->win, RootWindow(x->dpy, x->screen), 0, 0, px, py, &child)) *px = *py = 0;
+}
 
 static void cui__x11_set_cursor(void *user, cui_cursor c) {
     cui_app *app = user;
@@ -79978,6 +80411,7 @@ static void cui__x11_event(cui_app *app, XEvent *ev) {
         if (ev->xselection.property == x->cui_xdnd || (ev->xselection.selection == x->xdnd_selection)) cui__x11_xdnd_selection(app, &ev->xselection);
         break;
     case ConfigureNotify:
+        x->geometry_changed = true;
         if (ev->xconfigure.width != x->width || ev->xconfigure.height != x->height) {
             x->width = ev->xconfigure.width;
             x->height = ev->xconfigure.height;
@@ -80081,30 +80515,116 @@ void cui__plat_wait(cui_app *app, double timeout) {
         XNextEvent(x->dpy, &ev);
         cui__x11_event(app, &ev);
     }
+    /* after the whole batch, which also carries a state change that came with the move */
+    if (x->geometry_changed) {
+        x->geometry_changed = false;
+        if (x->mapped && cui__plat_window_state(app) == CUI_WINDOW_NORMAL) {
+            cui__x11_content_origin(x, &x->normal_x, &x->normal_y);
+            x->normal_pos_known = true;
+            x->normal_w = x->width;
+            x->normal_h = x->height;
+        }
+    }
 }
 
-void cui__plat_maximize(cui_app *app) {
-    cui__x11 *x = cui__x(app);
-    if (!x || !x->dpy || !x->win) return;
-
-    Atom wm_state = XInternAtom(x->dpy, "_NET_WM_STATE", False);
-    Atom max_horz = XInternAtom(x->dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
-    Atom max_vert = XInternAtom(x->dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
-
+/* Asks the window manager to add (1) or remove (0) two _NET_WM_STATE properties. */
+static void cui__x11_send_state(cui__x11 *x, long action, Atom a, Atom b) {
     XEvent e;
     memset(&e, 0, sizeof e);
     e.xclient.type = ClientMessage;
     e.xclient.window = x->win;
-    e.xclient.message_type = wm_state;
+    e.xclient.message_type = x->net_wm_state;
     e.xclient.format = 32;
-    e.xclient.data.l[0] = 1; /* _NET_WM_STATE_ADD */
-    e.xclient.data.l[1] = (long)max_horz;
-    e.xclient.data.l[2] = (long)max_vert;
+    e.xclient.data.l[0] = action;
+    e.xclient.data.l[1] = (long)a;
+    e.xclient.data.l[2] = (long)b;
     e.xclient.data.l[3] = 1; /* source: application */
-
-    XSendEvent(x->dpy, DefaultRootWindow(x->dpy), False,
-               SubstructureRedirectMask | SubstructureNotifyMask, &e);
+    XSendEvent(x->dpy, DefaultRootWindow(x->dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
     XFlush(x->dpy);
+}
+
+void cui__plat_maximize(cui_app *app) {
+    cui__x11 *x = cui__x(app);
+    if (x && x->dpy && x->win) cui__x11_send_state(x, 1, x->net_wm_maximized_horz, x->net_wm_maximized_vert);
+}
+
+void cui__plat_minimize(cui_app *app) {
+    cui__x11 *x = cui__x(app);
+    XIconifyWindow(x->dpy, x->win, x->screen);
+    XFlush(x->dpy);
+}
+
+void cui__plat_restore(cui_app *app) {
+    cui__x11 *x = cui__x(app);
+    cui_window_state state = cui__plat_window_state(app);
+    if (state == CUI_WINDOW_MAXIMIZED) {
+        cui__x11_send_state(x, 0, x->net_wm_maximized_horz, x->net_wm_maximized_vert);
+    } else if (state == CUI_WINDOW_MINIMIZED) {
+        /* ICCCM: mapping an iconic window makes it normal again; EWMH: activating raises it */
+        XMapWindow(x->dpy, x->win);
+        XEvent e;
+        memset(&e, 0, sizeof e);
+        e.xclient.type = ClientMessage;
+        e.xclient.window = x->win;
+        e.xclient.message_type = x->net_active_window;
+        e.xclient.format = 32;
+        e.xclient.data.l[0] = 1; /* source: application */
+        XSendEvent(x->dpy, DefaultRootWindow(x->dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &e);
+        XFlush(x->dpy);
+    }
+}
+
+/* Reads _NET_WM_STATE and WM_STATE. A minimized window keeps its maximized properties. */
+static void cui__x11_read_state(cui__x11 *x, bool *maximized, bool *minimized) {
+    bool horz = false, vert = false, hidden = false;
+    Atom type;
+    int format;
+    unsigned long count, after;
+    unsigned char *data = NULL;
+    if (XGetWindowProperty(x->dpy, x->win, x->net_wm_state, 0, 64, False, XA_ATOM, &type, &format, &count, &after, &data) == Success &&
+        data && format == 32) {
+        const Atom *atoms = (const Atom *)data;   /* format 32 arrives as an array of longs */
+        for (unsigned long i = 0; i < count; i++) {
+            if (atoms[i] == x->net_wm_maximized_horz) horz = true;
+            if (atoms[i] == x->net_wm_maximized_vert) vert = true;
+            if (atoms[i] == x->net_wm_hidden) hidden = true;
+        }
+    }
+    if (data) XFree(data);
+    /* ICCCM WM_STATE, for window managers that minimize without _NET_WM_STATE_HIDDEN */
+    data = NULL;
+    if (XGetWindowProperty(x->dpy, x->win, x->wm_state, 0, 2, False, x->wm_state, &type, &format, &count, &after, &data) == Success &&
+        data && format == 32 && count >= 1 && ((const long *)data)[0] == IconicState)
+        hidden = true;
+    if (data) XFree(data);
+    *maximized = horz && vert;
+    *minimized = hidden;
+}
+
+cui_window_state cui__plat_window_state(cui_app *app) {
+    bool maximized, minimized;
+    cui__x11_read_state(cui__x(app), &maximized, &minimized);
+    return minimized ? CUI_WINDOW_MINIMIZED : maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
+}
+
+void cui__plat_set_position(cui_app *app, int px, int py) {
+    cui__x11 *x = cui__x(app);
+    XMoveWindow(x->dpy, x->win, px, py);   /* static gravity: the content's corner */
+    XFlush(x->dpy);
+}
+
+void cui__plat_placement(cui_app *app, cui_window_placement *out) {
+    cui__x11 *x = cui__x(app);
+    /* the bounds noted after the last event batch: a live read can catch the window manager
+     * between placing the frame and reporting a new state */
+    bool maximized, minimized;
+    cui__x11_read_state(x, &maximized, &minimized);
+    out->x = x->normal_x;
+    out->y = x->normal_y;
+    out->width = (int)((float)x->normal_w / x->scale + 0.5f);
+    out->height = (int)((float)x->normal_h / x->scale + 0.5f);
+    out->has_position = x->normal_pos_known;
+    out->state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
 }
 #endif
 #endif /* CUI_NO_APP */

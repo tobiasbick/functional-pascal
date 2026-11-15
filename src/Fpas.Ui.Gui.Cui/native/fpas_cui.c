@@ -17,6 +17,7 @@
 #endif
 
 #include "host/bridge.c"
+#include "host/window_state.c"
 #include "host/controls.c"
 #include "host/widget_nodes.c"
 #include "host/control_state.c"

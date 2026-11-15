@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Gui.Internal.Hosting.Requests as Requests, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
 
 // Takes ownership of a native window and drives shared MVU transitions on its creating thread.
 //
@@ -64,6 +64,7 @@ requires Capacity > 0;
       Completion.GetAwaiter().GetResult();
     finally
       Released := true;
+      Closed := Window.Placement;
       Window.SetResizeRenderer(null);
       Window.Dispose();
     end try;
@@ -91,6 +92,17 @@ requires Capacity > 0;
   begin
     CheckOwner();
     return Window.IsSoftware;
+  end function;
+
+  function Placement(): Cui.CuiWindowPlacement;
+  begin
+    CheckOwner();
+    const Last: Cui.CuiWindowPlacement? := Closed;
+    return if Last <> null then
+      Last.Value
+    else
+      Window.Placement
+    end if;
   end function;
 
   procedure Capture(Path: string);
@@ -387,6 +399,7 @@ requires Capacity > 0;
 begin
   const Owner: int := Sys.Environment.CurrentManagedThreadId;
   var Released: bool := false;
+  var Closed: Cui.CuiWindowPlacement? := null;
   var Driving: bool := false;
   var Dirty: bool := true;
   var BrokenView: bool := false;
@@ -410,27 +423,7 @@ begin
           Focus.Clear();
           Focus.Enqueue('app:' + Id);
         when Mvu.HostRequest.Extension(const Value: Sys.Object):
-          case Value of
-            when is Windows.MaximizeRequest<TMsg> as Maximize:
-              Window.Maximize();
-            when is Clipboard.WriteRequest<TMsg> as Write:
-              Window.WriteClipboardText(Write.Text);
-            when is Clipboard.ReadRequest<TMsg> as Read:
-              Pending.Enqueue(Read.OnRead(Window.ReadClipboardText()));
-            when is Files.OpenRequest<TMsg> as Dialog:
-              const Path: string? := Window.OpenFile(
-                Dialog.Title,
-                Dialog.FilterName,
-                Dialog.Accept
-              );
-              if Path <> null then
-                Pending.Enqueue(Dialog.OnSelected(Path));
-              end if;
-            when is Toasts.Request<TMsg> as Notification:
-              PendingToasts.Enqueue(Notification);
-            else
-              raise new Sys.NotSupportedException('Unknown graphical host request.');
-          end case;
+          Requests.Apply<TMsg>(Value, Window, Pending, PendingToasts);
         else
       end case;
     end procedure, Capacity,
@@ -447,7 +440,7 @@ begin
     );
     Window.SetResizeRenderer(ResizeDraw);
     return App.Session<TMsg>.Create(
-      Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture
+      Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture, Placement
     );
   catch Error: Sys.Exception do
     Stop();

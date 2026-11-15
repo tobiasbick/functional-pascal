@@ -32,10 +32,15 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   On X11 it uses CUI's dark `GTK_THEME` hint when available and otherwise
   uses light.
 - `state.json` holds `width`, `height`, `x`, `y` and `maximized`. The
-  dimensions describe the normal window. Coordinates can be `null`.
+  dimensions describe the normal window in logical units. `x` and `y` are the
+  top-left corner of its content in desktop coordinates: pixels on Windows
+  and X11. They are `null` where the system reports no position, as on
+  Wayland. FPas-Amp saves the file when its window closes and reopens the
+  window there, maximized if it was. A window closed while minimized keeps
+  the state it would have come back in.
 
 A missing file yields an empty source list or a 1000 × 680 window with no saved
 position. When a file is damaged, FPas-Amp saves the original bytes in a
 `*.corrupt-*.bak` sibling and writes a repaired JSON file with the recoverable
-values and defaults. The window currently uses the saved initial size. The
-FPAS save routines can store the full placement for future GUI integration.
+values and defaults. A saved position on a monitor that is no longer connected
+is left to the system.

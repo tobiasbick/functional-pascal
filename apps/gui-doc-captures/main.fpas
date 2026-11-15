@@ -489,6 +489,8 @@ begin
           Button := 0;
           Presented.Step(Session);
           Leave(Session);
+        end procedure, procedure(Lines: float) begin
+          ScrollPage(Session, Lines);
         end procedure
       );
     else

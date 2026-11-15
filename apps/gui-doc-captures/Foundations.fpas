@@ -52,7 +52,9 @@ begin
   raise new Sys.InvalidOperationException('The Reader outline did not jump to Install.');
 end procedure;
 
-procedure CaptureDesktop(Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string));
+procedure CaptureDesktop(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string); Scroll: procedure(float)
+);
 begin
   Regions.Capture(Session, Output, 'menu-bar', new Regions.Insets(Bottom := -8), 'desktop-menu');
   Regions.Capture(
@@ -77,6 +79,14 @@ begin
     Session, Output, 'menu-bar-open',
     'desktop-menu', 'desktop-menu/view/sidebar', 'desktop-menu/view/zoom-out'
   );
+  // The window actions sit at the end of the page; the open menu takes the first wheel event.
+  Scroll(-60.0F);
+  Scroll(-60.0F);
+  for Frame: int := 1 to 4 do
+    Presented.Step(Session);
+  end for;
+
+  Shot(Session, Output, 'window-actions', 'desktop-maximize', 'desktop-placement');
 end procedure;
 
 procedure CaptureLayout(Session: Gui.Session<Gallery.Msg>; Output: string);
@@ -96,8 +106,10 @@ end procedure;
 // - `Output`: Directory for the frame images and crop bounds.
 // - `Page`: Active gallery page.
 // - `Click`: Activates a control by its rendered identity.
+// - `Scroll`: Injects a vertical wheel delta over the page margin.
 public procedure Capture(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Page: Gallery.Page; Click: procedure(string)
+  Session: Gui.Session<Gallery.Msg>; Output: string; Page: Gallery.Page; Click: procedure(string);
+  Scroll: procedure(float)
 );
 begin
   case Page of
@@ -106,7 +118,7 @@ begin
     when Gallery.Page.Reader:
       CaptureReader(Session, Output, Click);
     when Gallery.Page.Desktop:
-      CaptureDesktop(Session, Output, Click);
+      CaptureDesktop(Session, Output, Click, Scroll);
     when Gallery.Page.Layout:
       CaptureLayout(Session, Output);
     else

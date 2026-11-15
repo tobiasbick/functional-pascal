@@ -83,14 +83,6 @@ through the documented SDK workflow.
   saved size and update the title when it opens another file. Leave native
   handle and backend access for a concrete platform integration such as a tray
   icon. [CUI window API][window-api]
-- [ ] Expose window placement through the GUI host so apps can read it before
-  closing and restore it at startup. Placement includes the screen position
-  and size of the normal window and whether it was maximized. CUI exposes the
-  current logical size and a native window handle. FPAS supports maximizing
-  during startup and from an update. Reading and applying complete placement
-  still requires platform support. Verify that a window can close and
-  reopen in both normal and maximized states on Windows and X11, and that
-  unmaximizing returns it to its saved normal bounds. [CUI window API][window-api]
 
 ## Appearance and accessibility
 

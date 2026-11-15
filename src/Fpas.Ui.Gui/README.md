@@ -10,9 +10,9 @@ Use Run for the owner loop or Start with using const for explicit Step calls.
 Create, step, inspect and dispose sessions on their creating UI thread. Post
 admits typed messages from workers and reports Queued, Full or Closed.
 Use `Options` to set the title, logical width and height, renderer, mailbox
-capacity and theme. Set `StartMaximized := true` to open maximized on supported
-window managers. Return `Fpas.Ui.Gui.Windows.Maximize<TMsg>()` to maximize a
-running window. The initial width and height supply the normal window size.
+capacity and theme. The initial width and height supply the normal window size.
+Set `Placement` to open at a saved place, maximized if it was; see
+[window state and placement](#window-state-and-placement).
 
 Update and View run on the owner. Shared MVU commands start/cancel background
 work, request focus and exit. Close stops admission, cancels work and keeps
@@ -99,6 +99,33 @@ update, such as a menu command that copies a path. Return
 `Fpas.Ui.Gui.Clipboard.ReadText<TMsg>(OnRead)` to read text. The host applies
 `OnRead` to the clipboard text on its owner thread and queues the resulting
 message. Unavailable clipboard text is passed as an empty string.
+
+## Window state and placement
+
+Return a command from `Fpas.Ui.Gui.Windows` to change the owner window:
+
+- `Maximize<TMsg>()` and `Minimize<TMsg>()` change its state where the window
+  manager supports it.
+- `Restore<TMsg>()` undoes a maximize or a minimize. A window minimized from
+  maximized comes back maximized.
+- `MoveTo<TMsg>(X, Y)` places the top-left corner of the content.
+- `ReadPlacement<TMsg>(OnRead)` applies `OnRead` to the window's
+  `Cui.CuiWindowPlacement` on the owner thread and queues the message.
+
+A placement holds the normal size and place, also while the window is
+maximized or minimized, and whether the window is or comes back maximized.
+Save it and pass it as `Options.Placement` at the next start. Its size
+replaces `Width` and `Height` and is clamped to CUI's minimum window size.
+Closing the window does not pass through the update, so read the placement
+for saving from the session: drive `Start` or `StartThemed` with `Step` and
+call `Session.Placement()` after the last step and before `Dispose`. It then
+returns the placement the window had when it closed.
+
+The position is in desktop coordinates: pixels on Windows and X11, points on
+macOS. Keep it only to pass it back. A place on no screen is left to the
+system. Wayland reports `HasPosition = false` and ignores moves. On X11 the
+window manager carries out state changes, so a new state can take a few frames
+to show. A window manager without EWMH support ignores them.
 
 ## Toasts
 

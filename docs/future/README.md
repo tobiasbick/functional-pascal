@@ -12,3 +12,4 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 | Desktop application tutorial, GUI host and publishing | [Desktop GUI application gaps](gui-app-gaps.md) |
 | Confirmed native defects and integration workarounds | [CUI upstream bugs](cui-upstream-bugs.md) |
 | Optional native title bar, upstream proposal and platform validation | [CUI title bar](cui-titlebar.md) |
+| Window state and placement for CUI, open platform checks before the upstream proposal | [CUI window state](cui-window-state.md) |

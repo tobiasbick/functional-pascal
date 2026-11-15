@@ -3,7 +3,7 @@ unit GuiGallery.Pages.Desktop.Update;
 uses
   GuiGallery.Pages.Desktop.State as S, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T,
   Fpas.Ui.Widgets.Editors.PropertyInspectors as P, GuiGallery.Pages.Desktop.HostActions as HostActions,
-  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Mvu.Application as Mvu,
   System as Sys, System.Collections.Generic as Lists;
 
 function Documents(Model: S.Model; Change: D.Change): S.Model;
@@ -151,7 +151,11 @@ begin
       return Model with
         PastedText := Text;
       end with;
-    when S.Msg.Maximize, S.Msg.CopyPath, S.Msg.PasteText:
+    when S.Msg.PlacementRead(const Value: Cui.CuiWindowPlacement):
+      return Model with
+        Placement := Value;
+      end with;
+    when S.Msg.Maximize, S.Msg.Minimize, S.Msg.Restore, S.Msg.MoveWindow, S.Msg.ReadPlacement, S.Msg.CopyPath, S.Msg.PasteText:
       return Model;
   end case;
 end function;
@@ -168,6 +172,10 @@ begin
     Next(Model, Message),
     case Message of
       when S.Msg.Maximize: [Windows.Maximize<S.Msg>()];
+      when S.Msg.Minimize: [Windows.Minimize<S.Msg>()];
+      when S.Msg.Restore: [Windows.Restore<S.Msg>()];
+      when S.Msg.MoveWindow: [Windows.MoveTo<S.Msg>(HostActions.MoveX, HostActions.MoveY)];
+      when S.Msg.ReadPlacement: [Windows.ReadPlacement<S.Msg>(S.Msg.PlacementRead)];
       when S.Msg.CopyPath: [Clipboard.WriteText<S.Msg>(HostActions.SamplePath)];
       when S.Msg.PasteText: [Clipboard.ReadText<S.Msg>(S.Msg.ClipboardText)];
       else [];

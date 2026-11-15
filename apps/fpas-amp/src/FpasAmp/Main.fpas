@@ -2,23 +2,34 @@
 program FpasAmp;
 
 uses
+  Fpas.Ui.Gui.Cui as Cui,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Settings as Settings,
   FpasAmp.Ui.Settings.Model as Model,
   FpasAmp.Ui.Shell as Shell,
-  FpasAmp.WindowState as State;
+  FpasAmp.WindowState as State,
+  System as Sys,
+  System.Console as Console,
+  System.IO as IO;
 
 procedure Main();
 begin
   const Directory: string := Files.DirectoryPath();
   const Preferences: Model.Preferences := Settings.Load(Directory);
-  const Window: State.Placement := State.Load(Directory);
-  Shell.Run(
-    Window.Width, Window.Height, Preferences,
+  const Opened: State.Placement := State.Load(Directory);
+  const Closed: Cui.CuiWindowPlacement := Shell.Run(
+    State.ToWindow(Opened), Preferences,
     procedure(Value: Model.Preferences) begin
       Settings.Save(Directory, Value);
     end procedure
   );
+  try
+    State.Save(Directory, State.FromWindow(Closed));
+  catch Failure: IO.IOException do
+    Console.Error.WriteLine('Could not save the window state: ' + Failure.Message);
+  catch Failure: Sys.UnauthorizedAccessException do
+    Console.Error.WriteLine('Could not save the window state: ' + Failure.Message);
+  end try;
 end procedure;
 
 begin

@@ -66,9 +66,10 @@ the model. Rejecting a proposal leaves the model value authoritative.
 Start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
 Use `Gui.Options` to set title, logical width and height, renderer and mailbox
-capacity. Set `StartMaximized := true` to start maximized, or return
-`Fpas.Ui.Gui.Windows.Maximize<TMsg>()` from an update to maximize the open
-window. X11 requires a window manager with EWMH support.
+capacity. Set `Placement` to reopen a window where it was closed. Return
+[window commands](../../../src/Fpas.Ui.Gui/README.md#window-state-and-placement)
+from an update to maximize, minimize, restore or move it, or to read its
+placement for saving. X11 requires a window manager with EWMH support.
 The host validates the whole active view before drawing. Explicit GUI sizing
 uses portable `Layout.Measure.Logical`; the terminal adapter translates those
 distances to cells. Layout follows the [shared CUI rules](../../../src/Fpas.Ui/README.md#layout-and-style).

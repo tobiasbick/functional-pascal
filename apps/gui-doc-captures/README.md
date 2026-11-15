@@ -33,7 +33,8 @@ AI opens the reasoning and tool details and the standalone model menu. It
 also shows the agent status during the simulated reply. Motion captures both
 values of the rolling-number example with reduced motion.
 Text and display clicks the blue swatch. Reader jumps to Install. App
-chrome opens the View menu after capturing the editor and workspace.
+chrome opens the View menu after capturing the editor and workspace, then
+scrolls to the window actions.
 Smart inputs captures the message field before and after opening the emoji palette.
 Overview captures the workspace and metrics as well as the sidebar in both
 appearances. Layout captures the divider in the Notifications sheet.

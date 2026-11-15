@@ -10,7 +10,8 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_window_create", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial nint Create(string title, int width, int height, int renderer, int continuous);
+    internal static partial nint Create(string title, int width, int height, int renderer, int continuous,
+        int placed, int x, int y, int hasPosition, int maximized);
 
     [LibraryImport(Library, EntryPoint = "cui_app_destroy")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

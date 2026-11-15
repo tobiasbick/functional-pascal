@@ -29,7 +29,7 @@ the next view shows it. Close sends a command that ends the application.
 | Checkboxes, switches, radio controls, sliders, chips and ratings | [Selection](selection/README.md) |
 | Sidebar, tabs, breadcrumb, pagination and stepper | [Navigation](navigation/README.md) |
 | Table of contents and scroll anchors | [Reader](reader/README.md) |
-| Menu bar, toolbar, document tabs, status bar, docking and split panes | [App chrome](app-chrome/README.md) |
+| Menu bar, toolbar, document tabs, status bar, docking, split panes and window placement | [App chrome](app-chrome/README.md) |
 | Text roles, formatted labels, icons, emoji, keycaps, images and drawing | [Text and display](text-and-display/README.md) |
 | Layered stacks, dividers, reading direction, spacing and scroll views | [Layout](layout/README.md) |
 | Text editors, credentials, form fields and single-date calendars | [Inputs](inputs/README.md) |

@@ -1,32 +1,134 @@
 unit Fpas.Ui.Gui.Windows;
 
-uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu;
 
-// Maximizes the owner window when supported by its window manager.
+// Changes how the owner window is shown.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type MaximizeRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
-  // Retains the maximize request in a parent message space.
+public type StateRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Maximized or minimized to change to; normal restores the window.
+  public Target: Cui.CuiWindowState;
+
+  // Retains the state request in a parent message space.
   // ## Type parameters
   // - `TNext`: Parent message type.
   // ## Parameters
   // - `Messages`: Mapper for child messages.
   // ## Returns
-  // The parent maximize request.
+  // The parent state request.
   public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
   begin
-    return new MaximizeRequest<TNext>();
+    return new StateRequest<TNext>(self.Target);
   end function;
 end record;
 
-// Requests maximization when the GUI host applies the command.
+// Moves the owner window.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type MoveRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Left edge of the content in desktop coordinates.
+  public X: int;
+  // Top edge of the content in desktop coordinates.
+  public Y: int;
+
+  // Retains the move request in a parent message space.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Mapper for child messages.
+  // ## Returns
+  // The parent move request.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new MoveRequest<TNext>(self.X, self.Y);
+  end function;
+end record;
+
+// Reads the owner window's placement and produces an application message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type PlacementRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Maps the placement to a message.
+  public OnRead: function(Cui.CuiWindowPlacement): TMsg;
+
+  // Maps the resulting message into a parent message space.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Mapper for child messages.
+  // ## Returns
+  // The parent placement request.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    const Result: function(Cui.CuiWindowPlacement): TMsg := self.OnRead;
+    return new PlacementRequest<TNext>(
+      function(Placement: Cui.CuiWindowPlacement): TNext => Messages(Result(Placement))
+    );
+  end function;
+end record;
+
+function Change<TMsg>(Target: Cui.CuiWindowState): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new StateRequest<TMsg>(Target)));
+end function;
+
+// Maximizes the window where the window manager supports it.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Returns
 // The graphical window command.
 public function Maximize<TMsg>(): Mvu.Command<TMsg>;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new MaximizeRequest<TMsg>()));
+  return Change<TMsg>(Cui.CuiWindowState.Maximized);
+end function;
+
+// Minimizes the window to the taskbar or dock where the window manager supports it.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The graphical window command.
+public function Minimize<TMsg>(): Mvu.Command<TMsg>;
+begin
+  return Change<TMsg>(Cui.CuiWindowState.Minimized);
+end function;
+
+// Undoes a maximize or a minimize. A window minimized from maximized comes back
+// maximized.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The graphical window command.
+public function Restore<TMsg>(): Mvu.Command<TMsg>;
+begin
+  return Change<TMsg>(Cui.CuiWindowState.Normal);
+end function;
+
+// Moves the top-left corner of the window's content. Wayland ignores the
+// request because it lets no window place itself.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `X`: Left edge in desktop coordinates: pixels on Windows and X11, points on macOS.
+// - `Y`: Top edge in the same units, growing down.
+// ## Returns
+// The graphical window command.
+public function MoveTo<TMsg>(X: int; Y: int): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new MoveRequest<TMsg>(X, Y)));
+end function;
+
+// Reads the window's normal size and place and whether it is or comes back
+// maximized, for an application that saves them and passes them to
+// `Application.Options.Placement` at its next start.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnRead`: Maps the placement to one message.
+// ## Returns
+// The graphical window command.
+public function ReadPlacement<TMsg>(OnRead: function(Cui.CuiWindowPlacement): TMsg): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new PlacementRequest<TMsg>(OnRead)));
 end function;
 
 end unit;

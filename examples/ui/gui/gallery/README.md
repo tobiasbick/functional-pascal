@@ -126,8 +126,9 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   actions. Tick files to update the selection bar. Escape clears the selection.
   Under Presence avatars, choose a PNG or JPEG for Paul or switch back to initials.
 - **App chrome** shows the editor chrome, docking workspace and split view.
-  Window and clipboard lets you copy a sample path, paste from the system
-  clipboard and maximize the gallery window.
+  Window and clipboard maximizes, minimizes, restores and moves the gallery
+  window and reads its placement. It also copies a sample path and pastes
+  from the system clipboard.
 - **Editing tools** shows the original crate inspector, two-frame flame graph,
   easing curve, gradient ramp and shot timeline. Move or select a timeline key
   to edit the same track in its curve below.
@@ -174,7 +175,7 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   cards. The model owns header expansion;
   CUI owns the text link's local state. The original branch confirmation uses
   the danger action and Cancel button. All examples retain CUI rendering and
-  interaction, including its [documented focus limitation](../../../../docs/future/cui-upstream-bugs.md#cui-006).
+  interaction.
   Hover over @jonas to see the original profile card with initials and the
   online dot. Move onto the card to keep it open, or press Escape to close it.
   Use the Veil examples to reveal a picture, a sample identifier or a spoiler.

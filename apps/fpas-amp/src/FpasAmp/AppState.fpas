@@ -1,5 +1,5 @@
-// Stores the desktop window state.
-unit FpasAmp.WindowState;
+// Stores the desktop window and selected settings page.
+unit FpasAmp.AppState;
 
 uses
   Fpas.Ui.Gui.Cui as Cui,
@@ -8,8 +8,8 @@ uses
   System.IO as IO,
   System.Text.Json as J;
 
-// The window's normal bounds and last maximized state.
-public type Placement = record
+// The window's normal bounds, last maximized state and selected page.
+public type Snapshot = record
   // Normal window width in logical units.
   public Width: int := 1000;
   // Normal window height in logical units.
@@ -20,6 +20,8 @@ public type Placement = record
   public Y: int? := null;
   // Whether the window was maximized.
   public Maximized: bool := false;
+  // Selected settings tab: 0 for General, 1 for Library, or null for the empty shell.
+  public SettingsTab: int? := null;
 end record;
 
 const FileName: string := 'state.json';
@@ -46,45 +48,72 @@ begin
   return Value;
 end function;
 
-function Decode(Root: J.JsonElement): Files.Decoded<Placement>;
+function SelectedTab(Root: J.JsonElement; ref Valid: bool): int?;
 begin
-  const Defaults: Placement := new Placement();
+  // Missing fields are expected in files saved before page restoration existed.
+  var Field: J.JsonElement := new J.JsonElement();
+  if Root.ValueKind = J.JsonValueKind.Object and not Root.TryGetProperty(
+    'settingsTab',
+    out Field
+  )
+  then
+    return null;
+  end if;
+
+  Field := Fields.Field(Root, 'settingsTab');
+  if Field.ValueKind = J.JsonValueKind.Null then
+    return null;
+  end if;
+  const Value: int? := Fields.IntegerValue(Field);
+  if Value = 0 or Value = 1 then
+    return Value;
+  end if;
+
+  Valid := false;
+  return null;
+end function;
+
+function Decode(Root: J.JsonElement): Files.Decoded<Snapshot>;
+begin
+  const Defaults: Snapshot := new Snapshot();
   var Valid: bool := true;
   const Width: int := Dimension(Root, 'width', Defaults.Width, ref Valid);
   const Height: int := Dimension(Root, 'height', Defaults.Height, ref Valid);
   const X: int? := Coordinate(Root, 'x', ref Valid);
   const Y: int? := Coordinate(Root, 'y', ref Valid);
   const Maximized: bool? := Fields.BooleanValue(Fields.Field(Root, 'maximized'));
-  return new Files.Decoded<Placement>(
-    new Placement(Width, Height, X, Y, Maximized ?? Defaults.Maximized),
+  const Tab: int? := SelectedTab(Root, ref Valid);
+  return new Files.Decoded<Snapshot>(
+    new Snapshot(Width, Height, X, Y, Maximized ?? Defaults.Maximized, Tab),
     Valid and Maximized <> null
   );
 end function;
 
-// Loads the window placement and repairs a damaged state file when possible.
+// Loads the window and selected page, repairing a damaged state file when possible.
 //
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
 // ## Returns
-// The placement with positive dimensions.
-public function Load(Directory: string): Placement;
+// The saved state with positive dimensions and a valid tab or no selected page.
+public function Load(Directory: string): Snapshot;
 requires Directory.Length > 0;
-ensures (Value: Placement): Value.Width > 0 and Value.Height > 0;
+ensures (Value: Snapshot): Value.Width > 0 and Value.Height > 0;
 begin
-  return Files.Load<Placement>(IO.Path.Combine(Directory, FileName), new Placement(), Decode);
+  return Files.Load<Snapshot>(IO.Path.Combine(Directory, FileName), new Snapshot(), Decode);
 end function;
 
-// Validates and saves the normal bounds and maximized state.
+// Validates and saves the window and selected page.
 //
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
-// - `Value`: Placement with positive normal dimensions.
-public procedure Save(Directory: string; Value: Placement);
+// - `Value`: State with positive normal dimensions and tab 0, 1 or null.
+public procedure Save(Directory: string; Value: Snapshot);
 requires Directory.Length > 0;
 requires Value.Width > 0;
 requires Value.Height > 0;
+requires Value.SettingsTab = null or Value.SettingsTab = 0 or Value.SettingsTab = 1;
 begin
-  Files.Save<Placement>(IO.Path.Combine(Directory, FileName), Value, Decode);
+  Files.Save<Snapshot>(IO.Path.Combine(Directory, FileName), Value, Decode);
 end procedure;
 
 // Converts a stored placement for the GUI host.
@@ -93,7 +122,7 @@ end procedure;
 // - `Value`: Placement with positive normal dimensions.
 // ## Returns
 // The host placement; without both coordinates the system chooses the place.
-public function ToWindow(Value: Placement): Cui.CuiWindowPlacement;
+public function ToWindow(Value: Snapshot): Cui.CuiWindowPlacement;
 requires Value.Width > 0;
 requires Value.Height > 0;
 begin
@@ -121,12 +150,14 @@ end function;
 //
 // ## Parameters
 // - `Value`: The placement the GUI host reported when the window closed.
+// - `Tab`: The last selected settings tab, or null for the empty shell.
 // ## Returns
 // The stored placement; coordinates are null where the system reports none.
-public function FromWindow(Value: Cui.CuiWindowPlacement): Placement;
+public function FromWindow(Value: Cui.CuiWindowPlacement; Tab: int?): Snapshot;
+requires Tab = null or Tab = 0 or Tab = 1;
 begin
-  const Defaults: Placement := new Placement();
-  return new Placement(
+  const Defaults: Snapshot := new Snapshot();
+  return new Snapshot(
     if Value.Width > 0 then
       Value.Width
     else
@@ -147,7 +178,8 @@ begin
     else
       null
     end if,
-    Value.State = Cui.CuiWindowState.Maximized
+    Value.State = Cui.CuiWindowState.Maximized,
+    Tab
   );
 end function;
 

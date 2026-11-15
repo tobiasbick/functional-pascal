@@ -7,7 +7,7 @@ uses
   FpasAmp.Settings as Settings,
   FpasAmp.Ui.Settings.Model as Model,
   FpasAmp.Ui.Shell as Shell,
-  FpasAmp.WindowState as State,
+  FpasAmp.AppState as State,
   System as Sys,
   System.Console as Console,
   System.IO as IO;
@@ -16,19 +16,20 @@ procedure Main();
 begin
   const Directory: string := Files.DirectoryPath();
   const Preferences: Model.Preferences := Settings.Load(Directory);
-  const Opened: State.Placement := State.Load(Directory);
+  const Opened: State.Snapshot := State.Load(Directory);
+  var Tab: int? := Opened.SettingsTab;
   const Closed: Cui.CuiWindowPlacement := Shell.Run(
-    State.ToWindow(Opened), Preferences,
+    State.ToWindow(Opened), Preferences, ref Tab,
     procedure(Value: Model.Preferences) begin
       Settings.Save(Directory, Value);
     end procedure
   );
   try
-    State.Save(Directory, State.FromWindow(Closed));
+    State.Save(Directory, State.FromWindow(Closed, Tab));
   catch Failure: IO.IOException do
-    Console.Error.WriteLine('Could not save the window state: ' + Failure.Message);
+    Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
   catch Failure: Sys.UnauthorizedAccessException do
-    Console.Error.WriteLine('Could not save the window state: ' + Failure.Message);
+    Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
   end try;
 end procedure;
 

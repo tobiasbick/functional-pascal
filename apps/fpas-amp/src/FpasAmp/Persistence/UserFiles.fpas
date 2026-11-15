@@ -30,7 +30,7 @@ end record;
 // Returns the .NET application data directory for FPas-Amp without creating it.
 //
 // ## Returns
-// The absolute path shared by settings and window state.
+// The absolute path shared by settings and application state.
 public function DirectoryPath(): string;
 ensures (Path: string): Path.Length > 0;
 begin

@@ -6,6 +6,7 @@ appearance and accent color. **Library** lets you add a music folder, edit its
 name and formats, or mark it offline. New sources start with FLAC, MP3 and M4A.
 Appearance and offline changes save immediately. Use **Save** to confirm a new
 or edited source.
+The next launch returns to the settings tab that was open when the window closed.
 
 Set up the [local FPAS SDK](../../docs/build/development.md#build-an-fpas-application)
 and the [native CUI build tools](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
@@ -38,6 +39,9 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   Wayland. FPas-Amp saves the file when its window closes and reopens the
   window there, maximized if it was. A window closed while minimized keeps
   the state it would have come back in.
+- `state.json` also stores `settingsTab`, with `0` for General, `1` for Library
+  and `null` for the empty shell. A missing field defaults to the empty shell.
+  The selected page is saved when the window closes.
 
 A missing file yields an empty source list or a 1000 × 680 window with no saved
 position. When a file is damaged, FPas-Amp saves the original bytes in a

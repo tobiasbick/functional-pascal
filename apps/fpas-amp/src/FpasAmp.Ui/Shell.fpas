@@ -146,20 +146,25 @@ end function;
 // - `Window`: Saved normal size and place, and whether the window was maximized.
 //   The native window rejects a size below one logical unit.
 // - `Settings`: Validated preferences loaded at startup.
+// - `Tab`: Initial settings tab, updated to the last selection on close.
+//   0 opens General, 1 opens Library, and null opens the empty shell.
 // - `Save`: Persists a new set of validated preferences.
 // ## Returns
 // The window's placement when it closed, to restore at the next start.
 public function Run(
-  Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences)
+  Window: Cui.CuiWindowPlacement; Settings: M.Preferences; ref Tab: int?;
+  Save: procedure(M.Preferences)
 ): Cui.CuiWindowPlacement;
+requires Tab = null or Tab = 0 or Tab = 1;
 begin
-  const Initial: M.State := new M.State(Settings);
+  const Initial: M.State := new M.State(Settings, Tab := Tab);
+  var Last: M.State := Initial;
   using const Session: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
     Initial,
-    function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> => new Mvu.Transition<M.State, M.Msg>(
-      Updates.Apply(Current, Message, Save),
-      []
-    ),
+    function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> begin
+      Last := Updates.Apply(Current, Message, Save);
+      return new Mvu.Transition<M.State, M.Msg>(Last, []);
+    end function,
     View,
     new Gui.Options(Title := DisplayName, Theme := M.Theme(Initial, null), Placement := Window),
     M.Theme
@@ -167,6 +172,7 @@ begin
   while Session.Step() do
   end while;
 
+  Tab := Last.Tab;
   return Session.Placement();
 end function;
 

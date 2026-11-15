@@ -283,6 +283,12 @@ CUI_API void fpas_cui_request_focus(cui_ctx *ui, const char *id);
  * @param y Logical vertical coordinate. */
 CUI_API void fpas_cui_move_pointer(cui_ctx *ui, float x, float y);
 
+/** Injects wheel movement and refreshes routing for the current frame.
+ * @param ui Context for the current frame.
+ * @param x Horizontal movement in native wheel lines.
+ * @param y Vertical movement in native wheel lines. */
+CUI_API void fpas_cui_input_scroll(cui_ctx *ui, float x, float y);
+
 /** Begins a scroll area. Close it with cui_scroll_end.
  * @param ui Current UI-thread context.
  * @param id Borrowed stable identity.

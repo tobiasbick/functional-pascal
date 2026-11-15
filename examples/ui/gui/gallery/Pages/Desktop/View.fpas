@@ -2,7 +2,7 @@ unit GuiGallery.Pages.Desktop.View;
 
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Pages.Desktop.Editor as Editor,
-  GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Pages.Desktop.HostActions as HostActions, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Desktop.SplitViews as Split;
 
 // Builds the native desktop chrome page from CUI's reference examples.
@@ -11,7 +11,7 @@ uses
 // - `Colors`: Current CUI palette.
 // - `Width`: Window width in logical points.
 // ## Returns
-// Editor chrome, docking and a standalone split view.
+// Editor chrome, docking, split view, and host commands.
 public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array of E.Element<S.Msg>;
 begin
   return [
@@ -37,7 +37,9 @@ begin
         Height := L.Extent.Fixed(L.Measure.Logical(128)),
         MinimumFirst := 96.0F, MinimumSecond := 120.0F, Vertical := Width < 440
       )
-    )
+    ),
+    G.Heading<S.Msg>('Window and clipboard'),
+    HostActions.View(Model)
   ];
 end function;
 

@@ -28,7 +28,8 @@ public procedure Draw<TMsg>(
   begin
     const Result: int := Frame.Window.BeginDialog(
       C.Token('dialog', Id), Settings.Title, Settings.Description, cast<float>(Settings.Width),
-      Open, Enabled, Settings.Persistent, Settings.CloseButton, FocusClose, CloseToken
+      Open, Enabled, Settings.Persistent, Settings.CloseButton, FocusClose, CloseToken,
+      Settings.Draggable, Settings.Resizable
     );
     if Open and (Result and 1) <> 0 then
       Frame.Controls.Add(

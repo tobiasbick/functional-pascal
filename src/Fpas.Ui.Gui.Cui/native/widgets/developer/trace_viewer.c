@@ -15,9 +15,7 @@ void fpas_cui_trace_viewer(cui_ctx *ui, const char *id, const cui_trace_track * 
     fpas_creative_node(ui, root, key);
     out->index=selection;
     out->hover=r.hovered;
-    /* CUI-036 (docs/future/cui-upstream-bugs.md#cui-036): native view_changed omits measurement edits. */
-    const bool view_changed = r.view_changed || view.mark_start != mark_start || view.mark_end != mark_end;
-    out->flags = r.selection_changed | (view_changed << 1);
+    out->flags = r.selection_changed | (r.view_changed << 1);
     for (int i = 0; i < tracks_count; i++) {
         if (copy[i].collapsed != tracks[i].collapsed) {
             out->flags |= 4;

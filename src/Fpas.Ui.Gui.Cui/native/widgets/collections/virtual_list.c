@@ -3,13 +3,6 @@
 int fpas_cui_virtual_list_begin(cui_ctx *ui, const char *id, int count, float row_height,
     int kind, float height, int enabled, int *first, int *last) {
     const int node = ui->node_count;
-    const cui_id key = cui_make_id(ui, id);
-    cui_scroll_state *state = cui_state(ui, key, sizeof *state);
-    /* CUI-023 (docs/future/cui-upstream-bugs.md#cui-023): clamp before CUI calculates the realized range. */
-    state->content_h = (float)count * row_height;
-    const float maximum = CUI_MAX(0, state->content_h - state->view_h);
-    state->y = cui__clampf(state->y, 0, maximum);
-    state->ty = cui__clampf(state->ty, 0, maximum);
     const float dx = ui->scroll_dx, dy = ui->scroll_dy;
     ui->scroll_dx = 0;
     if (!enabled) ui->scroll_dy = 0;

@@ -1,0 +1,32 @@
+unit Fpas.Ui.Gui.Windows;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// Maximizes the owner window when supported by its window manager.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type MaximizeRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Retains the maximize request in a parent message space.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Mapper for child messages.
+  // ## Returns
+  // The parent maximize request.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new MaximizeRequest<TNext>();
+  end function;
+end record;
+
+// Requests maximization when the GUI host applies the command.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The graphical window command.
+public function Maximize<TMsg>(): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new MaximizeRequest<TMsg>()));
+end function;
+
+end unit;

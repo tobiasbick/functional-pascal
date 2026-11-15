@@ -8,7 +8,8 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_dialog_begin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int DialogBegin(nint context, string id, string title, string? description,
-        float width, int open, int enabled, int persistent, int closeButton, int focus, out int panel);
+        float width, int open, int enabled, int persistent, int closeButton, int focus, int draggable, int resizable,
+        out int panel);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_dialog_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

@@ -146,7 +146,7 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
   `Elements.Text` remains available in the portable profile.
 - [x] Link (`cui_link`). [API][fpas-hover-card]. Disclosure verifies pointer
   and keyboard activation of the original @jonas link and its visible focus
-  ring. The bridge applies the workaround for [CUI-012](future/cui-upstream-bugs.md#cui-012).
+  ring. The bridge paints the ring alongside the native hover underline.
   The graphical profile is required.
 - [x] Icon (`cui_icon`): standalone file icon from the CUI icon specimen.
 - [x] Emoji display (`cui_emoji`): the original three emoji and counts.
@@ -291,13 +291,13 @@ and widget options.
 - [x] Scrub field (`cui_scrub`): [API][fpas-smart-inputs]. Smart inputs shows
   Opacity, Radius and Blur with their original widths, suffixes and steps.
   CUI handles dragging, Shift precision, arrow keys and click-to-type. Invalid
-  commits are protected by [CUI-017](future/cui-upstream-bugs.md#cui-017).
+  numeric drafts leave the value unchanged.
   Arbitrary native printf formats remain unexposed; the API uses DecimalPlaces.
 - [x] Money field (`cui_money_input`): [API][fpas-smart-inputs]. Smart inputs
   shows the original USD amount and whole-euro salary with grouped resting
   values and plain editing digits. The model uses double, with zero through
   fifteen fractional digits. Greater native precision is unexposed.
-  Oversized proposals are protected by [CUI-018](future/cui-upstream-bugs.md#cui-018).
+  CUI rejects typed amounts that would overflow its grouped display.
 - [x] Shortcut recorder and shortcut label (`cui_shortcut_recorder`,
   `cui_shortcut_label`): [API][fpas-smart-inputs]. Smart inputs shows the original
   palette and unbound search shortcuts. CUI owns recording, cancellation, clear,
@@ -337,7 +337,6 @@ page-content comparison.
 - [x] Date picker (`cui_date_picker`): [API][fpas-calendar]. Inputs shows the
   original Due date field. Windows comparison covers the field and popup.
   The gallery checks selection, an empty value, dismissal and focus return.
-  Focus ring workaround: [CUI-012](future/cui-upstream-bugs.md#cui-012).
 - [x] Date range calendar (`cui_range_calendar`): [API][fpas-date-range].
   Pickers shows the original inline two-month calendar, linked to Stay dates.
   The gallery verifies month navigation and selection across a year boundary.
@@ -355,13 +354,10 @@ page-content comparison.
 - [x] Wheel picker (`cui_wheel_picker`): [API][fpas-time-controls]. Pickers
   shows the original three joined date wheels. The gallery verifies keyboard
   wrapping, wheel input, dragging and visible captions on keyboard focus.
-  Native workaround: [CUI-010](future/cui-upstream-bugs.md#cui-010).
 - [x] Color picker (`cui_color_picker`): [API][fpas-color-emoji]. Inputs shows
   the original Brand color field. The gallery verifies presets, hue editing
   after a model change, alpha preservation, and keyboard focus and dismissal.
-  Windows captures match within one color level per channel. Native
-  workarounds: [CUI-012](future/cui-upstream-bugs.md#cui-012) and
-  [CUI-013](future/cui-upstream-bugs.md#cui-013).
+  Windows captures match within one color level per channel.
 - [x] Emoji picker (`cui_emoji_picker`): [API][fpas-color-emoji]. Smart inputs
   shows the original message field and popup. The gallery verifies group
   navigation, search, insertion, and persistence of recent emoji and skin
@@ -376,8 +372,6 @@ page-content comparison.
 - [x] Ruler slider (`cui_ruler_slider`): [API][fpas-ruler-histogram]. Pickers
   shows the original Height and Temperature tapes. The gallery verifies
   dragging, both wheel axes, Shift+arrow and visible ticks with keyboard focus.
-  Native workarounds: [CUI-010](future/cui-upstream-bugs.md#cui-010) and
-  [CUI-011](future/cui-upstream-bugs.md#cui-011).
 - [x] Histogram slider (`cui_histogram_slider`): [API][fpas-ruler-histogram].
   Pickers shows the original 24-bin Price example and verifies both endpoints.
   Windows captures of the complete page at rest and after price adjustment
@@ -423,7 +417,7 @@ and FPAS examples.
 - [x] Gradient slider (`cui_gradient_slider`): [API][fpas-creative]. The original
   hue, white balance and opacity controls include the swatch and eyedropper.
   Custom stops and numeric formatting are exposed. The tests exercise snapped
-  input, the tool action and the CUI-031 endpoint workaround.
+  input, the tool action and keyboard access to both endpoints.
 - [x] Step slider (`cui_step_slider`): [API][fpas-creative]. Variations snaps to
   the four original stops and Generate updates the displayed count.
 - [x] Palette strip (`cui_palette_strip`): [API][fpas-creative]. The original
@@ -476,7 +470,7 @@ editor bars, document tabs, docking and split panes.
   badge and separator. Files emits a toast.
 - [x] Bottom tab bar (`cui_tab_bar`): [API][fpas-motion]. Motion shows the four
   original tabs and Inbox badge. The Windows keyboard test checks that Right
-  moves one tab and transfers focus. FPAS works around CUI-029.
+  moves one tab and transfers focus.
 - [x] Menu bar and menus (`cui_menu_bar`, `cui_menu_bar_menu`): App chrome uses
   the CUI documentation's File, Edit, View, Go and Help menus. The gallery
   checks Alt+V and Enter, and the native test exercises F10 and Down.
@@ -533,10 +527,12 @@ for gallery screenshots, FPAS examples and widget options.
   [API][fpas-dialog]. Overlays shows the original Edit profile example.
   Buttons and Overlays share the original 400-point project deletion dialog.
   The gallery verifies both launchers, cancellation, confirmation and Undo.
-  The dialog interior matches the Windows software reference.
-  Windows Software and OpenGL cover footer alignment, focus return, Escape,
-  scrim and close dismissal, and the Save changes toast. TUI: deferred;
-  graphical profile required.
+  At 1240 × 1000, scale 1, the dialog interior matches CUI pixel for pixel
+  at rest, after dragging and after corner resizing in both appearances
+  and renderers. The resized panel also matches through its outer edge.
+  The host fixture exercises the real gallery dialog and checks its footer,
+  focus return, Escape, scrim and close dismissal, and the Save changes toast.
+  Requires the graphical profile.
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
   The Notifications sheet shows the original three switches. Their values are
@@ -546,8 +542,8 @@ for gallery screenshots, FPAS examples and widget options.
   Overview and Overlays launch the original grouped command list.
   Windows Software and OpenGL checks cover native search, Enter activation,
   Escape with focus return and Ctrl+K. The visible panel interior matches the
-  pinned reference in both renderers. The adapter guards keyboard activation
-  during the exit animation for [CUI-024](future/cui-upstream-bugs.md#cui-024).
+  pinned reference in both renderers. CUI leaves keyboard input available
+  while the palette exits.
   The graphical profile is required.
 - [x] Accordion (`cui_accordion`): [API][fpas-accordion]. Data display shows the original
   three questions. Native headers propose model-owned expansion; pointer,
@@ -555,7 +551,7 @@ for gallery screenshots, FPAS examples and widget options.
 - [x] Hover card (`cui_hover_card`). [API][fpas-hover-card]. Disclosure verifies
   hover delay, moving onto the original @jonas card, leaving it and dismissal
   with Escape. The open and closed examples match the Windows software reference
-  pixel for pixel. The bridge applies the workaround for [CUI-016](future/cui-upstream-bugs.md#cui-016).
+  pixel for pixel. The card stays dismissed until the pointer leaves its anchor.
   The graphical profile is required.
 - [x] Confirm popover (`cui_confirm_popover`): [API][fpas-popovers].
   Disclosure shows the original Delete branch question. Windows Software and
@@ -564,8 +560,7 @@ for gallery screenshots, FPAS examples and widget options.
 - [x] Expandable text (`cui_expandable_text`): [API][fpas-expandable-text].
   Disclosure shows the original clamped About text. CUI owns expansion, wrapping,
   fade and the optional link. Removing the widget releases local state.
-  Native focus loss after toggling is documented as [CUI-006][cui-006]; no
-  integration workaround or upstream contribution is planned.
+  The expansion link keeps keyboard focus when its caption changes.
 - [x] Expandable card (`cui_expandable_card`): [API][fpas-accordion]. Disclosure
   shows Billing and Security with their native descriptions, icons and badge.
   CUI owns layout, chevrons and height springs. Software/OpenGL host tests cover
@@ -585,8 +580,7 @@ for gallery screenshots, FPAS examples and widget options.
   re-cover, the Reveal/Hide button and Enter on the focused picture.
   The covered and revealed cards were compared at both widths, using the
   same synthetic sample identifier in the reference. Subpixel placement
-  differences remain on Disclosure. [CUI-038](future/cui-upstream-bugs.md#cui-038)
-  records the tested workaround for a disabled veil intercepting input.
+  differences remain on Disclosure. A disabled veil lets clicks reach controls beneath it.
 
 ### Feedback and progress
 
@@ -659,7 +653,7 @@ and widget options.
   Disclosure shows the original workspace steps and verifies focus, keyboard
   toggling, action completion and advancement. Six pixels in the Windows
   software comparison differ by one level per color channel at most.
-  The bridge applies the workaround for [CUI-010](future/cui-upstream-bugs.md#cui-010).
+  The bridge keeps the circle visible when it paints a keyboard focus ring.
   The graphical profile is required.
 
 ### Lists, tables, and files
@@ -674,15 +668,14 @@ table, tree, list items, reorderable list, accordion and virtual list.
   checks cover expansion, collapse and selection.
 - [x] Virtual list (`cui_virtual_list`): [API][fpas-data-display]. The
   original 10,000 invoices are realized on demand. Windows checks cover wheel
-  scrolling and the immediate range after shrinking, with a workaround for
-  [CUI-023](future/cui-upstream-bugs.md#cui-023).
+  scrolling and the immediate range after shrinking.
 - [x] Reorderable list and items (`cui_reorder_begin`, `cui_reorder_item`):
   [API][fpas-data-display]. The original Tasks example saves the order
   proposed by native drag input and shows its toast.
 - [x] Table, rows, and cells (`cui_table`, `cui_table_row`, `cui_table_cell`,
   `cui_table_cell_text`): [API][fpas-data-display]. Data display shows the
   original People example. Windows checks cover reversing the sort, selecting a
-  row and the native focus ring supplied for [CUI-022](future/cui-upstream-bugs.md#cui-022).
+  row and the focus rings on headers and rows.
 
 Data display content and the Notifications sheet interior match the pinned
 Windows reference in Software and OpenGL at 1100×1800 and scale one. The
@@ -697,11 +690,10 @@ See [Data grid](ui/data-grid/README.md) for screenshots and FPAS examples.
   [API](../src/Fpas.Ui/README.md#data-grid-filter-bar-and-tree-table).
   The original People demo realizes rows on demand from 2,000 records.
   Windows checks cover sorting, column resizing, range selection, editing and
-  scrolling. [CUI-025](future/cui-upstream-bugs.md#cui-025) covers shrinking while scrolled.
+  scrolling, including shrinking while scrolled.
 - [x] Filter bar (`cui_filter_bar`): the original Team, Status and Role filters
   and Search field. Windows checks cover search, clearing and adding a filter.
-  The adapter opens the newly added chip's value menu for
-  [CUI-026](future/cui-upstream-bugs.md#cui-026).
+  CUI opens the newly added chip's value menu.
 - [x] Tree table (`cui_tree_table_begin`, `cui_tree_table_row`,
   `cui_tree_table_name`, `cui_tree_cell`): the original source-tree cells in a
   table and a supplementary virtual tree table with native selection, activation
@@ -767,8 +759,7 @@ for gallery screenshots and FPAS examples.
   ranges, selection, overwrite and Go to offset. The native test checks the
   selected address and edited byte.
 - [x] Flame graph (`cui_flame_graph`): the original two-frame profiler capture.
-  Native tests select a child and zoom to it. The disabled-input workaround
-  is tracked in [CUI-039](future/cui-upstream-bugs.md#cui-039).
+  Native tests select a child, zoom to it and check disabled wheel input.
 - [x] Curve editor (`cui_curve_editor`): the original easing curve and the
   selected timeline track's curve. Native tests nudge and delete a key.
 - [x] Gradient editor (`cui_gradient_editor`): the original flame ramp.
@@ -776,7 +767,7 @@ for gallery screenshots and FPAS examples.
 - [x] Timeline editor (`cui_timeline_editor`): the original hero, camera and
   sound tracks, range, playhead and track curve. Tests cover exact frame steps,
   keyframe moves and deletion, playback requests and the shared gallery model.
-  See [CUI-039](future/cui-upstream-bugs.md#cui-039) for disabled wheel input.
+  Disabled timelines ignore wheel input.
 
 The five CUI component specimens are grouped under Editing tools. Windows
 Software and OpenGL captures match the native reference at 1100 × 1400 and
@@ -822,7 +813,6 @@ Software and OpenGL comparisons covered three scroll positions per page with
 the same animation clock. Focused tests cover trace folding and measurement,
 regex results, histogram selection and clearing, reduced motion, and URL
 and query-parameter synchronization.
-The native trace measurement workaround is tracked in [CUI-036](future/cui-upstream-bugs.md#cui-036).
 
 ### Charts and instruments
 
@@ -873,12 +863,11 @@ examples and widget options.
   in light/dark themes, software/OpenGL renderers and 1240×4100/600×4800
   viewports at scale one. The 640 native pixel/geometry comparisons and 19
   managed binding cases also cover input and allocation retirement.
-  [CUI-020](future/cui-upstream-bugs.md#cui-020) and
-  [CUI-021](future/cui-upstream-bugs.md#cui-021) have direct native reproductions and
-  small protected adapter regressions.
+  Native tests check queued wheel input on disabled candlesticks and report
+  the original Sankey link index on a ribbon click.
 - [x] Dot-matrix chart (`cui_dot_chart`): the original caffeine chart shows
   stacked cup doses, an hours axis and native annotations. Windows tests cover
-  activation and the keyboard fallback for [CUI-028](future/cui-upstream-bugs.md#cui-028).
+  activation of the middle sample before the keyboard cursor has moved.
 - [x] Event track (`cui_event_track`): the original cup timeline shares the
   chart's scale. Windows checks cover drag, keyboard movement, add and remove.
 - [x] Readout (`cui_readout`): the original At Bed, Peak and Cups readouts
@@ -970,13 +959,12 @@ The original Planning page matches pixel for pixel in Windows Software and
 OpenGL at 1100×2200 and scale one. The adapters restore Enter activation of
 read-only week events and Gantt tasks and click activation of read-only week
 events. [Planning API][fpas-files-planning]
-[CUI-032](future/cui-upstream-bugs.md#cui-032)
 
 - [x] Node editor with pins, links, and node content (`cui_node_editor_begin`,
   `cui_node_begin`, `cui_node_input`, `cui_node_output`,
   `cui_node_content_begin`, `cui_node_link`): Canvas and bars uses the original
   three-node graph; the native test covers node dragging, wheel zoom and the
-  disabled-input workaround. [CUI-037](future/cui-upstream-bugs.md#cui-037)
+  disabled-input behavior.
 
 ### Canvas and bars
 
@@ -987,8 +975,10 @@ and FPAS examples, including the node editor and toolbar.
   list and delete controls. A native test toggles Bold.
 - [x] Live cursors, presence pill, and selection ring (`cui_live_cursors`,
   `cui_presence_pill`, `cui_selection_ring`): the original collaborators,
-  speaking indicator, cursor speech and node selection. Custom avatar images
-  in the presence pill remain an unexposed native option.
+  speaking indicator, cursor speech and node selection. The supplementary
+  Presence avatars example can choose a PNG or JPEG for Paul and restore his
+  initials. Both pill states match direct CUI pixel for pixel at scale 1
+  in both appearances and renderers.
 - [x] Canvas controls (`cui_canvas_controls`): the original zoom, fit, Grid
   and Layers controls. The native test selects the next zoom preset and resets
   to 100 percent.
@@ -1023,7 +1013,7 @@ of these effects and the compact controls shown on the same page.
   through the original four deployment targets.
 - [x] Rolling number (`cui_number_roll`): [API][fpas-motion]. The additional
   Motion example changes a formatted currency value. The native test checks
-  that the CUI-030 fallback preserves text outside the animation capacity.
+  that CUI preserves text outside the animation capacity.
 - [x] Gradient text (`cui_gradient_text`): [API][fpas-motion]. Motion shows the
   original animated Kiln 2.4 heading.
 - [x] Spotlight card (`cui_spotlight`): [API][fpas-motion]. Motion shows three
@@ -1145,7 +1135,6 @@ model picker and legacy voice orb follow the original content.
 [fpas-progress-ring]: ../src/Fpas.Ui/README.md#progress-ring
 [fpas-timeline]: ../src/Fpas.Ui/README.md#timeline-item
 [fpas-skeleton]: ../src/Fpas.Ui/README.md#skeleton
-[cui-006]: future/cui-upstream-bugs.md#cui-006
 [fpas-tooltip]: ../src/Fpas.Ui/README.md#tooltip
 [gui-gallery-test]: ../tests/Fixtures/gui-host/PublishedGallery.fpas
 [gui-layout-test]: ../tests/Fpas.Ui.Gui.Cui.Tests/CuiHostLayoutTests.cs

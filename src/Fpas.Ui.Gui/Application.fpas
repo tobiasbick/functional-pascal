@@ -16,7 +16,26 @@ public type Options = record
   public Capacity: int := 128;
   // Initial native theme, unless selected from the model.
   public Theme: Themes.Theme := new Themes.Theme();
+  // Request a maximized window at startup on window managers that support it.
+  public StartMaximized: bool := false;
 end record;
+
+function CreateWindow(Settings: Options): Cui.CuiWindow;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer
+  );
+  try
+    if Settings.StartMaximized then
+      Window.Maximize();
+    end if;
+
+    return Window;
+  catch Error: Sys.Exception do
+    Window.Dispose();
+    raise;
+  end try;
+end function;
 
 // A detached description of a presented graphical control.
 public type Control = record
@@ -183,7 +202,7 @@ begin
     InitialModel,
     Update,
     View,
-    new Cui.CuiWindow(Settings.Title, Settings.Width, Settings.Height, Settings.Renderer),
+    CreateWindow(Settings),
     Settings.Capacity, null, Settings.Theme, ThemeFor
   );
 end function;
@@ -246,7 +265,7 @@ requires Settings.Capacity > 0;
 begin
   return Host.StartThemed<TModel, TMsg>(
     InitialModel, Update, View,
-    new Cui.CuiWindow(Settings.Title, Settings.Width, Settings.Height, Settings.Renderer),
+    CreateWindow(Settings),
     Settings.Capacity, null, Settings.Theme, ThemeFor, true
   );
 end function;

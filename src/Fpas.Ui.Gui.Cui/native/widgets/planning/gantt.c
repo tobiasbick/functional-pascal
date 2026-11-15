@@ -25,11 +25,6 @@ int fpas_cui_gantt(cui_ctx *ui, const char *id, int origin, int days, fpas_gantt
         tasks[i].start = native[i].start;
         tasks[i].finish = native[i].end;
         parts[i] = fpas_find(ui, fpas_well_part(key ^ 0x6A7u, i));
-        /* CUI-032 (docs/future/cui-upstream-bugs.md#cui-032): keep keyboard
-           activation available when schedule editing is off. */
-        if (enabled && options.read_only && clicked < 0 && parts[i] >= node && ui->focus_visible &&
-            fpas_well_keys(ui, ui->nodes[parts[i]].id) &&
-            (cui_key_pressed(ui, CUI_KEY_ENTER) || cui_key_pressed(ui, CUI_KEY_SPACE))) clicked = i;
     }
     fpas_creative_node(ui, node, key);
     return enabled ? clicked : -1;

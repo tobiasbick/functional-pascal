@@ -76,6 +76,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Resize(nint app, int width, int height);
 
+    [LibraryImport(Library, EntryPoint = "cui_app_maximize")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void Maximize(nint app);
+
     [LibraryImport(Library, EntryPoint = "cui_app_size")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiSize Size(nint app);

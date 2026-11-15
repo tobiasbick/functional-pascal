@@ -6,6 +6,7 @@ uses
   Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Canvas.LiveCursors as Live,
   Fpas.Ui.Widgets.Canvas.PresencePills as P, Fpas.Ui.Widgets.Canvas.SelectionRings as R, Fpas.Ui.Widgets.Editors.NodeEditors as N,
   Fpas.Ui.Widgets.Canvas.ResultCards as Result, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Inputs.Checkboxes as Check,
+  Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Theming.Themes as Theme, System as Sys, System.Collections.Generic as Lists;
 
 function Glyph(Code: int): string;
@@ -44,7 +45,7 @@ begin
   );
 end function;
 
-function People(Seconds: float): array of Live.Person;
+function People(Seconds: float; Avatar: string): array of Live.Person;
 begin
   const Names: array of string := ['Paul', 'Kate', 'Mario'];
   const Tones: array of S.Tone := [S.Tone.Warning, S.Tone.Info, S.Tone.Rose];
@@ -60,7 +61,12 @@ begin
     Users.Add(
       new Live.Person(
         Names[Index], Tones[Index], 60.0F + cast<float>(Hash mod 420U),
-        60.0F + cast<float>((Hash shr 12) mod 220U), Says, Index = 0
+        60.0F + cast<float>((Hash shr 12) mod 220U), Says, Index = 0,
+        Avatar := if Index = 0 then
+          Avatar
+        else
+          ''
+        end if
       )
     );
   end for;
@@ -110,7 +116,7 @@ end function;
 function Canvas(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
 begin
   const Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(360));
-  const Users: array of Live.Person := People(Model.Seconds);
+  const Users: array of Live.Person := People(Model.Seconds, Model.Avatar);
   const Graph: E.Element<State.Msg> := N.NodeEditor<State.Msg>(
     'canvas-graph',
     Model.Viewport,
@@ -320,7 +326,24 @@ begin
       'Result card and selection bar',
       'A picture with its status and caption, and its actions in a floating toolbar. Tick files and a bar slides up; Esc clears.'
     ),
-    Results(Model, Colors)
+    Results(Model, Colors),
+    G.Heading<State.Msg>(
+      'Presence avatars',
+      'Choose a PNG or JPEG for Paul. Other collaborators use their initials.'
+    ),
+    G.Card<State.Msg>(
+      12, [
+        P.PresencePill<State.Msg>('canvas-avatar-preview', People(Model.Seconds, Model.Avatar)),
+        E.Row<State.Msg>(
+          new L.Flow(Gap := G.Points(8), Wrap := true),
+          B.Button<State.Msg>('canvas-avatar-choose', 'Choose avatar', State.Msg.ChooseAvatar),
+          B.Button<State.Msg>(
+            'canvas-avatar-clear', 'Use initials', State.Msg.SetAvatar(''),
+            new B.Options(Enabled := Model.Avatar <> '')
+          )
+        )
+      ]
+    )
   ];
 end function;
 

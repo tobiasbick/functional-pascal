@@ -33,10 +33,6 @@ int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *lab
     popup = cui__popup_get(ui, popup_key, false);
     const bool open = allowed && popup && popup->open;
     if (allowed && was_open && !open && (escape || changed)) ui->focus = key;
-    /* CUI-012 (docs/future/cui-upstream-bugs.md#cui-012): the date field
-       accepts Tab focus but omits the native focus ring. */
-    if (allowed && ui->focus == key && ui->focus_visible) cui__focus_ring(ui, *trigger, 1.0f);
-
     *count = 0;
     if (open && parts) {
         fpas_calendar_parts(ui, calendar, first, parts, nodes, count);

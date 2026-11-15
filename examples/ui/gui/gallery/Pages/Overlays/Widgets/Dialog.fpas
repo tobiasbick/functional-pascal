@@ -105,8 +105,16 @@ begin
     )
   );
   return D.Dialog<TParent>(
-    'edit-profile', Base, U.Map<State.Msg, TParent>(Content, Messages), Model.ProfileDialog,
-    new D.Options('Edit profile', Description := 'Changes are visible to your team.'),
+    'edit-profile', Base, U.Map<State.Msg, TParent>(
+      E.Size<State.Msg>(Content, new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fill))),
+      Messages
+    ), Model.ProfileDialog,
+    new D.Options(
+      'Edit profile',
+      Description := 'Changes are visible to your team.',
+      Draggable := true,
+      Resizable := true
+    ),
     Messages(State.Msg.SetProfileDialog(false))
   );
 end function;

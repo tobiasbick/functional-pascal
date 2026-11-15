@@ -74,7 +74,8 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
   last page visible on narrow screens. The stepper starts at Workspace and
   follows the Back and Next buttons. Finish shows an “All set” toast.
 - **Overlays** shows the original Edit profile dialog with Name, Email and
-  Public profile. The fields update shared preview values. Cancel closes the
+  Public profile. Drag the header to move it or an edge or corner to resize it.
+  The fields update shared preview values. Cancel closes the
   dialog and Save changes also shows a success toast. The same card opens the
   right-hand Notifications sheet with Comments, Mentions and Weekly digest
   switches and the two original Recent items. Switch values are shared with
@@ -123,6 +124,10 @@ owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 - **Canvas and bars** shows the original grouped toolbar, format bar, three
   collaborators over the node graph, zoom rail, result picture and floating
   actions. Tick files to update the selection bar. Escape clears the selection.
+  Under Presence avatars, choose a PNG or JPEG for Paul or switch back to initials.
+- **App chrome** shows the editor chrome, docking workspace and split view.
+  Window and clipboard lets you copy a sample path, paste from the system
+  clipboard and maximize the gallery window.
 - **Editing tools** shows the original crate inspector, two-frame flame graph,
   easing curve, gradient ramp and shot timeline. Move or select a timeline key
   to edit the same track in its curve below.

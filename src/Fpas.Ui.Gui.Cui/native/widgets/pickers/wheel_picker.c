@@ -1,10 +1,5 @@
 #include "../../fpas_cui.h"
 
-static void fpas_paint_focused_wheel_picker(cui_ctx *ui, cui_node *node, void *data) {
-    cui__paint_wheel(ui, node, data);
-    cui__draw_focus_ring(ui, node->rect, node->radius, 1.0f);
-}
-
 int fpas_cui_wheel_picker(cui_ctx *ui, const char *id, const char *const *items, int count,
     int index, float width, int rows, int loop, int join_left, int join_right, int enabled,
     int focus, int *node) {
@@ -28,23 +23,6 @@ int fpas_cui_wheel_picker(cui_ctx *ui, const char *id, const char *const *items,
     cui_pop_disabled(ui);
     *node = fpas_find(ui, key);
     ui->last_node = *node;
-    cui_node *wheel = &ui->nodes[*node];
-    if (wheel->paint == cui__paint_focus_after) {
-        /* CUI-010 (docs/future/cui-upstream-bugs.md#cui-010): the focus ring
-           replaced CUI's wheel paint data. Give both painters their inputs. */
-        const cui__wheel_state *state = cui_state(ui, key, sizeof *state);
-        const int visible_rows = rows | 1;
-        cui__wheel_paint *paint = cui__frame_alloc(ui, sizeof *paint);
-        *paint = (cui__wheel_paint){
-            .items = captions, .count = count, .pos = state->pos.x, .rows = visible_rows,
-            .row_h = wheel->h.value / (float)visible_rows, .loop = options.loop,
-            .join_l = options.join_left, .join_r = options.join_right,
-            .band = CUI_C(ui, ACTIVE), .fg = CUI_C(ui, FOREGROUND), .dim = CUI_C(ui, TEXT_MUTED),
-            .font_size = cui__fs(ui, ui->theme.text_body + 2)
-        };
-        wheel->paint_data = paint;
-        wheel->paint = fpas_paint_focused_wheel_picker;
-    }
     fpas_own(ui, key, key ^ CUI__VERTICAL_WHEEL_STATE, 0, 0);
     return allowed ? selected : index;
 }

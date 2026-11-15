@@ -988,6 +988,8 @@ pages demonstrate their native controls and model updates.
   It proposes pan, zoom and toggle states. `LiveCursors.LiveCursors` adds
   the shared collaborators to the same child. `PresencePills.PresencePill`
   and `SelectionRings.SelectionRing` show their presence and selections.
+  Set `LiveCursors.Person.Avatar` to a PNG or JPEG path to show an image in
+  the pill. An empty path or a failed image load shows the person's initials.
 - `ResultCards.ResultCard` takes a file or immutable RGBA picture.
   `SelectionBars.SelectionBar` anchors to its child and proposes a bulk
   action or clearing the supplied selection.
@@ -1034,9 +1036,8 @@ surface differs from the theme background.
 The noninteractive `expandable-text` snapshot reports native expansion in
 `Value`. When the text exceeds the line limit, `ExpandableTexts.ToggleId(Id)`
 identifies its `expandable-text-toggle` link for inspection and focus requests.
-The link disappears when the text fits. Native CUI currently loses keyboard
-focus after toggling ([CUI-006](../../docs/future/cui-upstream-bugs.md#cui-006));
-Tab or an explicit focus request selects it again. All three disclosure widgets
+The link disappears when the text fits. It keeps keyboard focus when toggled.
+All three disclosure widgets
 require the graphical profile. Terminal and portable preflight reject them.
 
 ## Banner, countdown and checklist
@@ -1176,7 +1177,10 @@ Keep `Content` available during the exit transition. The host disables the
 underlying view, moves focus into the dialog and restores focus on closure.
 `InitialFocus` can target an enabled control in the body or footer.
 
-CUI fits the requested width to the viewport. Escape, the native close
+CUI fits the requested width to the viewport. Set `Draggable` to let users move
+the dialog by its header and `Resizable` to let them drag its edges and corners.
+Both options default to false. A resized dialog keeps its action footer at
+the bottom edge. Escape, the native close
 button and a click on the scrim propose `OnDismiss`. A focused text field
 handles Escape before the dialog. `Persistent` suppresses Escape and scrim
 dismissal. Set `CloseButton` to false to hide the native close action.
@@ -1223,9 +1227,8 @@ proposal reconciles the native editing state. Inline snapshots expose the draft;
 scrub and money snapshots expose invariant numeric values, and shortcut
 snapshots expose the native formatted label. Removing a widget releases its
 draft, edit history and companion state. The Smart inputs gallery reproduces
-the original CUI page. Numeric protections are documented as
-[CUI-017](../../docs/future/cui-upstream-bugs.md#cui-017) and
-[CUI-018](../../docs/future/cui-upstream-bugs.md#cui-018).
+the original CUI page. CUI rejects invalid scrub drafts and amounts too large
+for the grouped money display.
 
 ## Text field
 

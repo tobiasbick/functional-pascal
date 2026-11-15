@@ -43,7 +43,20 @@ int fpas_cui_frame(cui_app *app, int defer_close) {
 int fpas_cui_last_node(cui_ctx *ui) { return ui->last_node; }
 
 cui_rect fpas_cui_node_rect(cui_ctx *ui, int node) {
-    return node >= 0 && node < ui->node_count ? ui->nodes[node].rect : (cui_rect){0};
+    if (node < 0 || node >= ui->node_count) return (cui_rect){0};
+    cui_rect rect = ui->nodes[node].rect;
+    /* Apply the visual transform from each ancestor, as CUI does for hit testing. */
+    for (int index = node; index >= 0; index = ui->nodes[index].parent) {
+        const cui_node *part = &ui->nodes[index];
+        if (part->scale == 1.0f && part->tx == 0 && part->ty == 0) continue;
+        const float x = part->rect.x + part->rect.w * 0.5f;
+        const float y = part->rect.y + part->rect.h * 0.5f;
+        rect.x = x + (rect.x - x) * part->scale + part->tx;
+        rect.y = y + (rect.y - y) * part->scale + part->ty;
+        rect.w *= part->scale;
+        rect.h *= part->scale;
+    }
+    return rect;
 }
 
 void fpas_cui_set_resize_renderer(cui_app *app, void (*render)(cui_ctx *, void *), void *user) {

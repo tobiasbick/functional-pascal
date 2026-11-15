@@ -1,4 +1,4 @@
-/* Native Smart inputs parity and upstream invalid-number reproductions. */
+/* Native Smart inputs parity and rejection of invalid numeric drafts. */
 #include "../fpas_cui.h"
 #include <math.h>
 #include <stdio.h>
@@ -126,9 +126,7 @@ static void numeric_regressions(void) {
             key(&s, CUI_KEY_ENTER, 0); draw(&s, pass != 0, 1, false, 640);
             cui_input_text(s.ui, invalid ? "7x" : "nan"); draw(&s, pass != 0, 1, false, 640);
             key(&s, CUI_KEY_ENTER, 0); draw(&s, pass != 0, 1, false, 640);
-            if (pass) CHECK(isfinite(s.number) && s.number == 12);
-            else if (invalid) { CHECK(s.number == 7); puts("Direct CUI reproduces a partially parsed scrub commit."); }
-            else { CHECK(isnan(s.number)); puts("Direct CUI reproduces non-finite scrub commit."); }
+            CHECK(isfinite(s.number) && s.number == 12);
             destroy(&s);
         }
         sample s = create(false, 640);
@@ -138,8 +136,7 @@ static void numeric_regressions(void) {
         cui_input_key(s.ui, CUI_KEY_NONE, false, 0);
         char huge[64]; memset(huge, '9', 63); huge[63] = 0;
         cui_input_text(s.ui, huge); draw(&s, pass != 0, 2, false, 640);
-        if (pass) CHECK(s.money == 1249.5);
-        else { CHECK(s.money > 1e60); puts("Direct CUI accepts an amount exceeding its grouped display capacity."); }
+        CHECK(s.money == 1249.5);
         destroy(&s);
     }
 }

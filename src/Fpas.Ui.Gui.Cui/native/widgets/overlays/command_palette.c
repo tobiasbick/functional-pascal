@@ -30,8 +30,9 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
     const cui_id focus = ui->focus;
     const cui_id modal_layer = ui->modal_layer;
     const int modal_z = ui->modal_z;
-    /* CUI-024 (docs/future/cui-upstream-bugs.md#cui-024): the exit animation still handles keys. */
-    if (!interactive) {
+    /* A disabled open palette must leave Escape available to the host. */
+    const bool disabled_open = was_open && !interactive;
+    if (disabled_open) {
         for (size_t index = 0; index < sizeof presses; ++index) {
             presses[index] = ui->kpressed[keys[index]];
             ui->kpressed[keys[index]] = 0;
@@ -40,7 +41,7 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
     cui_push_disabled(ui, !interactive);
     const int selected = cui_command_palette(ui, &visible, commands, count);
     cui_pop_disabled(ui);
-    if (!interactive) {
+    if (disabled_open) {
         for (size_t index = 0; index < sizeof presses; ++index)
             ui->kpressed[keys[index]] = presses[index];
         ui->focus = focus;

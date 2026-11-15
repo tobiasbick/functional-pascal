@@ -19,8 +19,7 @@ int fpas_cui_link(cui_ctx *ui, const char *id, const char *label, int enabled, i
     cui_node *link = &ui->nodes[*node];
     if (strstr(label, "##")) fpas_text(ui, *node, label);
     if (!allowed) link->opacity = CUI__DISABLED;
-    /* CUI-012 (docs/future/cui-upstream-bugs.md#cui-012): draw native focus
-       without replacing the link's hover underline. */
+    /* Draw the focus ring alongside the link's hover underline. */
     if (allowed) link->paint = fpas_paint_link;
     return allowed && clicked;
 }

@@ -92,7 +92,7 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_input_key")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void InputKey(nint context, int key, byte down, int modifiers);
-    [LibraryImport(Library, EntryPoint = "cui_input_scroll")]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_input_scroll")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void InputScroll(nint context, float x, float y);
 }

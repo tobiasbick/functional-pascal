@@ -20,6 +20,12 @@ void fpas_cui_move_pointer(cui_ctx *ui, float x, float y) {
     cui__compute_hot(ui);
 }
 
+void fpas_cui_input_scroll(cui_ctx *ui, float x, float y) {
+    cui_input_scroll(ui, x, y);
+    /* Wheel routing depends on the direction of the newly injected input. */
+    cui__compute_hot(ui);
+}
+
 void fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal) {
     const cui_scroll_opts options = {
         .id = id, .width = CUI_FILL, .height = height > 0 ? CUI_PX(height) : CUI_FILL,

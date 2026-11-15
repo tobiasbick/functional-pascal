@@ -2,7 +2,9 @@ unit GuiGallery.Pages.Desktop.Update;
 
 uses
   GuiGallery.Pages.Desktop.State as S, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T,
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as P, System as Sys, System.Collections.Generic as Lists;
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as P, GuiGallery.Pages.Desktop.HostActions as HostActions,
+  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.Collections.Generic as Lists;
 
 function Documents(Model: S.Model; Change: D.Change): S.Model;
 begin
@@ -35,13 +37,7 @@ begin
   end with;
 end function;
 
-// Accepts native UI proposals for the examples.
-// ## Parameters
-// - `Model`: Current editor and dock state.
-// - `Message`: Native action or proposed state.
-// ## Returns
-// Updated gallery state.
-public function Update(Model: S.Model; Message: S.Msg): S.Model;
+function Next(Model: S.Model; Message: S.Msg): S.Model;
 begin
   case Message of
     when S.Msg.Tabs(const Value: D.Change):
@@ -108,7 +104,7 @@ begin
         end with;
       end if;
 
-      return Update(Model, S.Msg.Panel(Change.Index, Change.Value <> 0));
+      return Next(Model, S.Msg.Panel(Change.Index, Change.Value <> 0));
     when S.Msg.Branch(const Key: string, const Open: bool):
       return case Key of
         when 'root': Model with
@@ -151,7 +147,32 @@ begin
       return Model with
         Ratio := Ratio;
       end with;
+    when S.Msg.ClipboardText(const Text: string):
+      return Model with
+        PastedText := Text;
+      end with;
+    when S.Msg.Maximize, S.Msg.CopyPath, S.Msg.PasteText:
+      return Model;
   end case;
+end function;
+
+// Applies native UI proposals and emits the requested window or clipboard command.
+// ## Parameters
+// - `Model`: Current editor, dock and clipboard state.
+// - `Message`: A widget proposal or host action.
+// ## Returns
+// Updated gallery state and commands.
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Next(Model, Message),
+    case Message of
+      when S.Msg.Maximize: [Windows.Maximize<S.Msg>()];
+      when S.Msg.CopyPath: [Clipboard.WriteText<S.Msg>(HostActions.SamplePath)];
+      when S.Msg.PasteText: [Clipboard.ReadText<S.Msg>(S.Msg.ClipboardText)];
+      else [];
+    end case
+  );
 end function;
 
 end unit;

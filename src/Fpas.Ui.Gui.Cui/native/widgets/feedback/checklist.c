@@ -34,8 +34,7 @@ static void fpas_paint_focused_checklist_circle(cui_ctx *ui, cui_node *node, voi
 static void fpas_checklist_circle(cui_ctx *ui, int node, cui_id key) {
     cui_node *circle = &ui->nodes[node];
     if (circle->paint != cui__paint_focus_after) return;
-    /* CUI-010 (docs/future/cui-upstream-bugs.md#cui-010): keep the circle
-       painter when the generic keyboard focus ring replaces it. */
+    /* Keep the checklist circle visible when the generic focus painter replaces it. */
     const cui__step_state *state = cui_state(ui, key, sizeof *state);
     cui__circle_paint *paint = cui__frame_alloc(ui, sizeof *paint);
     *paint = (cui__circle_paint){

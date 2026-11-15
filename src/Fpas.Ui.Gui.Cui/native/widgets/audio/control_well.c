@@ -26,13 +26,3 @@ static void fpas_well_focus(cui_ctx *ui, bool enabled, cui_id row, cui_id key, i
     if (enabled && focus >= 0 && focus < count) ui->focus_next_request = fpas_well_part(row, focus);
     if (enabled && tool && focus == count) ui->focus_next_request = key ^ CUI__WELL_TOOL_SALT;
 }
-
-static bool fpas_well_keys(cui_ctx *ui, cui_id key) {
-    if (ui->focus != key && ui->focus_next_request != key) return false;
-    int layer_z = 0;
-    for (int i = 0; i < ui->popup_count; ++i)
-        if (ui->popups[i].id == ui->current_layer) layer_z = ui->popups[i].z;
-    for (int i = 0; i < ui->popup_count; ++i)
-        if (ui->popups[i].open && ui->popups[i].z > layer_z) return false;
-    return true;
-}

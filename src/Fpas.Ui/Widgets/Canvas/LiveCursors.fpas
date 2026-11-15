@@ -20,6 +20,8 @@ public type Person = record
   public Away: bool := false;
   // Explicit color, or null to use the tone.
   public Color: G.Color? := null;
+  // PNG or JPEG path for the presence pill, or empty to show initials.
+  public Avatar: string := '';
 end record;
 
 // Cursor overlay settings.

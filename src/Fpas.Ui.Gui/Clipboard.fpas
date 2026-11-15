@@ -1,0 +1,74 @@
+unit Fpas.Ui.Gui.Clipboard;
+
+uses Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+// Writes literal text to the owner window's clipboard.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type WriteRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Text to submit to the system clipboard.
+  public Text: string;
+
+  // Keeps the clipboard text in a parent message space.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Mapper for child messages.
+  // ## Returns
+  // The parent clipboard request.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new WriteRequest<TNext>(self.Text);
+  end function;
+end record;
+
+// Reads clipboard text and produces an application message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type ReadRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Maps the current text, or an empty string if unavailable, to a message.
+  public OnRead: function(string): TMsg;
+
+  // Maps the resulting message into a parent message space.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Mapper for child messages.
+  // ## Returns
+  // The parent clipboard request.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    const Result: function(string): TMsg := self.OnRead;
+    return new ReadRequest<TNext>(function(Text: string): TNext => Messages(Result(Text)));
+  end function;
+end record;
+
+// Submits text to the system clipboard when the GUI host applies the command.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Text`: Literal text without embedded NUL characters.
+// ## Returns
+// The graphical clipboard command.
+public function WriteText<TMsg>(Text: string): Mvu.Command<TMsg>;
+begin
+  if Text.Contains(Sys.Char.MinValue) then
+    raise new Sys.ArgumentException('Clipboard text cannot contain embedded zero characters.');
+  end if;
+
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new WriteRequest<TMsg>(Text)));
+end function;
+
+// Reads the current clipboard text on the GUI owner.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnRead`: Maps the text, or an empty string if unavailable, to one message.
+// ## Returns
+// The graphical clipboard command.
+public function ReadText<TMsg>(OnRead: function(string): TMsg): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new ReadRequest<TMsg>(OnRead)));
+end function;
+
+end unit;

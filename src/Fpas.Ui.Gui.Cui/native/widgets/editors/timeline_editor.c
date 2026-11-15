@@ -16,22 +16,9 @@ int fpas_cui_timeline_editor(cui_ctx *ui, const char *id, cui_timeline_track *tr
         .width = fpas_extent(settings->width_kind, settings->width), .height = settings->height,
         .row_height = settings->row_height, .track_width = settings->track_width,
         .toggles = (settings->flags & 2) != 0, .free_drag = (settings->flags & 4) != 0 };
-    const cui_id wheel = ui->scroll_target;
-    const cui_id hot = ui->hot;
-    if (!enabled) {
-        /* CUI-039 (docs/future/cui-upstream-bugs.md#cui-039): raw wheel and middle-button pan bypass cui__interact. */
-        if (wheel == (key ^ 0x71AE5C01u)) ui->scroll_target = 0;
-        if (hot == key) ui->hot = 0;
-        cui__tl_state *state = cui__state_lazy(ui, key ^ 0x71AEu, sizeof *state, false);
-        if (state) state->mode = TL_IDLE;
-    }
     cui_push_disabled(ui, !enabled);
     const cui_timeline_editor_result result = cui_timeline_editor_ex(ui, id, tracks, count, &view->time, &options);
     cui_pop_disabled(ui);
-    if (!enabled) {
-        ui->scroll_target = wheel;
-        ui->hot = hot;
-    }
     fpas_creative_node(ui, root, key);
     view->start = range.start;
     view->end = range.end;

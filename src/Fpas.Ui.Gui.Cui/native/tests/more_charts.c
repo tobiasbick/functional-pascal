@@ -114,7 +114,7 @@ static void retirement(void) {
     CHECK(m.bytes==baseline);
     cui_destroy(ui);cui_sw_destroy(sw);CHECK(m.bytes==0);
 }
-/* CUI-020: the direct widget changes its disabled viewport; the adapter must not. */
+/* A queued wheel event must leave a disabled viewport unchanged. */
 static int disabled_wheel(bool bridge) {
     sample a=create(720,false),b=create(720,false);
     for(int frame=0;frame<7;frame++){
@@ -125,7 +125,7 @@ static int disabled_wheel(bool bridge) {
     int changed=memcmp(a.pixels,b.pixels,720*440*4)!=0;destroy(a);destroy(b);return changed;
 }
 
-/* CUI-021: native Sankey detects the flow but returns only node clicks. */
+/* A ribbon click reports the original link index, including skipped inputs. */
 static int sankey_click(bool bridge) {
     sample s=create(720,false);int result=-1;
     for(int frame=0;frame<6;frame++){
@@ -164,8 +164,7 @@ int main(void) {
                 cui_input_key(a.ui,key,true,0);cui_input_key(a.ui,key,false,0);cui_input_key(b.ui,key,true,0);cui_input_key(b.ui,key,false,0);
             }
             int ar=draw(&a,false,kind,width,frame),br=draw(&b,true,kind,width,frame);
-            /* CUI-021: the bridge also reports links on the native click frame. */
-            CHECK(ar==br || (kind==0 && frame==5 && ar==-1 && br>=4));
+            CHECK(ar==br);
             cui_rect ra=cui_get_rect(a.ui,cui_make_id(a.ui,"widget")),rb=cui_get_rect(b.ui,cui_make_id(b.ui,"widget"));
             CHECK(ra.x==rb.x&&ra.y==rb.y&&ra.w==rb.w&&ra.h==rb.h);
             if(memcmp(a.pixels,b.pixels,(size_t)width*440*4)){
@@ -176,8 +175,8 @@ int main(void) {
         destroy(a);destroy(b);
     }
     retirement();
-    CHECK(disabled_wheel(false)==1);CHECK(disabled_wheel(true)==0);
-    CHECK(sankey_click(false)==-1);CHECK(sankey_click(true)==3);
+    CHECK(disabled_wheel(false)==0);CHECK(disabled_wheel(true)==0);
+    CHECK(sankey_click(false)==3);CHECK(sankey_click(true)==3);
     printf("%d strict more-chart pixel/geometry comparisons, %d failures\n",comparisons,failures);
     return failures?1:0;
 }

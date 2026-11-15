@@ -44,20 +44,6 @@ static void fpas_grid_input(cui_ctx *ui, cui_id id, int enabled, int focus) {
     if (enabled && focus && !cui_is_disabled(ui)) ui->focus_next_request = id;
 }
 
-static void fpas_grid_scroll(cui_ctx *ui, cui_id key, int rows, float row_height, bool enabled) {
-    /* CUI-025 (docs/future/cui-upstream-bugs.md#cui-025): clamp before the
-       native grid computes its visible row range from the old scroll offset. */
-    cui_scroll_state *scroll = cui_state(ui, key ^ 0x5C011u, sizeof *scroll);
-    const float content = CUI__GRID_HEAD + (rows ? rows * row_height : 0);
-    if (content < scroll->content_h) {
-        const float maximum = CUI_MAX(0, content - scroll->view_h);
-        scroll->y = cui__clampf(scroll->y, 0, maximum);
-        scroll->ty = cui__clampf(scroll->ty, 0, maximum);
-        scroll->content_h = content;
-    }
-    if (!enabled) scroll->drag_x = scroll->drag_y = false;
-}
-
 void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *titles,
     const float *widths, const int *flags, int columns, int rows, uint8_t *selected,
     int *state, int height_kind, float height, float row_height, int options,
@@ -79,7 +65,10 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
         if (!frame->enabled) retained->resizing = -1;
     }
     fpas_own(ui, key, key ^ 0x5C011u, edit_key, 0);
-    fpas_grid_scroll(ui, key, rows, row_height, frame->enabled);
+    if (!frame->enabled) {
+        cui_scroll_state *scroll = cui_state(ui, key ^ 0x5C011u, sizeof *scroll);
+        scroll->drag_x = scroll->drag_y = false;
+    }
     fpas_grid_input(ui, key, frame->enabled, options & 8);
     const cui_grid_opts settings = {
         .height = fpas_extent(height_kind, height), .row_height = row_height,

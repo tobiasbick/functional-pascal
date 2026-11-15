@@ -183,16 +183,22 @@ begin
         end with, Child.Commands
       );
     when G.Msg.Desktop(const Value: Desktop.Msg):
+      const Child: Mvu.Transition<Desktop.Model, G.Msg> := C.MapTransition<Desktop.Model, Desktop.Msg, G.Msg>(
+        DesktopUpdate.Update(State.Desktop, Value), G.Msg.Desktop, 'desktop'
+      );
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
-          Desktop := DesktopUpdate.Update(State.Desktop, Value);
-        end with, []
+          Desktop := Child.Model;
+        end with, Child.Commands
       );
     when G.Msg.Canvas(const Value: Canvas.Msg):
+      const Child: Mvu.Transition<Canvas.Model, G.Msg> := C.MapTransition<Canvas.Model, Canvas.Msg, G.Msg>(
+        CanvasUpdate.Update(State.Canvas, Value), G.Msg.Canvas, 'canvas'
+      );
       return new Mvu.Transition<G.Model, G.Msg>(
         State with
-          Canvas := CanvasUpdate.Update(State.Canvas, Value);
-        end with, []
+          Canvas := Child.Model;
+        end with, Child.Commands
       );
     when G.Msg.Creative(const Value: Creative.Msg):
       return new Mvu.Transition<G.Model, G.Msg>(

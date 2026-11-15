@@ -987,6 +987,8 @@ typedef struct cui_dialog_opts {
     float width;               /* default 440 */
     bool no_close_button;      /* hides the x in the corner (Esc and a click outside still close it unless `persistent`) */
     bool persistent;           /* clicking outside or Esc does not close */
+    bool draggable;            /* the header moves the dialog; it stays inside the window */
+    bool resizable;            /* the edges and corners resize it, down to a minimum size; the content is clipped when it no longer fits */
 } cui_dialog_opts;
 /* Modal dialog. Shown while *open is true; closing sets it to false.
  * Escape leaves a focused text field before it can dismiss the dialog. */
@@ -1173,11 +1175,11 @@ typedef struct cui_list_item_opts {
 CUI_API bool cui_list_item_ex(cui_ctx *ui, const char *title, const cui_list_item_opts *opts);
 
 /* Virtual list: only the visible rows are built, so lists with a million
- * rows stay fast. Fills first/last with the visible range. */
+ * rows stay fast. Fills first/last with the visible range for this row count. */
 CUI_API void cui_virtual_list_begin(cui_ctx *ui, const char *id, int count, float row_height, cui_size height, int *first, int *last);
 CUI_API void cui_virtual_list_end(cui_ctx *ui);
 
-/* Table */
+/* Table: sortable headers and selectable rows show keyboard focus. */
 typedef struct cui_table_column {
     const char *title;         /* text of the column's header */
     cui_size width;            /* default fill */
@@ -1578,6 +1580,7 @@ typedef struct cui_grid_opts {
     bool hide_checkboxes;      /* with selected: rows still select (click, Shift, Ctrl) but no checkbox column */
     int *anchor;               /* the row Shift ranges start from, optional (in and out like cursor) */
 } cui_grid_opts;
+/* Returns a visible range for the current row count, even after the grid shrinks. */
 CUI_API bool cui_data_grid_begin_ex(cui_ctx *ui, const char *id, const cui_grid_column *columns, int column_count, int row_count,
                                     int *first, int *last, const cui_grid_opts *opts);
 CUI_API bool cui_data_grid_row(cui_ctx *ui, int row);   /* true when the row was clicked */
@@ -1875,6 +1878,8 @@ CUI_API bool cui_markdown_apply_task(char *text, const cui_markdown_result *resu
  *     if (r.changed) recompile(src);
  *     cui_textf(ui, "Ln %d, Col %d", r.line, r.column);
  *
+ * With .lang = "text", indentation is preserved without syntax colors;
+ * tabs advance to the next tab_size column stop.
  * Lines never wrap; long ones scroll sideways while the gutter stays. Only
  * the lines in view are tokenized and drawn, so files of tens of thousands
  * of lines stay fast. An edit that would not fit in the capacity is refused
@@ -2227,6 +2232,7 @@ typedef struct cui_sankey_opts {
     float node_width;          /* width of the node bars in points, default 6 */
     const cui_color *node_colors;   /* one per node, colored by meaning; `NULL`, or an unset entry, falls back to the palette for outcomes and neutral gray for sources and steps */
 } cui_sankey_opts;
+/* Returns the clicked node index, node_count + the clicked input link index, or -1. */
 CUI_API int cui_sankey_ex(cui_ctx *ui, const char *id, const char *const *nodes, int node_count, const cui_sankey_link *links, int link_count,
                           const cui_sankey_opts *opts);
 
@@ -2787,6 +2793,7 @@ typedef struct cui_week_opts {
     cui_size height;
     bool read_only;
 } cui_week_opts;
+/* Returns the activated event index or -1. Read-only events still activate. */
 CUI_API int cui_week_calendar_ex(cui_ctx *ui, const char *id, cui_date week_start, cui_cal_event *events, int count, const cui_week_opts *opts);
 
 /* Month calendar: a month grid with events. All-day and multi-day events
@@ -2858,6 +2865,7 @@ typedef struct cui_gantt_opts {
     int today;                 /* day to mark as today, counted from `origin`, with an accent line and a "Today" chip; 0 marks none */
     bool read_only;
 } cui_gantt_opts;
+/* Returns the activated task index or -1. Read-only tasks still activate. */
 CUI_API int cui_gantt_ex(cui_ctx *ui, const char *id, cui_gantt_task *tasks, int count, cui_date origin, int days, const cui_gantt_opts *opts);
 
 /* ------------------------------------------------------------------------ */
@@ -4333,6 +4341,7 @@ typedef struct cui_query_opts {
     int max_depth;             /* how deep groups may nest, default 3 */
     bool read_only;
 } cui_query_opts;
+/* Read-only and disabled builders preserve the input rules and count. */
 CUI_API bool cui_query_builder_ex(cui_ctx *ui, const char *id, const cui_query_field *fields, int field_count,
                                   cui_query_node *nodes, int *count, int capacity, const cui_query_opts *opts);
 /* the operators of a type: text "is", "is not", "contains", "does not contain",
@@ -4524,7 +4533,7 @@ typedef struct cui_trace_opts {
 } cui_trace_opts;
 typedef struct cui_trace_result {
     bool selection_changed;    /* `*selected` changed this frame (click or keys) */
-    bool view_changed;         /* the visible time range or the scroll in `*view` changed (zoom, pan, fit) */
+    bool view_changed;         /* time range, scroll position, or measurement in `*view` changed */
     int hovered;               /* span under the pointer, or -1 */
 } cui_trace_result;
 CUI_API cui_trace_result cui_trace_view_ex(cui_ctx *ui, const char *id, cui_trace_track *tracks, int track_count,
@@ -4834,7 +4843,7 @@ typedef struct cui_dot_chart_opts {
 } cui_dot_chart_opts;
 
 typedef struct cui_dot_chart_result {
-    int hovered;               /* the sample under the pointer or the keyboard cursor, or -1 */
+    int hovered;               /* pointer or keyboard sample, middle on first keyboard activation, else -1 */
     double x;                  /* that sample's x, in x units */
     float value;               /* the stacked value there */
     bool clicked;              /* the plot was clicked, or Enter was pressed on it, this frame: `x` is where */
@@ -5509,6 +5518,11 @@ CUI_API void cui_app_set_title(cui_app *app, const char *title);
 /* The window's size in logical points (the same units as cui_app_desc.width). */
 CUI_API void cui_app_set_size(cui_app *app, int width, int height);
 CUI_API cui_vec2 cui_app_size(cui_app *app);
+/* Maximizes the window on its display, as the title bar's maximize button does. NULL means the
+ * running app, so a cui_app_run callback can call it on its first frame; with the loop form it is
+ * fine right after cui_app_create. Nothing happens for a fixed-size window or where the window
+ * manager does not support it (an X11 window manager without EWMH). */
+CUI_API void cui_app_maximize(cui_app *app);
 /* Starts or stops following the OS light/dark setting, as cui_app_desc.follow_system_theme
  * does at creation, for a theme switcher with Light, Dark and System. Starting applies the
  * OS setting at once, where the platform reports one. Stopping keeps the current theme, so

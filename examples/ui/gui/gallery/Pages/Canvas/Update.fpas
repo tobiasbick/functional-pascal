@@ -2,7 +2,8 @@ unit GuiGallery.Pages.Canvas.Update;
 
 uses
   GuiGallery.Pages.Canvas.State as M, Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Editors.NodeEditors as N,
-  Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.SelectionBars as B;
+  Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.SelectionBars as B,
+  Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Mvu.Application as Mvu;
 
 function Tools(Model: M.Model; Value: T.Event): M.Model;
 begin
@@ -85,13 +86,7 @@ begin
   end with;
 end function;
 
-// Applies one proposal from Canvas and bars.
-// ## Parameters
-// - `Model`: Current page model.
-// - `Message`: Widget proposal or clock tick.
-// ## Returns
-// Updated page model.
-public function Update(Model: M.Model; Message: M.Msg): M.Model;
+function Next(Model: M.Model; Message: M.Msg): M.Model;
 begin
   return case Message of
     when M.Msg.Tools(const Value: T.Event): Tools(Model, Value);
@@ -114,8 +109,35 @@ begin
     when M.Msg.Tick(const Seconds: float): Model with
       Seconds := Seconds;
     end with;
-    when M.Msg.Preview: Model;
+    when M.Msg.SetAvatar(const Path: string): Model with
+      Avatar := Path;
+    end with;
+    when M.Msg.ChooseAvatar, M.Msg.Preview: Model;
   end case;
+end function;
+
+// Applies a canvas proposal or opens the native avatar chooser.
+// ## Parameters
+// - `Model`: Current page model.
+// - `Message`: Widget proposal or clock tick.
+// ## Returns
+// Updated page model and host commands.
+public function Update(Model: M.Model; Message: M.Msg): Mvu.Transition<M.Model, M.Msg>;
+begin
+  return new Mvu.Transition<M.Model, M.Msg>(
+    Next(Model, Message),
+    case Message of
+      when M.Msg.ChooseAvatar: [
+        Files.OpenFile<M.Msg>(
+          M.Msg.SetAvatar,
+          'Choose an avatar for Paul',
+          'PNG and JPEG images',
+          'png;jpg;jpeg'
+        )
+      ];
+      else [];
+    end case
+  );
 end function;
 
 end unit;

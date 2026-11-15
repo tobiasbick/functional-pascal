@@ -16,6 +16,10 @@ public type Options = record
   public CloseButton: bool := true;
   // Preferred enabled control when opening, before the native close button.
   public InitialFocus: string? := null;
+  // Let the user move the dialog by dragging its header.
+  public Draggable: bool := false;
+  // Let the user change the dialog size by dragging its edges or corners.
+  public Resizable: bool := false;
 end record;
 
 // Presents a model-controlled modal dialog over an existing view.

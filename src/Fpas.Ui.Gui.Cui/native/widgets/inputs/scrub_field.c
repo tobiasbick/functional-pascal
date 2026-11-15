@@ -1,5 +1,4 @@
 #include "../../fpas_cui.h"
-#include <ctype.h>
 
 typedef struct { float proposed; bool init; } fpas_scrub_binding;
 
@@ -23,7 +22,6 @@ void fpas_cui_scrub_field(cui_ctx *ui, const char *id, const char *label, float 
         if (ui->focus == *key || ui->focus == field) ui->focus = 0;
     } else if (focus) ui->focus_next_request = state->editing ? field : *key;
     const bool typing = state->editing;
-    const float original = *value;
     const cui_scrub_opts options = { .step = step, .format = format,
         .suffix = suffix ? cui__frame_strdup(ui, suffix, -1) : NULL,
         .icon = icon ? cui__frame_strdup(ui, icon, -1) : NULL,
@@ -31,21 +29,6 @@ void fpas_cui_scrub_field(cui_ctx *ui, const char *id, const char *label, float 
     cui_push_disabled(ui, !allowed);
     cui_scrub_ex(ui, id, value, minimum, maximum, &options);
     cui_pop_disabled(ui);
-    /* CUI-017 (docs/future/cui-upstream-bugs.md#cui-017): native scrub accepts
-       non-finite and partially parsed numeric commits. Preserve its model value. */
-    bool invalid = !isfinite(*value);
-    if (typing && !state->editing) {
-        char *end;
-        const double parsed = strtod(state->text, &end);
-        const bool empty = end == state->text;
-        while (*end && isspace((unsigned char)*end)) ++end;
-        invalid = invalid || empty || *end || !isfinite(parsed);
-    }
-    if (invalid) {
-        *value = original;
-        snprintf(state->text, sizeof state->text, format, (double)original);
-        fpas_text_refresh(ui, field, state->text);
-    }
     *node = fpas_find(ui, typing ? field : *key);
     if (!icon && !typing) {
         const int caption = fpas_label_node(ui, *node);

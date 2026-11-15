@@ -9,12 +9,6 @@ int fpas_cui_veil_begin(cui_ctx *ui, const char *id, int revealed, const char *l
         .toggle = (flags & 2) != 0, .color = fpas_chart_color(-1, color), .width = fpas_extent(width_kind, width) };
     cui_push_disabled(ui, !enabled);
     const bool changed = cui_veil_begin_ex(ui, id, &shown, &options);
-    if (!enabled) {
-        /* CUI-038: both hit registrations bypass the native disabled stack. */
-        cui_node *node = &ui->nodes[cui__current(ui)];
-        node->flags &= ~(CUI_NF_INTERACTIVE | CUI_NF_FOCUSABLE);
-        ((cui__veil_paint *)node->paint_data)->catch_clicks = false;
-    }
     return (shown ? 1 : 0) | (enabled && changed ? 2 : 0);
 }
 

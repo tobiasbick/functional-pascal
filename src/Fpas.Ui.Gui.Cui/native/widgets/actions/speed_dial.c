@@ -24,12 +24,9 @@ int fpas_cui_speed_dial(cui_ctx *ui, const char *id, const char *const *labels,
         ui->focus_next_request = cui__hash(&index, sizeof index, actions_key);
     }
     const cui_speed_dial_opts opts = { .icon = icon, .tooltip = tooltip, .placement = (cui_placement)placement };
-    const int scope = ui->disabled_n;
     cui_push_disabled(ui, !allowed);
     const int choice = cui_speed_dial_ex(ui, id, actions, count, &opts);
-    /* CUI-008 (docs/future/cui-upstream-bugs.md#cui-008):
-       Choosing an action can pop our temporary scope during drawing. */
-    if (ui->disabled_n > scope) cui_pop_disabled(ui);
+    cui_pop_disabled(ui);
     nodes[0] = ui->last_node;
     *open = allowed && state->open;
     for (int i = 0; i < count; ++i)

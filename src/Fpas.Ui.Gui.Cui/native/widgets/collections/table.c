@@ -26,13 +26,9 @@ int fpas_cui_table_begin(cui_ctx *ui, const char *id, const char *const *titles,
     cui_pop_disabled(ui);
     *sort = order.column;
     *descending = order.descending;
-    for (int index = 0; index < count; ++index) {
-        const cui_id header = cui__hash(&index, sizeof index, key ^ 0x4EADu);
-        const int part = fpas_find(ui, header);
-        if (headers) headers[index] = part;
-        /* CUI-022 (docs/future/cui-upstream-bugs.md#cui-022): show keyboard focus on table headers. */
-        if (ui->focus_visible && ui->focus == header) cui__focus_ring(ui, part, 1);
-    }
+    if (headers)
+        for (int index = 0; index < count; ++index)
+            headers[index] = fpas_find(ui, cui__hash(&index, sizeof index, key ^ 0x4EADu));
     return node;
 }
 
@@ -45,8 +41,6 @@ int fpas_cui_table_row(cui_ctx *ui, const char *id, int selected, int enabled, i
     const bool clicked = cui_table_row(ui, selected != 0);
     cui_pop_disabled(ui);
     *node = cui__current(ui);
-    /* CUI-022 (docs/future/cui-upstream-bugs.md#cui-022): use the same native ring for a row. */
-    if (ui->focus_visible && ui->focus == key) cui__focus_ring(ui, *node, 1);
     cui_push_id(ui, id);
     return clicked;
 }

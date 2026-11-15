@@ -48,6 +48,8 @@ public type Model = record
   public Picked: array of bool := [true, true, true, false, false];
   // Seconds elapsed on the collaborator demo.
   public Seconds: float := 0.0F;
+  // Image file for Paul's avatar, or empty to show initials.
+  public Avatar: string := '';
 end record;
 
 // Proposals from the native widgets on Canvas and bars.
@@ -68,6 +70,10 @@ public type Msg = variant
   Bulk(Value: B.Event);
   // Updates collaborator positions.
   Tick(Seconds: float);
+  // Open the native image chooser.
+  ChooseAvatar;
+  // Change the image path, or clear it to show initials.
+  SetAvatar(Path: string);
   // Activation without an application side effect in the original example.
   Preview;
 end variant;

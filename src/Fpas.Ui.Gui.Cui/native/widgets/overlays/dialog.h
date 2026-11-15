@@ -12,10 +12,13 @@
  * @param persistent Suppress Escape and scrim dismissal.
  * @param close_button Show the native close button.
  * @param focus Request focus for the close button.
+ * @param draggable Allow the header to move the dialog.
+ * @param resizable Allow the edges and corners to resize the dialog.
  * @param panel Receives the panel node, or -1.
  * @return Bit 1 draws the body and bit 2 proposes dismissal. */
 CUI_API int fpas_cui_dialog_begin(cui_ctx *ui, const char *id, const char *title, const char *description,
-    float width, int open, int enabled, int persistent, int close_button, int focus, int *panel);
+    float width, int open, int enabled, int persistent, int close_button, int focus, int draggable, int resizable,
+    int *panel);
 
 /** Ends a dialog and restores the base layout target.
  * @param ui Drawing context.

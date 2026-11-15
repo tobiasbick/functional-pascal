@@ -65,7 +65,10 @@ the model. Rejecting a proposal leaves the model value authoritative.
 
 Start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
-Options select title, logical width/height, renderer and mailbox capacity.
+Use `Gui.Options` to set title, logical width and height, renderer and mailbox
+capacity. Set `StartMaximized := true` to start maximized, or return
+`Fpas.Ui.Gui.Windows.Maximize<TMsg>()` from an update to maximize the open
+window. X11 requires a window manager with EWMH support.
 The host validates the whole active view before drawing. Explicit GUI sizing
 uses portable `Layout.Measure.Logical`; the terminal adapter translates those
 distances to cells. Layout follows the [shared CUI rules](../../../src/Fpas.Ui/README.md#layout-and-style).
@@ -89,6 +92,8 @@ Subview caching does not skip all host processing or virtualize large collection
 ## Work and cleanup
 
 Use shared `Mvu.StartBackground`, `CancelBackground`, `Focus` and `Exit` commands.
+For menu and toolbar actions, the graphical host also provides
+[clipboard commands](../../../src/Fpas.Ui.Gui/README.md#clipboard).
 Background work receives a typed Post callback and cancellation token. Update
 and View stay on the creating UI thread. Do not block them while waiting for a
 worker; post its result and let the next owner turn apply it.

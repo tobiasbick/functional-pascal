@@ -1,7 +1,7 @@
 /* Common modal header and layout identity handling for native dialogs and sheets. */
 static int fpas_modal_begin(cui_ctx *ui, cui_id key, const char *title, const char *description,
     float width, int kind, cui_side side, bool open, bool enabled, bool persistent,
-    bool close_button, bool focus, int *panel) {
+    bool close_button, bool focus, int grip, int *panel) {
     cui_id close = 0;
     if (close_button) {
         cui_push_id_int(ui, (int)key);
@@ -14,7 +14,7 @@ static int fpas_modal_begin(cui_ctx *ui, cui_id key, const char *title, const ch
     const bool blocked = visible && !enabled;
     if (blocked) cui_push_disabled(ui, true);
     const bool draw = cui__modal_begin(ui, key, title, &visible, description, width,
-        persistent || !enabled, close_button, kind, side);
+        persistent || !enabled, close_button, kind, side, enabled ? grip : 0);
     if (blocked) cui_pop_disabled(ui);
     *panel = -1;
     if (draw) {

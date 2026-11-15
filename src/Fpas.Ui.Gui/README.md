@@ -9,7 +9,10 @@ transitions and [Fpas.Ui](../Fpas.Ui/README.md) declarative views. Start with th
 Use Run for the owner loop or Start with using const for explicit Step calls.
 Create, step, inspect and dispose sessions on their creating UI thread. Post
 admits typed messages from workers and reports Queued, Full or Closed.
-Options select title, logical width/height, renderer, mailbox capacity and theme.
+Use `Options` to set the title, logical width and height, renderer, mailbox
+capacity and theme. Set `StartMaximized := true` to open maximized on supported
+window managers. Return `Fpas.Ui.Gui.Windows.Maximize<TMsg>()` to maximize a
+running window. The initial width and height supply the normal window size.
 
 Update and View run on the owner. Shared MVU commands start/cancel background
 work, request focus and exit. Close stops admission, cancels work and keeps
@@ -88,6 +91,14 @@ Return `Fpas.Ui.Gui.FileDialogs.OpenFile<TMsg>` from the update that handles a b
 owner window opens CUI's platform dialog between frames. Use its extension
 filter to match the drop target. A confirmed matching path becomes a normal
 application message.
+
+## Clipboard
+
+Return `Fpas.Ui.Gui.Clipboard.WriteText<TMsg>(Text)` to copy plain text from an
+update, such as a menu command that copies a path. Return
+`Fpas.Ui.Gui.Clipboard.ReadText<TMsg>(OnRead)` to read text. The host applies
+`OnRead` to the clipboard text on its owner thread and queues the resulting
+message. Unavailable clipboard text is passed as an empty string.
 
 ## Toasts
 

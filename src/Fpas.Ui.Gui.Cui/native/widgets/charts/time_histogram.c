@@ -19,12 +19,6 @@ void fpas_cui_time_histogram(cui_ctx *ui, const char *id, double start, double b
     fpas_own(ui, key, plot, drag, 0);
     fpas_owned_state *owner = cui_state(ui, fpas_owner_key(key), sizeof *owner);
     owner->hover = plot;
-    if (!allowed) {
-        /* CUI-041 (docs/future/cui-upstream-bugs.md#cui-041): a held drag ignores the disabled scope. */
-        cui__th_state *state = cui__state_lazy(ui, drag, sizeof *state, false);
-        if (state) state->mode = 0;
-        if (ui->active == plot) ui->active = 0;
-    }
     cui_push_disabled(ui, !allowed);
     const cui_time_histogram_result result = cui_time_histogram_ex(ui, "plot", start, bucket,
         buckets, series, series_count, &range_start, &range_end, &options);

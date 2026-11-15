@@ -1,0 +1,37 @@
+unit GuiGallery.Pages.Desktop.HostActions;
+
+uses
+  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B;
+
+// Path copied by the clipboard example.
+public const SamplePath: string := 'projects/atlas/notes.md';
+
+// Displays the gallery's window and clipboard actions.
+// ## Parameters
+// - `Model`: Current clipboard preview.
+// ## Returns
+// The actions and the text from the last paste.
+public function View(Model: S.Model): E.Element<S.Msg>;
+begin
+  return G.Card<S.Msg>(
+    12, [
+      E.Styled<S.Msg>(E.Text<S.Msg>(SamplePath), Styles.Role.Secondary),
+      E.Row<S.Msg>(
+        new L.Flow(Gap := G.Points(8), Wrap := true),
+        B.Button<S.Msg>('desktop-copy-path', 'Copy path', S.Msg.CopyPath),
+        B.Button<S.Msg>('desktop-paste-text', 'Paste text', S.Msg.PasteText),
+        B.Button<S.Msg>('desktop-maximize', 'Maximize window', S.Msg.Maximize)
+      ),
+      E.Text<S.Msg>(
+        if Model.PastedText = '' then
+          'No text pasted'
+        else
+          Model.PastedText
+        end if
+      )
+    ]
+  );
+end function;
+
+end unit;

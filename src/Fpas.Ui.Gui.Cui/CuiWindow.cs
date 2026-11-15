@@ -81,6 +81,13 @@ public sealed partial class CuiWindow : IDisposable
         NativeMethods.Resize(app, width, height);
     }
 
+    /// <summary>Requests maximization on the current display.</summary>
+    public void Maximize()
+    {
+        CheckOpen();
+        NativeMethods.Maximize(app);
+    }
+
     /// <summary>Presents the previous view and begins a frame, or returns false after close.</summary>
     /// <returns>Whether the host should construct another view.</returns>
     public bool NextFrame()

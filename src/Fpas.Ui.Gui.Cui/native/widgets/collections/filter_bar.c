@@ -26,8 +26,6 @@ int fpas_cui_filter_bar(cui_ctx *ui, const char *id, const char *const *names,
     const cui_id search_key = cui_make_id(ui, "#search");
     const cui_id add_key = cui_make_id(ui, "Filter##add");
     const cui_id clear_key = cui_make_id(ui, "Clear all");
-    const cui__filter_bar_state *state = cui_state(ui, key, sizeof *state);
-    const uint32_t before = state->active;
     if (!enabled) {
         for (int k = 0; k < count; ++k) {
             const cui_id chip = cui__hash_str("chip", cui__hash(&k, sizeof k, key));
@@ -42,9 +40,6 @@ int fpas_cui_filter_bar(cui_ctx *ui, const char *id, const char *const *names,
     cui_push_disabled(ui, !enabled);
     const bool changed = cui_filter_bar(ui, id, fields, count, selected, search, (size_t)capacity);
     cui_pop_disabled(ui);
-    /* CUI-026 (docs/future/cui-upstream-bugs.md#cui-026): the add menu creates a
-       chip without opening its options. Open it for the frame where it is drawn. */
-    const uint32_t added = state->active & ~before;
     fpas_own(ui, key, search_key, add_key, add_key ^ 0x3E40u);
     fpas_on_forget(ui, key, fpas_filter_retire);
     parts[0] = node;
@@ -55,13 +50,6 @@ int fpas_cui_filter_bar(cui_ctx *ui, const char *id, const char *const *names,
     for (int k = 0; k < count; ++k) {
         cui_push_id_int(ui, k);
         const cui_id chip = cui_make_id(ui, "chip");
-        if (enabled && (added & (1u << k))) {
-            const cui_id popup = chip ^ 0x3E40u;
-            cui__popup_set(ui, popup, true);
-            cui_popup *panel = cui__popup_get(ui, popup, false);
-            if (panel) panel->opened_frame = ui->frame + 1;
-            cui_request_redraw(ui);
-        }
         parts[4 + k] = fpas_find(ui, chip);
         cui_pop_id(ui);
     }

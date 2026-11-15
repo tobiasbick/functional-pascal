@@ -32,7 +32,8 @@ begin
         Item.Says,
         Item.Speaking,
         Item.Away,
-        Color
+        Color,
+        Item.Avatar
       )
     );
   end for;

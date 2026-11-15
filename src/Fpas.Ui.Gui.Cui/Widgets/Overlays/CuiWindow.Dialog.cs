@@ -17,7 +17,25 @@ public sealed partial class CuiWindow
     /// <param name="closeControl">Snapshot identity of the close button when present.</param>
     /// <returns>Draw the body for bit 1 and propose dismissal for bit 2.</returns>
     public int BeginDialog(string id, string title, string description, float width, bool open,
-        bool enabled, bool persistent, bool closeButton, bool focus, string closeControl)
+        bool enabled, bool persistent, bool closeButton, bool focus, string closeControl) =>
+        BeginDialog(id, title, description, width, open, enabled, persistent, closeButton, focus, closeControl, false, false);
+
+    /// <summary>Begins a native dialog with optional dragging and resizing.</summary>
+    /// <param name="id">Stable dialog and panel snapshot identity.</param>
+    /// <param name="title">Literal heading.</param>
+    /// <param name="description">Optional supporting text.</param>
+    /// <param name="width">Preferred width in logical points.</param>
+    /// <param name="open">Model-owned visibility.</param>
+    /// <param name="enabled">Whether the modal admits input.</param>
+    /// <param name="persistent">Suppresses Escape and scrim dismissal.</param>
+    /// <param name="closeButton">Whether to draw the native close button.</param>
+    /// <param name="focus">Whether to focus the native close button.</param>
+    /// <param name="closeControl">Snapshot identity of the close button when present.</param>
+    /// <param name="draggable">Whether the header can move the dialog.</param>
+    /// <param name="resizable">Whether the edges and corners can resize the dialog.</param>
+    /// <returns>Draw the body for bit 1 and propose dismissal for bit 2.</returns>
+    public int BeginDialog(string id, string title, string description, float width, bool open,
+        bool enabled, bool persistent, bool closeButton, bool focus, string closeControl, bool draggable, bool resizable)
     {
         CheckFrame();
         Utf8.Validate(title, nameof(title));
@@ -27,7 +45,8 @@ public sealed partial class CuiWindow
 
         int baseNode = NativeMethods.LastNode(context);
         int result = NativeMethods.DialogBegin(context, Stable(id), title, description.Length == 0 ? null : description, width,
-            open ? 1 : 0, enabled ? 1 : 0, persistent ? 1 : 0, closeButton ? 1 : 0, focus ? 1 : 0, out int panel);
+            open ? 1 : 0, enabled ? 1 : 0, persistent ? 1 : 0, closeButton ? 1 : 0, focus ? 1 : 0,
+            draggable ? 1 : 0, resizable ? 1 : 0, out int panel);
         if ((result & 1) != 0)
         {
             TrackModal(id);

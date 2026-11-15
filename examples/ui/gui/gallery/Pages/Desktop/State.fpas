@@ -120,6 +120,8 @@ public type Model = record
   public Closed: int := 0;
   // Requested dock layout reset.
   public Revision: int := 0;
+  // Text returned by the last clipboard read.
+  public PastedText: string := '';
 end record;
 
 // Native proposals for the desktop examples.
@@ -142,6 +144,14 @@ public type Msg = variant
   Property(Change: P.Event);
   // Accept the new divider position.
   Resize(Ratio: float);
+  // Maximize the gallery window.
+  Maximize;
+  // Copy the sample file path.
+  CopyPath;
+  // Read plain text from the system clipboard.
+  PasteText;
+  // Show the text returned by the clipboard.
+  ClipboardText(Value: string);
 end variant;
 
 end unit;

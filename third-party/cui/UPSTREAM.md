@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream snapshot after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`5d3d253ac4a537d0fbf87d445b425a9d574ca418`](https://github.com/yappologistic/CUI/commit/5d3d253ac4a537d0fbf87d445b425a9d574ca418) |
+| Commit | [`6e6b35326f655405822fcf863fac0d3bb35bb787`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -15,8 +15,8 @@ That commit is identical to upstream `master` at the time of this update.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `da6253f955b3778e8caedfc3420cc485932c063baed5ae41c41dfceef7e2a421` |
-| `cui.h` | `95a6478aaa5eb3d6e65a2ea6e092faa64ed19ca8c9725cb0777d716c93d9b409` |
+| `cui.c` | `dc56d9c1a39520071cad11245d6f2186209b8c787723fb37eadb70d5bee955d1` |
+| `cui.h` | `f630b662b3c94b7645c696c058b9c1263ac8df56555957a1fb9bf34ec8428958` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -24,14 +24,15 @@ from the unmodified upstream sources here.
 
 ## Snapshot verification
 
-The copied pair matches the generated files byte for byte. This snapshot includes
-the reduced-motion, JSON validation, nested wheel routing and split-pane,
-and Windows image path and disabled file-drop fixes. Upstream's license inputs,
-theme builder, and theme-token declarations are unchanged.
+The copied pair matches the generated files byte for byte. This snapshot
+includes the seven groups of fixes for collection widgets, chart interactions,
+read-only widgets, numeric editors, focus and popups, pickers, and disabled
+widgets. The upstream license inputs and theme builder are unchanged.
 
-After removing the corresponding local workarounds, the native consumer suite
-passed all 37 tests on Windows and all 35 tests on Linux under WSL. The upstream
-regression suite built against this source pair also passed on both systems.
+The native integration suite passed 37 tests on Windows and 35 on Linux under
+WSL. Five upstream test suites built against the amalgamation passed on both
+platforms. The 25 selected .NET GUI tests passed on both platforms, including
+the gallery with software and OpenGL renderers.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 

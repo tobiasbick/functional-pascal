@@ -29,6 +29,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
 
     if ScrollX <> 0.0F or ScrollY <> 0.0F then
+      Window.SetKey(0, false);
       Window.Wheel(ScrollX, ScrollY);
       ScrollX := 0.0F;
       ScrollY := 0.0F;

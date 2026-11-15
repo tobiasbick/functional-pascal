@@ -33,6 +33,7 @@ begin
   for Item: Live.Person in Items do
     Text(Item.Name, At);
     Text(Item.Says, At);
+    Text(Item.Avatar, At);
     Finite(Item.X, At);
     Finite(Item.Y, At);
     if Item.Name = '' or not Names.Add(Item.Name) then

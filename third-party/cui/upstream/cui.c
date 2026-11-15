@@ -77998,6 +77998,11 @@ void cui__plat_show(cui_app *app) {
      * content where it was asked to; a maximized window gets its normal place first */
     const cui_window_placement *pl = app->desc.placement;
     if (s->normal_pos_known) SDL_SetWindowPosition(s->win, s->normal_x, s->normal_y);
+    else if (cui__sdl_positions()) {
+        /* the place the system chose, before a maximize hides it until the window is restored */
+        SDL_GetWindowPosition(s->win, &s->normal_x, &s->normal_y);
+        s->normal_pos_known = true;
+    }
     if (pl && pl->state == CUI_WINDOW_MAXIMIZED) SDL_MaximizeWindow(s->win);
 }
 
@@ -78197,7 +78202,10 @@ cui_window_state cui__plat_window_state(cui_app *app) {
 }
 
 void cui__plat_set_position(cui_app *app, int x, int y) {
-    if (cui__sdl_positions()) SDL_SetWindowPosition(cui__s(app)->win, x, y);
+    cui__sdl *s = cui__s(app);
+    if (!cui__sdl_positions()) return;
+    s->hold_place_until = 0;   /* the new place replaces the one a restore holds */
+    SDL_SetWindowPosition(s->win, x, y);
 }
 
 void cui__plat_placement(cui_app *app, cui_window_placement *out) {
@@ -78223,11 +78231,10 @@ typedef struct {
     GLFWcursor *cursors[CUI_CURSOR_COUNT];
     cui_cursor cursor;
     /* GLFW keeps no normal size and place for a maximized window: noted while it is normal,
-     * in screen coordinates */
+     * the place in screen coordinates and the size in points */
     int normal_x, normal_y, normal_w, normal_h;
     bool normal_pos_known;
     bool geometry_changed;   /* moved or resized: note them after the batch */
-    float points;            /* points per screen coordinate, kept for a minimized window's empty framebuffer */
     bool was_maximized;      /* the state before a minimize */
     bool maximize_after_frame;   /* opening maximized: once the first frame is shown */
 } cui__glfw;
@@ -78334,6 +78341,33 @@ static bool cui__glfw_positions(void) {
 #endif
 }
 
+/* Notes the window's place where the platform reports it. GLFW 3.3 cannot tell Wayland
+ * apart, so a failed query is taken as no place. */
+static void cui__glfw_note_position(cui__glfw *g) {
+    if (!cui__glfw_positions()) return;
+    int x = 0, y = 0;
+    glfwGetError(NULL);
+    glfwGetWindowPos(g->win, &x, &y);
+    if (glfwGetError(NULL) != GLFW_NO_ERROR) return;
+    g->normal_x = x;
+    g->normal_y = y;
+    g->normal_pos_known = true;
+}
+
+/* Notes the window's size in points, as cui_app_size reports it. Screen coordinates are
+ * pixels on Windows and X11 but points on macOS and Wayland; the framebuffer tells which,
+ * on the monitor the window is on now. */
+static void cui__glfw_note_size(cui__glfw *g) {
+    int ww, wh, fw, fh;
+    float s = 1;
+    glfwGetWindowSize(g->win, &ww, &wh);
+    glfwGetFramebufferSize(g->win, &fw, &fh);
+    cui__glfw_scale(g->win, &s);
+    float points = ww > 0 && fw > 0 && s > 0 ? (float)fw / (float)ww / s : 1.0f;
+    g->normal_w = (int)((float)ww * points + 0.5f);
+    g->normal_h = (int)((float)wh * points + 0.5f);
+}
+
 /* True when the top edge of a window at x, y of width w is in a monitor's work area. */
 static bool cui__glfw_on_screen(int x, int y, int w) {
     int count = 0;
@@ -78391,12 +78425,16 @@ bool cui__plat_init(cui_app *app) {
     glfwSetDropCallback(g->win, cb_drop);
     glfwSetWindowPosCallback(g->win, cb_geometry);
     glfwSetWindowSizeCallback(g->win, cb_geometry);
-    glfwGetWindowSize(g->win, &g->normal_w, &g->normal_h);
+    g->normal_w = app->desc.width;
+    g->normal_h = app->desc.height;
     if (pl && pl->has_position && cui__glfw_positions() && cui__glfw_on_screen(pl->x, pl->y, g->normal_w)) {
+        glfwGetError(NULL);
         glfwSetWindowPos(g->win, pl->x, pl->y);   /* still hidden: it opens there */
-        g->normal_x = pl->x;
-        g->normal_y = pl->y;
-        g->normal_pos_known = true;
+        if (glfwGetError(NULL) == GLFW_NO_ERROR) {
+            g->normal_x = pl->x;
+            g->normal_y = pl->y;
+            g->normal_pos_known = true;
+        }
     }
     int shapes[CUI_CURSOR_COUNT] = { GLFW_ARROW_CURSOR, GLFW_HAND_CURSOR, GLFW_IBEAM_CURSOR, GLFW_HRESIZE_CURSOR,
                                      GLFW_VRESIZE_CURSOR, GLFW_ARROW_CURSOR, GLFW_ARROW_CURSOR };
@@ -78443,6 +78481,7 @@ void cui__plat_gl_swap(cui_app *app) {
     glfwSwapBuffers(g->win);
     if (g->maximize_after_frame) {
         g->maximize_after_frame = false;
+        if (!g->normal_pos_known) cui__glfw_note_position(g);   /* the place the system chose */
         glfwMaximizeWindow(g->win);
     }
 }
@@ -78469,18 +78508,6 @@ void cui__plat_set_title(cui_app *app, const char *title) { glfwSetWindowTitle(c
 void cui__plat_set_size(cui_app *app, int w, int h) { glfwSetWindowSize(cui__g(app)->win, w, h); }
 void *cui__plat_native(cui_app *app) { return cui__g(app)->win; }
 
-/* Screen coordinates are pixels on Windows and X11 but points on macOS and Wayland: the
- * framebuffer tells which. A minimized window's framebuffer can be empty, so the last
- * ratio is kept. */
-static void cui__glfw_note_points(cui__glfw *g) {
-    int ww, wh, fw, fh;
-    float s = 1;
-    glfwGetWindowSize(g->win, &ww, &wh);
-    glfwGetFramebufferSize(g->win, &fw, &fh);
-    cui__glfw_scale(g->win, &s);
-    if (ww > 0 && fw > 0 && s > 0) g->points = (float)fw / (float)ww / s;
-}
-
 void cui__plat_wait(cui_app *app, double timeout) {
     if (timeout < 0) glfwWaitEvents();
     else if (timeout > 0) glfwWaitEventsTimeout(timeout);
@@ -78491,12 +78518,8 @@ void cui__plat_wait(cui_app *app, double timeout) {
     if (state != CUI_WINDOW_MINIMIZED) g->was_maximized = state == CUI_WINDOW_MAXIMIZED;
     if (g->geometry_changed && state == CUI_WINDOW_NORMAL && glfwGetWindowAttrib(g->win, GLFW_VISIBLE)) {
         g->geometry_changed = false;
-        glfwGetWindowSize(g->win, &g->normal_w, &g->normal_h);
-        cui__glfw_note_points(g);
-        if (cui__glfw_positions()) {
-            glfwGetWindowPos(g->win, &g->normal_x, &g->normal_y);
-            g->normal_pos_known = true;
-        }
+        cui__glfw_note_size(g);
+        cui__glfw_note_position(g);
     }
 }
 
@@ -78534,12 +78557,10 @@ void cui__plat_set_position(cui_app *app, int x, int y) {
 
 void cui__plat_placement(cui_app *app, cui_window_placement *out) {
     cui__glfw *g = cui__g(app);
-    cui__glfw_note_points(g);
-    float points = g->points > 0 ? g->points : 1.0f;   /* sizes in points, as cui_app_size reports them */
     out->x = g->normal_x;
     out->y = g->normal_y;
-    out->width = (int)((float)g->normal_w * points + 0.5f);
-    out->height = (int)((float)g->normal_h * points + 0.5f);
+    out->width = g->normal_w;
+    out->height = g->normal_h;
     out->has_position = g->normal_pos_known;
     cui_window_state state = cui__plat_window_state(app);
     bool maximized = state == CUI_WINDOW_MAXIMIZED || (state == CUI_WINDOW_MINIMIZED && g->was_maximized);
@@ -78984,6 +79005,15 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
+/* The frame around the content at the window's DPI; left and top are negative. */
+static RECT cui__win32_frame(HWND hwnd) {
+    RECT r = { 0, 0, 0, 0 };
+    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
+    if (cui__AdjustWindowRectExForDpi && cui__GetDpiForWindow) cui__AdjustWindowRectExForDpi(&r, style, FALSE, 0, cui__GetDpiForWindow(hwnd));
+    else AdjustWindowRectEx(&r, style, FALSE, 0);
+    return r;
+}
+
 bool cui__plat_init(cui_app *app) {
     cui__win32_dpi_awareness();
     cui__win32 *w = calloc(1, sizeof *w);
@@ -79021,9 +79051,12 @@ bool cui__plat_init(cui_app *app) {
     DragAcceptFiles(w->hwnd, TRUE);   /* files dropped from Explorer arrive as WM_DROPFILES */
     w->scale = cui__win32_window_scale(w->hwnd);
     if (w->scale != scale) {
-        RECT r2 = { 0, 0, (LONG)(app->desc.width * w->scale), (LONG)(app->desc.height * w->scale) };
-        AdjustWindowRectEx(&r2, style, FALSE, 0);
-        SetWindowPos(w->hwnd, NULL, 0, 0, r2.right - r2.left, r2.bottom - r2.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        /* the frame at the DPI of the monitor the window opened on, which a saved place can make
+         * another than the primary one */
+        RECT f = cui__win32_frame(w->hwnd);
+        int fw = (int)(app->desc.width * w->scale) + (f.right - f.left);
+        int fh = (int)(app->desc.height * w->scale) + (f.bottom - f.top);
+        SetWindowPos(w->hwnd, NULL, 0, 0, fw, fh, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
     /* the frame was measured at the primary monitor's DPI: place the content exactly */
     if (left != CW_USEDEFAULT) cui__plat_set_position(app, pl->x, pl->y);
@@ -79197,26 +79230,46 @@ cui_window_state cui__plat_window_state(cui_app *app) {
     return IsIconic(hwnd) ? CUI_WINDOW_MINIMIZED : IsZoomed(hwnd) ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
 }
 
-/* The frame around the content at the window's DPI; left and top are negative. */
-static RECT cui__win32_frame(HWND hwnd) {
-    RECT r = { 0, 0, 0, 0 };
-    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
-    if (cui__AdjustWindowRectExForDpi && cui__GetDpiForWindow) cui__AdjustWindowRectExForDpi(&r, style, FALSE, 0, cui__GetDpiForWindow(hwnd));
-    else AdjustWindowRectEx(&r, style, FALSE, 0);
-    return r;
-}
-
 /* Window placements are in workspace coordinates: screen coordinates less the taskbars along
- * the top and the left of the window's monitor. */
-static POINT cui__win32_workspace_offset(const RECT *r) {
+ * the top and the left of the window's monitor. This is that offset for a monitor. */
+static POINT cui__win32_work_offset(HMONITOR monitor) {
     POINT o = { 0, 0 };
     MONITORINFO mi;
     mi.cbSize = sizeof mi;
-    if (GetMonitorInfoW(MonitorFromRect(r, MONITOR_DEFAULTTONEAREST), &mi)) {
+    if (GetMonitorInfoW(monitor, &mi)) {
         o.x = mi.rcWork.left - mi.rcMonitor.left;
         o.y = mi.rcWork.top - mi.rcMonitor.top;
     }
     return o;
+}
+
+typedef struct cui__win32_workspace_search {
+    RECT workspace;     /* the rectangle in workspace coordinates */
+    POINT offset;
+    bool found;
+} cui__win32_workspace_search;
+
+/* Takes the monitor that a workspace rectangle lands on when converted with that monitor's own
+ * offset: the monitor itself cannot be read from workspace coordinates. */
+static BOOL CALLBACK cui__win32_workspace_monitor(HMONITOR monitor, HDC dc, LPRECT bounds, LPARAM data) {
+    (void)dc; (void)bounds;
+    cui__win32_workspace_search *search = (cui__win32_workspace_search *)data;
+    POINT o = cui__win32_work_offset(monitor);
+    RECT screen = search->workspace;
+    OffsetRect(&screen, o.x, o.y);
+    if (MonitorFromRect(&screen, MONITOR_DEFAULTTONEAREST) != monitor) return TRUE;
+    search->offset = o;
+    search->found = true;
+    return FALSE;
+}
+
+/* The offset from workspace to screen coordinates for a rectangle in workspace coordinates. */
+static POINT cui__win32_workspace_offset(const RECT *workspace) {
+    cui__win32_workspace_search search;
+    memset(&search, 0, sizeof search);
+    search.workspace = *workspace;
+    EnumDisplayMonitors(NULL, NULL, cui__win32_workspace_monitor, (LPARAM)&search);
+    return search.found ? search.offset : cui__win32_work_offset(MonitorFromRect(workspace, MONITOR_DEFAULTTONEAREST));
 }
 
 void cui__plat_set_position(cui_app *app, int x, int y) {
@@ -79232,7 +79285,7 @@ void cui__plat_set_position(cui_app *app, int x, int y) {
     if (!GetWindowPlacement(hwnd, &wp)) return;
     RECT r = wp.rcNormalPosition;
     RECT moved = { x + f.left, y + f.top, x + f.left + (r.right - r.left), y + f.top + (r.bottom - r.top) };
-    POINT o = cui__win32_workspace_offset(&moved);
+    POINT o = cui__win32_work_offset(MonitorFromRect(&moved, MONITOR_DEFAULTTONEAREST));
     OffsetRect(&moved, -o.x, -o.y);
     wp.rcNormalPosition = moved;
     wp.showCmd = IsIconic(hwnd) ? SW_SHOWMINNOACTIVE : SW_SHOWMAXIMIZED;
@@ -80692,10 +80745,19 @@ void cui__plat_wait(cui_app *app, double timeout) {
     if (x->geometry_changed) {
         x->geometry_changed = false;
         if (x->mapped && cui__plat_window_state(app) == CUI_WINDOW_NORMAL) {
-            cui__x11_content_origin(x, &x->normal_x, &x->normal_y);
-            x->normal_pos_known = true;
-            x->normal_w = x->width;
-            x->normal_h = x->height;
+            int px, py;
+            cui__x11_content_origin(x, &px, &py);
+            /* another client can maximize the window between the two queries: keep only a place
+             * read while the window stayed normal, and only with the size it had then */
+            if (cui__plat_window_state(app) == CUI_WINDOW_NORMAL && !XPending(x->dpy)) {
+                x->normal_x = px;
+                x->normal_y = py;
+                x->normal_pos_known = true;
+                x->normal_w = x->width;
+                x->normal_h = x->height;
+            } else {
+                x->geometry_changed = true;   /* try again after the next batch */
+            }
         }
     }
 }

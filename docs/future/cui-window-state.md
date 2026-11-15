@@ -84,10 +84,12 @@ VM keeps the builds, the diagnostic programs and the raw outputs of every run.
   in the pull request.
 - [ ] Windows: placement across monitors with different scales. Only one
   monitor was available; a taskbar on the left is verified.
-- [ ] macOS: the Cocoa code was written without a Mac. Upstream CI compiles
-  and runs the smoke tests; the pull request must say that window behavior on
-  macOS is untested.
-- [ ] Follow the upstream review and CI of pull request #95, including the
-  macOS build of the untested Cocoa code. The vendored snapshot is built from
-  the pull request's commit `a18f661`; pin the upstream commit once CUI
-  contains the change, and update the FPAS binding if review changes the API.
+- [ ] macOS: the Cocoa code was written without a Mac. Upstream CI builds it
+  and runs the smoke tests; window behavior on macOS is untested, as the pull
+  request says.
+- [ ] Follow the upstream review of pull request #95. Its head `f259305`
+  contains the fixes for the first CodeRabbit review and is merged into the
+  vendored `fpas-cui` branch. Two findings stay unchanged with a reply in the
+  pull request: X11 reports no place for a window opened maximized until it
+  is restored, and the SDL2 backend keeps window units under `CUI_SCALE`.
+  Update the FPAS binding if the review changes the API.

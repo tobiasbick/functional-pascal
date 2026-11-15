@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Source fork branch [`fpas-cui`](https://github.com/tobiasbick/CUI/tree/fpas-cui), combining upstream PRs [#95](https://github.com/yappologistic/CUI/pull/95) and [#97](https://github.com/yappologistic/CUI/pull/97) on [`6e6b353`](https://github.com/yappologistic/CUI/commit/6e6b35326f655405822fcf863fac0d3bb35bb787) after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`ddceed18db3184855112104fc1e2b1c45cab1317`](https://github.com/tobiasbick/CUI/commit/ddceed18db3184855112104fc1e2b1c45cab1317) |
+| Commit | [`6999c2091040f11e7a676510391091c1d4131fd6`](https://github.com/tobiasbick/CUI/commit/6999c2091040f11e7a676510391091c1d4131fd6) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -20,7 +20,7 @@ again; keep unmerged contributions on `fpas-cui` in the meantime.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `04f6b9075dfe43d51148acc5ae27ff08eacd055c1f05daceb06b8188f883b026` |
+| `cui.c` | `9f90a8d35ea7a779db2ad8d9ce90357999a8afec6efde9a5963a9e107c788e3f` |
 | `cui.h` | `f7645be5df38b694e3b608461e70a2ad140942fcc6d1993a2b7cb2bf0169dcc8` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge

@@ -1,0 +1,47 @@
+# Ratio slider
+
+Use a ratio slider for two shares that add up to one. The gallery shows
+Coffee and Milk and a Train and Test split.
+Available in **GUI**.
+
+![Two ratio sliders in the FPAS gallery](images/ratio-slider.png)
+
+## Example
+
+```pascal
+unit Docs.Ui.CreativeControls.RatioSlider;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RatioSliders as W;
+
+// Sets the coffee fraction in a blend.
+// ## Parameters
+// - `Coffee`: Current coffee share from zero through one.
+// ## Returns
+// The slider with a proposed fraction as its message.
+public function View(Coffee: float): E.Element<float>;
+begin
+  return W.RatioSlider<float>('blend', new W.Value('COFFEE', 'MILK', Coffee),
+    function(Value: float): float => Value);
+end function;
+
+end unit;
+```
+
+## Options and defaults
+
+| Option | Default or requirement |
+| --- | --- |
+| `First / Second / Ratio` | Supply both labels and the first part's share. The second share is one minus Ratio. |
+| `Tone / Step` | Neutral / 0. Zero Step uses one percentage point. |
+| `Height / Width / Enabled` | 0 / Fill / true. Zero height uses native sizing. |
+
+## Interaction
+
+Drag the divider or use the arrow keys. Shift increases the keyboard step.
+Store the proposed first share in the model.
+
+## See also
+
+- [Widget API and types](../../../src/Fpas.Ui/Widgets/Inputs/RatioSliders.fpas)
+- [Gallery example](../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
+- [Creative controls](README.md)

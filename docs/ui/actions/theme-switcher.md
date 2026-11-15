@@ -9,7 +9,9 @@ Select Light, Dark or an application-provided System appearance. Available in **
 ```pascal
 unit Docs.Ui.Actions.ThemeSwitcher;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.ThemeSwitchers as T;
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.ThemeSwitchers as T,
+  Fpas.Ui.Widgets.Theming.Themes as Palette;
 
 // Builds the example view.
 // ## Parameters
@@ -20,6 +22,24 @@ public function View(Selected: T.Selection): E.Element<T.Selection>;
 begin
   return T.ThemeSwitcher<T.Selection>('theme', Selected,
     function(Choice: T.Selection): T.Selection => Choice, new T.Options(WithSystem := true));
+end function;
+
+// Resolves the selected palette for the host's ThemeFor callback.
+// ## Parameters
+// - `Selected`: The appearance selected in the model.
+// - `SystemAppearance`: The concrete light or dark system appearance.
+// - `Accent`: The current accent.
+// ## Returns
+// The theme drawn by the host.
+public function ThemeFor(
+  Selected: T.Selection; SystemAppearance: Palette.Mode; Accent: Palette.Accent
+): Palette.Theme;
+begin
+  return if T.Resolve(Selected, SystemAppearance) = Palette.Mode.Dark then
+    Palette.Dark(Accent)
+  else
+    Palette.Light(Accent)
+  end if;
 end function;
 
 end unit;
@@ -43,4 +63,6 @@ appearance to Resolve.
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Theming/ThemeSwitchers.fpas)
 - [Gallery example](../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ThemeSwitcher.fpas)
+- [Gallery theme callback](../../../examples/ui/gui/gallery/App/Update.fpas)
+- [Sidebar appearance controls](../navigation/sidebar.md#appearance-controls)
 - [Actions](README.md)

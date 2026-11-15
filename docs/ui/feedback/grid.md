@@ -39,11 +39,12 @@ end unit;
 
 ## Interaction
 
-CUI sizes each row to its tallest cell and places children in the order supplied. Use the enclosing layout to constrain the available width. For spacing inside a child row or column, use `Layout.Flow.Justify`. The Goals card uses Around to distribute the two rings.
+CUI sizes each row to its tallest cell and places children in the order supplied. Use the enclosing layout to constrain the available width. For spacing inside a child row or column, use `Layout.Flow.Justify`. The Goals card uses Around to distribute the two rings. Overview uses Grid for both its metric tiles and its workspace and team cards.
 
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Containers/Grids.fpas)
 - [Gallery example](../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Card](card.md)
+- [Overview](../overview/README.md)
 - [Feedback](README.md)

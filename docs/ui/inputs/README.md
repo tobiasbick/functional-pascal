@@ -21,5 +21,6 @@ function. These widgets require the GUI host.
 ## See also
 
 - [UI handbook](../README.md)
+- [Smart inputs](../smart-inputs/README.md)
 - [Pickers](../pickers/README.md)
 - [Inputs in the gallery](../../../examples/ui/gui/gallery/Pages/Inputs/View.fpas)

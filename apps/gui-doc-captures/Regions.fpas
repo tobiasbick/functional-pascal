@@ -17,6 +17,29 @@ public type Insets = record
   public Bottom: int := 0;
 end record;
 
+// Saves a frame and its explicit crop rectangle.
+// ## Parameters
+// - `Session`: Presented gallery session.
+// - `Output`: Directory for the full-frame PNG and crop coordinates.
+// - `Name`: Basename of the documented widget.
+// - `Rectangle`: Left, top, right and bottom pixel coordinates, in that order.
+public procedure CaptureRectangle(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Rectangle: array of int
+);
+requires Rectangle.Length = 4;
+begin
+  const Size: Cui.CuiSize := Session.Snapshot().Size;
+  if Rectangle[0] < 0 or Rectangle[1] < 0 or Rectangle[2] <= Rectangle[0]
+    or Rectangle[3] <= Rectangle[1] or Rectangle[2] > Size.Width or Rectangle[3] > Size.Height
+  then
+    raise new Sys.InvalidOperationException('Invalid crop rectangle for ' + Name);
+  end if;
+
+  const Target: string := IO.Path.Combine(Output, Name);
+  Session.CapturePng(Target + '.png');
+  IO.File.WriteAllText(Target + '.crop', Sys.String.Join<int>(',', Rectangle));
+end procedure;
+
 // Captures the union of named gallery controls in one presented frame.
 // ## Parameters
 // - `Session`: Presented gallery session.
@@ -70,9 +93,7 @@ begin
       cast<int>(Sys.Math.Ceiling(Bottom)) + 8 + Padding.Bottom
     )
   ];
-  const Target: string := IO.Path.Combine(Output, Name);
-  Session.CapturePng(Target + '.png');
-  IO.File.WriteAllText(Target + '.crop', Sys.String.Join<int>(',', Rectangle));
+  CaptureRectangle(Session, Output, Name, Rectangle);
 end procedure;
 
 // Captures a compound control and its visible native parts.

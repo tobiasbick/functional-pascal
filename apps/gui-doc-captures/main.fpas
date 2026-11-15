@@ -4,16 +4,24 @@ uses
   GuiDocCaptures.Regions as Regions, GuiDocCaptures.SelectionAndNavigation as Guides,
   GuiDocCaptures.Presented as Presented, GuiDocCaptures.FeedbackAndDataDisplay as Collections,
   GuiDocCaptures.Chapters as Chapters, GuiDocCaptures.Charts as Charts,
+  GuiDocCaptures.InstrumentsAndCapture as Devices,
+  GuiDocCaptures.Workspaces as Workspaces,
+  GuiDocCaptures.SourceTools as SourceTools,
+  GuiDocCaptures.CreativeAndCanvas as Creative,
+  GuiDocCaptures.SocialAndVoice as Social,
+  GuiDocCaptures.AiAndMotion as Effects, GuiDocCaptures.Foundations as Foundations, GuiDocCaptures.SmartInputs as Smart,
+  GuiDocCaptures.Overview as Overview,
   GuiGallery.App.State as Gallery,
   GuiGallery.App.Update as Update, GuiGallery.App.View as View,
   GuiGallery.Pages.Actions.State as Actions, GuiGallery.Pages.Inputs.State as Inputs,
   GuiGallery.Pages.Overlays.State as Overlays, GuiGallery.Pages.Disclosure.State as Disclosure,
   GuiGallery.Pages.Feedback.State as Feedback,
   GuiGallery.Pages.Charts.State as ChartState,
+  GuiGallery.Pages.Audio.State as Audio,
   GuiGallery.Shared.State as Demo,
   Fpas.Ui.Gui.Application as Gui,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Mvu.Session as Mvu, Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Mvu.Application as App,
   Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Gui.Toasts as Toasts,
   System as Sys, System.IO as IO;
 
@@ -22,17 +30,8 @@ const Enter: int := 2;
 const Escape: int := 3;
 const Down: int := 10;
 
-function WithFocus(Model: Gallery.Model; Message: Gallery.Msg; Id: string): App.Transition<Gallery.Model, Gallery.Msg>;
-begin
-  if Id = '' then
-    return Update.Update(Model, Message);
-  end if;
-
-  return new App.Transition<Gallery.Model, Gallery.Msg>(Model, [App.Focus<Gallery.Msg>(Id)]);
-end function;
-
-procedure Run(Output: string; Chapter: string);
-requires Output <> '';
+procedure Run(Destination: string; Chapter: string);
+requires Destination <> '';
   procedure Inject();
   begin
     Window.MovePointer(X, Y);
@@ -58,36 +57,17 @@ requires Output <> '';
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<Gallery.Msg>);
-  begin
-    if not Session.Step() then
-      raise new Sys.InvalidOperationException('The gallery closed during capture.');
-    end if;
-  end procedure;
-
-  procedure Send(Session: Gui.Session<Gallery.Msg>; Message: Gallery.Msg);
-  begin
-    case Session.Post(Message) of
-      when Mvu.Admission.Queued:
-      else
-        raise new Sys.InvalidOperationException('The gallery did not accept a message.');
-    end case;
-
-    Step(Session);
-    Step(Session);
-  end procedure;
-
   procedure Key(Session: Gui.Session<Gallery.Msg>; Value: int);
   begin
     KeyCode := Value;
-    Step(Session);
-    Step(Session);
+    Presented.Step(Session);
+    Presented.Step(Session);
   end procedure;
 
   procedure OpenMenu(Session: Gui.Session<Gallery.Msg>; Id: string; Activation: int);
   begin
     FocusId := Id;
-    Send(Session, Gallery.Msg.Preview);
+    Presented.Send(Session, Gallery.Msg.Preview);
     FocusId := '';
     Key(Session, Activation);
   end procedure;
@@ -99,44 +79,38 @@ requires Output <> '';
 
   procedure Aim(Session: Gui.Session<Gallery.Msg>; Id: string; Horizontal: float := 0.5F);
   begin
-    for Control: Gui.Control in Session.Snapshot().Controls do
-      if Control.Id = Id and Control.Bounds.Width > 0.0F and Control.Bounds.Height > 0.0F then
-        X := Control.Bounds.X + Control.Bounds.Width * Horizontal;
-        Y := Control.Bounds.Y + Control.Bounds.Height / 2.0F;
-        return;
-      end if;
-    end for;
-
-    raise new Sys.InvalidOperationException('No usable pointer target for ' + Id);
+    const Bounds: Cui.CuiRectangle := Presented.Bounds(Session, Id);
+    X := Bounds.X + Bounds.Width * Horizontal;
+    Y := Bounds.Y + Bounds.Height / 2.0F;
   end procedure;
 
   procedure Leave(Session: Gui.Session<Gallery.Msg>);
   begin
     X := -1.0F;
     Y := -1.0F;
-    Step(Session);
+    Presented.Step(Session);
+  end procedure;
+
+  procedure ScrollPage(Session: Gui.Session<Gallery.Msg>; Lines: float := -60.0F);
+  begin
+    X := 1200.0F;
+    Y := 600.0F;
+    Wheel := Lines;
+    Presented.Step(Session);
+    Presented.Step(Session);
+    Leave(Session);
   end procedure;
 
   procedure RevealSwipe(Session: Gui.Session<Gallery.Msg>);
   begin
-    for Control: Gui.Control in Session.Snapshot().Controls do
-      if Control.Id = 'swipe-design' then
-        X := Control.Bounds.X + Control.Bounds.Width / 2.0F;
-        Y := Control.Bounds.Y + Control.Bounds.Height / 2.0F;
-        Button := 1;
-        Step(Session);
-        X := X - 110.0F;
-        Step(Session);
-        Button := 0;
-        Step(Session);
-        X := -1.0F;
-        Y := -1.0F;
-        Step(Session);
-        return;
-      end if;
-    end for;
-
-    raise new Sys.InvalidOperationException('Missing gallery swipe row.');
+    Aim(Session, 'swipe-design');
+    Button := 1;
+    Presented.Step(Session);
+    X := X - 110.0F;
+    Presented.Step(Session);
+    Button := 0;
+    Presented.Step(Session);
+    Leave(Session);
   end procedure;
 
   procedure CaptureActions(Session: Gui.Session<Gallery.Msg>);
@@ -159,7 +133,7 @@ requires Output <> '';
     );
     Key(Session, Escape);
 
-    Send(Session, Gallery.Msg.Show(Gallery.Page.Actions));
+    Presented.Send(Session, Gallery.Msg.Show(Gallery.Page.Actions));
     Shot(Session, 'toggle-group', 'action-format', 'action-align');
     Shot(Session, 'reactions', 'action-reactions');
     Shot(Session, 'theme-switcher', 'theme-preview');
@@ -175,12 +149,12 @@ requires Output <> '';
     );
     Key(Session, Escape);
     FocusId := 'confirm-delete';
-    Send(Session, Gallery.Msg.Preview);
+    Presented.Send(Session, Gallery.Msg.Preview);
     FocusId := '';
     Key(Session, Enter);
     Shot(Session, 'confirm-button', 'confirm-delete');
     Key(Session, Escape);
-    Send(Session, Gallery.Msg.Actions(Actions.Msg.SetSaveStatus(Status.Status.Success)));
+    Presented.Send(Session, Gallery.Msg.Actions(Actions.Msg.SetSaveStatus(Status.Status.Success)));
     Shot(Session, 'status-button', 'status-save');
     OpenMenu(Session, 'action-user', Enter);
     Shot(Session, 'user-menu', 'action-user', 'action-user/profile', 'action-user/log-out');
@@ -219,7 +193,7 @@ requires Output <> '';
       'input-topics', 'input-topics/remove/0', 'input-topics/remove/1', 'input-topics/remove/2'
     );
     Regions.Capture(Session, Output, 'one-time-code', Caption, 'input-code');
-    Send(Session, Gallery.Msg.Inputs(Inputs.Msg.SetPassword('copper lantern demo 42!')));
+    Presented.Send(Session, Gallery.Msg.Inputs(Inputs.Msg.SetPassword('copper lantern demo 42!')));
     Regions.Capture(
       Session, Output, 'password-strength', Caption,
       'input-new-password', 'input-password-strength'
@@ -294,14 +268,14 @@ requires Output <> '';
 
   procedure CaptureOverlays(Session: Gui.Session<Gallery.Msg>);
   begin
-    Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetProfileDialog(true)));
+    Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetProfileDialog(true)));
     Shot(Session, 'dialog', 'edit-profile', 'edit-profile/close', 'edit-profile-save');
     Regions.Capture(
       Session, Output, 'action-footer', new Regions.Insets(Left := 188, Right := 16),
       'edit-profile-cancel', 'edit-profile-save'
     );
     Key(Session, Escape);
-    Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetSheet(true)));
+    Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetSheet(true)));
     Shot(
       Session,
       'sheet',
@@ -311,7 +285,7 @@ requires Output <> '';
       'recent-invitation'
     );
     Key(Session, Escape);
-    Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetPalette(true)));
+    Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetPalette(true)));
     Regions.CaptureParts(
       Session,
       Output,
@@ -320,14 +294,14 @@ requires Output <> '';
       new Regions.Insets(Bottom := -70)
     );
     Key(Session, Escape);
-    Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetFilters(true)));
+    Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetFilters(true)));
     Shot(Session, 'popover', 'filters-trigger', 'filters', 'filters-apply');
     Key(Session, Escape);
     Aim(Session, 'context', 0.08F);
     RightButton := 1;
-    Step(Session);
+    Presented.Step(Session);
     RightButton := 0;
-    Step(Session);
+    Presented.Step(Session);
     Shot(Session, 'context-menu', 'context/cut', 'context/delete');
     Key(Session, Escape);
     Aim(Session, 'tooltip-bold');
@@ -335,16 +309,16 @@ requires Output <> '';
     Shot(Session, 'tooltip', 'tooltip-bold', 'native-tooltip');
     Leave(Session);
     Window.Resize(620, 840);
-    Step(Session);
-    Send(Session, Gallery.Msg.SetDrawer(true));
+    Presented.Step(Session);
+    Presented.Send(Session, Gallery.Msg.SetDrawer(true));
     Regions.Capture(
       Session, Output, 'drawer', new Regions.Insets(Top := 22),
       'drawer/close', 'navigation/overview', 'navigation/charts'
     );
-    Send(Session, Gallery.Msg.SetDrawer(false));
+    Presented.Send(Session, Gallery.Msg.SetDrawer(false));
     Window.Resize(1240, 1540);
-    Step(Session);
-    Send(
+    Presented.Step(Session);
+    Presented.Send(
       Session, Gallery.Msg.Shared(
         Demo.Msg.Notify(
           'Changes saved',
@@ -373,9 +347,9 @@ requires Output <> '';
     Shot(Session, 'countdown', 'disclosure-launch', 'disclosure-sale');
     Shot(Session, 'onboarding-checklist', 'workspace-onboarding');
     Shot(Session, 'veil', 'photo', 'sample-key', 'reveal-sample-key', 'spoiler');
-    Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetPhoto(true)));
-    Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetKey(true)));
-    Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetSpoiler(true)));
+    Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetPhoto(true)));
+    Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetKey(true)));
+    Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetSpoiler(true)));
     Shot(Session, 'veil-revealed', 'photo', 'sample-key', 'reveal-sample-key', 'spoiler');
     Aim(Session, 'jonas-link');
     Presented.AwaitVisible(Session, 'jonas-avatar');
@@ -383,7 +357,7 @@ requires Output <> '';
     Shot(Session, 'avatar', 'jonas-avatar');
     Key(Session, Escape);
     Leave(Session);
-    Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetBranchQuestion(true)));
+    Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetBranchQuestion(true)));
     Shot(
       Session,
       'confirm-popover',
@@ -394,11 +368,12 @@ requires Output <> '';
     Key(Session, Escape);
     OpenMenu(Session, 'about-cui/toggle', Enter);
     Shot(Session, 'expandable-text-expanded', 'about-cui', 'about-cui/toggle');
-    Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.ArchiveConversations));
+    Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.ArchiveConversations));
     Presented.CaptureToast(Session, Output, 'undo-toast', '3 conversations archived');
   end procedure;
 begin
   const Page: Gallery.Page := Chapters.PageForChapter(Chapter);
+  const Output: string := IO.Path.GetFullPath(Destination);
 
   discard IO.Directory.CreateDirectory(Output);
   Sys.Environment.SetEnvironmentVariable('CUI_SCALE', '1');
@@ -416,19 +391,23 @@ begin
   );
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<Gallery.Msg> := Host.Start<Gallery.Model, Gallery.Msg>(
-    new Gallery.Model(Active := Page),
-    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition<Gallery.Model, Gallery.Msg> => WithFocus(
-      Model,
-      Message,
-      FocusId
-    ),
+    Workspaces.InitialModel(Page, Output),
+    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition<Gallery.Model, Gallery.Msg> => if FocusId =
+      ''
+    then
+      Update.Update(Model, Message)
+    else
+      new App.Transition<Gallery.Model, Gallery.Msg>(Model, [App.Focus<Gallery.Msg>(FocusId)])
+    end if,
     View.Build, Window, 128,
     Inject, ThemeFor := Update.ThemeFor
   );
-  Step(Session);
-  Step(Session);
+  Presented.Step(Session);
+  Presented.Step(Session);
 
   case Page of
+    when Gallery.Page.Overview:
+      Overview.Capture(Session, Output);
     when Gallery.Page.Buttons:
       CaptureActions(Session);
     when Gallery.Page.Selection:
@@ -437,6 +416,8 @@ begin
       Guides.CaptureNavigation(Session, Output);
     when Gallery.Page.Inputs:
       CaptureInputs(Session);
+    when Gallery.Page.SmartInputs:
+      Smart.Capture(Session, Output);
     when Gallery.Page.Pickers:
       CapturePickers(Session);
     when Gallery.Page.Overlays:
@@ -444,43 +425,80 @@ begin
     when Gallery.Page.Disclosure:
       CaptureDisclosure(Session);
     when Gallery.Page.Feedback:
-      Send(Session, Gallery.Msg.Feedback(Feedback.Msg.Finish(Status.Status.Success)));
+      Presented.Send(Session, Gallery.Msg.Feedback(Feedback.Msg.Finish(Status.Status.Success)));
       Collections.CaptureFeedback(Session, Output);
     when Gallery.Page.Lists:
       Collections.CaptureDataDisplay(Session, Output);
     when Gallery.Page.Charts:
       Charts.CaptureCharts(Session, Output);
-      Send(Session, Gallery.Msg.Charts(ChartState.Msg.SetGrayscale(true)));
+      Presented.Send(Session, Gallery.Msg.Charts(ChartState.Msg.SetGrayscale(true)));
       Charts.CaptureGrayscale(Session, Output);
     when Gallery.Page.MoreCharts:
       Charts.CaptureMoreChartsTop(Session, Output);
-      X := 1200.0F;
-      Y := 600.0F;
-      Wheel := -60.0F;
-      Step(Session);
-      Step(Session);
-      Leave(Session);
+      ScrollPage(Session);
       Charts.CaptureMoreChartsBottom(Session, Output);
+    when Gallery.Page.Instruments:
+      Devices.CaptureInstruments(Session, Output);
+    when Gallery.Page.Audio:
+      Devices.CaptureAudio(Session, Output);
+      Presented.Send(Session, Gallery.Msg.Audio(Audio.Msg.StartTour));
+      Devices.CaptureTour(Session, Output);
+    when Gallery.Page.Capture:
+      Devices.CaptureFileControls(
+        Session, Output, procedure(PointerX: float; PointerY: float; Press: int) begin
+          X := PointerX;
+          Y := PointerY;
+          Button := Press;
+          Presented.Step(Session);
+        end procedure
+      );
+    when Gallery.Page.DataGrid:
+      Workspaces.CaptureDataGrid(Session, Output);
+    when Gallery.Page.Files:
+      Workspaces.CaptureFiles(Session, Output);
+    when Gallery.Page.Planning:
+      Workspaces.CapturePlanningTop(Session, Output);
+      ScrollPage(Session);
+      Workspaces.CapturePlanningBottom(Session, Output);
+    when Gallery.Page.Code, Gallery.Page.EditingTools, Gallery.Page.DeveloperTools, Gallery.Page.MoreDeveloperTools:
+      SourceTools.Capture(
+        Session, Output, Page, procedure(Lines: float) begin
+          ScrollPage(Session, Lines);
+        end procedure
+      );
+    when Gallery.Page.CreativeControls:
+      Creative.CaptureControls(Session, Output);
+    when Gallery.Page.CanvasAndBars:
+      Creative.CaptureCanvas(Session, Output);
+    when Gallery.Page.Social, Gallery.Page.Voice:
+      Social.Capture(Session, Output, Page);
+    when Gallery.Page.AI:
+      OpenMenu(Session, 'ai-reasoning/toggle', Enter);
+      OpenMenu(Session, 'ai-search/toggle', Enter);
+      Effects.CaptureAi(Session, Output);
+      OpenMenu(Session, 'ai-model', Enter);
+      Effects.CaptureModelMenu(Session, Output);
+    when Gallery.Page.Motion:
+      Effects.CaptureMotion(Session, Output);
+    when Gallery.Page.Display, Gallery.Page.Reader, Gallery.Page.Desktop, Gallery.Page.Layout:
+      Foundations.Capture(
+        Session, Output, Page, procedure(Id: string) begin
+          Aim(Session, Id);
+          Button := 1;
+          Presented.Step(Session);
+          Button := 0;
+          Presented.Step(Session);
+          Leave(Session);
+        end procedure
+      );
     else
       raise new Sys.InvalidOperationException('No capture steps for ' + Page.ToString());
   end case;
 end procedure;
 
 begin
-  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
-  if Arguments.Length < 2 or Arguments.Length > 3 or Arguments[1] = '' then
-    raise new Sys.ArgumentException(
-      'Pass an output directory and optionally a handbook chapter name.'
-    );
-  end if;
-
-  Run(
-    Arguments[1], if Arguments.Length = 3 then
-      Arguments[2]
-    else
-      'actions'
-    end if
-  );
+  const Request: Chapters.Request := Chapters.ReadRequest();
+  Run(Request.Destination, Request.Chapter);
 end;
 
 end program;

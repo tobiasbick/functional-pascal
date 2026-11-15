@@ -42,9 +42,22 @@ end unit;
 
 Click a destination or activate it with Enter or Space while it has focus. The sidebar sends the item's message. Update the active key and displayed page together. Keys are unique across the sidebar. Use `ItemId(Id, Key)` for focus. Place the sidebar in a scroll view when its sections exceed the available height.
 
+## Appearance controls
+
+The gallery places a segmented Light and Dark control and eight canvas
+swatches under the destinations. The appearance and accent belong to
+the shared model and drive both the sidebar and the narrow drawer.
+
+![Light appearance and neutral accent in the gallery sidebar](images/sidebar-appearance.png)
+
+![Dark appearance and blue accent in the gallery sidebar](images/sidebar-appearance-dark.png)
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Navigation/Navigation.fpas)
 - [Gallery example](../../../examples/ui/gui/gallery/App/Sidebar.fpas)
 - [Tabs](tabs.md)
+- [Segmented control](../actions/segmented-control.md)
+- [Interactive canvas](../text-and-display/canvas.md)
+- [Theme selection and palette](../actions/theme-switcher.md)
 - [Navigation](README.md)

@@ -17,4 +17,4 @@ These controls require the GUI host.
 
 - [UI handbook](../README.md)
 - [Data display in the gallery](../../../examples/ui/gui/gallery/Pages/Lists/View.fpas)
-- [Data grid API](../../../src/Fpas.Ui/README.md#data-grid-filter-bar-and-tree-table)
+- [Data grid](../data-grid/README.md)

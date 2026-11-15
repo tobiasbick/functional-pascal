@@ -94,6 +94,9 @@ provider; there is no automatic OS or terminal theme detection.
 
 ### Layout compatibility
 
+The [Layout chapter](ui/layout/README.md) shows the layered stack, logical
+spacing and horizontal scroll viewport in the gallery.
+
 The GUI passes the [shared box-layout subset][fpas-layout] to CUI's native
 layout engine. The TUI reproduces those rules in cells. The subset covers
 rows and columns, content/fill/fixed sizing, weighted growth,
@@ -134,6 +137,9 @@ by the FPAS adapters.
 
 ### Text, icons, and display
 
+The [Text and display chapter](ui/text-and-display/README.md) shows native
+text, glyphs, keycaps, images and the interactive swatch canvas.
+
 - [x] Text, including heading, label, secondary, muted, and inline code
   (`cui_text`, `cui_heading`, `cui_label`, `cui_secondary`, `cui_muted`, `cui_code`).
   `Fpas.Ui.Widgets.Display.Texts` exposes the native roles used on Text and display.
@@ -159,7 +165,7 @@ by the FPAS adapters.
   cards in responsive grids. The gallery checks equal row heights and reflow
   after resizing. Feedback uses CUI's Around justification for the Goals rings.
   The graphical profile is required.
-- [x] Metric (`cui_metric`). [API][fpas-surfaces]. Overview shows the original
+- [x] [Metric](ui/overview/metric.md) (`cui_metric`). [API][fpas-surfaces]. Overview shows the original
   three tiles, including the Frame time trend and sparkline. The graphical
   profile is required.
 - [x] Empty state (`cui_empty_state`). [API][fpas-surfaces]. Feedback shows
@@ -250,8 +256,9 @@ See the illustrated [Actions](ui/actions/README.md) and
 
 ### Inputs and pickers
 
-See [Inputs](ui/inputs/README.md) and [Pickers](ui/pickers/README.md) for
-gallery screenshots, FPAS examples and widget options.
+See [Inputs](ui/inputs/README.md), [Smart inputs](ui/smart-inputs/README.md)
+and [Pickers](ui/pickers/README.md) for gallery screenshots, FPAS examples
+and widget options.
 
 - [x] Text field, including password mode, prefix, and suffix (`cui_input`):
   [API][fpas-text-field]. Inputs shows the responsive text fields. Smart inputs
@@ -375,7 +382,8 @@ page-content comparison.
   Pickers shows the original 24-bin Price example and verifies both endpoints.
   Windows captures of the complete page at rest and after price adjustment
   match the CUI content within one level per color channel.
-- [x] Knob (`cui_knob`): [API][fpas-audio]. Audio shows the original Cutoff,
+- [x] Knob (`cui_knob`): [API][fpas-audio]. See [Audio](ui/audio/README.md)
+  for screenshots and examples. The gallery shows the original Cutoff,
   Resonance, Attack and Pan. The gallery verifies logarithmic reset and drag.
   TUI: graphical profile required.
 - [x] Fader (`cui_fader`): [API][fpas-audio]. Audio shows the six original
@@ -386,7 +394,8 @@ page-content comparison.
   The accepted Audio content matches CUI pixel for pixel in Windows software
   captures at 1201 and 900 points with the same signal phase.
   TUI: graphical profile required.
-- [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. Capture shows the original
+- [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. See [Capture](ui/capture/README.md)
+  for screenshots and examples. The gallery shows the original
   tall and compact targets. Windows tests verify accepted and rejected shell
   drops and confirmation and cancellation in the native file dialog.
   TUI: graphical profile required.
@@ -401,6 +410,9 @@ page-content comparison.
   TUI: graphical profile required.
 
 ### Creative controls
+
+See [Creative controls](ui/creative-controls/README.md) for gallery screenshots
+and FPAS examples.
 
 - [x] Status tag (`cui_status_tag`): [API][fpas-creative]. Creative controls
   shows all seven presets and the compact removable row. The Windows test
@@ -433,7 +445,9 @@ checks that the slider wells stack in one column.
 ### Navigation and app chrome
 
 The [Navigation chapter](ui/navigation/README.md) shows the sidebar, tabs,
-breadcrumb, pagination and stepper.
+breadcrumb, pagination and stepper. [Reader](ui/reader/README.md) covers
+outlines and anchors. [App chrome](ui/app-chrome/README.md) covers the native
+editor bars, document tabs, docking and split panes.
 
 - [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`): [API][sidebar].
   TUI: implemented; top-aligned cell rows, labels and badges. Icons are omitted.
@@ -558,7 +572,8 @@ for gallery screenshots, FPAS examples and widget options.
   model proposals, keyboard/pointer input, closing content and responsive views.
   Native pixel comparisons cover all three widgets in light/dark and narrow/wide
   configurations. Gallery captures cover Data display and Disclosure.
-- [x] Guided tour (`cui_tour`): [API][fpas-tour]. Audio shows the original
+- [x] Guided tour (`cui_tour`): [API][fpas-tour].
+  See the [guide](ui/overlays/guided-tour.md). Audio shows the original
   three-step tour of the Cutoff knob, master meter and Bass fader. CUI owns
   the spotlight, card, positioning, animation and input. Software/OpenGL tests
   cover Next, Back, Done, Escape, closing, reopening, focus, model proposals
@@ -674,6 +689,8 @@ Windows reference in Software and OpenGL at 1100×1800 and scale one. The
 reference uses the same reserved example domain for the People addresses.
 These widgets require the graphical profile.
 
+See [Data grid](ui/data-grid/README.md) for screenshots and FPAS examples.
+
 - [x] Data grid, including editable cells (`cui_data_grid_begin`,
   `cui_data_grid_row`, `cui_data_grid_cell`, `cui_data_grid_cell_text`,
   `cui_data_grid_edit`, `cui_data_grid_cell_edit`):
@@ -697,6 +714,8 @@ default `qsort` can order tied rows differently. A direct CUI rendering of the
 supplementary example also matches in both renderers. The new widgets require
 the graphical profile.
 
+See [Files](ui/files/README.md) for screenshots and FPAS examples.
+
 - [x] Path bar and its dropdown (`cui_path_bar`, `cui_path_bar_menu_begin`):
   native segment navigation, editable path and child menus. Files shows
   the original browser path and a standalone example.
@@ -711,6 +730,9 @@ and scale one with identical fixture files. The separate Terminal example
 is tracked under code and tool panels. [Files API][fpas-files-planning]
 
 ### Code and tool panels
+
+See [Code](ui/code/README.md) and [Editing tools](ui/editing-tools/README.md)
+for gallery screenshots and FPAS examples.
 
 - [x] Code block (`cui_code_block`): the Code page reproduces the C, Python
   and shell examples and adds a native SQL sample. The focused native test
@@ -736,7 +758,8 @@ is tracked under code and tool panels. [Files API][fpas-files-planning]
 - [x] Log console (`cui_log_view`): original timestamped build log with native
   filters, copy, follow and clear. The native test verifies timestamped
   clipboard contents and the clear proposal.
-- [x] Terminal widget (`cui_terminal`): original Files shell with built-in
+- [x] Terminal widget (`cui_terminal`): [guide](ui/files/terminal.md).
+  Original Files shell with built-in
   commands, ANSI output, native input and history. The native test verifies
   submission, history and Ctrl+C; the gallery contract verifies command
   routing. CUI keeps the echo and history while the widget is mounted.
@@ -765,6 +788,10 @@ scale 1, using Software and OpenGL. The Code comparison covers four scroll
 positions per width. The supplementary Files path bar is outside the comparison.
 
 ### Developer tools
+
+See [Developer tools](ui/developer-tools/README.md) and
+[More developer tools](ui/more-developer-tools/README.md) for gallery
+screenshots and FPAS examples.
 
 - [x] Key-value editor (`cui_kv_editor`)
 - [x] Problems panel (`cui_problems`)
@@ -799,8 +826,9 @@ The native trace measurement workaround is tracked in [CUI-036](future/cui-upstr
 
 ### Charts and instruments
 
-See [Charts](ui/charts/README.md) and [More charts](ui/more-charts/README.md)
-for gallery screenshots, FPAS examples and widget options.
+See [Charts](ui/charts/README.md), [More charts](ui/more-charts/README.md)
+and [Instruments](ui/instruments/README.md) for gallery screenshots, FPAS
+examples and widget options.
 
 - [x] Line/area chart, smoothing and stacked dither (`cui_line_chart`),
   grouped/stacked bars (`cui_bar_chart`) and responsive donut
@@ -877,10 +905,13 @@ which remains a separate native build option.
 
 ### Conversation and media
 
+See [Social and media](ui/social-and-media/README.md) and
+[Voice](ui/voice/README.md) for gallery screenshots and FPAS examples.
+
 - [x] Chat message (`cui_chat_message`): the original grouped conversation
   shows outgoing and incoming bubbles, sender information and read receipts.
-  The API accepts avatar paths and native Markdown rendering. Markdown link and
-  task proposals remain part of the open Markdown work.
+  The API accepts avatar paths and renders native Markdown in the message.
+  The standalone [Markdown widget](ui/code/markdown.md) reports link and task events.
 - [x] Chat divider (`cui_chat_divider`): the original Today divider.
 - [x] Typing indicator (`cui_typing_indicator`): Jonas and the native dots.
   The dots stay still with reduced motion.
@@ -927,6 +958,8 @@ standalone sparkline matches direct CUI in the fixed-frame Software comparison.
 
 ### Planning and diagram editors
 
+See [Planning](ui/planning/README.md) for screenshots and FPAS examples.
+
 - [x] Kanban board, columns, and cards (`cui_kanban_begin`, `cui_kanban_column_begin`,
   `cui_kanban_card_begin`): native columns, composed card content and drag between columns.
 - [x] Week calendar (`cui_week_calendar`): native weekly events with keyboard move and resize.
@@ -946,6 +979,9 @@ events. [Planning API][fpas-files-planning]
   disabled-input workaround. [CUI-037](future/cui-upstream-bugs.md#cui-037)
 
 ### Canvas and bars
+
+See [Canvas and bars](ui/canvas-and-bars/README.md) for gallery screenshots
+and FPAS examples, including the node editor and toolbar.
 
 - [x] Format bar (`cui_format_bar`): the original color, styles, alignment,
   list and delete controls. A native test toggles Bold.
@@ -971,6 +1007,9 @@ antialiased edge. The Creative controls regression captures match exactly at
 both sizes in software and OpenGL.
 
 ### Motion
+
+See [Motion](ui/motion/README.md) for gallery screenshots and FPAS examples
+of these effects and the compact controls shown on the same page.
 
 - [x] Shimmer text (`cui_shimmer_text`): [API][fpas-motion]. Motion shows the
   original thinking line beside the dots loader.
@@ -1000,6 +1039,8 @@ follows the original page content.
 
 ### AI interfaces
 
+See [AI](ui/ai/README.md) for gallery screenshots and FPAS examples.
+
 - [x] Reasoning panel (`cui_reasoning_begin`): the original expandable thought
   with app-supplied content and running/finished state.
 - [x] Tool call (`cui_tool_call`): the original search and file calls, including
@@ -1010,6 +1051,7 @@ follows the original page content.
 - [x] Source list (`cui_source_list`): the original horizontally scrolling cards.
 - [x] Citation (`cui_citation`): the three original inline source previews.
 - [x] Composer (`cui_chat_composer`): the original AI editor and Voice recorder.
+  See the [Composer guide](ui/voice/composer.md).
   Windows checks UTF-8, Shift+Enter, send, stop, recording, cancel and voice send.
 - [x] Model picker (`cui_model_picker`): the embedded menu and a supplementary
   standalone example. Windows checks keyboard selection.

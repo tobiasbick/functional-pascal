@@ -22,6 +22,17 @@ begin
     new W.Options(Label := 'Full name', Placeholder := 'Maya Okafor', MaxUtf8Bytes := 63));
 end function;
 
+// Edits the address shown after the HTTPS prefix.
+// ## Parameters
+// - `Host`: The address without a scheme, up to 95 UTF-8 bytes.
+// ## Returns
+// A field that sends the edited address without the prefix.
+public function Address(Host: string): E.Element<string>;
+begin
+  return W.TextField<string>('input-url', Host, function(Value: string): string => Value,
+    new W.Options(Prefix := 'https://', MaxUtf8Bytes := 95));
+end function;
+
 end unit;
 ```
 
@@ -44,8 +55,17 @@ clears undo history. A read-only field still allows selection. Password mode
 masks the value and supplies a reveal button. GUI snapshots omit the password
 value.
 
+## Prefix and suffix
+
+In Smart inputs, the URL shows an HTTPS prefix and the weight shows a
+kilogram suffix. The model stores just the editable address and number.
+Build the full URL from the address in the update when you need it.
+
+![URL prefix and weight suffix in the FPAS gallery](images/text-field-affixes.png)
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Inputs/TextFields.fpas)
 - [Gallery example](../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/TextField.fpas)
+- [Smart inputs gallery example](../../../examples/ui/gui/gallery/Pages/SmartInputs/View.fpas)
 - [Inputs](README.md)

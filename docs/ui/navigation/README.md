@@ -14,4 +14,6 @@ Tabs switch content within a view. A sidebar switches between destinations.
 ## See also
 
 - [UI handbook](../README.md)
+- [Reader](../reader/README.md)
+- [App chrome](../app-chrome/README.md)
 - [Navigation in the gallery](../../../examples/ui/gui/gallery/Pages/Navigation/View.fpas)

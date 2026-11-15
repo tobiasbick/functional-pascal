@@ -1,0 +1,124 @@
+unit GuiDocCaptures.Workspaces;
+
+uses
+  GuiDocCaptures.Regions as Regions, GuiDocCaptures.Presented as Presented,
+  GuiGallery.App.State as Gallery, GuiGallery.Pages.Files.State as Files,
+  GuiGallery.Pages.Planning.State as Planning,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Widgets.Developer.Terminals as Terminal,
+  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
+  System as Sys, System.IO as IO;
+
+procedure WriteSample(Path: string; Content: string);
+begin
+  IO.File.WriteAllText(Path, Content);
+  IO.File.SetLastWriteTimeUtc(Path, new Sys.DateTime(2026, 3, 2, 12, 0, 0, Sys.DateTimeKind.Utc));
+end procedure;
+
+function SampleFiles(Output: string): Files.Model;
+begin
+  const Root: string := IO.Path.Combine(Output, 'file-fixtures', Sys.Guid.NewGuid().ToString('N'));
+  const Project: string := IO.Path.Combine(Root, 'project');
+  for Name: string in ['assets', 'src'] do
+    const Folder: IO.DirectoryInfo := IO.Directory.CreateDirectory(IO.Path.Combine(Project, Name));
+    Folder.LastWriteTimeUtc := new Sys.DateTime(2026, 3, 2, 12, 0, 0, Sys.DateTimeKind.Utc);
+  end for;
+
+  WriteSample(IO.Path.Combine(Project, 'README.md'), '# Example project');
+  WriteSample(IO.Path.Combine(Project, 'notes.txt'), 'Notes for the next release.');
+  WriteSample(IO.Path.Combine(Project, 'tasks.csv'), 'task,status');
+  WriteSample(IO.Path.Combine(Root, 'release-notes.md'), '# Release notes');
+  WriteSample(IO.Path.Combine(Root, 'schedule.csv'), 'date,task');
+  WriteSample(IO.Path.Combine(Root, 'summary.txt'), 'The sample workspace is ready.');
+  IO.Directory.SetLastWriteTimeUtc(
+    Project,
+    new Sys.DateTime(2026, 3, 2, 12, 0, 0, Sys.DateTimeKind.Utc)
+  );
+  Sys.Environment.CurrentDirectory := Root;
+  return new Files.Model(Folder := 'project');
+end function;
+
+// Starts the gallery on a page, with sample data for Files and Planning.
+// ## Parameters
+// - `Page`: Gallery page to open.
+// - `Output`: Absolute capture directory for the Files sample directory.
+// ## Returns
+// The initial gallery model.
+public function InitialModel(Page: Gallery.Page; Output: string): Gallery.Model;
+begin
+  return case Page of
+    when Gallery.Page.Files: new Gallery.Model(Active := Page, Files := SampleFiles(Output));
+    when Gallery.Page.Planning: new Gallery.Model(
+      Active := Page, Planning := new Planning.Model(Today := new Sys.DateOnly(2026, 3, 18))
+    );
+    else new Gallery.Model(Active := Page);
+  end case;
+end function;
+
+procedure Shot(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; params Ids: array of string);
+begin
+  Regions.Capture(Session, Output, Name, new Regions.Insets(), Ids);
+end procedure;
+
+// Captures the filter bar, data grid and both tree-table examples.
+// ## Parameters
+// - `Session`: Presented Data grid page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureDataGrid(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Shot(Session, Output, 'filter-bar', 'filters');
+  Shot(Session, Output, 'data-grid', 'people-grid');
+  Shot(Session, Output, 'tree-table', 'virtual-tree');
+  Shot(Session, Output, 'tree-cells', 'source-tree');
+end procedure;
+
+// Captures the file browser, path bar, terminal and both file picker modes.
+// ## Parameters
+// - `Session`: Presented Files page with the sample directory.
+// - `Output`: Absolute directory for full-frame images and crop bounds.
+public procedure CaptureFiles(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Shot(Session, Output, 'file-browser', 'files-browser');
+  Presented.Send(
+    Session,
+    Gallery.Msg.Files(Files.Msg.Path(new Paths.Event(Text := 'project/src')))
+  );
+  Shot(Session, Output, 'path-bar', 'files-path-bar');
+  Presented.Send(Session, Gallery.Msg.Files(Files.Msg.Terminal(Terminal.Event.Command('help'))));
+  Presented.Send(Session, Gallery.Msg.Files(Files.Msg.Terminal(Terminal.Event.Command('colors'))));
+  Shot(Session, Output, 'terminal', 'files-terminal');
+
+  Presented.Send(Session, Gallery.Msg.Files(Files.Msg.Open));
+  Shot(Session, Output, 'file-picker', 'files-open-picker/dialog');
+  Presented.Send(Session, Gallery.Msg.Files(Files.Msg.Opened(new Picker.Event(null))));
+  Presented.Send(Session, Gallery.Msg.Files(Files.Msg.Save));
+  Shot(Session, Output, 'file-picker-save', 'files-save-picker/dialog');
+end procedure;
+
+// Captures the board, weekly schedule and Gantt chart at the top of Planning.
+// ## Parameters
+// - `Session`: Presented Planning page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CapturePlanningTop(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Shot(
+    Session,
+    Output,
+    'kanban',
+    'planning-board/column-0',
+    'planning-board/column-1',
+    'planning-board/column-2'
+  );
+  Shot(Session, Output, 'week-calendar', 'planning-week');
+  Shot(Session, Output, 'gantt', 'planning-gantt');
+end procedure;
+
+// Captures the full month calendar at the bottom of Planning.
+// ## Parameters
+// - `Session`: Planning page scrolled to the bottom.
+// - `Output`: Directory for the full-frame image and crop bounds.
+public procedure CapturePlanningBottom(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Shot(Session, Output, 'month-calendar', 'planning-month');
+end procedure;
+
+end unit;

@@ -15,12 +15,38 @@ dotnet run --project apps/gui-doc-captures/GuiDocCaptures.fpasproj -- .temp-data
 python apps/gui-doc-captures/crop.py .temp-data/ui-selection docs/ui/selection/images
 ```
 
-The chapter argument accepts `actions` (the default), `selection`, `navigation`,
-`inputs`, `pickers`, `overlays`, `disclosure`, `feedback`, `data-display`,
-`charts` or `more-charts`. More charts scrolls the gallery to capture the
-lower examples.
+The chapter argument accepts `overview`, `actions` (the default), `selection`, `navigation`,
+`inputs`, `smart-inputs`, `pickers`, `overlays`, `disclosure`, `feedback`, `data-display`,
+`charts`, `more-charts`, `instruments`, `audio`, `capture`, `data-grid`,
+`files`, `planning`, `code`, `editing-tools`, `developer-tools`,
+`more-developer-tools`, `creative-controls`, `canvas-and-bars`,
+`social-and-media`, `voice`, `ai`, `motion`, `text-and-display`, `reader`,
+`app-chrome` or `layout`. The longer pages scroll to
+capture their lower examples. Code also captures the split and inline diff
+layouts. Canvas and bars uses a fixed collaborator animation
+time and includes the active bulk selection.
+Audio captures the open guided tour for the Overlays chapter. Capture draws
+a sample stroke in the signature pad.
+Voice advances the simulated call and records a synthetic take to capture
+the composer and an outgoing voice note.
+AI opens the reasoning and tool details and the standalone model menu. It
+also shows the agent status during the simulated reply. Motion captures both
+values of the rolling-number example with reduced motion.
+Text and display clicks the blue swatch. Reader jumps to Install. App
+chrome opens the View menu after capturing the editor and workspace.
+Smart inputs captures the message field before and after opening the emoji palette.
+Overview captures the workspace and metrics as well as the sidebar in both
+appearances. Layout captures the divider in the Notifications sheet.
+Files creates a separate sample directory within the capture output and
+lists those files.
 Use a fresh capture directory for each run and crop into the chapter's
-`images` folder. Review the output at its original size.
+`images` folder. Move Audio's `guided-tour.png` to `docs/ui/overlays/images`,
+AI's `composer-ai.png` to `docs/ui/voice/images` and Smart inputs'
+`text-field-affixes.png` to `docs/ui/inputs/images`. Move App chrome's
+`toolbar-editor.png` to `docs/ui/canvas-and-bars/images` and
+`formatted-text.png` to `docs/ui/text-and-display/images`. Move Overview's
+two `sidebar-appearance` captures to `docs/ui/navigation/images`.
+Review the output at its original size.
 The crop keeps the widget and its open menu entries. If a capture is blank
 while the desktop is busy, rerun the capture with the gallery window visible.
 

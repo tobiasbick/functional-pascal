@@ -1,6 +1,7 @@
 # Overlays
 
-Dialogs, sheets and the command palette take their visibility from the model.
+Dialogs, sheets, guided tours and the command palette take their visibility
+from the model.
 Context menus and tooltips open through native pointer interaction. Return
 a toast command from your update to send a notification.
 
@@ -14,6 +15,7 @@ a toast command from your update to send a notification.
 | [Popover](popover.md) | Open an anchored panel, such as a filter form. | GUI |
 | [Tooltip](tooltip.md) | Show brief pointer help and a shortcut hint. | GUI |
 | [Toast](toast.md) | Show a notification without moving focus. | GUI |
+| [Guided tour](guided-tour.md) | Highlight controls and explain them in order. | GUI |
 
 ## See also
 

@@ -107,7 +107,7 @@ begin
         Model
       end if;
     when M.Msg.Tick(const Seconds: float): Model with
-      Seconds := Seconds;
+      Seconds := Model.Seconds + Seconds;
     end with;
     when M.Msg.SetAvatar(const Path: string): Model with
       Avatar := Path;

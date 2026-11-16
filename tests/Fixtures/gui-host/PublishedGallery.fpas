@@ -1,6 +1,11 @@
 program PublishedGallery;
 
 uses
+  GalleryValidationBoundaryContract as ValidationBoundaryContract,
+  GalleryModalCompositionContract as ModalCompositionContract,
+  GalleryModelContract as ModelContract,
+  GalleryVoiceAiContract as VoiceAiContract,
+  GalleryMediaContract as MediaContract,
   GalleryTourContract as TourContract,
   GalleryLayoutContract as LayoutContract,
   GalleryGridRenameContract as GridRenameContract,
@@ -52,6 +57,7 @@ uses
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   System as Sys,
+  System.IO as IO,
   System.Console as Console,
   System.Text as Text,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host,
@@ -213,6 +219,13 @@ end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  ValidationBoundaryContract.Verify();
+  ModelContract.Verify();
+  ModelContract.VerifyDisplay(Renderer);
+  ModalCompositionContract.Verify(Renderer);
+  const Directory: string := IO.Path.GetDirectoryName(IO.Path.GetFullPath(Capture)) ?? '.';
+  VoiceAiContract.Verify(Renderer, Directory, Renderer.ToString());
+  MediaContract.Verify(Renderer, Directory, Renderer.ToString());
   GridRenameContract.Verify();
   TourContract.Verify();
   VerifyDesktop(Renderer, Capture);

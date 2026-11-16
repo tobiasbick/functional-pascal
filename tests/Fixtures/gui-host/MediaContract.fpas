@@ -53,9 +53,28 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
 
   function Bounds(Session: Gui.Session<State.Msg>; Id: string): Cui.CuiRectangle;
   begin
-    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
-    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native bounds for ' + Id);
-    return Box;
+    for Attempt: int := 0 to 15 do
+      const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+      A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native bounds for ' + Id);
+      if Box.Y >= 24.0F and Box.Y + Box.Height <= Session.Snapshot().Size.Height - 24.0F then
+        return Box;
+      end if;
+
+      // The desktop can constrain a requested tall window. Scroll over the
+      // gallery gutter so image tools cannot consume the wheel as zoom input.
+      const Main: Cui.CuiRectangle := A.Control(Session, 'main-social-0').Bounds;
+      X := Main.X + 4.0F;
+      Y := Session.Snapshot().Size.Height * 0.5F;
+      Step(Session, 1);
+      Scroll := if Box.Y < 24.0F then
+        4.0F
+      else
+        -4.0F
+      end if;
+      Step(Session, 3);
+    end for;
+
+    raise new Sys.InvalidOperationException('Could not scroll the media control into view: ' + Id);
   end function;
 
   procedure Move(Session: Gui.Session<State.Msg>; AtX: float; AtY: float);
@@ -161,7 +180,6 @@ begin
     Latest.Social.Destination = 2 and Swiped = Cards.Direction.Left,
     'Dragging left did not skip the top card.'
   );
-  Sys.Console.WriteLine('Verified the five media widgets with ' + Renderer.ToString());
 end procedure;
 
 end unit;

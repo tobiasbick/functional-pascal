@@ -57,6 +57,16 @@ public function Arrange<TMsg>(
 
   procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
   begin
+    if NavigationScope <> '' and ScopeId = NavigationScope then
+      case Node of
+        when E.Element.Action(const Id: string, _, const Enabled: bool, const View: E.ActionView):
+          if Enabled and View.Role = 'menu-item' then
+            Navigation.Add(new A.NavigationStop(Id, Area));
+          end if;
+        else
+      end case;
+    end if;
+
     const Clip: F.Rect := F.Intersect(Area, Limit);
     if Clip.Width = 0 or Clip.Height = 0 then
       return;
@@ -245,6 +255,39 @@ public function Arrange<TMsg>(
     return 0;
   end function;
 
+  function InitialMenuOffset(Content: E.Element<TMsg>; Area: F.Rect; Initial: string): int;
+  begin
+    // Menu.Rows supplies one direct action per command in its vertical stack.
+    const Geometry: V.Geometry<TMsg> := V.Arrange<TMsg>(
+      Content, E.ScrollPosition.Offset(0), Area, Area, false, null
+    );
+    case Content of
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Axis: bool,
+        const Flow: E.Flow
+      ):
+        const Bounds: array of F.Rect := Stacks.Bounds<TMsg>(
+          Children, Axis, Flow, Geometry.Content, PreviousAllocations, Allocations, true
+        );
+        for Index: int := 0 to Children.Length - 1 do
+          case Children[Index] of
+            when E.Element.Action(const Id: string, _, const Enabled: bool, _):
+              if Enabled and Id = Initial then
+                return Sys.Math.Clamp(
+                  Bounds[Index].Y + Bounds[Index].Height - Area.Y - Area.Height,
+                  0, Geometry.View.Maximum
+                );
+              end if;
+            else
+          end case;
+        end for;
+      else
+    end case;
+
+    return 0;
+  end function;
+
   procedure VisitStack(
     Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow;
     Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style
@@ -275,6 +318,8 @@ begin
   const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
   const Scopes: Generic.List<string> := new Generic.List<string>();
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
+  const Navigation: Generic.List<A.NavigationStop> := new Generic.List<A.NavigationStop>();
+  var NavigationScope: string := '';
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
   var Popup: MenuWidget.Pending<TMsg>? := null;
@@ -311,13 +356,15 @@ begin
       Previous.Active
     end if;
     if PreviousScope = null or PreviousScope.Id <> Pending.Id then
-      Scroll[Pending.Id] := 0;
+      Scroll[Pending.Id] := InitialMenuOffset(Pending.Content, Bounds[1], Pending.Initial);
     end if;
 
     Scopes.Add(Pending.Id);
-    Active := new A.Scope<TMsg>(
+    const PopupScope: A.Scope<TMsg> := new A.Scope<TMsg>(
       Pending.Id, Pending.Initial, null, [], Bounds[0], Dismiss := Pending.Close
     );
+    Active := PopupScope;
+    NavigationScope := Pending.Id;
     Visit(
       E.Element<TMsg>.Scrollable(Pending.Id, Pending.Content, false),
       Bounds[1],
@@ -325,6 +372,9 @@ begin
       Pending.Id,
       Colors
     );
+    Active := PopupScope with
+      Navigation := Navigation.ToArray();
+    end with;
   end if;
   const PreviousRows: array of D.PaintedRow := if Previous = null then
     []

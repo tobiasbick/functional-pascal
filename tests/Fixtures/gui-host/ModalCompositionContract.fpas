@@ -1,0 +1,139 @@
+unit GalleryModalCompositionContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Widgets.Canvas.SelectionRings as Rings,
+  Fpas.Ui.Widgets.Canvas.LiveCursors as Cursors,
+  Fpas.Ui.Widgets.Canvas.CanvasControls as Rails,
+  Fpas.Ui.Widgets.Canvas.SelectionBars as Bars,
+  Fpas.Ui.Widgets.Editors.NodeEditors as Nodes,
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
+  Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders,
+  Fpas.Ui.Widgets.Collections.Trees as Trees,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App,
+  System as Sys;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Find(Session: Gui.Session<bool>; Id: string): Gui.Control?;
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id then
+      return Control;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Control(Session: Gui.Session<bool>; Id: string): Gui.Control;
+begin
+  const Found: Gui.Control? := Find(Session, Id);
+  if Found = null then
+    raise new Sys.InvalidOperationException('Missing composed modal control ' + Id);
+  end if;
+
+  return Found;
+end function;
+
+procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
+  function View(Open: bool; Viewport: L.Viewport): E.Element<bool>;
+  begin
+    const Dialog: E.Element<bool> := Dialogs.Dialog<bool>(
+      'modal', E.Text<bool>('Dialog anchor'),
+      Buttons.Button<bool>('inside', 'Finish', false), Open,
+      new Dialogs.Options('Composed dialog'), false
+    );
+    const Wrapped: E.Element<bool> := case Kind of
+      when 0: Rings.SelectionRing<bool>('ring', Dialog);
+      when 1: Cursors.LiveCursors<bool>('cursors', [], Dialog);
+      when 2: Rails.CanvasControls<bool>(
+        'rail', new Nodes.View(), [], function(Event: Rails.Event): bool => true, Dialog
+      );
+      when 3: Bars.SelectionBar<bool>(
+        'selection', [], [], function(Event: Bars.Event): bool => true, Dialog
+      );
+      when 4: Tables.Table<bool>(
+        'table', [new Tables.Column('Column')],
+        [new Tables.Row<bool>('row', [Tables.Cell<bool>.Content([Dialog])])]
+      );
+      when 5: Reorders.ReorderableList<bool>(
+        'order',
+        [Dialog],
+        [0],
+        function(Order: array of int): bool => true
+      );
+      else Trees.Branch<bool>(
+        'branch', 'Branch', Kind = 6, [Dialog], function(Expanded: bool): bool => true
+      );
+    end case;
+    return E.Column<bool>(
+      new L.Flow(), Buttons.Button<bool>('background', 'Background', true), Wrapped
+    );
+  end function;
+
+  procedure Inject();
+  begin
+    if Escape then
+      Window.SetKey(3, true);
+      Window.SetKey(3, false);
+      Escape := false;
+    end if;
+  end procedure;
+begin
+  var Escape: bool := false;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Composed modal contract', 700, 500, Renderer, true
+  );
+  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+    true,
+    function(Model: bool; Message: bool): App.Transition<bool, bool> => new App.Transition<bool, bool>(
+      Message,
+      []
+    ),
+    View, Window, 16, Inject
+  );
+  Check(Session.Step(), 'The composed modal session closed unexpectedly.');
+  if Kind = 7 then
+    Check(Find(Session, 'inside') = null, 'A closed tree must not present its modal body.');
+    Check(
+      Control(Session, 'background').Enabled,
+      'A hidden modal must not disable the background.'
+    );
+    return;
+  end if;
+
+  Check(Control(Session, 'inside').Enabled, 'A composed modal must accept input.');
+  Check(Control(Session, 'modal/close').Enabled, 'A composed modal must allow dismissal.');
+  Check(
+    not Control(Session, 'background').Enabled,
+    'A composed modal must disable the background.'
+  );
+
+  Escape := true;
+  discard Window.TryWake();
+  Check(Session.Step(), 'The composed modal did not process Escape.');
+  discard Window.TryWake();
+  Check(Session.Step(), 'The composed modal did not apply dismissal.');
+  Check(Control(Session, 'background').Enabled, 'Dismissal must restore background input.');
+end procedure;
+
+// Exercises modal input ownership through graphical composition containers.
+// ## Parameters
+// - `Renderer`: Native renderer used for every composed view.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+begin
+  for Kind: int := 0 to 7 do
+    VerifyContainer(Renderer, Kind);
+  end for;
+end procedure;
+
+end unit;

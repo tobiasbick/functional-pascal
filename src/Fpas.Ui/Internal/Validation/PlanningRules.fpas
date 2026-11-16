@@ -162,7 +162,8 @@ end procedure;
 // - `At`: Diagnostic path.
 public procedure Gantt(Current: Gantts.Value; Settings: Gantts.Options; At: string);
 begin
-  if Current.Days <= 0 or cast<long>(Current.Origin.DayNumber) + Current.Days > 3652058L
+  if Current.Days <= 0 or cast<long>(Current.Origin.DayNumber) + Current.Days - 1L >
+    cast<long>(Sys.DateOnly.MaxValue.DayNumber)
     or Settings.Today < 0 or Settings.Today >= Current.Days
   then
     R.Reject(At, 'The chart needs a positive, representable day range.');

@@ -66,7 +66,7 @@ begin
   else
     'UNDER'
   end if;
-  const CupLabel: string := if Cups.Length >= 5 or Cups.Length = 0 then
+  const CupLabel: string := if Cups.Length >= 5 then
     '5+'
   else
     Cups.Length.ToString(Invariant)

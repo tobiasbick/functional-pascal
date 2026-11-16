@@ -245,6 +245,7 @@ end procedure;
 procedure Scrolling();
   function Update(State: int; Message: int): Mvu.Transition<int, int>;
   begin
+    Last := Message;
     return new Mvu.Transition<int, int>(Message, []);
   end function;
   function View(State: int): E.Element<int>;
@@ -252,16 +253,55 @@ procedure Scrolling();
     return M.Menu<int>('long', 'Long menu', Rows.ToArray());
   end function;
 begin
+  var Last: int := -1;
   const Rows: Lists.List<M.Entry<int>> := new Lists.List<M.Entry<int>>();
   for Index: int := 0 to 49 do
     Rows.Add(
       M.Entry<int>.Action(
-        new M.Item<int>('row-' + Index.ToString(), 'Command ' + Index.ToString(), Index)
+        new M.Item<int>(
+          'row-' + Index.ToString(), 'Command ' + Index.ToString(), Index, Enabled := Index <> 14
+        )
       )
     );
   end for;
 
   using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 50, 16);
+  Send(Session, Tui.Input.Activate('long'));
+  Send(Session, Tui.Input.Activate('long/row-49'));
+  Check(Last = -1, 'A command outside the viewport must reject direct activation.');
+  for Index: int := 1 to 13 do
+    Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  end for;
+
+  Check(
+    Control(Session, 'long/row-13').Focused,
+    'Down must reveal the next command beyond the viewport.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'long/row-15').Focused,
+    'Down must skip disabled commands while scrolling.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Up, K.KeyModifiers.None));
+  Check(Control(Session, 'long/row-13').Focused, 'Up must return past the disabled command.');
+  for Index: int := 1 to 13 do
+    Send(Session, Tui.Input.KeyPress(K.Key.Up, K.KeyModifiers.None));
+  end for;
+
+  Check(Control(Session, 'long/row-0').Focused, 'Up must reveal the first command again.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Up, K.KeyModifiers.None));
+  Check(Control(Session, 'long/row-49').Focused, 'Up must wrap to the final enabled command.');
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'long/row-0').Focused,
+    'Down must wrap back to the first enabled command.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Up, K.KeyModifiers.None));
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(
+    Last = 49 and Control(Session, 'long').Value = 'false' and Control(Session, 'long').Focused,
+    'Enter must dispatch the revealed final command and restore trigger focus.'
+  );
   Send(Session, Tui.Input.Activate('long'));
   Send(Session, Tui.Input.Scroll(4, 5, 20));
   Check(Control(Session, 'long/row-20').Row >= 0, 'Wheel scrolling must expose later commands.');
@@ -269,6 +309,31 @@ begin
   Check(Control(Session, 'long/row-33').Row >= 0, 'Page keys must scroll long menus.');
   Send(Session, Tui.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
   Check(Control(Session, 'long').Focused, 'A scrolled menu must restore trigger focus.');
+
+  for Index: int := 0 to 19 do
+    Rows[Index] := M.Entry<int>.Action(
+      new M.Item<int>(
+        'row-' + Index.ToString(),
+        'Disabled ' + Index.ToString(),
+        Index,
+        Enabled := false
+      )
+    );
+  end for;
+
+  Rows.Insert(0, M.Entry<int>.Label('Unavailable commands'));
+  Send(Session, Tui.Input.Activate('long'));
+  Check(
+    Control(Session, 'long/row-20').Focused,
+    'Opening must reveal the first enabled command past disabled rows and decorations.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Down, K.KeyModifiers.None));
+  Check(
+    Control(Session, 'long/row-21').Focused,
+    'Navigation must continue from the revealed initial command.'
+  );
+  Send(Session, Tui.Input.KeyPress(K.Key.Enter, K.KeyModifiers.None));
+  Check(Last = 21, 'Enter must dispatch after opening beyond the initial viewport.');
 end procedure;
 
 procedure Validation();

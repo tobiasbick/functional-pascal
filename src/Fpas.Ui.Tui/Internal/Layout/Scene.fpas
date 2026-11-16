@@ -34,6 +34,14 @@ public type Control<TMsg> = record
   public Appearance: Th.ButtonAppearance? := null;
 end record;
 
+// An enabled popup command, retaining its full bounds even outside the viewport.
+public type NavigationStop = record
+  // Stable command identity to receive keyboard focus.
+  public Id: string;
+  // Unclipped command bounds at the current scroll offset.
+  public Bounds: F.Rect;
+end record;
+
 public type Scope<TMsg> = record
   public Id: string;
   public Initial: string;
@@ -43,6 +51,8 @@ public type Scope<TMsg> = record
   public Panel: F.Rect? := null;
   // Optional host-owned dismissal for transient widget menus.
   public Dismiss: Sys.Action? := null;
+  // Enabled popup commands in traversal order, including scrolled-out commands.
+  public Navigation: array of NavigationStop := [];
 end record;
 
 public type ScrollRegion = record

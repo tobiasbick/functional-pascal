@@ -181,8 +181,6 @@ begin
   else
     CheckAi(Session);
   end if;
-
-  Sys.Console.WriteLine(Page.ToString() + ' verified with ' + Renderer.ToString());
 end procedure;
 
 // Runs the two focused gallery contracts.

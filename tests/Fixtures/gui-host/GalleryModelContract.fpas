@@ -1,0 +1,72 @@
+unit GalleryModelContract;
+
+uses
+  GalleryHostAssertions as A,
+  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Ai.Update as AiUpdate,
+  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
+  GuiGallery.Pages.Instruments.State as Instruments,
+  GuiGallery.App.State as Gallery, GuiGallery.App.Update as Update, GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Widgets.Ai.Composers as Composer,
+  Fpas.Ui.Widgets.Ai.ResponseActions as Response, Fpas.Ui.Widgets.Charts.EventTracks as Events;
+
+procedure Regeneration();
+begin
+  const Started: Ai.Model := AiUpdate.Update(
+    new Ai.Model(), Ai.Msg.Editor(Composer.Event.Send('Question'))
+  ).Model;
+  const Completed: Ai.Model := AiUpdate.Update(Started, Ai.Msg.Tick(9.0F)).Model;
+  A.Check(not Completed.Editor.Busy, 'The initial response must finish.');
+  const Restarted: Ai.Model := AiUpdate.Update(
+    Completed, Ai.Msg.Response(Response.Event.Regenerate)
+  ).Model;
+  const Advanced: Ai.Model := AiUpdate.Update(Restarted, Ai.Msg.Tick(0.25F)).Model;
+  A.Check(
+    Restarted.Editor.Busy and Advanced.Editor.Busy and Advanced.Elapsed = 0.25F,
+    'Regeneration must start a fresh response duration.'
+  );
+end procedure;
+
+procedure CollaboratorClock();
+begin
+  const First: Canvas.Model := CanvasUpdate.Update(
+    new Canvas.Model(), Canvas.Msg.Tick(0.5F)
+  ).Model;
+  const Second: Canvas.Model := CanvasUpdate.Update(First, Canvas.Msg.Tick(1.5F)).Model;
+  A.Check(
+    Second.Seconds = 2.0F,
+    'Collaborator animation time must accumulate the clock deltas.'
+  );
+end procedure;
+
+// Verifies that an empty instrument list displays zero through the native host.
+// ## Parameters
+// - `Renderer`: Native renderer used to present the instrument readout.
+public procedure VerifyDisplay(Renderer: Cui.CuiRenderer);
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Empty instrument readout',
+    1100,
+    800,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<Gallery.Msg> := Host.Start<Gallery.Model, Gallery.Msg>(
+    new Gallery.Model(
+      Active := Gallery.Page.Instruments,
+      Instruments := new Instruments.Model(Cups := new Events.Value([], -1))
+    ),
+    Update.Update, View.Build, Window, 16
+  );
+  A.Check(Session.Step(), 'The instrument readout did not present.');
+  A.Check(A.Control(Session, 'cup-count').Value = '0', 'Removing all cups must display zero cups.');
+end procedure;
+
+// Verifies generation and animation state transitions without a native window.
+public procedure Verify();
+begin
+  Regeneration();
+  CollaboratorClock();
+end procedure;
+
+end unit;

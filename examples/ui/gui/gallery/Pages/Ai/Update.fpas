@@ -56,6 +56,7 @@ begin
       end with;
     when S.Msg.Response(Response.Event.Regenerate):
       return Model with
+        Elapsed := 0.0F;
         Editor := Model.Editor with
           Busy := true;
         end with;

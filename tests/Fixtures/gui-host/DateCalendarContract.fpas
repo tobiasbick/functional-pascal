@@ -45,6 +45,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Window.SetKey(PendingKey, false);
       PendingKey := 0;
     end if;
+
+    if Scroll <> 0.0F then
+      Window.Wheel(Scroll);
+      Scroll := 0.0F;
+    end if;
   end procedure;
 
   procedure Step(Session: Gui.Session<State.Msg>);
@@ -52,10 +57,40 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(Session.Step(), 'The Inputs page closed unexpectedly.');
   end procedure;
 
+  function Bounds(Session: Gui.Session<State.Msg>; Id: string): Cui.CuiRectangle;
+  begin
+    for Attempt: int := 0 to 15 do
+      const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+      A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native calendar geometry for ' + Id);
+      const Height: float := Session.Snapshot().Size.Height;
+      if Box.Y >= 24.0F and Box.Y + Box.Height <= Height - 24.0F then
+        return Box;
+      end if;
+
+      // The desktop can constrain the requested window height. Scroll the
+      // gallery gutter, then reacquire the target's presented geometry.
+      const Main: Cui.CuiRectangle := A.Control(Session, 'main-inputs-0').Bounds;
+      X := Main.X + 4.0F;
+      Y := Height * 0.5F;
+      Step(Session);
+      Scroll := if Box.Y < 24.0F then
+        4.0F
+      else
+        -4.0F
+      end if;
+      for Frame: int := 1 to 3 do
+        Step(Session);
+      end for;
+    end for;
+
+    raise new Sys.InvalidOperationException(
+      'Could not scroll the calendar control into view: ' + Id
+    );
+  end function;
+
   procedure Click(Session: Gui.Session<State.Msg>; Id: string);
   begin
-    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
-    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native calendar geometry for ' + Id);
+    const Box: Cui.CuiRectangle := Bounds(Session, Id);
     X := Box.X + Box.Width / 2.0F;
     Y := Box.Y + Box.Height / 2.0F;
     Button := 1;
@@ -107,6 +142,7 @@ begin
   var PendingKey: int := 0;
   var Target: string := '';
   var ClearSelection: bool := false;
+  var Scroll: float := 0.0F;
   const Due: string := 'input-due-date';
   const Calendar: string := 'input-calendar';
   const Nov14: Sys.DateOnly := new Sys.DateOnly(2026, 11, 14);

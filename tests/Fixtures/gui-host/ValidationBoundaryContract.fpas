@@ -1,0 +1,57 @@
+unit GalleryValidationBoundaryContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Planning.Gantts as Gantts, System as Sys;
+
+procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+begin
+  try
+    discard V.Prepare<int>(Node, Profile);
+  catch Error: Sys.ArgumentException do
+    if not Error.Message.Contains(Reason) then
+      raise new Sys.InvalidOperationException('Unexpected preflight failure: ' + Error.Message);
+    end if;
+
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Expected preflight rejection: ' + Reason);
+end procedure;
+
+procedure GraphicalStyles();
+begin
+  for Role: S.Role in [
+    S.Role.DisplayBody, S.Role.CompactLabel, S.Role.SuccessGlyph, S.Role.CompactMutedIcon
+  ] do
+    const Node: E.Element<int> := E.Styled<int>(E.Text<int>('caption'), Role);
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+    for Profile: V.Target in [V.Target.Portable, V.Target.Terminal] do
+      Reject(Node, Profile, 'Graphical');
+    end for;
+  end for;
+end procedure;
+
+function Timeline(Origin: Sys.DateOnly; Days: int): E.Element<int>;
+begin
+  return Gantts.Gantt<int>(
+    'boundary-timeline', new Gantts.Value(Origin, Days, []),
+    function(Change: Gantts.Event): int => Change.Activated
+  );
+end function;
+
+procedure FinalTimelineDay();
+begin
+  discard V.Prepare<int>(Timeline(new Sys.DateOnly(9999, 12, 31), 1), V.Target.Graphical);
+  discard V.Prepare<int>(Timeline(new Sys.DateOnly(9999, 12, 30), 2), V.Target.Graphical);
+  Reject(Timeline(new Sys.DateOnly(9999, 12, 31), 2), V.Target.Graphical, 'day range');
+end procedure;
+
+// Checks target capabilities and inclusive timeline dates at the public preflight boundary.
+public procedure Verify();
+begin
+  GraphicalStyles();
+  FinalTimelineDay();
+end procedure;
+
+end unit;

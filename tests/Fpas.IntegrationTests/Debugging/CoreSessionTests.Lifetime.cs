@@ -3,6 +3,7 @@ using Fpas.Debugging.Hosting;
 using Fpas.Processes;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -14,10 +15,10 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-cancel");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Prepared(program, deadline.Token);
-        using var worker = Track(host.WorkerProcessId);
-        using var target = Track(host.Snapshot.ProcessId!.Value);
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
+        using var target = ProcessExit.Track(host.Snapshot.ProcessId!.Value);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => host.Initialize(new CancellationToken(true)));
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
         Assert.Equal(0, worker.ExitCode);
         using var image = new FileStream(program.Assembly, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     }
@@ -31,8 +32,8 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-crash");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Prepared(program, deadline.Token);
-        using var worker = Track(host.WorkerProcessId);
-        using var target = Track(host.Snapshot.ProcessId!.Value);
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
+        using var target = ProcessExit.Track(host.Snapshot.ProcessId!.Value);
         await host.Initialize(deadline.Token);
         Assert.Equal("stopped", (await host.WaitForStop(deadline.Token)).State);
         worker.Kill();
@@ -40,7 +41,7 @@ public sealed partial class CoreSessionTests
         while (state.State != "failed") state = await host.WaitForChange(state.Revision, deadline.Token);
         Assert.Equal("worker_exited", state.Error!.Code);
         await host.DisposeAsync();
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
         Assert.False(unrelated.HasExited);
     }
 
@@ -50,8 +51,8 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-pause");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Prepared(program, deadline.Token);
-        using var worker = Track(host.WorkerProcessId);
-        using var target = Track(host.Snapshot.ProcessId!.Value);
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
+        using var target = ProcessExit.Track(host.Snapshot.ProcessId!.Value);
         await host.Initialize(deadline.Token);
         var initial = await host.WaitForStop(deadline.Token);
         await host.Resume(initial.StopId!.Value, step: false, deadline.Token);
@@ -62,7 +63,7 @@ public sealed partial class CoreSessionTests
         Assert.NotEqual(initial.StopId, paused.StopId);
         await host.Stop(deadline.Token);
         await host.Stop(deadline.Token);
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
     }
 
     [Fact]
@@ -71,8 +72,8 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-unresponsive");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Prepared(program, deadline.Token, TimeSpan.FromMilliseconds(400));
-        using var worker = Track(host.WorkerProcessId);
-        using var target = Track(host.Snapshot.ProcessId!.Value);
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
+        using var target = ProcessExit.Track(host.Snapshot.ProcessId!.Value);
         await host.Initialize(deadline.Token);
         Assert.Equal("stopped", (await host.WaitForStop(deadline.Token)).State);
         using var suspended = new WorkerSuspension(worker);
@@ -81,7 +82,7 @@ public sealed partial class CoreSessionTests
         Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(2), "The short shutdown budget was replaced by the default grace.");
         Assert.False(deadline.IsCancellationRequested);
         Assert.Equal("worker_timeout", host.Snapshot.Error!.Code);
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
     }
 
     [Fact]
@@ -113,8 +114,8 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-initialize-stop");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Prepared(program, deadline.Token);
-        using var worker = Track(host.WorkerProcessId);
-        using var target = Track(host.Snapshot.ProcessId!.Value);
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
+        using var target = ProcessExit.Track(host.Snapshot.ProcessId!.Value);
         using var suspendedTarget = new WorkerSuspension(target);
         var initialize = host.Initialize(deadline.Token);
         var state = host.Snapshot;
@@ -123,7 +124,7 @@ public sealed partial class CoreSessionTests
         await host.Stop(deadline.Token);
         var cancelled = await Assert.ThrowsAsync<Fpas.Debugging.Core.DebugException>(async () => await initialize);
         Assert.Equal("cancelled", cancelled.Code);
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
     }
 
     private static async Task<DebugSessionHost> Prepared(Debuggee program, CancellationToken token, TimeSpan? shutdownGrace = null)
@@ -182,12 +183,5 @@ public sealed partial class CoreSessionTests
         Assert.Equal(abrupt ? OperatingSystem.IsLinux() ? 137 : -1 : 17, ended.ExitCode);
         Assert.Equal(abrupt && OperatingSystem.IsLinux() ? 9 : (int?)null, ended.ExitSignal);
         await host.Stop(deadline.Token);
-    }
-
-    private static Process Track(int id) { var process = Process.GetProcessById(id); _ = process.SafeHandle; return process; }
-    private static void Gone(Process process)
-    {
-        if (OperatingSystem.IsLinux()) Assert.False(Directory.Exists($"/proc/{process.Id}"));
-        else Assert.True(process.HasExited);
     }
 }

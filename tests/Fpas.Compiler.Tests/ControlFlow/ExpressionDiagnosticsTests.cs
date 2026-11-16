@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.ControlFlow;
 
 public sealed class ExpressionDiagnosticsTests
@@ -12,7 +13,7 @@ public sealed class ExpressionDiagnosticsTests
     public void Mixed_logical_chains_diagnose_the_first_different_operator(string first, string second)
     {
         var statement = $"const Value: bool := true {first} (false) {second} true;";
-        var result = DiagnosticsTests.Compile($"program Bad;\nbegin\n{statement}\nend;\nend program;");
+        var result = TestCompilation.CompileAgainstFramework($"program Bad;\nbegin\n{statement}\nend;\nend program;");
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP2003", diagnostic.Code);
         Assert.Equal(3, diagnostic.Location!.Line);
@@ -54,7 +55,7 @@ public sealed class ExpressionDiagnosticsTests
     [InlineData("const X: double := 1.0D_1;", "FP1004")]
     public void Invalid_expressions_and_control_flow_are_diagnosed(string body, string code)
     {
-        var result = DiagnosticsTests.Compile("program Bad; uses System.Console as Console; begin " + body + " end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad; uses System.Console as Console; begin " + body + " end; end program;");
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
         Assert.Null(result.Program);
     }
@@ -66,12 +67,12 @@ public sealed class ExpressionDiagnosticsTests
     [InlineData("function F(X: bool): int; begin if X then return 1; else return 2; end if; return 3; end function;", "FP3008")]
     [InlineData("procedure F(); begin end procedure; function G(): int; begin return if true then F() else F() end if; end function;", "FP3002")]
     public void Routine_flow_and_void_values_are_checked(string declarations, string code)
-        => Assert.Equal(code, Assert.Single(DiagnosticsTests.Compile("program Bad; " + declarations + " begin end; end program;").Diagnostics).Code);
+        => Assert.Equal(code, Assert.Single(TestCompilation.CompileAgainstFramework("program Bad; " + declarations + " begin end; end program;").Diagnostics).Code);
 
     [Fact]
     public void Unreachable_diagnostics_point_to_the_unreachable_statement()
     {
-        var result = DiagnosticsTests.Compile("program Bad;\nbegin\nreturn;\nConsole.WriteLine(1);\nend; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad;\nbegin\nreturn;\nConsole.WriteLine(1);\nend; end program;");
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP3008", diagnostic.Code);
         Assert.Equal(4, diagnostic.Location!.Line);

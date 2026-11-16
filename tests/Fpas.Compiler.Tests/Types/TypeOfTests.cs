@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
@@ -21,7 +21,7 @@ public sealed class TypeOfTests
     [InlineData("typeof(int??)", "FP2001")]
     public void Typeof_requires_a_supported_resolved_type_in_parentheses(string expression, string code)
     {
-        var result = DiagnosticsTests.Compile($$"""
+        var result = TestCompilation.CompileAgainstFramework($$"""
             program Invalid;
             uses System as Sys, System.Collections.Generic as C;
             begin const Value: int := 1; discard {{expression}}; end;
@@ -34,7 +34,7 @@ public sealed class TypeOfTests
     [Fact]
     public void Unconstrained_nullable_type_parameters_follow_the_existing_type_rules()
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Invalid;
             uses System as Sys;
             function Get<T>(): Sys.Type; begin return typeof(T?); end function;
@@ -47,7 +47,7 @@ public sealed class TypeOfTests
     [Fact]
     public void Typeof_does_not_extend_the_restricted_contract_expression_subset()
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Invalid;
             procedure Check(); requires typeof(int) <> null; begin end procedure;
             begin end;
@@ -59,7 +59,7 @@ public sealed class TypeOfTests
     [Fact]
     public void Typeof_is_not_an_optional_parameter_metadata_constant()
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Invalid;
             uses System as Sys;
             procedure Check(Value: Sys.Type := typeof(int)); begin end procedure;

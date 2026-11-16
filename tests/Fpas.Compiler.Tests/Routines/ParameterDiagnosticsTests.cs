@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class ParameterDiagnosticsTests
@@ -28,7 +28,7 @@ public sealed class ParameterDiagnosticsTests
     [InlineData("procedure Check(ref Value: int); begin const F: procedure() := procedure() begin Value := 2; end procedure; end procedure;", "", "FP3028")]
     public void Invalid_parameter_declarations_and_calls_are_rejected(string declaration, string body, string code)
     {
-        var result = DiagnosticsTests.Compile($"program Parameters; uses System as Sys; {declaration} begin {body} end; end program;");
+        var result = TestCompilation.CompileAgainstFramework($"program Parameters; uses System as Sys; {declaration} begin {body} end; end program;");
         Assert.False(result.Success);
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
     }

@@ -1,9 +1,9 @@
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
 using Json.Schema;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Cli;
 
@@ -93,10 +93,10 @@ public sealed class TerminalWorkflowTests
         var result = await Run(target, script); Assert.Equal(1, result.ExitCode);
         using var report = JsonDocument.Parse(result.Output); Assert.Equal("timeout", report.RootElement.GetProperty("status").GetString());
         var pid = report.RootElement.GetProperty("terminal").GetProperty("processId").GetInt32();
-        try { using var child = Process.GetProcessById(pid); Assert.True(child.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
         Assert.True(File.Exists(target.FilePath("child.pid")));
         var descendant = int.Parse(File.ReadAllText(target.FilePath("child.pid")), System.Globalization.CultureInfo.InvariantCulture);
-        try { using var child = Process.GetProcessById(descendant); Assert.True(child.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(descendant);
     }
 
     private static string Script(Debuggee target, object[] steps, int seconds = 20)

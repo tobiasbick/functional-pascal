@@ -1,4 +1,4 @@
-using Fpas.Tests.Support;
+using Fpas.Compiler.Tests.Support;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -147,7 +147,7 @@ public sealed class DebuggerAttributeTests
     private static CompiledProgram Compile(string source, bool symbols = true, bool optimize = false, CompilationTarget target = CompilationTarget.Library)
     {
         var result = FpasCompiler.Compile(new([new("views.fpas", source)], "DebugViews",
-            [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location], target, EmitDebugInformation: symbols, Optimize: optimize));
+            TestCompilation.References, target, EmitDebugInformation: symbols, Optimize: optimize));
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         return result.Program!;
     }

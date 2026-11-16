@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Fpas.IntegrationTests.Processes.Support;
 
@@ -15,11 +14,11 @@ public sealed partial class DapDebuggerTests
         await WaitingProgram(program);
         await using var client = new DapProbe(interruptible: interrupt);
         await LaunchRunning(client, program);
-        var pid = await Ready(program); using var target = Track(pid);
-        var parent = ProcessIdentity.Parent(pid); using var worker = Track(OperatingSystem.IsLinux() ? ProcessIdentity.Parent(parent) : parent);
+        var pid = await Ready(program); using var target = ProcessExit.Track(pid);
+        var parent = ProcessIdentity.Parent(pid); using var worker = ProcessExit.Track(OperatingSystem.IsLinux() ? ProcessIdentity.Parent(parent) : parent);
         if (interrupt) { await client.Interrupt(); await client.End(130); }
         else await client.EndInput();
-        Gone(target); Gone(worker);
+        ProcessExit.AssertGone(target); ProcessExit.AssertGone(worker);
     }
 
     [Theory]
@@ -30,8 +29,8 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-control-reserve");
         await WaitingProgram(program);
         await using var client = new DapProbe(); await LaunchRunning(client, program);
-        var pid = await Ready(program); using var target = Track(pid);
-        var parent = ProcessIdentity.Parent(pid); using var worker = Track(OperatingSystem.IsLinux() ? ProcessIdentity.Parent(parent) : parent);
+        var pid = await Ready(program); using var target = ProcessExit.Track(pid);
+        var parent = ProcessIdentity.Parent(pid); using var worker = ProcessExit.Track(OperatingSystem.IsLinux() ? ProcessIdentity.Parent(parent) : parent);
         await client.Success("pause"); await client.Event("stopped");
         using var suspended = new WorkerSuspension(worker);
         var requests = Enumerable.Range(0, requestCount).Select(_ => client.Request("threads")).ToArray();
@@ -42,7 +41,7 @@ public sealed partial class DapDebuggerTests
             var response = await request;
             Assert.False(response.GetProperty("success").GetBoolean(), response.GetRawText());
         }
-        await client.End(); Gone(target); Gone(worker);
+        await client.End(); ProcessExit.AssertGone(target); ProcessExit.AssertGone(worker);
     }
 
     private static async Task WaitingProgram(Debuggee program) => await program.Compile("""
@@ -66,10 +65,5 @@ public sealed partial class DapDebuggerTests
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         while (!File.Exists(program.FilePath("target.pid"))) await Task.Delay(10, deadline.Token);
         return int.Parse(File.ReadAllText(program.FilePath("target.pid")), System.Globalization.CultureInfo.InvariantCulture);
-    }
-    private static Process Track(int pid) { var result = Process.GetProcessById(pid); _ = result.SafeHandle; return result; }
-    private static void Gone(Process process)
-    {
-        if (OperatingSystem.IsLinux()) Assert.False(Directory.Exists($"/proc/{process.Id}")); else Assert.True(process.HasExited);
     }
 }

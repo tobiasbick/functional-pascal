@@ -30,9 +30,7 @@ public sealed class DiagnosticsFixture : IAsyncLifetime
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             File.WriteAllText(target, File.ReadAllText(file).Replace("Fpas.NET.Sdk/0.1.0-dev", "Fpas.NET.Sdk/" + sdk.Version, StringComparison.Ordinal));
         }
-        new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
-            new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", sdk.Feed)))))
-            .Save(directory.File("NuGet.Config"));
+        sdk.WriteFeedConfig(directory.Path);
         var project = directory.File("Measure/Measure.fpasproj"); var xml = XDocument.Load(project);
         xml.Descendants("ProjectReference").Single().SetAttributeValue("Include",
             "../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj");

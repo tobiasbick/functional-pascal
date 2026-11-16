@@ -2,6 +2,7 @@ using System.Text.Json;
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Projects;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Testing;
 
@@ -52,7 +53,7 @@ public sealed class TestingPlatformTests(SdkPackageFixture sdk) : IClassFixture<
         Assert.Equal(1, result.ExitCode); using var json = JsonDocument.Parse(result.Output); Assert.Equal("timeout", json.RootElement.GetProperty("status").GetString());
         Assert.True(File.Exists(identity), result.Output);
         var pid = int.Parse(File.ReadAllText(identity), System.Globalization.CultureInfo.InvariantCulture);
-        try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
     }
 
     [Fact]

@@ -24,7 +24,7 @@ public sealed class RecordMetadataTests
             var type = reader.TypeDefinitions.Select(reader.GetTypeDefinition).Single(type => reader.GetString(type.Name) == "Item");
             if (corruption == "version")
             {
-                var attribute = MetadataAttributes.Named(reader, type.GetCustomAttributes(), "RecordAttribute");
+                var attribute = AssemblyInspection.Attribute(reader, type.GetCustomAttributes(), "RecordAttribute");
                 var offset = pe.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset(HeapIndex.Blob) + MetadataTokens.GetHeapOffset(attribute.Value);
                 // The small blob has a one-byte length prefix followed by the two-byte attribute prolog.
                 bytes[offset + 3] = 2;
@@ -42,7 +42,7 @@ public sealed class RecordMetadataTests
         using var directory = new TemporaryDirectory();
         var reference = directory.File("Records.dll"); File.WriteAllBytes(reference, bytes);
         var result = FpasCompiler.Compile(new([new("consumer.fpas", "program Consumer; uses Model as M; begin const Item: M.Item := new M.Item(); end; end program;")],
-            "Consumer", [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location, reference]));
+            "Consumer", [.. TestCompilation.References, reference]));
         Assert.False(result.Success);
         Assert.Equal("FP4001", Assert.Single(result.Diagnostics).Code);
     }
@@ -55,7 +55,7 @@ public sealed class RecordMetadataTests
             new("model.fpas", "unit Demo.Model; public type Link = record public Next: Link? := null; public Other: Payload? := null; end record; public type Payload = record public Value: int; end record; end unit;"),
             new("api.fpas", "unit Demo.Api; uses Demo.Model as M; public function Make(): M.Link; begin return new M.Link(Other := new M.Payload(2)); end function; end unit;")
         ];
-        string[] references = [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];
+        string[] references = TestCompilation.References;
         var first = FpasCompiler.Compile(new(sources, "Forward", references, CompilationTarget.Library));
         var second = FpasCompiler.Compile(new(sources.Reverse().ToArray(), "Forward", references.Reverse().ToArray(), CompilationTarget.Library));
         Assert.True(first.Success, string.Join(";", first.Diagnostics));

@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
 using Fpas.Tests.Support;
 using static Fpas.Compiler.Tests.Analysis.Support.SemanticAnalysis;
@@ -91,11 +92,11 @@ public sealed class SemanticSnapshotTests
     {
         using var directory = new TemporaryDirectory();
         var library = FpasCompiler.Compile(new([new("library.fpas", "unit Library; public function Read(): int; begin return 42; end function; end unit;")],
-            "Dependency", References, CompilationTarget.Library));
+            "Dependency", TestCompilation.References, CompilationTarget.Library));
         Assert.True(library.Success);
         var path = directory.File("Dependency.dll"); File.WriteAllBytes(path, library.Program!.AssemblyImage);
         const string source = "program Consumer; uses Library as L; begin discard L.Read(); end; end program;";
-        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Input", [.. References, path]));
+        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Input", [.. TestCompilation.References, path]));
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         var snapshot = result.Snapshot!;
         File.Delete(path);

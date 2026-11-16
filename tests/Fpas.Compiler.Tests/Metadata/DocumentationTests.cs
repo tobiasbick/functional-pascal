@@ -1,5 +1,5 @@
+using Fpas.Compiler.Tests.Support;
 using System.Xml.Linq;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Metadata;
 
@@ -225,6 +225,6 @@ public sealed class DocumentationTests
     }
 
     private static CompilationResult Compile(string text, bool enabled = true, DiagnosticOptions? options = null)
-        => FpasCompiler.Compile(new([new("docs.fpas", text)], "Docs", [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location],
+        => FpasCompiler.Compile(new([new("docs.fpas", text)], "Docs", TestCompilation.References,
             CompilationTarget.Library, EmitDocumentation: enabled, DiagnosticOptions: options));
 }

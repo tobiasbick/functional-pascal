@@ -1,5 +1,4 @@
 using Fpas.Compiler.Tests.Support;
-using Fpas.Compiler.Tests.ControlFlow;
 namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class OverloadAndInterfaceDiagnosticsTests
@@ -11,7 +10,7 @@ public sealed class OverloadAndInterfaceDiagnosticsTests
     [InlineData("function F<T>(V: T): T; begin return V; end function; function F<U>(Other: U): U; begin return Other; end function;")]
     public void Duplicate_CLR_signatures_do_not_create_overloads(string declarations)
     {
-        var result = DiagnosticsTests.Compile($"program Duplicate; {declarations} begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework($"program Duplicate; {declarations} begin end; end program;");
         Assert.False(result.Success);
         Assert.Equal("FP3004", Assert.Single(result.Diagnostics).Code);
     }

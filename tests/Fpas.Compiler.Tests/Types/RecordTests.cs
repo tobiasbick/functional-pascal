@@ -1,8 +1,6 @@
-using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Fpas.Tests.Support;
 using static Fpas.Compiler.Tests.Support.TestCompilation;
 
 namespace Fpas.Compiler.Tests.Types;
@@ -103,5 +101,4 @@ public sealed class RecordTests
         Assert.False(result.Success);
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
     }
-
 }

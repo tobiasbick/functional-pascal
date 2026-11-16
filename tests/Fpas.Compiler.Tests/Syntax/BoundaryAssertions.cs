@@ -3,7 +3,6 @@ using Fpas.Compiler.Formatting;
 using Fpas.Compiler.Syntax;
 using Fpas.Compiler.Syntax.Parsing;
 using Fpas.Compiler.Tests.Support;
-using Fpas.Tests.Support;
 using System.Text;
 
 namespace Fpas.Compiler.Tests.Syntax;
@@ -62,7 +61,7 @@ internal static class BoundaryAssertions
         var compiled = TestCompilation.Compile(source, target);
         Assert.True(compiled.Success, context + "\n" + string.Join('\n', compiled.Diagnostics));
         var analyzed = FpasCompiler.Analyze(new([new("boundary.fpas", source)], "Boundary",
-            [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location], target));
+            TestCompilation.References, target));
         Assert.True(analyzed.Success, context + "\n" + string.Join('\n', analyzed.Diagnostics));
     }
 

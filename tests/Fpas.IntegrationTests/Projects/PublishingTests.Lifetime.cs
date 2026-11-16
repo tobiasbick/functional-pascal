@@ -2,12 +2,14 @@ using System.Text.Json;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Processes.Support;
+using Fpas.IntegrationTests.Support;
 
 namespace Fpas.IntegrationTests.Projects;
 
 public sealed partial class PublishingTests
 {
-    [Theory]
+    [UnixTheory]
     [InlineData("file")]
     [InlineData("directory")]
     [InlineData("root")]
@@ -15,8 +17,6 @@ public sealed partial class PublishingTests
     [InlineData("root-dangling")]
     public async Task Publish_rejects_staged_links_before_secret_cleanup(string linkKind)
     {
-        // Creating symbolic links on Windows can require developer mode or elevated privileges.
-        if (OperatingSystem.IsWindows()) return;
         using var directory = new TemporaryDirectory(); var project = await Create(directory);
         var destination = directory.File("output");
         var first = await Cli(directory, "publish", project, "--output", destination, "--mode", "apphost", "--report", "json");
@@ -61,7 +61,7 @@ public sealed partial class PublishingTests
         using var report = JsonDocument.Parse(timed.Output); Assert.Equal("timeout", report.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.True(File.Exists(waiting.Ready), "The deadline expired before the blocking build helper started. " + timed.Output + timed.Error);
         var pid = int.Parse(File.ReadAllText(waiting.Ready), System.Globalization.CultureInfo.InvariantCulture);
-        try { using var child = System.Diagnostics.Process.GetProcessById(pid); Assert.True(child.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
         Assert.Equal(before, Directory.GetFiles(destination).Order().Select(File.ReadAllBytes).ToArray());
         Assert.Empty(Directory.GetDirectories(directory.Path, ".fpas-publish-*"));
     }

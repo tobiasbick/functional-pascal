@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Syntax;
 using Fpas.Tests.Support;
@@ -91,6 +92,17 @@ public sealed class RichDiagnosticsTests
         Assert.Equal(new SourceLocation("sample.fpas", 1, 3, 2 + newline.Length, 2, 2, 2), range);
         var end = source.Location(source.Text.Length, 1);
         Assert.Equal(0, end.Length); Assert.Equal(2, end.EndLine); Assert.Equal(3, end.EndColumn);
+    }
+
+    [Fact]
+    public void Locations_map_mixed_line_endings_and_the_LF_of_CRLF_to_the_following_line()
+    {
+        var source = new SourceText("sample.fpas", "A\r\nB\rC\nD");
+        Assert.Equal(new SourceLocation("sample.fpas", 2, 1, 0, 2, 1, 2), source.Location(2, 0));
+        Assert.Equal(new SourceLocation("sample.fpas", 2, 1, 1, 2, 2, 3), source.Location(3, 1));
+        Assert.Equal(new SourceLocation("sample.fpas", 3, 1, 1, 3, 2, 5), source.Location(5, 1));
+        Assert.Equal(new SourceLocation("sample.fpas", 4, 1, 1, 4, 2, 7), source.Location(7, 1));
+        Assert.Equal(new SourceLocation("sample.fpas", 1, 2, 7, 4, 2, 1), source.Location(1, 7));
     }
 
     [Fact]
@@ -239,5 +251,5 @@ public sealed class RichDiagnosticsTests
     }
 
     private static CompilationResult Compile(string source)
-        => FpasCompiler.Compile(new([new("sample.fpas", source)], "Sample", [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location]));
+        => FpasCompiler.Compile(new([new("sample.fpas", source)], "Sample", TestCompilation.References));
 }

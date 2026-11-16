@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
 using Fpas.Tests.Support;
 
@@ -5,8 +6,6 @@ namespace Fpas.Compiler.Tests.Analysis;
 
 public sealed class AnalysisTests
 {
-    private static string[] References => [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];
-
     [Theory]
     [InlineData("program Empty; begin end; end program;", CompilationTarget.Exe)]
     [InlineData("unit Library; public function Read(): int; begin return 42; end function; end unit;", CompilationTarget.Library)]
@@ -15,7 +14,7 @@ public sealed class AnalysisTests
     public void Successful_analysis_has_independent_completion_and_does_not_publish_files(string source, CompilationTarget target)
     {
         using var directory = new TemporaryDirectory();
-        var result = FpasCompiler.Analyze(new([new(directory.File("Input.fpas"), source)], "Analyzed", References, target, ValidateDocumentation: true));
+        var result = FpasCompiler.Analyze(new([new(directory.File("Input.fpas"), source)], "Analyzed", TestCompilation.References, target, ValidateDocumentation: true));
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         Assert.True(result.IsComplete); Assert.Empty(result.Diagnostics);
         Assert.Empty(Directory.GetFileSystemEntries(directory.Path));
@@ -30,7 +29,7 @@ public sealed class AnalysisTests
     public void Analysis_and_compile_preserve_expected_semantic_failures(string body, string code)
     {
         var source = "program Invalid; begin " + body + " end; end program;";
-        var request = new CompilationRequest([new("invalid.fpas", source)], "Invalid", References);
+        var request = new CompilationRequest([new("invalid.fpas", source)], "Invalid", TestCompilation.References);
         var analysis = FpasCompiler.Analyze(new(request.Sources, request.AssemblyName, request.References));
         var compiled = FpasCompiler.Compile(request);
         Assert.False(analysis.Success); Assert.False(analysis.IsComplete);
@@ -45,7 +44,7 @@ public sealed class AnalysisTests
     public void Analysis_retains_original_error_coordinates(string newline)
     {
         var text = string.Join(newline, "// comment", "program Invalid;", "begin", "const Value := 'x';", "end;", "end program;");
-        var result = FpasCompiler.Analyze(new([new("input.fpas", text)], "Input", References));
+        var result = FpasCompiler.Analyze(new([new("input.fpas", text)], "Input", TestCompilation.References));
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP2002", diagnostic.Code);
         Assert.Equal(new SourceLocation("input.fpas", 4, 13, 2, 4, 15, text.IndexOf(":=", StringComparison.Ordinal)), diagnostic.Location);
@@ -66,12 +65,12 @@ public sealed class AnalysisTests
             begin end;
             end program;
             """;
-        var analyzed = FpasCompiler.Analyze(new([new("async.fpas", source)], "Invalid", References));
+        var analyzed = FpasCompiler.Analyze(new([new("async.fpas", source)], "Invalid", TestCompilation.References));
         var diagnostic = Assert.Single(analyzed.Diagnostics);
         Assert.False(analyzed.Success); Assert.Equal("FP3030", diagnostic.Code);
         Assert.Contains("cannot remain live across await", diagnostic.Message);
         Assert.Equal(7, diagnostic.Location!.Line);
-        Assert.Equal(FpasCompiler.Compile(new([new("async.fpas", source)], "Invalid", References)).Diagnostics, analyzed.Diagnostics);
+        Assert.Equal(FpasCompiler.Compile(new([new("async.fpas", source)], "Invalid", TestCompilation.References)).Diagnostics, analyzed.Diagnostics);
     }
 
     [Theory]
@@ -79,7 +78,7 @@ public sealed class AnalysisTests
     [InlineData("function Work(): int; requires Work() > 0; begin return 1; end function;", "FP3027")]
     public void Parameter_and_contract_validation_is_not_skipped(string declaration, string code)
     {
-        var analyzed = FpasCompiler.Analyze(new([new("invalid.fpas", "program Invalid; " + declaration + " begin end; end program;")], "Invalid", References));
+        var analyzed = FpasCompiler.Analyze(new([new("invalid.fpas", "program Invalid; " + declaration + " begin end; end program;")], "Invalid", TestCompilation.References));
         Assert.False(analyzed.Success); Assert.Equal(code, Assert.Single(analyzed.Diagnostics).Code);
     }
 
@@ -88,7 +87,7 @@ public sealed class AnalysisTests
     [InlineData("unit Invalid; end unit;", CompilationTarget.Exe)]
     public void Target_rules_are_identical_to_compilation(string source, CompilationTarget target)
     {
-        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Input", References, target));
+        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Input", TestCompilation.References, target));
         Assert.False(result.Success); Assert.Equal("FP2004", Assert.Single(result.Diagnostics).Code);
     }
 

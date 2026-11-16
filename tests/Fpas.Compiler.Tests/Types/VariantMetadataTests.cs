@@ -33,7 +33,7 @@ public sealed class VariantMetadataTests
             else
             {
                 if (corruption == "case-tag") type = reader.TypeDefinitions.Select(reader.GetTypeDefinition).Single(type => reader.GetString(type.Name) == "BCase");
-                var attribute = MetadataAttributes.Named(reader, type.GetCustomAttributes(), corruption == "version" ? "VariantAttribute" : "VariantCaseAttribute");
+                var attribute = AssemblyInspection.Attribute(reader, type.GetCustomAttributes(), corruption == "version" ? "VariantAttribute" : "VariantCaseAttribute");
                 var offset = pe.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset(HeapIndex.Blob) + MetadataTokens.GetHeapOffset(attribute.Value);
                 bytes[offset + 3] = corruption == "version" ? (byte)2 : (byte)0;
             }

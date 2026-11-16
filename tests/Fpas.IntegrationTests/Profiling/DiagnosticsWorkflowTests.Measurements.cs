@@ -1,6 +1,7 @@
 using System.Globalization;
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Profiling;
 
@@ -70,7 +71,7 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
         Assert.Equal(1, result.ExitCode); Assert.Contains("timed out", result.Error);
         Assert.False(File.Exists(output)); Assert.True(File.Exists(ready));
         var pid = int.Parse(File.ReadAllText(ready), CultureInfo.InvariantCulture);
-        try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
     }
 
     /// <summary>Checks that multibyte output triggers the byte limit and joins the still-running child.</summary>
@@ -101,7 +102,7 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
         Assert.Contains("Child output exceeded 64 KiB", result.Error, StringComparison.Ordinal);
         Assert.False(File.Exists(output));
         var pid = int.Parse(File.ReadAllText(ready), CultureInfo.InvariantCulture);
-        try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
     }
 
     /// <summary>Checks that invalid integer inputs use the documented argument-error exit path.</summary>

@@ -1,6 +1,5 @@
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Tests.Support;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Types;
 
@@ -21,7 +20,7 @@ public sealed class GenericDelimiterTests
         var compiled = TestCompilation.Compile(text, CompilationTarget.Library);
         Assert.True(compiled.Success, string.Join('\n', compiled.Diagnostics));
         var analyzed = FpasCompiler.Analyze(new([new("library.fpas", text)], "Library",
-            [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location], CompilationTarget.Library));
+            TestCompilation.References, CompilationTarget.Library));
         Assert.True(analyzed.Success, string.Join('\n', analyzed.Diagnostics));
     }
 }

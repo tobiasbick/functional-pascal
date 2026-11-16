@@ -2,6 +2,7 @@ using Fpas.Compiler.Formatting;
 using Fpas.Tests.Support;
 using System.Text;
 using System.Text.Json;
+using Fpas.IntegrationTests.Support;
 
 namespace Fpas.IntegrationTests.Formatting;
 
@@ -71,10 +72,9 @@ public sealed class FormatCliTests
         Assert.Equal(new[] { directory.File("a.fpas"), directory.File("nested/b.fpas") }, result.Output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
     }
 
-    [Fact]
+    [UnixFact]
     public async Task Explicit_links_and_links_in_parent_paths_are_rejected_without_touching_targets()
     {
-        if (OperatingSystem.IsWindows()) return;
         using var directory = new TemporaryDirectory();
         Directory.CreateDirectory(directory.File("sources"));
         var target = directory.File("sources/main.fpas"); File.WriteAllText(target, Source);

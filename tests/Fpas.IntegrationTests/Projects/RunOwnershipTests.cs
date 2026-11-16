@@ -1,7 +1,7 @@
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
-using System.Diagnostics;
 using System.Text.Json;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Projects;
 
@@ -47,12 +47,7 @@ public sealed class RunOwnershipTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         Assert.Equal("parent done" + Environment.NewLine, json.RootElement.GetProperty("program").GetProperty("output").GetString());
         Assert.False(File.Exists(directory.File("failure.json")));
         var child = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
-        try
-        {
-            using var process = Process.GetProcessById(child);
-            Assert.True(process.HasExited);
-        }
-        catch (ArgumentException) { }
+        ProcessExit.AssertExited(child);
         if (OperatingSystem.IsLinux()) Assert.False(Directory.Exists("/proc/" + child));
     }
 }

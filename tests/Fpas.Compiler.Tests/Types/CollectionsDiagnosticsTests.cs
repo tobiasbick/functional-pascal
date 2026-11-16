@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Types;
 
 public sealed class CollectionsDiagnosticsTests
@@ -35,7 +35,7 @@ public sealed class CollectionsDiagnosticsTests
     [InlineData("var X: string? := 'known'; for Item: int in [1, 2] do discard X.Length; X := null; end for;", "FP3013")]
     public void Invalid_collection_operations_are_diagnosed(string body, string code)
     {
-        var result = DiagnosticsTests.Compile("program Bad; uses System.Collections.Generic as C; begin " + body + " end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad; uses System.Collections.Generic as C; begin " + body + " end; end program;");
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
         Assert.Null(result.Program);
     }
@@ -43,7 +43,7 @@ public sealed class CollectionsDiagnosticsTests
     [Fact]
     public void Helpers_do_not_implicitly_receive_program_arguments()
     {
-        var result = DiagnosticsTests.Compile("program Bad; function Count(): int; begin return args.Length; end function; begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad; function Count(): int; begin return args.Length; end function; begin end; end program;");
         Assert.Equal("FP3001", Assert.Single(result.Diagnostics).Code);
     }
 }

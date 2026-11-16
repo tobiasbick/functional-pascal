@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Profiling;
 
@@ -43,6 +44,6 @@ public sealed partial class DiagnosticsWorkflowTests
         Assert.Equal(1, timedOut.ExitCode); using var timeout = JsonDocument.Parse(timedOut.Output);
         Assert.Equal("timeout", timeout.RootElement.GetProperty("status").GetString()); Assert.True(File.Exists(ready));
         var pid = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
-        try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+        ProcessExit.AssertExited(pid);
     }
 }

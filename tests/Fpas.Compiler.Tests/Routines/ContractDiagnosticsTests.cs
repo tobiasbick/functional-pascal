@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class ContractDiagnosticsTests
@@ -18,7 +18,7 @@ public sealed class ContractDiagnosticsTests
     [InlineData("ensures (First: int): First > 0; ensures First > 0;", "FP3001")]
     public void Invalid_contracts_report_semantic_diagnostics(string contract, string code)
     {
-        var result = DiagnosticsTests.Compile($"""
+        var result = TestCompilation.CompileAgainstFramework($"""
             program Contracts;
             uses System as Sys;
             function Positive(Value: int): int;
@@ -38,7 +38,7 @@ public sealed class ContractDiagnosticsTests
     [InlineData("", "const Callback: function(int): int := function(Value: int): int requires true; => Value;")]
     public void Contract_result_bindings_are_limited_to_their_own_postcondition(string declaration, string body)
     {
-        var result = DiagnosticsTests.Compile($"program Scope; {declaration} begin {body} end; end program;");
+        var result = TestCompilation.CompileAgainstFramework($"program Scope; {declaration} begin {body} end; end program;");
         Assert.False(result.Success);
         Assert.Null(result.Program);
     }

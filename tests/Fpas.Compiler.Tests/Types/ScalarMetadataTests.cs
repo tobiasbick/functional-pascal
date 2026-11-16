@@ -30,7 +30,7 @@ public sealed class ScalarMetadataTests
             {
                 var attributes = corruption.StartsWith("domain", StringComparison.Ordinal) ? type.GetCustomAttributes()
                     : reader.GetMethodDefinition(reader.MethodDefinitions.Single(handle => reader.GetString(reader.GetMethodDefinition(handle).Name) == "<Alias:Count>")).GetCustomAttributes();
-                var attribute = MetadataAttributes.Named(reader, attributes, corruption.StartsWith("domain", StringComparison.Ordinal) ? "DomainAttribute" : "AliasAttribute");
+                var attribute = AssemblyInspection.Attribute(reader, attributes, corruption.StartsWith("domain", StringComparison.Ordinal) ? "DomainAttribute" : "AliasAttribute");
                 var offset = pe.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset(HeapIndex.Blob) + MetadataTokens.GetHeapOffset(attribute.Value);
                 // A one-byte blob length precedes the two-byte attribute prolog.
                 bytes[offset + 3] = 2;
@@ -72,7 +72,7 @@ public sealed class ScalarMetadataTests
             new("types.fpas", "unit Model; public type Count = ulong; public type Id = distinct long; public type Port = ushort range 1..65535; public type Choice = enum : byte First; Last = 255; end enum; end unit;"),
             new("api.fpas", "unit Api; uses Model as M; public function Create(Value: M.Count): M.Id; begin return new M.Id(cast<long>(Value)); end function; end unit;")
         ];
-        string[] references = [.. TestEnvironment.References, typeof(Core.DomainAttribute).Assembly.Location];
+        string[] references = TestCompilation.References;
         var first = FpasCompiler.Compile(new(sources, "Scalars", references, CompilationTarget.Library));
         var second = FpasCompiler.Compile(new(sources.Reverse().ToArray(), "Scalars", references.Reverse().ToArray(), CompilationTarget.Library));
         Assert.True(first.Success, string.Join(";", first.Diagnostics)); Assert.True(second.Success, string.Join(";", second.Diagnostics));

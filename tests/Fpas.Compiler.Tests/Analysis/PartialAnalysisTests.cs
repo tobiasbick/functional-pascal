@@ -1,12 +1,11 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Analysis;
 
 public sealed class PartialAnalysisTests
 {
-    private static string[] References => [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];
-    private static AnalysisResult Analyze(params CompilationSource[] sources) => FpasCompiler.Analyze(new(sources, "Partial", References, CompilationTarget.Library));
+    private static AnalysisResult Analyze(params CompilationSource[] sources) => FpasCompiler.Analyze(new(sources, "Partial", TestCompilation.References, CompilationTarget.Library));
 
     [Theory]
     [InlineData("return Missing;")]
@@ -29,7 +28,7 @@ public sealed class PartialAnalysisTests
         Assert.DoesNotContain(snapshot.Occurrences, fact => fact.Span.Offset >= failed && fact.Span.Offset < failed + broken.Length);
         Assert.DoesNotContain(snapshot.Symbols, symbol => symbol.Kind == "local" && symbol.Name == "Value");
         AssertConsistent(snapshot);
-        var compiled = FpasCompiler.Compile(new([input], "Partial", References, CompilationTarget.Library));
+        var compiled = FpasCompiler.Compile(new([input], "Partial", TestCompilation.References, CompilationTarget.Library));
         Assert.False(compiled.Success); Assert.Null(compiled.Program);
     }
 
@@ -64,7 +63,7 @@ public sealed class PartialAnalysisTests
         var snapshot = Assert.IsType<SemanticSnapshot>(result.Snapshot);
         Assert.Contains(snapshot.Symbols, symbol => symbol.Name == "Healthy");
         Assert.Contains(snapshot.Bodies, body => body.Symbol is { } id && snapshot.Symbol(id).Name == "Healthy");
-        Assert.False(FpasCompiler.Compile(new([input], "Partial", References, CompilationTarget.Library)).Success); AssertConsistent(snapshot);
+        Assert.False(FpasCompiler.Compile(new([input], "Partial", TestCompilation.References, CompilationTarget.Library)).Success); AssertConsistent(snapshot);
     }
 
     private static void AssertConsistent(SemanticSnapshot snapshot)
@@ -105,7 +104,7 @@ public sealed class PartialAnalysisTests
     public void A_broken_program_entry_preserves_checked_routines_without_publishing_entry_facts()
     {
         const string source = "program Sample; function Healthy(): int; begin return 42; end function; begin discard Healthy(); discard Missing; end; end program;";
-        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Partial", References)); var snapshot = Assert.IsType<SemanticSnapshot>(result.Snapshot);
+        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Partial", TestCompilation.References)); var snapshot = Assert.IsType<SemanticSnapshot>(result.Snapshot);
         Assert.False(result.Success); Assert.Contains(snapshot.Symbols, symbol => symbol.Name == "Healthy");
         Assert.DoesNotContain(snapshot.Bodies, body => body.Kind == "program_entry"); Assert.Empty(snapshot.Operations); AssertConsistent(snapshot);
     }

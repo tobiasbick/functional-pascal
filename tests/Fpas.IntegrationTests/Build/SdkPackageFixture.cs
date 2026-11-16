@@ -38,11 +38,15 @@ public sealed class SdkPackageFixture : IAsyncLifetime
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             File.WriteAllText(target, File.ReadAllText(source).Replace("SDK_VERSION", Version, StringComparison.Ordinal));
         }
-        new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
-            new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", Feed)))))
-            .Save(project.File("NuGet.Config"));
+        WriteFeedConfig(project.Path);
         return project;
     }
+
+    // Writes a NuGet.Config into the directory that restores only from the fixture feed.
+    internal void WriteFeedConfig(string directory)
+        => new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
+            new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", Feed)))))
+            .Save(Path.Combine(directory, "NuGet.Config"));
 
     internal Task<ProcessResult> Run(TemporaryDirectory project, params string[] args)
         => ProcessRunner.RunAsync(args, workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));
@@ -50,6 +54,11 @@ public sealed class SdkPackageFixture : IAsyncLifetime
     public Task DisposeAsync()
     {
         directory.Dispose();
+        // Projects without an isolated cache restore the unique test version into the global cache; evict it.
+        var packages = Environment.GetEnvironmentVariable("NUGET_PACKAGES") is { Length: > 0 } root ? root
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+        var cached = Path.Combine(packages, "fpas.net.sdk", Version.ToLowerInvariant());
+        if (Directory.Exists(cached)) TemporaryDirectory.Remove(cached);
         return Task.CompletedTask;
     }
 }

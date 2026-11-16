@@ -3,6 +3,7 @@ using Fpas.Debugging.Native;
 using Fpas.Debugging.Hosting;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -32,8 +33,7 @@ public sealed class NativeCoreTests
         await using var session = await CoreClrSession.Launch(BuildProcess.DotnetHost(), program.Assembly,
             program.DirectoryPath, program.Source, 6, deadline.Token, Launcher);
         var pid = session.ProcessId;
-        using var process = Process.GetProcessById(pid);
-        _ = process.SafeHandle;
+        using var process = ProcessExit.Track(pid);
         Assert.Equal("breakpoint", await session.WaitForStop(deadline.Token));
         Assert.Equal(20, session.IntegerLocals()["Value"]);
         var position = session.Position();
@@ -45,7 +45,7 @@ public sealed class NativeCoreTests
         session.Continue();
         await session.WaitForExit(deadline.Token);
         Assert.Equal(0, await session.ExitCode(deadline.Token));
-        AssertExited(process);
+        ProcessExit.AssertGone(process);
     }
 
     [Fact]
@@ -66,20 +66,13 @@ public sealed class NativeCoreTests
             program.DirectoryPath, program.Source, 5, deadline.Token, Launcher);
         await using (session)
         {
-            using var target = Process.GetProcessById(session.ProcessId);
-            _ = target.SafeHandle;
+            using var target = ProcessExit.Track(session.ProcessId);
             Assert.Equal("breakpoint", await session.WaitForStop(deadline.Token));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await session.WaitForStop(new CancellationToken(true)));
             await session.DisposeAsync();
-            AssertExited(target);
+            ProcessExit.AssertGone(target);
             await session.DisposeAsync();
         }
-    }
-
-    private static void AssertExited(Process process)
-    {
-        if (OperatingSystem.IsLinux()) Assert.False(Directory.Exists($"/proc/{process.Id}"));
-        else Assert.True(process.HasExited);
     }
 
     [Fact]

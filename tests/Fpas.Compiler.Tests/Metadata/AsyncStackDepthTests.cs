@@ -1,4 +1,4 @@
-using Fpas.Tests.Support;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -38,7 +38,7 @@ public sealed class AsyncStackDepthTests
             end unit;
             """;
         var result = FpasCompiler.Compile(new([new("stack.fpas", source)], "TaskStack",
-            [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location], CompilationTarget.Library));
+            TestCompilation.References, CompilationTarget.Library));
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         var context = new AssemblyLoadContext("async-stack", isCollectible: true);
         try

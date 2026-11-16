@@ -1141,6 +1141,6 @@ model picker and legacy voice orb follow the original content.
 [fpas-skeleton]: ../src/Fpas.Ui/README.md#skeleton
 [fpas-tooltip]: ../src/Fpas.Ui/README.md#tooltip
 [gui-gallery-test]: ../tests/Fixtures/gui-host/PublishedGallery.fpas
-[gui-layout-test]: ../tests/Fpas.Ui.Gui.Cui.Tests/CuiHostLayoutTests.cs
+[gui-layout-test]: ../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiHostLayoutTests.cs
 [tui-gallery-test]: ../tests/Fpas.IntegrationTests/Tui/TuiGalleryTests.cs
 [tui-contract]: ../tests/Fixtures/tui/CuiContract.fpas

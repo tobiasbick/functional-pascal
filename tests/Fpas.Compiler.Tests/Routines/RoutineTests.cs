@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -36,7 +36,7 @@ public sealed class RoutineTests
     [Fact]
     public void Output_kind_must_match_the_source_container()
     {
-        Assert.Equal("FP2004", Assert.Single(DiagnosticsTests.Compile("unit Api; end unit;").Diagnostics).Code);
+        Assert.Equal("FP2004", Assert.Single(TestCompilation.CompileAgainstFramework("unit Api; end unit;").Diagnostics).Code);
         Assert.Equal("FP2004", Assert.Single(Compile("program App; begin end; end program;").Diagnostics).Code);
     }
 

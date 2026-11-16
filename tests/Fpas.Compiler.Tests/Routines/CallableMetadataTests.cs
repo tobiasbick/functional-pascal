@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -27,7 +27,7 @@ public sealed class CallableMetadataTests
     [Fact]
     public void Generic_calls_and_closures_have_real_CLR_metadata_and_no_language_runtime_dependency()
     {
-        var result = DiagnosticsTests.Compile(Source);
+        var result = TestCompilation.CompileAgainstFramework(Source);
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
         using var pe = new PEReader(new MemoryStream(result.Program!.AssemblyImage));
         var reader = pe.GetMetadataReader();
@@ -54,7 +54,7 @@ public sealed class CallableMetadataTests
     [Fact]
     public void Closure_layout_and_generic_instantiations_are_deterministic()
     {
-        var first = DiagnosticsTests.Compile(Source);
+        var first = TestCompilation.CompileAgainstFramework(Source);
         var second = FpasCompiler.Compile(new([new("elsewhere.fpas", Source)], "Example", TestEnvironment.References.Reverse().ToArray()));
         Assert.True(first.Success);
         Assert.True(second.Success);

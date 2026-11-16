@@ -107,7 +107,7 @@ dotnet pack src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj -c Release -o artifacts/feed
 ```
 
 Set PackageVersion consistently when creating a versioned release. The
-[GUI publishing acceptance](../../tests/Fpas.Ui.Gui.Cui.Tests/GuiPublishingTests.cs)
+[GUI publishing acceptance](../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/GuiPublishingTests.cs)
 builds a fresh feed with these packages and consumes Fpas.Ui.Gui without source
 references or native GUI build tools. Terminal-only applications use Fpas.Ui.Tui,
 Fpas.Ui and Fpas.Ui.Mvu independently of that native binding.

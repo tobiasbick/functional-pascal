@@ -29,7 +29,7 @@ public sealed class ComparisonOperatorTests
     [InlineData(">=", "op_GreaterThanOrEqual")]
     public void Imported_value_comparisons_emit_actual_CLR_operator_calls(string op, string method)
     {
-        var result = DiagnosticsTests.Compile($$"""
+        var result = TestCompilation.CompileAgainstFramework($$"""
             program Compare;
             uses System as Sys;
             function Test(A: Sys.DateTime; B: Sys.DateTime): bool;
@@ -51,7 +51,7 @@ public sealed class ComparisonOperatorTests
     public void Comparisons_preserve_contract_restrictions_and_reject_unsupported_operands(string type, string op, string code)
     {
         var contract = code == "FP3027";
-        var result = DiagnosticsTests.Compile($$"""
+        var result = TestCompilation.CompileAgainstFramework($$"""
             program Compare;
             uses System as Sys;
             function Test(A: {{type}}; B: {{type}}): bool;

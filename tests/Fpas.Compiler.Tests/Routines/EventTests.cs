@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class EventTests
@@ -49,7 +49,7 @@ public sealed class EventTests
     [Fact]
     public void Event_receivers_cannot_read_unassigned_out_parameters()
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Example;
             uses System as Sys;
             procedure Wire(out Domain: Sys.AppDomain; Handler: Sys.EventHandler);
@@ -60,7 +60,7 @@ public sealed class EventTests
         Assert.False(result.Success); Assert.Equal("FP3028", Assert.Single(result.Diagnostics).Code);
     }
 
-    private static CompilationResult Compile(string body) => DiagnosticsTests.Compile($$"""
+    private static CompilationResult Compile(string body) => TestCompilation.CompileAgainstFramework($$"""
         program Example;
         uses System as Sys;
         procedure Handle(Sender: object?; Args: Sys.EventArgs); begin end procedure;

@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -15,8 +16,8 @@ public sealed partial class DapDebuggerTests
     {
         using var program = new Debuggee("dap-invalid-frame"); await WaitingProgram(program);
         await using var client = new DapProbe(); await LaunchRunning(client, program);
-        using var target = Track(await Ready(program));
-        await client.Raw(frame); await client.End(1); Gone(target);
+        using var target = ProcessExit.Track(await Ready(program));
+        await client.Raw(frame); await client.End(1); ProcessExit.AssertGone(target);
     }
 
     [Fact]

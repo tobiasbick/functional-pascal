@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -29,12 +29,12 @@ public sealed partial class CoreSessionTests
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var launcher = WorkerLauncher.ForAssembly(TestEnvironment.Metadata("FpasCliPath"), BuildProcess.DotnetHost());
         await using var host = await DebugSessionHost.Start(launcher, program.DirectoryPath, deadline.Token);
-        using var worker = Process.GetProcessById(host.WorkerProcessId); _ = worker.SafeHandle;
+        using var worker = ProcessExit.Track(host.WorkerProcessId);
         var starting = await host.Prepare(new(BuildProcess.DotnetHost(), program.Assembly, program.DirectoryPath, new(program.Source, 6)), deadline.Token);
         Assert.Equal("starting", starting.State);
         Assert.True(starting.ProcessId > 0);
         Assert.NotEqual(host.WorkerProcessId, starting.ProcessId);
-        using var target = Process.GetProcessById(starting.ProcessId!.Value); _ = target.SafeHandle;
+        using var target = ProcessExit.Track(starting.ProcessId!.Value);
         await host.Initialize(deadline.Token);
         var stop = await host.WaitForStop(deadline.Token);
         Assert.Equal("stopped", stop.State);
@@ -50,7 +50,7 @@ public sealed partial class CoreSessionTests
         Assert.Equal("exited", (await host.WaitForStop(deadline.Token)).State);
         Assert.Equal(0, host.Snapshot.ExitCode);
         await host.Stop(deadline.Token);
-        Gone(worker); Gone(target);
+        ProcessExit.AssertGone(worker); ProcessExit.AssertGone(target);
         Assert.Equal(0, worker.ExitCode);
         Assert.Contains("42", string.Concat(host.Output().Items.Select(item => item.Text)));
     }

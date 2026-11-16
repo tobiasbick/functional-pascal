@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
 using Fpas.Tests.Support;
 
@@ -9,7 +10,7 @@ public sealed class MetadataImageTests
     public void Immutable_images_replace_disk_inputs_for_both_analysis_and_emission()
     {
         using var directory = new TemporaryDirectory(); var path = directory.File("Library.dll");
-        string[] references = [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];
+        string[] references = TestCompilation.References;
         var library = FpasCompiler.Compile(new([new("library.fpas", "unit Library; public function Read(): int; begin return 42; end function; end unit;")], "Library", references, CompilationTarget.Library));
         Assert.True(library.Success);
         var bytes = library.Program!.AssemblyImage; var image = new MetadataImage(path, bytes); Array.Clear(bytes);

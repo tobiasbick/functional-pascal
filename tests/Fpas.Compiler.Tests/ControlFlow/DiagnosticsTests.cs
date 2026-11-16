@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler;
 using Fpas.Tests.Support;
 
@@ -26,7 +27,7 @@ public sealed class DiagnosticsTests
     [InlineData("var A := 1;", "FP2002")]
     public void Invalid_programs_return_diagnostics_without_output(string body, string code)
     {
-        var result = Compile(Header + body + " end; end program;");
+        var result = TestCompilation.CompileAgainstFramework(Header + body + " end; end program;");
         Assert.False(result.Success);
         Assert.Null(result.Program);
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
@@ -39,7 +40,7 @@ public sealed class DiagnosticsTests
     public void Missing_types_report_the_original_source_location(string newline)
     {
         var source = string.Join(newline, "// comment", "program Example;", "begin", "const Value := 'x';", "end;", "end program;");
-        var diagnostic = Assert.Single(Compile(source).Diagnostics);
+        var diagnostic = Assert.Single(TestCompilation.CompileAgainstFramework(source).Diagnostics);
         Assert.Equal("FP2002", diagnostic.Code);
         Assert.Equal(new SourceLocation("example.fpas", 4, 13, 2, 4, 15, source.IndexOf(":=", StringComparison.Ordinal)), diagnostic.Location);
     }
@@ -51,13 +52,13 @@ public sealed class DiagnosticsTests
     [InlineData("program Example; begin end;")]
     [InlineData("program Example; begin end; end program; extra")]
     public void Keywords_and_program_terminators_follow_the_new_syntax(string source)
-        => Assert.Equal("FP2001", Assert.Single(Compile(source).Diagnostics).Code);
+        => Assert.Equal("FP2001", Assert.Single(TestCompilation.CompileAgainstFramework(source).Diagnostics).Code);
 
     [Fact]
     public void Diagnostics_after_a_multiline_string_keep_physical_source_positions()
     {
         const string source = "program Example;\r\nbegin\r\n  const Text: string := 'first\r\nsecond';\r\n  discard Missing;\r\nend;\r\nend program;";
-        var error = Assert.Single(Compile(source).Diagnostics);
+        var error = Assert.Single(TestCompilation.CompileAgainstFramework(source).Diagnostics);
         Assert.Equal("FP3001", error.Code);
         Assert.Equal(5, error.Location!.Line);
         Assert.Equal(11, error.Location.Column);
@@ -68,7 +69,7 @@ public sealed class DiagnosticsTests
     public void An_unterminated_multiline_string_points_to_its_opening_quote()
     {
         const string source = "program Example;\nbegin\n  const Text: string := 'first\r\nsecond";
-        var error = Assert.Single(Compile(source).Diagnostics);
+        var error = Assert.Single(TestCompilation.CompileAgainstFramework(source).Diagnostics);
         Assert.Equal("FP1002", error.Code);
         Assert.Equal(3, error.Location!.Line);
         Assert.Equal(source.IndexOf('\''), error.Location.Offset);
@@ -77,7 +78,7 @@ public sealed class DiagnosticsTests
     [Fact]
     public void Duplicate_imports_are_rejected()
     {
-        var result = Compile("program Example; uses System.Console as First, System.Console as Second; begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Example; uses System.Console as First, System.Console as Second; begin end; end program;");
         Assert.Equal("FP3004", Assert.Single(result.Diagnostics).Code);
     }
 
@@ -97,7 +98,4 @@ public sealed class DiagnosticsTests
         var result = FpasCompiler.Compile(new([new("example.fpas", "program Example; begin end; end program;")], "Example", [path]));
         Assert.Equal("FP4001", Assert.Single(result.Diagnostics).Code);
     }
-
-    internal static CompilationResult Compile(string source) => FpasCompiler.Compile(
-        new([new("example.fpas", source)], "Example", TestEnvironment.References));
 }

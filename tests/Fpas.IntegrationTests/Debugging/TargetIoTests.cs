@@ -1,9 +1,9 @@
-using System.Diagnostics;
 using System.Text;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
+using Fpas.IntegrationTests.Processes.Support;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -175,7 +175,7 @@ public sealed class TargetIoTests
         await host.Resume(entry.StopId!.Value, "continue", deadline.Token); await Task.Delay(100, deadline.Token);
         await host.Pause(deadline.Token); var paused = await host.WaitForStop(deadline.Token); Assert.Equal("pause", paused.Reason);
         await host.Stop(deadline.Token);
-        AssertExited(target); AssertExited(worker);
+        ProcessExit.AssertExited(target); ProcessExit.AssertExited(worker);
     }
 
     [Theory]
@@ -204,11 +204,5 @@ public sealed class TargetIoTests
         Assert.Equal(exact ? 7 : 11, output.TotalBytes); Assert.Equal(exact ? 7 : 4, output.RetainedBytes);
         Assert.Equal(!exact, output.Truncated);
         Assert.False(output.EncodingLoss);
-    }
-
-    private static void AssertExited(int id)
-    {
-        try { using var process = Process.GetProcessById(id); Assert.True(process.HasExited, "An owned I/O process survived shutdown."); }
-        catch (ArgumentException) { }
     }
 }

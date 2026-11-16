@@ -1,3 +1,4 @@
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.ControlFlow;
 
 public sealed class InteropDiagnosticsTests
@@ -30,7 +31,7 @@ public sealed class InteropDiagnosticsTests
     [InlineData("try raise new Sys.Exception(); catch Failure: Sys.Exception do end try; Console.WriteLine(Failure.Message);", "FP3001")]
     public void Unsafe_or_unsupported_interop_is_diagnosed(string body, string code)
     {
-        var result = DiagnosticsTests.Compile("program Bad; uses System as Sys, System.IO as IO, System.Console as Console; begin " + body + " end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad; uses System as Sys, System.IO as IO, System.Console as Console; begin " + body + " end; end program;");
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
         Assert.Null(result.Program);
     }

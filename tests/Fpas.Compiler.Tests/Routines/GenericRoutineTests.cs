@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class GenericRoutineTests
@@ -26,7 +26,7 @@ public sealed class GenericRoutineTests
     [InlineData("function F<T>(X: T): T; where T: array of string; begin return X; end function;", "FP3026")]
     public void Invalid_generic_declarations_and_unsafe_bodies_are_diagnosed(string declaration, string code)
     {
-        var result = DiagnosticsTests.Compile("program Example; uses System as Sys, System.Numerics as N; " + declaration + " begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Example; uses System as Sys, System.Numerics as N; " + declaration + " begin end; end program;");
         Assert.False(result.Success); Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
     }
 
@@ -40,7 +40,7 @@ public sealed class GenericRoutineTests
     [InlineData("discard Create<string>();", "FP3018")]
     public void Explicit_arguments_and_constraints_are_checked(string body, string code)
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Example;
             function Id<T>(X: T): T; begin return X; end function;
             function Ref<T>(X: T): T; where T: class; begin return X; end function;

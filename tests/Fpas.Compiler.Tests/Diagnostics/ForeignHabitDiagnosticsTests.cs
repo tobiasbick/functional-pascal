@@ -1,5 +1,5 @@
+using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Diagnostics;
 
@@ -168,7 +168,7 @@ public sealed class ForeignHabitDiagnosticsTests
         Assert.False(result.Success); Assert.Null(result.Program);
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal(code, diagnostic.Code);
-        var analysis = FpasCompiler.Analyze(new([new("sample.fpas", source)], "Sample", [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location]));
+        var analysis = FpasCompiler.Analyze(new([new("sample.fpas", source)], "Sample", TestCompilation.References));
         Assert.False(analysis.Success);
         var checkedDiagnostic = Assert.Single(analysis.Diagnostics);
         Assert.Equal(diagnostic.Code, checkedDiagnostic.Code); Assert.Equal(diagnostic.Location, checkedDiagnostic.Location);
@@ -177,5 +177,5 @@ public sealed class ForeignHabitDiagnosticsTests
     }
 
     private static CompilationResult Compile(string source)
-        => FpasCompiler.Compile(new([new("sample.fpas", source)], "Sample", [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location]));
+        => FpasCompiler.Compile(new([new("sample.fpas", source)], "Sample", TestCompilation.References));
 }

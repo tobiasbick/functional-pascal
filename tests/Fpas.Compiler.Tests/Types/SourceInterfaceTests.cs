@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Types;
 
@@ -56,7 +55,7 @@ public sealed class SourceInterfaceTests
             end unit;
             """;
         var request = new CompilationRequest([new("api.fpas", source)], "Api",
-            [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location], CompilationTarget.Library, EmitDocumentation: true);
+            TestCompilation.References, CompilationTarget.Library, EmitDocumentation: true);
         var result = FpasCompiler.Compile(request);
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         Assert.Equal(result.Program!.AssemblyImage, FpasCompiler.Compile(request).Program!.AssemblyImage);

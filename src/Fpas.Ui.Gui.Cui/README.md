@@ -119,7 +119,7 @@ See [FPAS publishing](../../docs/build/publishing.md) and
 ## FPAS integration fixture
 
 The binding and GUI tests are included in `Fpas.slnx`.
-[`FpasProjectTests`](../../tests/Fpas.Ui.Gui.Cui.Tests/FpasProjectTests.cs) builds
+[`FpasProjectTests`](../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/FpasProjectTests.cs) builds
 the internal [`GuiInterop.fpasproj`](../../tests/Fixtures/gui/GuiInterop.fpasproj)
 using a freshly packaged FPAS SDK, an isolated package cache and a normal CLR
 project reference to the solution-built binding. It does not rebuild the native
@@ -137,7 +137,7 @@ and the CUI source-build prerequisites above. The test also uses `dumpbin` on
 Windows and `readelf` on Linux to inspect the executable's imports. On Linux,
 use a `TMPDIR` path without spaces for the Native AOT linker.
 
-The [publishing test](../../tests/Fpas.Ui.Gui.Cui.Tests/FpasProjectTests.Publishing.cs)
+The [publishing test](../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/FpasProjectTests.Publishing.cs)
 builds both distribution packages in a fresh feed and restores the GUI package
 through a C# project reference. It publishes all five modes with `fpas publish`
 into the same owned output and checks that mode changes remove stale runtime

@@ -1,4 +1,4 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -11,7 +11,7 @@ public sealed class GenericRoutineMetadataTests
     [Fact]
     public void Generic_definitions_calls_and_closures_preserve_CLR_type_parameters()
     {
-        var result = DiagnosticsTests.Compile("""
+        var result = TestCompilation.CompileAgainstFramework("""
             program Metadata;
             function Id<T>(Value: T): T; begin return Value; end function;
             function Hold<T>(Value: T): function(): T; begin return function(): T => Value; end function;

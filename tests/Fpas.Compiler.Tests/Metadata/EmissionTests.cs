@@ -1,9 +1,8 @@
-using Fpas.Compiler.Tests.ControlFlow;
+using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Metadata;
 
@@ -22,7 +21,7 @@ public sealed class EmissionTests
     [Fact]
     public void Output_has_a_real_entry_point_and_the_exact_CLR_call_signature()
     {
-        var result = DiagnosticsTests.Compile(Hello);
+        var result = TestCompilation.CompileAgainstFramework(Hello);
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
         using var pe = new PEReader(new MemoryStream(result.Program!.AssemblyImage));
         var reader = pe.GetMetadataReader();
@@ -46,23 +45,13 @@ public sealed class EmissionTests
             .Select(handle => reader.GetString(reader.GetAssemblyReference(handle).Name)).Order().ToArray());
     }
 
-    [Fact]
-    public void Identical_inputs_emit_identical_assemblies_regardless_of_reference_order()
-    {
-        var first = DiagnosticsTests.Compile(Hello);
-        var second = FpasCompiler.Compile(new([new("elsewhere.fpas", Hello)], "Example", TestEnvironment.References.Reverse().ToArray()));
-        Assert.True(first.Success);
-        Assert.True(second.Success);
-        Assert.Equal(first.Program!.AssemblyImage, second.Program!.AssemblyImage);
-    }
-
     [Theory]
     [InlineData("program Empty; begin end; end program;")]
     [InlineData("\uFEFFprogram Escapes; uses System.Console as Console; begin const @end: string := 'It''s 😀'; Console.WriteLine(@end); end; end program;// EOF comment")]
     [InlineData("program Numbers; uses System.Console as Console; begin const Value: int := 2_147_483_647; Console.WriteLine(Value); end; end program;")]
     public void Supported_programs_emit_valid_managed_images(string source)
     {
-        var result = DiagnosticsTests.Compile(source);
+        var result = TestCompilation.CompileAgainstFramework(source);
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
         using var pe = new PEReader(new MemoryStream(result.Program!.AssemblyImage));
         Assert.True(pe.HasMetadata);

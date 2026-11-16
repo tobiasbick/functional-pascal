@@ -74,7 +74,7 @@ public sealed class AttributeTests
             """;
         CompilationResult Run(IEnumerable<string> references, bool documentation = true) => FpasCompiler.Compile(new([new("marked.fpas", text)], "Marked",
             references.ToArray(), CompilationTarget.Library, EmitDebugInformation: true, EmitDocumentation: documentation));
-        string[] references = [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];
+        string[] references = TestCompilation.References;
         var first = Run(references); var second = Run(references.Reverse()); var plain = Run(references, false);
         Assert.True(first.Success, string.Join(';', first.Diagnostics)); Assert.True(second.Success); Assert.True(plain.Success);
         Assert.Equal(first.Program!.AssemblyImage, second.Program!.AssemblyImage); Assert.Equal(first.Program.PortablePdb, second.Program.PortablePdb);
@@ -87,8 +87,8 @@ public sealed class AttributeTests
         Assert.Equal(2, property.GetCustomAttributes().Count);
         Assert.All(metadata.FieldDefinitions.Select(metadata.GetFieldDefinition), field =>
         {
-            MetadataAttributes.Named(metadata, field.GetCustomAttributes(), "CompilerGeneratedAttribute");
-            MetadataAttributes.Named(metadata, field.GetCustomAttributes(), "DebuggerBrowsableAttribute");
+            AssemblyInspection.Attribute(metadata, field.GetCustomAttributes(), "CompilerGeneratedAttribute");
+            AssemblyInspection.Attribute(metadata, field.GetCustomAttributes(), "DebuggerBrowsableAttribute");
         });
     }
 

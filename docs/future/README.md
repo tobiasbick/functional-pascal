@@ -13,3 +13,4 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 | Confirmed native defects and integration workarounds | [CUI upstream bugs](cui-upstream-bugs.md) |
 | Optional native title bar, upstream proposal and platform validation | [CUI title bar](cui-titlebar.md) |
 | Open platform checks and follow-ups for upstream window state and placement | [CUI window state](cui-window-state.md) |
+| Open findings and verification limits from the C# code review | [C# review gaps](csharp-review-gaps.md) |

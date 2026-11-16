@@ -33,9 +33,7 @@ public sealed class DocExamplesFixture : IAsyncLifetime
         StageUiProject("ui", "Fpas.Ui");
         StageUiProject("mvu", "Fpas.Ui.Mvu");
         StageUiProject("gui", "Fpas.Ui.Gui");
-        new XDocument(new XElement("configuration", new XElement("packageSources", new XElement("clear"),
-            new XElement("add", new XAttribute("key", "fpas-test"), new XAttribute("value", sdk.Feed)))))
-            .Save(directory.File("NuGet.Config"));
+        sdk.WriteFeedConfig(directory.Path);
         var restore = await ProcessRunner.RunAsync(["restore", project], workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(restore.ExitCode == 0, restore.Output + restore.Error);
         var build = await ProcessRunner.RunAsync(["build", project, "--no-restore", "--configuration", "Debug", "--disable-build-servers", "-warnaserror"],

@@ -4,6 +4,7 @@ using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Snapshots;
 using System.Text;
+using Fpas.IntegrationTests.Support;
 
 namespace Fpas.IntegrationTests.Editing;
 
@@ -132,10 +133,9 @@ public sealed class DiagnosticFixPlanTests
         Assert.Equal("int", File.ReadAllText(path));
     }
 
-    [Fact]
+    [UnixFact]
     public async Task Links_are_rejected_before_the_target_is_changed()
     {
-        if (OperatingSystem.IsWindows()) return;
         using var directory = new TemporaryDirectory(); var target = directory.File("target.fpas"); File.WriteAllText(target, "integer");
         var link = directory.File("link.fpas"); File.CreateSymbolicLink(link, target);
         var plan = Plan([new(link, "integer")], [Suggest(link, 0, "integer", "int")]);

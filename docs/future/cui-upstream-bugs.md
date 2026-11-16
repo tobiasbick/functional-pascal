@@ -44,3 +44,23 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 - Fix: [`5830981`](https://github.com/yappologistic/CUI/commit/5830981)
 - Verified snapshot: [`a5c9ef5`](https://github.com/yappologistic/CUI/commit/a5c9ef5efc39b3fc783758362f6b8f9f130f5883)
 - [Upstream confirmation](https://github.com/yappologistic/CUI/pull/93#issuecomment-6907821736)
+
+<a id="cui-033"></a>
+
+## CUI-033 — Planning drag resumes after editing or its target disappears
+
+Reproduced on Windows using direct `cui_gantt` and `cui_week_calendar` calls
+with the vendored snapshot at `a5c9ef5`.
+
+Start moving the second task or appointment with the left mouse button held.
+Set `read_only` for a frame, then restore editing while the button is still
+held. In Gantt, temporarily reducing the task count from two to one has the
+same effect. Continue moving the pointer before releasing the button. CUI
+resumes the previous drag and changes the task dates or appointment times.
+Restoring editability or the task should require a new press to start a drag.
+
+The FPAS adapters clear the active drag when editability changes, input is
+disabled, or the dragged index is outside the current item count. A click
+still activates a task or appointment in steady read-only mode. The native
+planning regression checks all three transitions after first observing a
+successful move.

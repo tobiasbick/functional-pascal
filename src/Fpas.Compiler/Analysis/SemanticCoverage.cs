@@ -1,12 +1,18 @@
 namespace Fpas.Compiler.Analysis;
 
+/// <summary>A source range and whether semantic facts are available for it.</summary>
+/// <param name="Span">The covered range.</param>
+/// <param name="State">"checked" or "unavailable".</param>
+/// <param name="Reason">Why facts are unavailable, such as a syntax or binding error.</param>
 public sealed record SemanticRegion(SourceSpan Span, string State, string? Reason = null);
 
 /// <summary>Partition of captured text into checked and unavailable semantic regions.</summary>
 public sealed class SemanticCoverage
 {
     private readonly IReadOnlyDictionary<string, int> lengths;
+    /// <summary>The regions of every captured source in source order.</summary>
     public IReadOnlyList<SemanticRegion> Regions { get; }
+    /// <summary>Whether every region is checked.</summary>
     public bool IsComplete => Regions.All(region => region.State == "checked");
 
     internal SemanticCoverage(IEnumerable<SourceDocument> documents, IEnumerable<SemanticRegion> invalid)
@@ -32,9 +38,16 @@ public sealed class SemanticCoverage
         Regions = Array.AsReadOnly(result.ToArray());
     }
 
+    /// <summary>Tests whether semantic facts are available at a cursor offset.</summary>
+    /// <param name="path">The source path.</param>
+    /// <param name="offset">The zero-based offset; the end of the source is allowed.</param>
+    /// <returns>Whether the offset belongs to a captured source and no unavailable region covers it.</returns>
     public bool AvailableAt(string path, int offset) => lengths.TryGetValue(path, out var length) && offset >= 0 && offset <= length &&
         !Regions.Any(region => region.State != "checked" && SamePath(region.Span.Path, path) &&
         (region.Span.Contains(offset) || region.Span.Length == 0 && region.Span.Offset == offset));
+    /// <summary>Tests whether semantic facts are available for a whole range.</summary>
+    /// <param name="span">The range to test.</param>
+    /// <returns>Whether the range lies in a captured source and overlaps no unavailable region.</returns>
     public bool Available(SourceSpan span) => lengths.TryGetValue(span.Path, out var length) && span.Offset >= 0 && span.Length >= 0 && (long)span.Offset + span.Length <= length &&
         (span.Length == 0 ? AvailableAt(span.Path, span.Offset) : !Regions.Any(region => region.State != "checked" && SamePath(region.Span.Path, span.Path) &&
             region.Span.Offset < (long)span.Offset + span.Length && span.Offset < (long)region.Span.Offset + region.Span.Length));

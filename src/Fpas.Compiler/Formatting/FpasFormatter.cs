@@ -3,14 +3,22 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Formatting;
 
+/// <summary>The outcome of formatting one source.</summary>
+/// <param name="Text">The formatted text, or <see langword="null"/> when the source could not be formatted.</param>
+/// <param name="Diagnostics">The syntax or preservation errors that prevented formatting.</param>
 public sealed record FormatResult(string? Text, IReadOnlyList<CompilerDiagnostic> Diagnostics)
 {
+    /// <summary>Whether formatted text was produced.</summary>
     public bool Success => Text is not null;
 }
 
 /// <summary>Formats one complete source without references, binding, or code generation.</summary>
 public static class FpasFormatter
 {
+    /// <summary>Formats a source and verifies that tokens, comments, and documentation are preserved.</summary>
+    /// <param name="input">The source to format.</param>
+    /// <param name="cancellationToken">Cancels formatting with an <see cref="OperationCanceledException"/>.</param>
+    /// <returns>The formatted text, or the diagnostics that prevented formatting.</returns>
     public static FormatResult Format(CompilationSource input, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);

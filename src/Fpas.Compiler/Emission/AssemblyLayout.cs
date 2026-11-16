@@ -87,7 +87,7 @@ internal sealed class AssemblyLayout
         }
         foreach (var unit in program.Units)
         {
-            var owner = MetadataTokens.TypeDefinitionHandle(program.Units.ToList().IndexOf(unit) + 2);
+            var owner = Containers[unit.Name];
             void Add(BoundRoutine routine, ClosureSymbol? closure, TypeDefinitionHandle parent, string parentName)
             {
                 if (!routine.Symbol.IsAsync) return;
@@ -115,7 +115,7 @@ internal sealed class AssemblyLayout
             foreach (var scalar in unit.Scalars)
             {
                 ScalarTypes.Add(scalar, MetadataTokens.TypeDefinitionHandle(type++));
-                ScalarOwners.Add(scalar, MetadataTokens.TypeDefinitionHandle(program.Units.ToList().IndexOf(unit) + 2));
+                ScalarOwners.Add(scalar, Containers[unit.Name]);
             }
     }
 }

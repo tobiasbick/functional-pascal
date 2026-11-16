@@ -4,17 +4,33 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
+/// <summary>A checked import that would resolve an unknown qualifier.</summary>
+/// <param name="Receiver">The unknown qualifier that becomes the alias.</param>
+/// <param name="Member">The member name after the qualifier.</param>
+/// <param name="Alias">The alias name.</param>
+/// <param name="QualifiedName">The CLR type or FPAS unit to import.</param>
+/// <param name="AssemblyHash">The content hash of the defining reference, for an imported CLR type.</param>
+/// <param name="Edit">The edit that adds the import to the uses clause.</param>
 public sealed record EditorImport(SourceSpan Receiver, SourceSpan Member, string Alias, string QualifiedName, string? AssemblyHash,
     DiagnosticEdit Edit);
 
+/// <summary>Suggests imports for unknown qualifiers.</summary>
 public static class EditorImports
 {
+    /// <summary>Suggests the single import whose simple name matches an unknown qualifier.</summary>
+    /// <param name="request">The analyzed inputs.</param>
+    /// <param name="path">The path of the source containing the qualifier.</param>
+    /// <param name="offset">The offset of the qualifier in <c>Qualifier.Member</c>.</param>
+    /// <param name="token">Cancels the query with an <see cref="OperationCanceledException"/>.</param>
+    /// <returns>The import, or <see langword="null"/> when no unambiguous import applies.</returns>
     public static EditorImport? Suggest(AnalysisRequest request, string path, int offset, CancellationToken token = default)
     {
         var paths = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var input = request.Sources.Single(item => paths.Equals(item.Path, path));
         var source = new SourceText(path, input.Text, token);
-        var tokens = new Lexer(source).ReadTokens();
+        IReadOnlyList<Token> tokens;
+        try { tokens = new Lexer(source).ReadTokens(); }
+        catch (CompilationFailure) { return null; }
         var index = Array.FindIndex(tokens.ToArray(), item => item.Position == offset && item.Kind == TokenKind.Identifier);
         if (index < 0 || index + 2 >= tokens.Count || tokens[index + 1].Text != "." || tokens[index + 2].Kind != TokenKind.Identifier ||
             index > 0 && tokens[index - 1].Text == ".") return null;

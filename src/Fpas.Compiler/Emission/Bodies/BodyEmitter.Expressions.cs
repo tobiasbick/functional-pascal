@@ -56,7 +56,15 @@ internal sealed partial class BodyEmitter
             case BoundArrayLiteral array: EmitArrayLiteral(array); break;
             case BoundArrayIndex index: EmitArrayIndex(index); break;
             case BoundArrayLength length:
-                EmitExpression(length.Receiver); il.OpCode(ILOpCode.Ldlen); il.OpCode(ILOpCode.Conv_ovf_i4_un); break;
+                EmitExpression(length.Receiver);
+                // ldlen is defined only for vectors; rectangular arrays use Array.Length.
+                if (length.Receiver.Type.Rank == 1) { il.OpCode(ILOpCode.Ldlen); il.OpCode(ILOpCode.Conv_ovf_i4_un); }
+                else
+                {
+                    il.OpCode(ILOpCode.Callvirt);
+                    il.Token(reference(new ImportedMethod(catalog.Symbol(catalog.Required("System.Array")), "get_Length", TypeSymbol.Int32, [], false)));
+                }
+                break;
             case BoundCharacter character: il.LoadConstantI4(character.Value); break;
             case BoundDelegate callable: EmitDelegate(callable); break;
             case BoundCapture capture: EmitCapture(capture); break;

@@ -4,15 +4,31 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
+/// <summary>A declaration recognized by syntax alone.</summary>
+/// <param name="Name">The declared source name.</param>
+/// <param name="Kind">The declaration kind, such as container, routine, constant, or alias.</param>
+/// <param name="Owner">The name offset of the enclosing declaration, when nested.</param>
+/// <param name="NameSpan">The span of the declared name.</param>
+/// <param name="Span">The span of the whole declaration.</param>
 public sealed record SyntaxDeclaration(string Name, string Kind, int? Owner, SourceSpan NameSpan, SourceSpan Span);
 
+/// <summary>The editor structure of one source.</summary>
+/// <param name="Document">The analyzed source.</param>
+/// <param name="Declarations">The recognized declarations.</param>
+/// <param name="Folds">Multi-line ranges that can be folded.</param>
+/// <param name="Selections">Syntactic ranges for expanding a selection.</param>
 public sealed record SyntaxStructure(SourceDocument Document, IReadOnlyList<SyntaxDeclaration> Declarations,
     IReadOnlyList<SourceSpan> Folds, IReadOnlyList<SourceSpan> Selections);
 
 public static partial class SyntaxAnalysis
 {
+    /// <summary>Collects declarations, folds, and selection ranges, recovering from syntax errors where possible.</summary>
+    /// <param name="input">The source to analyze.</param>
+    /// <param name="token">Cancels the analysis with an <see cref="OperationCanceledException"/>.</param>
+    /// <returns>The structure that could be recognized.</returns>
     public static SyntaxStructure Structure(CompilationSource input, CancellationToken token = default)
     {
+        ArgumentNullException.ThrowIfNull(input);
         var source = new SourceText(input.Path, input.Text, token);
         var document = new SourceDocument(input.Path, input.Text, token);
         var comments = new List<SourceComment>();

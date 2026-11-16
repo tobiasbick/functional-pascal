@@ -4,10 +4,39 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
+/// <summary>Parameter extents of a private routine for adding a parameter.</summary>
+/// <param name="Insertion">The offset where a new required parameter is inserted: before the first optional parameter, or at the closing parenthesis.</param>
+/// <param name="FirstOptional">The index of the first parameter with a default, or the parameter count.</param>
+/// <param name="Parameters">The parameter names in declaration order.</param>
+/// <param name="HasVariadicParameter">Whether the last parameter is a params parameter.</param>
 public sealed record RefactoringRoutine(int Insertion, int FirstOptional, IReadOnlyList<string> Parameters, bool HasVariadicParameter);
+
+/// <summary>Argument extents of one call.</summary>
+/// <param name="Close">The offset of the closing parenthesis.</param>
+/// <param name="PositionalArguments">The start offsets of the arguments before the first named argument.</param>
+/// <param name="HasArguments">Whether the call has any argument.</param>
 public sealed record RefactoringCall(int Close, IReadOnlyList<int> PositionalArguments, bool HasArguments);
+
+/// <summary>Extents of one import in a uses clause.</summary>
+/// <param name="Start">The offset of the imported name.</param>
+/// <param name="Target">The offset of the last part of the imported name.</param>
+/// <param name="Alias">The offset of the alias.</param>
+/// <param name="End">The end offset of the alias.</param>
+/// <param name="TargetName">The qualified imported name.</param>
+/// <param name="AliasName">The alias.</param>
 public sealed record RefactoringImport(int Start, int Target, int Alias, int End, string TargetName, string AliasName);
+
+/// <summary>Extents of a uses clause.</summary>
+/// <param name="Start">The offset of the uses keyword.</param>
+/// <param name="End">The end offset of the terminating semicolon.</param>
+/// <param name="Items">The imports in source order.</param>
+/// <param name="Comments">All comment ranges of the source, so edits can preserve them.</param>
 public sealed record RefactoringImports(int Start, int End, IReadOnlyList<RefactoringImport> Items, IReadOnlyList<SourceSpan> Comments);
+
+/// <summary>An expression that is evaluated first by its statement and can move into a preceding constant.</summary>
+/// <param name="Expression">The selected expression.</param>
+/// <param name="Statement">The offset of the containing statement, where the constant is inserted.</param>
+/// <param name="PriorCallTargets">The name offsets of enclosing calls whose first argument contains the expression.</param>
 public sealed record RefactoringExtraction(SourceSpan Expression, int Statement, IReadOnlyList<int> PriorCallTargets);
 
 /// <summary>Source extents for edits that must follow FPAS grammar and evaluation order.</summary>
@@ -20,6 +49,9 @@ public sealed class RefactoringSyntax
     private readonly CompilationUnitSyntax unit;
     private readonly CancellationToken token;
 
+    /// <summary>Parses a syntactically valid source.</summary>
+    /// <param name="document">The source to parse.</param>
+    /// <param name="token">Cancels parsing and later queries with an <see cref="OperationCanceledException"/>.</param>
     public RefactoringSyntax(SourceDocument document, CancellationToken token)
     {
         this.document = document; this.token = token;
@@ -28,6 +60,9 @@ public sealed class RefactoringSyntax
         unit = new Parser(source, tokens).ParseCompilationUnit();
     }
 
+    /// <summary>Finds the parameter extents of a private routine without attributes.</summary>
+    /// <param name="offset">The offset of the routine name.</param>
+    /// <returns>The extents, or <see langword="null"/> when no such routine is declared there.</returns>
     public RefactoringRoutine? PrivateRoutine(int offset)
     {
         var routine = unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods))
@@ -45,6 +80,10 @@ public sealed class RefactoringSyntax
             routine.Parameters.LastOrDefault()?.Mode == "params");
     }
 
+    /// <summary>Finds the argument extents of a call expression.</summary>
+    /// <param name="span">The whole call expression, ending at its closing parenthesis.</param>
+    /// <param name="target">An offset of the called name; it must precede the closing parenthesis.</param>
+    /// <returns>The extents, or <see langword="null"/> when <paramref name="span"/> is not exactly a call.</returns>
     public RefactoringCall? Call(SourceSpan span, int target)
     {
         var first = FindIndex(item => item.Position == span.Offset);
@@ -58,6 +97,8 @@ public sealed class RefactoringSyntax
             : null;
     }
 
+    /// <summary>Finds the extents of the uses clause.</summary>
+    /// <returns>The extents, or <see langword="null"/> when the source imports nothing.</returns>
     public RefactoringImports? Imports()
     {
         if (unit.Imports.Count == 0) return null;
@@ -69,6 +110,10 @@ public sealed class RefactoringSyntax
             comments.Select(comment => document.Span(comment.Start, comment.End - comment.Start)).ToArray());
     }
 
+    /// <summary>Finds a selected expression that its statement evaluates first and that can be extracted.</summary>
+    /// <param name="start">The selection start offset.</param>
+    /// <param name="end">The selection end offset.</param>
+    /// <returns>The extraction, or <see langword="null"/> when the selection cannot move before its statement.</returns>
     public RefactoringExtraction? Extract(int start, int end)
     {
         foreach (var statements in unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods)).Select(routine => routine.Statements)
@@ -125,6 +170,11 @@ public sealed class RefactoringSyntax
         }
     }
 
+    /// <summary>Tests whether texts parse exactly as one parameter type and one positional argument.</summary>
+    /// <param name="type">The parameter type text.</param>
+    /// <param name="argument">The argument expression text.</param>
+    /// <param name="token">Cancels the check with an <see cref="OperationCanceledException"/>.</param>
+    /// <returns>Whether both fragments are complete and self-contained.</returns>
     public static bool ParameterFragments(string type, string argument, CancellationToken token)
     {
         const string head = "program Fragment; function Value(Item: ";

@@ -5,6 +5,9 @@ namespace Fpas.Compiler.Syntax;
 
 internal sealed class SourceText(string path, string text, CancellationToken cancellationToken = default, DiagnosticBag? diagnostics = null)
 {
+    // Start offsets of each line, computed once so locations need no rescan of the text.
+    private int[]? lineStarts;
+
     internal string Path { get; } = path;
     internal string Text { get; } = text;
     internal CancellationToken CancellationToken => cancellationToken;
@@ -16,29 +19,36 @@ internal sealed class SourceText(string path, string text, CancellationToken can
     {
         position = Math.Clamp(position, 0, Text.Length);
         length = Math.Clamp(length, 0, Text.Length - position);
-        var line = 1;
-        var column = 1;
-        var startLine = 1; var startColumn = 1;
+        var (startLine, startColumn) = Coordinates(position);
+        var (endLine, endColumn) = Coordinates(position + length);
+        return new(Path, startLine, startColumn, length, endLine, endColumn, position);
+    }
+
+    private (int Line, int Column) Coordinates(int position)
+    {
+        var starts = lineStarts ??= LineStarts();
+        // The LF of a CRLF pair already belongs to the following line at column 1.
+        if (position > 0 && position < Text.Length && Text[position] == '\n' && Text[position - 1] == '\r') position++;
+        var line = Array.BinarySearch(starts, position);
+        if (line < 0) line = ~line - 1;
+        return (line + 1, position - starts[line] + 1);
+    }
+
+    private int[] LineStarts()
+    {
+        var starts = new List<int> { 0 };
         var nextCancellationCheck = 0;
-        for (var index = 0; index <= position + length; index++)
+        for (var index = 0; index < Text.Length; index++)
         {
             if (index >= nextCancellationCheck) { CheckCancellation(); nextCancellationCheck = index + 1024; }
-            if (index == position) { startLine = line; startColumn = column; }
-            if (index == position + length) break;
             if (Text[index] == '\r')
             {
-                line++;
-                column = 1;
+                if (index + 1 < Text.Length && Text[index + 1] == '\n') index++;
+                starts.Add(index + 1);
             }
-            else if (Text[index] == '\n')
-            {
-                if (index == 0 || Text[index - 1] != '\r') line++;
-                column = 1;
-            }
-            else
-                column++;
+            else if (Text[index] == '\n') starts.Add(index + 1);
         }
-        return new(Path, startLine, startColumn, length, line, column, position);
+        return starts.ToArray();
     }
 
     internal SourceLocation StatementLocation(int position)

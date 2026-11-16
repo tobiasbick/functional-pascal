@@ -5,6 +5,10 @@ namespace Fpas.Compiler;
 /// <summary>Canonical source spelling for generated qualified names.</summary>
 public static class FpasIdentifiers
 {
+    /// <summary>Spells a dot-qualified name, escaping keyword parts with '@'.</summary>
+    /// <param name="name">A qualified name of ASCII identifier parts separated by '.'.</param>
+    /// <returns>The source spelling of <paramref name="name"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="name"/> is not a qualified identifier.</exception>
     public static string SpellQualified(string name)
     {
         ArgumentNullException.ThrowIfNull(name);

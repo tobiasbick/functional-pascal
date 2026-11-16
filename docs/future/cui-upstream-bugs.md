@@ -18,7 +18,7 @@ Keep the identifiers stable.
 
 ## CUI-019 — Large constant chart ranges produce non-finite geometry
 
-- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. Retest this reproduction on upstream `master` once the PR is resolved.
+- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `a5c9ef5`.
 
 Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
 Use one series containing three `1e10f` samples with automatic bounds and reduced
@@ -37,14 +37,10 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 <a id="cui-032"></a>
 
-## CUI-032 — A read-only week event can activate after a drag on release
+## CUI-032 — Upstream links
 
-- Upstream: [Issue #75](https://github.com/yappologistic/CUI/issues/75) · [PR #76](https://github.com/yappologistic/CUI/pull/76)
-- Follow-up: [PR #93](https://github.com/yappologistic/CUI/pull/93) adds the release-frame drag check and regression test.
-
-The fixes in `6e6b353` restore keyboard and pointer activation in read-only
-schedules. One case still reproduces in the native week calendar. Press an
-event and submit pointer motion beyond its drag threshold in the same frame
-as the release. CUI updates the moved flag only while the button is down, so
-it reports an activation. The binding checks motion on release and retains
-the test for this sequence.
+- [Issue #75](https://github.com/yappologistic/CUI/issues/75)
+- [PR #76](https://github.com/yappologistic/CUI/pull/76) · [PR #93](https://github.com/yappologistic/CUI/pull/93)
+- Fix: [`5830981`](https://github.com/yappologistic/CUI/commit/5830981)
+- Verified snapshot: [`a5c9ef5`](https://github.com/yappologistic/CUI/commit/a5c9ef5efc39b3fc783758362f6b8f9f130f5883)
+- [Upstream confirmation](https://github.com/yappologistic/CUI/pull/93#issuecomment-6907821736)

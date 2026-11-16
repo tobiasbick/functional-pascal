@@ -16,10 +16,6 @@ int fpas_cui_week_calendar(cui_ctx *ui, const char *id, int week, fpas_week_even
         .height = fpas_extent(height_kind, height), .read_only = (flags & 2) != 0 || !enabled };
     cui__week_state *state = cui__state_lazy(ui, key, sizeof *state, false);
     if (state && (!enabled || state->drag > count)) state->drag = 0;
-    /* CUI-032: motion in the release frame must still disqualify a read-only click. */
-    if (state && state->drag > 0 && options.read_only && ui->mreleased[CUI_MOUSE_LEFT] &&
-        fabsf(ui->mx - state->press_x) + fabsf(ui->my - state->press_y) > 4)
-        state->moved = true;
     cui_push_disabled(ui, !enabled);
     int clicked = cui_week_calendar_ex(ui, id, fpas_date_from_number(week), native, count, &options);
     cui_pop_disabled(ui);

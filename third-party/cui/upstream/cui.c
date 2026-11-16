@@ -763,6 +763,17 @@ void cui__paint_annotations(cui_ctx *ui, const cui_chart_annotation *a, int n, c
 cui_chart_annotation *cui__copy_annotations(cui_ctx *ui, const cui_chart_annotation *a, int n);
 /* a dashed hairline from x0 to x1 at y: `dash` points drawn every `period` (cui_instrument.c) */
 void cui__draw_hdash(cui_ctx *ui, float x0, float x1, float y, float dash, float period, cui_color c);
+/* Time rulers (flame graph, trace view, waterfall), shared by the three views
+ * in cui_flame.c and checked by the tests: cui__fl_step gives the tick step for
+ * at least `raw` seconds, cui__fl_tick the label of a tick `step` apart
+ * ("4 min 50 s"), cui__fl_dur a duration in its unit ("12.4 ms", "1.50 min"),
+ * cui__fl_ruler_step the step a ruler `pw` points wide uses for t0..t1, wide
+ * enough for every label in view, and cui__fl_tick_x where tick q is drawn. */
+double cui__fl_step(double raw);
+double cui__fl_ruler_step(cui_ctx *ui, float pw, double t0, double t1, double origin);
+float cui__fl_tick_x(float px0, double k, double t0, double origin, double q, double step);
+const char *cui__fl_tick(cui_ctx *ui, double t, double step);
+const char *cui__fl_dur(cui_ctx *ui, double s);
 void cui__scroll_end_ex(cui_ctx *ui);
 cui_color cui__backdrop(cui_ctx *ui);
 
@@ -10093,6 +10104,15 @@ bool cui_shortcut(cui_ctx *ui, int mods, cui_key key) {
 cui_vec2 cui_mouse_pos(cui_ctx *ui) { cui_vec2 v = { ui->mx, ui->my }; return v; }
 bool cui_mouse_down(cui_ctx *ui, cui_mouse_button b) { return (int)b >= 0 && (int)b < 3 && ui->mdown[b]; }
 bool cui_mouse_clicked(cui_ctx *ui, cui_mouse_button b) { return (int)b >= 0 && (int)b < 3 && ui->mpressed[b]; }
+
+bool cui_wheel_take(cui_ctx *ui, cui_id id, cui_vec2 *delta) {
+    /* a disabled canvas takes nothing, also on the frame it turns disabled, when the wheel was
+     * aimed by the previous frame's region */
+    if (!id || cui_is_disabled(ui) || ui->scroll_target != id || (ui->scroll_dx == 0 && ui->scroll_dy == 0)) return false;
+    if (delta) { delta->x = ui->scroll_dx; delta->y = ui->scroll_dy; }
+    ui->scroll_dx = ui->scroll_dy = 0;   /* consumed */
+    return true;
+}
 bool cui_wants_keyboard(cui_ctx *ui) { return ui->edit != NULL; }
 bool cui_wants_mouse(cui_ctx *ui) { return ui->hot != 0 || ui->active != 0; }
 
@@ -26551,7 +26571,8 @@ static bool cui__fb_below(const char *path, const char *root) {
 /** Leave kernel, runtime and container mounts out of the user-facing list. */
 static bool cui__fb_user_mount(const struct mntent *m) {
     const char *p = m->mnt_dir, *type = m->mnt_type;
-    static const char *const system[] = { "/dev", "/proc", "/sys", "/boot", "/usr", "/var/lib", "/var/run", "/snap", "/mnt/wsl", "/mnt/wslg" };
+    /* /etc: a container binds its hosts, hostname and resolv.conf files there from the host's disk */
+    static const char *const system[] = { "/dev", "/proc", "/sys", "/boot", "/etc", "/usr", "/var/lib", "/var/run", "/snap", "/mnt/wsl", "/mnt/wslg" };
     static const char *const pseudo[] = { "proc", "sysfs", "devtmpfs", "devpts", "cgroup", "cgroup2", "securityfs", "pstore", "debugfs", "tracefs", "configfs", "mqueue", "hugetlbfs", "rpc_pipefs", "binfmt_misc", "fusectl", "nsfs", "efivarfs", "bpf", "autofs", "overlay", "squashfs", "fuse.portal", "fuse.gvfsd-fuse" };
     if (p[0] != '/' || !strcmp(p, "/")) return false;
     for (size_t i = 0; i < sizeof system / sizeof system[0]; i++) if (cui__fb_below(p, system[i])) return false;
@@ -27212,12 +27233,15 @@ static cui_color cui__fl_fg(cui_ctx *ui, uint32_t key, cui_color fill) {
 
 /* ---- number formatting ---- */
 
-static const char *cui__fl_dur(cui_ctx *ui, double s) {
+const char *cui__fl_dur(cui_ctx *ui, double s) {
     const char *u = "s";
     double v = s;
     if (s < 1e-6) { v = s * 1e9; u = "ns"; }
     else if (s < 1e-3) { v = s * 1e6; u = "\xc2\xb5s"; }
     else if (s < 1) { v = s * 1e3; u = "ms"; }
+    else if (s >= 86400) { v = s / 86400; u = "d"; }
+    else if (s >= 3600) { v = s / 3600; u = "h"; }
+    else if (s >= 60) { v = s / 60; u = "min"; }
     int dec = v >= 100 ? 0 : v >= 10 ? 1 : 2;
     return cui__frame_printf(ui, "%.*f %s", dec, v, u);
 }
@@ -27229,48 +27253,93 @@ static double cui__fl_nice(double raw) {
     double m = raw / p;
     return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
 }
-static void cui__fl_unit(double step, double *unit, const char **name, int *dec) {
-    if (step >= 0.1) { *unit = 1; *name = "s"; }
-    else if (step >= 1e-5) { *unit = 1e-3; *name = "ms"; }
-    else if (step >= 1e-8) { *unit = 1e-6; *name = "\xc2\xb5s"; }
-    else { *unit = 1e-9; *name = "ns"; }
-    double r = step / *unit;
-    int d = (int)ceil(-log10(r) - 1e-9);
-    *dec = CUI_CLAMP(d, 0, 3);
+/* The ruler step for at least `raw` seconds: 1, 2 or 5 times a power of ten
+ * up to 20 s, then steps a clock reads in (30 s, 1, 2, 5, 10, 15, 30 min,
+ * 1, 2, 3, 6, 12 h), then 1, 2 or 5 times a power of ten days. */
+double cui__fl_step(double raw) {
+    static const double clock_steps[] = { 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400 };
+    if (!(raw > 20)) return cui__fl_nice(raw);
+    for (int i = 0; i < CUI_COUNTOF(clock_steps); i++)
+        if (raw <= clock_steps[i]) return clock_steps[i];
+    return cui__fl_nice(raw / 86400) * 86400;
+}
+/* A tick at `t` seconds on a ruler `step` apart. Steps of a second or more
+ * read like a clock, from the largest part down to the step's own unit, zero
+ * parts left out: "45 s", "4 min 50 s", "1 h 30 min", "33 d 10 h".
+ * Shorter steps count in one unit: "250 ms". */
+const char *cui__fl_tick(cui_ctx *ui, double t, double step) {
+    if (step < 1) {
+        double unit = step >= 0.1 ? 1 : step >= 1e-5 ? 1e-3 : step >= 1e-8 ? 1e-6 : 1e-9;
+        const char *name = step >= 0.1 ? "s" : step >= 1e-5 ? "ms" : step >= 1e-8 ? "\xc2\xb5s" : "ns";
+        int d = (int)ceil(-log10(step / unit) - 1e-9);
+        double v = fabs(t) < 1e-12 ? 0 : t / unit;
+        return cui__frame_printf(ui, "%.*f %s", CUI_CLAMP(d, 0, 3), v, name);
+    }
+    static const struct { double s; const char *name; } parts[] = { { 86400, "d" }, { 3600, "h" }, { 60, "min" }, { 1, "s" } };
+    int last = step >= 86400 ? 0 : step >= 3600 ? 1 : step >= 60 ? 2 : 3;
+    long long n = llround(fabs(t) / parts[last].s);
+    if (n == 0) return cui__frame_printf(ui, "0 %s", parts[last].name);
+    char buf[64];
+    int len = snprintf(buf, sizeof buf, "%s", t < 0 ? "-" : "");
+    bool first = true;
+    for (int i = 0; i <= last; i++) {
+        long long per = llround(parts[i].s / parts[last].s), v = n / per;
+        n %= per;
+        if (!v) continue;
+        len += snprintf(buf + len, sizeof buf - (size_t)len, "%s%lld %s", first ? "" : " ", v, parts[i].name);
+        first = false;
+    }
+    return cui__frame_printf(ui, "%s", buf);
 }
 
 /* The time ruler: ticks a nice step apart with their labels, inside `rr` (its bottom edge is the
  * baseline), and grid lines `grid_h` tall below it. Time t sits at px0 + (t - t0) * pw / (t1 - t0);
  * labels count from `origin`. Returns the step. */
-static double cui__fl_ruler(cui_ctx *ui, cui_rect rr, float px0, float pw, double t0, double t1, double origin, float grid_h) {
+double cui__fl_ruler_step(cui_ctx *ui, float pw, double t0, double t1, double origin) {
     double range = t1 - t0;
     float k = (float)(pw / range);
     float fs = cui__fs(ui, ui->theme.text_xs);
-    double unit; const char *uname; int dec;
     float min_px = 72;
-    double step = cui__fl_nice(range * min_px / pw);
-    cui__fl_unit(step, &unit, &uname, &dec);
-    /* wide labels ("12.42 ms") need more room: thin the ticks until they fit */
-    for (int guard = 0; guard < 4; guard++) {
-        const char *wl = cui__frame_printf(ui, "%.*f %s", dec, (t1 - origin) / unit, uname);
-        float lw = cui__text_width(ui, CUI_FONT_BODY, fs, wl, -1, true);
-        if ((float)(step * k) >= lw + 16) break;
-        step = cui__fl_nice(step * 1.01 * 2);
-        cui__fl_unit(step, &unit, &uname, &dec);
+    double step = cui__fl_step(range * min_px / pw);
+    /* wide labels ("12.42 ms", "1 d 23 h 50 min") need more room: thin the ticks until every label
+     * in view fits before the next tick. Compound labels differ in length from tick to tick ("2 d"
+     * after "1 d 23 h 50 min"), so each one is measured; past 200 ticks the step is surely too fine,
+     * and so it is when the ticks are 2^52 steps or more from the origin, where neighbouring tick
+     * indices stop being distinct doubles. The index counts in an integer, so the loop always ends. */
+    for (int guard = 0; guard < 12; guard++) {
+        double first = ceil((t0 - origin) / step - 1e-9), last = floor((t1 - origin) / step + 1e-9);
+        float lw = 0;
+        bool many = !(last - first <= 200) || !(fabs(first) < 4e15 && fabs(last) < 4e15);
+        for (long long i = 0, n = many || last < first ? -1 : (long long)(last - first); i <= n; i++)
+            lw = fmaxf(lw, cui__text_width(ui, CUI_FONT_BODY, fs, cui__fl_tick(ui, (first + (double)i) * step, step), -1, true));
+        if (!many && (float)(step * k) >= lw + 16) break;
+        step = cui__fl_step(step * 1.01);   /* the next step up: 1, 2, 5, 10 ... 30 s, 1 min, 2 min ... */
     }
+    return step;
+}
+
+/* Where tick q of a ruler `step` apart sits: from the tick's offset from the origin, so a view
+ * of 1e-7 s two billion seconds after it keeps its ticks apart (origin + q * step would round
+ * the step away before t0 is taken off). */
+float cui__fl_tick_x(float px0, double k, double t0, double origin, double q, double step) {
+    return px0 + (float)((q * step - (t0 - origin)) * k);
+}
+
+static double cui__fl_ruler(cui_ctx *ui, cui_rect rr, float px0, float pw, double t0, double t1, double origin, float grid_h) {
+    float k = (float)(pw / (t1 - t0));
+    float fs = cui__fs(ui, ui->theme.text_xs);
+    double step = cui__fl_ruler_step(ui, pw, t0, t1, origin);
     double first = ceil((t0 - origin) / step - 1e-9);
     double last = floor((t1 - origin) / step + 1e-9);
     float fh = cui__font_line_height(ui, CUI_FONT_BODY, fs);
     cui_color grid = cui_alpha(CUI_C(ui, BORDER_SUBTLE), ui->mode == CUI_THEME_DARK ? 0.8f : 1.0f);
-    for (double q = first; q <= last && q - first < 400; q += 1) {
-        double t = origin + q * step;
-        float x = px0 + (float)((t - t0) * k);
-        x = floorf(x);
+    long long ticks = !(last >= first) ? 0 : last - first >= 400 ? 400 : (long long)(last - first) + 1;
+    for (long long i = 0; i < ticks; i++) {   /* an integer index: it always advances */
+        double q = first + (double)i;
+        float x = floorf(cui__fl_tick_x(px0, k, t0, origin, q, step));
         if (grid_h > 0) cui_draw_rect(ui, (cui_rect){ x, rr.y + rr.h + 1, 1, grid_h }, CUI_CORNERS(0), grid);
         cui_draw_rect(ui, (cui_rect){ x, rr.y + rr.h - 5, 1, 5 }, CUI_CORNERS(0), CUI_C(ui, BORDER_STRONG));
-        double v = q * step / unit;
-        if (fabs(v) < 1e-9) v = 0;
-        const char *lbl = cui__frame_printf(ui, "%.*f %s", dec, v, uname);
+        const char *lbl = cui__fl_tick(ui, q * step, step);
         float lw = cui__text_width(ui, CUI_FONT_BODY, fs, lbl, -1, true);
         if (x + 4 + lw <= rr.x + rr.w - 6)
             cui__draw_text_line(ui, CUI_FONT_BODY, fs, x + 4, rr.y + (rr.h - 4 - fh) * 0.5f, CUI_C(ui, TEXT_MUTED), lbl, -1, true);
@@ -28228,6 +28297,15 @@ typedef struct {
     cui_trace_view own_view;
     int own_sel;
     bool init;
+    /* geometry of the latest frame, for cui_trace_span_rect; row0/folded live in that frame's arena */
+    uint64_t geo_frame;
+    bool geo_valid;
+    float geo_plot_x, geo_plot_w, geo_body_y, geo_row_h, geo_scroll;
+    double geo_t0, geo_t1;
+    cui_rect geo_body;
+    const int *geo_row0;
+    const bool *geo_folded;
+    int geo_nt;
 } cui__tr_state;
 
 typedef struct { int lo, hi, maxd, row0, rows; } cui__tr_track;
@@ -28381,6 +28459,17 @@ static void cui__tr_reveal(const cui__tr_ctx *c, cui_trace_view *v, int i) {
 typedef struct { const char *name; int row0, rows; bool foldable, folded; } cui__tr_lane;
 typedef struct { const char *name; double time; cui_tone tone; } cui__tr_mark;
 
+#define CUI__TR_LINK_SEG 24   /* segments a link's curve is drawn with */
+typedef struct {
+    cui_vec2 pts[CUI__TR_LINK_SEG + 1];
+    double ta, tb;             /* the curve's ends in time: the end of `from`, the start of `to` */
+    int row_a, row_b;          /* and in rows */
+    int link;                  /* index into the caller's links */
+    cui_color color;
+    float width;
+    bool dashed, hot, head;    /* head: the arrowhead's end is in view */
+} cui__tr_curve;
+
 typedef struct {
     cui__fl_paint fp;            /* bars, view, rows, as the flame graph paints them */
     cui_id wid;
@@ -28389,7 +28478,45 @@ typedef struct {
     cui__tr_mark *marks; int nm;
     double mark0, mark1;
     int hover_lane;
+    cui__tr_curve *curves; int ncurves;
+    cui__tr_state *st;           /* where the spans were drawn goes here, for cui_trace_span_rect */
 } cui__tr_paint;
+
+/* A link's curve from (xa, ya) to (xb, yb) inside a plot from `left` to `right`: an end far off
+ * screen is pulled in to just past the edge, keeping the curve's sense; the arrowhead shows when
+ * the `to` end is in view. The build uses it with the previous frame's geometry, for the pointer,
+ * and the painter with this frame's. */
+static void cui__tr_curve_points(cui__tr_curve *q, float xa, float ya, float xb, float yb, float left, float right) {
+    q->head = xb >= left - 1 && xb <= right + 1;
+    xa = CUI_CLAMP(xa, left - 80, right + 80);
+    xb = CUI_CLAMP(xb, left - 80, right + 80);
+    float dx = CUI_MAX(24.0f, fabsf(xb - xa) * 0.5f);
+    cui_vec2 p0 = { xa, ya }, p1 = { xa + dx, ya }, p2 = { xb - dx, yb }, p3 = { xb, yb };
+    for (int s = 0; s <= CUI__TR_LINK_SEG; s++) {
+        float t = (float)s / CUI__TR_LINK_SEG, u = 1 - t;
+        float w0 = u * u * u, w1 = 3 * u * u * t, w2 = 3 * u * t * t, w3 = t * t * t;
+        q->pts[s] = (cui_vec2){ w0 * p0.x + w1 * p1.x + w2 * p2.x + w3 * p3.x, w0 * p0.y + w1 * p1.y + w2 * p2.y + w3 * p3.y };
+    }
+}
+
+static void cui__tr_paint_curve(cui_ctx *ui, const cui__tr_curve *cv) {
+    float w = cv->hot ? CUI_MAX(cv->width, 1.25f) + 0.75f : cv->width;
+    cui_color col = cui_alpha(cv->color, cv->hot ? 0.95f : 0.42f);
+    if (cv->dashed) {
+        for (int i = 0; i < CUI__TR_LINK_SEG; i += 2) cui_draw_polyline(ui, &cv->pts[i], 2, w, col, false);
+    } else {
+        cui_draw_polyline(ui, cv->pts, CUI__TR_LINK_SEG + 1, w, col, false);
+    }
+    if (!cv->head) return;
+    cui_vec2 b = cv->pts[CUI__TR_LINK_SEG], a = cv->pts[CUI__TR_LINK_SEG - 2];
+    float dx = b.x - a.x, dy = b.y - a.y, len = sqrtf(dx * dx + dy * dy);
+    if (len < 0.01f) { dx = 1; dy = 0; len = 1; }
+    dx /= len; dy /= len;
+    float s = cv->hot ? 6.5f : 5.0f;
+    cui_vec2 tri[3] = { b, { b.x - dx * s - dy * s * 0.55f, b.y - dy * s + dx * s * 0.55f },
+                        { b.x - dx * s + dy * s * 0.55f, b.y - dy * s - dx * s * 0.55f } };
+    cui_draw_polygon(ui, tri, 3, col);
+}
 
 static void cui__tr_paint_marks(cui_ctx *ui, const cui__tr_paint *p, cui_rect plot, float px0, float k, float strip_y, float bottom) {
     float fs = cui__fs(ui, ui->theme.text_xs), fh = cui__font_line_height(ui, CUI_FONT_BODY, fs);
@@ -28466,6 +28593,10 @@ static void cui__paint_trace(cui_ctx *ui, cui_node *n, void *data) {
     double range = fp->t1 - fp->t0;
     float k = range > 0 ? (float)(pw / range) : 0;
     float body_y = plot.y + CUI__FL_PADY;
+    if (p->st) {   /* where this frame draws the spans, for cui_trace_span_rect, as the flame graph does */
+        p->st->geo_plot_x = px0; p->st->geo_plot_w = pw; p->st->geo_body_y = body_y; p->st->geo_body = plot;
+        p->st->geo_valid = k > 0; p->st->geo_frame = ui->frame;   /* also the first frame, which had no rectangle to build with */
+    }
     cui_push_clip(ui, cui__rect_inset(r, 1));
     cui_draw_rect(ui, (cui_rect){ r.x, r.y, r.w, head }, (cui_corners){ rad - 1, rad - 1, 0, 0 }, CUI_C(ui, SURFACE_MUTED));
     cui_draw_rect(ui, (cui_rect){ r.x, r.y + head, r.w, 1 }, CUI_CORNERS(0), CUI_C(ui, BORDER));
@@ -28485,6 +28616,16 @@ static void cui__paint_trace(cui_ctx *ui, cui_node *n, void *data) {
     cui_push_clip(ui, plot);
     for (int i = 0; i < fp->n; i++) cui__fl_bar(ui, fp, &fp->items[i], px0, k, body_y, plot, false);
     if (fp->has_sel) cui__fl_bar(ui, fp, &fp->sel, px0, k, body_y, plot, true);
+    /* links where the trace is drawn now: the build placed them in the previous frame's rectangle */
+    for (int i = 0; i < p->ncurves && k > 0; i++) {
+        cui__tr_curve *q = &p->curves[i];
+        float ya = body_y + q->row_a * fp->row_h - fp->scroll + (fp->row_h - 1) * 0.5f;
+        float yb = body_y + q->row_b * fp->row_h - fp->scroll + (fp->row_h - 1) * 0.5f;
+        cui__tr_curve_points(q, px0 + (float)((q->ta - fp->t0) * k), ya, px0 + (float)((q->tb - fp->t0) * k), yb, plot.x, plot.x + plot.w);
+    }
+    for (int pass = 0; pass < 2; pass++)   /* subdued links first, the bright ones over them */
+        for (int i = 0; i < p->ncurves; i++)
+            if (p->curves[i].hot == (pass == 1)) cui__tr_paint_curve(ui, &p->curves[i]);
     cui_pop_clip(ui);
     if (k > 0) cui__tr_paint_marks(ui, p, plot, px0, k, r.y + CUI__FL_RULER + 1, plot.y + plot.h);
     if (k > 0) cui__tr_paint_measure(ui, p, plot, px0, k, (cui_rect){ plot.x, r.y, plot.w, CUI__FL_RULER });
@@ -28708,6 +28849,112 @@ static void cui__trf_row_items(cui__trf *f, cui__fl_paint *p, int t, int d, int 
     }
 }
 
+/* the row a span is drawn in: its track's top row when the track is folded */
+static int cui__tr_span_row(const cui__tr_ctx *c, const cui_trace_span *sp) {
+    return c->tk[sp->track].row0 + (c->tracks[sp->track].collapsed ? 0 : sp->depth);
+}
+
+/* The links whose time range meets the view, as curves in this frame's geometry, and the
+ * link under the pointer (when no span is under it). */
+static void cui__trf_links(cui__trf *f, cui__tr_curve **out, int *count) {
+    cui_ctx *ui = f->ui;
+    const cui_trace_opts *o = f->o;
+    const cui__tr_ctx *c = &f->c;
+    const cui_trace_view *v = f->v;
+    *out = NULL; *count = 0;
+    f->res->hovered_link = -1;
+    /* also on the first frame, with no rectangle yet: the painter places the curves where it draws */
+    if (!o->links || o->link_count <= 0 || c->n == 0 || !(v->end > v->start)) return;
+    double k = c->plot_w / (v->end - v->start);
+    float left = c->plot_x - CUI__FL_PADX, right = c->plot_x + c->plot_w + CUI__FL_PADX;
+    float top = c->body_y - CUI__FL_PADY, bottom = c->body_y + c->body_h + CUI__FL_PADY;
+    int cap = 0;
+    cui__tr_curve *cv = NULL;
+    for (int pass = 0; pass < 2; pass++) {   /* count, then fill */
+        int n = 0;
+        for (int i = 0; i < o->link_count; i++) {
+            const cui_trace_link *l = &o->links[i];
+            if (l->from < 0 || l->to < 0 || l->from >= c->n || l->to >= c->n) continue;
+            const cui_trace_span *a = &c->s[l->from], *b = &c->s[l->to];
+            /* a span outside the lanes is not drawn, and neither is a link to it */
+            if (a->track < 0 || a->track >= c->nt || b->track < 0 || b->track >= c->nt) continue;
+            double ta = a->end, tb = b->start;
+            if (CUI_MAX(ta, tb) < v->start || CUI_MIN(ta, tb) > v->end) continue;
+            int row_a = cui__tr_span_row(c, a), row_b = cui__tr_span_row(c, b);
+            float ya = c->body_y + row_a * c->row_h - v->scroll + (c->row_h - 1) * 0.5f;
+            float yb = c->body_y + row_b * c->row_h - v->scroll + (c->row_h - 1) * 0.5f;
+            if (f->has_rect && ((ya < top && yb < top) || (ya > bottom && yb > bottom))) continue;
+            if (pass == 0) { n++; continue; }
+            float xa = (float)(c->plot_x + (ta - v->start) * k), xb = (float)(c->plot_x + (tb - v->start) * k);
+            cui__tr_curve *q = &cv[n++];
+            cui__tr_curve_points(q, xa, ya, xb, yb, left, right);   /* the painter redraws it where the trace is now */
+            q->ta = ta; q->tb = tb; q->row_a = row_a; q->row_b = row_b;
+            q->link = i;
+            q->color = l->tone ? cui__tone_color(ui, l->tone) : cui__emphasis(ui);
+            q->width = l->width > 0 ? l->width : 1.25f;
+            q->dashed = l->dashed;
+            int sel = *f->sel;
+            q->hot = l->from == sel || l->to == sel || l->from == f->hov || l->to == f->hov;
+        }
+        if (pass == 0) {
+            if (n == 0) return;
+            cap = n;
+            cv = cui__frame_alloc(ui, sizeof *cv * (size_t)cap);
+        } else {
+            *count = n;
+        }
+    }
+    /* the link under the pointer: nearest curve within 5 points, when no span is hovered */
+    if (f->has_rect && f->hov < 0 && f->bi.hovered && f->mx >= left && f->mx <= right && f->my >= top && f->my <= bottom) {
+        float best = 5.0f * 5.0f;
+        int hit = -1;
+        for (int i = 0; i < *count; i++)
+            for (int s = 0; s < CUI__TR_LINK_SEG; s++) {
+                cui_vec2 a = cv[i].pts[s], b = cv[i].pts[s + 1];
+                float ex = b.x - a.x, ey = b.y - a.y, l2 = ex * ex + ey * ey;
+                float t = l2 > 0 ? CUI_CLAMP(((f->mx - a.x) * ex + (f->my - a.y) * ey) / l2, 0.0f, 1.0f) : 0;
+                float px = a.x + ex * t - f->mx, py = a.y + ey * t - f->my, d2 = px * px + py * py;
+                if (d2 < best) { best = d2; hit = i; }
+            }
+        if (hit >= 0) { cv[hit].hot = true; f->res->hovered_link = cv[hit].link; }
+    }
+    *out = cv;
+}
+
+/* remember where things were drawn, for cui_trace_span_rect */
+static void cui__trf_geometry(cui__trf *f) {
+    cui_ctx *ui = f->ui;
+    const cui__tr_ctx *c = &f->c;
+    cui__tr_state *st = f->st;
+    st->geo_valid = f->has_rect && f->v->end > f->v->start;
+    st->geo_frame = ui->frame;
+    st->geo_plot_x = c->plot_x; st->geo_plot_w = c->plot_w;
+    st->geo_body_y = c->body_y; st->geo_row_h = c->row_h; st->geo_scroll = f->v->scroll;
+    st->geo_t0 = f->v->start; st->geo_t1 = f->v->end;
+    st->geo_body = (cui_rect){ c->plot_x - CUI__FL_PADX, c->body_y - CUI__FL_PADY, c->plot_w + 2 * CUI__FL_PADX, c->body_h + 2 * CUI__FL_PADY };
+    int *row0 = cui__frame_alloc(ui, sizeof(int) * (size_t)CUI_MAX(1, c->nt));
+    bool *folded = cui__frame_alloc(ui, sizeof(bool) * (size_t)CUI_MAX(1, c->nt));
+    for (int t = 0; t < c->nt; t++) { row0[t] = c->tk[t].row0; folded[t] = c->tracks[t].collapsed; }
+    st->geo_row0 = row0; st->geo_folded = folded; st->geo_nt = c->nt;
+}
+
+cui_rect cui_trace_span_rect(cui_ctx *ui, cui_id trace, const cui_trace_span *span) {
+    cui_rect none = { 0, 0, 0, 0 };
+    if (!span || !cui__has_prev_rect(ui, trace)) return none;
+    cui__tr_state *st = cui_state(ui, trace ^ 0x7A1Eu, sizeof *st);
+    if (!st->geo_valid || st->geo_frame != ui->frame || span->track < 0 || span->track >= st->geo_nt || span->depth < 0) return none;
+    if (st->geo_folded[span->track] && span->depth > 0) return none;
+    /* drawn only when it meets the view (cui__trf_row_items); an end just outside the time range
+     * can still fall inside the plot's padding */
+    if (!(span->end > st->geo_t0 && span->start < st->geo_t1)) return none;
+    double k = st->geo_plot_w / (st->geo_t1 - st->geo_t0);
+    double x0 = st->geo_plot_x + (span->start - st->geo_t0) * k, x1 = st->geo_plot_x + (span->end - st->geo_t0) * k;
+    float y = st->geo_body_y + (st->geo_row0[span->track] + span->depth) * st->geo_row_h - st->geo_scroll;
+    cui_rect b = st->geo_body;
+    if (x1 < b.x || x0 > b.x + b.w || y + st->geo_row_h - 1 < b.y || y > b.y + b.h) return none;
+    return (cui_rect){ (float)x0, y, (float)CUI_MAX(1.0, x1 - x0), st->geo_row_h - 1 };
+}
+
 static void cui__trf_build(cui__trf *f, int *node, cui__tr_paint **out) {
     cui_ctx *ui = f->ui;
     const cui_trace_opts *o = f->o;
@@ -28734,6 +28981,7 @@ static void cui__trf_build(cui__trf *f, int *node, cui__tr_paint **out) {
     cui__tween(ui, &f->st->fl.focus, f->bi.focus_visible ? 1.0f : 0.0f, CUI__T_FOCUS);
     fp->focus = f->st->fl.focus;
     p->wid = f->wid; p->gutter = c->gutter; p->marks_h = head - CUI__FL_RULER;
+    p->st = f->st;
     p->mark0 = v->mark_start; p->mark1 = v->mark_end;
     p->hover_lane = f->bi.hovered && f->mx < f->R.x + c->gutter ? f->hov_track : -1;
     p->nl = c->nt;
@@ -28778,6 +29026,7 @@ static void cui__trf_build(cui__trf *f, int *node, cui__tr_paint **out) {
             }
         }
     }
+    cui__trf_links(f, &p->curves, &p->ncurves);
     n->paint = cui__paint_trace;
     n->paint_data = p;
     *node = en; *out = p;
@@ -28804,7 +29053,7 @@ cui_trace_result cui_trace_view_ex(cui_ctx *ui, const char *id_str, cui_trace_tr
     cui_trace_opts d;
     memset(&d, 0, sizeof d);
     if (!o) o = &d;
-    cui_trace_result res = { false, false, -1 };
+    cui_trace_result res = { false, false, -1, -1 };
     cui__trf f;
     memset(&f, 0, sizeof f);
     f.ui = ui; f.o = o; f.res = &res;
@@ -28859,6 +29108,7 @@ cui_trace_result cui_trace_view_ex(cui_ctx *ui, const char *id_str, cui_trace_tr
     int en;
     cui__tr_paint *p;
     cui__trf_build(&f, &en, &p);
+    cui__trf_geometry(&f);
     cui__open(ui, en);
     cui__trf_tooltip(&f);
     cui__close(ui);
@@ -44111,14 +44361,34 @@ size_t cui__inflate(const void *src, size_t src_len, void *dst, size_t dst_cap) 
 #define CUI__INS_AXIS_H   18.0f    /* the row of x labels under a dot chart */
 #define CUI__EV_DOT_Y     12.0f    /* the event dots' center, from the top of the track */
 #define CUI__EV_REACH     11.0f    /* how far from a dot a press still takes it */
+#define CUI__INS_LABEL_CAP 64      /* the buffer an app's label function writes into */
 
 /* ======================================================================== */
 /* The axis                                                                 */
 /* ======================================================================== */
 
-/* hours as a time of day, "12:15"; whole hours alone as "12" when `short_hours` */
-static const char *cui__ins_label(cui_ctx *ui, cui_axis_units units, const char *fmt, double x, bool short_hours) {
-    if (units == CUI_AXIS_HOURS) {
+typedef struct {
+    double x0, x1, step;
+    cui_axis_units units;
+    const char *fmt;
+    cui_axis_label_fn label;   /* the app's own labels, in place of units and fmt */
+    void *user;
+} cui__ins_axis;
+
+/* the text an app's label function writes, cut to the buffer it was given */
+static const char *cui__ins_call(cui_ctx *ui, cui_axis_label_fn fn, void *user, double v) {
+    char *out = cui__frame_alloc(ui, CUI__INS_LABEL_CAP);
+    out[0] = 0;
+    fn(user, v, out, CUI__INS_LABEL_CAP);
+    out[CUI__INS_LABEL_CAP - 1] = 0;
+    return out;
+}
+
+/* an axis label: the app's function when it gave one, else hours as a time of day, "12:15"
+ * (whole hours alone as "12" when `short_hours`), else the format */
+static const char *cui__ins_label(cui_ctx *ui, const cui__ins_axis *a, double x, bool short_hours) {
+    if (a->label) return cui__ins_call(ui, a->label, a->user, fabs(x) < 1e-9 ? 0 : x);
+    if (a->units == CUI_AXIS_HOURS) {
         long m = lround(x * 60.0);
         long day = 24 * 60;
         m = ((m % day) + day) % day;
@@ -44126,7 +44396,7 @@ static const char *cui__ins_label(cui_ctx *ui, cui_axis_units units, const char 
         return cui__frame_printf(ui, "%02ld:%02ld", m / 60, m % 60);
     }
     if (fabs(x) < 1e-9) x = 0;   /* never "-0" */
-    return cui__frame_printf(ui, fmt && *fmt ? fmt : "%g", x);
+    return cui__frame_printf(ui, a->fmt && *a->fmt ? a->fmt : "%g", x);
 }
 
 /* label spacing: the smallest "nice" step whose labels sit at least `min_px` apart */
@@ -44143,12 +44413,6 @@ static double cui__ins_step(cui_axis_units units, double span, float width, floa
     return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
 }
 
-typedef struct {
-    double x0, x1, step;
-    cui_axis_units units;
-    const char *fmt;
-} cui__ins_axis;
-
 /* labels under a span of pixels, each centered on its value and kept inside `clip`;
  * one that would crowd the previous label is left out */
 static void cui__ins_draw_axis(cui_ctx *ui, const cui__ins_axis *a, float px, float pw, float y, cui_rect clip, bool ticks) {
@@ -44161,7 +44425,7 @@ static void cui__ins_draw_axis(cui_ctx *ui, const cui__ins_axis *a, float px, fl
     for (double v = first; v <= a->x1 + step * 1e-6; v += step) {
         float x = px + (float)((v - a->x0) / (a->x1 - a->x0)) * pw;
         if (ticks) cui_draw_rect(ui, (cui_rect){ floorf(x), y - 6, 1, 3 }, CUI_CORNERS(0), CUI_C(ui, BORDER_STRONG));
-        const char *lbl = cui__ins_label(ui, a->units, a->fmt, v, true);
+        const char *lbl = cui__ins_label(ui, a, v, true);
         float lw = cui__text_width(ui, CUI_FONT_MONO, fs, lbl, -1, true);
         float lx = CUI_CLAMP(x - lw * 0.5f, clip.x, clip.x + clip.w - lw);
         if (lx < last_end + 6) continue;
@@ -44294,6 +44558,7 @@ typedef struct {
     double x0, x1; float lo, hi, pitch, head;
     cui__ins_axis axis;
     const char *fmt, *unit;
+    cui_axis_label_fn value_label; void *value_user;
     bool grid, axis_on, readout;
     int cursor; float intro, focus;
     cui_chart_annotation *ann; int nann;
@@ -44391,8 +44656,9 @@ static void cui__paint_dot_chart(cui_ctx *ui, cui_node *nd, void *data) {
         float py = plot.y + plot.h - cui__clampf((v - p->lo) / range, 0, 1) * plot.h;
         cui_draw_circle(ui, (cui_vec2){ px, py }, 3.5f, fg);
         float fs = cui__fs(ui, ui->theme.text_xs), lh = cui__font_line_height(ui, CUI_FONT_MONO, fs);
-        const char *val = cui__frame_printf(ui, p->fmt && *p->fmt ? p->fmt : "%.0f", (double)v);
-        const char *lbl = cui__frame_printf(ui, "%s \xc2\xb7 %s%s%s", cui__ins_label(ui, p->axis.units, p->axis.fmt, xv, false), val,
+        const char *val = p->value_label ? cui__ins_call(ui, p->value_label, p->value_user, (double)v)
+                                         : cui__frame_printf(ui, p->fmt && *p->fmt ? p->fmt : "%.0f", (double)v);
+        const char *lbl = cui__frame_printf(ui, "%s \xc2\xb7 %s%s%s", cui__ins_label(ui, &p->axis, xv, false), val,
                                             p->unit && *p->unit ? " " : "", p->unit ? p->unit : "");
         float lw = cui__text_width(ui, CUI_FONT_MONO, fs, lbl, -1, true);
         float lx = px + 9 + lw <= r.x + r.w ? px + 9 : px - 9 - lw;
@@ -44471,7 +44737,9 @@ cui_dot_chart_result cui_dot_chart_ex(cui_ctx *ui, const char *id_str, const cui
     p->x0 = x0; p->x1 = x1; p->pitch = pitch; p->head = head;
     p->axis.x0 = x0; p->axis.x1 = x1; p->axis.step = o->x_step; p->axis.units = o->x_units;
     p->axis.fmt = o->x_format ? cui__frame_strdup(ui, o->x_format, -1) : NULL;
+    p->axis.label = o->x_label; p->axis.user = o->x_label_user;
     p->fmt = o->format ? cui__frame_strdup(ui, o->format, -1) : NULL;
+    p->value_label = o->value_label; p->value_user = o->value_label_user;
     p->unit = o->unit ? cui__frame_strdup(ui, o->unit, -1) : NULL;
     p->grid = !o->no_grid; p->axis_on = axis_on; p->readout = !o->no_readout;
     p->cursor = cursor; p->intro = st->intro.x; p->focus = st->focus;
@@ -44561,7 +44829,7 @@ static void cui__paint_event_track(cui_ctx *ui, cui_node *nd, void *data) {
         cui_draw_circle(ui, (cui_vec2){ x, y }, rad, c);
         if (on && p->focus > 0.01f) cui__draw_focus_ring(ui, (cui_rect){ x - 8, y - 8, 16, 16 }, CUI_CORNERS(8), p->focus);
         if (i == label) {
-            const char *lbl = cui__ins_label(ui, p->axis.units, p->axis.fmt, p->t[i], false);
+            const char *lbl = cui__ins_label(ui, &p->axis, p->t[i], false);
             float lw = cui__text_width(ui, CUI_FONT_MONO, fs, lbl, -1, true);
             float lx = CUI_CLAMP(x - lw * 0.5f, r.x, r.x + r.w - lw);
             cui_color lc = on ? em : CUI_C(ui, FOREGROUND);
@@ -44685,6 +44953,7 @@ cui_event_track_result cui_event_track_ex(cui_ctx *ui, const char *id_str, doubl
     p->hover = st->drag < 0 ? near_i : -1;
     p->axis.x0 = lo; p->axis.x1 = hi; p->axis.step = o->label_step; p->axis.units = o->units;
     p->axis.fmt = o->format ? cui__frame_strdup(ui, o->format, -1) : NULL;
+    p->axis.label = o->label; p->axis.user = o->label_user;
     p->axis_on = !o->no_axis;
     p->focus = st->focus;
     int nd = cui__node_new(ui, id);
@@ -45948,6 +46217,10 @@ void cui__paint_wheel_hit(cui_ctx *ui, cui_id id, cui_rect r) {
     ss->view_w = r.w; ss->view_h = r.h;
     ss->content_w = r.w + 1e6f; ss->content_h = r.h + 1e6f;
     cui__add_hit(ui, id, cui__rect_intersect(r, cp), CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y);
+}
+
+void cui_wheel_region(cui_ctx *ui, cui_id id, cui_rect rect) {
+    if (!cui_is_disabled(ui)) cui__paint_wheel_hit(ui, id, rect);   /* a disabled canvas leaves the wheel to the page */
 }
 
 void cui__paint(cui_ctx *ui) {
@@ -55499,8 +55772,9 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
     /* drag in progress */
     if (st->drag > 0 && st->drag <= count) {
         cui_cal_event *e = &ev[st->drag - 1];
+        /* Motion and release can arrive before the same frame. */
+        if (fabsf(ui->mx - st->press_x) + fabsf(ui->my - st->press_y) > 4) st->moved = true;
         if (ui->mdown[0]) {
-            if (fabsf(ui->mx - st->press_x) + fabsf(ui->my - st->press_y) > 4) st->moved = true;
             if (st->moved && gr.w > 0 && !o->read_only) {
                 float gy = ui->my - gr.y;
                 if (st->mode == 1) {
@@ -73888,11 +74162,13 @@ void cui_image_ex(cui_ctx *ui, cui_texture tex, const cui_image_opts *o) {
     n->paint_data = p;
 }
 
-typedef struct { cui_paint_fn fn; void *user; } cui__canvas_paint;
+typedef struct { cui_paint_fn fn; void *user; bool disabled; } cui__canvas_paint;
 static void cui__paint_canvas(cui_ctx *ui, cui_node *n, void *data) {
     cui__canvas_paint *p = data;
     cui_push_clip(ui, n->rect);
+    if (p->disabled) ui->disabled_depth++;   /* the paint callback sees the scope it was built in */
     p->fn(ui, n->rect, p->user);
+    if (p->disabled) ui->disabled_depth--;
     cui_pop_clip(ui);
 }
 
@@ -73909,6 +74185,7 @@ cui_canvas_result cui_canvas(cui_ctx *ui, const char *id_str, cui_size w, cui_si
     if (paint) {
         cui__canvas_paint *p = cui__frame_alloc(ui, sizeof *p);
         p->fn = paint;
+        p->disabled = cui_is_disabled(ui);
         if (user && user_size) { p->user = cui__frame_alloc(ui, user_size); memcpy(p->user, user, user_size); }
         else p->user = (void *)user;
         ui->nodes[i].paint = cui__paint_canvas;
@@ -78483,8 +78760,12 @@ void cui__plat_gl_swap(cui_app *app) {
     glfwSwapBuffers(g->win);
     if (g->maximize_after_frame) {
         g->maximize_after_frame = false;
-        if (!g->normal_pos_known) cui__glfw_note_position(g);   /* the place the system chose */
-        cui__glfw_note_size(g);   /* and the size, which the window system may have changed */
+        /* not when the app maximized the window itself before this frame (cui_app_maximize right
+         * after cui_app_create): the size then is the maximized one */
+        if (cui__plat_window_state(app) == CUI_WINDOW_NORMAL) {
+            if (!g->normal_pos_known) cui__glfw_note_position(g);   /* the place the system chose */
+            cui__glfw_note_size(g);   /* and the size, which the window system may have changed */
+        }
         glfwMaximizeWindow(g->win);
     }
 }
@@ -79638,6 +79919,9 @@ static void cui__mac_menu(void) {
     [NSApp setWindowsMenu:winMenu];
 }
 
+/* Placements count y down from the top of the main screen, AppKit up from its bottom. */
+static CGFloat cui__mac_main_top(void) { return NSScreen.screens.count ? NSScreen.screens[0].frame.size.height : 0; }
+
 bool cui__plat_init(cui_app *app) {
     @autoreleasepool {
         [NSApplication sharedApplication];
@@ -79665,9 +79949,7 @@ bool cui__plat_init(cui_app *app) {
         const cui_window_placement *pl = app->desc.placement;
         BOOL placed = NO;
         if (pl && pl->has_position) {
-            /* placements count y down from the top of the main screen, AppKit up from its bottom */
-            CGFloat top = NSScreen.screens.count ? NSScreen.screens[0].frame.size.height : 0;
-            NSRect content = NSMakeRect(pl->x, top - pl->y - app->desc.height, app->desc.width, app->desc.height);
+            NSRect content = NSMakeRect(pl->x, cui__mac_main_top() - pl->y - app->desc.height, app->desc.width, app->desc.height);
             NSRect outer = [w frameRectForContentRect:content];
             NSRect caption = NSMakeRect(outer.origin.x, NSMaxY(content), outer.size.width, NSMaxY(outer) - NSMaxY(content));
             for (NSScreen *screen in NSScreen.screens)
@@ -79820,8 +80102,6 @@ cui_window_state cui__plat_window_state(cui_app *app) {
     NSWindow *w = cui__p(app).window;
     return w.isMiniaturized ? CUI_WINDOW_MINIMIZED : w.isZoomed ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL;
 }
-
-static CGFloat cui__mac_main_top(void) { return NSScreen.screens.count ? NSScreen.screens[0].frame.size.height : 0; }
 
 void cui__plat_set_position(cui_app *app, int x, int y) {
     NSWindow *w = cui__p(app).window;

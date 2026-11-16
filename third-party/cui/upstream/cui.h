@@ -2795,7 +2795,8 @@ typedef struct cui_week_opts {
     cui_size height;
     bool read_only;
 } cui_week_opts;
-/* Returns the activated event index or -1. Read-only events still activate. */
+/* Returns the activated event index or -1. Read-only events still activate.
+ * Pointer activation requires staying within the drag threshold through release. */
 CUI_API int cui_week_calendar_ex(cui_ctx *ui, const char *id, cui_date week_start, cui_cal_event *events, int count, const cui_week_opts *opts);
 
 /* Month calendar: a month grid with events. All-day and multi-day events
@@ -4506,7 +4507,15 @@ CUI_API cui_waterfall_result cui_waterfall_ex(cui_ctx *ui, const char *id, const
  * name folds it. Keys: Left and Right step through the selected span's lane,
  * + and - zoom, F fits, Esc clears. Spans must be sorted by track, depth and
  * start (cui_trace_sort), with no overlap within a depth of a track. Like the
- * flame graph, only what is in view is visited. */
+ * flame graph, only what is in view is visited.
+ *
+ * Links draw dependencies between spans (a request and the work it caused, a
+ * message and the turn it woke): a curve from the end of one span to the start
+ * of another, with an arrowhead, across lanes. A link is drawn when the time
+ * range it covers meets the view; an end off screen runs to the edge. A folded
+ * lane's links meet its top row. Links touching the selected or hovered span,
+ * and the link under the pointer (hovered_link), are drawn bright; the rest
+ * subdued. cui_trace_span_rect says where a span was drawn, for overlays. */
 typedef struct cui_trace_track {
     const char *name;          /* the lane's name, in the column on the left */
     bool collapsed;            /* the lane shows only its top row; a click on its name toggles this */
@@ -4520,6 +4529,12 @@ typedef struct cui_trace_span {
     uint32_t color_key;        /* picks the color; 0: hashed from the name */
 } cui_trace_span;
 typedef struct cui_trace_marker { const char *name; double time; cui_tone tone; } cui_trace_marker;
+typedef struct cui_trace_link {
+    int from, to;              /* indices into the spans: from the end of `from` to the start of `to` */
+    cui_tone tone;             /* the curve's color; CUI_TONE_NEUTRAL (0): the emphasis color */
+    float width;               /* line width in points; 0: 1.25 */
+    bool dashed;               /* a weaker or inferred dependency */
+} cui_trace_link;
 typedef struct cui_trace_view {
     double start, end;               /* visible time range; end <= start fits everything */
     float scroll;                    /* points scrolled down */
@@ -4532,15 +4547,27 @@ typedef struct cui_trace_opts {
     float row_height;                /* default 20 */
     const cui_trace_marker *markers; /* moments drawn as lines across every lane, named in a strip under the ruler */
     int marker_count;                /* number of `markers` */
+    const cui_trace_link *links;     /* dependencies drawn as curves between spans */
+    int link_count;                  /* number of `links` */
 } cui_trace_opts;
 typedef struct cui_trace_result {
     bool selection_changed;    /* `*selected` changed this frame (click or keys) */
     bool view_changed;         /* time range, scroll position, or measurement in `*view` changed */
     int hovered;               /* span under the pointer, or -1 */
+    int hovered_link;          /* link under the pointer (when no span is), or -1 */
 } cui_trace_result;
 CUI_API cui_trace_result cui_trace_view_ex(cui_ctx *ui, const char *id, cui_trace_track *tracks, int track_count,
                                            const cui_trace_span *spans, int span_count, cui_trace_view *view, int *selected, const cui_trace_opts *opts);
 CUI_API void cui_trace_sort(cui_trace_span *spans, int count);
+/* Where a span is drawn, in points (zero size when out of view or in a folded
+ * lane below its top row): its time extent and row, as cui_flame_span_rect
+ * gives one; the bar inside is a point narrower, the gap between neighbours,
+ * and a selected sliver is widened to 3 points. trace is the view's id:
+ * cui_last_id(ui) right after the call. Asked right after the call, it
+ * answers at this frame's view in the rectangle of the previous frame, as
+ * this frame is not laid out yet; after cui_end_frame, where this frame drew
+ * it, until the next frame begins. */
+CUI_API cui_rect cui_trace_span_rect(cui_ctx *ui, cui_id trace, const cui_trace_span *span);
 
 /* ---- Regular expressions and the regex tester ---- */
 
@@ -4805,6 +4832,22 @@ typedef enum cui_axis_units {
     CUI_AXIS_HOURS             /* hours shown as a time of day: 12.25 is 12:15, and 30 is 06:00 the next day */
 } cui_axis_units;
 
+/* Writes the label for `value` into `out`, for an axis or a readout that a format string
+ * cannot describe: month names, dates, a locale's decimal comma. At most `capacity` bytes,
+ * the terminating zero included (`capacity` is at least 64); longer text is cut. Called while
+ * the frame ends, so `user` must stay valid until cui_end_frame. A value from the axis can
+ * carry rounding error from the label step: round it before using it as an index.
+ *
+ *     static void month_name(void *user, double value, char *out, size_t capacity) {
+ *         static const char *const names[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+ *                                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+ *         long m = lround(value);
+ *         (void)user;
+ *         snprintf(out, capacity, "%s", m >= 1 && m <= 12 ? names[m - 1] : "");
+ *     }
+ */
+typedef void (*cui_axis_label_fn)(void *user, double value, char *out, size_t capacity);
+
 /* Dot-matrix chart: values drawn as a grid of dots, lit up to each column's value and dim
  * above it. Several series stack, each in its own band, and an `accent` series is drawn in
  * the accent color: the item being edited, or the part that matters. The pointer, or the
@@ -4842,6 +4885,10 @@ typedef struct cui_dot_chart_opts {
     bool no_readout;           /* no value label under the pointer */
     const cui_chart_annotation *annotations;   /* lines and points drawn over the dots */
     int annotation_count;      /* number of `annotations` */
+    cui_axis_label_fn x_label; /* writes the x labels and the readout's x in place of x_units and x_format; x_units still picks the spacing */
+    void *x_label_user;        /* passed to `x_label` as its first argument */
+    cui_axis_label_fn value_label;   /* writes the readout's value in place of `format`; `unit` still follows it */
+    void *value_label_user;    /* passed to `value_label` as its first argument */
 } cui_dot_chart_opts;
 
 typedef struct cui_dot_chart_result {
@@ -4875,6 +4922,8 @@ typedef struct cui_event_track_opts {
     bool no_add;               /* clicks and Enter do not add events */
     bool no_remove;            /* double-clicks and Delete do not remove events */
     bool no_axis;              /* hides the axis labels under the dots */
+    cui_axis_label_fn label;   /* writes the axis labels and the selected event's time in place of units and format; units still picks the spacing */
+    void *label_user;          /* passed to `label` as its first argument */
 } cui_event_track_opts;
 
 typedef struct cui_event_track_result {
@@ -5128,10 +5177,27 @@ CUI_API void cui_push_clip(cui_ctx *ui, cui_rect r);
 CUI_API void cui_pop_clip(cui_ctx *ui);
 
 /* Canvas: a box of the given size that you paint yourself. The callback
- * runs after layout, with the final rectangle. Returns interaction info. */
+ * runs after layout, with the final rectangle; inside a disabled scope
+ * (cui_push_disabled) it sees cui_is_disabled return true. Returns
+ * interaction info. */
 typedef void (*cui_paint_fn)(cui_ctx *ui, cui_rect rect, void *user);
 typedef struct cui_canvas_result { cui_rect rect; bool hovered, pressed, clicked; cui_vec2 mouse; } cui_canvas_result;
 CUI_API cui_canvas_result cui_canvas(cui_ctx *ui, const char *id, cui_size width, cui_size height, cui_paint_fn paint, const void *user, size_t user_size);
+
+/* Marks the part of a canvas that takes the wheel, for a canvas that zooms,
+ * pans or scrolls what it draws the way the built-in charts, graphs and
+ * timelines do. Call it from the paint callback; over the rectangle the wheel
+ * stops there instead of scrolling an enclosing scroll area or the page. Give
+ * it an id of its own, not the canvas's: the region keeps scroll state under
+ * that id. A canvas in a disabled scope marks nothing, so the wheel scrolls
+ * the page there. Like every hit area, the region is the one painted on the
+ * previous frame. */
+CUI_API void cui_wheel_region(cui_ctx *ui, cui_id id, cui_rect rect);
+/* Returns the wheel aimed at a cui_wheel_region id this frame, in lines with
+ * +y up as cui_input_scroll gives it, and consumes it, so call it once per
+ * frame. Returns false and leaves *delta alone when no wheel came, and in a
+ * disabled scope: call it in the scope the canvas was built in. */
+CUI_API bool cui_wheel_take(cui_ctx *ui, cui_id id, cui_vec2 *delta);
 
 /* Persistent per-id storage for your own components (zeroed on first use).
  * State not used for about 300 frames is freed (and zeroed again if it comes

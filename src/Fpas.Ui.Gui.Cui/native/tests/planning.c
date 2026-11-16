@@ -33,9 +33,8 @@ static bool read_only_week(bool adapter) {
                 -1, &part)
             : cui_week_calendar(ui, "week", monday, &e, 1, .start_hour = 8, .end_hour = 18, .read_only = true);
         cui_end_frame(ui);
-        /* CUI still ignores motion coalesced into the release frame. */
-        const int expected = frame == 2 || frame == 4 || frame == 7 ||
-            (!adapter && frame == 9) ? 0 : -1;
+        /* A drag coalesced into the release frame must not activate the event. */
+        const int expected = frame == 2 || frame == 4 || frame == 7 ? 0 : -1;
         if (result != expected) {
             fprintf(stderr, "%s: read-only week activation at frame %d was %d, expected %d\n",
                 adapter ? "FPAS" : "CUI", frame, result, expected);

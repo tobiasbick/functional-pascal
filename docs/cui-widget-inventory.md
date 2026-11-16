@@ -177,7 +177,8 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
   commands and local click coordinates. The gallery reuses the original
   sidebar swatch drawings in a standalone selection example. The native test
   checks the click coordinates. Custom paint callbacks and hover/press
-  notifications remain unexposed.
+  notifications remain unexposed, as do the native wheel-region and wheel-input
+  functions (`cui_wheel_region`, `cui_wheel_take`).
 
 Text and display matches its native CUI reference pixel for pixel on Windows
 in Software and OpenGL at 1100 × 1700 and 550 × 1700, scale 1. The gallery
@@ -793,7 +794,8 @@ screenshots and FPAS examples.
 - [x] Commit graph (`cui_commit_graph`)
 - [x] Dependency graph (`cui_graph_view`)
 - [x] Network waterfall (`cui_waterfall`)
-- [x] Trace viewer (`cui_trace_view`)
+- [x] Trace viewer (`cui_trace_view`). Native dependency links, hovered-link
+  reporting and `cui_trace_span_rect` remain unexposed.
 - [x] Regex tester (`cui_regex_tester`)
 - [x] Test explorer (`cui_test_explorer`)
 - [x] Stack trace (`cui_stack_trace`)
@@ -868,8 +870,10 @@ examples and widget options.
 - [x] Dot-matrix chart (`cui_dot_chart`): the original caffeine chart shows
   stacked cup doses, an hours axis and native annotations. Windows tests cover
   activation of the middle sample before the keyboard cursor has moved.
+  Native axis/readout label callbacks remain unexposed.
 - [x] Event track (`cui_event_track`): the original cup timeline shares the
   chart's scale. Windows checks cover drag, keyboard movement, add and remove.
+  The native axis/readout label callback remains unexposed.
 - [x] Readout (`cui_readout`): the original At Bed, Peak and Cups readouts
   react to changes in the timeline.
 - [x] Dot-matrix display (`cui_dot_display`): the original bedtime status.

@@ -5,6 +5,7 @@ uses
   FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
   FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Internal.Inbox as Q,
   FpasAmp.Library.Inventory.Internal.Runtime as Worker, System as Sys, System.IO as IO,
+  FpasAmp.Library.Metadata.Monitoring as Tags,
   System.Threading as T, System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
 
 // Owned discovery lifetime. Control methods never access the filesystem or database.
@@ -15,6 +16,8 @@ public type Session = record implements Sys.IAsyncDisposable
   public Progress: Channels.ChannelReader<P.Snapshot>;
   // Worker completion, including native resource and connection cleanup.
   public Completion: Tasks.Task;
+  // Borrowed metadata/rating access when enabled; disposed with this inventory session.
+  public Metadata: Tags.Session?;
   SetSources: procedure(array of S.MusicSource);
   RequestScan: procedure(string);
   RequestClear: function(string): Tasks.Task<M.Snapshot>;
@@ -48,12 +51,26 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Starts background work after validation. `DatabasePath` is absolute or :memory:
   // for isolated tests; `Cancellation` owns the lifetime; `Settings` supplies scan bounds.
-  public static function Start(Sources: array of S.MusicSource; DatabasePath: string; Cancellation: T.CancellationToken; Settings: M.Options? := null): Session;
+  // A distinct absolute `UserDataPath` enables the independently owned metadata stage.
+  public static function Start(Sources: array of S.MusicSource; DatabasePath: string; Cancellation: T.CancellationToken; Settings: M.Options? := null; UserDataPath: string? := null): Session;
   requires Sources <> null;
   requires DatabasePath.Length > 0;
   begin
     if DatabasePath <> ':memory:' and not IO.Path.IsPathFullyQualified(DatabasePath) then
       raise new Sys.ArgumentException('Expected an absolute database path.');
+    end if;
+
+    if UserDataPath <> null then
+      if DatabasePath = ':memory:' or not IO.Path.IsPathFullyQualified(UserDataPath)
+        or S.PathComparer().Equals(
+        IO.Path.GetFullPath(DatabasePath),
+        IO.Path.GetFullPath(UserDataPath)
+      )
+      then
+        raise new Sys.ArgumentException(
+          'Metadata requires distinct absolute catalogue and user database paths.'
+        );
+      end if;
     end if;
     const Options: M.Options := Settings ?? new M.Options();
     if Options.DebounceMilliseconds < 0 or Options.ControlScanMilliseconds <= 0
@@ -70,6 +87,11 @@ public type Session = record implements Sys.IAsyncDisposable
     const Stop: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       Cancellation
     );
+    const Metadata: Tags.Session? := if UserDataPath <> null then
+      Tags.Session.Start(Sources, DatabasePath, UserDataPath, Stop.Token)
+    else
+      null
+    end if;
     const Bounds: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(1);
     Bounds.FullMode := Channels.BoundedChannelFullMode.DropOldest;
     Bounds.AllowSynchronousContinuations := false;
@@ -87,7 +109,13 @@ public type Session = record implements Sys.IAsyncDisposable
           Progress.Writer,
           DatabasePath,
           Policy,
-          Stop.Token
+          Stop.Token,
+          procedure() begin
+            if Metadata <> null then
+              Metadata.Wake();
+            end if;
+          end procedure,
+          UserDataPath
         )
       )
     );
@@ -98,8 +126,14 @@ public type Session = record implements Sys.IAsyncDisposable
           await Stop.CancelAsync().ConfigureAwait(false);
           await Running.ConfigureAwait(false);
         finally
-          Inbox.Release();
-          Stop.Dispose();
+          try
+            if Metadata <> null then
+              await Metadata.DisposeAsync().ConfigureAwait(false);
+            end if;
+          finally
+            Inbox.Release();
+            Stop.Dispose();
+          end try;
         end try;
       end function
     );
@@ -107,9 +141,22 @@ public type Session = record implements Sys.IAsyncDisposable
       Output.Reader,
       Progress.Reader,
       Running,
-      Inbox.Configure,
+      Metadata,
+      procedure(Value: array of S.MusicSource) begin
+        Inbox.Configure(Value);
+        if Metadata <> null then
+          Metadata.Configure(Value);
+        end if;
+      end procedure,
       Inbox.Refresh,
-      Inbox.Clear,
+      function(Id: string): Tasks.Task<M.Snapshot> begin
+        const Pending: Tasks.Task<M.Snapshot> := Inbox.Clear(Id);
+        if Metadata <> null then
+          Metadata.Pause(Id);
+        end if;
+
+        return Pending;
+      end function,
       function(): Tasks.Task => Cleanup.Value
     );
   end function;

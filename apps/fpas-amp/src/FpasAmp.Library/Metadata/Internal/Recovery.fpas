@@ -1,0 +1,48 @@
+// Retained unavailable/paused views cannot prove that an old location disappeared.
+unit FpasAmp.Library.Metadata.Internal.Recovery;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Inventory.Internal.Directories as Directories,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO;
+
+// Allows hash-based recovery only when known source policies/errors do not make
+// `Path` uncertain. `Connection` is the catalogue and `Sources` the current policy.
+public function Allowed(Connection: Db.SqliteConnection; Path: string; Sources: array of S.MusicSource): bool;
+begin
+  for Source: S.MusicSource in Sources do
+    if not S.Within(Path, Source.Path) then
+      continue;
+    end if;
+
+    if Source.Paused or Source.Offline then
+      return false;
+    end if;
+
+    try
+      Directories.Check(Source.Path);
+    catch Failure: IO.IOException do
+      return false;
+    catch Failure: Sys.UnauthorizedAccessException do
+      return false;
+    end try;
+
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT path FROM directories WHERE source_id=$source AND error IS NOT NULL;',
+      null,
+      ['$source'],
+      [Source.Id]
+    );
+    using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
+    while Reader.Read() do
+      if S.Within(Path, Reader.GetString(0)) then
+        return false;
+      end if;
+    end while;
+  end for;
+
+  return true;
+end function;
+
+end unit;

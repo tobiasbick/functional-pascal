@@ -1,0 +1,159 @@
+// Tag selection, Unicode multi-values, database filtering and independent ratings.
+unit FpasAmp.Library.Tests.MetadataReading;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, ATL as A,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises real audio containers rather than assuming that extensions imply valid files.
+public type MetadataReadingTests = record
+  // ATL's zero sentinels become missing values without changing ATL's global settings.
+  [X.FactAttribute]
+  public async function MissingTagsRemainUnassigned(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    IO.File.Copy(
+      IO.Path.Combine(Sys.AppContext.BaseDirectory, 'Fixtures', 'silence.mp3'),
+      IO.Path.Combine(Root.Path, 'untagged.mp3')
+    );
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    X.Assert.Null(Values[0].Error);
+    const Tags: M.Tags := Values[0].Metadata ?? new M.Tags();
+    X.Assert.Equal<string>('', Tags.Title);
+    X.Assert.Equal<int>(0, Tags.Artists.Length);
+    X.Assert.Null(Tags.TrackNumber);
+    X.Assert.Null(Tags.TrackTotal);
+    X.Assert.Null(Tags.DiscNumber);
+    X.Assert.Null(Tags.Bpm);
+    X.Assert.Null(Values[0].Rating);
+  end function;
+
+  // MP3 and Ogg/Vorbis expose the same selected metadata and indexed multi-value filters.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('.mp3', 'silence')]
+  [X.InlineDataAttribute('.ogg', 'silence')]
+  [X.InlineDataAttribute('.ogg', 'silence-opus')]
+  public async function ReadsTagsAndQueries(Extension: string; Fixture: string): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track' + Extension, Fixture := Fixture);
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    const Entry: M.Entry := Values[0];
+    X.Assert.Null(Entry.Error);
+    X.Assert.True(Entry.TrackId.Length = 32);
+    X.Assert.Equal<int>(64, Entry.Sha256.Length);
+    X.Assert.Null(Entry.Rating);
+    const Fields: M.Tags? := Entry.Metadata;
+    X.Assert.True(Fields <> null);
+    if Fields = null then
+      return;
+    end if;
+
+    X.Assert.Equal<string>('Stück', Fields.Title);
+    X.Assert.Equal<string>('Älbum', Fields.Album);
+    X.Assert.Equal<int>(2, Fields.Artists.Length);
+    X.Assert.Equal<string>('AC/DC', Fields.Artists[0]);
+    X.Assert.Equal<string>('Björk', Fields.Artists[1]);
+    X.Assert.Equal<int>(2, Fields.Genres.Length);
+    X.Assert.Equal<int?>(2, Fields.TrackNumber);
+    X.Assert.Equal<int?>(12, Fields.TrackTotal);
+    X.Assert.Equal<int?>(2, Fields.DiscTotal);
+    X.Assert.True(Fields.ReleaseDate.StartsWith('2024'));
+    X.Assert.Equal<double?>(120.0, Fields.Bpm);
+    X.Assert.Equal<double?>(-3.25, Fields.ReplayGainTrack);
+    X.Assert.Equal<string>('11111111-1111-1111-1111-111111111111', Fields.MusicBrainzReleaseId);
+    X.Assert.True(Fields.DurationMilliseconds > 0.0);
+    X.Assert.True(Fields.SampleRate > 0.0);
+    X.Assert.Equal<int?>(2, Fields.Channels);
+    const Filtered: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+      new M.Query(Album := 'älbum', Artist := 'björk', Genre := 'rock'), T.CancellationToken.None
+    );
+    X.Assert.Equal<int>(1, Filtered.Length);
+    await Tags.SetRatingAsync(Entry.TrackId, 10, T.CancellationToken.None);
+    const Rated: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+      new M.Query(MinimumRating := 10),
+      T.CancellationToken.None
+    );
+    X.Assert.Equal<int>(1, Rated.Length);
+    X.Assert.Equal<int?>(10, Rated[0].Rating);
+    await Tags.SetRatingAsync(Entry.TrackId, null, T.CancellationToken.None);
+    X.Assert.Equal<int>(
+      0,
+      (await Tags.QueryAsync(new M.Query(MinimumRating := 1), T.CancellationToken.None)).Length
+    );
+    X.Assert.True(IO.File.Exists(Path));
+  end function;
+
+  // A same-path tag update refreshes metadata/hash while retaining the user rating.
+  [X.FactAttribute]
+  public async function ChangedTagsRetainRatingAndIdentity(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track.mp3');
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    await Tags.SetRatingAsync(Before[0].TrackId, 7, T.CancellationToken.None);
+    const Changed: A.Track := new A.Track(Path);
+    Changed.Title := 'New title';
+    X.Assert.True(Changed.Save());
+    Session.Refresh();
+    const After: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].Sha256 <> Before[0].Sha256
+    );
+    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal<int?>(7, After[0].Rating);
+    X.Assert.Equal<string>('New title', (After[0].Metadata ?? new M.Tags()).Title);
+  end function;
+
+  // One malformed file records its failure without preventing other files from being read.
+  [X.FactAttribute]
+  public async function BadFileDoesNotStopTheStage(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    discard F.Write(Root.Path, 'good.ogg');
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'bad.mp3'), 'not audio');
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+    );
+    var Good: int := 0;
+    var Bad: int := 0;
+    for Entry: M.Entry in Values do
+      if Entry.Error = null then
+        Good := Good + 1;
+      else
+        Bad := Bad + 1;
+      end if;
+    end for;
+
+    X.Assert.Equal<int>(1, Good);
+    X.Assert.Equal<int>(1, Bad);
+    X.Assert.False(F.Tags(Session).Completion.IsCompleted);
+  end function;
+end record;
+
+end unit;

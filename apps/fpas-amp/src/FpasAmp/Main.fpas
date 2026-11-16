@@ -23,7 +23,8 @@ begin
   await using const Inventory: Monitoring.Session := Monitoring.Session.Start(
     Preferences.MusicSources,
     LibraryPaths.DatabasePath(),
-    Threads.CancellationToken.None
+    Threads.CancellationToken.None,
+    UserDataPath := LibraryPaths.UserDataPath()
   );
   const Opened: State.Snapshot := State.Load(Directory);
   var Tab: int? := Opened.SettingsTab;

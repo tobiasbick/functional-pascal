@@ -3,6 +3,14 @@ unit FpasAmp.Library.Inventory.Internal.Observations;
 
 uses System.Collections.Generic as C;
 
+// Filesystem freshness observed without opening the file contents.
+public type FileStamp = record
+  // Byte length reported by directory enumeration.
+  public Size: long;
+  // Last-write UTC ticks reported by directory enumeration.
+  public Modified: long;
+end record;
+
 // One enumeration result. Collections are borrowed until the checkpoint returns.
 public type DirectoryObservation = record
   // Normalized directory path.
@@ -15,6 +23,8 @@ public type DirectoryObservation = record
   public Complete: bool;
   // Filesystem error when enumeration could not complete.
   public Failure: string?;
+  // Optional per-file freshness; absent for callers supplying only path observations.
+  public Stamps: C.Dictionary<string, FileStamp>? := null;
 end record;
 
 end unit;

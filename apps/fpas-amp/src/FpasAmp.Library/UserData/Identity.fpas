@@ -1,0 +1,94 @@
+// Full-file fingerprints assist identity recovery without merging extant copies.
+unit FpasAmp.Library.UserData.Identity;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Threading as T;
+
+function Absent(Path: string): bool;
+begin
+  try
+    discard IO.File.GetAttributes(Path);
+    return false;
+  catch Missing: IO.FileNotFoundException do
+    return true;
+  catch Missing: IO.DirectoryNotFoundException do
+    return true;
+  catch Unavailable: IO.IOException do
+    return false;
+  catch Unavailable: Sys.UnauthorizedAccessException do
+    return false;
+  end try;
+end function;
+
+// Resolves a stable UUID for a successfully fingerprinted file.
+// `Connection` belongs to this worker; `Path` is normalized, `Hash` is SHA-256,
+// `Size` and `Modified` are validated filesystem facts. Cancellation rolls back writes.
+// A move requires exactly one hash candidate and a confirmed missing previous path.
+// Optional `MayRecover` rejects known unavailable/paused source contexts.
+public function Resolve(Connection: Db.SqliteConnection; Path: string; Hash: string; Size: long; Modified: long; Cancellation: T.CancellationToken; MayRecover: Sys.Func<string, bool>? := null): string;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Key: string := Sql.Key(Path);
+  var Candidate: string := '';
+  var CandidatePath: string := '';
+  var Count: int := 0;
+  begin
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT id,path FROM tracks WHERE sha256=$hash AND size=$size AND path_key<>$key LIMIT 2;',
+      null, ['$hash', '$size', '$key'], [Hash, Size, Key]
+    );
+    using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
+    while Reader.Read() do
+      Count := Count + 1;
+      Candidate := Reader.GetString(0);
+      CandidatePath := Reader.GetString(1);
+    end while;
+  end;
+
+  if Count <> 1 or not Absent(CandidatePath) then
+    Candidate := '';
+  end if;
+
+  if Candidate <> '' then
+    case MayRecover of
+      when is Sys.Func<string, bool> as Predicate:
+        if not Predicate.Invoke(CandidatePath) then
+          Candidate := '';
+        end if;
+      else
+    end case;
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  using const Existing: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT id FROM tracks WHERE path_key=$key;', Transaction, ['$key'], [Key]
+  );
+  const Found: string := Sys.Convert.ToString(Existing.ExecuteScalar()) ?? '';
+  const Id: string := if Found <> '' then
+    Found
+  else
+    if Candidate <> '' then
+      Candidate
+    else
+      Sys.Guid.NewGuid().ToString('N')
+    end if
+  end if;
+  Sql.Execute(
+    Connection,
+    'INSERT INTO tracks(id,path_key,path,sha256,size,modified_utc) VALUES($id,$key,$path,$hash,$size,$modified)' +
+    ' ON CONFLICT(id) DO UPDATE SET path_key=excluded.path_key,path=excluded.path,' +
+    'sha256=excluded.sha256,size=excluded.size,modified_utc=excluded.modified_utc;',
+    Transaction,
+    ['$id', '$key', '$path', '$hash', '$size', '$modified'],
+    [Id, Key, Path, Hash, Size, Modified]
+  );
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+  return Id;
+end function;
+
+end unit;

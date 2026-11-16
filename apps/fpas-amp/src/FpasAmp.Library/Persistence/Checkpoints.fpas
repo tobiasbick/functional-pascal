@@ -4,7 +4,8 @@ unit FpasAmp.Library.Persistence.Checkpoints;
 uses
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Internal.Observations as O,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T;
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T,
+  System.Collections.Generic as C;
 
 const Gone: string := 'WITH RECURSIVE gone(path_key) AS (' +
   'SELECT path_key FROM directories WHERE source_id=$source AND parent_key=$directory' +
@@ -160,9 +161,12 @@ begin
 
   using const AddFile: Db.SqliteCommand := Sql.Command(
     Connection,
-    'INSERT INTO files(path_key,path,directory_key) VALUES($key,$path,$directory)' +
-    ' ON CONFLICT(path_key) DO UPDATE SET path=excluded.path,directory_key=excluded.directory_key RETURNING id;',
-    Transaction, ['$key', '$path', '$directory'], [null, null, Sql.Key(Observation.Path)]
+    'INSERT INTO files(path_key,path,directory_key,size,modified_utc) VALUES($key,$path,$directory,$size,$modified)' +
+    ' ON CONFLICT(path_key) DO UPDATE SET path=excluded.path,directory_key=excluded.directory_key,' +
+    'size=COALESCE(excluded.size,files.size),modified_utc=COALESCE(excluded.modified_utc,files.modified_utc) RETURNING id;',
+    Transaction,
+    ['$key', '$path', '$directory', '$size', '$modified'],
+    [null, null, Sql.Key(Observation.Path), null, null]
   );
   using const AddAssociation: Db.SqliteCommand := Sql.Command(
     Connection,
@@ -178,6 +182,13 @@ begin
 
     AddFile.Parameters['$key'].Value := Sql.Key(File);
     AddFile.Parameters['$path'].Value := File;
+    AddFile.Parameters['$size'].Value := Sys.DBNull.Value;
+    AddFile.Parameters['$modified'].Value := Sys.DBNull.Value;
+    const Stamps: C.Dictionary<string, O.FileStamp>? := Observation.Stamps;
+    if Stamps <> null and Stamps.ContainsKey(File) then
+      AddFile.Parameters['$size'].Value := Stamps[File].Size;
+      AddFile.Parameters['$modified'].Value := Stamps[File].Modified;
+    end if;
     const Id: long := Sys.Convert.ToInt64(AddFile.ExecuteScalar());
     for Source: S.MusicSource in Sources do
       if not Matches(File, Source) then

@@ -4,6 +4,7 @@ unit FpasAmp.Ui.Settings.Library;
 uses
   FpasAmp.Library.Sources as Locations,
   FpasAmp.Ui.Settings.DatabaseActions as Database, FpasAmp.Ui.Settings.ScanStatus as Scan,
+  FpasAmp.Ui.Settings.SourceActions as Actions,
   FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Display.Texts as Texts,
@@ -80,9 +81,10 @@ begin
         ),
         E.Row<M.Msg>(
           new L.Flow(Gap := Gap(8), Wrap := true),
-          Database.Clear(Id + '-clear', Source.Id, 'Clear index', Current, Theme),
+          Actions.Remove(Id + '-remove', Source.Id, Current, Theme),
+          Database.Clear(Id + '-clear', Source.Id, 'Reset', Current, Theme),
           B.Button<M.Msg>(
-            Id + '-rescan', 'Rescan', M.Msg.Rescan(Source.Id),
+            Id + '-rescan', 'Refresh', M.Msg.Rescan(Source.Id),
             new B.Options(
               Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
               Enabled := Current.Clearing = null and not Source.Offline and not Source.Paused

@@ -6,6 +6,7 @@ uses
   FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
   System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -13,34 +14,54 @@ begin
   return M.Msg.LibraryFailed(Error.Message);
 end function;
 
+function Stopped(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.LibraryStopped(Error.Message);
+end function;
+
 function Watch(Library: Monitoring.Session): array of Mvu.Command<M.Msg>;
 begin
-  return [
-    Mvu.StartBackground<M.Msg>(
-      'library-inventory',
-      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-        while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-          const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
-            Cancellation
-          ).ConfigureAwait(false);
-          await Post(M.Msg.InventoryReceived(Value)).ConfigureAwait(false);
-        end while;
-      end function,
-      Failure
-    ),
-    Mvu.StartBackground<M.Msg>(
-      'library-progress',
-      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-        while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-          const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
-            Cancellation
-          ).ConfigureAwait(false);
-          await Post(M.Msg.ProgressReceived(Value)).ConfigureAwait(false);
-        end while;
-      end function,
-      Failure
-    )
-  ];
+  const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+    [
+      Mvu.StartBackground<M.Msg>(
+        'library-inventory',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(M.Msg.InventoryReceived(Value)).ConfigureAwait(false);
+          end while;
+        end function,
+        Stopped
+      ),
+      Mvu.StartBackground<M.Msg>(
+        'library-progress',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(M.Msg.ProgressReceived(Value)).ConfigureAwait(false);
+          end while;
+        end function,
+        Stopped
+      )
+    ]
+  );
+  const Tags: Metadata.Session? := Library.Metadata;
+  if Tags <> null then
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
+        'library-metadata',
+        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
+        end function, Stopped
+      )
+    );
+  end if;
+
+  return Commands.ToArray();
 end function;
 
 // Applies a typed UI proposal. `Save` persists accepted preferences; `Library` owns
@@ -66,10 +87,15 @@ begin
         LibraryError := Text;
         Clearing := null;
       end with;
+    when M.Msg.LibraryStopped(const Text: string):
+      Next := Current with
+        TerminalError := Text;
+      end with;
     when M.Msg.AskClear(const Id: string):
       if Current.Clearing = null and (Id = '' or State.Source(Current, Id) <> null) then
         Next := Current with
           ConfirmClear := Id;
+          ConfirmRemove := null;
         end with;
       end if;
     when M.Msg.CancelClear:

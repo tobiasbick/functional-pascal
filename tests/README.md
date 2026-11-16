@@ -298,13 +298,18 @@ transaction rollback, source policy changes and corrupt/unsupported database han
 Unix permissions and symbolic-link cases require a normal Unix user.
 Control cases cover independent pause/resume, shared-source clearing, explicit
 rescan, real progress counters and prevention of cleared-membership resurrection.
+Metadata cases read synthetic MP3/Vorbis/Opus fixtures through ATL and verify
+multi-value Unicode filters, paging/order, durable ratings, moves/copies,
+streaming cancellation, lazy/offline artwork, index upgrade and damaged user stores.
+The fixtures contain generated silence; running tests does not require FFmpeg.
 See the [library reference](../apps/fpas-amp/src/FpasAmp.Library/README.md#focused-verification)
 for its standalone test command.
 
 [FpasAmp.Ui.Tests](FpasAmp.Ui.Tests/) checks pause preference persistence,
 failure-safe settings/clear proposals and the native shell's controls, progress,
-confirmations and background acknowledgements. Native checks have the `Gui`
-trait and require a real display or Xvfb. `FPAS_AMP_UI_ARTIFACTS` optionally names
+confirmations, source removal and background acknowledgements, including failure-safe
+preference writes. Native checks have the `Gui` trait and require a real display
+or Xvfb. `FPAS_AMP_UI_ARTIFACTS` optionally names
 an ignored directory for General, scanning, confirmation and paused screenshots.
 
 ## See also

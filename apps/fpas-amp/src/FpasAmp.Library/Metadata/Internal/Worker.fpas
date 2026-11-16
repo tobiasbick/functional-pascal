@@ -1,0 +1,69 @@
+// Second owned stage: one file at a time, independent of directory enumeration.
+unit FpasAmp.Library.Metadata.Internal.Worker;
+
+uses
+  FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Pending as Pending,
+  FpasAmp.Library.Metadata.Internal.Reading as Reading, FpasAmp.Library.Metadata.Persistence.Store as Store,
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.UserData.Schema as Users, FpasAmp.Library.UserData.Identity as Identity,
+  FpasAmp.Library.Metadata.Internal.Recovery as Recovery,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// Runs metadata/hash processing on a background task. `Ready` completes after both
+// schemas are validated; lifetime failures propagate without replacing either database.
+public async function Run(Policy: P.Policy; Database: string; UserDatabase: string; Ready: Tasks.TaskCompletionSource<bool>; Cancellation: T.CancellationToken): Tasks.Task;
+begin
+  try
+    Cancellation.ThrowIfCancellationRequested();
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    Schema.Ensure(Connection);
+    using const UserConnection: Db.SqliteConnection := Users.Open(UserDatabase);
+    discard Ready.TrySetResult(true);
+    var After: long := 0L;
+    var Configured: long := -1L;
+    while true do
+      Cancellation.ThrowIfCancellationRequested();
+      const Configuration: P.Configuration := Policy.Read();
+      if Configured <> Configuration.Version then
+        Pending.Configure(Connection, Configuration.Sources);
+        Configured := Configuration.Version;
+        After := 0L;
+      end if;
+      const File: Pending.File? := Pending.Next(Connection, After);
+      if File = null then
+        After := 0L;
+        discard await Policy.Signal.WaitAsync(60000, Cancellation).ConfigureAwait(false);
+        continue;
+      end if;
+
+      After := File.Id;
+      const Value: Reading.Result := await Reading.Read(
+        File.Path, File.Size, File.Modified, Cancellation,
+        function(): bool => Policy.Read().Version = Configuration.Version
+      ).ConfigureAwait(false);
+      if Policy.Read().Version <> Configuration.Version then
+        continue;
+      end if;
+      const TrackId: string := if Value.Hash <> '' then
+        Identity.Resolve(
+          UserConnection, File.Path, Value.Hash, File.Size, File.Modified, Cancellation,
+          function(Path: string): bool => Recovery.Allowed(Connection, Path, Configuration.Sources)
+        )
+      else
+        ''
+      end if;
+      discard Store.Save(
+        Connection, File.Id, File.Size, File.Modified, TrackId,
+        Value.Hash, Value.Tags, Value.Error,
+        function(): bool => Policy.Read().Version = Configuration.Version, Cancellation
+      );
+    end while;
+  catch Cancelled: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
+    discard Ready.TrySetCanceled();
+  catch Failure: Sys.Exception do
+    discard Ready.TrySetException(Failure);
+    raise;
+  end try;
+end function;
+
+end unit;

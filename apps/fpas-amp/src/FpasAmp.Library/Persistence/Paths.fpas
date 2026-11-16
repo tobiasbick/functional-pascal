@@ -18,4 +18,10 @@ begin
   return IO.Path.Combine(Root, 'fpas-amp', 'library.db');
 end function;
 
+// Returns the durable rating/identity database beside the reconstructible catalogue.
+public function UserDataPath(): string;
+begin
+  return IO.Path.Combine(IO.Path.GetDirectoryName(DatabasePath()) ?? '', 'userdata.db');
+end function;
+
 end unit;

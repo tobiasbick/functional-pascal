@@ -109,6 +109,45 @@ begin
       end for;
 
       return Current;
+    when M.Msg.AskRemove(const Id: string):
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id = Id and Current.Clearing = null then
+          return Current with
+            ConfirmRemove := Id;
+            ConfirmClear := null;
+          end with;
+        end if;
+      end for;
+
+      return Current;
+    when M.Msg.CancelRemove:
+      return Current with
+        ConfirmRemove := null;
+      end with;
+    when M.Msg.ConfirmRemove:
+      const Target: string? := Current.ConfirmRemove;
+      if Target = null or Current.Clearing <> null then
+        return Current;
+      end if;
+      const Remaining: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>();
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id <> Target then
+          Remaining.Add(Source);
+        end if;
+      end for;
+      const Removed: M.State := Persist(
+        Current, Settings with
+          MusicSources := Remaining.ToArray();
+        end with, Save
+      );
+      return if Removed.SaveFailed then
+        Removed
+      else
+        Removed with
+          ConfirmRemove := null;
+          Draft := null;
+        end with
+      end if;
     when M.Msg.ChooseFolder:
       return Current with
         PickingFolder := true;

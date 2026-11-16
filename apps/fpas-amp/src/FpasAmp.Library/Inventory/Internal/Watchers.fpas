@@ -5,6 +5,7 @@ uses
   FpasAmp.Library.Inventory.Internal.Inbox as Q,
   FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Internal.Directories as Directories,
+  FpasAmp.Library.Metadata.Covers as Covers,
   System as Sys, System.IO as IO, System.Collections.Generic as C;
 
 // Native watchers owned by the scan worker.
@@ -15,18 +16,26 @@ public type Watchers = record implements Sys.IDisposable
   // Opens recursive watchers before a full scan. `Roots` are minimal active roots.
   // `Inbox` accepts nonblocking invalidations; failures fall back to control scans.
   // `DatabasePath` and its SQLite sidecars are excluded to avoid self-triggered scans.
-  public static function Open(Roots: array of string; Inbox: Q.Inbox; DatabasePath: string := ':memory:'): Watchers;
+  // Optional `UserDataPath` also excludes its sidecars and the adjacent cover cache.
+  public static function Open(Roots: array of string; Inbox: Q.Inbox; DatabasePath: string := ':memory:'; UserDataPath: string? := null): Watchers;
     function OwnFile(Path: string): bool;
     begin
       if DatabasePath = ':memory:' then
         return false;
       end if;
       const Compare: Sys.StringComparer := S.PathComparer();
-      return Compare.Equals(Path, DatabasePath) or Compare.Equals(Path, DatabasePath + '-wal')
-        or Compare.Equals(
-        Path,
-        DatabasePath + '-shm'
-      ) or Compare.Equals(Path, DatabasePath + '-journal');
+      for Database: string in [DatabasePath, UserDataPath ?? ''] do
+        if Database <> '' and (Compare.Equals(Path, Database) or Compare.Equals(
+          Path,
+          Database + '-wal'
+        )
+          or Compare.Equals(Path, Database + '-shm') or Compare.Equals(Path, Database + '-journal'))
+        then
+          return true;
+        end if;
+      end for;
+      const UserDatabase: string? := UserDataPath;
+      return UserDatabase <> null and S.Within(Path, Covers.DirectoryPath(UserDatabase));
     end function;
     procedure Changed(Sender: object?; Event: IO.FileSystemEventArgs);
     begin

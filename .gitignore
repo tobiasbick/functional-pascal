@@ -62,6 +62,10 @@ library.db
 library.db-wal
 library.db-shm
 library.db-journal
+userdata.db
+userdata.db-wal
+userdata.db-shm
+userdata.db-journal
 
 # Legacy FPAS compiler caches
 *.fpascu

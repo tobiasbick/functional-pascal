@@ -1,0 +1,100 @@
+// Small configuration mailbox; pending metadata remains in SQLite, not an unbounded queue.
+unit FpasAmp.Library.Metadata.Internal.Policy;
+
+uses
+  FpasAmp.Library.Sources as S, System as Sys, System.Threading as T,
+  System.Collections.Generic as C, System.Runtime.CompilerServices as R;
+
+// An isolated discovery policy with a monotonically increasing version.
+public type Configuration = record
+  // Normalized sources whose active memberships may be read.
+  public Sources: array of S.MusicSource;
+  // Changes invalidate an in-flight metadata attempt before its commit.
+  public Version: long;
+end record;
+
+// Shared policy and capacity-one wake signal; locks never cover filesystem/database work.
+public type Policy = record
+  Gate: object;
+  State: R.StrongBox<Configuration>;
+  // Worker signal; repeated invalidations coalesce.
+  public Signal: T.SemaphoreSlim;
+
+  // Creates a mailbox from isolated normalized `Sources`.
+  public static function Create(Sources: array of S.MusicSource): Policy;
+  begin
+    return new Policy(
+      new object(),
+      new R.StrongBox<Configuration>(new Configuration(Sources, 1L)),
+      new T.SemaphoreSlim(0, 1)
+    );
+  end function;
+
+  // Reads an immutable configuration reference under the short mailbox lock.
+  public function Read(): Configuration;
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Configuration? := self.State.Value;
+      if Value = null then
+        raise new Sys.InvalidOperationException('Missing metadata policy.');
+      end if;
+
+      return Value;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end function;
+
+  // Signals additional durable work without allocating one task per file.
+  public procedure Wake();
+  begin
+    try
+      discard self.Signal.Release();
+    catch Full: T.SemaphoreFullException do
+    end try;
+  end procedure;
+
+  // Replaces normalized settings, invalidating reads only for actual policy changes.
+  public procedure Configure(Sources: array of S.MusicSource);
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Before: Configuration := self.Read();
+      if not S.SameDiscovery(Before.Sources, Sources) then
+        self.State.Value := new Configuration(Sources, Before.Version + 1L);
+      end if;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+
+    self.Wake();
+  end procedure;
+
+  // Pauses a clear target immediately; an empty ID pauses every configured source.
+  public procedure Pause(Id: string);
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Before: Configuration := self.Read();
+      const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+      for Source: S.MusicSource in Before.Sources do
+        Sources.Add(
+          if Id = '' or Source.Id = Id then
+            Source with
+              Paused := true;
+            end with
+          else
+            Source
+          end if
+        );
+      end for;
+
+      self.Configure(Sources.ToArray());
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+end record;
+
+end unit;

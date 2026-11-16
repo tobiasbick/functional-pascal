@@ -13,7 +13,15 @@ uses
   System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T,
   System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
 
-async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken): Tasks.Task;
+async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action?; UserDataPath: string?): Tasks.Task;
+  procedure Changed();
+  begin
+    case Notify of
+      when is Sys.Action as Callback:
+        Callback.Invoke();
+      else
+    end case;
+  end procedure;
   function Current(): bool;
   begin
     return Inbox.IsCurrent(Generation);
@@ -49,6 +57,7 @@ async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Cha
       end if;
 
       Counters.Observe(Owners, Value);
+      Changed();
       Report(false);
       return true;
     end function;
@@ -122,6 +131,7 @@ begin
         Clearing.Clear(Connection, Request.Id, Cancellation);
         Index.Clear(Request.Id);
         Counters.Clear(Request.Id, Sources);
+        Changed();
         const Cleared: M.Snapshot := Publish();
         Report(true);
         discard Request.Completion.TrySetResult(Cleared);
@@ -134,11 +144,12 @@ begin
         end if;
 
         Index.Prune(Sources);
+        Changed();
       end if;
       const Roots: array of string := S.Roots(Sources);
       if Batch.Reconfigure or Batch.Full then
         Watchers.Dispose();
-        Watchers := W.Watchers.Open(Roots, Inbox, DatabasePath);
+        Watchers := W.Watchers.Open(Roots, Inbox, DatabasePath, UserDataPath);
       end if;
       const Work: array of string := Plans.Scopes(Batch, Roots);
       if Work.Length = 0 and not Batch.Reconfigure and not Batch.Full and Batch.Clears.Length =
@@ -233,7 +244,8 @@ end function;
 
 // Runs the owned background lifetime. Both latest-value streams complete on every exit.
 // All database and filesystem operations stay on this task; `Inbox` accepts controls only.
-public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken): Tasks.Task;
+// `Notify` wakes an optional metadata stage after commits; `UserDataPath` excludes its files from watchers.
+public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action? := null; UserDataPath: string? := null): Tasks.Task;
 begin
   try
     Cancellation.ThrowIfCancellationRequested();
@@ -246,7 +258,9 @@ begin
       Progress,
       DatabasePath,
       Options,
-      Cancellation
+      Cancellation,
+      Notify,
+      UserDataPath
     ).ConfigureAwait(false);
   catch Failure: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
   catch Failure: Sys.Exception do

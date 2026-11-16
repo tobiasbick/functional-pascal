@@ -5,6 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="z440.atl.core" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,31 @@
+// Native source-removal confirmation; media and durable user data are retained.
+unit FpasAmp.Ui.Settings.SourceActions;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm,
+  Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+// Builds a source removal trigger for `SourceId`. `Id` is its stable control identity;
+// `Current` owns confirmation state and `Theme` supplies the native danger color.
+public function Remove(Id: string; SourceId: string; Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
+begin
+  return Confirm.ConfirmPopover<M.Msg>(
+    Id + '-confirm',
+    B.Button<M.Msg>(
+      Id, 'Delete', M.Msg.AskRemove(SourceId),
+      new B.Options(
+        Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
+        Enabled := Current.Clearing = null, Color := Theme.Colors.Danger
+      )
+    ),
+    Current.ConfirmRemove = SourceId,
+    new Confirm.Options(
+      Title := 'Delete this music source?',
+      Description := 'The folder is removed from the library and monitoring stops. Music files and ratings are kept.',
+      ConfirmLabel := 'Delete source', Danger := true
+    ), M.Msg.ConfirmRemove, M.Msg.CancelRemove
+  );
+end function;
+
+end unit;

@@ -97,7 +97,7 @@ begin
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(4))),
             Texts.Text<M.Msg>('Clear indexed files for all sources.', Texts.Appearance.Secondary),
             Texts.Text<M.Msg>(
-              'Music files and source settings are kept.',
+              'Music files, ratings and source settings are kept.',
               Texts.Appearance.Secondary
             )
           ),

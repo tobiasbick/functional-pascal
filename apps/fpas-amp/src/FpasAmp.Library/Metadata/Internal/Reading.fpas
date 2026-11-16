@@ -1,0 +1,122 @@
+// One bounded stream read for hashing, followed by ATL's seek-based tag read.
+unit FpasAmp.Library.Metadata.Internal.Reading;
+
+uses
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Internal.Mapping as Mapping,
+  FpasAmp.Library.Inventory.Internal.Directories as Directories,
+  ATL as A, System as Sys, System.IO as IO, System.Security.Cryptography as Crypto,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+// A detached read attempt. An empty hash means fingerprinting did not succeed.
+public type Result = record
+  // SHA-256 of the complete file, independent of its path.
+  public Hash: string;
+  // Tags from a successful ATL read, or null after a failure.
+  public Tags: M.Tags?;
+  // Reported failure, or null on success.
+  public Error: string?;
+end record;
+
+// Verifies current filesystem facts against a queued observation without opening content.
+public function Matches(Path: string; Size: long; Modified: long): bool;
+begin
+  try
+    const Info: IO.FileInfo := new IO.FileInfo(Path);
+    return Info.Exists and Info.Length = Size and Info.LastWriteTimeUtc.Ticks = Modified;
+  catch Failure: IO.IOException do
+    return false;
+  catch Failure: Sys.UnauthorizedAccessException do
+    return false;
+  end try;
+end function;
+
+// Reads an observed file using a fixed-size stream buffer; never decodes audio.
+// `Size`/`Modified` reject stale or changing files. Cancellation interrupts hashing
+// and is checked around ATL's synchronous parser. Pictures remain unloaded.
+// Optional `Current` rejects obsolete source policies between 64 KiB blocks.
+public async function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: Sys.Func<bool>? := null): Tasks.Task<Result>;
+  procedure Check();
+  begin
+    Cancellation.ThrowIfCancellationRequested();
+    case Current of
+      when is Sys.Func<bool> as Predicate:
+        if not Predicate.Invoke() then
+          raise new Sys.OperationCanceledException('The source policy changed.');
+        end if;
+      else
+    end case;
+  end procedure;
+begin
+  var Hash: string := '';
+  try
+    Check();
+    Directories.Check(IO.Path.GetDirectoryName(Path) ?? '');
+    if not Matches(
+      Path,
+      Size,
+      Modified
+    ) or (IO.File.GetAttributes(
+      Path
+    ) and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0)
+    then
+      raise new IO.IOException('The file changed before metadata reading.');
+    end if;
+
+    using const Stream: IO.FileStream := new IO.FileStream(
+      Path,
+      IO.FileMode.Open,
+      IO.FileAccess.Read,
+      IO.FileShare.Read or IO.FileShare.Delete,
+      65536,
+      IO.FileOptions.Asynchronous or IO.FileOptions.RandomAccess
+    );
+    using const Fingerprint: Crypto.IncrementalHash := Crypto.IncrementalHash.CreateHash(
+      Crypto.HashAlgorithmName.SHA256
+    );
+    const Buffer: array of byte := new byte[65536];
+    while true do
+      Check();
+      const Count: int := await Stream.ReadAsync(
+        Buffer,
+        0,
+        Buffer.Length,
+        Cancellation
+      ).ConfigureAwait(false);
+      if Count = 0 then
+        break;
+      end if;
+
+      Fingerprint.AppendData(Buffer, 0, Count);
+    end while;
+
+    Hash := Sys.Convert.ToHexString(Fingerprint.GetHashAndReset());
+    Stream.Position := 0L;
+    Check();
+    if Size < 16L then
+      raise new IO.InvalidDataException(
+        'The file is too short to contain a supported audio stream.'
+      );
+    end if;
+    const Track: A.Track := new A.Track(Stream, IO.Path.GetExtension(Path));
+    if Track.DurationMs <= 0.0 then
+      raise new IO.InvalidDataException('ATL could not read a supported audio stream.');
+    end if;
+    const Tags: M.Tags := Mapping.Read(Track);
+    Check();
+    if not Matches(Path, Size, Modified) then
+      raise new IO.IOException('The file changed during metadata reading.');
+    end if;
+
+    return new Result(Hash, Tags, null);
+  catch Cancelled: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
+    raise;
+  catch Failure: Sys.Exception do
+    if not Matches(Path, Size, Modified) then
+      Hash := '';
+    end if;
+
+    return new Result(Hash, null, Failure.Message);
+  end try;
+end function;
+
+end unit;

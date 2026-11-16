@@ -13,17 +13,21 @@ The next launch returns to the settings tab that was open when the window closed
 Online music locations are discovered and monitored in the background by
 [FpasAmp.Library](src/FpasAmp.Library/README.md). Discovery includes subdirectories
 and the configured extensions, batches changes and retries unavailable locations.
-It only records which entries exist; it does not read audio or tags. The inventory
+Directory discovery records which entries exist. A second worker uses ATL to
+read tags/audio properties and computes SHA-256 without decoding audio. The inventory
 shows each source's status and real file/directory counters. Running scans use an
 indeterminate activity bar; no percentage is invented before the total is known.
+These counters describe discovery; tag processing follows independently.
 Its reconstructible SQLite index is loaded before background reconciliation.
 
-Each source has **Clear index**, **Rescan** and **Edit** actions. Clear index
+Each source has **Delete**, **Reset**, **Refresh** and **Edit** actions, in that order. Reset
 removes only that source's associations after confirmation and automatically
 enables **Pause**. Shared entries belonging to other sources and the actual music
 files remain. Turning Pause off starts a complete reconciliation, including
-changes made while paused. Rescan checks only the selected online, unpaused source.
+changes made while paused. Refresh checks only the selected online, unpaused source.
 It is disabled while that source is paused, offline or scanning.
+Delete asks for confirmation, removes the source from settings and stops its
+monitoring. Actual music files, ratings and other sources' memberships remain.
 
 Set up the [local FPAS SDK](../../docs/build/development.md#build-an-fpas-application)
 and the [native CUI build tools](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
@@ -67,8 +71,18 @@ position. When a file is damaged, FPas-Amp saves the original bytes in a
 values and defaults. A saved position on a monitor that is no longer connected
 is left to the system.
 
-`library.db` stores discovered paths, source memberships and directory check states
+`library.db` stores discovered paths, source memberships, directory check states
+and imported metadata
 under .NET's `LocalApplicationData/fpas-amp`, independently of the music locations.
 The index survives restarts and temporary source outages. Only completed directory
 checks remove absent entries. SQLite may also create `library.db-wal` and
 `library.db-shm` sidecars. Database errors are reported without replacing the file.
+
+`userdata.db` beside the index holds durable track identities and user ratings
+from 1 to 10, with an unassigned state. Clearing the index retains these ratings.
+New paths recover an existing identity only for an unambiguous SHA-256 match
+whose previous path is confirmed absent; existing copies stay separate.
+Known-path tag changes retain the identity. Moving and editing together cannot
+be recognized reliably by a full-file hash. Embedded covers are cached separately
+on explicit request. The current UI provides settings; catalogue queries and
+rating storage are available through the library API for the subsequent track view.

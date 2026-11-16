@@ -37,10 +37,14 @@ public type State = record
   public Progress: Work.Snapshot? := null;
   // Clear confirmation target; empty means all sources and null means closed.
   public ConfirmClear: string? := null;
+  // Source removal confirmation; removing a source never deletes music or ratings.
+  public ConfirmRemove: string? := null;
   // Clear operation currently awaiting acknowledgement.
   public Clearing: string? := null;
   // Background storage/monitoring failure, if any.
   public LibraryError: string? := null;
+  // Fatal worker failure, retained across successful operations until a new session.
+  public TerminalError: string? := null;
 end record;
 
 // The proposals accepted by the settings page.
@@ -69,12 +73,18 @@ public type Msg = variant
   AskClear(Id: string);
   // Dismiss the current clear confirmation.
   CancelClear;
+  // Open/dismiss/accept removal of a configured music source.
+  AskRemove(Id: string);
+  CancelRemove;
+  ConfirmRemove;
   // Confirm clearing and automatically persist the affected pause flags.
   ConfirmClear;
   // Receive the post-clear snapshot after the transaction commits.
   Cleared(Id: string; Value: Inv.Snapshot);
   // Report a background library/storage failure.
   LibraryFailed(Message: string);
+  // Report a stopped discovery or metadata worker without dismissing it after a clear.
+  LibraryStopped(Message: string);
   // Open the folder picker for a new source.
   ChooseFolder;
   // Receive the chosen path or dismissal from the folder picker.

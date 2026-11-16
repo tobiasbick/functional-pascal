@@ -1,7 +1,9 @@
-// Current presence-index schema; settings remain authoritative in their JSON file.
+// Reconstructible catalogue schema; source settings remain authoritative in JSON.
 unit FpasAmp.Library.Persistence.Schema;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys;
+uses
+  FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Metadata.Persistence.Schema as Metadata, Microsoft.Data.Sqlite as Db, System as Sys;
 
 // Initializes a new database or validates the supported schema without resetting data.
 // `Connection` is an open, worker-owned connection.
@@ -15,7 +17,7 @@ begin
     []
   );
   const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-  if Version <> 0 and Version <> 1 then
+  if Version < 0 or Version > 2 then
     raise new Sys.InvalidOperationException(
       'Unsupported library database schema. The database was left intact.'
     );
@@ -33,15 +35,24 @@ begin
     'CREATE INDEX IF NOT EXISTS directories_parent ON directories(source_id,parent_key);' +
     'CREATE TABLE IF NOT EXISTS files (' +
     'id INTEGER PRIMARY KEY AUTOINCREMENT, path_key TEXT NOT NULL UNIQUE,' +
-    'path TEXT NOT NULL, directory_key TEXT NOT NULL);' +
+    'path TEXT NOT NULL, directory_key TEXT NOT NULL, size INTEGER, modified_utc INTEGER);' +
     'CREATE INDEX IF NOT EXISTS files_directory ON files(directory_key);' +
     'CREATE TABLE IF NOT EXISTS source_files (' +
     'source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,' +
     'file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,' +
     'PRIMARY KEY(source_id,file_id));' +
-    'CREATE INDEX IF NOT EXISTS file_sources ON source_files(file_id);' +
-    'PRAGMA user_version=1;', Transaction, [], []
+    'CREATE INDEX IF NOT EXISTS file_sources ON source_files(file_id);', Transaction, [], []
   );
+  if Version = 1 then
+    Sql.Execute(
+      Connection,
+      'ALTER TABLE files ADD COLUMN size INTEGER;' +
+      'ALTER TABLE files ADD COLUMN modified_utc INTEGER;', Transaction, [], []
+    );
+  end if;
+
+  Metadata.Create(Connection, Transaction);
+  Sql.Execute(Connection, 'PRAGMA user_version=2;', Transaction, [], []);
   Transaction.Commit();
   Sql.Execute(
     Connection,

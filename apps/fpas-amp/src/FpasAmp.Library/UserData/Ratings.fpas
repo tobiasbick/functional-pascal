@@ -1,0 +1,27 @@
+// Explicit user ratings have a durable lifetime independent of imported tags.
+unit FpasAmp.Library.UserData.Ratings;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.Threading as T;
+
+// Persists `Value` (one through ten, or null to clear) for existing UUID `Id`.
+// `Connection` is an open user database. Unknown IDs fail instead of creating detached ratings.
+public procedure SetValue(Connection: Db.SqliteConnection; Id: string; Value: int?; Cancellation: T.CancellationToken);
+requires Id <> '';
+requires Value = null or (Value >= 1 and Value <= 10);
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'UPDATE tracks SET rating=$rating WHERE id=$id;',
+    null,
+    ['$rating', '$id'],
+    [cast<object?>(Value), Id]
+  );
+  if Query.ExecuteNonQuery() <> 1 then
+    raise new Sys.ArgumentException('Unknown track identity.');
+  end if;
+end procedure;
+
+end unit;

@@ -27,10 +27,15 @@ begin
       Title := if Target = '' then
         'Clear the library database?'
       else
-        'Clear this source''s index?'
+        'Reset this source''s index?'
       end if,
-      Description := 'Only indexed entries are removed. Music files and source settings are kept. Scanning will be paused.',
-      ConfirmLabel := 'Clear index', Danger := true
+      Description := 'Only indexed entries are removed. Music files, ratings and source settings are kept. Scanning will be paused.',
+      ConfirmLabel := if Target = '' then
+        'Clear database'
+      else
+        'Reset'
+      end if,
+      Danger := true
     ), M.Msg.ConfirmClear, M.Msg.CancelClear
   );
 end function;

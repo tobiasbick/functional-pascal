@@ -1,0 +1,162 @@
+// Owned metadata lifetime and asynchronous catalogue/rating access.
+unit FpasAmp.Library.Metadata.Monitoring;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Metadata.Model as M,
+  FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Worker as Worker,
+  FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
+  FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Metadata.Covers as Covers,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+// The metadata stage owns its worker; every public operation keeps I/O off its caller.
+public type Session = record implements Sys.IAsyncDisposable
+  // Completes when catalogue and user-data schemas are ready, or faults on opening errors.
+  public Ready: Tasks.Task;
+  // Background lifetime, including database errors and cleanup.
+  public Completion: Tasks.Task;
+  Database: string;
+  UserDatabase: string;
+  Policy: P.Policy;
+  Lifetime: T.CancellationToken;
+  Stop: function(): Tasks.Task;
+
+  // Replaces isolated normalized source policy and wakes the bounded worker.
+  public procedure Configure(Sources: array of S.MusicSource);
+  begin
+    self.Lifetime.ThrowIfCancellationRequested();
+    self.Policy.Configure(S.Normalize(Sources));
+  end procedure;
+
+  // Marks a source/all sources paused before an index-clear acknowledgement.
+  public procedure Pause(Id: string);
+  begin
+    self.Policy.Pause(Id);
+  end procedure;
+
+  // Wakes processing after a committed directory checkpoint, without queuing file paths.
+  public procedure Wake();
+  begin
+    self.Policy.Wake();
+  end procedure;
+
+  // Reads a bounded page sorted/filtered by `Request`. Cancellation owns this query.
+  public async function QueryAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Entry>>;
+  requires Request.Limit >= 1 and Request.Limit <= 500;
+  requires Request.Offset >= 0;
+  requires Request.MinimumRating = null or (Request.MinimumRating >= 1 and Request.MinimumRating <=
+    10);
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<I.ImmutableArray<M.Entry>>(
+      function(): I.ImmutableArray<M.Entry> => Queries.Read(
+        self.Database,
+        self.UserDatabase,
+        Request,
+        Linked.Token
+      ),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Loads embedded artwork only on request and caches it by content hash.
+  // `FileId` is an indexed file; cancellation bounds waiting and cache I/O.
+  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Covers.Cover?>;
+  requires FileId > 0L;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.TaskExtensions.Unwrap<Covers.Cover?>(
+      Tasks.Task.Run<Tasks.Task<Covers.Cover?>>(
+        function(): Tasks.Task<Covers.Cover?> => Covers.Read(
+          self.Database,
+          self.UserDatabase,
+          FileId,
+          Linked.Token
+        ),
+        Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+
+  // Saves a user rating (one through ten, or null) for durable `TrackId`.
+  // Imported tags and subsequent rescans never overwrite this value.
+  public async function SetRatingAsync(TrackId: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
+  requires TrackId <> '';
+  requires Value = null or (Value >= 1 and Value <= 10);
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.Task.Run(
+      procedure() begin
+        using const Connection: Db.SqliteConnection := Users.Open(self.UserDatabase);
+        Ratings.SetValue(Connection, TrackId, Value, Linked.Token);
+      end procedure, Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Cancels and joins metadata work. Repeated disposal awaits the same cleanup.
+  public function DisposeAsync(): Tasks.ValueTask;
+  begin
+    return new Tasks.ValueTask(self.Stop());
+  end function;
+
+  // Starts a bounded stage for file-backed `Database` and a distinct `UserDatabase`.
+  // Both paths are absolute; `Sources` are copied and `Cancellation` owns the lifetime.
+  public static function Start(Sources: array of S.MusicSource; Database: string; UserDatabase: string; Cancellation: T.CancellationToken): Session;
+  requires Sources <> null;
+  begin
+    if not IO.Path.IsPathFullyQualified(Database) or not IO.Path.IsPathFullyQualified(UserDatabase)
+      or S.PathComparer().Equals(IO.Path.GetFullPath(Database), IO.Path.GetFullPath(UserDatabase))
+    then
+      raise new Sys.ArgumentException(
+        'Expected distinct absolute catalogue and user database paths.'
+      );
+    end if;
+    const Policy: P.Policy := P.Policy.Create(S.Normalize(Sources));
+    const Stop: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      Cancellation
+    );
+    const Ready: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    const Running: Tasks.Task := Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Worker.Run(Policy, Database, UserDatabase, Ready, Stop.Token)
+      )
+    );
+    const Cleanup: Sys.Lazy<Tasks.Task> := new Sys.Lazy<Tasks.Task>(
+      async function(): Tasks.Task begin
+        try
+          await Stop.CancelAsync().ConfigureAwait(false);
+          await Running.ConfigureAwait(false);
+        finally
+          Policy.Signal.Dispose();
+          Stop.Dispose();
+        end try;
+      end function
+    );
+    return new Session(
+      Ready.Task,
+      Running,
+      Database,
+      UserDatabase,
+      Policy,
+      Stop.Token,
+      function(): Tasks.Task => Cleanup.Value
+    );
+  end function;
+end record;
+
+end unit;

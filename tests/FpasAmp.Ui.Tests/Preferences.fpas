@@ -6,10 +6,38 @@ uses
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
   FpasAmp.Ui.Settings.Controller as Controller, FpasAmp.Settings as Store,
   Fpas.Ui.Mvu.Application as Mvu, System.IO as IO, System.Threading as T,
+  FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
   System.Threading.Tasks as Tasks, Xunit as X;
 
 // Verifies pause preferences and accepted/failed settings updates.
 public type PreferenceTests = record
+  // An index-clear acknowledgement cannot hide a failed metadata/discovery lifetime.
+  [X.FactAttribute]
+  public async function ClearDoesNotDismissATerminalWorkerFailure(): Tasks.Task;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path);
+    await using const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
+    const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin end procedure;
+    const Current: M.State := Controller.Apply(
+      new M.State(new M.Preferences([Source])),
+      M.Msg.LibraryStopped('test worker failure'),
+      Save,
+      Library
+    ).Model;
+    const Cleared: M.State := Controller.Apply(
+      Current,
+      M.Msg.Cleared(
+        '',
+        new Inventory.Snapshot(1L, 1L, I.ImmutableArray<Inventory.SourceSnapshot>.Empty)
+      ),
+      Save,
+      Library
+    ).Model;
+    X.Assert.Equal<string>('test worker failure', Cleared.TerminalError);
+    X.Assert.Null(Cleared.LibraryError);
+  end function;
+
   // Pause is serialized independently of Offline and survives a load/save cycle.
   [X.FactAttribute]
   public procedure PausePersistsIndependentlyFromOffline();
@@ -52,6 +80,14 @@ public type PreferenceTests = record
     X.Assert.False(Clear.Model.Settings.MusicSources[0].Paused);
     X.Assert.True(Clear.Model.Clearing = null);
     X.Assert.Equal<int>(0, Clear.Commands.Length);
+    const Remove: Mvu.Transition<M.State, M.Msg> := Controller.Apply(
+      Current with
+        ConfirmRemove := Source.Id;
+      end with, M.Msg.ConfirmRemove, Save, Library
+    );
+    X.Assert.True(Remove.Model.SaveFailed);
+    X.Assert.Equal<int>(1, Remove.Model.Settings.MusicSources.Length);
+    X.Assert.Equal<int>(0, Remove.Commands.Length);
   end function;
 end record;
 

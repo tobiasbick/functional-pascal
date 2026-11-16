@@ -13,7 +13,9 @@ internal static class ExpressionStack
         BoundAddress address => Depth(address.Target) + 1,
         BoundDereference dereference => Depth(dereference.Address),
         BoundTypeTest test => Math.Max(2, Depth(test.Value)),
-        BoundSequence sequence => sequence.Bindings.Select(binding => Depth(binding.Initializer)).Append(Depth(sequence.Value)).Max(),
+        // A sequence binding can store into a hoisted field while an enclosing
+        // expression is still on the stack. Include that receiver at every level.
+        BoundSequence sequence => sequence.Bindings.Select(binding => Depth(binding.Initializer) + 1).Append(Depth(sequence.Value)).Max(),
         BoundRecordField field => Depth(field.Receiver),
         BoundSafeCast cast => Depth(cast.Value),
         BoundLambda lambda => lambda.Closure.Captures.Select((capture, index) => index + Depth(capture.Value)).DefaultIfEmpty(2).Max() + 2,

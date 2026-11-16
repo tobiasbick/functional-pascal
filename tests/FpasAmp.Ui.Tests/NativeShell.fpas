@@ -90,6 +90,28 @@ public type NativeShellTests = record
         Control(Session, 'source-music-pause').Bounds.X
       );
       X.Assert.True(Control(Session, 'source-music-clear').Enabled);
+      X.Assert.Equal<string>('Delete', Control(Session, 'source-music-remove').Text);
+      X.Assert.Equal<string>('Reset', Control(Session, 'source-music-clear').Text);
+      X.Assert.Equal<string>('Refresh', Control(Session, 'source-music-rescan').Text);
+      X.Assert.Equal<string>('Edit', Control(Session, 'source-music-edit').Text);
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-remove'
+        ).Bounds.X < Control(Session, 'source-music-clear').Bounds.X
+      );
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-clear'
+        ).Bounds.X < Control(Session, 'source-music-rescan').Bounds.X
+      );
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-rescan'
+        ).Bounds.X < Control(Session, 'source-music-edit').Bounds.X
+      );
       const Deadline: long := Sys.Environment.TickCount64 + 15000L;
       var Ready: bool := false;
       while not Ready and Sys.Environment.TickCount64 < Deadline do
@@ -188,6 +210,21 @@ public type NativeShellTests = record
 
       X.Assert.True(AllCleared);
       X.Assert.True(Saved.MusicSources[0].Paused);
+      X.Assert.True(IO.File.Exists(Track));
+      Step(Session, 1);
+      X.Assert.True(Control(Session, 'source-music-remove').Enabled);
+      discard Session.Window.Post(M.Msg.AskRemove(Source.Id));
+      Step(Session, 1);
+      X.Assert.True(Control(Session, Confirm.ConfirmId('source-music-remove-confirm')).Enabled);
+      Capture(Session, 'library-remove');
+      discard Session.Window.Post(M.Msg.CancelRemove);
+      Step(Session, 1);
+      X.Assert.Equal<int>(1, Saved.MusicSources.Length);
+      discard Session.Window.Post(M.Msg.AskRemove(Source.Id));
+      Step(Session, 1);
+      discard Session.Window.Post(M.Msg.ConfirmRemove);
+      Step(Session, 1);
+      X.Assert.Equal<int>(0, Saved.MusicSources.Length);
       X.Assert.True(IO.File.Exists(Track));
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();

@@ -1,0 +1,102 @@
+// Bound queries use explicit sort keys and parameterized exact filters.
+unit FpasAmp.Library.Metadata.Persistence.Queries;
+
+uses
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Text.Json as J, System.Threading as T;
+
+function Order(Value: M.Sort): string;
+begin
+  case Value of
+    when M.Sort.Title:
+      return 'm.sort_title';
+    when M.Sort.Album:
+      return 'm.sort_album';
+    when M.Sort.Artist:
+      return 'm.sort_artist';
+    when M.Sort.AlbumArtist:
+      return 'm.sort_album_artist';
+    when M.Sort.Genre:
+      return '(SELECT MIN(g.name_key) FROM metadata_genres g WHERE g.file_id=f.id)';
+    when M.Sort.ReleaseDate:
+      return 'm.release_date';
+    when M.Sort.Duration:
+      return 'm.duration_ms';
+    when M.Sort.Rating:
+      return 'u.rating';
+    when M.Sort.Path:
+      return 'f.path_key';
+    else
+      raise new Sys.ArgumentOutOfRangeException('Order');
+  end case;
+end function;
+
+function Key(Value: string?): string?;
+begin
+  return if Value <> null then
+    Value.ToUpperInvariant()
+  else
+    null
+  end if;
+end function;
+
+// Reads a bounded detached page from both stores. `Request` is validated by the
+// public session, `UserDatabase` is its durable store, and cancellation bounds row iteration.
+public function Read(Database: string; UserDatabase: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [UserDatabase]);
+  const Direction: string := if Request.Descending then
+    ' DESC'
+  else
+    ' ASC'
+  end if;
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error' +
+    ' FROM files f JOIN metadata m ON m.file_id=f.id LEFT JOIN users.tracks u ON u.id=m.track_id' +
+    ' WHERE ($source IS NULL OR EXISTS(SELECT 1 FROM source_files s WHERE s.file_id=f.id AND s.source_id=$source))' +
+    ' AND ($album IS NULL OR m.album_key=$album)' +
+    ' AND ($artist IS NULL OR EXISTS(SELECT 1 FROM metadata_people p WHERE p.file_id=f.id AND p.role=''artist'' AND p.name_key=$artist))' +
+    ' AND ($genre IS NULL OR EXISTS(SELECT 1 FROM metadata_genres g WHERE g.file_id=f.id AND g.name_key=$genre))' +
+    ' AND ($rating IS NULL OR u.rating>=$rating)' +
+    ' ORDER BY ' + Order(Request.Order) + Direction + ',f.id ASC LIMIT $limit OFFSET $offset;',
+    null,
+    ['$source', '$album', '$artist', '$genre', '$rating', '$limit', '$offset'],
+    [
+      Request.SourceId, Key(Request.Album), Key(Request.Artist), Key(Request.Genre),
+      cast<object?>(Request.MinimumRating), Request.Limit, Request.Offset
+    ]
+  );
+  const Results: C.List<M.Entry> := new C.List<M.Entry>();
+  using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
+  while Reader.Read() do
+    Cancellation.ThrowIfCancellationRequested();
+    Results.Add(
+      new M.Entry(
+        Reader.GetInt64(0), Reader.GetString(1), Reader.GetString(2), Reader.GetString(3),
+        if Reader.IsDBNull(4) then
+          null
+        else
+          Reader.GetInt32(4)
+        end if,
+        if Reader.IsDBNull(5) then
+          null
+        else
+          J.JsonSerializer.Deserialize<M.Tags>(Reader.GetString(5))
+        end if,
+        if Reader.IsDBNull(6) then
+          null
+        else
+          Reader.GetString(6)
+        end if
+      )
+    );
+  end while;
+
+  return I.ImmutableArray.CreateRange<M.Entry>(Results);
+end function;
+
+end unit;

@@ -1,139 +1,154 @@
 # FpasAmp.Library
 
-UI-independent FPAS library for music locations and presence-only discovery.
-It uses the .NET framework, FPAS record support and Microsoft's `Microsoft.Data.Sqlite`
-provider, with no GUI or MVU dependency. No media file is opened, decoded,
-fingerprinted or inspected for tags, ratings or other music metadata.
+UI-independent FPAS directory discovery, audio metadata and durable user ratings,
+using .NET, `Microsoft.Data.Sqlite` and ATL (`z440.atl.core`). Discovery enumerates
+filesystem entries; the optional second stage reads tags, technical audio
+properties and SHA-256 without decoding or modifying audio.
 
-## Lifetime and results
+## Lifetime and control
 
-Call `Inventory.Monitoring.Session.Start` with normalized-compatible
-`Sources.MusicSource` settings, an absolute local SQLite database path and a parent
-cancellation token. `Persistence.Paths.DatabasePath` resolves the app's default.
-Start validates
-and copies settings, then schedules one worker on the thread pool. Directory
-enumeration, database opening/loading/writing and watcher installation happen
-exclusively on that worker. `:memory:` selects an isolated SQLite database for tests.
+Call `Inventory.Monitoring.Session.Start` with `Sources.MusicSource` settings,
+an absolute catalogue database path and a parent cancellation token.
+`Persistence.Paths.DatabasePath` resolves the app's default `library.db`.
+Pass the distinct absolute `UserDataPath` argument to enable metadata/ratings;
+`Persistence.Paths.UserDataPath` resolves the default `userdata.db`.
+Without that argument the session performs presence discovery only and supports
+an isolated `:memory:` catalogue for tests. Start validates/copies configuration;
+filesystem/database operations run on background workers.
 
-Read `Session.Changes` asynchronously. Its capacity is one: a slow consumer gets
-the latest completed snapshot instead of accumulating every intermediate result.
-Snapshots contain a revision, configuration generation, per-source availability,
-immutable path collections, unreadable directory reports and watcher coverage.
-Paths describe filesystem entries; matching an extension does not establish
-that a file contains valid or complete audio. Snapshots do not compare file contents.
-Startup data from SQLite has `Snapshot.Cached = true` and active sources have
-`Availability.Cached` until checked. A fresh reconciliation supersedes cached data
-in the latest-value stream; a reader may receive the fresh result directly.
+Await `DisposeAsync` on every exit, normally with `await using const`. It cancels
+and joins both stages and releases watchers/connections. `Completion` exposes
+discovery failures. The enabled, borrowed `Metadata` handle exposes its own
+`Ready` and `Completion`; do not dispose it separately from the inventory owner.
 
-`Configure` replaces the settings without waiting for a scan. Pending
-configurations collapse to the latest one; results from replaced runs are not
-published. Names and equivalent extension sets do not cause rescans. `Refresh`
-requests a complete check; `Refresh(SourceId)` targets one online, unpaused source.
-`MusicSource.Paused` retains its source-owned index and last progress while other
-sources continue. Resuming schedules a full reconciliation, conservatively
-covering every change while paused without storing an unbounded event log.
-An obsolete scan's in-flight directory/transaction is completed or rolled back
-cleanly; unfinished scopes still needed by active sources are requeued.
-Await `DisposeAsync` on every exit, normally with
-`await using const`; it cancels and joins the worker and releases watchers.
-`Completion` exposes worker failures. Drain any remaining snapshot before
-awaiting the channel reader's own completion.
+- `Configure` replaces settings without waiting for a scan. Pending changes
+  collapse to the latest configuration; names/equivalent extensions do not rescan.
+- `Refresh()` requests a complete check; `Refresh(SourceId)` targets one active
+  source. Paused/offline sources must first be resumed.
+- Pause/offline retain source-owned entries while other sources continue. Resume
+  reconciles changes made while suspended without retaining an event history.
+- `ClearAsync(SourceId, Cancellation)` pauses/clears one source; empty ID means
+  all sources. The returned snapshot acknowledges a committed transaction.
+  The UI saves pause preferences first. Duplicate targets share acknowledgement;
+  at most sixteen distinct clear requests queue. Caller cancellation stops waiting
+  while an accepted operation remains owned by the session.
+- Removing a source means saving a configuration without that ID and calling
+  `Configure`. Its membership/watchers are released. Shared memberships, media
+  files and durable ratings remain. Index clearing also retains ratings.
 
-Read `Session.Progress` separately for small, latest-value notifications, normally
-at most ten per second plus immediate state transitions. It reports queued,
-scanning, idle, paused and offline phases, real files found/directories checked,
-and completed availability/membership counts. Progress does not copy full path
-arrays or assume a known total.
+`Changes` publishes detached presence snapshots with revision/generation,
+per-source availability, immutable paths, directory errors and watcher coverage.
+Its capacity is one: slow readers receive the latest completed view. SQLite
+startup views are explicitly cached until reconciled. Matching an extension
+does not establish valid audio; metadata failures are recorded per file.
 
-`ClearAsync(SourceId, Cancellation)` pauses and clears one source; an empty ID
-clears all sources. The returned snapshot acknowledges a committed transaction,
-not merely queue admission. The UI persists the pause preferences before
-requesting the operation. Duplicate pending targets share one acknowledgement;
-at most sixteen distinct clear operations queue. Caller cancellation stops
-waiting while an accepted operation remains owned by the library lifetime.
-Clearing retains another source's shared rows and never deletes media/preferences.
+`Progress` is a separate capacity-one stream with queued/scanning/idle/paused/
+offline phases and actual file/directory counters, normally at most ten updates
+per second plus state transitions. It avoids full path-list copies and invented
+percentages. These counters describe directory discovery, independently of tags.
+Drain remaining snapshots before awaiting a channel reader's completion.
 
-## Reconciliation
+## Reconciliation and persistence
 
-- Enumerate one directory at a time with `DirectoryInfo.EnumerateFileSystemInfos`.
-  Include ordinary hidden directories. Skip reparse points and reject roots
-  reached through directory links or junctions. Paths compare ordinally on Unix
-  and without case on Windows; symbolic aliases and hard links are not merged.
-- Merge equal or nested active roots for physical traversal and watchers. Each
-  configured source retains its own ID and extension-filtered view, so overlapping
-  sources can refer to the same physical entry without duplicate discovery work.
-  Sources with no selected formats schedule neither traversal nor a watcher.
-- Enable recursive `FileSystemWatcher` instances before the first full scan.
-  Callbacks only mark directories. File writes recheck their direct parent;
-  structural events recheck its subtree. New directories are always traversed.
-- Treat events as invalidations rather than a reliable operation log. Enumerate
-  the affected directories and reconcile the actual membership. Overflow/error
-  or a saturated dirty set requests a complete check and watcher reinstallation.
-- Memberships and errors are source-scoped even though traversal is shared.
-  A paused/cleared source cannot inherit another source's background updates.
-  Failed enumeration retains known entries and descendants. A missing root is
-  unavailable, rather than evidence that its files were removed. Offline sources
-  retain their last completed view and schedule no work of their own. Complete
-  checks retry missing locations and unavailable watcher installations.
+One discovery worker streams each directory with `EnumerateFileSystemInfos`.
+Hidden directories are included; reparse points and roots reached through
+links/junctions are excluded. Paths compare ordinally on Unix and without case
+on Windows. Hard links and symbolic aliases are not merged.
 
-## Local index
+Equal/nested active roots share traversal/watchers, while source IDs retain their
+own filtered membership/error views. Empty extension selections schedule no work.
+Watchers are enabled before scanning; callbacks only invalidate directories.
+Events are hints: changes are reconciled from the filesystem, new directories
+are traversed, and overflow/saturation requests a complete check/reinstallation.
+Failed enumeration and unavailable roots retain earlier entries. Confirmed
+complete directory checks alone authorize deletion. Interrupted work needed by
+other active sources is requeued.
 
-`library.db` belongs in the per-user `LocalApplicationData/fpas-amp` directory,
-separately from music roots and the JSON preferences. `settings.json` owns source
-configuration; SQLite stores only the IDs/root context needed to associate observations.
+Defaults: one discovery worker, a fixed **500 ms** batching window, **1,024**
+pending directories, and a full control scan **15 minutes** after the previous
+full check. `Inventory.Model.Options` configures these bounds. Pending work is
+bounded; stored inventories necessarily scale with files/directories.
 
-- `files`: one normalized absolute path, directory key and stable integer ID.
-  An unchanged path retains its ID across scans/restarts. A rename is a different
-  path; content identity and metadata-preserving rename tracking are outside this index.
-- `source_files`: many-to-many source membership, sharing a file row across
-  overlapping sources. Paused, offline and unavailable memberships survive other
-  sources' successful reconciliation.
-- `directories`: per-source directory context, last successful UTC check and
-  latest error. Discovered but unchecked child directories have no success time.
+`settings.json` owns source configuration. The reconstructible `library.db` holds:
 
-The single worker uses parameterized SQL, prepared row commands, WAL, foreign keys
-and full SQLite durability. Each directory observation has one transaction. Only
-complete enumeration removes missing files/child subtrees. Partial observations
-can add positively observed paths and report errors, but retain unknown entries
-and their last successful check. Cancellation or an obsolete generation rolls back
-the current transaction; earlier complete checkpoints remain usable after restart.
-Unused file rows are collected after their last source association is removed.
+- `sources`, `source_files`: source/root context and shared file memberships.
+- `files`: normalized path, stable index ID, directory, byte length and UTC
+  modification ticks. Index IDs survive unchanged paths, not index deletion.
+- `directories`: per-source directory context, last successful check and error.
+- `metadata`: last successful tag JSON, read error/time, attempted freshness,
+  SHA-256, durable user UUID and indexed sort fields.
+- `metadata_people`, `metadata_genres`: ordered multi-value relationships with
+  indexed invariant case keys. ATL's public separator convention is used;
+  artist names are not split on commas or slashes.
 
-Source removal, root changes and excluded formats update the index as configuration
-changes; they do not imply filesystem deletion. SQLite failures fault `Completion`
-and the snapshot reader. Corrupt or unsupported databases are reported and left
-intact, rather than silently replaced. The database remains a reconstructible
-presence index; no application ratings or other irreplaceable user data belong here.
+Connections use WAL, foreign keys, prepared/bound SQL and full SQLite durability.
+Each directory/tag write is transactional; obsolete generations/cancellation
+roll back the current checkpoint. Orphans are collected only after their last
+source association disappears. Existing presence-only catalogues are upgraded
+without replacing rows. Corrupt/unsupported stores fail without being reset.
+The index contains no irreplaceable user data.
 
-Database and WAL/SHM/journal notifications are ignored by the music watchers so
-writing the index cannot continually trigger new scans. Runtime database files
-and their sidecars are ignored by Git. Native SQLite assets arrive through the
-provider's NuGet dependencies.
+Index/user database files, their sidecars and the adjacent cover cache are excluded
+from watcher notifications. Runtime database files/sidecars are ignored by Git.
+Native SQLite assets arrive through NuGet; ATL's managed dependency detects text encodings.
 
-Default limits: one worker, a fixed **500 ms** notification batching window,
-**1,024** dirty directories and a complete control scan **15 minutes** after
-the last full check. `Inventory.Model.Options` configures these values. Continuous
-notifications cannot extend the batching window indefinitely. Pending work is
-bounded; the index and completed snapshots necessarily scale with discovered
-directories and matching paths. There is no task per file.
+## Metadata and queries
 
-Cancellation is cooperative between entries. A blocking OS or network filesystem
-call cannot be forcibly interrupted by a .NET cancellation token, so cleanup may
-wait for that call while the UI thread remains free.
+The enabled `Metadata` stage reads one file at a time using a **64 KiB** hash
+buffer. Pending work stays in SQLite, with a cursor rather than repeated scans of
+earlier rows. Successful unchanged size/time observations skip hashing/tag reads.
+Files are revalidated around reading and at commit. Failures retry after a minute
+or an observed size/time change; earlier successful tags are retained.
 
-The application starts this lifetime after loading settings, reconfigures it
-after successful saves and awaits cleanup after its window closes. Presentation
-of the inventory is independent of discovery and is not part of this library.
+[Metadata.Model](Metadata/Model.fpas) defines the selected fields: title/subtitle,
+performers, album artists, album, genres, composers, dates, track/disc positions
+and totals, explicit sort tags, compilation, comment, grouping, label/copyright,
+BPM, MusicBrainz identities, duration, codec, bitrate, sample rate, channels,
+bit depth and ReplayGain. Dates use ATL's normalized representation, including
+its interpretation of year-only tags. MP3/ID3, Ogg/Vorbis and Ogg/Opus are tested
+with real synthetic containers; ATL also supports the app's FLAC/M4A locations.
+
+`QueryAsync` combines source, album, performer, genre and minimum-rating filters,
+ordering by title/album/artist/album artist/genre/date/duration/rating/path, and
+pages of at most **500** rows. Results include path, index ID, durable UUID,
+fingerprint, last successful tags, current error and user rating. Equal album
+titles are not assumed to identify the same release.
+
+Pause/removal/shutdown interrupt hashing between blocks. Blocking OS calls and
+ATL's synchronous parser must finish before that operation can exit. The UI
+thread remains free; per-file read errors remain visible in query results and
+fatal lifetime failures are reported by the shell.
+
+## Durable identities and ratings
+
+`userdata.db` stores UUIDs, latest paths/fingerprints and nullable integer ratings.
+`SetRatingAsync(TrackId, Value, Cancellation)` accepts **1–10**; null clears it.
+Imported file ratings never overwrite user choices. Clearing/removing/rebuilding
+the catalogue retains this database. The current shell contains settings; a
+track-list/rating editor is a separate view. UI bindings can use the existing
+native `Ratings.Rating` with `Maximum := 10`, mapping its cleared value 0 to null.
+
+Full-file SHA-256 is independent of the path but changes with tag edits. Known
+paths retain UUID/rating while updating their fingerprint. A new path recovers
+an identity only for exactly one hash/size candidate whose old path is confirmed
+absent and whose known source is not paused, offline or unreadable. Existing
+copies and ambiguous duplicates receive separate UUIDs. Simultaneous moving and
+editing is not reliably recognizable; replacing content at an existing path is
+treated as an update. This is file recognition, not an acoustic fingerprint.
+
+`CoverAsync(FileId, Cancellation)` reads the first embedded image only on demand
+and caches it under `covers` beside the user database, addressed by SHA-256.
+Scans leave image data unloaded. Cached artwork works offline; absence is cached
+too. Images retain their original MIME type/bytes, limited to **sixteen MiB**.
+Cache writes replace temporary files atomically; the cache is reconstructible.
 
 ## Focused verification
 
 The [FPAS xUnit tests](../../../../tests/FpasAmp.Library.Tests/) exercise real
-temporary directories, overlapping sources, filtering, locked media, structural
-notifications, missing roots, Unix permissions and links, control scans, bounded
-invalidations, configuration changes, pause/resume, targeted rescans, clear
-acknowledgements and asynchronous shutdown. Storage tests cover
-real database restart, cached/offline/unavailable views, stable/shared IDs, Unicode
-paths, completed/failed checkpoints, rollback, orphan collection and preserved errors.
+temporary folders, watchers, overlapping sources, pause/clear, permissions/links,
+disk restart, schema upgrade, safe checkpoints, rollback and corrupt stores.
+Metadata cases cover tags, Unicode multi-values, ordering, rating bounds,
+changes, cancellation, lazy/offline images, ambiguous copies, moves and restart.
 
 ```sh
 dotnet test tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj

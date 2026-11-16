@@ -1,0 +1,40 @@
+// Reconstructible tag rows and indexed multi-value relationships.
+unit FpasAmp.Library.Metadata.Persistence.Schema;
+
+uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+
+// Creates metadata tables inside the caller's schema transaction.
+// `Connection` owns `Transaction`; user ratings live in a separate database.
+public procedure Create(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction);
+begin
+  Sql.Execute(
+    Connection,
+    'CREATE TABLE IF NOT EXISTS metadata (' +
+    'file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,' +
+    'track_id TEXT NOT NULL, sha256 TEXT NOT NULL, size INTEGER NOT NULL,' +
+    'modified_utc INTEGER NOT NULL, read_utc INTEGER NOT NULL, error TEXT, tags_json TEXT,' +
+    'title TEXT NOT NULL DEFAULT '''', album TEXT NOT NULL DEFAULT '''', album_key TEXT NOT NULL DEFAULT '''',' +
+    'sort_title TEXT NOT NULL DEFAULT '''', sort_album TEXT NOT NULL DEFAULT '''',' +
+    'sort_artist TEXT NOT NULL DEFAULT '''', sort_album_artist TEXT NOT NULL DEFAULT '''',' +
+    'release_date TEXT NOT NULL DEFAULT '''', duration_ms REAL);' +
+    'CREATE INDEX IF NOT EXISTS metadata_title ON metadata(sort_title,file_id);' +
+    'CREATE INDEX IF NOT EXISTS metadata_album ON metadata(sort_album,sort_album_artist,file_id);' +
+    'CREATE INDEX IF NOT EXISTS metadata_album_name ON metadata(album_key,file_id);' +
+    'CREATE INDEX IF NOT EXISTS metadata_artist ON metadata(sort_artist,file_id);' +
+    'CREATE INDEX IF NOT EXISTS metadata_album_artist ON metadata(sort_album_artist,file_id);' +
+    'CREATE INDEX IF NOT EXISTS metadata_date ON metadata(release_date,file_id);' +
+    'CREATE TABLE IF NOT EXISTS metadata_people (' +
+    'file_id INTEGER NOT NULL REFERENCES metadata(file_id) ON DELETE CASCADE,' +
+    'role TEXT NOT NULL, position INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL,' +
+    'PRIMARY KEY(file_id,role,position));' +
+    'CREATE INDEX IF NOT EXISTS metadata_people_name ON metadata_people(role,name_key,file_id);' +
+    'CREATE TABLE IF NOT EXISTS metadata_genres (' +
+    'file_id INTEGER NOT NULL REFERENCES metadata(file_id) ON DELETE CASCADE,' +
+    'position INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL,' +
+    'PRIMARY KEY(file_id,position));' +
+    'CREATE INDEX IF NOT EXISTS metadata_genres_name ON metadata_genres(name_key,file_id);',
+    Transaction, [], []
+  );
+end procedure;
+
+end unit;

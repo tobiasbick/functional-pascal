@@ -36,7 +36,7 @@ begin
   else
     LibraryView.View(Current, Theme)
   end if;
-  const Error: string? := Current.LibraryError;
+  const Error: string? := Current.TerminalError ?? Current.LibraryError;
   const MainBody: E.Element<M.Msg> := if Error = null then
     Body
   else

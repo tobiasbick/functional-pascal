@@ -1,14 +1,45 @@
-// Preview edits stay local and preserve all catalogue and image state.
+// Toolbar edits stay local; the album slice derives the shown albums from them.
 unit FpasAmp.Ui.Albums.Toolbar.Update;
 
-uses FpasAmp.Ui.Albums.Toolbar.Model as M, System as Sys;
+uses
+  FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Library.Search.Matching as Matching,
+  System as Sys;
+
+function Searching(Text: string): bool;
+begin
+  return not Matching.Query.Parse(Text).IsEmpty();
+end function;
 
 // Applies `Message` to `Current`. Apply confirms the draft; closing cancels it.
-// Search and sort only update the toolbar model in this UI mockup.
+// Starting a search switches to best matches, and clearing it returns to the
+// order chosen before.
+//
+// ## Parameters
+// - `Current`: The toolbar state.
+// - `Message`: The proposal.
+// ## Returns
+// The next toolbar state.
 public function Apply(Current: M.State; Message: M.Msg): M.State;
 begin
   case Message of
     when M.Msg.Search(const Value: string):
+      const Was: bool := Searching(Current.Search);
+      const Now: bool := Searching(Value);
+      if Now and not Was and Current.Sort <> M.Order.Relevance then
+        return Current with
+          Search := Value;
+          Resume := Current.Sort;
+          Sort := M.Order.Relevance;
+        end with;
+      end if;
+
+      if Was and not Now and Current.Sort = M.Order.Relevance then
+        return Current with
+          Search := Value;
+          Sort := Current.Resume;
+        end with;
+      end if;
+
       return Current with
         Search := Value;
       end with;
@@ -17,28 +48,22 @@ begin
         Open := Value;
         Draft := Current.Applied;
       end with;
-    when M.Msg.Artist(const Value: int):
+    when M.Msg.Artist(const Value: string):
       return Current with
         Draft := Current.Draft with
-          Artist := Sys.Math.Clamp(Value, 0, 2);
+          Artist := Value;
         end with;
       end with;
-    when M.Msg.Genre(const Value: int):
+    when M.Msg.Genre(const Value: string):
       return Current with
         Draft := Current.Draft with
-          Genre := Sys.Math.Clamp(Value, 0, 3);
+          Genre := Value;
         end with;
       end with;
     when M.Msg.MinimumRating(const Value: int):
       return Current with
         Draft := Current.Draft with
           MinimumRating := Sys.Math.Clamp(Value, 0, 10);
-        end with;
-      end with;
-    when M.Msg.OnlyCover(const Value: bool):
-      return Current with
-        Draft := Current.Draft with
-          OnlyCover := Value;
         end with;
       end with;
     when M.Msg.Apply:
@@ -51,6 +76,10 @@ begin
         Draft := new M.Filters();
       end with;
     when M.Msg.Sort(const Value: M.Order):
+      if Value = M.Order.Relevance and not Searching(Current.Search) then
+        return Current;
+      end if;
+
       return Current with
         Sort := Value;
       end with;

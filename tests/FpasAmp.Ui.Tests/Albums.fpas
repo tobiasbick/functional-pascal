@@ -14,12 +14,15 @@ public type AlbumTests = record
   begin
     const Album: Library.Album := new Library.Album('album', 'Title', 'Artist', 12L, 'revision');
     const Image: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
-    const Current: M.State := new M.State(
-      Items := I.ImmutableArray.Create<Library.Album>(Album), Loaded := true,
-      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add('album', Image),
-      Saving := I.ImmutableHashSet<string>.Empty.Add('album'),
-      First := 0, Last := 1, Generation := 3L
-    );
+    const Current: M.State := Update.Apply(
+      new M.State(), M.Msg.Received(I.ImmutableArray.Create<Library.Album>(Album)), null
+    ).Model with
+      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add('album', Image);
+      Saving := I.ImmutableHashSet<string>.Empty.Add('album');
+      First := 0;
+      Last := 1;
+      Generation := 3L;
+    end with;
     const Saved: A.Transition<M.State, M.Msg> := Update.Apply(
       Current,
       M.Msg.Rated('album', 8),
@@ -48,6 +51,39 @@ public type AlbumTests = record
       null
     );
     X.Assert.Null(Cleared.Model.Items[0].Rating);
+  end procedure;
+
+  // A catalogue update keeps the covers of albums whose artwork did not change.
+  [X.FactAttribute]
+  public procedure UpdateKeepsCurrentCovers();
+  begin
+    const Same: Library.Album := new Library.Album('same', 'Same', 'Artist', 3L, 'r1');
+    const Changed: Library.Album := new Library.Album('changed', 'Changed', 'Artist', 4L, 'r1');
+    const Image: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
+    const Current: M.State := Update.Apply(
+      new M.State(), M.Msg.Received(I.ImmutableArray.Create<Library.Album>(Same, Changed)), null
+    ).Model with
+      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add(
+        'same',
+        Image
+      ).Add('changed', Image);
+    end with;
+    const Next: M.State := Update.Apply(
+      Current,
+      M.Msg.Received(
+        I.ImmutableArray.Create<Library.Album>(
+          Same,
+          Changed with
+            Revision := 'r2';
+          end with,
+          new Library.Album('added', 'Added', 'Artist', 5L, 'r1')
+        )
+      ),
+      null
+    ).Model;
+    X.Assert.Same(Image, Next.Images['same']);
+    X.Assert.False(Next.Images.ContainsKey('changed'));
+    X.Assert.Equal<int>(3, Next.Shown.Length);
   end procedure;
 
   // A rejected background save releases the control and exposes a recoverable error.

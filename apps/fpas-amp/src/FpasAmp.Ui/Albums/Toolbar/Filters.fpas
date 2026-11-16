@@ -1,43 +1,60 @@
-// The filter preview is composed entirely from existing native CUI widgets.
+// Artist, genre and rating filters, composed entirely from native CUI widgets.
 unit FpasAmp.Ui.Albums.Toolbar.Filters;
 
 uses
   FpasAmp.Ui.Albums.Toolbar.Model as M,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Feedback.Badges as Badges,
-  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
-  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
+  Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as C;
+  System as Sys, System.Collections.Generic as C;
 
 function Points(Value: int): L.Spacing;
 begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Panel(Current: M.State): E.Element<M.Msg>;
+// Builds a select with an "All" entry first, followed by `Values`; `Chosen` is
+// the selected value, or empty for all.
+function Choice(
+  Id: string; Label: string; All: string; Values: array of string; Chosen: string;
+  Change: function(string): M.Msg
+): E.Element<M.Msg>;
+begin
+  const Items: C.List<Selects.Item> := new C.List<Selects.Item>([new Selects.Item(All)]);
+  var Selected: int := 0;
+  for Index: int := 0 to Values.Length - 1 do
+    Items.Add(new Selects.Item(Values[Index]));
+    if Values[Index] = Chosen then
+      Selected := Index + 1;
+    end if;
+  end for;
+
+  return Selects.Select<M.Msg>(
+    Id, Items.ToArray(), Selected,
+    function(Index: int): M.Msg => Change(
+      if Index <= 0 or Index > Values.Length then
+        ''
+      else
+        Values[Index - 1]
+      end if
+    ),
+    new Selects.Options(Label := Label, Searchable := Values.Length > 8)
+  );
+end function;
+
+function Panel(Current: M.State; Artists: array of string; Genres: array of string): E.Element<M.Msg>;
 begin
   return E.Column<M.Msg>(
     new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false),
     Texts.Text<M.Msg>('Filter albums', Texts.Appearance.HeadingThree),
-    Selects.Select<M.Msg>(
-      'album-filter-artist',
-      [
-        new Selects.Item('All artists'),
-        new Selects.Item('Example artist'),
-        new Selects.Item('Various artists')
-      ],
-      Current.Draft.Artist, M.Msg.Artist, new Selects.Options(Label := 'Artist')
+    Choice(
+      'album-filter-artist', 'Artist', 'All artists', Artists, Current.Draft.Artist,
+      function(Value: string): M.Msg => M.Msg.Artist(Value)
     ),
-    Selects.Select<M.Msg>(
-      'album-filter-genre',
-      [
-        new Selects.Item('All genres'),
-        new Selects.Item('Electronic'),
-        new Selects.Item('Jazz'),
-        new Selects.Item('Rock')
-      ],
-      Current.Draft.Genre, M.Msg.Genre, new Selects.Options(Label := 'Genre')
+    Choice(
+      'album-filter-genre', 'Genre', 'All genres', Genres, Current.Draft.Genre,
+      function(Value: string): M.Msg => M.Msg.Genre(Value)
     ),
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
@@ -59,12 +76,6 @@ begin
           Current.Draft.MinimumRating.ToString() + ' / 10'
         end if, Texts.Appearance.Secondary
       )
-    ),
-    Checks.Checkbox<M.Msg>(
-      'album-filter-cover',
-      'Only with cover',
-      Current.Draft.OnlyCover,
-      M.Msg.OnlyCover
     ),
     E.Size<M.Msg>(
       E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
@@ -88,46 +99,45 @@ begin
   );
 end function;
 
-// Builds a filter button and native popup for `Current`, using the resolved
-// `Colors`. `Width` bounds its popup on a narrow content area. Choices are demo data.
-public function Build(Current: M.State; Colors: Themes.Palette; Width: int): E.Element<M.Msg>;
+// Builds a filter button and native popup for `Current`. `Width` bounds its
+// popup on a narrow content area.
+//
+// ## Parameters
+// - `Current`: The toolbar state.
+// - `Artists`: Distinct album artists of the catalogue, in display order.
+// - `Genres`: Distinct genres of the catalogue, in display order.
+// - `Width`: Positive content width in logical points.
+// ## Returns
+// The button, labelled with the number of applied filters, and its popover.
+public function Build(
+  Current: M.State; Artists: array of string; Genres: array of string; Width: int
+): E.Element<M.Msg>;
 requires Width > 0;
 begin
+  // an outline button like the sort menu; the count of applied filters joins its label
+  const Count: int := M.Count(Current.Applied);
   const Trigger: E.Element<M.Msg> := B.Button<M.Msg>(
-    'album-filters', 'Filters', M.Msg.SetOpen(not Current.Open),
+    'album-filters', if Count > 0 then
+      'Filters · ' + Count.ToString()
+    else
+      'Filters'
+    end if, M.Msg.SetOpen(not Current.Open),
     new B.Options(
-      Variant := S.ButtonVariant.Ghost, Selected := Current.Open,
+      Variant := S.ButtonVariant.Outline, Selected := Current.Open,
       Icon := Sys.Char.ConvertFromUtf32($E0DC)
     )
   );
-  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
-    [
-      Popovers.Popover<M.Msg>(
-        'album-filter-panel', Trigger, Panel(Current), Current.Open, M.Msg.SetOpen(false),
-        new Popovers.Options(
-          Position := Menus.Placement.BottomEnd,
-          Width := Sys.Math.Min(360, Width),
-          Padding := 16
-        )
-      )
-    ]
-  );
-  const Count: int := M.Count(Current.Applied);
-  if Count > 0 then
-    Parts.Add(
-      Badges.Badge<M.Msg>(
-        'album-filter-count',
-        Count.ToString(),
-        new Badges.Options(Size := B.Size.Small)
-      )
-    );
-  end if;
-
-  return E.Row<M.Msg>(
-    new L.Flow(
-      Gap := Points(2), Align := L.Alignment.Center,
-      PaddingEnd := Points(8), Background := Colors.Surface, CornerRadius := 6.0F, Clip := false
-    ), Parts.ToArray()
+  return Popovers.Popover<M.Msg>(
+    'album-filter-panel',
+    Trigger,
+    Panel(Current, Artists, Genres),
+    Current.Open,
+    M.Msg.SetOpen(false),
+    new Popovers.Options(
+      Position := Menus.Placement.BottomEnd,
+      Width := Sys.Math.Min(360, Width),
+      Padding := 16
+    )
   );
 end function;
 

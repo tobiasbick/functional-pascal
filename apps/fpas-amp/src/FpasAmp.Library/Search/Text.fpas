@@ -1,0 +1,250 @@
+// Language-independent search keys: folded words, phonetic codes and typo distance.
+unit FpasAmp.Library.Search.Text;
+
+uses System as Sys, System.Collections.Generic as C, System.Globalization as G, System.Text as Text;
+
+// Appends lower-case `Letter` to `Word`, spelling out letters that have no
+// accent-free decomposition.
+procedure Fold(Word: Text.StringBuilder; Letter: char);
+begin
+  const Code: int := cast<int>(Letter);
+  if Code = 223 then
+    discard Word.Append('ss');
+  elsif Code = 230 then
+    discard Word.Append('ae');
+  elsif Code = 339 then
+    discard Word.Append('oe');
+  elsif Code = 248 then
+    discard Word.Append('o');
+  elsif Code = 273 or Code = 240 then
+    discard Word.Append('d');
+  elsif Code = 322 then
+    discard Word.Append('l');
+  elsif Code = 254 then
+    discard Word.Append('th');
+  elsif Code = 305 then
+    discard Word.Append('i');
+  else
+    discard Word.Append(Letter);
+  end if;
+end procedure;
+
+// Splits `Value` into lower-case words without accents, so "Björk" and "bjork"
+// or "Straße" and "strasse" are the same word. Letters and digits form words;
+// apostrophes join their neighbors ("Don't" becomes "dont"), everything else separates.
+//
+// ## Parameters
+// - `Value`: Any text.
+// ## Returns
+// The words in their original order; empty when `Value` has none.
+public function Words(Value: string): array of string;
+begin
+  const Result: C.List<string> := new C.List<string>();
+  const Word: Text.StringBuilder := new Text.StringBuilder();
+  for Letter: char in Value.Normalize(Text.NormalizationForm.FormKD) do
+    const Category: G.UnicodeCategory := G.CharUnicodeInfo.GetUnicodeCategory(Letter);
+    if Category = G.UnicodeCategory.NonSpacingMark or Category =
+      G.UnicodeCategory.SpacingCombiningMark
+    then
+      continue;
+    end if;
+
+    if Sys.Char.IsLetterOrDigit(Letter) then
+      Fold(Word, Sys.Char.ToLowerInvariant(Letter));
+    elsif cast<int>(Letter) = 39 or cast<int>(Letter) = 8217 then
+      continue;
+    elsif Word.Length > 0 then
+      Result.Add(Word.ToString());
+      discard Word.Clear();
+    end if;
+  end for;
+
+  if Word.Length > 0 then
+    Result.Add(Word.ToString());
+  end if;
+
+  return Result.ToArray();
+end function;
+
+// True when every character of `Word` is a decimal digit.
+//
+// ## Parameters
+// - `Word`: A folded word.
+// ## Returns
+// Whether `Word` is a number such as a year, which matches only exactly or as a prefix.
+public function Numeric(Word: string): bool;
+begin
+  for Letter: char in Word do
+    if not Sys.Char.IsDigit(Letter) then
+      return false;
+    end if;
+  end for;
+
+  return Word.Length > 0;
+end function;
+
+function Code(Word: string; Index: int): string;
+begin
+  const Letter: string := Word[Index].ToString();
+  const Previous: string := if Index > 0 then
+    Word[Index - 1].ToString()
+  else
+    ''
+  end if;
+  const Next: string := if Index + 1 < Word.Length then
+    Word[Index + 1].ToString()
+  else
+    ''
+  end if;
+  if 'aeijouy'.Contains(Letter) then
+    return '0';
+  elsif Letter = 'b' then
+    return '1';
+  elsif Letter = 'p' then
+    return if Next = 'h' then
+      '3'
+    else
+      '1'
+    end if;
+  elsif Letter = 'd' or Letter = 't' then
+    return if Next <> '' and 'csz'.Contains(Next) then
+      '8'
+    else
+      '2'
+    end if;
+  elsif 'fvw'.Contains(Letter) then
+    return '3';
+  elsif 'gkq'.Contains(Letter) then
+    return '4';
+  elsif Letter = 'c' then
+    if Index = 0 then
+      return if Next <> '' and 'ahkloqrux'.Contains(Next) then
+        '4'
+      else
+        '8'
+      end if;
+    end if;
+
+    return if Next <> '' and 'ahkoqux'.Contains(
+      Next
+    ) and not (Previous <> '' and 'sz'.Contains(Previous))
+    then
+      '4'
+    else
+      '8'
+    end if;
+  elsif Letter = 'x' then
+    return if Previous <> '' and 'ckq'.Contains(Previous) then
+      '8'
+    else
+      '48'
+    end if;
+  elsif Letter = 'l' then
+    return '5';
+  elsif Letter = 'm' or Letter = 'n' then
+    return '6';
+  elsif Letter = 'r' then
+    return '7';
+  elsif Letter = 's' or Letter = 'z' then
+    return '8';
+  end if;
+
+  return '';
+end function;
+
+// Returns the Kölner Phonetik code of a folded word, so words that sound alike
+// share a code: "Meier", "Mayer" and "Maier" all become "67".
+//
+// ## Parameters
+// - `Word`: A folded lower-case word, as returned by `Words`.
+// ## Returns
+// The code, or an empty string for numbers and words without Latin letters.
+public function Phonetic(Word: string): string;
+begin
+  if Numeric(Word) then
+    return '';
+  end if;
+
+  const Raw: Text.StringBuilder := new Text.StringBuilder();
+  for Index: int := 0 to Word.Length - 1 do
+    discard Raw.Append(Code(Word, Index));
+  end for;
+
+  const Result: Text.StringBuilder := new Text.StringBuilder();
+  for Index: int := 0 to Raw.Length - 1 do
+    const Digit: char := Raw[Index];
+    if Index > 0 and Digit = Raw[Index - 1] then
+      continue;
+    end if;
+
+    if Index > 0 and cast<int>(Digit) = 48 then
+      continue;
+    end if;
+
+    discard Result.Append(Digit);
+  end for;
+
+  return Result.ToString();
+end function;
+
+// Counts the edits between two words: inserting, deleting or replacing a letter,
+// or swapping two neighbors. Stops early once `Limit` is exceeded.
+//
+// ## Parameters
+// - `Left`: The first word.
+// - `Right`: The second word.
+// - `Limit`: The largest distance of interest, zero or more.
+// ## Returns
+// The distance, or `Limit + 1` when it is larger than `Limit`.
+public function Distance(Left: string; Right: string; Limit: int): int;
+requires Limit >= 0;
+begin
+  if Sys.Math.Abs(Left.Length - Right.Length) > Limit then
+    return Limit + 1;
+  end if;
+
+  var Before: array of int := new int[Right.Length + 1];
+  var Previous: array of int := new int[Right.Length + 1];
+  var Current: array of int := new int[Right.Length + 1];
+  for Column: int := 0 to Right.Length do
+    Previous[Column] := Column;
+  end for;
+
+  for Row: int := 1 to Left.Length do
+    Current[0] := Row;
+    var Smallest: int := Row;
+    for Column: int := 1 to Right.Length do
+      const Cost: int := if Left[Row - 1] = Right[Column - 1] then
+        0
+      else
+        1
+      end if;
+      var Value: int := Sys.Math.Min(
+        Sys.Math.Min(Previous[Column] + 1, Current[Column - 1] + 1),
+        Previous[Column - 1] + Cost
+      );
+      if Row > 1 and Column > 1 and Left[
+        Row - 1
+      ] = Right[Column - 2] and Left[Row - 2] = Right[Column - 1]
+      then
+        Value := Sys.Math.Min(Value, Before[Column - 2] + 1);
+      end if;
+
+      Current[Column] := Value;
+      Smallest := Sys.Math.Min(Smallest, Value);
+    end for;
+
+    if Smallest > Limit then
+      return Limit + 1;
+    end if;
+
+    const Spare: array of int := Before;
+    Before := Previous;
+    Previous := Current;
+    Current := Spare;
+  end for;
+
+  return Sys.Math.Min(Previous[Right.Length], Limit + 1);
+end function;
+
+end unit;

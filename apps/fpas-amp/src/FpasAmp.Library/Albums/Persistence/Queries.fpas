@@ -21,7 +21,10 @@ begin
     'GROUP_CONCAT(m.sha256||'':''||m.read_utc||'':''||f.path_key,''|'')||' +
     'COALESCE((SELECT GROUP_CONCAT(art.path_key||'':''||art.size||'':''||art.modified_utc,''|'') FROM files art WHERE art.kind=2' +
     ' AND EXISTS(SELECT 1 FROM album_tracks t WHERE t.album_id=a.album_id AND (t.directory_key=art.directory_key OR t.root_key=art.directory_key))),''''),' +
-    '(SELECT r.rating FROM users.album_ratings r WHERE r.album_id=a.album_id)' +
+    '(SELECT r.rating FROM users.album_ratings r WHERE r.album_id=a.album_id),' +
+    '(SELECT GROUP_CONCAT(v,char(31)) FROM (SELECT DISTINCT TRIM(g.value) AS v FROM album_tracks t' +
+    ' JOIN metadata gm ON gm.file_id=t.file_id, json_each(gm.tags_json,''$.Genres'') g' +
+    ' WHERE t.album_id=a.album_id AND gm.tags_json IS NOT NULL AND TRIM(g.value)<>''''))' +
     ' FROM album_tracks a JOIN metadata m ON m.file_id=a.file_id JOIN files f ON f.id=a.file_id' +
     ' GROUP BY a.album_id ORDER BY MIN(a.sort_title),MIN(a.sort_artist),a.album_id;',
     Transaction,
@@ -46,6 +49,11 @@ begin
           null
         else
           Rows.GetInt32(5)
+        end if,
+        if Rows.IsDBNull(6) then
+          []
+        else
+          Rows.GetString(6).Split(#31)
         end if
       )
     );

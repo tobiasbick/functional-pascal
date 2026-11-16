@@ -1,66 +1,117 @@
-// Settings retain their existing General/Library pages inside the app shell.
+// Settings page with General and Library tabs, plus its folder picker and source editor.
 unit FpasAmp.Ui.Settings.View;
 
 uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Library.Sources as Locations,
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Editor as Editor,
   FpasAmp.Ui.Settings.General as General, FpasAmp.Ui.Settings.Library as LibraryView,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Theming.Themes as Themes;
+  Fpas.Ui.Composition as Composition, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  System as Sys, System.Collections.Generic as C;
 
-// Builds the selected settings tab from `Current`, using `Theme` and viewport `Padding`.
-public function Build(Current: M.State; Theme: Themes.Theme; Padding: int): E.Element<M.Msg>;
+function Body(Current: M.State; Tab: int; Theme: Themes.Theme): E.Element<M.Msg>;
 begin
-  const Header: E.Element<M.Msg> := Tabs.Tabs<M.Msg>(
-    'settings-tabs',
-    [new Tabs.Item('General'), new Tabs.Item('Library')],
-    Current.Navigation.SettingsTab,
-    function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
-  );
-  const Body: E.Element<M.Msg> := if Current.Navigation.SettingsTab = 0 then
+  const Page: E.Element<M.Msg> := if Tab = 0 then
     General.View(Current, Theme)
   else
     LibraryView.View(Current, Theme)
   end if;
-  const Error: string? := Current.TerminalError ?? Current.LibraryError;
-  const MainBody: E.Element<M.Msg> := if Error = null then
-    Body
-  else
-    E.Column<M.Msg>(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Align := L.Alignment.Stretch),
-      Alerts.Alert<M.Msg>(
-        'library-error',
-        'Library operation failed',
-        new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
-      ),
-      Body
-    )
-  end if;
-  const Content: array of E.Element<M.Msg> := if Current.SaveFailed and Current.Draft = null then
-    [
-      Texts.Text<M.Msg>('Settings', Texts.Appearance.HeadingOne),
-      Header,
+  const Alerted: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  if Current.SaveFailed and Current.Draft = null then
+    Alerted.Add(
       Alerts.Alert<M.Msg>(
         'settings-save-error',
         'Could not save settings. Try again.',
         new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
         function(): M.Msg => M.Msg.DismissError
-      ),
-      MainBody
-    ]
-  else
-    [Texts.Text<M.Msg>('Settings', Texts.Appearance.HeadingOne), Header, MainBody]
+      )
+    );
   end if;
-  return E.ScrollView<M.Msg>(
-    'settings-scroll', E.Column<M.Msg>(
+
+  const Error: string? := Current.TerminalError ?? Current.LibraryError;
+  if Error <> null then
+    Alerted.Add(
+      Alerts.Alert<M.Msg>(
+        'library-error',
+        'Library operation failed',
+        new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
+      )
+    );
+  end if;
+
+  Alerted.Add(Page);
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(20)), Align := L.Alignment.Stretch),
+    Alerted.ToArray()
+  );
+end function;
+
+// Builds the settings page. The selected tab belongs to the parent, which keeps it
+// across destinations and sessions.
+//
+// ## Type parameters
+// - `TParent`: The parent's message type.
+// ## Parameters
+// - `Current`: The settings state.
+// - `Tab`: The selected tab, General (0) or Library (1).
+// - `Theme`: The current palette.
+// - `Padding`: Page padding for the viewport size.
+// - `Messages`: Wraps settings messages in parent messages.
+// - `Select`: Proposes another tab.
+// ## Returns
+// The scrollable settings page.
+public function Build<TParent>(Current: M.State; Tab: int; Theme: Themes.Theme; Padding: int; Messages: function(M.Msg): TParent; Select: function(int): TParent): E.Element<TParent>;
+begin
+  return E.ScrollView<TParent>(
+    'settings-scroll', E.Column<TParent>(
       new L.Flow(
         Padding := L.Spacing.Fixed(L.Measure.Logical(Padding)),
         Gap := L.Spacing.Fixed(L.Measure.Logical(20)),
         Align := L.Alignment.Stretch
       ),
-      Content
+      Texts.Text<TParent>('Settings', Texts.Appearance.HeadingOne),
+      Tabs.Tabs<TParent>(
+        'settings-tabs', [new Tabs.Item('General'), new Tabs.Item('Library')], Tab, Select
+      ),
+      Composition.Map<M.Msg, TParent>(Body(Current, Tab, Theme), Messages)
     )
   );
+end function;
+
+// Lays the open folder picker or source editor over the parent's view.
+//
+// ## Type parameters
+// - `TParent`: The parent's message type.
+// ## Parameters
+// - `Current`: The settings state.
+// - `Base`: The whole app view; the dialogs stay open on every destination.
+// - `Messages`: Wraps settings messages in parent messages.
+// ## Returns
+// `Base`, or `Base` behind the picker or editor.
+public function Overlay<TParent>(Current: M.State; Base: E.Element<TParent>; Messages: function(M.Msg): TParent): E.Element<TParent>;
+begin
+  if Current.PickingFolder then
+    return Picker.FilePicker<TParent>(
+      'music-folder-picker',
+      true,
+      function(Result: Picker.Event): TParent => Messages(M.Msg.FolderResult(Result)),
+      new Picker.Options(
+        Kind := Picker.Mode.Folder,
+        Title := 'Choose a music folder',
+        Start := Sys.Environment.GetFolderPath(Sys.Environment.SpecialFolder.MyMusic)
+      ),
+      Base
+    );
+  end if;
+
+  const Draft: Locations.MusicSource? := Current.Draft;
+  return if Draft = null then
+    Base
+  else
+    Editor.View<TParent>(Base, Draft, Current.SaveFailed, Messages)
+  end if;
 end function;
 
 end unit;

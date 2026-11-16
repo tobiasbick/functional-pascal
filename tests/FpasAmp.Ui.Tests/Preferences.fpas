@@ -3,8 +3,8 @@ unit FpasAmp.Ui.Tests.Preferences;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.App.Model as M,
-  FpasAmp.Ui.App.Controller as Controller, FpasAmp.Settings as Store,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Ui.Settings.Update as Update, FpasAmp.Settings as Store,
   Fpas.Ui.Mvu.Application as Mvu, System.IO as IO, System.Threading as T,
   FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
   System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;
@@ -47,13 +47,13 @@ public type PreferenceTests = record
     const Source: S.MusicSource := H.Source('music', Folder.Path);
     await using const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
     const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin end procedure;
-    const Current: M.State := Controller.Apply(
+    const Current: M.State := Update.Apply(
       new M.State(new M.Preferences([Source])),
       M.Msg.LibraryStopped('test worker failure'),
       Save,
       Library
     ).Model;
-    const Cleared: M.State := Controller.Apply(
+    const Cleared: M.State := Update.Apply(
       Current,
       M.Msg.Cleared(
         '',
@@ -91,30 +91,30 @@ public type PreferenceTests = record
     const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin
       raise new IO.IOException('test save failure');
     end procedure;
-    const Pause: Mvu.Transition<M.State, M.Msg> := Controller.Apply(
+    const Pause: Mvu.Transition<M.State, M.Msg> := Update.Apply(
       Current,
       M.Msg.SetPaused(Source.Id, true),
       Save,
       Library
     );
     X.Assert.True(Pause.Model.SaveFailed);
-    X.Assert.False(Pause.Model.Settings.MusicSources[0].Paused);
-    const Clear: Mvu.Transition<M.State, M.Msg> := Controller.Apply(
+    X.Assert.False(Pause.Model.Saved.MusicSources[0].Paused);
+    const Clear: Mvu.Transition<M.State, M.Msg> := Update.Apply(
       Current with
         ConfirmClear := Source.Id;
       end with, M.Msg.ConfirmClear, Save, Library
     );
     X.Assert.True(Clear.Model.SaveFailed);
-    X.Assert.False(Clear.Model.Settings.MusicSources[0].Paused);
+    X.Assert.False(Clear.Model.Saved.MusicSources[0].Paused);
     X.Assert.True(Clear.Model.Clearing = null);
     X.Assert.Equal<int>(0, Clear.Commands.Length);
-    const Remove: Mvu.Transition<M.State, M.Msg> := Controller.Apply(
+    const Remove: Mvu.Transition<M.State, M.Msg> := Update.Apply(
       Current with
         ConfirmRemove := Source.Id;
       end with, M.Msg.ConfirmRemove, Save, Library
     );
     X.Assert.True(Remove.Model.SaveFailed);
-    X.Assert.Equal<int>(1, Remove.Model.Settings.MusicSources.Length);
+    X.Assert.Equal<int>(1, Remove.Model.Saved.MusicSources.Length);
     X.Assert.Equal<int>(0, Remove.Commands.Length);
   end function;
 end record;

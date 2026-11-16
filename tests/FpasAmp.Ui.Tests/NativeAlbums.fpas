@@ -4,7 +4,7 @@ unit FpasAmp.Ui.Tests.NativeAlbums;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
   FpasAmp.Library.Tests.MetadataSupport as F, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
   FpasAmp.Library.Sources as Sources,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Albums.Model as Albums,
   FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui,
@@ -12,7 +12,7 @@ uses
 
 procedure Pump(Session: Shell.Session);
 begin
-  discard Session.Window.Post(App.Msg.DismissError);
+  discard Session.Window.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Window.Step());
 end procedure;
 
@@ -136,8 +136,8 @@ public type NativeAlbumTests = record
       Placement.Width := Width;
       Placement.Height := 820;
       using const Session: Shell.Session := Shell.Session.Start(
-        Placement, new App.Preferences([Source], 'light'),
-        procedure(_Value: App.Preferences) begin end procedure, Library,
+        Placement, new SettingsModel.Preferences([Source], 'light'),
+        procedure(_Value: SettingsModel.Preferences) begin end procedure, Library,
         new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
       );
       Ready(Session, 36);

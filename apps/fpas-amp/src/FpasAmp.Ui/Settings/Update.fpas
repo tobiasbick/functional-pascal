@@ -1,225 +1,125 @@
-// Applies settings messages and persists accepted changes.
+// Settings slice update: edits stay synchronous; index clearing runs in the background.
 unit FpasAmp.Ui.Settings.Update;
 
 uses
-  FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.App.Model as M,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys,
-  System.Collections.Generic as C,
-  System.IO as IO;
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Editing as Editing,
+  FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
-function Persist(Current: M.State; Next: M.Preferences; Save: procedure(M.Preferences)): M.State;
+function Clear(Library: Monitoring.Session; Target: string): Mvu.Command<M.Msg>;
 begin
-  try
-    Save(Next);
-    return Current with
-      Settings := Next;
-      SaveFailed := false;
-    end with;
-  catch Failure: IO.IOException do
-    return Current with
-      SaveFailed := true;
-    end with;
-  catch Failure: Sys.UnauthorizedAccessException do
-    return Current with
-      SaveFailed := true;
-    end with;
-  end try;
+  return Mvu.StartBackground<M.Msg>(
+    'library-clear',
+    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      const Value: Inventory.Snapshot := await Library.ClearAsync(
+        Target,
+        Cancellation
+      ).ConfigureAwait(false);
+      await Post(M.Msg.Cleared(Target, Value)).ConfigureAwait(false);
+    end function,
+    function(Error: Sys.Exception): M.Msg => M.Msg.LibraryFailed(Error.Message)
+  );
 end function;
 
-function Replace(Sources: array of Locations.MusicSource; Revised: Locations.MusicSource): array of Locations.MusicSource;
+function Step(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
-  const Updated: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>(Sources);
-  for Index: int := 0 to Updated.Count - 1 do
-    if Updated[Index].Id = Revised.Id then
-      Updated[Index] := Revised;
-      return Updated.ToArray();
-    end if;
-  end for;
+  case Message of
+    when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
+      return new Mvu.Transition<M.State, M.Msg>(State.Receive(Current, Value), []);
+    when M.Msg.ProgressReceived(const Value: Progress.Snapshot):
+      const Before: Progress.Snapshot? := Current.Progress;
+      if Before <> null and Value.Sequence < Before.Sequence then
+        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+      end if;
 
-  Updated.Add(Revised);
-  return Updated.ToArray();
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          Progress := Value;
+        end with, []
+      );
+    when M.Msg.LibraryFailed(const Text: string):
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          LibraryError := Text;
+          Clearing := null;
+        end with, []
+      );
+    when M.Msg.LibraryStopped(const Text: string):
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          TerminalError := Text;
+        end with, []
+      );
+    when M.Msg.AskClear(const Id: string):
+      if Current.Clearing <> null or (Id <> '' and State.Source(Current, Id) = null) then
+        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+      end if;
+
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          ConfirmClear := Id;
+          ConfirmRemove := null;
+        end with, []
+      );
+    when M.Msg.CancelClear:
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          ConfirmClear := null;
+        end with, []
+      );
+    when M.Msg.ConfirmClear:
+      const Target: string? := Current.ConfirmClear;
+      if Target = null or Current.Clearing <> null then
+        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+      end if;
+      const Paused: M.State := Editing.Persist(Current, State.Pause(Current.Saved, Target), Save);
+      if Paused.SaveFailed then
+        return new Mvu.Transition<M.State, M.Msg>(Paused, []);
+      end if;
+
+      return new Mvu.Transition<M.State, M.Msg>(
+        Paused with
+          ConfirmClear := null;
+          Clearing := Target;
+          LibraryError := null;
+        end with, [Clear(Library, Target)]
+      );
+    when M.Msg.Cleared(const Id: string, const Value: Inventory.Snapshot):
+      return new Mvu.Transition<M.State, M.Msg>(State.Cleared(Current, Id, Value), []);
+    when M.Msg.Rescan(const Id: string):
+      const Source: Sources.MusicSource? := State.Source(Current, Id);
+      if Source <> null and not Source.Offline and not Source.Paused and Current.Clearing =
+        null
+      then
+        Library.Refresh(Id);
+      end if;
+
+      return new Mvu.Transition<M.State, M.Msg>(Current, []);
+    else
+      return new Mvu.Transition<M.State, M.Msg>(Editing.Apply(Current, Message, Save), []);
+  end case;
 end function;
 
-// Applies a settings proposal. A failed save leaves the last saved preferences
-// and any open draft in place so the action can be retried.
+// Applies a settings proposal or library publication. Saved source changes that
+// affect discovery reconfigure `Library` before any returned command runs.
 //
 // ## Parameters
 // - `Current`: State before the proposal.
-// - `Message`: The settings proposal.
+// - `Message`: The proposal or publication.
 // - `Save`: Persists a validated set of preferences.
+// - `Library`: Owns scanning, storage and index clearing.
 // ## Returns
-// The state after handling the proposal.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences)): M.State;
+// The next settings state and the background clear, when one was confirmed.
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
-  const Draft: Locations.MusicSource? := Current.Draft;
-  const Settings: M.Preferences := Current.Settings;
-  case Message of
-    when M.Msg.SetAppearance(const Choice: Switchers.Selection):
-      return Persist(
-        Current, Settings with
-          Appearance := Choice.ToString().ToLowerInvariant();
-        end with, Save
-      );
-    when M.Msg.SetAccent(const Choice: Themes.Accent):
-      return Persist(
-        Current, Settings with
-          Accent := Choice.ToString().ToLowerInvariant();
-        end with, Save
-      );
-    when M.Msg.SetOffline(const Id: string, const Offline: bool):
-      for Source: Locations.MusicSource in Settings.MusicSources do
-        if Source.Id = Id then
-          const Revised: Locations.MusicSource := Source with
-            Offline := Offline;
-          end with;
-          return Persist(
-            Current, Settings with
-              MusicSources := Replace(Settings.MusicSources, Revised);
-            end with, Save
-          );
-        end if;
-      end for;
+  const Next: Mvu.Transition<M.State, M.Msg> := Step(Current, Message, Save, Library);
+  if not Sources.SameDiscovery(Current.Saved.MusicSources, Next.Model.Saved.MusicSources) then
+    Library.Configure(Next.Model.Saved.MusicSources);
+  end if;
 
-      return Current;
-    when M.Msg.SetPaused(const Id: string, const Paused: bool):
-      for Source: Locations.MusicSource in Settings.MusicSources do
-        if Source.Id = Id then
-          return Persist(
-            Current, Settings with
-              MusicSources := Replace(
-                Settings.MusicSources, Source with
-                  Paused := Paused;
-                end with
-              );
-            end with, Save
-          );
-        end if;
-      end for;
-
-      return Current;
-    when M.Msg.AskRemove(const Id: string):
-      for Source: Locations.MusicSource in Settings.MusicSources do
-        if Source.Id = Id and Current.Clearing = null then
-          return Current with
-            ConfirmRemove := Id;
-            ConfirmClear := null;
-          end with;
-        end if;
-      end for;
-
-      return Current;
-    when M.Msg.CancelRemove:
-      return Current with
-        ConfirmRemove := null;
-      end with;
-    when M.Msg.ConfirmRemove:
-      const Target: string? := Current.ConfirmRemove;
-      if Target = null or Current.Clearing <> null then
-        return Current;
-      end if;
-      const Remaining: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>();
-      for Source: Locations.MusicSource in Settings.MusicSources do
-        if Source.Id <> Target then
-          Remaining.Add(Source);
-        end if;
-      end for;
-      const Removed: M.State := Persist(
-        Current, Settings with
-          MusicSources := Remaining.ToArray();
-        end with, Save
-      );
-      return if Removed.SaveFailed then
-        Removed
-      else
-        Removed with
-          ConfirmRemove := null;
-          Draft := null;
-        end with
-      end if;
-    when M.Msg.ChooseFolder:
-      return Current with
-        PickingFolder := true;
-        SaveFailed := false;
-      end with;
-    when M.Msg.FolderResult(const Result: Picker.Event):
-      const Folder: string? := Result.Path;
-      if Folder = null then
-        return Current with
-          PickingFolder := false;
-        end with;
-      end if;
-      const Name: string := IO.Path.GetFileName(IO.Path.TrimEndingDirectorySeparator(Folder)) ?? '';
-      return Current with
-        PickingFolder := false;
-        Draft := new Locations.MusicSource(
-          Sys.Guid.NewGuid().ToString('N'), if Name = '' then
-            Folder
-          else
-            Name
-          end if, Folder,
-          false, ['.flac', '.mp3', '.m4a'], ScanPlaylists := true
-        );
-      end with;
-    when M.Msg.EditSource(const Source: Locations.MusicSource):
-      return Current with
-        Draft := Source;
-        SaveFailed := false;
-      end with;
-    when M.Msg.SetName(const Name: string):
-      if Draft <> null then
-        return Current with
-          Draft := Draft with
-            Name := Name;
-          end with;
-        end with;
-      end if;
-
-      return Current;
-    when M.Msg.SetFormats(const Extensions: array of string):
-      if Draft <> null then
-        return Current with
-          Draft := Draft with
-            Extensions := Extensions;
-          end with;
-        end with;
-      end if;
-
-      return Current;
-    when M.Msg.SaveSource:
-      if Draft = null or Sys.String.IsNullOrWhiteSpace(Draft.Name) then
-        return Current;
-      end if;
-      const Revised: Locations.MusicSource := Draft with
-        Name := Draft.Name.Trim();
-      end with;
-      const Saved: M.State := Persist(
-        Current, Settings with
-          MusicSources := Replace(Settings.MusicSources, Revised);
-        end with, Save
-      );
-      return if Saved.SaveFailed then
-        Saved
-      else
-        Saved with
-          Draft := null;
-        end with
-      end if;
-    when M.Msg.CancelEdit:
-      return Current with
-        Draft := null;
-        SaveFailed := false;
-      end with;
-    when M.Msg.DismissError:
-      return Current with
-        SaveFailed := false;
-      end with;
-    else
-      return Current;
-  end case;
+  return Next;
 end function;
 
 end unit;

@@ -150,6 +150,25 @@ Scans leave image data unloaded. Cached artwork works offline; absence is cached
 too. Images retain their original MIME type/bytes, limited to **sixteen MiB**.
 Cache writes replace temporary files atomically; the cache is reconstructible.
 
+## Search
+
+`Search.Matching` ranks prepared documents for free text the way a modern search
+box does, without query syntax: `*`, `?` and regular expressions have no meaning.
+`Document.Create` takes weighted fields, `Query.Parse` the typed text, and `Rank`
+returns one score per document, zero for no match.
+
+- Words match in any order, and a document needs only one of them. Documents with
+  more of the words rank higher, and words that many documents share, such as
+  "the", count less.
+- Case, accents and apostrophes do not matter: "Björk" finds "bjork", "Straße"
+  finds "strasse" and "Don't" finds "dont". Adjacent words are also indexed
+  together, so "pinkfloyd" finds "Pink Floyd".
+- The start of a word matches while it is being typed. Words of four letters or
+  more tolerate one typo, eight or more two, including swapped neighbors.
+- `Search.Text.Phonetic` gives the Kölner Phonetik code, so "Mayer" finds "Meier".
+- Numbers such as years match exactly or as a prefix, never as a near miss.
+- Matches far below the best one are dropped as noise.
+
 ## Albums and artwork
 
 The borrowed `Metadata.Albums` handle provides `ObserveAsync` for sorted lightweight
@@ -158,6 +177,7 @@ headers and `ThumbnailAsync(Album, Cancellation)` for one immutable RGBA thumbna
 one to ten, or null to clear it. Ratings live in `userdata.db`, survive catalogue
 resets/rescans, and never change track ratings or source tags. Header observations
 include user-data changes without invalidating unchanged artwork.
+Headers also carry the distinct genre tags of the album's tracks.
 Header observations run only while the Albums slice is open. They poll database
 commit versions and publish changed snapshots. The catalogue derives memberships
 without reopening audio when upgrading cached successful tags; discovery starts

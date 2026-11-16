@@ -1,26 +1,38 @@
-// MVU boundary: settings stay synchronous; library work is owned and asynchronous.
+// MVU boundary: routes slice messages and owns the library subscriptions.
 unit FpasAmp.Ui.App.Controller;
 
 uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Settings.Update as Settings,
+  FpasAmp.Ui.App.Model as M,
+  FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.Update as SettingsUpdate,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.Update as Navigation,
   FpasAmp.Library.Playlists.Model as Playlists, System.Collections.Immutable as I,
-  FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
   FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Update as AlbumUpdate,
   FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
-  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
 begin
-  return M.Msg.LibraryFailed(Error.Message);
+  return M.Msg.Settings(SettingsModel.Msg.LibraryFailed(Error.Message));
 end function;
 
 function Stopped(Error: Sys.Exception): M.Msg;
 begin
-  return M.Msg.LibraryStopped(Error.Message);
+  return M.Msg.Settings(SettingsModel.Msg.LibraryStopped(Error.Message));
+end function;
+
+function Settings(Current: M.State; Message: SettingsModel.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+begin
+  const Child: Mvu.Transition<SettingsModel.State, M.Msg> := Composition.MapTransition<SettingsModel.State, SettingsModel.Msg, M.Msg>(
+    SettingsUpdate.Apply(Current.Settings, Message, Save, Library), M.Msg.Settings, 'settings'
+  );
+  return new Mvu.Transition<M.State, M.Msg>(
+    Current with
+      Settings := Child.Model;
+    end with, Child.Commands
+  );
 end function;
 
 function Album(Current: M.State; Message: AlbumModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
@@ -52,7 +64,9 @@ begin
             const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
               Cancellation
             ).ConfigureAwait(false);
-            await Post(M.Msg.InventoryReceived(Value)).ConfigureAwait(false);
+            await Post(
+              M.Msg.Settings(SettingsModel.Msg.InventoryReceived(Value))
+            ).ConfigureAwait(false);
           end while;
         end function,
         Stopped
@@ -64,7 +78,9 @@ begin
             const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
               Cancellation
             ).ConfigureAwait(false);
-            await Post(M.Msg.ProgressReceived(Value)).ConfigureAwait(false);
+            await Post(
+              M.Msg.Settings(SettingsModel.Msg.ProgressReceived(Value))
+            ).ConfigureAwait(false);
           end while;
         end function,
         Stopped
@@ -113,9 +129,17 @@ begin
   return Commands.ToArray();
 end function;
 
-// Applies a typed UI proposal. `Save` persists accepted preferences; `Library` owns
-// scanning/storage. Returned commands run outside the UI update through the MVU runtime.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+// Applies a typed UI proposal. Returned commands run outside the UI update
+// through the MVU runtime.
+//
+// ## Parameters
+// - `Current`: The app state.
+// - `Message`: The proposal or background publication.
+// - `Save`: Persists accepted preferences.
+// - `Library`: Owns scanning, storage and metadata; stays caller-owned.
+// ## Returns
+// The next app state and the slices' mapped commands.
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
   var Next: M.State := Current;
   var Commands: array of Mvu.Command<M.Msg> := [];
@@ -154,89 +178,8 @@ begin
         All.AddRange(Transition.Commands);
         Commands := All.ToArray();
       end if;
-    when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
-      Next := State.Receive(Current, Value);
-    when M.Msg.ProgressReceived(const Value: Progress.Snapshot):
-      const Before: Progress.Snapshot? := Current.Progress;
-      if Before = null or Value.Sequence >= Before.Sequence then
-        Next := Current with
-          Progress := Value;
-        end with;
-      end if;
-    when M.Msg.LibraryFailed(const Text: string):
-      Next := Current with
-        LibraryError := Text;
-        Clearing := null;
-      end with;
-    when M.Msg.LibraryStopped(const Text: string):
-      Next := Current with
-        TerminalError := Text;
-      end with;
-    when M.Msg.AskClear(const Id: string):
-      if Current.Clearing = null and (Id = '' or State.Source(Current, Id) <> null) then
-        Next := Current with
-          ConfirmClear := Id;
-          ConfirmRemove := null;
-        end with;
-      end if;
-    when M.Msg.CancelClear:
-      Next := Current with
-        ConfirmClear := null;
-      end with;
-    when M.Msg.ConfirmClear:
-      const Target: string? := Current.ConfirmClear;
-      if Target <> null and Current.Clearing = null then
-        const Preferences: M.Preferences := State.Pause(Current.Settings, Target);
-        var Saved: bool := false;
-        try
-          Save(Preferences);
-          Saved := true;
-        catch Error: IO.IOException do
-        catch Error: Sys.UnauthorizedAccessException do
-        end try;
-
-        if Saved then
-          Library.Configure(Preferences.MusicSources);
-          Next := Current with
-            Settings := Preferences;
-            SaveFailed := false;
-            ConfirmClear := null;
-            Clearing := Target;
-            LibraryError := null;
-          end with;
-          Commands := [
-            Mvu.StartBackground<M.Msg>(
-              'library-clear',
-              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-                const Value: Inventory.Snapshot := await Library.ClearAsync(
-                  Target,
-                  Cancellation
-                ).ConfigureAwait(false);
-                await Post(M.Msg.Cleared(Target, Value)).ConfigureAwait(false);
-              end function,
-              Failure
-            )
-          ];
-        else
-          Next := Current with
-            SaveFailed := true;
-          end with;
-        end if;
-      end if;
-    when M.Msg.Cleared(const Id: string, const Value: Inventory.Snapshot):
-      Next := State.Cleared(Current, Id, Value);
-    when M.Msg.Rescan(const Id: string):
-      const Source: Sources.MusicSource? := State.Source(Current, Id);
-      if Source <> null and not Source.Offline and not Source.Paused and Current.Clearing =
-        null
-      then
-        Library.Refresh(Id);
-      end if;
-    else
-      Next := Settings.Apply(Current, Message, Save);
-      if not Sources.SameDiscovery(Current.Settings.MusicSources, Next.Settings.MusicSources) then
-        Library.Configure(Next.Settings.MusicSources);
-      end if;
+    when M.Msg.Settings(const SettingsMessage: SettingsModel.Msg):
+      return Settings(Current, SettingsMessage, Save, Library);
   end case;
 
   return new Mvu.Transition<M.State, M.Msg>(Next, Commands);

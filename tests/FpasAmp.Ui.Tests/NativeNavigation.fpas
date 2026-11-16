@@ -4,7 +4,7 @@ unit FpasAmp.Ui.Tests.NativeNavigation;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
-  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Shell as Shell, FpasAmp.AppState as Storage,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, System as Sys, System.IO as IO,
   System.Threading as T, Xunit as X;
@@ -12,7 +12,7 @@ uses
 procedure Pump(Session: Shell.Session);
 begin
   // Wake without overwriting a navigation proposal already queued for this frame.
-  discard Session.Window.Post(App.Msg.DismissError);
+  discard Session.Window.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Window.Step());
 end procedure;
 
@@ -101,8 +101,11 @@ public type NativeNavigationTests = record
       [],
       ScanPlaylists := true
     );
-    const Preferences: App.Preferences := new App.Preferences([Source], 'light');
-    const Save: procedure(App.Preferences) := procedure(_Value: App.Preferences) begin end procedure;
+    const Preferences: SettingsModel.Preferences := new SettingsModel.Preferences(
+      [Source],
+      'light'
+    );
+    const Save: procedure(SettingsModel.Preferences) := procedure(_Value: SettingsModel.Preferences) begin end procedure;
     const Library: Monitor.Session := Start(Source, Data.Path);
     try
       begin
@@ -197,8 +200,8 @@ public type NativeNavigationTests = record
       [],
       ScanPlaylists := true
     );
-    const Preferences: App.Preferences := new App.Preferences([Source]);
-    const Save: procedure(App.Preferences) := procedure(_Value: App.Preferences) begin end procedure;
+    const Preferences: SettingsModel.Preferences := new SettingsModel.Preferences([Source]);
+    const Save: procedure(SettingsModel.Preferences) := procedure(_Value: SettingsModel.Preferences) begin end procedure;
     begin
       const Library: Monitor.Session := Start(Source, Data.Path);
       try

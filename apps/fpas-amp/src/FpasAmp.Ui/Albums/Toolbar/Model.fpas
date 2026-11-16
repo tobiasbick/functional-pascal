@@ -1,8 +1,10 @@
-// Local preview state; these controls do not query or reorder the catalogue yet.
+// Search text, applied filters and the sort order of the album page.
 unit FpasAmp.Ui.Albums.Toolbar.Model;
 
-// Album header fields offered by the sorting preview.
+// Album orders offered by the sort menu.
 public type Order = enum
+  // Best search matches first; offered while a search is active.
+  Relevance;
   // Album title.
   Title;
   // Album artist.
@@ -13,81 +15,78 @@ public type Order = enum
   Songs;
 end enum;
 
-// Filter values edited in the popover before Apply is chosen.
+// Filter values, edited as a draft in the popover until Apply is chosen.
 public type Filters = record
-  // Demo artist choice; zero means all artists.
-  public Artist: int := 0;
-  // Demo genre choice; zero means all genres.
-  public Genre: int := 0;
+  // Album artist to show, or empty for all artists.
+  public Artist: string := '';
+  // Genre to show, or empty for all genres.
+  public Genre: string := '';
   // Inclusive rating floor, or zero for any rating.
   public MinimumRating: int := 0;
-  // Whether a cover is requested.
-  public OnlyCover: bool := false;
 end record;
 
-// Model-owned toolbar preview, independent of album/thumbnail lifetimes.
+// Model-owned toolbar state, independent of album and thumbnail lifetimes.
 public type State = record
   // Text in the native search editor.
   public Search: string := '';
-  // Applied preview values used by the filter-count badge.
+  // Filters that select the shown albums.
   public Applied: Filters := new Filters();
   // Unconfirmed edits; dismissal restores Applied.
   public Draft: Filters := new Filters();
   // Whether the filter popover is open.
   public Open: bool := false;
-  // Current sort-field preview.
+  // Current sort order.
   public Sort: Order := Order.Title;
-  // Whether the preview direction is descending.
+  // Whether the order is descending; best matches always come first.
   public Descending: bool := false;
+  // The order to return to when a search that switched to best matches is cleared.
+  public Resume: Order := Order.Title;
 end record;
 
-// Native toolbar proposals. None starts library work.
+// Native toolbar proposals.
 public type Msg = variant
-  // Replace the search query.
+  // Replace the search text.
   Search(Value: string);
   // Open the filter editor, or dismiss its unconfirmed edits.
   SetOpen(Value: bool);
-  // Choose a demo artist.
-  Artist(Value: int);
-  // Choose a demo genre.
-  Genre(Value: int);
+  // Choose an album artist, or empty for all.
+  Artist(Value: string);
+  // Choose a genre, or empty for all.
+  Genre(Value: string);
   // Edit the rating floor.
   MinimumRating(Value: int);
-  // Request or remove the cover-only preview.
-  OnlyCover(Value: bool);
-  // Confirm the preview and close its popover.
+  // Confirm the draft and close the popover.
   Apply;
   // Reset the unconfirmed filter draft.
   Reset;
-  // Choose the preview sort field.
+  // Choose the sort order.
   Sort(Value: Order);
-  // Choose the preview sort direction.
+  // Choose the sort direction.
   Descending(Value: bool);
 end variant;
 
-// Counts nondefault values in `Value`, excluding search and sorting.
+// Counts the active filters in `Value`, excluding search and sorting.
+//
+// ## Parameters
+// - `Value`: Applied or draft filters.
+// ## Returns
+// The number of filters that hide albums, for the badge on the filter button.
 public function Count(Value: Filters): int;
 begin
-  return (if Value.Artist <> 0 then
-    1
-  else
-    0
-  end if) +
-    (if Value.Genre <> 0 then
-      1
-    else
-      0
-    end if) +
-    (if Value.MinimumRating > 0 then
-      1
-    else
-      0
-    end if) +
-    (if Value.OnlyCover then
-      1
-    else
-      0
-    end if);
+  var Result: int := 0;
+  if Value.Artist <> '' then
+    Result := Result + 1;
+  end if;
+
+  if Value.Genre <> '' then
+    Result := Result + 1;
+  end if;
+
+  if Value.MinimumRating > 0 then
+    Result := Result + 1;
+  end if;
+
+  return Result;
 end function;
 
 end unit;

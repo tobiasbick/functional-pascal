@@ -4,7 +4,7 @@ unit FpasAmp.Library.Albums.Internal.Observing;
 uses
   FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Persistence.Queries as Queries,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
+  System as Sys, System.Collections.Immutable as I, System.Linq as L, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Same(A: I.ImmutableArray<M.Album>; B: I.ImmutableArray<M.Album>): bool;
 begin
@@ -13,7 +13,13 @@ begin
   end if;
 
   for Index: int := 0 to A.Length - 1 do
-    if A[Index] <> B[Index] then
+    // record equality compares the genre arrays by reference, so compare their contents
+    const Left: M.Album := A[Index];
+    const Right: M.Album := B[Index];
+    if Left with
+      Genres := Right.Genres;
+    end with <> Right or not L.Enumerable.SequenceEqual<string>(Left.Genres, Right.Genres)
+    then
       return false;
     end if;
   end for;

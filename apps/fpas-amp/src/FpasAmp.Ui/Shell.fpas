@@ -2,16 +2,16 @@
 unit FpasAmp.Ui.Shell;
 
 uses
-  FpasAmp.Library.Sources as Locations, FpasAmp.Library.Inventory.Monitoring as Monitoring,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring,
   FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Controller as Updates,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.View as NavView,
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.View as AlbumView,
   Fpas.Ui.Composition as Composition,
-  FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.View as SettingsView,
+  FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.View as SettingsView,
   Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
+  Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
@@ -43,7 +43,10 @@ begin
     32
   end if;
   const Page: E.Element<M.Msg> := if Settings then
-    SettingsView.Build(Current, Theme, Padding)
+    SettingsView.Build<M.Msg>(
+      Current.Settings, Current.Navigation.SettingsTab, Theme, Padding, M.Msg.Settings,
+      function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
+    )
   elsif Nav.Key(Current.Navigation.Active) = 'albums' then
     Composition.Map<AlbumModel.Msg, M.Msg>(
       AlbumView.Build(
@@ -101,25 +104,7 @@ begin
       ), Fill
     )
   end if;
-  if Current.PickingFolder then
-    return Picker.FilePicker<M.Msg>(
-      'music-folder-picker',
-      true,
-      M.Msg.FolderResult,
-      new Picker.Options(
-        Kind := Picker.Mode.Folder,
-        Title := 'Choose a music folder',
-        Start := Sys.Environment.GetFolderPath(Sys.Environment.SpecialFolder.MyMusic)
-      ),
-      Base
-    );
-  end if;
-  const Draft: Locations.MusicSource? := Current.Draft;
-  return if Draft = null then
-    Base
-  else
-    Editor.View(Base, Draft, Current.SaveFailed)
-  end if;
+  return SettingsView.Overlay<M.Msg>(Current.Settings, Base, M.Msg.Settings);
 end function;
 
 // Manually driven native shell, useful for application hosting and focused UI checks.
@@ -143,10 +128,12 @@ public type Session = record implements Sys.IDisposable
   // Creates a shell for Window and Settings; Save persists preferences and
   // Library remains caller-owned. Optional Navigation restores the destination
   // and settings tab; a playlist is validated against its first background snapshot.
-  public static function Start(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null): Session;
+  public static function Start(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null): Session;
   requires Settings.MusicSources <> null;
   begin
-    const Initial: M.State := new M.State(Settings, Navigation := Navigation ?? new Nav.State());
+    const Initial: M.State := new M.State(
+      new SettingsModel.State(Settings), Navigation := Navigation ?? new Nav.State()
+    );
     if Initial.Navigation.SettingsTab <> 0 and Initial.Navigation.SettingsTab <> 1 then
       raise new Sys.ArgumentOutOfRangeException('Navigation');
     end if;
@@ -194,8 +181,8 @@ public type Session = record implements Sys.IDisposable
                 out First
               ) and int.TryParse(Parts[1], out End)
               then
-                const Start: int := Sys.Math.Min(Last.Albums.Items.Length, First * Columns);
-                const Finish: int := Sys.Math.Min(Last.Albums.Items.Length, End * Columns);
+                const Start: int := Sys.Math.Min(Last.Albums.Shown.Length, First * Columns);
+                const Finish: int := Sys.Math.Min(Last.Albums.Shown.Length, End * Columns);
                 if Start <> Last.Albums.First or Finish <> Last.Albums.Last then
                   discard Native.Post(M.Msg.Albums(AlbumModel.Msg.Visible(Start, Finish)));
                 end if;
@@ -221,7 +208,7 @@ end record;
 // Runs the shell for Window/Settings until close. Navigation is restored and
 // returned by reference, Save persists preferences, and Library stays caller-owned.
 // Returns the final host placement for storage alongside the selected destination.
-public function Run(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; ref Navigation: Nav.State; Save: procedure(M.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
+public function Run(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; ref Navigation: Nav.State; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
 requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
 begin
   using const Running: Session := Session.Start(Window, Settings, Save, Library, Navigation);

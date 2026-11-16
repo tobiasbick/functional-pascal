@@ -4,7 +4,13 @@ FPas-Amp is a desktop music player in development, written in Functional Pascal.
 The navigation groups **Music**, **Albums**, **Artists**, **Genres** and **Ratings**
 under **Library**, followed by all discovered/local **Playlists** in name order.
 Albums shows a responsive virtual grid of covers and titles; the other destinations
-currently open placeholder pages. The playlist list updates
+currently open placeholder pages. Its search field finds albums by title, artist
+and genre as you type: words in any order, any of them, with typos, accents and
+sound-alike spellings forgiven, best matches first. **Filters** narrows the grid
+to one album artist, one genre or a minimum rating once applied, and its button
+shows how many filters are active. The sort menu orders by title, artist, rating or song
+count in either direction, and by best match while searching; clearing the search
+returns to the order chosen before. The status bar shows how many albums match. The playlist list updates
 in the background; same-name source lists show their location alongside the name.
 Below 760 logical pixels, the sidebar becomes a left-hand drawer opened through
 the menu button. Selecting a destination closes it. **Settings** stays at the bottom.
@@ -114,19 +120,18 @@ Writes run in the background and persist in `userdata.db` across catalogue reset
 Resting the pointer on an album card for 700 ms opens native CUI hover details:
 a small cover beside the title, artist and song count, with a read-only rating
 below. Details reuse the loaded thumbnail and require no additional source reads.
-The native status bar stays below the scrolling grid and shows the total album
-count, including when no album exists. Loading and initial failures have their own
-status. Filtering can later display matching and overall counts separately.
+The native status bar stays below the scrolling grid and shows the album count,
+or how many of all albums match while search or filters hide some. Loading and
+initial failures have their own status.
 
-The gray album toolbar is an interactive UI mockup. Its search editor, filter
-popover with draft/Apply/Reset behavior, active-filter badge, and combined sort
-field/direction menu use native CUI widgets. Artist/genre choices are demo values.
-These controls currently update local view state; catalogue contents, ordering,
-thumbnail requests and total counts remain independent of them. Narrow windows
-place the two actions below the search field.
+The gray album toolbar uses native CUI widgets: the search editor, the filter
+popover with draft/Apply/Reset behavior, and the combined sort field/direction
+menu. Artist and genre choices come from the catalogue. A new order or match set
+requests covers for the newly visible albums only. Narrow windows place the two
+actions below the search field.
 Small content-addressed thumbnails are kept under `covers/thumbnails-v1` beside
 `userdata.db`, with bounded disk/memory caches. Cached thumbnails work offline.
-No search, filters or album detail/player view is included.
+No album detail/player view is included.
 
 Playlist files in music sources are also discovered and monitored. They are
 cached separately from audio entries; the scan never opens their media targets.

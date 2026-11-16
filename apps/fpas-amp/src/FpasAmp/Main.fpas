@@ -5,7 +5,7 @@ uses
   Fpas.Ui.Gui.Cui as Cui,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Settings as Settings,
-  FpasAmp.Ui.App.Model as Model,
+  FpasAmp.Ui.Settings.Model as Model,
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Shell as Shell,
   FpasAmp.AppState as State,

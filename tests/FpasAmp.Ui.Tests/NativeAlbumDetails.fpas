@@ -4,7 +4,7 @@ unit FpasAmp.Ui.Tests.NativeAlbumDetails;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Ui.Navigation.Model as Nav,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
@@ -36,7 +36,7 @@ end function;
 
 procedure Step(Session: Gui.Session<App.Msg>);
 begin
-  discard Session.Post(App.Msg.DismissError);
+  discard Session.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Step());
 end procedure;
 
@@ -153,12 +153,12 @@ public type DetailTests = record
       Pictures := Pictures.Add(Id, Image);
     end for;
     var Last: App.State := new App.State(
-      new App.Preferences([], 'light'),
+      new SettingsModel.State(new SettingsModel.Preferences([], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums), Loaded := true),
-      Albums := new Albums.State(
-        Items := Items, Images := Pictures, Loaded := true,
-        Saving := I.ImmutableHashSet<string>.Empty.Add('album-0')
-      )
+      Albums := Update.Apply(new Albums.State(), Albums.Msg.Received(Items), null).Model with
+        Images := Pictures;
+        Saving := I.ImmutableHashSet<string>.Empty.Add('album-0');
+      end with
     );
     var PointerX: float := -1.0F;
     var PointerY: float := -1.0F;

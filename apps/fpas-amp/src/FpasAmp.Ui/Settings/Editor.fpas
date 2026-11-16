@@ -3,7 +3,8 @@ unit FpasAmp.Ui.Settings.Editor;
 
 uses
   FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.App.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Composition as Composition,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.ActionFooters as Footers, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Inputs.Selects as Selects,
@@ -61,15 +62,18 @@ begin
   );
 end function;
 
-// Presents the editor for the current source draft.
+// Presents the editor for the current source draft over the parent's view.
 //
+// ## Type parameters
+// - `TParent`: The parent's message type.
 // ## Parameters
-// - `Base`: The settings page behind the editor.
+// - `Base`: The view behind the editor.
 // - `Draft`: The current name, folder and selected formats.
 // - `SaveFailed`: Whether the last save should be reported in the editor.
+// - `Messages`: Wraps settings messages in parent messages.
 // ## Returns
-// The settings page with the editor open.
-public function View(Base: E.Element<M.Msg>; Draft: Locations.MusicSource; SaveFailed: bool): E.Element<M.Msg>;
+// `Base` with the editor open.
+public function View<TParent>(Base: E.Element<TParent>; Draft: Locations.MusicSource; SaveFailed: bool; Messages: function(M.Msg): TParent): E.Element<TParent>;
 begin
   const Content: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [
@@ -110,13 +114,16 @@ begin
       )
     )
   );
-  return Dialogs.Dialog<M.Msg>(
+  return Dialogs.Dialog<TParent>(
     'edit-source', Base,
-    E.Column<M.Msg>(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(14)), Align := L.Alignment.Stretch),
-      Content.ToArray()
+    Composition.Map<M.Msg, TParent>(
+      E.Column<M.Msg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(14)), Align := L.Alignment.Stretch),
+        Content.ToArray()
+      ), Messages
     ),
-    true, new Dialogs.Options('Music source', InitialFocus := 'source-name'), M.Msg.CancelEdit
+    true, new Dialogs.Options('Music source', InitialFocus := 'source-name'),
+    Messages(M.Msg.CancelEdit)
   );
 end function;
 

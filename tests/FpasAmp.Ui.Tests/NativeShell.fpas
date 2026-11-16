@@ -5,6 +5,7 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.App.Model as M,
+  FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm, System as Sys, System.IO as IO,
@@ -25,6 +26,11 @@ procedure Step(Session: Shell.Session; Tab: int);
 begin
   discard Session.Window.Post(M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Tab)));
   X.Assert.True(Session.Window.Step());
+end procedure;
+
+procedure Send(Session: Shell.Session; Message: Settings.Msg);
+begin
+  discard Session.Window.Post(M.Msg.Settings(Message));
 end procedure;
 
 procedure Capture(Session: Shell.Session; Name: string);
@@ -65,14 +71,14 @@ public type NativeShellTests = record
       T.CancellationToken.None,
       new Inventory.Options(0, 60000, 4)
     );
-    var Saved: M.Preferences := new M.Preferences([Source]);
+    var Saved: Settings.Preferences := new Settings.Preferences([Source]);
     try
       var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
       Placement.Width := 1000;
       Placement.Height := 720;
       using const Session: Shell.Session := Shell.Session.Start(
         Placement,
-        Saved, procedure(Value: M.Preferences) begin
+        Saved, procedure(Value: Settings.Preferences) begin
           Saved := Value;
         end procedure, Library, new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings))
       );
@@ -117,15 +123,15 @@ public type NativeShellTests = record
       var Ready: bool := false;
       while not Ready and Sys.Environment.TickCount64 < Deadline do
         Step(Session, 1);
-        const Snapshot: Inventory.Snapshot? := Session.State().Inventory;
+        const Snapshot: Inventory.Snapshot? := Session.State().Settings.Inventory;
         Ready := Snapshot <> null and Snapshot.Sources[0].Files.Length = 1;
         T.Thread.Sleep(1);
       end while;
 
       X.Assert.True(Ready, 'The UI did not receive the background inventory.');
       // Feed a controlled progress state to check its native indeterminate rendering.
-      discard Session.Window.Post(
-        M.Msg.ProgressReceived(
+      Send(
+        Session, Settings.Msg.ProgressReceived(
           new Progress.Snapshot(
             1000000L, 1L,
             I.ImmutableArray.Create<Progress.SourceProgress>(
@@ -138,25 +144,25 @@ public type NativeShellTests = record
       X.Assert.Equal<string>('indeterminate', Control(Session, 'source-music-progress').Value);
       X.Assert.False(Control(Session, 'source-music-rescan').Enabled);
       Capture(Session, 'library-scanning');
-      discard Session.Window.Post(M.Msg.SetPaused(Source.Id, true));
+      Send(Session, Settings.Msg.SetPaused(Source.Id, true));
       Step(Session, 1);
       X.Assert.True(Saved.MusicSources[0].Paused);
       X.Assert.False(Control(Session, 'source-music-rescan').Enabled);
-      discard Session.Window.Post(M.Msg.AskClear(Source.Id));
+      Send(Session, Settings.Msg.AskClear(Source.Id));
       Step(Session, 1);
       X.Assert.True(Control(Session, Confirm.ConfirmId('source-music-clear-confirm')).Enabled);
       Capture(Session, 'library-confirm');
-      discard Session.Window.Post(M.Msg.CancelClear);
+      Send(Session, Settings.Msg.CancelClear);
       Step(Session, 1);
       X.Assert.True(IO.File.Exists(Track));
-      discard Session.Window.Post(M.Msg.AskClear(Source.Id));
+      Send(Session, Settings.Msg.AskClear(Source.Id));
       Step(Session, 1);
-      discard Session.Window.Post(M.Msg.ConfirmClear);
+      Send(Session, Settings.Msg.ConfirmClear);
       Step(Session, 1);
       var Cleared: bool := false;
       while not Cleared and Sys.Environment.TickCount64 < Deadline do
         Step(Session, 1);
-        const State: M.State := Session.State();
+        const State: Settings.State := Session.State().Settings;
         const Snapshot: Inventory.Snapshot? := State.Inventory;
         Cleared := State.Clearing = null and Snapshot <> null and Snapshot.Sources[
           0
@@ -168,40 +174,40 @@ public type NativeShellTests = record
       X.Assert.True(Saved.MusicSources[0].Paused);
       X.Assert.True(IO.File.Exists(Track));
       Capture(Session, 'library-paused');
-      discard Session.Window.Post(M.Msg.SetPaused(Source.Id, false));
+      Send(Session, Settings.Msg.SetPaused(Source.Id, false));
       Step(Session, 1);
       var Resumed: bool := false;
       const ResumeDeadline: long := Sys.Environment.TickCount64 + 15000L;
       while not Resumed and Sys.Environment.TickCount64 < ResumeDeadline do
         Step(Session, 1);
-        const Snapshot: Inventory.Snapshot? := Session.State().Inventory;
+        const Snapshot: Inventory.Snapshot? := Session.State().Settings.Inventory;
         Resumed := Snapshot <> null and Snapshot.Sources[0].Files.Length = 1;
         T.Thread.Sleep(1);
       end while;
 
       X.Assert.True(Resumed);
-      const Before: Inventory.Snapshot? := Session.State().Inventory;
-      discard Session.Window.Post(M.Msg.Rescan(Source.Id));
+      const Before: Inventory.Snapshot? := Session.State().Settings.Inventory;
+      Send(Session, Settings.Msg.Rescan(Source.Id));
       Step(Session, 1);
       var Rescanned: bool := false;
       while not Rescanned and Sys.Environment.TickCount64 < ResumeDeadline do
         Step(Session, 1);
-        const After: Inventory.Snapshot? := Session.State().Inventory;
+        const After: Inventory.Snapshot? := Session.State().Settings.Inventory;
         Rescanned := Before <> null and After <> null and After.Revision > Before.Revision;
         T.Thread.Sleep(1);
       end while;
 
       X.Assert.True(Rescanned);
       Step(Session, 0);
-      discard Session.Window.Post(M.Msg.AskClear(''));
+      Send(Session, Settings.Msg.AskClear(''));
       Step(Session, 0);
       X.Assert.True(Control(Session, Confirm.ConfirmId('clear-database-confirm')).Enabled);
-      discard Session.Window.Post(M.Msg.ConfirmClear);
+      Send(Session, Settings.Msg.ConfirmClear);
       Step(Session, 0);
       var AllCleared: bool := false;
       while not AllCleared and Sys.Environment.TickCount64 < ResumeDeadline do
         Step(Session, 0);
-        const State: M.State := Session.State();
+        const State: Settings.State := Session.State().Settings;
         const Snapshot: Inventory.Snapshot? := State.Inventory;
         AllCleared := State.Clearing = null and Snapshot <> null and Snapshot.Sources[
           0
@@ -214,16 +220,16 @@ public type NativeShellTests = record
       X.Assert.True(IO.File.Exists(Track));
       Step(Session, 1);
       X.Assert.True(Control(Session, 'source-music-remove').Enabled);
-      discard Session.Window.Post(M.Msg.AskRemove(Source.Id));
+      Send(Session, Settings.Msg.AskRemove(Source.Id));
       Step(Session, 1);
       X.Assert.True(Control(Session, Confirm.ConfirmId('source-music-remove-confirm')).Enabled);
       Capture(Session, 'library-remove');
-      discard Session.Window.Post(M.Msg.CancelRemove);
+      Send(Session, Settings.Msg.CancelRemove);
       Step(Session, 1);
       X.Assert.Equal<int>(1, Saved.MusicSources.Length);
-      discard Session.Window.Post(M.Msg.AskRemove(Source.Id));
+      Send(Session, Settings.Msg.AskRemove(Source.Id));
       Step(Session, 1);
-      discard Session.Window.Post(M.Msg.ConfirmRemove);
+      Send(Session, Settings.Msg.ConfirmRemove);
       Step(Session, 1);
       X.Assert.Equal<int>(0, Saved.MusicSources.Length);
       X.Assert.True(IO.File.Exists(Track));

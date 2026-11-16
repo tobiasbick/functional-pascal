@@ -3,11 +3,14 @@ unit FpasAmp.Ui.Albums.Toolbar.Sorting;
 
 uses
   FpasAmp.Ui.Albums.Toolbar.Model as M, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Styles as S, System as Sys;
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Styles as S, System as Sys,
+  System.Collections.Generic as C;
 
 function Name(Value: M.Order): string;
 begin
   case Value of
+    when M.Order.Relevance:
+      return 'Best match';
     when M.Order.Title:
       return 'Album title';
     when M.Order.Artist:
@@ -29,8 +32,16 @@ begin
 end function;
 
 // Presents `Current` as a single sort block, with direction choices inside its menu.
-public function Build(Current: M.State): E.Element<M.Msg>;
+// Best match is offered while `Searching`; it always lists the closest albums first.
+//
+// ## Parameters
+// - `Current`: The toolbar state.
+// - `Searching`: Whether the search text contains words.
+// ## Returns
+// The sort menu.
+public function Build(Current: M.State; Searching: bool): E.Element<M.Msg>;
 begin
+  const Relevance: bool := Current.Sort = M.Order.Relevance;
   const Alphabetic: bool := Current.Sort = M.Order.Title or Current.Sort = M.Order.Artist;
   const Direction: string := if Alphabetic then
     if Current.Descending then
@@ -45,11 +56,15 @@ begin
       'Low–high'
     end if
   end if;
-  return Menus.Menu<M.Msg>(
-    'album-sort',
-    Name(Current.Sort) + ' · ' + Direction,
+  const Entries: C.List<Menus.Entry<M.Msg>> := new C.List<Menus.Entry<M.Msg>>(
+    [Menus.Entry<M.Msg>.Label('Sort by')]
+  );
+  if Searching then
+    Entries.Add(Choice(Current, 'relevance', M.Order.Relevance));
+  end if;
+
+  Entries.AddRange(
     [
-      Menus.Entry<M.Msg>.Label('Sort by'),
       Choice(Current, 'title', M.Order.Title), Choice(Current, 'artist', M.Order.Artist),
       Choice(Current, 'rating', M.Order.Rating), Choice(Current, 'songs', M.Order.Songs),
       Menus.Entry<M.Msg>.Separator,
@@ -58,7 +73,8 @@ begin
           'ascending',
           'Ascending',
           M.Msg.Descending(false),
-          Checked := not Current.Descending
+          Checked := not Current.Descending and not Relevance,
+          Enabled := not Relevance
         )
       ),
       Menus.Entry<M.Msg>.Action(
@@ -66,13 +82,23 @@ begin
           'descending',
           'Descending',
           M.Msg.Descending(true),
-          Checked := Current.Descending
+          Checked := Current.Descending and not Relevance,
+          Enabled := not Relevance
         )
       )
-    ],
+    ]
+  );
+  return Menus.Menu<M.Msg>(
+    'album-sort',
+    if Relevance then
+      Name(Current.Sort)
+    else
+      Name(Current.Sort) + ' · ' + Direction
+    end if,
+    Entries.ToArray(),
     new Menus.Options(
       Icon := Sys.Char.ConvertFromUtf32(
-        if Current.Descending then
+        if Current.Descending and not Relevance then
           $E042
         else
           $E04A

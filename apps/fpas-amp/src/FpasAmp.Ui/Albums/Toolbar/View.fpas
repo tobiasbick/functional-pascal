@@ -1,9 +1,10 @@
-// A muted native layout groups search, filter preview and one sort menu.
+// A muted native layout groups search, filters and one sort menu.
 unit FpasAmp.Ui.Albums.Toolbar.View;
 
 uses
   FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
-  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, FpasAmp.Library.Search.Matching as Matching,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Theming.Themes as Themes,
   System as Sys;
 
@@ -14,18 +15,30 @@ end function;
 
 // Builds `Current` within measured content `Width`, using the resolved `Colors`.
 // Narrow views put the two actions below search; no catalogue work is started.
-public function Build(Current: M.State; Width: int; Colors: Themes.Palette): E.Element<M.Msg>;
+//
+// ## Parameters
+// - `Current`: The toolbar state.
+// - `Artists`: Distinct album artists offered by the artist filter.
+// - `Genres`: Distinct genres offered by the genre filter.
+// - `Width`: Positive content width in logical points.
+// - `Colors`: The resolved palette.
+// ## Returns
+// The search field, the filter button and the sort menu.
+public function Build(
+  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Colors: Themes.Palette
+): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
     'album-search', Current.Search, M.Msg.Search,
-    new Search.Options(Placeholder := 'Search albums…')
+    new Search.Options(Placeholder := 'Search titles, artists and genres…')
   );
   const Actions: E.Element<M.Msg> := E.Row<M.Msg>(
     new L.Flow(
       Gap := Points(12), Align := L.Alignment.Center,
       Justify := L.Justification.End, Wrap := true, Clip := false
-    ), Filters.Build(Current, Colors, Sys.Math.Max(1, Width - 24)), Sorting.Build(Current)
+    ), Filters.Build(Current, Artists, Genres, Sys.Math.Max(1, Width - 24)),
+    Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty())
   );
   const Flow: L.Flow := new L.Flow(
     Padding := Points(12), Gap := Points(12), Align := L.Alignment.Center,

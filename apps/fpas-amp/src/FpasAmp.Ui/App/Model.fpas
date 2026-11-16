@@ -1,54 +1,22 @@
-// App-wide preferences, navigation and settings state.
+// App state composed of the navigation, album and settings slices.
 unit FpasAmp.Ui.App.Model;
 
 uses
-  FpasAmp.Library.Sources as Locations,
-  FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Albums.Model as AlbumView,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  FpasAmp.Ui.Settings.Model as SettingsView,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys;
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 
-// The persisted FPas-Amp preferences.
-public type Preferences = record
-  // Music sources in the user's configured order.
-  public MusicSources: array of Locations.MusicSource;
-  // Appearance choice in JSON, either light, dark or system.
-  public Appearance: string := 'system';
-  // Lowercase name of the selected CUI accent.
-  public Accent: string := 'neutral';
-end record;
-
-// Owner-thread app state, with independent navigation and settings dialogs.
+// Owner-thread app state; each slice owns its part.
 public type State = record
-  // The last successfully saved preferences.
-  public Settings: Preferences;
+  // Saved preferences, settings dialogs and library status; other slices read
+  // the preferences only.
+  public Settings: SettingsView.State;
   // Selected destination, settings tab, drawer and detached playlist summaries.
   public Navigation: Nav.State := new Nav.State();
   // Lazy album slice; decoded images are retained only for the realized range.
   public Albums: AlbumView.State := new AlbumView.State();
-  // Whether the folder picker is open.
-  public PickingFolder: bool := false;
-  // Source being added or edited, or null when the editor is closed.
-  public Draft: Locations.MusicSource? := null;
-  // Whether the last attempted save failed.
-  public SaveFailed: bool := false;
-  // Last completed or cached inventory, detached from its background owner.
-  public Inventory: Inv.Snapshot? := null;
-  // Latest lightweight counters, without a full file-list copy.
-  public Progress: Work.Snapshot? := null;
-  // Clear confirmation target; empty means all sources and null means closed.
-  public ConfirmClear: string? := null;
-  // Source removal confirmation; removing a source never deletes music or ratings.
-  public ConfirmRemove: string? := null;
-  // Clear operation currently awaiting acknowledgement.
-  public Clearing: string? := null;
-  // Background storage/monitoring failure, if any.
-  public LibraryError: string? := null;
-  // Fatal worker failure, retained across successful operations until a new session.
-  public TerminalError: string? := null;
 end record;
 
 // Typed proposals routed by the app controller.
@@ -57,91 +25,26 @@ public type Msg = variant
   Navigation(Message: Nav.Msg);
   // Album slice lifecycle, headers and visible thumbnail completions.
   Albums(Message: AlbumView.Msg);
-  // Change the appearance choice.
-  SetAppearance(Choice: Switchers.Selection);
-  // Change the accent choice.
-  SetAccent(Choice: Themes.Accent);
-  // Change whether an existing source is offline.
-  SetOffline(Id: string; Offline: bool);
-  // Change whether a source's scan/reconciliation is paused.
-  SetPaused(Id: string; Paused: bool);
+  // Settings edits and library status publications.
+  Settings(Message: SettingsView.Msg);
   // Begin owned mailbox subscriptions when the shell starts.
   WatchLibrary;
-  // Receive a completed inventory publication.
-  InventoryReceived(Value: Inv.Snapshot);
-  // Receive lightweight scan counters.
-  ProgressReceived(Value: Work.Snapshot);
-  // Ask for a selected source to be rescanned.
-  Rescan(Id: string);
-  // Open a native confirmation; empty target means the entire index.
-  AskClear(Id: string);
-  // Dismiss the current clear confirmation.
-  CancelClear;
-  // Open/dismiss/accept removal of a configured music source.
-  AskRemove(Id: string);
-  CancelRemove;
-  ConfirmRemove;
-  // Confirm clearing and automatically persist the affected pause flags.
-  ConfirmClear;
-  // Receive the post-clear snapshot after the transaction commits.
-  Cleared(Id: string; Value: Inv.Snapshot);
-  // Report a background library/storage failure.
-  LibraryFailed(Message: string);
-  // Report a stopped discovery or metadata worker without dismissing it after a clear.
-  LibraryStopped(Message: string);
-  // Open the folder picker for a new source.
-  ChooseFolder;
-  // Receive the chosen path or dismissal from the folder picker.
-  FolderResult(Result: Picker.Event);
-  // Open an existing source in the editor.
-  EditSource(Source: Locations.MusicSource);
-  // Change the draft's display name.
-  SetName(Name: string);
-  // Change the draft's allowed extensions.
-  SetFormats(Extensions: array of string);
-  // Save the draft and close the editor on success.
-  SaveSource;
-  // Discard the draft and close the editor.
-  CancelEdit;
-  // Clear the settings write error.
-  DismissError;
 end variant;
 
-// Resolves the stored appearance choice.
+// Resolves colors for the saved preferences.
 //
 // ## Parameters
-// - `Settings`: Preferences with a validated appearance.
-// ## Returns
-// The selected light, dark or system mode.
-public function Appearance(Settings: Preferences): Switchers.Selection;
-begin
-  return Sys.Enum.Parse<Switchers.Selection>(Settings.Appearance, true);
-end function;
-
-// Resolves the stored accent choice.
-//
-// ## Parameters
-// - `Settings`: Preferences with a validated accent.
-// ## Returns
-// The selected CUI accent.
-public function Accent(Settings: Preferences): Themes.Accent;
-begin
-  return Sys.Enum.Parse<Themes.Accent>(Settings.Accent, true);
-end function;
-
-// Resolves colors for the current settings.
-//
-// ## Parameters
-// - `Current`: The current settings page state.
+// - `Current`: The app state.
 // - `SystemAppearance`: The desktop appearance, when reported by the GUI host.
 // ## Returns
 // The selected theme and accent. System falls back to light when unavailable.
 public function Theme(Current: State; SystemAppearance: Themes.Mode?): Themes.Theme;
 begin
+  const Saved: SettingsView.Preferences := Current.Settings.Saved;
   const Mode: Themes.Mode := Switchers.Resolve(
-    Appearance(Current.Settings), SystemAppearance ?? Themes.Mode.Light
+    SettingsView.Appearance(Saved), SystemAppearance ?? Themes.Mode.Light
   );
-  const Color: Themes.Accent := Accent(Current.Settings);
+  const Color: Themes.Accent := SettingsView.Accent(Saved);
   return if Mode = Themes.Mode.Dark then
     Themes.Dark(Color)
   else

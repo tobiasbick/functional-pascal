@@ -1,4 +1,4 @@
-// Watcher callbacks only invalidate directories; they never enumerate or wait.
+// Watcher callbacks only invalidate directories; they never enumerate or wait on scans.
 unit FpasAmp.Library.Inventory.Internal.Watchers;
 
 uses
@@ -45,9 +45,11 @@ public type Watchers = record implements Sys.IDisposable
 
       Inbox.Mark(IO.Path.GetDirectoryName(Event.FullPath) ?? Event.FullPath);
     end procedure;
+    // A folder's own change event repeats what its entries already report, and
+    // merely listing a folder raises one, so scans would otherwise retrigger themselves.
     procedure Touched(Sender: object?; Event: IO.FileSystemEventArgs);
     begin
-      if OwnFile(Event.FullPath) then
+      if OwnFile(Event.FullPath) or IO.Directory.Exists(Event.FullPath) then
         return;
       end if;
 

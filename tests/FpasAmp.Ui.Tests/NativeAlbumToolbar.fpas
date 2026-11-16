@@ -1,10 +1,10 @@
-// Native controls edit a preview without changing the album catalogue or its images.
+// Native search, filter and sort controls select the albums of the page.
 unit FpasAmp.Ui.Tests.NativeAlbumToolbar;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Navigation.Model as Nav,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
@@ -38,7 +38,7 @@ end function;
 
 procedure Step(Session: Gui.Session<App.Msg>);
 begin
-  discard Session.Post(App.Msg.DismissError);
+  discard Session.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Step());
 end procedure;
 
@@ -58,7 +58,7 @@ end procedure;
 
 // Checks native input, nested popups, draft ownership and responsive presentation.
 public type ToolbarTests = record
-  // Search, filter edits and sorting leave the same albums and thumbnails in place.
+  // Native search, filter and sort input select the shown albums and keep the thumbnails.
   [X.TheoryAttribute]
   [X.InlineDataAttribute(1280)]
   [X.InlineDataAttribute(620)]
@@ -142,9 +142,17 @@ public type ToolbarTests = record
     );
     const Items: I.ImmutableArray<Library.Album> := I.ImmutableArray.CreateRange<Library.Album>(
       [
-        new Library.Album('one', 'Blue horizon', 'Example artist', 12L, 'fixture', 8),
-        new Library.Album('two', 'City lights', 'Another artist', 9L, 'fixture', 6),
-        new Library.Album('three', 'Quiet waves', 'Various artists', 10L, 'fixture')
+        new Library.Album('one', 'Blue horizon', 'Example artist', 12L, 'fixture', 8, ['Jazz']),
+        new Library.Album('two', 'City lights', 'Another artist', 9L, 'fixture', 6, ['Electronic']),
+        new Library.Album(
+          'three',
+          'Quiet waves',
+          'Various artists',
+          10L,
+          'fixture',
+          null,
+          ['Jazz', 'Rock']
+        )
       ]
     );
     const Pictures: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add(
@@ -152,9 +160,15 @@ public type ToolbarTests = record
       Image
     ).Add('two', Image).Add('three', Image);
     var Last: App.State := new App.State(
-      new App.Preferences([], 'light'),
+      new SettingsModel.State(new SettingsModel.Preferences([], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums), Loaded := true),
-      Albums := new Albums.State(Items := Items, Images := Pictures, Loaded := true)
+      Albums := Update.Apply(
+        new Albums.State(Images := Pictures),
+        Albums.Msg.Received(Items),
+        null
+      ).Model with
+        Images := Pictures;
+      end with
     );
     var PointerX: float := -1.0F;
     var PointerY: float := -1.0F;
@@ -187,25 +201,30 @@ public type ToolbarTests = record
     Step(Session);
     Step(Session);
     X.Assert.Equal<string>('horizon', Last.Albums.Toolbar.Search);
+    X.Assert.Equal<int>(1, Last.Albums.Shown.Length);
+    X.Assert.Equal<string>('one', Last.Albums.Shown[0].Id);
+    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Relevance, Last.Albums.Toolbar.Sort);
     Press(Session, Search.ClearId('album-search'));
     X.Assert.Equal<string>('', Last.Albums.Toolbar.Search);
+    X.Assert.Equal<int>(3, Last.Albums.Shown.Length);
     Press(Session, 'album-filters');
     X.Assert.True(Last.Albums.Toolbar.Open);
     X.Assert.True(Has(Session, 'album-filter-panel'));
-    Pick(Session, 'album-filter-artist', 1);
-    X.Assert.Equal<int>(1, Last.Albums.Toolbar.Draft.Artist);
+    Pick(Session, 'album-filter-artist', 2);
+    X.Assert.Equal<string>('Example artist', Last.Albums.Toolbar.Draft.Artist);
     Preview(Session, Toolbar.Msg.MinimumRating(7));
-    Press(Session, 'album-filter-cover');
-    X.Assert.True(Last.Albums.Toolbar.Draft.OnlyCover);
     X.Assert.Equal<int>(0, Toolbar.Count(Last.Albums.Toolbar.Applied));
+    X.Assert.Equal<int>(3, Last.Albums.Shown.Length);
     Press(Session, 'album-filter-reset');
     X.Assert.Equal<int>(0, Toolbar.Count(Last.Albums.Toolbar.Draft));
-    Pick(Session, 'album-filter-artist', 1);
+    Pick(Session, 'album-filter-artist', 2);
     Preview(Session, Toolbar.Msg.MinimumRating(7));
     Press(Session, 'album-filter-apply');
     X.Assert.False(Last.Albums.Toolbar.Open);
     X.Assert.Equal<int>(2, Toolbar.Count(Last.Albums.Toolbar.Applied));
-    X.Assert.Equal<string>('2', Find(Session, 'album-filter-count').Text);
+    X.Assert.Equal<int>(1, Last.Albums.Shown.Length);
+    X.Assert.Equal<string>('one', Last.Albums.Shown[0].Id);
+    X.Assert.Equal<string>('Filters · 2', Find(Session, 'album-filters').Text);
     PointerX := -1.0F;
     PointerY := -1.0F;
     Step(Session);
@@ -213,13 +232,13 @@ public type ToolbarTests = record
     Press(Session, 'album-filters');
     Capture(Session, 'albums-toolbar-filters-' + Width.ToString());
     Pick(Session, 'album-filter-genre', 2);
-    X.Assert.Equal<int>(2, Last.Albums.Toolbar.Draft.Genre);
+    X.Assert.Equal<string>('Jazz', Last.Albums.Toolbar.Draft.Genre);
     Key := 3;
     Step(Session);
     Step(Session);
     X.Assert.False(Last.Albums.Toolbar.Open);
-    X.Assert.Equal<int>(0, Last.Albums.Toolbar.Draft.Genre);
-    X.Assert.Equal<int>(0, Last.Albums.Toolbar.Applied.Genre);
+    X.Assert.Equal<string>('', Last.Albums.Toolbar.Draft.Genre);
+    X.Assert.Equal<string>('', Last.Albums.Toolbar.Applied.Genre);
     Press(Session, 'album-sort');
     Press(Session, Menus.ItemId('album-sort', 'rating'));
     X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Rating, Last.Albums.Toolbar.Sort);
@@ -231,7 +250,6 @@ public type ToolbarTests = record
     Capture(Session, 'albums-toolbar-sorting-' + Width.ToString());
     X.Assert.Equal<I.ImmutableArray<Library.Album>>(Items, Last.Albums.Items);
     X.Assert.Same(Pictures, Last.Albums.Images);
-    X.Assert.Equal<long>(0L, Last.Albums.Generation);
     X.Assert.Equal<int>(3, Last.Albums.Items.Length);
   end procedure;
 end record;

@@ -54,7 +54,7 @@ begin
     return 'Local';
   end if;
 
-  for Source: Sources.MusicSource in Current.Settings.MusicSources do
+  for Source: Sources.MusicSource in Current.Settings.Saved.MusicSources do
     if Sources.Within(Path, Source.Path) then
       const Relative: string := IO.Path.GetRelativePath(
         Source.Path,

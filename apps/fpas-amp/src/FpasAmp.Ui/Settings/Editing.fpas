@@ -1,0 +1,234 @@
+// Preference and source edits; each accepted change is saved before it is shown.
+unit FpasAmp.Ui.Settings.Editing;
+
+uses
+  FpasAmp.Library.Sources as Locations,
+  FpasAmp.Ui.Settings.Model as M,
+  Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys,
+  System.Collections.Generic as C,
+  System.IO as IO;
+
+// Saves `Next` and shows it once the write succeeds.
+//
+// ## Parameters
+// - `Current`: State before the change.
+// - `Next`: Preferences to save.
+// - `Save`: Persists a validated set of preferences.
+// ## Returns
+// `Current` showing `Next`, or still showing the last saved preferences with
+// `SaveFailed` set when the write failed.
+public function Persist(Current: M.State; Next: M.Preferences; Save: procedure(M.Preferences)): M.State;
+begin
+  try
+    Save(Next);
+    return Current with
+      Saved := Next;
+      SaveFailed := false;
+    end with;
+  catch Failure: IO.IOException do
+    return Current with
+      SaveFailed := true;
+    end with;
+  catch Failure: Sys.UnauthorizedAccessException do
+    return Current with
+      SaveFailed := true;
+    end with;
+  end try;
+end function;
+
+function Replace(Sources: array of Locations.MusicSource; Revised: Locations.MusicSource): array of Locations.MusicSource;
+begin
+  const Updated: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>(Sources);
+  for Index: int := 0 to Updated.Count - 1 do
+    if Updated[Index].Id = Revised.Id then
+      Updated[Index] := Revised;
+      return Updated.ToArray();
+    end if;
+  end for;
+
+  Updated.Add(Revised);
+  return Updated.ToArray();
+end function;
+
+// Applies a preference or source edit. A failed save leaves the last saved
+// preferences and any open draft in place so the action can be retried.
+//
+// ## Parameters
+// - `Current`: State before the proposal.
+// - `Message`: The edit; library messages leave `Current` unchanged.
+// - `Save`: Persists a validated set of preferences.
+// ## Returns
+// The state after handling the proposal.
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences)): M.State;
+begin
+  const Draft: Locations.MusicSource? := Current.Draft;
+  const Settings: M.Preferences := Current.Saved;
+  case Message of
+    when M.Msg.SetAppearance(const Choice: Switchers.Selection):
+      return Persist(
+        Current, Settings with
+          Appearance := Choice.ToString().ToLowerInvariant();
+        end with, Save
+      );
+    when M.Msg.SetAccent(const Choice: Themes.Accent):
+      return Persist(
+        Current, Settings with
+          Accent := Choice.ToString().ToLowerInvariant();
+        end with, Save
+      );
+    when M.Msg.SetOffline(const Id: string, const Offline: bool):
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id = Id then
+          const Revised: Locations.MusicSource := Source with
+            Offline := Offline;
+          end with;
+          return Persist(
+            Current, Settings with
+              MusicSources := Replace(Settings.MusicSources, Revised);
+            end with, Save
+          );
+        end if;
+      end for;
+
+      return Current;
+    when M.Msg.SetPaused(const Id: string, const Paused: bool):
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id = Id then
+          return Persist(
+            Current, Settings with
+              MusicSources := Replace(
+                Settings.MusicSources, Source with
+                  Paused := Paused;
+                end with
+              );
+            end with, Save
+          );
+        end if;
+      end for;
+
+      return Current;
+    when M.Msg.AskRemove(const Id: string):
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id = Id and Current.Clearing = null then
+          return Current with
+            ConfirmRemove := Id;
+            ConfirmClear := null;
+          end with;
+        end if;
+      end for;
+
+      return Current;
+    when M.Msg.CancelRemove:
+      return Current with
+        ConfirmRemove := null;
+      end with;
+    when M.Msg.ConfirmRemove:
+      const Target: string? := Current.ConfirmRemove;
+      if Target = null or Current.Clearing <> null then
+        return Current;
+      end if;
+      const Remaining: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>();
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id <> Target then
+          Remaining.Add(Source);
+        end if;
+      end for;
+      const Removed: M.State := Persist(
+        Current, Settings with
+          MusicSources := Remaining.ToArray();
+        end with, Save
+      );
+      return if Removed.SaveFailed then
+        Removed
+      else
+        Removed with
+          ConfirmRemove := null;
+          Draft := null;
+        end with
+      end if;
+    when M.Msg.ChooseFolder:
+      return Current with
+        PickingFolder := true;
+        SaveFailed := false;
+      end with;
+    when M.Msg.FolderResult(const Result: Picker.Event):
+      const Folder: string? := Result.Path;
+      if Folder = null then
+        return Current with
+          PickingFolder := false;
+        end with;
+      end if;
+      const Name: string := IO.Path.GetFileName(IO.Path.TrimEndingDirectorySeparator(Folder)) ?? '';
+      return Current with
+        PickingFolder := false;
+        Draft := new Locations.MusicSource(
+          Sys.Guid.NewGuid().ToString('N'), if Name = '' then
+            Folder
+          else
+            Name
+          end if, Folder,
+          false, ['.flac', '.mp3', '.m4a'], ScanPlaylists := true
+        );
+      end with;
+    when M.Msg.EditSource(const Source: Locations.MusicSource):
+      return Current with
+        Draft := Source;
+        SaveFailed := false;
+      end with;
+    when M.Msg.SetName(const Name: string):
+      if Draft <> null then
+        return Current with
+          Draft := Draft with
+            Name := Name;
+          end with;
+        end with;
+      end if;
+
+      return Current;
+    when M.Msg.SetFormats(const Extensions: array of string):
+      if Draft <> null then
+        return Current with
+          Draft := Draft with
+            Extensions := Extensions;
+          end with;
+        end with;
+      end if;
+
+      return Current;
+    when M.Msg.SaveSource:
+      if Draft = null or Sys.String.IsNullOrWhiteSpace(Draft.Name) then
+        return Current;
+      end if;
+      const Revised: Locations.MusicSource := Draft with
+        Name := Draft.Name.Trim();
+      end with;
+      const Saved: M.State := Persist(
+        Current, Settings with
+          MusicSources := Replace(Settings.MusicSources, Revised);
+        end with, Save
+      );
+      return if Saved.SaveFailed then
+        Saved
+      else
+        Saved with
+          Draft := null;
+        end with
+      end if;
+    when M.Msg.CancelEdit:
+      return Current with
+        Draft := null;
+        SaveFailed := false;
+      end with;
+    when M.Msg.DismissError:
+      return Current with
+        SaveFailed := false;
+      end with;
+    else
+      return Current;
+  end case;
+end function;
+
+end unit;

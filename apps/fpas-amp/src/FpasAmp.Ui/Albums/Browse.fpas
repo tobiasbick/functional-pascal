@@ -1,0 +1,165 @@
+// Derives the shown albums from the catalogue, the search text, the filters and the order.
+unit FpasAmp.Ui.Albums.Browse;
+
+uses
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Library.Search.Matching as Matching,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Globalization as G;
+
+// Search documents and filter choices, prepared once per catalogue snapshot.
+public type Catalog = record
+  // One search document per album, in catalogue order.
+  public Documents: I.ImmutableArray<Matching.Document> := I.ImmutableArray<Matching.Document>.Empty;
+  // Distinct album artists in display order.
+  public Artists: array of string := [];
+  // Distinct genres in display order.
+  public Genres: array of string := [];
+end record;
+
+const Weights: array of double := [1.0, 0.9, 0.6];
+
+function Names(): Sys.StringComparer;
+begin
+  return Sys.StringComparer.Create(
+    G.CultureInfo.CurrentCulture,
+    G.CompareOptions.IgnoreCase or G.CompareOptions.IgnoreNonSpace
+  );
+end function;
+
+function Sorted(Values: C.HashSet<string>): array of string;
+begin
+  const Result: C.List<string> := new C.List<string>(Values);
+  Result.Sort(Names());
+  return Result.ToArray();
+end function;
+
+// Prepares the search documents and the filter choices of `Items`.
+//
+// ## Parameters
+// - `Items`: The album headers of one catalogue snapshot.
+// ## Returns
+// The catalog; titles weigh most in searches, then artists, then genres.
+public function Prepare(Items: I.ImmutableArray<Library.Album>): Catalog;
+begin
+  const Documents: I.ImmutableArray<Matching.Document>.Builder := I.ImmutableArray.CreateBuilder<Matching.Document>(
+    Items.Length
+  );
+  const Artists: C.HashSet<string> := new C.HashSet<string>(Names());
+  const Genres: C.HashSet<string> := new C.HashSet<string>(Names());
+  for Album: Library.Album in Items do
+    const Fields: C.List<Matching.Field> := new C.List<Matching.Field>(
+      [new Matching.Field(Album.Title, Weights[0]), new Matching.Field(Album.Artist, Weights[1])]
+    );
+    for Genre: string in Album.Genres do
+      Fields.Add(new Matching.Field(Genre, Weights[2]));
+      discard Genres.Add(Genre);
+    end for;
+
+    Documents.Add(Matching.Document.Create(Fields.ToArray()));
+    if not Sys.String.IsNullOrWhiteSpace(Album.Artist) then
+      discard Artists.Add(Album.Artist);
+    end if;
+  end for;
+
+  return new Catalog(Documents.MoveToImmutable(), Sorted(Artists), Sorted(Genres));
+end function;
+
+function Allowed(Album: Library.Album; Filters: Toolbar.Filters): bool;
+begin
+  if Filters.Artist <> '' and Names().Compare(Album.Artist, Filters.Artist) <> 0 then
+    return false;
+  end if;
+
+  if (Album.Rating ?? 0) < Filters.MinimumRating then
+    return false;
+  end if;
+
+  if Filters.Genre = '' then
+    return true;
+  end if;
+
+  for Genre: string in Album.Genres do
+    if Names().Compare(Genre, Filters.Genre) = 0 then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// One shown album with what it is sorted by.
+type Entry = record
+  public Album: Library.Album;
+  public Score: double;
+  public Position: int;
+end record;
+
+// Selects and orders the albums to show.
+//
+// ## Parameters
+// - `Items`: The album headers, in catalogue order.
+// - `Prepared`: The catalog prepared from `Items`; another catalog is rejected.
+// - `Settings`: The search text, applied filters and order.
+// ## Returns
+// The albums that pass the filters and, with search words, match at least one
+// of them. Best match lists the closest albums first; other orders apply to the
+// matches, and equal values keep the catalogue order.
+public function Select(Items: I.ImmutableArray<Library.Album>; Prepared: Catalog; Settings: Toolbar.State): I.ImmutableArray<Library.Album>;
+  function Compare(Left: Entry; Right: Entry): int;
+  begin
+    var Result: int := 0;
+    case Settings.Sort of
+      when Toolbar.Order.Relevance:
+        Result := Right.Score.CompareTo(Left.Score);
+      when Toolbar.Order.Title:
+        Result := Names().Compare(Left.Album.Title, Right.Album.Title);
+      when Toolbar.Order.Artist:
+        Result := Names().Compare(Left.Album.Artist, Right.Album.Artist);
+      when Toolbar.Order.Rating:
+        Result := (Left.Album.Rating ?? 0).CompareTo(Right.Album.Rating ?? 0);
+      when Toolbar.Order.Songs:
+        Result := Left.Album.Tracks.CompareTo(Right.Album.Tracks);
+      else
+        raise new Sys.ArgumentOutOfRangeException('Settings');
+    end case;
+
+    if Settings.Descending and Settings.Sort <> Toolbar.Order.Relevance then
+      Result := -Result;
+    end if;
+
+    if Result = 0 and Settings.Sort <> Toolbar.Order.Title then
+      Result := Names().Compare(Left.Album.Title, Right.Album.Title);
+    end if;
+
+    return if Result <> 0 then
+      Result
+    else
+      Left.Position.CompareTo(Right.Position)
+    end if;
+  end function;
+begin
+  if Prepared.Documents.Length <> Items.Length then
+    raise new Sys.ArgumentException('The catalog was prepared from other albums.', 'Prepared');
+  end if;
+
+  const Search: Matching.Query := Matching.Query.Parse(Settings.Search);
+  const Scores: array of double := Matching.Rank(Search, Prepared.Documents);
+  const Shown: C.List<Entry> := new C.List<Entry>();
+  for Index: int := 0 to Items.Length - 1 do
+    if (Search.IsEmpty() or Scores[Index] > 0.0) and Allowed(Items[Index], Settings.Applied) then
+      Shown.Add(new Entry(Items[Index], Scores[Index], Index));
+    end if;
+  end for;
+
+  Shown.Sort(Compare);
+  const Result: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+    Shown.Count
+  );
+  for Item: Entry in Shown do
+    Result.Add(Item.Album);
+  end for;
+
+  return Result.MoveToImmutable();
+end function;
+
+end unit;

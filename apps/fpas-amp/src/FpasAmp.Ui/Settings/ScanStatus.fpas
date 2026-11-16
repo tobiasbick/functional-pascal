@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Settings.ScanStatus;
 
 uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Settings.InventoryState as State,
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.InventoryState as State,
   FpasAmp.Library.Sources as Sources, FpasAmp.Library.Inventory.Model as Inv,
   FpasAmp.Library.Inventory.Progress as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars,

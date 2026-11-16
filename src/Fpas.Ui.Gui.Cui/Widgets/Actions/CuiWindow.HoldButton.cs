@@ -20,7 +20,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(icon, nameof(icon));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(durationMilliseconds);
         if (variant is < 0 or 3 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
-        return NativeMethods.HoldButton(context, Stable(id), label, icon.Length == 0 ? null : icon,
+        return NativeMethods.HoldButton(context, Stable(id), label, Optional(icon),
             durationMilliseconds, variant, enabled ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

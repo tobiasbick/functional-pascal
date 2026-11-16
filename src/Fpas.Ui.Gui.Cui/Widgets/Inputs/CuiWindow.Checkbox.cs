@@ -20,7 +20,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(description, nameof(description));
         ArgumentException.ThrowIfNullOrEmpty(label);
-        return NativeMethods.Checkbox(context, Stable(id), label, description.Length == 0 ? null : description,
+        return NativeMethods.Checkbox(context, Stable(id), label, Optional(description),
             @checked ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, indeterminate ? 1 : 0, hideLabel ? 1 : 0) != 0;
     }
 }

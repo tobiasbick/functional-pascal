@@ -18,7 +18,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(description, nameof(description));
         ArgumentException.ThrowIfNullOrEmpty(label);
-        return NativeMethods.RadioButton(context, Stable(id), label, description.Length == 0 ? null : description,
+        return NativeMethods.RadioButton(context, Stable(id), label, Optional(description),
             selected ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

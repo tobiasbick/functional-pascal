@@ -27,7 +27,7 @@ public sealed partial class CuiWindow
         ArgumentException.ThrowIfNullOrWhiteSpace(tooltip);
         if (variant is < 0 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
-        return NativeMethods.IconButton(context, Stable(id), icon, tooltip, shortcut.Length == 0 ? null : shortcut,
+        return NativeMethods.IconButton(context, Stable(id), icon, tooltip, Optional(shortcut),
             variant, size, enabled ? 1 : 0, loading ? 1 : 0, selected ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

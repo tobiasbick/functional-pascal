@@ -18,7 +18,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(icon, nameof(icon));
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
-        return NativeMethods.Chip(context, Stable(id), label, icon.Length == 0 ? null : icon,
+        return NativeMethods.Chip(context, Stable(id), label, Optional(icon),
             selected ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

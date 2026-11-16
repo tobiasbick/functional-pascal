@@ -86,6 +86,4 @@ public sealed partial class CuiWindow
                 icon, hint, error, prefix, suffix, options.Size, password, clearable, readOnly, enabled, focus, nodes, out revealed)
         };
     }
-
-    private static string? Optional(string value) => value.Length == 0 ? null : value;
 }

@@ -47,7 +47,7 @@ public sealed partial class CuiWindow
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         if (!float.IsFinite(width) || (width < 0 && width != -1)) throw new ArgumentOutOfRangeException(nameof(width));
         return NativeMethods.HostButton(context, Stable(id), label, variant, size, enabled ? 1 : 0, loading ? 1 : 0,
-            selected ? 1 : 0, focus ? 1 : 0, icon.Length == 0 ? null : icon, iconRight.Length == 0 ? null : iconRight,
-            tooltip.Length == 0 ? null : tooltip, shortcut.Length == 0 ? null : shortcut, fill ? 1 : 0, width, rgba) != 0;
+            selected ? 1 : 0, focus ? 1 : 0, Optional(icon), Optional(iconRight),
+            Optional(tooltip), Optional(shortcut), fill ? 1 : 0, width, rgba) != 0;
     }
 }

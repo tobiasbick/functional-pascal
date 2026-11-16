@@ -252,25 +252,6 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Gets the most recent widget's rectangle from the latest native layout.</summary>
     public CuiRectangle LastRectangle { get { CheckFrame(); return NativeMethods.LastRectangle(context); } }
 
-    /// <summary>Injects a logical pointer position before drawing widgets in the current frame.</summary>
-    /// <param name="x">Finite horizontal coordinate.</param>
-    /// <param name="y">Finite vertical coordinate.</param>
-    public void MovePointer(float x, float y)
-    {
-        CheckFrame();
-        if (!float.IsFinite(x)) throw new ArgumentOutOfRangeException(nameof(x));
-        if (!float.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(y));
-        NativeMethods.MovePointer(context, x, y);
-    }
-
-    /// <summary>Injects the left pointer button through CUI's input API.</summary>
-    /// <param name="down">Whether the button is pressed.</param>
-    public void SetLeftButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 0, down ? (byte)1 : (byte)0); }
-
-    /// <summary>Injects the right pointer button through CUI's input API.</summary>
-    /// <param name="down">Whether the button is pressed.</param>
-    public void SetRightButton(bool down) { CheckFrame(); NativeMethods.LeftButton(context, 1, down ? (byte)1 : (byte)0); }
-
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
     /// <param name="path">Unicode output filename in an existing directory.</param>
     public void CapturePng(string path)

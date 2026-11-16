@@ -34,6 +34,9 @@ public sealed partial class CuiWindow
         return "###" + Convert.ToBase64String(Utf8.Encoding.GetBytes(id));
     }
 
+    // Maps an empty optional native string to NULL.
+    private static string? Optional(string value) => value.Length == 0 ? null : value;
+
     /// <summary>Opens a clipped host layout container.</summary>
     /// <param name="horizontal">Whether its main axis is horizontal.</param>
     /// <param name="padding">Logical inset.</param>
@@ -192,75 +195,5 @@ public sealed partial class CuiWindow
         if (modalKeys.TryGetValue(id, out uint previous) && previous != key) NativeMethods.Forget(context, previous);
         modalKeys[id] = key;
         usedModals.Add(id);
-    }
-
-    /// <summary>Gets the platform's app appearance, or null if CUI cannot determine it.</summary>
-    public bool? SystemDark
-    {
-        get
-        {
-            CheckOpen();
-            return NativeMethods.SystemDark() switch { 0 => false, 1 => true, _ => null };
-        }
-    }
-
-    /// <summary>Applies the shared theme's semantic palette atomically.</summary>
-    /// <param name="dark">Whether to use dark typography and elevation defaults.</param>
-    /// <param name="accent">CUI accent family: neutral=0 through rose=7.</param>
-    /// <param name="colors">Exactly 34 packed RGBA colors in CUI semantic token order.</param>
-    public unsafe void SetTheme(bool dark, int accent, uint[] colors)
-    {
-        CheckOpen(); ArgumentNullException.ThrowIfNull(colors);
-        ArgumentOutOfRangeException.ThrowIfNegative(accent);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(accent, 7);
-        if (colors.Length != 34) throw new ArgumentException("Expected 34 CUI semantic colors.", nameof(colors));
-        fixed (uint* values = colors) NativeMethods.SetTheme(context, dark ? 1 : 0, accent, values);
-    }
-
-    /// <summary>Copies the active palette in the same semantic order accepted by SetTheme.</summary>
-    /// <returns>34 packed RGBA colors detached from native storage.</returns>
-    public unsafe uint[] ReadTheme()
-    {
-        CheckOpen();
-        var colors = new uint[34];
-        fixed (uint* values = colors) NativeMethods.ReadTheme(context, values);
-        return colors;
-    }
-
-    /// <summary>Reads a native key press during a frame.</summary>
-    /// <param name="key">Native key ordinal, tab=1, enter=2, escape=3, space=6, arrows=7..10.</param>
-    /// <returns>Whether pressed.</returns>
-    public bool KeyPressed(int key) { CheckFrame(); return NativeMethods.KeyPressed(context, key) != 0; }
-
-    /// <summary>Gets native modifier bits during a frame.</summary>
-    public int Modifiers { get { CheckFrame(); return NativeMethods.KeyModifiers(context); } }
-
-    /// <summary>Injects a key for a bounded native integration test.</summary>
-    /// <param name="key">Native key ordinal.</param>
-    /// <param name="down">Pressed state.</param>
-    /// <param name="modifiers">Native modifier bits.</param>
-    public void SetKey(int key, bool down, int modifiers = 0)
-    { CheckFrame(); NativeMethods.InputKey(context, key, down ? (byte)1 : (byte)0, modifiers); }
-
-    /// <summary>Supplies a committed text event to the native input queue.</summary>
-    /// <param name="text">Text to deliver to the focused editor in the current frame.</param>
-    public void InputText(string text)
-    {
-        CheckFrame();
-        Utf8.Validate(text, nameof(text));
-        NativeMethods.InputText(context, text);
-    }
-
-    /// <summary>Injects wheel movement for integration tests.</summary>
-    /// <param name="delta">Vertical movement in lines.</param>
-    public void Wheel(float delta) => Wheel(0, delta);
-
-    /// <summary>Supplies horizontal and vertical wheel input to CUI.</summary>
-    /// <param name="horizontal">Horizontal movement in native wheel lines.</param>
-    /// <param name="vertical">Vertical movement in native wheel lines.</param>
-    public void Wheel(float horizontal, float vertical)
-    {
-        CheckFrame();
-        NativeMethods.InputScroll(context, horizontal, vertical);
     }
 }

@@ -135,7 +135,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "cui_input_mouse_button")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void LeftButton(nint context, int button, byte down);
+    internal static partial void MouseButton(nint context, int button, byte down);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_capture", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

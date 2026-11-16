@@ -26,7 +26,7 @@ public sealed partial class CuiWindow
         CheckModalDepth();
 
         int baseNode = NativeMethods.LastNode(context);
-        int result = NativeMethods.SheetBegin(context, Stable(id), title, description.Length == 0 ? null : description,
+        int result = NativeMethods.SheetBegin(context, Stable(id), title, Optional(description),
             side, size, open ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0);
         if ((result & 1) != 0)
         {

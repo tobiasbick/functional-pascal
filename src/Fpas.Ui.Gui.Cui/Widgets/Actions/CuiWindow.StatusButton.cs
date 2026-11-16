@@ -30,7 +30,7 @@ public sealed partial class CuiWindow
         if (variant is < 0 or 3 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         int activated = NativeMethods.StatusButton(context, Stable(id), label, status, busyLabel,
-            successLabel, errorLabel, icon.Length == 0 ? null : icon, variant, size, enabled ? 1 : 0, focus ? 1 : 0);
+            successLabel, errorLabel, Optional(icon), variant, size, enabled ? 1 : 0, focus ? 1 : 0);
         return activated != 0;
     }
 }

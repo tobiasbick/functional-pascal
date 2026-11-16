@@ -44,7 +44,7 @@ public sealed partial class CuiWindow
         CheckModalDepth();
 
         int baseNode = NativeMethods.LastNode(context);
-        int result = NativeMethods.DialogBegin(context, Stable(id), title, description.Length == 0 ? null : description, width,
+        int result = NativeMethods.DialogBegin(context, Stable(id), title, Optional(description), width,
             open ? 1 : 0, enabled ? 1 : 0, persistent ? 1 : 0, closeButton ? 1 : 0, focus ? 1 : 0,
             draggable ? 1 : 0, resizable ? 1 : 0, out int panel);
         if ((result & 1) != 0)

@@ -41,7 +41,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(icon, nameof(icon));
         Utf8.Validate(badge, nameof(badge));
         return NativeMethods.SidebarItem(context, Stable(group), Stable(id), text,
-            icon.Length == 0 ? null : icon, badge.Length == 0 ? null : badge,
+            Optional(icon), Optional(badge),
             enabled ? 1 : 0, selected ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

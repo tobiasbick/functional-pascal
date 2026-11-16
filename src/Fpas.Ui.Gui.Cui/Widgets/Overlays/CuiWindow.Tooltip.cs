@@ -21,7 +21,7 @@ public sealed partial class CuiWindow
             + (shortcut.Length == 0 ? 0 : 6 + Utf8.Encoding.GetByteCount(shortcut));
         if (length > 255)
             throw new ArgumentException("Tooltip text and its shortcut must fit in 255 UTF-8 bytes.", nameof(text));
-        NativeMethods.Tooltip(context, text, shortcut.Length == 0 ? null : shortcut);
+        NativeMethods.Tooltip(context, text, Optional(shortcut));
     }
 
     /// <summary>Reads the tooltip rendered by CUI in the completed frame.</summary>

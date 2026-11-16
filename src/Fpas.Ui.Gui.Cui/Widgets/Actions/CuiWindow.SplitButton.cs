@@ -41,7 +41,7 @@ public sealed partial class CuiWindow
         int[] nodes = new int[labels.Length + 2];
         int choice, open, highlighted;
         fixed (int* parts = nodes)
-            choice = NativeMethods.SplitButton(context, Stable(id), label, icon.Length == 0 ? null : icon,
+            choice = NativeMethods.SplitButton(context, Stable(id), label, Optional(icon),
                 labels, icons, labels.Length, variant, size, enabled ? 1 : 0, focus, parts, out open, out highlighted);
         if (trackingIds is not null)
         {

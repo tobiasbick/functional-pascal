@@ -27,7 +27,7 @@ public sealed partial class CuiWindow
         if (variant is < 0 or 3 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         int events = NativeMethods.ConfirmButton(context, Stable(id), label, confirmLabel,
-            icon.Length == 0 ? null : icon, timeoutMilliseconds, variant, size, enabled ? 1 : 0, focus ? 1 : 0);
+            Optional(icon), timeoutMilliseconds, variant, size, enabled ? 1 : 0, focus ? 1 : 0);
         return new((events & 1) != 0, (events & 2) != 0);
     }
 }

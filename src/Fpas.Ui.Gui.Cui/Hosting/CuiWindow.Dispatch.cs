@@ -49,7 +49,12 @@ public sealed partial class CuiWindow
             if (window.layouts.Count != 0) throw new InvalidOperationException("Unbalanced live-resize view.");
             window.ResolveHostLayout();
         }
-        catch (Exception error) { window.resizeFailure ??= ExceptionDispatchInfo.Capture(error); }
+        catch (Exception error)
+        {
+            // Drop scopes left open by the failed view so the next frame can begin.
+            window.layouts.Clear();
+            window.resizeFailure ??= ExceptionDispatchInfo.Capture(error);
+        }
         finally { window.inFrame = false; }
     }
 }

@@ -32,7 +32,7 @@ public sealed partial class CuiWindow
         CheckPopupDepth();
         int* nodes = stackalloc int[3];
         int result = NativeMethods.ConfirmPopover(context, Stable(id), title,
-            description.Length == 0 ? null : description, confirm, cancel, placement,
+            Optional(description), confirm, cancel, placement,
             danger ? 1 : 0, open ? 1 : 0, enabled ? 1 : 0, nodes, out uint owner);
         if (owner != 0) TrackModal(id, owner);
         if (nodes[0] >= 0) trackedNodes.Add(id, nodes[0]);

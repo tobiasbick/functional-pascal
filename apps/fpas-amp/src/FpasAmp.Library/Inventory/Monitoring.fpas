@@ -115,7 +115,12 @@ public type Session = record implements Sys.IAsyncDisposable
               Metadata.Wake();
             end if;
           end procedure,
-          UserDataPath
+          UserDataPath,
+          if Metadata <> null then
+            Metadata.Ready
+          else
+            null
+          end if
         )
       )
     );

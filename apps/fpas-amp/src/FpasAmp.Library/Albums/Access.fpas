@@ -1,0 +1,109 @@
+// Borrowed album queries and artwork access share the metadata session lifetime.
+unit FpasAmp.Library.Albums.Access;
+
+uses
+  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observing,
+  FpasAmp.Library.Albums.Artwork.Reading as Reading, FpasAmp.Library.Metadata.Internal.Policy as Policy,
+  FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Sources as Sources,
+  FpasAmp.Library.Albums.Artwork.Names as Artwork,
+  FpasAmp.Library.Albums.Persistence.Ratings as Ratings,
+  FpasAmp.Imaging as Images, System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+// Detached read operations; the caller owns observations, not the metadata session.
+public type Session = record
+  Database: string;
+  Users: string;
+  Ready: Tasks.Task;
+  Lifetime: T.CancellationToken;
+  Configuration: Policy.Policy;
+  Cache: Images.ThumbnailStore;
+
+  // Creates a handle for validated `Database`/`Users` after `Ready`, sharing parent
+  // `Lifetime` and normalized source `Configuration`. Creation starts no I/O.
+  public static function Create(Database: string; Users: string; Ready: Tasks.Task; Lifetime: T.CancellationToken; Configuration: Policy.Policy): Session;
+  begin
+    return new Session(
+      Database, Users, Ready, Lifetime, Configuration,
+      new Images.ThumbnailStore(IO.Path.Combine(Covers.DirectoryPath(Users), 'thumbnails-v1'))
+    );
+  end function;
+
+  // Publishes changed sorted album headers through awaited `Publish` until
+  // `Cancellation` or the parent lifetime ends. All database work is off the caller.
+  public async function ObserveAsync(Publish: function(I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Observing.Run(self.Database, self.Users, Publish, Linked.Token),
+        Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+
+  // Saves an independent album `Value` (one through ten, or null to clear) for
+  // `Id` in user data. All I/O is off the caller; `Cancellation` bounds the write.
+  public async function SetRatingAsync(Id: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
+  requires Id <> '';
+  requires Value = null or (Value >= 1 and Value <= 10);
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.Task.Run(
+      procedure() begin
+        Ratings.Save(self.Database, self.Users, Id, Value, Linked.Token);
+      end procedure, Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Loads a bounded cached thumbnail for `Album`; missing/invalid art returns null.
+  // `Cancellation` owns this request. Paused/offline sources are never opened.
+  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+  requires Album.Id <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.TaskExtensions.Unwrap<Images.Bitmap?>(
+      Tasks.Task.Run<Tasks.Task<Images.Bitmap?>>(
+        function(): Tasks.Task<Images.Bitmap?> => Reading.Read(
+          self.Database, self.Users, Album.Id, Album.Revision, self.Cache,
+          function(Path: string): bool begin
+            for Source: Sources.MusicSource in self.Configuration.Read().Sources do
+              if not Source.Paused and not Source.Offline and Sources.Within(Path, Source.Path) then
+                if Artwork.Matches(Path) and Source.Extensions.Length > 0 then
+                  return true;
+                end if;
+
+                for Extension: string in Source.Extensions do
+                  if Sys.String.Equals(
+                    IO.Path.GetExtension(Path),
+                    Extension,
+                    Sys.StringComparison.OrdinalIgnoreCase
+                  )
+                  then
+                    return true;
+                  end if;
+                end for;
+              end if;
+            end for;
+
+            return false;
+          end function, Linked.Token
+        ), Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+end record;
+
+end unit;

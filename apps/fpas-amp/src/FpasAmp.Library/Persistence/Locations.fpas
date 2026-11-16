@@ -34,7 +34,7 @@ begin
         return false;
       end if;
 
-      if (Reader.GetInt32(
+      if (Reader.GetInt32(2) = 2 and Source.Extensions.Length = 0) or (Reader.GetInt32(
         2
       ) = 1 and not Source.ScanPlaylists) or (Reader.GetInt32(2) = 0 and not Extensions.Contains(
         IO.Path.GetExtension(Reader.GetString(1)) ?? ''

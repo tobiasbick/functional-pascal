@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Settings.InventoryState;
 
 uses
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Library.Sources as S,
+  FpasAmp.Ui.App.Model as M, FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as P,
   System.Collections.Generic as C, System.Collections.Immutable as I;
 

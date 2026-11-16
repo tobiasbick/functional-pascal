@@ -30,8 +30,10 @@ public type Options = record
   public Muted: bool := false;
   // Use an accent border.
   public Selected: bool := false;
-  // Whether the card itself accepts activation.
+  // Whether the card itself accepts hover/focus and activation.
   public Enabled: bool := true;
+  // Enable CUI hover/focus feedback without an activation callback, for hover details.
+  public Hoverable: bool := false;
 end record;
 
 // Draws a native card and makes it interactive when an activation callback is supplied.

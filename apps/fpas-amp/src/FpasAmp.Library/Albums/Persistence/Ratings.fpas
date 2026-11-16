@@ -1,0 +1,47 @@
+// Album ratings are explicit user data, independent of individual track ratings.
+unit FpasAmp.Library.Albums.Persistence.Ratings;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.UserData.Schema as Users,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T;
+
+// Saves `Value` (one through ten, or null to clear) for an existing album `Id`.
+// `Database` is the catalogue and `UserDatabase` owns durable ratings. Cancellation
+// before commit rolls back the write; scans and catalogue resets do not erase it.
+public procedure Save(Database: string; UserDatabase: string; Id: string; Value: int?; Cancellation: T.CancellationToken);
+requires Id <> '';
+requires Value = null or (Value >= 1 and Value <= 10);
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Users.Open(UserDatabase);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS catalogue;', null, ['$path'], [Database]);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
+  using const Exists: Db.SqliteCommand := Sql.Command(
+    Connection, 'SELECT 1 FROM catalogue.album_tracks WHERE album_id=$id LIMIT 1;',
+    Transaction, ['$id'], [Id]
+  );
+  if Exists.ExecuteScalar() = null then
+    raise new Sys.ArgumentException('Unknown album identity.');
+  end if;
+
+  if Value = null then
+    Sql.Execute(
+      Connection,
+      'DELETE FROM album_ratings WHERE album_id=$id;',
+      Transaction,
+      ['$id'],
+      [Id]
+    );
+  else
+    Sql.Execute(
+      Connection,
+      'INSERT INTO album_ratings(album_id,rating) VALUES($id,$value) ON CONFLICT(album_id) DO UPDATE SET rating=excluded.rating;',
+      Transaction, ['$id', '$value'], [Id, cast<object?>(Value)]
+    );
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+end procedure;
+
+end unit;

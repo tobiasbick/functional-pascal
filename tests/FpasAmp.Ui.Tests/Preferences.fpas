@@ -3,8 +3,8 @@ unit FpasAmp.Ui.Tests.Preferences;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
-  FpasAmp.Ui.Settings.Controller as Controller, FpasAmp.Settings as Store,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.App.Model as M,
+  FpasAmp.Ui.App.Controller as Controller, FpasAmp.Settings as Store,
   Fpas.Ui.Mvu.Application as Mvu, System.IO as IO, System.Threading as T,
   FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
   System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;

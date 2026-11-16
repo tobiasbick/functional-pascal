@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Settings.General;
 
 uses
-  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
+  FpasAmp.Ui.App.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
   FpasAmp.Ui.Settings.DatabaseActions as Database,
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Containers.Cards as Cards,

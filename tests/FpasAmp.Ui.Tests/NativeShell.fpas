@@ -4,7 +4,8 @@ unit FpasAmp.Ui.Tests.NativeShell;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.App.Model as M,
+  FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm, System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
@@ -22,7 +23,7 @@ end function;
 
 procedure Step(Session: Shell.Session; Tab: int);
 begin
-  discard Session.Window.Post(M.Msg.SelectTab(Tab));
+  discard Session.Window.Post(M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Tab)));
   X.Assert.True(Session.Window.Step());
 end procedure;
 
@@ -31,7 +32,7 @@ begin
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then
     for Index: int := 0 to 11 do
-      Step(Session, Session.State().Tab ?? 0);
+      Step(Session, Session.State().Navigation.SettingsTab);
       T.Thread.Sleep(16);
     end for;
 
@@ -73,7 +74,7 @@ public type NativeShellTests = record
         Placement,
         Saved, procedure(Value: M.Preferences) begin
           Saved := Value;
-        end procedure, Library, 0
+        end procedure, Library, new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings))
       );
       Step(Session, 0);
       X.Assert.True(Control(Session, 'clear-database').Enabled);

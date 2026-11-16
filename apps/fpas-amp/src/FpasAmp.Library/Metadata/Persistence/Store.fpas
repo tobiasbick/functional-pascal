@@ -3,6 +3,7 @@ unit FpasAmp.Library.Metadata.Persistence.Store;
 
 uses
   FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Albums.Persistence.Store as Albums,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Text.Json as J, System.Threading as T;
 
 function First(Values: array of string): string;
@@ -63,6 +64,7 @@ begin
     [Id, TrackId, Hash, Size, Modified, Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Error]
   );
   if Tags <> null then
+    Albums.Save(Connection, Transaction, Id, Tags);
     Sql.Execute(
       Connection,
       'UPDATE metadata SET tags_json=$json,title=$title,album=$album,album_key=$albumname,sort_title=$titlekey,sort_album=$albumkey,' +

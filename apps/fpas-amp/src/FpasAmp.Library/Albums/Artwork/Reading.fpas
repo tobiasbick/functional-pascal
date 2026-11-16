@@ -1,0 +1,182 @@
+// Album cover precedence is explicit; no network or arbitrary folder image is used.
+unit FpasAmp.Library.Albums.Artwork.Reading;
+
+uses
+  FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Albums.Artwork.Names as Names,
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Metadata.Internal.Reading as Facts,
+  FpasAmp.Imaging as Images, Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
+  System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Store(Cache: Images.ThumbnailStore; Album: string; Revision: string; Value: Covers.Cover?; Cancellation: T.CancellationToken): Images.Bitmap?;
+begin
+  if Value = null then
+    return null;
+  end if;
+
+  try
+    return Cache.Store(Album, Revision, Value.Data, Cancellation);
+  catch Invalid: IO.InvalidDataException do
+    return null;
+  catch Invalid: Sys.ArgumentException do
+    return null;
+  end try;
+end function;
+
+async function ReadFile(Path: string; Cancellation: T.CancellationToken): Tasks.Task<array of byte>;
+begin
+  const Info: IO.FileInfo := new IO.FileInfo(Path);
+  const Size: long := Info.Length;
+  const Modified: long := Info.LastWriteTimeUtc.Ticks;
+  if Size > 16777216L or (Info.Attributes and IO.FileAttributes.ReparsePoint) <>
+    cast<IO.FileAttributes>(0)
+  then
+    raise new IO.InvalidDataException('Unsupported artwork file.');
+  end if;
+
+  using const Stream: IO.FileStream := new IO.FileStream(
+    Path,
+    IO.FileMode.Open,
+    IO.FileAccess.Read,
+    IO.FileShare.Read or IO.FileShare.Delete,
+    65536,
+    IO.FileOptions.Asynchronous
+  );
+  const Bytes: array of byte := new byte[cast<int>(Size)];
+  var Position: int := 0;
+  while Position < Bytes.Length do
+    const Count: int := await Stream.ReadAsync(
+      Bytes,
+      Position,
+      Sys.Math.Min(65536, Bytes.Length - Position),
+      Cancellation
+    ).ConfigureAwait(false);
+    if Count = 0 then
+      raise new IO.IOException('The artwork changed during reading.');
+    end if;
+
+    Position := Position + Count;
+  end while;
+
+  if not Facts.Matches(Path, Size, Modified) then
+    raise new IO.IOException('The artwork changed during reading.');
+  end if;
+
+  return Bytes;
+end function;
+
+// Resolves embedded front/other images, then unambiguous cover/folder/front sidecars.
+// `MayRead` rejects paused/offline sources; cached `Album`/`Revision` works offline.
+// All I/O runs on the background caller; returned pixels are immutable by contract.
+public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Images.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Cached: Images.Bitmap? := Cache.TryGet(Album, Revision);
+  if Cached <> null then
+    return Cached;
+  end if;
+
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  const Others: C.List<Covers.Cover> := new C.List<Covers.Cover>();
+  begin
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT a.file_id,f.path FROM album_tracks a JOIN files f ON f.id=a.file_id WHERE a.album_id=$id ORDER BY f.path_key;',
+      null,
+      ['$id'],
+      [Album]
+    );
+    using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+    while Rows.Read() do
+      Cancellation.ThrowIfCancellationRequested();
+      if not MayRead(Rows.GetString(1)) then
+        continue;
+      end if;
+
+      try
+        const Value: Covers.Cover? := await Covers.Read(
+          Database,
+          Users,
+          Rows.GetInt64(0),
+          Cancellation,
+          UseCache := false
+        ).ConfigureAwait(false);
+        if Value <> null then
+          if Value.Front then
+            const Image: Images.Bitmap? := Store(Cache, Album, Revision, Value, Cancellation);
+            if Image <> null then
+              return Image;
+            end if;
+          elsif Others.Count = 0 then
+            Others.Add(Value);
+          end if;
+        end if;
+      catch Unavailable: IO.IOException do
+      catch Unavailable: Sys.UnauthorizedAccessException do
+      end try;
+    end while;
+  end;
+
+  if Others.Count > 0 then
+    const Image: Images.Bitmap? := Store(Cache, Album, Revision, Others[0], Cancellation);
+    if Image <> null then
+      return Image;
+    end if;
+  end if;
+  const Paths: C.List<string> := new C.List<string>();
+  begin
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT DISTINCT f.path,f.size,f.modified_utc FROM files f WHERE f.kind=2' +
+      ' AND EXISTS(SELECT 1 FROM album_tracks a WHERE a.album_id=$id AND (a.directory_key=f.directory_key OR a.root_key=f.directory_key))' +
+      ' AND (SELECT COUNT(DISTINCT a.album_id) FROM album_tracks a WHERE a.directory_key=f.directory_key OR a.root_key=f.directory_key)=1;',
+      null,
+      ['$id'],
+      [Album]
+    );
+    using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+    while Rows.Read() do
+      const Path: string := Rows.GetString(0);
+      if MayRead(Path) and not Rows.IsDBNull(1) and not Rows.IsDBNull(2) and Facts.Matches(
+        Path,
+        Rows.GetInt64(1),
+        Rows.GetInt64(2)
+      )
+      then
+        Paths.Add(Path);
+      end if;
+    end while;
+  end;
+
+  Paths.Sort(
+    function(A: string; B: string): int begin
+      const Order: int := Names.Rank(A).CompareTo(Names.Rank(B));
+      return if Order <> 0 then
+        Order
+      else
+        Sys.StringComparer.Ordinal.Compare(A, B)
+      end if;
+    end function
+  );
+  for Path: string in Paths do
+    Cancellation.ThrowIfCancellationRequested();
+    try
+      const Bytes: array of byte := await ReadFile(Path, Cancellation).ConfigureAwait(false);
+      const Image: Images.Bitmap? := Store(
+        Cache,
+        Album,
+        Revision,
+        new Covers.Cover('application/octet-stream', Bytes),
+        Cancellation
+      );
+      if Image <> null then
+        return Image;
+      end if;
+    catch Unavailable: IO.IOException do
+    catch Unavailable: Sys.UnauthorizedAccessException do
+    end try;
+  end for;
+
+  return null;
+end function;
+
+end unit;

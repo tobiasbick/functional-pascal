@@ -11,6 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Ude.NetStandard" Version="1.2.0" />
+    <PackageVersion Include="PhotoSauce.MagicScaler" Version="0.15.0" />
+    <PackageVersion Include="PhotoSauce.NativeCodecs.Libjpeg" Version="3.2.0-preview1" />
+    <PackageVersion Include="PhotoSauce.NativeCodecs.Libpng" Version="1.6.59-preview1" />
     <PackageVersion Include="Zomp.SyncMethodGenerator" Version="1.6.2" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.23" />

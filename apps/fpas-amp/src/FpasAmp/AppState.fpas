@@ -1,11 +1,13 @@
-// Stores the desktop window and selected settings page.
+// Stores window placement and a validated navigation selection.
 unit FpasAmp.AppState;
 
 uses
   Fpas.Ui.Gui.Cui as Cui,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
+  FpasAmp.Ui.Navigation.Model as Nav,
   System.IO as IO,
+  System as Sys,
   System.Text.Json as J;
 
 // The window's normal bounds, last maximized state and selected page.
@@ -20,8 +22,10 @@ public type Snapshot = record
   public Y: int? := null;
   // Whether the window was maximized.
   public Maximized: bool := false;
-  // Selected settings tab: 0 for General, 1 for Library, or null for the empty shell.
-  public SettingsTab: int? := null;
+  // Last settings tab: 0 for General or 1 for Library.
+  public SettingsTab: int := 0;
+  // Static destination or playlist store/UUID key; never a display name or index.
+  public ActivePage: string := 'music';
 end record;
 
 const FileName: string := 'state.json';
@@ -48,29 +52,29 @@ begin
   return Value;
 end function;
 
-function SelectedTab(Root: J.JsonElement; ref Valid: bool): int?;
+function SelectedTab(Root: J.JsonElement; ref Valid: bool): int;
 begin
-  // Missing fields are expected in files saved before page restoration existed.
+  // An absent/null optional selection uses the initial settings tab.
   var Field: J.JsonElement := new J.JsonElement();
   if Root.ValueKind = J.JsonValueKind.Object and not Root.TryGetProperty(
     'settingsTab',
     out Field
   )
   then
-    return null;
+    return 0;
   end if;
 
   Field := Fields.Field(Root, 'settingsTab');
   if Field.ValueKind = J.JsonValueKind.Null then
-    return null;
+    return 0;
   end if;
   const Value: int? := Fields.IntegerValue(Field);
   if Value = 0 or Value = 1 then
-    return Value;
+    return Value.Value;
   end if;
 
   Valid := false;
-  return null;
+  return 0;
 end function;
 
 function Decode(Root: J.JsonElement): Files.Decoded<Snapshot>;
@@ -82,9 +86,24 @@ begin
   const X: int? := Coordinate(Root, 'x', ref Valid);
   const Y: int? := Coordinate(Root, 'y', ref Valid);
   const Maximized: bool? := Fields.BooleanValue(Fields.Field(Root, 'maximized'));
-  const Tab: int? := SelectedTab(Root, ref Valid);
+  const Tab: int := SelectedTab(Root, ref Valid);
+  const PageField: J.JsonElement := Fields.Field(Root, 'activePage');
+  const Page: string := Fields.StringValue(PageField) ?? 'music';
+  const Route: Nav.Route? := Nav.Parse(Page);
+  if Route = null or (PageField.ValueKind <> J.JsonValueKind.Undefined and PageField.ValueKind <>
+    J.JsonValueKind.String)
+  then
+    Valid := false;
+  end if;
+
   return new Files.Decoded<Snapshot>(
-    new Snapshot(Width, Height, X, Y, Maximized ?? Defaults.Maximized, Tab),
+    new Snapshot(
+      Width, Height, X, Y, Maximized ?? Defaults.Maximized, Tab, if Route <> null then
+        Nav.Key(Route)
+      else
+        'music'
+      end if
+    ),
     Valid and Maximized <> null
   );
 end function;
@@ -94,7 +113,7 @@ end function;
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
 // ## Returns
-// The saved state with positive dimensions and a valid tab or no selected page.
+// The saved state with positive dimensions and a valid static/playlist route.
 public function Load(Directory: string): Snapshot;
 requires Directory.Length > 0;
 ensures (Value: Snapshot): Value.Width > 0 and Value.Height > 0;
@@ -106,13 +125,17 @@ end function;
 //
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
-// - `Value`: State with positive normal dimensions and tab 0, 1 or null.
+// - `Value`: Positive normal dimensions, tab 0 or 1, and a valid route key.
 public procedure Save(Directory: string; Value: Snapshot);
 requires Directory.Length > 0;
 requires Value.Width > 0;
 requires Value.Height > 0;
-requires Value.SettingsTab = null or Value.SettingsTab = 0 or Value.SettingsTab = 1;
+requires Value.SettingsTab = 0 or Value.SettingsTab = 1;
 begin
+  if Nav.Parse(Value.ActivePage) = null then
+    raise new Sys.ArgumentException('Invalid navigation route.', 'Value');
+  end if;
+
   Files.Save<Snapshot>(IO.Path.Combine(Directory, FileName), Value, Decode);
 end procedure;
 
@@ -150,11 +173,11 @@ end function;
 //
 // ## Parameters
 // - `Value`: The placement the GUI host reported when the window closed.
-// - `Tab`: The last selected settings tab, or null for the empty shell.
+// - `Navigation`: Final selected route and independently retained settings tab.
 // ## Returns
 // The stored placement; coordinates are null where the system reports none.
-public function FromWindow(Value: Cui.CuiWindowPlacement; Tab: int?): Snapshot;
-requires Tab = null or Tab = 0 or Tab = 1;
+public function FromWindow(Value: Cui.CuiWindowPlacement; Navigation: Nav.State): Snapshot;
+requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
 begin
   const Defaults: Snapshot := new Snapshot();
   return new Snapshot(
@@ -179,7 +202,8 @@ begin
       null
     end if,
     Value.State = Cui.CuiWindowState.Maximized,
-    Tab
+    Navigation.SettingsTab,
+    Nav.Key(Navigation.Active)
   );
 end function;
 

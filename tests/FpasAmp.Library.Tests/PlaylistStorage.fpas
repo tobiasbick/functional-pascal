@@ -50,7 +50,7 @@ public type StorageTests = record
     X.Assert.Null(Pending.Next(Connection));
   end procedure;
 
-  // Both owned stages can concurrently open a v2 catalogue without duplicate ALTERs.
+  // Both owned stages start safely against a v2 catalogue without duplicate ALTERs.
   [X.FactAttribute]
   public async function UpgradeWithBothStages(): Tasks.Task;
   begin
@@ -87,7 +87,7 @@ public type StorageTests = record
     using const Connection: Db.SqliteConnection := Sql.Open(
       IO.Path.Combine(Data.Path, 'library.db')
     );
-    X.Assert.Equal<long>(3L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal<long>(4L, D.Number(Connection, 'PRAGMA user_version;'));
   end function;
 end record;
 

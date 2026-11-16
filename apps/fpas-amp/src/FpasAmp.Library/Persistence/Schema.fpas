@@ -4,7 +4,8 @@ unit FpasAmp.Library.Persistence.Schema;
 uses
   FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Metadata.Persistence.Schema as Metadata, Microsoft.Data.Sqlite as Db, System as Sys,
-  FpasAmp.Library.Playlists.Persistence.Schema as Playlists, FpasAmp.Library.Content.Schema as Content;
+  FpasAmp.Library.Playlists.Persistence.Schema as Playlists, FpasAmp.Library.Content.Schema as Content,
+  FpasAmp.Library.Albums.Persistence.Schema as Albums;
 
 // Initializes a new database or validates the supported schema without resetting data.
 // `Connection` is an open, worker-owned connection.
@@ -19,7 +20,7 @@ begin
     []
   );
   const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-  if Version < 0 or Version > 3 then
+  if Version < 0 or Version > 4 then
     raise new Sys.InvalidOperationException(
       'Unsupported library database schema. The database was left intact.'
     );
@@ -65,7 +66,8 @@ begin
 
   Playlists.Catalogue(Connection, Transaction);
   Content.Create(Connection, Transaction, Version < 3);
-  Sql.Execute(Connection, 'PRAGMA user_version=3;', Transaction, [], []);
+  Albums.Create(Connection, Transaction, Version < 4);
+  Sql.Execute(Connection, 'PRAGMA user_version=4;', Transaction, [], []);
   Transaction.Commit();
   Sql.Execute(
     Connection,

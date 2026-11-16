@@ -22,6 +22,10 @@ begin
   if Kind = 1 then
     return Source.ScanPlaylists;
   end if;
+
+  if Kind = 2 then
+    return Source.Extensions.Length > 0;
+  end if;
   const Extension: string := IO.Path.GetExtension(Path) ?? '';
   for Allowed: string in Source.Extensions do
     if Sys.String.Equals(Extension, Allowed, Sys.StringComparison.OrdinalIgnoreCase) then
@@ -180,6 +184,11 @@ begin
   );
   const Files: C.HashSet<string> := new C.HashSet<string>(Observation.Files, S.PathComparer());
   const Playlists: C.HashSet<string>? := Observation.Playlists;
+  const Artwork: C.HashSet<string>? := Observation.Artwork;
+  if Artwork <> null then
+    Files.UnionWith(Artwork);
+  end if;
+
   if Playlists <> null then
     Files.UnionWith(Playlists);
   end if;
@@ -192,7 +201,9 @@ begin
 
     AddFile.Parameters['$key'].Value := Sql.Key(File);
     AddFile.Parameters['$path'].Value := File;
-    const Kind: int := if Playlists <> null and Playlists.Contains(File) then
+    const Kind: int := if Artwork <> null and Artwork.Contains(File) then
+      2
+    elsif Playlists <> null and Playlists.Contains(File) then
       1
     else
       0

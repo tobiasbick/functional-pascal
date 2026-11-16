@@ -5,7 +5,7 @@ uses
   FpasAmp.Library.Sources as Locations,
   FpasAmp.Ui.Settings.DatabaseActions as Database, FpasAmp.Ui.Settings.ScanStatus as Scan,
   FpasAmp.Ui.Settings.SourceActions as Actions,
-  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  FpasAmp.Ui.App.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Inputs.Switches as Switches,

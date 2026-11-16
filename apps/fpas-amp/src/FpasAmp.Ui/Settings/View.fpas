@@ -1,0 +1,66 @@
+// Settings retain their existing General/Library pages inside the app shell.
+unit FpasAmp.Ui.Settings.View;
+
+uses
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Settings.General as General, FpasAmp.Ui.Settings.Library as LibraryView,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+// Builds the selected settings tab from `Current`, using `Theme` and viewport `Padding`.
+public function Build(Current: M.State; Theme: Themes.Theme; Padding: int): E.Element<M.Msg>;
+begin
+  const Header: E.Element<M.Msg> := Tabs.Tabs<M.Msg>(
+    'settings-tabs',
+    [new Tabs.Item('General'), new Tabs.Item('Library')],
+    Current.Navigation.SettingsTab,
+    function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
+  );
+  const Body: E.Element<M.Msg> := if Current.Navigation.SettingsTab = 0 then
+    General.View(Current, Theme)
+  else
+    LibraryView.View(Current, Theme)
+  end if;
+  const Error: string? := Current.TerminalError ?? Current.LibraryError;
+  const MainBody: E.Element<M.Msg> := if Error = null then
+    Body
+  else
+    E.Column<M.Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Align := L.Alignment.Stretch),
+      Alerts.Alert<M.Msg>(
+        'library-error',
+        'Library operation failed',
+        new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
+      ),
+      Body
+    )
+  end if;
+  const Content: array of E.Element<M.Msg> := if Current.SaveFailed and Current.Draft = null then
+    [
+      Texts.Text<M.Msg>('Settings', Texts.Appearance.HeadingOne),
+      Header,
+      Alerts.Alert<M.Msg>(
+        'settings-save-error',
+        'Could not save settings. Try again.',
+        new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
+        function(): M.Msg => M.Msg.DismissError
+      ),
+      MainBody
+    ]
+  else
+    [Texts.Text<M.Msg>('Settings', Texts.Appearance.HeadingOne), Header, MainBody]
+  end if;
+  return E.ScrollView<M.Msg>(
+    'settings-scroll', E.Column<M.Msg>(
+      new L.Flow(
+        Padding := L.Spacing.Fixed(L.Measure.Logical(Padding)),
+        Gap := L.Spacing.Fixed(L.Measure.Logical(20)),
+        Align := L.Alignment.Stretch
+      ),
+      Content
+    )
+  );
+end function;
+
+end unit;

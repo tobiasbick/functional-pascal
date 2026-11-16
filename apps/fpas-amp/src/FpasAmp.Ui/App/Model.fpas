@@ -1,9 +1,11 @@
-// Preferences and view state for the settings page.
-unit FpasAmp.Ui.Settings.Model;
+// App-wide preferences, navigation and settings state.
+unit FpasAmp.Ui.App.Model;
 
 uses
   FpasAmp.Library.Sources as Locations,
   FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
+  FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Albums.Model as AlbumView,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
@@ -19,12 +21,14 @@ public type Preferences = record
   public Accent: string := 'neutral';
 end record;
 
-// Transient state of the settings page and its dialogs.
+// Owner-thread app state, with independent navigation and settings dialogs.
 public type State = record
   // The last successfully saved preferences.
   public Settings: Preferences;
-  // Selected settings tab, or null when the desktop shell is empty.
-  public Tab: int? := null;
+  // Selected destination, settings tab, drawer and detached playlist summaries.
+  public Navigation: Nav.State := new Nav.State();
+  // Lazy album slice; decoded images are retained only for the realized range.
+  public Albums: AlbumView.State := new AlbumView.State();
   // Whether the folder picker is open.
   public PickingFolder: bool := false;
   // Source being added or edited, or null when the editor is closed.
@@ -47,12 +51,12 @@ public type State = record
   public TerminalError: string? := null;
 end record;
 
-// The proposals accepted by the settings page.
+// Typed proposals routed by the app controller.
 public type Msg = variant
-  // Open the settings page.
-  OpenSettings;
-  // Select the settings tab by index.
-  SelectTab(Index: int);
+  // Navigate or receive a background playlist update.
+  Navigation(Message: Nav.Msg);
+  // Album slice lifecycle, headers and visible thumbnail completions.
+  Albums(Message: AlbumView.Msg);
   // Change the appearance choice.
   SetAppearance(Choice: Switchers.Selection);
   // Change the accent choice.

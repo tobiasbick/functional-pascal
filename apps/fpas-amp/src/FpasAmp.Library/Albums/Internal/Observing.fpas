@@ -1,0 +1,66 @@
+// Album observation owns its read connection and never runs on the UI thread.
+unit FpasAmp.Library.Albums.Internal.Observing;
+
+uses
+  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Persistence.Queries as Queries,
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Same(A: I.ImmutableArray<M.Album>; B: I.ImmutableArray<M.Album>): bool;
+begin
+  if A.Length <> B.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to A.Length - 1 do
+    if A[Index] <> B[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function Version(Connection: Db.SqliteConnection): long;
+begin
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'PRAGMA data_version;',
+    null,
+    [],
+    []
+  );
+  return Sys.Convert.ToInt64(Query.ExecuteScalar());
+end function;
+
+// Observes committed album changes in `Database`/`Users`; `Publish` is awaited and only
+// receives changed complete snapshots. `Cancellation` closes the borrowed lifetime.
+public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+begin
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  using const UserData: Db.SqliteConnection := Sql.Open(Users);
+  var CatalogueVersion: long := -1L;
+  var UserVersion: long := -1L;
+  var Published: bool := false;
+  var Previous: I.ImmutableArray<M.Album> := I.ImmutableArray<M.Album>.Empty;
+  while true do
+    Cancellation.ThrowIfCancellationRequested();
+    const Current: long := Version(Connection);
+    const CurrentUsers: long := Version(UserData);
+    if Current <> CatalogueVersion or CurrentUsers <> UserVersion then
+      const Snapshot: I.ImmutableArray<M.Album> := Queries.Read(Database, Users, Cancellation);
+      if not Published or not Same(Previous, Snapshot) then
+        await Publish(Snapshot).ConfigureAwait(false);
+        Previous := Snapshot;
+        Published := true;
+      end if;
+
+      CatalogueVersion := Current;
+      UserVersion := CurrentUsers;
+    end if;
+
+    await Tasks.Task.Delay(500, Cancellation).ConfigureAwait(false);
+  end while;
+end function;
+
+end unit;

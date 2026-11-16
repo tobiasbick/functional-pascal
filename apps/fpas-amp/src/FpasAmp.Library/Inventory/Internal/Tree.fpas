@@ -8,6 +8,7 @@ uses
   FpasAmp.Library.Inventory.Internal.Observations as O,
   FpasAmp.Library.Inventory.Internal.Catalog as Data,
   FpasAmp.Library.Playlists.Formats as PlaylistFormats,
+  FpasAmp.Library.Albums.Artwork.Names as ArtworkNames,
   System as Sys, System.IO as IO, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Threading as T;
 
@@ -137,6 +138,24 @@ public type Tree = record
 
       return false;
     end function;
+    function SelectedArtwork(Path: string): bool;
+    begin
+      if not ArtworkNames.Matches(Path) then
+        return false;
+      end if;
+
+      for Source: S.MusicSource in Sources do
+        if Source.Extensions.Length > 0 and not Source.Paused and not Source.Offline and S.Within(
+          Path,
+          Source.Path
+        )
+        then
+          return true;
+        end if;
+      end for;
+
+      return false;
+    end function;
     function Selected(Path: string): bool;
     begin
       for Source: S.MusicSource in Sources do
@@ -177,6 +196,7 @@ public type Tree = record
       const Directory: string := Pending.Pop();
       const Found: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
       const Playlists: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      const Artwork: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
       const Stamps: C.Dictionary<string, O.FileStamp> := new C.Dictionary<string, O.FileStamp>(
         S.PathComparer()
       );
@@ -210,9 +230,12 @@ public type Tree = record
             end if;
           else
             const IsPlaylist: bool := SelectedPlaylist(Entry.FullName);
-            if IsPlaylist or Selected(Entry.FullName) then
+            const IsArtwork: bool := SelectedArtwork(Entry.FullName);
+            if IsPlaylist or IsArtwork or Selected(Entry.FullName) then
               if IsPlaylist then
                 discard Playlists.Add(Entry.FullName);
+              elsif IsArtwork then
+                discard Artwork.Add(Entry.FullName);
               else
                 discard Found.Add(Entry.FullName);
               end if;
@@ -239,7 +262,8 @@ public type Tree = record
         Complete,
         Failure,
         Stamps,
-        Playlists
+        Playlists,
+        Artwork
       );
       case Checkpoint of
         when is Sys.Func<O.DirectoryObservation, bool> as Save:

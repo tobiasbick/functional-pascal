@@ -84,6 +84,9 @@ bounded; stored inventories necessarily scale with files/directories.
 - `playlist_files`, `playlist_items`: source-owned playlist cache, ordered entries,
   retained references, durable track associations and latest read errors.
 - `content_jobs`: indexed pending audio/playlist work, requeued by file-stamp changes.
+- `album_tracks`: indexed release memberships and sort/directory context, derived
+  transactionally from successful tags. Cover sidecar observations use `files.kind=2`
+  and never contribute to audio counters or metadata/hash jobs.
 
 Connections use WAL, foreign keys, prepared/bound SQL and full SQLite durability.
 Each directory/tag write is transactional; obsolete generations/cancellation
@@ -140,11 +143,51 @@ copies and ambiguous duplicates receive separate UUIDs. Simultaneous moving and
 editing is not reliably recognizable; replacing content at an existing path is
 treated as an update. This is file recognition, not an acoustic fingerprint.
 
-`CoverAsync(FileId, Cancellation)` reads the first embedded image only on demand
+`CoverAsync(FileId, Cancellation)` prefers an embedded front cover, then the first
+other picture, only on demand
 and caches it under `covers` beside the user database, addressed by SHA-256.
 Scans leave image data unloaded. Cached artwork works offline; absence is cached
 too. Images retain their original MIME type/bytes, limited to **sixteen MiB**.
 Cache writes replace temporary files atomically; the cache is reconstructible.
+
+## Albums and artwork
+
+The borrowed `Metadata.Albums` handle provides `ObserveAsync` for sorted lightweight
+headers and `ThumbnailAsync(Album, Cancellation)` for one immutable RGBA thumbnail.
+`SetRatingAsync(Id, Value, Cancellation)` stores an independent album rating from
+one to ten, or null to clear it. Ratings live in `userdata.db`, survive catalogue
+resets/rescans, and never change track ratings or source tags. Header observations
+include user-data changes without invalidating unchanged artwork.
+Header observations run only while the Albums slice is open. They poll database
+commit versions and publish changed snapshots. The catalogue derives memberships
+without reopening audio when upgrading cached successful tags; discovery starts
+after that schema initialization completes.
+
+A valid MusicBrainz release ID joins a release across folders. Without one, identity
+uses album title, album artist (performer or compilation fallback), release date and
+normalized album folder. Recognized CD/disc subfolders share their parent when disc
+tags are present. Missing album titles use that folder's name. Equal display names
+alone never merge unrelated releases.
+
+Artwork resolution first tries tagged front covers across album members, then
+another embedded picture. It next tries local `cover`, `folder`, `front` names, each
+in JPG/JPEG/PNG order, case-insensitively. A sidecar folder must belong to exactly one
+indexed album; mixed folders cannot give several releases the same accidental image.
+Only observed files inside active sources are opened. Invalid/missing art becomes
+a placeholder. Changed or deleted sidecars change the album revision; missing
+results do not prevent subsequently added pictures from being discovered.
+
+The GUI realizes native CUI virtual rows containing native grids/cards/images and
+requests thumbnails after native layout reports its range. Row factories remain
+pure. At most two source requests run for that range. Changing the range, leaving
+Albums or closing the window cancels work; generation checks reject stale results.
+The view retains only the requested images. Cached positive thumbnails work offline.
+All source reads, decoding and resizing stay outside the GUI thread.
+
+[FpasAmp.Imaging](../FpasAmp.Imaging/README.md) provides bounded MagicScaler decoding
+and content-addressed thumbnail storage: 384 × 384 RGBA, 32 MiB decoded cache and
+256 MiB disk pixel cache. Shared picture bytes share a blob across albums. Album
+thumbnail requests bypass the per-track original-image cache to avoid duplication.
 
 ## Playlists
 
@@ -152,6 +195,12 @@ The borrowed `Metadata.Playlists` handle provides asynchronous `ListAsync`,
 `ReadAsync`, `SaveAsync`, `DeleteAsync`, `ImportAsync` and `ExportAsync` operations.
 It shares initialization/cancellation with the owning session and starts no extra
 worker. All file/database I/O stays off the caller's thread.
+
+`ObserveAsync(Publish, Cancellation)` sends complete immutable summary snapshots,
+including an initially empty result. It observes both database commit versions
+twice per second and reloads summaries only after changes. Equal snapshots are
+not republished; pagination is revalidated against concurrent writes. Cancellation
+joins the observation and releases its connections. The caller owns that lifetime.
 
 Sources with `ScanPlaylists := true` discover playlists recursively and reconcile
 watcher changes alongside audio. The app enables this by default; the core source
@@ -210,6 +259,9 @@ changes, cancellation, lazy/offline images, ambiguous copies, moves and restart.
 Playlist cases cover all extensions, parser edge cases, watcher reconciliation,
 duplicates/order, URI/path handling, durable lists, late track resolution, schema
 upgrades, reset/restart, cancellation and M3U8 round trips.
+Album cases cover release/context grouping, cover precedence, shared-folder
+ambiguity, sidecar watcher changes, offline reuse, image deduplication and damaged
+cache recovery. Native view tests verify virtual realization and slice cleanup.
 
 ```sh
 dotnet test tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj

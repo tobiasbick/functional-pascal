@@ -27,6 +27,8 @@ public type DirectoryObservation = record
   public Stamps: C.Dictionary<string, FileStamp>? := null;
   // Optional playlist paths; these are not counted as audio in presence snapshots.
   public Playlists: C.HashSet<string>? := null;
+  // Recognized cover sidecars, observed without opening image content.
+  public Artwork: C.HashSet<string>? := null;
 end record;
 
 end unit;

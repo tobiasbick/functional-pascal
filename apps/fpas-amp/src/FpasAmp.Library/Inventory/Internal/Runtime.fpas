@@ -245,10 +245,15 @@ end function;
 // Runs the owned background lifetime. Both latest-value streams complete on every exit.
 // All database and filesystem operations stay on this task; `Inbox` accepts controls only.
 // `Notify` wakes an optional metadata stage after commits; `UserDataPath` excludes its files from watchers.
-public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action? := null; UserDataPath: string? := null): Tasks.Task;
+// Optional `Initialization` serializes potentially large schema upgrades with that stage.
+public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action? := null; UserDataPath: string? := null; Initialization: Tasks.Task? := null): Tasks.Task;
 begin
   try
     Cancellation.ThrowIfCancellationRequested();
+    if Initialization <> null then
+      await Initialization.WaitAsync(Cancellation).ConfigureAwait(false);
+    end if;
+
     using const Connection: Db.SqliteConnection := Sql.Open(DatabasePath);
     Schema.Ensure(Connection);
     await Work(

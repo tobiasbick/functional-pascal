@@ -96,7 +96,9 @@ public type UserListTests = record
     discard F.Write(Root.Path, 'later.mp3');
     const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].TrackId <> ''
     );
     const Resolved: M.Playlist := await P.Read(Lists, Key);
     X.Assert.Equal<M.Target>(M.Target.Track(Audio[0].TrackId), Resolved.Entries[0].Destination);

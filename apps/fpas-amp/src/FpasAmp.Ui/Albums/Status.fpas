@@ -1,0 +1,39 @@
+// A native CUI status bar sits outside the scrolling album viewport.
+unit FpasAmp.Ui.Albums.Status;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+
+// Formats `Shown` album matches and optional unfiltered `Total` for the status bar.
+// Without filtering, only the overall album count is shown.
+public function Caption(Shown: int; Total: int? := null): string;
+requires Shown >= 0;
+requires Total = null or Total >= Shown;
+begin
+  if Total <> null and Total <> Shown then
+    return Shown.ToString() + ' of ' + Total.ToString() + ' albums';
+  end if;
+
+  return Shown.ToString() + if Shown = 1 then
+    ' album'
+  else
+    ' albums'
+  end if;
+end function;
+
+// Presents the full header count in `Current`, independently of realized grid rows.
+// Loading and initial failures remain distinguishable from an empty catalogue.
+public function Build(Current: M.State): E.Element<M.Msg>;
+begin
+  const Text: string := if not Current.Loaded then
+    'Loading albums…'
+  elsif Current.Error <> null and Current.Items.Length = 0 then
+    'Albums unavailable'
+  else
+    Caption(Current.Items.Length)
+  end if;
+  return Status.StatusBar<M.Msg>('album-status', [Status.Item<M.Msg>.Text(new Status.Label(Text))]);
+end function;
+
+end unit;

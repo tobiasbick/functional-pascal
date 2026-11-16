@@ -10,6 +10,7 @@
   <Project Path="src/FpasAmp/FpasAmp.fpasproj" />
   <Project Path="src/FpasAmp.Ui/FpasAmp.Ui.fpasproj" />
   <Project Path="src/FpasAmp.Library/FpasAmp.Library.fpasproj" />
+  <Project Path="src/FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
   <Project Path="../../tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj" />
   <Project Path="../../tests/FpasAmp.Ui.Tests/FpasAmp.Ui.Tests.fpasproj" />
 </Solution>

@@ -12,11 +12,12 @@ begin
     'CREATE INDEX IF NOT EXISTS files_kind ON files(kind,id);' +
     'CREATE TABLE IF NOT EXISTS content_jobs(file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,kind INTEGER NOT NULL);' +
     'CREATE INDEX IF NOT EXISTS content_job_kind ON content_jobs(kind,file_id);' +
-    'CREATE TRIGGER IF NOT EXISTS queue_file_insert AFTER INSERT ON files BEGIN ' +
-    'INSERT OR REPLACE INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind); END;' +
-    'CREATE TRIGGER IF NOT EXISTS queue_file_change AFTER UPDATE OF size,modified_utc,kind ON files ' +
-    'WHEN OLD.size IS NOT NEW.size OR OLD.modified_utc IS NOT NEW.modified_utc OR OLD.kind<>NEW.kind BEGIN ' +
-    'INSERT OR REPLACE INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind); END;',
+    'DROP TRIGGER IF EXISTS queue_file_insert; DROP TRIGGER IF EXISTS queue_file_change;' +
+    'CREATE TRIGGER queue_file_insert AFTER INSERT ON files WHEN NEW.kind<2 BEGIN ' +
+    'INSERT INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind) ON CONFLICT(file_id) DO UPDATE SET kind=excluded.kind; END;' +
+    'CREATE TRIGGER queue_file_change AFTER UPDATE OF size,modified_utc,kind ON files ' +
+    'WHEN NEW.kind<2 AND (OLD.size IS NOT NEW.size OR OLD.modified_utc IS NOT NEW.modified_utc OR OLD.kind<>NEW.kind) BEGIN ' +
+    'INSERT INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind) ON CONFLICT(file_id) DO UPDATE SET kind=excluded.kind; END;',
     Transaction,
     [],
     []

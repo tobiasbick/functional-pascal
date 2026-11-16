@@ -1,0 +1,68 @@
+// Album ratings must not invalidate already loaded artwork or the virtual viewport.
+unit FpasAmp.Ui.Tests.Albums;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  Fpas.Ui.Mvu.Application as A, System.Collections.Immutable as I, Xunit as X;
+
+// Pure album-slice regression checks, independent of a native display.
+public type AlbumTests = record
+  // A confirmed rating changes just user state and keeps immutable image resources.
+  [X.FactAttribute]
+  public procedure RatingKeepsArtworkAndViewport();
+  begin
+    const Album: Library.Album := new Library.Album('album', 'Title', 'Artist', 12L, 'revision');
+    const Image: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
+    const Current: M.State := new M.State(
+      Items := I.ImmutableArray.Create<Library.Album>(Album), Loaded := true,
+      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add('album', Image),
+      Saving := I.ImmutableHashSet<string>.Empty.Add('album'),
+      First := 0, Last := 1, Generation := 3L
+    );
+    const Saved: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current,
+      M.Msg.Rated('album', 8),
+      null
+    );
+    X.Assert.Equal<int?>(8, Saved.Model.Items[0].Rating);
+    X.Assert.Empty(Saved.Model.Saving);
+    const Received: A.Transition<M.State, M.Msg> := Update.Apply(
+      Saved.Model,
+      M.Msg.Received(
+        I.ImmutableArray.Create<Library.Album>(
+          Album with
+            Rating := 8;
+          end with
+        )
+      ), null
+    );
+    X.Assert.Same(Image, Received.Model.Images['album']);
+    X.Assert.Equal<int>(0, Received.Model.First);
+    X.Assert.Equal<int>(1, Received.Model.Last);
+    X.Assert.Equal<long>(3L, Received.Model.Generation);
+    X.Assert.Empty(Received.Commands);
+    const Cleared: A.Transition<M.State, M.Msg> := Update.Apply(
+      Received.Model,
+      M.Msg.Rated('album', null),
+      null
+    );
+    X.Assert.Null(Cleared.Model.Items[0].Rating);
+  end procedure;
+
+  // A rejected background save releases the control and exposes a recoverable error.
+  [X.FactAttribute]
+  public procedure FailedRatingReleasesControl();
+  begin
+    const Current: M.State := new M.State(Saving := I.ImmutableHashSet<string>.Empty.Add('album'));
+    const Failed: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current,
+      M.Msg.RatingFailed('album', 'Write failed'),
+      null
+    );
+    X.Assert.Empty(Failed.Model.Saving);
+    X.Assert.Equal<string?>('Write failed', Failed.Model.Error);
+  end procedure;
+end record;
+
+end unit;

@@ -1,0 +1,20 @@
+// Detached album headers; image bytes are requested independently for visible tiles.
+unit FpasAmp.Library.Albums.Model;
+
+// A logical release with stable identity and observed artwork freshness.
+public type Album = record
+  // Content-derived identity, independent of list position.
+  public Id: string;
+  // Album tag or containing folder name when absent.
+  public Title: string;
+  // Album artist credits, falling back to performer/compilation credits.
+  public Artist: string;
+  // Number of indexed audio entries in this group.
+  public Tracks: long;
+  // Revision of audio tags and candidate sidecar image files.
+  public Revision: string;
+  // Independent user-assigned album rating, null or one through ten.
+  public Rating: int? := null;
+end record;
+
+end unit;

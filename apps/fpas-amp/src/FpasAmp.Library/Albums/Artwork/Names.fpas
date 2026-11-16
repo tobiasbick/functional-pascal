@@ -1,0 +1,37 @@
+// One explicit sidecar convention, shared by discovery and artwork resolution.
+unit FpasAmp.Library.Albums.Artwork.Names;
+
+uses System as Sys, System.IO as IO;
+
+// Returns deterministic filename preference (cover, folder, front; JPEG then PNG).
+// `Path` is a filename or complete path; -1 means it is not a candidate.
+public function Rank(Path: string): int;
+begin
+  const Name: string := (IO.Path.GetFileName(Path) ?? '').ToLowerInvariant();
+  const Names: array of string := [
+    'cover.jpg',
+    'cover.jpeg',
+    'cover.png',
+    'folder.jpg',
+    'folder.jpeg',
+    'folder.png',
+    'front.jpg',
+    'front.jpeg',
+    'front.png'
+  ];
+  for Index: int := 0 to Names.Length - 1 do
+    if Name = Names[Index] then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Reports whether `Path` is one of the recognized local cover filenames.
+public function Matches(Path: string): bool;
+begin
+  return Rank(Path) >= 0;
+end function;
+
+end unit;

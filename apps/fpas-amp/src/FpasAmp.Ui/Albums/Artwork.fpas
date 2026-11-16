@@ -1,0 +1,36 @@
+// Album tiles and hover details share the same immutable thumbnail pixels.
+unit FpasAmp.Ui.Albums.Artwork;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Imaging as Imaging,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Media.Images as Images, Fpas.Ui.Widgets.Media.MediaImages as Media,
+  System as Sys;
+
+// Presents cached `Image` at logical `Edge` with stable `Id`, or a square placeholder.
+// This pure view performs no I/O and does not retain additional decoded image data.
+public function Build(Id: string; Image: Imaging.Bitmap?; Edge: int): E.Element<M.Msg>;
+requires Id <> '';
+requires Edge > 0;
+begin
+  case Image of
+    when is Imaging.Bitmap as Bitmap:
+      return Images.Image<M.Msg>(
+        Id, Media.Source.Rgba(Bitmap.Width, Bitmap.Height, Bitmap.Pixels),
+        new Images.Options(
+          Width := L.Extent.Fixed(L.Measure.Logical(Edge)),
+          Height := L.Extent.Fixed(L.Measure.Logical(Edge)), Radius := 6.0F
+        )
+      );
+    else
+      const Size: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(Edge)));
+      return E.Size<M.Msg>(
+        E.Column<M.Msg>(
+          new L.Flow(Align := L.Alignment.Center, Justify := L.Justification.Center),
+          E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32($E122)), S.Role.MutedIcon)
+        ), new L.Flex(Width := Size, Height := Size)
+      );
+  end case;
+end function;
+
+end unit;

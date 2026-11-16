@@ -1,0 +1,60 @@
+// A stale saved playlist can never leave the app on an invalid destination.
+unit FpasAmp.Ui.Navigation.Update;
+
+uses FpasAmp.Ui.Navigation.Model as M, FpasAmp.Library.Playlists.Model as Lists, System.Collections.Immutable as I;
+
+function Valid(Current: M.State; Route: M.Route): M.Route;
+begin
+  case Route of
+    when M.Route.Playlist(const Identity: Lists.Key):
+      if Current.Loaded and M.Find(Current.Playlists, Identity) = null then
+        return M.Route.Page(M.Page.Music);
+      end if;
+    else
+  end case;
+
+  return Route;
+end function;
+
+// Applies `Message` to owner-thread `Current`; missing playlists fall back to Music.
+// A successful first snapshot validates startup restoration, while read failures
+// retain cached destinations and surface an error without treating them as deletions.
+public function Apply(Current: M.State; Message: M.Msg): M.State;
+begin
+  case Message of
+    when M.Msg.Select(const Destination: M.Route):
+      return Current with
+        Active := Valid(Current, Destination);
+        Drawer := false;
+      end with;
+    when M.Msg.SelectSettingsTab(const Index: int):
+      if Index <> 0 and Index <> 1 then
+        return Current;
+      end if;
+
+      return Current with
+        Active := M.Route.Page(M.Page.Settings);
+        SettingsTab := Index;
+        Drawer := false;
+      end with;
+    when M.Msg.SetDrawer(const Open: bool):
+      return Current with
+        Drawer := Open;
+      end with;
+    when M.Msg.Received(const Items: I.ImmutableArray<Lists.Summary>):
+      const Next: M.State := Current with
+        Playlists := Items;
+        Loaded := true;
+        Error := null;
+      end with;
+      return Next with
+        Active := Valid(Next, Current.Active);
+      end with;
+    when M.Msg.Failed(const Text: string):
+      return Current with
+        Error := Text;
+      end with;
+  end case;
+end function;
+
+end unit;

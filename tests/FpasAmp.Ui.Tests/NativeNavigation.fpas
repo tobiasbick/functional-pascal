@@ -1,0 +1,286 @@
+// Native navigation frames exercise actual discovery, restoration and compact sheets.
+unit FpasAmp.Ui.Tests.NativeNavigation;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as Sources,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
+  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Shell as Shell, FpasAmp.AppState as Storage,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, System as Sys, System.IO as IO,
+  System.Threading as T, Xunit as X;
+
+procedure Pump(Session: Shell.Session);
+begin
+  // Wake without overwriting a navigation proposal already queued for this frame.
+  discard Session.Window.Post(App.Msg.DismissError);
+  X.Assert.True(Session.Window.Step());
+end procedure;
+
+procedure Until(Session: Shell.Session; Accept: function(Nav.State): bool);
+begin
+  const Deadline: long := Sys.Environment.TickCount64 + 15000L;
+  while not Accept(Session.State().Navigation) and Sys.Environment.TickCount64 < Deadline do
+    Pump(Session);
+    T.Thread.Sleep(5);
+  end while;
+
+  X.Assert.True(
+    Accept(Session.State().Navigation),
+    'Navigation did not reach the expected background state.'
+  );
+end procedure;
+
+procedure SetRoute(Session: Shell.Session; Route: Nav.Route);
+begin
+  discard Session.Window.Post(App.Msg.Navigation(Nav.Msg.Select(Route)));
+  Pump(Session);
+end procedure;
+
+function Has(Session: Shell.Session; Id: string): bool;
+begin
+  for Control: Gui.Control in Session.Window.Snapshot().Controls do
+    if Control.Id = Id then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure Settle(Session: Shell.Session);
+begin
+  for Index: int := 0 to 15 do
+    Pump(Session);
+    T.Thread.Sleep(16);
+  end for;
+end procedure;
+
+procedure Capture(Session: Shell.Session; Name: string);
+begin
+  const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+  if Directory <> null then
+    Settle(Session);
+    discard IO.Directory.CreateDirectory(Directory);
+    Session.Window.CapturePng(IO.Path.Combine(Directory, Name + '.png'));
+  end if;
+end procedure;
+
+function Placement(Width: int): Cui.CuiWindowPlacement;
+begin
+  var Result: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+  Result.Width := Width;
+  Result.Height := 720;
+  return Result;
+end function;
+
+function Start(Source: Sources.MusicSource; Data: string): Monitor.Session;
+begin
+  return Monitor.Session.Start(
+    [Source], IO.Path.Combine(Data, 'library.db'), T.CancellationToken.None,
+    new Inventory.Options(0, 60000, 16), IO.Path.Combine(Data, 'userdata.db')
+  );
+end function;
+
+// Window-level checks run only with a native display (Xvfb on headless Linux).
+public type NativeNavigationTests = record
+  // All Library pages and discovered playlists render; a compact sheet closes on selection.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure DestinationsAndCompactDrawer();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    for Name: string in ['Evening mix', 'Favourites', 'Workout'] do
+      IO.File.WriteAllText(IO.Path.Combine(Root.Path, Name + '.m3u8'), 'missing.mp3' + #10);
+    end for;
+    const Source: Sources.MusicSource := new Sources.MusicSource(
+      'music',
+      'Music',
+      Root.Path,
+      false,
+      [],
+      ScanPlaylists := true
+    );
+    const Preferences: App.Preferences := new App.Preferences([Source], 'light');
+    const Save: procedure(App.Preferences) := procedure(_Value: App.Preferences) begin end procedure;
+    const Library: Monitor.Session := Start(Source, Data.Path);
+    try
+      begin
+        using const Session: Shell.Session := Shell.Session.Start(
+          Placement(1000),
+          Preferences,
+          Save,
+          Library
+        );
+        Until(
+          Session,
+          function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 3
+        );
+        X.Assert.False(Has(Session, 'drawer-open'));
+        Capture(Session, 'navigation-desktop');
+        for Page: Nav.Page in [
+          Nav.Page.Music,
+          Nav.Page.Albums,
+          Nav.Page.Artists,
+          Nav.Page.Genres,
+          Nav.Page.Ratings
+        ] do
+          SetRoute(Session, Nav.Route.Page(Page));
+          X.Assert.Equal<string>(
+            Page.ToString().ToLowerInvariant(),
+            Nav.Key(Session.State().Navigation.Active)
+          );
+          X.Assert.Contains<string>(Page.ToString(), Session.Window.Snapshot().Text);
+          X.Assert.True(
+            Has(
+              Session, if Page = Nav.Page.Albums then
+                'albums-empty'
+              else
+                'page-placeholder'
+              end if
+            )
+          );
+        end for;
+        const Selected: Lists.Summary := Session.State().Navigation.Playlists[0];
+        SetRoute(Session, Nav.Route.Playlist(Selected.Identity));
+        X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
+        Capture(Session, 'navigation-playlist');
+      end;
+
+      begin
+        using const Session: Shell.Session := Shell.Session.Start(
+          Placement(620),
+          Preferences,
+          Save,
+          Library
+        );
+        Until(
+          Session,
+          function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 3
+        );
+        X.Assert.True(Has(Session, 'drawer-open'));
+        X.Assert.False(Has(Session, 'navigation'));
+        Capture(Session, 'navigation-compact');
+        discard Session.Window.Post(App.Msg.Navigation(Nav.Msg.SetDrawer(true)));
+        Pump(Session);
+        X.Assert.True(Session.State().Navigation.Drawer);
+        Capture(Session, 'navigation-drawer');
+        SetRoute(Session, Nav.Route.Playlist(Session.State().Navigation.Playlists[0].Identity));
+        X.Assert.False(Session.State().Navigation.Drawer);
+        Settle(Session);
+        X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
+      end;
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Restarts handle deleted source files and parse failures without invalid navigation.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure PlaylistAfterRestart(Broken: bool);
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const File: string := IO.Path.Combine(Root.Path, 'Selected.xspf');
+    IO.File.WriteAllText(
+      File,
+      '<playlist><trackList><track><location>missing.mp3</location></track></trackList></playlist>'
+    );
+    const Source: Sources.MusicSource := new Sources.MusicSource(
+      'music',
+      'Music',
+      Root.Path,
+      false,
+      [],
+      ScanPlaylists := true
+    );
+    const Preferences: App.Preferences := new App.Preferences([Source]);
+    const Save: procedure(App.Preferences) := procedure(_Value: App.Preferences) begin end procedure;
+    begin
+      const Library: Monitor.Session := Start(Source, Data.Path);
+      try
+        using const Session: Shell.Session := Shell.Session.Start(
+          Placement(1000),
+          Preferences,
+          Save,
+          Library
+        );
+        Until(
+          Session,
+          function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 1
+        );
+        SetRoute(Session, Nav.Route.Playlist(Session.State().Navigation.Playlists[0].Identity));
+        Storage.Save(
+          Data.Path,
+          Storage.FromWindow(Session.Window.Placement(), Session.State().Navigation)
+        );
+      finally
+        Library.DisposeAsync().GetAwaiter().GetResult();
+      end try;
+    end;
+
+    if Broken then
+      IO.File.WriteAllText(File, '<playlist><track>');
+    else
+      IO.File.Delete(File);
+    end if;
+    const Saved: Storage.Snapshot := Storage.Load(Data.Path);
+    const Restored: Nav.State := new Nav.State(
+      Active := Nav.Parse(Saved.ActivePage) ?? Nav.Route.Page(Nav.Page.Music),
+      SettingsTab := Saved.SettingsTab
+    );
+    X.Assert.StartsWith('playlist:', Nav.Key(Restored.Active));
+    begin
+      const Library: Monitor.Session := Start(Source, Data.Path);
+      try
+        using const Session: Shell.Session := Shell.Session.Start(
+          Storage.ToWindow(Saved),
+          Preferences,
+          Save,
+          Library,
+          Restored
+        );
+        if Broken then
+          Until(
+            Session,
+            function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 1
+              and State.Playlists[
+              0
+            ].Error <> null
+          );
+          X.Assert.Equal<string>(Saved.ActivePage, Nav.Key(Session.State().Navigation.Active));
+          X.Assert.True(Has(Session, 'navigation-error'));
+          Capture(Session, 'navigation-unavailable-playlist');
+        else
+          Until(
+            Session,
+            function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 0
+              and Nav.Key(
+              State.Active
+            ) = 'music'
+          );
+          X.Assert.Contains<string>('Music', Session.Window.Snapshot().Text);
+        end if;
+
+        Storage.Save(
+          Data.Path,
+          Storage.FromWindow(Session.Window.Placement(), Session.State().Navigation)
+        );
+        X.Assert.Equal<string>(
+          if Broken then
+            Saved.ActivePage
+          else
+            'music'
+          end if, Storage.Load(Data.Path).ActivePage
+        );
+      finally
+        Library.DisposeAsync().GetAwaiter().GetResult();
+      end try;
+    end;
+  end procedure;
+end record;
+
+end unit;

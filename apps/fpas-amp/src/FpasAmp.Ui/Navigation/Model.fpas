@@ -1,0 +1,122 @@
+// Typed destinations and detached navigation data, independent of rendering.
+unit FpasAmp.Ui.Navigation.Model;
+
+uses FpasAmp.Library.Playlists.Model as Lists, System as Sys, System.Collections.Immutable as I;
+
+// Fixed app destinations; the first five form the Library section.
+public type Page = enum
+  // Every indexed song.
+  Music;
+  // Music grouped by album.
+  Albums;
+  // Music grouped by performer.
+  Artists;
+  // Music grouped by genre.
+  Genres;
+  // Music filtered by user rating.
+  Ratings;
+  // App preferences and music sources.
+  Settings;
+end enum;
+
+// Exactly one selected destination, including source and durable local playlists.
+public type Route = variant
+  // A fixed destination.
+  Page(Value: Page);
+  // A playlist identified independently of its display name.
+  Playlist(Identity: Lists.Key);
+end variant;
+
+// Owner-thread navigation state; background work publishes immutable summaries.
+public type State = record
+  // Active destination, initially all music.
+  public Active: Route := Route.Page(Page.Music);
+  // Last settings tab, independent of the active destination.
+  public SettingsTab: int := 0;
+  // Whether the compact navigation drawer is open; never persisted.
+  public Drawer: bool := false;
+  // All available playlist summaries in invariant name order.
+  public Playlists: I.ImmutableArray<Lists.Summary> := I.ImmutableArray<Lists.Summary>.Empty;
+  // Whether the first successful playlist snapshot has arrived.
+  public Loaded: bool := false;
+  // Last background navigation failure, if any.
+  public Error: string? := null;
+end record;
+
+// Navigation proposals and detached background publications.
+public type Msg = variant
+  // Select a destination and dismiss the compact drawer.
+  Select(Destination: Route);
+  // Open Settings and choose General (0) or Library (1).
+  SelectSettingsTab(Index: int);
+  // Open or dismiss the compact drawer.
+  SetDrawer(Open: bool);
+  // Replace all playlist summaries after a consistent background read.
+  Received(Items: I.ImmutableArray<Lists.Summary>);
+  // Keep cached data and report a background failure.
+  Failed(Message: string);
+end variant;
+
+// Returns the stable persisted/navigation key for `Destination`.
+public function Key(Destination: Route): string;
+begin
+  case Destination of
+    when Route.Page(const Value: Page):
+      return Value.ToString().ToLowerInvariant();
+    when Route.Playlist(const Identity: Lists.Key):
+      return 'playlist:' + Identity.Storage.ToString().ToLowerInvariant() + ':' + Identity.Id;
+  end case;
+end function;
+
+// Parses a stored `Value`; malformed/unknown destinations return null.
+public function Parse(Value: string): Route?;
+begin
+  for Item: Page in [
+    Page.Music,
+    Page.Albums,
+    Page.Artists,
+    Page.Genres,
+    Page.Ratings,
+    Page.Settings
+  ] do
+    if Value = Item.ToString().ToLowerInvariant() then
+      return Route.Page(Item);
+    end if;
+  end for;
+  const Parts: array of string := Value.Split(#58);
+  var Id: Sys.Guid := Sys.Guid.Empty;
+  if Parts.Length = 3 and Parts[
+    0
+  ] = 'playlist' and (Parts[1] = 'file' or Parts[1] = 'local') and Sys.Guid.TryParseExact(
+    Parts[2],
+    'N',
+    out Id
+  )
+  then
+    return Route.Playlist(
+      new Lists.Key(
+        if Parts[1] = 'file' then
+          Lists.Origin.File
+        else
+          Lists.Origin.Local
+        end if, Id.ToString('N')
+      )
+    );
+  end if;
+
+  return null;
+end function;
+
+// Finds `Identity` by storage and UUID, retaining same-name lists independently.
+public function Find(Items: I.ImmutableArray<Lists.Summary>; Identity: Lists.Key): Lists.Summary?;
+begin
+  for Item: Lists.Summary in Items do
+    if Item.Identity = Identity then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+end unit;

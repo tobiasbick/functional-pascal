@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Settings.Update;
 
 uses
   FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Ui.App.Model as M,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
@@ -58,14 +58,6 @@ begin
   const Draft: Locations.MusicSource? := Current.Draft;
   const Settings: M.Preferences := Current.Settings;
   case Message of
-    when M.Msg.OpenSettings:
-      return Current with
-        Tab := Current.Tab ?? 0;
-      end with;
-    when M.Msg.SelectTab(const Index: int):
-      return Current with
-        Tab := Index;
-      end with;
     when M.Msg.SetAppearance(const Choice: Switchers.Selection):
       return Persist(
         Current, Settings with

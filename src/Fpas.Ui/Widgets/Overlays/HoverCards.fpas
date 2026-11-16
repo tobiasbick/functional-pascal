@@ -19,7 +19,7 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable card identity.
-// - `Trigger`: A single native interactive control, such as a link.
+// - `Trigger`: A single native interactive control or a card with Hoverable enabled.
 // - `Content`: Nonmodal view shown in the card.
 // - `Settings`: Optional placement, sizing and input settings.
 // ## Returns

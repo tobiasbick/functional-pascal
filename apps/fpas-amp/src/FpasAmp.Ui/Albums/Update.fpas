@@ -1,0 +1,219 @@
+// Two owned loaders service visible albums, replacing and cancelling stale ranges.
+unit FpasAmp.Ui.Albums.Update;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
+  FpasAmp.Library.Albums.Access as Access, FpasAmp.Imaging as Images,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Failure(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.Failed(Error.Message);
+end function;
+
+function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index].Id <> Right[Index].Id or Left[Index].Revision <> Right[Index].Revision then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Applies `Message` using borrowed `Service`; owned commands do not access the UI.
+// Close cancels both workers; stale generations cannot reintroduce released pixels.
+public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?): A.Transition<M.State, M.Msg>;
+begin
+  case Message of
+    when M.Msg.Open:
+      if Service = null then
+        return new A.Transition<M.State, M.Msg>(new M.State(Loaded := true), []);
+      end if;
+
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          First := -1;
+          Last := -1;
+        end with,
+        [
+          A.StartBackground<M.Msg>(
+            'observe',
+            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+              await Service.ObserveAsync(
+                function(Items: I.ImmutableArray<Albums.Album>): Tasks.Task => Post(
+                  M.Msg.Received(Items)
+                ),
+                Cancellation
+              ).ConfigureAwait(false);
+            end function, Failure
+          )
+        ]
+      );
+    when M.Msg.Close:
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+          First := -1;
+          Last := -1;
+          Generation := Current.Generation + 1L;
+        end with,
+        [A.CancelBackground<M.Msg>('observe'), A.CancelBackground<M.Msg>('images')]
+      );
+    when M.Msg.Received(const Items: I.ImmutableArray<Albums.Album>):
+      if SameArtwork(Current.Items, Items) then
+        return new A.Transition<M.State, M.Msg>(
+          Current with
+            Items := Items;
+            Loaded := true;
+            Error := null;
+          end with, []
+        );
+      end if;
+
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Items := Items;
+          Loaded := true;
+          Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+          First := -1;
+          Last := -1;
+          Generation := Current.Generation + 1L;
+          Error := null;
+        end with,
+        [A.CancelBackground<M.Msg>('images')]
+      );
+    when M.Msg.Visible(const First: int, const Last: int):
+      const Start: int := Sys.Math.Clamp(First, 0, Current.Items.Length);
+      const Finish: int := Sys.Math.Clamp(Last, Start, Current.Items.Length);
+      if Service = null or (Start = Current.First and Finish = Current.Last) then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+      const Next: M.State := Current with
+        First := Start;
+        Last := Finish;
+        Generation := Current.Generation + 1L;
+        Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+      end with;
+      return new A.Transition<M.State, M.Msg>(
+        Next, [
+          A.StartBackground<M.Msg>(
+            'images',
+            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task
+              async function Load(Offset: int): Tasks.Task;
+              begin
+                var Index: int := Start + Offset;
+                while Index < Finish do
+                  Cancellation.ThrowIfCancellationRequested();
+                  const Album: Albums.Album := Current.Items[Index];
+                  var Image: Images.Bitmap? := null;
+                  try
+                    Image := await Service.ThumbnailAsync(
+                      Album,
+                      Cancellation
+                    ).ConfigureAwait(false);
+                  catch Invalid: Sys.OperationCanceledException do
+                    raise;
+                  catch Invalid: IO.IOException do
+                  catch Invalid: Sys.UnauthorizedAccessException do
+                  catch Invalid: Sys.ArgumentException do
+                  end try;
+
+                  await Post(M.Msg.Image(Next.Generation, Album.Id, Image)).ConfigureAwait(false);
+                  Index := Index + 2;
+                end while;
+              end function;
+            begin
+              await Tasks.Task.WhenAll(Load(0), Load(1)).ConfigureAwait(false);
+            end function, Failure
+          )
+        ]
+      );
+    when M.Msg.Image(const Generation: long, const Id: string, const Value: Images.Bitmap?):
+      if Generation <> Current.Generation then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Images := Current.Images.SetItem(Id, Value);
+        end with, []
+      );
+    when M.Msg.Failed(const Text: string):
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Error := Text;
+          Loaded := true;
+        end with, []
+      );
+    when M.Msg.Rate(const Id: string, const Value: int):
+      if Service = null or Value < 0 or Value > 10 or Current.Saving.Contains(Id) then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+      var Exists: bool := false;
+      for Item: Albums.Album in Current.Items do
+        if Item.Id = Id then
+          Exists := true;
+          break;
+        end if;
+      end for;
+
+      if not Exists then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+      const Rating: int? := if Value = 0 then
+        null
+      else
+        Value
+      end if;
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Saving := Current.Saving.Add(Id);
+          Error := null;
+        end with, [
+          A.StartBackground<M.Msg>(
+            'rating-' + Id,
+            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+              await Service.SetRatingAsync(Id, Rating, Cancellation).ConfigureAwait(false);
+              await Post(M.Msg.Rated(Id, Rating)).ConfigureAwait(false);
+            end function,
+            function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(Id, Error.Message)
+          )
+        ]
+      );
+    when M.Msg.Rated(const Id: string, const Value: int?):
+      var Items: I.ImmutableArray<Albums.Album> := Current.Items;
+      for Index: int := 0 to Items.Length - 1 do
+        if Items[Index].Id = Id then
+          Items := Items.SetItem(
+            Index, Items[Index] with
+              Rating := Value;
+            end with
+          );
+          break;
+        end if;
+      end for;
+
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Items := Items;
+          Saving := Current.Saving.Remove(Id);
+        end with, []
+      );
+    when M.Msg.RatingFailed(const Id: string, const Text: string):
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Saving := Current.Saving.Remove(Id);
+          Error := Text;
+        end with, []
+      );
+  end case;
+end function;
+
+end unit;

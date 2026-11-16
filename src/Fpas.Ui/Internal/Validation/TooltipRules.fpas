@@ -1,7 +1,8 @@
 unit Fpas.Ui.Internal.Validation.TooltipRules;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Rules as R, System as Sys,
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Rules as R,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, System as Sys,
   System.Collections.Generic as Lists, System.Text as Text;
 
 // Checks whether a node is a button or a button with a tooltip.
@@ -57,6 +58,8 @@ end function;
 public function HasAnchor<TMsg>(Node: E.Element<TMsg>; Subviews: Lists.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>): bool;
 begin
   case Node of
+    when E.Element.Card(_, _, const Settings: Cards.Options, const Activate: Sys.Func<TMsg>?):
+      return Settings.Hoverable or Activate <> null;
     when E.Element.LinkAction(_, _, _, _), E.Element.Canvas(_, _, _, _):
       return true;
     when E.Element.CheckboxAction(

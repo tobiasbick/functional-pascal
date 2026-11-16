@@ -5,6 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
     <ProjectReference Include="../../../../src/Fpas.Atl/Fpas.Atl.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>

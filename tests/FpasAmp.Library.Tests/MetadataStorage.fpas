@@ -13,6 +13,25 @@ uses
 
 // Verifies preservation of index/user data and query behavior rather than parser internals.
 public type MetadataStorageTests = record
+  // Repeated scan upserts coalesce into one pending read while file stamps keep changing.
+  [X.FactAttribute]
+  public procedure ChangedFileCoalescesPendingReads();
+  begin
+    using const Connection: Db.SqliteConnection := Sql.Open(':memory:');
+    Schema.Ensure(Connection);
+    for Stamp: int := 1 to 3 do
+      Sql.Execute(
+        Connection,
+        'INSERT INTO files(path_key,path,directory_key,size,modified_utc) VALUES(''file'',''file'',''directory'',1,$stamp)' +
+        ' ON CONFLICT(path_key) DO UPDATE SET modified_utc=excluded.modified_utc;',
+        null, ['$stamp'], [Stamp]
+      );
+      X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM content_jobs;'));
+    end for;
+
+    X.Assert.Equal<long>(3L, D.Number(Connection, 'SELECT modified_utc FROM files;'));
+  end procedure;
+
   // An existing presence-only index is upgraded without replacing paths or row identities.
   [X.FactAttribute]
   public procedure PresenceSchemaUpgradeKeepsItsRows();
@@ -29,7 +48,7 @@ public type MetadataStorageTests = record
     );
     Schema.Ensure(Connection);
     X.Assert.Equal<long>(42L, D.Number(Connection, 'SELECT id FROM files;'));
-    X.Assert.Equal<long>(3L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal<long>(4L, D.Number(Connection, 'PRAGMA user_version;'));
     X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM metadata;'));
     X.Assert.Equal<long>(
       1L,

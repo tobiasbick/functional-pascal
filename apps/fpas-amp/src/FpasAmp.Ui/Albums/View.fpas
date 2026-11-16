@@ -1,0 +1,150 @@
+// CUI's virtual rows contain ordinary native grids of cover/title cards.
+unit FpasAmp.Ui.Albums.View;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Library,
+  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
+  FpasAmp.Ui.Albums.Status as Status,
+  FpasAmp.Imaging as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Collections.VirtualLists as Virtual, Fpas.Ui.Widgets.Containers.Grids as Grids,
+  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Overlays.HoverCards as Hover,
+  Fpas.Ui.Widgets.Inputs.Ratings as Ratings,
+  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  System as Sys, System.Collections.Generic as C;
+
+// Native virtual viewport identity, also used by post-layout range observation.
+public const GridId: string := 'album-grid';
+
+// Returns responsive columns for measured content `Width`, without native duplication.
+public function Columns(Width: int): int;
+begin
+  return Sys.Math.Clamp((Width + 16) div 280, 1, 8);
+end function;
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Tile(Current: M.State; Album: Library.Album; Edge: int; RowHeight: int): E.Element<M.Msg>;
+begin
+  const Image: Imaging.Bitmap? := if Current.Images.ContainsKey(Album.Id) then
+    Current.Images[Album.Id]
+  else
+    null
+  end if;
+  const Card: E.Element<M.Msg> := Cards.Card<M.Msg>(
+    'album-' + Album.Id, [
+      Ratings.Rating<M.Msg>(
+        'album-rating-' + Album.Id, 'Rate ' + Album.Title + ' (1–10)', Album.Rating ?? 0,
+        function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value),
+        Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id)
+      ),
+      Artwork.Build('cover-' + Album.Id, Image, Edge),
+      E.Column<M.Msg>(
+        new L.Flow(Gap := Points(4), Align := L.Alignment.Center),
+        E.Styled<M.Msg>(
+          E.Styled<M.Msg>(E.Text<M.Msg>(Album.Title), S.Role.Strong),
+          S.Role.SingleLine
+        ),
+        Texts.Text<M.Msg>(
+          Details.Songs(Album.Tracks),
+          Texts.Appearance.Muted
+        )
+      )
+    ],
+    new Cards.Options(
+      Width := L.Extent.Fill,
+      Height := L.Extent.Fixed(L.Measure.Logical(RowHeight - 16)),
+      Padding := 12.0F,
+      Gap := 8.0F,
+      Align := L.Alignment.Center,
+      Hoverable := true
+    )
+  );
+  return Hover.HoverCard<M.Msg>(
+    'album-details-' + Album.Id, Card, Details.Build(Album, Image),
+    new Hover.Options(Width := 380.0F, Delay := 0.7F)
+  );
+end function;
+
+// Builds a pure responsive grid for `Current`. `Width` is the available main area;
+// `Padding` matches the shell viewport. Thumbnail work is requested after layout.
+public function Build(Current: M.State; Width: int; Padding: int): E.Element<M.Msg>;
+  function Row(Index: int): E.Element<M.Msg>;
+  begin
+    const Available: int := Sys.Math.Max(1, Width - Padding * 2);
+    const Count: int := Columns(Available);
+    const Edge: int := Sys.Math.Clamp((Available - (Count - 1) * 16) div Count - 24, 1, 256);
+    const RowHeight: int := Edge + 120;
+    const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+    for Position: int := Index * Count to Sys.Math.Min(
+      Current.Items.Length,
+      (Index + 1) * Count
+    ) - 1 do
+      Cells.Add(Tile(Current, Current.Items[Position], Edge, RowHeight));
+    end for;
+
+    return Grids.Grid<M.Msg>(
+      new Grids.Options(Columns := Count, Gap := Points(16)),
+      Cells.ToArray()
+    );
+  end function;
+begin
+  const Available: int := Sys.Math.Max(1, Width - Padding * 2);
+  const Count: int := Columns(Available);
+  const Edge: int := Sys.Math.Clamp((Available - (Count - 1) * 16) div Count - 24, 1, 256);
+  const RowHeight: int := Edge + 120;
+  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+    [Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne)]
+  );
+  const Error: string? := Current.Error;
+  if Error <> null then
+    Parts.Add(
+      Alerts.Alert<M.Msg>(
+        'album-error',
+        'Albums unavailable',
+        new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
+      )
+    );
+  end if;
+
+  if Current.Items.Length = 0 then
+    Parts.Add(
+      Empty.EmptyState<M.Msg>(
+        'albums-empty', if Current.Loaded then
+          'No albums yet'
+        else
+          'Loading albums…'
+        end if,
+        new Empty.Options(
+          Icon := Sys.Char.ConvertFromUtf32($E1C1),
+          Description := 'Albums appear as your music is scanned.'
+        )
+      )
+    );
+  else
+    Parts.Add(
+      E.Size<M.Msg>(
+        Virtual.VirtualList<M.Msg>(
+          GridId, (Current.Items.Length + Count - 1) div Count,
+          cast<float>(RowHeight), L.Extent.Fill, Row
+        ), new L.Flex(Basis := L.Extent.Fill)
+      )
+    );
+  end if;
+
+  return E.Column<M.Msg>(
+    new L.Flow(Align := L.Alignment.Stretch),
+    E.Size<M.Msg>(
+      E.Column<M.Msg>(
+        new L.Flow(Padding := Points(Padding), Gap := Points(20), Align := L.Alignment.Stretch),
+        Parts.ToArray()
+      ), new L.Flex(Basis := L.Extent.Fill)
+    ),
+    Status.Build(Current)
+  );
+end function;
+
+end unit;

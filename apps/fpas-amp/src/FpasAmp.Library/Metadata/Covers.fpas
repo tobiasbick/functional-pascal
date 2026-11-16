@@ -14,6 +14,8 @@ public type Cover = record
   public MimeType: string;
   // Original encoded image bytes, limited to sixteen MiB.
   public Data: array of byte;
+  // Whether ATL marked the selected picture as a front cover.
+  public Front: bool := false;
 end record;
 
 // Returns the cover cache beside `UserDatabase`, outside the reconstructible index.
@@ -25,7 +27,9 @@ end function;
 // Reads the first embedded picture for current `FileId`, or null when absent.
 // `Database`/`UserDatabase` belong to a validated session. Call on a background task.
 // Cache entries are addressed by SHA-256; cached artwork remains usable offline.
-public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Cover?>;
+// `UseCache` can be disabled by album thumbnail resolution to avoid duplicating
+// original artwork for every track; callers then own their thumbnail cache.
+public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken; UseCache: bool := true): Tasks.Task<Cover?>;
 begin
   Cancellation.ThrowIfCancellationRequested();
   var Path: string := '';
@@ -63,7 +67,7 @@ begin
   end for;
   const CacheDirectory: string := DirectoryPath(UserDatabase);
   const Cache: string := IO.Path.Combine(CacheDirectory, Hash + '.json');
-  if IO.File.Exists(Cache) and new IO.FileInfo(Cache).Length <= 23000000L then
+  if UseCache and IO.File.Exists(Cache) and new IO.FileInfo(Cache).Length <= 23000000L then
     try
       const Cached: Cover? := J.JsonSerializer.Deserialize<Cover>(
         await IO.File.ReadAllTextAsync(Cache, Cancellation).ConfigureAwait(false)
@@ -82,20 +86,40 @@ begin
   const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
   var Value: Cover? := null;
   if Pictures <> null and Pictures.Count > 0 then
-    const Picture: A.PictureInfo? := Pictures[0];
+    var Selected: A.PictureInfo? := null;
+    for Item: A.PictureInfo? in Pictures do
+      if Item <> null then
+        if Selected = null or Item.PicType = A.PictureInfo.PIC_TYPE.Front then
+          Selected := Item;
+        end if;
+
+        if Item.PicType = A.PictureInfo.PIC_TYPE.Front then
+          break;
+        end if;
+      end if;
+    end for;
+    const Picture: A.PictureInfo? := Selected;
     if Picture <> null then
       const Bytes: array of byte := Picture.PictureData ?? Sys.Array.Empty<byte>();
       if Bytes.Length > 16777216 then
         raise new IO.InvalidDataException('Embedded artwork exceeds sixteen MiB.');
       end if;
 
-      Value := new Cover(Picture.MimeType ?? 'application/octet-stream', Bytes);
+      Value := new Cover(
+        Picture.MimeType ?? 'application/octet-stream',
+        Bytes,
+        Picture.PicType = A.PictureInfo.PIC_TYPE.Front
+      );
     end if;
   end if;
 
   Cancellation.ThrowIfCancellationRequested();
   if not Reading.Matches(Path, Size, Modified) then
     raise new IO.IOException('The file changed while reading artwork.');
+  end if;
+
+  if not UseCache then
+    return Value;
   end if;
 
   discard IO.Directory.CreateDirectory(CacheDirectory);

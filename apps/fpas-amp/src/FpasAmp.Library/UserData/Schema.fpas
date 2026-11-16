@@ -20,7 +20,7 @@ begin
       []
     );
     const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-    if Version < 0 or Version > 2 then
+    if Version < 0 or Version > 3 then
       raise new Sys.InvalidOperationException(
         'Unsupported user database schema. The database was left intact.'
       );
@@ -34,7 +34,9 @@ begin
       'rating INTEGER CHECK(rating IS NULL OR rating BETWEEN 1 AND 10));' +
       'CREATE INDEX IF NOT EXISTS tracks_hash ON tracks(sha256,size);' +
       'CREATE INDEX IF NOT EXISTS tracks_rating ON tracks(rating,id);' +
-      'PRAGMA user_version=2;', Transaction, [], []
+      'CREATE TABLE IF NOT EXISTS album_ratings(album_id TEXT PRIMARY KEY,' +
+      'rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 10));' +
+      'PRAGMA user_version=3;', Transaction, [], []
     );
     Playlists.UserLists(Connection, Transaction);
     Transaction.Commit();

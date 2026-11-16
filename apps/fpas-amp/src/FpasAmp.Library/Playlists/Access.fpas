@@ -6,6 +6,7 @@ uses
   FpasAmp.Library.Playlists.Persistence.Queries as Queries,
   FpasAmp.Library.Playlists.Persistence.UserLists as Lists,
   FpasAmp.Library.Playlists.Internal.Transfer as Transfer,
+  FpasAmp.Library.Playlists.Internal.Observing as Observing,
   System as Sys, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
 
 // All operations await initialization and keep database/file I/O off the caller.
@@ -20,6 +21,24 @@ public type Session = record
   public static function Create(Database: string; Users: string; Ready: Tasks.Task; Lifetime: T.CancellationToken): Session;
   begin
     return new Session(Database, Users, Ready, Lifetime);
+  end function;
+
+  // Publishes all changed playlist summaries through awaited `Publish`, including
+  // the first empty snapshot. Cancellation closes the borrowed observation lifetime;
+  // blocking database reads and polling stay off the caller's thread.
+  public async function ObserveAsync(Publish: function(I.ImmutableArray<M.Summary>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Observing.Run(self.Database, self.Users, Publish, Linked.Token),
+        Linked.Token
+      )
+    ).ConfigureAwait(false);
   end function;
 
   // Lists a bounded summary page selected by `Request`; cancellation owns this call.

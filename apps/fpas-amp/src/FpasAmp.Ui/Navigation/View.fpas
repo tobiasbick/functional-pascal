@@ -1,0 +1,250 @@
+// Existing CUI navigation, scrolling and empty-state widgets compose the app shell.
+unit FpasAmp.Ui.Navigation.View;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Navigation.Model as M,
+  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Library.Sources as Sources,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Styles,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.IO as IO,
+  System.Collections.Generic as C;
+
+// Desktop sidebar width, in logical units.
+public const Width: int := 224;
+// Below this width the same navigation is presented in a native CUI sheet.
+public const DrawerBreakpoint: int := 760;
+
+// Returns the visible label of static `Page`.
+public function Title(Page: M.Page): string;
+begin
+  return Page.ToString();
+end function;
+
+function Icon(Page: M.Page): string;
+begin
+  return Sys.Char.ConvertFromUtf32(
+    case Page of
+      when M.Page.Music: $E122;
+      when M.Page.Albums: $E1C1;
+      when M.Page.Artists: $E1A4;
+      when M.Page.Genres: $E17F;
+      when M.Page.Ratings: $E176;
+      when M.Page.Settings: $E154;
+      else $E0AD;
+    end case
+  );
+end function;
+
+function Destination(Page: M.Page): Nav.Item<App.Msg>;
+begin
+  const Route: M.Route := M.Route.Page(Page);
+  return new Nav.Item<App.Msg>(
+    M.Key(Route),
+    Title(Page),
+    App.Msg.Navigation(M.Msg.Select(Route)),
+    Icon := Icon(Page)
+  );
+end function;
+
+function SourceLabel(Item: Lists.Summary; Current: App.State): string;
+begin
+  const Path: string? := Item.Path;
+  if Path = null then
+    return 'Local';
+  end if;
+
+  for Source: Sources.MusicSource in Current.Settings.MusicSources do
+    if Sources.Within(Path, Source.Path) then
+      const Relative: string := IO.Path.GetRelativePath(
+        Source.Path,
+        IO.Path.GetDirectoryName(Path) ?? Source.Path
+      );
+      return Source.Name + if Relative = '.' then
+        ''
+      else
+        '/' + Relative
+      end if;
+    end if;
+  end for;
+
+  return IO.Path.GetDirectoryName(Path) ?? '';
+end function;
+
+function Items(Current: App.State): E.Element<App.Msg>;
+begin
+  const Active: string := M.Key(Current.Navigation.Active);
+  const Playlists: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>();
+  const Names: C.Dictionary<string, int> := new C.Dictionary<string, int>(
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  for Item: Lists.Summary in Current.Navigation.Playlists do
+    Names[Item.Name] := if Names.ContainsKey(Item.Name) then
+      Names[Item.Name] + 1
+    else
+      1
+    end if;
+  end for;
+
+  for Item: Lists.Summary in Current.Navigation.Playlists do
+    const Route: M.Route := M.Route.Playlist(Item.Identity);
+    Playlists.Add(
+      new Nav.Item<App.Msg>(
+        M.Key(Route), Item.Name, App.Msg.Navigation(M.Msg.Select(Route)),
+        Icon := Sys.Char.ConvertFromUtf32($E106), Badge := if Names[Item.Name] > 1 then
+          SourceLabel(Item, Current)
+        else
+          ''
+        end if
+      )
+    );
+  end for;
+
+  if Playlists.Count = 0 then
+    Playlists.Add(
+      new Nav.Item<App.Msg>(
+        'playlists-empty',
+        if Current.Navigation.Loaded then
+          'No playlists found'
+        else
+          'Loading playlists…'
+        end if,
+        App.Msg.Navigation(M.Msg.SetDrawer(false)), Enabled := false
+      )
+    );
+  end if;
+
+  return Nav.Sidebar<App.Msg>(
+    'navigation',
+    [
+      new Nav.Section<App.Msg>(
+        'Library',
+        [
+          Destination(M.Page.Music),
+          Destination(M.Page.Albums),
+          Destination(M.Page.Artists),
+          Destination(M.Page.Genres),
+          Destination(M.Page.Ratings)
+        ]
+      ),
+      new Nav.Section<App.Msg>('Playlists', Playlists.ToArray(), GapBefore := 14)
+    ],
+    if Active = 'settings' or (not Current.Navigation.Loaded and Active.StartsWith(
+      'playlist:'
+    ))
+    then
+      null
+    else
+      Active
+    end if
+  );
+end function;
+
+// Builds scrollable Library/Playlists and pinned Settings for `Current`/`Theme`.
+// Optional `DrawerHeight` bounds the native sheet body at compact window sizes.
+public function Sidebar(Current: App.State; Theme: Themes.Theme; DrawerHeight: int? := null): E.Element<App.Msg>;
+begin
+  const Navigation: E.Element<App.Msg> := E.Size<App.Msg>(
+    E.ScrollView<App.Msg>('navigation-scroll', Items(Current)), new L.Flex(Basis := L.Extent.Fill)
+  );
+  const Footer: E.Element<App.Msg> := Nav.Sidebar<App.Msg>(
+    'settings-navigation',
+    [new Nav.Section<App.Msg>('', [Destination(M.Page.Settings)])],
+    if M.Key(Current.Navigation.Active) = 'settings' then
+      'settings'
+    else
+      null
+    end if
+  );
+  if DrawerHeight <> null then
+    return E.Size<App.Msg>(
+      E.Column<App.Msg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8))),
+        Navigation,
+        Footer
+      ),
+      new L.Flex(
+        Basis := L.Extent.Fixed(L.Measure.Logical(Sys.Math.Max(0, DrawerHeight.Value - 110)))
+      )
+    );
+  end if;
+
+  return E.Column<App.Msg>(
+    new L.Flow(
+      Padding := L.Spacing.Fixed(L.Measure.Logical(12)),
+      Gap := L.Spacing.Fixed(L.Measure.Logical(16)),
+      Align := L.Alignment.Stretch,
+      Background := Theme.Colors.SurfaceMuted
+    ),
+    E.Row<App.Msg>(
+      new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(4))),
+      Texts.Text<App.Msg>('FPas-Amp', Texts.Appearance.HeadingThree)
+    ),
+    Navigation, Footer
+  );
+end function;
+
+// Builds an actual native placeholder for the selected Library or Playlist route.
+// `Padding` follows the measured viewport; playlist failures remain informative.
+public function Placeholder(Current: App.State; Padding: int): E.Element<App.Msg>;
+begin
+  var Heading: string := 'Music';
+  var Description: string := 'Your music will appear here.';
+  var Glyph: string := Icon(M.Page.Music);
+  var Error: string? := Current.Navigation.Error;
+  case Current.Navigation.Active of
+    when M.Route.Page(const Page: M.Page):
+      Heading := Title(Page);
+      Glyph := Icon(Page);
+    when M.Route.Playlist(const Identity: Lists.Key):
+      const Found: Lists.Summary? := M.Find(Current.Navigation.Playlists, Identity);
+      Heading := if Found <> null then
+        Found.Name
+      else
+        'Playlist'
+      end if;
+      Description := if Found <> null then
+        'Playlist view is coming soon.'
+      else
+        'Loading the selected playlist…'
+      end if;
+      Error := if Found <> null then
+        Found.Error ?? Error
+      else
+        Error
+      end if;
+      Glyph := Sys.Char.ConvertFromUtf32($E106);
+  end case;
+  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
+    [Texts.Text<App.Msg>(Heading, Texts.Appearance.HeadingOne)]
+  );
+  if Error <> null then
+    Parts.Add(
+      Alerts.Alert<App.Msg>(
+        'navigation-error',
+        'Playlist unavailable',
+        new Alerts.Options(Tone := Styles.Tone.Warning, Description := Error)
+      )
+    );
+  end if;
+
+  Parts.Add(
+    Empty.EmptyState<App.Msg>(
+      'page-placeholder',
+      'Coming soon',
+      new Empty.Options(Icon := Glyph, Description := Description)
+    )
+  );
+  return E.ScrollView<App.Msg>(
+    'page-scroll', E.Column<App.Msg>(
+      new L.Flow(
+        Padding := L.Spacing.Fixed(L.Measure.Logical(Padding)),
+        Gap := L.Spacing.Fixed(L.Measure.Logical(20)),
+        Align := L.Alignment.Stretch
+      ),
+      Parts.ToArray()
+    )
+  );
+end function;
+
+end unit;

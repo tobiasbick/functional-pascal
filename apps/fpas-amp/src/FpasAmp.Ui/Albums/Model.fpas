@@ -1,0 +1,50 @@
+// Slice-owned album headers and only the thumbnails needed by the current viewport.
+unit FpasAmp.Ui.Albums.Model;
+
+uses
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  System.Collections.Immutable as I;
+
+// Owner-thread album view state; pixels are never mutated after publication.
+public type State = record
+  // Lightweight headers for all albums, sorted by the library.
+  public Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  // Whether the initial background query completed.
+  public Loaded: bool := false;
+  // Thumbnail values for realized albums; null means a confirmed missing image.
+  public Images: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+  // First requested album index, or -1 before layout observation.
+  public First: int := -1;
+  // Exclusive requested end index.
+  public Last: int := -1;
+  // Incremented for each data/range change to reject obsolete image completions.
+  public Generation: long := 0L;
+  // Recoverable background read error.
+  public Error: string? := null;
+  // Albums whose independent user rating is being saved in background work.
+  public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+end record;
+
+// Album lifecycle and immutable background publications.
+public type Msg = variant
+  // Enter the view and observe headers.
+  Open;
+  // Stop observations/image work and release decoded images.
+  Close;
+  // Replace album headers after a catalogue change.
+  Received(Items: I.ImmutableArray<Library.Album>);
+  // Realized album indices reported after native layout, never from the pure row factory.
+  Visible(First: int; Last: int);
+  // One completed thumbnail request, scoped to a generation.
+  Image(Generation: long; Id: string; Value: Images.Bitmap?);
+  // Report a background query failure.
+  Failed(Message: string);
+  // Propose a whole-star rating; zero clears the album rating.
+  Rate(Id: string; Value: int);
+  // Confirm durable persistence, without modifying track ratings.
+  Rated(Id: string; Value: int?);
+  // Restore the control after a failed write and show the error.
+  RatingFailed(Id: string; Message: string);
+end variant;
+
+end unit;

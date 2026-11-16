@@ -167,6 +167,8 @@ using Start, Center, End, Between or Around.
 - `Fpas.Ui.Widgets.Containers.Cards.Card` draws a native surface around child elements. Options
   set dimensions, padding, gap, axis, wrapping, muted fill and selection.
   An optional activation message makes the card hoverable and focusable.
+  `Hoverable := true` enables CUI's same hover/focus behavior without a click
+  action, for example when the card anchors informational hover content.
 - `Fpas.Ui.Widgets.Feedback.Badges.Badge` draws a literal label with an optional glyph, dot,
   solid fill and semantic tone.
 - `Fpas.Ui.Widgets.Charts.Metrics.Metric` shows a formatted value with an optional delta and
@@ -486,7 +488,8 @@ click, Enter or Space. The application handles navigation in its update.
 round or rounded-square shape and the presence dot use native CUI options.
 Use online, busy or away for colored presence. An empty status hides the dot.
 
-`Fpas.Ui.Widgets.Overlays.HoverCards.HoverCard` attaches a nonmodal body to one interactive control. CUI
+`Fpas.Ui.Widgets.Overlays.HoverCards.HoverCard` attaches a nonmodal body to one interactive control
+or a card with `Hoverable := true`. CUI
 opens it after the hover delay and keeps it open while the pointer is over
 the trigger or card. Escape closes it until the pointer leaves the trigger.
 Width and preferred placement are optional. All three widgets require

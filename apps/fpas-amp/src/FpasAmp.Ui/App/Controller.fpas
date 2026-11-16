@@ -1,12 +1,16 @@
 // MVU boundary: settings stay synchronous; library work is owned and asynchronous.
-unit FpasAmp.Ui.Settings.Controller;
+unit FpasAmp.Ui.App.Controller;
 
 uses
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Update as Settings,
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Settings.Update as Settings,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.Update as Navigation,
+  FpasAmp.Library.Playlists.Model as Playlists, System.Collections.Immutable as I,
   FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
   FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
+  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Update as AlbumUpdate,
+  FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
   System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -17,6 +21,24 @@ end function;
 function Stopped(Error: Sys.Exception): M.Msg;
 begin
   return M.Msg.LibraryStopped(Error.Message);
+end function;
+
+function Album(Current: M.State; Message: AlbumModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+begin
+  const Tags: Metadata.Session? := Library.Metadata;
+  const Service: AlbumAccess.Session? := if Tags <> null then
+    Tags.Albums
+  else
+    null
+  end if;
+  const Child: Mvu.Transition<AlbumModel.State, M.Msg> := Composition.MapTransition<AlbumModel.State, AlbumModel.Msg, M.Msg>(
+    AlbumUpdate.Apply(Current.Albums, Message, Service), M.Msg.Albums, 'albums'
+  );
+  return new Mvu.Transition<M.State, M.Msg>(
+    Current with
+      Albums := Child.Model;
+    end with, Child.Commands
+  );
 end function;
 
 function Watch(Library: Monitoring.Session): array of Mvu.Command<M.Msg>;
@@ -53,10 +75,37 @@ begin
   if Tags <> null then
     Commands.Add(
       Mvu.StartBackground<M.Msg>(
+        'navigation-playlists',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          await Tags.Playlists.ObserveAsync(
+            function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
+              M.Msg.Navigation(Nav.Msg.Received(Items))
+            ),
+            Cancellation
+          ).ConfigureAwait(false);
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Navigation(Nav.Msg.Failed(Error.Message))
+      )
+    );
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
         'library-metadata',
         async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
           await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
         end function, Stopped
+      )
+    );
+  end if;
+
+  if Tags = null then
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
+        'navigation-playlists',
+        async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
+          await Post(
+            M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
+          ).ConfigureAwait(false);
+        end function, Failure
       )
     );
   end if;
@@ -71,8 +120,40 @@ begin
   var Next: M.State := Current;
   var Commands: array of Mvu.Command<M.Msg> := [];
   case Message of
+    when M.Msg.Navigation(const NavigationMessage: Nav.Msg):
+      Next := Current with
+        Navigation := Navigation.Apply(Current.Navigation, NavigationMessage);
+      end with;
+      const Before: bool := Nav.Key(Current.Navigation.Active) = 'albums';
+      const After: bool := Nav.Key(Next.Navigation.Active) = 'albums';
+      if Before <> After then
+        const Transition: Mvu.Transition<M.State, M.Msg> := Album(
+          Next, if After then
+            AlbumModel.Msg.Open
+          else
+            AlbumModel.Msg.Close
+          end if, Library
+        );
+        Next := Transition.Model;
+        Commands := Transition.Commands;
+      end if;
+    when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):
+      if Nav.Key(Current.Navigation.Active) = 'albums' then
+        return Album(Current, AlbumMessage, Library);
+      end if;
     when M.Msg.WatchLibrary:
       Commands := Watch(Library);
+      if Nav.Key(Current.Navigation.Active) = 'albums' then
+        const Transition: Mvu.Transition<M.State, M.Msg> := Album(
+          Current,
+          AlbumModel.Msg.Open,
+          Library
+        );
+        Next := Transition.Model;
+        const All: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        All.AddRange(Transition.Commands);
+        Commands := All.ToArray();
+      end if;
     when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
       Next := State.Receive(Current, Value);
     when M.Msg.ProgressReceived(const Value: Progress.Snapshot):

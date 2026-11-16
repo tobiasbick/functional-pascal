@@ -1,147 +1,114 @@
-// The FPas-Amp desktop window.
+// Responsive native shell; all destinations share the same MVU navigation state.
 unit FpasAmp.Ui.Shell;
 
 uses
-  FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.General as General,
-  FpasAmp.Ui.Settings.Library as LibraryView, FpasAmp.Ui.Settings.Model as M,
-  FpasAmp.Ui.Settings.Controller as Updates, FpasAmp.Library.Inventory.Monitoring as Monitoring,
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Layout as L,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
+  FpasAmp.Library.Sources as Locations, FpasAmp.Library.Inventory.Monitoring as Monitoring,
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Controller as Updates,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.View as NavView,
+  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.View as AlbumView,
+  Fpas.Ui.Composition as Composition,
+  FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.View as SettingsView,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 
-const DisplayName: string := 'FPas-Amp';
-const SettingsLabel: string := 'Settings';
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-
-function Points(Value: int): L.Spacing;
-begin
-  return L.Spacing.Fixed(L.Measure.Logical(Value));
-end function;
 
 function Fixed(Width: int): L.Flex;
 begin
   return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Width)));
 end function;
 
-function SettingsPage(Current: M.State; Tab: int; Theme: Themes.Theme; Padding: int): E.Element<M.Msg>;
+// Builds the pure app view from `Current`, measured `Viewport` and resolved `Theme`.
+// The native session owns all input, layout and background effects separately.
+public function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<M.Msg>;
 begin
-  const Header: E.Element<M.Msg> := Tabs.Tabs<M.Msg>(
-    'settings-tabs', [new Tabs.Item('General'), new Tabs.Item('Library')], Tab, M.Msg.SelectTab
-  );
-  const Body: E.Element<M.Msg> := if Tab = 0 then
-    General.View(Current, Theme)
+  const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
+    600
   else
-    LibraryView.View(Current, Theme)
+    1000
   end if;
-  const Error: string? := Current.TerminalError ?? Current.LibraryError;
-  const MainBody: E.Element<M.Msg> := if Error = null then
-    Body
+  const Compact: bool := Width < NavView.DrawerBreakpoint;
+  var Settings: bool := false;
+  case Current.Navigation.Active of
+    when Nav.Route.Page(Nav.Page.Settings):
+      Settings := true;
+    else
+  end case;
+  const Padding: int := if Compact then
+    16
   else
+    32
+  end if;
+  const Page: E.Element<M.Msg> := if Settings then
+    SettingsView.Build(Current, Theme, Padding)
+  elsif Nav.Key(Current.Navigation.Active) = 'albums' then
+    Composition.Map<AlbumModel.Msg, M.Msg>(
+      AlbumView.Build(
+        Current.Albums, Width - (if Compact then
+          0
+        else
+          NavView.Width + 1
+        end if), Padding
+      ), M.Msg.Albums
+    )
+  else
+    NavView.Placeholder(Current, Padding)
+  end if;
+  const Main: E.Element<M.Msg> := if Compact then
     E.Column<M.Msg>(
-      new L.Flow(Gap := Points(16), Align := L.Alignment.Stretch),
-      Alerts.Alert<M.Msg>(
-        'library-error',
-        'Library operation failed',
-        new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
-      ),
-      Body
-    )
-  end if;
-  const Content: array of E.Element<M.Msg> := if Current.SaveFailed and Current.Draft = null then
-    [
-      Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne),
-      Header,
-      Alerts.Alert<M.Msg>(
-        'settings-save-error', 'Could not save settings. Try again.',
-        new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
-        function(): M.Msg => M.Msg.DismissError
-      ),
-      MainBody
-    ]
-  else
-    [Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne), Header, MainBody]
-  end if;
-  return E.ScrollView<M.Msg>(
-    'settings-scroll',
-    E.Column<M.Msg>(
-      new L.Flow(Padding := Points(Padding), Gap := Points(20), Align := L.Alignment.Stretch),
-      Content
-    )
-  );
-end function;
-
-function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<M.Msg>;
-begin
-  const Compact: bool := Viewport.Width = L.SizeClass.Compact;
-  const Tab: int? := Current.Tab;
-  const Sidebar: E.Element<M.Msg> := E.Column<M.Msg>(
-    new L.Flow(
-      Padding := Points(12),
-      Gap := Points(16),
-      Align := L.Alignment.Stretch,
-      Background := Theme.Colors.SurfaceMuted
-    ),
-    E.Row<M.Msg>(
-      new L.Flow(Padding := Points(4)),
-      Texts.Text<M.Msg>(DisplayName, Texts.Appearance.HeadingThree)
-    ),
-    E.Spacer<M.Msg>(),
-    Nav.Sidebar<M.Msg>(
-      'navigation', [
-        new Nav.Section<M.Msg>(
-          '', [
-            new Nav.Item<M.Msg>(
-              'settings',
-              SettingsLabel,
-              M.Msg.OpenSettings,
-              Icon := Sys.Char.ConvertFromUtf32($E154)
-            )
-          ]
-        )
-      ],
-      if Tab <> null then
-        'settings'
-      else
-        null
-      end if
-    )
-  );
-  const Main: E.Element<M.Msg> := if Tab = null then
-    E.Column<M.Msg>()
-  else
-    SettingsPage(
-      Current, Tab.Value, Theme, if Compact then
-        16
-      else
-        32
-      end if
-    )
-  end if;
-  const Base: E.Element<M.Msg> := E.Size<M.Msg>(
-    E.Row<M.Msg>(
       new L.Flow(Align := L.Alignment.Stretch),
-      E.Size<M.Msg>(
-        Sidebar, Fixed(
-          if Compact then
-            138
-          else
-            206
-          end if
-        )
+      E.Row<M.Msg>(
+        new L.Flow(
+          Padding := L.Spacing.Fixed(L.Measure.Logical(12)),
+          Gap := L.Spacing.Fixed(L.Measure.Logical(8)),
+          Align := L.Alignment.Center
+        ),
+        Icons.IconButton<M.Msg>(
+          'drawer-open',
+          Sys.Char.ConvertFromUtf32($E115),
+          'Navigation',
+          M.Msg.Navigation(Nav.Msg.SetDrawer(true))
+        ),
+        Texts.Text<M.Msg>('FPas-Amp', Texts.Appearance.HeadingThree)
+      ), E.Size<M.Msg>(Page, Fill)
+    )
+  else
+    Page
+  end if;
+  const Base: E.Element<M.Msg> := if Compact then
+    Sheets.Sheet<M.Msg>(
+      'navigation-drawer',
+      E.Size<M.Msg>(Main, Fill),
+      NavView.Sidebar(Current, Theme, Viewport.LogicalHeight ?? 680),
+      Current.Navigation.Drawer,
+      new Sheets.Options(
+        'FPas-Amp',
+        Edge := Sheets.Side.Left,
+        Size := Sys.Math.Min(280, Sys.Math.Max(1, Width - 32))
       ),
-      E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1)),
-      E.Size<M.Msg>(Main, Fill)
-    ),
-    Fill
-  );
+      M.Msg.Navigation(Nav.Msg.SetDrawer(false))
+    )
+  else
+    E.Size<M.Msg>(
+      E.Row<M.Msg>(
+        new L.Flow(Align := L.Alignment.Stretch),
+        E.Size<M.Msg>(NavView.Sidebar(Current, Theme), Fixed(NavView.Width)),
+        E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1)),
+        E.Size<M.Msg>(Main, Fill)
+      ), Fill
+    )
+  end if;
   if Current.PickingFolder then
     return Picker.FilePicker<M.Msg>(
-      'music-folder-picker', true, M.Msg.FolderResult,
+      'music-folder-picker',
+      true,
+      M.Msg.FolderResult,
       new Picker.Options(
-        Kind := Picker.Mode.Folder, Title := 'Choose a music folder',
+        Kind := Picker.Mode.Folder,
+        Title := 'Choose a music folder',
         Start := Sys.Environment.GetFolderPath(Sys.Environment.SpecialFolder.MyMusic)
       ),
       Base
@@ -167,18 +134,22 @@ public type Session = record implements Sys.IDisposable
     return self.Read();
   end function;
 
-  // Releases the GUI session and its owned MVU subscriptions, not the external library.
+  // Releases the GUI and its owned subscriptions, leaving the caller-owned library.
   public procedure Dispose();
   begin
     self.Window.Dispose();
   end procedure;
 
-  // Creates the shell. `Library` is caller-owned; `Save` persists accepted preferences.
-  // `Tab` is General (0), Library (1), or null for the initially empty shell.
-  public static function Start(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences); Library: Monitoring.Session; Tab: int? := null): Session;
-  requires Tab = null or Tab = 0 or Tab = 1;
+  // Creates a shell for Window and Settings; Save persists preferences and
+  // Library remains caller-owned. Optional Navigation restores the destination
+  // and settings tab; a playlist is validated against its first background snapshot.
+  public static function Start(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null): Session;
+  requires Settings.MusicSources <> null;
   begin
-    const Initial: M.State := new M.State(Settings, Tab := Tab);
+    const Initial: M.State := new M.State(Settings, Navigation := Navigation ?? new Nav.State());
+    if Initial.Navigation.SettingsTab <> 0 and Initial.Navigation.SettingsTab <> 1 then
+      raise new Sys.ArgumentOutOfRangeException('Navigation');
+    end if;
     var Last: M.State := Initial;
     const Native: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
       Initial,
@@ -193,37 +164,71 @@ public type Session = record implements Sys.IDisposable
         return Next;
       end function,
       View,
-      new Gui.Options(Title := DisplayName, Theme := M.Theme(Initial, null), Placement := Window),
+      new Gui.Options(Title := 'FPas-Amp', Theme := M.Theme(Initial, null), Placement := Window),
       M.Theme
     );
     discard Native.Post(M.Msg.WatchLibrary);
-    return new Session(Native, function(): M.State => Last);
+    const Observed: Gui.Session<M.Msg> := Gui.Session<M.Msg>.Create(
+      function(): bool begin
+        if not Native.Step() then
+          return false;
+        end if;
+
+        if Nav.Key(Last.Navigation.Active) = 'albums' then
+          const Frame: Gui.Frame := Native.Snapshot();
+          const WindowWidth: int := Sys.Convert.ToInt32(Frame.Size.Width);
+          const Compact: bool := WindowWidth < NavView.DrawerBreakpoint;
+          const Available: int := WindowWidth - (if Compact then
+            32
+          else
+            NavView.Width + 65
+          end if);
+          const Columns: int := AlbumView.Columns(Sys.Math.Max(1, Available));
+          for Control: Gui.Control in Frame.Controls do
+            if Control.Id = AlbumView.GridId then
+              const Parts: array of string := Control.Value.Split(#58);
+              var First: int := 0;
+              var End: int := 0;
+              if Parts.Length = 2 and int.TryParse(
+                Parts[0],
+                out First
+              ) and int.TryParse(Parts[1], out End)
+              then
+                const Start: int := Sys.Math.Min(Last.Albums.Items.Length, First * Columns);
+                const Finish: int := Sys.Math.Min(Last.Albums.Items.Length, End * Columns);
+                if Start <> Last.Albums.First or Finish <> Last.Albums.Last then
+                  discard Native.Post(M.Msg.Albums(AlbumModel.Msg.Visible(Start, Finish)));
+                end if;
+              end if;
+            end if;
+          end for;
+        end if;
+
+        return true;
+      end function,
+      Native.Post,
+      Native.Snapshot,
+      Native.IsOpen,
+      Native.IsSoftware,
+      Native.Dispose,
+      Native.CapturePng,
+      Native.Placement
+    );
+    return new Session(Observed, function(): M.State => Last);
   end function;
 end record;
 
-// Opens the desktop shell and runs it until the window closes.
-//
-// ## Parameters
-// - `Window`: Saved normal size and place, and whether the window was maximized.
-//   The native window rejects a size below one logical unit.
-// - `Settings`: Validated preferences loaded at startup.
-// - `Tab`: Initial settings tab, updated to the last selection on close.
-//   0 opens General, 1 opens Library, and null opens the empty shell.
-// - `Save`: Persists a new set of validated preferences.
-// - `Library`: Caller-owned scan/storage lifetime; the GUI only posts control requests.
-// ## Returns
-// The window's placement when it closed, to restore at the next start.
-public function Run(
-  Window: Cui.CuiWindowPlacement; Settings: M.Preferences; ref Tab: int?;
-  Save: procedure(M.Preferences); Library: Monitoring.Session
-): Cui.CuiWindowPlacement;
-requires Tab = null or Tab = 0 or Tab = 1;
+// Runs the shell for Window/Settings until close. Navigation is restored and
+// returned by reference, Save persists preferences, and Library stays caller-owned.
+// Returns the final host placement for storage alongside the selected destination.
+public function Run(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; ref Navigation: Nav.State; Save: procedure(M.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
+requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
 begin
-  using const Running: Session := Session.Start(Window, Settings, Save, Library, Tab);
+  using const Running: Session := Session.Start(Window, Settings, Save, Library, Navigation);
   while Running.Window.Step() do
   end while;
 
-  Tab := Running.State().Tab;
+  Navigation := Running.State().Navigation;
   return Running.Window.Placement();
 end function;
 

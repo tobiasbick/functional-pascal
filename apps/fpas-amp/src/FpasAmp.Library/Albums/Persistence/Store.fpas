@@ -1,0 +1,103 @@
+// Album memberships are replaced atomically with their corresponding tag rows.
+unit FpasAmp.Library.Albums.Persistence.Store;
+
+uses
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
+  System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
+  System.Text.RegularExpressions as Regex;
+
+// Replaces album membership for tag `Value` at indexed `Id`, inside `Transaction`.
+// Path/directory facts are read from `Connection`; no music/image file is opened.
+public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Value: M.Tags);
+begin
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT path,directory_key FROM files WHERE id=$id;',
+    Transaction,
+    ['$id'],
+    [Id]
+  );
+  using const Row: Db.SqliteDataReader := Query.ExecuteReader();
+  if not Row.Read() then
+    return;
+  end if;
+  const Directory: string := IO.Path.GetDirectoryName(Row.GetString(0)) ?? '';
+  const Name: string := IO.Path.GetFileName(Directory) ?? '';
+  const Root: string := if Value.DiscNumber <> null and Regex.Regex.IsMatch(
+    Name,
+    '^(?:cd|disc|disk)[ _-]*[0-9]+$',
+    Regex.RegexOptions.IgnoreCase
+  )
+  then
+    IO.Path.GetDirectoryName(Directory) ?? Directory
+  else
+    Directory
+  end if;
+  const Title: string := if Value.Album.Trim() <> '' then
+    Value.Album.Trim()
+  else
+    IO.Path.GetFileName(Root) ?? 'Unknown album'
+  end if;
+  const Artist: string := if Value.AlbumArtists.Length > 0 then
+    Sys.String.Join('; ', Value.AlbumArtists)
+  elsif Value.Compilation then
+    'Various artists'
+  else
+    Sys.String.Join('; ', Value.Artists)
+  end if;
+  var Release: Sys.Guid := Sys.Guid.Empty;
+  const Identity: string := if Sys.Guid.TryParse(Value.MusicBrainzReleaseId, out Release) then
+    'release:' + Release.ToString('N')
+  else
+    Json.JsonSerializer.Serialize<array of string>(
+      [Title.ToUpperInvariant(), Artist.ToUpperInvariant(), Value.ReleaseDate, Sql.Key(Root)]
+    )
+  end if;
+  const IdKey: string := Sys.Convert.ToHexString(
+    Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Identity))
+  );
+  const SortTitle: string := (if Value.SortAlbum <> '' then
+    Value.SortAlbum
+  else
+    Title
+  end if).ToUpperInvariant();
+  const SortArtist: string := (if Value.SortAlbumArtist <> '' then
+    Value.SortAlbumArtist
+  else
+    Artist
+  end if).ToUpperInvariant();
+  Sql.Execute(
+    Connection,
+    'INSERT INTO album_tracks VALUES($file,$id,$title,$artist,$sort,$sortartist,$directory,$key,$root,$rootkey)' +
+    ' ON CONFLICT(file_id) DO UPDATE SET album_id=excluded.album_id,title=excluded.title,artist=excluded.artist,sort_title=excluded.sort_title,' +
+    'sort_artist=excluded.sort_artist,directory=excluded.directory,directory_key=excluded.directory_key,root=excluded.root,root_key=excluded.root_key;',
+    Transaction,
+    [
+      '$file',
+      '$id',
+      '$title',
+      '$artist',
+      '$sort',
+      '$sortartist',
+      '$directory',
+      '$key',
+      '$root',
+      '$rootkey'
+    ],
+    [
+      Id,
+      IdKey,
+      Title,
+      Artist,
+      SortTitle,
+      SortArtist,
+      Directory,
+      Sql.Key(Directory),
+      Root,
+      Sql.Key(Root)
+    ]
+  );
+end procedure;
+
+end unit;

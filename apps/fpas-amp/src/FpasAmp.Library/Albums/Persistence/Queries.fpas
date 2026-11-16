@@ -1,0 +1,57 @@
+// Compact indexed album headers, without materializing audio tags or image data.
+unit FpasAmp.Library.Albums.Persistence.Queries;
+
+uses
+  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text,
+  System.Threading as T;
+
+// Reads a sorted album snapshot from catalogue `Database` and durable `Users`.
+// `Cancellation` bounds row iteration; large collections contain headers only.
+public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT a.album_id,MIN(a.title),MIN(a.artist),COUNT(*),' +
+    'GROUP_CONCAT(m.sha256||'':''||m.read_utc||'':''||f.path_key,''|'')||' +
+    'COALESCE((SELECT GROUP_CONCAT(art.path_key||'':''||art.size||'':''||art.modified_utc,''|'') FROM files art WHERE art.kind=2' +
+    ' AND EXISTS(SELECT 1 FROM album_tracks t WHERE t.album_id=a.album_id AND (t.directory_key=art.directory_key OR t.root_key=art.directory_key))),''''),' +
+    '(SELECT r.rating FROM users.album_ratings r WHERE r.album_id=a.album_id)' +
+    ' FROM album_tracks a JOIN metadata m ON m.file_id=a.file_id JOIN files f ON f.id=a.file_id' +
+    ' GROUP BY a.album_id ORDER BY MIN(a.sort_title),MIN(a.sort_artist),a.album_id;',
+    Transaction,
+    [],
+    []
+  );
+  using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+  const Albums: C.List<M.Album> := new C.List<M.Album>();
+  while Rows.Read() do
+    Cancellation.ThrowIfCancellationRequested();
+    const Revision: string := Sys.Convert.ToHexString(
+      Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Rows.GetString(4)))
+    );
+    Albums.Add(
+      new M.Album(
+        Rows.GetString(0),
+        Rows.GetString(1),
+        Rows.GetString(2),
+        Rows.GetInt64(3),
+        Revision,
+        if Rows.IsDBNull(5) then
+          null
+        else
+          Rows.GetInt32(5)
+        end if
+      )
+    );
+  end while;
+
+  return I.ImmutableArray.CreateRange<M.Album>(Albums);
+end function;
+
+end unit;

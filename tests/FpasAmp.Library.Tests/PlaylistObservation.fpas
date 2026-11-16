@@ -1,0 +1,75 @@
+// The navigation observer includes all pages and publishes committed changes.
+unit FpasAmp.Library.Tests.PlaylistObservation;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.UserData.Schema as Users,
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T,
+  System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Background summary snapshots retain complete pagination and cancellation ownership.
+public type ObservationTests = record
+  // More than one query page remains complete; edits/deletions propagate and stop joins.
+  [X.FactAttribute]
+  public async function AllPagesChangesAndCancellation(): Tasks.Task;
+  begin
+    using const Data: H.Folder := H.Folder.Create();
+    await using const Session: Monitor.Session := F.Start([], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    await F.Tags(Session).Ready;
+    begin
+      using const Connection: Db.SqliteConnection := Users.Open(
+        IO.Path.Combine(Data.Path, 'userdata.db')
+      );
+      using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+      for Index: int := 0 to 250 do
+        Sql.Execute(
+          Connection,
+          'INSERT INTO playlists VALUES($id,$name,$key,0);',
+          Transaction,
+          ['$id', '$name', '$key'],
+          [
+            Sys.Guid.NewGuid().ToString('N'),
+            'List ' + Index.ToString('D3'),
+            'LIST ' + Index.ToString('D3')
+          ]
+        );
+      end for;
+
+      Transaction.Commit();
+    end;
+
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    const Updates: Channels.Channel<I.ImmutableArray<M.Summary>> := Channels.Channel.CreateUnbounded<I.ImmutableArray<M.Summary>>();
+    const Running: Tasks.Task := Lists.ObserveAsync(
+      function(Items: I.ImmutableArray<M.Summary>): Tasks.Task => Updates.Writer.WriteAsync(
+        Items,
+        Stop.Token
+      ).AsTask(),
+      Stop.Token
+    );
+    try
+      const Initial: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal<int>(251, Initial.Length);
+      X.Assert.Equal<string>('List 000', Initial[0].Name);
+      X.Assert.Equal<string>('List 250', Initial[250].Name);
+      discard await Lists.SaveAsync(Initial[0].Identity.Id, 'Changed', [], Stop.Token);
+      const Changed: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal<int>(251, Changed.Length);
+      X.Assert.Equal<string>('Changed', Changed[0].Name);
+      await Lists.DeleteAsync(Changed[0].Identity.Id, Stop.Token);
+      const Deleted: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal<int>(250, Deleted.Length);
+    finally
+      Stop.Cancel();
+      try
+        await Running;
+      catch Cancelled: Sys.OperationCanceledException do
+      end try;
+    end try;
+  end function;
+end record;
+
+end unit;

@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Settings.DatabaseActions;
 
 uses
-  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
+  FpasAmp.Ui.App.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 

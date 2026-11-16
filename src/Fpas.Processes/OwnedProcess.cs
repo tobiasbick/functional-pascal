@@ -5,7 +5,16 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.Processes;
 
-public enum ProcessStdio { Capture, Inherit, CaptureOutput }
+/// <summary>Selects how an owned process connects its standard streams.</summary>
+public enum ProcessStdio
+{
+    /// <summary>Redirect input, output and error through pipes.</summary>
+    Capture,
+    /// <summary>Inherit all standard streams from the current process.</summary>
+    Inherit,
+    /// <summary>Inherit input and redirect output and error through pipes.</summary>
+    CaptureOutput
+}
 
 /// <summary>
 /// Owns a Windows job or a Linux process group and terminates its members on disposal.
@@ -18,8 +27,11 @@ public sealed class OwnedProcess : IAsyncDisposable
     private readonly object gate = new();
     private Task? disposal;
     private Task? termination;
+    /// <summary>Gets the writable standard input pipe, or <see cref="Stream.Null"/> when not captured.</summary>
     public Stream Input { get; }
+    /// <summary>Gets the readable standard output pipe, or <see cref="Stream.Null"/> when not captured.</summary>
     public Stream Output { get; }
+    /// <summary>Gets the readable standard error pipe, or <see cref="Stream.Null"/> when not captured.</summary>
     public Stream Error { get; }
 
     private OwnedProcess(Process process, Stream input, Stream output, Stream error, SafeFileHandle? job = null)
@@ -27,6 +39,8 @@ public sealed class OwnedProcess : IAsyncDisposable
         this.process = process; Input = input; Output = output; Error = error; this.job = job;
     }
 
+    /// <summary>Checks that an executable can be started as an owned process on this platform.</summary>
+    /// <param name="path">The absolute executable path.</param>
     public static void Validate(string path)
     {
         if (!Path.IsPathFullyQualified(path) || !File.Exists(path))
@@ -43,6 +57,13 @@ public sealed class OwnedProcess : IAsyncDisposable
         }
     }
 
+    /// <summary>Starts an executable inside a new ownership boundary.</summary>
+    /// <param name="path">The absolute executable path.</param>
+    /// <param name="arguments">The arguments, passed without shell interpretation.</param>
+    /// <param name="cwd">The working directory.</param>
+    /// <param name="environment">Variables that override the inherited environment.</param>
+    /// <param name="stdio">How the standard streams are connected.</param>
+    /// <returns>The started process; dispose it to terminate all owned members.</returns>
     public static OwnedProcess Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment = null, ProcessStdio stdio = ProcessStdio.Capture)
     {
         Validate(path);
@@ -69,16 +90,23 @@ public sealed class OwnedProcess : IAsyncDisposable
             start.RedirectStandardOutput ? process.StandardOutput.BaseStream : Stream.Null, start.RedirectStandardError ? process.StandardError.BaseStream : Stream.Null);
     }
 
+    /// <summary>Gets whether the root process has exited.</summary>
     public bool HasExited => process.HasExited;
+    /// <summary>Gets the root process identifier.</summary>
     public int Id => process.Id;
+    /// <summary>Gets the root process exit code after it has exited.</summary>
     public int ExitCode => process.ExitCode;
+    /// <summary>Waits until the root process exits.</summary>
+    /// <param name="token">Cancels the wait without terminating the process.</param>
     public Task WaitForExit(CancellationToken token) => process.WaitForExitAsync(token);
 
+    /// <summary>Terminates all owned members and releases the streams and handles.</summary>
     public ValueTask DisposeAsync()
     {
         lock (gate) return new(disposal ??= DisposeCore());
     }
 
+    /// <summary>Terminates all owned members and waits for them, at most five seconds.</summary>
     public Task TerminateAsync()
     {
         lock (gate) return termination ??= TerminateCore();

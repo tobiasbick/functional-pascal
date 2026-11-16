@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks;
 
+/// <summary>Compiles FPAS sources through the FPAS compiler with incremental fingerprinting.</summary>
 public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTask
 {
     [Required] public ITaskItem[] Sources { get; set; } = [];
@@ -30,10 +31,12 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     public string WarningsAsErrors { get; set; } = "";
     public string WarningsNotAsErrors { get; set; } = "";
     public string NoWarn { get; set; } = "";
+    /// <summary>Gets the XML documentation files written or confirmed current.</summary>
     [Output] public ITaskItem[] WrittenDocumentation { get; set; } = [];
     private readonly List<JsonElement> compilerDiagnostics = [];
     private readonly CancellationTokenSource cancellation = new();
 
+    /// <inheritdoc/>
     public override bool Execute()
     {
         if (Sources.Length == 0 || TargetFramework != "net10.0" || OutputType is not ("Exe" or "Library") || DebugType is not ("portable" or "none"))
@@ -136,12 +139,27 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
         }
         var text = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
-        using var result = JsonDocument.Parse(text);
-        foreach (var diagnostic in result.RootElement.GetProperty("diagnostics").EnumerateArray())
+        JsonDocument result;
+        try { result = JsonDocument.Parse(text); }
+        catch (JsonException)
+        {
+            // A crashed compiler leaves no JSON result; its stderr explains the failure.
+            Error("FP5003", "Compiler failed (exit code " + process.ExitCode + "): " + error);
+            return false;
+        }
+        using var owned = result;
+        if (result.RootElement.ValueKind != JsonValueKind.Object ||
+            !result.RootElement.TryGetProperty("diagnostics", out var diagnostics) || diagnostics.ValueKind != JsonValueKind.Array ||
+            !result.RootElement.TryGetProperty("success", out var succeeded) || succeeded.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            Error("FP5003", "The compiler returned an invalid JSON result: " + error);
+            return false;
+        }
+        foreach (var diagnostic in diagnostics.EnumerateArray())
         {
             compilerDiagnostics.Add(diagnostic.Clone()); ReportDiagnostic(diagnostic);
         }
-        if (process.ExitCode != 0 || !result.RootElement.GetProperty("success").GetBoolean())
+        if (process.ExitCode != 0 || !succeeded.GetBoolean())
         {
             if (!Log.HasLoggedErrors)
                 Error("FP5003", "Compiler failed: " + error);
@@ -150,6 +168,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
         return !Log.HasLoggedErrors;
     }
 
+    /// <inheritdoc/>
     public void Cancel() => cancellation.Cancel();
     private void ReportDiagnostic(JsonElement diagnostic) => Diagnostics.BuildDiagnostics.Report(Log, diagnostic);
     private void Error(string code, string message) => Log.LogError(null, code, null, null, 0, 0, 0, 0, message);

@@ -4,14 +4,18 @@ using System.Text.Json;
 
 namespace Fpas.SdkResolver.Diagnostics;
 
+/// <summary>Writes bounded MSBuild diagnostics as JSON lines to the file named by its Base64 parameter.</summary>
 public sealed class ProjectDiagnosticLogger : ILogger
 {
     private readonly object gate = new();
     private StreamWriter output = null!;
     private int remaining = 1_048_576;
+    /// <inheritdoc/>
     public LoggerVerbosity Verbosity { get; set; }
+    /// <summary>Gets or sets the Base64-encoded UTF-8 path of the new report file.</summary>
     public string? Parameters { get; set; }
 
+    /// <inheritdoc/>
     public void Initialize(IEventSource events)
     {
         var path = Encoding.UTF8.GetString(Convert.FromBase64String(Parameters ?? ""));
@@ -44,5 +48,6 @@ public sealed class ProjectDiagnosticLogger : ILogger
         }
     }
 
+    /// <inheritdoc/>
     public void Shutdown() => output?.Dispose();
 }

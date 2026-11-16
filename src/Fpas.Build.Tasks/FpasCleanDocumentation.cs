@@ -4,10 +4,13 @@ using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks;
 
+/// <summary>Deletes XML documentation files recorded by the compiler cache.</summary>
 public sealed class FpasCleanDocumentation : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Gets or sets the compiler cache file that records generated documentation.</summary>
     [Required] public string CacheFile { get; set; } = "";
 
+    /// <inheritdoc/>
     public override bool Execute()
     {
         try

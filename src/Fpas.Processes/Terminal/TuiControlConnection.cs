@@ -5,7 +5,10 @@ using System.Text.Json.Serialization;
 
 namespace Fpas.Processes.Terminal;
 
-// The controller owns the listening pipe and retains frames independently of the target.
+/// <summary>
+/// Connects a TUI target to the controller pipe named by FPAS_TUI_CONTROL_PIPE.
+/// The controller owns the listening pipe and retains frames independently of the target.
+/// </summary>
 public sealed class TuiControlConnection : IDisposable
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -22,6 +25,15 @@ public sealed class TuiControlConnection : IDisposable
         requests = Task.Run(() => Read(handle));
     }
 
+    /// <summary>Connects to the controller when FPAS_TUI_CONTROL_PIPE is set.</summary>
+    /// <param name="send">Admits one input event.</param>
+    /// <param name="snapshot">Returns the current frame.</param>
+    /// <param name="step">Runs one manual step.</param>
+    /// <param name="waitInput">Waits for an admitted input to finish within a millisecond limit.</param>
+    /// <param name="waitWork">Waits until queued work is available.</param>
+    /// <param name="waitCapacity">Waits until the input queue has capacity.</param>
+    /// <param name="manual">Whether the target advances only through explicit steps.</param>
+    /// <returns>The connection, or <see langword="null"/> without a controller.</returns>
     public static TuiControlConnection? Open(Func<TerminalInput, TuiControlReply> send, Func<object> snapshot,
         Func<TuiControlReply> step, Func<long, int, Task<TuiControlReply>> waitInput,
         Func<CancellationToken, Task<bool>> waitWork, Func<CancellationToken, Task<bool>> waitCapacity, bool manual)
@@ -92,6 +104,10 @@ public sealed class TuiControlConnection : IDisposable
         };
     }
 
+    /// <summary>Tests a serialized frame against a wait condition.</summary>
+    /// <param name="frame">The frame JSON.</param>
+    /// <param name="condition">The condition object with columns, rows, after, text or control.</param>
+    /// <returns>Whether every condition holds.</returns>
     public static bool Matches(JsonElement frame, JsonElement condition)
     {
         foreach (var property in condition.EnumerateObject())
@@ -134,8 +150,14 @@ public sealed class TuiControlConnection : IDisposable
         catch { pipe.Dispose(); throw; }
     }
 
+    /// <summary>Sends a frame notification to the controller.</summary>
+    /// <param name="frame">The frame to serialize.</param>
     public void Publish(object frame) => Notify(new { kind = "frame", version = 1, frame });
 
+    /// <summary>Sends the outcome of an input together with the pending work counts.</summary>
+    /// <param name="outcome">The input outcome.</param>
+    /// <param name="inputs">The number of pending inputs.</param>
+    /// <param name="background">The number of pending background operations.</param>
     public void PublishOutcome(TuiControlReply outcome, int inputs, int background)
         => Notify(new { kind = "outcome", version = 1, outcome, pending = new { inputs, background } });
 
@@ -226,6 +248,7 @@ public sealed class TuiControlConnection : IDisposable
         finally { writer.Release(); }
     }
 
+    /// <summary>Stops reading requests, waits for replies and closes the pipe.</summary>
     public void Dispose()
     {
         if (Interlocked.Exchange(ref disposed, 1) != 0) return;
@@ -241,5 +264,12 @@ public sealed class TuiControlConnection : IDisposable
     }
 }
 
+/// <summary>A reply to a controller request.</summary>
+/// <param name="Status">The reply status.</param>
+/// <param name="InputId">The admitted input identifier.</param>
+/// <param name="FrameId">The matching or resulting frame identifier.</param>
+/// <param name="Stage">The processing stage reached.</param>
+/// <param name="Message">An optional explanation.</param>
+/// <param name="Acknowledgement">Completed after the reply has been sent.</param>
 public sealed record TuiControlReply(string Status, long InputId = 0, long FrameId = 0, string Stage = "", string Message = "",
     [property: JsonIgnore] TaskCompletionSource? Acknowledgement = null);

@@ -37,14 +37,12 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
         {
             Check(CreatePipe(out read, out write, IntPtr.Zero, 0)); Check(CreatePipe(out outputRead, out outputWrite, IntPtr.Zero, 0));
             Marshal.ThrowExceptionForHR(CreatePseudoConsole(new() { X = (short)columns, Y = (short)rows }, read, outputWrite, 0, out console));
-            job = CreateJobObject(IntPtr.Zero, null); Check(!job.IsInvalid);
-            var limits = new ExtendedLimits(); limits.Basic.Flags = 0x2000;
-            Check(SetInformationJobObject(job, 9, ref limits, Marshal.SizeOf<ExtendedLimits>()));
+            job = WindowsProcess.CreateOwnedJob();
             nuint size = 0; InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref size);
             startup.Attributes = Marshal.AllocHGlobal((nint)size);
             Check(InitializeProcThreadAttributeList(startup.Attributes, 1, 0, ref size)); initialized = true;
             Check(UpdateProcThreadAttribute(startup.Attributes, 0, 0x20016, console, (nuint)IntPtr.Size, IntPtr.Zero, IntPtr.Zero));
-            var command = new StringBuilder(Quote(path) + " " + string.Join(' ', arguments.Select(Quote)));
+            var command = new StringBuilder(WindowsProcess.CommandLine(path, arguments));
             Check(CreateProcess(path, command, IntPtr.Zero, IntPtr.Zero, false, 0x00080004, IntPtr.Zero, cwd, ref startup, out var info));
             process = new(info.Process, true); thread = new(info.Thread, true);
             Check(AssignProcessToJobObject(job, process));
@@ -85,7 +83,5 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
     }
     public override async ValueTask DisposeAsync()
     { try { await TerminateAsync(); } finally { startupThread?.Dispose(); input.Dispose(); output.Dispose(); job.Dispose(); process.Dispose(); } }
-    private static string Quote(string value) => "\"" + System.Text.RegularExpressions.Regex.Replace(value, "(\\\\*)(\"|$)",
-        match => new string('\\', match.Groups[1].Length * 2) + (match.Groups[2].Length == 0 ? "" : "\\\"")) + "\"";
     private static void Check(bool success) { if (!success) throw new Win32Exception(Marshal.GetLastPInvokeError()); }
 }

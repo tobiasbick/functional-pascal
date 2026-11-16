@@ -7,6 +7,7 @@ using Fpas.Build.Tasks.Incremental;
 
 namespace Fpas.Build.Tasks.Analysis;
 
+/// <summary>Exports the evaluated FPAS compilation inputs as a JSON analysis manifest for workspace loading.</summary>
 public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
 {
     [Required] public string ManifestFile { get; set; } = "";
@@ -41,6 +42,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     public ITaskItem[] ProjectOutputs { get; set; } = [];
     public bool UseSourceReferences { get; set; }
 
+    /// <inheritdoc/>
     public override bool Execute()
     {
         try
@@ -65,7 +67,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 PathComparer.Equals(reference.GetMetadata("MSBuildSourceProjectFile"), output.GetMetadata("MSBuildSourceProjectFile")))).ToArray() : [];
             if (Phase == "resolved") references = references.Concat(Paths(sourceOutputs)).Distinct(PathComparer).Order(StringComparer.Ordinal).ToArray();
             var inputs = Phase == "resolved" ? projectFiles.Concat(sources).Concat(references) : projectFiles;
-            if (Phase == "resolved" && File.Exists(ProjectAssetsFile)) inputs = inputs.Append(ProjectAssetsFile);
+            if (Phase == "resolved") inputs = inputs.Append(ProjectAssetsFile);
             inputs = inputs.Concat(CompileFingerprint.Tools(CompilerPath));
             if (SigningKey.Length > 0) inputs = inputs.Append(SigningKey);
             var hashes = inputs.Where(path => File.Exists(path) || !sourceReferences.Any(output => PathComparer.Equals(output.GetMetadata("FullPath"), path)))
@@ -83,7 +85,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or
+            Microsoft.Build.Exceptions.InvalidProjectFileException)
         {
             Log.LogError(null, "FP5005", null, ProjectPath, 0, 0, 0, 0, "Cannot export analysis context: " + exception.Message);
             return false;

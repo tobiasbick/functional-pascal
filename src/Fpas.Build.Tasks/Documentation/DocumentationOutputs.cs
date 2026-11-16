@@ -16,6 +16,7 @@ internal static class DocumentationOutputs
             try { File.Copy(documents[0], temporary); File.Move(temporary, path, overwrite: true); }
             finally { File.Delete(temporary); }
         }
-        foreach (var obsolete in oldDocuments.Except(documents, Comparer)) File.Delete(obsolete);
+        foreach (var obsolete in oldDocuments.Except(documents, Comparer))
+            if (File.Exists(obsolete)) File.Delete(obsolete);
     }
 }

@@ -9,6 +9,7 @@ namespace Fpas.Deployment;
 internal sealed record SignedFile(string Path, long Bytes, string Sha256);
 internal sealed record SignedFiles(int Version, SignedFile[] Files);
 
+/// <summary>Signs and verifies the complete file inventory of a publish directory with a CMS signature.</summary>
 public static class PublishSignature
 {
     internal const string Name = ".fpas-signature.p7s";
@@ -36,6 +37,10 @@ public static class PublishSignature
         return files.OrderBy(file => file.Path, StringComparer.Ordinal).ToArray();
     }
 
+    /// <summary>Writes a CMS signature over the directory inventory.</summary>
+    /// <param name="directory">The publish directory to sign.</param>
+    /// <param name="certificate">The PKCS#12 certificate file with a private key.</param>
+    /// <param name="passwordEnvironment">The environment variable holding the certificate password, or empty for none.</param>
     public static void Sign(string directory, string certificate, string passwordEnvironment)
     {
         var password = passwordEnvironment.Length == 0 ? null : Environment.GetEnvironmentVariable(passwordEnvironment)
@@ -55,6 +60,9 @@ public static class PublishSignature
         finally { File.Delete(temporary); }
     }
 
+    /// <summary>Verifies that the directory matches its signed inventory and the pinned certificate.</summary>
+    /// <param name="directory">The publish directory to verify.</param>
+    /// <param name="certificate">The expected signer certificate file.</param>
     public static void Verify(string directory, string certificate)
     {
         var file = Path.Combine(directory, Name);

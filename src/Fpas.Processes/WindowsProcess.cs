@@ -21,16 +21,13 @@ internal static class WindowsProcess
     {
         var security = new SecurityAttributes { Length = Marshal.SizeOf<SecurityAttributes>(), Inherit = true };
         SafeFileHandle? inputRead = null, inputWrite = null, outputRead = null, outputWrite = null, errorRead = null, errorWrite = null;
-        var job = CreateJobObject(IntPtr.Zero, null);
+        var job = CreateOwnedJob();
         ProcessInfo process = default;
         SafeFileHandle? processHandle = null, thread = null;
         Process? tracked = null;
         var environmentBlock = EnvironmentBlock(environment);
         try
         {
-            Check(!job.IsInvalid);
-            var limits = new ExtendedLimits(); limits.Basic.Flags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-            Check(SetInformationJobObject(job, 9, ref limits, Marshal.SizeOf<ExtendedLimits>()));
             if (stdio == ProcessStdio.Capture)
             {
                 Check(CreatePipe(out inputRead, out inputWrite, ref security, 0));
@@ -50,8 +47,7 @@ internal static class WindowsProcess
                 Size = Marshal.SizeOf<StartupInfo>(), Flags = 0x100,
                 Input = inputRead.DangerousGetHandle(), Output = outputWrite.DangerousGetHandle(), Error = errorWrite.DangerousGetHandle()
             };
-            var commandLine = Quote(path) + " " + string.Join(' ', arguments.Select(Quote));
-            Check(CreateProcess(path, new StringBuilder(commandLine), IntPtr.Zero, IntPtr.Zero,
+            Check(CreateProcess(path, new StringBuilder(CommandLine(path, arguments)), IntPtr.Zero, IntPtr.Zero,
                 true, stdio == ProcessStdio.Capture ? 0x08000404u : 0x00000404u, environmentBlock, cwd, ref startup, out process)); // suspended, Unicode environment
             processHandle = new SafeFileHandle(process.Process, ownsHandle: true);
             thread = new SafeFileHandle(process.Thread, ownsHandle: true);
@@ -73,6 +69,24 @@ internal static class WindowsProcess
         }
         finally { thread?.Dispose(); processHandle?.Dispose(); if (environmentBlock != IntPtr.Zero) Marshal.FreeHGlobal(environmentBlock); }
     }
+
+    // Creates a job whose members are killed when its last handle closes.
+    internal static SafeFileHandle CreateOwnedJob()
+    {
+        var job = CreateJobObject(IntPtr.Zero, null);
+        try
+        {
+            Check(!job.IsInvalid);
+            var limits = new ExtendedLimits(); limits.Basic.Flags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            Check(SetInformationJobObject(job, 9, ref limits, Marshal.SizeOf<ExtendedLimits>()));
+            return job;
+        }
+        catch { job.Dispose(); throw; }
+    }
+
+    // Builds a command line that CommandLineToArgvW splits back into the original arguments.
+    internal static string CommandLine(string path, IReadOnlyList<string> arguments)
+        => Quote(path) + " " + string.Join(' ', arguments.Select(Quote));
 
     private static SafeFileHandle Inherit(int standard)
     {

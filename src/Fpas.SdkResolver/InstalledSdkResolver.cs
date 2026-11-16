@@ -6,9 +6,16 @@ namespace Fpas.SdkResolver;
 /// <summary>MSBuild-hosted package SDK resolution that never contacts a feed.</summary>
 public sealed class InstalledSdkResolver : Microsoft.Build.Framework.SdkResolver
 {
+    /// <inheritdoc/>
     public override string Name => "FPAS installed SDKs";
+    /// <inheritdoc/>
     public override int Priority => 10001;
 
+    /// <summary>Resolves a package SDK from the restored cache named by FPAS_INSTALLED_SDK_CACHE.</summary>
+    /// <param name="sdk">The requested SDK reference.</param>
+    /// <param name="context">The MSBuild resolution context.</param>
+    /// <param name="factory">Creates the resolution result.</param>
+    /// <returns>The installed SDK path, or a failure without contacting a feed.</returns>
     public override SdkResult Resolve(SdkReference sdk, SdkResolverContext context, SdkResultFactory factory)
     {
         try

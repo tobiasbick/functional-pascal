@@ -2,13 +2,19 @@ using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks.Publishing;
 
+/// <summary>Signs or verifies a publish directory with <see cref="Fpas.Deployment.PublishSignature"/>.</summary>
 public sealed class FpasSignPublish : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Gets or sets the publish directory.</summary>
     [Required] public string Directory { get; set; } = "";
+    /// <summary>Gets or sets the signing (PKCS#12) or pinned verification certificate.</summary>
     [Required] public string Certificate { get; set; } = "";
+    /// <summary>Gets or sets the environment variable holding the certificate password.</summary>
     public string PasswordEnvironment { get; set; } = "";
+    /// <summary>Gets or sets whether to verify instead of sign.</summary>
     public bool Verify { get; set; }
 
+    /// <inheritdoc/>
     public override bool Execute()
     {
         try

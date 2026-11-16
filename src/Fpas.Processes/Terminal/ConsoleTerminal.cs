@@ -5,9 +5,19 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.Processes.Terminal;
 
+/// <summary>One decoded terminal input event.</summary>
+/// <param name="Kind">The event kind, such as key, text, paste, press, release, move, scroll or resize.</param>
+/// <param name="Key">The key name for key events.</param>
+/// <param name="Modifiers">The modifier bit set for key events.</param>
+/// <param name="Text">The text for text, character, paste, focus and activate events.</param>
+/// <param name="Column">The zero-based column for pointer events, or the width for resize.</param>
+/// <param name="Row">The zero-based row for pointer events, or the height for resize.</param>
+/// <param name="Delta">The scroll amount for scroll events.</param>
+/// <param name="Button">The pointer button for press, release and click events.</param>
 public sealed record TerminalInput(string Kind, string Key = "", int Modifiers = 0, string Text = "",
     int Column = 0, int Row = 0, int Delta = 0, string Button = "left");
 
+/// <summary>Switches the current console to a raw alternate screen and restores it on disposal.</summary>
 public sealed class ConsoleTerminal : IDisposable
 {
     private const string EnterScreen = "\x1b[?1049h\x1b[?7l\x1b[?25l\x1b[?1003h\x1b[?1006h\x1b[?2004h";
@@ -24,9 +34,12 @@ public sealed class ConsoleTerminal : IDisposable
     private uint pressedButtons;
     private TerminalInput? pendingMouse;
     private char highSurrogate;
+    /// <summary>Gets the current console width.</summary>
     public int Columns { get; private set; }
+    /// <summary>Gets the current console height.</summary>
     public int Rows { get; private set; }
 
+    /// <summary>Enters raw input mode and the alternate screen.</summary>
     public ConsoleTerminal()
     {
         if (Console.IsInputRedirected || Console.IsOutputRedirected)
@@ -82,6 +95,8 @@ public sealed class ConsoleTerminal : IDisposable
         }
     }
 
+    /// <summary>Writes UTF-16 text, including VT sequences, to the console.</summary>
+    /// <param name="text">The text to write.</param>
     public void Write(string text)
     {
         outputFailed = true;
@@ -115,6 +130,9 @@ public sealed class ConsoleTerminal : IDisposable
         }
     }
 
+    /// <summary>Waits for the next input event.</summary>
+    /// <param name="milliseconds">The wait limit, 0..1000.</param>
+    /// <returns>The next event, or <see langword="null"/> when none arrived in time.</returns>
     public TerminalInput? Poll(int milliseconds)
     {
         if (milliseconds is < 0 or > 1000) throw new ArgumentOutOfRangeException(nameof(milliseconds));
@@ -216,6 +234,7 @@ public sealed class ConsoleTerminal : IDisposable
             Column: record.X, Row: record.Y, Button: name);
     }
 
+    /// <summary>Leaves the alternate screen and restores the original console modes.</summary>
     public void Dispose()
     {
         if (disposed) return;

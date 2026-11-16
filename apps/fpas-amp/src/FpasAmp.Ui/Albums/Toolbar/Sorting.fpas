@@ -1,0 +1,87 @@
+// Criterion and direction share one native CUI menu trigger.
+unit FpasAmp.Ui.Albums.Toolbar.Sorting;
+
+uses
+  FpasAmp.Ui.Albums.Toolbar.Model as M, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Styles as S, System as Sys;
+
+function Name(Value: M.Order): string;
+begin
+  case Value of
+    when M.Order.Title:
+      return 'Album title';
+    when M.Order.Artist:
+      return 'Artist';
+    when M.Order.Rating:
+      return 'Rating';
+    when M.Order.Songs:
+      return 'Song count';
+    else
+      raise new Sys.ArgumentOutOfRangeException('Value');
+  end case;
+end function;
+
+function Choice(Current: M.State; Key: string; Value: M.Order): Menus.Entry<M.Msg>;
+begin
+  return Menus.Entry<M.Msg>.Action(
+    new Menus.Item<M.Msg>(Key, Name(Value), M.Msg.Sort(Value), Checked := Current.Sort = Value)
+  );
+end function;
+
+// Presents `Current` as a single sort block, with direction choices inside its menu.
+public function Build(Current: M.State): E.Element<M.Msg>;
+begin
+  const Alphabetic: bool := Current.Sort = M.Order.Title or Current.Sort = M.Order.Artist;
+  const Direction: string := if Alphabetic then
+    if Current.Descending then
+      'Z–A'
+    else
+      'A–Z'
+    end if
+  else
+    if Current.Descending then
+      'High–low'
+    else
+      'Low–high'
+    end if
+  end if;
+  return Menus.Menu<M.Msg>(
+    'album-sort',
+    Name(Current.Sort) + ' · ' + Direction,
+    [
+      Menus.Entry<M.Msg>.Label('Sort by'),
+      Choice(Current, 'title', M.Order.Title), Choice(Current, 'artist', M.Order.Artist),
+      Choice(Current, 'rating', M.Order.Rating), Choice(Current, 'songs', M.Order.Songs),
+      Menus.Entry<M.Msg>.Separator,
+      Menus.Entry<M.Msg>.Action(
+        new Menus.Item<M.Msg>(
+          'ascending',
+          'Ascending',
+          M.Msg.Descending(false),
+          Checked := not Current.Descending
+        )
+      ),
+      Menus.Entry<M.Msg>.Action(
+        new Menus.Item<M.Msg>(
+          'descending',
+          'Descending',
+          M.Msg.Descending(true),
+          Checked := Current.Descending
+        )
+      )
+    ],
+    new Menus.Options(
+      Icon := Sys.Char.ConvertFromUtf32(
+        if Current.Descending then
+          $E042
+        else
+          $E04A
+        end if
+      ),
+      Variant := S.ButtonVariant.Outline,
+      Position := Menus.Placement.BottomEnd
+    )
+  );
+end function;
+
+end unit;

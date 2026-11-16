@@ -5,6 +5,8 @@ uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Library,
   FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
   FpasAmp.Ui.Albums.Status as Status,
+  FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
+  Fpas.Ui.Composition as Composition, Fpas.Ui.Widgets.Theming.Themes as Themes,
   FpasAmp.Imaging as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.VirtualLists as Virtual, Fpas.Ui.Widgets.Containers.Grids as Grids,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
@@ -48,6 +50,10 @@ begin
           E.Styled<M.Msg>(E.Text<M.Msg>(Album.Title), S.Role.Strong),
           S.Role.SingleLine
         ),
+        E.Styled<M.Msg>(
+          Texts.Text<M.Msg>(Album.Artist, Texts.Appearance.Secondary),
+          S.Role.SingleLine
+        ),
         Texts.Text<M.Msg>(
           Details.Songs(Album.Tracks),
           Texts.Appearance.Muted
@@ -71,13 +77,14 @@ end function;
 
 // Builds a pure responsive grid for `Current`. `Width` is the available main area;
 // `Padding` matches the shell viewport. Thumbnail work is requested after layout.
-public function Build(Current: M.State; Width: int; Padding: int): E.Element<M.Msg>;
+// `Theme` supplies the resolved native toolbar colors.
+public function Build(Current: M.State; Width: int; Padding: int; Theme: Themes.Theme): E.Element<M.Msg>;
   function Row(Index: int): E.Element<M.Msg>;
   begin
     const Available: int := Sys.Math.Max(1, Width - Padding * 2);
     const Count: int := Columns(Available);
     const Edge: int := Sys.Math.Clamp((Available - (Count - 1) * 16) div Count - 24, 1, 256);
-    const RowHeight: int := Edge + 120;
+    const RowHeight: int := Edge + 142;
     const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
     for Position: int := Index * Count to Sys.Math.Min(
       Current.Items.Length,
@@ -95,9 +102,15 @@ begin
   const Available: int := Sys.Math.Max(1, Width - Padding * 2);
   const Count: int := Columns(Available);
   const Edge: int := Sys.Math.Clamp((Available - (Count - 1) * 16) div Count - 24, 1, 256);
-  const RowHeight: int := Edge + 120;
+  const RowHeight: int := Edge + 142;
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
-    [Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne)]
+    [
+      Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne),
+      Composition.Map<Toolbar.Msg, M.Msg>(
+        ToolbarView.Build(Current.Toolbar, Available, Theme.Colors),
+        M.Msg.Toolbar
+      )
+    ]
   );
   const Error: string? := Current.Error;
   if Error <> null then

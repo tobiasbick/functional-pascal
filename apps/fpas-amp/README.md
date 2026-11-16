@@ -108,7 +108,7 @@ The Albums grid creates only visible rows plus a small overscan. It loads covers
 on background workers, preferring an embedded front cover, another embedded image,
 then `cover`, `folder` or `front` JPG/JPEG/PNG files in an unambiguous album folder.
 Missing/invalid pictures use a placeholder. Sidecar image changes are monitored.
-Each card shows a bold title and song count below the cover. Ten native CUI stars
+Each card centers a bold title, artist and song count below the cover. Ten native CUI stars
 above it set an independent album rating; clicking the selected star clears it.
 Writes run in the background and persist in `userdata.db` across catalogue resets.
 Resting the pointer on an album card for 700 ms opens native CUI hover details:
@@ -117,6 +117,13 @@ below. Details reuse the loaded thumbnail and require no additional source reads
 The native status bar stays below the scrolling grid and shows the total album
 count, including when no album exists. Loading and initial failures have their own
 status. Filtering can later display matching and overall counts separately.
+
+The gray album toolbar is an interactive UI mockup. Its search editor, filter
+popover with draft/Apply/Reset behavior, active-filter badge, and combined sort
+field/direction menu use native CUI widgets. Artist/genre choices are demo values.
+These controls currently update local view state; catalogue contents, ordering,
+thumbnail requests and total counts remain independent of them. Narrow windows
+place the two actions below the search field.
 Small content-addressed thumbnails are kept under `covers/thumbnails-v1` beside
 `userdata.db`, with bounded disk/memory caches. Cached thumbnails work offline.
 No search, filters or album detail/player view is included.

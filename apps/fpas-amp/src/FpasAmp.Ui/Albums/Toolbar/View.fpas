@@ -1,0 +1,46 @@
+// A muted native layout groups search, filter preview and one sort menu.
+unit FpasAmp.Ui.Albums.Toolbar.View;
+
+uses
+  FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
+  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  System as Sys;
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+// Builds `Current` within measured content `Width`, using the resolved `Colors`.
+// Narrow views put the two actions below search; no catalogue work is started.
+public function Build(Current: M.State; Width: int; Colors: Themes.Palette): E.Element<M.Msg>;
+requires Width > 0;
+begin
+  const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
+    'album-search', Current.Search, M.Msg.Search,
+    new Search.Options(Placeholder := 'Search albums…')
+  );
+  const Actions: E.Element<M.Msg> := E.Row<M.Msg>(
+    new L.Flow(
+      Gap := Points(12), Align := L.Alignment.Center,
+      Justify := L.Justification.End, Wrap := true, Clip := false
+    ), Filters.Build(Current, Colors, Sys.Math.Max(1, Width - 24)), Sorting.Build(Current)
+  );
+  const Flow: L.Flow := new L.Flow(
+    Padding := Points(12), Gap := Points(12), Align := L.Alignment.Center,
+    Background := Colors.BorderSubtle, CornerRadius := 10.0F, Clip := false
+  );
+  if Width < 640 then
+    return E.Column<M.Msg>(
+      Flow with
+        Align := L.Alignment.Stretch;
+      end with,
+      Field, Actions
+    );
+  end if;
+
+  return E.Row<M.Msg>(Flow, E.Size<M.Msg>(Field, new L.Flex(Basis := L.Extent.Fill)), Actions);
+end function;
+
+end unit;

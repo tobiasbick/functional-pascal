@@ -1,0 +1,64 @@
+// Preview edits stay local and preserve all catalogue and image state.
+unit FpasAmp.Ui.Albums.Toolbar.Update;
+
+uses FpasAmp.Ui.Albums.Toolbar.Model as M, System as Sys;
+
+// Applies `Message` to `Current`. Apply confirms the draft; closing cancels it.
+// Search and sort only update the toolbar model in this UI mockup.
+public function Apply(Current: M.State; Message: M.Msg): M.State;
+begin
+  case Message of
+    when M.Msg.Search(const Value: string):
+      return Current with
+        Search := Value;
+      end with;
+    when M.Msg.SetOpen(const Value: bool):
+      return Current with
+        Open := Value;
+        Draft := Current.Applied;
+      end with;
+    when M.Msg.Artist(const Value: int):
+      return Current with
+        Draft := Current.Draft with
+          Artist := Sys.Math.Clamp(Value, 0, 2);
+        end with;
+      end with;
+    when M.Msg.Genre(const Value: int):
+      return Current with
+        Draft := Current.Draft with
+          Genre := Sys.Math.Clamp(Value, 0, 3);
+        end with;
+      end with;
+    when M.Msg.MinimumRating(const Value: int):
+      return Current with
+        Draft := Current.Draft with
+          MinimumRating := Sys.Math.Clamp(Value, 0, 10);
+        end with;
+      end with;
+    when M.Msg.OnlyCover(const Value: bool):
+      return Current with
+        Draft := Current.Draft with
+          OnlyCover := Value;
+        end with;
+      end with;
+    when M.Msg.Apply:
+      return Current with
+        Applied := Current.Draft;
+        Open := false;
+      end with;
+    when M.Msg.Reset:
+      return Current with
+        Draft := new M.Filters();
+      end with;
+    when M.Msg.Sort(const Value: M.Order):
+      return Current with
+        Sort := Value;
+      end with;
+    when M.Msg.Descending(const Value: bool):
+      return Current with
+        Descending := Value;
+      end with;
+  end case;
+end function;
+
+end unit;

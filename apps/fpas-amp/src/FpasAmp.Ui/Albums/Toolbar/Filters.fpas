@@ -1,0 +1,134 @@
+// The filter preview is composed entirely from existing native CUI widgets.
+unit FpasAmp.Ui.Albums.Toolbar.Filters;
+
+uses
+  FpasAmp.Ui.Albums.Toolbar.Model as M,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Feedback.Badges as Badges,
+  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
+  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as C;
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Panel(Current: M.State): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false),
+    Texts.Text<M.Msg>('Filter albums', Texts.Appearance.HeadingThree),
+    Selects.Select<M.Msg>(
+      'album-filter-artist',
+      [
+        new Selects.Item('All artists'),
+        new Selects.Item('Example artist'),
+        new Selects.Item('Various artists')
+      ],
+      Current.Draft.Artist, M.Msg.Artist, new Selects.Options(Label := 'Artist')
+    ),
+    Selects.Select<M.Msg>(
+      'album-filter-genre',
+      [
+        new Selects.Item('All genres'),
+        new Selects.Item('Electronic'),
+        new Selects.Item('Jazz'),
+        new Selects.Item('Rock')
+      ],
+      Current.Draft.Genre, M.Msg.Genre, new Selects.Options(Label := 'Genre')
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
+      E.Size<M.Msg>(
+        Sliders.Slider<M.Msg>(
+          'album-filter-rating',
+          'Minimum rating',
+          cast<float>(Current.Draft.MinimumRating),
+          0.0F,
+          10.0F,
+          function(Value: float): M.Msg => M.Msg.MinimumRating(cast<int>(Sys.Math.Round(Value))),
+          new Sliders.Options(Step := 1.0F)
+        ), new L.Flex(Basis := L.Extent.Fill)
+      ),
+      Texts.Text<M.Msg>(
+        if Current.Draft.MinimumRating = 0 then
+          'Any'
+        else
+          Current.Draft.MinimumRating.ToString() + ' / 10'
+        end if, Texts.Appearance.Secondary
+      )
+    ),
+    Checks.Checkbox<M.Msg>(
+      'album-filter-cover',
+      'Only with cover',
+      Current.Draft.OnlyCover,
+      M.Msg.OnlyCover
+    ),
+    E.Size<M.Msg>(
+      E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+      B.Button<M.Msg>(
+        'album-filter-reset',
+        'Reset',
+        M.Msg.Reset,
+        new B.Options(Variant := S.ButtonVariant.Outline)
+      ),
+      B.Button<M.Msg>(
+        'album-filter-apply',
+        'Apply',
+        M.Msg.Apply,
+        new B.Options(Variant := S.ButtonVariant.Primary)
+      )
+    )
+  );
+end function;
+
+// Builds a filter button and native popup for `Current`, using the resolved
+// `Colors`. `Width` bounds its popup on a narrow content area. Choices are demo data.
+public function Build(Current: M.State; Colors: Themes.Palette; Width: int): E.Element<M.Msg>;
+requires Width > 0;
+begin
+  const Trigger: E.Element<M.Msg> := B.Button<M.Msg>(
+    'album-filters', 'Filters', M.Msg.SetOpen(not Current.Open),
+    new B.Options(
+      Variant := S.ButtonVariant.Ghost, Selected := Current.Open,
+      Icon := Sys.Char.ConvertFromUtf32($E0DC)
+    )
+  );
+  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+    [
+      Popovers.Popover<M.Msg>(
+        'album-filter-panel', Trigger, Panel(Current), Current.Open, M.Msg.SetOpen(false),
+        new Popovers.Options(
+          Position := Menus.Placement.BottomEnd,
+          Width := Sys.Math.Min(360, Width),
+          Padding := 16
+        )
+      )
+    ]
+  );
+  const Count: int := M.Count(Current.Applied);
+  if Count > 0 then
+    Parts.Add(
+      Badges.Badge<M.Msg>(
+        'album-filter-count',
+        Count.ToString(),
+        new Badges.Options(Size := B.Size.Small)
+      )
+    );
+  end if;
+
+  return E.Row<M.Msg>(
+    new L.Flow(
+      Gap := Points(2), Align := L.Alignment.Center,
+      PaddingEnd := Points(8), Background := Colors.Surface, CornerRadius := 6.0F, Clip := false
+    ), Parts.ToArray()
+  );
+end function;
+
+end unit;

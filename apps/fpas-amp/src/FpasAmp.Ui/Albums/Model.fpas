@@ -3,6 +3,7 @@ unit FpasAmp.Ui.Albums.Model;
 
 uses
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
   System.Collections.Immutable as I;
 
 // Owner-thread album view state; pixels are never mutated after publication.
@@ -23,6 +24,8 @@ public type State = record
   public Error: string? := null;
   // Albums whose independent user rating is being saved in background work.
   public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+  // Search/filter/sort preview; catalogue ordering is independent of these values.
+  public Toolbar: Toolbar.State := new Toolbar.State();
 end record;
 
 // Album lifecycle and immutable background publications.
@@ -45,6 +48,8 @@ public type Msg = variant
   Rated(Id: string; Value: int?);
   // Restore the control after a failed write and show the error.
   RatingFailed(Id: string; Message: string);
+  // Edit the local search/filter/sort preview.
+  Toolbar(Value: Toolbar.Msg);
 end variant;
 
 end unit;

@@ -1,0 +1,93 @@
+// Local preview state; these controls do not query or reorder the catalogue yet.
+unit FpasAmp.Ui.Albums.Toolbar.Model;
+
+// Album header fields offered by the sorting preview.
+public type Order = enum
+  // Album title.
+  Title;
+  // Album artist.
+  Artist;
+  // Independent album rating.
+  Rating;
+  // Number of indexed songs.
+  Songs;
+end enum;
+
+// Filter values edited in the popover before Apply is chosen.
+public type Filters = record
+  // Demo artist choice; zero means all artists.
+  public Artist: int := 0;
+  // Demo genre choice; zero means all genres.
+  public Genre: int := 0;
+  // Inclusive rating floor, or zero for any rating.
+  public MinimumRating: int := 0;
+  // Whether a cover is requested.
+  public OnlyCover: bool := false;
+end record;
+
+// Model-owned toolbar preview, independent of album/thumbnail lifetimes.
+public type State = record
+  // Text in the native search editor.
+  public Search: string := '';
+  // Applied preview values used by the filter-count badge.
+  public Applied: Filters := new Filters();
+  // Unconfirmed edits; dismissal restores Applied.
+  public Draft: Filters := new Filters();
+  // Whether the filter popover is open.
+  public Open: bool := false;
+  // Current sort-field preview.
+  public Sort: Order := Order.Title;
+  // Whether the preview direction is descending.
+  public Descending: bool := false;
+end record;
+
+// Native toolbar proposals. None starts library work.
+public type Msg = variant
+  // Replace the search query.
+  Search(Value: string);
+  // Open the filter editor, or dismiss its unconfirmed edits.
+  SetOpen(Value: bool);
+  // Choose a demo artist.
+  Artist(Value: int);
+  // Choose a demo genre.
+  Genre(Value: int);
+  // Edit the rating floor.
+  MinimumRating(Value: int);
+  // Request or remove the cover-only preview.
+  OnlyCover(Value: bool);
+  // Confirm the preview and close its popover.
+  Apply;
+  // Reset the unconfirmed filter draft.
+  Reset;
+  // Choose the preview sort field.
+  Sort(Value: Order);
+  // Choose the preview sort direction.
+  Descending(Value: bool);
+end variant;
+
+// Counts nondefault values in `Value`, excluding search and sorting.
+public function Count(Value: Filters): int;
+begin
+  return (if Value.Artist <> 0 then
+    1
+  else
+    0
+  end if) +
+    (if Value.Genre <> 0 then
+      1
+    else
+      0
+    end if) +
+    (if Value.MinimumRating > 0 then
+      1
+    else
+      0
+    end if) +
+    (if Value.OnlyCover then
+      1
+    else
+      0
+    end if);
+end function;
+
+end unit;

@@ -4,6 +4,7 @@ unit FpasAmp.Ui.Albums.Update;
 uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Library.Albums.Access as Access, FpasAmp.Imaging as Images,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -34,7 +35,10 @@ begin
   case Message of
     when M.Msg.Open:
       if Service = null then
-        return new A.Transition<M.State, M.Msg>(new M.State(Loaded := true), []);
+        return new A.Transition<M.State, M.Msg>(
+          new M.State(Loaded := true, Toolbar := Current.Toolbar),
+          []
+        );
       end if;
 
       return new A.Transition<M.State, M.Msg>(
@@ -63,6 +67,7 @@ begin
           First := -1;
           Last := -1;
           Generation := Current.Generation + 1L;
+          Toolbar := ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false));
         end with,
         [A.CancelBackground<M.Msg>('observe'), A.CancelBackground<M.Msg>('images')]
       );
@@ -211,6 +216,12 @@ begin
         Current with
           Saving := Current.Saving.Remove(Id);
           Error := Text;
+        end with, []
+      );
+    when M.Msg.Toolbar(const Value: Toolbar.Msg):
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Toolbar := ToolbarUpdate.Apply(Current.Toolbar, Value);
         end with, []
       );
   end case;

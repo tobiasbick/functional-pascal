@@ -169,7 +169,7 @@ internal sealed class TuiController : IAsyncDisposable
                     request.TrySetResult(message);
             }
         }
-        catch (Exception error) when (error is IOException or OperationCanceledException or ObjectDisposedException or JsonException) { }
+        catch (Exception error) when (IsConnectionFailure(error)) { }
         finally
         {
             var error = new IOException("The private terminal connection closed.");
@@ -221,7 +221,7 @@ internal sealed class TuiController : IAsyncDisposable
                 }
             }
         }
-        catch (Exception error) when (error is IOException or OperationCanceledException or ObjectDisposedException or JsonException) { }
+        catch (Exception error) when (IsConnectionFailure(error)) { }
         finally
         {
             var error = new IOException("The TUI control connection closed.");
@@ -229,6 +229,10 @@ internal sealed class TuiController : IAsyncDisposable
             foreach (var request in controlPending.Values) request.TrySetException(error);
         }
     }
+
+    // Malformed peer messages close the private connection like a transport failure.
+    private static bool IsConnectionFailure(Exception error) => error is IOException or OperationCanceledException or ObjectDisposedException
+        or JsonException or KeyNotFoundException or InvalidOperationException or FormatException;
 
     public async ValueTask DisposeAsync()
     {

@@ -4,6 +4,17 @@ using Fpas.Debugging.Evaluation;
 
 namespace Fpas.Debugging.Batch;
 
+/// <summary>Command-line options of one batch debug invocation.</summary>
+/// <param name="Program">Built executable DLL to debug.</param>
+/// <param name="Cwd">Target working directory; defaults to the program directory.</param>
+/// <param name="Breakpoints">One-shot source breakpoints as path:line[:column].</param>
+/// <param name="Expressions">Expressions to evaluate at the stop.</param>
+/// <param name="Stdin">File delivered as target standard input.</param>
+/// <param name="Timeout">Overall deadline in seconds, 1..3600.</param>
+/// <param name="OutputLimit">Captured output budget in bytes, 1..1048576.</param>
+/// <param name="Arguments">Verbatim target arguments.</param>
+/// <param name="Tracepoints">Source tracepoints as path:line[:column]; exclusive with breakpoints.</param>
+/// <param name="MaxHits">Maximum tracepoint observations, 1..256.</param>
 public sealed record BatchOptions(string? Program, string? Cwd = null, string[]? Breakpoints = null, string[]? Expressions = null,
     string? Stdin = null, int Timeout = 30, int OutputLimit = 1_048_576, string[]? Arguments = null,
     string[]? Tracepoints = null, int MaxHits = 100);

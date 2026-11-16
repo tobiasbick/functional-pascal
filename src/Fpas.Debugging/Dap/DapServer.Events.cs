@@ -15,7 +15,7 @@ internal sealed partial class DapServer
                 try
                 {
                     var state = Host.Snapshot;
-                    await Output();
+                    Output();
                     foreach (var point in state.Breakpoints ?? [])
                     {
                         if (knownBreakpoints.TryGetValue(point.Id, out var previous) && previous == point.State) continue;
@@ -31,7 +31,7 @@ internal sealed partial class DapServer
                     }
                     if (state.State is "exited" or "failed")
                     {
-                        await Host.DisposeAsync(); await Output(); FlushOutputLoss();
+                        await Host.DisposeAsync(); Output(); FlushOutputLoss();
                         if (state.ExitCode is { } exit) Event("exited", new() { ["exitCode"] = exit });
                         if (state.Error is { } failure) Event("output", new() { ["category"] = "stderr", ["output"] = failure.Code + ": " + failure.Message + "\n" });
                         Terminated();
@@ -49,25 +49,29 @@ internal sealed partial class DapServer
         }
     }
 
+    private const string OmittedOutput = "[FPAS debugger output omitted by capture/transport limit]\n";
     private bool outputLost;
     private void FlushOutputLoss()
     {
         if (!outputLost) return;
-        Event("output", new() { ["category"] = "stderr", ["output"] = "[FPAS debugger output omitted by capture/transport limit]\n" });
+        Event("output", new() { ["category"] = "stderr", ["output"] = OmittedOutput });
         outputLost = false;
     }
-    private Task Output()
+
+    // Forwards captured target output as lossy events and reports any omission once delivery recovers.
+    private void Output()
     {
         var captured = Host.Output(outputCursor);
         outputLost |= captured.Truncated;
         foreach (var item in captured.Items)
         {
-            if (outputLost && transport.Send(new() { ["type"] = "event", ["event"] = "output", ["body"] = new JsonObject
-                { ["category"] = "stderr", ["output"] = "[FPAS debugger output omitted by capture/transport limit]\n" } }, lossy: true)) outputLost = false;
-            if (!transport.Send(new() { ["type"] = "event", ["event"] = "output", ["body"] = new JsonObject { ["category"] = item.Stream, ["output"] = item.Text } }, lossy: true)) outputLost = true;
+            if (outputLost) outputLost = !SendOutput("stderr", OmittedOutput);
+            if (!SendOutput(item.Stream, item.Text)) outputLost = true;
         }
-        if (outputLost && transport.Send(new() { ["type"] = "event", ["event"] = "output", ["body"] = new JsonObject
-            { ["category"] = "stderr", ["output"] = "[FPAS debugger output omitted by capture/transport limit]\n" } }, lossy: true)) outputLost = false;
-        outputCursor = captured.NextSequence; return Task.CompletedTask;
+        if (outputLost) outputLost = !SendOutput("stderr", OmittedOutput);
+        outputCursor = captured.NextSequence;
     }
+
+    private bool SendOutput(string category, string text) => transport.Send(new() { ["type"] = "event", ["event"] = "output",
+        ["body"] = new JsonObject { ["category"] = category, ["output"] = text } }, lossy: true);
 }

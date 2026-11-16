@@ -67,7 +67,12 @@ internal sealed class DebugSessionHost : IAsyncDisposable
             await host.Status(startup.Token);
             return host;
         }
-        catch { await host.DisposeAsync(); throw; }
+        catch
+        {
+            // Report the startup failure rather than a secondary cleanup failure.
+            try { await host.DisposeAsync(); } catch (IOException) { }
+            throw;
+        }
     }
 
     internal async Task<DebugSnapshot> Prepare(LaunchTarget target, CancellationToken token)

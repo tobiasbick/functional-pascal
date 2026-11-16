@@ -102,7 +102,7 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
             if (command is "disconnect" or "terminate")
             {
                 await operations.WaitAsync(request.Token); held = true;
-                await Output(); FlushOutputLoss();
+                Output(); FlushOutputLoss();
             }
             Reply(id, command, body); replied = true;
             if (command is "continue" or "next" or "stepIn" or "stepOut")

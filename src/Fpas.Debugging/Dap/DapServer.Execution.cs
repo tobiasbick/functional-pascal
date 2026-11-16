@@ -105,8 +105,7 @@ internal sealed partial class DapServer
                 if (pending.TryGetValue(cancelled, out var waiting)) { try { waiting.Cancel(); } catch (ObjectDisposedException) { } }
                 return new();
             case "disconnect": case "terminate":
-                if (command == "disconnect" && !args.Flag("terminateDebuggee", true))
-                    throw new DebugException("unsupported", "Disconnect must terminate the debugger-owned target.");
+                // Dispatch has already rejected detach and restart shutdown variants.
                 if (host is not null) await host.DisposeAsync();
                 return new();
             case "threads": return await ThreadList(token);

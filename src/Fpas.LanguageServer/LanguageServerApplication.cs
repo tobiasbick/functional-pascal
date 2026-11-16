@@ -4,8 +4,15 @@ using StreamJsonRpc;
 
 namespace Fpas.LanguageServer;
 
+/// <summary>Hosts the FPAS language server over a JSON-RPC stream pair.</summary>
 public static class LanguageServerApplication
 {
+    /// <summary>Serve LSP requests until the client exits, the connection closes or the caller cancels.</summary>
+    /// <param name="input">Client-to-server LSP byte stream.</param>
+    /// <param name="output">Server-to-client LSP byte stream.</param>
+    /// <param name="error">Diagnostic log for transport and request failures.</param>
+    /// <param name="token">Cancellation that ends the session with exit code 130.</param>
+    /// <returns>0 after an orderly shutdown and exit or a closed connection, 1 after a failure or an exit without shutdown, or 130 when cancelled.</returns>
     public static async Task<int> RunAsync(Stream input, Stream output, TextWriter error, CancellationToken token = default)
     {
         await using var session = new ServerSession(error);
@@ -27,6 +34,5 @@ public static class LanguageServerApplication
         }
         catch (Exception failure) when (failure is IOException or InvalidDataException or Newtonsoft.Json.JsonException or InvalidOperationException or ArgumentException or StreamJsonRpc.ConnectionLostException or BadRpcHeaderException)
         { await error.WriteLineAsync("LSP connection failed: " + failure.Message); return 1; }
-        finally { rpc.Dispose(); }
     }
 }

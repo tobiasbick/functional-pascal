@@ -4,16 +4,29 @@ using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Hosting;
 
+/// <summary>Private child-process entry points used by the debugger host.</summary>
 public static class PrivateWorker
 {
+    /// <summary>Whether the command line requests the private debugger worker.</summary>
+    /// <param name="arguments">Process command-line arguments.</param>
+    /// <returns>True for a worker invocation.</returns>
     public static bool IsInvocation(string[] arguments) => arguments.Length == 2 && arguments[0] == WorkerLauncher.WorkerArgument;
+    /// <summary>Whether the command line requests the private target launch broker.</summary>
+    /// <param name="arguments">Process command-line arguments.</param>
+    /// <returns>True for a target broker invocation.</returns>
     public static bool IsTargetInvocation(string[] arguments) => arguments.Length == 2 && arguments[0] == WorkerLauncher.BrokerArgument;
+    /// <summary>Run the target launch broker connected to the named pipe.</summary>
+    /// <param name="pipeName">Private pipe created by the debugger worker.</param>
+    /// <returns>The broker process exit code.</returns>
     public static async Task<int> RunTargetAsync(string pipeName)
     {
         try { return await TargetBroker.Run(pipeName); }
         catch (Exception) { return 1; }
     }
 
+    /// <summary>Run the debugger worker connected to the named pipe.</summary>
+    /// <param name="pipeName">Private pipe created by the debugger host.</param>
+    /// <returns>The worker process exit code.</returns>
     public static async Task<int> RunAsync(string pipeName)
     {
         try { return await RunCore(pipeName); }

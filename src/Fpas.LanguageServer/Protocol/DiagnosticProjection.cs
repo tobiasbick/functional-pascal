@@ -37,13 +37,8 @@ internal static class DiagnosticProjection
         var document = texts.Documents.FirstOrDefault(document => SamePath(document.Path, location.Path));
         if (location.Offset is { } offset && document is not null)
         {
-            var end = Math.Min(document.Text.Length, (long)offset + Math.Max(0, location.Length)); var row = 0; var character = 0;
-            for (var index = 0; index < end; index++)
-            {
-                if (document.Text[index] == '\r') { if (index + 1 < end && document.Text[index + 1] == '\n') index++; row++; character = 0; }
-                else if (document.Text[index] == '\n') { row++; character = 0; } else character++;
-            }
-            return new() { Start = start, End = new(row, character) };
+            var end = (int)Math.Clamp((long)offset + Math.Max(0, location.Length), 0, document.Text.Length);
+            return new() { Start = start, End = FeatureProjection.End(document.Text[..end]) };
         }
         return new() { Start = start, End = new(start.Line, start.Character + Math.Max(0, location.Length)) };
     }

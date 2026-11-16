@@ -29,7 +29,8 @@ internal sealed partial class ServerSession
             {
                 foreach (var key in refactorings.Where(item => item.Value.Expires <= now).Select(item => item.Key).ToArray())
                     refactorings.Remove(key);
-                if (refactorings.Count == 8) refactorings.Remove(refactorings.Keys.First());
+                // Dictionary order is not insertion order after removals; evict the oldest preview explicitly.
+                if (refactorings.Count == 8) refactorings.Remove(refactorings.MinBy(item => item.Value.Expires).Key);
                 refactorings.Add(id, new(plan, snapshot.Revision, now + 300_000));
             }
             return new

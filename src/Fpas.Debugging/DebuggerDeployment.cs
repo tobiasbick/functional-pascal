@@ -4,9 +4,22 @@ using Fpas.Debugging.Native;
 
 namespace Fpas.Debugging;
 
+/// <summary>Availability of the packaged debugger shim for the current platform.</summary>
+/// <param name="Status">available, missing_shim or unsupported_platform.</param>
+/// <param name="Version">Debugger assembly version.</param>
+/// <param name="ShimVersion">Expected dbgshim version.</param>
+/// <param name="ShimPath">Located shim path, if any.</param>
+/// <param name="ShimSha256">Hex SHA-256 of the located shim, if any.</param>
+/// <param name="Os">Operating system family: win, linux or unsupported.</param>
+/// <param name="Architecture">Process architecture.</param>
+/// <param name="RequiredRuntime">Runtime the debugger targets.</param>
+/// <param name="Protocols">Supported debugger front ends.</param>
 public sealed record DebuggerDeployment(string Status, string Version, string ShimVersion, string? ShimPath, string? ShimSha256,
     string Os, string Architecture, string RequiredRuntime, string[] Protocols)
 {
+    /// <summary>Locate and hash the packaged shim for the current platform.</summary>
+    /// <param name="token">Cancellation for hashing the shim.</param>
+    /// <returns>The deployment status.</returns>
     public static async Task<DebuggerDeployment> Inspect(CancellationToken token = default)
     {
         var os = OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsLinux() ? "linux" : "unsupported";

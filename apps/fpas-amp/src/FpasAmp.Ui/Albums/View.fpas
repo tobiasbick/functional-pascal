@@ -5,12 +5,14 @@ uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Library,
   FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
   FpasAmp.Ui.Albums.Status as Status,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
   FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  Fpas.Ui.Composition as Composition, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Composition as Composition,
   FpasAmp.Imaging as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.VirtualLists as Virtual, Fpas.Ui.Widgets.Containers.Grids as Grids,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.HoverCards as Hover,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Widgets.Inputs.Ratings as Ratings,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   System as Sys, System.Collections.Generic as C;
@@ -67,7 +69,7 @@ begin
       Gap := 8.0F,
       Align := L.Alignment.Center,
       Hoverable := true
-    )
+    ), function(): M.Msg => M.Msg.OpenMusic(Album.Id)
   );
   return Hover.HoverCard<M.Msg>(
     'album-details-' + Album.Id, Card, Details.Build(Album, Image),
@@ -75,10 +77,14 @@ begin
   );
 end function;
 
-// Builds a pure responsive grid for `Current`. `Width` is the available main area;
-// `Padding` matches the shell viewport. Thumbnail work is requested after layout.
-// `Theme` supplies the resolved native toolbar colors.
-public function Build(Current: M.State; Width: int; Padding: int; Theme: Themes.Theme): E.Element<M.Msg>;
+// Builds the responsive album grid or the selected album's tracks.
+// ## Parameters
+// - `Current`: Album browser state.
+// - `Width`: Available width of the main area.
+// - `Padding`: Shell viewport inset.
+// ## Returns
+// The current Albums view.
+public function Build(Current: M.State; Width: int; Padding: int): E.Element<M.Msg>;
   function Row(Index: int): E.Element<M.Msg>;
   begin
     const Available: int := Sys.Math.Max(1, Width - Padding * 2);
@@ -101,6 +107,26 @@ public function Build(Current: M.State; Width: int; Padding: int; Theme: Themes.
   end function;
 begin
   const Available: int := Sys.Math.Max(1, Width - Padding * 2);
+  const Selected: Music.State? := Current.Music;
+  if Selected <> null then
+    const Heading: E.Element<Music.Msg> := E.Row<Music.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+      Icons.IconButton<Music.Msg>(
+        'tracks-back',
+        Sys.Char.ConvertFromUtf32($E048),
+        'Back to albums',
+        Music.Msg.Back
+      ),
+      Texts.Text<Music.Msg>('Music', Texts.Appearance.HeadingOne)
+    );
+    return Composition.Map<Music.Msg, M.Msg>(
+      Songs.Build(Selected, Heading, Available, Padding),
+      function(Value: Music.Msg): M.Msg => case Value of
+        when Music.Msg.Back: M.Msg.BackToAlbums;
+        else M.Msg.Music(Value);
+      end case
+    );
+  end if;
   const Count: int := Columns(Available);
   const Edge: int := Sys.Math.Clamp((Available - (Count - 1) * 16) div Count - 24, 1, 256);
   const RowHeight: int := Edge + 142;
@@ -109,7 +135,7 @@ begin
       Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne),
       Composition.Map<Toolbar.Msg, M.Msg>(
         ToolbarView.Build(
-          Current.Toolbar, Current.Catalog.Artists, Current.Catalog.Genres, Available, Theme.Colors
+          Current.Toolbar, Current.Catalog.Artists, Current.Catalog.Genres, Available
         ),
         M.Msg.Toolbar
       )
@@ -155,7 +181,7 @@ begin
       E.Size<M.Msg>(
         Virtual.VirtualList<M.Msg>(
           GridId, (Current.Shown.Length + Count - 1) div Count,
-          cast<float>(RowHeight), L.Extent.Fill, Row
+          cast<float>(RowHeight), L.Extent.Fill, Row, Current.Offset, M.Msg.Scrolled
         ), new L.Flex(Basis := L.Extent.Fill)
       )
     );

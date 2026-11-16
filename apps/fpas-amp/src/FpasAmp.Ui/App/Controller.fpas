@@ -44,7 +44,7 @@ begin
     null
   end if;
   const Child: Mvu.Transition<AlbumModel.State, M.Msg> := Composition.MapTransition<AlbumModel.State, AlbumModel.Msg, M.Msg>(
-    AlbumUpdate.Apply(Current.Albums, Message, Service), M.Msg.Albums, 'albums'
+    AlbumUpdate.Apply(Current.Albums, Message, Service, Tags), M.Msg.Albums, 'albums'
   );
   return new Mvu.Transition<M.State, M.Msg>(
     Current with

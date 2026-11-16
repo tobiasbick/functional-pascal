@@ -4,6 +4,7 @@ unit FpasAmp.Ui.Albums.Model;
 uses
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Browse as Browse,
+  FpasAmp.Ui.Albums.Music.Model as Music,
   System.Collections.Immutable as I;
 
 // Owner-thread album view state; pixels are never mutated after publication.
@@ -30,6 +31,12 @@ public type State = record
   public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
   // Search text, filters and order that select Shown from Items.
   public Toolbar: Toolbar.State := new Toolbar.State();
+  // Last scroll offset of the album grid in logical points.
+  public Offset: float := 0.0F;
+  // Visit counter keeps detached results scoped to the album that requested them.
+  public MusicVisit: long := 0L;
+  // Album tracks currently shown inside the Albums destination.
+  public Music: Music.State? := null;
 end record;
 
 // Album lifecycle and immutable background publications.
@@ -54,6 +61,14 @@ public type Msg = variant
   RatingFailed(Id: string; Message: string);
   // Edit the search text, filters or order.
   Toolbar(Value: Toolbar.Msg);
+  // Open the exact release represented by the activated card.
+  OpenMusic(Id: string);
+  // Return to the retained album grid.
+  BackToAlbums;
+  // Remember the latest target offset before leaving the grid.
+  Scrolled(Offset: float);
+  // Route an input or background result to the selected release.
+  Music(Value: Music.Msg);
 end variant;
 
 end unit;

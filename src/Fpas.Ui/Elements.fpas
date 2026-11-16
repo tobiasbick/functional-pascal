@@ -339,7 +339,7 @@ public type Element<TMsg> = variant
   // Native drag-to-reorder list.
   ReorderableList(Id: string; Items: array of Element<TMsg>; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
   // Native viewport with lazily realized rows.
-  VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element<TMsg>);
+  VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element<TMsg>; Offset: float?; OnScroll: Sys.Func<float, TMsg>?);
   // Native code block.
   CodeBlock(Id: string; Code: string; Settings: CodeBlocks.Options);
   // Native json view.

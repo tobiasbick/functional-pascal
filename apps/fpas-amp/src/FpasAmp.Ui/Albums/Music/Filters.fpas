@@ -1,0 +1,70 @@
+// Genre and rating form for the track list of one album.
+unit FpasAmp.Ui.Albums.Music.Filters;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Albums.Toolbar.Filters as Toolbar,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as Selects,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, System.Collections.Generic as C,
+  System.Collections.Immutable as I;
+
+function Genres(Names: array of string; Draft: M.Filters): E.Element<M.Msg>;
+  function Change(Flags: array of bool): M.Msg;
+  begin
+    const Chosen: I.ImmutableHashSet<string>.Builder := Draft.Genres.Clear().ToBuilder();
+    for Index: int := 0 to Names.Length - 1 do
+      if Flags[Index] then
+        discard Chosen.Add(Names[Index]);
+      end if;
+    end for;
+
+    return M.Msg.Genres(Chosen.ToImmutable());
+  end function;
+begin
+  const Items: C.List<Selects.Item> := new C.List<Selects.Item>(Names.Length);
+  const Selected: array of bool := new bool[Names.Length];
+  for Index: int := 0 to Names.Length - 1 do
+    const Name: string := Names[Index];
+    Items.Add(new Selects.Item(Name));
+    Selected[Index] := Draft.Genres.Contains(Name);
+  end for;
+
+  return Multi.MultiSelect<M.Msg>(
+    'track-filter-genre', Items.ToArray(), Selected, Change,
+    new Multi.Options(Label := 'Genre', Placeholder := 'All genres', Searchable := Names.Length > 8)
+  );
+end function;
+
+// Presents the toolbar filter trigger and the tracks' genre and rating controls.
+// ## Parameters
+// - `Current`: The track browser state.
+// - `Width`: Maximum popup width in logical points.
+// ## Returns
+// The filter button and its anchored form.
+public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+requires Width > 0;
+begin
+  const Names: array of string := Browse.GenreChoices(Current.Tracks);
+  const Fields: array of E.Element<M.Msg> := if Names.Length > 0 then
+    [Genres(Names, Current.Draft)]
+  else
+    []
+  end if;
+  const Count: int := Current.Applied.Genres.Count + if Current.Applied.MinimumRating > 0 then
+    1
+  else
+    0
+  end if;
+  const Form: E.Element<M.Msg> := Toolbar.Form<M.Msg>(
+    'track',
+    'Filter tracks',
+    Fields,
+    Current.Draft.MinimumRating,
+    M.Msg.Minimum,
+    M.Msg.Reset,
+    M.Msg.ApplyFilters
+  );
+  return Toolbar.Popup<M.Msg>('track', Form, Count, Current.FiltersOpen, M.Msg.ShowFilters, Width);
+end function;
+
+end unit;

@@ -11,8 +11,37 @@ uses
   FpasAmp.Library.Playlists.Persistence.Store as PlaylistStore,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
+const SqliteBusy: int := 5;
+
+// A busy attempt has already unwound its transaction. Retry from its beginning
+// with a bounded pause so a cancelled or superseded job can stop waiting.
+async function WhenWritable(Attempt: procedure(); Current: function(): bool; Cancellation: T.CancellationToken): Tasks.Task;
+begin
+  var Delay: int := 100;
+  while Current() do
+    Cancellation.ThrowIfCancellationRequested();
+    try
+      Attempt();
+      return;
+    catch Failure: Db.SqliteException when Failure.SqliteErrorCode = SqliteBusy do
+      await Tasks.Task.Delay(Delay, Cancellation).ConfigureAwait(false);
+    end try;
+
+    Delay := Sys.Math.Min(Delay * 2, 1000);
+  end while;
+end function;
+
 // Runs metadata/hash processing on a background task. `Ready` completes after both
 // schemas are validated; lifetime failures propagate without replacing either database.
+//
+// ## Parameters
+// - `Policy`: Source configuration and signal for queued work.
+// - `Database`: Local catalogue database path.
+// - `UserDatabase`: Separate durable user database path.
+// - `Ready`: Startup completion, owned by the caller.
+// - `Cancellation`: Stops the worker and releases its connections.
+// ## Returns
+// The task for the worker's lifetime.
 public async function Run(Policy: P.Policy; Database: string; UserDatabase: string; Ready: Tasks.TaskCompletionSource<bool>; Cancellation: T.CancellationToken): Tasks.Task;
 begin
   try
@@ -20,20 +49,42 @@ begin
     using const Connection: Db.SqliteConnection := Sql.Open(Database);
     Schema.Ensure(Connection);
     using const UserConnection: Db.SqliteConnection := Users.Open(UserDatabase);
+    // Provider waits are synchronous. Keep them short and wait between attempts with cancellation.
+    Connection.DefaultTimeout := 1;
+    UserConnection.DefaultTimeout := 1;
     discard Ready.TrySetResult(true);
     var Configured: long := -1L;
     var RetryAt: Sys.DateTimeOffset := Sys.DateTimeOffset.MinValue;
     while true do
       Cancellation.ThrowIfCancellationRequested();
       const Configuration: P.Configuration := Policy.Read();
+      const Current: function(): bool := function(): bool => Policy.Read().Version =
+        Configuration.Version;
       if Configured <> Configuration.Version then
-        Pending.Configure(Connection, Configuration.Sources);
+        await WhenWritable(
+          procedure() begin
+            Pending.Configure(Connection, Configuration.Sources);
+          end procedure,
+          Current, Cancellation
+        ).ConfigureAwait(false);
         Configured := Configuration.Version;
       end if;
 
       if Sys.DateTimeOffset.UtcNow >= RetryAt then
-        Pending.Retry(Connection);
+        await WhenWritable(
+          procedure() begin
+            Pending.Retry(Connection);
+          end procedure, Current, Cancellation
+        ).ConfigureAwait(false);
+        if not Current() then
+          continue;
+        end if;
+
         RetryAt := Sys.DateTimeOffset.UtcNow.AddMinutes(1.0);
+      end if;
+
+      if not Current() then
+        continue;
       end if;
       const Playlist: Pending.File? := Pending.Next(Connection, 1);
       if Playlist <> null then
@@ -41,20 +92,19 @@ begin
           Playlist.Path,
           Playlist.Size,
           Playlist.Modified,
-          Cancellation,
-          function(): bool => Policy.Read().Version = Configuration.Version
+          Cancellation, Current
         );
-        discard PlaylistStore.Save(
-          Connection,
-          UserConnection,
-          Playlist.Id,
-          Playlist.Path,
-          Playlist.Size,
-          Playlist.Modified,
-          Parsed,
-          function(): bool => Policy.Read().Version = Configuration.Version,
-          Cancellation
-        );
+        await WhenWritable(
+          procedure() begin
+            discard PlaylistStore.Save(
+              Connection, UserConnection, Playlist.Id, Playlist.Path,
+              Playlist.Size, Playlist.Modified, Parsed, Current, Cancellation
+            );
+          end procedure, Current, Cancellation
+        ).ConfigureAwait(false);
+        if not Current() then
+          continue;
+        end if;
       end if;
       const File: Pending.File? := Pending.Next(Connection);
       if File = null then
@@ -66,25 +116,38 @@ begin
       end if;
 
       const Value: Reading.Result := await Reading.Read(
-        File.Path, File.Size, File.Modified, Cancellation,
-        function(): bool => Policy.Read().Version = Configuration.Version
+        File.Path, File.Size, File.Modified, Cancellation, Current
       ).ConfigureAwait(false);
-      if Policy.Read().Version <> Configuration.Version then
-        continue;
+      const Fresh: function(): bool := function(): bool => Current() and (Value.Hash = ''
+        or Reading.Matches(
+        File.Path,
+        File.Size,
+        File.Modified
+      ));
+      var TrackId: string := '';
+      if Value.Hash <> '' then
+        await WhenWritable(
+          procedure() begin
+            TrackId := Identity.Resolve(
+              UserConnection, File.Path, Value.Hash, File.Size, File.Modified, Cancellation,
+              function(Path: string): bool => Recovery.Allowed(
+                Connection,
+                Path,
+                Configuration.Sources
+              )
+            );
+          end procedure, Fresh, Cancellation
+        ).ConfigureAwait(false);
       end if;
-      const TrackId: string := if Value.Hash <> '' then
-        Identity.Resolve(
-          UserConnection, File.Path, Value.Hash, File.Size, File.Modified, Cancellation,
-          function(Path: string): bool => Recovery.Allowed(Connection, Path, Configuration.Sources)
-        )
-      else
-        ''
-      end if;
-      discard Store.Save(
-        Connection, File.Id, File.Size, File.Modified, TrackId,
-        Value.Hash, Value.Tags, Value.Error,
-        function(): bool => Policy.Read().Version = Configuration.Version, Cancellation
-      );
+
+      await WhenWritable(
+        procedure() begin
+          discard Store.Save(
+            Connection, File.Id, File.Size, File.Modified, TrackId,
+            Value.Hash, Value.Tags, Value.Error, Current, Cancellation
+          );
+        end procedure, Fresh, Cancellation
+      ).ConfigureAwait(false);
     end while;
   catch Cancelled: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
     discard Ready.TrySetCanceled();

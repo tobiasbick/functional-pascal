@@ -64,7 +64,7 @@ static bool check_range(bool bridge) {
         const int count = frame == 3 ? 1 : 100;
         if (frame == 1) cui_scroll_to(ui, "list", 2000);
         if (bridge) {
-            int node = fpas_cui_virtual_list_begin(ui, "list", count, 36, 2, 140, 1, &first, &last);
+            int node = fpas_cui_virtual_list_begin(ui, "list", count, 36, 2, 140, 1, -1, &first, &last);
             fpas_cui_virtual_list_end(ui, node);
         } else {
             cui_virtual_list_begin(ui, "list", count, 36, CUI_PX(140), &first, &last);

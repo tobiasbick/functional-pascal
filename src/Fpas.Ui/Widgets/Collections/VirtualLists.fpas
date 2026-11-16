@@ -1,6 +1,6 @@
 unit Fpas.Ui.Widgets.Collections.VirtualLists;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
 // Uses CUI to realize only the visible rows and its overscan.
 // ## Type parameters
@@ -12,12 +12,14 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 // - `Height`: Viewport extent.
 // - `BuildRow`: Pure view factory called for each visible or overscan index.
 //   Interactive children must use IDs unique across the view.
+// - `Offset`: Last known logical scroll offset. The GUI restores it when the list appears.
+// - `OnScroll`: Maps a change from the supplied offset to a message. Store the reported value to preserve it across views.
 // ## Returns
 // The graphical element.
-public function VirtualList<TMsg>(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): E.Element<TMsg>): E.Element<TMsg>;
+public function VirtualList<TMsg>(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): E.Element<TMsg>; Offset: float? := null; OnScroll: Sys.Func<float, TMsg>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.VirtualList(Id, Count, RowHeight, Height, BuildRow);
+  return E.Element<TMsg>.VirtualList(Id, Count, RowHeight, Height, BuildRow, Offset, OnScroll);
 end function;
 
 end unit;

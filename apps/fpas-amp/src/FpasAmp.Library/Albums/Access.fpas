@@ -7,6 +7,7 @@ uses
   FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Albums.Artwork.Names as Artwork,
   FpasAmp.Library.Albums.Persistence.Ratings as Ratings,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Queries as Queries,
   FpasAmp.Imaging as Images, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -27,6 +28,32 @@ public type Session = record
       Database, Users, Ready, Lifetime, Configuration,
       new Images.ThumbnailStore(IO.Path.Combine(Covers.DirectoryPath(Users), 'thumbnails-v1'))
     );
+  end function;
+
+  // Loads the tracks of a single release outside the caller's thread.
+  //
+  // ## Parameters
+  // - `Id`: Stable identity from the selected album header.
+  // - `Cancellation`: Cancels the query along with the parent lifetime.
+  // ## Returns
+  // The selected release's tracks in disc and track order.
+  public async function TracksAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<Tracks.Entry>>;
+  requires Id <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<I.ImmutableArray<Tracks.Entry>>(
+      function(): I.ImmutableArray<Tracks.Entry> => Queries.ReadRelease(
+        self.Database,
+        self.Users,
+        Id,
+        Linked.Token
+      ),
+      Linked.Token
+    ).ConfigureAwait(false);
   end function;
 
   // Publishes changed sorted album headers through awaited `Publish` until

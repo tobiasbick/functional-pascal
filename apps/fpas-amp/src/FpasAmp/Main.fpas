@@ -21,29 +21,37 @@ async function Main(): Tasks.Task;
 begin
   const Directory: string := Files.DirectoryPath();
   const Preferences: Model.Preferences := Settings.Load(Directory);
-  await using const Inventory: Monitoring.Session := Monitoring.Session.Start(
+  const Inventory: Monitoring.Session := Monitoring.Session.Start(
     Preferences.MusicSources,
     LibraryPaths.DatabasePath(),
     Threads.CancellationToken.None,
     UserDataPath := LibraryPaths.UserDataPath()
   );
-  const Opened: State.Snapshot := State.Load(Directory);
-  var Navigation: Nav.State := new Nav.State(
-    Active := Nav.Parse(Opened.ActivePage) ?? Nav.Route.Page(Nav.Page.Music),
-    SettingsTab := Opened.SettingsTab
-  );
-  const Closed: Cui.CuiWindowPlacement := Shell.Run(
-    State.ToWindow(Opened), Preferences, ref Navigation,
-    procedure(Value: Model.Preferences) begin
-      Settings.Save(Directory, Value);
-    end procedure, Inventory
-  );
   try
-    State.Save(Directory, State.FromWindow(Closed, Navigation));
-  catch Failure: IO.IOException do
-    Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
-  catch Failure: Sys.UnauthorizedAccessException do
-    Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
+    const Opened: State.Snapshot := State.Load(Directory);
+    var Navigation: Nav.State := new Nav.State(
+      Active := Nav.Parse(Opened.ActivePage) ?? Nav.Route.Page(Nav.Page.Music),
+      SettingsTab := Opened.SettingsTab
+    );
+    const Closed: Cui.CuiWindowPlacement := Shell.Run(
+      State.ToWindow(Opened), Preferences, ref Navigation,
+      procedure(Value: Model.Preferences) begin
+        Settings.Save(Directory, Value);
+      end procedure, Inventory
+    );
+    try
+      State.Save(Directory, State.FromWindow(Closed, Navigation));
+    catch Failure: IO.IOException do
+      Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
+    catch Failure: Sys.UnauthorizedAccessException do
+      Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
+    end try;
+  finally
+    try
+      await Inventory.DisposeAsync().ConfigureAwait(false);
+    catch Failure: Sys.Exception do
+      Console.Error.WriteLine('The library worker stopped with an error: ' + Failure.Message);
+    end try;
   end try;
 end function;
 

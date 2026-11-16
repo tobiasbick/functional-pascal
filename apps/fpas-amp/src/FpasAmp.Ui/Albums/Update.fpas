@@ -6,6 +6,8 @@ uses
   FpasAmp.Library.Albums.Access as Access, FpasAmp.Imaging as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
   FpasAmp.Ui.Albums.Browse as Browse,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, Fpas.Ui.Mvu.Composition as Composition,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -96,11 +98,56 @@ begin
   end with;
 end function;
 
-// Applies `Message` using borrowed `Service`; owned commands do not access the UI.
-// Close cancels both workers; stale generations cannot reintroduce released pixels.
-public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?): A.Transition<M.State, M.Msg>;
+// Updates album browsing or delegates a message to the selected release.
+// ## Parameters
+// - `Current`: The current album browser state.
+// - `Message`: The interaction or background completion to apply.
+// - `Service`: The borrowed album index and artwork session.
+// - `Library`: The borrowed metadata session for loading and rating tracks.
+// ## Returns
+// The next state and any commands to run off the UI thread.
+public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?; Library: Metadata.Session? := null): A.Transition<M.State, M.Msg>;
 begin
   case Message of
+    when M.Msg.OpenMusic(const Id: string):
+      for Album: Albums.Album in Current.Shown do
+        if Album.Id = Id then
+          const Visit: long := Current.MusicVisit + 1L;
+          return MusicTransition(
+            Current with
+              MusicVisit := Visit;
+            end with,
+            Songs.Open(new Music.State(Album, Visit), Library)
+          );
+        end if;
+      end for;
+
+      return new A.Transition<M.State, M.Msg>(Current, []);
+    when M.Msg.BackToAlbums:
+      const Selected: Music.State? := Current.Music;
+      if Selected = null then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Music := null;
+        end with,
+        [A.CancelBackground<M.Msg>('music/load'), A.Focus<M.Msg>('album-' + Selected.Album.Id)]
+      );
+    when M.Msg.Scrolled(const Offset: float):
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Offset := Offset;
+        end with, []
+      );
+    when M.Msg.Music(const Value: Music.Msg):
+      const Selected: Music.State? := Current.Music;
+      if Selected = null then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+
+      return MusicTransition(Current, Songs.Apply(Selected, Value, Library));
     when M.Msg.Open:
       if Service = null then
         return new A.Transition<M.State, M.Msg>(
@@ -136,8 +183,13 @@ begin
           Last := -1;
           Generation := Current.Generation + 1L;
           Toolbar := ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false));
+          Music := null;
         end with,
-        [A.CancelBackground<M.Msg>('observe'), A.CancelBackground<M.Msg>('images')]
+        [
+          A.CancelBackground<M.Msg>('observe'),
+          A.CancelBackground<M.Msg>('images'),
+          A.CancelBackground<M.Msg>('music/load')
+        ]
       );
     when M.Msg.Received(const Items: I.ImmutableArray<Albums.Album>):
       const Prepared: Browse.Catalog := Browse.Prepare(Items);
@@ -325,6 +377,20 @@ begin
 
       return new A.Transition<M.State, M.Msg>(Show(Next), []);
   end case;
+end function;
+
+function MusicTransition(Current: M.State; Child: A.Transition<Music.State, Music.Msg>): A.Transition<M.State, M.Msg>;
+begin
+  const Mapped: A.Transition<Music.State, M.Msg> := Composition.MapTransition<Music.State, Music.Msg, M.Msg>(
+    Child,
+    M.Msg.Music,
+    'music'
+  );
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Music := Mapped.Model;
+    end with, Mapped.Commands
+  );
 end function;
 
 end unit;

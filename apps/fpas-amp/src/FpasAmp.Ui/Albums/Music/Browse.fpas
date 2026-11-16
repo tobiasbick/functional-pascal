@@ -1,0 +1,147 @@
+// Track presentation and selection for a single release.
+unit FpasAmp.Ui.Albums.Music.Browse;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Search.Text as Text, System as Sys, System.IO as IO,
+  System.Collections.Generic as C, System.Collections.Immutable as I;
+
+// Returns the title of `Track`, using its file name when no title is tagged.
+public function Title(Track: Tracks.Entry): string;
+begin
+  const Caption: string := (Track.Metadata ?? new Tracks.Tags()).Title;
+  return if Caption = '' then
+    IO.Path.GetFileNameWithoutExtension(Track.Path) ?? ''
+  else
+    Caption
+  end if;
+end function;
+
+// Returns the genres tagged on `Track`.
+public function Genres(Track: Tracks.Entry): array of string;
+begin
+  return (Track.Metadata ?? new Tracks.Tags()).Genres;
+end function;
+
+// Joins the performer credits of `Track` for display.
+public function Artist(Track: Tracks.Entry): string;
+begin
+  return Sys.String.Join(', ', (Track.Metadata ?? new Tracks.Tags()).Artists);
+end function;
+
+// Returns the reported duration of `Track` in milliseconds, or zero if unknown.
+public function Duration(Track: Tracks.Entry): double;
+begin
+  return (Track.Metadata ?? new Tracks.Tags()).DurationMilliseconds ?? 0.0;
+end function;
+
+// Formats a nonnegative duration `Milliseconds` as a compact time value.
+public function Time(Milliseconds: double): string;
+begin
+  const Seconds: long := cast<long>(Sys.Math.Max(0.0, Milliseconds) / 1000.0);
+  const Minutes: long := Seconds div 60L;
+  return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
+end function;
+
+// Returns the distinct genres in `Items` in display order.
+public function GenreChoices(Items: I.ImmutableArray<Tracks.Entry>): array of string;
+begin
+  const Names: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
+  for Track: Tracks.Entry in Items do
+    for Name: string in Genres(Track) do
+      if Name <> '' then
+        discard Names.Add(Name);
+      end if;
+    end for;
+  end for;
+
+  return (new C.List<string>(Names)).ToArray();
+end function;
+
+function Has(Values: array of string; Selected: I.ImmutableHashSet<string>): bool;
+begin
+  if Selected.IsEmpty then
+    return true;
+  end if;
+
+  for Value: string in Values do
+    if Selected.Contains(Value) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+function Matches(Entry: Tracks.Entry; Terms: array of string): bool;
+begin
+  if Terms.Length = 0 then
+    return true;
+  end if;
+  const Fields: array of string := Text.Words(
+    Title(Entry) + ' ' + Sys.String.Join(' ', Genres(Entry))
+  );
+  for Term: string in Terms do
+    var Found: bool := false;
+    for Word: string in Fields do
+      if Word.Contains(Term, Sys.StringComparison.Ordinal) then
+        Found := true;
+        break;
+      end if;
+    end for;
+
+    if not Found then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Returns `Current` with its visible tracks rebuilt from search, filters and sort.
+public function Select(Current: M.State): M.State;
+  function Compare(Left: Tracks.Entry; Right: Tracks.Entry): int;
+  begin
+    const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
+    const Value: int := case Current.Order.Column of
+      when 0: Names.Compare(Title(Left), Title(Right));
+      when 1: Names.Compare(Artist(Left), Artist(Right));
+      when 2: Names.Compare(
+        (Left.Metadata ?? new Tracks.Tags()).Album,
+        (Right.Metadata ?? new Tracks.Tags()).Album
+      );
+      when 3: Duration(Left).CompareTo(Duration(Right));
+      when 4: (Left.Rating ?? 0).CompareTo(Right.Rating ?? 0);
+      else 0;
+    end case;
+    if Value = 0 then
+      return Left.FileId.CompareTo(Right.FileId);
+    end if;
+
+    return if Current.Order.Descending then
+      -Value
+    else
+      Value
+    end if;
+  end function;
+begin
+  const Terms: array of string := Text.Words(Current.Search);
+  const Items: C.List<Tracks.Entry> := new C.List<Tracks.Entry>();
+  for Entry: Tracks.Entry in Current.Tracks do
+    if (Entry.Rating ?? 0) >= Current.Applied.MinimumRating
+      and Has(Genres(Entry), Current.Applied.Genres) and Matches(Entry, Terms)
+    then
+      Items.Add(Entry);
+    end if;
+  end for;
+
+  if Current.Order.Column >= 0 then
+    Items.Sort(Compare);
+  end if;
+
+  return Current with
+    Shown := I.ImmutableArray.CreateRange<Tracks.Entry>(Items);
+  end with;
+end function;
+
+end unit;

@@ -70,6 +70,38 @@ begin
       cast<object?>(Request.MinimumRating), Request.Limit, Request.Offset
     ]
   );
+  return Entries(Query, Cancellation);
+end function;
+
+// Reads the tracks of an exact indexed release, ordered by disc and track number.
+//
+// ## Parameters
+// - `Database`: Validated catalogue path.
+// - `UserDatabase`: Validated durable ratings store path.
+// - `Id`: Stable release identity from an album header.
+// - `Cancellation`: Cancels row iteration.
+// ## Returns
+// Detached tracks for the release, including their independent user ratings.
+public function ReadRelease(Database: string; UserDatabase: string; Id: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+requires Id <> '';
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [UserDatabase]);
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error' +
+    ' FROM album_tracks a JOIN files f ON f.id=a.file_id JOIN metadata m ON m.file_id=f.id' +
+    ' LEFT JOIN users.tracks u ON u.id=m.track_id WHERE a.album_id=$album' +
+    ' ORDER BY COALESCE(json_extract(m.tags_json,''$.DiscNumber''),1),' +
+    ' COALESCE(json_extract(m.tags_json,''$.TrackNumber''),2147483647),m.sort_title,f.id;',
+    null, ['$album'], [Id]
+  );
+  return Entries(Query, Cancellation);
+end function;
+
+function Entries(Query: Db.SqliteCommand; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+begin
   const Results: C.List<M.Entry> := new C.List<M.Entry>();
   using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
   while Reader.Read() do

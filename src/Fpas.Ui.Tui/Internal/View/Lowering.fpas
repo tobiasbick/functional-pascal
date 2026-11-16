@@ -602,7 +602,7 @@ public function Prepare<TMsg>(
         _,
         _,
         _
-      ), Ui.Element.VirtualList(_, _, _, _, _), Ui.Element.CommandPalette(
+      ), Ui.Element.VirtualList(_, _, _, _, _, _, _), Ui.Element.CommandPalette(
         _,
         _,
         _,

@@ -1,19 +1,17 @@
-// A muted native layout groups search, filters and one sort menu.
+// Groups search, filters and one sort menu.
 unit FpasAmp.Ui.Albums.Toolbar.View;
 
 uses
   FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
   FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, FpasAmp.Library.Search.Matching as Matching,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 
 function Points(Value: int): L.Spacing;
 begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-// Builds `Current` within measured content `Width`, using the resolved `Colors`.
+// Builds `Current` within the measured content width.
 // Narrow views put the two actions below search; no catalogue work is started.
 //
 // ## Parameters
@@ -21,11 +19,10 @@ end function;
 // - `Artists`: Distinct album artists offered by the artist filter.
 // - `Genres`: Distinct genres offered by the genre filter.
 // - `Width`: Positive content width in logical points.
-// - `Colors`: The resolved palette.
 // ## Returns
 // The search field, the filter button and the sort menu.
 public function Build(
-  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Colors: Themes.Palette
+  Current: M.State; Artists: array of string; Genres: array of string; Width: int
 ): E.Element<M.Msg>;
 requires Width > 0;
 begin
@@ -33,19 +30,36 @@ begin
     'album-search', Current.Search, M.Msg.Search,
     new Search.Options(Placeholder := 'Search titles, artists and genres…')
   );
-  const Actions: E.Element<M.Msg> := E.Row<M.Msg>(
+  return Arrange<M.Msg>(
+    Field, Filters.Build(Current, Artists, Genres, Width),
+    Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty()), Width
+  );
+end function;
+
+// Arranges the search and actions in the shared library toolbar.
+// ## Type parameters
+// - `TMsg`: The view's message type.
+// ## Parameters
+// - `Field`: Search control.
+// - `Filter`: Filter control.
+// - `Sort`: Sort control.
+// - `Width`: Available width in logical points.
+// ## Returns
+// The toolbar with wrapped controls at narrow widths.
+public function Arrange<TMsg>(Field: E.Element<TMsg>; Filter: E.Element<TMsg>; Sort: E.Element<TMsg>; Width: int): E.Element<TMsg>;
+requires Width > 0;
+begin
+  const Actions: E.Element<TMsg> := E.Row<TMsg>(
     new L.Flow(
       Gap := Points(12), Align := L.Alignment.Center,
       Justify := L.Justification.End, Wrap := true, Clip := false
-    ), Filters.Build(Current, Artists, Genres, Sys.Math.Max(1, Width - 24)),
-    Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty())
+    ), Filter, Sort
   );
   const Flow: L.Flow := new L.Flow(
-    Padding := Points(12), Gap := Points(12), Align := L.Alignment.Center,
-    Background := Colors.BorderSubtle, CornerRadius := 10.0F, Clip := false
+    Gap := Points(12), Align := L.Alignment.Center, Clip := false
   );
   if Width < 640 then
-    return E.Column<M.Msg>(
+    return E.Column<TMsg>(
       Flow with
         Align := L.Alignment.Stretch;
       end with,
@@ -53,7 +67,7 @@ begin
     );
   end if;
 
-  return E.Row<M.Msg>(Flow, E.Size<M.Msg>(Field, new L.Flex(Basis := L.Extent.Fill)), Actions);
+  return E.Row<TMsg>(Flow, E.Size<TMsg>(Field, new L.Flex(Basis := L.Extent.Fill)), Actions);
 end function;
 
 end unit;

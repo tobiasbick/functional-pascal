@@ -1190,10 +1190,25 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Visit
         );
       when E.Element.VirtualList(
-        const Id: string, const Count: int, const RowHeight: float, const Height: L.Extent,
-        const Build: function(int): E.Element<TMsg>
+        const Id: string,
+        const Count: int,
+        const RowHeight: float,
+        const Height: L.Extent,
+        const Build: function(int): E.Element<TMsg>,
+        const Offset: float?,
+        const Scroll: Sys.Func<float, TMsg>?
       ):
-        VirtualWidget.Draw<TMsg>(Current, Id, Count, RowHeight, Height, Build, Visit);
+        VirtualWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Count,
+          RowHeight,
+          Height,
+          Build,
+          Offset,
+          Scroll,
+          Visit
+        );
       when E.Element.FilterBar(
         const Id: string,
         const Fields: array of Filters.Field,

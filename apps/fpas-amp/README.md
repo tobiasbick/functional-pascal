@@ -12,6 +12,13 @@ shows how many filters are active. The sort menu orders by title, artist, rating
 count in either direction, and by best match while searching; clearing the search
 returns to the order chosen before. The status bar shows how many albums match. The playlist list updates
 in the background; same-name source lists show their location alongside the name.
+Click an album card to open its **Music** view inside **Albums**. The table uses
+disc and track order by default. It uses the same toolbar as the album grid, with
+title and genre search and a filter popup for genres and minimum rating. Rate a
+track with its ten stars or use the row menu to inspect its tags, copy the path
+from the details or open the folder.
+The status bar shows the matching track count and duration. The back arrow restores
+the album grid's search, applied filters, sort order and scroll position.
 Below 760 logical pixels, the sidebar becomes a left-hand drawer opened through
 the menu button. Selecting a destination closes it. **Settings** stays at the bottom.
 
@@ -131,7 +138,7 @@ requests covers for the newly visible albums only. Narrow windows place the two
 actions below the search field.
 Small content-addressed thumbnails are kept under `covers/thumbnails-v1` beside
 `userdata.db`, with bounded disk/memory caches. Cached thumbnails work offline.
-No album detail/player view is included.
+Playback is planned separately.
 
 Playlist files in music sources are also discovered and monitored. They are
 cached separately from audio entries; the scan never opens their media targets.

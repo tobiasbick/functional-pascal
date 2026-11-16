@@ -1,7 +1,11 @@
 #include "../../fpas_cui.h"
 
 int fpas_cui_virtual_list_begin(cui_ctx *ui, const char *id, int count, float row_height,
-    int kind, float height, int enabled, int *first, int *last) {
+    int kind, float height, int enabled, float restore_offset, int *first, int *last) {
+    if (restore_offset >= 0) {
+        cui_scroll_state *state = cui_state(ui, cui_make_id(ui, id), sizeof *state);
+        state->y = state->ty = restore_offset;
+    }
     const int node = ui->node_count;
     const float dx = ui->scroll_dx, dy = ui->scroll_dy;
     ui->scroll_dx = 0;

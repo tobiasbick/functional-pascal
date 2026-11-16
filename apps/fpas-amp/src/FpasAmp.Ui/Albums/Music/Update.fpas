@@ -1,0 +1,201 @@
+// Load one release and apply song edits on the UI owner.
+unit FpasAmp.Ui.Albums.Music.Update;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
+  System.Diagnostics as Diagnostics, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+
+const Empty: array of A.Command<M.Msg> := [];
+
+// Starts the selected release's query for `Current` through the borrowed `Library`.
+// Returns a transition whose visit key accompanies both results and errors.
+public function Open(Current: M.State; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+begin
+  if Library = null then
+    return new A.Transition<M.State, M.Msg>(
+      Current with
+        Loaded := true;
+      end with, Empty
+    );
+  end if;
+
+  return new A.Transition<M.State, M.Msg>(
+    Current, [
+      A.StartBackground<M.Msg>(
+        'load',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          const Items: I.ImmutableArray<Tracks.Entry> := await Library.Albums.TracksAsync(
+            Current.Album.Id, Cancellation
+          ).ConfigureAwait(false);
+          await Post(M.Msg.Loaded(Current.Visit, Items)).ConfigureAwait(false);
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+      )
+    ]
+  );
+end function;
+
+function Rating(Current: M.State; Library: Metadata.Session?; Id: string; Value: int): A.Transition<M.State, M.Msg>;
+begin
+  if Library = null or Id = '' or Current.Saving.Contains(Id) or Value < 0 or Value > 10 then
+    return new A.Transition<M.State, M.Msg>(Current, Empty);
+  end if;
+  const Selected: int? := if Value = 0 then
+    null
+  else
+    Value
+  end if;
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Saving := Current.Saving.Add(Id);
+      Error := null;
+    end with, [
+      A.StartBackground<M.Msg>(
+        'rate/' + Id,
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
+          await Post(M.Msg.Rated(Current.Visit, Id, Selected)).ConfigureAwait(false);
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(
+          Current.Visit,
+          Id,
+          Error.Message
+        )
+      )
+    ]
+  );
+end function;
+
+function OpenFolder(Current: M.State; Path: string): A.Transition<M.State, M.Msg>;
+begin
+  return new A.Transition<M.State, M.Msg>(
+    Current, [
+      A.StartBackground<M.Msg>(
+        'folder',
+        function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          Cancellation.ThrowIfCancellationRequested();
+          const Folder: string? := IO.Path.GetDirectoryName(Path);
+          if Folder = null or not IO.Directory.Exists(Folder) then
+            raise new IO.DirectoryNotFoundException('The track folder is unavailable.');
+          end if;
+
+          const Start: Diagnostics.ProcessStartInfo := new Diagnostics.ProcessStartInfo(Folder);
+          Start.UseShellExecute := true;
+          using const Process: Diagnostics.Process? := Diagnostics.Process.Start(Start);
+          return Tasks.Task.CompletedTask;
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+      )
+    ]
+  );
+end function;
+
+// Applies `Message` to `Current`. `Library` saves ratings off the owner thread.
+// Returns the next view and any commands to run.
+public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+begin
+  var Next: M.State := Current;
+  case Message of
+    when M.Msg.Back:
+      return new A.Transition<M.State, M.Msg>(Current, Empty);
+    when M.Msg.Loaded(const Visit: long, const Items: I.ImmutableArray<Tracks.Entry>):
+      if Visit = Current.Visit then
+        Next := Browse.Select(
+          Current with
+            Tracks := Items;
+            Loaded := true;
+          end with
+        );
+      end if;
+    when M.Msg.Failed(const Visit: long, const Text: string):
+      if Visit = Current.Visit then
+        Next := Current with
+          Loaded := true;
+          Error := Text;
+        end with;
+      end if;
+    when M.Msg.Search(const Text: string):
+      Next := Browse.Select(
+        Current with
+          Search := Text;
+        end with
+      );
+    when M.Msg.ShowFilters(const Value: bool):
+      Next := Current with
+        FiltersOpen := Value;
+        Draft := Current.Applied;
+      end with;
+    when M.Msg.Genres(const Values: I.ImmutableHashSet<string>):
+      Next := Current with
+        Draft := Current.Draft with
+          Genres := Values;
+        end with;
+      end with;
+    when M.Msg.Minimum(const Value: int):
+      Next := Current with
+        Draft := Current.Draft with
+          MinimumRating := Sys.Math.Clamp(Value, 0, 10);
+        end with;
+      end with;
+    when M.Msg.ApplyFilters:
+      Next := Browse.Select(
+        Current with
+          Applied := Current.Draft;
+          FiltersOpen := false;
+        end with
+      );
+    when M.Msg.Reset:
+      Next := Current with
+        Draft := new M.Filters();
+      end with;
+    when M.Msg.Sort(const Order: Tables.Sort):
+      Next := Browse.Select(
+        Current with
+          Order := Order;
+        end with
+      );
+    when M.Msg.Rate(const Id: string, const Value: int):
+      return Rating(Current, Library, Id, Value);
+    when M.Msg.Rated(const Visit: long, const Id: string, const Value: int?):
+      if Visit = Current.Visit then
+        const Items: I.ImmutableArray<Tracks.Entry>.Builder := Current.Tracks.ToBuilder();
+        for Index: int := 0 to Items.Count - 1 do
+          if Items[Index].TrackId = Id then
+            Items[Index] := Items[Index] with
+              Rating := Value;
+            end with;
+          end if;
+        end for;
+
+        Next := Browse.Select(
+          Current with
+            Tracks := Items.ToImmutable();
+            Saving := Current.Saving.Remove(Id);
+          end with
+        );
+      end if;
+    when M.Msg.RatingFailed(const Visit: long, const Id: string, const Text: string):
+      if Visit = Current.Visit then
+        Next := Current with
+          Saving := Current.Saving.Remove(Id);
+          Error := Text;
+        end with;
+      end if;
+    when M.Msg.Details(const Item: Tracks.Entry):
+      Next := Current with
+        Details := Item;
+      end with;
+    when M.Msg.DismissDetails:
+      Next := Current with
+        Details := null;
+      end with;
+    when M.Msg.ShowFolder(const Path: string):
+      return OpenFolder(Current, Path);
+  end case;
+
+  return new A.Transition<M.State, M.Msg>(Next, Empty);
+end function;
+
+end unit;

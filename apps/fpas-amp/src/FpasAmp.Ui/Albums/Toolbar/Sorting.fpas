@@ -88,17 +88,34 @@ begin
       )
     ]
   );
-  return Menus.Menu<M.Msg>(
+  return Trigger<M.Msg>(
     'album-sort',
     if Relevance then
       Name(Current.Sort)
     else
       Name(Current.Sort) + ' · ' + Direction
     end if,
-    Entries.ToArray(),
+    Entries.ToArray(), Current.Descending and not Relevance
+  );
+end function;
+
+// Presents the shared library sort control.
+// ## Type parameters
+// - `TMsg`: The page's message type.
+// ## Parameters
+// - `Id`: Stable menu identity.
+// - `Label`: Current sort order and direction.
+// - `Entries`: Available sort entries.
+// - `Descending`: Whether to show the descending icon.
+// ## Returns
+// The sort button and its menu.
+public function Trigger<TMsg>(Id: string; Label: string; Entries: array of Menus.Entry<TMsg>; Descending: bool): E.Element<TMsg>;
+begin
+  return Menus.Menu<TMsg>(
+    Id, Label, Entries,
     new Menus.Options(
       Icon := Sys.Char.ConvertFromUtf32(
-        if Current.Descending and not Relevance then
+        if Descending then
           $E042
         else
           $E04A

@@ -90,7 +90,10 @@ bounded; stored inventories necessarily scale with files/directories.
 
 Connections use WAL, foreign keys, prepared/bound SQL and full SQLite durability.
 Each directory/tag write is transactional; obsolete generations/cancellation
-roll back the current checkpoint. Orphans are collected only after their last
+roll back the current checkpoint. The metadata worker retries busy writes with
+short SQLite timeouts and cancellation-aware backoff. A queued file stays in the
+catalogue until its result commits, so interrupted work resumes on the next start.
+Orphans are collected only after their last
 source association disappears. Existing presence-only catalogues are upgraded
 without replacing rows. Corrupt/unsupported stores fail without being reset.
 The index contains no irreplaceable user data.

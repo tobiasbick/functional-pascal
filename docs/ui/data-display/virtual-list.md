@@ -35,6 +35,8 @@ end unit;
 | `RowHeight` | Fixed logical height of at least one point. |
 | `Height` | Viewport extent. The example uses 220 logical points. |
 | `BuildRow` | A pure function that builds a row from its zero-based index. |
+| `Offset` | Optional saved scroll offset in logical points, restored when the list appears. |
+| `OnScroll` | Optional callback reporting the native scroll offset to store for a later visit. |
 
 ## Interaction
 

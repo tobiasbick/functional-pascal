@@ -1,0 +1,84 @@
+// Album-scoped music browser state and messages.
+unit FpasAmp.Ui.Albums.Music.Model;
+
+uses
+  FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
+
+// Genre and rating filters for the selected album's tracks.
+public type Filters = record
+  // Selected genres. An empty set includes all genres.
+  public Genres: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty.WithComparer(
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  // Inclusive rating floor. Zero includes every rating.
+  public MinimumRating: int := 0;
+end record;
+
+// A loaded release and its independent song filters.
+public type State = record
+  // The selected album header.
+  public Album: Albums.Album;
+  // Identity of this visit, used to reject late background results.
+  public Visit: long;
+  // Full release in disc and track order.
+  public Tracks: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  // Filtered and sorted release tracks.
+  public Shown: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  // Whether the first query returned.
+  public Loaded: bool := false;
+  // Search text for this release.
+  public Search: string := '';
+  // Filters selecting the shown tracks.
+  public Applied: Filters := new Filters();
+  // Unconfirmed filters in the popup.
+  public Draft: Filters := new Filters();
+  // Whether the filter popup is open.
+  public FiltersOpen: bool := false;
+  // Grid sort; column -1 uses disc and track order.
+  public Order: Tables.Sort := new Tables.Sort(-1);
+  // Track identities with a write in flight.
+  public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+  // Details dialog's track, when open.
+  public Details: Tracks.Entry? := null;
+  // Last read or action error.
+  public Error: string? := null;
+end record;
+
+// Proposals and scoped background completions for the album's songs.
+public type Msg = variant
+  // Return to the parent album grid.
+  Back;
+  // Successfully loaded tracks for a visit.
+  Loaded(Visit: long; Items: I.ImmutableArray<Tracks.Entry>);
+  // Reports a failure for a visit.
+  Failed(Visit: long; Text: string);
+  // Change search text.
+  Search(Text: string);
+  // Change the visibility of the filter controls.
+  ShowFilters(Open: bool);
+  // Replace the draft genre selection.
+  Genres(Values: I.ImmutableHashSet<string>);
+  // Set the draft rating floor.
+  Minimum(Value: int);
+  // Confirm the draft and close the popup.
+  ApplyFilters;
+  // Clear the draft filters.
+  Reset;
+  // Set the song sort order.
+  Sort(Order: Tables.Sort);
+  // Propose a rating, with zero clearing it.
+  Rate(Id: string; Value: int);
+  // Apply a successful rating receipt.
+  Rated(Visit: long; Id: string; Value: int?);
+  // Release the saving indicator and show the failure.
+  RatingFailed(Visit: long; Id: string; Text: string);
+  // Show metadata for one track.
+  Details(Item: Tracks.Entry);
+  // Close track details.
+  DismissDetails;
+  // Open the containing folder of an indexed path.
+  ShowFolder(Path: string);
+end variant;
+
+end unit;

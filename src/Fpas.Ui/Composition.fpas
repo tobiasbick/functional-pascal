@@ -461,14 +461,20 @@ begin
       Enabled
     );
     when E.Element.VirtualList(
-      const Id: string, const Count: int, const RowHeight: float, const Height: L.Extent,
-      const Build: function(int): E.Element<TChild>
+      const Id: string,
+      const Count: int,
+      const RowHeight: float,
+      const Height: L.Extent,
+      const Build: function(int): E.Element<TChild>,
+      const Offset: float?,
+      const Scroll: Sys.Func<float, TChild>?
     ): E.Element<TParent>.VirtualList(
       Id,
       Count,
       RowHeight,
       Height,
-      function(Index: int): E.Element<TParent> => Map<TChild, TParent>(Build(Index), Messages)
+      function(Index: int): E.Element<TParent> => Map<TChild, TParent>(Build(Index), Messages),
+      Offset, M.Callback<float, TChild, TParent>(Scroll, Messages)
     );
     when E.Element.CodeBlock(
       const Id: string,

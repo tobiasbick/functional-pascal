@@ -54,7 +54,7 @@ begin
           0
         else
           NavView.Width + 1
-        end if), Padding, Theme
+        end if), Padding
       ), M.Msg.Albums
     )
   else

@@ -1939,11 +1939,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Count: int,
         const RowHeight: float,
         const Height: L.Extent,
-        _
+        _, const Offset: float?, _
       ):
         const At: string := Identify(Id, Location + '/virtualList');
         Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckExtent(Height, Profile, At + '/height');
+        if not Sys.Single.IsFinite(Offset ?? 0.0F) or (Offset ?? 0.0F) < 0.0F then
+          Rules.Reject(At, 'The virtual list scroll offset must be finite and nonnegative.');
+        end if;
+
         if Count < 0 or not Sys.Single.IsFinite(RowHeight) or RowHeight < 1.0F
           or cast<double>(RowHeight) * Count >= int.MaxValue
         then

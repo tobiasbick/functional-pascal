@@ -43,58 +43,107 @@ begin
   );
 end function;
 
-function Panel(Current: M.State; Artists: array of string; Genres: array of string): E.Element<M.Msg>;
+// Builds the shared library filter form.
+// ## Type parameters
+// - `TMsg`: The page's message type.
+// ## Parameters
+// - `Id`: Prefix for the form's controls.
+// - `Title`: The form heading.
+// - `Fields`: Choice controls above the rating slider.
+// - `Rating`: Draft minimum rating from zero to ten.
+// - `Change`: Maps a rating proposal to a message.
+// - `Reset`: Message to clear the draft.
+// - `Apply`: Message to confirm the draft.
+// ## Returns
+// The title, choice controls, rating slider and form buttons.
+public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg): E.Element<TMsg>;
 begin
-  return E.Column<M.Msg>(
-    new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false),
-    Texts.Text<M.Msg>('Filter albums', Texts.Appearance.HeadingThree),
-    Choice(
-      'album-filter-artist', 'Artist', 'All artists', Artists, Current.Draft.Artist,
-      function(Value: string): M.Msg => M.Msg.Artist(Value)
-    ),
-    Choice(
-      'album-filter-genre', 'Genre', 'All genres', Genres, Current.Draft.Genre,
-      function(Value: string): M.Msg => M.Msg.Genre(Value)
-    ),
-    E.Row<M.Msg>(
+  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  Parts.Add(Texts.Text<TMsg>(Title, Texts.Appearance.HeadingThree));
+  Parts.AddRange(Fields);
+  Parts.Add(
+    E.Row<TMsg>(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
-      E.Size<M.Msg>(
-        Sliders.Slider<M.Msg>(
-          'album-filter-rating',
+      E.Size<TMsg>(
+        Sliders.Slider<TMsg>(
+          Id + '-filter-rating',
           'Minimum rating',
-          cast<float>(Current.Draft.MinimumRating),
+          cast<float>(Rating),
           0.0F,
           10.0F,
-          function(Value: float): M.Msg => M.Msg.MinimumRating(cast<int>(Sys.Math.Round(Value))),
+          function(Value: float): TMsg => Change(cast<int>(Sys.Math.Round(Value))),
           new Sliders.Options(Step := 1.0F)
         ), new L.Flex(Basis := L.Extent.Fill)
       ),
-      Texts.Text<M.Msg>(
-        if Current.Draft.MinimumRating = 0 then
+      Texts.Text<TMsg>(
+        if Rating = 0 then
           'Any'
         else
-          Current.Draft.MinimumRating.ToString() + ' / 10'
+          Rating.ToString() + ' / 10'
         end if, Texts.Appearance.Secondary
       )
-    ),
-    E.Size<M.Msg>(
-      E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+    )
+  );
+  Parts.Add(
+    E.Size<TMsg>(
+      E.Styled<TMsg>(E.Column<TMsg>(), S.Role.Divider),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
-    ),
-    E.Row<M.Msg>(
+    )
+  );
+  Parts.Add(
+    E.Row<TMsg>(
       new L.Flow(Gap := Points(8), Justify := L.Justification.End),
-      B.Button<M.Msg>(
-        'album-filter-reset',
+      B.Button<TMsg>(
+        Id + '-filter-reset',
         'Reset',
-        M.Msg.Reset,
+        Reset,
         new B.Options(Variant := S.ButtonVariant.Outline)
       ),
-      B.Button<M.Msg>(
-        'album-filter-apply',
+      B.Button<TMsg>(
+        Id + '-filter-apply',
         'Apply',
-        M.Msg.Apply,
+        Apply,
         new B.Options(Variant := S.ButtonVariant.Primary)
       )
+    )
+  );
+  return E.Column<TMsg>(
+    new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false), Parts.ToArray()
+  );
+end function;
+
+// Builds the shared filter button and its anchored form.
+// ## Type parameters
+// - `TMsg`: The page's message type.
+// ## Parameters
+// - `Id`: Prefix for the button and popup identities.
+// - `Panel`: The form inside the popup.
+// - `Count`: Number of applied filters.
+// - `Open`: Whether the form is visible.
+// - `Toggle`: Maps the requested visibility to a message.
+// - `Width`: Maximum width in logical points.
+// ## Returns
+// The filter trigger and popup.
+public function Popup<TMsg>(Id: string; Panel: E.Element<TMsg>; Count: int; Open: bool; Toggle: function(bool): TMsg; Width: int): E.Element<TMsg>;
+requires Width > 0;
+begin
+  const Trigger: E.Element<TMsg> := B.Button<TMsg>(
+    Id + '-filters', if Count > 0 then
+      'Filters · ' + Count.ToString()
+    else
+      'Filters'
+    end if, Toggle(not Open),
+    new B.Options(
+      Variant := S.ButtonVariant.Outline, Selected := Open,
+      Icon := Sys.Char.ConvertFromUtf32($E0DC)
+    )
+  );
+  return Popovers.Popover<TMsg>(
+    Id + '-filter-panel', Trigger, Panel, Open, Toggle(false),
+    new Popovers.Options(
+      Position := Menus.Placement.BottomEnd,
+      Width := Sys.Math.Min(360, Width),
+      Padding := 16
     )
   );
 end function;
@@ -114,31 +163,20 @@ public function Build(
 ): E.Element<M.Msg>;
 requires Width > 0;
 begin
-  // an outline button like the sort menu; the count of applied filters joins its label
-  const Count: int := M.Count(Current.Applied);
-  const Trigger: E.Element<M.Msg> := B.Button<M.Msg>(
-    'album-filters', if Count > 0 then
-      'Filters · ' + Count.ToString()
-    else
-      'Filters'
-    end if, M.Msg.SetOpen(not Current.Open),
-    new B.Options(
-      Variant := S.ButtonVariant.Outline, Selected := Current.Open,
-      Icon := Sys.Char.ConvertFromUtf32($E0DC)
-    )
+  const Panel: E.Element<M.Msg> := Form<M.Msg>(
+    'album', 'Filter albums', [
+      Choice(
+        'album-filter-artist',
+        'Artist',
+        'All artists',
+        Artists,
+        Current.Draft.Artist,
+        M.Msg.Artist
+      ),
+      Choice('album-filter-genre', 'Genre', 'All genres', Genres, Current.Draft.Genre, M.Msg.Genre)
+    ], Current.Draft.MinimumRating, M.Msg.MinimumRating, M.Msg.Reset, M.Msg.Apply
   );
-  return Popovers.Popover<M.Msg>(
-    'album-filter-panel',
-    Trigger,
-    Panel(Current, Artists, Genres),
-    Current.Open,
-    M.Msg.SetOpen(false),
-    new Popovers.Options(
-      Position := Menus.Placement.BottomEnd,
-      Width := Sys.Math.Min(360, Width),
-      Padding := 16
-    )
-  );
+  return Popup<M.Msg>('album', Panel, M.Count(Current.Applied), Current.Open, M.Msg.SetOpen, Width);
 end function;
 
 end unit;

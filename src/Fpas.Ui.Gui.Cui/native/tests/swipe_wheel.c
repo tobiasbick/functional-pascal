@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-static bool frame(cui_ctx *ui, float elapsed) {
+static bool frame(cui_ctx *ui, float elapsed, bool revealed) {
     const char *labels[] = { "Done" };
     const char *icons[] = { CUI_ICON_CHECK };
     const int tones[] = { CUI_TONE_SUCCESS };
@@ -18,7 +18,7 @@ static bool frame(cui_ctx *ui, float elapsed) {
     cui_end_frame(ui);
     float offset, maximum;
     fpas_cui_scroll_metrics(ui, viewport, &offset, &maximum);
-    return nodes[1] >= 0 && offset == 0 && maximum > 0;
+    return (nodes[1] >= 0) == revealed && offset == 0 && maximum > 0;
 }
 
 int main(void) {
@@ -32,13 +32,13 @@ int main(void) {
     HWND window = (HWND)cui_app_native_window(app);
     cui_set_viewport(ui, 600, 400, 1);
     cui_set_reduced_motion(ui, true);
-    frame(ui, 0.016f);
-    const bool initially_closed = !frame(ui, 0.016f);
+    frame(ui, 0.016f, false);
+    const bool initially_closed = frame(ui, 0.016f, false);
     SendMessageW(window, WM_MOUSEMOVE, 0, MAKELPARAM(200, 20));
     /* Windows delivers the touchpad's horizontal scroll in wheel units. */
     SendMessageW(window, WM_MOUSEHWHEEL, MAKEWPARAM(0, (WORD)-360), 0);
-    frame(ui, 0.016f);
-    const bool revealed = frame(ui, 0.2f);
+    frame(ui, 0.016f, true);
+    const bool revealed = frame(ui, 0.2f, true);
     cui_app_destroy(app);
     if (initially_closed && revealed) return 0;
     fprintf(stderr, "WM_MOUSEHWHEEL did not reveal the swipe action without moving the scroll view.\n");

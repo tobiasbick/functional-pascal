@@ -16,8 +16,13 @@ int fpas_cui_gantt(cui_ctx *ui, const char *id, int origin, int days, fpas_gantt
     }
     const cui_gantt_opts options = { .today = today, .day_width = day_width, .row_height = row_height,
         .height = fpas_extent(height_kind, height), .read_only = (flags & 2) != 0 || !enabled };
+    const cui_id read_only_key = key ^ 0x6A17u;
+    fpas_own(ui, key, read_only_key, 0, 0);
+    bool *read_only = cui_state(ui, read_only_key, sizeof *read_only);
     cui__gantt_state *state = cui__state_lazy(ui, key, sizeof *state, false);
-    if (state && !enabled) state->drag = 0;
+    /* CUI-033 (docs/future/cui-upstream-bugs.md#cui-033): cancel a drag when editing or its task disappears. */
+    if (state && (!enabled || *read_only != options.read_only || state->drag > count)) state->drag = 0;
+    *read_only = options.read_only;
     cui_push_disabled(ui, !enabled);
     int clicked = cui_gantt_ex(ui, id, native, count, fpas_date_from_number(origin), days, &options);
     cui_pop_disabled(ui);

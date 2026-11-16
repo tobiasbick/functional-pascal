@@ -38,6 +38,13 @@ static void number(cui_ctx *ui, void *state) {
     fpas_cui_number_field(ui, "quantity", state, 0, 99, NULL, NULL, 1, 0, 1, 0, nodes);
 }
 
+static void check_copied_number(cui_ctx *ui, double *value) {
+    clipboard[0] = '\0';
+    key(ui, number, value, CUI_KEY_A, CUI_MOD_PRIMARY);
+    key(ui, number, value, CUI_KEY_C, CUI_MOD_PRIMARY);
+    CHECK(strcmp(clipboard, "99") == 0);
+}
+
 static void check_number(cui_ctx *ui) {
     double value = 3;
     frames(ui, number, &value, 2);
@@ -46,22 +53,16 @@ static void check_number(cui_ctx *ui) {
     text(ui, number, &value, "999");
     key(ui, number, &value, CUI_KEY_ENTER, 0);
     CHECK(value == 99);
-    key(ui, number, &value, CUI_KEY_A, CUI_MOD_PRIMARY);
-    key(ui, number, &value, CUI_KEY_C, CUI_MOD_PRIMARY);
-    CHECK(strcmp(clipboard, "99") == 0);
+    check_copied_number(ui, &value);
     text(ui, number, &value, "nan");
     CHECK(isfinite(value) && value == 99);
     key(ui, number, &value, CUI_KEY_ENTER, 0);
-    key(ui, number, &value, CUI_KEY_A, CUI_MOD_PRIMARY);
-    key(ui, number, &value, CUI_KEY_C, CUI_MOD_PRIMARY);
-    CHECK(strcmp(clipboard, "99") == 0);
+    check_copied_number(ui, &value);
     text(ui, number, &value, "7x");
     CHECK(value == 99);
     key(ui, number, &value, CUI_KEY_TAB, 0);
     key(ui, number, &value, CUI_KEY_TAB, CUI_MOD_SHIFT);
-    key(ui, number, &value, CUI_KEY_A, CUI_MOD_PRIMARY);
-    key(ui, number, &value, CUI_KEY_C, CUI_MOD_PRIMARY);
-    CHECK(strcmp(clipboard, "99") == 0);
+    check_copied_number(ui, &value);
 }
 
 static void tags(cui_ctx *ui, void *state) {

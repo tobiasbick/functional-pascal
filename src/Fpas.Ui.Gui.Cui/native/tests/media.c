@@ -14,6 +14,13 @@ static void release(void *user, cui_texture texture) {
     if (texture) ++probe->destroyed;
 }
 
+static cui_ctx *create_context(image_probe *probe) {
+    cui_ctx *ui = cui_create(&(cui_ctx_desc){ .no_default_fonts = true,
+        .renderer = { .user = probe, .texture_create = upload, .texture_destroy = release } });
+    if (ui) cui_set_viewport(ui, 320, 240, 1);
+    return ui;
+}
+
 static cui_id draw_image(cui_ctx *ui, fpas_media_source source) {
     cui_image_view view = {0};
     cui_begin_frame(ui, 1.0f / 60.0f);
@@ -23,13 +30,54 @@ static cui_id draw_image(cui_ctx *ui, fpas_media_source source) {
     return key;
 }
 
+static cui_id draw_presence(cui_ctx *ui, const char *path, int maximum) {
+    const fpas_presence_user users[] = {
+        { .name = "Alice", .avatar = path }, { .name = "Bob", .avatar = path }
+    };
+    cui_begin_frame(ui, 1.0f / 60.0f);
+    fpas_cui_presence(ui, "presence", users, 2, maximum, 24);
+    const cui_id key = fpas_cui_node_key(ui, fpas_cui_last_node(ui));
+    cui_end_frame(ui);
+    return key;
+}
+
+static bool presence_releases_avatars(void) {
+    static const char path[] = "fpas-cui-test-presence.png";
+    /* Two RGBA pixels, black and white. */
+    static const unsigned char png[] = {
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+        0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0xf4, 0x22, 0x7f, 0x8a, 0x00, 0x00, 0x00,
+        0x0e, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x60, 0x60, 0x60, 0xf8,
+        0x0f, 0x02, 0x00, 0x0e, 0xfa, 0x04, 0xfc, 0x45, 0xb0, 0x1d, 0x8b, 0x00,
+        0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+    };
+    image_probe probe = {0};
+    cui_ctx *ui = create_context(&probe);
+    if (!ui) return false;
+    FILE *fixture = fopen(path, "wbx");
+    bool passed = false;
+    if (fixture) {
+        const size_t size = fwrite(png, 1, sizeof png, fixture);
+        if (fclose(fixture) == 0 && size == sizeof png) {
+            const cui_id key = draw_presence(ui, path, 2);
+            passed = probe.created == 2 && probe.destroyed == 0;
+            draw_presence(ui, path, 1);
+            passed = passed && probe.created == 2 && probe.destroyed == 1;
+            fpas_cui_forget(ui, key);
+            passed = passed && probe.destroyed == 2;
+        }
+        passed = remove(path) == 0 && passed;
+    }
+    cui_destroy(ui);
+    return passed;
+}
+
 int main(void) {
     static const uint8_t pixels[] = { 0, 0, 0, 255, 255, 255, 255, 255 };
     image_probe probe = {0};
-    cui_ctx *ui = cui_create(&(cui_ctx_desc){ .no_default_fonts = true,
-        .renderer = { .user = &probe, .texture_create = upload, .texture_destroy = release } });
+    cui_ctx *ui = create_context(&probe);
     if (!ui) return 1;
-    cui_set_viewport(ui, 320, 240, 1);
 
     fpas_media_source source = { .pixels = pixels, .width = 2, .height = 1, .version = 1 };
     const cui_id key = draw_image(ui, source);
@@ -48,6 +96,8 @@ int main(void) {
     draw_image(ui, source);
     cui_destroy(ui);
     passed = passed && probe.created == 4 && probe.destroyed == 4;
+    const bool avatars_released = presence_releases_avatars();
     if (!passed) fprintf(stderr, "Media upload, reuse, replacement or release did not match source lifetime.\n");
-    return passed ? 0 : 1;
+    if (!avatars_released) fprintf(stderr, "Presence did not release hidden or retired avatar textures.\n");
+    return passed && avatars_released ? 0 : 1;
 }

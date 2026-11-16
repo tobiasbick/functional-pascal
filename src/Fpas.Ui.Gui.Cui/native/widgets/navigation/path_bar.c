@@ -5,6 +5,12 @@ static void fpas_path_forget(cui_ctx *ui, cui_id key) {
     if (popup) { popup->open = false; memset(&popup->s, 0, sizeof popup->s); }
 }
 
+static void fpas_path_close_menu(cui_ctx *ui, cui_id key) {
+    const cui_id menu = key ^ 0x5E9A0u;
+    const cui_popup *popup = cui__popup_get(ui, menu, false);
+    if (popup && popup->open) cui__popup_set(ui, menu, false);
+}
+
 int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, int count,
     const char *text, const char *icon, const char *placeholder, int size, int width_kind, float width,
     int flags, int focus, const char **submitted, int *parts, int *root, uint32_t *retained_key) {
@@ -14,8 +20,10 @@ int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, 
     const bool editable = (flags & 2) && enabled;
     if (enabled && focus >= 0 && focus < count)
         ui->focus_next_request = cui__pb_item_id(ui, id, focus, "seg");
+    const bool menus = (flags & 4) != 0;
+    if (!enabled || !menus) fpas_path_close_menu(ui, key);
     const cui_path_bar_opts options = { .icon = icon, .text = text, .placeholder = placeholder,
-        .size = size, .width = fpas_extent(width_kind, width), .menus = (flags & 4) != 0, .no_edit = !editable };
+        .size = size, .width = fpas_extent(width_kind, width), .menus = menus, .no_edit = !editable };
     cui_push_disabled(ui, !enabled);
     const cui_path_bar_result result = cui_path_bar_ex(ui, id, segments, count, &options);
     cui_pop_disabled(ui);
@@ -33,6 +41,10 @@ int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, 
 }
 
 int fpas_cui_path_menu_begin(cui_ctx *ui, const char *id) {
+    if (cui_is_disabled(ui)) {
+        fpas_path_close_menu(ui, cui_make_id(ui, id));
+        return -1;
+    }
     int segment = -1;
     return cui_path_bar_menu_begin(ui, id, &segment) ? segment : -1;
 }
@@ -43,7 +55,11 @@ void fpas_cui_path_menu_end(cui_ctx *ui) {
 
 int fpas_cui_path_menu_item(cui_ctx *ui, const char *label, int index) {
     cui_push_id_int(ui, index);
-    const bool picked = cui_menu_item_ex(ui, label, NULL);
+    const char *slot = "x";
+    const bool picked = cui_menu_item_ex(ui, slot, NULL);
+    const int row = fpas_find(ui, cui_make_id(ui, slot));
+    const int caption = row >= 0 ? fpas_label_node(ui, row) : -1;
+    if (caption >= 0) fpas_text(ui, caption, label);
     cui_pop_id(ui);
     return picked;
 }

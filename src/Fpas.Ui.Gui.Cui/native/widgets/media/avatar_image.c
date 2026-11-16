@@ -31,3 +31,30 @@ static fpas_avatar_image *fpas_avatar_image_for(cui_ctx *ui, cui_id key, const c
     fpas_avatar_image_update(ui, state, path);
     return state;
 }
+
+typedef struct {
+    fpas_avatar_image *images;
+    int count, capacity;
+} fpas_avatar_cache;
+
+static void fpas_avatar_cache_free(cui_ctx *ui, void *data) {
+    fpas_avatar_cache *cache = data;
+    for (int i = 0; i < cache->count; ++i) fpas_avatar_image_free(ui, &cache->images[i]);
+    cui__free(ui, cache->images);
+}
+
+static fpas_avatar_image *fpas_avatar_cache_resize(cui_ctx *ui, cui_id key, int visible) {
+    visible = CUI_MAX(visible, 0);
+    const cui_id image_key = key ^ 0x50494C4Cu;
+    fpas_own(ui, key, image_key, 0, 0);
+    fpas_avatar_cache *cache = cui_state(ui, image_key, sizeof *cache);
+    cui__state_set_dtor(ui, image_key, fpas_avatar_cache_free);
+    if (visible > cache->capacity) {
+        cache->images = cui__realloc(ui, cache->images, (size_t)visible * sizeof *cache->images);
+        cache->capacity = visible;
+    }
+    for (int i = cache->count; i < visible; ++i) cache->images[i] = (fpas_avatar_image){0};
+    for (int i = visible; i < cache->count; ++i) fpas_avatar_image_free(ui, &cache->images[i]);
+    cache->count = visible;
+    return cache->images;
+}

@@ -53,20 +53,27 @@ static bool read_only_gantt(bool adapter) {
     const int date = cui_date_to_days(origin) + 719162;
     cui_gantt_task task = {"Review", NULL, 2, 5, .5f, CUI_TONE_INFO, -1, false, CUI_GANTT_AUTO};
     fpas_gantt_task model = {"Review", NULL, 2, 5, .5f, CUI_TONE_INFO, -1, 0, CUI_GANTT_AUTO};
+    int part = -1;
     bool ok = true;
-    for (int frame = 0; frame < 5; ++frame) {
+    for (int frame = 0; frame < (adapter ? 8 : 5); ++frame) {
         if (frame == 1) key(ui, CUI_KEY_TAB);
         if (frame == 2) key(ui, CUI_KEY_ENTER);
         if (frame == 3) key(ui, CUI_KEY_RIGHT);
         if (frame == 4) key(ui, CUI_KEY_ENTER);
+        if (frame == 5) {
+            if (part < 0) { ok = false; break; }
+            const cui_rect rect = cui_get_rect(ui, fpas_cui_node_key(ui, part));
+            cui_input_mouse_move(ui, rect.x + rect.w / 2, rect.y + rect.h / 2);
+        }
+        if (frame == 6 || frame == 7) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, frame == 6);
         cui_begin_frame(ui, .016f);
-        int part;
         const int clicked = adapter ? fpas_cui_gantt(ui, "gantt", date, 12, &model, 1, 0, 0, 0,
             0, 0, 3, -1, &part) : cui_gantt(ui, "gantt", &task, 1, origin, 12, .read_only = true);
         cui_end_frame(ui);
-        if ((frame == 2 || frame == 4) && clicked != 0) {
-            fprintf(stderr, "%s: Enter did not activate read-only Gantt task (got %d)\n",
-                adapter ? "FPAS" : "CUI", clicked);
+        const int expected = frame == 2 || frame == 4 || frame == 7 ? 0 : -1;
+        if (clicked != expected) {
+            fprintf(stderr, "%s: read-only Gantt activation at frame %d was %d, expected %d\n",
+                adapter ? "FPAS" : "CUI", frame, clicked, expected);
             ok = false;
         }
     }
@@ -74,9 +81,70 @@ static bool read_only_gantt(bool adapter) {
     return ok && (adapter ? model.start : task.start) == 2;
 }
 
+static bool interrupted_drag(bool gantt, bool removed) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 940, 620, 1);
+    cui_set_reduced_motion(ui, true);
+    const int date = cui_date_to_days((cui_date){2026, 11, 9}) + 719162;
+    fpas_gantt_task tasks[] = {
+        {"Plan", NULL, 1, 4, .5f, CUI_TONE_INFO, -1, 0, CUI_GANTT_AUTO},
+        {"Review", NULL, 3, 6, .5f, CUI_TONE_INFO, -1, 0, CUI_GANTT_AUTO}
+    };
+    fpas_week_event events[] = {
+        {"Plan", NULL, 0, 9, 11, CUI_TONE_INFO},
+        {"Review", NULL, 1, 9, 11, CUI_TONE_INFO}
+    };
+    const float day_width = 30, hour_height = 32;
+    const float expected_start = gantt ? 4 : 10;
+    int parts[] = {-1, -1};
+    float x = 0, y = 0;
+    bool ok = true;
+    for (int frame = 0; frame < 9; ++frame) {
+        if (frame == 2) {
+            if (parts[1] < 0) { ok = false; break; }
+            const cui_rect rect = cui_get_rect(ui, fpas_cui_node_key(ui, parts[1]));
+            if (rect.w <= 0 || rect.h <= 0) { ok = false; break; }
+            x = rect.x + rect.w / 2;
+            y = rect.y + rect.h / 2;
+            cui_input_mouse_move(ui, x, y);
+        }
+        if (frame == 3) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        if (frame >= 4 && frame <= 6) {
+            const int distance = frame - 3;
+            cui_input_mouse_move(ui, x + (gantt ? day_width * distance : 0),
+                y + (gantt ? 0 : hour_height * distance));
+        }
+        if (frame == 7) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        const int count = frame == 5 && removed ? 1 : 2;
+        const int flags = frame == 5 && !removed ? 3 : 1;
+        cui_begin_frame(ui, .016f);
+        if (gantt) fpas_cui_gantt(ui, "gantt", date, 12, tasks, count, 0, day_width, 32,
+            0, 0, flags, -1, parts);
+        else fpas_cui_week_calendar(ui, "week", date, events, count, 8, 18, hour_height,
+            0, 0, flags, -1, parts);
+        cui_end_frame(ui);
+        if (frame >= 4) {
+            const float start = gantt ? tasks[1].start : events[1].start;
+            if (start == expected_start) continue;
+            fprintf(stderr, "%s drag, %s at frame %d: start was %g, expected %g\n",
+                gantt ? "Gantt" : "Week", removed ? "item removed" : "read-only",
+                frame, start, expected_start);
+            ok = false;
+            break;
+        }
+    }
+    cui_destroy(ui);
+    return ok;
+}
+
 int main(int argc, char **argv) {
     const bool adapter = argc < 2 || strcmp(argv[1], "upstream") != 0;
     const bool week = read_only_week(adapter);
     const bool gantt = read_only_gantt(adapter);
-    return week && gantt ? 0 : 1;
+    if (!adapter) return week && gantt ? 0 : 1;
+    const bool gantt_removed = interrupted_drag(true, true);
+    const bool gantt_read_only = interrupted_drag(true, false);
+    const bool week_read_only = interrupted_drag(false, false);
+    return week && gantt && gantt_removed && gantt_read_only && week_read_only ? 0 : 1;
 }

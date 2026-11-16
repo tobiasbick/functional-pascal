@@ -1,5 +1,6 @@
 #include "../fpas_cui.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int failures;
@@ -175,6 +176,60 @@ static void log_console(void) {
     cui_destroy(ui);
 }
 
+enum { PATH_WIDTH = 640, PATH_HEIGHT = 360 };
+
+static void render_path_menu(const char *label, unsigned char *pixels, bool disable) {
+    cui_sw_renderer *renderer = cui_sw_create();
+    const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
+    cui_ctx *ui = cui_create(&settings);
+    cui_set_viewport(ui, PATH_WIDTH, PATH_HEIGHT, 1);
+    cui_set_reduced_motion(ui, true);
+    const char *segments[] = { "project", "source" };
+    cui_rect separator = {0};
+    for (int frame = 0; frame < (disable ? 7 : 5); ++frame) {
+        cui_begin_frame(ui, .04f);
+        if (frame == 2 || frame == 3) {
+            fpas_cui_move_pointer(ui, separator.x + separator.w / 2, separator.y + separator.h / 2);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, frame == 2);
+        }
+        int parts[5], root;
+        uint32_t owner;
+        const char *submitted;
+        cui_column(ui, .width = CUI_FILL, .pad = 24) {
+            cui_push_disabled(ui, disable && frame == 5);
+            fpas_cui_path_bar(ui, "###location", segments, 2, NULL, NULL, NULL, 1, 1, 0,
+                7, -1, &submitted, parts, &root, &owner);
+            const int parent = fpas_cui_path_menu_begin(ui, "###location");
+            if (parent >= 0) {
+                fpas_cui_path_menu_item(ui, label, 0);
+                fpas_cui_path_menu_end(ui);
+            }
+            if (frame == 4) check(parent == 0, "Clicking the separator must open the first segment's child menu.");
+            if (frame >= 5) check(parent == -1, "Disabling the path bar must close its child menu until reopened.");
+            cui_pop_disabled(ui);
+        }
+        cui_end_frame(ui);
+        if (frame == 1) separator = fpas_cui_node_rect(ui, parts[1]);
+        if (frame == 4)
+            cui_sw_render(renderer, cui_get_draw_data(ui), pixels, PATH_WIDTH, PATH_HEIGHT, PATH_WIDTH * 4, CUI_SW_RGBA);
+    }
+    cui_destroy(ui);
+    cui_sw_destroy(renderer);
+}
+
+static void path_bar(void) {
+    const size_t bytes = (size_t)PATH_WIDTH * PATH_HEIGHT * 4;
+    unsigned char *plain = malloc(bytes), *literal = malloc(bytes);
+    check(plain && literal, "Path menu pixel buffers must allocate.");
+    if (plain && literal) {
+        render_path_menu("Alpha", plain, true);
+        render_path_menu("Alpha##Beta", literal, false);
+        check(memcmp(plain, literal, bytes) != 0, "The child menu must render the caption suffix after ##.");
+    }
+    free(plain);
+    free(literal);
+}
+
 int main(void) {
     markdown();
     editor();
@@ -182,5 +237,6 @@ int main(void) {
     hex();
     terminal();
     log_console();
+    path_bar();
     return failures ? 1 : 0;
 }

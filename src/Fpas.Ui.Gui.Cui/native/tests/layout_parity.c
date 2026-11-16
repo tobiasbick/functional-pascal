@@ -47,8 +47,37 @@ static bool matches(int axis, bool rtl, bool dark, int width) {
     return valid;
 }
 
+static bool check_hover(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 280, 220, 1);
+
+    cui_begin_frame(ui, .016f);
+    const int group = fpas_cui_group_begin(ui, 0, 8, 0, CUI_ALIGN_START, 0, 0, 0);
+    (void)cui_button(ui, "Continue");
+    const int button = fpas_cui_last_node(ui);
+    fpas_cui_group_end(ui, group);
+    cui_end_frame(ui);
+    const cui_rect bounds = fpas_cui_node_rect(ui, button);
+
+    cui_begin_frame(ui, .016f);
+    fpas_cui_move_pointer(ui, 270, 210);
+    const int current_group = fpas_cui_group_begin(ui, 0, 8, 0, CUI_ALIGN_START, 0, 0, 0);
+    (void)cui_button(ui, "Continue");
+    const int current_button = fpas_cui_last_node(ui);
+    const bool idle = !fpas_cui_hovered(ui, current_group) && !fpas_cui_hovered(ui, current_button);
+    fpas_cui_move_pointer(ui, bounds.x + bounds.w / 2, bounds.y + bounds.h / 2);
+    const bool hovered = !fpas_cui_hovered(ui, current_group) && fpas_cui_hovered(ui, current_button);
+    fpas_cui_group_end(ui, current_group);
+    cui_end_frame(ui);
+
+    cui_destroy(ui);
+    if (!idle || !hovered) fprintf(stderr, "Hover must identify the interactive button only (idle=%d hovered=%d).\n", idle, hovered);
+    return idle && hovered;
+}
+
 int main(void) {
-    bool valid = true;
+    bool valid = check_hover();
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)
             for (int dark = 0; dark < 2; ++dark)

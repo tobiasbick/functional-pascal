@@ -16,8 +16,8 @@ static bool fpas_has_focus(cui_ctx *ui, cui_id key) {
 }
 
 static bool fpas_has_hover(cui_ctx *ui, cui_id key) {
-    if (ui->hot == key) return true;
     if (!key || !ui->hot) return false;
+    if (ui->hot == key) return true;
     const fpas_owned_state *state = cui__state_lazy(ui, fpas_owner_key(key), sizeof *state, false);
     return state && state->hover == ui->hot;
 }

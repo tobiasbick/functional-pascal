@@ -71,6 +71,11 @@ static bool check_range(bool bridge) {
             cui_virtual_list_end(ui);
         }
         cui_end_frame(ui);
+        if (frame == 2 && first <= 0) {
+            fprintf(stderr, "%s virtual list did not scroll before shrinking.\n", bridge ? "FPAS" : "CUI");
+            cui_destroy(ui);
+            return false;
+        }
     }
     printf("%s virtual range after shrink [%d,%d)\n", bridge ? "FPAS" : "CUI", first, last);
     cui_destroy(ui);
@@ -101,7 +106,7 @@ static bool check_palette_close(bool bridge) {
     const char *titles[] = { command.title }, *empty[] = { "" };
     bool open = true;
     int selected = -1;
-    bool enter = false;
+    bool shown = false, enter = false;
     for (int frame = 0; frame < 12; ++frame) {
         if (frame == 11) {
             open = false;
@@ -114,16 +119,18 @@ static bool check_palette_close(bool bridge) {
             int visible = open, panel, query, row;
             selected = fpas_cui_command_palette(ui, "palette", &visible, 1,
                 titles, empty, empty, empty, 1, &owner, &panel, &query, &row);
+            if (frame == 10) shown = panel >= 0 && query >= 0;
         } else {
             selected = cui_command_palette(ui, &open, &command, 1);
+            if (frame == 10) shown = cui_wants_keyboard(ui);
         }
         enter = cui_key_pressed(ui, CUI_KEY_ENTER);
         cui_end_frame(ui);
     }
-    printf("%s closing palette selection=%d Enter available=%d\n",
-        bridge ? "FPAS" : "CUI", selected, enter);
+    printf("%s closing palette shown=%d selection=%d Enter available=%d\n",
+        bridge ? "FPAS" : "CUI", shown, selected, enter);
     cui_destroy(ui);
-    return selected == -1 && enter;
+    return shown && selected == -1 && enter;
 }
 
 int main(int argc, char **argv) {

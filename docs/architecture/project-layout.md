@@ -13,6 +13,11 @@ the [distribution reference](../build/distribution.md) owns deployment.
 Examples and applications build and run through the SDK. The responsibilities
 below describe their boundaries.
 
+`Fpas.Atl` builds the pinned ATL source under `third-party/atl` for applications.
+It preserves ATL's CLR namespace/assembly name and owns the dependency build and
+license delivery; the compiler has no dependency on it. Local playlist changes
+and snapshot/update details live in the [ATL provenance](../../third-party/atl/UPSTREAM.md).
+
 ## Repository tree
 
 ```text

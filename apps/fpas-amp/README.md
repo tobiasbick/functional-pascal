@@ -48,6 +48,8 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   an absolute `path`, `offline`, `paused` and an `extensions` array such as
   `[".flac", ".mp3"]`. Music sources include subdirectories.
   A missing `paused` value defaults to false. Pause and Offline are independent.
+  `scanPlaylists` enables playlist discovery independently of audio extensions;
+  it defaults to true in app settings and can explicitly be set to false.
 - `settings.json` also stores `appearance` (`light`, `dark` or `system`) and
   `accent` (`neutral`, `violet`, `blue`, `green`, `amber`, `orange`, `coral` or
   `rose`). Missing appearance fields default to system and neutral. System mode
@@ -86,3 +88,11 @@ Known-path tag changes retain the identity. Moving and editing together cannot
 be recognized reliably by a full-file hash. Embedded covers are cached separately
 on explicit request. The current UI provides settings; catalogue queries and
 rating storage are available through the library API for the subsequent track view.
+
+Playlist files in music sources are also discovered and monitored. They are
+cached separately from audio entries; the scan never opens their media targets.
+ATL supports M3U/M3U8, PLS, XSPF, ASX, B4S, DPL and SMIL-family files, plus
+experimental FPL import. The library API can create ordered local lists, import
+independent copies and export UTF-8 M3U8. Local lists are stored in `userdata.db`
+and survive index resets/source removal. A playlist editor is not part of the
+current settings shell. See the [library contract](src/FpasAmp.Library/README.md#playlists).

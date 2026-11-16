@@ -1,0 +1,147 @@
+// Read-only combined views of catalogue files and durable local lists.
+unit FpasAmp.Library.Playlists.Persistence.Queries;
+
+uses
+  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Threading as T;
+
+function Storage(Value: M.Origin): int;
+begin
+  case Value of
+    when M.Origin.File:
+      return 0;
+    when M.Origin.Local:
+      return 1;
+    else
+      raise new Sys.ArgumentOutOfRangeException('Storage');
+  end case;
+end function;
+
+function Summary(Row: Db.SqliteDataReader): M.Summary;
+begin
+  return new M.Summary(
+    new M.Key(
+      if Row.GetInt32(0) = 0 then
+        M.Origin.File
+      else
+        M.Origin.Local
+      end if, Row.GetString(1)
+    ),
+    Row.GetString(2), if Row.IsDBNull(3) then
+      null
+    else
+      Row.GetString(3)
+    end if,
+    Row.GetInt64(4), if Row.IsDBNull(5) then
+      null
+    else
+      Row.GetString(5)
+    end if
+  );
+end function;
+
+// Lists bounded summaries from `Database` and `Users`; `Request` selects a page.
+// Cancellation is checked during detached result construction.
+public function List(Database: string; Users: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Summary>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT storage,id,name,path,total,error FROM (' +
+    'SELECT 0 storage,p.id,p.name,p.name_key,f.path,(SELECT count(*) FROM playlist_items i WHERE i.playlist_id=p.id) total,p.error' +
+    ' FROM playlist_files p JOIN files f ON f.id=p.file_id WHERE $source IS NULL OR EXISTS(SELECT 1 FROM source_files s WHERE s.file_id=f.id AND s.source_id=$source)' +
+    ' UNION ALL SELECT 1,p.id,p.name,p.name_key,NULL,(SELECT count(*) FROM users.playlist_items i WHERE i.playlist_id=p.id),NULL' +
+    ' FROM users.playlists p WHERE $source IS NULL)' +
+    ' WHERE $storage IS NULL OR storage=$storage ORDER BY name_key,storage,id LIMIT $limit OFFSET $offset;',
+    null,
+    ['$source', '$storage', '$limit', '$offset'],
+    [
+      Request.SourceId, if Request.Storage <> null then
+        cast<object?>(Storage(Request.Storage.Value))
+      else
+        null
+      end if, Request.Limit, Request.Offset
+    ]
+  );
+  using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+  const Items: C.List<M.Summary> := new C.List<M.Summary>();
+  while Rows.Read() do
+    Cancellation.ThrowIfCancellationRequested();
+    Items.Add(Summary(Rows));
+  end while;
+
+  return I.ImmutableArray.CreateRange<M.Summary>(Items);
+end function;
+
+// Loads ordered `Identity`, preserving unresolved/duplicate entries and following
+// durable UUID moves. Returns null when the requested list no longer exists.
+public function Read(Database: string; Users: string; Identity: M.Key; Cancellation: T.CancellationToken): M.Playlist?;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Kind: int := Storage(Identity.Storage);
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
+  var Header: M.Summary? := null;
+  begin
+    const Text: string := if Kind = 0 then
+      'SELECT 0,p.id,p.name,f.path,(SELECT count(*) FROM playlist_items i WHERE i.playlist_id=p.id),p.error FROM playlist_files p JOIN files f ON f.id=p.file_id WHERE p.id=$id;'
+    else
+      'SELECT 1,p.id,p.name,NULL,(SELECT count(*) FROM users.playlist_items i WHERE i.playlist_id=p.id),NULL FROM users.playlists p WHERE p.id=$id;'
+    end if;
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      Text,
+      Transaction,
+      ['$id'],
+      [Identity.Id]
+    );
+    using const Row: Db.SqliteDataReader := Query.ExecuteReader();
+    if Row.Read() then
+      Header := Summary(Row);
+    end if;
+  end;
+
+  if Header = null then
+    return null;
+  end if;
+  const Table: string := if Kind = 0 then
+    'playlist_items'
+  else
+    'users.playlist_items'
+  end if;
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT p.position,p.reference,p.title,t.id,COALESCE(t.path,p.reference),' +
+    'EXISTS(SELECT 1 FROM files f WHERE f.kind=0 AND f.path_key=COALESCE(t.path_key,p.reference_key))' +
+    ' FROM ' + Table +
+    ' p LEFT JOIN users.tracks t ON t.id=p.track_id OR (p.track_id IS NULL AND t.path_key=p.reference_key)' +
+    ' WHERE p.playlist_id=$id ORDER BY p.position;', Transaction, ['$id'], [Identity.Id]
+  );
+  using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+  const Entries: C.List<M.Entry> := new C.List<M.Entry>();
+  while Rows.Read() do
+    Cancellation.ThrowIfCancellationRequested();
+    if Entries.Count >= 100000 then
+      raise new Sys.InvalidOperationException('Playlist exceeds 100000 entries.');
+    end if;
+
+    Entries.Add(
+      new M.Entry(
+        Rows.GetInt32(0), if Rows.IsDBNull(3) then
+          M.Target.Location(Rows.GetString(1))
+        else
+          M.Target.Track(Rows.GetString(3))
+        end if,
+        Rows.GetString(1), Rows.GetString(4), Rows.GetString(2), Rows.GetBoolean(5)
+      )
+    );
+  end while;
+
+  return new M.Playlist(Header, I.ImmutableArray.CreateRange<M.Entry>(Entries));
+end function;
+
+end unit;

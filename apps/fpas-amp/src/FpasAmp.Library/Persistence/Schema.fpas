@@ -3,27 +3,28 @@ unit FpasAmp.Library.Persistence.Schema;
 
 uses
   FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Metadata.Persistence.Schema as Metadata, Microsoft.Data.Sqlite as Db, System as Sys;
+  FpasAmp.Library.Metadata.Persistence.Schema as Metadata, Microsoft.Data.Sqlite as Db, System as Sys,
+  FpasAmp.Library.Playlists.Persistence.Schema as Playlists, FpasAmp.Library.Content.Schema as Content;
 
 // Initializes a new database or validates the supported schema without resetting data.
 // `Connection` is an open, worker-owned connection.
 public procedure Ensure(Connection: Db.SqliteConnection);
 begin
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   using const Read: Db.SqliteCommand := Sql.Command(
     Connection,
     'PRAGMA user_version;',
-    null,
+    Transaction,
     [],
     []
   );
   const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-  if Version < 0 or Version > 2 then
+  if Version < 0 or Version > 3 then
     raise new Sys.InvalidOperationException(
       'Unsupported library database schema. The database was left intact.'
     );
   end if;
 
-  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   Sql.Execute(
     Connection,
     'CREATE TABLE IF NOT EXISTS sources (' +
@@ -35,7 +36,7 @@ begin
     'CREATE INDEX IF NOT EXISTS directories_parent ON directories(source_id,parent_key);' +
     'CREATE TABLE IF NOT EXISTS files (' +
     'id INTEGER PRIMARY KEY AUTOINCREMENT, path_key TEXT NOT NULL UNIQUE,' +
-    'path TEXT NOT NULL, directory_key TEXT NOT NULL, size INTEGER, modified_utc INTEGER);' +
+    'path TEXT NOT NULL, directory_key TEXT NOT NULL, size INTEGER, modified_utc INTEGER,kind INTEGER NOT NULL DEFAULT 0);' +
     'CREATE INDEX IF NOT EXISTS files_directory ON files(directory_key);' +
     'CREATE TABLE IF NOT EXISTS source_files (' +
     'source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,' +
@@ -52,7 +53,19 @@ begin
   end if;
 
   Metadata.Create(Connection, Transaction);
-  Sql.Execute(Connection, 'PRAGMA user_version=2;', Transaction, [], []);
+  if Version = 1 or Version = 2 then
+    Sql.Execute(
+      Connection,
+      'ALTER TABLE files ADD COLUMN kind INTEGER NOT NULL DEFAULT 0;',
+      Transaction,
+      [],
+      []
+    );
+  end if;
+
+  Playlists.Catalogue(Connection, Transaction);
+  Content.Create(Connection, Transaction, Version < 3);
+  Sql.Execute(Connection, 'PRAGMA user_version=3;', Transaction, [], []);
   Transaction.Commit();
   Sql.Execute(
     Connection,

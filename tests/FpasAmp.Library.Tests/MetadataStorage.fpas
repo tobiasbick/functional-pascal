@@ -29,7 +29,7 @@ public type MetadataStorageTests = record
     );
     Schema.Ensure(Connection);
     X.Assert.Equal<long>(42L, D.Number(Connection, 'SELECT id FROM files;'));
-    X.Assert.Equal<long>(2L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal<long>(3L, D.Number(Connection, 'PRAGMA user_version;'));
     X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM metadata;'));
     X.Assert.Equal<long>(
       1L,
@@ -60,7 +60,7 @@ public type MetadataStorageTests = record
         IO.Path.Combine(Data.Path, 'library.db')
       );
       Pending.Configure(Connection, Sources);
-      X.Assert.Null(Pending.Next(Connection, 0L));
+      X.Assert.Null(Pending.Next(Connection));
     end;
 
     IO.File.WriteAllText(Path, 'broken');

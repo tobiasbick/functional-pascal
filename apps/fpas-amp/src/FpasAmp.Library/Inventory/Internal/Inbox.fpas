@@ -97,7 +97,7 @@ public type Inbox = record
 
       self.State.Value := new Pending(Sources, Value.Version + 1L, true, Value.Whole, false);
       for Source: S.MusicSource in Sources do
-        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+        if Source.Offline or Source.Paused or not S.HasWork(Source) then
           continue;
         end if;
         var Changed: bool := true;
@@ -140,7 +140,7 @@ public type Inbox = record
           continue;
         end if;
 
-        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+        if Source.Offline or Source.Paused or not S.HasWork(Source) then
           raise new Sys.InvalidOperationException('Resume the source before rescanning.');
         end if;
 

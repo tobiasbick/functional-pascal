@@ -1,7 +1,9 @@
 // Durable user data is never cleared with the reconstructible library index.
 unit FpasAmp.Library.UserData.Schema;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys;
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys,
+  FpasAmp.Library.Playlists.Persistence.Schema as Playlists;
 
 // Opens and validates a local user database at absolute `Path`; caller disposes it.
 // Unknown/corrupt data is reported without resetting the file.
@@ -9,21 +11,21 @@ public function Open(Path: string): Db.SqliteConnection;
 begin
   const Connection: Db.SqliteConnection := Sql.Open(Path);
   try
+    using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
     using const Read: Db.SqliteCommand := Sql.Command(
       Connection,
       'PRAGMA user_version;',
-      null,
+      Transaction,
       [],
       []
     );
     const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-    if Version <> 0 and Version <> 1 then
+    if Version < 0 or Version > 2 then
       raise new Sys.InvalidOperationException(
         'Unsupported user database schema. The database was left intact.'
       );
     end if;
 
-    using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
     Sql.Execute(
       Connection,
       'CREATE TABLE IF NOT EXISTS tracks (' +
@@ -32,8 +34,9 @@ begin
       'rating INTEGER CHECK(rating IS NULL OR rating BETWEEN 1 AND 10));' +
       'CREATE INDEX IF NOT EXISTS tracks_hash ON tracks(sha256,size);' +
       'CREATE INDEX IF NOT EXISTS tracks_rating ON tracks(rating,id);' +
-      'PRAGMA user_version=1;', Transaction, [], []
+      'PRAGMA user_version=2;', Transaction, [], []
     );
+    Playlists.UserLists(Connection, Transaction);
     Transaction.Commit();
     return Connection;
   catch do

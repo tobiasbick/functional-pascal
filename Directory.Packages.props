@@ -10,7 +10,8 @@
     <FpasTestingPlatformVersion>2.5.2</FpasTestingPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="z440.atl.core" Version="7.20.1" />
+    <PackageVersion Include="Ude.NetStandard" Version="1.2.0" />
+    <PackageVersion Include="Zomp.SyncMethodGenerator" Version="1.6.2" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.23" />
     <PackageVersion Include="JsonSchema.Net" Version="9.4.1" />

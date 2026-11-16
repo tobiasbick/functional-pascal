@@ -65,7 +65,7 @@ public type Reporting = record
         end if;
       end if;
 
-      if not Source.Offline and not Source.Paused and Source.Extensions.Length = 0 then
+      if not Source.Offline and not Source.Paused and not S.HasWork(Source) then
         Value := new P.SourceProgress(
           Source.Id,
           P.Phase.Idle,

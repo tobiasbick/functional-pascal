@@ -21,7 +21,7 @@ begin
   );
   using const Files: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT f.id,f.path FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source;',
+    'SELECT f.id,f.path,f.kind FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source;',
     Transaction,
     ['$source'],
     [Source.Id]
@@ -34,7 +34,12 @@ begin
         return false;
       end if;
 
-      if not Extensions.Contains(IO.Path.GetExtension(Reader.GetString(1)) ?? '') then
+      if (Reader.GetInt32(
+        2
+      ) = 1 and not Source.ScanPlaylists) or (Reader.GetInt32(2) = 0 and not Extensions.Contains(
+        IO.Path.GetExtension(Reader.GetString(1)) ?? ''
+      ))
+      then
         Candidates.Parameters['$id'].Value := Reader.GetInt64(0);
         discard Candidates.ExecuteNonQuery();
       end if;
@@ -48,7 +53,7 @@ begin
     ['$source'],
     [Source.Id]
   );
-  if Source.Extensions.Length = 0 then
+  if not S.HasWork(Source) then
     Sql.Execute(
       Connection,
       'DELETE FROM directories WHERE source_id=$source;',

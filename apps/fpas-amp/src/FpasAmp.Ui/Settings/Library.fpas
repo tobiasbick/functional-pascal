@@ -88,7 +88,7 @@ begin
             new B.Options(
               Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
               Enabled := Current.Clearing = null and not Source.Offline and not Source.Paused
-                and Source.Extensions.Length > 0 and not Scan.Running(
+                and Locations.HasWork(Source) and not Scan.Running(
                 Current,
                 Source
               ),

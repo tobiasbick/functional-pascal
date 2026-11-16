@@ -1,7 +1,7 @@
 # FpasAmp.Library
 
-UI-independent FPAS directory discovery, audio metadata and durable user ratings,
-using .NET, `Microsoft.Data.Sqlite` and ATL (`z440.atl.core`). Discovery enumerates
+UI-independent FPAS directory discovery, audio metadata, playlists and durable user
+ratings, using .NET, `Microsoft.Data.Sqlite` and the [ATL source dependency](../../../../third-party/atl/UPSTREAM.md). Discovery enumerates
 filesystem entries; the optional second stage reads tags, technical audio
 properties and SHA-256 without decoding or modifying audio.
 
@@ -56,7 +56,8 @@ links/junctions are excluded. Paths compare ordinally on Unix and without case
 on Windows. Hard links and symbolic aliases are not merged.
 
 Equal/nested active roots share traversal/watchers, while source IDs retain their
-own filtered membership/error views. Empty extension selections schedule no work.
+own filtered membership/error views. `ScanPlaylists` selects playlist discovery
+independently of audio extensions. With neither selected, a source schedules no work.
 Watchers are enabled before scanning; callbacks only invalidate directories.
 Events are hints: changes are reconciled from the filesystem, new directories
 are traversed, and overflow/saturation requests a complete check/reinstallation.
@@ -80,6 +81,9 @@ bounded; stored inventories necessarily scale with files/directories.
 - `metadata_people`, `metadata_genres`: ordered multi-value relationships with
   indexed invariant case keys. ATL's public separator convention is used;
   artist names are not split on commas or slashes.
+- `playlist_files`, `playlist_items`: source-owned playlist cache, ordered entries,
+  retained references, durable track associations and latest read errors.
+- `content_jobs`: indexed pending audio/playlist work, requeued by file-stamp changes.
 
 Connections use WAL, foreign keys, prepared/bound SQL and full SQLite durability.
 Each directory/tag write is transactional; obsolete generations/cancellation
@@ -95,8 +99,8 @@ Native SQLite assets arrive through NuGet; ATL's managed dependency detects text
 ## Metadata and queries
 
 The enabled `Metadata` stage reads one file at a time using a **64 KiB** hash
-buffer. Pending work stays in SQLite, with a cursor rather than repeated scans of
-earlier rows. Successful unchanged size/time observations skip hashing/tag reads.
+buffer. Pending work stays in an indexed SQLite queue; each iteration processes
+at most one playlist and one audio file. Successful unchanged size/time observations skip hashing/tag reads.
 Files are revalidated around reading and at commit. Failures retry after a minute
 or an observed size/time change; earlier successful tags are retained.
 
@@ -142,6 +146,60 @@ Scans leave image data unloaded. Cached artwork works offline; absence is cached
 too. Images retain their original MIME type/bytes, limited to **sixteen MiB**.
 Cache writes replace temporary files atomically; the cache is reconstructible.
 
+## Playlists
+
+The borrowed `Metadata.Playlists` handle provides asynchronous `ListAsync`,
+`ReadAsync`, `SaveAsync`, `DeleteAsync`, `ImportAsync` and `ExportAsync` operations.
+It shares initialization/cancellation with the owning session and starts no extra
+worker. All file/database I/O stays off the caller's thread.
+
+Sources with `ScanPlaylists := true` discover playlists recursively and reconcile
+watcher changes alongside audio. The app enables this by default; the core source
+type defaults to false for callers requesting audio presence only. Playlist files
+never contribute to audio path lists or scan file counters. Their parsed cache
+follows source membership, pause/offline, reset and deletion rules. The source file
+is never rewritten by scanning.
+
+ATL imports M3U/M3U8, PLS, XSPF, ASX/WAX/WVX, B4S, DPL and
+SMIL/SMI/WPL/ZPL. FPL import uses ATL's experimental URI extractor and cannot
+guarantee support for every Foobar2000 binary variant. Export is exclusively
+**M3U8 UTF-8**. The vendored ATL changes disable referenced-media metadata reads,
+make parse failures observable and correct documented playlist parser defects.
+
+[Playlists.Model](Playlists/Model.fpas) distinguishes source-file and local keys.
+Order and duplicates are retained, including unavailable paths and remote URIs.
+Relative references resolve against the playlist directory; URI escaping is decoded
+for XML formats while ordinary M3U paths retain literal percent characters.
+Foreign-platform absolute paths are retained without a host catalogue association.
+No referenced folder is enrolled automatically and no remote target is fetched.
+Known tracks bind by durable UUID; late indexing resolves previously unknown local
+references. Reads follow recognized moves through that UUID. `Indexed` means a
+catalogue membership exists, including cached/offline entries, rather than proving
+the file is currently readable.
+
+`SaveAsync(Id, Name, Items, Cancellation)` creates a durable local list when `Id`
+is null and replaces an existing local list otherwise. Items contain either
+`Target.Track(UUID)` or `Target.Location(AbsolutePathOrUri)` plus an optional title.
+Replacement is transactional and preserves the supplied order/duplicates. Unknown
+local IDs/track UUIDs and multiline references/titles are rejected. `DeleteAsync`
+only removes a local list, retaining tracks/ratings. Local lists live in
+`userdata.db` and survive source removal, index reset and rebuilding.
+
+`ImportAsync(Path, Cancellation, Name)` explicitly copies a supported playlist
+into a new local list, independently of sources and the input file's lifetime.
+`ExportAsync(Key, Destination, Cancellation, Overwrite)` writes any cached/local
+list to an absolute `.m3u8` path using current track paths. It writes a temporary
+file in the destination directory and renames it after success; replacement
+requires `Overwrite := true`. Missing entries are retained. Empty titles may
+receive ATL's filename fallback on export. No playback/editor view is implied.
+
+Summary queries have at most **200** rows and support store/source filters.
+Parsing uses a bounded temporary snapshot: **sixteen MiB** and **100000** entries
+per list. Failed reads retain the last successful entries and retry after one
+minute or a stamp change. Cancellation interrupts copying/entry iteration and
+checks both sides of ATL's synchronous parser; it cannot interrupt that parser
+mid-call. Durable list mutations roll back before commit on cancellation.
+
 ## Focused verification
 
 The [FPAS xUnit tests](../../../../tests/FpasAmp.Library.Tests/) exercise real
@@ -149,6 +207,9 @@ temporary folders, watchers, overlapping sources, pause/clear, permissions/links
 disk restart, schema upgrade, safe checkpoints, rollback and corrupt stores.
 Metadata cases cover tags, Unicode multi-values, ordering, rating bounds,
 changes, cancellation, lazy/offline images, ambiguous copies, moves and restart.
+Playlist cases cover all extensions, parser edge cases, watcher reconciliation,
+duplicates/order, URI/path handling, durable lists, late track resolution, schema
+upgrades, reset/restart, cancellation and M3U8 round trips.
 
 ```sh
 dotnet test tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj

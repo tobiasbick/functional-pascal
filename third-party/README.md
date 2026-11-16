@@ -10,3 +10,4 @@ Generated binaries and temporary build files do not belong in this directory.
 | Dependency | Source and license inventory |
 | --- | --- |
 | CUI | [CUI provenance](cui/UPSTREAM.md) |
+| ATL | [ATL provenance](atl/UPSTREAM.md) |

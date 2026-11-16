@@ -7,10 +7,38 @@ uses
   FpasAmp.Ui.Settings.Controller as Controller, FpasAmp.Settings as Store,
   Fpas.Ui.Mvu.Application as Mvu, System.IO as IO, System.Threading as T,
   FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
-  System.Threading.Tasks as Tasks, Xunit as X;
+  System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;
 
 // Verifies pause preferences and accepted/failed settings updates.
 public type PreferenceTests = record
+  // App settings enable playlist discovery by default and retain an explicit opt-out.
+  [X.FactAttribute]
+  public procedure PlaylistDiscoveryDefaultsAndPersists();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path);
+    Store.Save(
+      Folder.Path, new M.Preferences(
+        [
+          Source with
+            ScanPlaylists := true;
+          end with
+        ]
+      )
+    );
+    X.Assert.True(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+    Store.Save(Folder.Path, new M.Preferences([Source]));
+    X.Assert.False(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+    const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
+    IO.File.WriteAllText(
+      Path,
+      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+        Folder.Path
+      ) + ',"offline":false,"extensions":[".mp3"]}]}'
+    );
+    X.Assert.True(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+  end procedure;
+
   // An index-clear acknowledgement cannot hide a failed metadata/discovery lifetime.
   [X.FactAttribute]
   public async function ClearDoesNotDismissATerminalWorkerFailure(): Tasks.Task;

@@ -1,0 +1,119 @@
+// File lists are replaceable caches; user-owned lists are written separately.
+unit FpasAmp.Library.Playlists.Persistence.Store;
+
+uses
+  FpasAmp.Library.Playlists.Internal.Reading as Reading,
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T;
+
+// Saves `Value` for the same observed playlist ID/stamp while policy remains
+// `Current`. `Users` supplies durable track identities; failures preserve entries.
+// Returns false for stale/deleted files, leaving their queued work intact.
+public function Save(Connection: Db.SqliteConnection; Users: Db.SqliteConnection; Id: long; Path: string; Size: long; Modified: long; Value: Reading.Result; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  using const Check: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT count(*) FROM files f WHERE f.kind=1 AND f.id=$id AND f.size=$size AND f.modified_utc=$modified' +
+    ' AND EXISTS(SELECT 1 FROM source_files s JOIN metadata_active a ON a.id=s.source_id WHERE s.file_id=f.id);',
+    Transaction, ['$id', '$size', '$modified'], [Id, Size, Modified]
+  );
+  if Sys.Convert.ToInt64(Check.ExecuteScalar()) = 0L or not Current() then
+    return false;
+  end if;
+  const Name: string := IO.Path.GetFileNameWithoutExtension(Path) ?? '';
+  Sql.Execute(
+    Connection,
+    'INSERT INTO playlist_files(file_id,id,name,name_key,size,modified_utc,read_utc,error) VALUES($file,$id,$name,$key,$size,$modified,$read,$error)' +
+    ' ON CONFLICT(file_id) DO UPDATE SET name=excluded.name,name_key=excluded.name_key,size=excluded.size,' +
+    'modified_utc=excluded.modified_utc,read_utc=excluded.read_utc,error=excluded.error;',
+    Transaction,
+    ['$file', '$id', '$name', '$key', '$size', '$modified', '$read', '$error'],
+    [
+      Id,
+      Sys.Guid.NewGuid().ToString('N'),
+      Name,
+      Name.ToUpperInvariant(),
+      Size,
+      Modified,
+      Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+      Value.Error
+    ]
+  );
+  using const Identity: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT id FROM playlist_files WHERE file_id=$file;',
+    Transaction,
+    ['$file'],
+    [Id]
+  );
+  const ListId: string := Sys.Convert.ToString(Identity.ExecuteScalar()) ?? '';
+  if Value.Error = null then
+    const Previous: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+    begin
+      using const Old: Db.SqliteCommand := Sql.Command(
+        Connection,
+        'SELECT reference_key,track_id FROM playlist_items WHERE playlist_id=$id AND reference_key IS NOT NULL AND track_id IS NOT NULL;',
+        Transaction,
+        ['$id'],
+        [ListId]
+      );
+      using const Rows: Db.SqliteDataReader := Old.ExecuteReader();
+      while Rows.Read() do
+        Previous[Rows.GetString(0)] := Rows.GetString(1);
+      end while;
+    end;
+
+    Sql.Execute(
+      Connection,
+      'DELETE FROM playlist_items WHERE playlist_id=$id;',
+      Transaction,
+      ['$id'],
+      [ListId]
+    );
+    for Position: int := 0 to Value.Items.Length - 1 do
+      Cancellation.ThrowIfCancellationRequested();
+      const Item: Reading.Item := Value.Items[Position];
+      const Key: string? := Item.Reference.Key;
+      var Track: string? := null;
+      if Key <> null then
+        using const Known: Db.SqliteCommand := Sql.Command(
+          Users,
+          'SELECT id FROM tracks WHERE path_key=$key;',
+          null,
+          ['$key'],
+          [Item.Reference.Key]
+        );
+        Track := cast<string?>(Known.ExecuteScalar());
+        if Track = null and Previous.ContainsKey(Key) then
+          Track := Previous[Key];
+        end if;
+      end if;
+
+      Sql.Execute(
+        Connection,
+        'INSERT INTO playlist_items VALUES($id,$position,$ref,$key,$track,$title);', Transaction,
+        ['$id', '$position', '$ref', '$key', '$track', '$title'],
+        [ListId, Position, Item.Reference.Location, Item.Reference.Key, Track, Item.Title]
+      );
+    end for;
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  if not Current() then
+    return false;
+  end if;
+
+  Sql.Execute(
+    Connection,
+    'DELETE FROM content_jobs WHERE file_id=$id;',
+    Transaction,
+    ['$id'],
+    [Id]
+  );
+  Transaction.Commit();
+  return true;
+end function;
+
+end unit;

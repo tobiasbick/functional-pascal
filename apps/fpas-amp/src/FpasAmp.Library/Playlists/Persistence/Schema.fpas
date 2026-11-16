@@ -1,0 +1,47 @@
+// File-backed caches and user lists have separate storage lifetimes.
+unit FpasAmp.Library.Playlists.Persistence.Schema;
+
+uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+
+// Creates cache tables inside catalogue `Transaction` on `Connection`.
+public procedure Catalogue(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction);
+begin
+  Sql.Execute(
+    Connection,
+    'CREATE TABLE IF NOT EXISTS playlist_files (' +
+    'file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,id TEXT NOT NULL UNIQUE,' +
+    'name TEXT NOT NULL,name_key TEXT NOT NULL,size INTEGER NOT NULL,modified_utc INTEGER NOT NULL,' +
+    'read_utc INTEGER NOT NULL,error TEXT);' +
+    'CREATE INDEX IF NOT EXISTS playlist_names ON playlist_files(name_key,id);' +
+    'CREATE INDEX IF NOT EXISTS playlist_errors ON playlist_files(read_utc) WHERE error IS NOT NULL;' +
+    'CREATE TABLE IF NOT EXISTS playlist_items (' +
+    'playlist_id TEXT NOT NULL REFERENCES playlist_files(id) ON DELETE CASCADE,' +
+    'position INTEGER NOT NULL,reference TEXT NOT NULL,reference_key TEXT,track_id TEXT,title TEXT NOT NULL,' +
+    'PRIMARY KEY(playlist_id,position));' +
+    'CREATE INDEX IF NOT EXISTS playlist_item_paths ON playlist_items(reference_key) WHERE track_id IS NULL;',
+    Transaction,
+    [],
+    []
+  );
+end procedure;
+
+// Creates durable lists inside user-store `Transaction` on `Connection`.
+public procedure UserLists(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction);
+begin
+  Sql.Execute(
+    Connection,
+    'CREATE TABLE IF NOT EXISTS playlists (' +
+    'id TEXT PRIMARY KEY,name TEXT NOT NULL,name_key TEXT NOT NULL,updated_utc INTEGER NOT NULL);' +
+    'CREATE INDEX IF NOT EXISTS playlist_names ON playlists(name_key,id);' +
+    'CREATE TABLE IF NOT EXISTS playlist_items (' +
+    'playlist_id TEXT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,' +
+    'position INTEGER NOT NULL,reference TEXT NOT NULL,reference_key TEXT,' +
+    'track_id TEXT REFERENCES tracks(id),title TEXT NOT NULL,PRIMARY KEY(playlist_id,position));' +
+    'CREATE INDEX IF NOT EXISTS playlist_item_paths ON playlist_items(reference_key) WHERE track_id IS NULL;',
+    Transaction,
+    [],
+    []
+  );
+end procedure;
+
+end unit;

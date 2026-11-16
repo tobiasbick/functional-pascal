@@ -13,10 +13,14 @@ const Gone: string := 'WITH RECURSIVE gone(path_key) AS (' +
   ' UNION ALL SELECT d.path_key FROM directories d JOIN gone g ON d.parent_key=g.path_key' +
   ' WHERE d.source_id=$source) ';
 
-function Matches(Path: string; Source: S.MusicSource): bool;
+function Matches(Path: string; Source: S.MusicSource; Kind: int): bool;
 begin
   if Source.Offline or Source.Paused or not S.Within(Path, Source.Path) then
     return false;
+  end if;
+
+  if Kind = 1 then
+    return Source.ScanPlaylists;
   end if;
   const Extension: string := IO.Path.GetExtension(Path) ?? '';
   for Allowed: string in Source.Extensions do
@@ -122,7 +126,7 @@ begin
       return false;
     end if;
 
-    if Source.Offline or Source.Paused or Source.Extensions.Length = 0 or not S.Within(
+    if Source.Offline or Source.Paused or not S.HasWork(Source) or not S.Within(
       Observation.Path,
       Source.Path
     )
@@ -161,12 +165,12 @@ begin
 
   using const AddFile: Db.SqliteCommand := Sql.Command(
     Connection,
-    'INSERT INTO files(path_key,path,directory_key,size,modified_utc) VALUES($key,$path,$directory,$size,$modified)' +
+    'INSERT INTO files(path_key,path,directory_key,size,modified_utc,kind) VALUES($key,$path,$directory,$size,$modified,$kind)' +
     ' ON CONFLICT(path_key) DO UPDATE SET path=excluded.path,directory_key=excluded.directory_key,' +
-    'size=COALESCE(excluded.size,files.size),modified_utc=COALESCE(excluded.modified_utc,files.modified_utc) RETURNING id;',
+    'size=COALESCE(excluded.size,files.size),modified_utc=COALESCE(excluded.modified_utc,files.modified_utc),kind=excluded.kind RETURNING id;',
     Transaction,
-    ['$key', '$path', '$directory', '$size', '$modified'],
-    [null, null, Sql.Key(Observation.Path), null, null]
+    ['$key', '$path', '$directory', '$size', '$modified', '$kind'],
+    [null, null, Sql.Key(Observation.Path), null, null, 0]
   );
   using const AddAssociation: Db.SqliteCommand := Sql.Command(
     Connection,
@@ -174,7 +178,13 @@ begin
     'INSERT OR IGNORE INTO seen_files(source_id,path_key) VALUES($source,$key);',
     Transaction, ['$source', '$file', '$key'], [null, null, null]
   );
-  for File: string in Observation.Files do
+  const Files: C.HashSet<string> := new C.HashSet<string>(Observation.Files, S.PathComparer());
+  const Playlists: C.HashSet<string>? := Observation.Playlists;
+  if Playlists <> null then
+    Files.UnionWith(Playlists);
+  end if;
+
+  for File: string in Files do
     Cancellation.ThrowIfCancellationRequested();
     if not Current() then
       return false;
@@ -182,6 +192,12 @@ begin
 
     AddFile.Parameters['$key'].Value := Sql.Key(File);
     AddFile.Parameters['$path'].Value := File;
+    const Kind: int := if Playlists <> null and Playlists.Contains(File) then
+      1
+    else
+      0
+    end if;
+    AddFile.Parameters['$kind'].Value := Kind;
     AddFile.Parameters['$size'].Value := Sys.DBNull.Value;
     AddFile.Parameters['$modified'].Value := Sys.DBNull.Value;
     const Stamps: C.Dictionary<string, O.FileStamp>? := Observation.Stamps;
@@ -191,7 +207,7 @@ begin
     end if;
     const Id: long := Sys.Convert.ToInt64(AddFile.ExecuteScalar());
     for Source: S.MusicSource in Sources do
-      if not Matches(File, Source) then
+      if not Matches(File, Source, Kind) then
         continue;
       end if;
 
@@ -209,7 +225,7 @@ begin
         return false;
       end if;
 
-      if not Source.Offline and not Source.Paused and Source.Extensions.Length > 0 and S.Within(
+      if not Source.Offline and not Source.Paused and S.HasWork(Source) and S.Within(
         Observation.Path,
         Source.Path
       )

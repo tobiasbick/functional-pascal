@@ -80,7 +80,7 @@ public type Catalog = record
   public procedure Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource);
   begin
     for Source: S.MusicSource in Sources do
-      if Source.Offline or Source.Paused or Source.Extensions.Length = 0 or not S.Within(
+      if Source.Offline or Source.Paused or not S.HasWork(Source) or not S.Within(
         Value.Path,
         Source.Path
       )
@@ -294,7 +294,7 @@ public type Catalog = record
         end if;
       end for;
       var Watching: bool := false;
-      if not Source.Offline and not Source.Paused and Source.Extensions.Length > 0 then
+      if not Source.Offline and not Source.Paused and S.HasWork(Source) then
         for Root: string in Watched do
           if S.Within(Source.Path, Root) then
             Watching := true;

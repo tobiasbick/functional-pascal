@@ -188,7 +188,7 @@ begin
       // Retry nested roots not reached by a failed/missing ancestor, attributing
       // that attempt only to its own source rather than contaminating its parent.
       for Source: S.MusicSource in Sources do
-        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 or Index.WasObserved(
+        if Source.Offline or Source.Paused or not S.HasWork(Source) or Index.WasObserved(
           Source.Path
         )
         then

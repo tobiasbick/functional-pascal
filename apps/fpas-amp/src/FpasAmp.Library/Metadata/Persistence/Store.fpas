@@ -45,7 +45,7 @@ begin
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   using const Check: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT count(*) FROM files f WHERE f.id=$id AND f.size=$size AND f.modified_utc=$modified' +
+    'SELECT count(*) FROM files f WHERE f.kind=0 AND f.id=$id AND f.size=$size AND f.modified_utc=$modified' +
     ' AND EXISTS(SELECT 1 FROM source_files s JOIN metadata_active a ON a.id=s.source_id WHERE s.file_id=f.id);',
     Transaction, ['$id', '$size', '$modified'], [Id, Size, Modified]
   );
@@ -117,6 +117,11 @@ begin
     return false;
   end if;
 
+  Sql.Execute(
+    Connection,
+    'UPDATE playlist_items SET track_id=$track WHERE track_id IS NULL AND reference_key=(SELECT path_key FROM files WHERE id=$id) AND $track<>'''';' +
+    'DELETE FROM content_jobs WHERE file_id=$id;', Transaction, ['$id', '$track'], [Id, TrackId]
+  );
   Transaction.Commit();
   return true;
 end function;

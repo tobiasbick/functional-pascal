@@ -1,0 +1,34 @@
+// Durable, indexed pending work avoids polling previously processed files.
+unit FpasAmp.Library.Content.Schema;
+
+uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+
+// Creates the pending queue/triggers inside catalogue `Transaction` on `Connection`.
+// `Populate` initializes pending work when upgrading an existing index.
+public procedure Create(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Populate: bool);
+begin
+  Sql.Execute(
+    Connection,
+    'CREATE INDEX IF NOT EXISTS files_kind ON files(kind,id);' +
+    'CREATE TABLE IF NOT EXISTS content_jobs(file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,kind INTEGER NOT NULL);' +
+    'CREATE INDEX IF NOT EXISTS content_job_kind ON content_jobs(kind,file_id);' +
+    'CREATE TRIGGER IF NOT EXISTS queue_file_insert AFTER INSERT ON files BEGIN ' +
+    'INSERT OR REPLACE INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind); END;' +
+    'CREATE TRIGGER IF NOT EXISTS queue_file_change AFTER UPDATE OF size,modified_utc,kind ON files ' +
+    'WHEN OLD.size IS NOT NEW.size OR OLD.modified_utc IS NOT NEW.modified_utc OR OLD.kind<>NEW.kind BEGIN ' +
+    'INSERT OR REPLACE INTO content_jobs(file_id,kind) VALUES(NEW.id,NEW.kind); END;',
+    Transaction,
+    [],
+    []
+  );
+  if Populate then
+    Sql.Execute(
+      Connection,
+      'INSERT OR IGNORE INTO content_jobs SELECT f.id,f.kind FROM files f LEFT JOIN metadata m ON m.file_id=f.id' +
+      ' WHERE f.kind=1 OR m.file_id IS NULL OR m.size IS NOT f.size OR m.modified_utc IS NOT f.modified_utc OR m.error IS NOT NULL;',
+      Transaction, [], []
+    );
+  end if;
+end procedure;
+
+end unit;

@@ -7,6 +7,7 @@ uses
   FpasAmp.Library.Inventory.Internal.Directories as Directories,
   FpasAmp.Library.Inventory.Internal.Observations as O,
   FpasAmp.Library.Inventory.Internal.Catalog as Data,
+  FpasAmp.Library.Playlists.Formats as PlaylistFormats,
   System as Sys, System.IO as IO, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Threading as T;
 
@@ -118,6 +119,24 @@ public type Tree = record
   // configurations; `Recursive` includes known descendants. `Checkpoint` atomically
   // saves each observation before publication. Cancellation interrupts between entries.
   public procedure Scan(Scope: string; Sources: array of S.MusicSource; Current: function(): bool; Recursive: bool; Cancellation: T.CancellationToken; Checkpoint: Sys.Func<O.DirectoryObservation, bool>? := null);
+    function SelectedPlaylist(Path: string): bool;
+    begin
+      if not PlaylistFormats.IsPlaylist(Path) then
+        return false;
+      end if;
+
+      for Source: S.MusicSource in Sources do
+        if Source.ScanPlaylists and not Source.Paused and not Source.Offline and S.Within(
+          Path,
+          Source.Path
+        )
+        then
+          return true;
+        end if;
+      end for;
+
+      return false;
+    end function;
     function Selected(Path: string): bool;
     begin
       for Source: S.MusicSource in Sources do
@@ -157,6 +176,7 @@ public type Tree = record
       end if;
       const Directory: string := Pending.Pop();
       const Found: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      const Playlists: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
       const Stamps: C.Dictionary<string, O.FileStamp> := new C.Dictionary<string, O.FileStamp>(
         S.PathComparer()
       );
@@ -189,8 +209,13 @@ public type Tree = record
               Pending.Push(Entry.FullName);
             end if;
           else
-            if Selected(Entry.FullName) then
-              discard Found.Add(Entry.FullName);
+            const IsPlaylist: bool := SelectedPlaylist(Entry.FullName);
+            if IsPlaylist or Selected(Entry.FullName) then
+              if IsPlaylist then
+                discard Playlists.Add(Entry.FullName);
+              else
+                discard Found.Add(Entry.FullName);
+              end if;
               const File: IO.FileInfo := cast<IO.FileInfo>(Entry);
               Stamps[Entry.FullName] := new O.FileStamp(File.Length, File.LastWriteTimeUtc.Ticks);
             end if;
@@ -213,7 +238,8 @@ public type Tree = record
         Children,
         Complete,
         Failure,
-        Stamps
+        Stamps,
+        Playlists
       );
       case Checkpoint of
         when is Sys.Func<O.DirectoryObservation, bool> as Save:

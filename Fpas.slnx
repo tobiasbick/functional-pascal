@@ -11,6 +11,7 @@
     <Project Path="src/Fpas.Core/Fpas.Core.csproj" />
     <Project Path="src/Fpas.Debugging/Fpas.Debugging.csproj" />
     <Project Path="src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
+    <Project Path="src/Fpas.Atl/Fpas.Atl.csproj" />
   </Folder>
   <Folder Name="/sdk/">
     <Project Path="sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />

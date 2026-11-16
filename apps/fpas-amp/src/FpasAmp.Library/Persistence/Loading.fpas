@@ -63,7 +63,7 @@ begin
 
       using const Query: Db.SqliteCommand := Sql.Command(
         Connection,
-        'SELECT f.path FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source;',
+        'SELECT f.path FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source AND f.kind=0;',
         null,
         ['$source'],
         [Source.Id]

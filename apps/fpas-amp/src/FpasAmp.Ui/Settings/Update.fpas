@@ -169,7 +169,7 @@ begin
           else
             Name
           end if, Folder,
-          false, ['.flac', '.mp3', '.m4a']
+          false, ['.flac', '.mp3', '.m4a'], ScanPlaylists := true
         );
       end with;
     when M.Msg.EditSource(const Source: Locations.MusicSource):

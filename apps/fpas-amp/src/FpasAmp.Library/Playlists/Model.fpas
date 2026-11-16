@@ -1,0 +1,88 @@
+// Ordered playlists distinguish reconstructible source files from durable user lists.
+unit FpasAmp.Library.Playlists.Model;
+
+uses System.Collections.Immutable as I;
+
+// Storage owner; file-backed lists are updated by discovery.
+public type Origin = enum
+  // A playlist discovered in a configured source.
+  File;
+  // A user-created/imported list stored independently of the library index.
+  Local;
+end enum;
+
+// A playlist identifier, scoped to its storage owner.
+public type Key = record
+  // Which database owns the list.
+  public Storage: Origin;
+  // UUID within that store; file-backed IDs last until index removal.
+  public Id: string;
+end record;
+
+// A target is either a known durable track or an unresolved location.
+public type Target = variant
+  // An existing durable track UUID.
+  Track(Id: string);
+  // An absolute path or non-file URI, retained even when unavailable.
+  Location(Reference: string);
+end variant;
+
+// An ordered input entry; equal targets may occur more than once.
+public type Input = record
+  // Known track or location to retain.
+  public Destination: Target;
+  // Optional playlist-specific text, independent of file tags.
+  public Title: string := '';
+end record;
+
+// A detached entry with its current catalogue association.
+public type Entry = record
+  // Zero-based order, including duplicate targets.
+  public Position: int;
+  // Durable track when identified, otherwise the retained location.
+  public Destination: Target;
+  // Original normalized location.
+  public Reference: string;
+  // Current path/URI, following recognized moves.
+  public CurrentReference: string;
+  // Optional playlist-specific display text.
+  public Title: string;
+  // Whether the target belongs to the library, including cached/offline rows.
+  public Indexed: bool;
+end record;
+
+// A list result without loading all entries.
+public type Summary = record
+  // Store and UUID used by subsequent calls.
+  public Identity: Key;
+  // File stem or user-supplied name.
+  public Name: string;
+  // Source file path, null for a local list.
+  public Path: string?;
+  // Entry count, retaining duplicates and unresolved targets.
+  public Count: long;
+  // Latest file parse failure; null on success/local lists.
+  public Error: string?;
+end record;
+
+// One complete detached list, subject to the session's entry-count bound.
+public type Playlist = record
+  // Identity, name and current read status.
+  public Description: Summary;
+  // Ordered entries including missing and remote targets.
+  public Entries: I.ImmutableArray<Entry>;
+end record;
+
+// A bounded summary page, combining both stores by default.
+public type Query = record
+  // Optional storage filter.
+  public Storage: Origin? := null;
+  // Optional source filter, excluding local lists.
+  public SourceId: string? := null;
+  // Page size, one through two hundred.
+  public Limit: int := 100;
+  // Nonnegative offset in invariant name/UUID order.
+  public Offset: int := 0;
+end record;
+
+end unit;

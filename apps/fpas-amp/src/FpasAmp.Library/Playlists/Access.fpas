@@ -1,0 +1,131 @@
+// A borrowed asynchronous handle; the metadata stage owns its lifetime.
+unit FpasAmp.Library.Playlists.Access;
+
+uses
+  FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Playlists.Persistence.Queries as Queries,
+  FpasAmp.Library.Playlists.Persistence.UserLists as Lists,
+  FpasAmp.Library.Playlists.Internal.Transfer as Transfer,
+  System as Sys, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// All operations await initialization and keep database/file I/O off the caller.
+public type Session = record
+  Database: string;
+  Users: string;
+  Ready: Tasks.Task;
+  Lifetime: T.CancellationToken;
+
+  // Creates a borrowed handle for `Database`/`Users`. `Ready` validates schemas;
+  // `Lifetime` belongs to the owning metadata stage, not to this handle.
+  public static function Create(Database: string; Users: string; Ready: Tasks.Task; Lifetime: T.CancellationToken): Session;
+  begin
+    return new Session(Database, Users, Ready, Lifetime);
+  end function;
+
+  // Lists a bounded summary page selected by `Request`; cancellation owns this call.
+  public async function ListAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Summary>>;
+  requires Request.Limit >= 1 and Request.Limit <= 200;
+  requires Request.Offset >= 0;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<I.ImmutableArray<M.Summary>>(
+      function(): I.ImmutableArray<M.Summary> => Queries.List(
+        self.Database,
+        self.Users,
+        Request,
+        Linked.Token
+      ),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Reads ordered `Identity`, or null when absent; cancellation owns this call.
+  public async function ReadAsync(Identity: M.Key; Cancellation: T.CancellationToken): Tasks.Task<M.Playlist?>;
+  requires Identity.Id <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<M.Playlist?>(
+      function(): M.Playlist? => Queries.Read(self.Database, self.Users, Identity, Linked.Token),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Creates/replaces a local list by optional `Id`. `Items` retains duplicates/order;
+  // locations must be absolute paths/URIs. Cancellation rolls back replacement.
+  public async function SaveAsync(Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): Tasks.Task<M.Key>;
+  requires Name <> '';
+  requires Items <> null and Items.Length <= 100000;
+  begin
+    const Copy: array of M.Input := cast<array of M.Input>(Items.Clone());
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<M.Key>(
+      function(): M.Key => Lists.Save(self.Users, Id, Name, Copy, Linked.Token),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Deletes local `Id`; file-backed lists stay owned by their source files.
+  // Cancellation before commit leaves the durable list intact.
+  public async function DeleteAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task;
+  requires Id <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.Task.Run(
+      procedure() begin
+        Lists.Delete(self.Users, Id, Linked.Token);
+      end procedure, Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Imports absolute `Path` as a new durable copy, optionally named `Name`.
+  // Referenced media is never opened or enrolled; cancellation owns this call.
+  public async function ImportAsync(Path: string; Cancellation: T.CancellationToken; Name: string? := null): Tasks.Task<M.Key>;
+  requires Path <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<M.Key>(
+      function(): M.Key => Transfer.Import(self.Users, Path, Name, Linked.Token),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
+  // Exports `Identity` to absolute `.m3u8` `Destination`. Only explicit `Overwrite`
+  // permits replacement; cancellation before the atomic rename preserves the target.
+  public async function ExportAsync(Identity: M.Key; Destination: string; Cancellation: T.CancellationToken; Overwrite: bool := false): Tasks.Task;
+  requires Identity.Id <> '';
+  requires Destination <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.Task.Run(
+      procedure() begin
+        Transfer.Export(self.Database, self.Users, Identity, Destination, Overwrite, Linked.Token);
+      end procedure, Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+end record;
+
+end unit;

@@ -1,0 +1,128 @@
+// Durable ordered lists never share the lifetime of source-owned catalogue rows.
+unit FpasAmp.Library.Playlists.Persistence.UserLists;
+
+uses
+  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Internal.References as R,
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.UserData.Schema as Users,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T;
+
+// Creates a local list, or replaces existing `Id`, in durable `Database`.
+// `Name` and `Items` are detached caller input. Unknown IDs/track UUIDs are rejected.
+// Cancellation rolls back the complete replacement; returned key owns the list.
+public function Save(Database: string; Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): M.Key;
+begin
+  R.Validate(Name, 'Name');
+  if Items.Length > 100000 then
+    raise new Sys.ArgumentOutOfRangeException('Items');
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Users.Open(Database);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  const Identity: string := Id ?? Sys.Guid.NewGuid().ToString('N');
+  if Id <> null then
+    using const Check: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT count(*) FROM playlists WHERE id=$id;',
+      Transaction,
+      ['$id'],
+      [Id]
+    );
+    if Sys.Convert.ToInt64(Check.ExecuteScalar()) = 0L then
+      raise new Sys.ArgumentException('Unknown local playlist ID.', 'Id');
+    end if;
+  end if;
+
+  Sql.Execute(
+    Connection,
+    'INSERT INTO playlists VALUES($id,$name,$key,$time) ON CONFLICT(id) DO UPDATE SET name=excluded.name,name_key=excluded.name_key,updated_utc=excluded.updated_utc;' +
+    'DELETE FROM playlist_items WHERE playlist_id=$id;',
+    Transaction,
+    ['$id', '$name', '$key', '$time'],
+    [
+      Identity,
+      Name.Trim(),
+      Name.Trim().ToUpperInvariant(),
+      Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    ]
+  );
+  for Position: int := 0 to Items.Length - 1 do
+    Cancellation.ThrowIfCancellationRequested();
+    const Item: M.Input := Items[Position];
+    var TrackId: string? := null;
+    var Reference: R.Reference := new R.Reference('', null);
+    case Item.Destination of
+      when M.Target.Track(const Id: string):
+        using const Lookup: Db.SqliteCommand := Sql.Command(
+          Connection,
+          'SELECT path FROM tracks WHERE id=$id;',
+          Transaction,
+          ['$id'],
+          [Id]
+        );
+        const Path: string? := cast<string?>(Lookup.ExecuteScalar());
+        if Path = null then
+          raise new Sys.ArgumentException('Unknown durable track UUID.', 'Items');
+        end if;
+
+        TrackId := Id;
+        Reference := R.Resolve(Path, IO.Path.GetDirectoryName(Database) ?? '');
+      when M.Target.Location(const Location: string):
+        if not R.IsAbsolute(Location) then
+          raise new Sys.ArgumentException(
+            'Local playlist entries require absolute paths or URIs.',
+            'Items'
+          );
+        end if;
+
+        Reference := R.Resolve(Location, IO.Path.GetDirectoryName(Database) ?? '');
+        if Reference.Key <> null then
+          using const Lookup: Db.SqliteCommand := Sql.Command(
+            Connection,
+            'SELECT id FROM tracks WHERE path_key=$key;',
+            Transaction,
+            ['$key'],
+            [Reference.Key]
+          );
+          TrackId := cast<string?>(Lookup.ExecuteScalar());
+        end if;
+    end case;
+
+    if Item.Title <> '' then
+      R.Validate(Item.Title, 'Title');
+    end if;
+
+    Sql.Execute(
+      Connection,
+      'INSERT INTO playlist_items VALUES($id,$position,$ref,$key,$track,$title);',
+      Transaction,
+      ['$id', '$position', '$ref', '$key', '$track', '$title'],
+      [
+        Identity,
+        Position,
+        Reference.Location,
+        Reference.Key,
+        TrackId,
+        Item.Title
+      ]
+    );
+  end for;
+
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+  return new M.Key(M.Origin.Local, Identity);
+end function;
+
+// Deletes only durable `Id` in `Database`; absent IDs are harmless. Media and
+// track ratings remain intact; cancellation before commit rolls back deletion.
+public procedure Delete(Database: string; Id: string; Cancellation: T.CancellationToken);
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Users.Open(Database);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  Sql.Execute(Connection, 'DELETE FROM playlists WHERE id=$id;', Transaction, ['$id'], [Id]);
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+end procedure;
+
+end unit;

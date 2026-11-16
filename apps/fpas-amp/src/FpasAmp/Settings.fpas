@@ -50,6 +50,15 @@ begin
   if Paused = null then
     Valid := false;
   end if;
+  const PlaylistField: J.JsonElement := Fields.Field(Item, 'scanPlaylists');
+  const ScanPlaylists: bool? := if PlaylistField.ValueKind = J.JsonValueKind.Undefined then
+    true
+  else
+    Fields.BooleanValue(PlaylistField)
+  end if;
+  if ScanPlaylists = null then
+    Valid := false;
+  end if;
 
   if Offline = null then
     Valid := false;
@@ -77,7 +86,8 @@ begin
     Folder,
     Offline ?? false,
     Extensions.ToArray(),
-    Paused ?? false
+    Paused ?? false,
+    ScanPlaylists ?? true
   );
 end function;
 

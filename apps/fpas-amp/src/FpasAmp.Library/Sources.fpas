@@ -1,7 +1,9 @@
 // UI-independent music locations and path rules.
 unit FpasAmp.Library.Sources;
 
-uses System as Sys, System.IO as IO, System.Collections.Generic as C;
+uses
+  System as Sys, System.IO as IO, System.Collections.Generic as C,
+  FpasAmp.Library.Playlists.Formats as Playlists;
 
 // One configured location, including its ordinary subdirectories.
 public type MusicSource = record
@@ -17,7 +19,15 @@ public type MusicSource = record
   public Extensions: array of string;
   // Whether scanning and reconciliation are paused while the indexed view is retained.
   public Paused: bool := false;
+  // Whether playlist files are discovered independently of audio extensions.
+  public ScanPlaylists: bool := false;
 end record;
+
+// Reports whether `Source` selects audio formats or playlist discovery.
+public function HasWork(Source: MusicSource): bool;
+begin
+  return Source.Extensions.Length > 0 or Source.ScanPlaylists;
+end function;
 
 // Returns the platform's lexical path comparer: insensitive on Windows.
 public function PathComparer(): Sys.StringComparer;
@@ -71,6 +81,12 @@ begin
         raise new Sys.ArgumentException('Expected dot-prefixed file extensions.');
       end if;
 
+      if Playlists.IsExtension(Extension) then
+        raise new Sys.ArgumentException(
+          'Playlist discovery uses ScanPlaylists, not audio extensions.'
+        );
+      end if;
+
       for Index: int := 1 to Extension.Length - 1 do
         if not Sys.Char.IsAsciiLetterOrDigit(Extension[Index]) then
           raise new Sys.ArgumentException('Expected alphanumeric file extensions.');
@@ -86,7 +102,7 @@ begin
         Source.Name,
         IO.Path.TrimEndingDirectorySeparator(IO.Path.GetFullPath(Source.Path)),
         Source.Offline,
-        Items.ToArray(), Source.Paused
+        Items.ToArray(), Source.Paused, Source.ScanPlaylists
       )
     );
   end for;
@@ -108,7 +124,7 @@ begin
     if A.Id <> B.Id or not PathComparer().Equals(
       A.Path,
       B.Path
-    ) or A.Offline <> B.Offline or A.Paused <> B.Paused
+    ) or A.Offline <> B.Offline or A.Paused <> B.Paused or A.ScanPlaylists <> B.ScanPlaylists
     then
       return false;
     end if;
@@ -130,7 +146,7 @@ public function Roots(Sources: array of MusicSource): array of string;
 begin
   const Result: C.List<string> := new C.List<string>();
   for Source: MusicSource in Sources do
-    if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+    if Source.Offline or Source.Paused or not HasWork(Source) then
       continue;
     end if;
     var Covered: bool := false;

@@ -1,11 +1,11 @@
-// Durable pending selection keeps memory bounded even for very large libraries.
+// Indexed durable jobs bound memory and keep changed earlier files responsive.
 unit FpasAmp.Library.Metadata.Internal.Pending;
 
 uses
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Sources as S,
   Microsoft.Data.Sqlite as Db, System as Sys;
 
-// One queued file observation, revalidated at read and commit boundaries.
+// One observed audio/playlist file, revalidated at read and commit boundaries.
 public type File = record
   // Current presence ID.
   public Id: long;
@@ -22,42 +22,47 @@ public procedure Configure(Connection: Db.SqliteConnection; Sources: array of S.
 begin
   Sql.Execute(
     Connection,
-    'CREATE TEMP TABLE IF NOT EXISTS metadata_active(id TEXT PRIMARY KEY); DELETE FROM metadata_active;',
+    'CREATE TEMP TABLE IF NOT EXISTS metadata_active(id TEXT NOT NULL,root TEXT NOT NULL,extension TEXT NOT NULL,PRIMARY KEY(id,extension)); DELETE FROM metadata_active;',
     null,
     [],
     []
   );
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   for Source: S.MusicSource in Sources do
-    if not Source.Offline and not Source.Paused and Source.Extensions.Length > 0 then
-      Sql.Execute(
-        Connection,
-        'INSERT INTO metadata_active VALUES($id);',
-        Transaction,
-        ['$id'],
-        [Source.Id]
-      );
+    if not Source.Offline and not Source.Paused and S.HasWork(Source) then
+      for Extension: string in Source.Extensions do
+        Sql.Execute(
+          Connection,
+          'INSERT INTO metadata_active VALUES($id,$root,$extension);',
+          Transaction,
+          ['$id', '$root', '$extension'],
+          [Source.Id, Sql.Key(Source.Path), Extension.ToLowerInvariant()]
+        );
+      end for;
+
+      if Source.ScanPlaylists then
+        Sql.Execute(
+          Connection, 'INSERT INTO metadata_active VALUES($id,$root,'''');', Transaction,
+          ['$id', '$root'], [Source.Id, Sql.Key(Source.Path)]
+        );
+      end if;
     end if;
   end for;
 
   Transaction.Commit();
 end procedure;
 
-// Returns the next eligible stale file after numeric ID `After`, or null.
-// Failures retry after one minute; the cursor prevents repeated scans of earlier rows.
-public function Next(Connection: Db.SqliteConnection; After: long): File?;
+// Returns the next eligible queued file of `Kind` (0 audio, 1 playlist), or null.
+public function Next(Connection: Db.SqliteConnection; Kind: int := 0): File?;
 begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT f.id,f.path,f.size,f.modified_utc FROM files f LEFT JOIN metadata m ON m.file_id=f.id' +
-    ' WHERE f.id>$after AND f.size IS NOT NULL AND f.modified_utc IS NOT NULL AND EXISTS(' +
-    'SELECT 1 FROM source_files s JOIN metadata_active a ON a.id=s.source_id JOIN sources r ON r.id=s.source_id' +
-    ' LEFT JOIN directories d ON d.source_id=r.id AND d.path_key=r.path_key WHERE s.file_id=f.id AND d.error IS NULL)' +
-    ' AND (m.file_id IS NULL OR m.size<>f.size OR m.modified_utc<>f.modified_utc OR (m.error IS NOT NULL AND m.read_utc<$retry))' +
-    ' ORDER BY f.id LIMIT 1;',
-    null,
-    ['$retry', '$after'],
-    [Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 60000L, After]
+    'SELECT f.id,f.path,f.size,f.modified_utc FROM content_jobs j JOIN files f ON f.id=j.file_id' +
+    ' WHERE j.kind=$kind AND f.size IS NOT NULL AND f.modified_utc IS NOT NULL AND EXISTS(' +
+    'SELECT 1 FROM source_files s JOIN sources r ON r.id=s.source_id JOIN metadata_active a ON a.id=s.source_id AND a.root=r.path_key' +
+    ' LEFT JOIN directories d ON d.source_id=r.id AND d.path_key=r.path_key WHERE s.file_id=f.id AND d.error IS NULL' +
+    ' AND ((j.kind=1 AND a.extension='''') OR (j.kind=0 AND a.extension<>'''' AND lower(substr(f.path,-length(a.extension)))=a.extension)))' +
+    ' ORDER BY j.file_id LIMIT 1;', null, ['$kind'], [Kind]
   );
   using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
   return if Reader.Read() then
@@ -66,5 +71,16 @@ begin
     null
   end if;
 end function;
+
+// Requeues failed reads after one minute without touching successful unchanged rows.
+public procedure Retry(Connection: Db.SqliteConnection);
+begin
+  Sql.Execute(
+    Connection,
+    'INSERT OR IGNORE INTO content_jobs SELECT file_id,0 FROM metadata WHERE error IS NOT NULL AND read_utc<$retry;' +
+    'INSERT OR IGNORE INTO content_jobs SELECT file_id,1 FROM playlist_files WHERE error IS NOT NULL AND read_utc<$retry;',
+    null, ['$retry'], [Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 60000L]
+  );
+end procedure;
 
 end unit;

@@ -87,6 +87,16 @@ begin
     [Id, Key, Path, Hash, Size, Modified]
   );
   Cancellation.ThrowIfCancellationRequested();
+  const PreviousKey: string := if Found = '' and Candidate <> '' then
+    Sql.Key(CandidatePath)
+  else
+    Key
+  end if;
+  Sql.Execute(
+    Connection,
+    'UPDATE playlist_items SET track_id=$id WHERE track_id IS NULL AND (reference_key=$key OR reference_key=$previous);',
+    Transaction, ['$id', '$key', '$previous'], [Id, Key, PreviousKey]
+  );
   Transaction.Commit();
   return Id;
 end function;

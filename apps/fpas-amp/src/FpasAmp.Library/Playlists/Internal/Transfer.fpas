@@ -1,0 +1,103 @@
+// Explicit imports create durable copies; export has one canonical UTF-8 format.
+unit FpasAmp.Library.Playlists.Internal.Transfer;
+
+uses
+  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Internal.Reading as Reading,
+  FpasAmp.Library.Playlists.Internal.References as References,
+  FpasAmp.Library.Playlists.Persistence.UserLists as Lists,
+  FpasAmp.Library.Playlists.Persistence.Queries as Queries,
+  ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO,
+  System.Collections.Generic as C, System.Threading as T;
+
+// Imports supported absolute `Path` into durable `Database`, preserving ordered
+// targets without enrolling their folders as sources. `Name` defaults to the stem.
+// Returns the new independent local key; cancellation never leaves a partial list.
+public function Import(Database: string; Path: string; Name: string?; Cancellation: T.CancellationToken): M.Key;
+begin
+  if not IO.Path.IsPathFullyQualified(Path) then
+    raise new Sys.ArgumentException('Expected an absolute playlist path.', 'Path');
+  end if;
+  const Info: IO.FileInfo := new IO.FileInfo(Path);
+  const Value: Reading.Result := Reading.Read(
+    Path,
+    Info.Length,
+    Info.LastWriteTimeUtc.Ticks,
+    Cancellation
+  );
+  if Value.Error <> null then
+    raise new IO.InvalidDataException(Value.Error);
+  end if;
+  const Items: C.List<M.Input> := new C.List<M.Input>();
+  for Item: Reading.Item in Value.Items do
+    Items.Add(new M.Input(M.Target.Location(Item.Reference.Location), Item.Title));
+  end for;
+
+  return Lists.Save(
+    Database,
+    null,
+    Name ?? IO.Path.GetFileNameWithoutExtension(Path) ?? '',
+    Items.ToArray(),
+    Cancellation
+  );
+end function;
+
+// Exports `Identity` from both stores to absolute `.m3u8` `Destination` using ATL.
+// `Overwrite` explicitly authorizes replacing an existing file. A same-directory
+// temporary write is renamed atomically only after success and cancellation checks.
+public procedure Export(Database: string; Users: string; Identity: M.Key; Destination: string; Overwrite: bool; Cancellation: T.CancellationToken);
+begin
+  if not IO.Path.IsPathFullyQualified(Destination) or not Sys.String.Equals(
+    IO.Path.GetExtension(Destination),
+    '.m3u8',
+    Sys.StringComparison.OrdinalIgnoreCase
+  )
+  then
+    raise new Sys.ArgumentException('Expected an absolute .m3u8 export path.', 'Destination');
+  end if;
+  const Value: M.Playlist? := Queries.Read(Database, Users, Identity, Cancellation);
+  if Value = null then
+    raise new Sys.ArgumentException('Unknown playlist.', 'Identity');
+  end if;
+  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
+  if Factory = null then
+    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
+  end if;
+  const Temporary: string := IO.Path.Combine(
+    IO.Path.GetDirectoryName(Destination) ?? '',
+    '.' + Sys.Guid.NewGuid().ToString('N') + '.m3u8'
+  );
+  try
+    const Writer: A.IPlaylistIO? := Factory.GetPlaylistIO(
+      Temporary,
+      A.PlaylistFormat.LocationFormatting.FilePath,
+      A.PlaylistFormat.FileEncoding.UTF8_NO_BOM,
+      readTrackMetadata := false
+    );
+    if Writer = null then
+      raise new Sys.InvalidOperationException('ATL M3U8 writer is unavailable.');
+    end if;
+    const Tracks: C.List<Audio.Track?> := new C.List<Audio.Track?>();
+    for Entry: M.Entry in Value.Entries do
+      Cancellation.ThrowIfCancellationRequested();
+      References.Validate(Entry.CurrentReference, 'Reference');
+      if Entry.Title <> '' then
+        References.Validate(Entry.Title, 'Title');
+      end if;
+      const Track: Audio.Track := new Audio.Track(Entry.CurrentReference, false);
+      Track.Title := Entry.Title;
+      Tracks.Add(Track);
+    end for;
+
+    Writer.Tracks := Tracks;
+    if not Writer.Save() then
+      raise new IO.IOException('ATL could not write the playlist.');
+    end if;
+
+    Cancellation.ThrowIfCancellationRequested();
+    IO.File.Move(Temporary, Destination, Overwrite);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+end unit;

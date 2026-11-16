@@ -7,6 +7,7 @@ uses
   FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
   FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Metadata.Covers as Covers,
+  FpasAmp.Library.Playlists.Access as Lists,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -16,6 +17,8 @@ public type Session = record implements Sys.IAsyncDisposable
   public Ready: Tasks.Task;
   // Background lifetime, including database errors and cleanup.
   public Completion: Tasks.Task;
+  // Borrowed file/local playlist access, sharing this stage's lifetime.
+  public Playlists: Lists.Session;
   Database: string;
   UserDatabase: string;
   Policy: P.Policy;
@@ -150,6 +153,7 @@ public type Session = record implements Sys.IAsyncDisposable
     return new Session(
       Ready.Task,
       Running,
+      Lists.Session.Create(Database, UserDatabase, Ready.Task, Stop.Token),
       Database,
       UserDatabase,
       Policy,

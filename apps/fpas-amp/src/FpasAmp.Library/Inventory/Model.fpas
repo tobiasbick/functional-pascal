@@ -1,0 +1,68 @@
+// Presence-only inventory snapshots. No media files are opened.
+unit FpasAmp.Library.Inventory.Model;
+
+uses System.Collections.Immutable as I;
+
+// Availability observed during the latest directory reconciliation.
+public type Availability = enum
+  // Loaded from the local index; not yet checked in this session.
+  Cached;
+  // Every requested directory was read.
+  Ready;
+  // Some descendants could not be read.
+  Incomplete;
+  // The root could not be read.
+  Unavailable;
+  // Discovery was suspended in settings.
+  Offline;
+  // Reconciliation is paused while the last indexed view is retained.
+  Paused;
+end enum;
+
+// A directory whose contents could not be established.
+public type ScanIssue = record
+  // Absolute directory path.
+  public Path: string;
+  // Filesystem error or an explanation of an unsupported link.
+  public Reason: string;
+end record;
+
+// A detached source view; its paths refer to entries rather than media contents.
+public type SourceSnapshot = record
+  // Stable settings identity.
+  public Id: string;
+  // Normalized source root.
+  public Path: string;
+  // Availability; a failed scan retains previously discovered entries.
+  public Status: Availability;
+  // Selected absolute file paths; an overlapping source may contain the same path.
+  public Files: I.ImmutableArray<string>;
+  // Unreadable directories within this source.
+  public Issues: I.ImmutableArray<ScanIssue>;
+  // Whether an active ancestor watcher covers this source.
+  public Watching: bool;
+end record;
+
+// Latest completed reconciliation, delivered through a bounded latest-value stream.
+public type Snapshot = record
+  // Increasing publication sequence, including reconciliations with no membership change.
+  public Revision: long;
+  // Configuration generation; results from replaced configurations are not published.
+  public Generation: long;
+  // One view per configured source in settings order.
+  public Sources: I.ImmutableArray<SourceSnapshot>;
+  // True for startup data loaded before the current session's filesystem checks.
+  public Cached: bool := false;
+end record;
+
+// Bounds for background reconciliation and notification batching.
+public type Options = record
+  // Fixed window for combining notifications; continuous changes cannot extend it.
+  public DebounceMilliseconds: int := 500;
+  // Complete control scan interval; also retries unavailable roots and watchers.
+  public ControlScanMilliseconds: int := 900000;
+  // Maximum distinct pending directories before collapsing to a full scan.
+  public PendingDirectoryLimit: int := 1024;
+end record;
+
+end unit;

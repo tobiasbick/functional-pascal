@@ -1,0 +1,334 @@
+// Small coalescing control queue shared by callers, watcher callbacks and one worker.
+unit FpasAmp.Library.Inventory.Internal.Inbox;
+
+uses
+  FpasAmp.Library.Sources as S, System as Sys, System.Collections.Generic as C,
+  FpasAmp.Library.Inventory.Model as M,
+  System.Threading as T, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as R;
+
+// Accepted clear operation, completed only after the worker commits and publishes it.
+public type ClearRequest = record
+  // Source identity, or empty for the entire index.
+  public Id: string;
+  // Asynchronous acknowledgement with the post-clear snapshot.
+  public Completion: Tasks.TaskCompletionSource<M.Snapshot>;
+end record;
+
+// A detached batch of pending work.
+public type Batch = record
+  // Current isolated settings.
+  public Sources: array of S.MusicSource;
+  // Configuration generation.
+  public Generation: long;
+  // Whether watchers must be replaced.
+  public Reconfigure: bool;
+  // Whether all active roots must be reconciled.
+  public Full: bool;
+  // Dirty directory paths when Full is false.
+  public Directories: array of string;
+  // Dirty paths requiring subtree traversal rather than a direct directory check.
+  public Recursive: array of string;
+  // Accepted clear operations, applied before any further scan work.
+  public Clears: array of ClearRequest;
+end record;
+
+type Pending = record
+  public Sources: array of S.MusicSource;
+  public Version: long;
+  public Revised: bool;
+  public Whole: bool;
+  public Closed: bool;
+end record;
+
+// Thread-safe bounded dirty set. Its lock never covers filesystem calls.
+public type Inbox = record
+  Gate: object;
+  Signal: T.SemaphoreSlim;
+  Dirty: C.HashSet<string>;
+  Recursive: C.HashSet<string>;
+  State: R.StrongBox<Pending>;
+  Limit: int;
+  Clears: C.Dictionary<string, Tasks.TaskCompletionSource<M.Snapshot>>;
+
+  // Creates an inbox. `Sources` are isolated settings; `Limit` is positive.
+  public static function Create(Sources: array of S.MusicSource; Limit: int): Inbox;
+  begin
+    return new Inbox(
+      new object(),
+      new T.SemaphoreSlim(0, 1),
+      new C.HashSet<string>(S.PathComparer()),
+      new C.HashSet<string>(S.PathComparer()),
+      new R.StrongBox<Pending>(new Pending(Sources, 1L, true, true, false)),
+      Limit,
+      new C.Dictionary<string, Tasks.TaskCompletionSource<M.Snapshot>>(Sys.StringComparer.Ordinal)
+    );
+  end function;
+
+  procedure Pulse();
+  begin
+    if self.Signal.CurrentCount = 0 then
+      discard self.Signal.Release();
+    end if;
+  end procedure;
+
+  function ReadState(): Pending;
+  begin
+    const Value: Pending? := self.State.Value;
+    if Value = null then
+      raise new Sys.InvalidOperationException('Missing inbox state.');
+    end if;
+
+    return Value;
+  end function;
+
+  // Replaces pending configuration. `Sources` is an isolated normalized copy.
+  public procedure Configure(Sources: array of S.MusicSource);
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      if Value.Closed then
+        raise new Sys.ObjectDisposedException('Inventory');
+      end if;
+
+      if S.SameDiscovery(Value.Sources, Sources) then
+        return;
+      end if;
+
+      self.State.Value := new Pending(Sources, Value.Version + 1L, true, Value.Whole, false);
+      for Source: S.MusicSource in Sources do
+        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+          continue;
+        end if;
+        var Changed: bool := true;
+        for Before: S.MusicSource in Value.Sources do
+          if Before.Id = Source.Id then
+            Changed := not S.SameDiscovery([Before], [Source]);
+            break;
+          end if;
+        end for;
+
+        if Changed then
+          self.Mark(Source.Path);
+        end if;
+      end for;
+
+      self.Pulse();
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Requests a source rescan, or every active source when `Id` is empty.
+  // No filesystem access is performed; paused/offline sources must first be resumed.
+  public procedure Refresh(Id: string);
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      if Value.Closed then
+        raise new Sys.ObjectDisposedException('Inventory');
+      end if;
+
+      if Id = '' then
+        self.Mark('');
+        return;
+      end if;
+
+      for Source: S.MusicSource in Value.Sources do
+        if Source.Id <> Id then
+          continue;
+        end if;
+
+        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+          raise new Sys.InvalidOperationException('Resume the source before rescanning.');
+        end if;
+
+        self.Mark(Source.Path);
+        return;
+      end for;
+
+      raise new Sys.ArgumentException('Unknown music source.');
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Atomically pauses affected sources and queues a clear. `Id` is a configured
+  // source or empty for all. Duplicate targets share one task; at most 16 targets queue.
+  public function Clear(Id: string): Tasks.Task<M.Snapshot>;
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      if Value.Closed then
+        raise new Sys.ObjectDisposedException('Inventory');
+      end if;
+
+      if self.Clears.ContainsKey(Id) then
+        return self.Clears[Id].Task;
+      end if;
+
+      if self.Clears.Count >= 16 then
+        raise new Sys.InvalidOperationException('Too many pending library operations.');
+      end if;
+      var Known: bool := Id = '';
+      const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+      for Source: S.MusicSource in Value.Sources do
+        if Id = '' or Id = Source.Id then
+          Known := true;
+          Sources.Add(
+            Source with
+              Paused := true;
+            end with
+          );
+        else
+          Sources.Add(Source);
+        end if;
+      end for;
+
+      if not Known then
+        raise new Sys.ArgumentException('Unknown music source.');
+      end if;
+      const Completion: Tasks.TaskCompletionSource<M.Snapshot> := new Tasks.TaskCompletionSource<M.Snapshot>(
+        Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+      );
+      self.Clears[Id] := Completion;
+      self.State.Value := new Pending(
+        Sources.ToArray(),
+        Value.Version + 1L,
+        true,
+        Value.Whole,
+        false
+      );
+      self.Pulse();
+      return Completion.Task;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end function;
+
+  // Marks a directory, or every root when `Path` is empty. `Recursive` includes
+  // descendants for structural events. Safe for watcher callbacks.
+  public procedure Mark(Path: string; Recursive: bool := true);
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      if Value.Closed then
+        return;
+      end if;
+
+      if Path = '' or (not self.Dirty.Contains(Path) and self.Dirty.Count >= self.Limit) then
+        self.State.Value := Value with
+          Whole := true;
+        end with;
+        self.Dirty.Clear();
+        self.Recursive.Clear();
+      else
+        if not Value.Whole then
+          discard self.Dirty.Add(Path);
+          if Recursive then
+            discard self.Recursive.Add(Path);
+          end if;
+        end if;
+      end if;
+
+      self.Pulse();
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Takes pending requests without waiting or doing filesystem work.
+  public function Take(): Batch;
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      const Clears: C.List<ClearRequest> := new C.List<ClearRequest>();
+      for Id: string in self.Clears.Keys do
+        Clears.Add(new ClearRequest(Id, self.Clears[Id]));
+      end for;
+      const Result: Batch := new Batch(
+        Value.Sources,
+        Value.Version,
+        Value.Revised,
+        Value.Whole,
+        new C.List<string>(self.Dirty).ToArray(),
+        new C.List<string>(self.Recursive).ToArray(), Clears.ToArray()
+      );
+      self.State.Value := Value with
+        Revised := false;
+        Whole := false;
+      end with;
+      self.Dirty.Clear();
+      self.Recursive.Clear();
+      self.Clears.Clear();
+      return Result;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end function;
+
+  // Tests whether a scan still belongs to the current configuration.
+  // `Generation` is the value from Take; false also signals shutdown.
+  public function IsCurrent(Generation: long): bool;
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      return not Value.Closed and Value.Version = Generation;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end function;
+
+  // Publishes a prepared result only while `Generation` is current. `Publish`
+  // must be nonblocking and must not call back into the inbox.
+  public procedure PublishIfCurrent(Generation: long; Publish: procedure());
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      const Value: Pending := self.ReadState();
+      if not Value.Closed and Value.Version = Generation then
+        Publish();
+      end if;
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Waits for a signal or timeout. `Milliseconds` is nonnegative; cancellation interrupts waiting.
+  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task<bool>;
+  begin
+    return self.Signal.WaitAsync(Milliseconds, Cancellation);
+  end function;
+
+  // Stops admission and wakes the worker; repeated calls are harmless.
+  public procedure Close();
+  begin
+    T.Monitor.Enter(self.Gate);
+    try
+      self.State.Value := self.ReadState() with
+        Closed := true;
+      end with;
+      for Completion: Tasks.TaskCompletionSource<M.Snapshot> in self.Clears.Values do
+        discard Completion.TrySetCanceled();
+      end for;
+
+      self.Clears.Clear();
+      self.Pulse();
+    finally
+      T.Monitor.Exit(self.Gate);
+    end try;
+  end procedure;
+
+  // Releases the signal after the worker and watcher callbacks have finished.
+  public procedure Release();
+  begin
+    self.Signal.Dispose();
+  end procedure;
+end record;
+
+end unit;

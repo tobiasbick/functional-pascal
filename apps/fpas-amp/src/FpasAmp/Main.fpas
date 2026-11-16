@@ -1,5 +1,5 @@
 // FPas-Amp desktop entry point.
-program FpasAmp;
+async program FpasAmp;
 
 uses
   Fpas.Ui.Gui.Cui as Cui,
@@ -8,21 +8,30 @@ uses
   FpasAmp.Ui.Settings.Model as Model,
   FpasAmp.Ui.Shell as Shell,
   FpasAmp.AppState as State,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring,
+  FpasAmp.Library.Persistence.Paths as LibraryPaths,
   System as Sys,
   System.Console as Console,
-  System.IO as IO;
+  System.IO as IO,
+  System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
 
-procedure Main();
+async function Main(): Tasks.Task;
 begin
   const Directory: string := Files.DirectoryPath();
   const Preferences: Model.Preferences := Settings.Load(Directory);
+  await using const Inventory: Monitoring.Session := Monitoring.Session.Start(
+    Preferences.MusicSources,
+    LibraryPaths.DatabasePath(),
+    Threads.CancellationToken.None
+  );
   const Opened: State.Snapshot := State.Load(Directory);
   var Tab: int? := Opened.SettingsTab;
   const Closed: Cui.CuiWindowPlacement := Shell.Run(
     State.ToWindow(Opened), Preferences, ref Tab,
     procedure(Value: Model.Preferences) begin
       Settings.Save(Directory, Value);
-    end procedure
+    end procedure, Inventory
   );
   try
     State.Save(Directory, State.FromWindow(Closed, Tab));
@@ -31,10 +40,10 @@ begin
   catch Failure: Sys.UnauthorizedAccessException do
     Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
   end try;
-end procedure;
+end function;
 
 begin
-  Main();
+  await Main();
 end;
 
 end program;

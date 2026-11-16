@@ -1,0 +1,149 @@
+// Deterministic invalidation, source policy and reconciliation tests.
+unit FpasAmp.Library.Tests.Policies;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Internal.Inbox as Q, FpasAmp.Library.Inventory.Internal.Tree as Trees,
+  FpasAmp.Library.Inventory.Model as M, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Checks bounded work, lexical path boundaries and deliberate rescan policies.
+public type PolicyTests = record
+  // Ignores names and format ordering, and copies caller-owned extension arrays.
+  [X.FactAttribute]
+  public procedure SourcePoliciesAreIsolatedAndCompareByDiscovery();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Original: S.MusicSource := H.Source('root', Root.Path);
+    const Normalized: array of S.MusicSource := S.Normalize([Original]);
+    Original.Extensions[0] := '.wav';
+    X.Assert.Equal<string>('.flac', Normalized[0].Extensions[0]);
+    X.Assert.True(
+      S.SameDiscovery(
+        Normalized, S.Normalize(
+          [
+            Original with
+              Name := 'Renamed';
+              Extensions := ['.MP3', '.FLAC'];
+            end with
+          ]
+        )
+      )
+    );
+    X.Assert.False(S.Within(Root.Path + '-sibling', Root.Path));
+    X.Assert.Equal<int>(
+      0, S.Roots(
+        S.Normalize(
+          [
+            Original with
+              Extensions := [];
+            end with
+          ]
+        )
+      ).Length
+    );
+    X.Assert.False(
+      S.SameDiscovery(
+        Normalized, S.Normalize(
+          [
+            Original with
+              Offline := true;
+            end with
+          ]
+        )
+      )
+    );
+    const Inbox: Q.Inbox := Q.Inbox.Create(Normalized, 4);
+    try
+      const Before: Q.Batch := Inbox.Take();
+      Inbox.Configure(
+        S.Normalize(
+          [
+            H.Source('root', Root.Path) with
+              Name := 'New label';
+            end with
+          ]
+        )
+      );
+      const After: Q.Batch := Inbox.Take();
+      X.Assert.Equal<long>(Before.Generation, After.Generation);
+      X.Assert.False(After.Full);
+    finally
+      Inbox.Close();
+      Inbox.Release();
+    end try;
+  end procedure;
+
+  // A direct change only checks its directory; structural/control checks descend.
+  [X.FactAttribute]
+  public procedure DirectChangesPreserveKnownDescendantsUntilRechecked();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Child, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Index: Trees.Tree := Trees.Tree.Create();
+    const Sources: array of S.MusicSource := S.Normalize([H.Source('root', Root.Path)]);
+    Index.Scan(Root.Path, Sources, function(): bool => true, true, T.CancellationToken.None);
+    IO.File.Delete(Track);
+    Index.Scan(Root.Path, Sources, function(): bool => true, false, T.CancellationToken.None);
+    const Previous: C.Dictionary<string, M.SourceSnapshot> := new C.Dictionary<string, M.SourceSnapshot>();
+    X.Assert.True(H.Has(Index.Describe(Sources, [])[0], Track));
+    Index.Scan(Root.Path, Sources, function(): bool => true, true, T.CancellationToken.None);
+    X.Assert.False(H.Has(Index.Describe(Sources, [])[0], Track));
+  end procedure;
+
+  // Replacing the formats replaces membership without changing the source identity.
+  [X.FactAttribute]
+  public async function FormatChangesTriggerACompleteNewGeneration(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'first.flac'), '');
+    const Second: string := IO.Path.Combine(Root.Path, 'second.wav');
+    IO.File.WriteAllText(Second, '');
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    await using const Session: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    const Before: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Files.Length = 1
+    );
+    Session.Configure(
+      [
+        Source with
+          Extensions := ['.wav'];
+        end with
+      ]
+    );
+    const After: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Generation > Before.Generation
+    );
+    X.Assert.Equal<int>(1, After.Sources[0].Files.Length);
+    X.Assert.True(H.Has(After.Sources[0], Second));
+  end function;
+
+  // Disposing immediately joins even a newly queued scan and accepts repeated disposal.
+  [X.FactAttribute]
+  public async function CancellationBeforeFirstScanCompletesCleanly(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource();
+    Stop.Cancel();
+    const Session: Monitor.Session := H.Start(
+      [H.Source('root', Root.Path)],
+      Stop.Token
+    );
+    await Session.DisposeAsync();
+    await Session.DisposeAsync();
+    await H.Drain(Session);
+    X.Assert.True(Session.Completion.IsCompletedSuccessfully);
+  end function;
+end record;
+
+end unit;

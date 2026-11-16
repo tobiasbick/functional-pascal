@@ -1,0 +1,26 @@
+// Directory traversal policy shared by scanner and watcher installation.
+unit FpasAmp.Library.Inventory.Internal.Directories;
+
+uses System.IO as IO;
+
+// Rejects a linked directory anywhere in the configured path, including junctions.
+// `Path` is absolute and normalized. Throws the filesystem error when unavailable.
+// Call only on the background worker; this checks attributes, never file contents.
+public procedure Check(Path: string);
+begin
+  var Current: string := Path;
+  while Current <> '' do
+    const Attributes: IO.FileAttributes := IO.File.GetAttributes(Current);
+    if (Attributes and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0) then
+      raise new IO.IOException('Directory links are not traversed.');
+    end if;
+
+    if (Attributes and IO.FileAttributes.Directory) = cast<IO.FileAttributes>(0) then
+      raise new IO.IOException('The configured location is not a directory.');
+    end if;
+
+    Current := IO.Path.GetDirectoryName(Current) ?? '';
+  end while;
+end procedure;
+
+end unit;

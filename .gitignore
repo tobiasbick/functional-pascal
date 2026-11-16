@@ -57,6 +57,12 @@ coverage/
 # Temporary local work
 .temp-data/
 
+# Private FPas-Amp inventory and SQLite sidecars
+library.db
+library.db-wal
+library.db-shm
+library.db-journal
+
 # Legacy FPAS compiler caches
 *.fpascu
 *.fpascu.lock

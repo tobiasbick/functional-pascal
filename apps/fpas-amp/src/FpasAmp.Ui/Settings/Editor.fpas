@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Settings.Editor;
 
 uses
+  FpasAmp.Library.Sources as Locations,
   FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.ActionFooters as Footers, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
@@ -68,7 +69,7 @@ end function;
 // - `SaveFailed`: Whether the last save should be reported in the editor.
 // ## Returns
 // The settings page with the editor open.
-public function View(Base: E.Element<M.Msg>; Draft: M.MusicSource; SaveFailed: bool): E.Element<M.Msg>;
+public function View(Base: E.Element<M.Msg>; Draft: Locations.MusicSource; SaveFailed: bool): E.Element<M.Msg>;
 begin
   const Content: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [

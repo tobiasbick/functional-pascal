@@ -1,0 +1,30 @@
+// Explicit index clearing never deletes media or source preferences.
+unit FpasAmp.Library.Persistence.Clearing;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  Microsoft.Data.Sqlite as Db, System.Threading as T;
+
+// Clears one source's memberships/checkpoints, or all source data when `Id` is empty.
+// `Connection` is worker-owned; cancellation rolls back the transaction before commit.
+public procedure Clear(Connection: Db.SqliteConnection; Id: string; Cancellation: T.CancellationToken);
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  if Id = '' then
+    Sql.Execute(Connection, 'DELETE FROM sources; DELETE FROM files;', Transaction, [], []);
+  else
+    Sql.Execute(
+      Connection,
+      'INSERT OR IGNORE INTO orphan_candidates SELECT file_id FROM source_files WHERE source_id=$id;' +
+      'DELETE FROM source_files WHERE source_id=$id; DELETE FROM directories WHERE source_id=$id;',
+      Transaction, ['$id'], [Id]
+    );
+    Schema.Collect(Connection, Transaction);
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+end procedure;
+
+end unit;

@@ -1,0 +1,162 @@
+// Native watcher delivery, bounded invalidation and structured shutdown.
+unit FpasAmp.Library.Tests.Monitoring;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Model as M, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Inventory.Internal.Inbox as Q,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Focused asynchronous filesystem monitoring contracts.
+public type MonitoringTests = record
+  // Watches populated new directories, file and directory renames, and deletion.
+  [X.FactAttribute]
+  public async function WatcherReconcilesStructuralChanges(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    await using const Session: Monitor.Session := H.Start(
+      [H.Source('root', Root.Path)],
+      T.CancellationToken.None,
+      new M.Options(20, 60000, 8)
+    );
+    discard await H.Until(Session, function(Value: M.Snapshot): bool => Value.Sources[0].Watching);
+    const Album: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    const First: string := IO.Path.Combine(Album, 'first.flac');
+    IO.File.WriteAllText(First, '');
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], First)
+    );
+    const Renamed: string := IO.Path.Combine(Album, 'renamed.MP3');
+    IO.File.Move(First, Renamed);
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(
+        Value.Sources[0],
+        Renamed
+      ) and not H.Has(Value.Sources[0], First)
+    );
+    const Moved: string := IO.Path.Combine(Root.Path, 'moved');
+    IO.Directory.Move(Album, Moved);
+    const Final: string := IO.Path.Combine(Moved, 'renamed.MP3');
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(
+        Value.Sources[0],
+        Final
+      ) and not H.Has(Value.Sources[0], Renamed)
+    );
+    IO.Directory.Delete(Moved, true);
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Files.Length = 0
+    );
+  end function;
+
+  // Reduces a notification storm to a bounded full reconciliation request.
+  [X.FactAttribute]
+  public procedure PendingDirectoriesAreBoundedAndOldGenerationsCannotPublish();
+  begin
+    const Inbox: Q.Inbox := Q.Inbox.Create([], 4);
+    try
+      const Initial: Q.Batch := Inbox.Take();
+      for Index: int := 0 to 3 do
+        Inbox.Mark('directory-' + Index.ToString());
+      end for;
+
+      for Index: int := 0 to 99 do
+        Inbox.Mark('directory-0');
+      end for;
+      const Repeated: Q.Batch := Inbox.Take();
+      X.Assert.False(Repeated.Full);
+      X.Assert.Equal<int>(4, Repeated.Directories.Length);
+      for Index: int := 0 to 9999 do
+        Inbox.Mark('directory-' + Index.ToString());
+      end for;
+      const Batch: Q.Batch := Inbox.Take();
+      X.Assert.True(Batch.Full);
+      X.Assert.Equal<int>(0, Batch.Directories.Length);
+      Inbox.Configure(S.Normalize([H.Source('root', IO.Path.GetTempPath())]));
+      var Published: bool := false;
+      Inbox.PublishIfCurrent(
+        Initial.Generation, procedure() begin
+          Published := true;
+        end procedure
+      );
+      X.Assert.False(Published);
+      const Current: Q.Batch := Inbox.Take();
+      Inbox.PublishIfCurrent(
+        Current.Generation, procedure() begin
+          Published := true;
+        end procedure
+      );
+      X.Assert.True(Published);
+    finally
+      Inbox.Close();
+      Inbox.Release();
+    end try;
+  end procedure;
+
+  // Control scans discover a location that did not exist when its watcher was installed.
+  [X.FactAttribute]
+  public async function ControlScanRetriesUnavailableRoots(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'later');
+    await using const Session: Monitor.Session := H.Start(
+      [H.Source('root', Path)],
+      T.CancellationToken.None,
+      new M.Options(0, 100, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Unavailable
+    );
+    discard IO.Directory.CreateDirectory(Path);
+    const Track: string := IO.Path.Combine(Path, 'new.flac');
+    IO.File.WriteAllText(Track, '');
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Watching and H.Has(
+        Value.Sources[0],
+        Track
+      )
+    );
+  end function;
+
+  // A slow observer does not retain one result per scan or prevent asynchronous shutdown.
+  [X.FactAttribute]
+  public async function LatestSnapshotsAndIdempotentShutdown(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Lifetime: T.CancellationTokenSource := new T.CancellationTokenSource();
+    const Session: Monitor.Session := H.Start(
+      [H.Source('root', Root.Path)],
+      Lifetime.Token,
+      new M.Options(0, 60000, 4)
+    );
+    try
+      discard await H.Until(Session, function(Value: M.Snapshot): bool => Value.Sources.Length = 1);
+      for Index: int := 0 to 299 do
+        IO.File.WriteAllText(IO.Path.Combine(Root.Path, Index.ToString() + '.flac'), '');
+      end for;
+      const Complete: M.Snapshot := await H.Until(
+        Session,
+        function(Value: M.Snapshot): bool => Value.Sources[0].Files.Length = 300
+      );
+      X.Assert.True(Complete.Revision > 1L);
+      Lifetime.Cancel();
+      await Session.Completion.WaitAsync(Sys.TimeSpan.FromSeconds(10));
+    finally
+      await Session.DisposeAsync();
+    end try;
+
+    await Session.DisposeAsync();
+    await H.Drain(Session);
+    X.Assert.True(Session.Completion.IsCompletedSuccessfully);
+  end function;
+end record;
+
+end unit;

@@ -1,11 +1,14 @@
-// Music sources listed with their formats and offline setting.
+// Native source cards with independent offline/pause controls and index actions.
 unit FpasAmp.Ui.Settings.Library;
 
 uses
+  FpasAmp.Library.Sources as Locations,
+  FpasAmp.Ui.Settings.DatabaseActions as Database, FpasAmp.Ui.Settings.ScanStatus as Scan,
   FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Inputs.Switches as Switches,
+  Fpas.Ui.Widgets.Theming.Themes as Themes,
   System as Sys, System.Collections.Generic as C;
 
 function Gap(Value: int): L.Spacing;
@@ -13,9 +16,9 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function SourceCard(Source: M.MusicSource; Index: int): E.Element<M.Msg>;
+function SourceCard(Current: M.State; Source: Locations.MusicSource; Theme: Themes.Theme): E.Element<M.Msg>;
 begin
-  const Id: string := 'source-' + Index.ToString();
+  const Id: string := 'source-' + Source.Id;
   const Formats: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
   if Source.Extensions.Length = 0 then
     Formats.Add(Texts.Text<M.Msg>('No formats selected', Texts.Appearance.Secondary));
@@ -44,11 +47,25 @@ begin
           ),
           new L.Flex(Basis := L.Extent.Fill)
         ),
-        Switches.Switch<M.Msg>(
-          Id + '-offline', 'Offline', Source.Offline,
-          function(Value: bool): M.Msg => M.Msg.SetOffline(Source.Id, Value)
+        E.Column<M.Msg>(
+          new L.Flow(Gap := Gap(8), Align := L.Alignment.Start),
+          Switches.Switch<M.Msg>(
+            Id + '-offline',
+            'Offline',
+            Source.Offline,
+            function(Value: bool): M.Msg => M.Msg.SetOffline(Source.Id, Value),
+            Enabled := Current.Clearing = null
+          ),
+          Switches.Switch<M.Msg>(
+            Id + '-pause',
+            'Pause',
+            Source.Paused,
+            function(Value: bool): M.Msg => M.Msg.SetPaused(Source.Id, Value),
+            Enabled := Current.Clearing = null
+          )
         )
       ),
+      Scan.View(Current, Source, Id),
       E.Divider<M.Msg>(),
       E.Row<M.Msg>(
         new L.Flow(
@@ -61,9 +78,29 @@ begin
           new L.Flow(Gap := Gap(8), Align := L.Alignment.Center, Wrap := true),
           Formats.ToArray()
         ),
-        B.Button<M.Msg>(
-          Id + '-edit', 'Edit', M.Msg.EditSource(Source),
-          new B.Options(Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small)
+        E.Row<M.Msg>(
+          new L.Flow(Gap := Gap(8), Wrap := true),
+          Database.Clear(Id + '-clear', Source.Id, 'Clear index', Current, Theme),
+          B.Button<M.Msg>(
+            Id + '-rescan', 'Rescan', M.Msg.Rescan(Source.Id),
+            new B.Options(
+              Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
+              Enabled := Current.Clearing = null and not Source.Offline and not Source.Paused
+                and Source.Extensions.Length > 0 and not Scan.Running(
+                Current,
+                Source
+              ),
+              Loading := Scan.Running(Current, Source), Icon := Sys.Char.ConvertFromUtf32($E145)
+            )
+          ),
+          B.Button<M.Msg>(
+            Id + '-edit', 'Edit', M.Msg.EditSource(Source),
+            new B.Options(
+              Variant := S.ButtonVariant.Outline,
+              ControlSize := B.Size.Small,
+              Enabled := Current.Clearing = null
+            )
+          )
         )
       )
     ],
@@ -79,10 +116,11 @@ end function;
 // Builds the library tab.
 //
 // ## Parameters
-// - `Sources`: Current music sources in display order.
+// - `Current`: Source preferences, inventory and lightweight scan progress.
+// - `Theme`: Palette used by the native destructive action labels.
 // ## Returns
 // The source list and its actions.
-public function View(Sources: array of M.MusicSource): E.Element<M.Msg>;
+public function View(Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
 begin
   const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
   Rows.Add(
@@ -104,7 +142,7 @@ begin
       )
     )
   );
-  if Sources.Length = 0 then
+  if Current.Settings.MusicSources.Length = 0 then
     Rows.Add(
       Cards.Card<M.Msg>(
         'empty-sources',
@@ -120,8 +158,8 @@ begin
     );
   end if;
 
-  for Index: int := 0 to Sources.Length - 1 do
-    Rows.Add(SourceCard(Sources[Index], Index));
+  for Source: Locations.MusicSource in Current.Settings.MusicSources do
+    Rows.Add(SourceCard(Current, Source, Theme));
   end for;
 
   return E.Column<M.Msg>(new L.Flow(Gap := Gap(16), Align := L.Alignment.Stretch), Rows.ToArray());

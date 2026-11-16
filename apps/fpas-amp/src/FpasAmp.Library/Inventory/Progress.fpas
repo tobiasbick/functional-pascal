@@ -1,0 +1,54 @@
+// Lightweight latest-value scan progress, independent of full inventory snapshots.
+unit FpasAmp.Library.Inventory.Progress;
+
+uses System.Collections.Immutable as I, FpasAmp.Library.Inventory.Model as M;
+
+// Completed source summary without copying its path collection.
+public type Result = record
+  // Availability after a scan scope completed.
+  public Status: M.Availability;
+  // Number of indexed source memberships.
+  public Files: long;
+end record;
+
+// Per-source scheduling state; no percentage is implied.
+public type Phase = enum
+  // No scan is currently queued or running.
+  Idle;
+  // Waiting for the single scan worker.
+  Queued;
+  // Directory checks are running.
+  Scanning;
+  // Scanning is suspended by the pause preference.
+  Paused;
+  // Source is marked offline.
+  Offline;
+end enum;
+
+// Counters for the latest pass, retained while paused.
+public type SourceProgress = record
+  // Stable music-source identity.
+  public Id: string;
+  // Scheduling phase.
+  public State: Phase;
+  // Matching files observed during this pass.
+  public FilesFound: long := 0L;
+  // Directory enumeration attempts checkpointed during this pass.
+  public DirectoriesChecked: long := 0L;
+  // Most recently checkpointed directory, or empty before the first check.
+  public Directory: string := '';
+  // Completed summary for the latest scope; absent while queued/scanning.
+  public Result: Result? := null;
+end record;
+
+// Coalesced progress notification, normally published at most every 100 ms.
+public type Snapshot = record
+  // Monotonic session-local sequence, including forced state transitions.
+  public Sequence: long;
+  // Configuration generation.
+  public Generation: long;
+  // Detached source counters in configuration order.
+  public Sources: I.ImmutableArray<SourceProgress>;
+end record;
+
+end unit;

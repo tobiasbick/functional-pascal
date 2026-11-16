@@ -1,0 +1,21 @@
+// Local application data locations for the reconstructible presence index.
+unit FpasAmp.Library.Persistence.Paths;
+
+uses System as Sys, System.IO as IO;
+
+// Returns the local per-user library.db path without creating a directory or file.
+// The database belongs on local application storage, independently of music roots.
+public function DatabasePath(): string;
+begin
+  const Root: string := Sys.Environment.GetFolderPath(
+    Sys.Environment.SpecialFolder.LocalApplicationData,
+    Sys.Environment.SpecialFolderOption.DoNotVerify
+  );
+  if not IO.Path.IsPathFullyQualified(Root) then
+    raise new IO.IOException('Could not resolve the local application data directory.');
+  end if;
+
+  return IO.Path.Combine(Root, 'fpas-amp', 'library.db');
+end function;
+
+end unit;

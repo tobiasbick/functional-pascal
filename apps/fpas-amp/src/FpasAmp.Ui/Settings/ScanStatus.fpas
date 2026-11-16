@@ -1,0 +1,131 @@
+// Native progress/status presentation without invented totals or percentages.
+unit FpasAmp.Ui.Settings.ScanStatus;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.InventoryState as State,
+  FpasAmp.Library.Sources as Sources, FpasAmp.Library.Inventory.Model as Inv,
+  FpasAmp.Library.Inventory.Progress as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars,
+  Fpas.Ui.Widgets.Feedback.StatusSpinners as Spinner, Fpas.Ui.Widgets.Actions.StatusButtons as Work,
+  System.Collections.Generic as C, System.Globalization as Culture;
+
+function Count(Value: long): string;
+begin
+  return Value.ToString('N0', Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Reports whether an unpaused online source is currently being scanned.
+public function Running(Current: M.State; Source: Sources.MusicSource): bool;
+begin
+  const Progress: P.SourceProgress? := State.Progress(Current, Source.Id);
+  return not Source.Offline and not Source.Paused and Progress <> null and Progress.State =
+    P.Phase.Scanning;
+end function;
+
+// Builds a compact source status/counter row and an optional native activity bar.
+public function View(Current: M.State; Source: Sources.MusicSource; Id: string): E.Element<M.Msg>;
+begin
+  const Progress: P.SourceProgress? := State.Progress(Current, Source.Id);
+  const Data: Inv.SourceSnapshot? := State.View(Current, Source.Id);
+  const Completed: P.Result? := if Progress = null then
+    null
+  else
+    Progress.Result
+  end if;
+  const Status: Inv.Availability := if Completed <> null then
+    Completed.Status
+  else
+    if Data <> null then
+      Data.Status
+    else
+      Inv.Availability.Cached
+    end if
+  end if;
+  var Label: string := 'Waiting for scan';
+  var Details: string := '';
+  var Success: bool := false;
+  const Busy: bool := Running(Current, Source);
+  if Source.Offline then
+    Label := 'Offline';
+  else
+    if Source.Paused then
+      Label := 'Paused';
+    else
+      if Busy then
+        Label := 'Scanning...';
+      else
+        if Progress <> null and Progress.State = P.Phase.Queued then
+          Label := 'Waiting for scan';
+        else
+          case Status of
+            when Inv.Availability.Ready:
+              Label := 'Up to date';
+              Success := true;
+            when Inv.Availability.Incomplete:
+              Label := 'Some folders could not be read';
+            when Inv.Availability.Unavailable:
+              Label := 'Unavailable';
+            else
+              Label := 'Waiting for scan';
+          end case;
+        end if;
+      end if;
+    end if;
+  end if;
+
+  if Progress <> null and (Busy or Source.Paused) and Progress.DirectoriesChecked > 0L then
+    Details := Count(
+      Progress.FilesFound
+    ) + ' files found · ' + Count(Progress.DirectoriesChecked) + ' folders checked';
+  else
+    if Completed <> null then
+      Details := Count(Completed.Files) + ' files indexed';
+    else
+      if Data <> null then
+        Details := Count(cast<long>(Data.Files.Length)) + ' files indexed';
+      end if;
+    end if;
+  end if;
+  const Left: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  if Success then
+    Left.Add(
+      Spinner.StatusSpinner<M.Msg>(
+        Id + '-ready',
+        Work.Status.Success,
+        new Spinner.Options(Size := 14.0F, Keep := true)
+      )
+    );
+  end if;
+
+  Left.Add(Texts.Text<M.Msg>(Label, Texts.Appearance.Secondary));
+  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  Rows.Add(
+    E.Row<M.Msg>(
+      new L.Flow(
+        Gap := L.Spacing.Fixed(L.Measure.Logical(12)), Wrap := true,
+        Align := L.Alignment.Center, Justify := L.Justification.Between
+      ),
+      E.Row<M.Msg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(6)), Align := L.Alignment.Center),
+        Left.ToArray()
+      ),
+      Texts.Text<M.Msg>(Details, Texts.Appearance.Secondary)
+    )
+  );
+  if Busy then
+    Rows.Add(
+      Bars.ProgressBar<M.Msg>(
+        Id + '-progress',
+        0.0F,
+        new Bars.Options(Indeterminate := true, Height := 4.0F, Width := L.Extent.Fill)
+      )
+    );
+  end if;
+
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Stretch),
+    Rows.ToArray()
+  );
+end function;
+
+end unit;

@@ -1,0 +1,20 @@
+// Borrowed directory observations passed to an owned persistence checkpoint.
+unit FpasAmp.Library.Inventory.Internal.Observations;
+
+uses System.Collections.Generic as C;
+
+// One enumeration result. Collections are borrowed until the checkpoint returns.
+public type DirectoryObservation = record
+  // Normalized directory path.
+  public Path: string;
+  // Matching file paths actually encountered, before merging older entries.
+  public Files: C.HashSet<string>;
+  // Ordinary direct child directories actually encountered.
+  public Children: C.HashSet<string>;
+  // True only after the enumerator reached its end without an error.
+  public Complete: bool;
+  // Filesystem error when enumeration could not complete.
+  public Failure: string?;
+end record;
+
+end unit;

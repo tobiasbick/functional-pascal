@@ -1,0 +1,292 @@
+// Source-specific pause, explicit clearing and independent background progress.
+unit FpasAmp.Library.Tests.Controls;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.StorageSupport as D,
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
+  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
+  FpasAmp.Library.Inventory.Internal.Tree as Trees, FpasAmp.Library.Inventory.Internal.Observations as O,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises control commands against real temporary folders and SQLite.
+public type ControlTests = record
+  // Pause retains a source's view while another source continues to reconcile changes.
+  [X.FactAttribute]
+  public async function PauseAndResumeDoNotStopOtherSources(): Tasks.Task;
+  begin
+    using const First: H.Folder := H.Folder.Create();
+    using const Second: H.Folder := H.Folder.Create();
+    const Sources: array of S.MusicSource := [
+      H.Source('first', First.Path),
+      H.Source('second', Second.Path)
+    ];
+    const Original: string := IO.Path.Combine(First.Path, 'old.flac');
+    IO.File.WriteAllText(Original, '');
+    await using const Session: Monitor.Session := H.Start(
+      Sources,
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Original)
+    );
+    Session.Configure(
+      [
+        Sources[0] with
+          Paused := true;
+        end with, Sources[1]
+      ]
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Paused
+    );
+    IO.File.Delete(Original);
+    const Changed: string := IO.Path.Combine(First.Path, 'new.flac');
+    IO.File.WriteAllText(Changed, '');
+    const Other: string := IO.Path.Combine(Second.Path, 'other.flac');
+    IO.File.WriteAllText(Other, '');
+    Session.Refresh('second');
+    const WhilePaused: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[1], Other)
+    );
+    X.Assert.True(H.Has(WhilePaused.Sources[0], Original));
+    X.Assert.False(H.Has(WhilePaused.Sources[0], Changed));
+    Session.Configure(Sources);
+    const Resumed: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(
+        Value.Sources[0],
+        Changed
+      ) and not H.Has(Value.Sources[0], Original)
+    );
+    X.Assert.True(H.Has(Resumed.Sources[1], Other));
+  end function;
+
+  // Clearing a shared source pauses it, keeps the other association and does not resurrect it.
+  [X.FactAttribute]
+  public async function ClearOneSourcePreservesSharedFilesUntilExplicitResume(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Database: string := IO.Path.Combine(Data.Path, 'library.db');
+    const Track: string := IO.Path.Combine(Root.Path, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Sources: array of S.MusicSource := [
+      H.Source('first', Root.Path),
+      H.Source('second', Root.Path)
+    ];
+    await using const Session: Monitor.Session := Monitor.Session.Start(
+      Sources,
+      Database,
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[
+        0
+      ].Files.Length = 1 and Value.Sources[1].Files.Length = 1
+    );
+    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    const Cleared: M.Snapshot := await Session.ClearAsync('second', Deadline.Token);
+    X.Assert.Equal<M.Availability>(M.Availability.Paused, Cleared.Sources[1].Status);
+    X.Assert.Equal<int>(0, Cleared.Sources[1].Files.Length);
+    X.Assert.True(H.Has(Cleared.Sources[0], Track));
+    const New: string := IO.Path.Combine(Root.Path, 'new.flac');
+    IO.File.WriteAllText(New, '');
+    Session.Refresh('first');
+    const Other: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], New)
+    );
+    X.Assert.Equal<int>(0, Other.Sources[1].Files.Length);
+    begin
+      using const Connection: Db.SqliteConnection := D.Open(Database);
+      X.Assert.Equal<long>(2L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+      X.Assert.Equal<long>(
+        0L,
+        D.Number(Connection, 'SELECT count(*) FROM source_files WHERE source_id=''second'';')
+      );
+    end;
+
+    Session.Configure(Sources);
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[
+        1
+      ].Status = M.Availability.Ready and Value.Sources[1].Files.Length = 2
+    );
+  end function;
+
+  // Full clearing pauses every source, stays empty during control scans and retains actual files.
+  [X.FactAttribute]
+  public async function ClearAllStaysEmptyUntilResume(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Track: string := IO.Path.Combine(Root.Path, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    await using const Session: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+    );
+    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    const Cleared: M.Snapshot := await Session.ClearAsync('', Deadline.Token);
+    X.Assert.Equal<int>(0, Cleared.Sources[0].Files.Length);
+    X.Assert.True(IO.File.Exists(Track));
+    Session.Refresh();
+    const Empty: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Revision > Cleared.Revision
+    );
+    X.Assert.Equal<M.Availability>(M.Availability.Paused, Empty.Sources[0].Status);
+    X.Assert.Equal<int>(0, Empty.Sources[0].Files.Length);
+    Session.Configure([Source]);
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+    );
+  end function;
+
+  // Progress publishes real checked-directory/file counts independently of inventory lists.
+  [X.FactAttribute]
+  public async function ProgressCountsAndPauseAreSourceSpecific(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    IO.File.WriteAllText(IO.Path.Combine(Child, 'one.flac'), '');
+    IO.File.WriteAllText(IO.Path.Combine(Child, 'ignore.txt'), '');
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    await using const Session: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Files.Length = 1
+    );
+    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    var Progress: P.Snapshot := await Session.Progress.ReadAsync(Deadline.Token);
+    while Progress.Sources[
+      0
+    ].State <> P.Phase.Idle or Progress.Sources[0].DirectoriesChecked = 0L do
+      Progress := await Session.Progress.ReadAsync(Deadline.Token);
+    end while;
+
+    X.Assert.Equal<long>(1L, Progress.Sources[0].FilesFound);
+    X.Assert.Equal<long>(2L, Progress.Sources[0].DirectoriesChecked);
+    Session.Configure(
+      [
+        Source with
+          Paused := true;
+        end with
+      ]
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Paused
+    );
+    Progress := await Session.Progress.ReadAsync(Deadline.Token);
+    while Progress.Sources[0].State <> P.Phase.Paused do
+      Progress := await Session.Progress.ReadAsync(Deadline.Token);
+    end while;
+
+    X.Assert.Equal<long>(1L, Progress.Sources[0].FilesFound);
+    X.Assert.Equal<long>(2L, Progress.Sources[0].DirectoriesChecked);
+  end function;
+
+  // Changing a root inside the old tree cannot expose memberships removed from SQLite.
+  [X.FactAttribute]
+  public async function RootChangeCannotReviveAnOldMembershipOnFailure(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Child, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    await using const Session: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None,
+      new M.Options(0, 60000, 4)
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+    );
+    IO.Directory.Delete(Child, true);
+    Session.Configure(
+      [
+        Source with
+          Path := Child;
+        end with
+      ]
+    );
+    const Changed: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => S.PathComparer().Equals(
+        Value.Sources[0].Path,
+        Child
+      ) and Value.Sources[0].Status = M.Availability.Unavailable
+    );
+    X.Assert.Equal<int>(0, Changed.Sources[0].Files.Length);
+  end function;
+
+  // A pause immediately after a committed parent check must not retain its deleted child in memory.
+  [X.FactAttribute]
+  public procedure PauseAtCheckpointKeepsMemoryAndDatabaseConsistent();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Connection: Db.SqliteConnection := D.Open(':memory:');
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Child, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    const Index: Trees.Tree := Trees.Tree.Create();
+    D.Configure(Connection, [Source]);
+    Index.Scan(
+      Root.Path, [Source], function(): bool => true, true, T.CancellationToken.None,
+      function(Value: O.DirectoryObservation): bool begin
+        D.Save(Connection, [Source], Value);
+        return true;
+      end function
+    );
+    IO.Directory.Delete(Child, true);
+    var Current: bool := true;
+    Index.Scan(
+      Root.Path, [Source], function(): bool => Current, true, T.CancellationToken.None,
+      function(Value: O.DirectoryObservation): bool begin
+        D.Save(Connection, [Source], Value);
+        Current := false;
+        return true;
+      end function
+    );
+    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal<int>(
+      0, Index.Describe(
+        [
+          Source with
+            Paused := true;
+          end with
+        ], []
+      )[0].Files.Length
+    );
+  end procedure;
+end record;
+
+end unit;

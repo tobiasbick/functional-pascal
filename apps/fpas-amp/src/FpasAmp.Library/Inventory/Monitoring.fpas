@@ -1,0 +1,118 @@
+// UI-independent control and lifetime for presence discovery and storage.
+unit FpasAmp.Library.Inventory.Monitoring;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
+  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Internal.Inbox as Q,
+  FpasAmp.Library.Inventory.Internal.Runtime as Worker, System as Sys, System.IO as IO,
+  System.Threading as T, System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
+
+// Owned discovery lifetime. Control methods never access the filesystem or database.
+public type Session = record implements Sys.IAsyncDisposable
+  // Latest completed inventory, capacity one.
+  public Changes: Channels.ChannelReader<M.Snapshot>;
+  // Lightweight progress, capacity one and normally throttled to 100 ms.
+  public Progress: Channels.ChannelReader<P.Snapshot>;
+  // Worker completion, including native resource and connection cleanup.
+  public Completion: Tasks.Task;
+  SetSources: procedure(array of S.MusicSource);
+  RequestScan: procedure(string);
+  RequestClear: function(string): Tasks.Task<M.Snapshot>;
+  Stop: function(): Tasks.Task;
+
+  // Replaces validated settings. Pause/offline flags retain source-owned indexed data.
+  public procedure Configure(Sources: array of S.MusicSource);
+  requires Sources <> null;
+  begin
+    self.SetSources(S.Normalize(Sources));
+  end procedure;
+
+  // Requests a rescan of `Id`, or every active source when empty. Resume paused sources first.
+  public procedure Refresh(Id: string := '');
+  begin
+    self.RequestScan(Id);
+  end procedure;
+
+  // Pauses and clears `Id`, or every source when empty, then acknowledges its snapshot.
+  // `Cancellation` cancels waiting; an accepted clear remains owned by the worker.
+  public function ClearAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task<M.Snapshot>;
+  begin
+    return self.RequestClear(Id).WaitAsync(Cancellation);
+  end function;
+
+  // Requests cancellation, joins the worker and releases all resources; repeatable.
+  public function DisposeAsync(): Tasks.ValueTask;
+  begin
+    return new Tasks.ValueTask(self.Stop());
+  end function;
+
+  // Starts background work after validation. `DatabasePath` is absolute or :memory:
+  // for isolated tests; `Cancellation` owns the lifetime; `Settings` supplies scan bounds.
+  public static function Start(Sources: array of S.MusicSource; DatabasePath: string; Cancellation: T.CancellationToken; Settings: M.Options? := null): Session;
+  requires Sources <> null;
+  requires DatabasePath.Length > 0;
+  begin
+    if DatabasePath <> ':memory:' and not IO.Path.IsPathFullyQualified(DatabasePath) then
+      raise new Sys.ArgumentException('Expected an absolute database path.');
+    end if;
+    const Options: M.Options := Settings ?? new M.Options();
+    if Options.DebounceMilliseconds < 0 or Options.ControlScanMilliseconds <= 0
+      or Options.PendingDirectoryLimit <= 0
+    then
+      raise new Sys.ArgumentOutOfRangeException('Settings');
+    end if;
+    const Policy: M.Options := new M.Options(
+      Options.DebounceMilliseconds,
+      Options.ControlScanMilliseconds,
+      Options.PendingDirectoryLimit
+    );
+    const Inbox: Q.Inbox := Q.Inbox.Create(S.Normalize(Sources), Policy.PendingDirectoryLimit);
+    const Stop: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      Cancellation
+    );
+    const Bounds: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(1);
+    Bounds.FullMode := Channels.BoundedChannelFullMode.DropOldest;
+    Bounds.AllowSynchronousContinuations := false;
+    const Output: Channels.Channel<M.Snapshot> := Channels.Channel.CreateBounded<M.Snapshot>(
+      Bounds
+    );
+    const Progress: Channels.Channel<P.Snapshot> := Channels.Channel.CreateBounded<P.Snapshot>(
+      Bounds
+    );
+    const Running: Tasks.Task := Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Worker.Run(
+          Inbox,
+          Output.Writer,
+          Progress.Writer,
+          DatabasePath,
+          Policy,
+          Stop.Token
+        )
+      )
+    );
+    const Cleanup: Sys.Lazy<Tasks.Task> := new Sys.Lazy<Tasks.Task>(
+      async function(): Tasks.Task begin
+        Inbox.Close();
+        try
+          await Stop.CancelAsync().ConfigureAwait(false);
+          await Running.ConfigureAwait(false);
+        finally
+          Inbox.Release();
+          Stop.Dispose();
+        end try;
+      end function
+    );
+    return new Session(
+      Output.Reader,
+      Progress.Reader,
+      Running,
+      Inbox.Configure,
+      Inbox.Refresh,
+      Inbox.Clear,
+      function(): Tasks.Task => Cleanup.Value
+    );
+  end function;
+end record;
+
+end unit;

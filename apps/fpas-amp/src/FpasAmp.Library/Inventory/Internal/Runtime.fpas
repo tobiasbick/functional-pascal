@@ -1,0 +1,263 @@
+// One background owner for SQLite, traversal, clear commands and progress.
+unit FpasAmp.Library.Inventory.Internal.Runtime;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
+  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Internal.Reporting as Reports,
+  FpasAmp.Library.Inventory.Internal.Inbox as Q, FpasAmp.Library.Inventory.Internal.Planning as Plans,
+  FpasAmp.Library.Inventory.Internal.Tree as Trees, FpasAmp.Library.Inventory.Internal.Watchers as W,
+  FpasAmp.Library.Inventory.Internal.Observations as O, FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Persistence.Schema as Schema, FpasAmp.Library.Persistence.Loading as Loading,
+  FpasAmp.Library.Persistence.Locations as Locations, FpasAmp.Library.Persistence.Checkpoints as Checkpoints,
+  FpasAmp.Library.Persistence.Clearing as Clearing, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T,
+  System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
+
+async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken): Tasks.Task;
+  function Current(): bool;
+  begin
+    return Inbox.IsCurrent(Generation);
+  end function;
+  procedure Report(Force: bool);
+  begin
+    Inbox.PublishIfCurrent(
+      Generation, procedure() begin
+        Counters.Publish(Sources, Generation, Progress, Force);
+      end procedure
+    );
+  end procedure;
+  function Publish(): M.Snapshot;
+  begin
+    Revision := Revision + 1L;
+    const Value: M.Snapshot := new M.Snapshot(
+      Revision,
+      Generation,
+      Index.Describe(Sources, Watchers.Covered())
+    );
+    Inbox.PublishIfCurrent(
+      Generation, procedure() begin
+        discard Output.TryWrite(Value);
+      end procedure
+    );
+    return Value;
+  end function;
+  procedure Scan(Path: string; Owners: array of S.MusicSource; Recursive: bool);
+    function Save(Value: O.DirectoryObservation): bool;
+    begin
+      if not Checkpoints.Save(Connection, Value, Owners, Current, Cancellation) then
+        return false;
+      end if;
+
+      Counters.Observe(Owners, Value);
+      Report(false);
+      return true;
+    end function;
+  begin
+    Counters.State(Owners, Path, P.Phase.Scanning);
+    Report(true);
+    Index.Scan(Path, Owners, Current, Recursive, Cancellation, Save);
+    Counters.Finish(Owners, Path, Index);
+    Report(true);
+  end procedure;
+begin
+  const Index: Trees.Tree := Trees.Tree.Create();
+  const Counters: Reports.Reporting := Reports.Reporting.Create();
+  const Previous: C.Dictionary<string, M.SourceSnapshot> := new C.Dictionary<string, M.SourceSnapshot>();
+  var Sources: array of S.MusicSource := [];
+  var Generation: long := 0L;
+  var Revision: long := 0L;
+  var ActiveClears: array of Q.ClearRequest := [];
+  var Watchers: W.Watchers := W.Watchers.Open([], Inbox);
+  var Deadline: long := Sys.Environment.TickCount64;
+  var First: bool := true;
+  try
+    const Startup: Q.Batch := Inbox.Take();
+    ActiveClears := Startup.Clears;
+    Sources := Startup.Sources;
+    Generation := Startup.Generation;
+    const Cached: I.ImmutableArray<M.SourceSnapshot> := Loading.Restore(
+      Connection,
+      Sources,
+      Index,
+      Previous,
+      Cancellation
+    );
+    if Previous.Count > 0 then
+      Revision := Revision + 1L;
+      Inbox.PublishIfCurrent(
+        Generation, procedure() begin
+          discard Output.TryWrite(new M.Snapshot(Revision, Generation, Cached, true));
+        end procedure
+      );
+    end if;
+
+    while true do
+      Cancellation.ThrowIfCancellationRequested();
+      if not First then
+        const Remaining: int := cast<int>(Sys.Math.Clamp(
+          Deadline - Sys.Environment.TickCount64,
+          0L,
+          cast<long>(int.MaxValue)
+        ));
+        const Signalled: bool := await Inbox.Wait(Remaining, Cancellation).ConfigureAwait(false);
+        if Signalled and Options.DebounceMilliseconds > 0 then
+          await Tasks.Task.Delay(Options.DebounceMilliseconds, Cancellation).ConfigureAwait(false);
+        end if;
+
+        if Sys.Environment.TickCount64 >= Deadline then
+          Inbox.Mark('');
+        end if;
+      end if;
+      const Batch: Q.Batch := if First then
+        Startup
+      else
+        Inbox.Take()
+      end if;
+      First := false;
+      Sources := Batch.Sources;
+      Generation := Batch.Generation;
+      ActiveClears := Batch.Clears;
+      Counters.Begin(Sources, []);
+      for Request: Q.ClearRequest in ActiveClears do
+        Clearing.Clear(Connection, Request.Id, Cancellation);
+        Index.Clear(Request.Id);
+        Counters.Clear(Request.Id, Sources);
+        const Cleared: M.Snapshot := Publish();
+        Report(true);
+        discard Request.Completion.TrySetResult(Cleared);
+      end for;
+
+      ActiveClears := [];
+      if Batch.Reconfigure then
+        if not Locations.Configure(Connection, Sources, Current, Cancellation) then
+          continue;
+        end if;
+
+        Index.Prune(Sources);
+      end if;
+      const Roots: array of string := S.Roots(Sources);
+      if Batch.Reconfigure or Batch.Full then
+        Watchers.Dispose();
+        Watchers := W.Watchers.Open(Roots, Inbox, DatabasePath);
+      end if;
+      const Work: array of string := Plans.Scopes(Batch, Roots);
+      if Work.Length = 0 and not Batch.Reconfigure and not Batch.Full and Batch.Clears.Length =
+        0
+      then
+        continue;
+      end if;
+
+      Index.BeginPass();
+      Counters.Begin(Sources, Work);
+      Report(true);
+      for Position: int := 0 to Work.Length - 1 do
+        const Root: string := Work[Position];
+        var Recursive: bool := Batch.Full;
+        for Directory: string in Batch.Recursive do
+          if S.Within(Directory, Root) or S.Within(Root, Directory) then
+            Recursive := true;
+            break;
+          end if;
+        end for;
+
+        Scan(Root, Sources, Recursive);
+        if not Current() then
+          for Remaining: int := Position to Work.Length - 1 do
+            Inbox.Mark(Work[Remaining]);
+          end for;
+
+          break;
+        end if;
+      end for;
+
+      if not Current() then
+        continue;
+      end if;
+
+      // Retry nested roots not reached by a failed/missing ancestor, attributing
+      // that attempt only to its own source rather than contaminating its parent.
+      for Source: S.MusicSource in Sources do
+        if Source.Offline or Source.Paused or Source.Extensions.Length = 0 or Index.WasObserved(
+          Source.Path
+        )
+        then
+          continue;
+        end if;
+        var Covered: bool := false;
+        for Scope: string in Work do
+          if S.Within(Source.Path, Scope) then
+            Covered := true;
+            break;
+          end if;
+        end for;
+
+        if Covered then
+          Scan(Source.Path, [Source], true);
+        end if;
+      end for;
+
+      if not Current() then
+        for Scope: string in Work do
+          Inbox.Mark(Scope);
+        end for;
+
+        continue;
+      end if;
+
+      discard Publish();
+      Report(true);
+      if Batch.Full then
+        Deadline := Sys.Environment.TickCount64 + Options.ControlScanMilliseconds;
+      end if;
+    end while;
+  catch Failure: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
+    for Request: Q.ClearRequest in ActiveClears do
+      discard Request.Completion.TrySetCanceled();
+    end for;
+
+    raise;
+  catch Failure: Sys.Exception do
+    for Request: Q.ClearRequest in ActiveClears do
+      discard Request.Completion.TrySetException(Failure);
+    end for;
+
+    raise;
+  finally
+    for Request: Q.ClearRequest in ActiveClears do
+      discard Request.Completion.TrySetCanceled();
+    end for;
+
+    Watchers.Dispose();
+  end try;
+end function;
+
+// Runs the owned background lifetime. Both latest-value streams complete on every exit.
+// All database and filesystem operations stay on this task; `Inbox` accepts controls only.
+public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken): Tasks.Task;
+begin
+  try
+    Cancellation.ThrowIfCancellationRequested();
+    using const Connection: Db.SqliteConnection := Sql.Open(DatabasePath);
+    Schema.Ensure(Connection);
+    await Work(
+      Connection,
+      Inbox,
+      Output,
+      Progress,
+      DatabasePath,
+      Options,
+      Cancellation
+    ).ConfigureAwait(false);
+  catch Failure: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
+  catch Failure: Sys.Exception do
+    discard Output.TryComplete(Failure);
+    discard Progress.TryComplete(Failure);
+    raise;
+  finally
+    Inbox.Close();
+    discard Output.TryComplete();
+    discard Progress.TryComplete();
+  end try;
+end function;
+
+end unit;

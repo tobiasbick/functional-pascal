@@ -1,0 +1,118 @@
+// Watcher callbacks only invalidate directories; they never enumerate or wait.
+unit FpasAmp.Library.Inventory.Internal.Watchers;
+
+uses
+  FpasAmp.Library.Inventory.Internal.Inbox as Q,
+  FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Internal.Directories as Directories,
+  System as Sys, System.IO as IO, System.Collections.Generic as C;
+
+// Native watchers owned by the scan worker.
+public type Watchers = record implements Sys.IDisposable
+  Handles: C.List<IO.FileSystemWatcher>;
+  Roots: C.List<string>;
+
+  // Opens recursive watchers before a full scan. `Roots` are minimal active roots.
+  // `Inbox` accepts nonblocking invalidations; failures fall back to control scans.
+  // `DatabasePath` and its SQLite sidecars are excluded to avoid self-triggered scans.
+  public static function Open(Roots: array of string; Inbox: Q.Inbox; DatabasePath: string := ':memory:'): Watchers;
+    function OwnFile(Path: string): bool;
+    begin
+      if DatabasePath = ':memory:' then
+        return false;
+      end if;
+      const Compare: Sys.StringComparer := S.PathComparer();
+      return Compare.Equals(Path, DatabasePath) or Compare.Equals(Path, DatabasePath + '-wal')
+        or Compare.Equals(
+        Path,
+        DatabasePath + '-shm'
+      ) or Compare.Equals(Path, DatabasePath + '-journal');
+    end function;
+    procedure Changed(Sender: object?; Event: IO.FileSystemEventArgs);
+    begin
+      if OwnFile(Event.FullPath) then
+        return;
+      end if;
+
+      Inbox.Mark(IO.Path.GetDirectoryName(Event.FullPath) ?? Event.FullPath);
+    end procedure;
+    procedure Touched(Sender: object?; Event: IO.FileSystemEventArgs);
+    begin
+      if OwnFile(Event.FullPath) then
+        return;
+      end if;
+
+      Inbox.Mark(IO.Path.GetDirectoryName(Event.FullPath) ?? Event.FullPath, false);
+    end procedure;
+    procedure Renamed(Sender: object?; Event: IO.RenamedEventArgs);
+    begin
+      if not OwnFile(Event.OldFullPath) then
+        Inbox.Mark(IO.Path.GetDirectoryName(Event.OldFullPath) ?? Event.OldFullPath);
+      end if;
+
+      if not OwnFile(Event.FullPath) then
+        Inbox.Mark(IO.Path.GetDirectoryName(Event.FullPath) ?? Event.FullPath);
+      end if;
+    end procedure;
+    procedure Failed(Sender: object?; Event: IO.ErrorEventArgs);
+    begin
+      Inbox.Mark('');
+    end procedure;
+  begin
+    const Result: Watchers := new Watchers(
+      new C.List<IO.FileSystemWatcher>(),
+      new C.List<string>()
+    );
+    for Root: string in Roots do
+      var Watcher: IO.FileSystemWatcher? := null;
+      try
+        Directories.Check(Root);
+        Watcher := new IO.FileSystemWatcher(Root);
+        Watcher.IncludeSubdirectories := true;
+        Watcher.NotifyFilter := IO.NotifyFilters.FileName or IO.NotifyFilters.DirectoryName
+          or IO.NotifyFilters.LastWrite;
+        subscribe Watcher.Created with Changed;
+        subscribe Watcher.Deleted with Changed;
+        subscribe Watcher.Changed with Touched;
+        subscribe Watcher.Renamed with Renamed;
+        subscribe Watcher.Error with Failed;
+        Watcher.EnableRaisingEvents := true;
+        Result.Handles.Add(Watcher);
+        Result.Roots.Add(Root);
+      catch Failure: Sys.ArgumentException do
+        if Watcher <> null then
+          Watcher.Dispose();
+        end if;
+      catch Failure: IO.IOException do
+        if Watcher <> null then
+          Watcher.Dispose();
+        end if;
+      catch Failure: Sys.UnauthorizedAccessException do
+        if Watcher <> null then
+          Watcher.Dispose();
+        end if;
+      end try;
+    end for;
+
+    return Result;
+  end function;
+
+  // Returns the roots for which watcher installation succeeded.
+  public function Covered(): array of string;
+  begin
+    return self.Roots.ToArray();
+  end function;
+
+  // Stops callbacks and releases native handles. Call on the worker.
+  public procedure Dispose();
+  begin
+    for Watcher: IO.FileSystemWatcher in self.Handles do
+      Watcher.Dispose();
+    end for;
+
+    self.Handles.Clear();
+    self.Roots.Clear();
+  end procedure;
+end record;
+
+end unit;

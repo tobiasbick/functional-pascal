@@ -1,0 +1,228 @@
+// Presence-only scans, source boundaries and retained offline/unavailable inventory.
+unit FpasAmp.Library.Tests.Discovery;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Model as M, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises complete scans using real temporary directories, without any GUI host.
+public type DiscoveryTests = record
+  // Finds configured formats recursively, including hidden directories and unreadable content.
+  [X.FactAttribute]
+  public async function EnumeratesNamesWithoutOpeningMedia(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Hidden: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, '.hidden', 'album')
+    ).FullName;
+    const Locked: string := IO.Path.Combine(Hidden, 'track.FLAC');
+    using const Media: IO.FileStream := new IO.FileStream(
+      Locked,
+      IO.FileMode.CreateNew,
+      IO.FileAccess.ReadWrite,
+      IO.FileShare.None
+    );
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'notes.txt'), 'not media');
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'other.mp3'), 'not decoded');
+    await using const Session: Monitor.Session := H.Start(
+      [H.Source('root', Root.Path)],
+      T.CancellationToken.None
+    );
+    const Found: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Ready
+    );
+    X.Assert.Equal<int>(2, Found.Sources[0].Files.Length);
+    X.Assert.True(H.Has(Found.Sources[0], Locked));
+  end function;
+
+  // Shares overlapping physical trees while retaining each source's format filter.
+  [X.FactAttribute]
+  public async function MultipleAndOverlappingRoots(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Other: H.Folder := H.Folder.Create();
+    const Album: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    IO.File.WriteAllText(IO.Path.Combine(Album, 'a.mp3'), '');
+    IO.File.WriteAllText(IO.Path.Combine(Album, 'b.flac'), '');
+    IO.File.WriteAllText(IO.Path.Combine(Other.Path, 'c.flac'), '');
+    const Sources: array of S.MusicSource := [
+      H.Source('nested', Album) with
+        Extensions := ['.mp3'];
+      end with, H.Source('parent', Root.Path), H.Source('other', Other.Path)
+    ];
+    X.Assert.Equal<int>(2, S.Roots(S.Normalize(Sources)).Length);
+    await using const Session: Monitor.Session := H.Start(
+      Sources,
+      T.CancellationToken.None
+    );
+    const Found: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources.Length = 3
+    );
+    X.Assert.Equal<int>(1, Found.Sources[0].Files.Length);
+    X.Assert.Equal<int>(2, Found.Sources[1].Files.Length);
+    X.Assert.Equal<int>(1, Found.Sources[2].Files.Length);
+    X.Assert.True(Found.Sources[0].Watching);
+  end function;
+
+  // Distinguishes an unavailable root from successfully observing an empty directory.
+  [X.FactAttribute]
+  public async function UnavailableRootRetainsItsFilesAndRecovers(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Path: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'source')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Path, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    await using const Session: Monitor.Session := H.Start(
+      [H.Source('root', Path)],
+      T.CancellationToken.None
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+    );
+    IO.Directory.Delete(Path, true);
+    Session.Refresh();
+    const Missing: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Unavailable
+    );
+    X.Assert.True(H.Has(Missing.Sources[0], Track));
+    X.Assert.False(Missing.Sources[0].Watching);
+    discard IO.Directory.CreateDirectory(Path);
+    Session.Refresh();
+    const Returned: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Revision > Missing.Revision and Value.Sources[
+        0
+      ].Status = M.Availability.Ready
+    );
+    X.Assert.Equal<int>(0, Returned.Sources[0].Files.Length);
+  end function;
+
+  // Suspends source discovery and preserves its last view until it is re-enabled.
+  [X.FactAttribute]
+  public async function OfflineSourceAndReconfiguration(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('root', Root.Path);
+    const Track: string := IO.Path.Combine(Root.Path, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    await using const Session: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None
+    );
+    discard await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+    );
+    Session.Configure(
+      [
+        Source with
+          Offline := true;
+        end with
+      ]
+    );
+    const Offline: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Offline
+    );
+    X.Assert.True(H.Has(Offline.Sources[0], Track));
+    X.Assert.False(Offline.Sources[0].Watching);
+    IO.File.Delete(Track);
+    Session.Configure([Source]);
+    const Online: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Generation > Offline.Generation
+    );
+    X.Assert.Equal<int>(0, Online.Sources[0].Files.Length);
+    Session.Configure([]);
+    discard await H.Until(Session, function(Value: M.Snapshot): bool => Value.Sources.Length = 0);
+  end function;
+
+  // Neither recurses into a directory loop nor indexes its linked target twice.
+  [X.FactAttribute]
+  public async function DirectoryLinksAreNotTraversed(): Tasks.Task;
+  begin
+    if Sys.OperatingSystem.IsWindows() then
+      return;
+    end if;
+
+    using const Root: H.Folder := H.Folder.Create();
+    using const Outside: H.Folder := H.Folder.Create();
+    IO.File.WriteAllText(IO.Path.Combine(Outside.Path, 'outside.flac'), '');
+    discard IO.Directory.CreateSymbolicLink(IO.Path.Combine(Root.Path, 'loop'), Root.Path);
+    discard IO.Directory.CreateSymbolicLink(IO.Path.Combine(Root.Path, 'external'), Outside.Path);
+    await using const Session: Monitor.Session := H.Start(
+      [H.Source('root', Root.Path)],
+      T.CancellationToken.None
+    );
+    const Found: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Sources.Length = 1
+    );
+    X.Assert.Equal<int>(0, Found.Sources[0].Files.Length);
+    X.Assert.Equal<M.Availability>(M.Availability.Ready, Found.Sources[0].Status);
+    Session.Configure([H.Source('linked', IO.Path.Combine(Root.Path, 'external'))]);
+    const Linked: M.Snapshot := await H.Until(
+      Session,
+      function(Value: M.Snapshot): bool => Value.Generation > Found.Generation
+    );
+    X.Assert.Equal<M.Availability>(M.Availability.Unavailable, Linked.Sources[0].Status);
+    X.Assert.False(Linked.Sources[0].Watching);
+  end function;
+
+  // Losing directory permissions preserves known files, reports an incomplete tree, and recovers.
+  [X.FactAttribute]
+  public async function UnreadableSubdirectoryRetainsKnownEntries(): Tasks.Task;
+  begin
+    if Sys.OperatingSystem.IsWindows() then
+      return;
+    end if;
+
+    using const Root: H.Folder := H.Folder.Create();
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Child, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Permissions: IO.UnixFileMode := IO.File.GetUnixFileMode(Child);
+    try
+      await using const Session: Monitor.Session := H.Start(
+        [H.Source('root', Root.Path)],
+        T.CancellationToken.None,
+        new M.Options(0, 60000, 8)
+      );
+      discard await H.Until(
+        Session,
+        function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
+      );
+      IO.File.SetUnixFileMode(Child, cast<IO.UnixFileMode>(0));
+      Session.Refresh();
+      const Denied: M.Snapshot := await H.Until(
+        Session,
+        function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Incomplete
+      );
+      X.Assert.True(H.Has(Denied.Sources[0], Track));
+      X.Assert.Equal<int>(1, Denied.Sources[0].Issues.Length);
+      IO.File.SetUnixFileMode(Child, Permissions);
+      Session.Refresh();
+      discard await H.Until(
+        Session,
+        function(Value: M.Snapshot): bool => Value.Revision > Denied.Revision and Value.Sources[
+          0
+        ].Status = M.Availability.Ready
+      );
+    finally
+      IO.File.SetUnixFileMode(Child, Permissions);
+    end try;
+  end function;
+end record;
+
+end unit;

@@ -1,8 +1,9 @@
-// General appearance controls.
+// General appearance and library database controls.
 unit FpasAmp.Ui.Settings.General;
 
 uses
   FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
+  FpasAmp.Ui.Settings.DatabaseActions as Database,
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
@@ -35,14 +36,14 @@ begin
   );
 end function;
 
-// Builds the appearance and accent cards.
+// Builds appearance, accent and database action cards from the current state.
 //
 // ## Parameters
-// - `Settings`: The current preferences.
+// - `Current`: Preferences, clear confirmation and operation status.
 // - `Theme`: The current palette.
 // ## Returns
 // The general settings tab.
-public function View(Settings: M.Preferences; Theme: Themes.Theme): E.Element<M.Msg>;
+public function View(Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
 begin
   const Colors: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
   for Accent: Themes.Accent in Sys.Enum.GetValues<Themes.Accent>() do
@@ -66,7 +67,7 @@ begin
             new Segments.Item('Dark', Sys.Char.ConvertFromUtf32($E11E)),
             new Segments.Item('System', Sys.Char.ConvertFromUtf32($E11D))
           ],
-          cast<int>(M.Appearance(Settings)),
+          cast<int>(M.Appearance(Current.Settings)),
           function(Index: int): M.Msg => M.Msg.SetAppearance(cast<Switchers.Selection>(Index))
         )
       ],
@@ -83,6 +84,26 @@ begin
         Texts.Text<M.Msg>(Theme.AccentFamily.ToString(), Texts.Appearance.Secondary)
       ],
       Options
+    ),
+    Cards.Card<M.Msg>(
+      'database-card', [
+        Texts.Text<M.Msg>('Library database', Texts.Appearance.HeadingThree),
+        E.Row<M.Msg>(
+          new L.Flow(
+            Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Wrap := true,
+            Align := L.Alignment.Center, Justify := L.Justification.Between
+          ),
+          E.Column<M.Msg>(
+            new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(4))),
+            Texts.Text<M.Msg>('Clear indexed files for all sources.', Texts.Appearance.Secondary),
+            Texts.Text<M.Msg>(
+              'Music files and source settings are kept.',
+              Texts.Appearance.Secondary
+            )
+          ),
+          Database.Clear('clear-database', '', 'Clear database', Current, Theme)
+        )
+      ], Options
     )
   );
 end function;

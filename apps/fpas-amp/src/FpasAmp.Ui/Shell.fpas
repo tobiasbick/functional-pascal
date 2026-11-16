@@ -2,9 +2,10 @@
 unit FpasAmp.Ui.Shell;
 
 uses
+  FpasAmp.Library.Sources as Locations,
   FpasAmp.Ui.Settings.Editor as Editor, FpasAmp.Ui.Settings.General as General,
-  FpasAmp.Ui.Settings.Library as Library, FpasAmp.Ui.Settings.Model as M,
-  FpasAmp.Ui.Settings.Update as Updates,
+  FpasAmp.Ui.Settings.Library as LibraryView, FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Ui.Settings.Controller as Updates, FpasAmp.Library.Inventory.Monitoring as Monitoring,
   Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Layout as L,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
@@ -31,9 +32,23 @@ begin
     'settings-tabs', [new Tabs.Item('General'), new Tabs.Item('Library')], Tab, M.Msg.SelectTab
   );
   const Body: E.Element<M.Msg> := if Tab = 0 then
-    General.View(Current.Settings, Theme)
+    General.View(Current, Theme)
   else
-    Library.View(Current.Settings.MusicSources)
+    LibraryView.View(Current, Theme)
+  end if;
+  const Error: string? := Current.LibraryError;
+  const MainBody: E.Element<M.Msg> := if Error = null then
+    Body
+  else
+    E.Column<M.Msg>(
+      new L.Flow(Gap := Points(16), Align := L.Alignment.Stretch),
+      Alerts.Alert<M.Msg>(
+        'library-error',
+        'Library operation failed',
+        new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
+      ),
+      Body
+    )
   end if;
   const Content: array of E.Element<M.Msg> := if Current.SaveFailed and Current.Draft = null then
     [
@@ -44,10 +59,10 @@ begin
         new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
         function(): M.Msg => M.Msg.DismissError
       ),
-      Body
+      MainBody
     ]
   else
-    [Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne), Header, Body]
+    [Texts.Text<M.Msg>(SettingsLabel, Texts.Appearance.HeadingOne), Header, MainBody]
   end if;
   return E.ScrollView<M.Msg>(
     'settings-scroll',
@@ -132,13 +147,59 @@ begin
       Base
     );
   end if;
-  const Draft: M.MusicSource? := Current.Draft;
+  const Draft: Locations.MusicSource? := Current.Draft;
   return if Draft = null then
     Base
   else
     Editor.View(Base, Draft, Current.SaveFailed)
   end if;
 end function;
+
+// Manually driven native shell, useful for application hosting and focused UI checks.
+public type Session = record implements Sys.IDisposable
+  // Native session, driven and disposed on its creating thread.
+  public Window: Gui.Session<M.Msg>;
+  Read: function(): M.State;
+
+  // Reads the latest owner-thread model, including accepted background publications.
+  public function State(): M.State;
+  begin
+    return self.Read();
+  end function;
+
+  // Releases the GUI session and its owned MVU subscriptions, not the external library.
+  public procedure Dispose();
+  begin
+    self.Window.Dispose();
+  end procedure;
+
+  // Creates the shell. `Library` is caller-owned; `Save` persists accepted preferences.
+  // `Tab` is General (0), Library (1), or null for the initially empty shell.
+  public static function Start(Window: Cui.CuiWindowPlacement; Settings: M.Preferences; Save: procedure(M.Preferences); Library: Monitoring.Session; Tab: int? := null): Session;
+  requires Tab = null or Tab = 0 or Tab = 1;
+  begin
+    const Initial: M.State := new M.State(Settings, Tab := Tab);
+    var Last: M.State := Initial;
+    const Native: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
+      Initial,
+      function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> begin
+        const Next: Mvu.Transition<M.State, M.Msg> := Updates.Apply(
+          Current,
+          Message,
+          Save,
+          Library
+        );
+        Last := Next.Model;
+        return Next;
+      end function,
+      View,
+      new Gui.Options(Title := DisplayName, Theme := M.Theme(Initial, null), Placement := Window),
+      M.Theme
+    );
+    discard Native.Post(M.Msg.WatchLibrary);
+    return new Session(Native, function(): M.State => Last);
+  end function;
+end record;
 
 // Opens the desktop shell and runs it until the window closes.
 //
@@ -149,31 +210,21 @@ end function;
 // - `Tab`: Initial settings tab, updated to the last selection on close.
 //   0 opens General, 1 opens Library, and null opens the empty shell.
 // - `Save`: Persists a new set of validated preferences.
+// - `Library`: Caller-owned scan/storage lifetime; the GUI only posts control requests.
 // ## Returns
 // The window's placement when it closed, to restore at the next start.
 public function Run(
   Window: Cui.CuiWindowPlacement; Settings: M.Preferences; ref Tab: int?;
-  Save: procedure(M.Preferences)
+  Save: procedure(M.Preferences); Library: Monitoring.Session
 ): Cui.CuiWindowPlacement;
 requires Tab = null or Tab = 0 or Tab = 1;
 begin
-  const Initial: M.State := new M.State(Settings, Tab := Tab);
-  var Last: M.State := Initial;
-  using const Session: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
-    Initial,
-    function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> begin
-      Last := Updates.Apply(Current, Message, Save);
-      return new Mvu.Transition<M.State, M.Msg>(Last, []);
-    end function,
-    View,
-    new Gui.Options(Title := DisplayName, Theme := M.Theme(Initial, null), Placement := Window),
-    M.Theme
-  );
-  while Session.Step() do
+  using const Running: Session := Session.Start(Window, Settings, Save, Library, Tab);
+  while Running.Window.Step() do
   end while;
 
-  Tab := Last.Tab;
-  return Session.Placement();
+  Tab := Running.State().Tab;
+  return Running.Window.Placement();
 end function;
 
 end unit;

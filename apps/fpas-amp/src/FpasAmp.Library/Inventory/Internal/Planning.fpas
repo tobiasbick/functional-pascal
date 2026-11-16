@@ -1,0 +1,50 @@
+// Combines dirty directories into minimal active scan scopes.
+unit FpasAmp.Library.Inventory.Internal.Planning;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Internal.Inbox as Q,
+  System.Collections.Generic as C;
+
+// Returns minimal scopes from a detached batch and normalized active roots.
+public function Scopes(Batch: Q.Batch; Roots: array of string): array of string;
+begin
+  if Batch.Full then
+    return Roots;
+  end if;
+  const Selected: C.List<string> := new C.List<string>();
+  for Directory: string in Batch.Directories do
+    for Root: string in Roots do
+      var Path: string := Directory;
+      if S.Within(Root, Directory) then
+        Path := Root;
+      else
+        if not S.Within(Directory, Root) then
+          continue;
+        end if;
+      end if;
+      var Covered: bool := false;
+      for Existing: string in Selected do
+        if S.Within(Path, Existing) then
+          Covered := true;
+          break;
+        end if;
+      end for;
+
+      if Covered then
+        continue;
+      end if;
+
+      for Index: int := Selected.Count - 1 downto 0 do
+        if S.Within(Selected[Index], Path) then
+          Selected.RemoveAt(Index);
+        end if;
+      end for;
+
+      Selected.Add(Path);
+    end for;
+  end for;
+
+  return Selected.ToArray();
+end function;
+
+end unit;

@@ -1,0 +1,66 @@
+// Current presence-index schema; settings remain authoritative in their JSON file.
+unit FpasAmp.Library.Persistence.Schema;
+
+uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys;
+
+// Initializes a new database or validates the supported schema without resetting data.
+// `Connection` is an open, worker-owned connection.
+public procedure Ensure(Connection: Db.SqliteConnection);
+begin
+  using const Read: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'PRAGMA user_version;',
+    null,
+    [],
+    []
+  );
+  const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
+  if Version <> 0 and Version <> 1 then
+    raise new Sys.InvalidOperationException(
+      'Unsupported library database schema. The database was left intact.'
+    );
+  end if;
+
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  Sql.Execute(
+    Connection,
+    'CREATE TABLE IF NOT EXISTS sources (' +
+    'id TEXT PRIMARY KEY, path_key TEXT NOT NULL, path TEXT NOT NULL);' +
+    'CREATE TABLE IF NOT EXISTS directories (' +
+    'source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,' +
+    'path_key TEXT NOT NULL, path TEXT NOT NULL, parent_key TEXT NOT NULL,' +
+    'checked_utc INTEGER, error TEXT, PRIMARY KEY(source_id,path_key));' +
+    'CREATE INDEX IF NOT EXISTS directories_parent ON directories(source_id,parent_key);' +
+    'CREATE TABLE IF NOT EXISTS files (' +
+    'id INTEGER PRIMARY KEY AUTOINCREMENT, path_key TEXT NOT NULL UNIQUE,' +
+    'path TEXT NOT NULL, directory_key TEXT NOT NULL);' +
+    'CREATE INDEX IF NOT EXISTS files_directory ON files(directory_key);' +
+    'CREATE TABLE IF NOT EXISTS source_files (' +
+    'source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,' +
+    'file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,' +
+    'PRIMARY KEY(source_id,file_id));' +
+    'CREATE INDEX IF NOT EXISTS file_sources ON source_files(file_id);' +
+    'PRAGMA user_version=1;', Transaction, [], []
+  );
+  Transaction.Commit();
+  Sql.Execute(
+    Connection,
+    'CREATE TEMP TABLE seen_files (source_id TEXT NOT NULL,path_key TEXT NOT NULL,PRIMARY KEY(source_id,path_key));' +
+    'CREATE TEMP TABLE seen_children (path_key TEXT PRIMARY KEY);' +
+    'CREATE TEMP TABLE orphan_candidates (id INTEGER PRIMARY KEY);', null, [], []
+  );
+end procedure;
+
+// Removes only candidate files with no remaining source association.
+// `Connection` and `Transaction` belong to the current checkpoint.
+public procedure Collect(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction);
+begin
+  Sql.Execute(
+    Connection,
+    'DELETE FROM files WHERE id IN (SELECT id FROM orphan_candidates)' +
+    ' AND NOT EXISTS(SELECT 1 FROM source_files WHERE file_id=files.id);' +
+    'DELETE FROM orphan_candidates;', Transaction, [], []
+  );
+end procedure;
+
+end unit;

@@ -1,0 +1,160 @@
+// UI-independent music locations and path rules.
+unit FpasAmp.Library.Sources;
+
+uses System as Sys, System.IO as IO, System.Collections.Generic as C;
+
+// One configured location, including its ordinary subdirectories.
+public type MusicSource = record
+  // Stable settings identity.
+  public Id: string;
+  // User-facing name.
+  public Name: string;
+  // Fully qualified directory path.
+  public Path: string;
+  // Whether work for this source is suspended.
+  public Offline: bool;
+  // Selected extensions, including their leading dots.
+  public Extensions: array of string;
+  // Whether scanning and reconciliation are paused while the indexed view is retained.
+  public Paused: bool := false;
+end record;
+
+// Returns the platform's lexical path comparer: insensitive on Windows.
+public function PathComparer(): Sys.StringComparer;
+begin
+  return if Sys.OperatingSystem.IsWindows() then
+    Sys.StringComparer.OrdinalIgnoreCase
+  else
+    Sys.StringComparer.Ordinal
+  end if;
+end function;
+
+// Tests a normalized path for equality with or containment in a directory.
+// `Path` and `Root` are absolute, normalized paths. Returns true at a path boundary.
+public function Within(Path: string; Root: string): bool;
+begin
+  const Comparison: Sys.StringComparison := if Sys.OperatingSystem.IsWindows() then
+    Sys.StringComparison.OrdinalIgnoreCase
+  else
+    Sys.StringComparison.Ordinal
+  end if;
+  if Sys.String.Equals(Path, Root, Comparison) then
+    return true;
+  end if;
+  const Prefix: string := if IO.Path.EndsInDirectorySeparator(Root) then
+    Root
+  else
+    Root + IO.Path.DirectorySeparatorChar
+  end if;
+  return Path.StartsWith(Prefix, Comparison);
+end function;
+
+// Copies and validates source settings without accessing the filesystem.
+// `Sources` must have unique IDs, absolute paths and dot-prefixed extensions.
+// Returns isolated settings with normalized paths and deduplicated extensions.
+public function Normalize(Sources: array of MusicSource): array of MusicSource;
+requires Sources <> null;
+begin
+  const Ids: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Result: C.List<MusicSource> := new C.List<MusicSource>();
+  for Source: MusicSource in Sources do
+    if Sys.String.IsNullOrWhiteSpace(Source.Id) or not Ids.Add(Source.Id)
+      or not IO.Path.IsPathFullyQualified(Source.Path) or Source.Path.Contains(cast<char>(0))
+    then
+      raise new Sys.ArgumentException('Expected unique source IDs and absolute directory paths.');
+    end if;
+    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      Sys.StringComparer.OrdinalIgnoreCase
+    );
+    for Extension: string in Source.Extensions do
+      if Extension.Length < 2 or Extension[0] <> cast<char>(46) then
+        raise new Sys.ArgumentException('Expected dot-prefixed file extensions.');
+      end if;
+
+      for Index: int := 1 to Extension.Length - 1 do
+        if not Sys.Char.IsAsciiLetterOrDigit(Extension[Index]) then
+          raise new Sys.ArgumentException('Expected alphanumeric file extensions.');
+        end if;
+      end for;
+
+      discard Extensions.Add(Extension);
+    end for;
+    const Items: C.List<string> := new C.List<string>(Extensions);
+    Result.Add(
+      new MusicSource(
+        Source.Id,
+        Source.Name,
+        IO.Path.TrimEndingDirectorySeparator(IO.Path.GetFullPath(Source.Path)),
+        Source.Offline,
+        Items.ToArray(), Source.Paused
+      )
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Compares normalized discovery policies, ignoring display names and extension order.
+// `Left` and `Right` are isolated normalized settings. Returns true when no rescan is needed.
+public function SameDiscovery(Left: array of MusicSource; Right: array of MusicSource): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    const A: MusicSource := Left[Index];
+    const B: MusicSource := Right[Index];
+    if A.Id <> B.Id or not PathComparer().Equals(
+      A.Path,
+      B.Path
+    ) or A.Offline <> B.Offline or A.Paused <> B.Paused
+    then
+      return false;
+    end if;
+    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      A.Extensions,
+      Sys.StringComparer.OrdinalIgnoreCase
+    );
+    if not Extensions.SetEquals(B.Extensions) then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Returns minimal active roots, merging equal paths and nested locations.
+// `Sources` contains normalized settings. Each returned tree needs one traversal/watcher.
+public function Roots(Sources: array of MusicSource): array of string;
+begin
+  const Result: C.List<string> := new C.List<string>();
+  for Source: MusicSource in Sources do
+    if Source.Offline or Source.Paused or Source.Extensions.Length = 0 then
+      continue;
+    end if;
+    var Covered: bool := false;
+    for Root: string in Result do
+      if Within(Source.Path, Root) then
+        Covered := true;
+        break;
+      end if;
+    end for;
+
+    if Covered then
+      continue;
+    end if;
+
+    for Index: int := Result.Count - 1 downto 0 do
+      if Within(Result[Index], Source.Path) then
+        Result.RemoveAt(Index);
+      end if;
+    end for;
+
+    Result.Add(Source.Path);
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

@@ -1,0 +1,195 @@
+// Worker-owned progress bookkeeping; no full file list is copied for a progress tick.
+unit FpasAmp.Library.Inventory.Internal.Reporting;
+
+uses
+  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Internal.Tree as Trees,
+  FpasAmp.Library.Inventory.Model as M,
+  FpasAmp.Library.Inventory.Internal.Observations as O,
+  System as Sys, System.IO as IO, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Runtime.CompilerServices as R,
+  System.Threading.Channels as Channels;
+
+// Bounded per-source counters and a throttled latest-value publisher.
+public type Reporting = record
+  Values: C.Dictionary<string, P.SourceProgress>;
+  Sequence: R.StrongBox<long>;
+  Last: R.StrongBox<long>;
+
+  // Creates empty counters for one monitoring lifetime.
+  public static function Create(): Reporting;
+  begin
+    return new Reporting(
+      new C.Dictionary<string, P.SourceProgress>(Sys.StringComparer.Ordinal),
+      new R.StrongBox<long>(0L),
+      new R.StrongBox<long>(0L)
+    );
+  end function;
+
+  function Read(Source: S.MusicSource): P.SourceProgress;
+  begin
+    if self.Values.ContainsKey(Source.Id) then
+      return self.Values[Source.Id];
+    end if;
+
+    return new P.SourceProgress(Source.Id, P.Phase.Idle);
+  end function;
+
+  // Queues affected sources and preserves counters for paused/offline sources.
+  public procedure Begin(Sources: array of S.MusicSource; Scopes: array of string);
+  begin
+    const Keep: C.HashSet<string> := new C.HashSet<string>();
+    for Source: S.MusicSource in Sources do
+      discard Keep.Add(Source.Id);
+      var Value: P.SourceProgress := self.Read(Source);
+      if Value.Directory <> '' and not S.Within(Value.Directory, Source.Path) then
+        Value := new P.SourceProgress(Source.Id, P.Phase.Idle);
+      end if;
+
+      if Source.Offline then
+        Value := Value with
+          State := P.Phase.Offline;
+        end with;
+      else
+        if Source.Paused then
+          Value := Value with
+            State := P.Phase.Paused;
+          end with;
+        else
+          for Scope: string in Scopes do
+            if S.Within(Scope, Source.Path) or S.Within(Source.Path, Scope) then
+              Value := new P.SourceProgress(Source.Id, P.Phase.Queued);
+              break;
+            end if;
+          end for;
+        end if;
+      end if;
+
+      if not Source.Offline and not Source.Paused and Source.Extensions.Length = 0 then
+        Value := new P.SourceProgress(
+          Source.Id,
+          P.Phase.Idle,
+          Result := new P.Result(M.Availability.Ready, 0L)
+        );
+      end if;
+
+      self.Values[Source.Id] := Value;
+    end for;
+    const Remove: C.List<string> := new C.List<string>();
+    for Id: string in self.Values.Keys do
+      if not Keep.Contains(Id) then
+        Remove.Add(Id);
+      end if;
+    end for;
+
+    for Id: string in Remove do
+      discard self.Values.Remove(Id);
+    end for;
+  end procedure;
+
+  // Marks sources overlapping a physical scope as scanning or idle.
+  public procedure State(Sources: array of S.MusicSource; Scope: string; Phase: P.Phase);
+  begin
+    for Source: S.MusicSource in Sources do
+      if Source.Offline or Source.Paused or not (S.Within(
+        Scope,
+        Source.Path
+      ) or S.Within(Source.Path, Scope))
+      then
+        continue;
+      end if;
+
+      self.Values[Source.Id] := self.Read(Source) with
+        State := Phase;
+        Result := null;
+      end with;
+    end for;
+  end procedure;
+
+  // Completes overlapping source counters using source-owned availability and counts.
+  public procedure Finish(Sources: array of S.MusicSource; Scope: string; Index: Trees.Tree);
+  begin
+    for Source: S.MusicSource in Sources do
+      if Source.Offline or Source.Paused or not (S.Within(
+        Scope,
+        Source.Path
+      ) or S.Within(Source.Path, Scope))
+      then
+        continue;
+      end if;
+
+      self.Values[Source.Id] := self.Read(Source) with
+        State := P.Phase.Idle;
+        Result := Index.Summary(Source);
+      end with;
+    end for;
+  end procedure;
+
+  // Counts a persisted observation for active covering sources only.
+  public procedure Observe(Sources: array of S.MusicSource; Value: O.DirectoryObservation);
+  begin
+    for Source: S.MusicSource in Sources do
+      if Source.Offline or Source.Paused or not S.Within(Value.Path, Source.Path) then
+        continue;
+      end if;
+      const Extensions: C.HashSet<string> := new C.HashSet<string>(
+        Source.Extensions,
+        Sys.StringComparer.OrdinalIgnoreCase
+      );
+      var Count: long := 0L;
+      for File: string in Value.Files do
+        if Extensions.Contains(IO.Path.GetExtension(File) ?? '') then
+          Count := Count + 1L;
+        end if;
+      end for;
+      const Before: P.SourceProgress := self.Read(Source);
+      self.Values[Source.Id] := Before with
+        State := P.Phase.Scanning;
+        FilesFound := Before.FilesFound + Count;
+        DirectoriesChecked := Before.DirectoriesChecked + 1L;
+        Directory := Value.Path;
+      end with;
+    end for;
+  end procedure;
+
+  // Resets cleared source counters and keeps their pause state.
+  public procedure Clear(Id: string; Sources: array of S.MusicSource);
+  begin
+    for Source: S.MusicSource in Sources do
+      if Id = '' or Id = Source.Id then
+        self.Values[Source.Id] := new P.SourceProgress(
+          Source.Id, if Source.Offline then
+            P.Phase.Offline
+          else
+            P.Phase.Paused
+          end if
+        );
+      end if;
+    end for;
+  end procedure;
+
+  // Publishes detached counters to `Writer`; `Force` bypasses the 100 ms interval.
+  public procedure Publish(Sources: array of S.MusicSource; Generation: long; Writer: Channels.ChannelWriter<P.Snapshot>; Force: bool);
+  begin
+    const Now: long := Sys.Environment.TickCount64;
+    if not Force and Now - self.Last.Value < 100L then
+      return;
+    end if;
+    const Values: C.List<P.SourceProgress> := new C.List<P.SourceProgress>();
+    for Source: S.MusicSource in Sources do
+      Values.Add(self.Read(Source));
+    end for;
+
+    self.Last.Value := Now;
+    self.Sequence.Value := self.Sequence.Value + 1L;
+    discard Writer.TryWrite(
+      new P.Snapshot(
+        self.Sequence.Value,
+        Generation,
+        I.ImmutableArray.CreateRange<P.SourceProgress>(Values)
+      )
+    );
+  end procedure;
+end record;
+
+end unit;

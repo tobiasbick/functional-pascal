@@ -1,8 +1,8 @@
 <Project>
-  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(MSBuildProjectExtension)' == '.csproj'">
     <Compile Include="$(MSBuildThisFileDirectory)TestSupport/*.cs" Link="TestSupport/%(Filename)%(Extension)" />
   </ItemGroup>
-  <Target Name="RecordFpasTestReferences" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveReferences" Condition="'$(IsTestProject)' == 'true'">
+  <Target Name="RecordFpasTestReferences" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveReferences" Condition="'$(IsTestProject)' == 'true' and '$(MSBuildProjectExtension)' == '.csproj'">
     <ItemGroup>
       <_FpasRuntimeReference Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'System.Runtime'" />
       <AssemblyMetadata Include="FpasReferenceDirectory" Value="%(_FpasRuntimeReference.RootDir)%(_FpasRuntimeReference.Directory)" />

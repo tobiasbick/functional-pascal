@@ -1,0 +1,80 @@
+// SQLite test primitives; every database and source belongs to an isolated test.
+unit FpasAmp.Library.Tests.StorageSupport;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.Persistence.Locations as Locations, FpasAmp.Library.Persistence.Checkpoints as Checkpoints,
+  FpasAmp.Library.Inventory.Internal.Observations as O, FpasAmp.Library.Sources as S,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C, System.Threading as T, Xunit as X;
+
+// Opens a current-schema database. `Path` is absolute or :memory:; caller disposes it.
+public function Open(Path: string): Db.SqliteConnection;
+begin
+  const Connection: Db.SqliteConnection := Sql.Open(Path);
+  try
+    Schema.Ensure(Connection);
+    return Connection;
+  catch do
+    Connection.Dispose();
+    raise;
+  end try;
+end function;
+
+// Applies isolated normalized `Sources` to an open test database.
+public procedure Configure(Connection: Db.SqliteConnection; Sources: array of S.MusicSource);
+begin
+  X.Assert.True(
+    Locations.Configure(
+      Connection,
+      S.Normalize(Sources),
+      function(): bool => true,
+      T.CancellationToken.None
+    )
+  );
+end procedure;
+
+// Creates a borrowed enumeration result for a directory and its observed entries.
+// `Complete` controls deletion authority; `Failure` is the recorded error, if any.
+public function Observation(Path: string; Files: array of string; Children: array of string; Complete: bool := true; Failure: string? := null): O.DirectoryObservation;
+begin
+  return new O.DirectoryObservation(
+    Path, new C.HashSet<string>(Files, S.PathComparer()),
+    new C.HashSet<string>(Children, S.PathComparer()), Complete, Failure
+  );
+end function;
+
+// Saves an observation using an always-current generation; asserts successful commit.
+public procedure Save(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Value: O.DirectoryObservation);
+begin
+  X.Assert.True(
+    Checkpoints.Save(
+      Connection,
+      Value,
+      S.Normalize(Sources),
+      function(): bool => true,
+      T.CancellationToken.None
+    )
+  );
+end procedure;
+
+// Reads one scalar from trusted test SQL, returning its numeric value.
+public function Number(Connection: Db.SqliteConnection; Text: string): long;
+begin
+  using const Query: Db.SqliteCommand := Sql.Command(Connection, Text, null, [], []);
+  return Sys.Convert.ToInt64(Query.ExecuteScalar());
+end function;
+
+// Reads the stable row identity for an indexed normalized `Path`, or zero when absent.
+public function FileId(Connection: Db.SqliteConnection; Path: string): long;
+begin
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT id FROM files WHERE path_key=$key;',
+    null,
+    ['$key'],
+    [Sql.Key(Path)]
+  );
+  return Sys.Convert.ToInt64(Query.ExecuteScalar());
+end function;
+
+end unit;

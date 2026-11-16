@@ -1,0 +1,117 @@
+// Rehydrates cached source views and the worker-owned directory index.
+unit FpasAmp.Library.Persistence.Loading;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Model as M, FpasAmp.Library.Inventory.Internal.Tree as Trees,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
+  System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T;
+
+// Reads matching source IDs/roots into `Index` and isolated `Previous` views.
+// `Sources` are normalized settings; `Cancellation` interrupts row traversal.
+// Returns a startup snapshot view for every configured source, explicitly unverified.
+public function Restore(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Index: Trees.Tree; Previous: C.Dictionary<string, M.SourceSnapshot>; Cancellation: T.CancellationToken): I.ImmutableArray<M.SourceSnapshot>;
+begin
+  const Result: C.List<M.SourceSnapshot> := new C.List<M.SourceSnapshot>();
+  for Source: S.MusicSource in Sources do
+    Cancellation.ThrowIfCancellationRequested();
+    const Files: C.List<string> := new C.List<string>();
+    const Issues: C.List<M.ScanIssue> := new C.List<M.ScanIssue>();
+    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      Source.Extensions,
+      Sys.StringComparer.OrdinalIgnoreCase
+    );
+    using const Context: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT path_key FROM sources WHERE id=$source;',
+      null,
+      ['$source'],
+      [Source.Id]
+    );
+    const Matches: bool := Sys.String.Equals(
+      cast<string?>(Context.ExecuteScalar()),
+      Sql.Key(Source.Path),
+      Sys.StringComparison.Ordinal
+    );
+    if Matches then
+      using const Directories: Db.SqliteCommand := Sql.Command(
+        Connection,
+        'SELECT path,error FROM directories WHERE source_id=$source;',
+        null,
+        ['$source'],
+        [Source.Id]
+      );
+      begin
+        using const Reader: Db.SqliteDataReader := Directories.ExecuteReader();
+        while Reader.Read() do
+          Cancellation.ThrowIfCancellationRequested();
+          const Path: string := Reader.GetString(0);
+          if not S.Within(Path, Source.Path) then
+            continue;
+          end if;
+          const Error: string? := if Reader.IsDBNull(1) then
+            null
+          else
+            Reader.GetString(1)
+          end if;
+          Index.RestoreDirectory(Source.Id, Path, Error);
+          if Error <> null then
+            Issues.Add(new M.ScanIssue(Path, Error));
+          end if;
+        end while;
+      end;
+
+      using const Query: Db.SqliteCommand := Sql.Command(
+        Connection,
+        'SELECT f.path FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source;',
+        null,
+        ['$source'],
+        [Source.Id]
+      );
+      begin
+        using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
+        while Reader.Read() do
+          Cancellation.ThrowIfCancellationRequested();
+          const Path: string := Reader.GetString(0);
+          if not S.Within(Path, Source.Path) then
+            continue;
+          end if;
+
+          if not Source.Offline and not Source.Paused and not Extensions.Contains(
+            IO.Path.GetExtension(Path) ?? ''
+          )
+          then
+            continue;
+          end if;
+
+          Files.Add(Path);
+          Index.RestoreFile(Source.Id, Path);
+        end while;
+      end;
+    end if;
+    const View: M.SourceSnapshot := new M.SourceSnapshot(
+      Source.Id,
+      Source.Path,
+      if Source.Offline then
+        M.Availability.Offline
+      else
+        if Source.Paused then
+          M.Availability.Paused
+        else
+          M.Availability.Cached
+        end if
+      end if,
+      I.ImmutableArray.CreateRange<string>(Files),
+      I.ImmutableArray.CreateRange<M.ScanIssue>(Issues),
+      false
+    );
+    Result.Add(View);
+    if Matches then
+      Previous[Source.Id] := View;
+    end if;
+  end for;
+
+  return I.ImmutableArray.CreateRange<M.SourceSnapshot>(Result);
+end function;
+
+end unit;

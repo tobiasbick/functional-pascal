@@ -1,0 +1,221 @@
+// Atomic, source-scoped directory checkpoints with safe membership deletion.
+unit FpasAmp.Library.Persistence.Checkpoints;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Internal.Observations as O,
+  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T;
+
+const Gone: string := 'WITH RECURSIVE gone(path_key) AS (' +
+  'SELECT path_key FROM directories WHERE source_id=$source AND parent_key=$directory' +
+  ' AND path_key NOT IN(SELECT path_key FROM seen_children)' +
+  ' UNION ALL SELECT d.path_key FROM directories d JOIN gone g ON d.parent_key=g.path_key' +
+  ' WHERE d.source_id=$source) ';
+
+function Matches(Path: string; Source: S.MusicSource): bool;
+begin
+  if Source.Offline or Source.Paused or not S.Within(Path, Source.Path) then
+    return false;
+  end if;
+  const Extension: string := IO.Path.GetExtension(Path) ?? '';
+  for Allowed: string in Source.Extensions do
+    if Sys.String.Equals(Extension, Allowed, Sys.StringComparison.OrdinalIgnoreCase) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure Prune(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Source: string; Directory: string);
+begin
+  const Names: array of string := ['$source', '$directory'];
+  const Values: array of object? := [Source, Sql.Key(Directory)];
+  Sql.Execute(
+    Connection,
+    'INSERT OR IGNORE INTO orphan_candidates SELECT f.id FROM files f JOIN source_files s ON s.file_id=f.id' +
+    ' WHERE s.source_id=$source AND f.directory_key=$directory;' +
+    'DELETE FROM source_files WHERE source_id=$source AND file_id IN (' +
+    'SELECT id FROM files WHERE directory_key=$directory AND path_key NOT IN (' +
+    'SELECT path_key FROM seen_files WHERE source_id=$source));', Transaction, Names, Values
+  );
+  Sql.Execute(
+    Connection,
+    Gone +
+    'INSERT OR IGNORE INTO orphan_candidates SELECT f.id FROM files f JOIN source_files s ON s.file_id=f.id' +
+    ' WHERE s.source_id=$source AND f.directory_key IN(SELECT path_key FROM gone);',
+    Transaction,
+    Names,
+    Values
+  );
+  Sql.Execute(
+    Connection,
+    Gone +
+    'DELETE FROM source_files WHERE source_id=$source AND file_id IN (' +
+    'SELECT id FROM files WHERE directory_key IN(SELECT path_key FROM gone));',
+    Transaction,
+    Names,
+    Values
+  );
+  Sql.Execute(
+    Connection,
+    Gone +
+    'DELETE FROM directories WHERE source_id=$source AND path_key IN(SELECT path_key FROM gone);',
+    Transaction,
+    Names,
+    Values
+  );
+end procedure;
+
+// Saves one borrowed directory observation. `Sources` are normalized settings;
+// `Current` and `Cancellation` interrupt obsolete work and roll back before commit.
+// Only Complete observations remove absent entries; failures retain membership and timestamps.
+// Returns false when superseded. SQLite errors propagate without resetting the database.
+public function Save(Connection: Db.SqliteConnection; Observation: O.DirectoryObservation; Sources: array of S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if not Current() then
+    return false;
+  end if;
+
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  Sql.Execute(
+    Connection,
+    'DELETE FROM seen_files; DELETE FROM seen_children; DELETE FROM orphan_candidates;',
+    Transaction,
+    [],
+    []
+  );
+  using const AddChild: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT OR IGNORE INTO seen_children VALUES($key);', Transaction, ['$key'], [null]
+  );
+  for Child: string in Observation.Children do
+    Cancellation.ThrowIfCancellationRequested();
+    if not Current() then
+      return false;
+    end if;
+
+    AddChild.Parameters['$key'].Value := Sql.Key(Child);
+    discard AddChild.ExecuteNonQuery();
+  end for;
+
+  using const AddDirectory: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT INTO directories(source_id,path_key,path,parent_key,checked_utc,error) VALUES($source,$key,$path,$parent,$checked,$error)' +
+    ' ON CONFLICT(source_id,path_key) DO UPDATE SET path=excluded.path,parent_key=excluded.parent_key,' +
+    'checked_utc=COALESCE(excluded.checked_utc,directories.checked_utc),error=excluded.error;',
+    Transaction,
+    ['$source', '$key', '$path', '$parent', '$checked', '$error'],
+    [null, null, null, null, null, null]
+  );
+  using const AddPlaceholder: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT INTO directories(source_id,path_key,path,parent_key) VALUES($source,$key,$path,$parent)' +
+    ' ON CONFLICT(source_id,path_key) DO UPDATE SET path=excluded.path,parent_key=excluded.parent_key;',
+    Transaction, ['$source', '$key', '$path', '$parent'], [null, null, null, null]
+  );
+  for Source: S.MusicSource in Sources do
+    Cancellation.ThrowIfCancellationRequested();
+    if not Current() then
+      return false;
+    end if;
+
+    if Source.Offline or Source.Paused or Source.Extensions.Length = 0 or not S.Within(
+      Observation.Path,
+      Source.Path
+    )
+    then
+      continue;
+    end if;
+
+    AddDirectory.Parameters['$source'].Value := Source.Id;
+    AddDirectory.Parameters['$key'].Value := Sql.Key(Observation.Path);
+    AddDirectory.Parameters['$path'].Value := Observation.Path;
+    AddDirectory.Parameters['$parent'].Value := Sql.Key(
+      IO.Path.GetDirectoryName(Observation.Path) ?? ''
+    );
+    AddDirectory.Parameters['$checked'].Value := if Observation.Complete then
+      cast<object>(Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+    else
+      Sys.DBNull.Value
+    end if;
+    AddDirectory.Parameters[
+      '$error'
+    ].Value := cast<object?>(Observation.Failure) ?? Sys.DBNull.Value;
+    discard AddDirectory.ExecuteNonQuery();
+    for Child: string in Observation.Children do
+      Cancellation.ThrowIfCancellationRequested();
+      if not Current() then
+        return false;
+      end if;
+
+      AddPlaceholder.Parameters['$source'].Value := Source.Id;
+      AddPlaceholder.Parameters['$key'].Value := Sql.Key(Child);
+      AddPlaceholder.Parameters['$path'].Value := Child;
+      AddPlaceholder.Parameters['$parent'].Value := Sql.Key(Observation.Path);
+      discard AddPlaceholder.ExecuteNonQuery();
+    end for;
+  end for;
+
+  using const AddFile: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT INTO files(path_key,path,directory_key) VALUES($key,$path,$directory)' +
+    ' ON CONFLICT(path_key) DO UPDATE SET path=excluded.path,directory_key=excluded.directory_key RETURNING id;',
+    Transaction, ['$key', '$path', '$directory'], [null, null, Sql.Key(Observation.Path)]
+  );
+  using const AddAssociation: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT OR IGNORE INTO source_files(source_id,file_id) VALUES($source,$file);' +
+    'INSERT OR IGNORE INTO seen_files(source_id,path_key) VALUES($source,$key);',
+    Transaction, ['$source', '$file', '$key'], [null, null, null]
+  );
+  for File: string in Observation.Files do
+    Cancellation.ThrowIfCancellationRequested();
+    if not Current() then
+      return false;
+    end if;
+
+    AddFile.Parameters['$key'].Value := Sql.Key(File);
+    AddFile.Parameters['$path'].Value := File;
+    const Id: long := Sys.Convert.ToInt64(AddFile.ExecuteScalar());
+    for Source: S.MusicSource in Sources do
+      if not Matches(File, Source) then
+        continue;
+      end if;
+
+      AddAssociation.Parameters['$source'].Value := Source.Id;
+      AddAssociation.Parameters['$file'].Value := Id;
+      AddAssociation.Parameters['$key'].Value := Sql.Key(File);
+      discard AddAssociation.ExecuteNonQuery();
+    end for;
+  end for;
+
+  if Observation.Complete then
+    for Source: S.MusicSource in Sources do
+      Cancellation.ThrowIfCancellationRequested();
+      if not Current() then
+        return false;
+      end if;
+
+      if not Source.Offline and not Source.Paused and Source.Extensions.Length > 0 and S.Within(
+        Observation.Path,
+        Source.Path
+      )
+      then
+        Prune(Connection, Transaction, Source.Id, Observation.Path);
+      end if;
+    end for;
+  end if;
+
+  Schema.Collect(Connection, Transaction);
+  Cancellation.ThrowIfCancellationRequested();
+  if not Current() then
+    return false;
+  end if;
+
+  Transaction.Commit();
+  return true;
+end function;
+
+end unit;

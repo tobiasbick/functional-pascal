@@ -287,6 +287,26 @@ design-time metadata preparation retain staged documentation before copying. See
 [documentation acceptance](coverage.md#documentation-acceptance) and
 [example conventions](../docs/pascal/tools/documentation-examples.md).
 
+## FPas-Amp library
+
+[FpasAmp.Library.Tests](FpasAmp.Library.Tests/) is a focused FPAS xUnit project
+in the [application solution](../apps/fpas-amp/fpas-amp.slnx). It verifies filesystem
+discovery, overlapping source policies, native watcher changes, unavailable roots,
+bounded invalidation and asynchronous cleanup without opening a GUI or reading audio.
+SQLite cases verify disk restart, shared/stable path IDs, safe directory checkpoints,
+transaction rollback, source policy changes and corrupt/unsupported database handling.
+Unix permissions and symbolic-link cases require a normal Unix user.
+Control cases cover independent pause/resume, shared-source clearing, explicit
+rescan, real progress counters and prevention of cleared-membership resurrection.
+See the [library reference](../apps/fpas-amp/src/FpasAmp.Library/README.md#focused-verification)
+for its standalone test command.
+
+[FpasAmp.Ui.Tests](FpasAmp.Ui.Tests/) checks pause preference persistence,
+failure-safe settings/clear proposals and the native shell's controls, progress,
+confirmations and background acknowledgements. Native checks have the `Gui`
+trait and require a real display or Xvfb. `FPAS_AMP_UI_ARTIFACTS` optionally names
+an ignored directory for General, scanning, confirmation and paused screenshots.
+
 ## See also
 
 - [Compiler architecture](../docs/architecture/README.md)

@@ -1,0 +1,70 @@
+// Parameterized SQLite primitives for the worker-owned inventory database.
+unit FpasAmp.Library.Persistence.Sql;
+
+uses
+  Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO;
+
+// Produces a stable lexical key for an absolute normalized path, including Unicode.
+// `Path` is normalized by Sources.Normalize or filesystem enumeration.
+public function Key(Path: string): string;
+begin
+  return if Sys.OperatingSystem.IsWindows() then
+    Path.ToUpperInvariant()
+  else
+    Path
+  end if;
+end function;
+
+// Creates a bound command. `Connection` is open and worker-owned, `Text` contains
+// named placeholders, and `Transaction` is the current write or null for reads.
+// `Names` and `Values` have equal lengths. The caller disposes the returned command.
+public function Command(Connection: Db.SqliteConnection; Text: string; Transaction: Db.SqliteTransaction?; Names: array of string; Values: array of object?): Db.SqliteCommand;
+begin
+  const Result: Db.SqliteCommand := Connection.CreateCommand();
+  Result.CommandText := Text;
+  Result.Transaction := Transaction;
+  for Index: int := 0 to Names.Length - 1 do
+    discard Result.Parameters.AddWithValue(Names[Index], Values[Index] ?? Sys.DBNull.Value);
+  end for;
+
+  return Result;
+end function;
+
+// Executes bound SQL. Arguments have the same ownership and shape as Command.
+public procedure Execute(Connection: Db.SqliteConnection; Text: string; Transaction: Db.SqliteTransaction?; Names: array of string; Values: array of object?);
+begin
+  using const Query: Db.SqliteCommand := Command(Connection, Text, Transaction, Names, Values);
+  discard Query.ExecuteNonQuery();
+end procedure;
+
+// Opens a local file database (or SQLite's explicit :memory: test database).
+// `Path` must be absolute or :memory:. Call on the background worker only.
+// Returns a nonpooled connection with foreign keys, WAL and full durability enabled.
+public function Open(Path: string): Db.SqliteConnection;
+requires Path.Length > 0;
+begin
+  if Path <> ':memory:' and not IO.Path.IsPathFullyQualified(Path) then
+    raise new Sys.ArgumentException('Expected an absolute database path.');
+  end if;
+
+  if Path <> ':memory:' then
+    discard IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Path) ?? '');
+  end if;
+  const Settings: Db.SqliteConnectionStringBuilder := new Db.SqliteConnectionStringBuilder();
+  Settings.DataSource := Path;
+  Settings.Pooling := false;
+  Settings.ForeignKeys := true;
+  Settings.DefaultTimeout := 5;
+  const Connection: Db.SqliteConnection := new Db.SqliteConnection(Settings.ToString());
+  try
+    Connection.Open();
+    Execute(Connection, 'PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;', null, [], []);
+    return Connection;
+  catch do
+    Connection.Dispose();
+    raise;
+  end try;
+end function;
+
+end unit;

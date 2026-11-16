@@ -1,0 +1,137 @@
+// Synchronizes source identity context without duplicating user settings.
+unit FpasAmp.Library.Persistence.Locations;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.Sources as S, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T;
+
+function Filter(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Source: S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+begin
+  if Source.Offline or Source.Paused then
+    return true;
+  end if;
+  const Extensions: C.HashSet<string> := new C.HashSet<string>(
+    Source.Extensions,
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  using const Candidates: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'INSERT OR IGNORE INTO orphan_candidates(id) VALUES($id);', Transaction, ['$id'], [null]
+  );
+  using const Files: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT f.id,f.path FROM files f JOIN source_files s ON s.file_id=f.id WHERE s.source_id=$source;',
+    Transaction,
+    ['$source'],
+    [Source.Id]
+  );
+  begin
+    using const Reader: Db.SqliteDataReader := Files.ExecuteReader();
+    while Reader.Read() do
+      Cancellation.ThrowIfCancellationRequested();
+      if not Current() then
+        return false;
+      end if;
+
+      if not Extensions.Contains(IO.Path.GetExtension(Reader.GetString(1)) ?? '') then
+        Candidates.Parameters['$id'].Value := Reader.GetInt64(0);
+        discard Candidates.ExecuteNonQuery();
+      end if;
+    end while;
+  end;
+
+  Sql.Execute(
+    Connection,
+    'DELETE FROM source_files WHERE source_id=$source AND file_id IN(SELECT id FROM orphan_candidates);',
+    Transaction,
+    ['$source'],
+    [Source.Id]
+  );
+  if Source.Extensions.Length = 0 then
+    Sql.Execute(
+      Connection,
+      'DELETE FROM directories WHERE source_id=$source;',
+      Transaction,
+      ['$source'],
+      [Source.Id]
+    );
+  end if;
+
+  Schema.Collect(Connection, Transaction);
+  return true;
+end function;
+
+// Atomically reconciles source IDs/roots. `Sources` are isolated normalized settings;
+// `Current` rejects obsolete generations and `Cancellation` interrupts between operations.
+// Returns false after a superseding configuration, rolling back the whole transaction.
+public function Configure(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+begin
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  const Wanted: C.Dictionary<string, string> := new C.Dictionary<string, string>(
+    Sys.StringComparer.Ordinal
+  );
+  for Source: S.MusicSource in Sources do
+    Wanted[Source.Id] := Sql.Key(Source.Path);
+  end for;
+  const Remove: C.List<string> := new C.List<string>();
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT id,path_key FROM sources;',
+    Transaction,
+    [],
+    []
+  );
+  begin
+    using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
+    while Reader.Read() do
+      Cancellation.ThrowIfCancellationRequested();
+      const Id: string := Reader.GetString(0);
+      if not Wanted.ContainsKey(Id) or Wanted[Id] <> Reader.GetString(1) then
+        Remove.Add(Id);
+      end if;
+    end while;
+  end;
+
+  for Id: string in Remove do
+    Cancellation.ThrowIfCancellationRequested();
+    if not Current() then
+      return false;
+    end if;
+
+    Sql.Execute(
+      Connection,
+      'INSERT OR IGNORE INTO orphan_candidates SELECT file_id FROM source_files WHERE source_id=$id;' +
+      'DELETE FROM sources WHERE id=$id;', Transaction, ['$id'], [Id]
+    );
+  end for;
+
+  Schema.Collect(Connection, Transaction);
+  for Source: S.MusicSource in Sources do
+    Cancellation.ThrowIfCancellationRequested();
+    if not Current() then
+      return false;
+    end if;
+
+    Sql.Execute(
+      Connection,
+      'INSERT INTO sources(id,path_key,path) VALUES($id,$key,$path)' +
+      ' ON CONFLICT(id) DO UPDATE SET path=excluded.path;', Transaction,
+      ['$id', '$key', '$path'], [Source.Id, Sql.Key(Source.Path), Source.Path]
+    );
+    if not Filter(Connection, Transaction, Source, Current, Cancellation) then
+      return false;
+    end if;
+  end for;
+
+  Schema.Collect(Connection, Transaction);
+  Cancellation.ThrowIfCancellationRequested();
+  if not Current() then
+    return false;
+  end if;
+
+  Transaction.Commit();
+  return true;
+end function;
+
+end unit;

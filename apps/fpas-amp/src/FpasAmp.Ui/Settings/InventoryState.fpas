@@ -1,0 +1,118 @@
+// Pure source lookup and UI state updates for background library publications.
+unit FpasAmp.Ui.Settings.InventoryState;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as P,
+  System.Collections.Generic as C, System.Collections.Immutable as I;
+
+// Finds a configured source by `Id`, returning null after removal.
+public function Source(Current: M.State; Id: string): S.MusicSource?;
+begin
+  for Item: S.MusicSource in Current.Settings.MusicSources do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+// Finds the latest inventory view for a configured source identity.
+public function View(Current: M.State; Id: string): Inventory.SourceSnapshot?;
+begin
+  const Snapshot: Inventory.Snapshot? := Current.Inventory;
+  if Snapshot <> null then
+    for Item: Inventory.SourceSnapshot in Snapshot.Sources do
+      if Item.Id = Id then
+        return Item;
+      end if;
+    end for;
+  end if;
+
+  return null;
+end function;
+
+// Finds a source's latest counters, if any.
+public function Progress(Current: M.State; Id: string): P.SourceProgress?;
+begin
+  const Snapshot: P.Snapshot? := Current.Progress;
+  if Snapshot <> null then
+    for Item: P.SourceProgress in Snapshot.Sources do
+      if Item.Id = Id then
+        return Item;
+      end if;
+    end for;
+  end if;
+
+  return null;
+end function;
+
+// Accepts monotonically newer inventory snapshots, rejecting delayed pre-clear results.
+public function Receive(Current: M.State; Value: Inventory.Snapshot): M.State;
+begin
+  const Before: Inventory.Snapshot? := Current.Inventory;
+  if Before <> null and Before.Revision > Value.Revision then
+    return Current;
+  end if;
+
+  return Current with
+    Inventory := Value;
+  end with;
+end function;
+
+// Returns preferences with one or all sources paused, preserving every other field.
+public function Pause(Current: M.Preferences; Id: string): M.Preferences;
+begin
+  const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+  for Source: S.MusicSource in Current.MusicSources do
+    Sources.Add(
+      if Id = '' or Id = Source.Id then
+        Source with
+          Paused := true;
+        end with
+      else
+        Source
+      end if
+    );
+  end for;
+
+  return Current with
+    MusicSources := Sources.ToArray();
+  end with;
+end function;
+
+// Resets counters after a clear without disturbing other sources' progress.
+public function Cleared(Current: M.State; Id: string; Value: Inventory.Snapshot): M.State;
+begin
+  var Next: M.State := Receive(Current, Value) with
+    Clearing := null;
+    ConfirmClear := null;
+    LibraryError := null;
+  end with;
+  const Before: P.Snapshot? := Next.Progress;
+  if Before <> null then
+    const Values: C.List<P.SourceProgress> := new C.List<P.SourceProgress>();
+    for Item: P.SourceProgress in Before.Sources do
+      Values.Add(
+        if Id = '' or Id = Item.Id then
+          new P.SourceProgress(Item.Id, P.Phase.Paused)
+        else
+          Item
+        end if
+      );
+    end for;
+
+    Next := Next with
+      Progress := new P.Snapshot(
+        Before.Sequence,
+        Before.Generation,
+        I.ImmutableArray.CreateRange<P.SourceProgress>(Values)
+      );
+    end with;
+  end if;
+
+  return Next;
+end function;
+
+end unit;

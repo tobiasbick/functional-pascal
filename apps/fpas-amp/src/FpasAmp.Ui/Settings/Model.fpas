@@ -2,29 +2,17 @@
 unit FpasAmp.Ui.Settings.Model;
 
 uses
+  FpasAmp.Library.Sources as Locations,
+  FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   System as Sys;
 
-// The user's settings for one music directory, including its subdirectories.
-public type MusicSource = record
-  // Stable identifier within the settings file.
-  public Id: string;
-  // Name displayed for the source.
-  public Name: string;
-  // Fully qualified path to the directory.
-  public Path: string;
-  // Whether the user marked the source offline.
-  public Offline: bool;
-  // Allowed file extensions, including the leading dot.
-  public Extensions: array of string;
-end record;
-
 // The persisted FPas-Amp preferences.
 public type Preferences = record
   // Music sources in the user's configured order.
-  public MusicSources: array of MusicSource;
+  public MusicSources: array of Locations.MusicSource;
   // Appearance choice in JSON, either light, dark or system.
   public Appearance: string := 'system';
   // Lowercase name of the selected CUI accent.
@@ -40,9 +28,19 @@ public type State = record
   // Whether the folder picker is open.
   public PickingFolder: bool := false;
   // Source being added or edited, or null when the editor is closed.
-  public Draft: MusicSource? := null;
+  public Draft: Locations.MusicSource? := null;
   // Whether the last attempted save failed.
   public SaveFailed: bool := false;
+  // Last completed or cached inventory, detached from its background owner.
+  public Inventory: Inv.Snapshot? := null;
+  // Latest lightweight counters, without a full file-list copy.
+  public Progress: Work.Snapshot? := null;
+  // Clear confirmation target; empty means all sources and null means closed.
+  public ConfirmClear: string? := null;
+  // Clear operation currently awaiting acknowledgement.
+  public Clearing: string? := null;
+  // Background storage/monitoring failure, if any.
+  public LibraryError: string? := null;
 end record;
 
 // The proposals accepted by the settings page.
@@ -57,12 +55,32 @@ public type Msg = variant
   SetAccent(Choice: Themes.Accent);
   // Change whether an existing source is offline.
   SetOffline(Id: string; Offline: bool);
+  // Change whether a source's scan/reconciliation is paused.
+  SetPaused(Id: string; Paused: bool);
+  // Begin owned mailbox subscriptions when the shell starts.
+  WatchLibrary;
+  // Receive a completed inventory publication.
+  InventoryReceived(Value: Inv.Snapshot);
+  // Receive lightweight scan counters.
+  ProgressReceived(Value: Work.Snapshot);
+  // Ask for a selected source to be rescanned.
+  Rescan(Id: string);
+  // Open a native confirmation; empty target means the entire index.
+  AskClear(Id: string);
+  // Dismiss the current clear confirmation.
+  CancelClear;
+  // Confirm clearing and automatically persist the affected pause flags.
+  ConfirmClear;
+  // Receive the post-clear snapshot after the transaction commits.
+  Cleared(Id: string; Value: Inv.Snapshot);
+  // Report a background library/storage failure.
+  LibraryFailed(Message: string);
   // Open the folder picker for a new source.
   ChooseFolder;
   // Receive the chosen path or dismissal from the folder picker.
   FolderResult(Result: Picker.Event);
   // Open an existing source in the editor.
-  EditSource(Source: MusicSource);
+  EditSource(Source: Locations.MusicSource);
   // Change the draft's display name.
   SetName(Name: string);
   // Change the draft's allowed extensions.

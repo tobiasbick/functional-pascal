@@ -1,0 +1,295 @@
+// Streaming physical traversal with independently owned source memberships.
+unit FpasAmp.Library.Inventory.Internal.Tree;
+
+uses
+  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
+  FpasAmp.Library.Inventory.Progress as P,
+  FpasAmp.Library.Inventory.Internal.Directories as Directories,
+  FpasAmp.Library.Inventory.Internal.Observations as O,
+  FpasAmp.Library.Inventory.Internal.Catalog as Data,
+  System as Sys, System.IO as IO, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Threading as T;
+
+// Worker-owned physical directory cache and source-specific observed facts.
+public type Tree = record
+  Entries: C.Dictionary<string, C.HashSet<string>>;
+  Attempted: C.HashSet<string>;
+  Catalog: Data.Catalog;
+  Children: C.Dictionary<string, C.HashSet<string>>;
+
+  // Creates an empty traversal cache and source catalog.
+  public static function Create(): Tree;
+  begin
+    return new Tree(
+      new C.Dictionary<string, C.HashSet<string>>(S.PathComparer()),
+      new C.HashSet<string>(S.PathComparer()),
+      Data.Catalog.Create(), new C.Dictionary<string, C.HashSet<string>>(S.PathComparer())
+    );
+  end function;
+
+  // Restores a source-owned directory observation without filesystem access.
+  public procedure RestoreDirectory(Id: string; Path: string; Error: string?);
+  begin
+    if not self.Entries.ContainsKey(Path) then
+      self.Entries[Path] := new C.HashSet<string>(S.PathComparer());
+    end if;
+
+    self.Catalog.RestoreDirectory(Id, Path, Error);
+    const Parent: string := IO.Path.GetDirectoryName(Path) ?? '';
+    if Parent <> '' then
+      if not self.Children.ContainsKey(Parent) then
+        self.Children[Parent] := new C.HashSet<string>(S.PathComparer());
+      end if;
+
+      discard self.Children[Parent].Add(Path);
+    end if;
+  end procedure;
+
+  procedure ReconcileChildren(Value: O.DirectoryObservation; Sources: array of S.MusicSource);
+  begin
+    if not self.Children.ContainsKey(Value.Path) then
+      self.Children[Value.Path] := new C.HashSet<string>(S.PathComparer());
+    end if;
+
+    if not Value.Complete then
+      self.Children[Value.Path].UnionWith(Value.Children);
+      return;
+    end if;
+    const Removed: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+    const Pending: C.Stack<string> := new C.Stack<string>();
+    for Child: string in self.Children[Value.Path] do
+      if not Value.Children.Contains(Child) then
+        Pending.Push(Child);
+      end if;
+    end for;
+
+    while Pending.Count > 0 do
+      const Path: string := Pending.Pop();
+      if not Removed.Add(Path) then
+        continue;
+      end if;
+
+      if self.Children.ContainsKey(Path) then
+        for Child: string in self.Children[Path] do
+          Pending.Push(Child);
+        end for;
+      end if;
+    end while;
+
+    if Removed.Count > 0 then
+      self.Catalog.RemoveDirectories(Removed, Sources);
+      for Path: string in Removed do
+        discard self.Entries.Remove(Path);
+        discard self.Children.Remove(Path);
+      end for;
+    end if;
+
+    self.Children[Value.Path] := new C.HashSet<string>(Value.Children, S.PathComparer());
+  end procedure;
+
+  // Restores one normalized file under its source identity.
+  public procedure RestoreFile(Id: string; Path: string);
+  begin
+    const Directory: string := IO.Path.GetDirectoryName(Path) ?? '';
+    self.RestoreDirectory(Id, Directory, null);
+    discard self.Entries[Directory].Add(Path);
+    self.Catalog.RestoreFile(Id, Path);
+  end procedure;
+
+  // Starts tracking which configured roots were actually attempted in this pass.
+  public procedure BeginPass();
+  begin
+    self.Attempted.Clear();
+  end procedure;
+
+  // Reports whether a normalized directory was attempted during this pass.
+  public function WasObserved(Path: string): bool;
+  begin
+    return self.Attempted.Contains(Path);
+  end function;
+
+  // Reports whether a directory has cached traversal state.
+  public function ContainsDirectory(Path: string): bool;
+  begin
+    return self.Entries.ContainsKey(Path);
+  end function;
+
+  // Reconciles a subtree for normalized active `Sources`. `Current` rejects obsolete
+  // configurations; `Recursive` includes known descendants. `Checkpoint` atomically
+  // saves each observation before publication. Cancellation interrupts between entries.
+  public procedure Scan(Scope: string; Sources: array of S.MusicSource; Current: function(): bool; Recursive: bool; Cancellation: T.CancellationToken; Checkpoint: Sys.Func<O.DirectoryObservation, bool>? := null);
+    function Selected(Path: string): bool;
+    begin
+      for Source: S.MusicSource in Sources do
+        if Source.Offline or Source.Paused or not S.Within(Path, Source.Path) then
+          continue;
+        end if;
+
+        for Extension: string in Source.Extensions do
+          if Sys.String.Equals(
+            Extension,
+            IO.Path.GetExtension(Path),
+            Sys.StringComparison.OrdinalIgnoreCase
+          )
+          then
+            return true;
+          end if;
+        end for;
+      end for;
+
+      return false;
+    end function;
+    function Check(): bool;
+    begin
+      Cancellation.ThrowIfCancellationRequested();
+      return Current();
+    end function;
+  begin
+    const Pending: C.Stack<string> := new C.Stack<string>();
+    Pending.Push(Scope);
+    const Options: IO.EnumerationOptions := new IO.EnumerationOptions();
+    Options.RecurseSubdirectories := false;
+    Options.IgnoreInaccessible := false;
+    Options.AttributesToSkip := cast<IO.FileAttributes>(0);
+    while Pending.Count > 0 do
+      if not Check() then
+        return;
+      end if;
+      const Directory: string := Pending.Pop();
+      const Found: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      const Children: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      var Complete: bool := false;
+      var Failure: string? := null;
+      try
+        if S.PathComparer().Equals(Directory, Scope) then
+          Directories.Check(Directory);
+        end if;
+        const Info: IO.DirectoryInfo := new IO.DirectoryInfo(Directory);
+        if (Info.Attributes and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0) then
+          continue;
+        end if;
+
+        for Entry: IO.FileSystemInfo in Info.EnumerateFileSystemInfos('*', Options) do
+          if not Check() then
+            return;
+          end if;
+
+          if (Entry.Attributes and IO.FileAttributes.ReparsePoint) <>
+            cast<IO.FileAttributes>(0)
+          then
+            continue;
+          end if;
+
+          if (Entry.Attributes and IO.FileAttributes.Directory) <> cast<IO.FileAttributes>(0) then
+            discard Children.Add(Entry.FullName);
+            if Recursive or not self.Entries.ContainsKey(Entry.FullName) then
+              Pending.Push(Entry.FullName);
+            end if;
+          else
+            if Selected(Entry.FullName) then
+              discard Found.Add(Entry.FullName);
+            end if;
+          end if;
+        end for;
+
+        Complete := true;
+      catch Error: IO.IOException do
+        Failure := Error.Message;
+      catch Error: Sys.UnauthorizedAccessException do
+        Failure := Error.Message;
+      end try;
+
+      if not Check() then
+        return;
+      end if;
+      const Value: O.DirectoryObservation := new O.DirectoryObservation(
+        Directory,
+        Found,
+        Children,
+        Complete,
+        Failure
+      );
+      case Checkpoint of
+        when is Sys.Func<O.DirectoryObservation, bool> as Save:
+          if not Save.Invoke(Value) then
+            return;
+          end if;
+        else
+      end case;
+
+      discard self.Attempted.Add(Directory);
+      self.Catalog.Apply(Value, Sources);
+      // Mirror a committed parent's deletions immediately, even if a pause/clear
+      // invalidates the generation before the rest of this subtree can be read.
+      self.ReconcileChildren(Value, Sources);
+      if not Complete then
+        if self.Entries.ContainsKey(Directory) then
+          Found.UnionWith(self.Entries[Directory]);
+        end if;
+      end if;
+
+      self.Entries[Directory] := Found;
+    end while;
+  end procedure;
+
+  // Creates source-owned views, preserving paused/offline memberships independently.
+  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray<M.SourceSnapshot>;
+  begin
+    return self.Catalog.Describe(Sources, Watched);
+  end function;
+
+  // Returns the latest source result without constructing a full inventory snapshot.
+  public function Summary(Source: S.MusicSource): P.Result;
+  begin
+    return self.Catalog.Summary(Source);
+  end function;
+
+  // Forgets one source or all sources when `Id` is empty, releasing unreferenced cached paths.
+  public procedure Clear(Id: string);
+  begin
+    self.Catalog.Clear(Id);
+    if Id = '' then
+      self.Entries.Clear();
+      self.Children.Clear();
+      return;
+    end if;
+    const Known: C.HashSet<string> := self.Catalog.KnownFiles();
+    for Files: C.HashSet<string> in self.Entries.Values do
+      Files.IntersectWith(Known);
+    end for;
+  end procedure;
+
+  // Releases removed source state after a configuration change.
+  public procedure Prune(Sources: array of S.MusicSource);
+  begin
+    self.Catalog.Prune(Sources);
+    const Remove: C.List<string> := new C.List<string>();
+    for Directory: string in self.Entries.Keys do
+      var Keep: bool := false;
+      for Source: S.MusicSource in Sources do
+        if S.Within(Directory, Source.Path) then
+          Keep := true;
+          break;
+        end if;
+      end for;
+
+      if not Keep then
+        Remove.Add(Directory);
+      end if;
+    end for;
+
+    for Directory: string in Remove do
+      discard self.Entries.Remove(Directory);
+      discard self.Children.Remove(Directory);
+      const Parent: string := IO.Path.GetDirectoryName(Directory) ?? '';
+      if self.Children.ContainsKey(Parent) then
+        discard self.Children[Parent].Remove(Directory);
+        if self.Children[Parent].Count = 0 and not self.Entries.ContainsKey(Parent) then
+          discard self.Children.Remove(Parent);
+        end if;
+      end if;
+    end for;
+  end procedure;
+end record;
+
+end unit;

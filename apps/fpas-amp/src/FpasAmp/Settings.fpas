@@ -2,6 +2,7 @@
 unit FpasAmp.Settings;
 
 uses
+  FpasAmp.Library.Sources as Locations,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model,
@@ -20,7 +21,7 @@ const ExtensionPattern: R.Regex := new R.Regex('\A\.[A-Za-z0-9]+\z');
 
 const FileName: string := 'settings.json';
 
-function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet<string>; ref Valid: bool): Model.MusicSource?;
+function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet<string>; ref Valid: bool): Locations.MusicSource?;
 begin
   const Folder: string := Fields.StringValue(Fields.Field(Item, 'path')) ?? '';
   if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast<char>(0)) then
@@ -40,6 +41,16 @@ begin
     Name := Folder;
   end if;
   const Offline: bool? := Fields.BooleanValue(Fields.Field(Item, 'offline'));
+  const PauseField: J.JsonElement := Fields.Field(Item, 'paused');
+  const Paused: bool? := if PauseField.ValueKind = J.JsonValueKind.Undefined then
+    false
+  else
+    Fields.BooleanValue(PauseField)
+  end if;
+  if Paused = null then
+    Valid := false;
+  end if;
+
   if Offline = null then
     Valid := false;
   end if;
@@ -60,7 +71,14 @@ begin
     Valid := false;
   end if;
 
-  return new Model.MusicSource(Id, Name, Folder, Offline ?? false, Extensions.ToArray());
+  return new Locations.MusicSource(
+    Id,
+    Name,
+    Folder,
+    Offline ?? false,
+    Extensions.ToArray(),
+    Paused ?? false
+  );
 end function;
 
 function DecodeChoice<T>(Root: J.JsonElement; Name: string; Fallback: string; ref Valid: bool): string;
@@ -92,11 +110,11 @@ function Decode(Root: J.JsonElement): Files.Decoded<Model.Preferences>;
 begin
   const Items: J.JsonElement := Fields.Field(Root, SourcesKey);
   var Valid: bool := Items.ValueKind = J.JsonValueKind.Array;
-  const Sources: C.List<Model.MusicSource> := new C.List<Model.MusicSource>();
+  const Sources: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>();
   if Valid then
     const UsedIds: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
     for Item: J.JsonElement in Items.EnumerateArray() do
-      const Source: Model.MusicSource? := DecodeSource(Item, UsedIds, ref Valid);
+      const Source: Locations.MusicSource? := DecodeSource(Item, UsedIds, ref Valid);
       if Source <> null then
         Sources.Add(Source);
       end if;

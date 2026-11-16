@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../FpasAmp.Library/FpasAmp.Library.fpasproj" />
     <ProjectReference Include="../FpasAmp.Ui/FpasAmp.Ui.fpasproj" />
   </ItemGroup>
 </Project>

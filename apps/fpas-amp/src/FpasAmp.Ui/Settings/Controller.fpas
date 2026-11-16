@@ -1,0 +1,138 @@
+// MVU boundary: settings stay synchronous; library work is owned and asynchronous.
+unit FpasAmp.Ui.Settings.Controller;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Update as Settings,
+  FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Failure(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.LibraryFailed(Error.Message);
+end function;
+
+function Watch(Library: Monitoring.Session): array of Mvu.Command<M.Msg>;
+begin
+  return [
+    Mvu.StartBackground<M.Msg>(
+      'library-inventory',
+      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+          const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
+            Cancellation
+          ).ConfigureAwait(false);
+          await Post(M.Msg.InventoryReceived(Value)).ConfigureAwait(false);
+        end while;
+      end function,
+      Failure
+    ),
+    Mvu.StartBackground<M.Msg>(
+      'library-progress',
+      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+          const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
+            Cancellation
+          ).ConfigureAwait(false);
+          await Post(M.Msg.ProgressReceived(Value)).ConfigureAwait(false);
+        end while;
+      end function,
+      Failure
+    )
+  ];
+end function;
+
+// Applies a typed UI proposal. `Save` persists accepted preferences; `Library` owns
+// scanning/storage. Returned commands run outside the UI update through the MVU runtime.
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+begin
+  var Next: M.State := Current;
+  var Commands: array of Mvu.Command<M.Msg> := [];
+  case Message of
+    when M.Msg.WatchLibrary:
+      Commands := Watch(Library);
+    when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
+      Next := State.Receive(Current, Value);
+    when M.Msg.ProgressReceived(const Value: Progress.Snapshot):
+      const Before: Progress.Snapshot? := Current.Progress;
+      if Before = null or Value.Sequence >= Before.Sequence then
+        Next := Current with
+          Progress := Value;
+        end with;
+      end if;
+    when M.Msg.LibraryFailed(const Text: string):
+      Next := Current with
+        LibraryError := Text;
+        Clearing := null;
+      end with;
+    when M.Msg.AskClear(const Id: string):
+      if Current.Clearing = null and (Id = '' or State.Source(Current, Id) <> null) then
+        Next := Current with
+          ConfirmClear := Id;
+        end with;
+      end if;
+    when M.Msg.CancelClear:
+      Next := Current with
+        ConfirmClear := null;
+      end with;
+    when M.Msg.ConfirmClear:
+      const Target: string? := Current.ConfirmClear;
+      if Target <> null and Current.Clearing = null then
+        const Preferences: M.Preferences := State.Pause(Current.Settings, Target);
+        var Saved: bool := false;
+        try
+          Save(Preferences);
+          Saved := true;
+        catch Error: IO.IOException do
+        catch Error: Sys.UnauthorizedAccessException do
+        end try;
+
+        if Saved then
+          Library.Configure(Preferences.MusicSources);
+          Next := Current with
+            Settings := Preferences;
+            SaveFailed := false;
+            ConfirmClear := null;
+            Clearing := Target;
+            LibraryError := null;
+          end with;
+          Commands := [
+            Mvu.StartBackground<M.Msg>(
+              'library-clear',
+              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                const Value: Inventory.Snapshot := await Library.ClearAsync(
+                  Target,
+                  Cancellation
+                ).ConfigureAwait(false);
+                await Post(M.Msg.Cleared(Target, Value)).ConfigureAwait(false);
+              end function,
+              Failure
+            )
+          ];
+        else
+          Next := Current with
+            SaveFailed := true;
+          end with;
+        end if;
+      end if;
+    when M.Msg.Cleared(const Id: string, const Value: Inventory.Snapshot):
+      Next := State.Cleared(Current, Id, Value);
+    when M.Msg.Rescan(const Id: string):
+      const Source: Sources.MusicSource? := State.Source(Current, Id);
+      if Source <> null and not Source.Offline and not Source.Paused and Current.Clearing =
+        null
+      then
+        Library.Refresh(Id);
+      end if;
+    else
+      Next := Settings.Apply(Current, Message, Save);
+      if not Sources.SameDiscovery(Current.Settings.MusicSources, Next.Settings.MusicSources) then
+        Library.Configure(Next.Settings.MusicSources);
+      end if;
+  end case;
+
+  return new Mvu.Transition<M.State, M.Msg>(Next, Commands);
+end function;
+
+end unit;

@@ -4,6 +4,7 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../FpasAmp.Library/FpasAmp.Library.fpasproj" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
   </ItemGroup>
 </Project>

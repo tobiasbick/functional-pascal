@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Settings.Update;
 
 uses
+  FpasAmp.Library.Sources as Locations,
   FpasAmp.Ui.Settings.Model as M,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
@@ -29,9 +30,9 @@ begin
   end try;
 end function;
 
-function Replace(Sources: array of M.MusicSource; Revised: M.MusicSource): array of M.MusicSource;
+function Replace(Sources: array of Locations.MusicSource; Revised: Locations.MusicSource): array of Locations.MusicSource;
 begin
-  const Updated: C.List<M.MusicSource> := new C.List<M.MusicSource>(Sources);
+  const Updated: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>(Sources);
   for Index: int := 0 to Updated.Count - 1 do
     if Updated[Index].Id = Revised.Id then
       Updated[Index] := Revised;
@@ -54,7 +55,7 @@ end function;
 // The state after handling the proposal.
 public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences)): M.State;
 begin
-  const Draft: M.MusicSource? := Current.Draft;
+  const Draft: Locations.MusicSource? := Current.Draft;
   const Settings: M.Preferences := Current.Settings;
   case Message of
     when M.Msg.OpenSettings:
@@ -78,14 +79,30 @@ begin
         end with, Save
       );
     when M.Msg.SetOffline(const Id: string, const Offline: bool):
-      for Source: M.MusicSource in Settings.MusicSources do
+      for Source: Locations.MusicSource in Settings.MusicSources do
         if Source.Id = Id then
-          const Revised: M.MusicSource := Source with
+          const Revised: Locations.MusicSource := Source with
             Offline := Offline;
           end with;
           return Persist(
             Current, Settings with
               MusicSources := Replace(Settings.MusicSources, Revised);
+            end with, Save
+          );
+        end if;
+      end for;
+
+      return Current;
+    when M.Msg.SetPaused(const Id: string, const Paused: bool):
+      for Source: Locations.MusicSource in Settings.MusicSources do
+        if Source.Id = Id then
+          return Persist(
+            Current, Settings with
+              MusicSources := Replace(
+                Settings.MusicSources, Source with
+                  Paused := Paused;
+                end with
+              );
             end with, Save
           );
         end if;
@@ -107,7 +124,7 @@ begin
       const Name: string := IO.Path.GetFileName(IO.Path.TrimEndingDirectorySeparator(Folder)) ?? '';
       return Current with
         PickingFolder := false;
-        Draft := new M.MusicSource(
+        Draft := new Locations.MusicSource(
           Sys.Guid.NewGuid().ToString('N'), if Name = '' then
             Folder
           else
@@ -116,7 +133,7 @@ begin
           false, ['.flac', '.mp3', '.m4a']
         );
       end with;
-    when M.Msg.EditSource(const Source: M.MusicSource):
+    when M.Msg.EditSource(const Source: Locations.MusicSource):
       return Current with
         Draft := Source;
         SaveFailed := false;
@@ -145,7 +162,7 @@ begin
       if Draft = null or Sys.String.IsNullOrWhiteSpace(Draft.Name) then
         return Current;
       end if;
-      const Revised: M.MusicSource := Draft with
+      const Revised: Locations.MusicSource := Draft with
         Name := Draft.Name.Trim();
       end with;
       const Saved: M.State := Persist(
@@ -169,6 +186,8 @@ begin
       return Current with
         SaveFailed := false;
       end with;
+    else
+      return Current;
   end case;
 end function;
 

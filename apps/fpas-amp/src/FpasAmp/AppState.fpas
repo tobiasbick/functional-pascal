@@ -25,7 +25,7 @@ public type Snapshot = record
   public Maximized: bool := false;
   // Last settings tab: 0 for General or 1 for Library.
   public SettingsTab: int := 0;
-  // Static destination or playlist store/UUID key; never a display name or index.
+  // Current page, album release ID or playlist key, independent of playback.
   public ActivePage: string := 'music';
   // Playback queue and the position to restore in pause.
   public Player: Transport.Saved := new Transport.Saved();
@@ -116,7 +116,7 @@ end function;
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
 // ## Returns
-// The saved state with positive dimensions and a valid static/playlist route.
+// The saved state with positive dimensions and a valid navigation route.
 public function Load(Directory: string): Snapshot;
 requires Directory.Length > 0;
 ensures (Value: Snapshot): Value.Width > 0 and Value.Height > 0;

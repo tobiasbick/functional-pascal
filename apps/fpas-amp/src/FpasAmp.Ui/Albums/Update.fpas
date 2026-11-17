@@ -110,7 +110,7 @@ public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?
 begin
   case Message of
     when M.Msg.OpenMusic(const Id: string):
-      for Album: Albums.Album in Current.Shown do
+      for Album: Albums.Album in Current.Items do
         if Album.Id = Id then
           const Visit: long := Current.MusicVisit + 1L;
           return MusicTransition(

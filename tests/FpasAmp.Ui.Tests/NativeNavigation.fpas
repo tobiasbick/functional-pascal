@@ -4,6 +4,9 @@ unit FpasAmp.Ui.Tests.NativeNavigation;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
+  FpasAmp.Library.Tests.AlbumSupport as Fixtures, FpasAmp.Library.Tests.MetadataSupport as Metadata,
+  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Persistence.PlayerState as Bookmark, Fpas.Media.Audio as Audio,
   FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Shell as Shell, FpasAmp.AppState as Storage,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, System as Sys, System.IO as IO,
@@ -35,6 +38,12 @@ begin
   discard Session.Window.Post(App.Msg.Navigation(Nav.Msg.Select(Route)));
   Pump(Session);
 end procedure;
+
+function ShowsTracks(Session: Shell.Session; Id: string): bool;
+begin
+  const Page: Music.State? := Session.State().Albums.Music;
+  return Page <> null and Page.Album.Id = Id and Page.Shown.Length = 1;
+end function;
 
 function Has(Session: Shell.Session; Id: string): bool;
 begin
@@ -83,6 +92,118 @@ end function;
 
 // Window-level checks run only with a native display (Xvfb on headless Linux).
 public type NativeNavigationTests = record
+  // Closing on one release restores its tracks even when the player holds another release.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure AlbumTracksAfterRestart();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    discard Fixtures.Track(IO.Path.Combine(Root.Path, 'a'), 'First.mp3', 'Live', 'First artist');
+    discard Fixtures.Track(IO.Path.Combine(Root.Path, 'b'), 'Second.mp3', 'Live', 'Second artist');
+    const Source: Sources.MusicSource := Metadata.Source(Root.Path);
+    const Preferences: SettingsModel.Preferences := new SettingsModel.Preferences([Source]);
+    const Save: procedure(SettingsModel.Preferences) := procedure(_Value: SettingsModel.Preferences) begin end procedure;
+    const Library: Monitor.Session := Start(Source, Data.Path);
+    var Browsed: string := '';
+    var Playing: string := '';
+    try
+      begin
+        using const Session: Shell.Session := Shell.Session.Start(
+          Placement(1000),
+          Preferences,
+          Save,
+          Library,
+          new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums)),
+          Output := new Audio.Session(true)
+        );
+        Until(
+          Session,
+          function(_State: Nav.State): bool => Session.State().Albums.Items.Length = 2
+        );
+        Playing := Session.State().Albums.Items[0].Id;
+        Browsed := Session.State().Albums.Items[1].Id;
+        discard Session.Window.Post(App.Msg.Albums(Albums.Msg.OpenMusic(Playing)));
+        Until(Session, function(_State: Nav.State): bool => ShowsTracks(Session, Playing));
+        discard Session.Window.Post(App.Msg.Albums(Albums.Msg.Music(Music.Msg.Play(0))));
+        discard Session.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));
+        discard Session.Window.Post(App.Msg.Albums(Albums.Msg.OpenMusic(Browsed)));
+        Until(Session, function(_State: Nav.State): bool => ShowsTracks(Session, Browsed));
+        discard Session.Window.Post(App.Msg.Closing(Session.State().Player));
+        while Session.Window.Step() do
+        end while;
+
+        Storage.Save(
+          Data.Path,
+          Storage.FromWindow(
+            Session.Window.Placement(),
+            Session.State().Navigation,
+            Bookmark.Capture(Session.State().Player)
+          )
+        );
+      end;
+      const Saved: Storage.Snapshot := Storage.Load(Data.Path);
+      X.Assert.Equal<string>(Playing, Saved.Player.Source.AlbumId);
+      const Restored: Nav.State := new Nav.State(
+        Active := Nav.Parse(Saved.ActivePage) ?? Nav.Route.Page(Nav.Page.Music)
+      );
+      using const Reopened: Shell.Session := Shell.Session.Start(
+        Storage.ToWindow(Saved),
+        Preferences,
+        Save,
+        Library,
+        Restored,
+        Output := new Audio.Session(true),
+        Restored := Bookmark.Restore(
+          Saved.Player,
+          Metadata.Tags(Library).QueueAsync(
+            Playing,
+            T.CancellationToken.None
+          ).GetAwaiter().GetResult()
+        )
+      );
+      Until(Reopened, function(_State: Nav.State): bool => Reopened.State().Albums.Loaded);
+      X.Assert.NotNull(Reopened.State().Albums.Music);
+      Until(Reopened, function(_State: Nav.State): bool => ShowsTracks(Reopened, Browsed));
+      X.Assert.True(Has(Reopened, 'album-tracks'));
+      X.Assert.Equal<string>(Playing, Reopened.State().Player.Source.AlbumId);
+      X.Assert.False(Reopened.State().Player.Playing);
+      discard Reopened.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));
+      Pump(Reopened);
+      X.Assert.Null(Reopened.State().Albums.Music);
+      X.Assert.Equal<string>(
+        'albums',
+        Storage.FromWindow(Reopened.Window.Placement(), Reopened.State().Navigation).ActivePage
+      );
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // A saved release absent from the catalogue returns to the album grid.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure MissingAlbumAfterRestart();
+  begin
+    using const Data: H.Folder := H.Folder.Create();
+    const Library: Monitor.Session := Metadata.Start([], Data.Path);
+    try
+      const Saved: Nav.State := new Nav.State(Active := Nav.Route.Album(new string(#65, 64)));
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement(1000), new SettingsModel.Preferences([]),
+        procedure(_Value: SettingsModel.Preferences) begin end procedure, Library, Saved
+      );
+      Until(Session, function(_State: Nav.State): bool => Session.State().Albums.Loaded);
+      X.Assert.True(Has(Session, 'albums-empty'));
+      X.Assert.Equal<string>(
+        'albums',
+        Storage.FromWindow(Session.Window.Placement(), Session.State().Navigation).ActivePage
+      );
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
   // All Library pages and discovered playlists render; a compact sheet closes on selection.
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]

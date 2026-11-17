@@ -113,8 +113,10 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   window there, maximized if it was. A window closed while minimized keeps
   the state it would have come back in.
 - `state.json` also stores `settingsTab`, with `0` for General and `1` for Library,
-  and `activePage`: `music`, `albums`, `artists`, `genres`, `ratings`, `settings`
-  or `playlist:<file|local>:<UUID>`. Defaults are Music and General. Malformed
+  and `activePage`: `music`, `albums`, `album:<release ID>`, `artists`, `genres`,
+  `ratings`, `settings` or `playlist:<file|local>:<UUID>`. Closing inside an album
+  reopens its track list, independently of the playing track. If the catalogue
+  no longer contains that release, the album grid opens. Defaults are Music and General. Malformed
   routes/tabs are repaired to these defaults. The drawer's open state is transient.
   The selected destination is saved when the window closes, including a fallback
   after the selected playlist has disappeared.

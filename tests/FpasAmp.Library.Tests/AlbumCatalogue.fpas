@@ -1,0 +1,51 @@
+// Cold album loads and cancellation on a catalogue with one cover per directory.
+unit FpasAmp.Library.Tests.AlbumCatalogue;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Diagnostics as Diagnostics, System.Threading as T, Xunit as X;
+
+// Exercises the initial album snapshot, before SQLite can return its first sorted row.
+public type CatalogueTests = record
+  // Closing during the initial sort cancels promptly; re-opening still returns every release.
+  [X.FactAttribute]
+  public procedure LargeAlbumSnapshotCanBeCancelledAndReopened();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Database: string := IO.Path.Combine(Folder.Path, 'library.db');
+    const Ratings: string := IO.Path.Combine(Folder.Path, 'userdata.db');
+    using const UserData: Db.SqliteConnection := Users.Open(Ratings);
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    Schema.Ensure(Connection);
+    const Count: int := 6500;
+    Sql.Execute(
+      Connection,
+      'CREATE TEMP TABLE sequence(n INTEGER PRIMARY KEY);' +
+      'WITH RECURSIVE seq(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM seq WHERE n<$count) INSERT INTO sequence SELECT n FROM seq;' +
+      'INSERT INTO files(id,path_key,path,directory_key,kind,size,modified_utc) SELECT n,''song''||n,''song''||n,''dir''||n,0,1,1 FROM sequence;' +
+      'INSERT INTO metadata(file_id,track_id,sha256,size,modified_utc,read_utc,tags_json) SELECT n,''id''||n,''hash''||n,1,1,1,''{}'' FROM sequence;' +
+      'INSERT INTO album_tracks SELECT n,''album''||n,''title''||n,''artist'',''sort''||n,''artist'',''dir''||n,''dir''||n,''dir''||n,''dir''||n FROM sequence;' +
+      'INSERT INTO files(id,path_key,path,directory_key,kind,size,modified_utc) SELECT n+$count,''art''||n,''art''||n,''dir''||n,2,1,1 FROM sequence;',
+      null, ['$count'], [Count]
+    );
+
+    using const Close: T.CancellationTokenSource := new T.CancellationTokenSource();
+    const Elapsed: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+    Close.CancelAfter(20);
+    try
+      discard Albums.Read(Database, Ratings, Close.Token);
+      X.Assert.Fail('The cancelled album snapshot completed.');
+    catch Cancelled: Sys.OperationCanceledException do
+      X.Assert.Equal<T.CancellationToken>(Close.Token, Cancelled.CancellationToken);
+    end try;
+
+    X.Assert.True(Elapsed.ElapsedMilliseconds < 2500L, 'Closing waited for the full album query.');
+
+    using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    X.Assert.Equal<int>(Count, Albums.Read(Database, Ratings, Startup.Token).Length);
+  end procedure;
+end record;
+
+end unit;

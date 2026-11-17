@@ -11,20 +11,24 @@ namespace Fpas.Media.Audio.Output;
 internal sealed class DeviceStream : IDisposable
 {
     private readonly object binding = new();
+    private readonly object lifecycle = new();
     private readonly AudioPlaybackDevice device;
     private readonly CancellationToken shutdown;
+    private readonly CancellationTokenRegistration closeRegistration;
     private TrackOutput? voice;
-    private bool started;
 
     internal DeviceStream(MiniAudioEngine engine, TrackSource source, CancellationToken shutdown)
     {
         this.shutdown = shutdown;
         device = engine.InitializePlaybackDevice(null, source.Format, new MiniAudioDeviceConfig());
         device.OnAudioProcessed += Render;
+        closeRegistration = shutdown.Register(Stop);
     }
 
     internal bool Accepts(TrackSource source) => device.Format.SampleRate == source.Format.SampleRate
         && device.Format.Channels == source.Format.Channels && device.Format.Format == source.Format.Format;
+
+    internal bool IsRunning => device.IsRunning;
 
     internal void Bind(TrackOutput? next)
     {
@@ -33,9 +37,18 @@ internal sealed class DeviceStream : IDisposable
 
     internal void Start()
     {
-        if (started || shutdown.IsCancellationRequested) return;
-        device.Start();
-        started = true;
+        lock (lifecycle)
+        {
+            if (!shutdown.IsCancellationRequested && !IsRunning) device.Start();
+        }
+    }
+
+    private void Stop()
+    {
+        lock (lifecycle)
+        {
+            if (IsRunning) device.Stop();
+        }
     }
 
     private void Render(Span<float> samples, Capability capability)
@@ -50,7 +63,8 @@ internal sealed class DeviceStream : IDisposable
 
     public void Dispose()
     {
-        try { if (started) device.Stop(); }
+        closeRegistration.Dispose();
+        try { Stop(); }
         finally
         {
             device.OnAudioProcessed -= Render;

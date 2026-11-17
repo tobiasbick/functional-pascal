@@ -5,22 +5,22 @@ uses
   FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text,
-  System.Threading as T;
+  System.Threading as T, SQLitePCL as Native;
 
-// Reads a sorted album snapshot from catalogue `Database` and durable `Users`.
-// `Cancellation` bounds row iteration; large collections contain headers only.
-public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
 begin
-  Cancellation.ThrowIfCancellationRequested();
-  using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT a.album_id,MIN(a.title),MIN(a.artist),COUNT(*),' +
+    'WITH directory_art(dir,facts) AS MATERIALIZED (' +
+    'SELECT directory_key,GROUP_CONCAT(path_key||'':''||size||'':''||modified_utc,''|'' ORDER BY path_key)' +
+    ' FROM files WHERE kind=2 GROUP BY directory_key)' +
+    ' SELECT a.album_id,MIN(a.title),MIN(a.artist),COUNT(*),' +
     'GROUP_CONCAT(m.sha256||'':''||m.read_utc||'':''||f.path_key,''|'')||' +
-    'COALESCE((SELECT GROUP_CONCAT(art.path_key||'':''||art.size||'':''||art.modified_utc,''|'') FROM files art WHERE art.kind=2' +
-    ' AND EXISTS(SELECT 1 FROM album_tracks t WHERE t.album_id=a.album_id AND (t.directory_key=art.directory_key OR t.root_key=art.directory_key))),''''),' +
+    'COALESCE((SELECT GROUP_CONCAT(d.facts,''|'' ORDER BY d.dir) FROM (' +
+    'SELECT directory_key AS dir FROM album_tracks WHERE album_id=a.album_id' +
+    ' UNION SELECT root_key FROM album_tracks WHERE album_id=a.album_id' +
+    ') ad JOIN directory_art d ON d.dir=ad.dir),''''),' +
     '(SELECT r.rating FROM users.album_ratings r WHERE r.album_id=a.album_id),' +
     '(SELECT GROUP_CONCAT(v,char(31)) FROM (SELECT DISTINCT TRIM(g.value) AS v FROM album_tracks t' +
     ' JOIN metadata gm ON gm.file_id=t.file_id, json_each(gm.tags_json,''$.Genres'') g' +
@@ -60,6 +60,36 @@ begin
   end while;
 
   return I.ImmutableArray.CreateRange<M.Album>(Albums);
+end function;
+
+// Reads the sorted album headers from `Database` with ratings from `Users`.
+// `Cancellation` also interrupts SQLite while it prepares the first sorted row.
+// ## Returns
+// One detached header per release, including its artwork revision.
+public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+requires Database.Length > 0;
+requires Users.Length > 0;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  if Cancellation.CanBeCanceled then
+    Native.raw.sqlite3_progress_handler(
+      Connection.Handle, 4096,
+      function(_State: object?): int => if Cancellation.IsCancellationRequested then
+        1
+      else
+        0
+      end if, null
+    );
+  end if;
+
+  try
+    return Headers(Connection, Cancellation);
+  catch Interrupted: Db.SqliteException when Interrupted.SqliteErrorCode =
+    Native.raw.SQLITE_INTERRUPT and Cancellation.IsCancellationRequested do
+    raise new Sys.OperationCanceledException(Cancellation);
+  end try;
 end function;
 
 end unit;

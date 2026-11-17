@@ -23,6 +23,8 @@ end enum;
 public type Route = variant
   // A fixed destination.
   Page(Value: Page);
+  // The track list of the release identified by its catalogue ID.
+  Album(Id: string);
   // A playlist identified independently of its display name.
   Playlist(Identity: Lists.Key);
 end variant;
@@ -63,8 +65,21 @@ begin
   case Destination of
     when Route.Page(const Value: Page):
       return Value.ToString().ToLowerInvariant();
+    when Route.Album(const Id: string):
+      return 'album:' + Id;
     when Route.Playlist(const Identity: Lists.Key):
       return 'playlist:' + Identity.Storage.ToString().ToLowerInvariant() + ':' + Identity.Id;
+  end case;
+end function;
+
+// Returns the sidebar item's key for `Destination`, including its nested pages.
+public function SectionKey(Destination: Route): string;
+begin
+  case Destination of
+    when Route.Album(_):
+      return 'albums';
+    else
+      return Key(Destination);
   end case;
 end function;
 
@@ -84,6 +99,15 @@ begin
     end if;
   end for;
   const Parts: array of string := Value.Split(#58);
+  if Parts.Length = 2 and Parts[0] = 'album' and Parts[1].Length = 64 then
+    for Digit: char in Parts[1] do
+      if not Sys.Uri.IsHexDigit(Digit) then
+        return null;
+      end if;
+    end for;
+
+    return Route.Album(Parts[1].ToUpperInvariant());
+  end if;
   var Id: Sys.Guid := Sys.Guid.Empty;
   if Parts.Length = 3 and Parts[
     0

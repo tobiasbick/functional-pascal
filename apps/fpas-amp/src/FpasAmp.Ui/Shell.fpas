@@ -56,7 +56,7 @@ begin
       Current.Settings, Current.Navigation.SettingsTab, Theme, Padding, M.Msg.Settings,
       function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
     )
-  elsif Nav.Key(Current.Navigation.Active) = 'albums' then
+  elsif Nav.SectionKey(Current.Navigation.Active) = 'albums' then
     Composition.Map<AlbumModel.Msg, M.Msg>(
       AlbumView.Build(Current.Albums, Content, Padding), M.Msg.Albums
     )

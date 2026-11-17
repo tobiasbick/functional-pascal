@@ -197,7 +197,7 @@ public type AlbumMusicTests = record
       const Track: Metadata.Entry := Page.Tracks[0];
       X.Assert.Equal<string>(Page.Album.Artist, (Track.Metadata ?? new Metadata.Tags()).Artists[0]);
       X.Assert.Contains<string>('Music', Session.Snapshot().Text);
-      X.Assert.Equal<string>('albums', Nav.Key(Last.Navigation.Active));
+      X.Assert.Equal<string>('albums', Nav.SectionKey(Last.Navigation.Active));
       const TrackSearch: Cui.CuiRectangle := Control(Session, 'track-search').Bounds;
       const TrackFilter: Cui.CuiRectangle := Control(Session, 'track-filters').Bounds;
       const TrackSort: Cui.CuiRectangle := Control(Session, 'track-sort').Bounds;

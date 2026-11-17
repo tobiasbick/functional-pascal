@@ -73,7 +73,7 @@ end function;
 
 function Items(Current: App.State): E.Element<App.Msg>;
 begin
-  const Active: string := M.Key(Current.Navigation.Active);
+  const Active: string := M.SectionKey(Current.Navigation.Active);
   const Playlists: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>();
   const Names: C.Dictionary<string, int> := new C.Dictionary<string, int>(
     Sys.StringComparer.OrdinalIgnoreCase
@@ -196,6 +196,9 @@ begin
     when M.Route.Page(const Page: M.Page):
       Heading := Title(Page);
       Glyph := Icon(Page);
+    when M.Route.Album(_):
+      Heading := Title(M.Page.Albums);
+      Glyph := Icon(M.Page.Albums);
     when M.Route.Playlist(const Identity: Lists.Key):
       const Found: Lists.Summary? := M.Find(Current.Navigation.Playlists, Identity);
       Heading := if Found <> null then

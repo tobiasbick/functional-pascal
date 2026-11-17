@@ -110,6 +110,7 @@ public type NavigationTests = record
   // Unknown pages, invalid playlist UUIDs and malformed tabs repair to safe defaults.
   [X.TheoryAttribute]
   [X.InlineDataAttribute('unknown')]
+  [X.InlineDataAttribute('album:invalid')]
   [X.InlineDataAttribute('playlist:file:missing')]
   [X.InlineDataAttribute('playlist:invalid:11111111111111111111111111111111')]
   public procedure InvalidSavedRoute(Page: string);

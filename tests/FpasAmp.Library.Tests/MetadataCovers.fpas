@@ -31,7 +31,8 @@ public type MetadataCoverTests = record
 
     Pictures.Add(A.PictureInfo.fromBinaryData(Bytes));
     X.Assert.True(Track.Save());
-    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Source: S.MusicSource := F.Source(Root.Path);
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
     const Entries: I.ImmutableArray<M.Entry> := await F.Until(
       Tags, function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
@@ -54,6 +55,20 @@ public type MetadataCoverTests = record
     end if;
 
     X.Assert.NotEqual<string>(Contents, IO.File.ReadAllText(CachedPath));
+    // Keep the indexed file ID available for the offline cache lookup.
+    Session.Configure(
+      [
+        Source with
+          Offline := true;
+        end with
+      ]
+    );
+    discard await H.Until(
+      Session,
+      function(Value: Inventory.Snapshot): bool => Value.Sources[
+        0
+      ].Status = Inventory.Availability.Offline
+    );
     IO.File.Delete(Path);
     X.Assert.NotNull(await Tags.CoverAsync(Entries[0].FileId, T.CancellationToken.None));
   end function;

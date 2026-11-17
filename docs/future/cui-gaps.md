@@ -25,7 +25,7 @@ list is open:
   still has to be posted through the ChatGPT Codex Connector, as described in
   [CUI contributions](../cui-contributions.md#confirming-upstream-fixes).
 - PR [#99](https://github.com/yappologistic/CUI/pull/99): follow-ups to #93 and
-  #95 (week-calendar click, GLFW and SDL2 restore), open.
+  #95 (week-calendar click and focus loss, GLFW and SDL2 restore), open.
 
 Findings on hold, checked against `a5c9ef5`:
 
@@ -52,8 +52,13 @@ Findings on hold, checked against `a5c9ef5`:
 - [ ] [CUI-033](cui-upstream-bugs.md#cui-033) has an FPAS workaround but no
   upstream report yet.
 - Not to report: shared-library test linkage (`CUI_BUILD_SHARED=ON` with tests)
-  affects nine test programs and has no CI job; already explained in
+  affects five test programs that call private `cui__` functions through
+  `cui::cui` (`cui_tests`, `cui_test_devtools`, `cui_test_dither`,
+  `cui_component_shots`, `cui_rtl_layout`; inferred, not built) and has no CI
+  job; already explained in
   [#97](https://github.com/yappologistic/CUI/pull/97#issuecomment-6955446066).
+  `cui_test_inflate` and the bidi programs compile their sources directly
+  ([correction](https://github.com/yappologistic/CUI/pull/97#issuecomment-6956800280)).
 
 ## Strict gallery pixel parity
 

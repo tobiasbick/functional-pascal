@@ -70,7 +70,7 @@ font, and resource APIs are outside this inventory. Layout primitives,
 axis formatting, and chart annotations are listed separately because the
 gallery also needs them.
 
-See [CUI gallery gaps](future/cui-gaps.md) for remaining gallery work and
+See [CUI gaps](future/cui-gaps.md) for remaining gallery work and
 [Desktop GUI application gaps](future/gui-app-gaps.md) for host and publishing work.
 
 ## Shared foundations

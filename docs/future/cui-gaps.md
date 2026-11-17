@@ -1,8 +1,59 @@
-# CUI gallery gaps
+# CUI gaps
 
 The [CUI widget inventory](../cui-widget-inventory.md) records accepted widgets
 and current terminal coverage. Desktop host and publishing work is tracked in
-[Desktop GUI application gaps](gui-app-gaps.md).
+[Desktop GUI application gaps](gui-app-gaps.md). Confirmed defects with FPAS
+workarounds are tracked in [CUI upstream bugs](cui-upstream-bugs.md).
+
+## Upstream reporting pause
+
+We have sent upstream CUI many reports recently. Until all of them are closed,
+do not open new issues or pull requests. Finishing the open contributions is
+still allowed: answering reviews, fixing CI and confirming applied changes. New
+findings go into the list below. Resume reporting once nothing in the following
+list is open:
+
+- PR [#93](https://github.com/yappologistic/CUI/pull/93) and issue
+  [#75](https://github.com/yappologistic/CUI/issues/75): applied as `5830981`,
+  confirmed; waiting for the maintainer to close them.
+- PR [#95](https://github.com/yappologistic/CUI/pull/95) and issue
+  [#94](https://github.com/yappologistic/CUI/issues/94): applied, confirmed;
+  waiting for the maintainer to close them.
+- PR [#97](https://github.com/yappologistic/CUI/pull/97) and issue
+  [#96](https://github.com/yappologistic/CUI/issues/96): the remaining test
+  commit `35e9f0e` is under review. The confirmation of the applied commits
+  still has to be posted through the ChatGPT Codex Connector, as described in
+  [CUI contributions](../cui-contributions.md#confirming-upstream-fixes).
+- PR [#99](https://github.com/yappologistic/CUI/pull/99): follow-ups to #93 and
+  #95 (week-calendar click, GLFW and SDL2 restore), open.
+
+Findings on hold, checked against `a5c9ef5`:
+
+- [ ] Wheel regions ignore paint transforms. `cui__paint_wheel_hit`
+  (`src/cui_layout.c:1076`) registers the rectangle in layout coordinates, but
+  intersects it with a transformed clip. This affects `cui_wheel_region` and
+  nine built-in callers (dials, emoji, flame, graph, photo, terminal, viz). A
+  chart in a dragged `.draggable` dialog would take the wheel at its old place.
+  Inferred from code; reproduce it with a canvas in a moved dialog before
+  reporting. The fix belongs in `cui__paint_wheel_hit`.
+- [ ] Custom axis labels lose small values. `cui__ins_label`
+  (`src/cui_instrument.c:38`, from `731a4c6`) passes 0 to the label function
+  for any value below `1e-9`, so a callback that scales seconds to nanoseconds
+  shows 0. Only negative zero needs normalizing. Report it as a comment on
+  [#28](https://github.com/yappologistic/CUI/issues/28), which added the label
+  functions.
+- [ ] An editable week-calendar drag that ends between frames keeps the event
+  at the last frame's position; the motion up to the release is lost and the
+  click is suppressed. Older than #99, raised in its
+  [review](https://github.com/yappologistic/CUI/pull/99#discussion_r4603195287).
+- [ ] SDL2 placement sizes under `CUI_SCALE` with the software renderer differ
+  from `cui_app_size`. Deferred in the
+  [#95 review](https://github.com/yappologistic/CUI/pull/95#discussion_r4580381315).
+- [ ] [CUI-033](cui-upstream-bugs.md#cui-033) has an FPAS workaround but no
+  upstream report yet.
+- Not to report: shared-library test linkage (`CUI_BUILD_SHARED=ON` with tests)
+  affects nine test programs and has no CI job; already explained in
+  [#97](https://github.com/yappologistic/CUI/pull/97#issuecomment-6955446066).
 
 ## Strict gallery pixel parity
 

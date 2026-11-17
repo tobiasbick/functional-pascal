@@ -318,7 +318,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Event metadata/accessors, storage, delegates, nullable captures | EventTests, EventMetadataTests | MsBuildTests.Events/EventDiagnostics |
 | Type tokens, generic identity, initialization effects | TypeOfTests | TypeOfExecutionTests, MsBuildTests.TypeOf |
 | Attribute constants, targets, usage, flags | AttributeTests | MsBuildTests.Attributes/AttributeDiagnostics |
-| CLR operators, overloads, checked and lifted calls, and unsupported signatures | ComparisonOperatorTests | ComparisonExecutionTests, MsBuildTests.Comparisons/ImportedOperators/SignatureLimits, LanguageSpecificationTests (TimeAndDuration) |
+| CLR operators, overloads, checked and lifted calls, array-to-span arguments, unmanaged generic constraints, and unsupported signatures | ComparisonOperatorTests, SpanArgumentTests | ComparisonExecutionTests, MsBuildTests.Comparisons/ImportedOperators/SignatureLimits, LanguageSpecificationTests (TimeAndDuration) |
 
 Files live in [compiler tests](Fpas.Compiler.Tests/) and
 [integration tests](Fpas.IntegrationTests/). MsBuildTests uses topic-based partial
@@ -408,6 +408,12 @@ check methods, method groups,
 delegates, fields, properties, and indexers against a real C# reference with
 unsupported ref returns, pointers, byref-like types, or required modifiers.
 Supported overloads remain usable; excluded ones produce identifying diagnostics.
+The same builds pass arrays and array literals to span method and constructor
+parameters and call `unmanaged` generics, rejecting reference and
+reference-containing type arguments with the constraint diagnostic. Span
+argument tests also execute BCL span-only APIs, inference, ReadOnlySpan
+preference and a later awaited argument, and reject span results, locals and
+method groups.
 
 Nullable-effect regressions check ref/out writes, repeated conditions, catch
 filters, case guards, deferred arguments, and captured writes. Unsafe stale facts

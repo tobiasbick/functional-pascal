@@ -66,11 +66,11 @@ internal sealed partial class Binder
                 }
                 if (created.Kind == TypeKind.Variant || created.IsNullable || created.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Abstract) == true)
                     throw source.Error("FP3005", "Cannot instantiate a nullable, abstract, or static type.", creation.Position);
-                var constructors = references.Methods(created, ".ctor", false);
+                var constructors = references.Methods(created, ".ctor", false, allowSpans: true);
                 if (created.IsValue && creation.Arguments.Count == 0 && !constructors.Any(method => method.Parameters.Count == 0)) return new BoundNew(created, null, []);
-                if (constructors.Count == 0) references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position);
+                if (constructors.Count == 0) references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position, allowSpanParameters: true);
                 return BindInvocation(constructors, creation.Arguments, null, check, creation.Position, created,
-                    noApplicable: () => references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position, creation.Arguments.Count));
+                    noApplicable: () => references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position, creation.Arguments.Count, allowSpanParameters: true));
             case UncheckedSyntax wrapping:
                 return BindExpression(wrapping.Operand, check: false, expected: expected);
             case CastSyntax cast:

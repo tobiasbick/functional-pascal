@@ -38,9 +38,12 @@ internal sealed class SignatureTypes(ReferenceCatalog catalog, ReferenceAssembly
     public TypeSymbol GetByReferenceType(TypeSymbol elementType) => elementType == TypeSymbol.Unsupported ? TypeSymbol.Unsupported : TypeSymbol.ByRef(elementType);
     public TypeSymbol GetFunctionPointerType(MethodSignature<TypeSymbol> signature) => TypeSymbol.Unsupported;
     public TypeSymbol GetGenericMethodParameter(object? context, int index) => new(TypeKind.MethodParameter, ParameterIndex: index);
+    // C# encodes `where T: unmanaged` as a ValueType constraint with this required modifier;
+    // the generic parameter's IsUnmanagedAttribute carries the actual rule.
     public TypeSymbol GetModifiedType(TypeSymbol modifier, TypeSymbol type, bool required)
         => modifier.Definition?.FullName is "System.Runtime.InteropServices.InAttribute" or "System.Runtime.CompilerServices.IsReadOnlyAttribute" && type.Kind == TypeKind.ByRef
-            ? type with { Definition = modifier.Definition, ParameterIndex = required ? 1 : 0 } : !required ? type : TypeSymbol.Unsupported;
+            ? type with { Definition = modifier.Definition, ParameterIndex = required ? 1 : 0 }
+            : !required || modifier.Definition?.FullName == "System.Runtime.InteropServices.UnmanagedType" && type.Definition?.FullName == "System.ValueType" ? type : TypeSymbol.Unsupported;
     public TypeSymbol GetPinnedType(TypeSymbol type) => TypeSymbol.Unsupported;
     public TypeSymbol GetPointerType(TypeSymbol elementType) => TypeSymbol.Unsupported;
     public TypeSymbol GetSZArrayType(TypeSymbol elementType) => elementType == TypeSymbol.Unsupported ? TypeSymbol.Unsupported : TypeSymbol.Array(elementType);

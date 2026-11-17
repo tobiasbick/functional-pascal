@@ -105,7 +105,8 @@ graph regression is additionally checked against the unchanged compiler.
 Within these contracts, the comparison leaves no confirmed baseline compiler or
 MSBuild omission open. This is bounded acceptance, not a claim that all possible
 .NET metadata combinations or external tools are supported. Source events, class hierarchies,
-unsafe/byref-like features, custom awaiters, async iterators, extension discovery,
+unsafe/byref-like features (except arrays passed to imported span parameters),
+custom awaiters, async iterators, extension discovery,
 and IDE integration retain their documented separate scope. Application publication,
 Native AOT and signing follow the [publishing contract](build/publishing.md).
 

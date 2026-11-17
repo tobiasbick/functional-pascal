@@ -63,8 +63,11 @@ of imported interfaces. For example, `where T: N.INumber<T>;` permits arithmetic
 Static method groups such as `T.CreateChecked<int>` become ordinary CLR delegates.
 Inherited contracts and default implementations retain CLR dispatch. Unrelated
 applicable operators or same-name static properties are ambiguous, not selected
-by constraint order. Unmanaged/byref-like constraints remain unsupported. There
-are no built-in Numeric/Printable constraints or runtime reflection fallback.
+by constraint order. Source declarations cannot state unmanaged or byref-like
+constraints. Calls to imported methods with C#'s `unmanaged` constraint accept
+primitives, enums, value domains and imported structs whose fields are all
+unmanaged; other arguments report the violated CLR constraints. There are no
+built-in Numeric/Printable constraints or runtime reflection fallback.
 
 ```pascal
 program GenericArithmetic;

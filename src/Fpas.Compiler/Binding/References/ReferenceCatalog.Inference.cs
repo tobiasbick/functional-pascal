@@ -26,6 +26,6 @@ internal sealed partial class ReferenceCatalog
     }
 
     internal static bool UsableTemplate(TypeSymbol type)
-        => type.Kind is not (TypeKind.Unsupported or TypeKind.TypeParameter) && (type.Element is null || UsableTemplate(type.Element)) && type.TypeArguments.All(UsableTemplate);
+        => type.Kind is not (TypeKind.Unsupported or TypeKind.TypeParameter) && !type.IsSpan && (type.Element is null || UsableTemplate(type.Element)) && type.TypeArguments.All(UsableTemplate);
 
 }

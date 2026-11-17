@@ -22,7 +22,8 @@ internal sealed partial class ReferenceCatalog
         throw source.Error(code, $"{(best.Length == 0 ? "No supported public overload" : "Ambiguous overloads")} for '{owner}.{name}'.", position);
     }
 
-    internal IReadOnlyList<ImportedMethod> Methods(TypeSymbol owner, string name, bool isStatic, TypeList? methodArguments = null, RecordSymbol? access = null, bool includeOpen = false, bool operatorsOnly = false)
+    internal IReadOnlyList<ImportedMethod> Methods(TypeSymbol owner, string name, bool isStatic, TypeList? methodArguments = null, RecordSymbol? access = null, bool includeOpen = false, bool operatorsOnly = false,
+        bool allowSpans = false)
     {
         var result = new List<ImportedMethod>();
         var signatures = new HashSet<string>(StringComparer.Ordinal);
@@ -73,7 +74,7 @@ internal sealed partial class ReferenceCatalog
                     method.Attributes.HasFlag(MethodAttributes.Static) != isStatic ||
                     operatorsOnly && !method.Attributes.HasFlag(MethodAttributes.SpecialName) ||
                     (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public || !includeOpen && method.GetGenericParameters().Count != (methodArguments?.Count ?? 0)) continue;
-                var imported = ConstrainStatic(ReadMethod(type, handle, methodArguments, allowOpen: includeOpen), owner);
+                var imported = ConstrainStatic(ReadMethod(type, handle, methodArguments, allowOpen: includeOpen, allowSpans: allowSpans), owner);
                 if (imported is null) continue;
                 var key = method.GetGenericParameters().Count + ":" + string.Join(';', imported.DelegateParameters.Select(parameter => parameter.Erased));
                 if (owner.Interface is not null || imported.ConstrainedType is not null || signatures.Add(key)) result.Add(imported);
@@ -82,7 +83,10 @@ internal sealed partial class ReferenceCatalog
         return MostSpecificStatic(result);
     }
 
-    private ImportedMethod? ReadMethod(TypeSymbol owner, MethodDefinitionHandle handle, TypeList? methodArguments = null, bool includePrivate = false, bool allowOpen = false)
+    // allowSpans admits Span<T>/ReadOnlySpan<T> by-value parameters for direct invocation;
+    // returns, ref/out parameters, nested spans and delegate signatures stay unsupported.
+    private ImportedMethod? ReadMethod(TypeSymbol owner, MethodDefinitionHandle handle, TypeList? methodArguments = null, bool includePrivate = false, bool allowOpen = false,
+        bool allowSpans = false)
     {
         var definition = Definition(owner);
         var method = definition.Assembly.Reader.GetMethodDefinition(handle);
@@ -91,13 +95,16 @@ internal sealed partial class ReferenceCatalog
         var result = Substitute(NullabilityMetadata.Parameter(raw.ReturnType, definition, method, 0), owner, methodArguments, keep);
         var parameters = raw.ParameterTypes.Select((type, index) => Substitute(NullabilityMetadata.Parameter(type.Kind == TypeKind.ByRef ? type.Element! : type, definition, method, index + 1), owner, methodArguments, keep)).ToArray();
         bool Supported(TypeSymbol type) => allowOpen ? UsableTemplate(type) : Usable(type);
+        bool SupportedParameter(TypeSymbol type, TypeSymbol signature) => allowSpans && type.IsSpan && signature.Kind != TypeKind.ByRef
+            ? !type.TypeArguments[0].ContainsSpan && Supported(type.TypeArguments[0]) : Supported(type);
         if (raw.Header.CallingConvention != SignatureCallingConvention.Default || raw.ReturnType.Kind == TypeKind.ByRef || !Supported(result) ||
-            parameters.Any(type => !Supported(type) || type == TypeSymbol.Void)) return null;
+            parameters.Select((type, index) => !SupportedParameter(type, raw.ParameterTypes[index]) || type == TypeSymbol.Void).Any(rejected => rejected)) return null;
         if (keep && method.GetGenericParameters().Count != 0)
             methodArguments = new(Enumerable.Range(0, method.GetGenericParameters().Count).Select(index => new TypeSymbol(TypeKind.MethodParameter, ParameterIndex: index)));
         return new(owner, definition.Assembly.Reader.GetString(method.Name), result, parameters,
             method.Attributes.HasFlag(MethodAttributes.Static), method.Attributes.HasFlag(MethodAttributes.Virtual), raw.ReturnType, raw.ParameterTypes,
-            MethodArguments: methodArguments, DefinitionHandle: handle, ParameterInfo: ReadParameters(definition, method, parameters, raw.ParameterTypes));
+            MethodArguments: methodArguments, DefinitionHandle: handle, ParameterInfo: ReadParameters(definition, method, parameters, raw.ParameterTypes),
+            SpanParameters: parameters.Any(type => type.IsSpan));
     }
 
     internal bool Better(ImportedMethod left, ImportedMethod right, IReadOnlyList<TypeSymbol> arguments, IReadOnlyList<bool>? delegateSources = null, bool tieBreak = true)

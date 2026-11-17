@@ -64,10 +64,10 @@ internal sealed partial class Binder
                 catalog.Analysis?.Expression(source, member, value);
                 return InvokeDelegate(value, call.Arguments, call.Position, check);
             }
-            var methods = references.Methods(owner, member.Name.Text, receiver is null, typeArguments, recordContext, includeOpen: typeArguments is null);
-            if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position);
+            var methods = references.Methods(owner, member.Name.Text, receiver is null, typeArguments, recordContext, includeOpen: typeArguments is null, allowSpans: true);
+            if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position, allowSpanParameters: true);
             return BindInvocation(methods, call.Arguments, receiver, check, call.Position, inferGenerics: typeArguments is null,
-                noApplicable: () => references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position, call.Arguments.Count));
+                noApplicable: () => references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position, call.Arguments.Count, allowSpanParameters: true));
         }
         if (typeArguments is not null) throw source.Error("FP3003", "Explicit type arguments require a named source or CLR method.", call.Position);
         return InvokeDelegate(Receiver(target, check), call.Arguments, call.Position, check);

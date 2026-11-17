@@ -41,5 +41,5 @@ internal sealed partial class ReferenceCatalog
 
     internal ImportedMethod CloseMethod(ImportedMethod method, TypeList arguments)
         => method.SourceMethod is { } source ? InstantiateSource(source, method.Owner, arguments)
-            : ReadMethod(method.Owner, method.DefinitionHandle, arguments)! with { ConstrainedType = method.ConstrainedType };
+            : ReadMethod(method.Owner, method.DefinitionHandle, arguments, allowSpans: method.SpanParameters)! with { ConstrainedType = method.ConstrainedType };
 }

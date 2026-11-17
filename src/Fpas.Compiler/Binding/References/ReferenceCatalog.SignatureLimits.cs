@@ -8,7 +8,8 @@ namespace Fpas.Compiler.Binding.References;
 
 internal sealed partial class ReferenceCatalog
 {
-    internal void DiagnoseUnsupportedMethod(TypeSymbol owner, string name, bool isStatic, SourceText source, int position, int? argumentCount = null)
+    internal void DiagnoseUnsupportedMethod(TypeSymbol owner, string name, bool isStatic, SourceText source, int position, int? argumentCount = null,
+        bool allowSpanParameters = false)
     {
         foreach (var type in Hierarchy(owner).Where(type => type.Definition is not null))
         {
@@ -26,6 +27,10 @@ internal sealed partial class ReferenceCatalog
                 if (argumentCount is not null && signature.ParameterTypes.Length != argumentCount) continue;
                 if (signature.ReturnType.Kind == TypeKind.ByRef) limits.Reasons.Add("ref returns");
                 if (signature.Header.CallingConvention != SignatureCallingConvention.Default) limits.Reasons.Add("non-managed-default calling conventions");
+                limits.Spans(signature.ReturnType, allowed: false);
+                foreach (var parameter in signature.ParameterTypes)
+                    if (parameter.Kind == TypeKind.ByRef) limits.Spans(parameter.Element!, allowed: false);
+                    else limits.Spans(parameter, allowSpanParameters);
                 limits.Diagnose(source, position, $"{type}.{name}");
             }
         }
@@ -51,7 +56,7 @@ internal sealed partial class ReferenceCatalog
                 if (reader.GetString(field.Name) != name || field.Attributes.HasFlag(FieldAttributes.Static) != isStatic ||
                     (field.Attributes & FieldAttributes.FieldAccessMask) != FieldAttributes.Public) continue;
                 var limits = new SignatureLimits(this, definition.Assembly);
-                field.DecodeSignature(limits, null);
+                limits.Spans(field.DecodeSignature(limits, null), allowed: false);
                 limits.Diagnose(source, position, $"{type}.{name}");
             }
         }
@@ -67,6 +72,14 @@ internal sealed partial class ReferenceCatalog
                 throw source.Error("FP3005", $"CLR member '{member}' requires unsupported features: {string.Join(", ", Reasons.Order(StringComparer.Ordinal))}.", position);
         }
         private TypeSymbol Reject(string reason) { Reasons.Add(reason); return TypeSymbol.Unsupported; }
+        // Spans decode as ordinary types; only a top-level by-value call parameter may use one.
+        internal void Spans(TypeSymbol type, bool allowed)
+        {
+            if (allowed && type.IsSpan) type = type.TypeArguments[0];
+            if (Find(type) is { } span) Reasons.Add($"byref-like type '{span.Definition!.FullName}'");
+            static TypeSymbol? Find(TypeSymbol type) => type.IsSpan ? type : type.Element is { } element ? Find(element)
+                : type.Arguments?.Select(Find).FirstOrDefault(found => found is not null);
+        }
         public TypeSymbol GetPrimitiveType(PrimitiveTypeCode code)
             => types.GetPrimitiveType(code) is { Kind: not TypeKind.Unsupported } type ? type : Reject($"CLR primitive '{code}'");
         public TypeSymbol GetGenericInstantiation(TypeSymbol type, ImmutableArray<TypeSymbol> arguments) => types.GetGenericInstantiation(type, arguments);

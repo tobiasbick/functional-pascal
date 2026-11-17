@@ -22,15 +22,19 @@ internal sealed partial class ReferenceCatalog
         var definition = candidates[0];
         if (Symbol(definition) == TypeSymbol.Unsupported)
             throw source.Error("FP3005", $"Type '{name}' is byref-like or otherwise unsupported.", position);
+        if (SpanDefinition(definition))
+            throw source.Error("FP3005", $"Type '{name}' is byref-like. Pass an array where an imported call expects Span<T> or ReadOnlySpan<T>.", position);
         return definition;
     }
 
     internal TypeSymbol Symbol(ImportedType type)
     {
-        if (MetadataAttributes.Has(type.Assembly.Reader, type.Definition.GetCustomAttributes(), "System.Runtime.CompilerServices.IsByRefLikeAttribute")) return TypeSymbol.Unsupported;
+        if (!SpanDefinition(type) && MetadataAttributes.Has(type.Assembly.Reader, type.Definition.GetCustomAttributes(), "System.Runtime.CompilerServices.IsByRefLikeAttribute")) return TypeSymbol.Unsupported;
         var primitive = TypeFacts.Primitive(type.FullName);
         return primitive != TypeSymbol.Unsupported ? primitive : new(TypeKind.Named, type);
     }
+
+    private static bool SpanDefinition(ImportedType type) => type.FullName is "System.Span`1" or "System.ReadOnlySpan`1";
 
     internal ImportedType Definition(TypeSymbol type)
     {

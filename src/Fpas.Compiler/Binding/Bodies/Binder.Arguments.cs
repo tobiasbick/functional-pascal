@@ -52,7 +52,7 @@ internal sealed partial class Binder
         var arguments = syntax.Select(argument => argument is NamedArgumentSyntax named ? named.Value : argument).ToArray();
         var only = shapes.Length == 1 ? shapes[0] : null;
         var inference = only?.Method.MethodArguments is { Count: > 0 } variables ? new TypeInference(references, variables) : null;
-        var values = BindInferenceValues(arguments, check, out var argumentFacts, only?.Types, inference);
+        var values = BindInferenceValues(arguments, check, out var argumentFacts, only?.Types.Select(SpanSource).ToArray(), inference);
         var matches = new List<CallShape>();
         var inferenceFailed = false;
         var constraintsFailed = false;
@@ -80,11 +80,12 @@ internal sealed partial class Binder
         if (best.Length == 0 && !constraintsFailed && !inferenceFailed) noApplicable?.Invoke();
         if (best.Length != 1)
             throw source.Error(best.Length == 0 && constraintsFailed ? "FP3018" : best.Length == 0 && inferenceFailed && matches.Count == 0 ? "FP3026" : "FP3003",
-                (best.Length == 0 ? "No applicable overload for the supplied names, argument modes, types, and optional parameters." : "Ambiguous overloads for the supplied arguments.") +
+                (best.Length == 0 && constraintsFailed && matches.Count == 0 ? "The type arguments violate the CLR constraints (such as unmanaged, struct, class or new()) of every candidate."
+                    : best.Length == 0 ? "No applicable overload for the supplied names, argument modes, types, and optional parameters." : "Ambiguous overloads for the supplied arguments.") +
                 " Candidates: " + string.Join("; ", templates.Select(method => method.Name + (method.MethodArguments is null ? "" : "<" + string.Join(',', method.MethodArguments) + ">") +
                     "(" + string.Join(", ", method.Parameters.Select((type, index) => method.Parameter(index).Mode + " " + TypeFacts.Display(type))) + ")").Distinct().Take(20)), position);
         var selected = best[0];
-        return (selected, BindDeferredArguments(arguments, values, selected.Types, check, argumentFacts));
+        return (selected, BindDeferredArguments(arguments, values, selected.Types.Select(SpanSource).ToArray(), check, argumentFacts));
     }
 
     private BoundExpression BindInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
@@ -115,16 +116,18 @@ internal sealed partial class Binder
                     InvalidateReference(address.Target);
                 }
             }
-            else value = Convert(value, selected.Types[index], arguments[index].Position);
+            else value = Convert(value, SpanSource(selected.Types[index]), arguments[index].Position);
             saved[index] = Save(value, bindings);
         }
+        // Spans wrap the saved arrays only now, so no span is stored or kept across an await.
+        BoundExpression Supply(int index) => selected.Types[index].IsSpan ? SpanArgument(saved[index], selected.Types[index]) : saved[index];
         var supplied = new BoundExpression[selected.Method.Parameters.Count];
         for (var slot = 0; slot < supplied.Length; slot++)
         {
             var indices = selected.Slots.Select((target, index) => (target, index)).Where(item => item.target == slot).Select(item => item.index).ToArray();
             supplied[slot] = selected.Expanded && slot == supplied.Length - 1
                 ? new BoundArrayLiteral(selected.Method.Parameters[slot], indices.Select(index => saved[index]).ToArray())
-                : indices.Length == 1 ? saved[indices[0]] : Convert(selected.Method.Parameter(slot).Default!, selected.Method.Parameters[slot], position);
+                : indices.Length == 1 ? Supply(indices[0]) : Convert(selected.Method.Parameter(slot).Default!, selected.Method.Parameters[slot], position);
         }
         ForgetCapturedFacts();
         BoundExpression call = constructed is null ? new BoundCall(selected.Method, supplied, receiver, written)
@@ -137,11 +140,46 @@ internal sealed partial class Binder
         var mode = shape.Expanded && shape.Slots[index] == shape.Method.Parameters.Count - 1 ? "" : shape.Method.Parameter(shape.Slots[index]).Mode;
         if (mode is "ref" or "out" or "in")
             return value is BoundAddress address && address.Mode == mode && address.Target.Type == shape.Types[index];
-        return value is not BoundAddress && (value is null ? AcceptsDeferred(syntax, shape.Types[index]) : Accepts(value, shape.Types[index]));
+        var target = shape.Types[index];
+        if (target.IsSpan)
+            return value is not BoundAddress && (value is null ? AcceptsDeferred(syntax, SpanSource(target)) : AcceptsSpan(value, target));
+        return value is not BoundAddress && (value is null ? AcceptsDeferred(syntax, target) : Accepts(value, target));
+    }
+
+    // An array argument stands in for Span<T> or ReadOnlySpan<T>. Span<T> requires the exact
+    // element type, because array covariance would fail when the span is created.
+    private static TypeSymbol SpanSource(TypeSymbol type) => type.IsSpan ? TypeSymbol.Array(type.TypeArguments[0]) with { IsNullable = true } : type;
+
+    private bool AcceptsSpan(BoundExpression value, TypeSymbol target)
+    {
+        if (value is BoundArrayLiteral) return Accepts(value, SpanSource(target));
+        var element = target.TypeArguments[0];
+        return value.Type is { Kind: TypeKind.Array, Rank: 1 } array && (array.Element!.Erased == element.Erased ||
+            target.Definition!.FullName == "System.ReadOnlySpan`1" && references.CanAssign(array.Element, element));
+    }
+
+    private BoundExpression SpanArgument(BoundExpression array, TypeSymbol span)
+    {
+        var constructor = references.Methods(span, ".ctor", false)
+            .Single(method => method.Parameters is [{ Kind: TypeKind.Array, Rank: 1 }]);
+        return new BoundNew(span, constructor, [array]);
     }
 
     private bool BetterCall(CallShape left, CallShape right, IReadOnlyList<BoundExpression?> values)
     {
+        // A candidate that needs fewer array-to-span conversions always wins, so span
+        // overloads never displace an applicable array or collection overload.
+        var leftSpans = left.Types.Count(type => type.IsSpan);
+        var rightSpans = right.Types.Count(type => type.IsSpan);
+        if (leftSpans != rightSpans) return leftSpans < rightSpans;
+        // Between otherwise equal span overloads, ReadOnlySpan<T> wins, as in C#.
+        if (leftSpans > 0 && left.Types.Select(ReadOnly).SequenceEqual(right.Types.Select(ReadOnly)))
+        {
+            var leftReadOnly = left.Types.Count(type => type.IsSpan && type.Definition!.FullName == "System.ReadOnlySpan`1");
+            var rightReadOnly = right.Types.Count(type => type.IsSpan && type.Definition!.FullName == "System.ReadOnlySpan`1");
+            if (leftReadOnly != rightReadOnly) return leftReadOnly > rightReadOnly;
+        }
+        static TypeSymbol ReadOnly(TypeSymbol type) => type.IsSpan ? SpanSource(type) : type.Erased;
         var arguments = values.Select(value => value is BoundAddress address ? address.Target.Type : value?.Type ?? TypeSymbol.Unsupported).ToArray();
         static ImportedMethod View(CallShape shape) => shape.Method with { Parameters = shape.Types };
         var l = View(left); var r = View(right);

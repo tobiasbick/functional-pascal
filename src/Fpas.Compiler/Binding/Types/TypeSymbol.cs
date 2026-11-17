@@ -21,6 +21,9 @@ internal sealed record TypeSymbol(TypeKind Kind, ImportedType? Definition = null
     internal bool IsReference => IsParameter ? Parameter!.IsReference : Kind is TypeKind.String or TypeKind.Object or TypeKind.Array or TypeKind.Generated or TypeKind.Record or TypeKind.Variant or TypeKind.Async or TypeKind.Interface || Kind is TypeKind.Named or TypeKind.Scalar && !IsValue;
     internal bool IsInterface => Interface is not null || Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Interface) == true;
     internal bool NullableValue => IsNullable && IsValue;
+    // Span<T> and ReadOnlySpan<T> are accepted only as by-value parameters of imported calls.
+    internal bool IsSpan => Kind == TypeKind.Named && Definition?.FullName is "System.Span`1" or "System.ReadOnlySpan`1";
+    internal bool ContainsSpan => IsSpan || Element?.ContainsSpan == true || Arguments?.Any(argument => argument.ContainsSpan) == true;
     internal TypeSymbol NonNullable => this with { IsNullable = false, NullValidated = IsParameter };
     internal TypeList TypeArguments => NullableValue ? new([NonNullable]) : Arguments ?? TypeList.Empty;
     internal static TypeSymbol Array(TypeSymbol element, int rank = 1) => new(TypeKind.Array, Element: element, Rank: rank);

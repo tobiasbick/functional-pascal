@@ -39,7 +39,7 @@ internal sealed partial class ReferenceCatalog
         });
     }
 
-    internal static bool Usable(TypeSymbol type) => type.Kind is not (TypeKind.Unsupported or TypeKind.TypeParameter or TypeKind.MethodParameter or TypeKind.Container) &&
+    internal static bool Usable(TypeSymbol type) => type.Kind is not (TypeKind.Unsupported or TypeKind.TypeParameter or TypeKind.MethodParameter or TypeKind.Container) && !type.IsSpan &&
         (type.Element is null || Usable(type.Element)) && (type.Arguments is null || type.Arguments.All(Usable));
 
     private IEnumerable<TypeSymbol> Parents(TypeSymbol type)

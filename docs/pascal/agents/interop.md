@@ -128,8 +128,10 @@ end;
 end program;
 ```
 
-Excluded signatures such as Span<T>/ref structs, pointers, ref returns, init-only
-setters, and unsupported modifiers/calling conventions receive diagnostics.
+Pass arrays to imported Span<T>/ReadOnlySpan<T> parameters; spans are otherwise
+unavailable. Imported `unmanaged` generics accept unmanaged value types. Other ref
+structs, pointers, ref returns, init-only setters, and unsupported
+modifiers/calling conventions receive diagnostics.
 Use an ordinary supported API overload; runtime reflection is not a compiler
 fallback. Nested CLR type paths put each segment's own arguments on that segment,
 as in N.Outer<string>.Inner<int>; N.Outer<string>.Leaf inherits its owner's

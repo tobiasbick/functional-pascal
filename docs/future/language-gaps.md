@@ -14,10 +14,19 @@ Record concrete maintenance blockers in task-specific documents under
   neutral language in build and publish outputs. An `EmbeddedResource` item
   currently fails with `FP5001`.
 
+## Diagnostics gaps
+
+- [ ] Report every failing statement of a routine. The binder stops at a
+  routine's first error and marks the whole body unavailable, so later
+  independent errors, such as a second unresolved overload, appear only after
+  the first is fixed. Statement-level recovery must avoid follow-up errors from
+  failed declarations and keep editor analysis consistent.
+
 ## Scope boundary
 
 Source event declarations, expression-tree conversion, user-authored class
-hierarchies, custom awaiters, async iterators, unsafe/byref-like features,
-operator declarations, automatic extension-method discovery, and interface
-variance/default bodies remain outside the agreed scope. Additional platform/framework
-coverage remains a separate toolchain proposal.
+hierarchies, custom awaiters, async iterators, unsafe/byref-like features beyond
+array arguments for imported span parameters, operator declarations, automatic
+extension-method discovery, and interface variance/default bodies remain outside
+the agreed scope. Additional platform/framework coverage remains a separate
+toolchain proposal.

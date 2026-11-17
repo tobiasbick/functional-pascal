@@ -32,6 +32,12 @@ internal sealed class TypeInference(ReferenceCatalog references, IReadOnlyList<T
             return;
         }
         if (actual.Kind is TypeKind.Void or TypeKind.Unsupported) return;
+        // An array argument supplies a span parameter's element type exactly.
+        if (formal.IsSpan)
+        {
+            if (actual is { Kind: TypeKind.Array, Rank: 1 }) Add(formal.TypeArguments[0], actual.Element!, InferenceBound.Exact);
+            return;
+        }
         if (formal.NullableValue)
         {
             if (actual.NullableValue) Add(formal.NonNullable, actual.NonNullable, kind);
@@ -77,9 +83,9 @@ internal sealed class TypeInference(ReferenceCatalog references, IReadOnlyList<T
     internal void Add(TypeSymbol formal, BoundExpression value)
     {
         if (value is BoundMethodGroup) return;
-        if (value is BoundArrayLiteral array && formal.Kind == TypeKind.Array && formal.Rank == 1)
+        if (value is BoundArrayLiteral array && (formal.Kind == TypeKind.Array && formal.Rank == 1 || formal.IsSpan))
         {
-            foreach (var element in array.Elements) Add(formal.Element!, element);
+            foreach (var element in array.Elements) Add(formal.IsSpan ? formal.TypeArguments[0] : formal.Element!, element);
             return;
         }
         if (value is BoundDelegate callable && references.DelegateSignature(formal, allowOpen: true) is { } invoke)

@@ -1,0 +1,45 @@
+unit EditorCommands.State;
+
+uses
+  Fpas.Ui.Widgets.Editors.CodeEditors as Editor,
+  Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Overlays.Tours as Tours;
+
+// Model-owned text and native interaction proposals.
+public type Model = record
+  // Editable document, including supplementary Unicode characters.
+  public Text: string := 'first 😀' + #10 + 'second é' + #10 + 'third 😀';
+  // Latest native caret and find observation.
+  public Editor: Editor.Event := new Editor.Event(null, 1, 1, 3, false);
+  // Optional native account avatar image supplied as a command-line path.
+  public AvatarPath: string? := null;
+  // Aggregate selection count, without allocating flags.
+  public Count: int := 1200;
+  // Selected tour step, minus one when closed.
+  public Tour: int := -1;
+  // Last application command.
+  public Notice: string := 'Ctrl/Cmd+S dispatches a Save message; no file is written.';
+end record;
+
+// Typed native proposals and application commands.
+public type Msg = variant
+  // Adopt editor text and observations.
+  Edited(Value: Editor.Event);
+  // Find the next emoji.
+  Search;
+  // Navigate to the second line.
+  GoTo;
+  // Select the whole current document.
+  SelectAll;
+  // Demonstrate a global command while editing.
+  Save;
+  // Activate the account action.
+  Account;
+  // Handle aggregate selection actions and clearing.
+  Bulk(Value: Bulk.Event);
+  // Open the guided tour.
+  StartTour;
+  // Adopt native tour navigation.
+  TourChanged(Value: Tours.Change);
+end variant;
+
+end unit;

@@ -125,13 +125,27 @@ pixels.
 
 `Canvases.Canvas` paints rectangles, circles and lines in local logical
 coordinates and reports the local position and bounds on click.
+Its optional `OnWheel` callback receives both native line deltas. Only an enabled
+canvas with a handler claims the wheel region; registration uses the preceding
+painted frame, following CUI's hit testing.
+Its optional `Paint` receives a callback-scoped `Painting.Surface` after native
+layout, with direct CUI drawing, measurement, clipping and cached images.
+`OnPointer` reports changed hover/press state and active pointer movement.
+See [custom painting](../../docs/ui/canvas-and-bars/painting.md) and its
+[runnable example](../../examples/ui/gui/painting/README.md).
 `Veils.Veil` wraps one element and proposes changes to the model's revealed
 state. The optional toggle also lets a pointer click cover revealed content.
 
 ## Native source tools
 
 `Markdowns.Markdown` reports link activation and task changes using UTF-8
-byte offsets. `CodeEditors.CodeEditor` proposes edits and caret positions.
+byte offsets. `CodeEditors.CodeEditor` proposes edits, caret/anchor positions,
+focus and native find-match counts. Cursor, anchor and `Options.Marks` use
+UTF-16 offsets at Unicode scalar boundaries in the current model text. Marks
+are sorted by start; color zero is the accent and one through six are series
+colors. Line and column remain CUI's one-based visual positions, including tab
+stops. The GUI host supplies [editor commands](../Fpas.Ui.Gui/README.md#code-editor-commands)
+for navigation, selection and native find.
 `DiffViews.DiffView` reports the selected change and the actual split or inline
 layout. `HexViews.HexView` accepts immutable bytes and proposes a replacement
 array on edit. Clear a hex GoTo request after handling its proposal.
@@ -196,7 +210,10 @@ Next, Back, Done or Skipped. Rejecting the proposal leaves the selected model
 step authoritative. Options set logical card `Width`, spotlight `Padding` and
 `BlockTarget`; zero dimensions select CUI's defaults. CUI owns positioning,
 spotlight animation, viewport fitting, pointer blocking and keyboard navigation.
-Its native Back/Next/Done captions and step-count format use the defaults.
+`NextLabel`, `BackLabel` and `DoneLabel` override the native button captions;
+empty strings use CUI's defaults. Their identities and focus remain stable
+when captions change. `CountFormat` accepts up to two native `%d` slots
+(step, total), plus literal `%%`; empty selects CUI's default.
 
 The `tour` snapshot reports the selected index in `Value`. `Tours.CloseId`,
 `BackId` and `NextId` identify the native actions for inspection and focus;
@@ -243,6 +260,13 @@ selection, disabled and error colors from the same tokens and composites alpha
 against the containing surface. Typography, round corners, shadows and animation
 are native GUI presentation; terminal cells approximate the relevant states.
 TUI requires no native CUI or graphical dependencies.
+
+`Theme.Metrics` optionally supplies `ThemeMetrics.Options`: typography, control
+heights, corner radii, two-layer resting/raised/floating shadows, font scale and
+motion. Null elevation levels retain the native light/dark defaults. Motion
+zero enables reduced motion; a null motion preserves the host setting.
+With no metrics, native geometry defaults are restored while the host's current
+motion and font scale are preserved. The terminal host keeps cell-based sizing.
 
 Pass the same `ThemeFor(Model): Themes.Theme` callback to either host. Fixed
 themes go in GUI Options.Theme or the TUI Theme argument. Prefer Styled and
@@ -416,6 +440,9 @@ require the graphical profile.
 `Fpas.Ui.Widgets.Overlays.Menus.Entry<TMsg>` commands and decorations as a dropdown. CUI draws
 the initials avatar, optional status and detail, trigger and popup. `Options`
 sets compact presentation, popup placement and width, and input permission.
+`AvatarPath` supplies a native PNG/JPEG image for the trigger and popup;
+null or a failed load uses initials. Replacing/removing the image releases
+its native texture with the control's lifetime.
 Use the pointer, Enter or Space to open the menu. Choosing a command dispatches
 its message. Escape dismisses the popup and returns focus to the trigger.
 User menus require the graphical profile.
@@ -857,6 +884,11 @@ profile.
   takes sorted event times and an optional selected index and proposes updates
   after native input. Both expose numeric and hours axes and can be aligned
   by giving them the same width and range.
+  Dot-chart `XLabel`/`ValueLabel` and event-track `Label` accept optional
+  `System.Func<double, string>` formatters. They run during native painting,
+  remain alive through the frame and return valid Unicode without NUL. The
+  native UTF-8 buffer truncates at complete Unicode scalars. They must be short,
+  pure and must not reenter the window; failures propagate after native rendering.
 
 These widgets require the graphical profile. The Code and Instruments gallery
 pages demonstrate the native options and interactions.
@@ -995,11 +1027,17 @@ pages demonstrate their native controls and model updates.
   the pill. An empty path or a failed image load shows the person's initials.
 - `ResultCards.ResultCard` takes a file or immutable RGBA picture.
   `SelectionBars.SelectionBar` anchors to its child and proposes a bulk
-  action or clearing the supplied selection.
+  action or clearing the supplied selection. Supply `Selection.Items(Flags)`
+  or `Selection.Count(Count)` through the same constructor. Count mode does not
+  allocate item flags; the model applies the clear proposal. `Options.CountFormat`
+  permits one native `%d` slot and literal `%%`, or empty for the native default.
+  CUI retains its count animation and Escape/clear behavior.
 
 The original Canvas and bars page exercises the graphical APIs. The
 collaborator positions and result image are generated locally from the
 same sample data as the native gallery.
+The [editor commands example](../../examples/ui/gui/editor-commands/README.md)
+demonstrates the optional account avatar, tour captions and aggregate selection.
 
 ## Developer tools
 
@@ -1008,6 +1046,12 @@ same sample data as the native gallery.
   any lane collapse change. `NetworkWaterfalls.NetworkWaterfall`,
   `DependencyGraphs.DependencyGraph`, `CommitGraphs.CommitGraph` and
   `Pipelines.Pipeline` accept model-owned selections.
+  Trace `Options.Links` adds native dependency curves using indices in the sorted
+  span array. `Event.Hovered` reports the native span/link indices. Set
+  `Options.Hovered` to the model's acknowledged hover to opt into hover-only
+  proposals; null leaves hover passive. Read a span's last presented logical
+  rectangle with the graphical `Fpas.Ui.Gui.TraceGeometry.ReadSpanRectangle`
+  command. Invisible, folded or removed spans return an empty rectangle.
 - `ProblemsPanels.Problems`, `TestExplorers.TestExplorer`,
   `StackTraces.StackTrace`, `Blames.Blame` and `Coverages.Coverage`
   report native activations. CUI keeps filters, sort order and expanded
@@ -1211,11 +1255,12 @@ These widgets require the graphical profile and call CUI directly:
   replacing the caption, and native width. Precision controls display rather
   than quantizing typed values.
 - `Fpas.Ui.Widgets.Inputs.MoneyFields.MoneyField(Id, Value, OnChange, Settings)` uses an
-  ordinary double. At rest CUI groups digits with commas; editing uses plain
-  digits and a decimal point. This format is independent of the current CLR
-  culture. Options select literal label, symbol, currency code, hint, width
-  and zero through fifteen fractional digits. A grouped amount must fit CUI's
-  63-byte text capacity; oversized proposals retain the previous value.
+  exact CLR `decimal` and a native CUI text field. At rest amounts use invariant
+  comma grouping; editing retains the typed draft. Complete exact values produce
+  proposals; invalid, incomplete, overflowing or overly precise drafts retain
+  the model. Options select label, currency symbol/code, hint, width and zero
+  through twenty-eight fractional digits. No amount passes through `double`
+  or implicit rounding. See the [money contract](../../docs/ui/smart-inputs/money-field.md).
 - `Fpas.Ui.Widgets.Inputs.ShortcutRecorders.ShortcutRecorder(Id, Value, OnChange, Settings)`
   takes a `Combination` of typed `Key` and `Modifier` values. Combine modifiers
   with `or`; `PrimaryModifier()` chooses Command on macOS and Control elsewhere.

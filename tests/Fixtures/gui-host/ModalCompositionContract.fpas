@@ -59,7 +59,7 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
         'rail', new Nodes.View(), [], function(Event: Rails.Event): bool => true, Dialog
       );
       when 3: Bars.SelectionBar<bool>(
-        'selection', [], [], function(Event: Bars.Event): bool => true, Dialog
+        'selection', Bars.Selection.Items([]), [], function(Event: Bars.Event): bool => true, Dialog
       );
       when 4: Tables.Table<bool>(
         'table', [new Tables.Column('Column')],

@@ -72,7 +72,8 @@ begin
   const Result: CuiOverlays.CuiTourResult := Frame.Window.Tour(
     C.Token('tour', Id), Targets.ToArray(), Titles.ToArray(), Bodies.ToArray(),
     Positions, Current, Settings.Width, Settings.Padding, Settings.BlockTarget,
-    function(Slot: int): string => C.Token(Role(Slot), PartId(Id, Slot)), Focus
+    function(Slot: int): string => C.Token(Role(Slot), PartId(Id, Slot)), Focus,
+    Settings.NextLabel, Settings.BackLabel, Settings.DoneLabel, Settings.CountFormat
   );
   if Result.Event <> 0 and Frame.AcceptInput then
     Frame.Messages.Add(OnChange(new T.Change(Result.Step, cast<T.Event>(Result.Event))));
@@ -90,11 +91,23 @@ begin
     const Caption: string := if Slot = 0 then
       'End the tour'
     elsif Slot = 1 then
-      'Back'
+      if Settings.BackLabel = '' then
+        'Back'
+      else
+        Settings.BackLabel
+      end if
     elsif Current = Steps.Length - 1 then
-      'Done'
+      if Settings.DoneLabel = '' then
+        'Done'
+      else
+        Settings.DoneLabel
+      end if
     else
-      'Next'
+      if Settings.NextLabel = '' then
+        'Next'
+      else
+        Settings.NextLabel
+      end if
     end if;
     Frame.Controls.Add(
       new App.Control(

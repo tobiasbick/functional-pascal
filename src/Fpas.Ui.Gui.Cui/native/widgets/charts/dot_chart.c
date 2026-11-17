@@ -11,6 +11,8 @@ int fpas_cui_dot_chart(cui_ctx *ui, const char *id, const float *samples, const 
         .annotations = shared.annotations, .annotation_count = shared.annotation_count,
         .x_min = o->x_min, .x_max = o->x_max, .x_step = o->x_step, .x_units = o->units,
         .x_format = o->x_format, .unit = o->unit, .pitch = o->pitch,
+        .x_label = o->x_label, .x_label_user = o->x_label_user,
+        .value_label = o->value_label, .value_label_user = o->value_label_user,
         .no_axis = (o->flags & 1) != 0, .no_readout = (o->flags & 2) != 0 };
     const bool enabled = (o->flags & 4) != 0;
     const int node = ui->node_count;

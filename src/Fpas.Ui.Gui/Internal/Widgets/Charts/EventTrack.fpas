@@ -31,7 +31,8 @@ begin
     Settings.LabelStep,
     Settings.Add,
     Settings.Remove,
-    Settings.Axis
+    Settings.Axis,
+    Settings.Label
   );
   const Result: CuiCharts.CuiEventResult := Frame.Window.EventTrack(
     Token, Current.Times, Current.Selected, Native,

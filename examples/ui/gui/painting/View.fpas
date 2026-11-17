@@ -1,0 +1,169 @@
+unit NativePainting.View;
+
+uses
+  NativePainting.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Canvas.Painting as Painting,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics, Fpas.Ui.Widgets.Media.MediaImages as Images,
+  Fpas.Ui.Graphics as G;
+
+// CUI_ICON_MUSIC from the vendored Lucide font.
+const MusicGlyph: string := '';
+
+const Pixels: array of byte := [
+  40,
+  120,
+  210,
+  255,
+  80,
+  180,
+  140,
+  255,
+  230,
+  180,
+  40,
+  255,
+  180,
+  80,
+  140,
+  255
+];
+
+// Resolves the model's typography and motion against the available system appearance.
+// ## Parameters
+// - `Model`: User text scale and motion preference.
+// - `Appearance`: Native light/dark mode, or null when unavailable.
+// ## Returns
+// One palette and metric contract for widgets and the custom canvas.
+public function ThemeFor(Model: S.Model; Appearance: Themes.Mode?): Themes.Theme;
+begin
+  const Theme: Themes.Theme := if Appearance = Themes.Mode.Dark then
+    Themes.Dark(Themes.Accent.Blue)
+  else
+    Themes.Light(Themes.Accent.Blue)
+  end if;
+  return Theme with
+    Metrics := new Metrics.Options(
+      FontScale := Model.Scale, Motion := if Model.ReducedMotion then
+        0.0F
+      else
+        1.0F
+      end if
+    );
+  end with;
+end function;
+
+// Builds native controls around a callback-scoped CUI drawing surface.
+// ## Parameters
+// - `Model`: Acknowledged pointer and resource state.
+// - `Viewport`: Native logical viewport.
+// - `Theme`: The same resolved theme used by CUI.
+// ## Returns
+// The declarative view; its paint callback only draws and never changes the model.
+public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<S.Msg>;
+  procedure Paint(Surface: Painting.Surface);
+  begin
+    const C: Themes.Palette := Theme.Colors;
+    Surface.Gradient(
+      0.0F,
+      0.0F,
+      Surface.Width(),
+      Surface.Height(),
+      14.0F,
+      C.SurfaceMuted,
+      C.Surface
+    );
+    Surface.Border(
+      16.0F,
+      16.0F,
+      Surface.Width() - 32.0F,
+      Surface.Height() - 32.0F,
+      10.0F,
+      C.Surface,
+      C.Border,
+      1.0F
+    );
+    Surface.Text(
+      32.0F,
+      32.0F,
+      'CUI canvas — Grüße',
+      G.Font.Body,
+      18.0F * Surface.FontScale(),
+      C.Foreground
+    );
+    Surface.Circle(
+      65.0F, 115.0F, 24.0F, if Model.Pointer.Hovered then
+        C.Accent
+      else
+        C.BorderStrong
+      end if
+    );
+    Surface.Polyline(
+      [
+        new Painting.Point(115.0F, 125.0F),
+        new Painting.Point(150.0F, 90.0F),
+        new Painting.Point(190.0F, 120.0F)
+      ],
+      3.0F,
+      C.Accent,
+      false
+    );
+    Surface.Arc(240.0F, 110.0F, 28.0F, 0.0F, 2.8F, 4.0F, C.Accent);
+    Surface.Icon(400.0F, 95.0F, 32.0F, 32.0F, MusicGlyph, 28.0F, C.Foreground);
+    Surface.Emoji(450.0F, 95.0F, 32.0F, 32.0F, '🎵');
+    Surface.Image(
+      Images.Source.Rgba(2, 2, Pixels),
+      300.0F,
+      86.0F,
+      72.0F,
+      55.0F,
+      8.0F,
+      new G.Color(255, 255, 255)
+    );
+    const Size: Painting.TextMetrics := Surface.Measure(
+      'Measured by CUI',
+      G.Font.Mono,
+      13.0F * Surface.FontScale()
+    );
+    Surface.Text(
+      32.0F,
+      180.0F,
+      'Measured by CUI',
+      G.Font.Mono,
+      13.0F * Surface.FontScale(),
+      C.TextSecondary
+    );
+    Surface.Line(32.0F, 205.0F, 32.0F + Size.Width, 205.0F, 1.0F, C.Accent);
+  end procedure;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
+    E.Text<S.Msg>('Native fonts, themes and custom painting'),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := L.Spacing.Tight),
+      Buttons.Button<S.Msg>(
+        'load',
+        'Load font',
+        S.Msg.LoadFont,
+        new Buttons.Options(Enabled := Model.FontPath <> '')
+      ),
+      Buttons.Button<S.Msg>('restore', 'Restore font', S.Msg.RestoreFont),
+      Buttons.Button<S.Msg>('scale', 'Text scale', S.Msg.ScaleText),
+      Buttons.Button<S.Msg>('motion', 'Reduced motion', S.Msg.Motion)
+    ),
+    E.Text<S.Msg>(Model.Status),
+    Canvas.Canvas<S.Msg>(
+      'paint',
+      [],
+      S.Msg.Clicked,
+      new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(245))),
+      Paint := Paint,
+      OnPointer := S.Msg.PointerChanged
+    ),
+    E.Text<S.Msg>(
+      'Hover: ' + Model.Pointer.Hovered.ToString() + '; press: ' + Model.Pointer.Pressed.ToString()
+    )
+  );
+end function;
+
+end unit;

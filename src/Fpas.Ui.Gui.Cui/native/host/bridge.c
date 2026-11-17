@@ -14,10 +14,15 @@
  * @param y Top edge of the content in desktop coordinates.
  * @param has_position Nonzero when x and y name a saved place.
  * @param maximized Nonzero to open maximized.
+ * @param minimum_width Minimum logical width, zero for CUI's default.
+ * @param minimum_height Minimum logical height, zero for CUI's default.
+ * @param fixed_size Nonzero to create a nonresizable window.
+ * @param app_id Optional Linux desktop application identity, copied at creation.
  * @return The owned app, or NULL on creation failure. */
 CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height,
                                       int renderer, int continuous, int placed,
-                                      int x, int y, int has_position, int maximized) {
+                                      int x, int y, int has_position, int maximized,
+                                      int minimum_width, int minimum_height, int fixed_size, const char *app_id) {
     const cui_window_placement placement = {
         .x = x, .y = y, .width = width, .height = height,
         .state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL, .has_position = has_position != 0
@@ -25,6 +30,8 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
     const cui_app_desc options = {
         .title = title, .width = width, .height = height,
         .renderer = (cui_renderer_kind)renderer, .continuous = continuous != 0,
+        .min_width = minimum_width, .min_height = minimum_height,
+        .fixed_size = fixed_size != 0, .app_id = app_id,
         .placement = placed ? &placement : NULL
     };
     return cui_app_create(&options);

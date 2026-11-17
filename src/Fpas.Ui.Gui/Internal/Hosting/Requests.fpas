@@ -1,24 +1,71 @@
 unit Fpas.Ui.Gui.Internal.Hosting.Requests;
 
 uses
+  Fpas.Ui.Gui.Localization as Localization,
+  Fpas.Ui.Gui.Fonts as Fonts, Fpas.Ui.Gui.Internal.Hosting.FontRequests as FontRequests,
   Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.FileDialogs as Files,
-  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Windows as Windows, System as Sys,
-  System.Collections.Generic as Generic;
+  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.TraceGeometry as Trace,
+  Fpas.Ui.Gui.Internal.Hosting.Context as Context, Fpas.Ui.Gui.Cui.Widgets.Developer as Developer, System as Sys,
+  Fpas.Ui.Gui.Closing as Closing, Fpas.Ui.Gui.Frames as Frames, System.Collections.Generic as Generic,
+  System.Runtime.CompilerServices as Cells, Fpas.Ui.Gui.EditorCommands as Editors;
+
+// Owner-thread services used while applying graphical commands between frames.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type State<TMsg> = record
+  // Owned native window.
+  public Window: Cui.CuiWindow;
+  // Deferred typed command results.
+  public Pending: Generic.Queue<TMsg>;
+  // Toasts to submit while constructing the next view.
+  public Toasts: Generic.Queue<Toasts.Request<TMsg>>;
+  // Native frame deadlines to apply after constructing that view.
+  public Frames: Generic.Queue<float>;
+  // Whether a native close is awaiting the application's decision.
+  public ClosePending: Cells.StrongBox<bool> := new Cells.StrongBox<bool>(false);
+end record;
+
+function Choose<TMsg>(Window: Cui.CuiWindow; Dialog: Files.Request<TMsg>): string?;
+begin
+  case Dialog.Kind of
+    when Cui.CuiFileDialogKind.Open:
+      return Window.OpenFile(Dialog.Title, Dialog.FilterName, Dialog.Accept);
+    when Cui.CuiFileDialogKind.Save:
+      return Window.SaveFile(Dialog.Title, Dialog.FilterName, Dialog.Accept, Dialog.DefaultName);
+    when Cui.CuiFileDialogKind.Folder:
+      return Window.ChooseFolder(Dialog.Title);
+    else
+      raise new Sys.ArgumentOutOfRangeException('Kind');
+  end case;
+end function;
 
 // Carries out one graphical host extension on the owner thread.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Value`: The extension payload from a host command.
-// - `Window`: The owned native window.
-// - `Pending`: Receives messages the request produces, such as read results.
-// - `PendingToasts`: Receives toast requests for the next frame.
+// - `Services`: Window, result queues and close-decision service.
 public procedure Apply<TMsg>(
-  Value: Sys.Object; Window: Cui.CuiWindow; Pending: Generic.Queue<TMsg>;
-  PendingToasts: Generic.Queue<Toasts.Request<TMsg>>
+  Value: Sys.Object; Services: State<TMsg>
 );
 begin
+  const Window: Cui.CuiWindow := Services.Window;
+  const Pending: Generic.Queue<TMsg> := Services.Pending;
   case Value of
+    when is Localization.Request<TMsg> as Captions:
+      Window.SetStrings(Captions.Strings);
+    when is Fonts.Request<TMsg> as Font:
+      FontRequests.Apply<TMsg>(Font.Action, Window, Pending);
+    when is Editors.Request<TMsg> as Edit:
+      const Id: string := Context.Token('code-editor', Edit.Id);
+      case Edit.Action of
+        when Editors.Operation.GoTo(const Line: int, const Column: int):
+          Window.CodeEditorGoTo(Id, Line, Column);
+        when Editors.Operation.Select(const Anchor: int, const Cursor: int):
+          Window.CodeEditorSelect(Id, Anchor, Cursor);
+        when Editors.Operation.Find(const Query: string?):
+          Window.CodeEditorFind(Id, Query);
+      end case;
     when is Windows.StateRequest<TMsg> as Change:
       case Change.Target of
         when Cui.CuiWindowState.Maximized:
@@ -28,21 +75,51 @@ begin
         else
           Window.Restore();
       end case;
+    when is Windows.TitleRequest<TMsg> as Title:
+      Window.SetTitle(Title.Title);
+    when is Windows.SizeRequest<TMsg> as Size:
+      Window.Resize(Size.Width, Size.Height);
+    when is Closing.CancelRequest<TMsg> as _Cancel:
+      Services.ClosePending.Value := false;
+    when is Frames.Request<TMsg> as Frame:
+      if not Sys.Single.IsFinite(Frame.DelaySeconds) or Frame.DelaySeconds < 0.0F then
+        raise new Sys.ArgumentOutOfRangeException('DelaySeconds');
+      end if;
+
+      Services.Frames.Enqueue(Frame.DelaySeconds);
     when is Windows.MoveRequest<TMsg> as Move:
       Window.MoveTo(Move.X, Move.Y);
     when is Windows.PlacementRequest<TMsg> as Placement:
       Pending.Enqueue(Placement.OnRead(Window.Placement));
+    when is Trace.SpanRequest<TMsg> as Geometry:
+      const Span: Developer.CuiDevSpan := new Developer.CuiDevSpan(
+        Geometry.Span.Name, Geometry.Span.Start, Geometry.Span.End,
+        Geometry.Span.Track, Geometry.Span.Depth, Geometry.Span.ColorKey
+      );
+      Pending.Enqueue(
+        Geometry.OnRead(
+          Window.TraceSpanRectangle(
+            Context.Token('trace-viewer', Geometry.Id), Span
+          )
+        )
+      );
     when is Clipboard.WriteRequest<TMsg> as Write:
       Window.WriteClipboardText(Write.Text);
     when is Clipboard.ReadRequest<TMsg> as Read:
       Pending.Enqueue(Read.OnRead(Window.ReadClipboardText()));
-    when is Files.OpenRequest<TMsg> as Dialog:
-      const Path: string? := Window.OpenFile(Dialog.Title, Dialog.FilterName, Dialog.Accept);
+    when is Files.Request<TMsg> as Dialog:
+      const Path: string? := Choose<TMsg>(Window, Dialog);
       if Path <> null then
         Pending.Enqueue(Dialog.OnSelected(Path));
+      else
+        case Dialog.OnCancelled of
+          when is Sys.Func<TMsg> as Notify:
+            Pending.Enqueue(Notify.Invoke());
+          else
+        end case;
       end if;
     when is Toasts.Request<TMsg> as Notification:
-      PendingToasts.Enqueue(Notification);
+      Services.Toasts.Enqueue(Notification);
     else
       raise new Sys.NotSupportedException('Unknown graphical host request.');
   end case;

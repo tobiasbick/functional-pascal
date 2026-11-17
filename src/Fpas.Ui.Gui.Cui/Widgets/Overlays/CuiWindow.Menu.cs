@@ -54,7 +54,7 @@ public sealed partial class CuiWindow
                 keys, labels, icons, shortcuts, bits, entries.Length, variant, placement, width,
                 iconOnly ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, contextMenu ? 1 : 0, parts, out open, out highlighted, out owner)
                 : NativeMethods.UserMenu(context, key, label, Optional(user.Detail),
-                    Optional(user.Status), keys, labels, icons, shortcuts, bits,
+                    Optional(user.Status), user.AvatarPath, keys, labels, icons, shortcuts, bits,
                     entries.Length, placement, width, user.Compact ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0,
                     parts, out open, out highlighted);
         }

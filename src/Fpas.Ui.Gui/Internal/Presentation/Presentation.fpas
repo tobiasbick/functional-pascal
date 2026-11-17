@@ -177,8 +177,8 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         ScrubWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Changed, Settings);
       when E.Element.MoneyField(
         const Id: string,
-        const Value: double,
-        const Changed: function(double): TMsg,
+        const Value: decimal,
+        const Changed: function(decimal): TMsg,
         const Settings: MoneyFields.Options
       ):
         MoneyWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
@@ -382,6 +382,9 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
+        _,
+        _,
+        _,
         _,
         _,
         _,

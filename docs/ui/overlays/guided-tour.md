@@ -38,6 +38,8 @@ end unit;
 | `Target / Position` | Empty / BottomStart. CUI centers the card if the target is absent and fits the card within the window. |
 | `Width / Padding` | 0 / 0. CUI uses 300 logical points for the card and 6 around the target. |
 | `BlockTarget` | false. Set true to block pointer input in the spotlight too. |
+| `NextLabel / BackLabel / DoneLabel` | Empty uses the native captions. Literal replacements retain the same focus identities. |
+| `CountFormat` | Empty uses CUI's default. Up to two `%d` slots (step, total), plus literal `%%`. |
 
 ## Interaction
 

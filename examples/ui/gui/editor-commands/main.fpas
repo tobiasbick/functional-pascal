@@ -1,0 +1,24 @@
+program EditorCommandsExample;
+
+uses
+  EditorCommands.State as S, EditorCommands.Update as Update, EditorCommands.View as View,
+  Fpas.Ui.Gui.Application as Gui, System as Sys;
+
+begin
+  const Args: array of string := Sys.Environment.GetCommandLineArgs();
+  Gui.Run<S.Model, S.Msg>(
+    new S.Model(
+      AvatarPath := if Args.Length > 1 then
+        Args[1]
+      else
+        null
+      end if
+    ),
+    Update.Apply,
+    View.Build,
+    new Gui.Options(Title := 'Native editor commands', Width := 760, Height := 580),
+    BindingsFor := Update.Bindings
+  );
+end;
+
+end program;

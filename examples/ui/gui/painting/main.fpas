@@ -1,0 +1,30 @@
+program NativePaintingExample;
+
+uses
+  NativePainting.State as S, NativePainting.Update as Update, NativePainting.View as View,
+  Fpas.Ui.Gui.Application as Gui, System as Sys;
+
+begin
+  const Args: array of string := Sys.Environment.GetCommandLineArgs();
+  Gui.RunThemed<S.Model, S.Msg>(
+    new S.Model(
+      FontPath := if Args.Length > 1 then
+        Args[1]
+      else
+        ''
+      end if
+    ),
+    Update.Apply,
+    View.Build,
+    new Gui.Options(
+      Title := 'Native CUI painting',
+      Width := 720,
+      Height := 440,
+      MinimumWidth := 500,
+      MinimumHeight := 360
+    ),
+    View.ThemeFor
+  );
+end;
+
+end program;

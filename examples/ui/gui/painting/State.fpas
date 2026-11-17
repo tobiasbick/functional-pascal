@@ -1,0 +1,39 @@
+unit NativePainting.State;
+
+uses Fpas.Ui.Gui.Cui.Resources as Resources, Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+
+// Application state; native font bytes are owned by the window after loading.
+public type Model = record
+  // Optional trusted TTF/OTF file supplied on the command line.
+  public FontPath: string := '';
+  // Last successfully loaded context-owned face.
+  public Face: Resources.CuiFontFace? := null;
+  // User text multiplier selected by the model.
+  public Scale: float := 1.0F;
+  // Whether to snap native animations.
+  public ReducedMotion: bool := true;
+  // Last acknowledged native hover/press state.
+  public Pointer: Canvas.Pointer := new Canvas.Pointer(false, false, 0.0F, 0.0F, 0.0F, 0.0F);
+  // Resource-operation status.
+  public Status: string := 'CUI owns drawing, clipping, fonts and image caching.';
+end record;
+
+// User actions and native owner-thread results.
+public type Msg = variant
+  // Load the trusted file selected at startup.
+  LoadFont;
+  // Receive the context-owned face or a native rejection.
+  Loaded(Face: Resources.CuiFontFace?);
+  // Restore the native body font.
+  RestoreFont;
+  // Switch between normal and enlarged typography.
+  ScaleText;
+  // Switch native reduced motion.
+  Motion;
+  // Acknowledge native pointer transitions.
+  PointerChanged(Value: Canvas.Pointer);
+  // Acknowledge native canvas activation.
+  Clicked(Value: Canvas.Event);
+end variant;
+
+end unit;

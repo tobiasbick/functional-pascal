@@ -35,10 +35,12 @@ public sealed partial class CuiWindow
         var times = new double[Math.Max(1, options.Capacity)];
         events.CopyTo(times, 0);
         using var memory = new ChartMemory();
+        nint label = RetainAxisLabel(options.Label);
         var native = new NativeEventOptions {
             Minimum = options.Minimum, Maximum = options.Maximum, Step = options.Step,
             LabelStep = options.LabelStep, Format = memory.Format(options.Format), Width = options.Width,
             WidthKind = options.WidthKind, Units = options.Units,
+            Label = AxisLabelFunction(label), LabelUser = label,
             Flags = (options.Add ? 0 : 1) | (options.Remove ? 0 : 2) | (options.Axis ? 0 : 4) |
                 (enabled ? 8 : 0) | (focus ? 16 : 0)
         };

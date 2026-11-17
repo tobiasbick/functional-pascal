@@ -12,4 +12,5 @@ internal unsafe struct NativeDotOptions
     internal byte* Unit;
     internal float Pitch;
     internal int Units, Flags;
+    internal nint XLabel, XLabelUser, ValueLabel, ValueLabelUser;
 }

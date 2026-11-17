@@ -63,14 +63,14 @@ begin
       );
     when E.Element.MoneyField(
       const Id: string,
-      const Current: double,
-      const Changed: function(double): TChild,
+      const Current: decimal,
+      const Changed: function(decimal): TChild,
       const Settings: MoneyFields.Options
     ):
       return E.Element<TParent>.MoneyField(
         Id,
         Current,
-        function(Next: double): TParent => Messages(Changed(Next)),
+        function(Next: decimal): TParent => Messages(Changed(Next)),
         Settings
       );
     when E.Element.ShortcutRecorder(

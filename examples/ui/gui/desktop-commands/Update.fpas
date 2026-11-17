@@ -1,0 +1,77 @@
+unit DesktopCommands.Update;
+
+uses
+  DesktopCommands.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Closing as Closing,
+  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames;
+
+// Converts application decisions into owner-thread CUI commands.
+// ## Parameters
+// - `Model`: Current selection and close decision.
+// - `Message`: Native or application proposal.
+// ## Returns
+// The next model and commands to apply between frames.
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return case Message of
+    when S.Msg.Open: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [
+        Files.OpenFile<S.Msg>(
+          S.Msg.Selected,
+          'Open text file',
+          'Text',
+          'txt',
+          function(): S.Msg => S.Msg.Cancelled
+        )
+      ]
+    );
+    when S.Msg.Save: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [
+        Files.SaveFile<S.Msg>(
+          S.Msg.Selected,
+          'notes.txt',
+          'Choose save destination',
+          'Text',
+          'txt',
+          function(): S.Msg => S.Msg.Cancelled
+        )
+      ]
+    );
+    when S.Msg.Folder: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [
+        Files.ChooseFolder<S.Msg>(
+          S.Msg.Selected,
+          'Choose directory',
+          function(): S.Msg => S.Msg.Cancelled
+        )
+      ]
+    );
+    when S.Msg.Selected(const Path: string): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Selection := Path;
+      end with, [Windows.SetTitle<S.Msg>(Path)]
+    );
+    when S.Msg.Cancelled: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Selection := 'No selection.';
+      end with, []
+    );
+    when S.Msg.CloseRequested: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Closing := true;
+      end with, []
+    );
+    when S.Msg.Stay: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Closing := false;
+      end with, [Closing.Cancel<S.Msg>()]
+    );
+    when S.Msg.Quit: new Mvu.Transition<S.Model, S.Msg>(Model, [Mvu.Exit<S.Msg>()]);
+    when S.Msg.Redraw: new Mvu.Transition<S.Model, S.Msg>(Model, [Frames.Redraw<S.Msg>(0.5F)]);
+  end case;
+end function;
+
+end unit;

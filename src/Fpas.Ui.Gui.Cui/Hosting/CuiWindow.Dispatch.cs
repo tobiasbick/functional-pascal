@@ -11,6 +11,7 @@ public sealed partial class CuiWindow
     private GCHandle resizeRoot;
     private ExceptionDispatchInfo? resizeFailure;
     private int resizeRenderVersion;
+    private bool renderingResize;
 
     /// <summary>Wakes the owner when asynchronous cleanup finishes, without retaining native pointers.</summary>
     /// <param name="completion">The cleanup to observe.</param>
@@ -41,10 +42,12 @@ public sealed partial class CuiWindow
         try
         {
             window.resizeRenderVersion++;
+            window.renderingResize = true;
             window.inFrame = true;
             window.trackedNodes.Clear();
             window.scrollRequests.Clear(); window.scrollNodes.Clear();
             window.usedModals.Clear();
+            window.moneyDrawn.Clear();
             window.resizeRenderer?.Invoke();
             if (window.layouts.Count != 0) throw new InvalidOperationException("Unbalanced live-resize view.");
             window.ResolveHostLayout();
@@ -55,6 +58,6 @@ public sealed partial class CuiWindow
             window.layouts.Clear();
             window.resizeFailure ??= ExceptionDispatchInfo.Capture(error);
         }
-        finally { window.inFrame = false; }
+        finally { window.inFrame = false; window.renderingResize = false; }
     }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.ExceptionServices;
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;
@@ -38,10 +39,18 @@ public sealed partial class CuiWindow : IDisposable
     /// A saved placement to open at, whose size replaces <paramref name="width"/> and <paramref name="height"/>;
     /// null lets the system choose the place.
     /// </param>
+    /// <param name="minimumWidth">Minimum logical width, zero for CUI's default.</param>
+    /// <param name="minimumHeight">Minimum logical height, zero for CUI's default.</param>
+    /// <param name="fixedSize">Whether the native window is nonresizable.</param>
+    /// <param name="appId">Linux desktop identity; empty uses CUI's default.</param>
     public CuiWindow(string title, int width = 640, int height = 480,
-        CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false, CuiWindowPlacement? placement = null)
+        CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false, CuiWindowPlacement? placement = null,
+        int minimumWidth = 0, int minimumHeight = 0, bool fixedSize = false, string appId = "")
     {
         Utf8.Validate(title, nameof(title));
+        Utf8.Validate(appId, nameof(appId));
+        ArgumentOutOfRangeException.ThrowIfNegative(minimumWidth);
+        ArgumentOutOfRangeException.ThrowIfNegative(minimumHeight);
         if (placement is { } saved)
         {
             if (!Enum.IsDefined(saved.State)) throw new ArgumentOutOfRangeException(nameof(placement));
@@ -57,10 +66,11 @@ public sealed partial class CuiWindow : IDisposable
                 throw new InvalidOperationException("A CUI OpenGL window already owns this thread's OpenGL context.");
             renderer = CuiRenderer.Software;
         }
-        app = placement is { } at
-            ? NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0,
-                1, at.X, at.Y, at.HasPosition ? 1 : 0, at.State == CuiWindowState.Maximized ? 1 : 0)
-            : NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0, 0, 0, 0, 0, 0);
+        var at = placement.GetValueOrDefault();
+        app = NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0,
+            placement.HasValue ? 1 : 0, at.X, at.Y, at.HasPosition ? 1 : 0,
+            at.State == CuiWindowState.Maximized ? 1 : 0,
+            minimumWidth, minimumHeight, fixedSize ? 1 : 0, Optional(appId));
         if (app == 0) throw new InvalidOperationException("CUI could not create a window. Check the native display connection.");
         wakeTarget = NativeMethods.OpenWakeTarget(app);
         if (wakeTarget == 0)
@@ -107,23 +117,31 @@ public sealed partial class CuiWindow : IDisposable
         CheckOpen();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before beginning another frame.");
         bool presented = inFrame;
+        if (presented) editorRequests.Clear();
+        if (presented) SnapshotShortcutKeys();
         if (presented) ResolveHostLayout();
         var retiredControls = presented ? controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray() : null;
         var retiredModals = presented ? modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray() : null;
         int resizeVersion = resizeRenderVersion;
-        int result = NativeMethods.Pump(app, DeferClose ? 1 : 0);
+        int result;
+        ExceptionDispatchInfo? callbackFailure;
+        try { result = NativeMethods.Pump(app, DeferClose ? 1 : 0); }
+        finally { callbackFailure = ReleaseFrameCallbacks(); }
         if (presented) RetireMissingControls(retiredControls!, retiredModals!, resizeVersion != resizeRenderVersion);
         CloseRequested |= result == 2;
         inFrame = result != 0;
+        shortcutsRead = false;
+        if (inFrame) shortcutOwners = NativeMethods.ShortcutOwners(context);
         hasPresentedFrame |= presented;
-        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); }
-        else CloseWakeTarget();
+        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); moneyDrawn.Clear(); }
+        else { editorRequests.Clear(); moneyFields.Clear(); moneyDrawn.Clear(); CloseWakeTarget(); }
         if (resizeFailure is { } failure)
         {
             resizeFailure = null;
             SetResizeRenderer(null);
             failure.Throw();
         }
+        callbackFailure?.Throw();
         return inFrame;
     }
 
@@ -142,13 +160,15 @@ public sealed partial class CuiWindow : IDisposable
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before presenting.");
         ResolveHostLayout();
         int presented;
+        ExceptionDispatchInfo? callbackFailure;
         try { presented = NativeMethods.Present(app); }
-        finally { inFrame = false; }
+        finally { SnapshotShortcutKeys(); inFrame = false; editorRequests.Clear(); callbackFailure = ReleaseFrameCallbacks(); }
         if (presented == 0) throw new InvalidOperationException("CUI could not present the current view.");
         hasPresentedFrame = true;
         RetireMissingControls(
             controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray(),
             modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray(), false);
+        callbackFailure?.Throw();
     }
 
     private void RetireMissingControls(KeyValuePair<string, uint>[] controls, KeyValuePair<string, uint>[] modals,
@@ -160,6 +180,7 @@ public sealed partial class CuiWindow : IDisposable
         foreach (var (id, key) in modals)
             if ((!renderedDuringPump || !usedModals.Contains(id)) && modalKeys.TryGetValue(id, out uint current) && current == key)
             { NativeMethods.Forget(context, key); modalKeys.Remove(id); }
+        RetireMoneyFields();
     }
 
     /// <summary>Enables or disables CUI motion reduction.</summary>
@@ -206,7 +227,7 @@ public sealed partial class CuiWindow : IDisposable
         Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
         if (!float.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
-        NativeMethods.BeginScroll(context, id, height, horizontal ? 1 : 0);
+        NativeMethods.BeginScroll(context, Stable(id), height, horizontal ? 1 : 0);
         layouts.Add(new(Layout.Scroll));
     }
 
@@ -228,7 +249,7 @@ public sealed partial class CuiWindow : IDisposable
         Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
         if (!float.IsFinite(offset) || offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
-        NativeMethods.ScrollTo(context, id, offset);
+        NativeMethods.ScrollTo(context, Stable(id), offset);
     }
 
     /// <summary>Requests focus for a control when CUI next draws it as focusable.</summary>
@@ -276,7 +297,12 @@ public sealed partial class CuiWindow : IDisposable
         trackedNodes.Clear();
         controlKeys.Clear();
         modalKeys.Clear();
+        editorRequests.Clear();
+        NativeMethods.FinishFrameForDestroy(app);
+        moneyFields.Clear(); moneyDrawn.Clear();
+        ReleaseOwnedStrings();
         NativeMethods.Destroy(app);
+        ReleaseFrameCallbacks();
         if (usesOpenGl) openGlWindow = false;
         app = 0;
         inFrame = false;
@@ -297,6 +323,10 @@ public sealed partial class CuiWindow : IDisposable
         ObjectDisposedException.ThrowIf(app == 0, this);
         if (ownerThread != Environment.CurrentManagedThreadId)
             throw new InvalidOperationException("CUI must be accessed and disposed on its creating UI thread.");
+        if (formattingAxisLabel)
+            throw new InvalidOperationException("Axis label callbacks cannot reenter the native window.");
+        if (paintingCanvas)
+            throw new InvalidOperationException("Canvas paint callbacks cannot reenter the native window.");
     }
 
     private void CheckFrame()

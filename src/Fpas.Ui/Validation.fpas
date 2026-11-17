@@ -1040,7 +1040,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         SmartRules.Scrub(Label, Current, Minimum, Maximum, Settings, At);
       when E.Element.MoneyField(
         const Id: string,
-        const Current: double,
+        const Current: decimal,
         _,
         const Settings: MoneyFields.Options
       ):
@@ -1263,6 +1263,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         MenuRules.Check<TMsg>(Id, Name, Entries, null, Path, Identify);
         Rules.CheckText(Settings.Detail, Path + '/detail');
         Rules.CheckText(Settings.Status, Path + '/status');
+        const AvatarPath: string? := Settings.AvatarPath;
+        if AvatarPath <> null then
+          Rules.CheckText(AvatarPath, Path + '/avatar');
+        end if;
+
         if Settings.Detail.Contains(#10) or Settings.Detail.Contains(#13)
           or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
           or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0
@@ -2216,6 +2221,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _,
         _,
+        _,
+        _,
+        _,
         _
       ), E.Element.Veil(
         _,
@@ -2619,6 +2627,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
         FeedbackRules.Nonnegative(Settings.Width, At + '/width');
         FeedbackRules.Nonnegative(Settings.Padding, At + '/padding');
+        Rules.CheckText(Settings.NextLabel, At + '/next');
+        Rules.CheckText(Settings.BackLabel, At + '/back');
+        Rules.CheckText(Settings.DoneLabel, At + '/done');
+        Rules.CheckText(Settings.CountFormat, At + '/countFormat');
         for Item: Tours.Step in Steps do
           Rules.CheckText(Item.Target, At + '/target');
           Rules.CheckText(Item.Title, At + '/title');

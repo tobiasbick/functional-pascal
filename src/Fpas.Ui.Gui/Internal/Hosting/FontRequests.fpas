@@ -1,0 +1,44 @@
+unit Fpas.Ui.Gui.Internal.Hosting.FontRequests;
+
+uses
+  Fpas.Ui.Gui.Fonts as Fonts, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Resources as Resources,
+  Fpas.Ui.Graphics as G, System.Collections.Generic as Generic;
+
+// Applies one resource operation on the GUI owner thread.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Action`: Font operation selected by the application.
+// - `Window`: Owning native context.
+// - `Pending`: Deferred completion messages.
+public procedure Apply<TMsg>(Action: Fonts.Operation<TMsg>; Window: Cui.CuiWindow; Pending: Generic.Queue<TMsg>);
+begin
+  case Action of
+    when Fonts.Operation.Load(
+      const Data: array of byte,
+      const Loaded: function(Resources.CuiFontFace?): TMsg
+    ):
+      Pending.Enqueue(Loaded(Window.LoadFont(Data)));
+    when Fonts.Operation.Assign(const Role: G.Font, const Face: Resources.CuiFontFace?):
+      Window.SetFontRole(cast<int>(Role), Face);
+    when Fonts.Operation.Fallback(
+      const Face: Resources.CuiFontFace,
+      const Fallback: Resources.CuiFontFace
+    ):
+      Window.AddFontFallback(Face, Fallback);
+    when Fonts.Operation.Emoji(const Data: (array of byte)?, const Loaded: function(bool): TMsg):
+      Pending.Enqueue(
+        Loaded(
+          if Data = null then
+            Window.LoadSystemEmojiFont()
+          else
+            Window.LoadEmojiFont(Data)
+          end if
+        )
+      );
+    when Fonts.Operation.SupportsEmoji(const Text: string, const Read: function(bool): TMsg):
+      Pending.Enqueue(Read(Window.SupportsEmoji(Text)));
+  end case;
+end procedure;
+
+end unit;

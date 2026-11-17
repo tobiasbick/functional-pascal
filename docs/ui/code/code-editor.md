@@ -37,13 +37,22 @@ end unit;
 | `Width / Height / Size` | Fill / 0 / 0. Zero uses native height or font size. A height of minus one fills the viewport. |
 | `Capacity / TabSize / UseTabs` | 65,536 UTF-8 bytes including the terminator / 4 / false. |
 | `LineNumbers / ReadOnly` | true / false. ReadOnly allows selection and find. |
+| `Marks` | Empty. Sorted UTF-16 scalar-boundary ranges with colors zero (accent) through six. |
 
 ## Interaction
 
 Store the new source when `Event.Text` has a value. An event may also
-report only caret position and line count. Lines and columns start at one.
+report only caret/anchor, focus, line count or native find results. Cursor and
+anchor are UTF-16 scalar-boundary offsets. Lines and visual columns start at
+one; tabs count to their configured stops. `Matches` and `MatchIndex` report
+the native search result.
 `Refused` reports an edit that exceeded the UTF-8 capacity. Replacing the
 source from outside the editor resets its undo history.
+
+Return [GUI editor commands](../../../src/Fpas.Ui.Gui/README.md#code-editor-commands)
+from an update to find, navigate or select a range. CUI owns the editing and
+search implementation. The [companion example](../../../examples/ui/gui/editor-commands/README.md)
+also shows global shortcuts and custom highlights.
 
 ![SQL editor in the FPAS gallery](images/code-editor-sql.png)
 

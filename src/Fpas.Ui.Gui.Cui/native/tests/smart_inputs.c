@@ -1,4 +1,4 @@
-/* Native Smart inputs parity and rejection of invalid numeric drafts. */
+/* Native smart inputs parity; decimal money drafts stay text across the ABI. */
 #include "../fpas_cui.h"
 #include <math.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@ typedef struct {
     unsigned char *pixels;
     char text[128];
     float number;
-    double money;
+    char money[128];
     int key, mods, node;
 } sample;
 static int failures, comparisons;
@@ -26,7 +26,8 @@ static sample create(bool dark, int width) {
     cui_set_reduced_motion(s.ui, true);
     cui_set_theme(s.ui, dark ? CUI_THEME_DARK : CUI_THEME_LIGHT);
     snprintf(s.text, sizeof s.text, "%s", "Q3 roadmap");
-    s.number = 12; s.money = 1249.5; s.key = CUI_KEY_P; s.mods = CUI_MOD_PRIMARY | CUI_MOD_SHIFT;
+    snprintf(s.money,sizeof s.money,"%s","1,249.50");
+    s.number = 12; s.key = CUI_KEY_P; s.mods = CUI_MOD_PRIMARY | CUI_MOD_SHIFT;
     return s;
 }
 
@@ -53,9 +54,9 @@ static void draw(sample *s, bool adapter, int kind, bool fixed, int width) {
                 .width = fixed ? CUI_PX(200) : CUI_FIT);
             break;
         case 2:
-            if (adapter) fpas_cui_money_field(s->ui, "amount", &s->money, "Amount", "$", "USD", "Helper", 2,
+            if (adapter) fpas_cui_money_field(s->ui, "amount", s->money, sizeof s->money, "Amount", "$", "USD", "Helper", NULL,
                 fixed ? 2 : 0, 200, 1, 0, &s->node);
-            else cui_money_input(s->ui, "amount", &s->money, .label = "Amount", .code = "USD", .hint = "Helper",
+            else cui_input(s->ui, "amount", s->money, sizeof s->money, .label = "Amount", .prefix = "$", .suffix = "USD", .hint = "Helper", .placeholder = "0",
                 .width = fixed ? CUI_PX(200) : CUI_FIT);
             break;
         case 3: {
@@ -136,7 +137,7 @@ static void numeric_regressions(void) {
         cui_input_key(s.ui, CUI_KEY_NONE, false, 0);
         char huge[64]; memset(huge, '9', 63); huge[63] = 0;
         cui_input_text(s.ui, huge); draw(&s, pass != 0, 2, false, 640);
-        CHECK(s.money == 1249.5);
+        CHECK(strcmp(s.money, huge) == 0);
         destroy(&s);
     }
 }

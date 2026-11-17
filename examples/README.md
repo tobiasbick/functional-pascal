@@ -55,6 +55,10 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | Example | Demonstrates |
 | --- | --- |
 | [GUI widget gallery](ui/gui/gallery/README.md) | Accepted graphical widgets, themes, responsive layout and modal focus |
+| [Native CUI APIs](ui/gui/native-api/README.md) | Canvas wheel input, deferred labels and trace links/geometry |
+| [Native CUI painting](ui/gui/painting/README.md) | Scoped drawing, Unicode measurement, cached images, fonts and theme metrics |
+| [Native desktop commands](ui/gui/desktop-commands/README.md) | File/folder dialogs, close decisions, title updates and frame requests |
+| [Editor commands and shortcuts](ui/gui/editor-commands/README.md) | Native editor navigation/find/marks, application bindings and optional widget labels/images |
 | [TUI widget gallery](ui/tui/gallery/README.md) | Interactive widget previews, themes, and headless control |
 
 ## Related documentation

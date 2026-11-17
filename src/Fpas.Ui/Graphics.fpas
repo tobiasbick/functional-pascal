@@ -1,5 +1,19 @@
 unit Fpas.Ui.Graphics;
 
+// Native CUI font roles; loaded faces can replace these roles in a GUI window.
+public type Font = enum
+  // Ordinary proportional text.
+  Body;
+  // Medium-weight labels.
+  Medium;
+  // Large headings.
+  Display;
+  // Monospaced text.
+  Mono;
+  // Icon glyphs; use a dedicated icon face for this role.
+  Icons;
+end enum;
+
 // Straight-alpha color for shared themes, images and graphical canvas work.
 public type Color = record
   // Red channel.

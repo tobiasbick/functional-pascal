@@ -1,0 +1,71 @@
+unit NativePainting.Update;
+
+uses
+  NativePainting.State as S, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Fonts as Fonts,
+  Fpas.Ui.Gui.Cui.Resources as Resources, Fpas.Ui.Widgets.Canvas.Canvases as Canvas,
+  Fpas.Ui.Graphics as G, System.IO as IO;
+
+// Acknowledges native events and schedules resource work between frames.
+// ## Parameters
+// - `Model`: Current application state.
+// - `Message`: User action or native completion.
+// ## Returns
+// Next model and owner-thread commands.
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return case Message of
+    when S.Msg.LoadFont: new Mvu.Transition<S.Model, S.Msg>(
+      Model, [
+        Fonts.Apply<S.Msg>(
+          if Model.Face = null then
+            Fonts.Operation<S.Msg>.Load(IO.File.ReadAllBytes(Model.FontPath), S.Msg.Loaded)
+          else
+            Fonts.Operation<S.Msg>.Assign(G.Font.Body, Model.Face)
+          end if
+        )
+      ]
+    );
+    when S.Msg.Loaded(const Face: Resources.CuiFontFace?): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Face := Face;
+        Status := if Face = null then
+          'CUI rejected the font.'
+        else
+          'The window owns a copy of the loaded face.'
+        end if;
+      end with,
+      if Face = null then
+        []
+      else
+        [Fonts.Apply<S.Msg>(Fonts.Operation<S.Msg>.Assign(G.Font.Body, Face))]
+      end if
+    );
+    when S.Msg.RestoreFont: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Status := 'Built-in body role restored; loaded faces live until close.';
+      end with, [Fonts.Apply<S.Msg>(Fonts.Operation<S.Msg>.Assign(G.Font.Body, null))]
+    );
+    when S.Msg.ScaleText: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Scale := if Model.Scale = 1.0F then
+          1.35F
+        else
+          1.0F
+        end if;
+      end with, []
+    );
+    when S.Msg.Motion: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        ReducedMotion := not Model.ReducedMotion;
+      end with, []
+    );
+    when S.Msg.PointerChanged(const Value: Canvas.Pointer): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Pointer := Value;
+      end with, []
+    );
+    when S.Msg.Clicked(_): new Mvu.Transition<S.Model, S.Msg>(Model, []);
+  end case;
+end function;
+
+end unit;

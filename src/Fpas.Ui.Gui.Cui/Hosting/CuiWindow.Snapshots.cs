@@ -19,6 +19,10 @@ public sealed partial class CuiWindow
     {
         CheckOpen();
         NativeMethods.FinishFrameForDestroy(app);
+        SnapshotShortcutKeys();
+        ReleaseFrameCallbacks();
+        DiscardMoneyFields();
+        editorRequests.Clear();
         layouts.Clear();
         trackedNodes.Clear();
         inFrame = false;
@@ -52,6 +56,11 @@ public sealed partial class CuiWindow
     public void ForgetControl(string id)
     {
         CheckOpen();
+        if (moneyFields.Remove(id, out var money))
+        {
+            moneyDrawn.Remove(id);
+            if (!controlKeys.ContainsKey(id)) NativeMethods.Forget(context, money.Key);
+        }
         if (controlKeys.Remove(id, out uint key))
         {
             NativeMethods.Forget(context, key);

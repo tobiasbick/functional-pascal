@@ -1,34 +1,16 @@
 #include "../../fpas_cui.h"
 
-void fpas_cui_money_field(cui_ctx *ui, const char *id, double *value,
-    const char *label, const char *symbol, const char *code, const char *hint, int decimals,
+int fpas_cui_money_field(cui_ctx *ui, const char *id, char *text, size_t capacity,
+    const char *label, const char *symbol, const char *code, const char *hint, const char *error,
     int width_kind, float width, int enabled, int focus, int *node) {
-    const cui_id key = cui_make_id(ui, id), state_key = key ^ 0x3077u;
-    cui__money_state *state = cui_state(ui, state_key, sizeof *state);
-    fpas_own(ui, key, state_key, 0, 0);
+    const cui_id key = cui_make_id(ui, id);
     const bool allowed = enabled && !cui_is_disabled(ui);
-    if (!allowed) {
-        if (ui->focus == key) ui->focus = 0;
-        state->had_focus = state->init = false;
-    }
-    if (allowed && focus) { ui->focus = key; ui->focus_visible = true; }
-    if (state->init && state->last != *value) {
-        if (ui->focus == key) snprintf(state->text, sizeof state->text, "%.*f", decimals, *value);
-        else state->had_focus = false;
-        cui_edit_state *edit = cui__state_lazy(ui, key, sizeof *edit, false);
-        if (edit) fpas_text_reset(ui, edit, (int)strlen(state->text));
-    }
-    const cui_money_opts options = {
-        .label = label ? cui__frame_strdup(ui, label, -1) : NULL,
-        .symbol = cui__frame_strdup(ui, symbol, -1),
-        .code = code ? cui__frame_strdup(ui, code, -1) : NULL,
-        .hint = hint ? cui__frame_strdup(ui, hint, -1) : NULL,
-        .decimals = decimals ? decimals : -1, .width = fpas_extent(width_kind, width) };
-    cui_push_disabled(ui, !allowed);
-    cui_money_input_ex(ui, id, value, &options);
-    cui_pop_disabled(ui);
-    *node = fpas_find(ui, key);
-    const int root = label || hint ? ui->nodes[*node].parent : *node;
-    if (label && strstr(label, "##")) fpas_text(ui, ui->nodes[root].first, label);
-    ui->last_node = root; ui->last_id = key;
+    if (!allowed && ui->focus == key) ui->focus = 0;
+    const cui_input_opts options = { .label=label, .prefix=symbol, .suffix=code,
+        .hint=hint, .error=error, .placeholder="0", .width=fpas_extent(width_kind,width) };
+    int nodes[3], revealed;
+    const int flags = fpas_draw_text_editor(ui,id,text,capacity,options,false,allowed,focus,
+        nodes,&revealed,cui_input_ex);
+    *node = nodes[0];
+    return flags | (allowed && ui->focus == key ? 4 : 0);
 }

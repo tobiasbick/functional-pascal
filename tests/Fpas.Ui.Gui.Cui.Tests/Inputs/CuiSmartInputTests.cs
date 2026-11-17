@@ -142,30 +142,30 @@ public sealed class CuiSmartInputTests
     [GuiTheory]
     [InlineData(CuiRenderer.Software)]
     [InlineData(CuiRenderer.OpenGl)]
-    public void MoneyUsesNativeDigitsAndControlledValues(CuiRenderer renderer)
+    public void MoneyUsesDecimalDraftsAndControlledValues(CuiRenderer renderer)
     {
         using var window = new CuiWindow("Money", 520, 320, renderer, continuous: true);
         window.SetReducedMotion(true);
-        double model = 1249.5;
+        decimal model = 1249.5m;
         Draw(focus: true);
-        Assert.Equal(42.75, Replace("42.75"));
-        model = 42.75;
+        Assert.Equal(42.75m, Replace("42.75"));
+        model = 42.75m;
         Draw();
-        model = 123.5;
-        Assert.Equal(123.5, Draw());
-        Assert.Equal(7.25, Replace("7.25"));
+        model = 123.5m;
+        Assert.Equal(123.5m, Draw());
+        Assert.Equal(7.25m, Replace("7.25"));
         Assert.Equal(model, Draw());
         Assert.Equal(model, Replace("99", enabled: false));
         Draw(focus: true);
         Assert.Equal(model, Replace(new string('9', 63)));
 
-        double Replace(string text, bool enabled = true)
+        decimal Replace(string text, bool enabled = true)
         {
             Draw(select: true, enabled: enabled);
             return Draw(text: text, enabled: enabled);
         }
 
-        double Draw(bool focus = false, string? text = null, bool select = false, bool enabled = true)
+        decimal Draw(bool focus = false, string? text = null, bool select = false, bool enabled = true)
         {
             Assert.True(window.NextFrame());
             window.MovePointer(-1, -1);
@@ -173,7 +173,7 @@ public sealed class CuiSmartInputTests
             if (text is not null) window.SetKey(0, false, 0);
             if (text is not null) window.InputText(text);
             window.BeginColumn();
-            double result = window.MoneyField("amount", model, "Amount", "$", "USD", "", 2, 2, 240,
+            decimal result = window.MoneyField("amount", model, "Amount", "$", "USD", "", 2, 2, 240,
                 enabled, focus, true);
             window.EndColumn(); GC.Collect(); window.Present();
             return result;
@@ -231,7 +231,8 @@ public sealed class CuiSmartInputTests
         Assert.True(window.NextFrame());
         Assert.Throws<ArgumentOutOfRangeException>(() => window.InlineEdit("id", "text", "", 1, 0, 512, 0, 0, true, false, true));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrubField("id", "Radius", 1, 0, 100, float.NaN, 0, "", "", 0, 0, true, false, true));
-        Assert.Throws<ArgumentOutOfRangeException>(() => window.MoneyField("id", 1e100, "", "$", "", "", 2, 0, 0, true, false, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.MoneyField("id", 0m, "", "$", "", "", 29, 0, 0, true, false, true));
+        Assert.Throws<ArgumentException>(() => window.MoneyField("id", .001m, "", "$", "", "", 2, 0, 0, true, false, true));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.ShortcutRecorder("id", new(68, 0), "", 0, 0, true, false, "clear"));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.ShortcutLabel(new(0, 2)));
         window.Button("Frame remains usable"); window.Present();

@@ -1,19 +1,25 @@
 unit Fpas.Ui.Gui.FileDialogs;
 
-uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui as Cui, System as Sys;
 
 // An owner-window file selection request.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type OpenRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Native Open, Save or Folder operation.
+  public Kind: Cui.CuiFileDialogKind;
   // Optional dialog title.
   public Title: string;
   // Optional name for the extension filter.
   public FilterName: string;
   // Semicolon-separated extensions, or empty for any type.
   public Accept: string;
+  // Proposed filename or path for Save.
+  public DefaultName: string;
   // Mapper for a confirmed selection.
   public OnSelected: function(string): TMsg;
+  // Optional message when CUI returns no selection.
+  public OnCancelled: Sys.Func<TMsg>? := null;
 
   // Translates the selected file into a parent message.
   // ## Type parameters
@@ -25,16 +31,22 @@ public type OpenRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
   begin
     const Select: function(string): TMsg := self.OnSelected;
-    return new OpenRequest<TNext>(
+    const Cancelled: Sys.Func<TNext>? := case self.OnCancelled of
+      when is Sys.Func<TMsg> as Notify: function(): TNext => Messages(Notify.Invoke());
+      else null;
+    end case;
+    return new Request<TNext>(
+      self.Kind,
       self.Title,
       self.FilterName,
       self.Accept,
-      function(Path: string): TNext => Messages(Select(Path))
+      self.DefaultName,
+      function(Path: string): TNext => Messages(Select(Path)), Cancelled
     );
   end function;
 end record;
 
-// Opens the native file chooser between frames. Cancellation posts no message.
+// Opens the native file chooser between frames.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -42,14 +54,73 @@ end record;
 // - `Title`: Optional dialog title.
 // - `FilterName`: Optional name for the extension filter.
 // - `Accept`: Semicolon-separated extensions without dots, or empty for any type.
+// - `OnCancelled`: Optional message when CUI returns no selection.
 // ## Returns
 // The graphical host command.
 public function OpenFile<TMsg>(
-  OnSelected: function(string): TMsg; Title: string := ''; FilterName: string := ''; Accept: string := ''
+  OnSelected: function(string): TMsg; Title: string := ''; FilterName: string := ''; Accept: string := '';
+  OnCancelled: Sys.Func<TMsg>? := null
 ): Mvu.Command<TMsg>;
 begin
   return Mvu.Command<TMsg>.Host(
-    Mvu.HostRequest.Extension(new OpenRequest<TMsg>(Title, FilterName, Accept, OnSelected))
+    Mvu.HostRequest.Extension(
+      new Request<TMsg>(
+        Cui.CuiFileDialogKind.Open,
+        Title, FilterName, Accept, '', OnSelected, OnCancelled
+      )
+    )
+  );
+end function;
+
+// Selects a save destination without writing the file.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnSelected`: Maps the confirmed destination to a message.
+// - `DefaultName`: Proposed filename or path.
+// - `Title`: Optional dialog title.
+// - `FilterName`: Optional native extension filter label.
+// - `Accept`: Semicolon-separated extensions without dots.
+// - `OnCancelled`: Optional message when CUI returns no selection.
+// ## Returns
+// The owner-thread graphical command.
+public function SaveFile<TMsg>(
+  OnSelected: function(string): TMsg; DefaultName: string := '';
+  Title: string := ''; FilterName: string := ''; Accept: string := '';
+  OnCancelled: Sys.Func<TMsg>? := null
+): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(
+    Mvu.HostRequest.Extension(
+      new Request<TMsg>(
+        Cui.CuiFileDialogKind.Save,
+        Title, FilterName, Accept, DefaultName, OnSelected, OnCancelled
+      )
+    )
+  );
+end function;
+
+// Selects an existing directory through CUI's native chooser.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnSelected`: Maps the chosen directory to a message.
+// - `Title`: Optional dialog title.
+// - `OnCancelled`: Optional message when CUI returns no selection.
+// ## Returns
+// The owner-thread graphical command.
+public function ChooseFolder<TMsg>(
+  OnSelected: function(string): TMsg; Title: string := '';
+  OnCancelled: Sys.Func<TMsg>? := null
+): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(
+    Mvu.HostRequest.Extension(
+      new Request<TMsg>(
+        Cui.CuiFileDialogKind.Folder,
+        Title, '', '', '', OnSelected, OnCancelled
+      )
+    )
   );
 end function;
 

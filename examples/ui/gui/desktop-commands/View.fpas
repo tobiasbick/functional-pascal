@@ -1,0 +1,42 @@
+unit DesktopCommands.View;
+
+uses
+  DesktopCommands.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+
+// Builds the native dialog controls and model-owned close confirmation.
+// ## Parameters
+// - `Model`: Current selection and close decision.
+// - `Viewport`: Current logical viewport.
+// ## Returns
+// The native CUI view.
+public function Build(Model: S.Model; Viewport: L.Viewport): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
+    E.Text<S.Msg>('Native desktop commands'),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      Buttons.Button<S.Msg>('open', 'Open file', S.Msg.Open),
+      Buttons.Button<S.Msg>('save', 'Save destination', S.Msg.Save),
+      Buttons.Button<S.Msg>('folder', 'Choose folder', S.Msg.Folder)
+    ),
+    E.Text<S.Msg>(Model.Selection),
+    Buttons.Button<S.Msg>('redraw', 'Request native repaint', S.Msg.Redraw),
+    if Model.Closing then
+      E.Column<S.Msg>(
+        new L.Flow(Gap := L.Spacing.Normal),
+        E.Text<S.Msg>('Close this window?'),
+        E.Row<S.Msg>(
+          new L.Flow(Gap := L.Spacing.Normal),
+          Buttons.Button<S.Msg>('stay', 'Keep open', S.Msg.Stay),
+          Buttons.Button<S.Msg>('quit', 'Close', S.Msg.Quit)
+        )
+      )
+    else
+      E.Text<S.Msg>('The native close button asks before exiting.')
+    end if
+  );
+end function;
+
+end unit;

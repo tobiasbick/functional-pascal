@@ -1,0 +1,39 @@
+unit Fpas.Ui.Gui.Frames;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// Requests a native redraw or a delayed native wakeup after the current view.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Zero requests the next frame; positive values are seconds after presentation.
+  public DelaySeconds: float;
+
+  // Retains the deadline when a child command maps to its parent.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same native frame request in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new Request<TNext>(self.DelaySeconds);
+  end function;
+end record;
+
+// Requests a native frame without creating a timer task or changing the model.
+// CUI combines this deadline with earlier animation and input wakeups.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `DelaySeconds`: Finite nonnegative delay; zero requests the next frame.
+// ## Returns
+// An owner-thread graphical command; closing discards pending requests.
+public function Redraw<TMsg>(DelaySeconds: float := 0.0F): Mvu.Command<TMsg>;
+requires DelaySeconds >= 0.0F and DelaySeconds <= float.MaxValue;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(DelaySeconds)));
+end function;
+
+end unit;

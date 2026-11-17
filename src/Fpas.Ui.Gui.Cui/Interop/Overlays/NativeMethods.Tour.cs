@@ -12,5 +12,6 @@ internal static partial class NativeMethods
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] titles,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] bodies,
         int* placements, int count, ref int step, float width, float padding, int blockTarget,
+        string? nextLabel, string? backLabel, string? doneLabel, string? countFormat,
         int focus, out int node, out uint key, int* parts);
 }

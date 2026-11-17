@@ -65,7 +65,7 @@ static bool parity(bool icon_only, int placement, float width, bool contextual) 
     return valid;
 }
 
-static bool user_menu_rename(bool compact) {
+static bool user_menu_rename(bool compact, const char *avatar_path) {
     const int w = 640, h = 320;
     const size_t bytes = (size_t)w * h * 4;
     unsigned char *actual = malloc(bytes), *expected = malloc(bytes);
@@ -79,6 +79,8 @@ static bool user_menu_rename(bool compact) {
         if (!ui) { cui_sw_destroy(renderer); valid = false; break; }
         cui_set_viewport(ui, w, h, 1);
         cui_set_reduced_motion(ui, true);
+        const cui_texture avatar = avatar_path ? cui_image_load(ui, avatar_path, NULL, NULL) : 0;
+        if (avatar_path && !avatar) valid = false;
         const char *keys[] = { "profile" }, *labels[] = { "Profile" }, *empty[] = { "" };
         const int flags[] = { 0 };
         for (int frame = 0; frame < 6; ++frame) {
@@ -91,7 +93,7 @@ static bool user_menu_rename(bool compact) {
                 if (pass) {
                     int nodes[2], open, highlight;
                     fpas_cui_user_menu(ui, "account", frame < 4 ? "Daniel Carter" : "Maya ### Ortiz",
-                        "Account", "online", keys, labels, empty, empty, flags, 1,
+                        "Account", "online", avatar_path, keys, labels, empty, empty, flags, 1,
                         CUI_PLACE_BOTTOM_START, 0, compact, 1, 0, nodes, &open, &highlight);
                     if (frame >= 3 && (!open || !fpas_cui_focused(ui, nodes[0]))) {
                         fprintf(stderr, "Renaming an account must preserve its open menu and trigger focus.\n");
@@ -99,7 +101,7 @@ static bool user_menu_rename(bool compact) {
                     }
                 } else {
                     const cui_user_menu_opts options = { .detail = "Account", .status = "online",
-                        .placement = CUI_PLACE_BOTTOM_START, .compact = compact };
+                        .placement = CUI_PLACE_BOTTOM_START, .compact = compact, .avatar = avatar };
                     if (cui_user_menu_begin(ui, "Maya ### Ortiz", &options)) {
                         cui_menu_item(ui, "Profile");
                         cui_user_menu_end(ui);
@@ -129,7 +131,17 @@ int main(void) {
                 valid = parity(icon != 0, place ? CUI_PLACE_TOP_END : CUI_PLACE_BOTTOM_START, sized ? 260 : 0, false) && valid;
     valid = parity(false, CUI_PLACE_BOTTOM_START, 0, true) && valid;
     if (!valid) fprintf(stderr, "Menu adapter pixels differ from native CUI.\n");
-    valid = user_menu_rename(false) && valid;
-    valid = user_menu_rename(true) && valid;
+    unsigned char rgba[8 * 8 * 4];
+    for (int pixel = 0; pixel < 64; pixel++) {
+        rgba[pixel * 4] = (unsigned char)(pixel * 3); rgba[pixel * 4 + 1] = 127;
+        rgba[pixel * 4 + 2] = 188; rgba[pixel * 4 + 3] = 255;
+    }
+    const char *avatar_path = "cui-menu-avatar.png";
+    if (!cui_write_png(avatar_path, rgba, 8, 8, 8 * 4)) return 1;
+    for (int compact = 0; compact < 2; compact++) {
+        valid = user_menu_rename(compact != 0, NULL) && valid;
+        valid = user_menu_rename(compact != 0, avatar_path) && valid;
+    }
+    remove(avatar_path);
     return valid ? 0 : 1;
 }

@@ -47,10 +47,10 @@ begin
     when S.Msg.SetBlur(const Value: float): State with
       Blur := Value;
     end with;
-    when S.Msg.SetAmount(const Value: double): State with
+    when S.Msg.SetAmount(const Value: decimal): State with
       Amount := Value;
     end with;
-    when S.Msg.SetSalary(const Value: double): State with
+    when S.Msg.SetSalary(const Value: decimal): State with
       Salary := Value;
     end with;
     when S.Msg.SetPaletteKey(const Value: Keys.Combination): State with

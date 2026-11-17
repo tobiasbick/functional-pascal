@@ -13,8 +13,11 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Charts;
 /// <param name="Pitch">Distance between dots, or zero for the default.</param>
 /// <param name="Axis">Whether to show the axis labels.</param>
 /// <param name="Readout">Whether to show the interactive value label.</param>
+/// <param name="XLabel">Formats axis/readout X values during painting, or null for native formatting.</param>
+/// <param name="ValueLabel">Formats readout values before their unit, or null for native formatting.</param>
 public sealed record CuiDotOptions(CuiChartOptions Chart, double Minimum, double Maximum, double Step,
-    int Units, CuiChartFormat? XFormat, string Unit, float Pitch, bool Axis, bool Readout);
+    int Units, CuiChartFormat? XFormat, string Unit, float Pitch, bool Axis, bool Readout,
+    Func<double, string>? XLabel = null, Func<double, string>? ValueLabel = null);
 
 /// <summary>Native activation and readout.</summary>
 /// <param name="Clicked">Whether the pointer or keyboard activated the chart.</param>

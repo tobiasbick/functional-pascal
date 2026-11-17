@@ -58,11 +58,11 @@ static void editor(void) {
         if (frame == 7) cui_input_key(ui, CUI_KEY_NONE, false, 0);
         if (frame == 7) cui_input_text(ui, " xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         cui_begin_frame(ui, .016f);
-        int line, column, lines;
+        fpas_code_editor_observation observation;
         int result = fpas_cui_code_editor(ui,"sql", source,sizeof source,"sql",NULL,1,0,250,0,4,
-            frame == 0 ? 17 : 1, &line,&column,&lines);
+            frame == 0 ? 17 : 1, NULL, 0, &observation);
         if (result & 1) ++changes;
-        if (frame == 3) check(!strcmp(source, "SELECT \xc3\xa9") && (result & 1) && line == 1 && lines == 1,
+        if (frame == 3) check(!strcmp(source, "SELECT \xc3\xa9") && (result & 1) && observation.line == 1 && observation.lines == 1,
             "The SQL editor must propose one complete UTF-8 insertion.");
         if (frame == 6) check(!strcmp(source, "FROM"), "Undo must not resurrect source replaced by the application.");
         if (frame == 7) check((result & 2) && !strcmp(source, "FROM"), "An oversized insertion must be refused whole.");

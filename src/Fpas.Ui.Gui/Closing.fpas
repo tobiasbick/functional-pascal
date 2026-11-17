@@ -1,0 +1,33 @@
+unit Fpas.Ui.Gui.Closing;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// Rejects the pending native close and allows a subsequent native close request.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type CancelRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Retains the cancellation when a child command maps to its parent.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same graphical close decision in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new CancelRequest<TNext>();
+  end function;
+end record;
+
+// Rejects a native close request delivered through Application.OnCloseRequested.
+// Confirm closing with the existing MVU Exit command instead.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// An owner-thread command that keeps the session and its background work open.
+public function Cancel<TMsg>(): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new CancelRequest<TMsg>()));
+end function;
+
+end unit;

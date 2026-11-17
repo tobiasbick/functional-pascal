@@ -1,0 +1,87 @@
+unit EditorCommands.Update;
+
+uses
+  EditorCommands.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.EditorCommands as Editor, Fpas.Ui.Gui.Shortcuts as Shortcuts,
+  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
+  Fpas.Ui.Widgets.Editors.CodeEditors as Code, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk,
+  Fpas.Ui.Widgets.Overlays.Tours as Tours;
+
+// Converts model decisions into one-view native editor requests.
+// ## Parameters
+// - `Model`: Committed state.
+// - `Message`: Native proposal or application action.
+// ## Returns
+// The next model and owner-thread commands.
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return case Message of
+    when S.Msg.Edited(const Value: Code.Event): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Text := Value.Text ?? Model.Text;
+        Editor := Value;
+      end with, []
+    );
+    when S.Msg.Search: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [Editor.Find<S.Msg>('editor', '😀')]
+    );
+    when S.Msg.GoTo: new Mvu.Transition<S.Model, S.Msg>(Model, [Editor.GoTo<S.Msg>('editor', 2)]);
+    when S.Msg.SelectAll: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [Editor.Select<S.Msg>('editor', 0, Model.Text.Length)]
+    );
+    when S.Msg.Save: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Notice := 'Save message received.';
+      end with, []
+    );
+    when S.Msg.Account: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Notice := 'Account action received.';
+      end with, []
+    );
+    when S.Msg.Bulk(const Value: Bulk.Event): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Count := 0;
+        Notice := if Value.Clear then
+          'Selection cleared.'
+        else
+          'Selection action received.'
+        end if;
+      end with, []
+    );
+    when S.Msg.StartTour: new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Tour := 0;
+      end with, []
+    );
+    when S.Msg.TourChanged(const Value: Tours.Change): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Tour := Value.Step;
+      end with, []
+    );
+  end case;
+end function;
+
+// Selects portable model-owned shortcuts; native editing and overlays run first.
+// ## Parameters
+// - `Model`: Committed model used to enable commands.
+// ## Returns
+// Immutable application bindings for the current view.
+public function Bindings(Model: S.Model): array of Shortcuts.Binding<S.Msg>;
+begin
+  return [
+    new Shortcuts.Binding<S.Msg>(
+      new Keys.Combination(Keys.Key.S, Keys.PrimaryModifier()), S.Msg.Save,
+      AllowWhileEditing := true
+    ),
+    new Shortcuts.Binding<S.Msg>(
+      new Keys.Combination(Keys.Key.F1),
+      S.Msg.StartTour,
+      AllowWhileEditing := true
+    )
+  ];
+end function;
+
+end unit;

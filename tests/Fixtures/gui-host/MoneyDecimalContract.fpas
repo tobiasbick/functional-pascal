@@ -1,0 +1,186 @@
+unit MoneyDecimalContract;
+
+uses
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Inputs.MoneyFields as Money, Fpas.Ui.Elements as E,
+  Fpas.Ui.Composition as Composition, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
+  System as Sys;
+
+type Model = record
+  public Amount: decimal := 0.30M;
+  public Accept: bool := true;
+end record;
+
+type Msg = variant
+  Changed(Value: decimal);
+  Focus;
+  Reject;
+  Accept;
+end variant;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Validation();
+begin
+  for Places: int in [-1, 29] do
+    var Rejected: bool := false;
+    try
+      discard V.Prepare<decimal>(
+        Money.MoneyField<decimal>(
+          'amount', 0M, function(Value: decimal): decimal => Value,
+          new Money.Options(DecimalPlaces := Places)
+        ), V.Target.Graphical
+      );
+    catch Error: Sys.ArgumentException do
+      Rejected := true;
+    end try;
+
+    Check(Rejected, 'The prepared view accepted invalid decimal precision.');
+  end for;
+  var Rejected: bool := false;
+  try
+    discard V.Prepare<decimal>(
+      Money.MoneyField<decimal>('amount', 0.001M, function(Value: decimal): decimal => Value),
+      V.Target.Graphical
+    );
+  catch Error: Sys.ArgumentException do
+    Rejected := true;
+  end try;
+
+  Check(Rejected, 'The prepared view silently rounded a model amount.');
+  discard V.Prepare<decimal>(
+    Money.MoneyField<decimal>(
+      'amount', decimal.MaxValue, function(Value: decimal): decimal => Value,
+      new Money.Options(DecimalPlaces := 28)
+    ), V.Target.Graphical
+  );
+end procedure;
+
+// Verifies exact decimal MVU mapping, native focus/input, rejection and invariant inspection.
+// ## Parameters
+// - `Renderer`: Explicit native renderer for the bounded test.
+// - `Capture`: Optional destination for a screenshot of the accepted decimal field.
+public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string? := null);
+requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenGl;
+  function Update(Current: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+  begin
+    return case Message of
+      when Msg.Changed(const Value: decimal): new Mvu.Transition<Model, Msg>(
+        if Current.Accept then
+          Current with
+            Amount := Value;
+          end with
+        else
+          Current
+        end if, []
+      );
+      when Msg.Focus: new Mvu.Transition<Model, Msg>(Current, [Mvu.Focus<Msg>('amount')]);
+      when Msg.Reject: new Mvu.Transition<Model, Msg>(
+        Current with
+          Accept := false;
+        end with, []
+      );
+      when Msg.Accept: new Mvu.Transition<Model, Msg>(
+        Current with
+          Accept := true;
+        end with, []
+      );
+    end case;
+  end function;
+  function View(Current: Model; Size: L.Viewport): E.Element<Msg>;
+  begin
+    Last := Current;
+    return Composition.Map<decimal, Msg>(
+      Money.MoneyField<decimal>(
+        'amount',
+        Current.Amount,
+        function(Value: decimal): decimal => Value,
+        new Money.Options(
+          Label := 'Amount',
+          Symbol := '€',
+          Code := 'EUR',
+          Hint := 'Exact decimal',
+          Width := L.Extent.Fixed(L.Measure.Logical(400))
+        )
+      ), Msg.Changed
+    );
+  end function;
+  procedure Inject();
+  begin
+    if Select then
+      Window.SetKey(15, true, 2);
+      Window.SetKey(15, false, 2);
+      Select := false;
+    end if;
+
+    const Draft: string? := Text;
+    if Draft <> null then
+      Window.SetKey(0, false);
+      Window.InputText(Draft);
+      Text := null;
+    end if;
+  end procedure;
+  procedure Steps(Value: Gui.Session<Msg>);
+  begin
+    for Index: int := 0 to 3 do
+      Check(Value.Step(), 'The decimal session closed.');
+    end for;
+  end procedure;
+  procedure Replace(Value: Gui.Session<Msg>; Draft: string);
+  begin
+    Select := true;
+    Steps(Value);
+    Text := Draft;
+    Steps(Value);
+  end procedure;
+begin
+  Validation();
+  var Last: Model := new Model();
+  var Select: bool := false;
+  var Text: string? := null;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPAS decimal money', 520, 200, Renderer, true);
+  using const Session: Gui.Session<Msg> := Host.Start<Model, Msg>(
+    Last,
+    Update,
+    View,
+    Window,
+    32,
+    Inject
+  );
+  Check(Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software), 'Unexpected renderer.');
+  Steps(Session);
+  discard Session.Post(Msg.Focus);
+  Steps(Session);
+  Replace(Session, '9007199254740993.01');
+  Check(Last.Amount = 9007199254740993.01M, 'The FPAS money path lost decimal precision.');
+  var Found: bool := false;
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = 'amount' then
+      Found := Item.Value = '9007199254740993.01';
+    end if;
+  end for;
+
+  Check(Found, 'Inspection lost the exact decimal value.');
+  if Capture <> null then
+    Session.CapturePng(Capture);
+  end if;
+
+  Replace(Session, '9007199254740993.011');
+  Check(Last.Amount = 9007199254740993.01M, 'Excess fractional precision changed the model.');
+  discard Session.Post(Msg.Reject);
+  Steps(Session);
+  Replace(Session, '99.99');
+  Check(Last.Amount = 9007199254740993.01M, 'A rejected proposal replaced the model.');
+  discard Session.Post(Msg.Accept);
+  Steps(Session);
+  Replace(Session, '0.10');
+  Check(Last.Amount = 0.10M, 'The decimal field did not recover from a rejected proposal.');
+end procedure;
+
+end unit;

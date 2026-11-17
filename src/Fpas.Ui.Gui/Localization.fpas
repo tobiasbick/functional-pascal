@@ -1,0 +1,38 @@
+unit Fpas.Ui.Gui.Localization;
+
+uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui.Resources as Resources;
+
+// An owned native caption-table replacement.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Partial captions; null restores native English defaults.
+  public Strings: Resources.CuiStrings?;
+
+  // Retains the caption table when mapping a feature command.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent mapper; no completion message is produced.
+  // ## Returns
+  // The same replacement in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new Request<TNext>(self.Strings);
+  end function;
+end record;
+
+// Replaces native calendar/file-browser captions between frames. The window owns a native copy.
+// Per-widget captions override this table; null entries use English.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Strings`: Partial table, or null to restore English. Weeks start on Monday.
+// ## Returns
+// An owner-thread graphical command.
+public function Set<TMsg>(Strings: Resources.CuiStrings?): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(Strings)));
+end function;
+
+end unit;

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Widgets.Canvas.Canvases;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, System as Sys, Fpas.Ui.Widgets.Canvas.Painting as Painting;
 
 // A drawing command in canvas-local logical points.
 public type Shape = variant
@@ -34,6 +34,30 @@ public type Event = record
   public Height: float;
 end record;
 
+// Wheel movement over the native canvas, in lines; positive Y scrolls upward.
+public type Wheel = record
+  // Horizontal line delta.
+  public X: float;
+  // Vertical line delta.
+  public Y: float;
+end record;
+
+// Native pointer state; emitted on hover/press transitions and movement while active.
+public type Pointer = record
+  // Whether CUI hovers this enabled canvas.
+  public Hovered: bool;
+  // Whether a native press starts in this frame.
+  public Pressed: bool;
+  // Canvas-local horizontal pointer coordinate.
+  public X: float;
+  // Canvas-local vertical pointer coordinate.
+  public Y: float;
+  // Previously laid-out logical width.
+  public Width: float;
+  // Previously laid-out logical height.
+  public Height: float;
+end record;
+
 // Creates a native CUI canvas element.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -42,12 +66,23 @@ end record;
 // - `Drawing`: Draw commands in paint order.
 // - `Clicked`: Maps native activation to an application message.
 // - `Settings`: Native canvas options.
+// - `OnWheel`: Optional wheel mapper. Null leaves scrolling to enclosing views.
+// - `Paint`: Optional direct CUI drawing after layout, following Drawing; owner-thread only.
+// - `OnPointer`: Optional changed-state hover/press mapper; disabling emits a final leave.
 // ## Returns
 // A graphical element.
-public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null; OnWheel: Sys.Func<Wheel, TMsg>? := null; Paint: Sys.Action<Painting.Surface>? := null; OnPointer: Sys.Func<Pointer, TMsg>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Canvas(Id, Drawing, Clicked, Settings ?? new Options());
+  return E.Element<TMsg>.Canvas(
+    Id,
+    Drawing,
+    Clicked,
+    Settings ?? new Options(),
+    OnWheel,
+    Paint,
+    OnPointer
+  );
 end function;
 
 end unit;

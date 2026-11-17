@@ -1,0 +1,206 @@
+unit DesktopCommandsContract;
+
+uses
+  DesktopCommandMappingContract as Mapping,
+  DesktopSchedulingContract as Scheduling,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Closing as Closing,
+  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type Msg = variant
+  Start;
+  Close;
+  Reject;
+  Approve;
+  Configure;
+  Failed(Error: Sys.Exception);
+end variant;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function View(Model: int; Size: L.Viewport): E.Element<Msg>;
+begin
+  return E.Text<Msg>('Desktop commands ' + Model.ToString());
+end function;
+
+procedure Steps(Session: Gui.Session<Msg>);
+begin
+  for Index: int := 0 to 2 do
+    Check(Session.Step(), 'Desktop command session closed unexpectedly.');
+  end for;
+end procedure;
+
+procedure VerifyClose(Renderer: Cui.CuiRenderer);
+  async function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    Started.SetResult(true);
+    try
+      await Tasks.Task.Delay(-1, Token).ConfigureAwait(false);
+    finally
+      Stopped.SetResult(true);
+    end try;
+  end function;
+  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  begin
+    case Message of
+      when Msg.Start:
+        return new Mvu.Transition<int, Msg>(
+          Model,
+          [Mvu.StartBackground<Msg>('work', Work, Msg.Failed)]
+        );
+      when Msg.Close:
+        return new Mvu.Transition<int, Msg>(Model + 1, []);
+      when Msg.Reject:
+        return new Mvu.Transition<int, Msg>(Model, [Closing.Cancel<Msg>()]);
+      when Msg.Approve:
+        return new Mvu.Transition<int, Msg>(Model, [Mvu.Exit<Msg>()]);
+      when Msg.Configure:
+        return new Mvu.Transition<int, Msg>(
+          Model, [
+            Windows.SetTitle<Msg>('Document — été'),
+            Windows.Resize<Msg>(480, 340),
+            Frames.Redraw<Msg>(0.05F)
+          ]
+        );
+      when Msg.Failed(const Error: Sys.Exception):
+        raise Error;
+    end case;
+  end function;
+  function Notify(): Msg;
+  begin
+    Notifications := Notifications + 1;
+    return Msg.Close;
+  end function;
+begin
+  var Notifications: int := 0;
+  const Started: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Stopped: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Desktop close', 420, 300, Renderer, true);
+  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(
+    0, Update, View, Window, 64,
+    OnCloseRequested := Notify
+  );
+  Steps(Session);
+  discard Session.Post(Msg.Start);
+  Steps(Session);
+  Check(Started.Task.Wait(3000), 'The background run did not start.');
+  discard Session.Post(Msg.Configure);
+  Steps(Session);
+  Check(
+    Window.Size.Width = 480 and Window.Size.Height = 340,
+    'Resize did not reach the native owner.'
+  );
+  Window.RequestClose();
+  Steps(Session);
+  Window.RequestClose();
+  Steps(Session);
+  Check(Notifications = 1, 'Repeated close requests must share one pending decision.');
+  Check(
+    Session.IsOpen() and not Stopped.Task.IsCompleted,
+    'A pending close cancelled background work.'
+  );
+  discard Session.Post(Msg.Reject);
+  Steps(Session);
+  Window.RequestClose();
+  Steps(Session);
+  Check(Notifications = 2, 'Rejecting a close must allow a new close decision.');
+  Check(
+    Session.IsOpen() and not Stopped.Task.IsCompleted,
+    'Rejecting a close stopped the session.'
+  );
+  discard Session.Post(Msg.Approve);
+  while Session.Step() do
+  end while;
+
+  Check(Stopped.Task.IsCompleted, 'Approved close must join background cleanup.');
+end procedure;
+
+procedure VerifyDefaultAndDispose(Renderer: Cui.CuiRenderer);
+  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  begin
+    return new Mvu.Transition<int, Msg>(Model, []);
+  end function;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Default close', 420, 300, Renderer, true);
+  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(0, Update, View, Window, 64);
+  Steps(Session);
+  Window.RequestClose();
+  while Session.Step() do
+  end while;
+
+  Check(not Session.IsOpen(), 'Without a handler, native close must end the session.');
+  // Explicit disposal is a forced cleanup, not another interactive close request.
+  using const Forced: Gui.Session<Msg> := Gui.Start<int, Msg>(
+    0, Update, View,
+    new Gui.Options(
+      Title := 'Forced cleanup',
+      Renderer := Renderer,
+      Width := 420,
+      Height := 300,
+      MinimumWidth := 240,
+      MinimumHeight := 180,
+      FixedSize := true,
+      AppId := 'org.example.DesktopCommands'
+    ),
+    OnCloseRequested := function(): Msg begin
+      raise new Sys.InvalidOperationException('Dispose must not prompt for confirmation.');
+    end function
+  );
+  Check(Forced.Step(), 'Public start did not present.');
+end procedure;
+
+procedure VerifyFactoryFailure(Renderer: Cui.CuiRenderer);
+  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  begin
+    return new Mvu.Transition<int, Msg>(Model, []);
+  end function;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Close callback failure',
+    420,
+    300,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(
+    0, Update, View, Window, 64,
+    OnCloseRequested := function(): Msg begin
+      raise new Sys.InvalidOperationException('Close factory failed.');
+    end function
+  );
+  Steps(Session);
+  Window.RequestClose();
+  var Caught: bool := false;
+  try
+    discard Session.Step();
+  catch Error: Sys.InvalidOperationException do
+    Caught := Error.Message = 'Close factory failed.';
+  end try;
+
+  Check(Caught and not Session.IsOpen(), 'A throwing close callback must clean up and propagate.');
+end procedure;
+
+// Exercises close decisions, worker lifetime, window commands and public creation options.
+// ## Parameters
+// - `Renderer`: Native renderer used for each owned window.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+begin
+  Mapping.Verify();
+  Scheduling.Verify(Renderer);
+  VerifyClose(Renderer);
+  VerifyDefaultAndDispose(Renderer);
+  VerifyFactoryFailure(Renderer);
+end procedure;
+
+end unit;

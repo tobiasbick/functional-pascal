@@ -1,0 +1,49 @@
+unit NativeApi.Update;
+
+uses
+  NativeApi.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.TraceGeometry as Geometry, Fpas.Ui.Widgets.Canvas.Canvases as Canvas,
+  Fpas.Ui.Widgets.Developer.TraceViewers as Trace, Fpas.Ui.Widgets.Charts.EventTracks as Events,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Acknowledges native proposals and requests geometry on the window owner thread.
+// ## Parameters
+// - `Model`: Current retained state.
+// - `Message`: Native widget or host-command proposal.
+// ## Returns
+// The next model and its typed commands.
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return case Message of
+    when S.Msg.Clicked(_): new Mvu.Transition<S.Model, S.Msg>(Model, []);
+    when S.Msg.Scrolled(const Delta: Canvas.Wheel): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        X := Model.X + Delta.X;
+        Y := Model.Y + Delta.Y;
+      end with, []
+    );
+    when S.Msg.TraceChanged(const Change: Trace.Event): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        View := Change.Viewport;
+        Selection := Change.Selection;
+        Hover := Change.Hovered;
+      end with, []
+    );
+    when S.Msg.Inspect: new Mvu.Transition<S.Model, S.Msg>(
+      Model,
+      [Geometry.ReadSpanRectangle<S.Msg>('trace', S.Spans[0], S.Msg.Geometry)]
+    );
+    when S.Msg.Geometry(const Bounds: Cui.CuiRectangle): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Bounds := Bounds;
+      end with, []
+    );
+    when S.Msg.DaysChanged(const Change: Events.Change): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Days := Change.Current;
+      end with, []
+    );
+  end case;
+end function;
+
+end unit;

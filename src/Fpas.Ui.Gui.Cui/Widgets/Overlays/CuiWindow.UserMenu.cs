@@ -5,7 +5,7 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    private sealed record UserMenuTrigger(string Detail, string Status, bool Compact);
+    private sealed record UserMenuTrigger(string Detail, string Status, bool Compact, string? AvatarPath);
 
     /// <summary>Draws CUI's account trigger and its native menu.</summary>
     /// <param name="id">Stable trigger identity.</param>
@@ -19,13 +19,15 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether the trigger and commands accept input.</param>
     /// <param name="focus">Whether to focus the trigger.</param>
     /// <param name="trackingIds">Trigger and ordered entry identities, or null.</param>
+    /// <param name="avatarPath">Optional native image file; null uses initials.</param>
     /// <returns>The choice, popup visibility and highlight.</returns>
     public CuiMenuResult UserMenu(string id, string name, string detail, string status, bool compact,
-        CuiMenuEntry[] entries, int placement, float width, bool enabled, bool focus, string[]? trackingIds)
+        CuiMenuEntry[] entries, int placement, float width, bool enabled, bool focus, string[]? trackingIds, string? avatarPath = null)
     {
         Utf8.Validate(detail, nameof(detail));
         Utf8.Validate(status, nameof(status));
+        if (avatarPath is not null) Utf8.Validate(avatarPath, nameof(avatarPath));
         return DrawMenu(id, name, "", entries, 0, placement, width, false, enabled, focus, trackingIds,
-            false, new UserMenuTrigger(detail, status, compact));
+            false, new UserMenuTrigger(detail, status, compact, avatarPath));
     }
 }

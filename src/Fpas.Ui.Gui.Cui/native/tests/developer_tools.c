@@ -41,9 +41,10 @@ static void trace(bool adapter) {
         if (frame == 7) cui_input_key(ui, CUI_KEY_A, false, 0);
         cui_begin_frame(ui, 0.016f);
         if (adapter) {
+            int hovered_link = -1;
             fpas_cui_trace_viewer(ui, "trace", &track, 1, spans, 2, NULL, 0,
                 view.start, view.end, view.scroll, view.mark_start, view.mark_end,
-                -1, 180, 0, 1, 0, 1, &result);
+                -1, 180, 0, 1, 0, 1, &result, NULL, 0, &hovered_link);
         } else {
             int selected = -1;
             const cui_trace_result native = cui_trace_view(ui, "trace", &track, 1, spans, 2,

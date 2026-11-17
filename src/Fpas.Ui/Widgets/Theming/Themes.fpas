@@ -1,6 +1,6 @@
 unit Fpas.Ui.Widgets.Theming.Themes;
 
-uses Fpas.Ui.Graphics as G, Fpas.Ui.Internal.Theming.ThemePalettes as Palettes;
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Internal.Theming.ThemePalettes as Palettes, Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
 
 // Base appearance shared by graphical and terminal hosts.
 public type Mode = enum
@@ -111,6 +111,8 @@ public type Theme = record
   public AccentFamily: Accent := Accent.Neutral;
   // Semantic colors with an opaque Background; defaults to CUI neutral light.
   public Colors: Palette := new Palette();
+  // Optional native typography, geometry and elevation; terminal hosts use their cell metrics.
+  public Metrics: Metrics.Options? := null;
 end record;
 
 // Creates CUI's light palette with the selected accent.

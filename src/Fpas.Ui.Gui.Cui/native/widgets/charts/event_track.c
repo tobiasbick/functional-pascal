@@ -13,6 +13,7 @@ void fpas_cui_event_track(cui_ctx *ui, const char *id, double *times, int *count
     }
     const cui_event_track_opts options = { .width = fpas_extent(o->width_kind, o->width),
         .step = o->step, .label_step = o->label_step, .units = o->units, .format = o->format,
+        .label = o->label, .label_user = o->label_user,
         .selected = &selected, .no_add = (o->flags & 1) != 0, .no_remove = (o->flags & 2) != 0,
         .no_axis = (o->flags & 4) != 0 };
     cui_push_disabled(ui, !enabled);

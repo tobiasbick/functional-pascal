@@ -316,4 +316,8 @@ CUI_API int fpas_cui_wake_post(void *target);
  * @param target Owned wake target. */
 CUI_API void fpas_cui_wake_close(void *target);
 
+#include "host/shortcuts.h"
+#include "host/resources.h"
+#include "widgets/canvas/painting.h"
+
 #endif

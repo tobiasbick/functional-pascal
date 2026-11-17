@@ -1,0 +1,177 @@
+unit Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface;
+
+uses
+  Fpas.Ui.Widgets.Canvas.Painting as D, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Widgets.Media.MediaImages as Images, Fpas.Ui.Gui.Cui.Widgets.Canvas as Native,
+  Fpas.Ui.Gui.Internal.Data.CreativeParts as Colors, Fpas.Ui.Gui.Internal.Data.MediaData as Media;
+
+function Points(Values: array of D.Point): array of Native.CuiPoint;
+begin
+  const Result: array of Native.CuiPoint := new Native.CuiPoint[Values.Length];
+  for Index: int := 0 to Values.Length - 1 do
+    Result[Index] := new Native.CuiPoint(Values[Index].X, Values[Index].Y);
+  end for;
+
+  return Result;
+end function;
+
+// Forwards a shared drawing capability to a callback-scoped native CUI painter.
+public type Adapter = record implements D.Surface
+  // Active owner-thread painter; it invalidates itself when the callback ends.
+  public Native: Native.CuiCanvasPainter;
+
+  // Returns the final logical canvas width.
+  public function Width(): float;
+  begin
+    return self.Native.Width;
+  end function;
+
+  // Returns the final logical canvas height.
+  public function Height(): float;
+  begin
+    return self.Native.Height;
+  end function;
+
+  // Returns the captured native disabled scope.
+  public function Disabled(): bool;
+  begin
+    return self.Native.Disabled;
+  end function;
+
+  // Returns the native user font multiplier.
+  public function FontScale(): float;
+  begin
+    return self.Native.FontScale;
+  end function;
+
+  // Returns the monotonic native frame time in seconds.
+  public function Time(): double;
+  begin
+    return self.Native.Time;
+  end function;
+
+  // Returns the native frame duration in seconds.
+  public function DeltaTime(): float;
+  begin
+    return self.Native.DeltaTime;
+  end function;
+
+  // Forwards X/Y/Width/Height/Radius and Color to CUI's filled rectangle.
+  public procedure Rectangle(X: float; Y: float; Width: float; Height: float; Radius: float; Color: G.Color);
+  begin
+    self.Native.Rectangle(X, Y, Width, Height, Radius, Colors.Pack(Color));
+  end procedure;
+
+  // Forwards X/Y/Radius and Color to CUI's circle.
+  public procedure Circle(X: float; Y: float; Radius: float; Color: G.Color);
+  begin
+    self.Native.Circle(X, Y, Radius, Colors.Pack(Color));
+  end procedure;
+
+  // Forwards the two endpoints, Thickness and Color to CUI's line.
+  public procedure Line(X: float; Y: float; EndX: float; EndY: float; Thickness: float; Color: G.Color);
+  begin
+    self.Native.Line(X, Y, EndX, EndY, Thickness, Colors.Pack(Color));
+  end procedure;
+
+  // Forwards the rounded rectangle, Fill/Border and Thickness to CUI.
+  public procedure Border(X: float; Y: float; Width: float; Height: float; Radius: float; Fill: G.Color; Border: G.Color; Thickness: float);
+  begin
+    self.Native.Border(
+      X,
+      Y,
+      Width,
+      Height,
+      Radius,
+      Colors.Pack(Fill),
+      Colors.Pack(Border),
+      Thickness
+    );
+  end procedure;
+
+  // Forwards the rounded rectangle and Top/Bottom gradient colors to CUI.
+  public procedure Gradient(X: float; Y: float; Width: float; Height: float; Radius: float; Top: G.Color; Bottom: G.Color);
+  begin
+    self.Native.Gradient(X, Y, Width, Height, Radius, Colors.Pack(Top), Colors.Pack(Bottom));
+  end procedure;
+
+  // Forwards the rectangle, Radius, Blur, Spread, offsets and Color to CUI.
+  public procedure Shadow(X: float; Y: float; Width: float; Height: float; Radius: float; Blur: float; Spread: float; OffsetX: float; OffsetY: float; Color: G.Color);
+  begin
+    self.Native.Shadow(
+      X,
+      Y,
+      Width,
+      Height,
+      Radius,
+      Blur,
+      Spread,
+      OffsetX,
+      OffsetY,
+      Colors.Pack(Color)
+    );
+  end procedure;
+
+  // Forwards Points, Thickness, Color and Closed to CUI's stroker.
+  public procedure Polyline(Values: array of D.Point; Thickness: float; Color: G.Color; Closed: bool);
+  begin
+    self.Native.Polyline(Points(Values), Thickness, Colors.Pack(Color), Closed);
+  end procedure;
+
+  // Forwards the convex Points and Color to CUI.
+  public procedure Polygon(Values: array of D.Point; Color: G.Color);
+  begin
+    self.Native.Polygon(Points(Values), Colors.Pack(Color));
+  end procedure;
+
+  // Forwards center, Radius, angle range, Thickness and Color to CUI.
+  public procedure Arc(X: float; Y: float; Radius: float; Start: float; Finish: float; Thickness: float; Color: G.Color);
+  begin
+    self.Native.Arc(X, Y, Radius, Start, Finish, Thickness, Colors.Pack(Color));
+  end procedure;
+
+  // Forwards X/Y, literal Text, Font, Size and Color to CUI.
+  public procedure Text(X: float; Y: float; Text: string; Font: G.Font; Size: float; Color: G.Color);
+  begin
+    self.Native.Text(X, Y, Text, cast<int>(Font), Size, Colors.Pack(Color));
+  end procedure;
+
+  // Measures Text with Font/Size and returns native scaled metrics.
+  public function Measure(Text: string; Font: G.Font; Size: float): D.TextMetrics;
+  begin
+    const M: Native.CuiTextMetrics := self.Native.Measure(Text, cast<int>(Font), Size);
+    return new D.TextMetrics(M.Width, M.Height, M.Ascent, M.Descent, M.LineHeight);
+  end function;
+
+  // Forwards the rectangle, Glyph, Size and Color to CUI's icon drawing.
+  public procedure Icon(X: float; Y: float; Width: float; Height: float; Glyph: string; Size: float; Color: G.Color);
+  begin
+    self.Native.Icon(X, Y, Width, Height, Glyph, Size, Colors.Pack(Color));
+  end procedure;
+
+  // Forwards the rectangle and emoji Text to CUI.
+  public procedure Emoji(X: float; Y: float; Width: float; Height: float; Text: string);
+  begin
+    self.Native.Emoji(X, Y, Width, Height, Text);
+  end procedure;
+
+  // Forwards Source, the rectangle, Radius and Tint to the native image cache.
+  public procedure Image(Source: Images.Source; X: float; Y: float; Width: float; Height: float; Radius: float; Tint: G.Color);
+  begin
+    self.Native.Image(Media.Convert(Source), X, Y, Width, Height, Radius, Colors.Pack(Tint));
+  end procedure;
+
+  // Pushes a callback-local clip from X/Y/Width/Height.
+  public procedure PushClip(X: float; Y: float; Width: float; Height: float);
+  begin
+    self.Native.PushClip(X, Y, Width, Height);
+  end procedure;
+
+  // Pops a callback-local clip.
+  public procedure PopClip();
+  begin
+    self.Native.PopClip();
+  end procedure;
+end record;
+
+end unit;

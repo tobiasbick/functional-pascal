@@ -1,16 +1,19 @@
 #include "../../fpas_cui.h"
 
-void fpas_cui_trace_viewer(cui_ctx *ui, const char *id, const cui_trace_track * tracks, int tracks_count, const cui_trace_span * spans, int spans_count, const cui_trace_marker * markers, int markers_count, double start, double stop, float scroll, double mark_start, double mark_end, int selection, float height, float row_height, int width_kind, float width, int enabled, fpas_dev_result * out) {
+void fpas_cui_trace_viewer(cui_ctx *ui, const char *id, const cui_trace_track * tracks, int tracks_count, const cui_trace_span * spans, int spans_count, const cui_trace_marker * markers, int markers_count, double start, double stop, float scroll, double mark_start, double mark_end, int selection, float height, float row_height, int width_kind, float width, int enabled, fpas_dev_result * out, const cui_trace_link *links, int link_count, int *hovered_link) {
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id);
+    fpas_own(ui, key, key ^ 0x7A1Eu, 0, 0);
     *out = fpas_dev_empty();
     cui_trace_view view = { start, stop, scroll, mark_start, mark_end };
-    const cui_trace_opts o = { .width = fpas_extent(width_kind, width), .height = height, .row_height = row_height, .markers = markers, .marker_count = markers_count };
+    const cui_trace_opts o = { .width = fpas_extent(width_kind, width), .height = height, .row_height = row_height, .markers = markers, .marker_count = markers_count,
+        .links = links, .link_count = link_count };
     cui_push_disabled(ui, !enabled);
     cui_trace_track *copy = cui__frame_alloc(ui, sizeof *copy * (size_t)CUI_MAX(1, tracks_count));
     if (tracks_count > 0) memcpy(copy, tracks, sizeof *copy * (size_t)tracks_count);
     cui_trace_result r = cui_trace_view_ex(ui, id, copy, tracks_count, spans, spans_count, &view, &selection, &o);
     cui_pop_disabled(ui);
+    *hovered_link = r.hovered_link;
     if (ui->node_count == root) cui__leaf(ui, key, CUI_FIT, CUI_FIT);
     fpas_creative_node(ui, root, key);
     out->index=selection;
@@ -29,4 +32,9 @@ void fpas_cui_trace_viewer(cui_ctx *ui, const char *id, const cui_trace_track * 
     out->z = view.scroll;
     out->a = view.mark_start;
     out->b = view.mark_end;
+}
+
+cui_rect fpas_cui_trace_span_rect(cui_ctx *ui, const char *id, double start, double end, int track, int depth) {
+    const cui_trace_span span = { .start = start, .end = end, .track = track, .depth = depth };
+    return cui_trace_span_rect(ui, cui_make_id(ui, id), &span);
 }

@@ -1,0 +1,88 @@
+unit Fpas.Ui.Gui.EditorCommands;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// One operation on the next enabled view of a code editor.
+public type Operation = variant
+  // One-based line and visual column; tabs count to their configured stops.
+  GoTo(Line: int; Column: int);
+  // UTF-16 scalar-boundary offsets in that view's model text; reverse ranges are valid.
+  Select(Anchor: int; Cursor: int);
+  // Open native find, or close it with null. Queries hold at most 255 UTF-8 bytes.
+  Find(Query: string?);
+end variant;
+
+// Owner-thread code editor request; only the last request per ID and view is retained.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Application editor identity.
+  public Id: string;
+  // Navigation, selection or native find operation.
+  public Action: Operation;
+
+  // Retains the operation when a child command is mapped into its parent.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same editor request in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new Request<TNext>(self.Id, self.Action);
+  end function;
+end record;
+
+function Send<TMsg>(Id: string; Action: Operation): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(Id, Action)));
+end function;
+
+// Focuses and scrolls the next enabled code editor to a native line/visual column.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable editor ID.
+// - `Line`: Positive line, clamped by CUI to the document.
+// - `Column`: Positive visual column, including tab stops.
+// ## Returns
+// A command discarded if its editor is absent or disabled in the next view.
+public function GoTo<TMsg>(Id: string; Line: int; Column: int := 1): Mvu.Command<TMsg>;
+requires Id <> '';
+requires Line > 0 and Column > 0;
+begin
+  return Send<TMsg>(Id, Operation.GoTo(Line, Column));
+end function;
+
+// Focuses and selects a range in the next enabled editor's model text.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable editor ID.
+// - `Anchor`: UTF-16 anchor offset at a Unicode scalar boundary.
+// - `Cursor`: UTF-16 caret offset at a Unicode scalar boundary; may precede Anchor.
+// ## Returns
+// A one-view command; invalid offsets in the rendered text are rejected.
+public function Select<TMsg>(Id: string; Anchor: int; Cursor: int): Mvu.Command<TMsg>;
+requires Id <> '';
+requires Anchor >= 0 and Cursor >= 0;
+begin
+  return Send<TMsg>(Id, Operation.Select(Anchor, Cursor));
+end function;
+
+// Opens the native find bar and selects a match, or closes it with null.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable editor ID.
+// - `Query`: Valid Unicode of at most 255 UTF-8 bytes, or null to close.
+// ## Returns
+// A command for the next enabled editor view, including read-only editors.
+public function Find<TMsg>(Id: string; Query: string?): Mvu.Command<TMsg>;
+requires Id <> '';
+begin
+  return Send<TMsg>(Id, Operation.Find(Query));
+end function;
+
+end unit;

@@ -1,0 +1,81 @@
+unit Fpas.Ui.Widgets.Canvas.Painting;
+
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Images;
+
+// A point in canvas-local logical units.
+public type Point = record
+  // Horizontal coordinate.
+  public X: float;
+  // Vertical coordinate.
+  public Y: float;
+end record;
+
+// Native text measurements at the requested logical size.
+public type TextMetrics = record
+  // Horizontal advance.
+  public Width: float;
+  // Native measured block height.
+  public Height: float;
+  // Baseline ascent.
+  public Ascent: float;
+  // Signed baseline descent.
+  public Descent: float;
+  // Recommended line advance.
+  public LineHeight: float;
+end record;
+
+// Native CUI drawing operations, valid only inside a GUI Canvas paint callback.
+// All positions are canvas-local logical points. CUI clips to the canvas.
+// Do not retain this capability, use it from workers, or reenter the window/session.
+public type Surface = protocol
+  // Returns the final logical width.
+  function Width(): float;
+  // Returns the final logical height.
+  function Height(): float;
+  // Returns whether the canvas was built inside a disabled scope.
+  function Disabled(): bool;
+  // Returns CUI's user font multiplier; apply it to explicit text sizes when desired.
+  function FontScale(): float;
+  // Returns CUI's monotonic frame time in seconds.
+  function Time(): double;
+  // Returns the native frame duration in seconds.
+  function DeltaTime(): float;
+  // Fills a rectangle. X/Y are its origin, Width/Height its nonnegative size,
+  // Radius its nonnegative corner radius and Color its straight-alpha fill.
+  procedure Rectangle(X: float; Y: float; Width: float; Height: float; Radius: float; Color: G.Color);
+  // Fills a circle at X/Y with nonnegative Radius and the given Color.
+  procedure Circle(X: float; Y: float; Radius: float; Color: G.Color);
+  // Draws from X/Y to EndX/EndY using nonnegative Thickness and Color.
+  procedure Line(X: float; Y: float; EndX: float; EndY: float; Thickness: float; Color: G.Color);
+  // Fills and outlines the X/Y/Width/Height rectangle with Radius, Fill, Border
+  // and nonnegative Thickness, all in logical points.
+  procedure Border(X: float; Y: float; Width: float; Height: float; Radius: float; Fill: G.Color; Border: G.Color; Thickness: float);
+  // Fills the X/Y/Width/Height rounded rectangle from Top to Bottom color.
+  procedure Gradient(X: float; Y: float; Width: float; Height: float; Radius: float; Top: G.Color; Bottom: G.Color);
+  // Draws the X/Y/Width/Height rounded rectangle's shadow with nonnegative Blur,
+  // signed Spread, OffsetX/OffsetY and Color. CUI retains canvas clipping.
+  procedure Shadow(X: float; Y: float; Width: float; Height: float; Radius: float; Blur: float; Spread: float; OffsetX: float; OffsetY: float; Color: G.Color);
+  // Strokes Points with Thickness and Color; Closed joins the last point to the first.
+  procedure Polyline(Points: array of Point; Thickness: float; Color: G.Color; Closed: bool);
+  // Fills a convex polygon of at least three Points in winding order with Color.
+  procedure Polygon(Points: array of Point; Color: G.Color);
+  // Draws a circle arc at X/Y with Radius, Start/Finish radians, Thickness and Color.
+  procedure Arc(X: float; Y: float; Radius: float; Start: float; Finish: float; Thickness: float; Color: G.Color);
+  // Draws literal Text at X/Y with Font, positive Size and Color.
+  procedure Text(X: float; Y: float; Text: string; Font: G.Font; Size: float; Color: G.Color);
+  // Returns native metrics for Text with Font and positive Size, using the drawing scale.
+  function Measure(Text: string; Font: G.Font; Size: float): TextMetrics;
+  // Draws native Glyph in X/Y/Width/Height with positive Size and Color.
+  procedure Icon(X: float; Y: float; Width: float; Height: float; Glyph: string; Size: float; Color: G.Color);
+  // Draws Unicode Text as color emoji in X/Y/Width/Height using the current emoji resource.
+  procedure Emoji(X: float; Y: float; Width: float; Height: float; Text: string);
+  // Draws immutable Source in X/Y/Width/Height with Radius and Tint. Native image
+  // slots follow invocation order and retire on replacement, omission or canvas removal.
+  procedure Image(Source: Images.Source; X: float; Y: float; Width: float; Height: float; Radius: float; Tint: G.Color);
+  // Intersects the current clip with X/Y/Width/Height; must stay inside this callback.
+  procedure PushClip(X: float; Y: float; Width: float; Height: float);
+  // Restores the last callback-local clip. Unclosed clips unwind on return or failure.
+  procedure PopClip();
+end protocol;
+
+end unit;

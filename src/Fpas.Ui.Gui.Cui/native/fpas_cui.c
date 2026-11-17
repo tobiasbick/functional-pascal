@@ -17,6 +17,7 @@
 #endif
 
 #include "host/bridge.c"
+#include "host/shortcuts.c"
 #include "host/window_state.c"
 #include "host/controls.c"
 #include "host/widget_nodes.c"
@@ -249,6 +250,7 @@
 #include "widgets/display/keycap.c"
 #include "widgets/media/image.c"
 #include "widgets/canvas/canvas.c"
+#include "widgets/canvas/painting.c"
 #include "widgets/overlays/veil.c"
 #include "widgets/display/markdown.c"
 #include "widgets/editors/code_editor.c"
@@ -262,3 +264,6 @@
 #include "widgets/editors/gradient_editor.c"
 #include "widgets/editors/timeline_editor.c"
 #include "host/host_theme.c"
+#include "host/fonts.c"
+#include "host/strings.c"
+#include "host/colors.c"

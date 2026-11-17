@@ -1,0 +1,37 @@
+unit Fpas.Ui.Gui.Shortcuts;
+
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+
+// A model-owned application key binding, evaluated after native widgets.
+// ## Type parameters
+// - `TMsg`: Message delivered by activation.
+public type Binding<TMsg> = record
+  // Existing native key/modifier types; use Keys.PrimaryModifier for portable commands.
+  public Combination: Keys.Combination;
+  // Message queued once when the combination activates.
+  public Message: TMsg;
+  // Whether this model state enables the binding.
+  public Enabled: bool := true;
+  // Allow OS-repeat activation in later frames; false waits for an observed key release.
+  public Repeat: bool := false;
+  // Permit an unconsumed combination while editing; use only for commands such as Save.
+  // Native popups, modals, navigation keys and consumed widget shortcuts retain priority.
+  public AllowWhileEditing: bool := false;
+
+  // Wraps a child message while preserving the combination and activation policy.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The binding in its parent's message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Binding<TNext>;
+  begin
+    return new Binding<TNext>(
+      self.Combination, Messages(self.Message), self.Enabled,
+      self.Repeat, self.AllowWhileEditing
+    );
+  end function;
+end record;
+
+end unit;

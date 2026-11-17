@@ -1,0 +1,32 @@
+unit Fpas.Ui.Gui.Internal.Hosting.FrameControls;
+
+uses
+  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as Context, System.Collections.Generic as Generic;
+
+// Resolves native control state after presentation into detached snapshot records.
+// ## Parameters
+// - `Window`: Window with a successfully presented frame.
+// - `Controls`: Descriptors from the view traversal, updated with native bounds and input state.
+public procedure Resolve(Window: Cui.CuiWindow; Controls: Generic.List<App.Control>);
+begin
+  for Index: int := 0 to Controls.Count - 1 do
+    const Control: App.Control := Controls[Index];
+    const Token: string := Context.Token(Control.Role, Control.Id, Control.Key);
+    Controls[Index] := Control with
+      Bounds := Window.GetControlRectangle(Token);
+      Focused := Window.ControlFocused(Token);
+      Hovered := Window.ControlHovered(Token);
+    end with;
+    if Control.Role = 'scroll' then
+      var Offset: float := 0.0F;
+      var Maximum: float := 0.0F;
+      Window.ScrollMetrics(Token, out Offset, out Maximum);
+      Controls[Index] := Controls[Index] with
+        Value := Offset.ToString();
+      end with;
+    end if;
+  end for;
+end procedure;
+
+end unit;

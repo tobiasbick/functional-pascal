@@ -2,7 +2,7 @@
 
 typedef struct {
     fpas_text_binding text;
-    int line, column, lines;
+    fpas_code_editor_observation observation;
     bool refused;
 } fpas_code_editor_state;
 
@@ -15,7 +15,10 @@ static void fpas_code_editor_retire(cui_ctx *ui, cui_id key) {
     fpas_forget_state(ui, key ^ 0xED15C011u);
 }
 
-int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacity, const char *language, const char *placeholder, int width_kind, float width, float height, float size, int tab_size, int flags, int *line, int *column, int *lines) {
+int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacity,
+    const char *language, const char *placeholder, int width_kind, float width, float height,
+    float size, int tab_size, int flags, const cui_text_mark *marks, int mark_count,
+    fpas_code_editor_observation *observation) {
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id), slot = key ^ 0xC0DE07u, editor = key ^ CUI__ED_SALT;
     const cui_id focus = key ^ 0xED1B0D1u;
@@ -39,7 +42,8 @@ int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacit
     const cui_code_editor_opts options = { .lang = language,
         .placeholder = placeholder ? cui__frame_strdup(ui, placeholder, -1) : NULL,
         .width = fpas_extent(width_kind, width), .height = height, .size = size, .tab_size = tab_size,
-        .read_only = !enabled || (flags & 2), .use_tabs = (flags & 4) != 0, .no_line_numbers = (flags & 8) != 0 };
+        .read_only = !enabled || (flags & 2), .use_tabs = (flags & 4) != 0, .no_line_numbers = (flags & 8) != 0,
+        .marks = marks, .mark_count = mark_count };
     cui_push_disabled(ui, !enabled);
     const cui_code_editor_result event = cui_code_editor_ex(ui, id, text, capacity, &options);
     cui_pop_disabled(ui);
@@ -51,11 +55,11 @@ int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacit
         memcpy(prior->value, text, prior->length + 1);
     }
     prior->capacity = capacity;
-    const bool moved = state->line != event.line || state->column != event.column || state->lines != event.line_count;
+    *observation = (fpas_code_editor_observation){ event.line, event.column, event.line_count,
+        event.cursor, event.anchor, event.find_matches, event.find_index, event.focused };
+    const bool moved = enabled && memcmp(&state->observation, observation, sizeof *observation) != 0;
+    if (enabled) state->observation = *observation;
     const bool refusal_changed = state->refused != event.refused;
     state->refused = event.refused;
-    *line = state->line = event.line;
-    *column = state->column = event.column;
-    *lines = state->lines = event.line_count;
     return (enabled && event.changed ? 1 : 0) | (enabled && event.refused ? 2 : 0) | (moved || refusal_changed ? 4 : 0);
 }

@@ -1,6 +1,7 @@
 unit Fpas.Ui.Gui.Internal.Presentation.DisplayPresentation;
 
 uses
+  Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Media.Images as Images,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
@@ -12,7 +13,7 @@ uses
   Fpas.Ui.Gui.Internal.Widgets.Display.Keycap as KeycapWidget,
   Fpas.Ui.Gui.Internal.Widgets.Media.Image as ImageWidget,
   Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas as CanvasWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil as VeilWidget;
+  Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil as VeilWidget, System as Sys;
 
 // Presents the native display elements.
 // ## Type parameters
@@ -42,9 +43,12 @@ begin
       const Id: string,
       const Drawing: array of Canvases.Shape,
       const Clicked: function(Canvases.Event): TMsg,
-      const Settings: Canvases.Options
+      const Settings: Canvases.Options,
+      const OnWheel: Sys.Func<Canvases.Wheel, TMsg>?,
+      const Paint: Sys.Action<Painting.Surface>?,
+      const OnPointer: Sys.Func<Canvases.Pointer, TMsg>?
     ):
-      CanvasWidget.Draw<TMsg>(Frame, Id, Drawing, Clicked, Settings);
+      CanvasWidget.Draw<TMsg>(Frame, Id, Drawing, Clicked, Settings, OnWheel, Paint, OnPointer);
     when E.Element.Veil(
       const Id: string,
       const Revealed: bool,

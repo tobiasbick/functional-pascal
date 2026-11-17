@@ -3,7 +3,7 @@ unit Fpas.Ui.Internal.Validation.SmartInputRules;
 uses
   Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
   Fpas.Ui.Widgets.Inputs.InlineEdits as I, Fpas.Ui.Widgets.Inputs.ScrubFields as S, Fpas.Ui.Widgets.Inputs.MoneyFields as M,
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as K, System as Sys, System.Text as Text, System.Globalization as Culture;
+  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as K, System as Sys, System.Text as Text;
 
 procedure Width(Value: L.Extent; At: string);
 begin
@@ -66,39 +66,23 @@ begin
   Width(Settings.Width, At);
 end procedure;
 
-// Validates a finite amount against CUI's fixed grouped-text capacity.
+// Validates exact decimal scale before constructing a graphical view.
 // ## Parameters
 // - `Value`: Model amount.
 // - `Settings`: Captions, precision and native width.
 // - `At`: Diagnostic path.
-public procedure Money(Value: double; Settings: M.Options; At: string);
+public procedure Money(Value: decimal; Settings: M.Options; At: string);
 begin
   for Caption: string in [Settings.Label, Settings.Symbol, Settings.Code, Settings.Hint] do
     R.CheckText(Caption, At);
   end for;
 
-  if not Sys.Double.IsFinite(
-    Value
-  ) or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 15
-  then
-    R.Reject(At, 'Invalid finite money amount or precision.');
+  if Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 28 then
+    R.Reject(At, 'Money precision must be between zero and twenty-eight fractional digits.');
   end if;
-  const Digits: string := Value.ToString(
-    'F' + Settings.DecimalPlaces.ToString(),
-    Culture.CultureInfo.InvariantCulture
-  );
-  const Dot: int := Digits.IndexOf('.');
-  const Integers: int := (if Dot < 0 then
-    Digits.Length
-  else
-    Dot
-  end if) - (if Value < 0.0 then
-    1
-  else
-    0
-  end if);
-  if Digits.Length + (Integers - 1) div 3 > 63 then
-    R.Reject(At, 'The grouped amount exceeds CUI display capacity.');
+
+  if Sys.Decimal.Round(Value, Settings.DecimalPlaces) <> Value then
+    R.Reject(At, 'The amount must fit its fractional precision without rounding.');
   end if;
 
   Width(Settings.Width, At);

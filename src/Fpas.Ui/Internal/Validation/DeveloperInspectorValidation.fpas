@@ -213,6 +213,16 @@ begin
 
       Chart.Distance(Value.Scroll, At);
       var Prior: TraceViewers.Span? := null;
+      for Link: TraceViewers.Link in Settings.Links do
+        if Link.From < 0 or Link.From >= Spans.Length or Link.To < 0 or Link.To >= Spans.Length
+          or Link.Tone < 0 or Link.Tone > 8
+        then
+          Fail(At);
+        end if;
+
+        Chart.Distance(Link.Width, At);
+      end for;
+
       for Item: TraceViewers.Span in Spans do
         if Item.Track < 0 or Item.Track >= Tracks.Length or Item.Depth < 0 or Item.Depth > 256
           or not Sys.Double.IsFinite(

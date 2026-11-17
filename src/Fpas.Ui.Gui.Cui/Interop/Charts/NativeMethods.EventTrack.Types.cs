@@ -10,4 +10,5 @@ internal unsafe struct NativeEventOptions
     internal byte* Format;
     internal float Width;
     internal int WidthKind, Units, Flags;
+    internal nint Label, LabelUser;
 }

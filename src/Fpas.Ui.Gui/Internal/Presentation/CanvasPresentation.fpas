@@ -85,7 +85,7 @@ begin
       ResultCardWidget.Draw<TMsg>(Frame, Id, Image, Title, Activate, Settings);
     when E.Element.SelectionBar(
       const Id: string,
-      const Selected: array of bool,
+      const Selected: SelectionBars.Selection,
       const Actions: array of SelectionBars.Action,
       const Changed: function(SelectionBars.Event): TMsg,
       const Child: E.Element<TMsg>,

@@ -1,14 +1,14 @@
 #include "../../fpas_cui.h"
 
 static void fpas_user_menu_name(cui_ctx *ui, int row, const char *name, float size,
-    const char *status, bool show_name) {
+    const char *status, bool show_name, cui_texture image) {
     const int avatar = ui->nodes[row].first;
     const int next = ui->nodes[avatar].next;
     const int last = ui->nodes[row].last;
     if (show_name) fpas_text(ui, ui->nodes[next].first, name);
 
     /* Use CUI's own initials and color for the display name, in the original avatar slot. */
-    const cui_avatar_opts options = { .size = size, .status = status };
+    const cui_avatar_opts options = { .size = size, .status = status, .image = image };
     const int replacement = ui->node_count;
     cui__open(ui, row);
     cui_avatar_ex(ui, name, &options);
@@ -24,7 +24,7 @@ static void fpas_user_menu_name(cui_ctx *ui, int row, const char *name, float si
 }
 
 int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
-    const char *detail, const char *status, const char *const *keys,
+    const char *detail, const char *status, const char *avatar_path, const char *const *keys,
     const char *const *labels, const char *const *icons, const char *const *shortcuts,
     const int *flags, int count, int placement, float width, int compact, int enabled,
     int focus, int *nodes, int *open, int *highlighted) {
@@ -33,15 +33,18 @@ int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
     cui_push_id(ui, id);
     const cui_id trigger = cui_make_id(ui, caption) ^ 0x05E4u;
     const cui_id popup = trigger ^ 0x3E40u;
+    const cui_id image_key = trigger ^ 0x46504149u;
+    fpas_own(ui, trigger, popup ^ 0x4E4156u, image_key, popup);
+    const cui_texture avatar = fpas_avatar_image_at(ui, image_key, avatar_path)->texture;
     if (allowed && focus) ui->focus_next_request = trigger;
     if (!allowed) cui__popup_set(ui, popup, false);
     const cui_user_menu_opts options = { .detail = detail, .status = status,
-        .compact = compact != 0, .placement = (cui_placement)placement, .width = width };
+        .compact = compact != 0, .placement = (cui_placement)placement, .width = width, .avatar = avatar };
     cui_push_disabled(ui, !allowed);
     const bool visible = cui_user_menu_begin(ui, caption, &options);
     const int row = fpas_find(ui, trigger);
-    fpas_user_menu_name(ui, row, name, compact ? 28 : 32, status, !compact);
-    if (visible) fpas_user_menu_name(ui, ui->nodes[cui__current(ui)].first, name, 36, NULL, true);
+    fpas_user_menu_name(ui, row, name, compact ? 28 : 32, status, !compact, avatar);
+    if (visible) fpas_user_menu_name(ui, ui->nodes[cui__current(ui)].first, name, 36, NULL, true, avatar);
     const int chosen = fpas_menu_rows(ui, popup, visible, keys, labels, icons, shortcuts,
         flags, count, nodes, highlighted);
     if (visible) cui_user_menu_end(ui);
@@ -49,6 +52,5 @@ int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
     cui_pop_id(ui);
 
     fpas_menu_snapshot(ui, allowed, row, trigger, popup, count, nodes, open, highlighted);
-    fpas_own(ui, trigger, popup ^ 0x4E4156u, 0, popup);
     return allowed ? chosen : -1;
 }

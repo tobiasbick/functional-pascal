@@ -1,6 +1,7 @@
 unit Fpas.Ui.Internal.Mapping.Display;
 
 uses
+  Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Media.Images as Images,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
@@ -37,13 +38,30 @@ begin
       const Id: string,
       const Drawing: array of Canvases.Shape,
       const Clicked: function(Canvases.Event): TChild,
-      const Settings: Canvases.Options
+      const Settings: Canvases.Options,
+      const OnWheel: Sys.Func<Canvases.Wheel, TChild>?,
+      const Paint: Sys.Action<Painting.Surface>?,
+      const OnPointer: Sys.Func<Canvases.Pointer, TChild>?
     ):
+      const Wheel: Sys.Func<Canvases.Wheel, TParent>? := case OnWheel of
+        when is Sys.Func<Canvases.Wheel, TChild> as Handler: function(Delta: Canvases.Wheel): TParent => Messages(
+          Handler.Invoke(Delta)
+        );
+        else null;
+      end case;
       return E.Element<TParent>.Canvas(
         Id,
         Drawing,
         function(Event: Canvases.Event): TParent => Messages(Clicked(Event)),
-        Settings
+        Settings,
+        Wheel,
+        Paint,
+        case OnPointer of
+          when is Sys.Func<Canvases.Pointer, TChild> as Handler: function(State: Canvases.Pointer): TParent => Messages(
+            Handler.Invoke(State)
+          );
+          else null;
+        end case
       );
     when E.Element.Veil(
       const Id: string,

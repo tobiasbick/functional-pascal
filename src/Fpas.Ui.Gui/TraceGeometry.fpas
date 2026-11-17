@@ -1,0 +1,53 @@
+unit Fpas.Ui.Gui.TraceGeometry;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+
+// Reads one span from the last presented native trace on the window owner thread.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type SpanRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Application identity supplied to the trace widget.
+  public Id: string;
+  // Span whose native geometry is requested.
+  public Span: Trace.Span;
+  // Maps logical bounds, or an empty rectangle, into the application.
+  public OnRead: function(Cui.CuiRectangle): TMsg;
+
+  // Retains the request when a subview maps its messages.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Maps child messages.
+  // ## Returns
+  // The same request with its result mapped to the parent.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    const Read: function(Cui.CuiRectangle): TMsg := self.OnRead;
+    return new SpanRequest<TNext>(
+      self.Id, self.Span,
+      function(Bounds: Cui.CuiRectangle): TNext => Messages(Read(Bounds))
+    );
+  end function;
+end record;
+
+// Reads CUI's span rectangle after presentation, suitable for application overlays.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Application identity supplied to the trace widget.
+// - `Span`: Span in the last presented trace model.
+// - `OnRead`: Maps bounds to a message; absent, folded or invisible spans return empty bounds.
+// ## Returns
+// An owner-thread graphical command. Reading before presentation is invalid.
+public function ReadSpanRectangle<TMsg>(
+  Id: string; Span: Trace.Span;
+  OnRead: function(Cui.CuiRectangle): TMsg
+): Mvu.Command<TMsg>;
+requires Id <> '';
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new SpanRequest<TMsg>(Id, Span, OnRead)));
+end function;
+
+end unit;

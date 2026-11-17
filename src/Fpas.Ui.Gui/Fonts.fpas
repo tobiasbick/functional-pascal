@@ -1,0 +1,87 @@
+unit Fpas.Ui.Gui.Fonts;
+
+uses
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Gui.Cui.Resources as Resources, System as Sys;
+
+// An owner-thread font operation. Faces and emoji data live until the window closes.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Operation<TMsg> = variant
+  // Copies trusted font bytes; returns null when CUI rejects the face.
+  Load(Data: array of byte; OnLoaded: function(Resources.CuiFontFace?): TMsg);
+  // Replaces a role; null restores its built-in face.
+  Assign(Role: G.Font; Face: Resources.CuiFontFace?);
+  // Adds one of CUI's four direct missing-glyph fallbacks.
+  Fallback(Face: Resources.CuiFontFace; Fallback: Resources.CuiFontFace);
+  // Replaces the emoji font; null asks CUI for the system font.
+  Emoji(Data: (array of byte)?; OnLoaded: function(bool): TMsg);
+  // Queries whether the native emoji font supports a Unicode sequence.
+  SupportsEmoji(Text: string; OnRead: function(bool): TMsg);
+end variant;
+
+// A font request retained when feature commands are mapped to a parent model.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Work to perform after the current frame is presented.
+  public Action: Operation<TMsg>;
+
+  // Maps completion messages without performing resource work.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same resource operation with mapped completion messages.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    const Next: Operation<TNext> := case self.Action of
+      when Operation.Load(
+        const Data: array of byte,
+        const Loaded: function(Resources.CuiFontFace?): TMsg
+      ): Operation<TNext>.Load(
+        Data,
+        function(Face: Resources.CuiFontFace?): TNext => Messages(Loaded(Face))
+      );
+      when Operation.Assign(
+        const Role: G.Font,
+        const Face: Resources.CuiFontFace?
+      ): Operation<TNext>.Assign(Role, Face);
+      when Operation.Fallback(
+        const Face: Resources.CuiFontFace,
+        const Fallback: Resources.CuiFontFace
+      ): Operation<TNext>.Fallback(Face, Fallback);
+      when Operation.Emoji(
+        const Data: (array of byte)?,
+        const Loaded: function(bool): TMsg
+      ): Operation<TNext>.Emoji(
+        Data,
+        function(Supported: bool): TNext => Messages(Loaded(Supported))
+      );
+      when Operation.SupportsEmoji(
+        const Text: string,
+        const Read: function(bool): TMsg
+      ): Operation<TNext>.SupportsEmoji(
+        Text,
+        function(Supported: bool): TNext => Messages(Read(Supported))
+      );
+    end case;
+    return new Request<TNext>(Next);
+  end function;
+end record;
+
+// Schedules a font operation between native frames. Use CLR file APIs to obtain font bytes.
+// Replacing roles does not unload fonts: CUI owns every loaded face until window disposal.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Action`: Resource operation and typed result mapper.
+// ## Returns
+// A graphical owner-thread command.
+public function Apply<TMsg>(Action: Operation<TMsg>): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(Action)));
+end function;
+
+end unit;

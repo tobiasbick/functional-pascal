@@ -22,6 +22,48 @@ public type StateRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   end function;
 end record;
 
+// Changes the owner window's document title.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type TitleRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Valid Unicode title.
+  public Title: string;
+
+  // Retains the title when mapping child commands.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same title request in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new TitleRequest<TNext>(self.Title);
+  end function;
+end record;
+
+// Changes the owner window's logical dimensions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type SizeRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+  // Positive logical width.
+  public Width: int;
+  // Positive logical height.
+  public Height: int;
+
+  // Retains the dimensions when mapping child commands.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same size request in the parent message space.
+  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  begin
+    return new SizeRequest<TNext>(self.Width, self.Height);
+  end function;
+end record;
+
 // Moves the owner window.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -70,6 +112,32 @@ end record;
 function Change<TMsg>(Target: Cui.CuiWindowState): Mvu.Command<TMsg>;
 begin
   return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new StateRequest<TMsg>(Target)));
+end function;
+
+// Changes the native document title between frames.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Title`: Valid Unicode title, copied by CUI.
+// ## Returns
+// The owner-thread graphical command.
+public function SetTitle<TMsg>(Title: string): Mvu.Command<TMsg>;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new TitleRequest<TMsg>(Title)));
+end function;
+
+// Changes the native window's logical dimensions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Width`: Positive logical width.
+// - `Height`: Positive logical height.
+// ## Returns
+// The owner-thread graphical command; the platform applies the size request.
+public function Resize<TMsg>(Width: int; Height: int): Mvu.Command<TMsg>;
+requires Width > 0 and Height > 0;
+begin
+  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new SizeRequest<TMsg>(Width, Height)));
 end function;
 
 // Maximizes the window where the window manager supports it.

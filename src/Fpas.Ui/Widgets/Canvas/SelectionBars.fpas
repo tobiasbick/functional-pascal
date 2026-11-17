@@ -12,12 +12,22 @@ public type Action = record
   public Tone: S.Tone := S.Tone.Neutral;
 end record;
 
+// The model supplies either item flags or an aggregate count.
+public type Selection = variant
+  // Item flags counted by CUI; the model handles the clear proposal.
+  Items(Values: array of bool);
+  // Nonnegative aggregate count, without allocating item flags.
+  Count(Value: int);
+end variant;
+
 // Selection bar settings.
 public type Options = record
   // Keeps the selection when Escape is pressed.
   public NoEscape: bool := false;
   // Whether the bar accepts actions.
   public Enabled: bool := true;
+  // Native count format: at most one %d slot, %% for a percent; empty uses CUI's default.
+  public CountFormat: string := '';
 end record;
 
 // Selection bar action.
@@ -33,14 +43,14 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Selected`: Model-owned selection flags.
+// - `Selected`: Model-owned flags or an aggregate count.
 // - `Actions`: Available actions in display order.
 // - `Changed`: Maps actions and clearing to messages.
 // - `Child`: Content that anchors the floating bar.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function SelectionBar<TMsg>(Id: string; Selected: array of bool; Actions: array of Action; Changed: function(Event): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function SelectionBar<TMsg>(Id: string; Selected: Selection; Actions: array of Action; Changed: function(Event): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
   return E.Element<TMsg>.SelectionBar(

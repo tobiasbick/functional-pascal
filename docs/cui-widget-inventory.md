@@ -3,6 +3,8 @@
 All 220 catalog entries have GUI acceptance. Each entry records the tested
 behavior, gallery example and terminal coverage where available. See the
 [FPAS widget reference](../src/Fpas.Ui/README.md) for public API contracts.
+The [CUI API coverage](cui-api-coverage.md) classifies native application services,
+custom painting and backend/helper functions outside the widget catalog.
 
 ## Integration
 
@@ -177,8 +179,10 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
   commands and local click coordinates. The gallery reuses the original
   sidebar swatch drawings in a standalone selection example. The native test
   checks the click coordinates. Custom paint callbacks and hover/press
-  notifications remain unexposed, as do the native wheel-region and wheel-input
-  functions (`cui_wheel_region`, `cui_wheel_take`).
+  notifications remain unexposed. Optional `OnWheel` maps horizontal/vertical
+  line deltas using `cui_wheel_region` and `cui_wheel_take`; CUI owns clipping,
+  targeting and previous-frame registration. Disabled/unsubscribed canvases
+  leave scrolling to their enclosing views.
 
 Text and display matches its native CUI reference pixel for pixel on Windows
 in Software and OpenGL at 1100 × 1700 and 550 × 1700, scale 1. The gallery
@@ -220,8 +224,8 @@ See the illustrated [Actions](ui/actions/README.md) and
   tests cover opening, choosing an action, Escape and focus return.
 - [x] User menu (`cui_user_menu`): [API][fpas-user-menu]. GUI uses CUI's native
   account trigger and popup with shared menu commands and focus handling.
-  The original example uses initials. The native avatar image option is open.
-  Reuse the image loading and lifetime handling from Avatar.
+  The original example uses initials. Optional avatar images reuse the native
+  image cache and texture lifetime, including replacement and removal.
 - [x] Swipe actions (`cui_swipe_item_begin`): [API][fpas-swipe-actions]. Actions
   shows the three original task rows and the resulting toasts. The tests
   exercise mouse dragging and the Windows horizontal wheel path used by
@@ -294,23 +298,23 @@ and widget options.
   CUI handles dragging, Shift precision, arrow keys and click-to-type. Invalid
   numeric drafts leave the value unchanged.
   Arbitrary native printf formats remain unexposed; the API uses DecimalPlaces.
-- [x] Money field (`cui_money_input`): [API][fpas-smart-inputs]. Smart inputs
+- [x] Money field (native `cui_input_ex` with CLR decimal): [API][fpas-smart-inputs]. Smart inputs
   shows the original USD amount and whole-euro salary with grouped resting
-  values and plain editing digits. The model uses double, with zero through
-  fifteen fractional digits. Greater native precision is unexposed.
-  CUI rejects typed amounts that would overflow its grouped display.
+  values and retained text drafts. The model and proposals use `decimal`, with
+  zero through twenty-eight fractional digits and exact validation. This is an
+  intentional adaptation of the catalog's money example: CUI owns text editing
+  and presentation; the CLR owns amount parsing/formatting without binary
+  floating-point conversion. Invalid or unrepresentable drafts retain the model.
 - [x] Shortcut recorder and shortcut label (`cui_shortcut_recorder`,
   `cui_shortcut_label`): [API][fpas-smart-inputs]. Smart inputs shows the original
   palette and unbound search shortcuts. CUI owns recording, cancellation, clear,
   modifier order and platform key names; passive labels use native keycaps.
 
-These four Smart inputs widgets were reviewed against `86d9781`. Targeted
-software/OpenGL binding tests cover draft retention, model proposals, rejection,
+Targeted software/OpenGL tests cover drafts, exact decimal proposals, rejection,
 focus, keys, pointer dragging and removal. Native tests compare 224 images
-exactly with direct CUI calls. The Smart inputs page content matches the pinned
-native gallery pixel for pixel in light/dark, wide/narrow software and OpenGL
-captures; the existing application branding and navigation are outside that
-page-content comparison.
+exactly with direct CUI calls; money uses the native text-field reference.
+The page retains the catalog layout, with the decimal money contract and its
+caption as an intentional FPAS adaptation.
 - [x] Tag input (`cui_tag_input`): [API][fpas-tag-input]. Inputs shows Topics
   with native tag entry, removal and per-event limit enforcement.
   TUI: deferred; graphical profile required.
@@ -575,7 +579,8 @@ for gallery screenshots, FPAS examples and widget options.
   cover Next, Back, Done, Escape, closing, reopening, focus, model proposals
   and state retirement. Native pixel comparisons cover light/dark themes,
   centered/targeted cards, all three steps, widths and spotlight options.
-  Custom captions and step-count formatting remain unexposed native options.
+  Optional literal captions retain focus across changes; count formatting uses
+  CUI's native integer slots. The companion editor example demonstrates both.
 - [x] Veil (`cui_veil`): Disclosure reproduces the picture, sample identifier
   and spoiler. Windows Software and OpenGL tests cover pointer reveal and
   re-cover, the Reveal/Hide button and Enter on the focused picture.
@@ -738,8 +743,9 @@ for gallery screenshots and FPAS examples.
   UTF-8 task offsets.
 - [x] Code editor (`cui_code_editor`): original editable C tile cache and an
   editable SQL example. Native tests cover UTF-8 edits, capacity refusal and
-  undo reset after external replacement. Programmatic caret and find requests
-  and custom marks remain unexposed.
+  undo reset after external replacement. Owner-thread go-to, selection and find
+  commands use UTF-16 scalar boundaries at the public API and UTF-8 in CUI.
+  Custom marks, caret/anchor/focus observations and find counts are exposed.
 - [x] Diff viewer (`cui_diff_view`): original config loader comparison with
   split/inline selection, change navigation and folding. The native test
   verifies keyboard navigation and responsive inline fallback.
@@ -794,8 +800,10 @@ screenshots and FPAS examples.
 - [x] Commit graph (`cui_commit_graph`)
 - [x] Dependency graph (`cui_graph_view`)
 - [x] Network waterfall (`cui_waterfall`)
-- [x] Trace viewer (`cui_trace_view`). Native dependency links, hovered-link
-  reporting and `cui_trace_span_rect` remain unexposed.
+- [x] Trace viewer (`cui_trace_view`). Native dependency links use original sorted
+  span indices. Opt-in model-owned hover reports span/link indices. The GUI
+  `TraceGeometry.ReadSpanRectangle` command reads CUI geometry after presentation,
+  including folding, clipping and removal.
 - [x] Regex tester (`cui_regex_tester`)
 - [x] Test explorer (`cui_test_explorer`)
 - [x] Stack trace (`cui_stack_trace`)
@@ -870,10 +878,12 @@ examples and widget options.
 - [x] Dot-matrix chart (`cui_dot_chart`): the original caffeine chart shows
   stacked cup doses, an hours axis and native annotations. Windows tests cover
   activation of the middle sample before the keyboard cursor has moved.
-  Native axis/readout label callbacks remain unexposed.
+  Optional `XLabel` and `ValueLabel` callbacks format native axis/readout text.
 - [x] Event track (`cui_event_track`): the original cup timeline shares the
   chart's scale. Windows checks cover drag, keyboard movement, add and remove.
-  The native axis/readout label callback remains unexposed.
+  An optional `Label` callback formats native axis/time-readout text. Label
+  callbacks are retained through deferred paint, use bounded valid UTF-8 and
+  propagate failures after returning from CUI.
 - [x] Readout (`cui_readout`): the original At Bed, Peak and Cups readouts
   react to changes in the timeline.
 - [x] Dot-matrix display (`cui_dot_display`): the original bedtime status.
@@ -990,8 +1000,8 @@ and FPAS examples, including the node editor and toolbar.
   status chip, with the floating toolbar below it.
 - [x] Selection bar (`cui_selection_bar`): the five-file example with native
   bulk actions and Escape-to-clear. The Windows gallery test selects a fourth
-  file and clears the selection. The native count-format override and count-only
-  mode remain unexposed.
+  file and clears the selection. Native count formatting and aggregate-count
+  mode preserve the clear proposal without allocating item flags.
 
 The [Canvas and bars APIs](../src/Fpas.Ui/README.md#canvas-and-bars) use the
 graphical profile. Windows captures at 1100 × 1700 and 550 × 1700, scale 1,

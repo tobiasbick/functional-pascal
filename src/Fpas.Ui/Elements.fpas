@@ -1,6 +1,7 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors,
   Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs,
   Fpas.Ui.Widgets.Editors.CurveEditors as CurveEditors,
@@ -225,7 +226,7 @@ public type Element<TMsg> = variant
   // Native draggable numeric field with an optional typing mode.
   ScrubField(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: ScrubFields.Options);
   // Native grouped monetary display and plain-digit editor.
-  MoneyField(Id: string; Value: double; OnChange: function(double): TMsg; Settings: MoneyFields.Options);
+  MoneyField(Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: MoneyFields.Options);
   // Native key-combination recorder with a model-owned value.
   ShortcutRecorder(Id: string; Value: RecorderKeys.Combination; OnChange: function(RecorderKeys.Combination): TMsg; Settings: RecorderKeys.Options);
   // Native platform key names displayed as keycaps.
@@ -447,7 +448,7 @@ public type Element<TMsg> = variant
   // Native CUI Image element.
   Image(Id: string; Source: Media.Source; Settings: Images.Options);
   // Native CUI Canvas element.
-  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options);
+  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options; OnWheel: Sys.Func<Canvases.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<Canvases.Pointer, TMsg>?);
   // Native CUI Veil element.
   Veil(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: Element<TMsg>; Settings: Veils.Options);
   // Native CUI FormatBar element.
@@ -463,7 +464,7 @@ public type Element<TMsg> = variant
   // Native CUI ResultCard element.
   ResultCard(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: ResultCards.Options);
   // Native CUI SelectionBar element.
-  SelectionBar(Id: string; Selected: array of bool; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element<TMsg>; Settings: SelectionBars.Options);
+  SelectionBar(Id: string; Selected: SelectionBars.Selection; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element<TMsg>; Settings: SelectionBars.Options);
   // Native desktop menu bar.
   MenuBar(Id: string; Menus: array of MenuBars.Menu<TMsg>; HideBorder: bool);
   // Native closable, reorderable document tabs.

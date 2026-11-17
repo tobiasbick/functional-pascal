@@ -26,7 +26,7 @@ public function View(
   Actions: array of W.Action
 ): E.Element<W.Event>;
 begin
-  return W.SelectionBar<W.Event>('bulk-files', Selected, Actions,
+  return W.SelectionBar<W.Event>('bulk-files', W.Selection.Items(Selected), Actions,
     function(Change: W.Event): W.Event => Change, Child);
 end function;
 
@@ -37,13 +37,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Selected / Actions` | Supply the current flags and ordered actions. The bar appears when items are selected. |
+| `Selected / Actions` | Supply `Selection.Items(Flags)` or `Selection.Count(Count)` and ordered actions. The count must be nonnegative. |
 | `NoEscape / Enabled` | false / true. NoEscape keeps selection when Escape is pressed. |
+| `CountFormat` | Empty uses CUI's default. At most one `%d` slot and literal `%%` are accepted. |
 
 ## Interaction
 
 Use `Event.Index` to resolve the action and apply it to the selected
-items. When `Clear` is true, clear the flags in the model.
+items. When `Clear` is true, clear the flags or reset the aggregate count in
+the model. Count mode needs no item-flag array and retains native count animation.
 
 ## See also
 

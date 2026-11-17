@@ -1,6 +1,10 @@
 program PublishedGallery;
 
 uses
+  MoneyDecimalContract as MoneyDecimalContract,
+  DrawingResourcesContract as DrawingResourcesContract,
+  EditorCommandsContract as EditorCommandsContract,
+  DesktopCommandsContract as DesktopCommandsContract,
   GalleryValidationBoundaryContract as ValidationBoundaryContract,
   GalleryModalCompositionContract as ModalCompositionContract,
   GalleryModelContract as ModelContract,
@@ -219,6 +223,10 @@ end procedure;
 
 procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  EditorCommandsContract.Verify(Renderer);
+  DrawingResourcesContract.Verify(Renderer);
+  MoneyDecimalContract.Verify(Renderer);
+  DesktopCommandsContract.Verify(Renderer);
   ValidationBoundaryContract.Verify();
   ModelContract.Verify();
   ModelContract.VerifyDisplay(Renderer);

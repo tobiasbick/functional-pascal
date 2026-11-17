@@ -8,6 +8,8 @@ public type Options = record
   public Detail: string := '';
   // Optional avatar status, such as online, busy or away.
   public Status: string := '';
+  // Optional native avatar image file; null uses initials.
+  public AvatarPath: string? := null;
   // Show only the avatar in the trigger.
   public Compact: bool := false;
   // Native placement. BottomStart uses CUI's default for the trigger style.

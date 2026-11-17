@@ -18,9 +18,9 @@ public type Model = record
   // Scrubbable blur radius.
   public Blur: float := 24.0F;
   // Dollar amount with fractional digits.
-  public Amount: double := 1249.5;
+  public Amount: decimal := 1249.50M;
   // Whole-euro annual salary.
-  public Salary: double := 98000.0;
+  public Salary: decimal := 98000M;
   // Original command-palette shortcut.
   public PaletteKey: Keys.Combination := new Keys.Combination(
     Keys.Key.P,
@@ -53,9 +53,9 @@ public type Msg = variant
   // Apply native blur scrubbing.
   SetBlur(Value: float);
   // Apply a dollar amount proposal.
-  SetAmount(Value: double);
+  SetAmount(Value: decimal);
   // Apply an annual salary proposal.
-  SetSalary(Value: double);
+  SetSalary(Value: decimal);
   // Apply the recorded palette shortcut.
   SetPaletteKey(Value: Keys.Combination);
   // Apply the recorded search shortcut.

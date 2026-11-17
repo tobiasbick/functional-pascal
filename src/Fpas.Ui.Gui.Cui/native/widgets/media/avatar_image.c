@@ -23,13 +23,17 @@ static void fpas_avatar_image_update(cui_ctx *ui, fpas_avatar_image *state, cons
     }
 }
 
-static fpas_avatar_image *fpas_avatar_image_for(cui_ctx *ui, cui_id key, const char *path) {
-    const cui_id image_key = key ^ 0x46504149u;
-    fpas_own(ui, key, image_key, 0, 0);
+static fpas_avatar_image *fpas_avatar_image_at(cui_ctx *ui, cui_id image_key, const char *path) {
     fpas_avatar_image *state = cui_state(ui, image_key, sizeof *state);
     cui__state_set_dtor(ui, image_key, fpas_avatar_image_free);
     fpas_avatar_image_update(ui, state, path);
     return state;
+}
+
+static fpas_avatar_image *fpas_avatar_image_for(cui_ctx *ui, cui_id key, const char *path) {
+    const cui_id image_key = key ^ 0x46504149u;
+    fpas_own(ui, key, image_key, 0, 0);
+    return fpas_avatar_image_at(ui, image_key, path);
 }
 
 typedef struct {

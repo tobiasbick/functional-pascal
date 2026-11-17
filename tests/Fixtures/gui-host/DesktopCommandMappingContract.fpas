@@ -1,0 +1,106 @@
+unit DesktopCommandMappingContract;
+
+uses
+  Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Closing as Closing,
+  Fpas.Ui.Gui.Frames as Frames, Fpas.Ui.Gui.Windows as Windows,
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Mvu.Composition as Composition, System as Sys;
+
+function Payload(Value: Mvu.Command<string>): Sys.Object;
+begin
+  case Value of
+    when Mvu.Command.Host(const Request: Mvu.HostRequest):
+      case Request of
+        when Mvu.HostRequest.Extension(const Extension: Sys.Object):
+          return Extension;
+        else
+      end case;
+    else
+  end case;
+
+  raise new Sys.InvalidOperationException('Expected an owner-thread extension.');
+end function;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Map(Value: Mvu.Command<int>): Sys.Object;
+begin
+  return Payload(
+    Composition.MapCommand<int, string>(
+      Value,
+      function(Message: int): string => 'child:' + Message.ToString()
+    )
+  );
+end function;
+
+// Verifies typed selected/cancelled results across a feature slice and command mapping.
+public procedure Verify();
+begin
+  const Requests: array of Mvu.Command<int> := [
+    Files.OpenFile<int>(
+      function(Path: string): int => Path.Length,
+      'Open',
+      'Text',
+      'txt',
+      function(): int => -1
+    ),
+    Files.SaveFile<int>(
+      function(Path: string): int => Path.Length,
+      'notes — été.txt',
+      'Save',
+      'Text',
+      'txt',
+      function(): int => -1
+    ),
+    Files.ChooseFolder<int>(
+      function(Path: string): int => Path.Length,
+      'Folder',
+      function(): int => -1
+    )
+  ];
+  for Index: int := 0 to Requests.Length - 1 do
+    const Request: Files.Request<string> := cast<Files.Request<string>>(Map(Requests[Index]));
+    Check(cast<int>(Request.Kind) = Index, 'Mapping lost the native dialog kind.');
+    Check(Request.OnSelected('été') = 'child:3', 'Selected paths did not map into the parent.');
+    case Request.OnCancelled of
+      when is Sys.Func<string> as Notify:
+        Check(Notify.Invoke() = 'child:-1', 'Dialog cancellation did not map into the parent.');
+      else
+        raise new Sys.InvalidOperationException('Mapped cancellation callback is missing.');
+    end case;
+
+    if Index = 1 then
+      Check(
+        Request.DefaultName = 'notes — été.txt' and Request.Accept = 'txt',
+        'Save options changed during mapping.'
+      );
+    end if;
+  end for;
+  const Silent: Files.Request<string> := cast<Files.Request<string>>(Map(
+    Files.ChooseFolder<int>(function(Path: string): int => Path.Length)
+  ));
+  Check(Silent.OnCancelled = null, 'Mapping must preserve silent cancellation.');
+  const Title: Windows.TitleRequest<string> := cast<Windows.TitleRequest<string>>(Map(
+    Windows.SetTitle<int>('Document')
+  ));
+  Check(Title.Title = 'Document', 'Mapping lost the window title.');
+  const Size: Windows.SizeRequest<string> := cast<Windows.SizeRequest<string>>(Map(
+    Windows.Resize<int>(420, 300)
+  ));
+  Check(Size.Width = 420 and Size.Height = 300, 'Mapping lost the native size.');
+  const Frame: Frames.Request<string> := cast<Frames.Request<string>>(Map(
+    Frames.Redraw<int>(0.25F)
+  ));
+  Check(Frame.DelaySeconds = 0.25F, 'Mapping lost the native frame deadline.');
+  Check(
+    Map(Closing.Cancel<int>()) is Closing.CancelRequest<string>,
+    'Mapping lost the close rejection.'
+  );
+end procedure;
+
+end unit;

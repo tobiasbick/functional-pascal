@@ -31,10 +31,13 @@ public sealed partial class CuiWindow
                 Math.Abs(settings.Maximum) > 35_000_000 || settings.Minimum == settings.Maximum && count > 35_000_000))
             throw new ArgumentException("Invalid dot chart series or axis.", nameof(settings));
         using var memory = new ChartMemory();
+        nint xLabel = RetainAxisLabel(settings.XLabel), valueLabel = RetainAxisLabel(settings.ValueLabel);
         var native = new NativeDotOptions {
             Chart = memory.Options(settings.Chart), Minimum = settings.Minimum, Maximum = settings.Maximum,
             Step = settings.Step, Units = settings.Units, XFormat = memory.Format(settings.XFormat),
             Unit = memory.Text(Optional(settings.Unit)), Pitch = settings.Pitch,
+            XLabel = AxisLabelFunction(xLabel), XLabelUser = xLabel,
+            ValueLabel = AxisLabelFunction(valueLabel), ValueLabelUser = valueLabel,
             Flags = (settings.Axis ? 0 : 1) | (settings.Readout ? 0 : 2) | (enabled ? 4 : 0) | (focus ? 8 : 0)
         };
         fixed (float* values = samples)

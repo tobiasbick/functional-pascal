@@ -3,7 +3,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Editors.CodeEditor;
 uses
   Fpas.Ui.Widgets.Editors.CodeEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
   Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
-  Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
+  Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors, System.Collections.Generic as Lists;
 
 // Renders the native CodeEditor and dispatches its proposals.
 // ## Type parameters
@@ -21,17 +21,28 @@ begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
   const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Marks: Lists.List<CuiEditors.CuiTextMark> := new Lists.List<CuiEditors.CuiTextMark>(
+    Settings.Marks.Length
+  );
+  for Mark: D.Mark in Settings.Marks do
+    Marks.Add(new CuiEditors.CuiTextMark(Mark.Start, Mark.Finish, Mark.Color));
+  end for;
   const Result: CuiEditors.CuiCodeEditorEvent? := Frame.Window.CodeEditor(
     Token, Text, Settings.Capacity, Settings.Language, Settings.Placeholder,
     Width.Kind, Width.Value, Settings.Height, Settings.Size, Settings.TabSize,
     P.Bits(Enabled, 1) or P.Bits(Settings.ReadOnly, 2) or P.Bits(Settings.UseTabs, 4)
-    or P.Bits(not Settings.LineNumbers, 8) or P.Bits(Focus, 16)
+    or P.Bits(not Settings.LineNumbers, 8) or P.Bits(Focus, 16), Marks.ToArray()
   );
   if Enabled then
     case Result of
       when is CuiEditors.CuiCodeEditorEvent as Event:
         Frame.Messages.Add(
-          Changed(new D.Event(Event.Text, Event.Line, Event.Column, Event.Lines, Event.Refused))
+          Changed(
+            new D.Event(
+              Event.Text, Event.Line, Event.Column, Event.Lines, Event.Refused,
+              Event.Cursor, Event.Anchor, Event.Matches, Event.MatchIndex, Event.Focused
+            )
+          )
         );
       else
     end case;

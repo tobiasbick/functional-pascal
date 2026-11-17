@@ -38,9 +38,35 @@ use the same topics and expose the `fpas_cui_` symbols.
 - SetTheme/ReadTheme transfer the shared semantic palette. SystemDark reads
   CUI's platform appearance and returns null when it is unavailable.
   Reduced motion is controlled independently of palette changes.
-- DeferClose, CloseRequested and WakeWhenCompleted support asynchronous cleanup.
+- DeferClose, TakeCloseRequest and WakeWhenCompleted support close decisions and
+  asynchronous cleanup. SetTitle, Resize and RequestFrame run on the owner;
+  frame requests use CUI's redraw/deadline APIs rather than managed timers.
+  Creation accepts minimum dimensions, fixed size and Linux application identity.
   SetResizeRenderer roots an owner-thread cached-view callback until detachment;
   failures are surfaced after the native pump returns.
+- OpenFile, SaveFile and ChooseFolder use CUI's modal platform chooser outside
+  active frames. They return Unicode paths or null when CUI has no selection.
+  Linux needs Zenity or KDialog; Save selects a destination without writing it.
+- ReadShortcuts runs once after widgets. It uses native exact combinations,
+  popup/modal/text ownership and observed held-key levels for repeat policy.
+  Native consumed keys remain unavailable to application bindings.
+- CodeEditorGoTo/Select/Find queue one-view requests between frames; only the
+  last per ID survives. CodeEditor converts UTF-16 scalar-boundary offsets to
+  native UTF-8 and back. CUI copies the visible marks for deferred painting.
+  Live-resize cached rendering does not consume these requests.
+- User-menu avatars reuse native texture loading/lifetime. Tours retain stable
+  action identities across caption changes. Count formats expose only the
+  native integer `%d` slots and literal `%%`, validated before C varargs calls.
+- LoadFont, SetFontRole, AddFontFallback and emoji operations own native font data
+  until window disposal. Role replacement/restoration and caption replacement
+  run between frames. SetStrings copies a partial Unicode caption table.
+- SetTheme accepts optional metric values; ReadThemeMetrics returns a detached
+  snapshot. FollowSystemTheme enables native platform following. The FPAS host
+  reapplies its resolved application palette after appearance changes.
+- DrawingCanvas accepts deferred painting and changed pointer-state callbacks.
+  CuiCanvasPainter is valid only inside its owner-thread callback, forwards to
+  CUI, owns callback-local clip scopes and rejects window reentry. Managed
+  exceptions return through Present/NextFrame after native painting ends.
 
 ## Source build and verification
 
@@ -78,8 +104,9 @@ dotnet test tests/Fpas.Ui.Gui.Cui.Tests/Fpas.Ui.Gui.Cui.Tests.csproj -c Release 
 ```
 
 The tests cover encoding limits and Unicode positions without a display.
-Native window cases require a display and are skipped only when `DISPLAY` is
-absent on Linux. The test project sets `CUI_SCALE=1` for its test host and
+Native window cases require a display and are skipped when `DISPLAY` is
+absent on Linux. Native Linux dialog automation additionally requires Zenity
+with xdotool and xclip on `PATH`. The test project sets `CUI_SCALE=1` for its test host and
 fixture processes so the expected PNG pixel dimensions are independent of the
 desktop scale. The cases exercise shared-library loading, software and OpenGL
 rendering, native button input, thread ownership, nested layout, scroll geometry,

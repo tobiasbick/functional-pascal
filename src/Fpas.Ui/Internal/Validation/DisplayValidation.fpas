@@ -88,7 +88,10 @@ begin
       const Id: string,
       const Drawing: array of Canvas.Shape,
       _,
-      const Options: Canvas.Options
+      const Options: Canvas.Options,
+      _,
+      _,
+      _
     ):
       const Path: string := Identify(Id, Location + '/canvas');
       R.CheckExtent(Options.Width, Profile, Path);

@@ -50,6 +50,28 @@ public type View = record
   public MarkEnd: double;
 end record;
 
+// A dependency between indices in the sorted span array.
+public type Link = record
+  // Source span index.
+  public From: int;
+  // Destination span index.
+  public To: int;
+  // Native semantic tone, zero for emphasis.
+  public Tone: int := 0;
+  // Logical line width, zero for the native default.
+  public Width: float := 0.0F;
+  // Whether the dependency is weak or inferred.
+  public Dashed: bool := false;
+end record;
+
+// Native hover indices; minus one means no span or link is under the pointer.
+public type Hover = record
+  // Index in the sorted span array.
+  public Span: int := -1;
+  // Index in the dependency array; a span takes priority.
+  public Link: int := -1;
+end record;
+
 // Action or changed value reported by the native widget.
 public type Event = record
   // Viewport supplied to CUI.
@@ -60,6 +82,8 @@ public type Event = record
   public TrackIndex: int;
   // New collapsed state of the changed lane.
   public Collapsed: bool;
+  // Current native hover, available with every proposal.
+  public Hovered: Hover := new Hover();
 end record;
 
 // Native layout and interaction options.
@@ -72,6 +96,10 @@ public type Options = record
   public RowHeight: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Native dependencies, using the supplied sorted span indices.
+  public Links: array of Link := [];
+  // Model-owned previous hover. Null disables hover-only proposals.
+  public Hovered: Hover? := null;
 end record;
 
 // Builds the native TraceViewer widget.

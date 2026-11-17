@@ -15,9 +15,10 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Charts;
 /// <param name="Add">Whether to accept insertions.</param>
 /// <param name="Remove">Whether to accept removals.</param>
 /// <param name="Axis">Whether to show axis labels.</param>
+/// <param name="Label">Formats axis/selected-event times during painting, or null for native formatting.</param>
 public sealed record CuiEventOptions(int WidthKind, float Width, int Capacity, double Minimum,
     double Maximum, double Step, int Units, CuiChartFormat? Format, double LabelStep,
-    bool Add, bool Remove, bool Axis);
+    bool Add, bool Remove, bool Axis, Func<double, string>? Label = null);
 
 /// <summary>Native event track result.</summary>
 /// <param name="Changed">Whether the native track edited a time.</param>

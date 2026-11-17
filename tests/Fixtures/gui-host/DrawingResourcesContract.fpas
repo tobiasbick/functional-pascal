@@ -1,0 +1,227 @@
+unit DrawingResourcesContract;
+
+uses
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Resources as Resources,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Fonts as Fonts,
+  Fpas.Ui.Gui.Localization as Localization, Fpas.Ui.Gui.Colors as Colors,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Canvas.Painting as Painting,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics,
+  Fpas.Ui.Widgets.Media.MediaImages as Images, Fpas.Ui.Graphics as G,
+  Fpas.Ui.Elements as E, Fpas.Ui.Composition as Composition, Fpas.Ui.Layout as L,
+  Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+type Msg = variant
+  Load;
+  Completed;
+  Pointer(Value: bool);
+  Scale;
+end variant;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure ValidateMetrics();
+begin
+  var Rejected: bool := false;
+  try
+    discard Metrics.Native(new Metrics.Options(Motion := -1.0F));
+  catch Error: Sys.ArgumentOutOfRangeException do
+    Rejected := true;
+  end try;
+
+  Check(Rejected, 'Public motion cannot use the native preservation sentinel.');
+  Rejected := false;
+  try
+    discard Metrics.Native(
+      new Metrics.Options(
+        Floating := new Metrics.Elevation(Primary := new Metrics.Shadow(Blur := -1.0F))
+      )
+    );
+  catch Error: Sys.ArgumentOutOfRangeException do
+    Rejected := true;
+  end try;
+
+  Check(Rejected, 'Public shadow blur cannot use the native preservation sentinel.');
+end procedure;
+
+// Exercises mapped font commands, shared drawing capabilities, native palettes and pointer mapping.
+// ## Parameters
+// - `Renderer`: Native renderer for the bounded session.
+// - `FontBytes`: Trusted TTF/OTF bytes, or null to exercise native rejection without a font dependency.
+public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? := null);
+  function Update(Model: bool; Message: Msg): Mvu.Transition<bool, Msg>;
+  begin
+    case Message of
+      when Msg.Load:
+        const Child: Fonts.Request<bool> := new Fonts.Request<bool>(
+          Fonts.Operation<bool>.Load(
+            Bytes,
+            function(Face: Resources.CuiFontFace?): bool begin
+              Loaded := Face;
+              return (Face <> null) = Expected;
+            end function
+          )
+        );
+        return new Mvu.Transition<bool, Msg>(
+          Model, [
+            Mvu.Command<Msg>.Host(
+              Mvu.HostRequest.Extension(
+                Child.Map<Msg>(
+                  function(Success: bool): Msg begin
+                    Check(Success, 'Native font acceptance did not match the supplied data.');
+                    return Msg.Completed;
+                  end function
+                )
+              )
+            )
+          ]
+        );
+      when Msg.Completed:
+        Done := true;
+        return new Mvu.Transition<bool, Msg>(
+          Model, [
+            Fonts.Apply<Msg>(Fonts.Operation<Msg>.Assign(G.Font.Body, Loaded)),
+            Localization.Set<Msg>(new Resources.CuiStrings(Today := 'Heute 日本'))
+          ]
+        );
+      when Msg.Pointer(const Hovered: bool):
+        PointerEvents := PointerEvents + 1;
+        return new Mvu.Transition<bool, Msg>(Model, []);
+      when Msg.Scale:
+        return new Mvu.Transition<bool, Msg>(not Model, []);
+    end case;
+  end function;
+  function ThemeFor(Model: bool; Appearance: Themes.Mode?): Themes.Theme;
+  begin
+    const T: Themes.Theme := Themes.Dark(Themes.Accent.Blue);
+    return T with
+      Metrics := new Metrics.Options(
+        FontScale := if Model then
+          1.5F
+        else
+          1.0F
+        end if, Motion := 0.0F
+      );
+    end with;
+  end function;
+  procedure Paint(Surface: Painting.Surface);
+  begin
+    Paints := Paints + 1;
+    Retained := Surface;
+    LastScale := Surface.FontScale();
+    Check(
+      Surface.Width() > 0.0F and Surface.Height() > 0.0F,
+      'The painter needs final layout geometry.'
+    );
+    Check(not Surface.Disabled(), 'The enabled canvas was marked disabled.');
+    const Color: G.Color := Colors.Oklch(0.7F, 0.1F, 240.0F);
+    Surface.Rectangle(0.0F, 0.0F, Surface.Width(), Surface.Height(), 0.0F, Color);
+    Surface.Text(
+      8.0F,
+      8.0F,
+      'Grüße 日本 🎵',
+      G.Font.Body,
+      13.0F * Surface.FontScale(),
+      new G.Color(255, 255, 255)
+    );
+    Check(
+      Surface.Measure('Unicode 🎵', G.Font.Body, 13.0F).Width > 0.0F,
+      'Native Unicode measurement failed.'
+    );
+    Surface.Image(
+      Images.Source.Rgba(1, 1, Pixels),
+      20.0F,
+      60.0F,
+      20.0F,
+      20.0F,
+      2.0F,
+      new G.Color(255, 255, 255)
+    );
+    Surface.PushClip(0.0F, 0.0F, 40.0F, 40.0F);
+    Surface.Line(0.0F, 0.0F, 50.0F, 50.0F, 2.0F, Color);
+  end procedure;
+  function View(Model: bool; Size: L.Viewport; Theme: Themes.Theme): E.Element<Msg>;
+  begin
+    return Composition.Map<bool, Msg>(
+      Canvas.Canvas<bool>(
+        'paint', [], function(_Event: Canvas.Event): bool => false,
+        new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(130))), Paint := Paint,
+        OnPointer := function(State: Canvas.Pointer): bool => State.Hovered
+      ), Msg.Pointer
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(20.0F, 20.0F);
+  end procedure;
+  procedure Steps(Value: Gui.Session<Msg>);
+  begin
+    for Index: int := 0 to 3 do
+      Check(Value.Step(), 'The drawing session closed.');
+    end for;
+  end procedure;
+begin
+  ValidateMetrics();
+  var Loaded: Resources.CuiFontFace? := null;
+  var Done: bool := false;
+  var Paints: int := 0;
+  var PointerEvents: int := 0;
+  var LastScale: float := 0.0F;
+  var Retained: Painting.Surface? := null;
+  const Pixels: array of byte := [220, 80, 40, 255];
+  const Bytes: array of byte := FontBytes ?? new byte[0];
+  const Expected: bool := Bytes.Length > 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPAS drawing contract',
+    480,
+    240,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<Msg> := Host.StartThemed<bool, Msg>(
+    false, Update, View, Window, 32, Inject,
+    Themes.Dark(), ThemeFor, true
+  );
+  Check(
+    Session.IsSoftware() = (Renderer = Cui.CuiRenderer.Software),
+    'Unexpected native renderer.'
+  );
+  Steps(Session);
+  Check(Paints > 0 and PointerEvents > 0, 'Shared canvas mapping lost paint or pointer callbacks.');
+  const Count: int := PointerEvents;
+  Steps(Session);
+  Check(PointerEvents = Count, 'Idle canvas pointer state caused a message loop.');
+  var Rejected: bool := false;
+  try
+    if Retained <> null then
+      discard Retained.Width();
+    end if;
+  catch Error: Sys.InvalidOperationException do
+    Rejected := true;
+  end try;
+
+  Check(Rejected, 'A retained drawing capability remained active.');
+  discard Session.Post(Msg.Load);
+  Steps(Session);
+  Check(Done and ((Loaded <> null) = Expected), 'A mapped font completion did not arrive.');
+  discard Session.Post(Msg.Scale);
+  Steps(Session);
+  Check(LastScale = 1.5F, 'The shared theme did not reach native drawing.');
+  Rejected := false;
+  try
+    discard V.Prepare<Msg>(
+      View(false, new L.Viewport(L.SizeClass.Regular, L.SizeClass.Regular), Themes.Light()),
+      V.Target.Terminal
+    );
+  catch Error: Sys.ArgumentException do
+    Rejected := true;
+  end try;
+
+  Check(Rejected, 'The terminal profile accepted a graphical canvas.');
+end procedure;
+
+end unit;

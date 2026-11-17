@@ -13,6 +13,13 @@ swatches. The gallery shows the accepted widget examples from the
 See the [UI handbook](../../../../docs/ui/README.md) for widget examples and
 screenshots.
 
+The companion [native API example](../native-api/README.md) demonstrates canvas
+wheel handling, custom axis labels and trace links/geometry without changing
+the original gallery composition.
+The [editor commands example](../editor-commands/README.md) shows optional
+editor requests, application shortcuts, account images, tour labels and
+aggregate-selection settings alongside the gallery's default widget examples.
+
 ## Source structure
 
 - `App/`: navigation, responsive window composition, root state and message routing.

@@ -13,9 +13,7 @@ static void fpas_media_release(cui_ctx *ui, void *data) {
     cui__free(ui, image->path);
 }
 
-static fpas_media_image *fpas_media_resolve(cui_ctx *ui, cui_id slot, const fpas_media_source *source) {
-    fpas_media_image *image = cui_state(ui, slot, sizeof *image);
-    cui__state_set_dtor(ui, slot, fpas_media_release);
+static fpas_media_image *fpas_media_update(cui_ctx *ui, fpas_media_image *image, const fpas_media_source *source) {
     const bool same = source->path ? image->path && strcmp(image->path, source->path) == 0
         : !image->path && image->version == source->version
             && image->width == source->width && image->height == source->height;
@@ -34,4 +32,10 @@ static fpas_media_image *fpas_media_resolve(cui_ctx *ui, cui_id slot, const fpas
         }
     }
     return image;
+}
+
+static fpas_media_image *fpas_media_resolve(cui_ctx *ui, cui_id slot, const fpas_media_source *source) {
+    fpas_media_image *image = cui_state(ui, slot, sizeof *image);
+    cui__state_set_dtor(ui, slot, fpas_media_release);
+    return fpas_media_update(ui, image, source);
 }

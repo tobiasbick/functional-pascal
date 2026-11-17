@@ -31,6 +31,7 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Detail / Status` | Both empty |
+| `AvatarPath` | Null uses initials. A PNG/JPEG path supplies the native trigger and popup image. Failed loads use initials. |
 | `Compact / Enabled` | false / true |
 | `Position / Width` | BottomStart / 0 for automatic width |
 

@@ -1,0 +1,47 @@
+unit Fpas.Ui.Gui.Colors;
+
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Resources as Native, Fpas.Ui.Gui.Internal.Data.CreativeParts as C;
+
+// Converts OKLCH through CUI into straight-alpha RGBA.
+// ## Parameters
+// - `Lightness`: Zero through one.
+// - `Chroma`: Finite nonnegative chroma.
+// - `Hue`: Finite angle in degrees.
+// - `Alpha`: Zero through one.
+// ## Returns
+// Native CUI color conversion.
+public function Oklch(Lightness: float; Chroma: float; Hue: float; Alpha: float := 1.0F): G.Color;
+requires Lightness >= 0.0F and Lightness <= 1.0F;
+requires Chroma >= 0.0F and Chroma <= float.MaxValue;
+requires Hue >= -float.MaxValue and Hue <= float.MaxValue;
+requires Alpha >= 0.0F and Alpha <= 1.0F;
+begin
+  return C.Unpack(Native.CuiColors.Oklch(Lightness, Chroma, Hue, Alpha));
+end function;
+
+// Interpolates two straight-alpha colors using CUI's OKLab mixing.
+// ## Parameters
+// - `Left`: Start color.
+// - `Right`: End color.
+// - `Amount`: Interpolation from zero through one.
+// ## Returns
+// Native mixed color.
+public function Mix(Left: G.Color; Right: G.Color; Amount: float): G.Color;
+requires Amount >= 0.0F and Amount <= 1.0F;
+begin
+  return C.Unpack(Native.CuiColors.Mix(C.Pack(Left), C.Pack(Right), Amount));
+end function;
+
+// Multiplies alpha using CUI and clamps it to the byte range.
+// ## Parameters
+// - `Color`: Straight-alpha source.
+// - `Multiplier`: Finite nonnegative opacity multiplier.
+// ## Returns
+// Color with the native multiplied alpha.
+public function Alpha(Color: G.Color; Multiplier: float): G.Color;
+requires Multiplier >= 0.0F and Multiplier <= float.MaxValue;
+begin
+  return C.Unpack(Native.CuiColors.Alpha(C.Pack(Color), Multiplier));
+end function;
+
+end unit;

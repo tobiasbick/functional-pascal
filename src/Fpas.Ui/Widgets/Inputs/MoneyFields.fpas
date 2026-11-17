@@ -2,7 +2,7 @@ unit Fpas.Ui.Widgets.Inputs.MoneyFields;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
-// Native money-input presentation; no FPAS monetary scalar type is introduced.
+// Exact CLR decimal editing through a native CUI text field.
 public type Options = record
   // Literal caption above the input.
   public Label: string := '';
@@ -12,7 +12,7 @@ public type Options = record
   public Code: string := '';
   // Supporting text below the input.
   public Hint: string := '';
-  // Fractional precision from zero through fifteen.
+  // Fractional precision from zero through twenty-eight; values are never implicitly rounded.
   public DecimalPlaces: int := 2;
   // Native content, fill, fixed or percentage width.
   public Width: L.Extent := L.Extent.Content;
@@ -20,17 +20,17 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Builds CUI's grouped amount display with plain digits while editing.
+// Builds an exact decimal editor with invariant grouping at rest and retained text drafts.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable control identity.
-// - `Value`: Finite double amount fitting CUI's 63-byte grouped display.
-// - `OnChange`: Maps a proposed native amount to a message.
+// - `Value`: Decimal amount representable at the selected fractional precision.
+// - `OnChange`: Maps an exactly representable proposal to a message.
 // - `Settings`: Optional currency captions, precision and native width.
 // ## Returns
 // A graphical model-controlled money field.
-public function MoneyField<TMsg>(Id: string; Value: double; OnChange: function(double): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function MoneyField<TMsg>(Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
   return E.Element<TMsg>.MoneyField(Id, Value, OnChange, Settings ?? new Options());

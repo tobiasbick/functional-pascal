@@ -66,7 +66,16 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  const Result: CuiDeveloper.CuiDevResult := Frame.Window.TraceViewer(
+  const Links: Lists.List<CuiDeveloper.CuiTraceLink> := new Lists.List<CuiDeveloper.CuiTraceLink>(
+    Settings.Links.Length
+  );
+  for Index: int := 0 to Settings.Links.Length - 1 do
+    const Link: D.Link := Settings.Links[Index];
+    Links.Add(
+      new CuiDeveloper.CuiTraceLink(Link.From, Link.To, Link.Tone, Link.Width, Link.Dashed)
+    );
+  end for;
+  const Native: CuiDeveloper.CuiTraceResult := Frame.Window.TraceViewer(
     Token,
     PackTrack(Tracks),
     PackSpan(Spans),
@@ -81,15 +90,22 @@ begin
     Settings.RowHeight,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    Links.ToArray()
   );
+  const Result: CuiDeveloper.CuiDevResult := Native.Edit;
+  const Hovered: D.Hover := new D.Hover(Result.Hover, Native.HoveredLink);
+  const HoverChanged: bool := case Settings.Hovered of
+    when is D.Hover as Previous: Previous.Span <> Hovered.Span or Previous.Link <> Hovered.Link;
+    else false;
+  end case;
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
-  if Enabled and (Result.Flags <> 0) then
+  if Enabled and (Result.Flags <> 0 or HoverChanged) then
     Frame.Messages.Add(
       Changed(
         new D.Event(
           new D.View(Result.X, Result.Y, cast<float>(Result.Z), Result.A, Result.B),
-          Result.Index, Result.Action, Result.Count <> 0
+          Result.Index, Result.Action, Result.Count <> 0, Hovered
         )
       )
     );

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Fpas.Ui.Gui.Cui.Tests.Packaging;
 
 /// <summary>Sends real X server events; it never calls the GUI binding's input injection APIs.</summary>
-internal sealed class X11Input : IDisposable
+internal sealed partial class X11Input : IDisposable
 {
     private nint display = XOpenDisplay(0);
     private readonly nuint window;

@@ -1,0 +1,47 @@
+unit NativeApi.State;
+
+uses
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Developer.TraceViewers as Trace,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Charts.EventTracks as Events;
+
+// Retained native API demonstration state.
+public type Model = record
+  // Accumulated horizontal wheel movement, in lines.
+  public X: float := 0.0F;
+  // Accumulated vertical wheel movement, in lines.
+  public Y: float := 0.0F;
+  // Last native trace hover; the model acknowledges hover proposals.
+  public Hover: Trace.Hover := new Trace.Hover();
+  // Native visible trace interval.
+  public View: Trace.View := new Trace.View(0.0, 5.0, 0.0F, 0.0, 0.0);
+  // Selected span index.
+  public Selection: int := -1;
+  // Last inspected logical span bounds.
+  public Bounds: Cui.CuiRectangle := new Cui.CuiRectangle();
+  // Model-owned day markers for the custom date labels.
+  public Days: Events.Value := new Events.Value([1.0, 3.0], -1);
+end record;
+
+// Typed messages proposed by the native widgets and geometry command.
+public type Msg = variant
+  // A click leaves this example's drawing unchanged.
+  Clicked(Value: Canvas.Event);
+  // Wheel deltas update the demonstration's counters.
+  Scrolled(Value: Canvas.Wheel);
+  // Trace edits and native hover changes.
+  TraceChanged(Value: Trace.Event);
+  // Request the source span's native bounds.
+  Inspect;
+  // Receive its logical rectangle after presentation.
+  Geometry(Value: Cui.CuiRectangle);
+  // Adopt native changes to the day markers.
+  DaysChanged(Value: Events.Change);
+end variant;
+
+// Sorted spans; dependency indices refer to this exact order.
+public const Spans: array of Trace.Span := [
+  new Trace.Span('Send', 0.0, 1.0, 0, 0, 0u),
+  new Trace.Span('Receive', 3.0, 4.0, 1, 0, 0u)
+];
+
+end unit;

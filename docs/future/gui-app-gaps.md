@@ -36,8 +36,8 @@ The source review covers CUI's [Building an app][apps], [Recipes][recipes],
   for progress, errors and timer ticks. Demonstrate cancellation and updates
   without user input. The
   [gallery countdown](../../examples/ui/gui/gallery/Pages/Disclosure/Clock.fpas)
-  already uses this pattern. Add a direct frame scheduling API when a use case
-  needs a repaint without a model change.
+  already uses this pattern. For repaints without model changes, use
+  [native frame scheduling](../../src/Fpas.Ui.Gui/README.md#invalidation-and-inspection).
 
 Use the Notes app to verify opening, editing, saving, reopening and restoring
 settings. Cover button and keyboard submission, selection after sorting, and
@@ -46,24 +46,25 @@ through the documented SDK workflow.
 
 ## Document commands and window close
 
-- [ ] Route a native close request through the application's update before
-  shutting down. The [GUI host](../../src/Fpas.Ui.Gui/Internal/Hosting/Session.fpas)
-  currently starts cleanup immediately. Let the application approve the
-  request, cancel it or show a confirmation and save first. Verify the title-bar
-  close action, clean and dirty documents, repeated close requests, failed or
-  cancelled saves, and normal cancellation and joining of background work once
-  the close is approved.
-- [ ] Add typed Save File and Choose Folder commands beside the existing
-  [Open File command](../../src/Fpas.Ui.Gui/FileDialogs.fpas). Use CUI's native
-  chooser, including its default filename for Save. Exercise confirmation,
-  cancellation, Unicode paths and filters on Windows and Linux. Add a real
-  Save As flow to Notes. [CUI file dialogs][file-dialogs]
-- [ ] Let applications bind keyboard combinations such as primary modifier
-  plus S to typed messages. The command palette has its own binding and
-  recording a shortcut produces a value. Define how app bindings yield to text
-  editors, active overlays and widget shortcuts. Verify that a shortcut fires
-  once per activation and that disabled commands and covered controls stay
-  inactive. [CUI keyboard shortcuts][shortcuts]
+The [desktop command API](../../src/Fpas.Ui.Gui/README.md#file-selection) and
+[runnable example](../../examples/ui/gui/desktop-commands/README.md) supply the
+native operations. The Notes application must exercise Open/Save/Choose Folder with Unicode
+paths, filters and cancellation, then Save As and restoring the resulting title.
+Verify a clean close, dirty close, repeated close requests and failed/cancelled
+saves. Only an approved close stops and joins background work; opt into the
+GUI host's `OnCloseRequested` callback and reject with `Closing.Cancel` or
+approve with `Mvu.Exit`. Exercise model-owned
+[application bindings](../../src/Fpas.Ui.Gui/README.md#application-shortcuts)
+with primary modifiers, single activation and native overlay/editing ownership.
+Use AllowWhileEditing only for global commands such as Save.
+[CUI file dialogs][file-dialogs] · [CUI keyboard shortcuts][shortcuts]
+
+- [ ] Run the focused desktop command acceptance on Windows: native Open,
+  Save and Choose Folder, Unicode/default names/filters/cancellation, repeated
+  close decisions, worker cleanup, title/size options and idle frame deadlines.
+  Include application shortcuts and native editor find/navigation/Unicode
+  selection and focus return on Windows.
+  Linux X11 automation does not establish Windows behavior.
 
 ## Desktop publishing and window configuration
 
@@ -73,27 +74,25 @@ through the documented SDK workflow.
   directly from Explorer for the supported desktop publish modes. Cover the
   project's icon and version metadata in the publishing instructions.
   [CUI shipping guide][shipping]
-- [ ] Expose Linux application identity through GUI options, the managed
-  window and the bridge to `cui_app_desc.app_id`. Match the installed
-  `.desktop` filename and icon. Verify the resulting X11 `WM_CLASS` and
-  desktop grouping. CUI reads the ID at window creation and ignores it on
-  Windows. [CUI desktop identity][desktop-id]
-- [ ] Expose runtime title and logical size changes, minimum dimensions and
-  fixed-size windows through the GUI host. Verify that an app can restore a
-  saved size and update the title when it opens another file. Leave native
-  handle and backend access for a concrete platform integration such as a tray
-  icon. [CUI window API][window-api]
+
+Use the supported [window options and commands](../../src/Fpas.Ui.Gui/README.md#window-state-and-placement).
+For Linux delivery, match application identity to the installed `.desktop`
+filename/icon and check X11 `WM_CLASS` and desktop grouping. CUI reads the ID at
+creation and ignores it on Windows. Verify restoring saved dimensions and
+changing a document title in Notes. Native handles/backend access need a concrete
+platform integration such as a tray icon.
+[CUI desktop identity][desktop-id] · [CUI window API][window-api]
 
 ## Appearance and accessibility
 
-- [ ] Read the Linux desktop appearance and receive live changes. CUI's X11
-  backend supplies a dark `GTK_THEME` hint. The GUI host needs a change
-  notification to update an idle window. [CUI app options][app-options]
-- [ ] Expose reduced motion through the public GUI API. The native binding
-  already has `SetReducedMotion`. Verify it with a running animation. Expose
-  font-role overrides and fallback fonts where an application needs them.
-  Test visible CJK glyphs with a supplied fallback. Font coverage and
-  bidirectional editing are separate problems. [CUI typography and motion][theming]
+Use the [font and native caption commands](../../src/Fpas.Ui.Gui/README.md#fonts-and-native-captions)
+and shared theme metrics for platform acceptance.
+Platform acceptance must cover a running animation and visible CJK glyphs with
+an explicit fallback. Linux live appearance needs change notifications for an
+idle window; CUI's X11 backend currently supplies a dark `GTK_THEME` hint.
+Font coverage and bidirectional editing are separate concerns.
+[CUI app options][app-options] · [CUI typography and motion][theming]
+
 - [ ] Establish a screen-reader plan before treating the GUI as accessible for
   public apps. CUI has no accessibility tree. FPAS snapshots expose bounds,
   roles and values for inspection. A screen reader also needs platform

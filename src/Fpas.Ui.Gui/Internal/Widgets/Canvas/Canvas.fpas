@@ -1,8 +1,9 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas;
 
 uses
+  Fpas.Ui.Widgets.Canvas.Painting as Painting, Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface as Surface,
   Fpas.Ui.Widgets.Canvas.Canvases as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
-  Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas;
+  Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, System as Sys;
 
 function Pack(Shape: D.Shape): CuiCanvas.CuiDrawingShape;
 begin
@@ -41,7 +42,10 @@ end function;
 // - `Drawing`: Draw commands in paint order.
 // - `Clicked`: Maps native activation to an application message.
 // - `Settings`: Native canvas options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options);
+// - `OnWheel`: Optional horizontal/vertical wheel mapper.
+// - `Paint`: Optional deferred drawing capability, scoped to one native callback.
+// - `OnPointer`: Optional changed-state pointer mapper.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func<D.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<D.Pointer, TMsg>?);
 begin
   const Role: string := 'canvas';
   const Width: S.NativeExtent := S.Extent(Settings.Width);
@@ -55,12 +59,39 @@ begin
   var Y: float := 0.0F;
   var W: float := 0.0F;
   var H: float := 0.0F;
+  var WheelX: float := 0.0F;
+  var WheelY: float := 0.0F;
+  const NativePaint: Sys.Action<CuiCanvas.CuiCanvasPainter>? := case Paint of
+    when is Sys.Action<Painting.Surface> as Draw: procedure(Painter: CuiCanvas.CuiCanvasPainter) begin
+      Draw.Invoke(new Surface.Adapter(Painter));
+    end procedure;
+    else null;
+  end case;
+  const NativePointer: Sys.Action<CuiCanvas.CuiCanvasPointer>? := case OnPointer of
+    when is Sys.Func<D.Pointer, TMsg> as Notify: procedure(State: CuiCanvas.CuiCanvasPointer) begin
+      Frame.Messages.Add(
+        Notify.Invoke(
+          new D.Pointer(State.Hovered, State.Pressed, State.X, State.Y, State.Width, State.Height)
+        )
+      );
+    end procedure;
+    else null;
+  end case;
   if Frame.Window.DrawingCanvas(
     C.Token(Role, Id), Width.Kind, Width.Value, Height.Kind, Height.Value,
-    Shapes, Enabled, out X, out Y, out W, out H
+    Shapes, Enabled, out X, out Y, out W, out H, OnWheel <> null,
+    out WheelX, out WheelY, NativePaint, NativePointer
   )
   then
     Frame.Messages.Add(Clicked(new D.Event(X, Y, W, H)));
+  end if;
+
+  if Enabled and (WheelX <> 0.0F or WheelY <> 0.0F) then
+    case OnWheel of
+      when is Sys.Func<D.Wheel, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(new D.Wheel(WheelX, WheelY)));
+      else
+    end case;
   end if;
 
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');

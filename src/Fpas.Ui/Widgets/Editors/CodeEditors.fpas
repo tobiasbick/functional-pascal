@@ -8,12 +8,32 @@ public type Event = record
   public Text: string?;
   // One-based caret line.
   public Line: int;
-  // One-based caret column.
+  // One-based visual caret column, including tab stops.
   public Column: int;
   // Number of lines.
   public LineCount: int;
   // Whether an edit exceeded the UTF-8 capacity.
   public Refused: bool;
+  // UTF-16 caret offset at a Unicode scalar boundary.
+  public Cursor: int := 0;
+  // UTF-16 selection anchor at a Unicode scalar boundary.
+  public Anchor: int := 0;
+  // Number of native find matches.
+  public Matches: int := 0;
+  // One-based selected find match, or zero.
+  public MatchIndex: int := 0;
+  // Whether the editor or its native find bar owns keyboard input.
+  public Focused: bool := false;
+end record;
+
+// A highlight range at UTF-16 scalar boundaries in the model text.
+public type Mark = record
+  // Inclusive start offset.
+  public Start: int;
+  // Exclusive end offset.
+  public Finish: int;
+  // Zero uses the accent; one through six use native series colors.
+  public Color: int := 0;
 end record;
 
 // Native CodeEditor configuration.
@@ -38,6 +58,8 @@ public type Options = record
   public LineNumbers: bool := true;
   // Allow selection and find while preventing edits.
   public ReadOnly: bool := false;
+  // Immutable highlight ranges, sorted by Start and bounded by the model text.
+  public Marks: array of Mark := [];
 end record;
 
 // Creates a graphical CodeEditor.

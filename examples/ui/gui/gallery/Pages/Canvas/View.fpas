@@ -223,7 +223,7 @@ begin
     'hero-light.png',
     'social-card.png',
     'icon-512.png',
-    'thumb@2x.png'
+    'demo@example.com'
   ];
   const Bytes: array of string := ['2.4 MB', '2.3 MB', '812 KB', '96 KB', '140 KB'];
   const Rows: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>(
@@ -234,7 +234,7 @@ begin
   end for;
 
   return Bulk.SelectionBar<State.Msg>(
-    'canvas-bulk', Model.Picked, [
+    'canvas-bulk', Bulk.Selection.Items(Model.Picked), [
       new Bulk.Action(Glyph($E121), 'Move'),
       new Bulk.Action(Glyph($E09E), 'Copy'),
       new Bulk.Action(Glyph($E18E), 'Delete', S.Tone.Danger)

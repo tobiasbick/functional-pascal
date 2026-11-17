@@ -1,0 +1,119 @@
+unit Fpas.Ui.Widgets.Theming.ThemeMetrics;
+
+uses System as Sys;
+
+// One native elevation layer in logical points.
+public type Shadow = record
+  // Vertical displacement.
+  public Y: float := 0.0F;
+  // Nonnegative blur radius.
+  public Blur: float := 0.0F;
+  // Signed expansion; negative values contract the shadow.
+  public Spread: float := 0.0F;
+  // Opacity from zero through one.
+  public Opacity: float := 0.0F;
+end record;
+
+// The two layers CUI uses for one elevation level.
+public type Elevation = record
+  // Main drop shadow.
+  public Primary: Shadow := new Shadow();
+  // Secondary contact shadow.
+  public Secondary: Shadow := new Shadow();
+end record;
+
+// Optional graphical metrics. Terminal hosts retain their cell-based sizing.
+public type Options = record
+  // Control corner radius in logical points.
+  public ControlRadius: float := 10.0F;
+  // Menu and nested-panel corner radius.
+  public PanelRadius: float := 14.0F;
+  // Card and dialog corner radius.
+  public SurfaceRadius: float := 18.0F;
+  // Small control height.
+  public SmallControl: float := 30.0F;
+  // Normal control height.
+  public MediumControl: float := 36.0F;
+  // Large control height.
+  public LargeControl: float := 44.0F;
+  // Extra-small text size.
+  public ExtraSmallText: float := 11.0F;
+  // Small text size.
+  public SmallText: float := 12.0F;
+  // Body text size.
+  public BodyText: float := 13.0F;
+  // Large text size.
+  public LargeText: float := 15.0F;
+  // Level-one heading size.
+  public HeadingOne: float := 36.0F;
+  // Level-two heading size.
+  public HeadingTwo: float := 28.0F;
+  // Level-three heading size.
+  public HeadingThree: float := 22.0F;
+  // Level-four heading size.
+  public HeadingFour: float := 17.0F;
+  // Zero reduces motion; positive values scale animation duration. Null preserves the host setting.
+  public Motion: float? := null;
+  // Positive user font-size multiplier, independent of display DPI.
+  public FontScale: float := 1.0F;
+  // Null selects the appearance's native resting shadows.
+  public Resting: Elevation? := null;
+  // Null selects the appearance's native raised shadows.
+  public Raised: Elevation? := null;
+  // Null selects the appearance's native floating shadows.
+  public Floating: Elevation? := null;
+end record;
+
+// Marshals graphical metrics for the native host, which validates every value.
+// ## Parameters
+// - `Value`: Optional metrics; null preserves native defaults.
+// ## Returns
+// Forty detached values in the CUI host's field order, or null.
+public function Native(Value: Options?): (array of float)?;
+  procedure Layer(Result: array of float; Index: int; Value: Shadow);
+  begin
+    if Value.Blur < 0.0F then
+      raise new Sys.ArgumentOutOfRangeException('Blur');
+    end if;
+
+    Result[Index] := Value.Y;
+    Result[Index + 1] := Value.Blur;
+    Result[Index + 2] := Value.Spread;
+    Result[Index + 3] := Value.Opacity;
+  end procedure;
+  procedure Layers(Result: array of float; Index: int; Value: Elevation?);
+  begin
+    if Value = null then
+      Result[Index + 1] := -1.0F;
+      Result[Index + 5] := -1.0F;
+    else
+      Layer(Result, Index, Value.Primary);
+      Layer(Result, Index + 4, Value.Secondary);
+    end if;
+  end procedure;
+begin
+  if Value = null then
+    return null;
+  end if;
+  const V: Options := Value;
+  if V.Motion <> null and V.Motion < 0.0F then
+    raise new Sys.ArgumentOutOfRangeException('Motion');
+  end if;
+  const Result: array of float := new float[40];
+  const Sizes: array of float := [
+    V.ControlRadius, V.PanelRadius, V.SurfaceRadius,
+    V.SmallControl, V.MediumControl, V.LargeControl, V.ExtraSmallText, V.SmallText,
+    V.BodyText, V.LargeText, V.HeadingOne, V.HeadingTwo, V.HeadingThree, V.HeadingFour,
+    V.Motion ?? -1.0F, V.FontScale
+  ];
+  for Index: int := 0 to Sizes.Length - 1 do
+    Result[Index] := Sizes[Index];
+  end for;
+
+  Layers(Result, 16, V.Resting);
+  Layers(Result, 24, V.Raised);
+  Layers(Result, 32, V.Floating);
+  return Result;
+end function;
+
+end unit;

@@ -153,7 +153,7 @@ begin
       Token, Label, Account.Detail, Account.Status, Account.Compact, Prepared.Entries,
       cast<int>(Account.Position), Account.Width, Accept,
       C.WantsFocus<TMsg>(State, Id, Token, Accept),
-      Prepared.Tokens
+      Prepared.Tokens, Account.AvatarPath
     )
   elsif Settings = null then
     State.Window.ContextMenu(

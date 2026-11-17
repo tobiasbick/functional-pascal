@@ -14,14 +14,14 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MoneyFields as W;
 
 // Displays a whole-euro salary field.
 // ## Parameters
-// - `Salary`: Current finite amount fitting the grouped display.
+// - `Salary`: Exact whole-euro amount.
 // ## Returns
 // A field that sends proposed amounts.
-public function View(Salary: double): E.Element<double>;
-requires Salary >= -double.MaxValue and Salary <= double.MaxValue;
+public function View(Salary: decimal): E.Element<decimal>;
+requires Salary >= decimal.MinValue and Salary <= decimal.MaxValue;
 begin
-  return W.MoneyField<double>('salary', Salary,
-    function(Proposed: double): double => Proposed,
+  return W.MoneyField<decimal>('salary', Salary,
+    function(Proposed: decimal): decimal => Proposed,
     new W.Options(Label := 'Salary', Symbol := '€', Code := 'EUR',
       DecimalPlaces := 0, Hint := 'Gross per year'));
 end function;
@@ -33,18 +33,35 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value` | A finite double. The grouped display must fit in 63 bytes. |
+| `Value` | CLR `decimal`, exactly representable at the selected fractional precision. |
 | `Label / Hint` | Empty. Shown above and below the field. |
 | `Symbol / Code` | $ / empty. These are literal captions. |
-| `DecimalPlaces` | 2. Accepts 0 to 15 fractional digits. |
+| `DecimalPlaces` | 2. Accepts 0 to 28 fractional digits. |
 | `Width / Enabled` | Content / true. |
 
 ## Interaction
 
-CUI groups digits with commas at rest. While editing, use plain digits
-and a decimal point. The format is independent of the current CLR culture.
-Handle the proposed double in the update. If its grouped display would
-exceed the native capacity, the widget retains the previous value.
+The field uses CUI's native text input with a currency prefix/suffix. CUI owns
+layout, focus, cursor, selection, clipboard and undo. The CLR handles exact
+decimal parsing and formatting; neither the model nor the native boundary
+converts an amount to `double`.
+
+At rest, amounts have comma grouping and the selected number of fractional
+digits. Editing retains the typed draft, including incomplete signs or a trailing
+decimal point. Use ASCII digits, an optional leading sign, a decimal point and
+optional correctly grouped commas. This format is independent of CLR culture.
+
+Only complete, exactly representable input produces a `decimal` proposal. Empty,
+incomplete, malformed, overflowing or overly precise input leaves the amount
+unchanged and shows native error feedback. Decimal parsing also rejects values
+that .NET would otherwise round to fit its 96-bit coefficient. Enter or loss of
+focus restores the accepted amount's formatted text. Type `0` to clear an amount.
+
+Model replacements and rejected proposals reconcile the draft with the model.
+Changing `DecimalPlaces` requires a model amount that fits the new precision;
+round explicitly in application code when that is the intended operation.
+The complete decimal range is supported. The editor allows 128 UTF-8 bytes,
+which covers every formatted decimal amount at all supported precisions.
 
 ## See also
 

@@ -52,6 +52,28 @@ begin
       R.CheckText(Text, Path);
       R.CheckText(Settings.Language, Path);
       R.CheckText(Settings.Placeholder, Path);
+      var Previous: int := -1;
+      for Mark: CodeEditors.Mark in Settings.Marks do
+        if Mark.Start < 0 or Mark.Start < Previous or Mark.Finish < Mark.Start
+          or Mark.Finish > Text.Length or Mark.Color < 0 or Mark.Color > 6
+        then
+          R.Reject(
+            Path,
+            'Code editor marks need sorted UTF-16 ranges and colors zero through six.'
+          );
+        end if;
+
+        for Offset: int in [Mark.Start, Mark.Finish] do
+          if Offset > 0 and Offset < Text.Length and Sys.Char.IsHighSurrogate(Text[Offset - 1])
+            and Sys.Char.IsLowSurrogate(Text[Offset])
+          then
+            R.Reject(Path, 'Code editor mark offsets must be Unicode scalar boundaries.');
+          end if;
+        end for;
+
+        Previous := Mark.Start;
+      end for;
+
       if Settings.Capacity <= Sys.Text.Encoding.UTF8.GetByteCount(
         Text
       ) or Settings.TabSize < 1 or Settings.TabSize > 16

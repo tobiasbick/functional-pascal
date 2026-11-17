@@ -1,0 +1,64 @@
+unit Fpas.Ui.Gui.Internal.Hosting.KeyBindings;
+
+uses
+  Fpas.Ui.Gui.Shortcuts as S, Fpas.Ui.Gui.Cui as Cui, System as Sys,
+  System.Collections.Generic as Lists;
+
+// Retained typed bindings and their ABI-ready native combinations.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Prepared<TMsg> = record
+  // Immutable model-owned typed bindings.
+  public Entries: array of S.Binding<TMsg>;
+  // Corresponding native key/modifier policies.
+  public Native: array of Cui.CuiShortcut;
+end record;
+
+// Resolves bindings only when the model view changes.
+// ## Type parameters
+// - `TModel`: Current model type.
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Model`: Current committed model.
+// - `Select`: Optional model selector.
+// ## Returns
+// Retained bindings; an absent selector supplies no application shortcuts.
+public function Prepare<TModel, TMsg>(Model: TModel; Select: Sys.Func<TModel, array of S.Binding<TMsg>>?): Prepared<TMsg>;
+begin
+  const Entries: array of S.Binding<TMsg> := case Select of
+    when is Sys.Func<TModel, array of S.Binding<TMsg>> as Choose: Choose.Invoke(Model);
+    else [];
+  end case;
+  const Native: Lists.List<Cui.CuiShortcut> := new Lists.List<Cui.CuiShortcut>(Entries.Length);
+  for Entry: S.Binding<TMsg> in Entries do
+    Native.Add(
+      new Cui.CuiShortcut(
+        cast<int>(Entry.Combination.Key), cast<int>(Entry.Combination.Modifiers),
+        Entry.Enabled, Entry.Repeat, Entry.AllowWhileEditing
+      )
+    );
+  end for;
+
+  return new Prepared<TMsg>(Entries, Native.ToArray());
+end function;
+
+// Collects application shortcuts after all native widgets have processed input.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Window`: Owner window in an active frame.
+// - `Bindings`: Retained bindings for this view.
+// - `Accept`: Whether application input is admitted.
+// - `Messages`: Typed proposals to enqueue after presentation.
+public procedure Collect<TMsg>(Window: Cui.CuiWindow; Bindings: Prepared<TMsg>; Accept: bool; Messages: Lists.List<TMsg>);
+begin
+  if not Accept then
+    return;
+  end if;
+
+  for Index: int in Window.ReadShortcuts(Bindings.Native) do
+    Messages.Add(Bindings.Entries[Index].Message);
+  end for;
+end procedure;
+
+end unit;

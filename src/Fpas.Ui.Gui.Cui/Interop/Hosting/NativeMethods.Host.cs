@@ -84,6 +84,12 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_theme_read")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void ReadTheme(nint context, uint* colors);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_follow_theme")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void FollowTheme(nint app, int follow);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_theme_metrics")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial void ThemeMetrics(nint context, float* values, int write);
     [LibraryImport(Library, EntryPoint = "cui_key_pressed")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial byte KeyPressed(nint context, int key);

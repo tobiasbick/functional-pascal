@@ -27,12 +27,14 @@ static bool matches(int selected, bool target, bool dark, bool block, int width)
             const char *titles[3] = { "Turn ## literally", "Watch the levels", "Ride the faders" };
             const char *bodies[3] = { "Drag up and down. Shift gives fine steps.", "Native peak hold.", "Use the wheel or arrow keys." };
             const int positions[3] = { CUI_PLACE_BOTTOM_START, CUI_PLACE_TOP_START, CUI_PLACE_LEFT_START };
+            const char *next = block ? "Continue" : NULL, *back = block ? "Previous" : NULL;
+            const char *done = block ? "Finish" : NULL, *format = block ? "Step %d / %d" : NULL;
             if (frame > 0) {
                 int step = selected;
                 if (pass) {
                     int node, parts[3]; unsigned int owner;
                     fpas_cui_tour(ui, "###guide", targets, titles, bodies, positions, 3, &step,
-                        block ? 260 : 0, block ? 9 : 0, block, 0, &node, &owner, parts);
+                        block ? 260 : 0, block ? 9 : 0, block, next, back, done, format, 0, &node, &owner, parts);
                     valid = valid && node >= 0 && parts[0] >= 0 && parts[2] >= 0 &&
                         (parts[1] >= 0) == (selected > 0) && owner == cui_make_id(ui, "###guide") &&
                         fpas_cui_last_node(ui) == saved;
@@ -42,7 +44,8 @@ static bool matches(int selected, bool target, bool dark, bool block, int width)
                         { key, titles[1], bodies[1], (cui_placement)positions[1] },
                         { key, titles[2], bodies[2], (cui_placement)positions[2] }
                     };
-                    const cui_tour_opts settings = { .width = block ? 260 : 0, .padding = block ? 9 : 0, .block_target = block };
+                    const cui_tour_opts settings = { .width = block ? 260 : 0, .padding = block ? 9 : 0, .block_target = block,
+                        .next_label = next, .back_label = back, .done_label = done, .count_format = format };
                     cui_tour_ex(ui, "###guide", steps, 3, &step, &settings);
                 }
             }

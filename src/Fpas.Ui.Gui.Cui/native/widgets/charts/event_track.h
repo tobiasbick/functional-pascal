@@ -6,6 +6,8 @@ typedef struct {
     const char *format;
     float width;
     int width_kind, units, flags;
+    cui_axis_label_fn label;
+    void *label_user;
 } fpas_event_options;
 CUI_API void fpas_cui_event_track(cui_ctx *ui, const char *id, double *times, int *count,
     int capacity, const fpas_event_options *o, int *result);

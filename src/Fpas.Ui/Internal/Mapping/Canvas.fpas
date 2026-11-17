@@ -113,7 +113,7 @@ begin
       return E.Element<TParent>.ResultCard(Id, Image, Title, Messages(Activate), Settings);
     when E.Element.SelectionBar(
       const Id: string,
-      const Selected: array of bool,
+      const Selected: SelectionBars.Selection,
       const Actions: array of SelectionBars.Action,
       const Changed: function(SelectionBars.Event): TChild,
       const Content: E.Element<TChild>,

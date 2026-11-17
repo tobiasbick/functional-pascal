@@ -1,0 +1,66 @@
+unit NativeApi.View;
+
+uses
+  NativeApi.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Charts.DotCharts as Dots,
+  Fpas.Ui.Widgets.Charts.EventTracks as Events, Fpas.Ui.Widgets.Developer.TraceViewers as Trace,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, System.Globalization as Culture, System as Sys;
+
+// Builds native widget examples without a custom layout or interaction engine.
+// ## Parameters
+// - `Model`: Retained model and acknowledged native hover.
+// - `Viewport`: Current logical viewport.
+// ## Returns
+// The native CUI view.
+public function Build(Model: S.Model; Viewport: L.Viewport): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
+    E.Text<S.Msg>('Canvas wheel: ' + Model.X.ToString() + ', ' + Model.Y.ToString()),
+    Canvas.Canvas<S.Msg>(
+      'wheel', [], S.Msg.Clicked,
+      new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(60))), S.Msg.Scrolled
+    ),
+    Dots.DotChart<S.Msg>(
+      'values', [new Dots.Series([1000.0F, 2000.0F, 1500.0F])], 3,
+      Settings := new Dots.Options(
+        Height := 130.0F, XMaximum := 2.0,
+        XLabel := function(Value: double): string => 'D' + Value.ToString(
+          'F0',
+          Culture.CultureInfo.InvariantCulture
+        ),
+        ValueLabel := function(Value: double): string => Value.ToString(
+          'N0',
+          Culture.CultureInfo.GetCultureInfo('de-DE')
+        )
+      )
+    ),
+    Events.EventTrack<S.Msg>(
+      'days', Model.Days, S.Msg.DaysChanged,
+      new Events.Options(
+        Minimum := 0.0, Maximum := 6.0, Step := 1.0, LabelStep := 2.0,
+        Label := function(Value: double): string => new Sys.DateTime(
+          2026,
+          1,
+          1
+        ).AddDays(Value).ToString(
+          'dd.MM.',
+          Culture.CultureInfo.InvariantCulture
+        )
+      )
+    ),
+    Trace.TraceViewer<S.Msg>(
+      'trace', [new Trace.Track('Main', false), new Trace.Track('Worker', false)],
+      S.Spans, [], Model.View, Model.Selection, S.Msg.TraceChanged,
+      new Trace.Options(
+        Height := 180.0F, Hovered := Model.Hover,
+        Links := [new Trace.Link(0, 1, Tone := 8, Dashed := true)]
+      )
+    ),
+    E.Text<S.Msg>('Hovered link: ' + Model.Hover.Link.ToString()),
+    Buttons.Button<S.Msg>('bounds', 'Read source span bounds', S.Msg.Inspect),
+    E.Text<S.Msg>('Span width: ' + Model.Bounds.Width.ToString())
+  );
+end function;
+
+end unit;

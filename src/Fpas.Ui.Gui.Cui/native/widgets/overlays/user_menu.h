@@ -7,6 +7,7 @@
  * @param name Account name.
  * @param detail Optional line shown below the account name.
  * @param status Optional status dot color name.
+ * @param avatar_path Optional decoded avatar image file.
  * @param keys Stable command keys.
  * @param labels Literal row captions.
  * @param icons Optional row glyphs.
@@ -23,7 +24,7 @@
  * @param highlighted Highlighted entry index, or -1.
  * @return Chosen entry index, or -1. */
 CUI_API int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
-    const char *detail, const char *status, const char *const *keys,
+    const char *detail, const char *status, const char *avatar_path, const char *const *keys,
     const char *const *labels, const char *const *icons, const char *const *shortcuts,
     const int *flags, int count, int placement, float width, int compact, int enabled,
     int focus, int *nodes, int *open, int *highlighted);

@@ -1,0 +1,19 @@
+unit Fpas.Ui.Gui.Internal.Hosting.ThemeApplication;
+
+uses
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
+
+// Applies one resolved application theme without exposing native theme storage.
+// ## Parameters
+// - `Window`: Owning native window.
+// - `Theme`: Immutable shared palette and optional graphical metrics.
+public procedure Apply(Window: Cui.CuiWindow; Theme: Themes.Theme);
+begin
+  Window.SetTheme(
+    Theme.Appearance = Themes.Mode.Dark, cast<int>(Theme.AccentFamily),
+    Themes.Rgba(Theme), Metrics.Native(Theme.Metrics)
+  );
+end procedure;
+
+end unit;

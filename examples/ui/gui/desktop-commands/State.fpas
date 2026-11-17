@@ -1,0 +1,33 @@
+unit DesktopCommands.State;
+
+// Application-owned selection and close confirmation.
+public type Model = record
+  // Last confirmed native selection or cancellation notice.
+  public Selection: string := 'Choose a file or folder.';
+  // Whether the native close request is awaiting a decision.
+  public Closing: bool := false;
+end record;
+
+// Messages from native dialogs, buttons and the host close callback.
+public type Msg = variant
+  // Select an existing text file.
+  Open;
+  // Choose a save destination without writing anything.
+  Save;
+  // Select an existing directory.
+  Folder;
+  // Receive a confirmed native selection.
+  Selected(Path: string);
+  // The native chooser returned no selection.
+  Cancelled;
+  // The user requested native closure.
+  CloseRequested;
+  // Reject the pending close request.
+  Stay;
+  // Approve closure through the normal MVU exit.
+  Quit;
+  // Request a native repaint without a timer or model change.
+  Redraw;
+end variant;
+
+end unit;

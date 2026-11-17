@@ -69,7 +69,7 @@ end function;
 public function Money(Model: S.Model): array of E.Element<S.Msg>;
 begin
   return [
-    G.Heading<S.Msg>('Money', 'Grouped digits at rest, plain digits while typing.'),
+    G.Heading<S.Msg>('Money', 'Exact decimal amounts with native text editing.'),
     E.Row<S.Msg>(
       new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
       E.Size<S.Msg>(

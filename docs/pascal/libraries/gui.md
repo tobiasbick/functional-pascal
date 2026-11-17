@@ -66,7 +66,9 @@ the model. Rejecting a proposal leaves the model value authoritative.
 Start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
 Use `Gui.Options` to set title, logical width and height, renderer and mailbox
-capacity. Set `Placement` to reopen a window where it was closed. Return
+capacity. Set `Placement` to reopen a window where it was closed.
+`MinimumWidth`, `MinimumHeight`, `FixedSize` and Linux `AppId` configure native
+creation. Return
 [window commands](../../../src/Fpas.Ui.Gui/README.md#window-state-and-placement)
 from an update to maximize, minimize, restore or move it, or to read its
 placement for saving. X11 requires a window manager with EWMH support.
@@ -105,6 +107,27 @@ reports Queued, Full or Closed. Close cancels work, rejects late results and
 keeps pumping the frozen view until cleanup finishes. Disposal joins cleanup and
 releases native resources on the owner. Step, Snapshot and disposal must not be
 reentered from callbacks.
+
+An optional `OnCloseRequested` message factory on Start/Run lets the model
+confirm native closure. Return `Closing.Cancel<TMsg>()` to keep running or
+`Mvu.Exit<TMsg>()` to approve cleanup. Pending confirmation leaves background
+work active. Without a handler, native close starts cleanup immediately.
+The [desktop commands example](../../../examples/ui/gui/desktop-commands/README.md)
+also shows native Open/Save/Choose Folder, optional cancellation messages and
+window-title updates. Save chooses a path; the application writes its own data.
+Linux dialogs require Zenity or KDialog.
+
+`Fpas.Ui.Gui.Frames.Redraw<TMsg>(DelaySeconds)` requests a native repaint now
+or within a finite positive delay. It neither emits a message nor rebuilds the
+model view. Use background work for timed application updates.
+
+Use `BindingsFor(Model)` on Start/Run for model-owned application shortcuts.
+They reuse `ShortcutRecorders.Combination` and `PrimaryModifier`, respect
+native overlays/editing, and can opt into global Save while editing.
+[Editor commands](../../../src/Fpas.Ui.Gui/README.md#code-editor-commands)
+provide native find, go-to and selection using model text and UTF-16 scalar
+boundaries. The [runnable example](../../../examples/ui/gui/editor-commands/README.md)
+also demonstrates marks, avatar images, tour captions and aggregate selection.
 
 Snapshot describes the last successful frame, including control bounds, values,
 focus and theme. `Session.CapturePng(Path)`

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Application;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record
@@ -19,12 +19,21 @@ public type Options = record
   // A saved placement to open at, maximized if it was; its size replaces Width
   // and Height. Null lets the system choose the place.
   public Placement: Cui.CuiWindowPlacement? := null;
+  // Minimum logical dimensions, zero for CUI's native defaults.
+  public MinimumWidth: int := 0;
+  // Minimum logical height, zero for CUI's native default.
+  public MinimumHeight: int := 0;
+  // Whether to disable interactive resizing and native maximization.
+  public FixedSize: bool := false;
+  // Linux desktop identity, matching the .desktop filename without its suffix.
+  public AppId: string := '';
 end record;
 
 function CreateWindow(Settings: Options): Cui.CuiWindow;
 begin
   return new Cui.CuiWindow(
-    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer, false, Settings.Placement
+    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer, false, Settings.Placement,
+    Settings.MinimumWidth, Settings.MinimumHeight, Settings.FixedSize, Settings.AppId
   );
 end function;
 
@@ -189,6 +198,8 @@ end record;
 // - `View`: Builds the declarative view for the current model.
 // - `Settings`: Window and mailbox configuration.
 // - `ThemeFor`: Optional model-owned shared theme selector.
+// - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
+// - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 //
 // ## Returns
 // The owned session; its first Step presents the initial model.
@@ -196,18 +207,20 @@ public function Start<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
+  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null; OnCloseRequested: Sys.Func<TMsg>? := null;
+  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
 ): Session<TMsg>;
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
+requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
   return Host.Start<TModel, TMsg>(
     InitialModel,
     Update,
     View,
     CreateWindow(Settings),
-    Settings.Capacity, null, Settings.Theme, ThemeFor
+    Settings.Capacity, null, Settings.Theme, ThemeFor, OnCloseRequested, BindingsFor
   );
 end function;
 
@@ -223,22 +236,26 @@ end function;
 // - `View`: The shared declarative view.
 // - `Settings`: Window and mailbox configuration.
 // - `ThemeFor`: Optional model-owned shared theme selector.
+// - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
+// - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null
+  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null; OnCloseRequested: Sys.Func<TMsg>? := null;
+  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
 );
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
+requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
   using const Running: Session<TMsg> := Start<TModel, TMsg>(
     InitialModel,
     Update,
     View,
     Settings,
-    ThemeFor
+    ThemeFor, OnCloseRequested, BindingsFor
   );
   while Running.Step() do
   end while;
@@ -256,21 +273,25 @@ end procedure;
 // - `View`: Builds a view from the model, viewport and resolved theme.
 // - `Settings`: Window and mailbox configuration.
 // - `ThemeFor`: Resolves a theme from the model and system appearance, which is null when unavailable.
+// - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
+// - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 // ## Returns
 // The owned session. Its first Step resolves the theme and presents the initial view.
 public function StartThemed<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: Sys.Func<TMsg>? := null;
+  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
 ): Session<TMsg>;
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
+requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
   return Host.StartThemed<TModel, TMsg>(
     InitialModel, Update, View,
     CreateWindow(Settings),
-    Settings.Capacity, null, Settings.Theme, ThemeFor, true
+    Settings.Capacity, null, Settings.Theme, ThemeFor, true, OnCloseRequested, BindingsFor
   );
 end function;
 
@@ -285,21 +306,25 @@ end function;
 // - `View`: Builds a view from the model, viewport and resolved theme.
 // - `Settings`: Window and mailbox configuration.
 // - `ThemeFor`: Resolves a theme from the model and system appearance, which is null when unavailable.
+// - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
+// - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 public procedure RunThemed<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: Sys.Func<TMsg>? := null;
+  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
 );
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
+requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
   using const Running: Session<TMsg> := StartThemed<TModel, TMsg>(
     InitialModel,
     Update,
     View,
     Settings,
-    ThemeFor
+    ThemeFor, OnCloseRequested, BindingsFor
   );
   while Running.Step() do
   end while;

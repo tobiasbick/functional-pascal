@@ -3,12 +3,25 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Projects;
 
+/// <summary>Selects deployment mode, target runtime and optional signing inputs.</summary>
+/// <param name="Mode">aot, single-file, self-contained, apphost or framework-dependent.</param>
+/// <param name="Runtime">win-x64 or linux-x64; null selects the host runtime identifier.</param>
+/// <param name="Configuration">Build configuration.</param>
+/// <param name="NoRestore">Whether to use existing restore assets.</param>
+/// <param name="NoBuild">Whether to use existing compilation outputs.</param>
+/// <param name="KeyFile">Optional strong-name key path.</param>
+/// <param name="PublicSign">Whether to embed the public key without cryptographic signing.</param>
+/// <param name="DelaySign">Whether to reserve a strong-name signature for later signing.</param>
+/// <param name="Certificate">Optional PKCS#12 delivery-signing certificate path.</param>
+/// <param name="CertificatePasswordEnvironment">Environment variable containing the certificate password.</param>
 public sealed record PublishOptions(string Mode = "aot", string? Runtime = null, string Configuration = "Release",
     bool NoRestore = false, bool NoBuild = false, string? KeyFile = null, bool PublicSign = false, bool DelaySign = false,
     string? Certificate = null, string? CertificatePasswordEnvironment = null)
 {
+    /// <summary>Gets the explicit target or host runtime identifier.</summary>
     public string RuntimeIdentifier => Runtime ?? RuntimeInformation.RuntimeIdentifier;
 
+    /// <summary>Rejects unsupported platforms, conflicting modes and missing signing inputs.</summary>
     public void Validate()
     {
         if (Mode is not ("aot" or "single-file" or "self-contained" or "apphost" or "framework-dependent"))

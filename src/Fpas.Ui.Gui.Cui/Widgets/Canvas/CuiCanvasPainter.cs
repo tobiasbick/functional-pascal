@@ -175,7 +175,8 @@ public sealed class CuiCanvasPainter
     {
         Check(); Distance(width); Distance(height); Distance(radius);
         if (!float.IsFinite(x) || !float.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(x));
-        CuiWindow.PaintImage(context, images, imageIndex++, source, area.X + x, area.Y + y, width, height, radius, tint);
+        CuiWindow.PaintImage(context, images, imageIndex, source, area.X + x, area.Y + y, width, height, radius, tint);
+        imageIndex++;
     }
 
     /// <summary>Intersects the current native clip with a canvas-local rectangle.</summary>

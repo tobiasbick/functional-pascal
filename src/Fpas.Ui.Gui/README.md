@@ -134,6 +134,10 @@ the host maps proposals to messages without applying application updates itself.
 Prepare validates the active view before drawing. GUI distances use logical
 units; terminal-specific elements and cell distances are rejected. View records,
 arrays and callbacks remain unchanged while retained by the host.
+Place modal scopes outside native-owned collapsible Reasoning bodies; validation
+rejects that composition even while the modal is closed. In virtual lists and
+data grids, declare open modal scopes outside row/cell factories. Only realized
+subtrees are checked, before drawing their modal contents.
 
 A visible native tooltip appears in `Snapshot().Controls` with role `tooltip`
 and its finalized bounds. The underlying control retains its own identity.
@@ -279,6 +283,9 @@ theme dependencies in cached subviews.
 Platform live-resize callbacks draw the cached tree without Update, View,
 commands or input proposals. Callback state stays rooted until detachment;
 managed failures surface after the native pump returns.
+Typewriter completion factories run once on a normal owner frame, including
+when covered by a modal. Completion during a cached resize is delivered on
+the next owner frame; closing painting invokes no completion factories.
 
 Snapshot returns the last successful frame: sequence, logical size, text, theme
 and detached control descriptors with ID, role, item key, value, enabled state,

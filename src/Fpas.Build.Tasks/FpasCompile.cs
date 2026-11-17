@@ -9,35 +9,68 @@ namespace Fpas.Build.Tasks;
 /// <summary>Compiles FPAS sources through the FPAS compiler with incremental fingerprinting.</summary>
 public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTask
 {
+    /// <summary>Gets or sets the FPAS source items to compile.</summary>
     [Required] public ITaskItem[] Sources { get; set; } = [];
+    /// <summary>Gets or sets the resolved CLR assembly references.</summary>
     [Required] public ITaskItem[] References { get; set; } = [];
+    /// <summary>Gets or sets the compiler executable or managed entry assembly.</summary>
     [Required] public string CompilerPath { get; set; } = "";
+    /// <summary>Gets or sets the compiler assembly used to verify toolchain identity.</summary>
     public string CompilerAssemblyPath { get; set; } = "";
+    /// <summary>Gets or sets the destination assembly path.</summary>
     [Required] public string OutputAssembly { get; set; } = "";
+    /// <summary>Gets or sets the incremental compilation proof path.</summary>
     [Required] public string CacheFile { get; set; } = "";
+    /// <summary>Gets or sets the dotnet host, or empty to use the configured environment.</summary>
     public string DotnetHostPath { get; set; } = "";
+    /// <summary>Gets or sets Exe or Library output.</summary>
     public string OutputType { get; set; } = "Exe";
+    /// <summary>Gets or sets the build configuration included in the compilation fingerprint.</summary>
     public string Configuration { get; set; } = "Debug";
+    /// <summary>Gets or sets the supported target framework, net10.0.</summary>
     public string TargetFramework { get; set; } = "net10.0";
+    /// <summary>Gets or sets portable symbols or none.</summary>
     public string DebugType { get; set; } = "portable";
+    /// <summary>Gets or sets whether compiler optimizations are enabled.</summary>
     public bool Optimize { get; set; }
+    /// <summary>Gets or sets the optional assembly signing key path.</summary>
     public string SigningKey { get; set; } = "";
+    /// <summary>Gets or sets public signing without a private-key signature.</summary>
     public bool PublicSign { get; set; }
+    /// <summary>Gets or sets whether signing reserves a signature for later completion.</summary>
     public bool DelaySign { get; set; }
+    /// <summary>Gets or sets the optional XML documentation path.</summary>
     public string DocumentationFile { get; set; } = "";
+    /// <summary>Gets or sets the optional documentation publication destination.</summary>
     public string DocumentationDestination { get; set; } = "";
+    /// <summary>Gets or sets the optional documentation output copy.</summary>
     public string DocumentationOutput { get; set; } = "";
+    /// <summary>Gets or sets whether all enabled warnings are errors.</summary>
     public bool TreatWarningsAsErrors { get; set; }
+    /// <summary>Gets or sets diagnostic codes promoted to errors.</summary>
     public string WarningsAsErrors { get; set; } = "";
+    /// <summary>Gets or sets diagnostic codes exempt from warning promotion.</summary>
     public string WarningsNotAsErrors { get; set; } = "";
+    /// <summary>Gets or sets diagnostic codes to suppress.</summary>
     public string NoWarn { get; set; } = "";
     /// <summary>Gets the XML documentation files written or confirmed current.</summary>
     [Output] public ITaskItem[] WrittenDocumentation { get; set; } = [];
     private readonly List<JsonElement> compilerDiagnostics = [];
+    private readonly object cancellationGate = new();
     private readonly CancellationTokenSource cancellation = new();
+    private bool completed;
 
     /// <inheritdoc/>
     public override bool Execute()
+    {
+        try { return ExecuteCore(); }
+        finally
+        {
+            lock (cancellationGate) { completed = true; cancellation.Dispose(); }
+        }
+    }
+
+    private bool ExecuteCore()
     {
         if (Sources.Length == 0 || TargetFramework != "net10.0" || OutputType is not ("Exe" or "Library") || DebugType is not ("portable" or "none"))
         {
@@ -169,7 +202,10 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     }
 
     /// <inheritdoc/>
-    public void Cancel() => cancellation.Cancel();
+    public void Cancel()
+    {
+        lock (cancellationGate) if (!completed) cancellation.Cancel();
+    }
     private void ReportDiagnostic(JsonElement diagnostic) => Diagnostics.BuildDiagnostics.Report(Log, diagnostic);
     private void Error(string code, string message) => Log.LogError(null, code, null, null, 0, 0, 0, 0, message);
 }

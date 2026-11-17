@@ -2,47 +2,12 @@ unit Fpas.Ui.Tui.Internal.Rendering.Glyphs;
 
 uses System as Sys, System.Globalization as Global;
 
-// Measures one text element in terminal cells.
-//
+// Replaces controls, invalid scalar fragments and clusters without a visible base
+// with one space, preserving marks and joiners inside visible text clusters.
 // ## Parameters
-// - `Value`: A grapheme cluster or an empty string.
-//
+// - `Value`: One grapheme cluster to paint.
 // ## Returns
-// Zero for an empty string, one for a narrow glyph, or two for a wide glyph.
-public function Width(Value: string): int;
-begin
-  if Value.Length = 0 then
-    return 0;
-  end if;
-  var Code: int := cast<int>(Value[0]);
-  if Value.Length > 1 and Sys.Char.IsSurrogatePair(Value[0], Value[1]) then
-    Code := Sys.Char.ConvertToUtf32(Value[0], Value[1]);
-  end if;
-
-  const FirstIndicator: int := $1F1E6;
-  const LastIndicator: int := $1F1FF;
-  if Code >= FirstIndicator and Code <= LastIndicator and Value.Length >= 4
-    and Sys.Char.IsSurrogatePair(Value[2], Value[3])
-  then
-    const Second: int := Sys.Char.ConvertToUtf32(Value[2], Value[3]);
-    if Second >= FirstIndicator and Second <= LastIndicator then
-      return 2;
-    end if;
-  end if;
-
-  if (Code >= 4352 and Code <= 4447) or (Code >= 11904 and Code <= 42191)
-    or (Code >= 44032 and Code <= 55203) or (Code >= 63744 and Code <= 64255)
-    or (Code >= 65040 and Code <= 65376) or (Code >= 65504 and Code <= 65510)
-    or (Code >= 127744 and Code <= 129791) or (Code >= 131072 and Code <= 196605)
-    or (Code >= 196608 and Code <= 262141)
-    or Value.IndexOf(cast<char>(65039)) >= 0
-  then
-    return 2;
-  end if;
-
-  return 1;
-end function;
-
+// A printable cluster or a single space.
 public function Sanitize(Value: string): string;
 begin
   if Value.Length = 0 then
@@ -53,9 +18,76 @@ begin
     return ' ';
   end if;
 
-  return Value;
+  var Index: int := 0;
+  while Index < Value.Length do
+    const Category: Global.UnicodeCategory := Global.CharUnicodeInfo.GetUnicodeCategory(
+      Value,
+      Index
+    );
+    if Category <> Global.UnicodeCategory.Format
+      and Category <> Global.UnicodeCategory.NonSpacingMark
+      and Category <> Global.UnicodeCategory.EnclosingMark
+    then
+      return Value;
+    end if;
+
+    Index := Index + (if Sys.Char.IsSurrogatePair(Value, Index) then
+      2
+    else
+      1
+    end if);
+  end while;
+
+  return ' ';
 end function;
 
+// Measures one text element in terminal cells.
+//
+// ## Parameters
+// - `Value`: A grapheme cluster or an empty string.
+//
+// ## Returns
+// Zero for an empty string, otherwise the sanitized cluster's one or two cells.
+public function Width(Value: string): int;
+begin
+  if Value.Length = 0 then
+    return 0;
+  end if;
+  const Glyph: string := Sanitize(Value);
+  var Code: int := cast<int>(Glyph[0]);
+  if Glyph.Length > 1 and Sys.Char.IsSurrogatePair(Glyph[0], Glyph[1]) then
+    Code := Sys.Char.ConvertToUtf32(Glyph[0], Glyph[1]);
+  end if;
+
+  const FirstIndicator: int := $1F1E6;
+  const LastIndicator: int := $1F1FF;
+  if Code >= FirstIndicator and Code <= LastIndicator and Glyph.Length >= 4
+    and Sys.Char.IsSurrogatePair(Glyph[2], Glyph[3])
+  then
+    const Second: int := Sys.Char.ConvertToUtf32(Glyph[2], Glyph[3]);
+    if Second >= FirstIndicator and Second <= LastIndicator then
+      return 2;
+    end if;
+  end if;
+
+  if (Code >= 4352 and Code <= 4447) or (Code >= 11904 and Code <= 42191)
+    or (Code >= 44032 and Code <= 55203) or (Code >= 63744 and Code <= 64255)
+    or (Code >= 65040 and Code <= 65376) or (Code >= 65504 and Code <= 65510)
+    or (Code >= 127744 and Code <= 129791) or (Code >= 131072 and Code <= 196605)
+    or (Code >= 196608 and Code <= 262141)
+    or Glyph.IndexOf(cast<char>(65039)) >= 0
+  then
+    return 2;
+  end if;
+
+  return 1;
+end function;
+
+// Sums the sanitized cell widths of all grapheme clusters without line wrapping.
+// ## Parameters
+// - `Value`: Text to measure; line terminators count as sanitized spaces.
+// ## Returns
+// The total cell width, or zero for empty text.
 public function Measure(Value: string): int;
 begin
   const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
@@ -67,11 +99,21 @@ begin
   return Cells;
 end function;
 
+// Identifies a grapheme cluster beginning with a CR or LF line terminator.
+// ## Parameters
+// - `Glyph`: A nonempty grapheme cluster.
+// ## Returns
+// Whether the cluster begins a new line.
 public function LineBreak(Glyph: string): bool;
 begin
   return Glyph[0] = #10 or Glyph[0] = #13;
 end function;
 
+// Measures the widest explicit line using sanitized terminal cell widths.
+// ## Parameters
+// - `Value`: Text whose CR and LF clusters delimit lines.
+// ## Returns
+// The widest line in cells, or zero for empty text.
 public function LineWidth(Value: string): int;
 begin
   const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
@@ -90,6 +132,12 @@ begin
   return Sys.Math.Max(Longest, Cells);
 end function;
 
+// Counts explicit lines and wraps at grapheme boundaries when a width is supplied.
+// ## Parameters
+// - `Value`: Text to measure; empty text still occupies one line.
+// - `Columns`: Positive wrapping width in cells, or a nonpositive value for explicit lines only.
+// ## Returns
+// The number of rows, including a final empty row after a line terminator.
 public function LineCount(Value: string; Columns: int): int;
 begin
   const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
@@ -118,6 +166,11 @@ begin
   return Rows;
 end function;
 
+// Replaces line terminators with spaces for single-line captions.
+// ## Parameters
+// - `Value`: Text containing optional CR, LF, Unicode line or paragraph separators.
+// ## Returns
+// Text with one space per CRLF pair or other line terminator.
 public function SingleLine(Value: string): string;
 begin
   return Value.Replace(
@@ -126,6 +179,13 @@ begin
   ).Replace(#13, #32).Replace(#10, #32).Replace(#8232, #32).Replace(#8233, #32);
 end function;
 
+// Finds a UTF-16 boundary after the clusters fitting within a cell budget.
+// ## Parameters
+// - `Value`: Text to traverse without line wrapping.
+// - `Start`: UTF-16 offset at a grapheme boundary within the text, or its length.
+// - `Column`: Cell budget from Start; a nonpositive budget returns Start.
+// ## Returns
+// The first cluster's offset that exceeds the budget, or the text length when all fit.
 public function IndexAt(Value: string; Start: int; Column: int): int;
 begin
   if Column <= 0 then

@@ -101,5 +101,11 @@ internal sealed partial class Binder
         return type;
     }
 
-    private BoundExpression BindTypeTest(TypeTestSyntax syntax) => new BoundTypeTest(BindExpression(syntax.Value), PatternType(syntax.Target));
+    private BoundExpression BindTypeTest(TypeTestSyntax syntax)
+    {
+        var value = BindExpression(syntax.Value);
+        if (value.Type.Kind is TypeKind.Void or TypeKind.Unsupported || value is BoundMethodGroup)
+            throw source.Error("FP3002", "A CLR type test requires a supported value operand.", syntax.Value.Position);
+        return new BoundTypeTest(value, PatternType(syntax.Target));
+    }
 }

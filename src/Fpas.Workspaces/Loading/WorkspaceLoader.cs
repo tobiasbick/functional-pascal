@@ -8,10 +8,15 @@ using static Fpas.Workspaces.Processes.MsBuildSyntax;
 
 namespace Fpas.Workspaces.Loading;
 
+/// <summary>Captures evaluated project inputs and dependency proofs for source analysis.</summary>
 public static class WorkspaceLoader
 {
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
+    /// <summary>Loads a bounded, consistent project or solution context.</summary>
+    /// <param name="options">Context path, configuration and allowed preparation policy.</param>
+    /// <param name="cancellationToken">Cancels evaluation, preparation and input capture.</param>
+    /// <returns>The checked projects, source inputs, dependency proofs and any project issues.</returns>
     public static async Task<WorkspaceContext> LoadAsync(ContextOptions options, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -48,7 +53,9 @@ public static class WorkspaceLoader
 
     private static async Task<WorkspaceContext> Load(ContextOptions options, string context, SolutionScope scope, string scratch, CancellationToken token)
     {
-        var hashes = new Dictionary<string, string>(Paths) { [context] = WorkspaceContext.HashFile(context) };
+        var compiler = Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly);
+        var compilerHash = WorkspaceContext.HashFile(compiler);
+        var hashes = new Dictionary<string, string>(Paths) { [context] = WorkspaceContext.HashFile(context), [compiler] = compilerHash };
         var projects = new List<ContextProject>(); var issues = new List<ContextIssue>();
         var outputs = new List<PreparationOutput>();
         var edges = new Dictionary<string, string[]>(Paths);
@@ -80,7 +87,7 @@ public static class WorkspaceLoader
             {
                 if (Path.GetExtension(selection.Path).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase))
                 {
-                    var manifest = await Export(selection, scope, scratch, "description", options.Preparation, environment, token);
+                    var manifest = await Export(selection, scope, scratch, "description", options.Preparation, environment, compilerHash, token);
                     described.Add(selection.Path, (selection, manifest));
                     edges[selection.Path] = manifest.Projects.Select(reference => reference.Path).ToArray();
                     foreach (var reference in manifest.Projects)
@@ -101,11 +108,9 @@ public static class WorkspaceLoader
         {
             try
             {
-                var manifest = await Export(selection, scope, scratch, "resolved", options.Preparation, environment, token);
+                var manifest = await Export(selection, scope, scratch, "resolved", options.Preparation, environment, compilerHash, token);
                 resolved.Add(selection.Path, manifest);
                 outputs.AddRange(manifest.Outputs.Select(output => new PreparationOutput(output.Project, output.Path)));
-                var compiler = Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly);
-                hashes[compiler] = WorkspaceContext.HashFile(compiler);
                 var sources = new List<CompilationSource>();
                 foreach (var (path, hash) in manifest.InputHashes)
                 {
@@ -177,7 +182,7 @@ public static class WorkspaceLoader
     }
 
     private static async Task<ProjectManifest> Export(ProjectSelection project, SolutionScope scope, string scratch, string phase, ContextPreparation preparation,
-        IReadOnlyDictionary<string, string>? environment, CancellationToken token)
+        IReadOnlyDictionary<string, string>? environment, string compilerHash, CancellationToken token)
     {
         var path = Path.Combine(scratch, Guid.NewGuid().ToString("N") + ".json");
         var args = Arguments(project, scope, preparation);
@@ -200,8 +205,7 @@ public static class WorkspaceLoader
             manifest.Outputs.Any(output => output is null || !Path.IsPathFullyQualified(output.Path)) ||
             manifest.InputHashes.Values.Any(hash => hash is null || hash.Length != 64 || !hash.All(char.IsAsciiHexDigit)))
             throw new ContextFailure("context_failed", "Invalid context identities or content fingerprints.");
-        var currentCompiler = WorkspaceContext.HashFile(Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly));
-        if (manifest.CompilerHash != currentCompiler) throw new ContextFailure("context_failed", "Selected SDK compiler differs from this CLI; rebuild/repack the matching SDK.");
+        if (manifest.CompilerHash != compilerHash) throw new ContextFailure("context_failed", "Selected SDK compiler differs from this CLI; rebuild/repack the matching SDK.");
         bool SourceReference(string file) => preparation == ContextPreparation.SourceSnapshots && manifest.Outputs.Any(output => Paths.Equals(output.Path, file) &&
             Path.GetExtension(output.Project).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase));
         foreach (var file in (phase == "resolved" ? manifest.Sources.Concat(manifest.References) : []).Concat(manifest.InputHashes.Keys))

@@ -38,8 +38,9 @@ end unit;
 
 ## Interaction
 
-Use the wheel to zoom around the pointer, drag to pan and double-click
-for 100 percent. Store the proposed value. To request fit from the
+Use the wheel to zoom around the pointer and drag to pan. Double-click
+switches from fit or a zoom below 100 percent to 100 percent; otherwise it
+fits the image. Store the proposed value. To request fit from the
 application, set Zoom to zero.
 
 ## See also

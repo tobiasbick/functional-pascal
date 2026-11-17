@@ -113,6 +113,8 @@ static bool check_copy_retirement(cui_ctx *ui) {
     return (copied & 1) && fresh == 4 && probe.writes == 1 && probe.exact;
 }
 
+static cui_id split_owner;
+
 static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open, int *highlighted) {
     const char *labels[] = { "Save ## draft", "Save and publish", "Schedule..." };
     const char *icons[] = { "", "", "" };
@@ -122,25 +124,60 @@ static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open,
     const int choice = fpas_cui_split_button(ui, "###split-fixture", "Save ## literal", "",
         labels, icons, 3, 1, 0, enabled, focus, nodes, open, highlighted);
     const bool tracked = nodes[0] >= 0 && nodes[1] >= 0 && (!*open || nodes[2] >= 0);
+    split_owner = fpas_cui_node_key(ui, nodes[0]);
     cui_end_frame(ui);
     if (key >= 0) cui_input_key(ui, (cui_key)key, false, 0);
     return tracked ? choice : -99;
 }
 
+#define SPLIT_FAIL_IF(test) do { if (test) { \
+    fprintf(stderr, "Split line %d: %s (open=%d highlighted=%d)\n", __LINE__, #test, open, highlighted); \
+    return false; \
+} } while (0)
+
 static bool check_split_button(cui_ctx *ui) {
     int open, highlighted;
-    if (split_frame(ui, 1, -1, true, &open, &highlighted) != -1 || open) return false;
-    if (split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 0) return false;
-    if (split_frame(ui, 2, -1, true, &open, &highlighted) != -1) return false;
-    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open) return false;
-    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 0) return false;
-    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 1) return false;
-    if (split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 2 || open) return false;
-    if (split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open) return false;
-    if (split_frame(ui, 0, CUI_KEY_ESCAPE, true, &open, &highlighted) != -1 || open) return false;
-    if (split_frame(ui, 0, CUI_KEY_ENTER, false, &open, &highlighted) != -1 || open) return false;
-    return split_frame(ui, 0, CUI_KEY_DOWN, false, &open, &highlighted) == -1 && !open;
+    SPLIT_FAIL_IF(split_frame(ui, 1, -1, true, &open, &highlighted) != -1 || open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 0);
+    SPLIT_FAIL_IF(split_frame(ui, 2, -1, true, &open, &highlighted) != -1);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 0);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 1);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 2 || open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ESCAPE, true, &open, &highlighted) != -1 || open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, false, &open, &highlighted) != -1 || open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, false, &open, &highlighted) != -1 || open);
+
+    const cui_key activation[] = { CUI_KEY_ENTER, CUI_KEY_SPACE };
+    for (int opener = 0; opener < 2; ++opener) {
+        for (int selector = 0; selector < 2; ++selector) {
+            SPLIT_FAIL_IF(split_frame(ui, 2, -1, true, &open, &highlighted) != -1 || open);
+            SPLIT_FAIL_IF(split_frame(ui, 0, activation[opener], true, &open, &highlighted) != -1 || !open);
+            SPLIT_FAIL_IF(highlighted < 0 && split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1);
+            SPLIT_FAIL_IF(!open || highlighted != 0);
+            SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || highlighted != 1);
+            if (activation[selector] == CUI_KEY_SPACE) {
+                /* Match direct CUI: Space preserves an open menu; Enter selects. */
+                SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_SPACE, true, &open, &highlighted) != -1
+                    || !open || highlighted != 1);
+            }
+            SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 2 || open);
+        }
+        /* Each keyboard opener must also support dismissal and retirement. */
+        for (int dismissal = 0; dismissal < 3; ++dismissal) {
+            SPLIT_FAIL_IF(split_frame(ui, 2, -1, true, &open, &highlighted) != -1 || open);
+            SPLIT_FAIL_IF(split_frame(ui, 0, activation[opener], true, &open, &highlighted) != -1 || !open);
+            if (dismissal == 2) fpas_cui_forget(ui, split_owner);
+            const int key = dismissal == 0 ? CUI_KEY_ESCAPE : -1;
+            SPLIT_FAIL_IF(split_frame(ui, 0, key, dismissal != 1, &open, &highlighted) != -1 || open);
+            SPLIT_FAIL_IF(split_frame(ui, 2, -1, true, &open, &highlighted) != -1 || open);
+        }
+    }
+    return true;
 }
+
+#undef SPLIT_FAIL_IF
 
 /* Returns success only when the linked CUI implementation produces a drawn view. */
 int main(void) {

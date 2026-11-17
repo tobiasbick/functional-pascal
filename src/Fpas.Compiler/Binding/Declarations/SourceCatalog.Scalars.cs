@@ -98,7 +98,7 @@ internal sealed partial class SourceCatalog
     private void ValidateAliases(ReferenceCatalog references)
     {
         if (Units.SelectMany(unit => unit.Aliases.Values).Any(alias => alias.Syntax.IsPublic)) references.Required("Fpas.Core.AliasAttribute");
-        static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Variant?.IsPublic != false &&
+        static bool Visible(TypeSymbol type) => type.Interface?.IsPublic != false && type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Variant?.IsPublic != false &&
             (type.Element is null || Visible(type.Element)) && type.TypeArguments.All(Visible);
         foreach (var alias in Units.SelectMany(unit => unit.Aliases.Values))
         {

@@ -7,6 +7,7 @@ README, sources, project files and assets.
   expected compiler errors and controlled execution through the CLR toolchain.
 - [diagnostics](diagnostics/) provides verified CPU/allocation workloads, repeated
   unprofiled measurements and controlled failure targets for .NET tools.
+- [gui-doc-captures](gui-doc-captures/) captures gallery widgets for the UI handbook.
 - [FPas-Amp](fpas-amp/) is a desktop music player in development.
 
 See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications).

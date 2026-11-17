@@ -7,6 +7,8 @@ uses
   DesktopCommandsContract as DesktopCommandsContract,
   GalleryValidationBoundaryContract as ValidationBoundaryContract,
   GalleryModalCompositionContract as ModalCompositionContract,
+  GalleryTypewriterObservationContract as TypewriterObservationContract,
+  GalleryModalPreflightContract as ModalPreflightContract,
   GalleryModelContract as ModelContract,
   GalleryVoiceAiContract as VoiceAiContract,
   GalleryMediaContract as MediaContract,
@@ -231,6 +233,8 @@ begin
   ModelContract.Verify();
   ModelContract.VerifyDisplay(Renderer);
   ModalCompositionContract.Verify(Renderer);
+  TypewriterObservationContract.Verify(Renderer);
+  ModalPreflightContract.Verify(Renderer);
   const Directory: string := IO.Path.GetDirectoryName(IO.Path.GetFullPath(Capture)) ?? '.';
   VoiceAiContract.Verify(Renderer, Directory, Renderer.ToString());
   MediaContract.Verify(Renderer, Directory, Renderer.ToString());

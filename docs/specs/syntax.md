@@ -61,7 +61,7 @@ callable_type   = "function", "(", [type_list], ")", ":", type
 type_list       = type, {",", type} ;
 constraint      = "where", identifier, ":", constraint_item,
                   {",", constraint_item}, ";" ;
-constraint_item = named_type | "class", ["?"] | "struct" | "new", "(", ")" ;
+constraint_item = named_type, ["?"] | "class", ["?"] | "struct" | "new", "(", ")" ;
 
 protocol_body   = "protocol", ["extends", named_type, {",", named_type}],
                   {protocol_member}, "end", "protocol" ;
@@ -235,7 +235,7 @@ pattern         = "_" | "const", identifier, ":", type
                 | qualified_name, "(", [pattern_arguments], ")" ;
 pattern_arguments = pattern_argument, {",", pattern_argument} ;
 pattern_argument = [identifier, ":="], pattern ;
-constant_pattern = ["-"], (literal | qualified_name) ;
+constant_pattern = unary_expression ;
 ```
 
 `literal` includes strings, character codes, numeric forms, true, false, and null.
@@ -243,6 +243,10 @@ Apostrophe-delimited strings may span lines. Each physical LF, CRLF, or CR
 inside the literal decodes to one LF.
 Semantic analysis restricts subrange bounds, pattern ranges, enum initializers,
 attribute constants, and optional-parameter defaults to legal constant types.
+Constant patterns also accept casts and parenthesized constant expressions;
+unparenthesized binary expressions are not pattern syntax. Qualified names resolve
+to variant cases or metadata constants; payload lists use the variant-pattern
+alternative.
 An ordinary alias remains distinct from the `BaseType range Low..High` production.
 The optional `?` after a new-expression's named type is allowed only for an
 array allocation's element annotation, not for constructing a nullable class.

@@ -58,7 +58,7 @@ dotnet=$(readlink -f "$(command -v dotnet)")
 workload="$PWD/apps/diagnostics/Workload/bin/Release/net10.0/Workload.dll"
 measure="$PWD/apps/diagnostics/Measure/bin/Release/net10.0/Measure.dll"
 compiler="$PWD/src/Fpas.Cli/bin/Release/net10.0/Fpas.Cli.dll"
-refs=$(rg --files "$(dirname "$dotnet")/packs/Microsoft.NETCore.App.Ref" -g System.Runtime.dll | sort -V | tail -n 1)
+refs=$(rg --files "$(dirname "$dotnet")/packs/Microsoft.NETCore.App.Ref" -g '**/ref/net10.0/System.Runtime.dll' | sort -V | tail -n 1)
 refs=$(dirname "$refs")
 ```
 

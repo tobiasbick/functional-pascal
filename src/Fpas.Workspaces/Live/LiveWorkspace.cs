@@ -22,10 +22,16 @@ public sealed class LiveWorkspace : IAsyncDisposable
     private LiveSnapshot? current;
     private long revision;
     private bool disposed;
+    /// <summary>Gets the current document/input generation, incremented by each mutation.</summary>
     public long Revision { get { lock (gate) return revision; } }
+    /// <summary>Gets the successfully analyzed current generation, or null after invalidation.</summary>
     public LiveSnapshot? Current { get { lock (gate) return current; } }
+    /// <summary>Gets a detached snapshot of the open documents without writing them to disk.</summary>
     public WorkspaceTextSnapshot OpenDocuments { get { lock (gate) { Check(); return new(opened.Values); } } }
 
+    /// <summary>Creates a source-snapshot workspace without permitting restore or dependency builds.</summary>
+    /// <param name="input">Context path and build configuration; preparation is forced to source snapshots.</param>
+    /// <param name="limits">Positive text, retained-memory and analysis-time limits, or the defaults.</param>
     public LiveWorkspace(ContextOptions input, LiveWorkspaceLimits? limits = null)
     {
         options = input with { Context = Path.GetFullPath(input.Context), NoRestore = true, Preparation = ContextPreparation.SourceSnapshots };
@@ -35,6 +41,10 @@ public sealed class LiveWorkspace : IAsyncDisposable
         cache = new(this.limits.RetainedBytes);
     }
 
+    /// <summary>Opens a document overlay and invalidates pending/current analysis.</summary>
+    /// <param name="path">Document path, normalized to an absolute path; it must not already be open.</param>
+    /// <param name="text">Complete source text within the configured document/session budget.</param>
+    /// <param name="version">Initial document version.</param>
     public void Open(string path, string text, int version)
     {
         var document = new TextDocumentSnapshot(path, text, version); DocumentChanges.CheckSize(text, limits);
@@ -45,6 +55,10 @@ public sealed class LiveWorkspace : IAsyncDisposable
         }
     }
 
+    /// <summary>Applies an ordered change batch to an open document and invalidates analysis.</summary>
+    /// <param name="path">Path of an open document.</param>
+    /// <param name="version">A version greater than the document's current version.</param>
+    /// <param name="changes">Sequential UTF-16 range edits or full-document replacements.</param>
     public void Change(string path, int version, IReadOnlyList<TextChange> changes)
     {
         lock (gate)
@@ -54,10 +68,18 @@ public sealed class LiveWorkspace : IAsyncDisposable
         }
     }
 
+    /// <summary>Invalidates analysis after an external save; this method never writes the file.</summary>
+    /// <param name="path">Path of the open document whose save is being reported.</param>
     public void Save(string path) { lock (gate) { Check(); _ = Document(path); Changed(); } }
+    /// <summary>Removes an overlay and invalidates analysis so subsequent loads use disk content.</summary>
+    /// <param name="path">Path of the open document to close.</param>
     public void Close(string path) { lock (gate) { Check(); var document = Document(path); opened.Remove(document.Path); Changed(); } }
+    /// <summary>Invalidates the current generation after project or dependency inputs change.</summary>
     public void Invalidate() { lock (gate) { Check(); Changed(); } }
 
+    /// <summary>Analyzes the current generation, sharing existing work for that generation.</summary>
+    /// <param name="token">Cancels the caller's wait, and new work when this caller creates it.</param>
+    /// <returns>The current checked snapshot, or a cancellation/input-change failure.</returns>
     public Task<LiveSnapshot> AnalyzeAsync(CancellationToken token = default)
     {
         lock (gate)
@@ -79,6 +101,10 @@ public sealed class LiveWorkspace : IAsyncDisposable
         }
     }
 
+    /// <summary>Checks that a current snapshot still matches the context's files and open overlays.</summary>
+    /// <param name="snapshot">The current snapshot produced by this workspace.</param>
+    /// <param name="token">Cancels input verification.</param>
+    /// <returns>A task that completes only if the snapshot remains current and its inputs match.</returns>
     public Task VerifyAsync(LiveSnapshot snapshot, CancellationToken token = default)
     {
         lock (gate)
@@ -135,8 +161,10 @@ public sealed class LiveWorkspace : IAsyncDisposable
                 var hits = cache.Hits;
                 var analysis = await Task.Run(() => SourceGraphAnalysis.Analyze(context, texts, cache, token), token);
                 context.VerifyFiles(token, overlays.Documents.Select(document => document.Path));
-                var all = new WorkspaceTextSnapshot(texts.Documents.Concat(overlays.Documents.Where(document => !texts.Documents.Any(owned => WorkspaceTextSnapshot.Paths.Equals(owned.Path, document.Path)))));
-                var unowned = overlays.Documents.Where(document => !texts.Documents.Any(owned => WorkspaceTextSnapshot.Paths.Equals(owned.Path, document.Path)))
+                var ownedPaths = texts.Documents.Select(document => document.Path).ToHashSet(WorkspaceTextSnapshot.Paths);
+                var unownedDocuments = overlays.Documents.Where(document => !ownedPaths.Contains(document.Path)).ToArray();
+                var all = new WorkspaceTextSnapshot(texts.Documents.Concat(unownedDocuments));
+                var unowned = unownedDocuments
                     .Select(document => new UnownedDocument(document, SyntaxAnalysis.Check(new(document.Path, document.Text), token))).ToArray();
                 var retained = analysis.Context.Projects.SelectMany(project => project.Request.ReferenceImages ?? []).DistinctBy(image => image.Path).Sum(image => (long)image.Length) +
                     analysis.Projects.Sum(project => project.Result is { } result ? ProjectAnalysisCache.Measure(result, null) : 0) + all.Documents.Sum(document => 2L * document.Text.Length);
@@ -173,6 +201,8 @@ public sealed class LiveWorkspace : IAsyncDisposable
         generation.Cancel(); generation.Dispose(); generation = new();
     }
 
+    /// <summary>Cancels and joins owned operations, then releases overlays and cached analyses.</summary>
+    /// <returns>The shared disposal operation; repeated disposal awaits the same cleanup.</returns>
     public ValueTask DisposeAsync()
     {
         lock (gate)

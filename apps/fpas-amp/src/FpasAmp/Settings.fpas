@@ -3,6 +3,7 @@ unit FpasAmp.Settings;
 
 uses
   FpasAmp.Library.Sources as Locations,
+  FpasAmp.Library.Playlists.Formats as Playlists,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model,
@@ -70,7 +71,10 @@ begin
     const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
     for Entry: J.JsonElement in ExtensionList.EnumerateArray() do
       const Extension: string := Fields.StringValue(Entry) ?? '';
-      if ExtensionPattern.IsMatch(Extension) and Seen.Add(Extension) then
+      if ExtensionPattern.IsMatch(
+        Extension
+      ) and not Playlists.IsExtension(Extension) and Seen.Add(Extension)
+      then
         Extensions.Add(Extension);
       else
         Valid := false;

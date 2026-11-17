@@ -2,6 +2,7 @@ using Fpas.Compiler.Analysis;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <remarks>Call-site indexing is lazy and shared by outgoing and incoming queries on this service.</remarks>
 public sealed partial class SourceQuery
 {
     private sealed record IndexedCall(string Project, SemanticSnapshot Snapshot, SourceBody Owner, SourceOperation Site, string? Target);

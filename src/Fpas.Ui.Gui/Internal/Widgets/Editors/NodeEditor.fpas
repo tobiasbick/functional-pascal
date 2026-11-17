@@ -39,6 +39,8 @@ begin
   end if;
   const BodyFrame: C.State<TMsg> := Frame with
     AcceptInput := Enabled;
+    Interactive := Frame.Interactive and Settings.Enabled;
+    PaintingClosed := Frame.PaintingClosed or not Settings.Enabled;
   end with;
   for Item: D.Node<TMsg> in Nodes do
     var X: float := Item.X;

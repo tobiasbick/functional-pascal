@@ -5,7 +5,9 @@ namespace Fpas.Debugging.Evaluation;
 internal interface IPassiveContext
 {
     DebugBinding? Name(string name);
+    DebugBinding? NameType(string name);
     DebugBinding Static(string type, string member);
+    DebugBinding StaticType(string type, string member);
     DebugBinding Member(DebugBinding receiver, string name);
     DebugBinding MemberType(DebugBinding receiver, string name);
     DebugBinding Index(DebugBinding receiver, DebugBinding[] indices);
@@ -70,7 +72,8 @@ internal sealed class PassiveEvaluator(IPassiveContext context)
         if (values.TryGetValue(expression, out var value)) return value;
         return expression switch
         {
-            LiteralExpression or NameExpression => Evaluate(expression),
+            LiteralExpression => Evaluate(expression),
+            NameExpression name => context.NameType(name.Name) ?? throw Unknown(name.Name),
             MemberExpression member => MemberType(member),
             ParenthesizedExpression parent => Type(parent.Operand),
             UnaryExpression { Operator: "-", Operand: LiteralExpression literal } when Numeric(literal.Token) => Evaluate(expression),
@@ -97,7 +100,13 @@ internal sealed class PassiveEvaluator(IPassiveContext context)
 
     private DebugBinding MemberType(MemberExpression member)
     {
-        if (member.Receiver is NameExpression name && context.Name(name.Name) is null) return Member(member);
+        var names = new List<string>(); PassiveExpression root = member;
+        while (root is MemberExpression current) { names.Add(current.Name); root = current.Receiver; }
+        if (root is NameExpression name && context.NameType(name.Name) is null)
+        {
+            names.Reverse();
+            return context.StaticType(string.Join('.', new[] { name.Name }.Concat(names.SkipLast(1))), names[^1]);
+        }
         return context.MemberType(Type(member.Receiver), member.Name);
     }
 

@@ -93,6 +93,9 @@ internal sealed class ParameterFlow(SourceText source, int position)
                     result.Include(Statement(caught.Body, entry));
                 }
                 if (guarded.Finally is null) return result;
+                // Cleanup also runs when an expression throws before its store or
+                // call completes; successful body states do not cover those edges.
+                Statement(guarded.Finally, state);
                 var cleaned = new Paths();
                 foreach (var (exit, before) in result)
                 {

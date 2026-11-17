@@ -1,8 +1,8 @@
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Build.Support;
+using Fpas.IntegrationTests.Processes.Support;
 using Fpas.Tests.Support;
 using Fpas.IntegrationTests.Workspaces.Support;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -116,7 +116,7 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
     }
 
     [Fact]
-    public async Task Timeout_is_a_single_structured_failure_and_joins_preparation()
+    public async Task Timeout_is_a_single_structured_failure()
     {
         using var project = sdk.CreateProject();
         using var waiting = await WaitingBuild.Prepare(project.File("Game/Game.fpasproj"));
@@ -126,7 +126,39 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
         Assert.Equal("timeout", json.RootElement.GetProperty("error").GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task Timeout_joins_a_started_preparation_child_before_returning()
+    {
+        using var project = sdk.CreateProject();
+        using var waiting = await WaitingBuild.Prepare(project.File("Game/Game.fpasproj"));
+        var checking = ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
+            "Game/Game.fpasproj", "--timeout", "30", "--diagnostics", "json"],
+            workingDirectory: project.Path, timeLimit: TimeSpan.FromSeconds(60));
+        try
+        {
+            while (!File.Exists(waiting.Ready))
+            {
+                if (checking.IsCompleted)
+                {
+                    var early = await checking;
+                    Assert.Fail("Check ended before its preparation child became ready: " + early.Output + early.Error);
+                }
+                await Task.Delay(20);
+            }
+            int pid = int.Parse(await File.ReadAllTextAsync(waiting.Ready), System.Globalization.CultureInfo.InvariantCulture);
+            using var child = ProcessExit.Track(pid);
+            var result = await checking;
+            Assert.Equal(1, result.ExitCode);
+            Assert.Empty(result.Error);
+            using var json = JsonDocument.Parse(result.Output);
+            Assert.Equal("timeout", json.RootElement.GetProperty("error").GetProperty("code").GetString());
+            // Observe exit before fixture disposal can remove the helper or clean up its owner.
+            ProcessExit.AssertGone(child);
+        }
+        finally { await checking; }
+    }
+
     private Task<ProcessResult> Check(TemporaryDirectory project, params string[] arguments)
         => ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", .. arguments], workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
-    private static string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
+    private static string Hash(string path) => FileHash.Sha256(path);
 }

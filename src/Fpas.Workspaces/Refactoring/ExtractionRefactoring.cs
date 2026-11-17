@@ -3,6 +3,7 @@ using Fpas.Compiler.Syntax;
 
 namespace Fpas.Workspaces.Refactoring;
 
+/// <remarks>Variable extraction retains the selected expression's checked type and original evaluation position.</remarks>
 public static partial class CheckedRefactoring
 {
     private static IReadOnlyList<string> ExtractVariable(Draft draft, RefactoringRequest request, SourceDocument source, int start, int end)

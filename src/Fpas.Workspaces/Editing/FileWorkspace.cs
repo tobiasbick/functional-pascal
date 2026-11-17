@@ -9,30 +9,59 @@ namespace Fpas.Workspaces.Editing;
 public sealed class FileWorkspace
 {
     private readonly ContextOptions input;
+    /// <summary>Gets the currently captured context, refreshed after publication.</summary>
     public WorkspaceContext Context { get; private set; }
+    /// <summary>Gets current analysis, or null when publication invalidated it and reanalysis failed.</summary>
     public WorkspaceAnalysis? Analysis { get; private set; }
+    /// <summary>Gets source paths whose replacements remain published.</summary>
     public IReadOnlyList<string> Written { get; private set; } = [];
+    /// <summary>Gets retained backup or staging paths after incomplete recovery.</summary>
     public IReadOnlyList<string> RecoveryBackups { get; private set; } = [];
+    /// <summary>Gets whether post-publication reload, analysis and input verification completed.</summary>
     public bool Rechecked { get; private set; }
 
     private FileWorkspace(ContextOptions input, WorkspaceContext context, WorkspaceAnalysis analysis)
     { this.input = input; Context = context; Analysis = analysis; }
 
+    /// <summary>Loads explicit project inputs and analyzes them without publishing edits.</summary>
+    /// <param name="input">Context and preparation policy to retain for rechecks.</param>
+    /// <param name="token">Cancels preparation and analysis.</param>
+    /// <returns>A workspace containing current analysis, including compilation errors.</returns>
     public static async Task<FileWorkspace> OpenAsync(ContextOptions input, CancellationToken token = default)
     {
         var context = await WorkspaceLoader.LoadAsync(input, token);
         return new(input, context, WorkspaceAnalysis.Analyze(context, token));
     }
 
+    /// <summary>Collects automatic corrections and review-only proposals from current analysis.</summary>
+    /// <param name="token">Cancels proposal validation.</param>
+    /// <returns>A detached correction plan.</returns>
     public DiagnosticFixPlan Corrections(CancellationToken token = default) => DiagnosticFixPlan.Create(Checked(), token);
+    /// <summary>Prepares and semantically validates a source rename.</summary>
+    /// <param name="selection">Checked declaration or reference position.</param>
+    /// <param name="name">New unescaped simple identifier.</param>
+    /// <param name="token">Cancels rename planning.</param>
+    /// <returns>A checked plan and detached edits.</returns>
     public PreparedRename Rename(SourceSelection selection, string name, CancellationToken token = default)
         => RenameService.Prepare(Checked(), selection, name, token);
+    /// <summary>Regenerates a stored rename against the current context and snapshot.</summary>
+    /// <param name="plan">Original checked plan to validate.</param>
+    /// <param name="token">Cancels semantic revalidation.</param>
+    /// <returns>The regenerated matching plan and edits.</returns>
     public PreparedRename ValidateRename(RenamePlan plan, CancellationToken token = default)
         => RenameService.Validate(Checked(), plan, token);
 
+    /// <summary>Rechecks disk bytes and evaluated context inputs before answers or edits are published.</summary>
+    /// <param name="token">Cancels input verification.</param>
+    /// <returns>A task completing when inputs still match.</returns>
     public async Task VerifyAsync(CancellationToken token = default)
     { await Context.VerifyInputsAsync(token); token.ThrowIfCancellationRequested(); }
 
+    /// <summary>Publishes one checked edit batch, then reloads, analyzes and verifies current inputs.</summary>
+    /// <param name="edits">Edits matching this workspace's captured texts and versions.</param>
+    /// <param name="verifyPublicationInput">Optional final verification of adapter-owned inputs such as a plan file.</param>
+    /// <param name="token">Cancels publication or reanalysis; written/recovery state remains observable.</param>
+    /// <returns>A task completing after the post-publication check; inspect analysis for remaining errors.</returns>
     public async Task ApplyAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput = null, CancellationToken token = default)
     {
         if (Written.Count != 0) throw new InvalidOperationException("An editing operation has already published changes.");

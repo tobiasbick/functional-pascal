@@ -9,14 +9,14 @@ internal static class NumericFacts
     internal static bool Integral(TypeSymbol type) => NumericKind(type.Kind) && type.Kind is not (TypeKind.Single or TypeKind.Double or TypeKind.Decimal) && !type.IsNullable;
     internal static bool Unsigned(TypeSymbol type) => type.Kind is TypeKind.Byte or TypeKind.UInt16 or TypeKind.UInt32 or TypeKind.UInt64 or TypeKind.NativeUInt or TypeKind.Char;
     internal static bool Floating(TypeSymbol type) => type.Kind is TypeKind.Single or TypeKind.Double;
-    internal static int Bits(TypeSymbol type) => type.Kind switch
+    internal static int Bits(TypeSymbol type, int? nativeBits = null) => type.Kind switch
     {
         TypeKind.SByte or TypeKind.Byte => 8, TypeKind.Int16 or TypeKind.UInt16 or TypeKind.Char => 16,
-        TypeKind.Int64 or TypeKind.UInt64 => 64, TypeKind.NativeInt or TypeKind.NativeUInt => IntPtr.Size * 8, _ => 32
+        TypeKind.Int64 or TypeKind.UInt64 => 64, TypeKind.NativeInt or TypeKind.NativeUInt => nativeBits ?? IntPtr.Size * 8, _ => 32
     };
-    internal static BigInteger Min(TypeSymbol type) => Unsigned(type) ? BigInteger.Zero : -(BigInteger.One << (Bits(type) - 1));
-    internal static BigInteger Max(TypeSymbol type) => (BigInteger.One << (Bits(type) - (Unsigned(type) ? 0 : 1))) - 1;
-    internal static bool Fits(BigInteger value, TypeSymbol type) => Integral(type) && value >= Min(type) && value <= Max(type);
+    internal static BigInteger Min(TypeSymbol type, int? nativeBits = null) => Unsigned(type) ? BigInteger.Zero : -(BigInteger.One << (Bits(type, nativeBits) - 1));
+    internal static BigInteger Max(TypeSymbol type, int? nativeBits = null) => (BigInteger.One << (Bits(type, nativeBits) - (Unsigned(type) ? 0 : 1))) - 1;
+    internal static bool Fits(BigInteger value, TypeSymbol type, int? nativeBits = null) => Integral(type) && value >= Min(type, nativeBits) && value <= Max(type, nativeBits);
 
     internal static bool Widen(TypeSymbol from, TypeSymbol to)
     {

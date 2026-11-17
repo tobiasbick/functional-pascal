@@ -6,15 +6,27 @@ using System.Text.Json;
 
 namespace Fpas.Workspaces.Projects;
 
+/// <summary>Describes an evaluated project output without requiring successful compilation.</summary>
+/// <param name="Project">Absolute project path.</param>
+/// <param name="Configuration">Mapped project configuration.</param>
+/// <param name="Platform">Mapped project platform.</param>
+/// <param name="Framework">Explicit target framework.</param>
+/// <param name="OutputType">Evaluated output kind.</param>
+/// <param name="Assembly">Absolute managed output path.</param>
 public sealed record ProjectOutput(string Project, string Configuration, string Platform, string Framework, string OutputType, string Assembly)
 {
+    /// <summary>Gets whether the output kind is Exe or WinExe.</summary>
     public bool Executable => OutputType.Equals("Exe", StringComparison.OrdinalIgnoreCase) || OutputType.Equals("WinExe", StringComparison.OrdinalIgnoreCase);
 }
 
+/// <summary>Builds explicit contexts and selects evaluated executable outputs.</summary>
 public static class ProjectDriver
 {
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
+    /// <summary>Requires an existing supported project or solution file.</summary>
+    /// <param name="path">FPAS, C#, F# project or slnx solution path.</param>
+    /// <returns>The absolute validated context path.</returns>
     public static string ValidateContext(string path)
     {
         path = Path.GetFullPath(path);
@@ -23,6 +35,14 @@ public static class ProjectDriver
         return path;
     }
 
+    /// <summary>Builds a context with the selected dotnet SDK and owned process lifetime.</summary>
+    /// <param name="context">Project or solution path.</param>
+    /// <param name="configuration">Build or solution configuration.</param>
+    /// <param name="noRestore">Whether to use existing restore assets.</param>
+    /// <param name="token">Cancels the build and joins owned processes.</param>
+    /// <param name="captureDiagnostics">Whether to attach structured MSBuild diagnostics.</param>
+    /// <param name="liveOutput">Live output writers when structured capture is disabled.</param>
+    /// <returns>Build status, captured output and optional structured diagnostics.</returns>
     public static async Task<BuildResult> BuildAsync(string context, string configuration, bool noRestore, CancellationToken token,
         bool captureDiagnostics = false, ProcessOutput? liveOutput = null)
     {
@@ -34,6 +54,12 @@ public static class ProjectDriver
             await BuildProcess.Run(directory, args, token, liveOutput: liveOutput);
     }
 
+    /// <summary>Selects one executable using evaluated outputs and solution mappings.</summary>
+    /// <param name="context">Project or solution path.</param>
+    /// <param name="configuration">Build or solution configuration.</param>
+    /// <param name="project">Optional included project path to disambiguate.</param>
+    /// <param name="token">Cancels project evaluation.</param>
+    /// <returns>The unique executable output; ambiguous or absent executables are rejected.</returns>
     public static async Task<ProjectOutput> SelectExecutableAsync(string context, string configuration, string? project, CancellationToken token)
     {
         context = ValidateContext(context);
@@ -57,6 +83,12 @@ public static class ProjectDriver
             candidates: outputs.Select(output => output.Project).Order(StringComparer.Ordinal).ToArray());
     }
 
+    /// <summary>Reevaluates one included project's output in its context mapping.</summary>
+    /// <param name="context">Project or solution path.</param>
+    /// <param name="configuration">Context configuration.</param>
+    /// <param name="project">Included absolute project path.</param>
+    /// <param name="token">Cancels evaluation.</param>
+    /// <returns>The current evaluated output description.</returns>
     public static async Task<ProjectOutput> DescribeAsync(string context, string configuration, string project, CancellationToken token)
     {
         var scope = await Scope(context, configuration, token);

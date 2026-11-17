@@ -141,7 +141,9 @@ public sealed partial class MsBuildTests(SdkPackageFixture sdk) : IClassFixture<
         xml.Descendants("ProjectReference").Single().ReplaceWith(new XElement("PackageReference",
             new XAttribute("Include", "Demo.Shared"), new XAttribute("Version", version)));
         xml.Save(path);
-        var build = await sdk.Run(project, "build", "Host/Host.csproj");
+        var build = await ProcessRunner.RunAsync(["build", "Host/Host.csproj"], workingDirectory: project.Path,
+            environment: new Dictionary<string, string?> { ["NUGET_PACKAGES"] = project.File("packages") },
+            timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var executed = await sdk.Run(project, "Host/bin/Debug/net10.0/Host.dll");
         Assert.Equal(0, executed.ExitCode);

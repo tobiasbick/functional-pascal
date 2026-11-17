@@ -3,6 +3,35 @@ namespace Fpas.Compiler.Tests.Routines;
 
 public sealed class OverloadAndInterfaceDiagnosticsTests
 {
+    /// <summary>Distinguishes scalar identities in direct and nested overload signatures.</summary>
+    /// <param name="declaration">The common declaration form for two distinct scalar types.</param>
+    /// <param name="first">An expression constructing the first scalar.</param>
+    /// <param name="second">An expression constructing the second scalar.</param>
+    [Theory]
+    [InlineData("distinct int", "new A(1)", "new B(1)")]
+    [InlineData("int range 0..9", "new A(1)", "new B(1)")]
+    [InlineData("enum One; end enum", "A.One", "B.One")]
+    public void Different_source_scalar_types_define_distinct_overloads(string declaration, string first, string second)
+    {
+        var result = TestCompilation.Compile($$"""
+            program ScalarOverloads;
+            type A = {{declaration}};
+            type B = {{declaration}};
+            function F(Value: A): int; begin return 1; end function;
+            function F(Value: B): int; begin return 2; end function;
+            function G(Value: array of A?): int; begin return 1; end function;
+            function G(Value: array of B?): int; begin return 2; end function;
+            begin
+              discard F({{first}});
+              discard F({{second}});
+              discard G([cast<A?>({{first}})]);
+              discard G([cast<B?>({{second}})]);
+            end;
+            end program;
+            """);
+        Assert.True(result.Success, string.Join(';', result.Diagnostics));
+    }
+
     [Theory]
     [InlineData("function F(V: int): int; begin return V; end function; function F(Other: int): string; begin return ''; end function;")]
     [InlineData("function F(V: string): int; begin return 1; end function; function F(V: string?): int; begin return 2; end function;")]

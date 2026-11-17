@@ -19,9 +19,11 @@ Native-sized integers follow the target architecture. `string` is immutable;
 its `Length` and indexes use UTF-16 code units. `Text[Index]` returns `char`.
 Use imported .NET APIs for Unicode scalars, graphemes, encoding, and formatting.
 
-There are no implicit boxing-based collection conversions or implicit narrowing
-numeric conversions. Ordinary CLR boxing to `object` or an implemented interface
-is supported. Explicit unboxing uses `cast<T>` and requires the actual boxed type.
+There are no implicit boxing-based collection conversions. Implicit narrowing
+numeric conversions are limited to the representable constant expressions
+described in [literal rules](lexical-rules.md#literals). Ordinary CLR boxing to
+`object` or an implemented interface is supported. Explicit unboxing uses
+`cast<T>` and requires the actual boxed type.
 
 ## Example
 

@@ -72,8 +72,14 @@ begin
       const Cached: Cover? := J.JsonSerializer.Deserialize<Cover>(
         await IO.File.ReadAllTextAsync(Cache, Cancellation).ConfigureAwait(false)
       );
-      if Cached = null or Cached.Data.Length <= 16777216 then
-        return Cached;
+      if Cached = null then
+        return null;
+      end if;
+      // JSON can omit or null constructor arguments despite source nullability.
+      const Data: (array of byte)? := Cached.Data;
+      const MimeType: string? := Cached.MimeType;
+      if Data <> null and Data.Length <= 16777216 and MimeType <> null then
+        return new Cover(MimeType, Data, Cached.Front);
       end if;
     catch Damaged: J.JsonException do
     end try;

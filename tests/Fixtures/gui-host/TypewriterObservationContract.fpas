@@ -1,0 +1,118 @@
+unit GalleryTypewriterObservationContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Motion.Typewriters as Typing, Fpas.Ui.Widgets.Motion.Motion as Motion,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Internal.Presentation.Presentation as P,
+  System as Sys, System.Collections.Generic as Lists;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Lifetime(Renderer: Cui.CuiRenderer);
+  function View(Visible: bool; Viewport: L.Viewport): E.Element<bool>;
+  begin
+    if not Visible then
+      return E.Text<bool>('Removed');
+    end if;
+
+    return Typing.Typewriter<bool>(
+      'typing', 'Same revision', OnComplete := function(): bool begin
+        Callbacks := Callbacks + 1;
+        return true;
+      end function
+    );
+  end function;
+begin
+  var Callbacks: int := 0;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Typewriter lifetime', 480, 240, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+    true,
+    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+      Message,
+      []
+    ),
+    View, Window, 16
+  );
+  Check(Session.Step() and Callbacks = 1, 'The initial typewriter must complete once.');
+  Check(Session.Step() and Callbacks = 1, 'Applying completion must not notify again.');
+  discard Session.Post(false);
+  Check(Session.Step() and Callbacks = 1, 'Removal must not notify.');
+  discard Session.Post(true);
+  Check(
+    Session.Step() and Callbacks = 2,
+    'Reappearing with the same revision must complete again.'
+  );
+end procedure;
+
+// Exercises cached repaint, covered owner and closing observation policies without a platform resize loop.
+// ## Parameters
+// - `Renderer`: Native renderer used for presentation.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Completed(): bool;
+  begin
+    Callbacks := Callbacks + 1;
+    return true;
+  end function;
+
+  function Draw(Text: string; Replay: int; Observe: bool; Accept: bool): int;
+  begin
+    const Tree: E.Element<bool> := Typing.Typewriter<bool>(
+      'typing', Text, Replay, new Motion.TextOptions(Delay := 600.0F), Completed
+    );
+    const Frame: C.State<bool> := new C.State<bool>(
+      Window, V.Prepare<bool>(Tree, V.Target.Graphical), new Lists.List<bool>(),
+      new Lists.List<string>(), new Lists.List<Gui.Control>(), new Lists.Queue<string>(),
+      new Lists.Dictionary<string, string>(), new Lists.HashSet<string>(), [], Accept, Accept, null,
+      ObserveTransitions := Observe, CompletedAnimations := Completions
+    );
+    Check(Window.NextFrame(), 'The typewriter observation window closed.');
+    P.Draw<bool>(Frame);
+    Window.Present();
+    return Frame.Messages.Count;
+  end function;
+begin
+  Lifetime(Renderer);
+  var Callbacks: int := 0;
+  const Completions: Lists.Dictionary<string, C.AnimationCompletion> := new Lists.Dictionary<string, C.AnimationCompletion>();
+  using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Typewriter owner observations', 480, 240, Renderer, true
+  );
+  Window.SetReducedMotion(false);
+  Check(Draw('Original', 0, true, true) = 0, 'An unfinished animation must not complete.');
+  Window.SetReducedMotion(true);
+  Check(
+    Draw('Original', 0, false, false) = 0 and Callbacks = 0,
+    'A cached resize must not invoke the completion factory.'
+  );
+  Check(
+    Draw('Original', 0, true, false) = 1 and Callbacks = 1,
+    'The next covered owner frame must deliver completion consumed by a cached resize.'
+  );
+  Check(
+    Draw('Original', 0, true, true) = 0 and Callbacks = 1,
+    'A completed revision must notify once.'
+  );
+  Check(
+    Draw('Original', 1, true, true) = 1 and Callbacks = 2,
+    'A replay revision must complete independently.'
+  );
+  Check(
+    Draw('Replacement', 1, true, true) = 1 and Callbacks = 3,
+    'Replacement text must complete independently.'
+  );
+  Check(
+    Draw('Closing text', 2, false, false) = 0 and Callbacks = 3,
+    'Closing painting must not invoke the completion factory.'
+  );
+end procedure;
+
+end unit;

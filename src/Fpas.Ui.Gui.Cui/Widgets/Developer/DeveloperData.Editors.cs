@@ -85,15 +85,13 @@ public sealed partial class CuiWindow
     /// <summary>Formats the query using the native query builder's vocabulary.</summary>
     /// <param name="fields">Native field schema.</param>
     /// <param name="rules">Current conditions and groups.</param>
-    /// <returns>The native description.</returns>
+    /// <returns>The complete native description, preserving Unicode field names.</returns>
     public static unsafe string DescribeQuery(CuiDevField[] fields, CuiDevRule[] rules)
     {
         using var memory = new ChartMemory();
         var schema = PackQueryFields(memory, fields);
         var rows = new NativeDevRule[rules.Length];
-        byte[] output = new byte[checked(1 + 256 * rules.Length)];
         fixed (NativeDevRule* data = rows)
-        fixed (byte* text = output)
         {
             for (int i = 0; i < rows.Length; i++)
             {
@@ -105,7 +103,10 @@ public sealed partial class CuiWindow
                 data[i].Operator = rule.Operator;
                 WriteDevText(rule.Value, new Span<byte>(data[i].Value, 64));
             }
-            NativeMethods.DescribeQuery(schema, fields.Length, data, rules.Length, text, (nuint)output.Length);
+            nuint length = NativeMethods.DescribeQuery(schema, fields.Length, data, rules.Length, null, 0);
+            byte[] output = new byte[checked((int)length + 1)];
+            fixed (byte* text = output)
+                NativeMethods.DescribeQuery(schema, fields.Length, data, rules.Length, text, (nuint)output.Length);
             return ReadDevText(output);
         }
     }

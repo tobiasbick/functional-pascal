@@ -42,6 +42,11 @@ Plus and minus use zoom presets. Click the percentage to reset the zoom.
 Store the proposed viewport and toggle states. When Fit is requested
 without bounds, compute the viewport in the application.
 
+Keep `Content` bounds current when objects move, including positions before
+the canvas origin. The gallery computes conservative bounds for its three
+fixed node specimens in [SampleBounds](../../../examples/ui/gui/gallery/Pages/Canvas/SampleBounds.fpas).
+These are application-supplied extents, not measured node sizes.
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Canvas/CanvasControls.fpas)

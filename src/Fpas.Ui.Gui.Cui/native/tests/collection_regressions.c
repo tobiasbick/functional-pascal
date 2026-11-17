@@ -2,6 +2,22 @@
 #include <stdio.h>
 #include <string.h>
 
+static bool same_region(const unsigned char *a, const unsigned char *b,
+    int width, int height, cui_rect rect) {
+    int left = (int)rect.x - 3, top = (int)rect.y - 3;
+    int right = (int)(rect.x + rect.w) + 3, bottom = (int)(rect.y + rect.h) + 3;
+    if (left < 0) left = 0;
+    if (top < 0) top = 0;
+    if (right > width) right = width;
+    if (bottom > height) bottom = height;
+    if (right <= left || bottom <= top) return false;
+    for (int y = top; y < bottom; ++y) {
+        const size_t offset = ((size_t)y * width + left) * 4;
+        if (memcmp(a + offset, b + offset, (size_t)(right - left) * 4)) return false;
+    }
+    return true;
+}
+
 static void table(cui_ctx *ui, bool bridge, int *header, int *row) {
     const cui_table_column column = { "Title", CUI_FILL, CUI_TEXT_START, true };
     cui_table_sort order = { 0, false };
@@ -35,6 +51,7 @@ static bool check_focus(bool bridge) {
     cui_set_viewport(ui, WIDTH, HEIGHT, 1);
     cui_set_reduced_motion(ui, true);
     bool focused = true;
+    cui_rect header_ring = {0}, row_ring = {0};
     for (int i = 0; i < 3; ++i) {
         if (i) {
             cui_input_key(ui, CUI_KEY_TAB, true, 0);
@@ -43,11 +60,26 @@ static bool check_focus(bool bridge) {
         cui_begin_frame(ui, .016f);
         table(ui, bridge, &header, &row);
         cui_end_frame(ui);
+        if (bridge && !i) {
+            header_ring = fpas_cui_node_rect(ui, header);
+            row_ring = fpas_cui_node_rect(ui, row);
+            /* Sample the outer halves so neighboring rings cannot share pixels. */
+            focused &= header_ring.w > 0 && header_ring.h > 12 && row_ring.w > 0 && row_ring.h > 12;
+            header_ring.h = header_ring.h / 2 - 3;
+            row_ring.y += row_ring.h / 2 + 3;
+            row_ring.h = row_ring.h / 2 - 3;
+        }
         if (bridge && i) focused &= fpas_cui_focused(ui, i == 1 ? header : row) != 0;
         cui_sw_render(renderer, cui_get_draw_data(ui), pixels[i], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
     }
     bool header_draws = memcmp(pixels[0], pixels[1], sizeof pixels[0]) != 0;
     bool row_draws = memcmp(pixels[0], pixels[2], sizeof pixels[0]) != 0;
+    if (bridge) {
+        header_draws = !same_region(pixels[0], pixels[1], WIDTH, HEIGHT, header_ring)
+            && same_region(pixels[0], pixels[2], WIDTH, HEIGHT, header_ring);
+        row_draws = !same_region(pixels[0], pixels[2], WIDTH, HEIGHT, row_ring)
+            && same_region(pixels[0], pixels[1], WIDTH, HEIGHT, row_ring);
+    }
     printf("%s table focus visible on header=%d row=%d\n", bridge ? "FPAS" : "CUI", header_draws, row_draws);
     cui_destroy(ui);
     cui_sw_destroy(renderer);

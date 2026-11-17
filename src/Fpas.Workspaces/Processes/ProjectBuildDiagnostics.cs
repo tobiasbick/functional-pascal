@@ -5,6 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace Fpas.Workspaces.Processes;
 
+/// <summary>Contains a structured MSBuild diagnostic and its compiler-related notes.</summary>
+/// <param name="Project">Owning project, when reported.</param>
+/// <param name="Severity">Error or warning severity.</param>
+/// <param name="Code">Diagnostic code, when reported.</param>
+/// <param name="Message">Native diagnostic message.</param>
+/// <param name="Location">Source location, or null for locationless failures.</param>
+/// <param name="Related">Related compiler diagnostic notes.</param>
 public sealed record ProjectBuildDiagnostic(string? Project, string Severity, string? Code, string Message, SourceLocation? Location,
     IReadOnlyList<DiagnosticNote> Related);
 

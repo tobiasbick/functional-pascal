@@ -3,7 +3,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid;
 uses
   Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Validation as V, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
-  Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutCheck, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Layout.RealizedValidation as Realized, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
   Fpas.Ui.Gui.Cui as Cui, System as Sys;
 
@@ -61,11 +61,7 @@ public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Defs: array of D.C
     if Items.Length = 0 then
       return;
     end if;
-    const Prepared: V.Prepared<TMsg> := V.Prepare<TMsg>(
-      E.Row<TMsg>(new L.Flow(), Items),
-      V.Target.Graphical
-    );
-    LayoutCheck.Check<TMsg>(Prepared);
+    const Prepared: V.Prepared<TMsg> := Realized.Prepare<TMsg>(E.Row<TMsg>(new L.Flow(), Items));
     const Inner: C.State<TMsg> := Frame with
       Prepared := Prepared;
       AcceptInput := Frame.AcceptInput and Settings.Enabled;

@@ -42,6 +42,8 @@ public sealed class SourceProjectionTests
         var bindings = await host.FrameBindings(new(stop.StopId.Value, frame.Id), deadline.Token);
         var receiver = Assert.Single(bindings.Items, item => item.Name == "self"); Assert.Equal("record", receiver.Kind);
         Assert.Equal("42", Assert.Single((await host.ValueChildren(new(stop.StopId.Value, receiver.Reference!.Value, View: "source"), deadline.Token)).Items).Scalar);
+        var skipped = await host.Evaluate(new(stop.StopId.Value, frame.Id, "false and (self.Value = 0)"), deadline.Token);
+        Assert.Null(skipped.Error); Assert.Equal("false", skipped.Value?.Scalar);
         var raw = await host.FrameBindings(new(stop.StopId.Value, frame.Id, View: "raw"), deadline.Token);
         Assert.DoesNotContain(raw.Items, item => item.Name == "self");
         if (!asynchronous) Assert.Contains(raw.Items, item => item.Name == "this");

@@ -62,6 +62,8 @@ public sealed class StaticInspectionTests
         Assert.Equal("7", Assert.Single((await host.ValueChildren(new(stop.StopId.Value, storage.Reference!.Value), deadline.Token)).Items).Scalar);
         var dormant = await host.StaticBindings(new(stop.StopId.Value, frame.Id, "Fixture.Dormant"), deadline.Token);
         Assert.Equal("unavailable", Assert.Single(dormant.Items).Status);
+        var skipped = await host.Evaluate(new(stop.StopId.Value, frame.Id, "false and (Fixture.Dormant.Value = 0)"), deadline.Token);
+        Assert.Null(skipped.Error); Assert.Equal("false", skipped.Value?.Scalar);
         Assert.False(File.Exists(program.FilePath("initialized.txt"))); Assert.False(File.Exists(program.FilePath("getter.txt")));
         foreach (var (name, expected) in new[] { ("Integer", "41"), ("Text", "99") })
         {

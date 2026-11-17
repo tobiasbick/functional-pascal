@@ -45,9 +45,7 @@ internal static class FailureRunner
                     report.Stop = new("exception", null, null);
                     report.Capture.Omit("task_inventory");
                     if (!options.CaptureOutput) report.Capture.Omit("output_inherited");
-                    using var capture = CancellationTokenSource.CreateLinkedTokenSource(token);
-                    capture.CancelAfter(TimeSpan.FromSeconds(10));
-                    try { await new SnapshotCapture(host, stopped, report, capture.Token).Capture([]); }
+                    try { await new SnapshotCapture(host, stopped, report, token, TimeSpan.FromSeconds(10)).Capture([]); }
                     catch (Exception failure) when (failure is not OutOfMemoryException)
                     {
                         report.Capture.Omit("interrupted");

@@ -5,7 +5,7 @@ using Fpas.Debugging.Values;
 
 namespace Fpas.Debugging.Symbols;
 
-internal sealed class StoredTypeSignature(MetadataImage image, long module, DebugTypeIdentity[] arguments)
+internal sealed class StoredTypeSignature(MetadataImage image, long module, DebugTypeIdentity[] arguments, DebugTypeIdentity[]? methodArguments = null)
 {
     private int remaining = 128;
 
@@ -19,17 +19,49 @@ internal sealed class StoredTypeSignature(MetadataImage image, long module, Debu
         return type;
     }
 
+    internal DebugTypeIdentity? BaseType(uint type)
+    {
+        var definition = image.Metadata.GetTypeDefinition((TypeDefinitionHandle)MetadataTokens.Handle((int)type));
+        return definition.BaseType.IsNil ? null : Named(definition.BaseType, 18, 0);
+    }
+
+    internal DebugTypeIdentity Local(uint method, int slot)
+    {
+        var blob = image.LocalSignature(method);
+        if (blob.ReadByte() != 7) throw new BadImageFormatException("Invalid local signature.");
+        var count = blob.ReadCompressedInteger();
+        if (count is < 0 or > 4096 || slot < 0 || slot >= count) throw new BadImageFormatException("Invalid local slot.");
+        for (var index = 0; index < slot; index++) { remaining = 128; _ = Read(ref blob, 0); }
+        remaining = 128;
+        return Read(ref blob, 0);
+    }
+
+    internal DebugTypeIdentity Argument(uint method, int index)
+    {
+        var definition = image.Metadata.GetMethodDefinition((MethodDefinitionHandle)MetadataTokens.Handle((int)method));
+        var blob = image.Metadata.GetBlobReader(definition.Signature); var header = blob.ReadSignatureHeader();
+        if (header.IsGeneric) _ = blob.ReadCompressedInteger();
+        var count = blob.ReadCompressedInteger();
+        if (count is < 0 or > 4096 || index < 0 || index >= count) throw new BadImageFormatException("Invalid argument index.");
+        _ = Read(ref blob, 0);
+        for (var position = 0; position < index; position++) { remaining = 128; _ = Read(ref blob, 0); }
+        remaining = 128;
+        return Read(ref blob, 0);
+    }
+
     private DebugTypeIdentity Read(ref BlobReader blob, int depth)
     {
         if (depth >= 16 || --remaining < 0) throw new DebugException("limit_exceeded", "Stored field types exceed 16 levels or 128 nodes.");
         var kind = blob.ReadByte();
+        if (kind == 1) return new("void", kind);
         if (ScalarValue.TypeName(kind) is { } primitive) return new(primitive, kind);
         if (kind is 0x11 or 0x12) return Named(blob.ReadTypeHandle(), kind, depth);
-        if (kind == 0x13)
+        if (kind is 0x13 or 0x1e)
         {
             var index = blob.ReadCompressedInteger();
-            if (index < 0 || index >= arguments.Length) throw new DebugException("unavailable", "The field's declaring generic argument is unavailable.");
-            return arguments[index];
+            var parameters = kind == 0x13 ? arguments : methodArguments ?? [];
+            if (index < 0 || index >= parameters.Length) throw new DebugException("unavailable", "The declared generic argument is unavailable.");
+            return parameters[index];
         }
         if (kind == 0x15)
         {

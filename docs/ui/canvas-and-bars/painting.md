@@ -15,6 +15,8 @@ Positions and explicit sizes are logical points. CUI handles display DPI.
 desired. `Measure` uses the exact supplied font role and logical size, matching
 `Text`. `Time()` and `DeltaTime()` expose the native frame clock in seconds;
 request another frame with `Frames.Redraw` when animation needs it.
+`Disabled()` reports whether the canvas was built inside a disabled scope,
+so custom painting can follow the surrounding control state.
 
 CUI clips painting to the canvas. `PushClip` intersects that clip; `PopClip`
 cannot escape the callback's scopes. Unclosed clips unwind on return or error.

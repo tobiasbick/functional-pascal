@@ -134,8 +134,8 @@ fatal lifetime failures are reported by the shell.
 `userdata.db` stores UUIDs, latest paths/fingerprints and nullable integer ratings.
 `SetRatingAsync(TrackId, Value, Cancellation)` accepts **1–10**; null clears it.
 Imported file ratings never overwrite user choices. Clearing/removing/rebuilding
-the catalogue retains this database. The current shell contains settings; a
-track-list/rating editor is a separate view. UI bindings can use the existing
+the catalogue retains this database. The Albums destination opens a Music view
+with the release's track list and independent track rating controls. UI bindings use the existing
 native `Ratings.Rating` with `Maximum := 10`, mapping its cleared value 0 to null.
 
 Full-file SHA-256 is independent of the path but changes with tag edits. Known

@@ -47,6 +47,57 @@ begin
   );
 end procedure;
 
+procedure ZeroWidthClusters();
+  procedure CheckCluster(Value: string; Painted: string; Span: int);
+    function View(State: int): E.Element<int>;
+    begin
+      return E.Text<int>(Value + 'A');
+    end function;
+  begin
+    using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 6, 1);
+    const Frame: Tui.Frame := Session.Snapshot();
+    Check(
+      Frame.Cells[0].Text = Painted and Frame.Cells[Span].Text = 'A',
+      'Normalized clusters must leave adjacent text at its measured cell.'
+    );
+    Check(
+      Glyphs.Measure(Value + 'A') = Span + 1,
+      'Measurement must use the same normalized clusters as drawing.'
+    );
+    var Output: string := '';
+    const Present: procedure(int, int, array of Terminal.Cell) := Presentation.Create(
+      procedure(Text: string) begin
+        Output := Text;
+      end procedure
+    );
+    Present(6, 1, Frame.Cells);
+    Check(
+      Output.Contains(Painted + 'A'),
+      'Presentation must emit the normalized cluster followed by adjacent text.'
+    );
+    const Next: array of Terminal.Cell := cast<array of Terminal.Cell>(Frame.Cells.Clone());
+    Next[Span] := new Terminal.Cell('B', Frame.Cells[Span].Colors);
+    Present(6, 1, Next);
+    Check(
+      Output.Contains(new string(#27, 1) + '[1;' + (Span + 1).ToString() + 'H')
+      and Output.Contains('B'),
+      'Incremental repaint must address the cell after the normalized cluster.'
+    );
+  end procedure;
+begin
+  CheckCluster(Sys.Char.ConvertFromUtf32($200B), ' ', 1);
+  CheckCluster(Sys.Char.ConvertFromUtf32($200D), ' ', 1);
+  CheckCluster(Sys.Char.ConvertFromUtf32($FE0F), ' ', 1);
+  CheckCluster(Sys.Char.ConvertFromUtf32($301), ' ', 1);
+  const Accented: string := 'e' + Sys.Char.ConvertFromUtf32($301);
+  CheckCluster(Accented, Accented, 1);
+  const Emoji: string := Sys.Char.ConvertFromUtf32($1F469) +
+    Sys.Char.ConvertFromUtf32($200D) + Sys.Char.ConvertFromUtf32($1F4BB);
+  CheckCluster(Emoji, Emoji, 2);
+  const Heart: string := Sys.Char.ConvertFromUtf32($2764) + Sys.Char.ConvertFromUtf32($FE0F);
+  CheckCluster(Heart, Heart, 2);
+end procedure;
+
 procedure DisabledForeground();
   function View(State: int): E.Element<int>;
   begin
@@ -104,6 +155,7 @@ end procedure;
 
 begin
   WideIdeographs();
+  ZeroWidthClusters();
   DisabledForeground();
   Console.WriteLine('Rendering contracts verified');
 end;

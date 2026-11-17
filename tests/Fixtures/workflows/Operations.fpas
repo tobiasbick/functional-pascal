@@ -79,7 +79,7 @@ begin
   Check(Starts = 2, 'A cancelled run called the workflow body');
 end function;
 
-async function VerifyDeadline(): Tasks.Task;
+async function VerifyDeadline(CancelCaller: bool): Tasks.Task;
   async function Wait(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
   begin
     try
@@ -87,24 +87,88 @@ async function VerifyDeadline(): Tasks.Task;
     finally
       await Tasks.Task.Delay(10);
       Cleaned := true;
+      if CancelCaller then
+        Caller.Cancel();
+      end if;
     end try;
 
     return W.Outcome.Success(Value);
   end function;
 begin
   var Cleaned: bool := false;
+  using const Caller: T.CancellationTokenSource := new T.CancellationTokenSource();
   const Timed: W.Workflow<int, string, int> := Policy.WithDeadline(
     W.Workflow<int, string, int>.Defer(Wait), Sys.TimeSpan.FromMilliseconds(100),
     function(): string => 'deadline', Sys.TimeProvider.System
   );
-  case await Timed.Run(7, T.CancellationToken.None) of
-    when W.Outcome.Success(_):
-      Check(false, 'The deadline did not stop the wait');
-    when W.Outcome.Failure(const Reason: string):
-      Check(Reason = 'deadline', 'Unexpected deadline reason');
-  end case;
+  try
+    case await Timed.Run(7, Caller.Token) of
+      when W.Outcome.Success(_):
+        Check(false, 'The deadline did not stop the wait');
+      when W.Outcome.Failure(const Reason: string):
+        Check(
+          not CancelCaller and Reason = 'deadline',
+          'Deadline expiry replaced caller cancellation'
+        );
+    end case;
+  catch Failure: Sys.OperationCanceledException do
+    Check(
+      CancelCaller and Failure.CancellationToken = Caller.Token,
+      'Caller cancellation did not take precedence after expiry'
+    );
+  end try;
 
   Check(Cleaned, 'Deadline completed before cleanup');
+end function;
+
+async function VerifyDeadlineCancellation(): Tasks.Task;
+  function CancelCaller(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    Caller.Cancel();
+    return Success(Value, Token);
+  end function;
+
+  function CancelOther(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    raise new Sys.OperationCanceledException(Other.Token);
+  end function;
+
+  function Expired(): string;
+  begin
+    Expirations := Expirations + 1;
+    return 'deadline';
+  end function;
+begin
+  var Expirations: int := 0;
+  using const Caller: T.CancellationTokenSource := new T.CancellationTokenSource();
+  using const Other: T.CancellationTokenSource := new T.CancellationTokenSource();
+  Other.Cancel();
+  const Cancelled: W.Workflow<int, string, int> := Policy.WithDeadline(
+    W.Workflow<int, string, int>.Defer(CancelCaller), Sys.TimeSpan.FromDays(1),
+    Expired, Sys.TimeProvider.System
+  );
+  try
+    discard await Cancelled.Run(7, Caller.Token);
+    Check(false, 'The deadline policy returned success after caller cancellation');
+  catch Failure: Sys.OperationCanceledException do
+    Check(Failure.CancellationToken = Caller.Token, 'The deadline policy lost the caller token');
+  end try;
+
+  const Unrelated: W.Workflow<int, string, int> := Policy.WithDeadline(
+    W.Workflow<int, string, int>.Defer(CancelOther), Sys.TimeSpan.FromDays(1),
+    Expired, Sys.TimeProvider.System
+  );
+  try
+    discard await Unrelated.Run(7, T.CancellationToken.None);
+    Check(false, 'The deadline policy swallowed unrelated cancellation');
+  catch Failure: Sys.OperationCanceledException do
+    Check(
+      Failure.CancellationToken = Other.Token,
+      'The deadline policy replaced an unrelated cancellation token'
+    );
+  end try;
+
+  Check(Expirations = 0, 'Cancellation was converted into a deadline failure');
 end function;
 
 async function VerifyTracing(): Tasks.Task;
@@ -229,7 +293,9 @@ end function;
 
 begin
   await VerifyComposition();
-  await VerifyDeadline();
+  await VerifyDeadline(false);
+  await VerifyDeadline(true);
+  await VerifyDeadlineCancellation();
   await VerifyParallel();
   await VerifyParallelFailure();
   await VerifyTracing();

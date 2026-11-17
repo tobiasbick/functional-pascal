@@ -97,6 +97,45 @@ public sealed class CuiCanvasPaintingTests
         }
     }
 
+    /// <summary>Caught image validation errors leave native cache slots contiguous and reusable.</summary>
+    /// <param name="renderer">Native renderer.</param>
+    [GuiTheory]
+    [InlineData(CuiRenderer.Software)]
+    [InlineData(CuiRenderer.OpenGl)]
+    public void CaughtImageErrorsDoNotAdvanceNativeCache(CuiRenderer renderer)
+    {
+        using var window = new CuiWindow("Canvas image recovery", 220, 160, renderer, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        Draw(false, true); Draw(false, true);
+        window.CapturePng(directory.File("expected.png"));
+        byte[] expected = File.ReadAllBytes(directory.File("expected.png"));
+        Draw(true, true); Draw(true, true);
+        window.CapturePng(directory.File("recovered.png"));
+        Assert.Equal(expected, File.ReadAllBytes(directory.File("recovered.png")));
+        Draw(true, false);
+        window.CapturePng(directory.File("removed.png"));
+        Assert.NotEqual(expected, File.ReadAllBytes(directory.File("removed.png")));
+        Draw(true, true);
+        window.CapturePng(directory.File("restored.png"));
+        Assert.Equal(expected, File.ReadAllBytes(directory.File("restored.png")));
+
+        void Draw(bool invalid, bool visible)
+        {
+            Assert.True(window.NextFrame());
+            window.DrawingCanvas("canvas", 1, 0, 2, 100, [], true,
+                out _, out _, out _, out _, false, out _, out _, painter =>
+                {
+                    if (invalid)
+                        for (int attempt = 0; attempt < 5; attempt++)
+                            Assert.Throws<ArgumentException>(() => painter.Image(default, 0, 0, 20, 20, 0, uint.MaxValue));
+                    if (visible)
+                        painter.Image(new(null, 1, 1, [255, 0, 0, 255]), 20, 20, 30, 30, 0, uint.MaxValue);
+                });
+            window.Present();
+        }
+    }
+
     /// <summary>Retires captured state at every frame boundary.</summary>
     /// <param name="finish">Frame completion path.</param>
     [GuiTheory]

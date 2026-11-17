@@ -8,7 +8,7 @@ public sealed partial class CuiWindow
     private sealed record EditorRequest(EditorOperation Operation, int First = 0, int Second = 0, string? Query = null);
     private readonly Dictionary<string, EditorRequest> editorRequests = new(StringComparer.Ordinal);
 
-    /// <summary>Queues a one-based line/visual-column navigation for the next enabled editor view.</summary>
+    /// <summary>Queues a one-based line/visual-column navigation for the next view; absent or disabled editors discard it.</summary>
     /// <param name="id">The editor's stable tracking identity.</param>
     /// <param name="line">Positive line; CUI clamps it to the document.</param>
     /// <param name="column">Positive visual column, including native tab stops.</param>

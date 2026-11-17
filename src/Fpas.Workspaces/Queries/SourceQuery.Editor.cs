@@ -4,12 +4,30 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <summary>Contains bounded hover text for a checked identifier.</summary>
+/// <param name="Span">Identifier token span.</param>
+/// <param name="Signature">Checked signature, including actual call substitutions when available.</param>
+/// <param name="Documentation">Source Markdown or escaped metadata text, when present.</param>
 public sealed record EditorHover(SourceSpan Span, string Signature, string? Documentation);
+/// <summary>Classifies one checked identifier occurrence.</summary>
+/// <param name="Span">Identifier token span.</param>
+/// <param name="Kind">Semantic symbol kind.</param>
+/// <param name="Declaration">Whether the occurrence declares the symbol.</param>
 public sealed record EditorClassification(SourceSpan Span, string Kind, bool Declaration);
+/// <summary>Contains a bounded public-declaration view for one source owner.</summary>
+/// <param name="Project">Owning project path.</param>
+/// <param name="Declarations">Public source declarations in source order.</param>
+/// <param name="Complete">Whether the owning semantic snapshot has complete coverage.</param>
+/// <param name="Omitted">Declarations omitted by the 500-item limit.</param>
 public sealed record EditorSignatures(string Project, IReadOnlyList<DeclarationMatch> Declarations, bool Complete, int Omitted);
 
+/// <remarks>Editor views adapt detached compiler facts and preserve explicit absence and coverage states.</remarks>
 public sealed partial class SourceQuery
 {
+    /// <summary>Gets the selected identifier's checked signature and available documentation.</summary>
+    /// <param name="selection">Checked source position.</param>
+    /// <param name="token">Cancels metadata documentation reads.</param>
+    /// <returns>Bounded hover text, or null when no symbol occurs at the position.</returns>
     public EditorHover? Hover(SourceSelection selection, CancellationToken token = default)
     {
         var (project, snapshot, offset, position) = SelectPosition(selection);
@@ -25,6 +43,9 @@ public sealed partial class SourceQuery
         return new(occurrence.Span, Bound(signature), documentation is null ? null : Bound(documentation));
     }
 
+    /// <summary>Locates the source declaration of a checked expression's type.</summary>
+    /// <param name="selection">Checked source position.</param>
+    /// <returns>A source type or type-parameter declaration, or null without editable source.</returns>
     public SourceSpan? TypeDefinition(SourceSelection selection)
     {
         var (project, snapshot, offset, position) = SelectPosition(selection);
@@ -38,6 +59,10 @@ public sealed partial class SourceQuery
         return Definition(project, candidate).Symbol.Declaration;
     }
 
+    /// <summary>Finds checked occurrences of the selected identity in the same physical document.</summary>
+    /// <param name="selection">Checked symbol position.</param>
+    /// <param name="token">Cancels occurrence traversal.</param>
+    /// <returns>At most 1,000 occurrences; larger results fail explicitly.</returns>
     public IReadOnlyList<SymbolOccurrence> Highlights(SourceSelection selection, CancellationToken token = default)
     {
         var (project, snapshot, offset, position) = SelectPosition(selection);
@@ -52,6 +77,10 @@ public sealed partial class SourceQuery
             throw new ContextFailure("result_limit", "Document highlights exceed 1,000 locations.");
     }
 
+    /// <summary>Classifies available checked identifier occurrences without requiring full-document coverage.</summary>
+    /// <param name="file">Unambiguously owned source path.</param>
+    /// <param name="token">Cancels occurrence traversal.</param>
+    /// <returns>At most 10,000 classifications; larger results fail explicitly.</returns>
     public IReadOnlyList<EditorClassification> Classifications(string file, CancellationToken token = default)
     {
         var (_, snapshot, _, position) = SelectPosition(new(file, 1, 1), requireChecked: false);
@@ -66,20 +95,37 @@ public sealed partial class SourceQuery
         return matches.AsReadOnly();
     }
 
+    /// <summary>Resolves one source owner even when the selected region is unchecked.</summary>
+    /// <param name="selection">Source position and optional linked-file owner.</param>
+    /// <returns>The analyzed owning project path.</returns>
     public string EditorOwner(SourceSelection selection) => SelectPosition(selection, requireChecked: false).Project;
 
+    /// <summary>Computes compiler-owned completions using this snapshot's captured inputs.</summary>
+    /// <param name="selection">Completion insertion position, possibly in incomplete syntax.</param>
+    /// <param name="token">Cancels completion analysis.</param>
+    /// <returns>Checked candidates and the exact replacement range.</returns>
     public EditorCompletion Complete(SourceSelection selection, CancellationToken token = default)
     {
         var (project, _, offset, position) = SelectPosition(selection, requireChecked: false);
         return EditorAnalysis.Complete(projects[project].Input.Request, position.Span.Path, offset, token);
     }
 
+    /// <summary>Computes signature-help candidates at a call position.</summary>
+    /// <param name="selection">Source position in the argument list.</param>
+    /// <param name="token">Cancels signature analysis.</param>
+    /// <returns>Compiler-owned signatures and active-argument information.</returns>
     public EditorCallSignatures Signatures(SourceSelection selection, CancellationToken token = default)
     {
         var (project, _, offset, position) = SelectPosition(selection, requireChecked: false);
         return EditorAnalysis.Signatures(projects[project].Input.Request, position.Span.Path, offset, token);
     }
 
+    /// <summary>Reads documentation for an editor candidate's checked metadata or source identity.</summary>
+    /// <param name="selection">Position determining the owning compilation.</param>
+    /// <param name="identity">Optional metadata identity, preferred over a source span.</param>
+    /// <param name="declaration">Optional source declaration span.</param>
+    /// <param name="token">Cancels metadata documentation reads.</param>
+    /// <returns>Bounded Markdown-compatible text, or null when absent.</returns>
     public string? EditorDocumentation(SourceSelection selection, MetadataIdentity? identity, SourceSpan? declaration, CancellationToken token = default)
     {
         var (project, snapshot, _, _) = SelectPosition(selection, requireChecked: false);
@@ -95,6 +141,11 @@ public sealed partial class SourceQuery
         return symbol is null ? null : SourceDocumentation(Definition(project, symbol));
     }
 
+    /// <summary>Lists explicit public declarations whose containing owners remain accessible.</summary>
+    /// <param name="file">Source file path.</param>
+    /// <param name="token">Cancels declaration traversal.</param>
+    /// <param name="owningProject">Optional linked-file project selection.</param>
+    /// <returns>A bounded source-order signature view with coverage and omission counts.</returns>
     public EditorSignatures PublicSignatures(string file, CancellationToken token = default, string? owningProject = null)
     {
         var (project, snapshot, _, position) = SelectPosition(new(file, 1, 1, owningProject), requireChecked: false);
@@ -120,9 +171,17 @@ public sealed partial class SourceQuery
         }
     }
 
+    /// <summary>Inspects a declaration including its selected body text.</summary>
+    /// <param name="selection">Checked source position.</param>
+    /// <param name="token">Cancels inspection.</param>
+    /// <returns>The standard bounded inspection result with body text enabled.</returns>
     public SourceQueryResult EditorInspection(SourceSelection selection, CancellationToken token = default)
         => Inspect(selection, cancellationToken: token, includeBody: true);
 
+    /// <summary>Resolves a snapshot-local symbol through checked source/export mappings.</summary>
+    /// <param name="project">Analyzed project path.</param>
+    /// <param name="symbol">Symbol identity from that project's semantic snapshot.</param>
+    /// <returns>The canonical source, metadata or implicit definition.</returns>
     public DefinitionResult EditorDefinition(string project, string symbol) => Resolve(project, symbol);
 
     private string? SourceDocumentation(DefinitionResult definition)

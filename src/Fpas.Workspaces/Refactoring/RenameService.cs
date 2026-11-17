@@ -9,11 +9,21 @@ using System.Text;
 
 namespace Fpas.Workspaces.Refactoring;
 
+/// <summary>Pairs a portable checked rename plan with its detached edits.</summary>
+/// <param name="Plan">Versioned plan and its semantic/input identity.</param>
+/// <param name="Edits">Validated source changes.</param>
 public sealed record PreparedRename(RenamePlan Plan, TextEditSet Edits);
 
+/// <summary>Plans source-identity renames and revalidates plans without filesystem publication.</summary>
 public static class RenameService
 {
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+    /// <summary>Follows checked source identities and source interface relations, then verifies renamed bindings.</summary>
+    /// <param name="analysis">Successful complete context analysis.</param>
+    /// <param name="selection">Explicit source declaration or checked reference.</param>
+    /// <param name="newName">Unescaped simple identifier; keyword escaping is chosen automatically.</param>
+    /// <param name="token">Cancels planning and semantic verification.</param>
+    /// <returns>A checked plan and edits, bounded to 1,000 source edits and 4 MiB of plan data.</returns>
     public static PreparedRename Prepare(WorkspaceAnalysis analysis, SourceSelection selection, string newName, CancellationToken token = default)
     {
         var spelling = IdentifierFacts.Spell(newName); token.ThrowIfCancellationRequested();
@@ -106,6 +116,11 @@ public static class RenameService
         }
     }
 
+    /// <summary>Regenerates a plan and requires its context, input snapshot and identity to match exactly.</summary>
+    /// <param name="analysis">Current successful complete analysis.</param>
+    /// <param name="plan">Original checked rename plan.</param>
+    /// <param name="token">Cancels semantic regeneration.</param>
+    /// <returns>The matching regenerated plan and edits.</returns>
     public static PreparedRename Validate(WorkspaceAnalysis analysis, RenamePlan plan, CancellationToken token = default)
     {
         if (plan.Version != 1 || plan.Kind != "rename" || RenamePlanJson.Identity(plan) != plan.Id)
@@ -118,6 +133,10 @@ public static class RenameService
         return prepared;
     }
 
+    /// <summary>Rejects applying a plan to another context or configuration.</summary>
+    /// <param name="plan">Plan containing the original context.</param>
+    /// <param name="context">Requested project or solution path.</param>
+    /// <param name="configuration">Requested context configuration.</param>
     public static void ValidateContext(RenamePlan plan, string context, string configuration)
     {
         if (plan.Context != Path.GetFullPath(context) || plan.Configuration != configuration)

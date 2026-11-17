@@ -12,6 +12,7 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 // - `Height`: Viewport extent.
 // - `BuildRow`: Pure view factory called for each visible or overscan index.
 //   Interactive children must use IDs unique across the view.
+//   Declare open modal scopes outside the factory; realized content is checked before drawing.
 // - `Offset`: Last known logical scroll offset. The GUI restores it when the list appears.
 // - `OnScroll`: Maps a change from the supplied offset to a message. Store the reported value to preserve it across views.
 // ## Returns

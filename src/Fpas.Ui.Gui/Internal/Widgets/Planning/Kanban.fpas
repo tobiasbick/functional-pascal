@@ -62,6 +62,8 @@ begin
       Visit(
         Card.Content, Frame with
           AcceptInput := Enabled;
+          Interactive := Frame.Interactive and Settings.Enabled;
+          PaintingClosed := Frame.PaintingClosed or not Settings.Enabled;
         end with, false, L.Alignment.Default
       );
       Frame.Window.EndKanbanCard();

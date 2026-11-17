@@ -10,6 +10,8 @@ typedef struct {
     cui_id focus, active;
 } fpas_chrome_input;
 
+/** Saves frame key/pointer admission and focus/active identity, then masks them until resume.
+ * input must remain alive until the matching resume in the same frame. */
 static void fpas_chrome_pause(cui_ctx *ui, fpas_chrome_input *input) {
     memcpy(input->keys, ui->kpressed, sizeof input->keys);
     memcpy(input->pressed, ui->mpressed, sizeof input->pressed);
@@ -26,6 +28,7 @@ static void fpas_chrome_pause(cui_ctx *ui, fpas_chrome_input *input) {
     ui->focus = ui->active = 0;
 }
 
+/** Restores the exact frame input and identities saved by the matching pause. */
 static void fpas_chrome_resume(cui_ctx *ui, const fpas_chrome_input *input) {
     memcpy(ui->kpressed, input->keys, sizeof input->keys);
     memcpy(ui->mpressed, input->pressed, sizeof input->pressed);

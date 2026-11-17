@@ -40,8 +40,12 @@ internal sealed class XmlDocumentation(DocumentationInputs inputs, CancellationT
 
 }
 
+/// <summary>Projects native documentation markup into readable plain text.</summary>
 public static class DocumentationDisplay
 {
+    /// <summary>Preserves Markdown text or renders XML member sections and cross references.</summary>
+    /// <param name="documentation">Documentation text or explicit availability state.</param>
+    /// <returns>Readable text, or the parenthesized availability state when text is absent.</returns>
     public static string Text(DocumentationContent documentation)
     {
         if (documentation.Content is not { } content) return "(" + documentation.Availability + ")";

@@ -12,6 +12,8 @@ uses
   Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders,
   Fpas.Ui.Widgets.Collections.Trees as Trees,
+  Fpas.Ui.Widgets.Overlays.Veils as Veils,
+  Fpas.Ui.Widgets.Planning.Kanbans as Kanbans,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App,
   System as Sys;
@@ -45,6 +47,11 @@ begin
 end function;
 
 procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
+  procedure Assert(Condition: bool; Reason: string);
+  begin
+    Check(Condition, 'Container kind ' + Kind.ToString() + ': ' + Reason);
+  end procedure;
+
   function View(Open: bool; Viewport: L.Viewport): E.Element<bool>;
   begin
     const Dialog: E.Element<bool> := Dialogs.Dialog<bool>(
@@ -71,8 +78,24 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
         [0],
         function(Order: array of int): bool => true
       );
-      else Trees.Branch<bool>(
+      when 6..7: Trees.Branch<bool>(
         'branch', 'Branch', Kind = 6, [Dialog], function(Expanded: bool): bool => true
+      );
+      when 8..10: Veils.Veil<bool>(
+        'veil', Kind <> 9, function(Revealed: bool): bool => true, Dialog,
+        new Veils.Options(Enabled := Kind <> 10)
+      );
+      when 11..12: Kanbans.Kanban<bool>(
+        'board', [new Kanbans.Column<bool>('Column', [new Kanbans.Card<bool>(0, 'Card', Dialog)])],
+        function(Event: Kanbans.Event): bool => true, new Kanbans.Options(Enabled := Kind = 11)
+      );
+      else Nodes.NodeEditor<bool>(
+        'nodes',
+        new Nodes.View(),
+        [new Nodes.Node<bool>(0, 0.0F, 0.0F, 'Node', [], Body := Dialog)],
+        [],
+        function(Event: Nodes.Event): bool => true,
+        new Nodes.Options(Enabled := Kind = 13)
       );
     end case;
     return E.Column<bool>(
@@ -101,29 +124,33 @@ begin
     ),
     View, Window, 16, Inject
   );
-  Check(Session.Step(), 'The composed modal session closed unexpectedly.');
-  if Kind = 7 then
-    Check(Find(Session, 'inside') = null, 'A closed tree must not present its modal body.');
-    Check(
+  Assert(Session.Step(), 'The composed modal session closed unexpectedly.');
+  if Kind = 7 or Kind = 9 or Kind = 10 or Kind = 12 or Kind = 14 then
+    Assert(
+      Find(Session, 'inside') = null,
+      'A hidden or disabled container must not present its modal body.'
+    );
+    Assert(
       Control(Session, 'background').Enabled,
       'A hidden modal must not disable the background.'
     );
     return;
   end if;
 
-  Check(Control(Session, 'inside').Enabled, 'A composed modal must accept input.');
-  Check(Control(Session, 'modal/close').Enabled, 'A composed modal must allow dismissal.');
-  Check(
+  Assert(Control(Session, 'inside').Enabled, 'A composed modal must accept input.');
+  Assert(Control(Session, 'modal/close').Enabled, 'A composed modal must allow dismissal.');
+  Assert(Control(Session, 'modal/close').Focused, 'A composed modal must receive initial focus.');
+  Assert(
     not Control(Session, 'background').Enabled,
     'A composed modal must disable the background.'
   );
 
   Escape := true;
   discard Window.TryWake();
-  Check(Session.Step(), 'The composed modal did not process Escape.');
+  Assert(Session.Step(), 'The composed modal did not process Escape.');
   discard Window.TryWake();
-  Check(Session.Step(), 'The composed modal did not apply dismissal.');
-  Check(Control(Session, 'background').Enabled, 'Dismissal must restore background input.');
+  Assert(Session.Step(), 'The composed modal did not apply dismissal.');
+  Assert(Control(Session, 'background').Enabled, 'Dismissal must restore background input.');
 end procedure;
 
 // Exercises modal input ownership through graphical composition containers.
@@ -131,7 +158,7 @@ end procedure;
 // - `Renderer`: Native renderer used for every composed view.
 public procedure Verify(Renderer: Cui.CuiRenderer);
 begin
-  for Kind: int := 0 to 7 do
+  for Kind: int := 0 to 14 do
     VerifyContainer(Renderer, Kind);
   end for;
 end procedure;

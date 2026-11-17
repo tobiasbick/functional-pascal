@@ -11,6 +11,7 @@ public sealed partial class CuiWindow
     /// <param name="id">Stable workspace identity.</param>
     /// <param name="revision">Application restore revision.</param>
     /// <param name="layout">Saved native layout in dock1 format.</param>
+    /// <remarks>Forgetting the tracked workspace ends its revision history; a later workspace can apply the same revision again.</remarks>
     public void RestoreDockLayout(string id, int revision, string layout)
     {
         CheckFrame();

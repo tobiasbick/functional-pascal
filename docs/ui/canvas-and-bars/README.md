@@ -15,6 +15,7 @@ These widgets require the GUI host.
 | [Selection ring](selection-ring.md) | Outline a selection and show its owner's name. |
 | [Result card](result-card.md) | Show a picture with a caption and result status. |
 | [Selection bar](selection-bar.md) | Offer actions for a multi-item selection. |
+| [Custom canvas painting](painting.md) | Draw with the final canvas size and receive pointer or wheel events. |
 
 ## See also
 

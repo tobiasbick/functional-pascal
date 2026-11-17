@@ -4,6 +4,7 @@ using Fpas.Workspaces.Queries;
 
 namespace Fpas.Workspaces.Refactoring;
 
+/// <remarks>Parameter addition preserves existing direct-call bindings and argument evaluation order.</remarks>
 public static partial class CheckedRefactoring
 {
     private static IReadOnlyList<string> AddParameter(Draft draft, RefactoringRequest request, SourceSelection selection, SourceDocument source)

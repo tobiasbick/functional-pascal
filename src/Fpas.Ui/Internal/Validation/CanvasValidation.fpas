@@ -231,7 +231,7 @@ begin
       const Settings: Bulk.Options
     ):
       const Path: string := At(Id, 'selection-bar');
-      Text(Settings.CountFormat, Path);
+      R.CheckCountFormat(Settings.CountFormat, 1, Path + '/countFormat');
       case Selected of
         when Bulk.Selection.Count(const Count: int):
           if Count < 0 then

@@ -101,5 +101,6 @@ internal sealed class MetadataCatalog : IDisposable
         var definition = reader.GetTypeDefinition(handle); var access = definition.Attributes & TypeAttributes.VisibilityMask;
         return access == TypeAttributes.Public || access == TypeAttributes.NestedPublic && Public(reader, definition.GetDeclaringType());
     }
+    /// <inheritdoc/>
     public void Dispose() { foreach (var image in images.Values) image.Dispose(); }
 }

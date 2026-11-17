@@ -17,6 +17,8 @@ end procedure;
 
 Calls require addressable storage of the exact element type, with no numeric
 conversion. Locals passed to `out` must still be declared with an initializer.
+In `finally`, an `out` parameter must be assigned before entering `try` or
+inside the `finally` body before it is read; assignments in `try` can be interrupted.
 An ordinary CLR property is not addressable storage. Writable fields and array
 elements may be passed as appropriate. Source `const` bindings are not writable
 `ref`/`out` targets.

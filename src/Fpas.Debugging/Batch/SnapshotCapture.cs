@@ -3,24 +3,35 @@ using Fpas.Debugging.Hosting;
 
 namespace Fpas.Debugging.Batch;
 
-internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopped, BatchReport report, CancellationToken token)
+internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopped, BatchReport report, CancellationToken token, TimeSpan? budget = null)
 {
     private readonly Dictionary<string, string> objects = new(StringComparer.Ordinal);
     private int valueCount;
     private int reservedExpressions;
+    private readonly long started = System.Diagnostics.Stopwatch.GetTimestamp();
+    private CancellationToken Token
+    {
+        get
+        {
+            token.ThrowIfCancellationRequested();
+            if (budget is { } limit && System.Diagnostics.Stopwatch.GetElapsedTime(started) >= limit)
+                throw new DebugException("capture_limit", "The snapshot inspection budget was reached.");
+            return token;
+        }
+    }
     private long Stop => stopped.StopId ?? throw new DebugException("invalid_state", "No stopped context is available.");
 
     internal async Task Capture(string[] expressions)
     {
         if (stopped.Reason == "exception")
         {
-            var exception = await host.ExceptionInfo(Stop, token);
+            var exception = await host.ExceptionInfo(Stop, Token);
             report.Exception = new(exception.Type, exception.Message, exception.Policy, exception.Source, exception.ThrowStack, exception.Truncated, exception.Status);
         }
-        var threads = await host.Threads(Stop, token);
+        var threads = await host.Threads(Stop, Token);
         report.Capture.TotalThreads = threads.Length;
         var selected = threads.FirstOrDefault(item => item.IsStopThread);
-        var first = selected is null ? null : await host.Stack(new(Stop, selected.Id, Count: 1), token);
+        var first = selected is null ? null : await host.Stack(new(Stop, selected.Id, Count: 1), Token);
         var frame = first?.Items.FirstOrDefault();
         report.Stop = new(stopped.Reason ?? "stopped", selected?.Id, frame?.Source);
         reservedExpressions = expressions.Length;
@@ -30,7 +41,7 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
             if (frame is null) { report.Expressions.Add(new(expression, Error: new("unavailable", "The stop has no managed frame."))); continue; }
             try
             {
-                var result = await host.Evaluate(new(Stop, frame.Id, expression), token);
+                var result = await host.Evaluate(new(Stop, frame.Id, expression), Token);
                 report.Expressions.Add(new(expression, result.Value is null ? null : await Value(result.Value, 0), result.Error));
             }
             catch (DebugException failure) when (LocalFailure(failure)) { report.Expressions.Add(new(expression, Error: new(failure.Code, failure.Message))); }
@@ -39,7 +50,7 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
         foreach (var thread in threads.Take(64))
         {
             if (report.Frames.Count >= 256) { report.Capture.Omit("frames"); break; }
-            var stack = await host.Stack(new(Stop, thread.Id, Count: Math.Min(32, 256 - report.Frames.Count)), token);
+            var stack = await host.Stack(new(Stop, thread.Id, Count: Math.Min(32, 256 - report.Frames.Count)), Token);
             var clipped = stack.Truncated || stack.Total > stack.Items.Length;
             report.Threads.Add(new(thread.Id, thread.Name, thread.IsStopThread, stack.Total, stack.OmittedNativeChains, clipped));
             if (clipped) report.Capture.Omit("frames");
@@ -64,8 +75,8 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
     {
         for (var start = 0; start < 4096 && valueCount < 4096;)
         {
-            var page = scope == "statics" ? await host.StaticBindings(new(Stop, frame, Start: start, Count: 64), token)
-                : await host.FrameBindings(new(Stop, frame, Start: start, Count: 64), token);
+            var page = scope == "statics" ? await host.StaticBindings(new(Stop, frame, Start: start, Count: 64), Token)
+                : await host.FrameBindings(new(Stop, frame, Start: start, Count: 64), Token);
             foreach (var item in page.Items)
             {
                 if (valueCount >= 4096) { report.Capture.Omit("bindings"); break; }
@@ -90,7 +101,7 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
                 var view = value.SourceChildren is not null ? "source" : "raw";
                 try
                 {
-                    var page = await host.ValueChildren(new(Stop, reference, Count: 64, View: view), token);
+                    var page = await host.ValueChildren(new(Stop, reference, Count: 64, View: view), Token);
                     foreach (var item in page.Items)
                     {
                         if (valueCount + reservedExpressions >= 4096) { omission = "bindings"; break; }

@@ -8,7 +8,7 @@ uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions, Fpas.Ui.Gui.Internal
 // ## Parameters
 // - `Frame`: Current presentation context.
 // - `Id`: Stable widget identity.
-// - `Vote`: Current vote: minus one, zero or one. Null hides voting.
+// - `Vote`: Current vote: minus one, zero or one. Null leaves votes momentary.
 // - `Changed`: Maps a native action.
 // - `Settings`: Native options.
 public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Vote: int?; Changed: function(ResponseActions.Event): TMsg; Settings: ResponseActions.Options);

@@ -11,7 +11,11 @@ internal sealed partial class CoreClrSession
     private sealed partial class EvaluationContext
     {
         public DebugBinding MemberType(DebugBinding receiver, string name)
+            => MemberType(receiver, name, 0);
+
+        private DebugBinding MemberType(DebugBinding receiver, string name, int depth)
         {
+            if (depth >= 64) throw new DebugException("limit_exceeded", "Stored-field type lookup exceeds 64 base types.");
             var identity = receiver.RuntimeType;
             if (identity?.ModuleId is not { } moduleId || identity.Token is not { } token)
             {
@@ -40,9 +44,13 @@ internal sealed partial class CoreClrSession
             var definition = image.Metadata.GetTypeDefinition((TypeDefinitionHandle)MetadataTokens.Handle((int)token));
             if (definition.GetProperties().Any(handle => image.Metadata.StringComparer.Equals(image.Metadata.GetPropertyDefinition(handle).Name, name)))
                 throw new DebugException("requires_execution", "A custom property getter is outside passive inspection.");
+            if (shape is null && new StoredTypeSignature(image, moduleId, identity.Arguments ?? []).BaseType(token) is { } parent
+                && parent.Name is not ("System.Object" or "System.ValueType" or "System.Enum"))
+                return MemberType(TypeValue(parent), name, depth + 1);
             throw new DebugException("unresolved_name", $"No stored source field is named '{name}'.");
         }
 
-        private static DebugBinding TypeValue(DebugTypeIdentity type) => new("", type.Name, type.ElementKind == 2 ? "boolean" : "unknown", null, RuntimeType: type);
+        private static DebugBinding TypeValue(DebugTypeIdentity type) => type.ElementKind == 16 && type.Arguments is [var element] ? TypeValue(element)
+            : new("", type.Name == "System.Decimal" ? "decimal" : type.Name, type.ElementKind == 2 ? "boolean" : "unknown", null, RuntimeType: type);
     }
 }

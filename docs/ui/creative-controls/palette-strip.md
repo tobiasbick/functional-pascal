@@ -30,7 +30,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Swatches / Locked` | Supply one to sixteen colors. Each lock defaults to false. |
+| `Value.Swatches / Swatch.Locked` | Supply one to sixteen `Swatch` records with a color and optional lock. Each lock defaults to false. |
 | `Seed / NoShuffle` | null / false. Pass a seed to let CUI shuffle unlocked swatches. |
 | `Display / Height / Plain / Enabled` | Empty / 0 / false / true. Zero height uses the native size. |
 

@@ -1,7 +1,8 @@
 unit GuiGallery.Pages.Canvas.View;
 
 uses
-  GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture, GuiGallery.Shared.Sections as G,
+  GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture,
+  GuiGallery.Pages.Canvas.SampleBounds as SampleBounds, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M,
   Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Canvas.LiveCursors as Live,
   Fpas.Ui.Widgets.Canvas.PresencePills as P, Fpas.Ui.Widgets.Canvas.SelectionRings as R, Fpas.Ui.Widgets.Editors.NodeEditors as N,
@@ -89,7 +90,7 @@ begin
         12.0F,
         Colors.TextSecondary
       ),
-      184.0F
+      SampleBounds.NodeWidth
     ),
     new N.Node<State.Msg>(
       1,
@@ -98,7 +99,7 @@ begin
       'Negative',
       [new N.Pin(2, 'Avoid', true, 1)],
       E.FormattedText<State.Msg>('No text, no people', M.Font.Body, 12.0F, Colors.TextSecondary),
-      184.0F
+      SampleBounds.NodeWidth
     ),
     new N.Node<State.Msg>(
       2,
@@ -107,7 +108,7 @@ begin
       'Generate',
       [new N.Pin(3, 'Prompt', false, 1), new N.Pin(4, 'Avoid', false, 1)],
       E.FormattedText<State.Msg>('Steps 30 · dpm++ 2M', M.Font.Body, 12.0F, Colors.TextSecondary),
-      184.0F,
+      SampleBounds.NodeWidth,
       Ring := new R.Options(Tone := S.Tone.Warning, Name := 'Paul')
     )
   ];
@@ -125,10 +126,6 @@ begin
     State.Msg.Graph,
     new N.Options(Height := Height, HideGrid := not Model.Grid)
   );
-  const Bounds: C.Bounds := new C.Bounds(
-    Model.Positions[0].X, Model.Positions[0].Y,
-    Sys.MathF.Max(0.0F, Model.Positions[2].X + 184.0F - Model.Positions[0].X), 290.0F
-  );
   const Rail: E.Element<State.Msg> := C.CanvasControls<State.Msg>(
     'canvas-zoom',
     Model.Viewport,
@@ -138,7 +135,7 @@ begin
     ],
     State.Msg.Rail,
     Graph,
-    new C.Options(Content := Bounds)
+    new C.Options(Content := SampleBounds.Content(Model))
   );
   return E.Size<State.Msg>(
     E.Element<State.Msg>.Layered(

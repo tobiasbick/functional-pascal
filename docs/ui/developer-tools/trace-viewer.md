@@ -45,6 +45,7 @@ end unit;
 | `View.Start / End / Scroll` | Pass the visible time range in seconds and the vertical offset in points. |
 | `View.MarkStart / MarkEnd` | Pass the measured interval in seconds. |
 | `Width / Height / RowHeight / Enabled` | Fill / 0 / 0 / true. Zero uses native dimensions. |
+| `Links / Hovered` | Empty / null. Links connect indices in the sorted span array. Supply the previous Hovered value to enable hover-only proposals. |
 
 ## Interaction
 
@@ -52,6 +53,11 @@ Zoom with the wheel, pan by dragging and hold Shift while dragging to
 measure. Click a lane name to fold it. Save `Event.Viewport` and `Selection`.
 When `TrackIndex` is nonnegative, also update the indicated lane's
 `Collapsed` state.
+
+Use `Link.From` and `To` for dependencies between spans. Each link can set a
+tone, width and dashed style. `Event.Hovered` identifies the span or link
+under the pointer, with minus one for neither. Store it and pass it back through
+`Options.Hovered` when handling hover changes.
 
 ## See also
 

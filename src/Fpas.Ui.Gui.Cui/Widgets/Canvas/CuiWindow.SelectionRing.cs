@@ -4,11 +4,11 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Invokes the native SelectionRing operation.</summary>
-    /// <param name="tone">tone supplied to the native operation.</param>
-    /// <param name="rgba">rgba supplied to the native operation.</param>
-    /// <param name="name">name supplied to the native operation.</param>
-    /// <param name="radius">radius supplied to the native operation.</param>
+    /// <summary>Outlines the previous component with a collaborator's selection ring.</summary>
+    /// <param name="tone">Native semantic tone ordinal; zero uses CUI's default when no explicit color is supplied.</param>
+    /// <param name="rgba">Packed straight RGBA override, or zero to use the tone.</param>
+    /// <param name="name">Optional collaborator flag at the component's top end corner.</param>
+    /// <param name="radius">Corner radius in logical points, or zero to follow the component's corners.</param>
     public unsafe void SelectionRing(int tone, uint rgba, string? name, float radius)
     {
         CheckFrame();

@@ -2,6 +2,14 @@ unit Fpas.Ui.Gui.Internal.Hosting.Context;
 
 uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, System as Sys, System.Text as Text, System.Collections.Generic as C;
 
+// Identifies the animation revision whose completion the owner has delivered.
+public type AnimationCompletion = record
+  // Literal animated text.
+  public Text: string;
+  // Application replay revision.
+  public Replay: int;
+end record;
+
 // State shared by recursive drawing without application updates.
 //
 // ## Type parameters
@@ -33,7 +41,29 @@ public type State<TMsg> = record
   public ActiveModal: string?;
   // Draw a closing overlay without publishing its controls or opening nested layers.
   public PaintingClosed: bool := false;
+  // Whether this normal owner traversal may deliver non-input observations.
+  public ObserveTransitions: bool := true;
+  // Completed animation revisions retained across cached native repaints.
+  public CompletedAnimations: C.Dictionary<string, AnimationCompletion> := new C.Dictionary<string, AnimationCompletion>();
+  // Animations visible during this traversal, for removal reconciliation.
+  public SeenAnimations: C.HashSet<string> := new C.HashSet<string>();
 end record;
+
+// Retires completion observations for animations removed from a successful owner frame.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Successfully presented traversal and its retained animation observations.
+public procedure CommitAnimations<TMsg>(State: State<TMsg>);
+begin
+  if State.ObserveTransitions then
+    for Id: string in new C.List<string>(State.CompletedAnimations.Keys) do
+      if not State.SeenAnimations.Contains(Id) then
+        discard State.CompletedAnimations.Remove(Id);
+      end if;
+    end for;
+  end if;
+end procedure;
 
 // Encodes an unambiguous native/tracking identity.
 //

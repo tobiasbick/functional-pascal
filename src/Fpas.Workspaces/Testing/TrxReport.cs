@@ -5,17 +5,47 @@ using System.Xml.Linq;
 
 namespace Fpas.Workspaces.Testing;
 
+/// <summary>Contains validated native test-result counts.</summary>
+/// <param name="Total">Total leaf cases.</param>
+/// <param name="Passed">Passed leaf cases.</param>
+/// <param name="Failed">Failed leaf cases.</param>
+/// <param name="Skipped">Leaf cases reported NotExecuted.</param>
 public sealed record TestCounts(int Total, int Passed, int Failed, int Skipped);
+/// <summary>Preserves one native TRX leaf-case result.</summary>
+/// <param name="Name">Native case display name.</param>
+/// <param name="FullyQualifiedName">Method identity from test definitions, when present.</param>
+/// <param name="Outcome">Native outcome text.</param>
+/// <param name="Duration">Native duration text, when present.</param>
+/// <param name="Output">Case standard output.</param>
+/// <param name="ErrorOutput">Case standard error.</param>
+/// <param name="Error">Failure explanation.</param>
+/// <param name="StackTrace">Native failure stack trace.</param>
 public sealed record TestCaseResult(string Name, string? FullyQualifiedName, string Outcome, string? Duration, string? Output, string? ErrorOutput, string? Error, string? StackTrace)
 {
+    /// <summary>Gets the native TRX test identifier, when present.</summary>
     public string? Id { get; init; }
 }
+/// <summary>Preserves a native runner-level message.</summary>
+/// <param name="Outcome">Native message severity or outcome.</param>
+/// <param name="Text">Message text.</param>
 public sealed record TestRunMessage(string Outcome, string Text);
+/// <summary>Contains validated TRX cases, counters and runner-level failures.</summary>
+/// <param name="Counts">Validated leaf-case counts.</param>
+/// <param name="Tests">Native leaf-case results, excluding data-container duplicates.</param>
+/// <param name="Outcome">Native summary outcome.</param>
+/// <param name="Messages">Runner-level messages.</param>
+/// <param name="Output">Summary standard output.</param>
+/// <param name="ErrorOutput">Summary standard error.</param>
 public sealed record TrxReport(TestCounts Counts, IReadOnlyList<TestCaseResult> Tests, string Outcome,
     IReadOnlyList<TestRunMessage> Messages, string? Output, string? ErrorOutput)
 {
+    /// <summary>Gets whether every case passed or skipped and the native runner completed without errors.</summary>
     public bool Success => Counts.Failed == 0 && (long)Counts.Passed + Counts.Skipped == Counts.Total &&
         (Outcome is "Completed" or "Passed") && !Messages.Any(message => message.Outcome == "Error");
+    /// <summary>Reads bounded native TRX XML and rejects inconsistent counters or missing cases.</summary>
+    /// <param name="path">Native results.trx artifact path.</param>
+    /// <param name="token">Cancels case traversal.</param>
+    /// <returns>The validated native report.</returns>
     public static TrxReport Read(string path, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();

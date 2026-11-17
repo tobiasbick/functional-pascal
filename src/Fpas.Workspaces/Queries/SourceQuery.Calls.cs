@@ -3,6 +3,7 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <remarks>Call queries follow checked static targets and never infer runtime delegate or virtual dispatch targets.</remarks>
 public sealed partial class SourceQuery
 {
     private static readonly CallOperationPolicy OperationPolicy = new("explicit_source_operations_v1",
@@ -11,6 +12,14 @@ public sealed partial class SourceQuery
     private sealed record CallTarget(QuerySelection Position, string Project, SemanticSnapshot Snapshot,
         DefinitionResult? Definition, SourceBody? Body, MetadataIdentity? Operation, string? Key, string? Failure);
 
+    /// <summary>Finds explicit source operations outgoing from or incoming to a checked callable.</summary>
+    /// <param name="operation">callees or callers.</param>
+    /// <param name="selection">Exact target position.</param>
+    /// <param name="body">Whether to select the innermost executable body rather than the callable target.</param>
+    /// <param name="limit">Maximum returned sites, 1..1,000.</param>
+    /// <param name="offset">Nonnegative sorted-site offset.</param>
+    /// <param name="cancellationToken">Cancels index construction and search.</param>
+    /// <returns>A site page, operation policy and unresolved/excluded summaries.</returns>
     public SourceQueryResult Calls(string operation, SourceSelection selection, bool body = false, int limit = 100, int offset = 0,
         CancellationToken cancellationToken = default)
         => CallsCore(operation, selection, body, limit, offset, cancellationToken) with { Coverage = coverage };

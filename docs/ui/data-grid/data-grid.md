@@ -50,6 +50,10 @@ allows multiple selections. Double-click an editable cell to start editing.
 Its commit mapper reports the text. Store row selections by stable identity
 when sorting or filtering changes their positions.
 
+Declare open modal scopes outside the row factory. The GUI validates realized
+`Content` children and `Editable` leading children before drawing them and
+rejects open dialogs, sheets, command palettes and file pickers there.
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Collections/DataGrids.fpas)

@@ -21,6 +21,12 @@ reconciliation only handles external model replacements; CUI owns draft validati
 and commit/blur formatting. Tag limits and searchable-select dismissal also remain
 native.
 
+Property text rows retain the previous proposal to distinguish ordinary editing
+from external model replacements. A changed value or capacity resets native
+selection and undo history. The inspector owns these bindings and retires them
+with their native input state when a row disappears or the inspector is forgotten;
+whole-context destruction releases the binding memory without recursive state removal.
+
 The single-date calendar and date picker expose up to 45 native parts: 42 day
 cells and the title/page arrows, or twelve month/year choices and those three
 header controls. Their adapters use CUI's stable navigation IDs across views.

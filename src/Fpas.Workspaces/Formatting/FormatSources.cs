@@ -13,6 +13,11 @@ public static class FormatSources
     private static readonly HashSet<string> IgnoredDirectories = new([".git", ".temp-data", "bin", "obj", "node_modules"], StringComparer.OrdinalIgnoreCase);
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
+    /// <summary>Collects source files from explicit files, directories or evaluated project ownership.</summary>
+    /// <param name="inputs">FPAS files, directories, projects or solutions.</param>
+    /// <param name="configuration">Configuration for evaluated Compile items.</param>
+    /// <param name="cancellationToken">Cancels traversal and evaluation.</param>
+    /// <returns>Unique absolute source paths in ordinal order.</returns>
     public static async Task<IReadOnlyList<string>> CollectAsync(IReadOnlyList<string> inputs, string configuration,
         CancellationToken cancellationToken = default)
     {
@@ -34,6 +39,8 @@ public static class FormatSources
         return Array.AsReadOnly(files.Order(StringComparer.Ordinal).ToArray());
     }
 
+    /// <summary>Rejects symbolic links and reparse points in an existing input path.</summary>
+    /// <param name="path">Source or directory path to validate.</param>
     public static void ValidateRegularPath(string path)
         => SourcePublication.ValidateRegularPath(path);
 

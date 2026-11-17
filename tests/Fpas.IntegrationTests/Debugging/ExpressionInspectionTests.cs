@@ -7,6 +7,48 @@ namespace Fpas.IntegrationTests.Debugging;
 
 public sealed class ExpressionInspectionTests
 {
+    /// <summary>Checks skipped generic bindings when their type is available independently of stored contents.</summary>
+    /// <param name="optimized">Whether the target uses full optimization and must expose an unavailable local.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Skipped_generic_method_arguments_and_locals_use_the_actual_type_without_requiring_stored_values(bool optimized)
+    {
+        using var program = new Debuggee("own-skipped-generic-types");
+        await program.Compile("""
+            program GenericTypes;
+            uses System.Console as Console, System.Runtime.CompilerServices as Runtime;
+            [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
+            procedure Observe<T>(Value: T);
+            begin
+              const Removed: T := Value;
+              Console.WriteLine(cast<object?>(Value));
+            end procedure;
+            begin Observe<int>(42); end;
+            end program;
+            """, optimized ? ["--optimize"] : []);
+        if (optimized) program.UseFullyOptimizedJit();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var launcher = WorkerLauncher.ForAssembly(TestEnvironment.Metadata("FpasCliPath"), BuildProcess.DotnetHost());
+        await using var host = await DebugSessionHost.Start(launcher, program.DirectoryPath, deadline.Token);
+        await host.Prepare(new(BuildProcess.DotnetHost(), program.Assembly, program.DirectoryPath, new(program.Source, 7)), deadline.Token);
+        await host.Initialize(deadline.Token); var stop = await host.WaitForStop(deadline.Token);
+        Assert.Equal("breakpoint", stop.Reason);
+        var thread = Assert.Single(await host.Threads(stop.StopId!.Value, deadline.Token), item => item.IsStopThread);
+        var frame = (await host.Stack(new(stop.StopId.Value, thread.Id), deadline.Token)).Items[0];
+        if (optimized)
+            Assert.Equal("optimized_out", Assert.Single((await host.FrameBindings(new(stop.StopId.Value, frame.Id), deadline.Token)).Items,
+                item => item.Name == "Removed").Status);
+        foreach (var expression in new[] { "false and (Value = 0)", "false and (Removed = 0)" })
+        {
+            var result = await host.Evaluate(new(stop.StopId.Value, frame.Id, expression), deadline.Token);
+            Assert.Null(result.Error); Assert.Equal("false", result.Value?.Scalar);
+        }
+        await host.Resume(stop.StopId.Value, "continue", deadline.Token);
+        Assert.Equal(0, (await host.WaitForStop(deadline.Token)).ExitCode);
+        await host.Stop(deadline.Token);
+    }
+
     [Fact]
     public async Task Passive_expressions_read_one_stop_follow_fpas_scalar_rules_and_isolate_errors()
     {
@@ -60,6 +102,10 @@ public sealed class ExpressionInspectionTests
             ("false and (1 / 0 > 0.0)", "bool", "false"),
             ("-2147483648", "int", "-2147483648"), ("-9223372036854775808L", "long", "-9223372036854775808"),
             ("false and (1 div 0 = 0)", "bool", "false"), ("true or (1 div 0 = 0)", "bool", "true"), ("true xor false", "bool", "true"),
+            ("false and (NativeUnsigned + 1 = NativeUnsigned)", "bool", "false"),
+            ("true or (1 + NativeUnsigned = NativeUnsigned)", "bool", "true"),
+            ("false and (1UL + 1 = 2UL)", "bool", "false"),
+            ("false and (Amount + 1.25M = Amount)", "bool", "false"),
             ("(false and false) or true", "bool", "true"), ("false and (false or true)", "bool", "false"),
             ("false and (Points[1 div 0].X = 0)", "bool", "false"),
             ("'it''s' + #10", "string", "it's\n"), ("'first\r\nsecond\rlast''line'", "string", "first\nsecond\nlast'line"),
@@ -78,6 +124,8 @@ public sealed class ExpressionInspectionTests
         {
             ("Value div 0", "division_by_zero"), ("int.MaxValue + 1", "overflow"),
             ("Amount + 1.0", "unsupported_expression"), ("false and 1", "unsupported_expression"), ("Values[3]", "index_out_of_range"),
+            ("false and (NativeUnsigned + -1 = NativeUnsigned)", "unsupported_expression"),
+            ("false and (1 shl NativeUnsigned = 0)", "unsupported_expression"),
             ("false and (false) or true", "invalid_expression"),
             ("Text[-1]", "index_out_of_range"), ("value", "unresolved_name"), ("Position + Position", "unsupported_expression"),
             ("array", "unsupported_expression"),

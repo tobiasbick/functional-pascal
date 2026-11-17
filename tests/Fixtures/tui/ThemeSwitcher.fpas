@@ -278,6 +278,22 @@ begin
   );
 end procedure;
 
+procedure DefaultPalette();
+begin
+  const DefaultColors: array of uint := Themes.Rgba(new Themes.Theme());
+  const NeutralColors: array of uint := Themes.Rgba(Themes.Light());
+  Check(
+    DefaultColors.Length = NeutralColors.Length,
+    'Default and neutral palettes differ in size.'
+  );
+  for Index: int := 0 to DefaultColors.Length - 1 do
+    Check(
+      DefaultColors[Index] = NeutralColors[Index],
+      'Default theme differs from neutral light at token ' + Index.ToString()
+    );
+  end for;
+end procedure;
+
 procedure Validation();
 begin
   for Target: V.Target in [V.Target.Terminal, V.Target.Graphical] do
@@ -313,6 +329,7 @@ begin
 end procedure;
 
 begin
+  DefaultPalette();
   Validation();
   Behavior();
   Console.WriteLine('Theme switcher contracts verified');

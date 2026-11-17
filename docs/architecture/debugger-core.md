@@ -19,7 +19,10 @@ The public frontends are batch, stdio DAP and optional automatic
 The run frontend shares batch identity checks and snapshot capture, atomically
 publishes the first unhandled-exception report before resuming, and then observes
 the natural target exit. It never replays target execution. Snapshot inspection
-has a ten-second budget; interrupted captures retain issues and omissions.
+has a ten-second budget checked between bounded inspection requests; an in-flight
+request retains its ordinary deadline. Budget exhaustion saves an incomplete
+capture and resumes the original target. External cancellation and individual
+operation failures still end the session.
 Editor-specific extensions and
 configuration are outside this debugger. Public attach, dump inspection, Native
 AOT targets, native/mixed-mode debugging, mutation, managed function evaluation,

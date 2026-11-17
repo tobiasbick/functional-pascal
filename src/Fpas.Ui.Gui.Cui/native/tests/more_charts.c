@@ -128,13 +128,14 @@ static int disabled_wheel(bool bridge) {
 /* A ribbon click reports the original link index, including skipped inputs. */
 static int sankey_click(bool bridge) {
     sample s=create(720,false);int result=-1;
+    /* Direct CUI borrows these arrays until cui_end_frame paints the chart. */
+    const char *names[]={"Source","Paid"};cui_sankey_link links[]={{0,1,0},{0,1,42}};
+    fpas_sankey_node nodes[]={{"Source"},{"Paid"}};int node;
     for(int frame=0;frame<6;frame++){
         if(frame>=3)cui_input_mouse_move(s.ui,300,120);
         if(frame==4||frame==5)cui_input_mouse_button(s.ui,CUI_MOUSE_LEFT,frame==4);
         cui_begin_frame(s.ui,.04f);
         cui_column(s.ui,.pad=16){
-            const char *names[]={"Source","Paid"};cui_sankey_link links[]={{0,1,0},{0,1,42}};
-            fpas_sankey_node nodes[]={{"Source"},{"Paid"}};int node;
             if(bridge)result=fpas_cui_sankey(s.ui,"flow",nodes,2,links,2,1,0,220,0,NULL,1,&node);
             else result=cui_sankey(s.ui,"flow",names,2,links,2,.height=220);
         }

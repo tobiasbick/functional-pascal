@@ -24,6 +24,10 @@ Preflight validates the view before rendering. Logical distances map to cells:
 distances. Content/fill allocation, weighted growth, shrinkage, size bounds and
 cross-axis alignment follow the shared CUI layout subset.
 
+Standalone zero-width format characters and combining marks without a visible
+base render as spaces. Combining marks, joiners and variation selectors within
+visible grapheme clusters remain intact.
+
 The host retains prepared subviews, allocation data and unchanged painted rows.
 An equivalent frame keeps its presentation sequence while installing current
 input bindings. Resize resolves the new viewport without invalidating unrelated

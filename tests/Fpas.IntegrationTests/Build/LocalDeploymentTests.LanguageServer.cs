@@ -1,6 +1,5 @@
 using Fpas.IntegrationTests.LanguageServer;
 using Fpas.Tests.Support;
-using System.Security.Cryptography;
 using System.Text.Json;
 using static Fpas.IntegrationTests.LanguageServer.LspFeatureTests;
 
@@ -35,6 +34,6 @@ public sealed partial class LocalDeploymentTests
         }
 
         static string[] Fingerprints(string root) => Directory.GetFiles(root, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
-            .Select(path => path + ":" + File.GetLastWriteTimeUtc(path).Ticks + ":" + Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)))).ToArray();
+            .Select(path => path + ":" + File.GetLastWriteTimeUtc(path).Ticks + ":" + FileHash.Sha256(path)).ToArray();
     }
 }

@@ -37,12 +37,17 @@ end unit;
 | --- | --- |
 | `Width / Height / Enabled` | Fill / 120 logical points / true. |
 | `Drawing` | Rectangles, circles and lines in paint order. |
+| `Paint` | null. An optional owner-thread callback draws after layout with the final canvas size. |
+| `OnWheel / OnPointer` | Both null. Opt in to wheel ownership or changed hover and press notifications. |
 
 ## Interaction
 
 The click message carries the pointer position and canvas size in local
 logical points. In the gallery, each swatch maps its click to a selection
 index. The update stores that index and the next view draws its ring.
+
+Use [custom canvas painting](../canvas-and-bars/painting.md) for text,
+images and other drawing primitives, or to observe pointer and wheel input.
 
 ![Canvas swatches after selecting blue](images/canvas-selected.png)
 

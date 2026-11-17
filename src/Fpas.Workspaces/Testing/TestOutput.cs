@@ -8,11 +8,16 @@ using System.Text;
 
 namespace Fpas.Workspaces.Testing;
 
+/// <summary>Captures test output identity and verified portable-symbol method locations.</summary>
 public sealed class TestOutput
 {
     private readonly Dictionary<string, SourceLocation?> methods = new(StringComparer.Ordinal);
+    /// <summary>Gets the project enriched with output identity and stale-source state.</summary>
     public TestProject Project { get; private set; }
 
+    /// <summary>Inspects an existing test output without loading its code.</summary>
+    /// <param name="project">Evaluated output and native runner selection.</param>
+    /// <param name="token">Cancels hashing and metadata traversal.</param>
     public TestOutput(TestProject project, CancellationToken token)
     {
         TestDriver.RequireOutput(project);
@@ -77,9 +82,14 @@ public sealed class TestOutput
         { methods.Clear(); Project = Project with { StaleSources = true }; }
     }
 
+    /// <summary>Attaches only unambiguous method locations with verified source checksums.</summary>
+    /// <param name="tests">Native discovery results.</param>
+    /// <returns>Detached discovery records with available source locations.</returns>
     public IReadOnlyList<DiscoveredTest> AttachLocations(IReadOnlyList<DiscoveredTest> tests)
         => tests.Select(test => test with { Location = methods.GetValueOrDefault(test.FullyQualifiedName) }).ToArray();
 
+    /// <summary>Rejects output changes during discovery or execution.</summary>
+    /// <param name="token">Cancels output hashing.</param>
     public void Verify(CancellationToken token)
     {
         if (Identity(Project, token) != Project.OutputIdentity)

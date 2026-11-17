@@ -33,6 +33,9 @@ internal static class ExpressionStack
         BoundConversion conversion => Depth(conversion.Operand),
         BoundUnary unary => Math.Max(2, Depth(unary.Operand) +
             (unary.Operator == "-" && unary.Checked && NumericFacts.Integral(unary.Type) ? 1 : 0)),
+        BoundBinary { Operator: "shl" or "shr" } binary => Math.Max(
+            binary.Left.Type.Kind is TypeKind.NativeInt or TypeKind.NativeUInt ? 4 : 3,
+            Math.Max(Depth(binary.Left), Depth(binary.Right) + 1)),
         BoundBinary binary => Math.Max(Depth(binary.Left),
             Depth(binary.Right) + (binary.Left.Type == TypeSymbol.Boolean && binary.Operator is "and" or "or" ? 0 : 1)),
         BoundConditional conditional => conditional.Arms.Select(arm => Math.Max(Depth(arm.Condition), Depth(arm.Value)))

@@ -119,7 +119,7 @@ requires Capacity > 0;
     Window.CapturePng(Path);
   end procedure;
 
-  function Context(Candidate: V.Prepared<TMsg>; Accept: bool): C.State<TMsg>;
+  function Context(Candidate: V.Prepared<TMsg>; Accept: bool; ObserveTransitions: bool): C.State<TMsg>;
   begin
     const Last: App.Frame? := Published;
     const Previous: array of App.Control := if Last = null then
@@ -140,7 +140,9 @@ requires Capacity > 0;
       Previous,
       Accept and Modal = null,
       Accept,
-      Modal
+      Modal,
+      ObserveTransitions := ObserveTransitions,
+      CompletedAnimations := CompletedAnimations
     );
   end function;
 
@@ -151,12 +153,12 @@ requires Capacity > 0;
       return;
     end if;
 
-    P.Draw<TMsg>(Context(Cached, false));
+    P.Draw<TMsg>(Context(Cached, false, false));
   end procedure;
 
   procedure Paint(Candidate: V.Prepared<TMsg>; Accept: bool; Size: Cui.CuiSize);
   begin
-    const State: C.State<TMsg> := Context(Candidate, Accept);
+    const State: C.State<TMsg> := Context(Candidate, Accept, Cleanup = null);
     P.Draw<TMsg>(State);
     KeyBindings.Collect<TMsg>(Window, Bindings, Accept, State.Messages);
     Focus.Clear();
@@ -165,6 +167,7 @@ requires Capacity > 0;
     end while;
 
     Window.Present();
+    C.CommitAnimations<TMsg>(State);
     FrameControls.Resolve(Window, State.Controls);
 
     Tooltip.Collect<TMsg>(State);
@@ -332,14 +335,7 @@ requires Capacity > 0;
       end if;
 
       if Cleanup = null and ReadSystemAppearance then
-        const Dark: bool? := Window.SystemDark;
-        const Appearance: Themes.Mode? := if Dark = null then
-          null
-        elsif Dark.Value then
-          Themes.Mode.Dark
-        else
-          Themes.Mode.Light
-        end if;
+        const Appearance: Themes.Mode? := ThemeApplication.Appearance(Window);
         if Appearance <> SystemAppearance then
           SystemAppearance := Appearance;
           Dirty := true;
@@ -421,6 +417,7 @@ begin
   );
   const ActiveToasts: Generic.Dictionary<int, Toasts.Request<TMsg>> := new Generic.Dictionary<int, Toasts.Request<TMsg>>();
   const Modals: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
+  const CompletedAnimations: Generic.Dictionary<string, C.AnimationCompletion> := new Generic.Dictionary<string, C.AnimationCompletion>();
   const Core: Runtime.Runtime<TModel, TMsg, bool> := Runtime.Start<TModel, TMsg, bool>(
     InitialModel, Update,
     procedure(Request: Mvu.HostRequest) begin

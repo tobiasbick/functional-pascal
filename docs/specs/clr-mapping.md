@@ -44,7 +44,7 @@ that engineering choice is separate from source syntax.
 | Top-level const / var | Static readonly / mutable static field on the container |
 | Language record | Sealed class with read-only properties and an all-fields constructor |
 | Record instance / static method | Instance method with self / static method without self |
-| Language variant | Public abstract closed-in-source base class with generated sealed case classes |
+| Language variant | Abstract closed-in-source base class with source visibility and generated sealed case classes |
 | CLR enum | Enum type and chosen integral underlying type |
 | Vector / rectangular / jagged array | Actual corresponding CLR array type |
 | Callable shorthand | Matching Func/Action delegate type |
@@ -492,8 +492,8 @@ not source identifiers and cannot collide with a user-defined Main routine.
 Forward command-line arguments to the program body's `args` binding.
 
 The CLR owns GC, execution, stack unwinding, and task infrastructure. Deployment
-and compilation-mode selection are deferred. Running managed FPAS code does not
-imply sandboxing or process isolation.
+and compilation modes follow the [publishing contract](../build/publishing.md).
+Running managed FPAS code does not imply sandboxing or process isolation.
 
 Emit portable PDB sequence points for user statements and source spans for
 diagnostics. Closure/async-generated methods require appropriate debug metadata;

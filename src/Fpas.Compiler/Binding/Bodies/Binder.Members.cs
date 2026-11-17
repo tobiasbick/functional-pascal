@@ -53,6 +53,8 @@ internal sealed partial class Binder
     private BoundExpression Receiver(ExpressionSyntax syntax, bool check = true)
     {
         var receiver = BindExpression(syntax, check);
+        if (receiver.Type.Kind is TypeKind.Void or TypeKind.Unsupported || receiver is BoundMethodGroup)
+            throw source.Error("FP3002", "A receiver requires a supported value.", syntax.Position);
         if (receiver.Type.CanHaveNull && receiver.Type.NeedsNullCheck)
             throw source.Error("FP3013", "The receiver may be null; check a stable local/parameter first or use coalescing.", syntax.Position);
         return receiver;

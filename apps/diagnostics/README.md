@@ -26,12 +26,12 @@ dotnet apps/diagnostics/Workload/bin/Release/net10.0/Workload.dll bench cpu 1000
 ```
 
 `cpu` repeatedly sums squares from 0 through 32767; one batch must produce
-11727587164160. `alloc` creates 512 byte arrays of 8192 bytes, retaining at most
-32 at once; the sum of the last byte of each array must be 62795. Each batch is
-checked. The allocation workload includes queue growth and GC work; it does not
-measure raw array allocation in isolation. Both modes accept a bounded duration
-in milliseconds. Fixed-loop `bench` accepts rounds, warmup, sample count, a fresh
-CSV filename, label and `local`/`cloud` environment. Timed samples exclude their
+11727587164160. `alloc` creates 512 byte arrays of 8192 bytes, keeping the latest
+32 in a queue between iterations; the sum of the last byte of each array must be
+62795. Each batch is checked. The allocation workload includes queue growth and
+GC work; it does not measure raw array allocation in isolation. Both modes accept
+a bounded duration in milliseconds. Fixed-loop `bench` accepts rounds, warmup,
+sample count, a fresh CSV filename, label and `local`/`cloud` environment. Timed samples exclude their
 result check and report the computed checksum.
 
 `noop` writes `verified:noop` and exits. `fault READY RELEASE` captures a real

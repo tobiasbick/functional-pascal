@@ -8,6 +8,7 @@ public sealed partial class CuiWindow
     /// <param name="label">CUI label including its stable identity suffix.</param>
     /// <param name="enabled">Whether the control accepts pointer and keyboard input.</param>
     /// <returns>Whether the button was activated.</returns>
+    /// <remarks>Use the overload with a separate identity when requesting focus through <see cref="RequestFocus"/>.</remarks>
     public bool Button(string label, bool enabled = true)
     {
         CheckFrame(); Utf8.Validate(label, nameof(label));

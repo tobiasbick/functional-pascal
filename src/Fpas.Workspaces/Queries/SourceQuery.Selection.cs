@@ -3,6 +3,7 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <remarks>Source selections require unambiguous physical ownership and checked-region availability when requested.</remarks>
 public sealed partial class SourceQuery
 {
     private (string Project, SemanticSnapshot Snapshot, int Offset, QuerySelection Position) SelectPosition(SourceSelection selection, bool requireChecked = true)

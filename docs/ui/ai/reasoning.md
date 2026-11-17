@@ -43,6 +43,10 @@ Click the heading to toggle the disclosure. Keep the summary and elapsed
 time in the application model. CUI retains the open state for the mounted
 panel.
 
+Declare dialogs, sheets, command palettes and file pickers outside the reasoning
+body. Validation rejects these modal declarations inside the body even when
+they are closed, because CUI owns its disclosure state.
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Ai/Reasonings.fpas)

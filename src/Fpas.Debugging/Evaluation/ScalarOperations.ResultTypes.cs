@@ -25,9 +25,11 @@ internal static partial class ScalarOperations
         if (left.Type == "string" && right.Type == "string" && op is "+" or "=" or "<>")
             return new("", op == "+" ? "string" : "bool", op == "+" ? "string" : "boolean", null);
         if (op == "+" && (left.Type == "string" && right.Type == "char" || left.Type == "char" && right.Type == "string")) return new("", "string", "string", null);
-        var kind = BinaryKind(left with { Constant = false }, op, right with { Constant = false });
+        var kind = BinaryKind(left, op, right);
         if (kind == 0 || op is "and" or "or" or "xor" or "div" or "mod" or "shl" or "shr" && (!Integral(kind) || !Integral(Kind(right.Type)))
             || op == "/" && kind is not (12 or 13 or 80)) throw Error("The numeric operator does not accept these types.");
+        if (op is "shl" or "shr" && !Widens(Kind(right.Type), 8) && !(right.Constant && Fits(Number(right), 8)))
+            throw Error("A shift count must convert implicitly to int.");
         return Comparison(op) ? new("", "bool", "boolean", null) : TypeValue(kind);
     }
 

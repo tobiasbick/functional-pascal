@@ -6,22 +6,48 @@ using System.Text;
 
 namespace Fpas.Workspaces.Loading;
 
+/// <summary>Describes a project preparation or capture failure.</summary>
+/// <param name="Project">Affected project path.</param>
+/// <param name="Code">Stable failure code.</param>
+/// <param name="Message">Failure explanation.</param>
+/// <param name="OutputTruncated">Whether supporting process output exceeded its budget.</param>
 public sealed record ContextIssue(string Project, string Code, string Message, bool OutputTruncated = false);
+/// <summary>Contains one evaluated FPAS compilation and its reachable dependencies.</summary>
+/// <param name="Path">Absolute project path.</param>
+/// <param name="Configuration">Evaluated project configuration.</param>
+/// <param name="Id">Identity of the project path/configuration pair.</param>
+/// <param name="Request">Captured compiler analysis inputs.</param>
+/// <param name="Dependencies">Transitively reachable project paths.</param>
 public sealed record ContextProject(string Path, string Configuration, string Id, AnalysisRequest Request, IReadOnlyList<string> Dependencies);
+/// <summary>Maps a resolved dependency assembly to its owning project.</summary>
+/// <param name="Project">Producing project path.</param>
+/// <param name="Path">Logical assembly output path.</param>
 public sealed record PreparationOutput(string Project, string Path);
 
+/// <summary>Retains evaluated project inputs, text ownership and verification identities.</summary>
 public sealed class WorkspaceContext
 {
+    /// <summary>Gets the selected absolute project or solution path.</summary>
     public string Path { get; }
+    /// <summary>Gets the selected context configuration.</summary>
     public string Configuration { get; }
+    /// <summary>Gets the identity of captured inputs and semantic policies.</summary>
     public string SnapshotId { get; }
+    /// <summary>Gets whether context preparation performed restore.</summary>
     public bool RestorePerformed { get; }
+    /// <summary>Gets the retained preparation policy.</summary>
     public ContextPreparation Preparation { get; }
+    /// <summary>Gets whether preparation permits dependency builds.</summary>
     public bool DependencyBuildsAllowed => Preparation == ContextPreparation.BuildDependencies;
+    /// <summary>Gets captured FPAS compilations.</summary>
     public IReadOnlyList<ContextProject> Projects { get; }
+    /// <summary>Gets explicit preparation and capture failures.</summary>
     public IReadOnlyList<ContextIssue> Issues { get; }
+    /// <summary>Gets requested FPAS project paths, including unavailable projects.</summary>
     public IReadOnlyList<string> RequestedProjects { get; }
+    /// <summary>Gets resolved dependency outputs and their owning projects.</summary>
     public IReadOnlyList<PreparationOutput> DependencyOutputs { get; }
+    /// <summary>Gets one consistent captured text per physical source path.</summary>
     public WorkspaceTextSnapshot Texts { get; }
     private readonly IReadOnlyDictionary<string, string> inputs;
 
@@ -42,6 +68,9 @@ public sealed class WorkspaceContext
             configuration + "\n" + string.Join('\n', semantics) + "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)));
     }
 
+    /// <summary>Rechecks captured file contents and reevaluates project inputs using the retained preparation policy.</summary>
+    /// <param name="cancellationToken">Cancels file checks and context reevaluation.</param>
+    /// <returns>A task completing when both content and evaluated snapshot identity still match.</returns>
     public async Task VerifyInputsAsync(CancellationToken cancellationToken = default)
     {
         VerifyFiles(cancellationToken);

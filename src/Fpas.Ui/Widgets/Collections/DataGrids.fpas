@@ -73,7 +73,7 @@ end record;
 // - `Id`: Stable grid identity.
 // - `Columns`: Column descriptors in display order.
 // - `Count`: Total row count.
-// - `BuildRow`: Pure view factory for one display position.
+// - `BuildRow`: Pure view factory for one display position. Declare open modal scopes outside row/cell factories.
 // - `Current`: Model-owned selection, sort, cursor and anchor.
 // - `OnChange`: Maps a native state proposal to a message.
 // - `Settings`: Optional viewport and input configuration.

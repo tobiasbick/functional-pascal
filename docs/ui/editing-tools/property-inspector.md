@@ -54,6 +54,10 @@ CUI chooses the editor from the value type. Store an `Expansion` proposal
 on the corresponding group. Store the typed value from `Edit` at its group
 and row indices, and render the resulting groups.
 
+Replacing a text value or changing its capacity resets that row's selection
+and undo history. Ordinary edits retain undo/redo; rejecting an edit restores
+the model value. Hidden or removed text rows release their editing state.
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Editors/PropertyInspectors.fpas)

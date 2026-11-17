@@ -2,8 +2,7 @@
 
 This CLR FPAS application compiles Markdown examples with explicit contexts,
 checks intentional compiler errors and runs selected programs against declared
-output/exception expectations. Its organization follows the FPAS checker on main;
-the CLR implementation uses actual .NET APIs and the current compiler CLI.
+output/exception expectations. It uses actual .NET APIs and the current compiler CLI.
 
 [The guide](../../docs/pascal/tools/documentation-examples.md) owns arguments,
 fence instructions, reports, limits, contexts and companion projects.

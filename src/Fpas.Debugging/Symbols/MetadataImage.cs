@@ -40,5 +40,13 @@ internal partial class MetadataImage : IDisposable
             yield return (Metadata.GetString(Metadata.GetFieldDefinition(handle).Name), (uint)MetadataTokens.GetToken(handle));
     }
 
+    internal BlobReader LocalSignature(uint method)
+    {
+        var definition = Metadata.GetMethodDefinition((MethodDefinitionHandle)MetadataTokens.Handle((int)method));
+        var signature = Image.GetMethodBody(definition.RelativeVirtualAddress).LocalSignature;
+        if (signature.IsNil) throw new BadImageFormatException("Missing local signature.");
+        return Metadata.GetBlobReader(Metadata.GetStandaloneSignature(signature).Signature);
+    }
+
     public virtual void Dispose() { Image.Dispose(); stream.Dispose(); }
 }

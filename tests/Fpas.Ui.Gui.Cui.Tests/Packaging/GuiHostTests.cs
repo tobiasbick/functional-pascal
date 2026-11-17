@@ -7,11 +7,8 @@ namespace Fpas.Ui.Gui.Cui.Tests.Packaging;
 public sealed class GuiHostTests
 {
     /// <summary>Builds the public gallery and verifies its visible pages and controls.</summary>
-    /// <param name="renderer">The renderer that must be selected by the FPAS host.</param>
-    [GuiTheory]
-    [InlineData("software")]
-    [InlineData("opengl")]
-    public async Task FpasHostOwnsTypedTransitionsAndNativeFrames(string renderer)
+    [GuiFact]
+    public async Task FpasHostOwnsTypedTransitionsAndNativeFrames()
     {
         using var directory = new TemporaryDirectory();
         string version = "0.1.0-host." + Guid.NewGuid().ToString("N");
@@ -66,82 +63,85 @@ public sealed class GuiHostTests
             "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
             workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(galleryBuild.ExitCode == 0, galleryBuild.Output + galleryBuild.Error);
-        string galleryCapture = directory.File("gallery.png");
-        var gallery = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/gallery/bin/{configuration}/net10.0/GuiWidgetGallery.dll"), renderer, galleryCapture],
-            workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(90));
-        Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
-        Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
-        PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);
-        CheckWheelFocus(galleryCapture);
-        CheckRulerFocus(galleryCapture);
-        CheckDateFocus(galleryCapture);
-        CheckColorFocus(galleryCapture);
-        CheckSignatureInk(galleryCapture);
-        CheckChecklistFocus(galleryCapture);
-        CheckHoverLinkFocus(galleryCapture);
-        CheckReaderMarker(galleryCapture);
-        foreach (string page in new[] { "developer", "more" })
-            for (int offset = 0; offset < 3; offset++)
-                PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-{offset}.png", 1100, 1700);
-        foreach (string page in new[] { "canvas", "creative" })
+        foreach (string renderer in new[] { "software", "opengl" })
         {
-            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-1100.png", 1100, 1700);
-            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550.png", 550, 1700);
-            PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550-end.png", 550, 1700);
-        }
-
-        foreach (int width in new[] { 1100, 550 })
-        {
-            PngAssertions.HasRenderedContent($"{galleryCapture}-display-{width}.png", width, 1700);
-            PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}.png", width, 1700);
-            PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}-revealed.png", width, 1700);
-            PngAssertions.HasRenderedContent($"{galleryCapture}-files-{width}-0.png", width, 1400);
-            foreach (int offset in new[] { 0, 520, 900 })
-                PngAssertions.HasRenderedContent($"{galleryCapture}-editing-{width}-{offset}.png", width, 1400);
-            foreach (int offset in new[] { 650, 1450, 2100, 2800 })
-                PngAssertions.HasRenderedContent($"{galleryCapture}-code-{width}-{offset}.png", width, 1700);
-        }
-
-        string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
-        foreach (var (page, width, height) in new[]
-        {
-            ("actions", 1000, 760), ("status", 1000, 760),
-            ("actions-account", 1000, 1040), ("user-menu", 1000, 1040), ("selection", 1100, 1360),
-            ("actions-complete", 1000, 1440), ("swipe-revealed", 1000, 1440),
-            ("speed-dial", 1000, 1440), ("multi-select", 1000, 1440), ("multi-select-open", 1000, 1440),
-            ("date-range", 1000, 1000), ("date-range-presets", 1000, 1000), ("date-range-stay", 1000, 1000),
-            ("due-date", 1000, 1700), ("due-date-open", 1000, 1700), ("due-date-focused", 1000, 1700),
-            ("brand-color", 1000, 1700), ("brand-color-open", 1000, 1700), ("brand-color-focused", 1000, 1700),
-            ("emoji-message", 1000, 1280), ("emoji-open", 1000, 1280),
-            ("time-wheels-dial", 1000, 1280), ("time-24-hour", 1000, 1280), ("time-12-hour", 1000, 1280),
-            ("wheel-focused", 1000, 1280),
-            ("ruler-histogram", 1000, 1600), ("ruler-focused", 1000, 1600), ("histogram-adjusted", 1000, 1600),
-            ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
-            ("tooltips", 1000, 900), ("popover", 1000, 900), ("confirm-popover", 1000, 900),
-            ("text-fields", 1000, 760), ("text-fields-compact", 360, 760),
-            ("tags-codes-strength", 1000, 1000),
-            ("pickers", 1000, 1200), ("pickers-search", 1000, 1200), ("pickers-bound", 1000, 1200),
-            ("text-affixes", 1000, 760), ("edit-profile", 1000, 900),
-            ("disclosure", 1100, 1100), ("disclosure-dark", 1100, 1100), ("disclosure-narrow", 650, 1250),
-            ("capture", 1000, 1000), ("capture-signed", 1000, 1000), ("capture-cleared", 1000, 1000),
-            ("disclosure-feedback", 1100, 1500), ("checklist-focused", 1100, 1500),
-            ("hover-card-open", 1100, 1500), ("hover-link-focused", 1100, 1500),
-            ("reader", 1100, 850), ("reader-jump", 1100, 850), ("reader-scrolled", 1100, 850),
-            ("workspace", 1100, 1700), ("overview-narrow", 500, 1700), ("project-delete", 1100, 1700),
-            ("notification-switches", 1100, 1700), ("disclosure-undo", 1100, 1800),
-            ("disclosure-undo-toast", 1100, 1800),
-            ("accordion", 1100, 1800), ("audio", 1201, 800), ("audio-wrap", 900, 800),
-            ("audio-tour-knob", 1201, 800), ("audio-tour-meter", 1201, 800), ("audio-tour-fader", 1201, 800),
-            ("layout", 1100, 1050), ("layout-dark", 1100, 1050), ("layout-narrow", 500, 650),
-            ("feedback", 1100, 1700), ("feedback-dark", 1100, 1700), ("feedback-narrow", 500, 1800)
-        })
-        {
-            string pageCapture = galleryCapture + "." + page + ".png";
-            PngAssertions.HasRenderedContent(pageCapture, width, height);
-            if (!string.IsNullOrWhiteSpace(artifacts))
+            string galleryCapture = directory.File("gallery-" + renderer + ".png");
+            var gallery = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/gallery/bin/{configuration}/net10.0/GuiWidgetGallery.dll"), renderer, galleryCapture],
+                workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(90));
+            Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
+            Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
+            PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);
+            CheckWheelFocus(galleryCapture);
+            CheckRulerFocus(galleryCapture);
+            CheckDateFocus(galleryCapture);
+            CheckColorFocus(galleryCapture);
+            CheckSignatureInk(galleryCapture);
+            CheckChecklistFocus(galleryCapture);
+            CheckHoverLinkFocus(galleryCapture);
+            CheckReaderMarker(galleryCapture);
+            foreach (string page in new[] { "developer", "more" })
+                for (int offset = 0; offset < 3; offset++)
+                    PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-{offset}.png", 1100, 1700);
+            foreach (string page in new[] { "canvas", "creative" })
             {
-                string target = Directory.CreateDirectory(Path.Combine(artifacts, "host-gallery", renderer)).FullName;
-                File.Copy(pageCapture, Path.Combine(target, page + ".png"), overwrite: true);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-1100.png", 1100, 1700);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550.png", 550, 1700);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-550-end.png", 550, 1700);
+            }
+
+            foreach (int width in new[] { 1100, 550 })
+            {
+                PngAssertions.HasRenderedContent($"{galleryCapture}-display-{width}.png", width, 1700);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}.png", width, 1700);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-disclosure-{width}-revealed.png", width, 1700);
+                PngAssertions.HasRenderedContent($"{galleryCapture}-files-{width}-0.png", width, 1400);
+                foreach (int offset in new[] { 0, 520, 900 })
+                    PngAssertions.HasRenderedContent($"{galleryCapture}-editing-{width}-{offset}.png", width, 1400);
+                foreach (int offset in new[] { 650, 1450, 2100, 2800 })
+                    PngAssertions.HasRenderedContent($"{galleryCapture}-code-{width}-{offset}.png", width, 1700);
+            }
+
+            string? artifacts = Environment.GetEnvironmentVariable("FPAS_GUI_TEST_ARTIFACTS");
+            foreach (var (page, width, height) in new[]
+            {
+                ("actions", 1000, 760), ("status", 1000, 760),
+                ("actions-account", 1000, 1040), ("user-menu", 1000, 1040), ("selection", 1100, 1360),
+                ("actions-complete", 1000, 1440), ("swipe-revealed", 1000, 1440),
+                ("speed-dial", 1000, 1440), ("multi-select", 1000, 1440), ("multi-select-open", 1000, 1440),
+                ("date-range", 1000, 1000), ("date-range-presets", 1000, 1000), ("date-range-stay", 1000, 1000),
+                ("due-date", 1000, 1700), ("due-date-open", 1000, 1700), ("due-date-focused", 1000, 1700),
+                ("brand-color", 1000, 1700), ("brand-color-open", 1000, 1700), ("brand-color-focused", 1000, 1700),
+                ("emoji-message", 1000, 1280), ("emoji-open", 1000, 1280),
+                ("time-wheels-dial", 1000, 1280), ("time-24-hour", 1000, 1280), ("time-12-hour", 1000, 1280),
+                ("wheel-focused", 1000, 1280),
+                ("ruler-histogram", 1000, 1600), ("ruler-focused", 1000, 1600), ("histogram-adjusted", 1000, 1600),
+                ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
+                ("tooltips", 1000, 900), ("popover", 1000, 900), ("confirm-popover", 1000, 900),
+                ("text-fields", 1000, 760), ("text-fields-compact", 360, 760),
+                ("tags-codes-strength", 1000, 1000),
+                ("pickers", 1000, 1200), ("pickers-search", 1000, 1200), ("pickers-bound", 1000, 1200),
+                ("text-affixes", 1000, 760), ("edit-profile", 1000, 900),
+                ("disclosure", 1100, 1100), ("disclosure-dark", 1100, 1100), ("disclosure-narrow", 650, 1250),
+                ("capture", 1000, 1000), ("capture-signed", 1000, 1000), ("capture-cleared", 1000, 1000),
+                ("disclosure-feedback", 1100, 1500), ("checklist-focused", 1100, 1500),
+                ("hover-card-open", 1100, 1500), ("hover-link-focused", 1100, 1500),
+                ("reader", 1100, 850), ("reader-jump", 1100, 850), ("reader-scrolled", 1100, 850),
+                ("workspace", 1100, 1700), ("overview-narrow", 500, 1700), ("project-delete", 1100, 1700),
+                ("notification-switches", 1100, 1700), ("disclosure-undo", 1100, 1800),
+                ("disclosure-undo-toast", 1100, 1800),
+                ("accordion", 1100, 1800), ("audio", 1201, 800), ("audio-wrap", 900, 800),
+                ("audio-tour-knob", 1201, 800), ("audio-tour-meter", 1201, 800), ("audio-tour-fader", 1201, 800),
+                ("layout", 1100, 1050), ("layout-dark", 1100, 1050), ("layout-narrow", 500, 650),
+                ("feedback", 1100, 1700), ("feedback-dark", 1100, 1700), ("feedback-narrow", 500, 1800)
+            })
+            {
+                string pageCapture = galleryCapture + "." + page + ".png";
+                PngAssertions.HasRenderedContent(pageCapture, width, height);
+                if (!string.IsNullOrWhiteSpace(artifacts))
+                {
+                    string target = Directory.CreateDirectory(Path.Combine(artifacts, "host-gallery", renderer)).FullName;
+                    File.Copy(pageCapture, Path.Combine(target, page + ".png"), overwrite: true);
+                }
             }
         }
     }

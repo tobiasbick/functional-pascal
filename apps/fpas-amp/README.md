@@ -113,9 +113,9 @@ New paths recover an existing identity only for an unambiguous SHA-256 match
 whose previous path is confirmed absent; existing copies stay separate.
 Known-path tag changes retain the identity. Moving and editing together cannot
 be recognized reliably by a full-file hash. Embedded covers are cached separately
-on explicit request. The current UI provides settings, the Albums grid and navigation placeholders;
-catalogue queries and rating storage are available through the library API for
-the subsequent track view.
+on explicit request. The current UI provides settings, the Albums grid and its
+Music view with track browsing and independent track ratings. Other library
+destinations remain navigation placeholders.
 
 The Albums grid creates only visible rows plus a small overscan. It loads covers
 on background workers, preferring an embedded front cover, another embedded image,

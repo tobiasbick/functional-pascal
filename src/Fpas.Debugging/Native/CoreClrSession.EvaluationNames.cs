@@ -33,6 +33,12 @@ internal sealed partial class CoreClrSession
         }
 
         public DebugBinding Static(string typeName, string member)
+            => Static(typeName, member, false);
+
+        public DebugBinding StaticType(string typeName, string member)
+            => Static(typeName, member, true);
+
+        private DebugBinding Static(string typeName, string member, bool typeOnly)
         {
             var name = typeName switch
             {
@@ -46,6 +52,8 @@ internal sealed partial class CoreClrSession
             var accessible = image.Fields(owner.UInt32(4)).Take(4097).Where(field => field.Name == member).Any(field => own ||
                 (image.Metadata.GetFieldDefinition((FieldDefinitionHandle)MetadataTokens.Handle((int)field.Token)).Attributes & FieldAttributes.FieldAccessMask) == FieldAttributes.Public);
             if (!accessible) throw new DebugException("unresolved_name", "The qualified static field is absent or inaccessible.");
+            if (typeOnly) return StaticFieldType(type, member)
+                ?? throw new DebugException("unresolved_name", "The qualified name does not identify a stored static field.");
             return Find(start => session.ReadStatics(type, frame, start, 128), member)
                 ?? throw new DebugException("unresolved_name", "The qualified name does not identify a stored static field.");
         }

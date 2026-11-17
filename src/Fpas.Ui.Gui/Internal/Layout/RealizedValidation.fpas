@@ -1,0 +1,24 @@
+unit Fpas.Ui.Gui.Internal.Layout.RealizedValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
+  Fpas.Ui.Gui.Internal.Layout.LayoutValidation as Layout;
+
+// Validates only content requested by native virtualization before presenting it.
+// Modal scopes belong outside factories so the owner can resolve input before drawing.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Tree`: One realized row or composed cell subtree.
+// ## Returns
+// The prepared graphical subtree, with open modal scopes rejected.
+public function Prepare<TMsg>(Tree: E.Element<TMsg>): V.Prepared<TMsg>;
+begin
+  const Prepared: V.Prepared<TMsg> := V.Prepare<TMsg>(
+    Tree, V.Target.Graphical, AllowOpenModals := false
+  );
+  Layout.Check<TMsg>(Prepared);
+  return Prepared;
+end function;
+
+end unit;

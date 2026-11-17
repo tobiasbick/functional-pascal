@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.InlineEdit;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.InlineEdits as W;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.InlineEdits as W,
+  System as Sys, System.Text as Text;
 
 // Displays the confirmed title as an inline editor.
 // ## Parameters
@@ -20,6 +21,10 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.InlineEdits as W;
 public function View(Title: string): E.Element<string>;
 requires Title.Length <= 127;
 begin
+  if Text.Encoding.UTF8.GetByteCount(Title) > 127 or Title.Contains(#10) or Title.Contains(#13) then
+    raise new Sys.ArgumentException('The title must fit 127 UTF-8 bytes on one line.');
+  end if;
+
   return W.InlineEdit<string>('roadmap-title', Title,
     function(Proposed: string): string => Proposed,
     new W.Options(Placeholder := 'Add a title', Face := W.Font.Display,

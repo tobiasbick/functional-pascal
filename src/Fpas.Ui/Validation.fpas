@@ -102,11 +102,13 @@ end variant;
 // - `Profile`: The capabilities of the target.
 // - `Previous`: The last successfully presented view, if available.
 // - `TerminalSize`: Exact dimensions required by terminal viewport subtrees.
+// - `AllowOpenModals`: False for dynamically realized content whose modal scopes must live outside the factory.
 //
 // ## Returns
 // The view and the cache entries that its presenter should use.
 public function Prepare<TMsg>(
-  Tree: E.Element<TMsg>; Profile: Target; Previous: Prepared<TMsg>? := null; TerminalSize: T.Viewport? := null
+  Tree: E.Element<TMsg>; Profile: Target; Previous: Prepared<TMsg>? := null; TerminalSize: T.Viewport? := null;
+  AllowOpenModals: bool := true
 ): Prepared<TMsg>;
 requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Target.Graphical;
   function Identify(Id: string; Location: string): string;
@@ -2281,7 +2283,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        VoiceAndAi.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+        VoiceAndAi.Check<TMsg>(Node, Location, Profile, Identify, VisitReasoning);
       when E.Element.PathBar(_, _, _, _), E.Element.FileBrowser(_, _, _, _), E.Element.FilePicker(
         _,
         _,
@@ -2630,7 +2632,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Settings.NextLabel, At + '/next');
         Rules.CheckText(Settings.BackLabel, At + '/back');
         Rules.CheckText(Settings.DoneLabel, At + '/done');
-        Rules.CheckText(Settings.CountFormat, At + '/countFormat');
+        Rules.CheckCountFormat(Settings.CountFormat, 2, At + '/countFormat');
         for Item: Tours.Step in Steps do
           Rules.CheckText(Item.Target, At + '/target');
           Rules.CheckText(Item.Title, At + '/title');
@@ -2949,6 +2951,68 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     Pending.Add(Work<TMsg>.Resume(Action));
   end procedure;
 
+  procedure VisitReasoning(Node: E.Element<TMsg>; Location: string);
+  begin
+    After(
+      procedure() begin
+        ReasoningDepth := ReasoningDepth + 1;
+      end procedure
+    );
+    Visit(Node, Location);
+    After(
+      procedure() begin
+        ReasoningDepth := ReasoningDepth - 1;
+      end procedure
+    );
+  end procedure;
+
+  procedure CheckModalScope(Node: E.Element<TMsg>; Location: string);
+  begin
+    var Modal: bool := false;
+    var Open: bool := false;
+    case Node of
+      when E.Element.Dialog(
+        _,
+        _,
+        _,
+        const Shown: bool,
+        _,
+        _
+      ), E.Element.Sheet(
+        _,
+        _,
+        _,
+        const Shown: bool,
+        _,
+        _
+      ), E.Element.CommandPalette(
+        _,
+        _,
+        const Shown: bool,
+        _,
+        _,
+        _
+      ), E.Element.FilePicker(_, _, const Shown: bool, _, _):
+        Modal := true;
+        Open := Shown;
+      else
+    end case;
+
+    if Modal and ReasoningDepth > 0 then
+      Rules.Reject(
+        Location,
+        'Declare modal scopes outside native-owned collapsible reasoning bodies.'
+      );
+    end if;
+
+    if Modal and Open and not AllowOpenModals then
+      Rules.Reject(
+        Location,
+        'Declare open modal scopes outside virtual row and data-grid content factories.'
+      );
+    end if;
+  end procedure;
+
   procedure ValidateTree();
   begin
     Visit(Tree, 'root');
@@ -2967,6 +3031,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end if;
 
           Pending.Add(Work<TMsg>.Leave(Node));
+          CheckModalScope(Node, Location);
           CheckNode(Node, Location);
           // The leave marker stays below the scheduled children.
           Pending.Reverse(Index + 1, Pending.Count - Index - 1);
@@ -3023,6 +3088,7 @@ begin
   const Pending: Generic.List<Work<TMsg>> := new Generic.List<Work<TMsg>>();
   const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
   var HoverDepth: int := 0;
+  var ReasoningDepth: int := 0;
   const UncontrolledScrolls: Generic.HashSet<string> := new Generic.HashSet<string>();
   const AnchorOwners: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
   const TocTargets: Generic.Dictionary<string, array of Toc.Item> := new Generic.Dictionary<string, array of Toc.Item>();

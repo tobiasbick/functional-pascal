@@ -56,6 +56,7 @@ public sealed partial class CuiWindow
     public void ForgetControl(string id)
     {
         CheckOpen();
+        dockRestores.Remove(id);
         if (moneyFields.Remove(id, out var money))
         {
             moneyDrawn.Remove(id);

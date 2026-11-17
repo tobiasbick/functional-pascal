@@ -37,8 +37,11 @@ public sealed partial class DapDebuggerTests
         client.PauseReading(); File.WriteAllText(program.FilePath("go"), "go");
         await Task.Delay(400); client.ResumeReading();
         var events = await client.UntilTerminated();
-        Assert.Contains(events, item => item.GetProperty("event").GetString() == "output" && item.GetProperty("body").GetProperty("output").GetString()!.Contains("output omitted", StringComparison.Ordinal));
-        Assert.Contains(events, item => item.GetProperty("event").GetString() == "exited");
+        var omitted = Array.FindIndex(events, item => item.GetProperty("event").GetString() == "output"
+            && item.GetProperty("body").GetProperty("output").GetString()!.Contains("output omitted", StringComparison.Ordinal));
+        var exited = Array.FindIndex(events, item => item.GetProperty("event").GetString() == "exited");
+        Assert.True(omitted >= 0 && exited > omitted, "Output loss must be reported before the target exit event.");
+        Assert.Equal("terminated", events[^1].GetProperty("event").GetString());
         await client.Success("disconnect"); await client.End();
     }
 

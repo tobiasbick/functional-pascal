@@ -3,10 +3,17 @@ using System.Text;
 
 namespace Fpas.Workspaces.Processes;
 
+/// <summary>Contains an owned process's exit status and bounded captured output.</summary>
+/// <param name="ExitCode">Native exit code, or 130 for captured cancellation.</param>
+/// <param name="Output">Captured standard output; empty when streamed live.</param>
+/// <param name="Error">Captured standard error; empty when streamed live.</param>
+/// <param name="Truncated">Whether captured output exceeded its shared byte budget.</param>
 public sealed record BuildResult(int ExitCode, string Output, string Error, bool Truncated)
 {
+    /// <summary>Gets structured build diagnostics when an MSBuild logger was requested.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<ProjectBuildDiagnostic>? Diagnostics { get; init; }
+    /// <summary>Gets whether the structured diagnostic stream exceeded its own budget.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public bool DiagnosticsTruncated { get; init; }
 }
@@ -16,8 +23,19 @@ public sealed record BuildResult(int ExitCode, string Output, string Error, bool
 /// <param name="StandardError">Writer for standard error.</param>
 public sealed record ProcessOutput(TextWriter StandardOutput, TextWriter StandardError);
 
+/// <summary>Runs dotnet and explicit tools with bounded output and owned descendant cleanup.</summary>
 public static class BuildProcess
 {
+    /// <summary>Runs the selected dotnet host and joins owned descendants before returning.</summary>
+    /// <param name="cwd">Process working directory.</param>
+    /// <param name="arguments">Arguments passed without shell interpretation.</param>
+    /// <param name="token">Cancels execution and terminates owned processes.</param>
+    /// <param name="inheritInput">Whether to inherit caller stdin; otherwise supplies EOF.</param>
+    /// <param name="buildEnvironment">Whether to disable build servers and select the bundled compiler.</param>
+    /// <param name="environment">Additional environment overrides.</param>
+    /// <param name="captureCancellation">Whether cancellation returns exit 130 instead of throwing.</param>
+    /// <param name="liveOutput">Optional writers receiving unbounded live output instead of capture.</param>
+    /// <returns>Exit status and at most 1 MiB of combined captured output.</returns>
     public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true,
         IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false, ProcessOutput? liveOutput = null)
     {
@@ -26,6 +44,13 @@ public static class BuildProcess
             captureCancellation: captureCancellation, liveOutput: liveOutput);
     }
 
+    /// <summary>Runs an explicit executable without build-specific environment changes.</summary>
+    /// <param name="path">Absolute executable path.</param>
+    /// <param name="cwd">Process working directory.</param>
+    /// <param name="arguments">Arguments passed without shell interpretation.</param>
+    /// <param name="token">Cancels execution and terminates owned processes.</param>
+    /// <param name="outputLimit">Shared output byte budget, 1..4 MiB.</param>
+    /// <returns>Exit status and bounded captured streams.</returns>
     public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, int outputLimit = 1_048_576)
         => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false, outputLimit: outputLimit);
 
@@ -90,6 +115,8 @@ public static class BuildProcess
         }
     }
 
+    /// <summary>Finds dotnet using DOTNET_HOST_PATH, DOTNET_ROOT and then PATH.</summary>
+    /// <returns>The selected absolute host path, or an I/O failure when unavailable.</returns>
     public static string DotnetHost()
     {
         if (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } host) return host;

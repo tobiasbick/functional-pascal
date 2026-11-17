@@ -139,9 +139,10 @@ provides project, test, and debug commands.
 
 ## Applications
 
-[`apps/`](apps/README.md) contains the documentation example checker and the
-diagnostic workloads for profiling and failure investigation. Focused language
-and .NET API demonstrations live under [`examples/`](examples/README.md).
+[`apps/`](apps/README.md) contains FPas-Amp, the desktop music player in development,
+the documentation example checker, GUI documentation captures and diagnostic
+workloads for profiling and failure investigation. Focused language and .NET API
+demonstrations live under [`examples/`](examples/README.md).
 
 ## Examples
 
@@ -365,7 +366,7 @@ contract, follow [AGENTS.md](AGENTS.md) when using an agent, and use the
 | `sdk/Fpas.NET.Sdk` | Project props/targets and packaging of the matching toolchain |
 | `tests/` | Compiler, metadata, execution, documentation, and SDK verification |
 | `examples/` | Focused executable FPAS/.NET projects |
-| `apps/` | Documentation checker and diagnostic workloads written in FPAS |
+| `apps/` | FPAS applications, documentation tools and diagnostic workloads |
 
 See [compiler architecture](docs/architecture/README.md) for project dependencies,
 closures, async lowering, and debug metadata. The CLR owns execution and GC.

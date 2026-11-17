@@ -6,14 +6,30 @@ using Fpas.Workspaces.Processes;
 
 namespace Fpas.Workspaces.Projects;
 
+/// <summary>Identifies one delivered file by relative path, size and content.</summary>
+/// <param name="Path">Forward-slash path relative to the publish root.</param>
+/// <param name="Bytes">File length in bytes.</param>
+/// <param name="Sha256">SHA-256 content digest.</param>
 public sealed record PublishedFile(string Path, long Bytes, string Sha256);
 internal sealed record PublishManifest(int Version, PublishedFile[] Files, string[]? EmptyDirectories = null);
+/// <summary>Contains the publish process result and committed delivery inventory.</summary>
+/// <param name="Build">Native publish status and output.</param>
+/// <param name="Files">Committed inventory, or empty when publishing failed.</param>
 public sealed record PublishResult(BuildResult Build, IReadOnlyList<PublishedFile> Files);
 
+/// <summary>Stages delivery directories and replaces only empty or unchanged owned destinations.</summary>
 public static class PublishDirectory
 {
     private const string Manifest = ".fpas-publish.json";
 
+    /// <summary>Publishes into a sibling stage and replaces the destination after successful validation.</summary>
+    /// <param name="project">Selected evaluated executable.</param>
+    /// <param name="options">Validated deployment and signing options.</param>
+    /// <param name="destination">Empty, absent or unchanged FPAS-owned delivery directory.</param>
+    /// <param name="token">Cancels preparation and publication before commit.</param>
+    /// <param name="context">Optional solution path retaining its project mappings.</param>
+    /// <param name="liveOutput">Optional native publish output writers.</param>
+    /// <returns>The process status and inventory of successfully committed files.</returns>
     public static async Task<PublishResult> Publish(ProjectOutput project, PublishOptions options, string destination, CancellationToken token,
         string? context = null, ProcessOutput? liveOutput = null)
     {
@@ -78,6 +94,10 @@ public static class PublishDirectory
         else File.Delete(stage);
     }
 
+    /// <summary>Rejects destinations containing unowned, changed or missing entries.</summary>
+    /// <param name="destination">Delivery directory to validate.</param>
+    /// <param name="token">Cancels inventory hashing.</param>
+    /// <returns>A task completing when the destination may be replaced.</returns>
     public static async Task Check(string destination, CancellationToken token)
     {
         if (File.Exists(destination)) throw new ArgumentException("Publish output must be a directory.");

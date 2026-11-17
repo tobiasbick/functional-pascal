@@ -5,9 +5,22 @@ using System.Text;
 namespace Fpas.Workspaces.Live;
 
 /// <summary>One-based UTF-16 coordinates; protocol adapters convert at their boundary.</summary>
+/// <param name="Line">One-based source line.</param>
+/// <param name="Column">One-based UTF-16 column; tabs count as one code unit.</param>
 public sealed record TextPosition(int Line, int Column);
+/// <summary>A half-open range in one document state.</summary>
+/// <param name="Start">Inclusive start position.</param>
+/// <param name="End">Exclusive end position.</param>
 public sealed record TextRange(TextPosition Start, TextPosition End);
+/// <summary>Replaces a range, or the whole document when the range is absent.</summary>
+/// <param name="Text">Replacement text.</param>
+/// <param name="Range">Range in the state produced by preceding changes, or null for full replacement.</param>
 public sealed record TextChange(string Text, TextRange? Range = null);
+/// <summary>Bounds live text, retained analysis and operation duration.</summary>
+/// <param name="DocumentBytes">Maximum UTF-8 bytes in one document.</param>
+/// <param name="OpenBytes">Maximum aggregate UTF-8 bytes in open documents.</param>
+/// <param name="RetainedBytes">Maximum accounted bytes in analysis and cache data.</param>
+/// <param name="WorkTimeout">Operation deadline, or null for thirty seconds.</param>
 public sealed record LiveWorkspaceLimits(int DocumentBytes = 4_194_304, int OpenBytes = 67_108_864,
     long RetainedBytes = 134_217_728, TimeSpan? WorkTimeout = null);
 

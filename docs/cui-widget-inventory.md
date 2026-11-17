@@ -88,11 +88,14 @@ checks semantic foregrounds, backgrounds and alpha composition.
 That covers the shared palette required by the gallery. CUI also exposes
 typography, control sizing, corner radii, shadows, reduced motion, and
 system-theme behavior in its [theming reference][theming]. The shared FPAS
-`Theme` contains appearance, accent, and colors. Track any additional theme
-properties with the gallery widget that needs them. Theme switcher and theme
-toggle propose a model change through existing CUI primitives without changing
-the native palette themselves. System appearance is resolved by an application
-provider; there is no automatic OS or terminal theme detection.
+`Theme` contains appearance, accent, colors and optional graphical metrics for
+typography, geometry, elevation and motion. TUI retains its cell metrics.
+Theme switcher and theme toggle propose a model change through existing CUI
+primitives without changing the native palette themselves. GUI `StartThemed` and
+`RunThemed` supply CUI's
+system appearance hint to the application's theme provider; the provider chooses
+the palette. Terminal theme detection remains application-owned. See the
+[system appearance contract](../src/Fpas.Ui.Gui/README.md#system-appearance).
 
 ### Layout compatibility
 
@@ -178,8 +181,9 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
 - [x] Interactive canvas (`cui_canvas`): native rectangle, circle and line
   commands and local click coordinates. The gallery reuses the original
   sidebar swatch drawings in a standalone selection example. The native test
-  checks the click coordinates. Custom paint callbacks and hover/press
-  notifications remain unexposed. Optional `OnWheel` maps horizontal/vertical
+  checks the click coordinates. [Custom paint callbacks](ui/canvas-and-bars/painting.md)
+  expose native drawing and text measurement; `OnPointer` reports hover and
+  press transitions with local coordinates. Optional `OnWheel` maps horizontal/vertical
   line deltas using `cui_wheel_region` and `cui_wheel_take`; CUI owns clipping,
   targeting and previous-frame registration. Disabled/unsubscribed canvases
   leave scrolling to their enclosing views.

@@ -2,6 +2,7 @@ using Fpas.Compiler.Analysis;
 
 namespace Fpas.Workspaces.Refactoring;
 
+/// <remarks>Import organization removes only proven unused CLR aliases while preserving comments and source imports.</remarks>
 public static partial class CheckedRefactoring
 {
     private static IReadOnlyList<string> OrganizeImports(Draft draft, SourceDocument source)

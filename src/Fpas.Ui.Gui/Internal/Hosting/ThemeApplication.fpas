@@ -4,6 +4,23 @@ uses
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
 
+// Reads the system appearance without resolving the application's model-owned palette.
+// ## Parameters
+// - `Window`: Owner-thread window supplying the native appearance hint.
+// ## Returns
+// The reported mode, or null when the backend has no system appearance.
+public function Appearance(Window: Cui.CuiWindow): Themes.Mode?;
+begin
+  const Dark: bool? := Window.SystemDark;
+  return if Dark = null then
+    null
+  elsif Dark.Value then
+    Themes.Mode.Dark
+  else
+    Themes.Mode.Light
+  end if;
+end function;
+
 // Applies one resolved application theme without exposing native theme storage.
 // ## Parameters
 // - `Window`: Owning native window.

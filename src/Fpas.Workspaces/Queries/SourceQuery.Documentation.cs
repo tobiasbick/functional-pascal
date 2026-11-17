@@ -2,6 +2,7 @@ using Fpas.Workspaces.Documentation;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <remarks>Documentation lookup reuses checked name search and bounded declaration inspection.</remarks>
 public sealed partial class SourceQuery
 {
     internal IEnumerable<DocumentationCandidate> Documentation(DocumentationSearch search, CancellationToken token)

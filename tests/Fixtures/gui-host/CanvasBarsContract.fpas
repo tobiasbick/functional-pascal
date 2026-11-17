@@ -3,9 +3,35 @@ unit GalleryCanvasBarsContract;
 uses
   GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
   GalleryHostAssertions as A,
+  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
+  GuiGallery.Pages.Canvas.SampleBounds as SampleBounds,
+  Fpas.Ui.Widgets.Editors.NodeEditors as Nodes, Fpas.Ui.Widgets.Canvas.CanvasControls as Controls,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
   Fpas.Ui.Gui.Internal.Hosting.Context as Context;
+
+procedure MovedSampleBounds();
+begin
+  const First: Canvas.Model := CanvasUpdate.Update(
+    new Canvas.Model(), Canvas.Msg.Graph(Nodes.Event.Move(0, 800.0F, -700.0F))
+  ).Model;
+  const Second: Canvas.Model := CanvasUpdate.Update(
+    First, Canvas.Msg.Graph(Nodes.Event.Move(1, -600.0F, 950.0F))
+  ).Model;
+  const Moved: Canvas.Model := CanvasUpdate.Update(
+    Second, Canvas.Msg.Graph(Nodes.Event.Move(2, -1200.0F, -900.0F))
+  ).Model;
+  const Bounds: Controls.Bounds := SampleBounds.Content(Moved);
+  A.Check(
+    Bounds.X = -1200.0F and Bounds.Y = -900.0F
+    and Bounds.Width > 0.0F and Bounds.Height > 0.0F,
+    'Fit bounds must include nodes moved left and above the original canvas.'
+  );
+  A.Check(
+    Bounds.X + Bounds.Width >= 984.0F and Bounds.Y + Bounds.Height >= 1062.0F,
+    'Fit bounds must include the rightmost and lowest displaced node specimens.'
+  );
+end procedure;
 
 procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; Width: int);
   procedure Inject();
@@ -106,12 +132,13 @@ begin
   end if;
 end procedure;
 
-// Captures both pages and checks checkbox and Escape behavior.
+// Checks moved-node Fit bounds, captures both pages, and checks checkbox and Escape behavior.
 // ## Parameters
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix of the gallery screenshots.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  MovedSampleBounds();
   CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 1100);
   CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 550);
   CapturePage(State.Page.CreativeControls, Renderer, Capture + '-creative', 1100);

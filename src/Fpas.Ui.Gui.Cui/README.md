@@ -4,6 +4,12 @@ Low-level .NET 10 binding for the pinned [CUI dependency](../../third-party/cui/
 It supports the FPAS GUI host and interop fixtures. Applications use the
 [Fpas.Ui.Gui](../Fpas.Ui.Gui/README.md) MVU/declarative host.
 
+Managed Veil, Kanban and NodeEditor drawing scopes restrict their native chrome
+independently from composed bodies. Callers supply each child control's input
+permission explicitly, allowing the host's admitted nested modal to receive
+focus while covered chrome stays disabled. A concealed Veil also blocks its
+body through CUI's native disabled scope.
+
 ## Source layout
 
 `Widgets/<Topic>` and `Interop/<Topic>` group the managed adapters and
@@ -21,6 +27,11 @@ use the same topics and expose the `fpas_cui_` symbols.
 - NextFrame pumps events and begins a frame. Close layouts in reverse order;
   Present completes the view and exposes finalized control rectangles.
   CapturePng writes the presented view to an existing directory.
+  It also completes a newly constructed view after an earlier presentation,
+  releases that frame's callbacks and surfaces deferred painting failures.
+  Dockspace, dock-panel, split-view, menu-bar and status-bar scopes currently
+  follow native caller discipline: balance their begin/end operations in the
+  same frame; managed layout-stack validation does not cover those scopes.
 - See the [CUI widget inventory](../../docs/cui-widget-inventory.md#widget-inventory)
   for widget coverage and gallery acceptance. Stable identities are separate
   from literal labels. The FPAS host maps native interaction results to model

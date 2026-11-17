@@ -66,6 +66,9 @@ public sealed class ExpressionDiagnosticsTests
     [InlineData("procedure F(); begin return; end procedure; function G(): int; begin return F(); end function;", "FP3002")]
     [InlineData("function F(X: bool): int; begin if X then return 1; else return 2; end if; return 3; end function;", "FP3008")]
     [InlineData("procedure F(); begin end procedure; function G(): int; begin return if true then F() else F() end if; end function;", "FP3002")]
+    [InlineData("procedure F(); begin end procedure; function G(): bool; begin return F() is int; end function;", "FP3002")]
+    [InlineData("procedure F(); begin end procedure; function G(): string; begin return F().ToString(); end function;", "FP3002")]
+    [InlineData("procedure F(); begin end procedure; function G(): int; begin return F()[0]; end function;", "FP3002")]
     public void Routine_flow_and_void_values_are_checked(string declarations, string code)
         => Assert.Equal(code, Assert.Single(TestCompilation.CompileAgainstFramework("program Bad; " + declarations + " begin end; end program;").Diagnostics).Code);
 

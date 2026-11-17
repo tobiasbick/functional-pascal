@@ -159,16 +159,30 @@ public sealed partial class CuiWindow : IDisposable
         CheckFrame();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before presenting.");
         ResolveHostLayout();
-        int presented;
+        int presented = 0;
         ExceptionDispatchInfo? callbackFailure;
         try { presented = NativeMethods.Present(app); }
-        finally { SnapshotShortcutKeys(); inFrame = false; editorRequests.Clear(); callbackFailure = ReleaseFrameCallbacks(); }
+        finally { callbackFailure = CompleteRenderedFrame(presented != 0); }
         if (presented == 0) throw new InvalidOperationException("CUI could not present the current view.");
-        hasPresentedFrame = true;
-        RetireMissingControls(
-            controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray(),
-            modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray(), false);
         callbackFailure?.Throw();
+    }
+
+    private ExceptionDispatchInfo? CompleteRenderedFrame(bool succeeded)
+    {
+        // Capture can fail before its native screenshot starts rendering.
+        NativeMethods.FinishFrameForDestroy(app);
+        SnapshotShortcutKeys();
+        inFrame = false;
+        editorRequests.Clear();
+        var callbackFailure = ReleaseFrameCallbacks();
+        if (succeeded)
+        {
+            hasPresentedFrame = true;
+            RetireMissingControls(
+                controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray(),
+                modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray(), false);
+        }
+        return callbackFailure;
     }
 
     private void RetireMissingControls(KeyValuePair<string, uint>[] controls, KeyValuePair<string, uint>[] modals,
@@ -257,9 +271,7 @@ public sealed partial class CuiWindow : IDisposable
     public void RequestFocus(string id)
     {
         CheckFrame();
-        Utf8.Validate(id, nameof(id));
-        ArgumentException.ThrowIfNullOrEmpty(id);
-        NativeMethods.RequestFocus(context, id);
+        NativeMethods.RequestFocus(context, Stable(id));
     }
 
     /// <summary>Adds a heading to the current frame.</summary>
@@ -275,16 +287,21 @@ public sealed partial class CuiWindow : IDisposable
 
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
     /// <param name="path">Unicode output filename in an existing directory.</param>
+    /// <remarks>An active frame is completed and its deferred callback failures are propagated, as with Present.</remarks>
     public void CapturePng(string path)
     {
         CheckOpen(); Utf8.Validate(path, nameof(path));
         ArgumentException.ThrowIfNullOrEmpty(path);
         if (layouts.Count != 0 || !hasPresentedFrame)
             throw new InvalidOperationException("Capture needs closed layouts and a previously presented frame.");
-        int captured;
+        bool rendering = inFrame;
+        if (rendering) ResolveHostLayout();
+        int captured = 0;
+        ExceptionDispatchInfo? callbackFailure = null;
         try { captured = NativeMethods.Capture(app, path); }
-        finally { inFrame = false; }
+        finally { if (rendering) callbackFailure = CompleteRenderedFrame(captured != 0); }
         if (captured == 0) throw new IOException("CUI could not capture the current view.");
+        callbackFailure?.Throw();
     }
 
     /// <summary>Destroys all window/context resources on the creating UI thread.</summary>

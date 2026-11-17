@@ -834,6 +834,12 @@ wrapper; no second disclosure layout or animation system is involved.
   and each interactive child an ID unique across the view. The viewport snapshot reports the
   half-open range as `first:last`.
 
+Declare modal scopes outside virtual row and data-grid content factories. The
+host validates each realized subtree before drawing it and rejects open dialogs,
+sheets, command palettes and file pickers there. Closed scopes are permitted;
+opening them requires moving the scope outside the factory. Validation realizes
+only the native visible range and overscan.
+
 The graphical gallery shows these controls on Data display and uses list items
 for Recent in the Notifications sheet. Terminal and portable preflight reject
 these elements.
@@ -981,7 +987,9 @@ profile. The Social and media page shows all five with the original CUI examples
   send and stop, and voice recording actions. The model owns the draft,
   recording levels and elapsed time. `ModelPickers.ModelPicker` also works
   independently of a composer.
-- `Reasonings.Reasoning` composes a native disclosure body. `ToolCalls.ToolCall`,
+- `Reasonings.Reasoning` composes a native disclosure body. Declare modal scopes
+  outside its native-owned collapsible body; validation rejects modal declarations
+  there even while closed. `ToolCalls.ToolCall`,
   `AgentPlans.AgentPlan` and `AgentStatuses.AgentStatus` display tool payloads,
   steps and task state.
 - `SourceLists.SourceList` and `Citations.Citation` report source activation.
@@ -998,7 +1006,9 @@ their native examples.
 - `FileBrowsers.FileBrowser` proposes folder changes and file activation.
   `FilePickers.FilePicker` opens a native CUI dialog for opening, saving, or
   choosing a folder. Its event carries the chosen path or null on dismissal.
-  A `FileListings.Provider` supplies entries for either widget.
+  Set either widget's `Options.Source` to a
+  `Sys.Func<string, bool, FileListings.Listing?>` to supply folder entries.
+  It receives the folder path and hidden-file mode; null reports an unreadable folder.
 - `Kanbans.Kanban` lays out model-owned columns and cards. Card bodies can
   contain regular FPAS UI elements. Native drag proposes a card's destination.
 - `WeekCalendars.WeekCalendar` and `Gantts.Gantt` report event and task

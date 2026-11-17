@@ -14,14 +14,15 @@ public sealed partial class CuiWindow
     /// <param name="height">height supplied to the native operation.</param>
     /// <param name="minimum">minimum supplied to the native operation.</param>
     /// <param name="maximum">maximum supplied to the native operation.</param>
-    /// <param name="flags">flags supplied to the native operation.</param>
+    /// <param name="flags">Native editor chrome input/appearance flags. Composed bodies supply their own input permission.</param>
     /// <returns>The native result.</returns>
     public unsafe bool BeginNodeEditor(string id, CuiNodeView view, int widthKind, float width, int heightKind, float height, float minimum, float maximum, int flags)
     {
         CheckFrame();
         if (NativeMethods.NodeEditorBegin(context, Stable(id), view, widthKind, width, heightKind, height, minimum, maximum, flags) == 0)
             return false;
-        layouts.Add(new(Layout.NodeEditor));
+        NativeMethods.PopDisabled(context);
+        layouts.Add(new(Layout.NodeEditor, Data: (flags & 1) != 0));
         return true;
     }
 
@@ -30,6 +31,7 @@ public sealed partial class CuiWindow
     public unsafe CuiNodeView EndNodeEditor()
     {
         RequireLayout(Layout.NodeEditor);
+        RestoreContainerInput(Layout.NodeEditor);
         NativeMethods.NodeEditorEnd(context, out var result);
         layouts.RemoveAt(layouts.Count - 1);
         return result;
@@ -45,6 +47,7 @@ public sealed partial class CuiWindow
     public unsafe void BeginNode(int id, ref float x, ref float y, string title, float width, string? icon)
     {
         CheckFrame();
+        using var input = RestrictChrome(Layout.NodeEditor);
         NativeMethods.NodeBegin(context, id, ref x, ref y, title, width, icon);
     }
 
@@ -56,6 +59,7 @@ public sealed partial class CuiWindow
     public unsafe void NodePin(int id, string label, bool output, int type)
     {
         CheckFrame();
+        using var input = RestrictChrome(Layout.NodeEditor);
         NativeMethods.NodePin(context, id, label, output ? 1 : 0, type);
     }
 
@@ -66,6 +70,7 @@ public sealed partial class CuiWindow
     public unsafe void NodeLink(int id, int fromPin, int toPin)
     {
         CheckFrame();
+        using var input = RestrictChrome(Layout.NodeEditor);
         _ = NativeMethods.NodeLink(context, id, fromPin, toPin);
     }
 
@@ -84,6 +89,7 @@ public sealed partial class CuiWindow
     public unsafe void EndNode()
     {
         CheckFrame();
+        using var input = RestrictChrome(Layout.NodeEditor);
         NativeMethods.NodeEnd(context);
     }
 

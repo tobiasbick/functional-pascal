@@ -9,12 +9,13 @@ public sealed partial class CuiWindow
 {
     /// <summary>Opens a native Kanban board.</summary>
     /// <param name="id">Stable board identity.</param>
-    /// <param name="enabled">Whether the board accepts input.</param>
+    /// <param name="enabled">Whether board chrome accepts input. Composed bodies supply their own input permission.</param>
     public void BeginKanban(string id, bool enabled)
     {
         CheckFrame();
         int node = NativeMethods.KanbanBegin(context, Stable(id), enabled ? 1 : 0);
-        layouts.Add(new(Layout.Kanban, Node: node));
+        NativeMethods.PopDisabled(context);
+        layouts.Add(new(Layout.Kanban, Node: node, Data: enabled));
     }
 
     /// <summary>Opens the next native board column.</summary>
@@ -35,6 +36,7 @@ public sealed partial class CuiWindow
         CheckFeedbackNumber(width, nameof(width));
         if (count < 0 || limit < 0) throw new ArgumentOutOfRangeException(nameof(count));
         int* parts = stackalloc int[2];
+        using var input = RestrictChrome(Layout.Kanban);
         int result = NativeMethods.KanbanColumnBegin(context, title, count, dot.Palette, dot.Rgba, limit, width, parts);
         if (columnToken is not null) TrackControl(columnToken, parts[0]);
         if (addToken is not null) TrackControl(addToken, parts[1]);
@@ -51,6 +53,7 @@ public sealed partial class CuiWindow
     {
         RequireLayout(Layout.KanbanColumn);
         if (key < 0) throw new ArgumentOutOfRangeException(nameof(key));
+        using var input = RestrictChrome(Layout.Kanban);
         int result = NativeMethods.KanbanCardBegin(context, key, focus ? 1 : 0, out int node);
         if (token is not null) TrackControl(token, node);
         layouts.Add(new(Layout.KanbanCard));
@@ -61,6 +64,7 @@ public sealed partial class CuiWindow
     public void EndKanbanCard()
     {
         RequireLayout(Layout.KanbanCard);
+        using var input = RestrictChrome(Layout.Kanban);
         NativeMethods.KanbanCardEnd(context);
         layouts.RemoveAt(layouts.Count - 1);
     }
@@ -69,6 +73,7 @@ public sealed partial class CuiWindow
     public void EndKanbanColumn()
     {
         RequireLayout(Layout.KanbanColumn);
+        using var input = RestrictChrome(Layout.Kanban);
         NativeMethods.KanbanColumnEnd(context);
         layouts.RemoveAt(layouts.Count - 1);
     }
@@ -78,6 +83,7 @@ public sealed partial class CuiWindow
     public CuiKanbanMove? EndKanban()
     {
         var scope = RequireLayout(Layout.Kanban);
+        RestoreContainerInput(Layout.Kanban);
         int result = NativeMethods.KanbanEnd(context, scope.Node, out var move);
         layouts.RemoveAt(layouts.Count - 1);
         return result != 0 ? move : null;

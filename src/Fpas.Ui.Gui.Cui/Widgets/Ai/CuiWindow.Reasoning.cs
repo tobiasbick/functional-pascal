@@ -11,6 +11,8 @@ public sealed partial class CuiWindow
     /// <param name="title">Optional heading.</param>
     /// <param name="flags">Native input and appearance flags.</param>
     /// <param name="header">Optional tracked header identity.</param>
+    /// <returns>Bit 1 when the body must be drawn and closed with <see cref="EndReasoning"/>;
+    /// bit 2 when the body is open. A closing animation can return only bit 1.</returns>
     public unsafe int BeginReasoning(string id, bool thinking, float seconds, string title, int flags, string? header)
     {
         CheckFrame();
@@ -21,7 +23,7 @@ public sealed partial class CuiWindow
         return state;
     }
 
-    /// <summary>Closes the current reasoning body.</summary>
+    /// <summary>Closes a body drawn when <see cref="BeginReasoning"/> returned bit 1, including its closing animation.</summary>
     public void EndReasoning()
     {
         var scope = RequireLayout(Layout.Reasoning);

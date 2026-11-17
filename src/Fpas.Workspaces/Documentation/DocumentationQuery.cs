@@ -5,15 +5,20 @@ using System.Text;
 
 namespace Fpas.Workspaces.Documentation;
 
+/// <summary>Searches checked FPAS declarations and public metadata without loading reference code.</summary>
 public sealed class DocumentationQuery
 {
     private readonly WorkspaceAnalysis analysis;
     private readonly SourceQuery source;
     private DocumentationInputs? inputs;
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+    /// <summary>Creates documentation lookup over current captured analysis.</summary>
+    /// <param name="analysis">Analysis with at least one available checked source region.</param>
     public DocumentationQuery(WorkspaceAnalysis analysis)
     { this.analysis = analysis; source = new(analysis); }
 
+    /// <summary>Rejects empty names, unsupported match modes and invalid page bounds.</summary>
+    /// <param name="search">Documentation filter to validate.</param>
     public static void Validate(DocumentationSearch search)
     {
         if (string.IsNullOrWhiteSpace(search.Name)) throw new ContextFailure("invalid_argument", "--name must not be empty.");
@@ -21,6 +26,11 @@ public sealed class DocumentationQuery
         if (search.Limit is < 1 or > 100 || search.Offset < 0) throw new ContextFailure("invalid_argument", "--limit must be 1..100 and --offset must be nonnegative.");
         if (search.Assembly is not null && string.IsNullOrWhiteSpace(search.Assembly)) throw new ContextFailure("invalid_argument", "--assembly must be an assembly's simple name.");
     }
+    /// <summary>Captures XML identities and searches actual source/reference declarations.</summary>
+    /// <param name="search">Literal name, owner filters and pagination.</param>
+    /// <param name="token">Cancels traversal, metadata reads and documentation hashing.</param>
+    /// <param name="metadataOnly">Whether to search captured reference images only, bounded to 1,000 matches.</param>
+    /// <returns>A deterministic page sharing a 64-KiB documentation text budget.</returns>
     public DocumentationResult Search(DocumentationSearch search, CancellationToken token = default, bool metadataOnly = false)
     {
         Validate(search); token.ThrowIfCancellationRequested();
@@ -68,6 +78,8 @@ public sealed class DocumentationQuery
             next < ordered.Length ? (int)next : null, page.Count < ordered.Length || omitted != 0, omitted,
             Array.AsReadOnly(projects.Select(project => project.Path).ToArray()), Array.AsReadOnly(references), analysis.SemanticCoverage);
     }
+    /// <summary>Rechecks XML contents and absence captured by the latest search.</summary>
+    /// <param name="token">Cancels documentation hashing.</param>
     public void VerifyInputs(CancellationToken token = default)
     {
         if (inputs is null) throw new InvalidOperationException("Search must capture documentation inputs before verification.");

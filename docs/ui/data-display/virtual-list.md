@@ -42,6 +42,10 @@ end unit;
 
 Scrolling changes which rows CUI requests. The factory can also receive rows just outside the viewport so scrolling has content ready. Give interactive children stable IDs unique across the view. The GUI snapshot reports the realized range as `first:last`, with last excluded.
 
+Declare open modal scopes outside `BuildRow`. The GUI validates each realized
+row before drawing it and rejects open dialogs, sheets, command palettes and
+file pickers in its content. Rows outside the realized range remain unbuilt.
+
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Collections/VirtualLists.fpas)

@@ -11,7 +11,9 @@ namespace Fpas.LanguageServer.Hosting;
 internal sealed class NotificationQueue : IAsyncDisposable
 {
     private sealed record Pending(string Method, JObject Parameters, Func<bool> Current, int Bytes);
-    private readonly Channel<Pending> queue = Channel.CreateBounded<Pending>(64);
+    // Admission is bounded by serialized bytes, so one diagnostics batch can cover
+    // every open document without waiting while the producer holds the session gate.
+    private readonly Channel<Pending> queue = Channel.CreateUnbounded<Pending>(new UnboundedChannelOptions { SingleReader = true });
     private readonly CancellationTokenSource stop;
     private readonly Task writing;
     private readonly Action fail;

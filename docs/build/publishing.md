@@ -63,10 +63,11 @@ success prints the destination. Build logs stream to stderr during publishing.
 
 ## Output ownership
 
-`--output` must be absent, empty, or an unchanged delivery previously produced by
-this command. It must not contain the source project. Publication builds into a
-private sibling directory, inventories the result, and replaces the destination
-after success. Mode changes remove stale runtime files. Build failure, timeout or
+`--output` is required and must name an absent or empty directory, or an unchanged
+delivery previously produced by this command. It must not contain the source
+project. Publication builds into a private sibling directory, inventories the
+result, and replaces the destination after success. Mode changes remove stale
+runtime files. Build failure, timeout or
 cancellation preserve the previous delivery. Failed filesystem rollback retains
 the previous-directory backup instead of deleting it.
 

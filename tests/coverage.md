@@ -156,6 +156,15 @@ Edit profile checks centered dialog geometry, right-aligned footer spacing,
 focus return, consecutive Escape presses from a text field, Cancel, close,
 scrim dismissal and the Save changes toast. The dialog options case checks a
 narrow viewport, persistent dismissal and initial focus without a close button.
+`ModalCompositionContract` checks nested modal ownership, focus, Escape and
+background admission through composed containers, including hidden/disabled
+Veil, Kanban and NodeEditor bodies. `ModalPreflightContract` checks Reasoning
+and realized virtual/grid content restrictions without defeating virtualization.
+`TypewriterObservationContract` checks completion across cached repaint,
+covered/closing frames, replay, replacement and removal. `TourContract` checks
+count-format preflight; `CanvasBarsContract` includes displaced-node Fit bounds.
+`CuiVeilScopeTests` checks nested covered/revealed bodies and sibling focus after
+their native scopes close, under both renderers.
 
 `GuiPublishingTests` uses the same gallery contract from a package-only
 consumer. It checks all five delivery modes, the bundled or transitive CUI
@@ -200,6 +209,17 @@ assets and checks the generated assembly references.
 `HeadlessTuiTests` checks frame updates, bounded input, cached views, and
 effect completion, cancellation and cleanup. `TerminalModeTests` checks
 restoration of native terminal modes after exit and output failure.
+The rendering fixture checks sanitized orphan Unicode clusters against actual
+cells and output positions; the theme fixture compares all default palette colors.
+
+## Workflows and Amp
+
+`WorkflowTests` covers cleanup failure preserving completed outcomes, throwing
+cancellation callbacks, late resource acquisition after scope closure, and
+deadline/caller/unrelated cancellation precedence.
+`FpasAmp.Library.Tests` checks malformed cover-cache rebuilding and offline reuse.
+`FpasAmp.Ui.Tests` checks rating receipts after navigation, stale messages, and
+music-source settings repair and save rejection for playlist extensions.
 
 ## Language and metadata
 

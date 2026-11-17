@@ -8,15 +8,15 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Invokes the native CanvasControls operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="view">view supplied to the native operation.</param>
-    /// <param name="content">content supplied to the native operation.</param>
-    /// <param name="steps">steps supplied to the native operation.</param>
-    /// <param name="toggles">toggles supplied to the native operation.</param>
-    /// <param name="states">states supplied to the native operation.</param>
-    /// <param name="flags">flags supplied to the native operation.</param>
-    /// <returns>The native result.</returns>
+    /// <summary>Overlays zoom and toggle controls on the previous component, preserving its layout target.</summary>
+    /// <param name="id">Stable controls identity.</param>
+    /// <param name="view">Current pan and zoom, updated with native proposals.</param>
+    /// <param name="content">Content bounds in canvas points for fitting; empty bounds only report a fit request.</param>
+    /// <param name="steps">Ascending positive zoom presets; an empty array uses CUI's presets from 25% to 400%.</param>
+    /// <param name="toggles">Icons and tooltips for additional controls, in display order.</param>
+    /// <param name="states">Current and proposed toggle values, one per toggle.</param>
+    /// <param name="flags">Bits: 1 accepts input, 2 hides fit, 4 places the rail at the reading-direction start edge.</param>
+    /// <returns>Bits: 1 zoom changed, 2 fit requested, 4 a toggle changed; zero when idle or disabled.</returns>
     public unsafe int CanvasControls(string id, ref CuiNodeView view, CuiRectangle content, float[] steps, CuiCanvasToggle[] toggles, bool[] states, int flags)
     {
         CheckFrame();

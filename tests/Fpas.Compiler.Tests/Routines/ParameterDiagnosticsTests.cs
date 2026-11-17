@@ -32,4 +32,32 @@ public sealed class ParameterDiagnosticsTests
         Assert.False(result.Success);
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
     }
+
+    /// <summary>Checks cleanup reads on implicit exceptional exits before out assignment completes.</summary>
+    /// <param name="body">The potentially throwing operation in the protected body.</param>
+    [Theory]
+    [InlineData("Value := int.Parse('invalid');")]
+    [InlineData("Fill(out Value);")]
+    public void Finally_cannot_read_an_out_parameter_assigned_only_after_a_throwing_operation(string body)
+    {
+        var result = TestCompilation.CompileAgainstFramework($$"""
+            program Parameters;
+            procedure Fill(out Value: int); begin Value := int.Parse('invalid'); end procedure;
+            procedure Check(out Value: int);
+            begin try {{body}} finally discard Value; end try; end procedure;
+            begin end;
+            end program;
+            """);
+        Assert.False(result.Success);
+        Assert.Equal("FP3028", Assert.Single(result.Diagnostics).Code);
+        Assert.Null(result.Program);
+    }
+
+    /// <summary>Accepts cleanup that initializes an out parameter before reading or returning.</summary>
+    [Fact]
+    public void Finally_assignments_initialize_out_parameters_before_reads_and_successful_return()
+    {
+        var result = TestCompilation.CompileAgainstFramework("program Parameters; procedure Check(out Value: int); begin try return; finally Value := 1; discard Value; end try; end procedure; begin end; end program;");
+        Assert.True(result.Success, string.Join(';', result.Diagnostics));
+    }
 }

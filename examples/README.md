@@ -27,7 +27,7 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | Example | Demonstrates |
 | --- | --- |
 | [Local functions](functions/local-functions/README.md) | Lexical recursion, captures, and escaping delegates |
-| [Generic pipeline](functions/generic-pipeline/README.md) | Generic routines, constraints, and higher-order functions |
+| [Generic pipeline](functions/generic-pipeline/README.md) | Generic routines, inference, and higher-order functions |
 
 ## .NET interop
 

@@ -188,6 +188,17 @@ internal sealed partial class BodyEmitter
         var check = binary.Checked && NumericFacts.Integral(binary.Left.Type);
         var real = NumericFacts.Floating(binary.Left.Type);
         var unsigned = NumericFacts.Unsigned(binary.Left.Type);
+        if (binary.Operator is "shl" or "shr")
+        {
+            if (binary.Left.Type.Kind is TypeKind.NativeInt or TypeKind.NativeUInt)
+            {
+                il.OpCode(ILOpCode.Sizeof); il.Token(typeHandle(TypeSymbol.NativeInt));
+                il.LoadConstantI4(8); il.OpCode(ILOpCode.Mul);
+                il.LoadConstantI4(1); il.OpCode(ILOpCode.Sub);
+            }
+            else il.LoadConstantI4(binary.Left.Type.Kind is TypeKind.Int64 or TypeKind.UInt64 ? 63 : 31);
+            il.OpCode(ILOpCode.And);
+        }
         il.OpCode(binary.Operator switch
         {
             "+" => check ? unsigned ? ILOpCode.Add_ovf_un : ILOpCode.Add_ovf : ILOpCode.Add,

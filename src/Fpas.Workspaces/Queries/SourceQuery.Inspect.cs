@@ -4,8 +4,15 @@ using System.Text;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <remarks>Inspection copies bounded slices from captured source text without filesystem reads.</remarks>
 public sealed partial class SourceQuery
 {
+    /// <summary>Inspects a declaration and one hop of its related source types within a 64-KiB text budget.</summary>
+    /// <param name="selection">Checked declaration or reference position.</param>
+    /// <param name="limit">Maximum related source declarations, 1..100.</param>
+    /// <param name="cancellationToken">Cancels traversal and text copying.</param>
+    /// <param name="includeBody">Whether to include the selected body text and available metadata documentation.</param>
+    /// <returns>Exact captured source slices with explicit absence and omission states.</returns>
     public SourceQueryResult Inspect(SourceSelection selection, int limit = 20, CancellationToken cancellationToken = default, bool includeBody = false)
     {
         if (limit is < 1 or > 100) throw new ContextFailure("invalid_argument", "Related declaration limit must be 1..100.");

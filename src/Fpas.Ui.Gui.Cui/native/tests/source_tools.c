@@ -176,6 +176,77 @@ static void log_console(void) {
     cui_destroy(ui);
 }
 
+/* Compare updated widgets with a fresh rendering of the same application data.
+   This checks visible scrollback rather than the adapter's private cache layout. */
+enum { TRANSITION_WIDTH = 780, TRANSITION_HEIGHT = 450,
+    TRANSITION_BYTES = TRANSITION_WIDTH * TRANSITION_HEIGHT * 4 };
+
+static void transition_frame(cui_ctx *ui, cui_sw_renderer *renderer, const char *output,
+    int revision, const fpas_log_entry *entries, int count, unsigned char *pixels) {
+    cui_begin_frame(ui, .016f);
+    if (output) {
+        int interrupt;
+        fpas_cui_terminal(ui, "transition", output, revision, "> ", 1, 0, 300, 0, 1, &interrupt);
+    } else fpas_cui_log_console(ui, "transition", entries, count, 1, 0, 300, 0, 5);
+    cui_end_frame(ui);
+    cui_sw_render(renderer, cui_get_draw_data(ui), pixels, TRANSITION_WIDTH,
+        TRANSITION_HEIGHT, TRANSITION_WIDTH * 4, CUI_SW_RGBA);
+}
+
+static void check_transition(cui_ctx *ui, cui_sw_renderer *renderer, const char *output,
+    int revision, const fpas_log_entry *entries, int count, const char *message) {
+    unsigned char *actual = malloc(TRANSITION_BYTES), *expected = malloc(TRANSITION_BYTES);
+    check(actual && expected, "Transition pixel buffers must allocate.");
+    if (actual && expected) {
+        cui_sw_renderer *fresh_renderer = cui_sw_create();
+        cui_ctx *fresh = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(fresh_renderer) });
+        cui_set_viewport(fresh, TRANSITION_WIDTH, TRANSITION_HEIGHT, 1);
+        cui_set_reduced_motion(fresh, true);
+        /* Settle layout on both instances before comparing their complete output. */
+        for (int frame = 0; frame < 3; ++frame) {
+            transition_frame(ui, renderer, output, revision, entries, count, actual);
+            transition_frame(fresh, fresh_renderer, output, revision, entries, count, expected);
+        }
+        check(!memcmp(actual, expected, TRANSITION_BYTES), message);
+        cui_destroy(fresh);
+        cui_sw_destroy(fresh_renderer);
+    }
+    free(actual);
+    free(expected);
+}
+
+static void source_transitions(void) {
+    cui_sw_renderer *renderer = cui_sw_create();
+    cui_ctx *ui = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(renderer) });
+    cui_set_viewport(ui, TRANSITION_WIDTH, TRANSITION_HEIGHT, 1);
+    cui_set_reduced_motion(ui, true);
+    check_transition(ui, renderer, "Alpha\n", 0, NULL, 0, "Initial terminal output must match fresh scrollback.");
+    check_transition(ui, renderer, "Alpha\nBeta\n", 0, NULL, 0, "Terminal append must preserve complete output.");
+    check_transition(ui, renderer, "Other\nText\n", 0, NULL, 0, "Same-length terminal replacement must discard old scrollback.");
+    check_transition(ui, renderer, "X\n", 0, NULL, 0, "Shrinking terminal output must discard old scrollback.");
+    check_transition(ui, renderer, "X\n", 1, NULL, 0, "A terminal revision must rebuild scrollback without duplicating output.");
+    fpas_cui_forget(ui, cui_make_id(ui, "transition"));
+    check_transition(ui, renderer, "New\n", 1, NULL, 0, "Reinserted terminal output must start with fresh scrollback.");
+    fpas_cui_forget(ui, cui_make_id(ui, "transition"));
+
+    char text[12][96];
+    fpas_log_entry entries[12];
+    for (int i = 0; i < 12; ++i) {
+        snprintf(text[i], sizeof text[i], "Row %02d: enough text to grow the backing text allocation beyond its initial capacity", i);
+        entries[i] = (fpas_log_entry){ text[i], i, CUI_LOG_INFO };
+    }
+    check_transition(ui, renderer, NULL, 0, entries, 1, "Initial log entries must match a fresh console.");
+    check_transition(ui, renderer, NULL, 0, entries, 12, "Log growth must preserve every row across allocation changes.");
+    entries[0].text = "Replacement";
+    check_transition(ui, renderer, NULL, 0, entries, 12, "A replaced log prefix must refresh the visible rows.");
+    check_transition(ui, renderer, NULL, 0, entries, 2, "Shrinking a log must remove the old tail.");
+    check_transition(ui, renderer, NULL, 0, entries, 3, "Appending after log replacement must preserve the new prefix.");
+    fpas_cui_forget(ui, cui_make_id(ui, "transition"));
+    check_transition(ui, renderer, NULL, 0, entries + 1, 2, "Reinserted log consoles must not retain previous entries.");
+    cui_destroy(ui);
+    cui_sw_destroy(renderer);
+}
+
 enum { PATH_WIDTH = 640, PATH_HEIGHT = 360 };
 
 static void render_path_menu(const char *label, unsigned char *pixels, bool disable) {
@@ -237,6 +308,7 @@ int main(void) {
     hex();
     terminal();
     log_console();
+    source_transitions();
     path_bar();
     return failures ? 1 : 0;
 }

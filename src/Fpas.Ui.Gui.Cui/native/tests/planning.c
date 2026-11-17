@@ -81,7 +81,8 @@ static bool read_only_gantt(bool adapter) {
     return ok && (adapter ? model.start : task.start) == 2;
 }
 
-static bool interrupted_drag(bool gantt, bool removed) {
+/* mode: 0 read-only, 1 removed target, 2 disabled input. */
+static bool interrupted_drag(bool gantt, int mode) {
     cui_ctx *ui = cui_create(NULL);
     if (!ui) return false;
     cui_set_viewport(ui, 940, 620, 1);
@@ -116,8 +117,8 @@ static bool interrupted_drag(bool gantt, bool removed) {
                 y + (gantt ? 0 : hour_height * distance));
         }
         if (frame == 7) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
-        const int count = frame == 5 && removed ? 1 : 2;
-        const int flags = frame == 5 && !removed ? 3 : 1;
+        const int count = frame == 5 && mode == 1 ? 1 : 2;
+        const int flags = frame == 5 ? (mode == 2 ? 0 : mode == 0 ? 3 : 1) : 1;
         cui_begin_frame(ui, .016f);
         if (gantt) fpas_cui_gantt(ui, "gantt", date, 12, tasks, count, 0, day_width, 32,
             0, 0, flags, -1, parts);
@@ -128,7 +129,7 @@ static bool interrupted_drag(bool gantt, bool removed) {
             const float start = gantt ? tasks[1].start : events[1].start;
             if (start == expected_start) continue;
             fprintf(stderr, "%s drag, %s at frame %d: start was %g, expected %g\n",
-                gantt ? "Gantt" : "Week", removed ? "item removed" : "read-only",
+                gantt ? "Gantt" : "Week", mode == 1 ? "item removed" : mode == 2 ? "disabled" : "read-only",
                 frame, start, expected_start);
             ok = false;
             break;
@@ -143,8 +144,12 @@ int main(int argc, char **argv) {
     const bool week = read_only_week(adapter);
     const bool gantt = read_only_gantt(adapter);
     if (!adapter) return week && gantt ? 0 : 1;
-    const bool gantt_removed = interrupted_drag(true, true);
-    const bool gantt_read_only = interrupted_drag(true, false);
-    const bool week_read_only = interrupted_drag(false, false);
-    return week && gantt && gantt_removed && gantt_read_only && week_read_only ? 0 : 1;
+    const bool gantt_removed = interrupted_drag(true, 1);
+    const bool gantt_read_only = interrupted_drag(true, 0);
+    const bool week_read_only = interrupted_drag(false, 0);
+    const bool week_removed = interrupted_drag(false, 1);
+    const bool gantt_disabled = interrupted_drag(true, 2);
+    const bool week_disabled = interrupted_drag(false, 2);
+    return week && gantt && gantt_removed && gantt_read_only && week_read_only
+        && week_removed && gantt_disabled && week_disabled ? 0 : 1;
 }

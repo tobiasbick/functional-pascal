@@ -165,10 +165,121 @@ begin
   Check(Released = 1, 'A failing finalizer prevented later cleanup');
 end function;
 
+async function VerifyCompletedValue(Callback: bool): Tasks.Task;
+  function Use(Lifetime: S.Scope): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    Lifetime.OnClose(
+      function(): Tasks.Task begin
+        Released := Released + 1;
+        return Tasks.Task.CompletedTask;
+      end function
+    );
+    if Callback then
+      discard Lifetime.Token.Register(
+        procedure() begin
+          raise Expected;
+        end procedure
+      );
+    else
+      Lifetime.OnClose(
+        function(): Tasks.Task begin
+          raise Expected;
+        end function
+      );
+    end if;
+
+    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Failure('expected outcome'));
+  end function;
+begin
+  var Released: int := 0;
+  const Expected: Sys.InvalidOperationException := new Sys.InvalidOperationException(
+    'release failure'
+  );
+  try
+    discard await S.Scope.Use<W.Outcome<int, string>>(Use, T.CancellationToken.None);
+    Check(false, 'Scope cleanup failure was swallowed');
+  catch Failure: Sys.AggregateException do
+    const Faults: Sys.AggregateException := Failure.Flatten();
+    Check(Faults.InnerExceptions.Count = 1, 'Cleanup reported missing or duplicate failures');
+    Check(
+      Sys.Object.ReferenceEquals(Faults.InnerExceptions[0], Expected),
+      'Cleanup lost its failure'
+    );
+    const Stored: object? := Failure.Data[
+      'Fpas.Workflows.CompletedValue'
+    ];
+    if Stored = null then
+      raise new Sys.InvalidOperationException('Cleanup lost the completed outcome');
+    end if;
+
+    const Completed: W.Outcome<int, string> := cast<W.Outcome<int, string>>(Stored);
+    case Completed of
+      when W.Outcome.Failure(const Reason: string):
+        Check(Reason = 'expected outcome', 'Cleanup lost the completed expected outcome');
+      when W.Outcome.Success(_):
+        Check(false, 'Cleanup changed the completed expected outcome');
+    end case;
+  end try;
+
+  Check(Released = 1, 'Cleanup failure prevented another resource release');
+end function;
+
+async function VerifyLateAcquisition(): Tasks.Task;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  begin
+    return Acquired.Task;
+  end function;
+
+  function Release(Value: int): Tasks.Task;
+  begin
+    Check(Value = 42, 'Registration refusal released the wrong resource');
+    Released := Released + 1;
+    return Tasks.Task.CompletedTask;
+  end function;
+
+  function Use(Lifetime: S.Scope): Tasks.Task<Tasks.Task<W.Outcome<int, string>>>;
+  begin
+    const Dependency: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
+      W.Workflow<int, string, int>.Defer(Acquire), Release
+    );
+    // Deliberately let acquisition escape so it finishes after its owner closes.
+    return Tasks.Task.FromResult<Tasks.Task<W.Outcome<int, string>>>(
+      Dependency.Build(42, Lifetime)
+    );
+  end function;
+begin
+  var Released: int := 0;
+  const Acquired: Tasks.TaskCompletionSource<W.Outcome<int, string>> := new Tasks.TaskCompletionSource<W.Outcome<int, string>>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Pending: Tasks.Task<W.Outcome<int, string>> := await S.Scope.Use<Tasks.Task<W.Outcome<int, string>>>(
+    Use,
+    T.CancellationToken.None
+  );
+  Check(
+    not Pending.IsCompleted and Released = 0,
+    'Acquisition did not remain pending until its owner closed'
+  );
+  Acquired.SetResult(W.Outcome.Success(42));
+  var Refused: bool := false;
+  try
+    discard await Pending;
+  catch Failure: Sys.InvalidOperationException do
+    Refused := true;
+    Check(Released = 1, 'A dependency refused by its closed scope was not released');
+  end try;
+
+  Check(Refused, 'A closed scope accepted a late dependency');
+  Check(Released = 1, 'The late dependency was not released exactly once');
+end function;
+
 begin
   await VerifyLayers();
   await VerifyChild();
   await VerifyFaults();
+  await VerifyCompletedValue(false);
+  await VerifyCompletedValue(true);
+  await VerifyLateAcquisition();
   Sys.Console.WriteLine('Workflow contracts verified');
 end;
 

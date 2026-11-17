@@ -2,7 +2,60 @@ unit GalleryTourContract;
 
 uses
   Fpas.Ui.Widgets.Overlays.Tours as T, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
-  Fpas.Ui.Widgets.Overlays.Menus as M, GalleryHostAssertions as A, System as Sys;
+  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk,
+  GalleryHostAssertions as A, System as Sys;
+
+procedure CountFormats();
+  function Tour(Format: string; Current: int): E.Element<int>;
+  begin
+    return T.Tour<int>(
+      'tour-format', E.Text<int>('Base'), [new T.Step()], Current,
+      function(Change: T.Change): int => Change.Step, new T.Options(CountFormat := Format)
+    );
+  end function;
+  function Selection(Format: string; Count: int): E.Element<int>;
+  begin
+    return Bulk.SelectionBar<int>(
+      'selection-format', Bulk.Selection.Count(Count), [],
+      function(Change: Bulk.Event): int => Change.Index, E.Text<int>('Anchor'),
+      new Bulk.Options(CountFormat := Format)
+    );
+  end function;
+  procedure Reject(Node: E.Element<int>; Id: string);
+  begin
+    try
+      discard V.Prepare<int>(Node, V.Target.Graphical);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Id) and Error.Message.Contains('countFormat'), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Invalid count format passed view preflight.');
+  end procedure;
+begin
+  for Format: string in ['', 'Selected', '100%%', '%d chosen (100%%)', '%%%d'] do
+    for Current: int in [-1, 0] do
+      discard V.Prepare<int>(Tour(Format, Current), V.Target.Graphical);
+    end for;
+
+    for Count: int in [0, 5] do
+      discard V.Prepare<int>(Selection(Format, Count), V.Target.Graphical);
+    end for;
+  end for;
+
+  discard V.Prepare<int>(Tour('Step %d / %d', 0), V.Target.Graphical);
+  for Format: string in ['%s', '%n', '%', '%1$d', '%02d', '%d %d %d'] do
+    for Current: int in [-1, 0] do
+      Reject(Tour(Format, Current), 'tour-format');
+    end for;
+
+    for Count: int in [0, 5] do
+      Reject(Selection(Format, Count), 'selection-format');
+    end for;
+  end for;
+
+  Reject(Selection('%d %d', 0), 'selection-format');
+end procedure;
 
 // Checks tour preflight before native calls can create an overlay.
 public procedure Verify();
@@ -25,6 +78,7 @@ public procedure Verify();
     );
   end function;
 begin
+  CountFormats();
   const Steps: array of T.Step := [new T.Step(Title := 'Title', Body := 'Body')];
   const Settings: T.Options := new T.Options();
   Reject(View(Steps, -1, Settings), V.Target.Terminal, 'Graphical');

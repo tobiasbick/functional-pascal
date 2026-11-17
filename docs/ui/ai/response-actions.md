@@ -31,7 +31,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Vote / CopyText` | Vote uses minus one for down, zero for neutral and one for up. Null Vote or CopyText hides the corresponding controls. |
+| `Vote / CopyText` | Vote uses minus one for down, zero for neutral and one for up. Null Vote leaves voting momentary, with no selected state. Null CopyText hides Copy. |
 | `HideRegenerate / HideShare / Enabled` | false / false / true. |
 
 ## Interaction

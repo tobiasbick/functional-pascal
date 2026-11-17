@@ -40,6 +40,8 @@ begin
   Visit(
     Child, Frame with
       AcceptInput := Enabled and Shown;
+      Interactive := Frame.Interactive and Settings.Enabled and Shown;
+      PaintingClosed := Frame.PaintingClosed or not Settings.Enabled or not Shown;
     end with, false, L.Alignment.Default
   );
   Frame.Window.VeilEnd();

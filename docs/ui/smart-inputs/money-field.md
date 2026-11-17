@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.MoneyField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MoneyFields as W;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MoneyFields as W,
+  System as Sys;
 
 // Displays a whole-euro salary field.
 // ## Parameters
@@ -20,6 +21,10 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MoneyFields as W;
 public function View(Salary: decimal): E.Element<decimal>;
 requires Salary >= decimal.MinValue and Salary <= decimal.MaxValue;
 begin
+  if Sys.Decimal.Round(Salary, 0) <> Salary then
+    raise new Sys.ArgumentException('The salary must be a whole-euro amount.');
+  end if;
+
   return W.MoneyField<decimal>('salary', Salary,
     function(Proposed: decimal): decimal => Proposed,
     new W.Options(Label := 'Salary', Symbol := '€', Code := 'EUR',

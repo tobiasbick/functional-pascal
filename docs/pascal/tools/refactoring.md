@@ -42,9 +42,9 @@ rename.
 
 The original context must analyze successfully. Rename finds exact declaration
 and reference tokens, retains their original text and deduplicates linked edits.
-Proposed source is checked with the same compiler. FPAS dependency images are
-compiled into an owned temporary directory for this validation, without source
-writes or application execution. Temporary images are removed afterwards.
+Proposed source is checked with the same compiler. FPAS dependencies are compiled
+to private in-memory metadata images for this validation, without writing their
+DLLs/PDBs, changing sources or executing the application.
 
 Compilation success alone is insufficient: every indexed source occurrence must
 retain its declaration/metadata binding after offsets are adjusted. Source
@@ -86,8 +86,8 @@ dependencies; it follows the [check contract](../program-structure/cli.md).
 covers the whole operation, defaults to 120 seconds and accepts 1..3600. Cancellation
 stops and joins owned build processes. Preview/apply work is bounded to 1,000 edit
 occurrences, 100,000 indexed occurrences, 64 MiB of distinct source input,
-64 MiB of changed original/replacement bytes and 64 MiB of temporary dependency
-images. Plans and JSON reports are bounded to 4 MiB.
+64 MiB of changed original/replacement bytes and a 64 MiB retained cache of
+overlay analysis and dependency images. Plans and JSON reports are bounded to 4 MiB.
 
 Human output shows the plan path and edits; diagnostics use stderr. --report json
 owns stdout with one object, including failures. It contains success/status,

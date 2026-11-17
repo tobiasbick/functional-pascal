@@ -4,10 +4,81 @@ unit FpasAmp.Ui.Tests.Albums;
 uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  System.Threading as T, System.Threading.Tasks as Tasks,
   Fpas.Ui.Mvu.Application as A, System.Collections.Immutable as I, Xunit as X;
 
 // Pure album-slice regression checks, independent of a native display.
 public type AlbumTests = record
+  // Rating receipts release retained controls even after navigation hides Albums.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  public async function RatingFinishesWhileAnotherDestinationIsOpen(Failed: bool): Tasks.Task;
+  begin
+    await using const LibrarySession: Monitor.Session := H.Start([], T.CancellationToken.None);
+    const Save: procedure(Settings.Preferences) := procedure(_Value: Settings.Preferences) begin end procedure;
+    const Header: Library.Album := new Library.Album('album', 'Title', 'Artist', 1L, 'revision');
+    const Initial: App.State := new App.State(
+      new Settings.State(new Settings.Preferences([])),
+      Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums)),
+      Albums := Update.Apply(
+        new M.State(),
+        M.Msg.Received(I.ImmutableArray.Create<Library.Album>(Header)),
+        null
+      ).Model with
+        Saving := I.ImmutableHashSet<string>.Empty.Add('album');
+      end with
+    );
+    const Hidden: App.State := Controller.Apply(
+      Initial,
+      App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Settings))),
+      Save,
+      LibrarySession
+    ).Model;
+    X.Assert.True(Hidden.Albums.Saving.Contains('album'));
+    const Receipt: M.Msg := if Failed then
+      M.Msg.RatingFailed('album', 'Write failed')
+    else
+      M.Msg.Rated('album', 8)
+    end if;
+    const Finished: App.State := Controller.Apply(
+      Hidden,
+      App.Msg.Albums(Receipt),
+      Save,
+      LibrarySession
+    ).Model;
+    X.Assert.Empty(Finished.Albums.Saving);
+    if Failed then
+      X.Assert.Equal<string?>('Write failed', Finished.Albums.Error);
+    else
+      X.Assert.Equal<int?>(8, Finished.Albums.Items[0].Rating);
+    end if;
+    const Stale: App.State := Controller.Apply(
+      Finished,
+      App.Msg.Albums(M.Msg.Received(I.ImmutableArray<Library.Album>.Empty)),
+      Save,
+      LibrarySession
+    ).Model;
+    X.Assert.Equal<int>(1, Stale.Albums.Items.Length);
+    const Image: App.State := Controller.Apply(
+      Stale,
+      App.Msg.Albums(M.Msg.Image(Stale.Albums.Generation, 'album', null)),
+      Save,
+      LibrarySession
+    ).Model;
+    X.Assert.Empty(Image.Albums.Images);
+    const Reopened: App.State := Controller.Apply(
+      Image,
+      App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Albums))),
+      Save,
+      LibrarySession
+    ).Model;
+    X.Assert.Empty(Reopened.Albums.Saving);
+  end function;
+
   // A confirmed rating changes just user state and keeps immutable image resources.
   [X.FactAttribute]
   public procedure RatingKeepsArtworkAndViewport();

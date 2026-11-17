@@ -52,7 +52,7 @@ public sealed partial class PublishingTests
         foreach (var entry in entries)
         {
             var path = Path.Combine(output, entry.GetProperty("path").GetString()!);
-            Assert.Equal(entry.GetProperty("sha256").GetString(), Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))));
+            Assert.Equal(entry.GetProperty("sha256").GetString(), FileHash.Sha256(path));
         }
         Assert.Empty(Directory.GetFiles(output, "*.pfx", SearchOption.AllDirectories));
         Task<ProcessResult> Verify(string expected) => ProcessRunner.RunAsync(["msbuild", verificationProject, "-nologo", "-t:FpasVerifyPublish",

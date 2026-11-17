@@ -113,16 +113,37 @@ public sealed class CuiFontThemeTests
     [GuiFact]
     public void NativeCaptionTablesOwnTheirStrings()
     {
-        using var window = new CuiWindow("Owned captions", renderer: CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        using var window = new CuiWindow("Owned captions", 500, 440, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        byte[] english = Capture("english");
         var names = new string?[12]; names[0] = "Januar 日本";
         window.SetStrings(new(Months: names, Today: "Heute 🎵"));
+        byte[] translated = Capture("translated");
+        Assert.NotEqual(english, translated);
         names[0] = "Changed"; GC.Collect();
+        Assert.Equal(translated, Capture("copied"));
         Assert.Throws<ArgumentException>(() => window.SetStrings(new(Weekdays: ["Monday"])));
         Assert.Throws<ArgumentException>(() => window.SetStrings(new(Today: "invalid\0text")));
+        Assert.Equal(translated, Capture("rejected"));
         Assert.True(window.NextFrame());
         Assert.Throws<InvalidOperationException>(() => window.SetStrings(null));
         window.DiscardFrame();
-        window.SetStrings(new(Today: "Today")); window.SetStrings(null);
+        window.SetStrings(new(Months: names));
+        Assert.NotEqual(translated, Capture("replacement"));
+        window.SetStrings(null);
+        Assert.Equal(english, Capture("reset"));
+
+        byte[] Capture(string name)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.Calendar("calendar", new DateOnly(2026, 1, 14), true, 0, null);
+            window.Present();
+            string path = directory.File(name + ".png");
+            window.CapturePng(path);
+            return File.ReadAllBytes(path);
+        }
     }
 
     /// <summary>Uses CUI's color conversion, interpolation and alpha helpers.</summary>

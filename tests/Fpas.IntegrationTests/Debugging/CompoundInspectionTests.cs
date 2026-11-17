@@ -17,7 +17,7 @@ public sealed class CompoundInspectionTests
             uses Fixture as F, System.Console as Console;
             procedure Observe();
             begin
-              const Root: F.Node<int> := new F.Node<int>(42);
+              const Root: F.Node<int> := new F.Node<int>(42); const Derived: F.Derived := new F.Derived();
               Root.Next := Root;
               const Alias: F.Node<int> := Root;
               const Values: array of int := [10, 20, 30];
@@ -59,7 +59,8 @@ public sealed class CompoundInspectionTests
         var sourceFields = await host.ValueChildren(new(stop.StopId.Value, root.Reference.Value, View: "source"), deadline.Token);
         var getter = Assert.Single(sourceFields.Items, item => item.Name == "Dangerous");
         Assert.Equal("unavailable", getter.Status); Assert.Equal("requires_execution", getter.Error!.Code);
-        foreach (var (expression, expected) in new[] { ("Root.Value + 1", "43"), ("Offset[-1, 7]", "99") })
+        foreach (var (expression, expected) in new[] { ("Root.Value + 1", "43"), ("Offset[-1, 7]", "99"),
+            ("Derived.Inherited", "42"), ("false and (Derived.Inherited = 0)", "false"), ("true or (Derived.Inherited = 0)", "true") })
         {
             var evaluated = await host.Evaluate(new(stop.StopId.Value, frame.Id, expression), deadline.Token);
             Assert.Null(evaluated.Error); Assert.Equal(expected, evaluated.Value?.Scalar);
@@ -170,6 +171,8 @@ public sealed class CompoundInspectionTests
             using System.Diagnostics;
             using System.IO;
             namespace Fixture;
+            public class Base<T>(T value) { public T Inherited = value; }
+            public sealed class Derived() : Base<int>(42);
             [DebuggerDisplay("{Dangerous}")]
             [DebuggerTypeProxy(typeof(Proxy))]
             public sealed class Node<T>(T value)

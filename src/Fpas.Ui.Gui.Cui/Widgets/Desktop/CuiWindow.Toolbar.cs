@@ -5,11 +5,11 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Opens the native BeginToolbar operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="style">style supplied to the native operation.</param>
-    /// <param name="noBorder">noBorder supplied to the native operation.</param>
-    /// <param name="enabled">enabled supplied to the native operation.</param>
+    /// <summary>Opens a toolbar, closed by EndToolbar after its tools and groups.</summary>
+    /// <param name="id">Stable toolbar identity.</param>
+    /// <param name="style">Plain strip=0, grouped pill=1, floating pill=2.</param>
+    /// <param name="noBorder">Whether to omit the plain strip's bottom hairline.</param>
+    /// <param name="enabled">Whether tools accept input.</param>
     public unsafe void BeginToolbar(string id, int style, bool noBorder, bool enabled)
     {
         CheckFrame();
@@ -17,7 +17,7 @@ public sealed partial class CuiWindow
         layouts.Add(new(Layout.Toolbar));
     }
 
-    /// <summary>Closes the native EndToolbar operation.</summary>
+    /// <summary>Closes the innermost toolbar, builds its overflow menu and makes its root the last widget.</summary>
     public unsafe void EndToolbar()
     {
         RequireLayout(Layout.Toolbar);
@@ -25,27 +25,27 @@ public sealed partial class CuiWindow
         layouts.RemoveAt(layouts.Count - 1);
     }
 
-    /// <summary>Invokes the native ToolbarButton operation.</summary>
-    /// <param name="icon">icon supplied to the native operation.</param>
-    /// <param name="label">label supplied to the native operation.</param>
-    /// <param name="tooltip">tooltip supplied to the native operation.</param>
-    /// <param name="shortcut">shortcut supplied to the native operation.</param>
-    /// <param name="toggle">toggle supplied to the native operation.</param>
-    /// <param name="tone">tone supplied to the native operation.</param>
-    /// <param name="flags">flags supplied to the native operation.</param>
-    /// <returns>The native result.</returns>
+    /// <summary>Adds an action or toggle to the current toolbar.</summary>
+    /// <param name="icon">Optional CUI icon glyph, copied for deferred overflow construction.</param>
+    /// <param name="label">Optional visible caption.</param>
+    /// <param name="tooltip">Optional hover caption.</param>
+    /// <param name="shortcut">Optional shortcut hint.</param>
+    /// <param name="toggle">Minus one for an action, zero for an unchecked toggle, one for a checked toggle.</param>
+    /// <param name="tone">Native semantic tone ordinal.</param>
+    /// <param name="flags">Bits: 1 disables the tool, 2 shows a flyout marker, 4 draws a primary action.</param>
+    /// <returns>Minus one when idle; otherwise the proposed toggle value, or zero for an activated action.</returns>
     public unsafe int ToolbarButton(string? icon, string? label, string? tooltip, string? shortcut, int toggle, int tone, int flags)
     {
         CheckFrame();
         return NativeMethods.ToolbarButton(context, icon, label, tooltip, shortcut, toggle, tone, flags);
     }
 
-    /// <summary>Invokes the native ToolbarRadio operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="icons">icons supplied to the native operation.</param>
-    /// <param name="labels">labels supplied to the native operation.</param>
-    /// <param name="value">value supplied to the native operation.</param>
-    /// <returns>The native result.</returns>
+    /// <summary>Adds an exclusive choice of icon tools to the current toolbar.</summary>
+    /// <param name="id">Stable choice identity.</param>
+    /// <param name="icons">Option glyphs; CUI uses at most the first 32 entries.</param>
+    /// <param name="labels">One tooltip per icon.</param>
+    /// <param name="value">Current zero-based selection.</param>
+    /// <returns>The proposed index, or minus one when unchanged or empty.</returns>
     public unsafe int ToolbarRadio(string id, string[] icons, string[] labels, int value)
     {
         CheckFrame();
@@ -54,12 +54,12 @@ public sealed partial class CuiWindow
         return NativeMethods.ToolbarRadio(context, Stable(id), memory.Labels(icons), memory.Labels(labels), icons.Length, value);
     }
 
-    /// <summary>Invokes the native ToolbarCycle operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="labels">labels supplied to the native operation.</param>
-    /// <param name="value">value supplied to the native operation.</param>
-    /// <param name="tooltip">tooltip supplied to the native operation.</param>
-    /// <returns>The native result.</returns>
+    /// <summary>Adds a tool that cycles through its captions when activated.</summary>
+    /// <param name="id">Stable tool identity.</param>
+    /// <param name="labels">Available captions in cycle order.</param>
+    /// <param name="value">Current zero-based selection.</param>
+    /// <param name="tooltip">Hover caption.</param>
+    /// <returns>The proposed index, or minus one when unchanged.</returns>
     public unsafe int ToolbarCycle(string id, string[] labels, int value, string tooltip)
     {
         CheckFrame();
@@ -67,28 +67,28 @@ public sealed partial class CuiWindow
         return NativeMethods.ToolbarCycle(context, Stable(id), memory.Labels(labels), labels.Length, value, tooltip);
     }
 
-    /// <summary>Opens the native BeginToolbarGroup operation.</summary>
+    /// <summary>Opens a native tool group; pair with EndToolbarGroup before closing the toolbar.</summary>
     public unsafe void BeginToolbarGroup()
     {
         CheckFrame();
         NativeMethods.ToolbarGroupBegin(context);
     }
 
-    /// <summary>Closes the native EndToolbarGroup operation.</summary>
+    /// <summary>Closes the current native tool group.</summary>
     public unsafe void EndToolbarGroup()
     {
         CheckFrame();
         NativeMethods.ToolbarGroupEnd(context);
     }
 
-    /// <summary>Invokes the native ToolbarSeparator operation.</summary>
+    /// <summary>Adds a divider between tools in the current toolbar.</summary>
     public unsafe void ToolbarSeparator()
     {
         CheckFrame();
         NativeMethods.ToolbarSeparator(context);
     }
 
-    /// <summary>Invokes the native ToolbarSpacer operation.</summary>
+    /// <summary>Pushes subsequent tools to the far side of the current toolbar.</summary>
     public unsafe void ToolbarSpacer()
     {
         CheckFrame();

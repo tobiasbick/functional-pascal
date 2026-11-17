@@ -149,6 +149,34 @@ public sealed class SourceInterfaceTests
         Assert.Contains(Assert.Single(result.Diagnostics).Code, new[] { "FP3021", "FP3029" });
     }
 
+    /// <summary>Checks private protocol visibility through public transparent aliases.</summary>
+    /// <param name="target">The alias target containing a private protocol.</param>
+    [Theory]
+    [InlineData("Hidden")]
+    [InlineData("array of Hidden")]
+    [InlineData("Box<Hidden>")]
+    public void Public_aliases_cannot_expose_private_protocols(string target)
+    {
+        var result = TestCompilation.Compile($$"""
+            unit Invalid;
+            type Hidden = protocol end protocol;
+            public type Box<T> = record public Value: T; end record;
+            public type Alias = {{target}};
+            end unit;
+            """, CompilationTarget.Library);
+        Assert.False(result.Success);
+        Assert.Equal("FP3031", Assert.Single(result.Diagnostics).Code);
+        Assert.Null(result.Program);
+    }
+
+    /// <summary>Accepts transparent aliases whose protocol target is public.</summary>
+    [Fact]
+    public void Public_aliases_can_expose_public_protocols()
+    {
+        var result = TestCompilation.Compile("unit Api; public type Visible = protocol end protocol; public type Alias = Visible; end unit;", CompilationTarget.Library);
+        Assert.True(result.Success, string.Join(';', result.Diagnostics));
+    }
+
     [Fact]
     public void Declaring_an_interface_does_not_require_record_implementation_support_for_its_imported_bases()
     {

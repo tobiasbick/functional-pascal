@@ -151,11 +151,12 @@ offline SDK export, cache ownership, native assets and optional symbols.
 
 Check/query require the CLI and the project's SDK to contain the same compiler
 binary. Dist builds both from the same artifacts directory and reads the package
-version from the SDK project (currently `0.1.0-dev`). It removes only that version's
-`fpas.net.sdk` entry from the active NuGet global-packages cache, so the next
-consumer restore/SDK resolution selects the new package. Other versions/packages
-remain cached. No separate SDK build, pack or cache-clear command is needed after
-dist. Consumers must select this SDK version and have the local feed configured;
+version from the SDK project (currently `0.1.0-dev`). It stops .NET build servers
+and removes that version's `fpas.net.sdk` and `fpas.ui.gui.cui` entries from the
+active NuGet global-packages cache, so the next consumer restore/SDK resolution
+selects the new packages. Other versions/packages remain cached. No separate SDK
+build, pack or cache-clear command is needed after dist. Consumers must select
+this SDK version and have the local feed configured;
 the checkout's examples already do. Outside the checkout, `fpas sdk export ./feed`
 exports the embedded matching package without downloads. `fpas build` selects the
 delivered executable; the SDK verifies its compiler hash before compilation.

@@ -4,17 +4,59 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Queries;
 
+/// <summary>Selects a source position using one-based UTF-16 coordinates.</summary>
+/// <param name="File">Source path in the context.</param>
+/// <param name="Line">One-based line.</param>
+/// <param name="Column">One-based UTF-16 column; tabs count as one.</param>
+/// <param name="Project">Optional owning project path for a linked source.</param>
 public sealed record SourceSelection(string File, int Line, int Column, string? Project = null);
+/// <summary>Records the checked owner and exact span selected by a query.</summary>
+/// <param name="Project">Owning project path.</param>
+/// <param name="Span">Selected source span.</param>
 public sealed record QuerySelection(string Project, SourceSpan Span);
+/// <summary>Describes a resolved source, metadata or implicit declaration.</summary>
+/// <param name="Project">Source owner, or null for external metadata.</param>
+/// <param name="Origin">source, metadata or implicit.</param>
+/// <param name="Symbol">Resolved symbol descriptor.</param>
+/// <param name="Types">Self-contained types reachable from the declaration surface.</param>
 public sealed record DefinitionResult(string? Project, string Origin, SemanticSymbol Symbol, IReadOnlyList<SemanticType> Types);
+/// <summary>Describes the checked type of a source expression.</summary>
+/// <param name="Type">Actual checked expression type.</param>
+/// <param name="DeclaredType">Declared type, when separately available.</param>
+/// <param name="Symbol">Symbol at the position, when present.</param>
+/// <param name="Types">Types required to interpret the descriptors.</param>
 public sealed record TypeResult(SemanticType Type, SemanticType? DeclaredType, SemanticSymbol? Symbol, IReadOnlyList<SemanticType> Types);
+/// <summary>Identifies one checked reference in an owning compilation.</summary>
+/// <param name="Project">Owning project path.</param>
+/// <param name="Span">Reference token span.</param>
+/// <param name="Role">Semantic occurrence role.</param>
 public sealed record ReferenceResult(string Project, SourceSpan Span, string Role);
+/// <summary>Contains a bounded reference search excluding declaration occurrences.</summary>
+/// <param name="Definition">Canonical target declaration.</param>
+/// <param name="References">Ordered checked references.</param>
+/// <param name="ReturnedCount">Number of returned references.</param>
 public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList<ReferenceResult> References, int ReturnedCount);
+/// <summary>Contains one source query's payload, scope and independent coverage/truncation states.</summary>
+/// <param name="Status">ok or not_found.</param>
+/// <param name="Reason">Explicit absence reason, when applicable.</param>
+/// <param name="Selection">Resolved source selection, when applicable.</param>
+/// <param name="Definition">Definition-query payload.</param>
+/// <param name="Type">Type-query payload.</param>
+/// <param name="Refs">Reference-query payload.</param>
+/// <param name="Truncated">Whether pagination or text budgets omitted results.</param>
+/// <param name="BinaryBoundaries">References outside editable source ownership.</param>
+/// <param name="Find">Name-search payload.</param>
+/// <param name="Inspect">Inspection payload.</param>
+/// <param name="Searched">Project paths searched, when explicitly supplied.</param>
+/// <param name="Callees">Outgoing-call payload.</param>
+/// <param name="Callers">Incoming-call payload.</param>
+/// <param name="Coverage">Checked semantic coverage independent of pagination.</param>
 public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection? Selection, DefinitionResult? Definition,
     TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries,
     FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null,
     CalleesResult? Callees = null, CallersResult? Callers = null, WorkspaceSemanticCoverage? Coverage = null);
 
+/// <summary>Queries detached checked facts without executing code or reading source files.</summary>
 public sealed partial class SourceQuery
 {
     private readonly WorkspaceAnalysis analysis;
@@ -23,6 +65,8 @@ public sealed partial class SourceQuery
     private readonly WorkspaceSemanticCoverage coverage;
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
+    /// <summary>Creates a query service when at least one checked semantic region is available.</summary>
+    /// <param name="analysis">Current detached project analysis.</param>
     public SourceQuery(WorkspaceAnalysis analysis)
     {
         this.analysis = analysis;
@@ -32,6 +76,12 @@ public sealed partial class SourceQuery
         if (projects.Count == 0) throw new ContextFailure("analysis_failed", "No checked semantic regions are available in the selected scope.");
     }
 
+    /// <summary>Queries a definition, expression type or references at an exact source position.</summary>
+    /// <param name="operation">definition, type or refs.</param>
+    /// <param name="selection">Source position and optional linked-file owner.</param>
+    /// <param name="limit">Maximum returned references, 1..1,000.</param>
+    /// <param name="cancellationToken">Cancels semantic search.</param>
+    /// <returns>Checked facts or explicit absence, with coverage and binary boundaries.</returns>
     public SourceQueryResult Execute(string operation, SourceSelection selection, int limit = 100, CancellationToken cancellationToken = default)
         => ExecuteCore(operation, selection, limit, cancellationToken) with { Coverage = coverage };
 

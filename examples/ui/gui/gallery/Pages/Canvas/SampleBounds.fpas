@@ -1,0 +1,39 @@
+unit GuiGallery.Pages.Canvas.SampleBounds;
+
+uses
+  GuiGallery.Pages.Canvas.State as State, Fpas.Ui.Widgets.Canvas.CanvasControls as Controls,
+  System as Sys;
+
+// Shared width of the three fixed gallery node specimens, in canvas points.
+public const NodeWidth: float := 184.0F;
+
+// Conservative extents for these specimens, including room around their native
+// title, pin rows and wrapped body text. Positive has two body lines, Negative
+// has one, and Generate has one body line below two pins. These bounds do not
+// change the native layout and are not a general node measurement API.
+const Heights: array of float := [128.0F, 112.0F, 136.0F];
+
+// Encloses every current node specimen for the native Fit action.
+// ## Parameters
+// - `Model`: Canvas model containing the three fixed specimens' current positions.
+// ## Returns
+// Conservative content bounds in canvas coordinates, including negative positions.
+public function Content(Model: State.Model): Controls.Bounds;
+requires Model.Positions.Length = 3;
+begin
+  var Left: float := Model.Positions[0].X;
+  var Top: float := Model.Positions[0].Y;
+  var Right: float := Left + NodeWidth;
+  var Bottom: float := Top + Heights[0];
+  for Index: int := 1 to Model.Positions.Length - 1 do
+    const Position: State.Position := Model.Positions[Index];
+    Left := Sys.MathF.Min(Left, Position.X);
+    Top := Sys.MathF.Min(Top, Position.Y);
+    Right := Sys.MathF.Max(Right, Position.X + NodeWidth);
+    Bottom := Sys.MathF.Max(Bottom, Position.Y + Heights[Index]);
+  end for;
+
+  return new Controls.Bounds(Left, Top, Right - Left, Bottom - Top);
+end function;
+
+end unit;

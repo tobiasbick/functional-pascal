@@ -5,12 +5,52 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
   FpasAmp.Ui.Settings.Update as Update, FpasAmp.Settings as Store,
-  Fpas.Ui.Mvu.Application as Mvu, System.IO as IO, System.Threading as T,
+  Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO, System.Threading as T,
   FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
   System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;
 
 // Verifies pause preferences and accepted/failed settings updates.
 public type PreferenceTests = record
+  // Damaged extension policies are repaired to settings that discovery can accept.
+  [X.FactAttribute]
+  public procedure PlaylistExtensionsAreRepairedAndCannotBeSaved();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
+    IO.File.WriteAllText(
+      Path,
+      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+        Folder.Path
+      ) +
+      ',"offline":false,"extensions":[".M3U",".mp3"]}]}'
+    );
+    const Loaded: M.Preferences := Store.Load(Folder.Path);
+    X.Assert.Equal<string>(['.mp3'], Loaded.MusicSources[0].Extensions);
+    X.Assert.Equal<int>(1, S.Normalize(Loaded.MusicSources).Length);
+    X.Assert.Equal<int>(
+      1,
+      IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
+    );
+    X.Assert.DoesNotContain('.M3U', IO.File.ReadAllText(Path));
+    var Rejected: bool := false;
+    try
+      Store.Save(
+        Folder.Path, new M.Preferences(
+          [
+            H.Source('music', Folder.Path) with
+              Extensions := ['.m3u8'];
+            end with
+          ]
+        )
+      );
+    catch Invalid: Sys.ArgumentException do
+      Rejected := true;
+    end try;
+
+    X.Assert.True(Rejected);
+    X.Assert.Equal<string>(['.mp3'], Store.Load(Folder.Path).MusicSources[0].Extensions);
+  end procedure;
+
   // App settings enable playlist discovery by default and retain an explicit opt-out.
   [X.FactAttribute]
   public procedure PlaylistDiscoveryDefaultsAndPersists();

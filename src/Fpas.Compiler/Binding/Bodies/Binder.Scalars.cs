@@ -32,7 +32,7 @@ internal sealed partial class Binder
             var constant = NumericValue.Integer(ConstantValue.Evaluate(value)!);
             if (constant < info.Lower || constant > info.Upper) throw source.Error("FP3031", "The constant is outside the declared subrange.", position);
         }
-        catch (Exception error) when (error is OverflowException or DivideByZeroException)
+        catch (Exception error) when (error is OverflowException or DivideByZeroException or InvalidOperationException)
         { throw source.Error("FP3031", "The constant cannot be represented in the declared subrange.", position); }
     }
 

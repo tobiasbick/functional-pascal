@@ -47,6 +47,9 @@ end unit;
 | `Today / DayWidth / RowHeight` | All zero. Zero Today hides the marker. Other zeros use native dimensions. |
 | `ReadOnly / Enabled` | false / true. ReadOnly keeps activation and disables edits. |
 
+For task bars, `Start` is inclusive and `Finish` is exclusive: offsets 0 and 1
+make a one-day task. A milestone may use equal start and finish offsets.
+
 ## Interaction
 
 Drag the bar to move a task, or pull either end to resize it. Dependency

@@ -8,9 +8,25 @@ using Fpas.Workspaces.Snapshots;
 
 namespace Fpas.Workspaces.Refactoring;
 
+/// <summary>Requests a checked editor refactoring over an exact source selection.</summary>
+/// <param name="Kind">add-parameter, extract-variable or organize-imports.</param>
+/// <param name="Selection">One-based UTF-16 selection start and optional project owner.</param>
+/// <param name="EndLine">One-based exclusive end line.</param>
+/// <param name="EndColumn">One-based UTF-16 exclusive end column.</param>
+/// <param name="Name">New unescaped identifier for extraction or parameter addition.</param>
+/// <param name="Type">Explicit FPAS type for parameter addition.</param>
+/// <param name="Argument">FPAS value expression appended at each affected call.</param>
 public sealed record RefactoringRequest(string Kind, SourceSelection Selection, int EndLine, int EndColumn,
     string? Name = null, string? Type = null, string? Argument = null);
 
+/// <summary>Contains a proposed edit batch checked in a private semantic overlay.</summary>
+/// <param name="Request">Normalized originating request.</param>
+/// <param name="Project">Selected source owner.</param>
+/// <param name="Selection">Original selection span.</param>
+/// <param name="SnapshotId">Input snapshot identity.</param>
+/// <param name="Edits">Detached validated edits.</param>
+/// <param name="Notes">Behavior and limitation explanations.</param>
+/// <param name="BinaryBoundaries">Reference assemblies outside editable source ownership.</param>
 public sealed record PreparedRefactoring(RefactoringRequest Request, string Project, SourceSpan Selection, string SnapshotId,
     TextEditSet Edits, IReadOnlyList<string> Notes, IReadOnlyList<string> BinaryBoundaries);
 
@@ -18,6 +34,11 @@ public sealed record PreparedRefactoring(RefactoringRequest Request, string Proj
 public static partial class CheckedRefactoring
 {
     private static StringComparer Paths => WorkspaceTextSnapshot.Paths;
+    /// <summary>Prepares source edits and proves existing bindings and declaration relationships are retained.</summary>
+    /// <param name="analysis">Successful complete context analysis.</param>
+    /// <param name="request">Requested refactoring and source selection.</param>
+    /// <param name="token">Cancels syntax work and overlay analysis.</param>
+    /// <returns>A detached checked proposal without publishing files.</returns>
     public static PreparedRefactoring Prepare(WorkspaceAnalysis analysis, RefactoringRequest request, CancellationToken token = default)
     {
         if (!analysis.Success || !analysis.IsComplete) throw Refuse("Refactoring requires successful and complete analysis of the context.");

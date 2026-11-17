@@ -24,7 +24,9 @@ logical chain.
 - `and`/`or` on `bool` short-circuit. `xor` is eager.
 - On integral values, `and`, `or`, `xor`, `not`, `shl`, and `shr` are bitwise,
   with CLR/C# numeric promotion and shift-count rules. Same-type enum bitwise
-  operations retain the enum type.
+  operations retain the enum type. Shift counts use their low five bits for
+  32-bit operands and low six bits for 64-bit operands, including negative
+  counts. Native operands use the execution runtime's pointer width.
 - With two integral operands, `/` converts each to `double` before dividing.
   This includes mixed signed and unsigned types, native integers, `char`,
   and subranges projected to their base type. `1 / 2` yields `0.5`,
@@ -43,6 +45,13 @@ logical chain.
   Arbitrary objects are not implicitly formatted into strings.
 - `Value ?? Fallback` evaluates the fallback only if the nullable value is null.
   For `Nullable<T>`, the non-null result is the contained `T`.
+
+Compile-time constant evaluation checks both 32-bit and 64-bit native-integer
+widths. A required constant must produce the same value without an exception
+at both widths; an architecture-dependent result is diagnosed. This applies to
+optional defaults, scalar bounds and enum values, constant patterns, and
+attribute arguments. Ordinary runtime expressions retain native arithmetic
+at the execution runtime's pointer width.
 
 `=` and `<>` use primitive equality or an applicable CLR equality operator.
 Strings compare ordinal contents; arrays use reference identity. Generated

@@ -165,6 +165,13 @@ begin
       if Nav.Key(Current.Navigation.Active) = 'albums' then
         return Album(Current, AlbumMessage, Library);
       end if;
+
+      // Durable writes outlive the visible slice; their receipts release its controls.
+      case AlbumMessage of
+        when AlbumModel.Msg.Rated(_, _), AlbumModel.Msg.RatingFailed(_, _):
+          return Album(Current, AlbumMessage, Library);
+        else
+      end case;
     when M.Msg.WatchLibrary:
       Commands := Watch(Library);
       if Nav.Key(Current.Navigation.Active) = 'albums' then

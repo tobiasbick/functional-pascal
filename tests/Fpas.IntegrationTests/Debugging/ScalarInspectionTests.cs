@@ -133,6 +133,11 @@ public sealed class ScalarInspectionTests
         var first = await host.FrameBindings(new(before.StopId!.Value, firstFrame.Id), deadline.Token);
         Assert.False(File.Exists(program.FilePath("first.txt")));
         Assert.Contains(first.Items, item => item.Name == "Unused" && item.Status == "optimized_out" && item.Scalar is null);
+        foreach (var (expression, expected) in new[] { ("false and (Unused > 0L)", "false"), ("true or (Unused > 0L)", "true") })
+        {
+            var skipped = await host.Evaluate(new(before.StopId.Value, firstFrame.Id, expression), deadline.Token);
+            Assert.Null(skipped.Error); Assert.Equal(expected, skipped.Value?.Scalar);
+        }
         CheckValue(Assert.Single(first.Items, item => item.Name == "Value"), "42");
         await host.SetBreakpoints(new(program.Source, [new(10)], before.StopId), deadline.Token);
         await host.Resume(before.StopId.Value, "continue", deadline.Token);

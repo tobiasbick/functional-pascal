@@ -6,19 +6,19 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Invokes the native ResultCard operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="image">image supplied to the native operation.</param>
-    /// <param name="title">title supplied to the native operation.</param>
-    /// <param name="caption">caption supplied to the native operation.</param>
-    /// <param name="badge">badge supplied to the native operation.</param>
-    /// <param name="tone">tone supplied to the native operation.</param>
-    /// <param name="widthKind">widthKind supplied to the native operation.</param>
-    /// <param name="width">width supplied to the native operation.</param>
-    /// <param name="aspect">aspect supplied to the native operation.</param>
-    /// <param name="enabled">enabled supplied to the native operation.</param>
-    /// <param name="focus">focus supplied to the native operation.</param>
-    /// <returns>The native result.</returns>
+    /// <summary>Draws an activatable image card with a window-owned native image cache.</summary>
+    /// <param name="id">Stable card identity.</param>
+    /// <param name="image">Immutable RGBA pixels or an image filename.</param>
+    /// <param name="title">Visible card title.</param>
+    /// <param name="caption">Optional secondary caption.</param>
+    /// <param name="badge">Optional badge caption.</param>
+    /// <param name="tone">Native semantic tone ordinal for the badge.</param>
+    /// <param name="widthKind">Content=0, fill=1, logical points=2, percentage=3.</param>
+    /// <param name="width">Nonnegative logical width or percentage, according to the extent kind.</param>
+    /// <param name="aspect">Image width divided by height; zero uses the native default.</param>
+    /// <param name="enabled">Whether the card accepts input.</param>
+    /// <param name="focus">Whether to request keyboard focus.</param>
+    /// <returns>Whether the enabled card was activated.</returns>
     public unsafe bool ResultCard(string id, CuiMediaImage image, string title, string? caption, string? badge, int tone, int widthKind, float width, float aspect, bool enabled, bool focus)
     {
         CheckFrame();

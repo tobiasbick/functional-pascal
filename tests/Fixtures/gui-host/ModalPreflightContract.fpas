@@ -1,0 +1,177 @@
+unit GalleryModalPreflightContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Ai.Reasonings as Reasoning,
+  Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
+  Fpas.Ui.Widgets.Files.FilePickers as Pickers,
+  Fpas.Ui.Widgets.Collections.VirtualLists as Virtuals, Fpas.Ui.Widgets.Collections.DataGrids as Grids,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Modal(Open: bool; Kind: int := 0): E.Element<bool>;
+begin
+  return case Kind of
+    when 1: Sheets.Sheet<bool>(
+      'modal',
+      E.Text<bool>('Anchor'),
+      E.Text<bool>('Body'),
+      Open,
+      new Sheets.Options('Modal'),
+      false
+    );
+    when 2: Palettes.CommandPalette<bool>(
+      'modal',
+      E.Text<bool>('Anchor'),
+      Open,
+      [],
+      function(Shown: bool): bool => false
+    );
+    when 3: Pickers.FilePicker<bool>('modal', Open, function(Event: Pickers.Event): bool => false);
+    else Dialogs.Dialog<bool>(
+      'modal', E.Text<bool>('Anchor'), E.Text<bool>('Body'), Open,
+      new Dialogs.Options('Modal'), false
+    );
+  end case;
+end function;
+
+procedure ReasoningScope();
+begin
+  for Kind: int := 0 to 3 do
+    for Open: int := 0 to 1 do
+      var Rejected: bool := false;
+      try
+        discard V.Prepare<bool>(
+          Reasoning.Reasoning<bool>('reasoning', [Modal(Open = 1, Kind)]), V.Target.Graphical
+        );
+      catch Error: Sys.ArgumentException do
+        Rejected := Error.Message.Contains('outside native-owned collapsible reasoning bodies');
+      end try;
+
+      Check(Rejected, 'Reasoning must reject modal declarations even when closed.');
+    end for;
+  end for;
+
+  // Returning from the restricted body must restore the enclosing validation scope.
+  discard V.Prepare<bool>(
+    E.Column<bool>(
+      new L.Flow(),
+      Reasoning.Reasoning<bool>('reasoning', [E.Text<bool>('Body')]),
+      Modal(true)
+    ),
+    V.Target.Graphical
+  );
+end procedure;
+
+procedure CachedScopes();
+  function Build(Kind: int): E.Element<bool>;
+  begin
+    Built := Built + 1;
+    return Modal(true, Kind);
+  end function;
+begin
+  var Built: int := 0;
+  for Kind: int := 0 to 3 do
+    const Tree: E.Element<bool> := E.CachedSubview<int, bool>(
+      'cached', Kind, Build, function(Left: int; Right: int): bool => Left = Right
+    );
+    const Previous: V.Prepared<bool> := V.Prepare<bool>(Tree, V.Target.Graphical);
+    var Rejected: bool := false;
+    try
+      discard V.Prepare<bool>(
+        Tree, V.Target.Graphical, Previous, AllowOpenModals := false
+      );
+    catch Error: Sys.ArgumentException do
+      Rejected := Error.Message.Contains('outside virtual row and data-grid content factories');
+    end try;
+
+    Check(
+      Rejected and Built = Kind + 1,
+      'Cached modal scopes must be rechecked without rebuilding the cached subtree.'
+    );
+    discard V.Prepare<bool>(Modal(false, Kind), V.Target.Graphical, AllowOpenModals := false);
+  end for;
+end procedure;
+
+procedure Factory(Renderer: Cui.CuiRenderer; Kind: int);
+  function Row(Index: int): E.Element<bool>;
+  begin
+    Built := Built + 1;
+    return if Index = 0 then
+      Modal(Kind <> 3)
+    else
+      E.Text<bool>('Row ' + Index.ToString())
+    end if;
+  end function;
+
+  function GridRow(Index: int): Grids.Row<bool>;
+  begin
+    const Child: E.Element<bool> := Row(Index);
+    const Cell: Grids.Cell<bool> := if Kind = 1 then
+      Grids.Cell<bool>.Content([Child])
+    else
+      Grids.Cell<bool>.Editable('Value', 64, function(Text: string): bool => true, [Child])
+    end if;
+    return new Grids.Row<bool>('row-' + Index.ToString(), [Cell]);
+  end function;
+
+  function View(Model: bool; Viewport: L.Viewport): E.Element<bool>;
+  begin
+    return if Kind = 0 or Kind = 3 then
+      Virtuals.VirtualList<bool>('list', 10000, 40.0F, L.Extent.Fixed(L.Measure.Logical(120)), Row)
+    else
+      Grids.DataGrid<bool>(
+        'grid', [new Grids.Column('Column')], 10000, GridRow, new Grids.Value(),
+        function(Value: Grids.Value): bool => true,
+        new Grids.Options(Height := L.Extent.Fixed(L.Measure.Logical(120)))
+      )
+    end if;
+  end function;
+begin
+  var Built: int := 0;
+  var Rejected: bool := false;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Realized modal preflight',
+    480,
+    360,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+    true,
+    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+      Message,
+      []
+    ),
+    View, Window, 16
+  );
+  try
+    Check(Session.Step(), 'The realized factory session closed.');
+  catch Error: Sys.ArgumentException do
+    Rejected := Error.Message.Contains('outside virtual row and data-grid content factories');
+  end try;
+
+  Check(Rejected = (Kind <> 3), 'Only open realized modal scopes must fail preflight.');
+  Check(Built > 0 and Built < 10000, 'Modal preflight must preserve native virtualization.');
+end procedure;
+
+// Rejects unsupported modal compositions before their native modal is presented.
+// ## Parameters
+// - `Renderer`: Native renderer used for realized factory validation.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+begin
+  ReasoningScope();
+  CachedScopes();
+  for Kind: int := 0 to 3 do
+    Factory(Renderer, Kind);
+  end for;
+end procedure;
+
+end unit;

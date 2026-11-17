@@ -64,11 +64,15 @@ show model ownership, scoped effects and message routing in one session.
 Use `Fpas.Ui.Elements.CachedSubview` with only the inputs that affect that
 subtree. It avoids rebuilding an unchanged view, but the hosts still validate
 and process the resolved tree. Slicing alone does not provide incremental layout
-or data virtualization. GUI collections process all supplied items; the TUI
-limits row drawing to the viewport but still traverses complete data elsewhere.
-Large collections therefore need separate virtualization work. Functional tests
-and the galleries do not establish large-application scalability; measure a
-representative workload before choosing further optimizations.
+or data virtualization. For large graphical collections, use
+[`VirtualLists.VirtualList`](../Fpas.Ui/README.md#data-display) or
+[`DataGrids.DataGrid`](../Fpas.Ui/README.md#data-grid-filter-bar-and-tree-table):
+their pure row factories realize only CUI's visible range and overscan.
+Ordinary collection views still process all supplied items. The TUI limits
+drawing to the viewport but still traverses the complete view elsewhere.
+Functional tests and the galleries do not establish large-application
+scalability; measure a representative workload before choosing further
+optimizations.
 
 ## Background effects
 

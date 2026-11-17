@@ -45,6 +45,8 @@ public sealed class CaptureInspectionTests
         await host.Resume(declaring.StopId.Value, "continue", deadline.Token); var resumed = await host.WaitForStop(deadline.Token);
         var captured = await host.FrameBindings(new(resumed.StopId!.Value, (await Frame(host, resumed, deadline.Token)).Id), deadline.Token);
         Assert.Equal("42", Assert.Single(captured.Items, item => item.Name == "Value").Scalar);
+        var skipped = await host.Evaluate(new(resumed.StopId.Value, (await Frame(host, resumed, deadline.Token)).Id, "false and (Value = 0)"), deadline.Token);
+        Assert.Null(skipped.Error); Assert.Equal("false", skipped.Value?.Scalar);
         var box = Assert.Single(captured.Items, item => item.Name == "Box"); Assert.Equal("object", box.Kind);
         Assert.Equal("70", Assert.Single((await host.ValueChildren(new(resumed.StopId.Value, box.Reference!.Value), deadline.Token)).Items).Scalar);
         await host.Resume(resumed.StopId.Value, "continue", deadline.Token);

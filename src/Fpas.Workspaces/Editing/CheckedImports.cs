@@ -7,10 +7,20 @@ using Fpas.Workspaces.Snapshots;
 
 namespace Fpas.Workspaces.Editing;
 
+/// <summary>An import proposal proven to preserve existing checked bindings.</summary>
+/// <param name="Trigger">Unresolved receiver span that prompted the proposal.</param>
+/// <param name="Fix">Validated import insertion.</param>
 public sealed record CheckedImport(SourceSpan Trigger, DiagnosticFix Fix);
 
+/// <summary>Finds conservative import corrections using isolated source-graph analysis.</summary>
 public static class CheckedImports
 {
+    /// <summary>Checks at most sixteen unresolved-name diagnostics for safe imports.</summary>
+    /// <param name="analysis">Current source analysis.</param>
+    /// <param name="project">Owning analyzed project path.</param>
+    /// <param name="path">Source path in that project.</param>
+    /// <param name="token">Cancels suggestions and overlay verification.</param>
+    /// <returns>Only proposals that repair the target and retain existing bindings.</returns>
     public static IReadOnlyList<CheckedImport> Find(WorkspaceAnalysis analysis, string project, string path, CancellationToken token = default)
     {
         var paths = WorkspaceTextSnapshot.Paths;

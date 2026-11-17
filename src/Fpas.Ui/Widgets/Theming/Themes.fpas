@@ -90,17 +90,17 @@ public type Palette = record
   // focus ring color.
   public FocusRing: G.Color := new G.Color(31, 125, 207, 230);
   // series1 color.
-  public Series1: G.Color := new G.Color(42, 120, 214, 255);
+  public Series1: G.Color := new G.Color(42, 118, 195, 255);
   // series2 color.
-  public Series2: G.Color := new G.Color(235, 104, 52, 255);
+  public Series2: G.Color := new G.Color(181, 84, 34, 255);
   // series3 color.
-  public Series3: G.Color := new G.Color(27, 175, 122, 255);
+  public Series3: G.Color := new G.Color(0, 141, 95, 255);
   // series4 color.
-  public Series4: G.Color := new G.Color(98, 80, 214, 255);
+  public Series4: G.Color := new G.Color(110, 101, 194, 255);
   // series5 color.
-  public Series5: G.Color := new G.Color(237, 161, 0, 255);
+  public Series5: G.Color := new G.Color(159, 104, 0, 255);
   // series6 color.
-  public Series6: G.Color := new G.Color(232, 123, 164, 255);
+  public Series6: G.Color := new G.Color(175, 77, 128, 255);
 end record;
 
 // One theme contract for GUI and TUI. Terminal hosts composite alpha over surfaces.

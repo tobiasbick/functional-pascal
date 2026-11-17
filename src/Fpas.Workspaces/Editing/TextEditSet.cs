@@ -6,12 +6,18 @@ using System.Text;
 
 namespace Fpas.Workspaces.Editing;
 
+/// <summary>Contains validated original-offset edits and the resulting text for one document.</summary>
 public sealed class DocumentEdits
 {
+    /// <summary>Gets the original captured document and optional editor version.</summary>
     public TextDocumentSnapshot Original { get; }
+    /// <summary>Gets the replacement text after all edits.</summary>
     public string NewText { get; }
+    /// <summary>Gets deduplicated edits ordered by original offset.</summary>
     public IReadOnlyList<DiagnosticEdit> Edits { get; }
+    /// <summary>Gets the SHA-256 hash of the original UTF-8 bytes.</summary>
     public string OriginalHash { get; }
+    /// <summary>Gets the SHA-256 hash of the replacement UTF-8 bytes.</summary>
     public string ReplacementHash { get; }
     internal DocumentEdits(TextDocumentSnapshot original, string text, DiagnosticEdit[] edits)
     {
@@ -24,10 +30,17 @@ public sealed class DocumentEdits
 /// <summary>Validated original-offset edits over captured text. Construction performs no file I/O.</summary>
 public sealed class TextEditSet
 {
+    /// <summary>Gets changed documents sorted by path; no-op documents are omitted.</summary>
     public IReadOnlyList<DocumentEdits> Documents { get; }
+    /// <summary>Gets the number of deduplicated edits in changed documents.</summary>
     public int EditCount => Documents.Sum(document => document.Edits.Count);
     private TextEditSet(List<DocumentEdits> documents) => Documents = documents.AsReadOnly();
 
+    /// <summary>Validates ranges, expected text, overlap and batch budgets without file I/O.</summary>
+    /// <param name="snapshot">Authoritative captured FPAS texts.</param>
+    /// <param name="edits">At most 1,000 proposed original-offset edits.</param>
+    /// <param name="token">Cancels validation and replacement construction.</param>
+    /// <returns>Detached changed documents within the combined 64-MiB text budget.</returns>
     public static TextEditSet Create(WorkspaceTextSnapshot snapshot, IEnumerable<DiagnosticEdit> edits, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
@@ -70,6 +83,7 @@ public sealed class TextEditSet
     }
 
     /// <summary>Creates independent byte buffers for an explicit filesystem publication.</summary>
+    /// <returns>New original and replacement UTF-8 buffers for each changed document.</returns>
     public IReadOnlyList<SourceChange> ToSourceChanges() => Array.AsReadOnly(Documents.Select(document => new SourceChange(document.Original.Path,
         document.Original.EncodeUtf8(), TextDocumentSnapshot.Utf8.GetBytes(document.NewText))).ToArray());
 }

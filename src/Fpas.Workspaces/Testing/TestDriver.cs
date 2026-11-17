@@ -8,24 +8,52 @@ using Fpas.Compiler;
 
 namespace Fpas.Workspaces.Testing;
 
+/// <summary>Describes an evaluated native .NET test project and its output identity.</summary>
+/// <param name="Project">Absolute project path.</param>
+/// <param name="Configuration">Mapped project configuration.</param>
+/// <param name="Platform">Mapped project platform.</param>
+/// <param name="Framework">Explicit target framework.</param>
+/// <param name="Assembly">Absolute managed test output path.</param>
 public sealed record TestProject(string Project, string Configuration, string Platform, string Framework, string Assembly)
 {
+    /// <summary>Gets whether the output is a self-hosted Microsoft.Testing.Platform application.</summary>
     public bool TestingPlatform { get; init; }
+    /// <summary>Gets the evaluated framework moniker for VSTest selection.</summary>
     public string FrameworkMoniker { get; init; } = "";
+    /// <summary>Gets evaluated VSTest adapter and collector directories.</summary>
     public IReadOnlyList<string> VstestExtensionPaths { get; init; } = [];
+    /// <summary>Gets the captured output-content identity, when inspected.</summary>
     public string? OutputIdentity { get; init; }
+    /// <summary>Gets whether portable symbols or source checksums could not be verified.</summary>
     public bool StaleSources { get; init; }
 }
+/// <summary>Identifies one test discovered by its native runner.</summary>
+/// <param name="Project">Owning project path.</param>
+/// <param name="FullyQualifiedName">Native method identity, or MTP UID when no method identity is available.</param>
 public sealed record DiscoveredTest(string Project, string FullyQualifiedName)
 {
+    /// <summary>Gets the native MTP test UID, when provided.</summary>
     public string? Uid { get; init; }
+    /// <summary>Gets the native display name, when provided.</summary>
     public string? DisplayName { get; init; }
+    /// <summary>Gets the verified method source location, or null when unavailable or ambiguous.</summary>
     public SourceLocation? Location { get; init; }
 }
+/// <summary>Supplies native runner extensions and passthrough arguments.</summary>
+/// <param name="AdapterPaths">Additional VSTest adapter directories.</param>
+/// <param name="Collectors">Native VSTest collector names.</param>
+/// <param name="Arguments">VSTest runsettings or MTP extension arguments.</param>
 public sealed record TestRunOptions(IReadOnlyList<string> AdapterPaths, IReadOnlyList<string> Collectors, IReadOnlyList<string> Arguments);
 
+/// <summary>Selects native test projects and invokes their VSTest or MTP runner.</summary>
 public static class TestDriver
 {
+    /// <summary>Evaluates included test projects using the context's solution mappings.</summary>
+    /// <param name="context">Project or solution path.</param>
+    /// <param name="configuration">Context configuration.</param>
+    /// <param name="project">Optional included project path to restrict selection.</param>
+    /// <param name="token">Cancels evaluation.</param>
+    /// <returns>Enabled test projects with explicit frameworks and outputs.</returns>
     public static async Task<IReadOnlyList<TestProject>> SelectAsync(string context, string configuration, string? project, CancellationToken token)
     {
         context = ProjectDriver.ValidateContext(context);
@@ -70,6 +98,15 @@ public static class TestDriver
         return selected.AsReadOnly();
     }
 
+    /// <summary>Runs native tests and requests a results.trx artifact in the supplied directory.</summary>
+    /// <param name="project">Evaluated test output to run.</param>
+    /// <param name="directory">Invocation-owned result directory.</param>
+    /// <param name="filter">Native runner filter, or null.</param>
+    /// <param name="settings">Native runsettings path, or null.</param>
+    /// <param name="token">Cancels execution and joins owned processes.</param>
+    /// <param name="options">Optional native extensions and arguments.</param>
+    /// <param name="liveOutput">Optional live output writers.</param>
+    /// <returns>Native process status, including captured cancellation as exit 130.</returns>
     public static async Task<BuildResult> RunAsync(TestProject project, string directory, string? filter, string? settings, CancellationToken token,
         TestRunOptions? options = null, ProcessOutput? liveOutput = null)
     {
@@ -82,6 +119,14 @@ public static class TestDriver
         return await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true, liveOutput: liveOutput);
     }
 
+    /// <summary>Discovers native method identities without running test bodies.</summary>
+    /// <param name="project">Evaluated test output to inspect.</param>
+    /// <param name="directory">Invocation-owned discovery artifact directory.</param>
+    /// <param name="filter">Native runner filter, or null.</param>
+    /// <param name="settings">Native runsettings path, or null.</param>
+    /// <param name="token">Cancels discovery and joins owned processes.</param>
+    /// <param name="options">Optional native extensions and arguments.</param>
+    /// <returns>Native status and bounded discovered identities.</returns>
     public static async Task<(BuildResult Process, IReadOnlyList<DiscoveredTest> Tests)> DiscoverAsync(TestProject project,
         string directory, string? filter, string? settings, CancellationToken token, TestRunOptions? options = null)
     {
@@ -113,6 +158,8 @@ public static class TestDriver
         args.AddRange(extra);
     }
 
+    /// <summary>Requires an existing managed test output and runtime configuration.</summary>
+    /// <param name="project">Evaluated test output to validate.</param>
     public static void RequireOutput(TestProject project)
     {
         if (!File.Exists(project.Assembly) || !File.Exists(Path.ChangeExtension(project.Assembly, ".runtimeconfig.json")))

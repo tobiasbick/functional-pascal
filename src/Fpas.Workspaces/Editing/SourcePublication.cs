@@ -2,20 +2,33 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Editing;
 
+/// <summary>Supplies exact bytes for one checked filesystem replacement.</summary>
+/// <param name="Path">Source file path.</param>
+/// <param name="Original">Expected current bytes; retain unchanged during publication.</param>
+/// <param name="Replacement">New bytes; retain unchanged during publication.</param>
 public sealed record SourceChange(string Path, byte[] Original, byte[] Replacement)
 {
+    /// <summary>Gets whether replacement bytes differ from the expected original.</summary>
     public bool Changed => !Original.AsSpan().SequenceEqual(Replacement);
 }
 
+/// <summary>Reports incomplete rollback or cleanup with explicit recovery locations.</summary>
+/// <param name="message">Failure explanation.</param>
+/// <param name="written">Files still containing published replacements.</param>
+/// <param name="backups">Retained recovery or staging paths to inspect.</param>
 public sealed class SourcePublicationFailure(string message, IReadOnlyList<string> written, IReadOnlyList<string> backups) : IOException(message)
 {
+    /// <summary>Gets files whose replacements remain published.</summary>
     public IReadOnlyList<string> Written { get; } = written;
+    /// <summary>Gets retained recovery and staging paths.</summary>
     public IReadOnlyList<string> Backups { get; } = backups;
 }
 
 /// <summary>Stages source replacements, checks original bytes and rolls back a failed batch.</summary>
 public static class SourcePublication
 {
+    /// <summary>Rejects symbolic links or reparse points anywhere in an existing path.</summary>
+    /// <param name="path">Existing source or directory path to validate.</param>
     public static void ValidateRegularPath(string path)
     {
         for (var current = Path.GetFullPath(path); current is not null; current = Path.GetDirectoryName(current))
@@ -23,6 +36,10 @@ public static class SourcePublication
                 throw new ContextFailure("invalid_argument", "Symbolic links and reparse points cannot be edited: " + current);
     }
 
+    /// <summary>Checks regular paths and exact original bytes without writing.</summary>
+    /// <param name="changes">Expected source states.</param>
+    /// <param name="token">Cancels file reads.</param>
+    /// <returns>A task completing when every original still matches.</returns>
     public static async Task VerifyAsync(IEnumerable<SourceChange> changes, CancellationToken token = default)
     {
         foreach (var change in changes)
@@ -34,6 +51,11 @@ public static class SourcePublication
         }
     }
 
+    /// <summary>Stages a batch, reverifies it and replaces files with rollback on failure.</summary>
+    /// <param name="changes">Distinct source paths with authoritative original and replacement bytes.</param>
+    /// <param name="verifyContext">Optional final project/input check after staging and before replacement.</param>
+    /// <param name="token">Cancels staging and publication; rollback proceeds without cancellation.</param>
+    /// <returns>A task completing after publication and staging cleanup.</returns>
     public static async Task ApplyAsync(IReadOnlyList<SourceChange> changes,
         Func<CancellationToken, Task>? verifyContext = null, CancellationToken token = default)
     {

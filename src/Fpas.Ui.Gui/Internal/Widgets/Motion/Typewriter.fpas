@@ -24,12 +24,25 @@ begin
     Replay,
     Common.Options(Settings)
   );
-  if Progress.Completed and not Frame.PaintingClosed then
-    case OnComplete of
-      when is Sys.Func<TMsg> as Notify:
-        Frame.Messages.Add(Notify.Invoke());
-      else
-    end case;
+  if Frame.ObserveTransitions and not Frame.PaintingClosed then
+    discard Frame.SeenAnimations.Add(Id);
+    if Frame.CompletedAnimations.ContainsKey(Id) then
+      const Previous: C.AnimationCompletion := Frame.CompletedAnimations[Id];
+      if Previous.Text <> Text or Previous.Replay <> Replay then
+        discard Frame.CompletedAnimations.Remove(Id);
+      end if;
+    end if;
+
+    // Done remains observable after a cached resize consumed the native edge.
+    if Progress.Done and not Frame.CompletedAnimations.ContainsKey(Id) then
+      case OnComplete of
+        when is Sys.Func<TMsg> as Notify:
+          Frame.Messages.Add(Notify.Invoke());
+        else
+      end case;
+
+      Frame.CompletedAnimations.Add(Id, new C.AnimationCompletion(Text, Replay));
+    end if;
   end if;
 
   C.Track<TMsg>(

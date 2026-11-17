@@ -5,7 +5,6 @@ using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Toolchain;
@@ -31,7 +30,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         var selected = await ProcessRunner.RunAsync(["--version"], workingDirectory: root.Path);
         Assert.Equal(selected.Output.Trim(), report.GetProperty("dotnet").GetProperty("selectedSdk").GetString());
         var compiler = report.GetProperty("fpas").GetProperty("compiler");
-        Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(FpasCompiler).Assembly.Location))), compiler.GetProperty("sha256").GetString());
+        Assert.Equal(FileHash.Sha256(typeof(FpasCompiler).Assembly.Location), compiler.GetProperty("sha256").GetString());
         Assert.All(report.GetProperty("dotnet").GetProperty("sdks").EnumerateArray(), entry => Assert.True(Directory.Exists(entry.GetProperty("path").GetString())));
         Assert.Equal("available", report.GetProperty("debugger").GetProperty("status").GetString());
         var server = report.GetProperty("languageServer");
@@ -41,7 +40,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal("fpas lsp", server.GetProperty("command").GetString());
         var assembly = server.GetProperty("assembly");
         Assert.Equal("Fpas.LanguageServer.dll", Path.GetFileName(assembly.GetProperty("path").GetString()));
-        Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.GetProperty("path").GetString()!))), assembly.GetProperty("sha256").GetString());
+        Assert.Equal(FileHash.Sha256(assembly.GetProperty("path").GetString()!), assembly.GetProperty("sha256").GetString());
         Assert.Contains(report.GetProperty("issues").EnumerateArray(), issue => issue.GetProperty("code").GetString() == "sdk_not_cached");
         Assert.DoesNotContain("private-test-sentinel", result.Output);
         Assert.Equal(before, Directory.GetFiles(root.Path)); Assert.False(Directory.Exists(root.File("obj")));
@@ -138,7 +137,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal("available", debugger.GetProperty("status").GetString());
         Assert.Equal("10.0.750501", debugger.GetProperty("shimVersion").GetString());
         var shim = debugger.GetProperty("shimPath").GetString()!;
-        Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(shim))), debugger.GetProperty("shimSha256").GetString());
+        Assert.Equal(FileHash.Sha256(shim), debugger.GetProperty("shimSha256").GetString());
         Assert.Equal(new[] { "batch", "dap" }, debugger.GetProperty("protocols").EnumerateArray().Select(item => item.GetString()));
     }
 

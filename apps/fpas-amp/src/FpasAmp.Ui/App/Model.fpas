@@ -5,6 +5,7 @@ uses
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Albums.Model as AlbumView,
   FpasAmp.Ui.Settings.Model as SettingsView,
+  FpasAmp.Ui.Player.Model as Player,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 
@@ -17,6 +18,8 @@ public type State = record
   public Navigation: Nav.State := new Nav.State();
   // Lazy album slice; decoded images are retained only for the realized range.
   public Albums: AlbumView.State := new AlbumView.State();
+  // Queue, transport, volume and equalizer shared by every destination.
+  public Player: Player.State := new Player.State();
 end record;
 
 // Typed proposals routed by the app controller.
@@ -27,6 +30,8 @@ public type Msg = variant
   Albums(Message: AlbumView.Msg);
   // Settings edits and library status publications.
   Settings(Message: SettingsView.Msg);
+  // Transport, volume and equalizer edits.
+  Player(Message: Player.Msg);
   // Begin owned mailbox subscriptions when the shell starts.
   WatchLibrary;
 end variant;

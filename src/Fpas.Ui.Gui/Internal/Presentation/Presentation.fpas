@@ -976,9 +976,9 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Chip.Draw<TMsg>(Current, Id, Label, Selected, Change, Icon, Enabled);
       when E.Element.RatingAction(
         const Id: string, const Label: string, const Value: int, const Change: function(int): TMsg,
-        const Maximum: int, const Enabled: bool
+        const Maximum: int, const Enabled: bool, const StarSize: float
       ):
-        Rating.Draw<TMsg>(Current, Id, Label, Value, Change, Maximum, Enabled);
+        Rating.Draw<TMsg>(Current, Id, Label, Value, Change, Maximum, Enabled, StarSize);
       when E.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
         const Items: array of Split.Item<TMsg>, const Settings: Split.Options

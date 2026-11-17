@@ -98,7 +98,7 @@ public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Sessio
 begin
   var Next: M.State := Current;
   case Message of
-    when M.Msg.Back:
+    when M.Msg.Back, M.Msg.Play(_):
       return new A.Transition<M.State, M.Msg>(Current, Empty);
     when M.Msg.Loaded(const Visit: long, const Items: I.ImmutableArray<Tracks.Entry>):
       if Visit = Current.Visit then

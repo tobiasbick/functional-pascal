@@ -17,6 +17,16 @@ disc and track order by default. It uses the same toolbar as the album grid, wit
 title and genre search and a filter popup for genres and minimum rating. Rate a
 track with its ten stars or use the row menu to inspect its tags, copy the path
 from the details or open the folder.
+The player strip stays at the bottom of every destination except **Settings**.
+The play button beside each title starts that track and queues the shown tracks
+after it. Until then, the strip shows **Nothing playing** with its transport and
+position bar disabled; the equalizer and volume stay editable. It shows
+the title and artist, previous/play-pause/next, a ten-band equalizer (±12 dB with
+**Reset**), a volume knob (−60 to 0 dB), stereo level meters and a seekable
+position bar. **Previous** restarts a track after three seconds. Below 760 logical
+pixels of content width, the strip hides the equalizer and meters. Audio output is
+not implemented yet: the position moves only by seeking, the meters stay silent
+and the position bar shows uniform bars until loudness is measured.
 The status bar shows the matching track count and duration. The back arrow restores
 the album grid's search, applied filters, sort order and scroll position.
 Below 760 logical pixels, the sidebar becomes a left-hand drawer opened through

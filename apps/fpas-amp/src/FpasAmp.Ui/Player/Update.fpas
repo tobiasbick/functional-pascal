@@ -1,0 +1,103 @@
+// Pure player transitions on the UI owner.
+unit FpasAmp.Ui.Player.Update;
+
+uses
+  FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Albums.Music.Browse as Browse, System as Sys, System.Collections.Immutable as I;
+
+// Elapsed time after which Previous restarts the current track.
+const RestartAfter: double := 3000.0;
+
+function Clamp(Value: float; Low: float; High: float): float;
+begin
+  return if Sys.Single.IsNaN(Value) then
+    Low
+  else
+    Sys.MathF.Max(Low, Sys.MathF.Min(High, Value))
+  end if;
+end function;
+
+function Start(Current: M.State; Index: int): M.State;
+begin
+  return Current with
+    Index := Index;
+    Position := 0.0;
+  end with;
+end function;
+
+// Applies a player proposal.
+// ## Parameters
+// - `Current`: Player state.
+// - `Message`: Transport, volume or equalizer proposal.
+// ## Returns
+// The next player state; proposals without a current track or outside the
+// queue leave it unchanged.
+public function Apply(Current: M.State; Message: M.Msg): M.State;
+begin
+  const Track: Tracks.Entry? := M.Track(Current);
+  case Message of
+    when M.Msg.Play(const Queue: I.ImmutableArray<Tracks.Entry>, const Index: int):
+      if Index < 0 or Index >= Queue.Length then
+        return Current;
+      end if;
+
+      return Start(
+        Current with
+          Queue := Queue;
+          Playing := true;
+        end with, Index
+      );
+    when M.Msg.Toggle:
+      return if Track = null then
+        Current
+      else
+        Current with
+          Playing := not Current.Playing;
+        end with
+      end if;
+    when M.Msg.Previous:
+      if Track = null then
+        return Current;
+      end if;
+
+      return Start(
+        Current, if Current.Position > RestartAfter or Current.Index = 0 then
+          Current.Index
+        else
+          Current.Index - 1
+        end if
+      );
+    when M.Msg.Next:
+      return if Track = null or Current.Index + 1 >= Current.Queue.Length then
+        Current
+      else
+        Start(Current, Current.Index + 1)
+      end if;
+    when M.Msg.Seek(const Fraction: float):
+      if Track = null then
+        return Current;
+      end if;
+
+      return Current with
+        Position := cast<double>(Clamp(Fraction, 0.0F, 1.0F)) * Browse.Duration(Track);
+      end with;
+    when M.Msg.Volume(const Value: float):
+      return Current with
+        Volume := Clamp(Value, M.Quietest, 0.0F);
+      end with;
+    when M.Msg.Gain(const Band: int, const Value: float):
+      if Band < 0 or Band >= Current.Gains.Length then
+        return Current;
+      end if;
+
+      return Current with
+        Gains := Current.Gains.SetItem(Band, Clamp(Value, -M.Boost, M.Boost));
+      end with;
+    when M.Msg.Flatten:
+      return Current with
+        Gains := M.Flat();
+      end with;
+  end case;
+end function;
+
+end unit;

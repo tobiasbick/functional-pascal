@@ -73,6 +73,9 @@ public type Msg = variant
   Rated(Visit: long; Id: string; Value: int?);
   // Release the saving indicator and show the failure.
   RatingFailed(Visit: long; Id: string; Text: string);
+  // Play the shown track at `Index`, queueing the shown tracks after it.
+  // The app routes this to the player; the music slice keeps its state.
+  Play(Index: int);
   // Show metadata for one track.
   Details(Item: Tracks.Entry);
   // Close track details.

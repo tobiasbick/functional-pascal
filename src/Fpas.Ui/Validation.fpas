@@ -1528,9 +1528,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Value: int,
         _,
         const Maximum: int,
-        _
+        _, const StarSize: float
       ):
         SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/rating', Identify);
+        if not Sys.Single.IsFinite(StarSize) or StarSize <= 0.0F then
+          Rules.Reject(Location + '/rating', 'Rating star size must be finite and positive.');
+        end if;
+
         if Maximum < 1 or Maximum > 16 or Value < 0 or Value > Maximum then
           Rules.Reject(
             Location + '/rating',

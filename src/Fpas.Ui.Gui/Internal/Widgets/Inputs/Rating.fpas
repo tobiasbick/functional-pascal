@@ -14,13 +14,20 @@ uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Interna
 // - `OnChange`: Maps the proposed rating to a message.
 // - `Maximum`: Number of stars.
 // - `Enabled`: Model-owned input permission.
+// - `StarSize`: Logical edge length of the native star boxes.
 public procedure Draw<TMsg>(
   Frame: C.State<TMsg>; Id: string; Label: string; Value: int;
-  OnChange: function(int): TMsg; Maximum: int; Enabled: bool
+  OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;
-  const Proposal: int := Frame.Window.Rating(C.Token('rating', Id), Value, Maximum, Allowed);
+  const Proposal: int := Frame.Window.Rating(
+    C.Token('rating', Id),
+    Value,
+    Maximum,
+    Allowed,
+    StarSize
+  );
   if Proposal >= 0 then
     Frame.Messages.Add(OnChange(Proposal));
   end if;

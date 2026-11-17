@@ -11,6 +11,8 @@ uses
   FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Update as AlbumUpdate,
   FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Update as Player,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -161,6 +163,17 @@ begin
         Next := Transition.Model;
         Commands := Transition.Commands;
       end if;
+    when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.Play(const Index: int))):
+      const Page: Music.State? := Current.Albums.Music;
+      if Page <> null then
+        Next := Current with
+          Player := Player.Apply(Current.Player, PlayerModel.Msg.Play(Page.Shown, Index));
+        end with;
+      end if;
+    when M.Msg.Player(const PlayerMessage: PlayerModel.Msg):
+      Next := Current with
+        Player := Player.Apply(Current.Player, PlayerMessage);
+      end with;
     when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):
       if Nav.Key(Current.Navigation.Active) = 'albums' then
         return Album(Current, AlbumMessage, Library);

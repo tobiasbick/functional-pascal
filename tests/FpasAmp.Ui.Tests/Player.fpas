@@ -1,0 +1,85 @@
+// Player transitions keep the queue, transport and sound settings within their bounds.
+unit FpasAmp.Ui.Tests.Player;
+
+uses
+  FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Player.Update as Update,
+  FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I, Xunit as X;
+
+function Song(Id: long; Seconds: double): Tracks.Entry;
+begin
+  return new Tracks.Entry(
+    Id,
+    'track-' + Id.ToString(),
+    'song.mp3',
+    '',
+    null,
+    new Tracks.Tags(Title := 'Song ' + Id.ToString(), DurationMilliseconds := Seconds * 1000.0),
+    null
+  );
+end function;
+
+function Started(): M.State;
+begin
+  return Update.Apply(
+    new M.State(),
+    M.Msg.Play(I.ImmutableArray.CreateRange<Tracks.Entry>([Song(1L, 200.0), Song(2L, 100.0)]), 0)
+  );
+end function;
+
+// Queue navigation, seeking and sound settings.
+public type PlayerTests = record
+  // Transport proposals without a track, or beyond the queue, change nothing.
+  [X.FactAttribute]
+  public procedure TransportStaysWithinTheQueue();
+  begin
+    const Idle: M.State := new M.State();
+    X.Assert.Same(Idle, Update.Apply(Idle, M.Msg.Toggle));
+    X.Assert.Same(Idle, Update.Apply(Idle, M.Msg.Seek(0.5F)));
+    X.Assert.Same(
+      Idle,
+      Update.Apply(Idle, M.Msg.Play(I.ImmutableArray<Tracks.Entry>.Empty, 0))
+    );
+
+    const First: M.State := Started();
+    X.Assert.True(First.Playing);
+    X.Assert.Equal<long>(1L, (M.Track(First) ?? Song(0L, 0.0)).FileId);
+    const Last: M.State := Update.Apply(First, M.Msg.Next);
+    X.Assert.Equal<int>(1, Last.Index);
+    X.Assert.Same(Last, Update.Apply(Last, M.Msg.Next));
+    X.Assert.False(Update.Apply(Last, M.Msg.Toggle).Playing);
+  end procedure;
+
+  // Previous restarts a track after three seconds and otherwise goes back.
+  [X.FactAttribute]
+  public procedure PreviousRestartsOrGoesBack();
+  begin
+    const Second: M.State := Update.Apply(Started(), M.Msg.Next);
+    const Early: M.State := Update.Apply(Second, M.Msg.Previous);
+    X.Assert.Equal<int>(0, Early.Index);
+
+    const Late: M.State := Update.Apply(
+      Update.Apply(Second, M.Msg.Seek(0.5F)),
+      M.Msg.Previous
+    );
+    X.Assert.Equal<int>(1, Late.Index);
+    X.Assert.Equal<double>(0.0, Late.Position);
+  end procedure;
+
+  // Seeking, volume and equalizer gains are clamped to their ranges.
+  [X.FactAttribute]
+  public procedure SoundSettingsAreClamped();
+  begin
+    const Current: M.State := Started();
+    X.Assert.Equal<double>(200000.0, Update.Apply(Current, M.Msg.Seek(3.0F)).Position);
+    X.Assert.Equal<double>(50000.0, Update.Apply(Current, M.Msg.Seek(0.25F)).Position);
+    X.Assert.Equal<float>(M.Quietest, Update.Apply(Current, M.Msg.Volume(-90.0F)).Volume);
+    X.Assert.Equal<float>(0.0F, Update.Apply(Current, M.Msg.Volume(6.0F)).Volume);
+
+    const Boosted: M.State := Update.Apply(Current, M.Msg.Gain(9, 20.0F));
+    X.Assert.Equal<float>(M.Boost, Boosted.Gains[9]);
+    X.Assert.Same(Boosted, Update.Apply(Boosted, M.Msg.Gain(10, 1.0F)));
+    X.Assert.Equal<float>(0.0F, Update.Apply(Boosted, M.Msg.Flatten).Gains[9]);
+  end procedure;
+end record;
+
+end unit;

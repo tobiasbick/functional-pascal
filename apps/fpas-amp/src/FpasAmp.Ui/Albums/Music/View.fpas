@@ -5,11 +5,12 @@ uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
+  FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.Ratings as Ratings, Fpas.Ui.Widgets.Inputs.SearchFields as Search,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
-  Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   System as Sys, System.Collections.Generic as C;
@@ -31,13 +32,25 @@ begin
   end if;
 end function;
 
-function Song(Current: M.State; Item: Tracks.Entry): Grid.Row<M.Msg>;
+function Song(Current: M.State; Index: int): Grid.Row<M.Msg>;
 begin
+  const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString();
   const Name: string := Browse.Title(Item);
   return new Grid.Row<M.Msg>(
     Id, [
-      Grid.Cell<M.Msg>.Text(Name),
+      Grid.Cell<M.Msg>.Content(
+        [
+          E.Row<M.Msg>(
+            new L.Flow(Gap := Points(6), Align := L.Alignment.Center),
+            Icons.IconButton<M.Msg>(
+              'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
+              M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
+            ),
+            E.Size<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Name), S.Role.SingleLine), Fill)
+          )
+        ]
+      ),
       Grid.Cell<M.Msg>.Text(Browse.Artist(Item)),
       Grid.Cell<M.Msg>.Text(AlbumName(Current, Item)),
       Grid.Cell<M.Msg>.Text(
@@ -55,7 +68,8 @@ begin
             Item.Rating ?? 0,
             function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
             Maximum := 10,
-            Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId)
+            Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
+            StarSize := RatingStyle.StarSize
           )
         ]
       ),
@@ -107,11 +121,11 @@ begin
         Fixed := true,
         Priority := 2
       ),
-      new Grid.Column('Rating', 260.0F, Sortable := true, Fixed := true),
+      new Grid.Column('Rating', 180.0F, Sortable := true, Fixed := true),
       new Grid.Column('', 42.0F, Fixed := true)
     ],
     Current.Shown.Length,
-    function(Index: int): Grid.Row<M.Msg> => Song(Current, Current.Shown[Index]),
+    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index),
     new Grid.Value(Order := Current.Order),
     function(Value: Grid.Value): M.Msg => M.Msg.Sort(Value.Order ?? Current.Order),
     new Grid.Options(RowHeight := 40.0F, HideCheckboxes := true)

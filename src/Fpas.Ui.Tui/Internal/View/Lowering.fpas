@@ -503,7 +503,7 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException(
           'Dropzone, avatar upload and signature pad require the graphical profile.'
         );
-      when Ui.Element.ChipAction(_, _, _, _, _, _), Ui.Element.RatingAction(_, _, _, _, _, _):
+      when Ui.Element.ChipAction(_, _, _, _, _, _), Ui.Element.RatingAction(_, _, _, _, _, _, _):
         raise new Sys.NotSupportedException('Chip and rating require the graphical profile.');
       when Ui.Element.TabStrip(
         _,

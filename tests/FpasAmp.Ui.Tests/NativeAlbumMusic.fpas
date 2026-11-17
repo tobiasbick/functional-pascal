@@ -25,6 +25,17 @@ begin
   raise new Sys.InvalidOperationException('Missing native control: ' + Id);
 end function;
 
+function Has(Session: Gui.Session<App.Msg>; Id: string): bool;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
 procedure Step(Session: Gui.Session<App.Msg>);
 begin
   discard Session.Post(App.Msg.Settings(Settings.Msg.DismissError));
@@ -159,6 +170,9 @@ public type AlbumMusicTests = record
         raise new Sys.InvalidOperationException('No visible album card.');
       end if;
 
+      const AlbumRating: Cui.CuiRectangle := Control(
+        Session, 'album-rating-' + Selected.Id.Substring('album-'.Length)
+      ).Bounds;
       Click(Session, Selected.Bounds);
       Until(
         Session, function(): bool begin
@@ -187,13 +201,18 @@ public type AlbumMusicTests = record
       X.Assert.Equal<float>(AlbumSort.Height, TrackSort.Height);
       X.Assert.Equal<float>(AlbumFilter.Y - AlbumSearch.Y, TrackFilter.Y - TrackSearch.Y);
       const Footer: Cui.CuiRectangle := Control(Session, 'track-status').Bounds;
-      X.Assert.True(Sys.Math.Abs(Footer.Y + Footer.Height - Session.Snapshot().Size.Height) < 1.0F);
+      const Toggle: Gui.Control := Control(Session, 'player-toggle');
+      X.Assert.False(Toggle.Enabled);
+      X.Assert.True(Footer.Y + Footer.Height <= Toggle.Bounds.Y);
       const Id: string := Track.FileId.ToString();
-      Click(Session, Control(Session, 'track-rating-' + Id).Bounds, 0.43F);
+      const TrackRating: Cui.CuiRectangle := Control(Session, 'track-rating-' + Id).Bounds;
+      X.Assert.True(AlbumRating.Height > 0.0F);
+      X.Assert.Equal<float>(AlbumRating.Height, TrackRating.Height);
+      Click(Session, TrackRating, 0.95F);
       Until(
         Session, function(): bool begin
           const Details: Music.State? := Last.Albums.Music;
-          return Details <> null and (Details.Tracks[0].Rating ?? 0) > 0;
+          return Details <> null and (Details.Tracks[0].Rating ?? 0) = 10;
         end function, 'The clicked track rating was not saved.'
       );
       Click(Session, Control(Session, 'track-menu-' + Id).Bounds);
@@ -238,6 +257,28 @@ public type AlbumMusicTests = record
         Send(Session, Albums.Msg.Music(Music.Msg.ShowFilters(false)));
       end if;
 
+      Click(Session, Control(Session, 'track-play-' + Id).Bounds, 0.5F);
+      X.Assert.True(Last.Player.Playing);
+      X.Assert.Equal<long>(Track.FileId, Last.Player.Queue[Last.Player.Index].FileId);
+      Click(Session, Control(Session, 'player-toggle').Bounds, 0.5F);
+      X.Assert.False(Last.Player.Playing);
+      if Last.Player.Index + 1 < Last.Player.Queue.Length then
+        Click(Session, Control(Session, 'player-next').Bounds, 0.5F);
+        X.Assert.Equal<int>(1, Last.Player.Index);
+      end if;
+      const Bass: Cui.CuiRectangle := Control(Session, 'player-eq-31').Bounds;
+      XPos := Bass.X + Bass.Width / 2.0F;
+      YPos := Bass.Y + 2.0F;
+      Step(Session);
+      Left := 1;
+      Step(Session);
+      Left := 0;
+      Step(Session);
+      X.Assert.True(Last.Player.Gains[0] > 6.0F, 'Dragging the 31 Hz fader did not boost it.');
+      if SaveAt <> null then
+        Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music-player.png'));
+      end if;
+
       Window.Resize(620, 820);
       Until(
         Session, function(): bool => Session.Snapshot().Size.Width < 640.0F,
@@ -250,6 +291,8 @@ public type AlbumMusicTests = record
       Click(Session, Control(Session, 'track-filters').Bounds);
       X.Assert.True(Control(Session, 'track-filter-apply').Bounds.Width > 0.0F);
       Send(Session, Albums.Msg.Music(Music.Msg.ShowFilters(false)));
+      X.Assert.True(Has(Session, 'player-toggle'));
+      X.Assert.False(Has(Session, 'player-eq-31'));
       Window.Resize(1320, 820);
       Until(
         Session, function(): bool => Session.Snapshot().Size.Width > 1000.0F,

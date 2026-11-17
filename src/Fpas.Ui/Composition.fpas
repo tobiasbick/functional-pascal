@@ -1627,6 +1627,7 @@ begin
       _,
       _,
       _,
+      _,
       _
     ), E.Element.TabStrip(
       _,

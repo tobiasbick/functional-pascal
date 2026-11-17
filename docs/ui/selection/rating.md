@@ -32,6 +32,7 @@ end unit;
 | `Value` | A model-owned integer from zero through Maximum. |
 | `Maximum` | 5. Accepts 1 through 16 stars. |
 | `Enabled` | true. |
+| `StarSize` | 22 logical points. Accepts any finite positive size. |
 
 ## Interaction
 

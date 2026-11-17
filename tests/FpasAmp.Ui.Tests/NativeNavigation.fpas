@@ -143,11 +143,15 @@ public type NativeNavigationTests = record
               end if
             )
           );
+          X.Assert.True(Has(Session, 'player-toggle'));
         end for;
         const Selected: Lists.Summary := Session.State().Navigation.Playlists[0];
         SetRoute(Session, Nav.Route.Playlist(Selected.Identity));
         X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
+        X.Assert.True(Has(Session, 'player-toggle'));
         Capture(Session, 'navigation-playlist');
+        SetRoute(Session, Nav.Route.Page(Nav.Page.Settings));
+        X.Assert.False(Has(Session, 'player-toggle'));
       end;
 
       begin

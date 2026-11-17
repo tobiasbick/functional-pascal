@@ -9,14 +9,17 @@ public sealed partial class CuiWindow
     /// <param name="value">Current rating, or zero for no selection.</param>
     /// <param name="maximum">Number of stars from one through sixteen.</param>
     /// <param name="enabled">Whether the rating accepts pointer input.</param>
+    /// <param name="starSize">The positive logical edge length of each star's hit area.</param>
     /// <returns>A proposed rating, or minus one when unchanged.</returns>
-    public int Rating(string id, int value, int maximum, bool enabled)
+    public int Rating(string id, int value, int maximum, bool enabled, float starSize = 22f)
     {
         CheckFrame();
         ArgumentOutOfRangeException.ThrowIfLessThan(maximum, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(maximum, 16);
         ArgumentOutOfRangeException.ThrowIfNegative(value);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, maximum);
-        return NativeMethods.Rating(context, Stable(id), value, maximum, enabled ? 1 : 0);
+        if (!float.IsFinite(starSize) || starSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(starSize));
+        return NativeMethods.Rating(context, Stable(id), value, maximum, enabled ? 1 : 0, starSize);
     }
 }

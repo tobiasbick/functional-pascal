@@ -308,9 +308,11 @@ for its standalone test command.
 [FpasAmp.Ui.Tests](FpasAmp.Ui.Tests/) checks pause preference persistence,
 failure-safe settings/clear proposals and the native shell's controls, progress,
 confirmations, source removal and background acknowledgements, including failure-safe
-preference writes. Native checks have the `Gui` trait and require a real display
+preference writes, and the player strip's queue, transport, equalizer and compact
+layout. Native checks have the `Gui` trait and require a real display
 or Xvfb. `FPAS_AMP_UI_ARTIFACTS` optionally names
-an ignored directory for General, scanning, confirmation and paused screenshots.
+an ignored directory for General, scanning, confirmation, paused, album music and
+player screenshots.
 
 ## See also
 

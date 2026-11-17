@@ -202,7 +202,7 @@ public type Element<TMsg> = variant
   // Toggle an independent graphical selection.
   ChipAction(Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg; Icon: string; Enabled: bool);
   // Select a graphical whole-star rating.
-  RatingAction(Id: string; Label: string; Value: int; OnChange: function(int): TMsg; Maximum: int; Enabled: bool);
+  RatingAction(Id: string; Label: string; Value: int; OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float);
   // Select a tab in a native graphical strip.
   TabStrip(Id: string; Items: array of Tabs.Item; Selected: int; OnChange: function(int): TMsg; Settings: Tabs.Options);
   // Navigate to an ancestor in a graphical breadcrumb trail.

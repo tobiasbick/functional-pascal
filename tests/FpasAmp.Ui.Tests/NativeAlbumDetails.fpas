@@ -182,10 +182,21 @@ public type DetailTests = record
     Step(Session);
     const Footer: Cui.CuiRectangle := Find(Session, 'album-status').Bounds;
     const Grid: Cui.CuiRectangle := Find(Session, 'album-grid').Bounds;
-    X.Assert.True(Sys.Math.Abs(Footer.Y + Footer.Height - Session.Snapshot().Size.Height) < 1.0F);
+    X.Assert.True(Footer.Y + Footer.Height <= Find(Session, 'player-toggle').Bounds.Y);
     X.Assert.True(Grid.Y + Grid.Height <= Footer.Y);
     X.Assert.False(Find(Session, 'album-rating-album-0').Enabled);
+    const FirstCard: Cui.CuiRectangle := Find(Session, 'album-album-0').Bounds;
+    var FirstRow: int := 0;
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Role = 'card' and Item.Id.StartsWith('album-') and Item.Bounds.Y = FirstCard.Y then
+        FirstRow := FirstRow + 1;
+      end if;
+    end for;
+
+    X.Assert.Equal<int>(3, FirstRow);
+    X.Assert.True(FirstCard.Width <= 187.0F);
     const Cover: Cui.CuiRectangle := Find(Session, 'cover-album-0').Bounds;
+    X.Assert.True(Cover.Width <= 171.0F);
     PointerX := Cover.X + Cover.Width / 2.0F;
     PointerY := Cover.Y + Cover.Height / 2.0F;
     Step(Session);
@@ -248,7 +259,9 @@ public type DetailTests = record
     PointerY := -1.0F;
     Step(Session);
     const TileRating: Cui.CuiRectangle := Find(Session, 'album-rating-album-0').Bounds;
-    PointerX := TileRating.X + 35.0F;
+    X.Assert.True(TileRating.X >= FirstCard.X);
+    X.Assert.True(TileRating.X + TileRating.Width <= FirstCard.X + FirstCard.Width);
+    PointerX := TileRating.X + TileRating.Width * 0.15F;
     PointerY := TileRating.Y + TileRating.Height / 2.0F;
     Step(Session);
     Step(Session);

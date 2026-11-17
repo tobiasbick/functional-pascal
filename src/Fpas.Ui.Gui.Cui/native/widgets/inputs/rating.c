@@ -1,6 +1,6 @@
 #include "../../fpas_cui.h"
 
-int fpas_cui_rating(cui_ctx *ui, const char *id, int value, int maximum, int enabled) {
+int fpas_cui_rating(cui_ctx *ui, const char *id, int value, int maximum, int enabled, float star_size) {
     const bool allowed = enabled && !cui_is_disabled(ui);
     int proposed = value;
     cui_push_disabled(ui, !enabled);
@@ -8,6 +8,9 @@ int fpas_cui_rating(cui_ctx *ui, const char *id, int value, int maximum, int ena
     cui_pop_disabled(ui);
     const cui_id key = cui_make_id(ui, id);
     const int row = fpas_find(ui, key);
+    for (int child = ui->nodes[row].first; child >= 0; child = ui->nodes[child].next) {
+        ui->nodes[child].w = ui->nodes[child].h = CUI_PX(star_size);
+    }
     if (!allowed) ui->nodes[row].opacity = CUI__DISABLED;
     ui->last_node = row;
     ui->last_id = key;

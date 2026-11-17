@@ -15,7 +15,7 @@ public sealed partial class CuiWindow
     /// <param name="bar">Bar width or zero.</param>
     /// <param name="gap">Bar gap or zero.</param>
     /// <param name="color">Played bar color.</param>
-    /// <param name="flags">Enabled and focus bits.</param>
+    /// <param name="flags">Enabled (1), request focus (2), and commit pointer input on release (4).</param>
     /// <returns>The proposed position, or null without progress.</returns>
     public unsafe float? Waveform(string id, float[] peaks, float? progress, int widthKind, float width,
         float height, float bar, float gap, CuiChartColor color, int flags)

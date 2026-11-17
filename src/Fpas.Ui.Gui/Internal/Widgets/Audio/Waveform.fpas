@@ -29,6 +29,10 @@ begin
       2
     else
       0
+    end if) + (if Settings.SeekOnRelease then
+      4
+    else
+      0
     end if);
   const Proposed: float? := Frame.Window.Waveform(
     Token, Peaks, Progress, Width.Kind, Width.Value,

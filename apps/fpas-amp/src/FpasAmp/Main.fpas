@@ -9,6 +9,8 @@ uses
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Shell as Shell,
   FpasAmp.AppState as State,
+  FpasAmp.Persistence.PlayerState as Transport, FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Library.Metadata.Monitoring as Metadata,
   FpasAmp.Library.Inventory.Monitoring as Monitoring,
   FpasAmp.Library.Persistence.Paths as LibraryPaths,
   System as Sys,
@@ -29,18 +31,44 @@ begin
   );
   try
     const Opened: State.Snapshot := State.Load(Directory);
+    var Restored: Player.State := new Player.State();
+    var PreserveQueue: bool := false;
+    const Tags: Metadata.Session? := Inventory.Metadata;
+    if Tags <> null and Opened.Player.Index >= 0 then
+      try
+        Restored := Transport.Restore(
+          Opened.Player,
+          Tags.QueueAsync(
+            Opened.Player.Source.AlbumId,
+            Threads.CancellationToken.None
+          ).GetAwaiter().GetResult()
+        );
+      catch Failure: Sys.Exception do
+        PreserveQueue := true;
+        Console.Error.WriteLine('Could not restore the playback queue: ' + Failure.Message);
+      end try;
+    end if;
     var Navigation: Nav.State := new Nav.State(
       Active := Nav.Parse(Opened.ActivePage) ?? Nav.Route.Page(Nav.Page.Music),
       SettingsTab := Opened.SettingsTab
     );
     const Closed: Cui.CuiWindowPlacement := Shell.Run(
-      State.ToWindow(Opened), Preferences, ref Navigation,
+      State.ToWindow(Opened), Preferences, ref Navigation, ref Restored,
       procedure(Value: Model.Preferences) begin
         Settings.Save(Directory, Value);
       end procedure, Inventory
     );
     try
-      State.Save(Directory, State.FromWindow(Closed, Navigation));
+      State.Save(
+        Directory, State.FromWindow(
+          Closed, Navigation,
+          if PreserveQueue and Restored.Index < 0 then
+            Opened.Player
+          else
+            Transport.Capture(Restored)
+          end if
+        )
+      );
     catch Failure: IO.IOException do
       Console.Error.WriteLine('Could not save the application state: ' + Failure.Message);
     catch Failure: Sys.UnauthorizedAccessException do

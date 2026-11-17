@@ -1,0 +1,44 @@
+// Ten-band equalizer curves, ordered from 31 Hz to 16 kHz.
+unit FpasAmp.Ui.Player.Presets;
+
+uses System.Collections.Immutable as I, System.Linq as Linq;
+
+// One selectable curve.
+public type Curve = record
+  // English caption shown in the preset menu.
+  public Name: string;
+  // Gain of each band in dB.
+  public Gains: I.ImmutableArray<float>;
+end record;
+
+function Define(Name: string; Gains: array of float): Curve;
+begin
+  return new Curve(Name, I.ImmutableArray.CreateRange<float>(Gains));
+end function;
+
+// Presets in menu order. The first entry is the neutral reset curve.
+public const Choices: array of Curve := [
+  Define('None', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+  Define('Rock', [4, 3, 2, -1, -2, -1, 1, 3, 4, 3]),
+  Define('Pop', [-1, 1, 2, 3, 2, 1, 0, -1, 1, 2]),
+  Define('Jazz', [3, 2, 1, 0, -1, -1, 0, 2, 3, 3]),
+  Define('Classical', [2, 2, 1, 0, -1, -1, 0, 1, 2, 3]),
+  Define('Bass Boost', [6, 5, 4, 2, 0, 0, 0, 0, 0, 0]),
+  Define('Vocal', [-3, -2, -1, 0, 2, 3, 4, 2, 0, -1])
+];
+
+// Finds the preset matching all ten values in `Gains`.
+// ## Returns
+// Index in Choices, or -1 for a custom curve.
+public function Match(Gains: I.ImmutableArray<float>): int;
+begin
+  for Index: int := 0 to Choices.Length - 1 do
+    if Linq.Enumerable.SequenceEqual<float>(Choices[Index].Gains, Gains) then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+end unit;

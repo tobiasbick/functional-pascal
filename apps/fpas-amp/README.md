@@ -22,11 +22,19 @@ The play button beside each title starts that track and queues the shown tracks
 after it. Until then, the strip shows **Nothing playing** with its transport and
 position bar disabled; the equalizer and volume stay editable. It shows
 the title and artist, previous/play-pause/next, a ten-band equalizer (±12 dB with
-**Reset**), a volume knob (−60 to 0 dB), stereo level meters and a seekable
-position bar. **Previous** restarts a track after three seconds. Below 760 logical
-pixels of content width, the strip hides the equalizer and meters. Audio output is
-not implemented yet: the position moves only by seeking, the meters stay silent
-and the position bar shows uniform bars until loudness is measured.
+**Reset**), a vertical volume fader (−60 to 0 dB) beside the stereo level meters,
+and a full-width waveform. **Previous** restarts a track after three seconds. Below 760 logical
+pixels of content width, the strip hides the equalizer and meters. The meters show
+the output after equalization and volume. Click the waveform to seek, or drag
+to preview a position and release to seek once. Both work while playing or paused.
+The accent color marks the played portion. On first playback, waveform analysis
+starts in the background once playback has delivered audio. You can seek while it loads.
+The library index caches the envelope by SHA-256 for later plays and app restarts.
+The dropdown beside **Reset** offers Rock, Pop, Jazz, Classical, Bass Boost and Vocal.
+**None** and **Reset** set all ten bands to zero. A manually adjusted curve is
+shown as **Custom** when it differs from every preset.
+At the end of a song the next queued track starts automatically. Playback
+stops at the end of the queue.
 The status bar shows the matching track count and duration. The back arrow restores
 the album grid's search, applied filters, sort order and scroll position.
 Below 760 logical pixels, the sidebar becomes a left-hand drawer opened through
@@ -90,6 +98,13 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   follows Windows app appearance while running and keeps the chosen accent.
   On X11 it uses CUI's dark `GTK_THEME` hint when available and otherwise
   uses light.
+- `settings.json` saves the master volume and ten equalizer gains in dB under
+  `mixer`. The player restores both presets and custom curves from these values.
+- Closing the window silences playback immediately. `state.json` stores the
+  playing selection (album or library, search, filters and sort order), the current
+  track ID, its slot, position and duration. On restart the player rebuilds
+  the queue from the library and opens paused at that track and position.
+  If the track has disappeared, the replacement at the saved slot starts at zero.
 - `state.json` holds `width`, `height`, `x`, `y` and `maximized`. The
   dimensions describe the normal window in logical units. `x` and `y` are the
   top-left corner of its content in desktop coordinates: pixels on Windows
@@ -148,7 +163,6 @@ requests covers for the newly visible albums only. Narrow windows place the two
 actions below the search field.
 Small content-addressed thumbnails are kept under `covers/thumbnails-v1` beside
 `userdata.db`, with bounded disk/memory caches. Cached thumbnails work offline.
-Playback is planned separately.
 
 Playlist files in music sources are also discovered and monitored. They are
 cached separately from audio entries; the scan never opens their media targets.

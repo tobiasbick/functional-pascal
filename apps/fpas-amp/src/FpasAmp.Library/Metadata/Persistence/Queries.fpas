@@ -78,25 +78,34 @@ end function;
 // ## Parameters
 // - `Database`: Validated catalogue path.
 // - `UserDatabase`: Validated durable ratings store path.
-// - `Id`: Stable release identity from an album header.
+// - `Id`: Stable release identity, or empty for all indexed releases.
 // - `Cancellation`: Cancels row iteration.
 // ## Returns
 // Detached tracks for the release, including their independent user ratings.
 public function ReadRelease(Database: string; UserDatabase: string; Id: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
-requires Id <> '';
+requires Id <> null;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
   Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [UserDatabase]);
+  const Scope: string := if Id = '' then
+    ' ORDER BY m.sort_album_artist,m.sort_album,a.album_id,'
+  else
+    ' WHERE a.album_id=$album ORDER BY '
+  end if;
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error' +
     ' FROM album_tracks a JOIN files f ON f.id=a.file_id JOIN metadata m ON m.file_id=f.id' +
-    ' LEFT JOIN users.tracks u ON u.id=m.track_id WHERE a.album_id=$album' +
-    ' ORDER BY COALESCE(json_extract(m.tags_json,''$.DiscNumber''),1),' +
+    ' LEFT JOIN users.tracks u ON u.id=m.track_id' + Scope +
+    'COALESCE(json_extract(m.tags_json,''$.DiscNumber''),1),' +
     ' COALESCE(json_extract(m.tags_json,''$.TrackNumber''),2147483647),m.sort_title,f.id;',
-    null, ['$album'], [Id]
+    null, [], []
   );
+  if Id <> '' then
+    discard Query.Parameters.AddWithValue('$album', Id);
+  end if;
+
   return Entries(Query, Cancellation);
 end function;
 

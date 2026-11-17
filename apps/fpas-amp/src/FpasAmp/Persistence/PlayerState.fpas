@@ -1,0 +1,176 @@
+// Compact playback bookmark: the catalogue supplies the queue on restart.
+unit FpasAmp.Persistence.PlayerState;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Player.Model as M,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Library.Metadata.Model as Tracks, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Text.Json as J;
+
+// The playing source and track at close, independent of subsequent navigation.
+public type Saved = record
+  // Source, search, filters and sort captured when playback began.
+  public Source: Music.Selection := new Music.Selection();
+  // Durable identity of the selected track, empty for an idle player.
+  public TrackId: string := '';
+  // Fallback slot if the current track disappears from the selection.
+  public Index: int := -1;
+  // Elapsed playback time in milliseconds.
+  public Position: double := 0.0;
+  // Last known track duration in milliseconds.
+  public Duration: double := 0.0;
+end record;
+
+function Selection(Field: J.JsonElement; ref Valid: bool): Music.Selection;
+begin
+  const Album: string? := Fields.StringValue(Fields.Field(Field, 'albumId'));
+  const Search: string? := Fields.StringValue(Fields.Field(Field, 'search'));
+  const Column: int := Fields.IntegerValue(Fields.Field(Field, 'column')) ?? -2;
+  const Rating: int := Fields.IntegerValue(Fields.Field(Field, 'minimumRating')) ?? -1;
+  const Desc: bool? := Fields.BooleanValue(Fields.Field(Field, 'descending'));
+  const Values: J.JsonElement := Fields.Field(Field, 'genres');
+  const Genres: C.List<string> := new C.List<string>();
+  if Values.ValueKind = J.JsonValueKind.Array then
+    for Item: J.JsonElement in Values.EnumerateArray() do
+      const Name: string? := Fields.StringValue(Item);
+      if Name <> null then
+        Genres.Add(Name);
+      else
+        Valid := false;
+      end if;
+    end for;
+  else
+    Valid := false;
+  end if;
+
+  if Album = null or Search = null or Desc = null or Column < -1 or Column > 4 or Rating < 0
+    or Rating > 10
+  then
+    Valid := false;
+  end if;
+
+  return new Music.Selection(
+    Album ?? '',
+    Search ?? '',
+    Genres.ToArray(),
+    Sys.Math.Clamp(Rating, 0, 10),
+    Sys.Math.Clamp(Column, -1, 4),
+    Desc ?? false
+  );
+end function;
+
+// Reads the optional player `Field` and marks `Valid` false for malformed data.
+// ## Returns
+// A compact bookmark. Older queues contribute their selected identity only.
+public function Decode(Field: J.JsonElement; ref Valid: bool): Saved;
+begin
+  if Field.ValueKind = J.JsonValueKind.Undefined then
+    return new Saved();
+  end if;
+  const Slot: int? := Fields.IntegerValue(Fields.Field(Field, 'index'));
+  const Position: double? := Fields.Number(
+    Fields.Field(Field, 'position'),
+    0.0,
+    Sys.TimeSpan.MaxValue.TotalMilliseconds - 1.0
+  );
+  const Duration: double? := Fields.Number(
+    Fields.Field(Field, 'duration'),
+    0.0,
+    Sys.TimeSpan.MaxValue.TotalMilliseconds - 1.0
+  );
+  if Slot = null or Slot < -1 or Position = null or Duration = null then
+    Valid := false;
+  end if;
+  var Source: Music.Selection := new Music.Selection();
+  var Id: string? := null;
+  const Legacy: J.JsonElement := Fields.Field(Field, 'queue');
+  if Legacy.ValueKind = J.JsonValueKind.Array and Fields.Field(
+    Field,
+    'source'
+  ).ValueKind = J.JsonValueKind.Undefined
+  then
+    if Slot >= 0 and Slot < Legacy.GetArrayLength() then
+      Id := Fields.StringValue(Legacy[Slot.Value]);
+    elsif Legacy.GetArrayLength() = 0 then
+      Id := '';
+    end if;
+  else
+    Source := Selection(Fields.Field(Field, 'source'), ref Valid);
+    Id := Fields.StringValue(Fields.Field(Field, 'trackId'));
+  end if;
+
+  if Id = null then
+    Valid := false;
+  end if;
+
+  return new Saved(Source, Id ?? '', Slot ?? -1, Position ?? 0.0, Duration ?? 0.0);
+end function;
+
+// Captures the playback source and selected title from `Current` in constant space.
+public function Capture(Current: M.State): Saved;
+begin
+  const Track: Tracks.Entry? := M.Track(Current);
+  if Track = null then
+    return new Saved();
+  end if;
+
+  return new Saved(
+    Current.Source,
+    Track.TrackId,
+    Current.Index,
+    Current.Position,
+    Current.Duration
+  );
+end function;
+
+// Restores `Value` against fresh source `Entries`, reusing the browser's filter and sort.
+// ## Returns
+// A paused queue. A replacement title starts at zero if the saved title disappeared.
+public function Restore(Value: Saved; Entries: I.ImmutableArray<Tracks.Entry>): M.State;
+begin
+  if Value.Index < 0 then
+    return new M.State();
+  end if;
+  const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(Entries, Value.Source);
+  if Queue.IsEmpty then
+    return new M.State();
+  end if;
+  var Index: int := Sys.Math.Min(Value.Index, Queue.Length - 1);
+  const Same: bool := Queue[Index].TrackId = Value.TrackId;
+  if not Same then
+    for N: int := 0 to Queue.Length - 1 do
+      if Queue[N].TrackId = Value.TrackId then
+        Index := N;
+        break;
+      end if;
+    end for;
+  end if;
+  const Track: Tracks.Entry := Queue[Index];
+  const Matched: bool := Track.TrackId = Value.TrackId;
+  const Duration: double := if Matched and Value.Duration > 0.0 then
+    Value.Duration
+  else
+    Browse.Duration(Track)
+  end if;
+  const Position: double := if Matched then
+    Sys.Math.Min(Value.Position, Duration)
+  else
+    0.0
+  end if;
+  return new M.State(
+    Queue := Queue,
+    Source := Value.Source,
+    Index := Index,
+    NeedsOpen := true,
+    Duration := Duration,
+    Position := Position,
+    Finished := Duration > 0.0 and Position >= Duration,
+    WaveformKey := if Track.Sha256 <> '' then
+      Track.Sha256
+    else
+      Track.Path
+    end if
+  );
+end function;
+
+end unit;

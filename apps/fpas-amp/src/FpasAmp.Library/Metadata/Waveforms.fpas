@@ -1,0 +1,102 @@
+// On-demand, content-addressed loudness envelopes in the reconstructible catalogue.
+unit FpasAmp.Library.Metadata.Waveforms;
+
+uses
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Internal.Reading as Reading,
+  FpasAmp.Library.Persistence.Sql as Sql, Fpas.Media.Audio as Audio, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// Number of equal-duration RMS intervals across the complete recording.
+public const Buckets: int := 1024;
+
+// Bind the detached queue entry to the fingerprint and stamp of the file being played.
+const Indexed: string := 'SELECT m.sha256 FROM metadata m JOIN files f ON f.id=m.file_id' +
+  ' WHERE f.id=$id AND f.path_key=$path AND m.sha256=$hash AND m.error IS NULL' +
+  ' AND m.size=$size AND m.modified_utc=$modified';
+
+// Reads a validated envelope or measures the source with an independent decoder.
+// ## Parameters
+// - `Database`: Absolute path of the initialized catalogue. Call on a worker.
+// - `Track`: File selected for playback and its indexed content fingerprint.
+// - `Cancellation`: Stops work when another track takes its place.
+// ## Returns
+// Relative RMS values in time order. Each cached interval occupies one byte.
+public async function Read(Database: string; Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<array of float>;
+requires Database <> '';
+requires Track.Path <> '';
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if Track.Sha256.Length <> 64 then
+    return await Audio.Analysis.LoudnessAsync(
+      Track.Path,
+      Buckets,
+      Cancellation
+    ).ConfigureAwait(false);
+  end if;
+  const File: IO.FileInfo := new IO.FileInfo(Track.Path);
+  const Size: long := File.Length;
+  const Modified: long := File.LastWriteTimeUtc.Ticks;
+  const Names: array of string := ['$id', '$path', '$hash', '$size', '$modified'];
+  const Values: array of object? := [
+    Track.FileId,
+    Sql.Key(Track.Path),
+    Track.Sha256,
+    Size,
+    Modified
+  ];
+  try
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    using const Query: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'SELECT levels FROM waveforms WHERE sha256=(' + Indexed +
+      ') AND typeof(levels)=''blob'' AND length(levels)=$count;',
+      null, Names, Values
+    );
+    discard Query.Parameters.AddWithValue('$count', Buckets);
+    using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
+    if Rows.Read() then
+      const Packed: array of byte := Rows.GetFieldValue<array of byte>(0);
+      const Levels: array of float := new float[Buckets];
+      for Index: int := 0 to Buckets - 1 do
+        Levels[Index] := cast<float>(Packed[Index]) / 255.0F;
+      end for;
+
+      return Levels;
+    end if;
+  catch Failure: Db.SqliteException do
+    // A busy or unavailable cache must not prevent measuring the playing file.
+  end try;
+
+  const Levels: array of float := await Audio.Analysis.LoudnessAsync(
+    Track.Path,
+    Buckets,
+    Cancellation
+  ).ConfigureAwait(false);
+  Cancellation.ThrowIfCancellationRequested();
+  if not Reading.Matches(Track.Path, Size, Modified) then
+    return [];
+  end if;
+  const Packed: array of byte := new byte[Buckets];
+  for Index: int := 0 to Buckets - 1 do
+    Packed[Index] := Sys.Convert.ToByte(Levels[Index] * 255.0F);
+  end for;
+
+  try
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    using const Save: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'INSERT OR REPLACE INTO waveforms(sha256,levels) SELECT sha256,$levels FROM (' + Indexed +
+      ');',
+      null, Names, Values
+    );
+    discard Save.Parameters.AddWithValue('$levels', Packed);
+    Cancellation.ThrowIfCancellationRequested();
+    discard Save.ExecuteNonQuery();
+  catch Failure: Db.SqliteException do
+    // The measured envelope is still available for this playback.
+  end try;
+
+  return Levels;
+end function;
+
+end unit;

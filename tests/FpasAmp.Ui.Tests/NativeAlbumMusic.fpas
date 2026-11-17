@@ -2,6 +2,8 @@
 unit FpasAmp.Ui.Tests.NativeAlbumMusic;
 
 uses
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
+  FpasAmp.Ui.Player.Model as Player, FpasAmp.Persistence.PlayerState as Bookmark,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Fixtures,
   FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Inventory.Monitoring as Library,
   FpasAmp.Library.Metadata.Model as Metadata,
@@ -79,7 +81,7 @@ public type AlbumMusicTests = record
     function Apply(Current: App.State; Message: App.Msg): A.Transition<App.State, App.Msg>;
     begin
       const Next: A.Transition<App.State, App.Msg> := Controller.Apply(
-        Current, Message, procedure(_Value: Settings.Preferences) begin end procedure, Store
+        Current, Message, procedure(_Value: Settings.Preferences) begin end procedure, Store, Port
       );
       Last := Next.Model;
       return Next;
@@ -113,6 +115,9 @@ public type AlbumMusicTests = record
       Finale.Genre := 'Pop';
       X.Assert.True(Finale.Save());
     end for;
+
+    using const Device: Media.Session := new Media.Session(true);
+    const Port: Playback.Connection := new Playback.Connection(Device);
     var Last: App.State := new App.State(
       new Settings.State(new Settings.Preferences([], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
@@ -128,7 +133,8 @@ public type AlbumMusicTests = record
     try
       Window.SetReducedMotion(true);
       using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
-        Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
+        Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false,
+        OnCloseRequested := function(): App.Msg => App.Msg.Closing(Playback.Stop(Last.Player, Port))
       );
       discard Session.Post(App.Msg.WatchLibrary);
       Until(
@@ -260,8 +266,43 @@ public type AlbumMusicTests = record
       Click(Session, Control(Session, 'track-play-' + Id).Bounds, 0.5F);
       X.Assert.True(Last.Player.Playing);
       X.Assert.Equal<long>(Track.FileId, Last.Player.Queue[Last.Player.Index].FileId);
+      X.Assert.Equal<string>(Page.Album.Id, Bookmark.Capture(Last.Player).Source.AlbumId);
       Click(Session, Control(Session, 'player-toggle').Bounds, 0.5F);
       X.Assert.False(Last.Player.Playing);
+      const Wave: Cui.CuiRectangle := Control(Session, 'player-position').Bounds;
+      Click(Session, Wave, 0.72F);
+      X.Assert.InRange<double>(Last.Player.Position / Last.Player.Duration, 0.70, 0.74);
+      const BeforeDrag: long := Last.Player.Revision;
+      XPos := Wave.X + Wave.Width * 0.9F;
+      Step(Session);
+      Left := 1;
+      Step(Session);
+      XPos := Wave.X + Wave.Width * 0.5F;
+      Step(Session);
+      XPos := Wave.X + Wave.Width * 0.2F;
+      Step(Session);
+      X.Assert.Equal<long>(BeforeDrag, Last.Player.Revision);
+      Left := 0;
+      Step(Session);
+      Step(Session);
+      X.Assert.Equal<long>(BeforeDrag + 1L, Last.Player.Revision);
+      X.Assert.InRange<double>(Last.Player.Position / Last.Player.Duration, 0.18, 0.22);
+      const Volume: Cui.CuiRectangle := Control(Session, 'player-volume').Bounds;
+      X.Assert.True(Volume.X + Volume.Width <= Control(Session, 'player-levels').Bounds.X);
+      X.Assert.True(Volume.Y + Volume.Height <= Wave.Y);
+      Click(Session, Volume, 0.5F);
+      X.Assert.InRange<float>(Last.Player.Volume, -55.0F, -5.0F);
+      const Selector: Gui.Control := Control(Session, 'player-eq-preset');
+      const Reset: Cui.CuiRectangle := Control(Session, 'player-eq-reset').Bounds;
+      X.Assert.Equal<float>(Reset.Height, Selector.Bounds.Height);
+      X.Assert.True(Selector.Bounds.X + Selector.Bounds.Width <= Reset.X);
+      Click(Session, Selector.Bounds);
+      Click(Session, Control(Session, 'player-preset-1').Bounds);
+      X.Assert.Equal<string>('Rock', Control(Session, 'player-eq-preset').Text);
+      X.Assert.Equal<float>(4.0F, Last.Player.Gains[0]);
+      Click(Session, Control(Session, 'player-eq-preset').Bounds);
+      Click(Session, Control(Session, 'player-preset-0').Bounds);
+      X.Assert.Equal<float>(0.0F, Last.Player.Gains[0]);
       if Last.Player.Index + 1 < Last.Player.Queue.Length then
         Click(Session, Control(Session, 'player-next').Bounds, 0.5F);
         X.Assert.Equal<int>(1, Last.Player.Index);
@@ -275,6 +316,9 @@ public type AlbumMusicTests = record
       Left := 0;
       Step(Session);
       X.Assert.True(Last.Player.Gains[0] > 6.0F, 'Dragging the 31 Hz fader did not boost it.');
+      X.Assert.Equal<string>('Custom', Control(Session, 'player-eq-preset').Text);
+      Click(Session, Control(Session, 'player-eq-reset').Bounds);
+      X.Assert.Equal<string>('None', Control(Session, 'player-eq-preset').Text);
       if SaveAt <> null then
         Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music-player.png'));
       end if;
@@ -313,6 +357,39 @@ public type AlbumMusicTests = record
         Sys.Math.Abs(Returned.Y - Selected.Bounds.Y) < 1.0F,
         'The native grid returned to a different offset.'
       );
+      discard Session.Post(App.Msg.Player(Player.Msg.Seek(0.05F)));
+      discard Session.Post(App.Msg.Player(Player.Msg.Toggle));
+      Until(
+        Session,
+        function(): bool => Last.Player.Playing and Last.Player.Position > Last.Player.Duration *
+          0.05 + 1.0,
+        'Playback did not resume before closing.'
+      );
+      Window.RequestClose();
+      while Session.Step() do
+      end while;
+
+      X.Assert.False(Last.Player.Playing);
+      const Stopped: Media.PlaybackEvent? := Device.StopPlayback();
+      X.Assert.True(Stopped is Media.PlaybackEvent);
+      if Stopped is Media.PlaybackEvent then
+        X.Assert.Equal<long>(Last.Player.Revision, Stopped.RequestId);
+        X.Assert.Equal<double>(Stopped.Position.TotalMilliseconds, Last.Player.Position);
+      end if;
+      const Saved: Bookmark.Saved := Bookmark.Capture(Last.Player);
+      const Restored: Player.State := Bookmark.Restore(
+        Saved, Sources.Tags(Store).QueueAsync(
+          Saved.Source.AlbumId, T.CancellationToken.None
+        ).GetAwaiter().GetResult()
+      );
+      X.Assert.Equal<int>(2, Restored.Queue.Length);
+      X.Assert.Equal<string>(Page.Album.Id, Saved.Source.AlbumId);
+      X.Assert.Equal<long>(
+        Last.Player.Queue[Last.Player.Index].FileId,
+        Restored.Queue[Restored.Index].FileId
+      );
+      X.Assert.Equal<double>(Last.Player.Position, Restored.Position);
+      X.Assert.False(Restored.Playing);
     finally
       Store.DisposeAsync().GetAwaiter().GetResult();
     end try;

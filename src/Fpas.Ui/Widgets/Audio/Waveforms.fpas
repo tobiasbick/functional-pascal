@@ -16,6 +16,8 @@ public type Options = record
   public Color: C.Color := C.Color.Automatic;
   // Accept seek input.
   public Enabled: bool := true;
+  // Preview pointer movement locally and send its final position on release.
+  public SeekOnRelease: bool := false;
 end record;
 
 // Draws the native CUI waveform.

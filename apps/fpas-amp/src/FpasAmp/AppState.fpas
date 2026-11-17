@@ -6,6 +6,7 @@ uses
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Persistence.PlayerState as Transport,
   System.IO as IO,
   System as Sys,
   System.Text.Json as J;
@@ -26,6 +27,8 @@ public type Snapshot = record
   public SettingsTab: int := 0;
   // Static destination or playlist store/UUID key; never a display name or index.
   public ActivePage: string := 'music';
+  // Playback queue and the position to restore in pause.
+  public Player: Transport.Saved := new Transport.Saved();
 end record;
 
 const FileName: string := 'state.json';
@@ -102,7 +105,7 @@ begin
         Nav.Key(Route)
       else
         'music'
-      end if
+      end if, Transport.Decode(Fields.Field(Root, 'player'), ref Valid)
     ),
     Valid and Maximized <> null
   );
@@ -174,9 +177,10 @@ end function;
 // ## Parameters
 // - `Value`: The placement the GUI host reported when the window closed.
 // - `Navigation`: Final selected route and independently retained settings tab.
+// - `Player`: Optional saved queue and position from this window.
 // ## Returns
 // The stored placement; coordinates are null where the system reports none.
-public function FromWindow(Value: Cui.CuiWindowPlacement; Navigation: Nav.State): Snapshot;
+public function FromWindow(Value: Cui.CuiWindowPlacement; Navigation: Nav.State; Player: Transport.Saved? := null): Snapshot;
 requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
 begin
   const Defaults: Snapshot := new Snapshot();
@@ -203,7 +207,7 @@ begin
     end if,
     Value.State = Cui.CuiWindowState.Maximized,
     Navigation.SettingsTab,
-    Nav.Key(Navigation.Active)
+    Nav.Key(Navigation.Active), Player ?? new Transport.Saved()
   );
 end function;
 

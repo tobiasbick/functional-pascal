@@ -32,6 +32,10 @@ public type Msg = variant
   Settings(Message: SettingsView.Msg);
   // Transport, volume and equalizer edits.
   Player(Message: Player.Msg);
+  // Save the latest mixer after a burst of fader movement.
+  SaveMixer;
+  // Final paused transport captured by the native close gesture.
+  Closing(FinalPlayer: Player.State);
   // Begin owned mailbox subscriptions when the shell starts.
   WatchLibrary;
 end variant;

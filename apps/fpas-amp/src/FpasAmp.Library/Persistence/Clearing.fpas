@@ -12,7 +12,13 @@ begin
   Cancellation.ThrowIfCancellationRequested();
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   if Id = '' then
-    Sql.Execute(Connection, 'DELETE FROM sources; DELETE FROM files;', Transaction, [], []);
+    Sql.Execute(
+      Connection,
+      'DELETE FROM sources; DELETE FROM files; DELETE FROM waveforms;',
+      Transaction,
+      [],
+      []
+    );
   else
     Sql.Execute(
       Connection,

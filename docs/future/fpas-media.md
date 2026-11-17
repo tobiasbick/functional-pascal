@@ -1,9 +1,8 @@
 # Media libraries and FPas-Amp playback
 
-The FPas-Amp player strip ([app README](../../apps/fpas-amp/README.md)) holds the
-queue, transport, volume and ten-band equalizer in its MVU model, but nothing
-produces sound. This plan adds reusable media libraries beside `Fpas.Ui.*` and
-then connects real playback to the strip on Windows x64 and Linux x64.
+The FPas-Amp [player strip](../../apps/fpas-amp/README.md) uses the audio
+session for transport, equalization and metering on Windows x64 and Linux x64.
+This plan tracks the remaining media libraries and playback features.
 
 ## Libraries
 
@@ -16,7 +15,7 @@ base classes or span results; FPAS passes arrays to span parameters.
 
 | Library | Language | Backend | Purpose |
 | --- | --- | --- | --- |
-| `Fpas.Media.Audio` | C# | to be chosen (see below) | Playback session, equalizer, levels and loudness analysis |
+| [`Fpas.Media.Audio`](../../src/Fpas.Media.Audio/README.md) | C# | SoundFlow with miniaudio and FFmpeg | Local playback, ten-band equalization, peak metering and waveform analysis |
 | `Fpas.Media.Tags` | FPAS | vendored [ATL](../../third-party/atl/UPSTREAM.md) (`src/Fpas.Atl`) | Tags, embedded pictures, audio properties and playlists as records |
 | `Fpas.Media.Images` | C# | PhotoSauce MagicScaler with libjpeg/libpng | Decode, orient and fit pictures into straight-alpha RGBA bitmaps |
 
@@ -34,28 +33,18 @@ base classes or span results; FPAS passes arrays to span parameters.
 - Moving public CLR names requires updating the owning interop and CLR mapping
   specifications in the same change.
 
-### `Fpas.Media.Audio` surface
+The [audio library reference](../../src/Fpas.Media.Audio/README.md) describes
+the session commands, transport events, equalizer settings and waveform API.
 
-- `Session`: `IDisposable`. Opens a path and offers play, pause, seek and
-  `Apply(Settings)`. `Apply` swaps volume and gains atomically, so moving a
-  fader does not click.
-- `Settings` record: volume in dB, one gain per equalizer band.
-- `Events`: a `ChannelReader<Event>` that publishes status about 30 times a
-  second (position, duration, per-channel peak levels, state), plus track end
-  and failures. FPas-Amp subscribes to it like the library channels.
-- `LoudnessAsync(path, buckets, cancellation)`: a pure analysis that returns
-  normalized RMS buckets for the position bar.
-
-Backend candidates, all hidden behind this surface:
+The spike compared the following backends and selected SoundFlow.
 
 - [SoundFlow](https://github.com/LSXPrime/SoundFlow) (MIT, miniaudio
   output) with [SoundFlow.Codecs.FFMpeg](https://www.nuget.org/packages/SoundFlow.Codecs.FFMpeg/)
   for M4A/AAC, Vorbis and Opus. That package is about 39 MB and contains
   FFmpeg/LAME under LGPL 2.1+. Its `ParametricEqualizer` computes
   coefficients only when bands are added or removed, and those changes are not
-  synchronized with the audio thread. A C# `SoundModifier` would provide a
-  thread-safe ten-band peaking equalizer, and an analyzer would provide the
-  levels.
+  synchronized with the audio thread. The session applies its own ten peaking
+  filters to the decoded output and measures each channel after master gain.
 - [Silk.NET.OpenAL](https://www.nuget.org/packages/Silk.NET.OpenAL) (.NET
   Foundation, MIT) with bundled OpenAL Soft (LGPL, separate library). It has a
   buffer-queue model without callbacks. Decoding, equalizer and levels would be
@@ -63,41 +52,67 @@ Backend candidates, all hidden behind this surface:
   `AudioContext` and manage sources and buffers; FPAS can now also call the
   `unmanaged`-constrained `BufferData<T>`.
 
+## Spike results
+
+A throwaway C# spike (SoundFlow 1.4.2, SoundFlow.Codecs.FFMpeg 1.4.0) decoded
+a generated 10 s tone, 5 s quiet and 5 s loud with different channel levels,
+as WAV, FLAC, MP3, AAC and ALAC M4A, Ogg Vorbis and Opus, plus 48 and 96 kHz
+variants on Windows and Linux (WSL).
+
+- miniaudio's built-in decoders handle WAV, FLAC and MP3. They convert any
+  source rate to the requested 44.1 kHz. The observed seek errors were
+  0.1 ms for FLAC/WAV and up to 25 ms for MP3.
+- The FFmpeg codec decodes every format with correct levels, but it never
+  converts the sample rate: 48 and 96 kHz files and all Opus files would play
+  too slowly and too low. Its seeks land on packet boundaries: up to 93 ms off
+  for WAV, FLAC and ALAC, 23 ms for AAC and up to 1.2 s for Vorbis and Opus.
+  The 44.1 kHz AAC output contained 7.8 ms of extra tail padding. Capping it
+  at the container duration preserved the 5 s transition in all 14 spike files.
+  Registering FFmpeg globally also takes WAV, FLAC and MP3 away from miniaudio.
+  `TrackSource` selects the appropriate factory directly.
+- `StreamDataProvider` must be created with an explicit F32 format. Without it,
+  16-bit samples are read as floats, which yields NaN levels and noise.
+- `SoundPlayer` reports time and duration, seeks, pauses and raises
+  `PlaybackEnded`. Its centre pan applies
+  -3 dB per channel.
+- A C# `SoundModifier` with ten `BiquadFilter` peaking bands (Q 1.41) updates
+  coefficients on the audio thread without resetting filter state. An instant
+  +12 dB step jumps like a hard volume change; gliding 0.5 dB per buffer cuts
+  that step from 3.98 to 1.78 times the steady signal change. An
+  `AudioAnalyzer` subclass reads per-channel peaks after volume.
+- `AudioEngine.CreateDecoder` decodes without starting a device, at about
+  1,000 times real time, which suits loudness analysis.
+- SoundFlow 1.4.2 passes managed backend enum numbers directly to miniaudio.
+  They differ from the bundled native enum. For example, managed `Null` is 0,
+  which selects native WASAPI. `ma_get_backend_from_name` resolves the actual
+  IDs. The native `Null` device rendered both 96 kHz Vorbis and 48 kHz AAC
+  and raised `PlaybackEnded` on Windows and Linux without a sound server.
+
+### Reproducing the spike
+
+The spike lived in the ignored `.temp-data/audio-spike` directory and may be
+gone; this section keeps what is needed to rebuild it.
+
+- Test signal, 44.1 kHz stereo, encoded with ffmpeg to every target format
+  (`-c:a flac`, `libmp3lame -b:a 192k`, `aac -b:a 192k`, `alac`,
+  `libvorbis -q:a 5`, `libopus -b:a 128k`, plus `-ar 48000`/`96000` variants):
+  `aevalsrc=exprs='if(lt(t,5),0.0316*sin(2*PI*220*t),0.5*sin(2*PI*440*t))|if(lt(t,5),0.0158*sin(2*PI*220*t),0.25*sin(2*PI*440*t))':s=44100:d=10`.
+  Expected RMS: left quiet 0.0224, left loud 0.3536, right loud 0.1768.
+- Seek accuracy: seek to a time before 5.0 s and find the first left sample
+  above 0.1; its offset from the expected step is the seek error.
+- Equalizer click check: feed a 0.25 amplitude 1 kHz sine in 512-frame
+  buffers, step the 1 kHz band to +12 dB and compare the largest
+  second difference after the step with the steady value; a pure gain change
+  gives about 3.98.
+- Linux: run the Windows-built framework-dependent output in WSL with
+  `~/.dotnet/dotnet`; the output carries `runtimes/linux-x64/native`
+  (`libminiaudio.so`, `libsoundflow-ffmpeg.so`). WSLg provides PulseAudio.
+
+
 ## Steps
 
-- [ ] Choose the audio backend with a C# spike. Test FLAC, MP3, M4A, Ogg Vorbis
-  and Opus on Windows and Linux. Check seek accuracy against ATL's duration,
-  equalizer changes while dragging, levels, decoding without a device, and a
-  null device for headless CI.
-- [ ] Create `Fpas.Media.Audio` with the surface above and a fake session for
-  tests.
-- [ ] Have the shell create and dispose the session next to the library
-  session. Turn `Player.Update` into transitions with commands, add progress,
-  end and failure messages, and play the next queued track on end.
-- [ ] Report unreadable files, unsupported codecs and offline sources in the
-  strip and skip them. Stop playback when the track's source is removed,
+- [ ] Skip tracks belonging to offline sources even if the files remain
+  accessible. Stop playback when the track's source is removed,
   reset or cleared.
-- [ ] Persist volume and gains in `settings.json` when a drag ends.
-- [ ] Analyze loudness for played tracks in the background. Cache the result
-  in the library index keyed by the existing SHA-256, and replace the strip's
-  uniform bars.
 - [ ] Extract `Fpas.Media.Tags` and `Fpas.Media.Images` from FPas-Amp, together
   with the audio library or right after it.
-- [ ] Remove the strip's "no audio output" notes from the app README and code
-  comments.
-
-## Verification
-
-- Pure tests: player transitions against the fake session, including track
-  end at the end of the queue and failures.
-- Analysis tests: a generated WAV with known quiet and loud halves produces
-  the expected buckets.
-- Native GUI tests: the strip follows fake progress and levels. Real device
-  output stays a manual check unless the spike finds a null device.
-
-## Open decisions
-
-- Audio backend: SoundFlow with FFmpeg, or OpenAL with our own decoders.
-- M4A/AAC support and the size and license of FFmpeg.
-- Loudness analysis only for played tracks, or for the whole library in the
-  background.

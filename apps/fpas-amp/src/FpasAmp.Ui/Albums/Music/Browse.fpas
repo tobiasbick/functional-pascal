@@ -98,12 +98,23 @@ begin
   return true;
 end function;
 
-// Returns `Current` with its visible tracks rebuilt from search, filters and sort.
-public function Select(Current: M.State): M.State;
+// Captures the applied playback selection of the album page `Current`.
+public function Selection(Current: M.State): M.Selection;
+begin
+  return new M.Selection(
+    Current.Album.Id, Current.Search, new C.List<string>(Current.Applied.Genres).ToArray(),
+    Current.Applied.MinimumRating, Current.Order.Column, Current.Order.Descending
+  );
+end function;
+
+// Filters and orders source `TracksInOrder` according to `Source` for display or playback.
+// ## Returns
+// The same track order for a freshly opened page and a restored session.
+public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.Selection): I.ImmutableArray<Tracks.Entry>;
   function Compare(Left: Tracks.Entry; Right: Tracks.Entry): int;
   begin
     const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
-    const Value: int := case Current.Order.Column of
+    const Value: int := case Source.Column of
       when 0: Names.Compare(Title(Left), Title(Right));
       when 1: Names.Compare(Artist(Left), Artist(Right));
       when 2: Names.Compare(
@@ -118,29 +129,39 @@ public function Select(Current: M.State): M.State;
       return Left.FileId.CompareTo(Right.FileId);
     end if;
 
-    return if Current.Order.Descending then
+    return if Source.Descending then
       -Value
     else
       Value
     end if;
   end function;
 begin
-  const Terms: array of string := Text.Words(Current.Search);
+  const Terms: array of string := Text.Words(Source.Search);
+  const GenresFilter: I.ImmutableHashSet<string> := I.ImmutableHashSet.CreateRange<string>(
+    Sys.StringComparer.OrdinalIgnoreCase,
+    Source.Genres
+  );
   const Items: C.List<Tracks.Entry> := new C.List<Tracks.Entry>();
-  for Entry: Tracks.Entry in Current.Tracks do
-    if (Entry.Rating ?? 0) >= Current.Applied.MinimumRating
-      and Has(Genres(Entry), Current.Applied.Genres) and Matches(Entry, Terms)
+  for Entry: Tracks.Entry in TracksInOrder do
+    if (Entry.Rating ?? 0) >= Source.MinimumRating
+      and Has(Genres(Entry), GenresFilter) and Matches(Entry, Terms)
     then
       Items.Add(Entry);
     end if;
   end for;
 
-  if Current.Order.Column >= 0 then
+  if Source.Column >= 0 then
     Items.Sort(Compare);
   end if;
 
+  return I.ImmutableArray.CreateRange<Tracks.Entry>(Items);
+end function;
+
+// Returns `Current` with its visible tracks rebuilt from search, filters and sort.
+public function Select(Current: M.State): M.State;
+begin
   return Current with
-    Shown := I.ImmutableArray.CreateRange<Tracks.Entry>(Items);
+    Shown := Songs(Current.Tracks, Selection(Current));
   end with;
 end function;
 

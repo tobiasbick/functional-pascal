@@ -6,7 +6,7 @@ uses
   FpasAmp.Library.Playlists.Formats as Playlists,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
-  FpasAmp.Ui.Settings.Model as Model,
+  FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   System as Sys,
@@ -120,6 +120,38 @@ begin
   return Fallback;
 end function;
 
+function Mixer(Root: J.JsonElement; ref Valid: bool): Audio.Settings;
+begin
+  const Field: J.JsonElement := Fields.Field(Root, 'mixer');
+  if Field.ValueKind = J.JsonValueKind.Undefined then
+    return Audio.Settings.Flat;
+  end if;
+  const Volume: double? := Fields.Number(Fields.Field(Field, 'volume'), Player.Quietest, 0.0);
+  const Bands: J.JsonElement := Fields.Field(Field, 'gains');
+  const Gains: array of float := new float[Player.Bands.Length];
+  if Volume = null or Bands.ValueKind <> J.JsonValueKind.Array then
+    Valid := false;
+  end if;
+
+  if Bands.ValueKind = J.JsonValueKind.Array then
+    const Count: int := Bands.GetArrayLength();
+    if Count <> Gains.Length then
+      Valid := false;
+    end if;
+
+    for Index: int := 0 to Sys.Math.Min(Count, Gains.Length) - 1 do
+      const Gain: double? := Fields.Number(Bands[Index], -Player.Boost, Player.Boost);
+      if Gain = null then
+        Valid := false;
+      end if;
+
+      Gains[Index] := cast<float>(Gain ?? 0.0);
+    end for;
+  end if;
+
+  return new Audio.Settings(cast<float>(Volume ?? 0.0), Gains);
+end function;
+
 function Decode(Root: J.JsonElement): Files.Decoded<Model.Preferences>;
 begin
   const Items: J.JsonElement := Fields.Field(Root, SourcesKey);
@@ -143,7 +175,7 @@ begin
   );
   const Accent: string := DecodeChoice<Themes.Accent>(Root, 'accent', 'neutral', ref Valid);
   return new Files.Decoded<Model.Preferences>(
-    new Model.Preferences(Sources.ToArray(), Appearance, Accent),
+    new Model.Preferences(Sources.ToArray(), Appearance, Accent, Mixer(Root, ref Valid)),
     Valid
   );
 end function;

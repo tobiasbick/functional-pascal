@@ -4,18 +4,17 @@ unit FpasAmp.Ui.Player.View;
 
 uses
   FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Player.Presets as Presets,
+  Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.Menus as Menus,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Audio.Faders as Faders, Fpas.Ui.Widgets.Audio.Knobs as Knobs,
+  Fpas.Ui.Widgets.Audio.Faders as Faders,
   Fpas.Ui.Widgets.Audio.LevelMeters as Meters, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
   Fpas.Ui.Widgets.Display.Texts as Texts, System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const FaderLength: int := 64;
-const BarCount: int := 120;
-// Uniform bar height shown until playback measures the track's loudness.
-const UnmeasuredBar: float := 0.3F;
+const Baseline: array of float := [0.0F];
 
 function Points(Value: int): L.Spacing;
 begin
@@ -110,7 +109,8 @@ begin
             S.Role.SingleLine
           ),
           E.Styled<M.Msg>(
-            Texts.Text<M.Msg>(Artist, Texts.Appearance.Secondary), S.Role.SingleLine
+            Texts.Text<M.Msg>(Current.Error ?? Artist, Texts.Appearance.Secondary),
+            S.Role.SingleLine
           )
         ), Fill
       )
@@ -118,7 +118,7 @@ begin
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
       Transport(Current, Track <> null),
-      Caption(Browse.Time(Current.Position) + ' / ' + Browse.Time(Duration(Track)))
+      Caption(Browse.Time(Current.Position) + ' / ' + Browse.Time(Current.Duration))
     )
   );
 end function;
@@ -131,6 +131,42 @@ begin
     new Faders.Options(
       Step := 0.5F, UnitLabel := 'dB', HideValue := true, Length := cast<float>(FaderLength)
     )
+  );
+end function;
+
+function PresetMenu(Current: M.State): E.Element<M.Msg>;
+begin
+  const Selected: int := Presets.Match(Current.Gains);
+  const Label: string := if Selected >= 0 then
+    Presets.Choices[Selected].Name
+  else
+    'Custom'
+  end if;
+  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  for Index: int := 0 to Presets.Choices.Length - 1 do
+    Rows.Add(
+      Buttons.Button<M.Msg>(
+        'player-preset-' + Index.ToString(), Presets.Choices[Index].Name,
+        M.Msg.Preset(Index), new Buttons.Options(
+          Variant := S.ButtonVariant.Ghost, Selected := Selected = Index,
+          ControlSize := Buttons.Size.Small, Width := L.Extent.Fill
+        )
+      )
+    );
+  end for;
+
+  return Popovers.Popover<M.Msg>(
+    'player-presets',
+    Buttons.Button<M.Msg>(
+      'player-eq-preset', Label, M.Msg.ShowPresets(not Current.PresetsOpen),
+      new Buttons.Options(
+        Variant := S.ButtonVariant.Outline, ControlSize := Buttons.Size.Small,
+        IconRight := Glyph($E06D), Tooltip := 'Equalizer preset', Selected := Current.PresetsOpen
+      )
+    ),
+    E.Column<M.Msg>(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray()),
+    Current.PresetsOpen, M.Msg.ShowPresets(false),
+    new Popovers.Options(Position := Menus.Placement.TopEnd, Width := 150, Padding := 4)
   );
 end function;
 
@@ -158,6 +194,7 @@ begin
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
       E.Size<M.Msg>(Texts.Text<M.Msg>('Equalizer', Texts.Appearance.Muted), Fill),
+      PresetMenu(Current),
       Buttons.Button<M.Msg>(
         'player-eq-reset', 'Reset', M.Msg.Flatten,
         new Buttons.Options(Variant := S.ButtonVariant.Ghost, ControlSize := Buttons.Size.Small)
@@ -169,35 +206,30 @@ end function;
 
 function Volume(Current: M.State): E.Element<M.Msg>;
 begin
-  return Knobs.Knob<M.Msg>(
+  return Faders.Fader<M.Msg>(
     'player-volume', 'Volume', Current.Volume, M.Quietest, 0.0F, M.Msg.Volume,
-    new Knobs.Options(Step := 0.5F, DecimalPlaces := 1, UnitLabel := 'dB', Size := 44.0F)
+    new Faders.Options(Step := 0.5F, UnitLabel := 'dB', Length := cast<float>(FaderLength))
   );
 end function;
 
-function Duration(Track: Tracks.Entry?): double;
+function Position(Current: M.State): E.Element<M.Msg>;
 begin
-  return if Track = null then
-    0.0
+  const Length: double := Current.Duration;
+  const Peaks: array of float := if Current.Waveform.Length > 0 then
+    Current.Waveform
   else
-    Browse.Duration(Track)
+    Baseline
   end if;
-end function;
-
-function Position(Current: M.State; Track: Tracks.Entry?): E.Element<M.Msg>;
-begin
-  const Length: double := Duration(Track);
-  const Peaks: array of float := new float[BarCount];
-  for Index: int := 0 to BarCount - 1 do
-    Peaks[Index] := UnmeasuredBar;
-  end for;
-
   return Waves.Waveform<M.Msg>(
-    'player-position', Peaks, if Length > 0.0 then
+    'player-position',
+    Peaks,
+    if Length > 0.0 then
       cast<float>(Sys.Math.Min(1.0, Current.Position / Length))
     else
       0.0F
-    end if, M.Msg.Seek, new Waves.Options(Height := 24.0F, Enabled := Length > 0.0)
+    end if,
+    M.Msg.Seek,
+    new Waves.Options(Height := 44.0F, Enabled := Length > 0.0, SeekOnRelease := true)
   );
 end function;
 
@@ -228,7 +260,7 @@ begin
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
         Volume(Current),
         Meters.LevelMeter<M.Msg>(
-          'player-levels', [0.0F, 0.0F],
+          'player-levels', Current.Levels,
           new Meters.Options(Length := cast<float>(FaderLength), Thickness := 5.0F)
         )
       )
@@ -240,7 +272,7 @@ begin
     E.Column<M.Msg>(
       new L.Flow(Padding := Points(12), Gap := Points(10), Align := L.Alignment.Stretch),
       Controls,
-      Position(Current, Track)
+      Position(Current)
     )
   );
 end function;

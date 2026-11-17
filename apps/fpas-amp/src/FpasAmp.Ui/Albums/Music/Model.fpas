@@ -15,6 +15,22 @@ public type Filters = record
   public MinimumRating: int := 0;
 end record;
 
+// Reproducible selection captured when playback starts, independent of later navigation.
+public type Selection = record
+  // Stable release ID, empty for the whole music library.
+  public AlbumId: string := '';
+  // Track title and genre search.
+  public Search: string := '';
+  // Applied genre names.
+  public Genres: array of string := [];
+  // Inclusive minimum user rating.
+  public MinimumRating: int := 0;
+  // Sort column, or -1 for source order.
+  public Column: int := -1;
+  // Reverse the selected column order.
+  public Descending: bool := false;
+end record;
+
 // A loaded release and its independent song filters.
 public type State = record
   // The selected album header.

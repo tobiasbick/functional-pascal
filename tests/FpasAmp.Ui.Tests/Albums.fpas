@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Tests.Albums;
 
 uses
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
@@ -19,6 +20,8 @@ public type AlbumTests = record
   public async function RatingFinishesWhileAnotherDestinationIsOpen(Failed: bool): Tasks.Task;
   begin
     await using const LibrarySession: Monitor.Session := H.Start([], T.CancellationToken.None);
+    using const Device: Media.Session := new Media.Session(true);
+    const Port: Playback.Connection := new Playback.Connection(Device);
     const Save: procedure(Settings.Preferences) := procedure(_Value: Settings.Preferences) begin end procedure;
     const Header: Library.Album := new Library.Album('album', 'Title', 'Artist', 1L, 'revision');
     const Initial: App.State := new App.State(
@@ -36,7 +39,7 @@ public type AlbumTests = record
       Initial,
       App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Settings))),
       Save,
-      LibrarySession
+      LibrarySession, Port
     ).Model;
     X.Assert.True(Hidden.Albums.Saving.Contains('album'));
     const Receipt: M.Msg := if Failed then
@@ -48,7 +51,7 @@ public type AlbumTests = record
       Hidden,
       App.Msg.Albums(Receipt),
       Save,
-      LibrarySession
+      LibrarySession, Port
     ).Model;
     X.Assert.Empty(Finished.Albums.Saving);
     if Failed then
@@ -60,21 +63,21 @@ public type AlbumTests = record
       Finished,
       App.Msg.Albums(M.Msg.Received(I.ImmutableArray<Library.Album>.Empty)),
       Save,
-      LibrarySession
+      LibrarySession, Port
     ).Model;
     X.Assert.Equal<int>(1, Stale.Albums.Items.Length);
     const Image: App.State := Controller.Apply(
       Stale,
       App.Msg.Albums(M.Msg.Image(Stale.Albums.Generation, 'album', null)),
       Save,
-      LibrarySession
+      LibrarySession, Port
     ).Model;
     X.Assert.Empty(Image.Albums.Images);
     const Reopened: App.State := Controller.Apply(
       Image,
       App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Albums))),
       Save,
-      LibrarySession
+      LibrarySession, Port
     ).Model;
     X.Assert.Empty(Reopened.Albums.Saving);
   end function;

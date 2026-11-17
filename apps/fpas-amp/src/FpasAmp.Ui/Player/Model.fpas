@@ -1,7 +1,7 @@
 // Playback queue, transport, volume and equalizer state for the player strip.
 unit FpasAmp.Ui.Player.Model;
 
-uses FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I;
+uses FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music;
 
 // Equalizer band captions in ascending frequency, in hertz.
 public const Bands: array of string := [
@@ -26,20 +26,41 @@ public const Quietest: float := -60.0F;
 // One neutral gain per entry of `Bands`.
 public function Flat(): I.ImmutableArray<float>;
 begin
-  return I.ImmutableArray.CreateRange<float>(new float[Bands.Length]);
+  return Presets.Choices[0].Gains;
 end function;
 
-// Owner-thread player state. Playback output is not implemented yet, so
-// `Position` changes only through seeking and track changes.
+// Owner-thread player state and the most recent matching audio observation.
 public type State = record
   // Tracks in play order, captured from the table that started playback.
   public Queue: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  // Origin, filters and sort order of the playing queue.
+  public Source: Music.Selection := new Music.Selection();
   // Position of the current track in `Queue`, or -1 before the first track.
   public Index: int := -1;
   // Whether the transport is running rather than paused.
   public Playing: bool := false;
+  // The restored track is paused and will open on its first explicit play.
+  public NeedsOpen: bool := false;
+  // Whether the equalizer preset dropdown is visible.
+  public PresetsOpen: bool := false;
   // Elapsed time in the current track, in milliseconds.
   public Position: double := 0.0;
+  // Metadata estimate until the decoder reports its presentation length, in milliseconds.
+  public Duration: double := 0.0;
+  // Linear output levels supplied to the native meter.
+  public Levels: array of float := [0.0F, 0.0F];
+  // Content hash (or unindexed path) of the requested or displayed waveform.
+  public WaveformKey: string := '';
+  // Defer the offline decoder until the new track has delivered audio.
+  public WaitingForAudio: bool := false;
+  // Relative RMS envelope across the whole track, empty until analysis completes.
+  public Waveform: array of float := [];
+  // Identity of the most recently requested transport action.
+  public Revision: long := 0L;
+  // Open the selected track afresh after a failure or the end of the queue.
+  public Finished: bool := false;
+  // Diagnostic displayed in the strip when playback fails.
+  public Error: string? := null;
   // Output volume in dB, from `Quietest` through zero.
   public Volume: float := 0.0F;
   // Equalizer gains in dB, one per entry of `Bands`.
@@ -48,8 +69,8 @@ end record;
 
 // Transport, volume and equalizer proposals.
 public type Msg = variant
-  // Start `Queue[Index]` from its beginning.
-  Play(Queue: I.ImmutableArray<Tracks.Entry>; Index: int);
+  // Start `Queue[Index]` and retain `Source` to reconstruct the selection.
+  Play(Queue: I.ImmutableArray<Tracks.Entry>; Index: int; Source: Music.Selection);
   // Pause or resume the current track.
   Toggle;
   // Restart the current track, or go to the previous one near its beginning.
@@ -62,9 +83,41 @@ public type Msg = variant
   Volume(Value: float);
   // Set one equalizer band's gain in dB.
   Gain(Band: int; Value: float);
+  // Open or dismiss the compact preset selector.
+  ShowPresets(Open: bool);
+  // Apply all ten gains of the chosen preset in one mixer update.
+  Preset(Index: int);
   // Reset every equalizer band to zero dB.
   Flatten;
+  // A device status, file failure or natural end for a specific transport request.
+  Observed(Value: Audio.PlaybackEvent);
+  // Background envelope for `Key`; empty when measurement was unavailable.
+  Measured(Key: string; Levels: array of float);
+  // The session worker or its subscription stopped unexpectedly.
+  Unavailable(Reason: string);
 end variant;
+
+// Ordered work for the audio worker.
+public type Request = variant
+  // Replace the active file and optionally start it.
+  Load(Path: string; Playing: bool; Revision: long);
+  // Open a restored track, seek, then start playback.
+  Resume(Path: string; Milliseconds: double; Revision: long);
+  // Pause or resume the active file.
+  Transport(Playing: bool; Revision: long);
+  // Seek within the active file in milliseconds.
+  Position(Milliseconds: double; Revision: long);
+  // Apply a complete mixer snapshot.
+  Mixer(Value: Audio.Settings);
+end variant;
+
+// One player update and its optional audio command.
+public type Transition = record
+  // Next state for the strip.
+  public Model: State;
+  // Work for the single ordered audio command queue.
+  public Command: Request? := null;
+end record;
 
 // Returns the current track of `Current`.
 // ## Parameters

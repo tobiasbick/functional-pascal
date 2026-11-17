@@ -3,9 +3,9 @@ unit FpasAmp.Ui.Player.Update;
 
 uses
   FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Music.Browse as Browse, System as Sys, System.Collections.Immutable as I;
+  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio,
+  System as Sys, System.Collections.Immutable as I;
 
-// Elapsed time after which Previous restarts the current track.
 const RestartAfter: double := 3000.0;
 
 function Clamp(Value: float; Low: float; High: float): float;
@@ -13,91 +13,249 @@ begin
   return if Sys.Single.IsNaN(Value) then
     Low
   else
-    Sys.MathF.Max(Low, Sys.MathF.Min(High, Value))
+    Sys.Math.Clamp(Value, Low, High)
   end if;
 end function;
 
-function Start(Current: M.State; Index: int): M.State;
+function SelectWaveform(Current: M.State; Track: Tracks.Entry): M.State;
 begin
+  const Key: string := if Track.Sha256 <> '' then
+    Track.Sha256
+  else
+    Track.Path
+  end if;
+  if Current.WaveformKey = Key then
+    return Current;
+  end if;
+
   return Current with
-    Index := Index;
-    Position := 0.0;
+    WaitingForAudio := Current.Playing;
+    WaveformKey := if Current.Playing then
+      Key
+    else
+      ''
+    end if;
+    Waveform := [];
   end with;
 end function;
 
-// Applies a player proposal.
-// ## Parameters
-// - `Current`: Player state.
-// - `Message`: Transport, volume or equalizer proposal.
-// ## Returns
-// The next player state; proposals without a current track or outside the
-// queue leave it unchanged.
-public function Apply(Current: M.State; Message: M.Msg): M.State;
+function Start(Current: M.State; Index: int): M.Transition;
+begin
+  const Track: Tracks.Entry := Current.Queue[Index];
+  const Next: M.State := Current with
+    Index := Index;
+    Revision := Current.Revision + 1L;
+    Position := 0.0;
+    Duration := Browse.Duration(Track);
+    Finished := false;
+    NeedsOpen := false;
+    Levels := [0.0F, 0.0F];
+  end with;
+  return new M.Transition(
+    SelectWaveform(Next, Track),
+    M.Request.Load(Track.Path, Next.Playing, Next.Revision)
+  );
+end function;
+
+function Mix(Current: M.State): M.Transition;
+begin
+  const Gains: array of float := new float[Current.Gains.Length];
+  Current.Gains.CopyTo(Gains);
+  return new M.Transition(Current, M.Request.Mixer(new Audio.Settings(Current.Volume, Gains)));
+end function;
+
+function Observe(Current: M.State; Value: Audio.PlaybackEvent): M.Transition;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
-  case Message of
-    when M.Msg.Play(const Queue: I.ImmutableArray<Tracks.Entry>, const Index: int):
-      if Index < 0 or Index >= Queue.Length then
-        return Current;
-      end if;
-
-      return Start(
-        Current with
-          Queue := Queue;
-          Playing := true;
-        end with, Index
-      );
-    when M.Msg.Toggle:
-      return if Track = null then
-        Current
+  if Track = null or Value.RequestId <> Current.Revision or Value.Path <> Track.Path then
+    return new M.Transition(Current);
+  end if;
+  const Count: int := Sys.Math.Min(8, Value.Peaks.Length);
+  const Levels: array of float := if Count = 0 then
+    [0.0F, 0.0F]
+  else
+    new float[Count]
+  end if;
+  if Count > 0 then
+    Value.Peaks.CopyTo(0, Levels, 0, Count);
+  end if;
+  const Next: M.State := Current with
+    Position := Value.Position.TotalMilliseconds;
+    WaitingForAudio := Current.WaitingForAudio and not ((Value.State = Audio.PlaybackState.Playing
+      and Value.Position.TotalMilliseconds > 0.0)
+      or (not Current.Playing and Value.State = Audio.PlaybackState.Paused));
+    Duration := Value.Duration.TotalMilliseconds;
+    Levels := Levels;
+  end with;
+  if Value.State = Audio.PlaybackState.Failed or Value.State = Audio.PlaybackState.Ended then
+    const Terminal: M.State := Next with
+      Finished := true;
+      Error := if Value.State = Audio.PlaybackState.Failed then
+        Track.Path + ' — ' + Value.Error
       else
-        Current with
+        Current.Error
+      end if;
+    end with;
+    if Current.Playing and Current.Index + 1 < Current.Queue.Length then
+      return Start(Terminal, Current.Index + 1);
+    end if;
+
+    return new M.Transition(
+      Terminal with
+        Playing := false;
+      end with
+    );
+  end if;
+
+  return new M.Transition(Next);
+end function;
+
+// Applies a control proposal or session observation without performing I/O.
+// ## Parameters
+// - `Current`: Owner-thread playback state.
+// - `Message`: Control input or audio status.
+// ## Returns
+// The updated strip state and optional ordered session request.
+public function Apply(Current: M.State; Message: M.Msg): M.Transition;
+requires Current.Index >= -1;
+begin
+  const Track: Tracks.Entry? := M.Track(Current);
+  const Revision: long := Current.Revision + 1L;
+  case Message of
+    when M.Msg.Play(
+      const Queue: I.ImmutableArray<Tracks.Entry>,
+      const Index: int,
+      const Source: Music.Selection
+    ):
+      if Index >= 0 and Index < Queue.Length then
+        return Start(
+          Current with
+            Queue := Queue;
+            Source := Source;
+            Playing := true;
+            Error := null;
+          end with, Index
+        );
+      end if;
+    when M.Msg.Toggle:
+      if Track <> null then
+        const Next: M.State := Current with
           Playing := not Current.Playing;
-        end with
+          Error := null;
+        end with;
+        if Current.Finished then
+          return Start(Next, Current.Index);
+        end if;
+
+        if Current.NeedsOpen then
+          return new M.Transition(
+            SelectWaveform(Next, Track) with
+              NeedsOpen := false;
+              Revision := Revision;
+            end with, M.Request.Resume(Track.Path, Current.Position, Revision)
+          );
+        end if;
+
+        return new M.Transition(
+          SelectWaveform(Next, Track) with
+            Revision := Revision;
+          end with, M.Request.Transport(Next.Playing, Revision)
+        );
       end if;
     when M.Msg.Previous:
-      if Track = null then
-        return Current;
+      if Track <> null then
+        return Start(
+          Current with
+            Error := null;
+          end with, if Current.Position > RestartAfter or Current.Index = 0 then
+            Current.Index
+          else
+            Current.Index - 1
+          end if
+        );
       end if;
-
-      return Start(
-        Current, if Current.Position > RestartAfter or Current.Index = 0 then
-          Current.Index
-        else
-          Current.Index - 1
-        end if
-      );
     when M.Msg.Next:
-      return if Track = null or Current.Index + 1 >= Current.Queue.Length then
-        Current
-      else
-        Start(Current, Current.Index + 1)
+      if Track <> null and Current.Index + 1 < Current.Queue.Length then
+        return Start(
+          Current with
+            Error := null;
+          end with, Current.Index + 1
+        );
       end if;
     when M.Msg.Seek(const Fraction: float):
-      if Track = null then
-        return Current;
+      if Track <> null then
+        const Milliseconds: double := cast<double>(Clamp(Fraction, 0.0F, 1.0F)) * Current.Duration;
+        return new M.Transition(
+          Current with
+            Position := Milliseconds;
+            Revision := Revision;
+            Finished := false;
+          end with,
+          if Current.NeedsOpen then
+            null
+          else
+            M.Request.Position(Milliseconds, Revision)
+          end if
+        );
       end if;
-
-      return Current with
-        Position := cast<double>(Clamp(Fraction, 0.0F, 1.0F)) * Browse.Duration(Track);
-      end with;
     when M.Msg.Volume(const Value: float):
-      return Current with
-        Volume := Clamp(Value, M.Quietest, 0.0F);
-      end with;
+      return Mix(
+        Current with
+          Volume := Clamp(Value, M.Quietest, 0.0F);
+        end with
+      );
     when M.Msg.Gain(const Band: int, const Value: float):
-      if Band < 0 or Band >= Current.Gains.Length then
-        return Current;
+      if Band >= 0 and Band < Current.Gains.Length then
+        return Mix(
+          Current with
+            Gains := Current.Gains.SetItem(Band, Clamp(Value, -M.Boost, M.Boost));
+          end with
+        );
       end if;
-
-      return Current with
-        Gains := Current.Gains.SetItem(Band, Clamp(Value, -M.Boost, M.Boost));
-      end with;
     when M.Msg.Flatten:
-      return Current with
-        Gains := M.Flat();
-      end with;
+      return Apply(Current, M.Msg.Preset(0));
+    when M.Msg.ShowPresets(const Open: bool):
+      return new M.Transition(
+        Current with
+          PresetsOpen := Open;
+        end with
+      );
+    when M.Msg.Preset(const Index: int):
+      if Index >= 0 and Index < Presets.Choices.Length then
+        return Mix(
+          Current with
+            Gains := Presets.Choices[Index].Gains;
+            PresetsOpen := false;
+          end with
+        );
+      end if;
+    when M.Msg.Observed(const Value: Audio.PlaybackEvent):
+      return Observe(Current, Value);
+    when M.Msg.Measured(const Key: string, const Levels: array of float):
+      if Key = Current.WaveformKey and Key <> '' then
+        return new M.Transition(
+          Current with
+            Waveform := Levels;
+            WaveformKey := if Levels.Length = 0 then
+              ''
+            else
+              Key
+            end if;
+          end with
+        );
+      end if;
+    when M.Msg.Unavailable(const Reason: string):
+      return new M.Transition(
+        Current with
+          Playing := false;
+          Finished := true;
+          Error := Reason;
+          Levels := [0.0F, 0.0F];
+        end with
+      );
   end case;
+
+  return new M.Transition(Current);
 end function;
 
 end unit;

@@ -78,6 +78,8 @@ bounded; stored inventories necessarily scale with files/directories.
 - `directories`: per-source directory context, last successful check and error.
 - `metadata`: last successful tag JSON, read error/time, attempted freshness,
   SHA-256, durable user UUID and indexed sort fields.
+- `waveforms` stores 1,024 normalized loudness samples per played recording,
+  keyed by the indexed SHA-256. Duplicate files share the same envelope.
 - `metadata_people`, `metadata_genres`: ordered multi-value relationships with
   indexed invariant case keys. ATL's public separator convention is used;
   artist names are not split on commas or slashes.

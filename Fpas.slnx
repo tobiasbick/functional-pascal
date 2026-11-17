@@ -12,6 +12,7 @@
     <Project Path="src/Fpas.Debugging/Fpas.Debugging.csproj" />
     <Project Path="src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
     <Project Path="src/Fpas.Atl/Fpas.Atl.csproj" />
+    <Project Path="src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
   </Folder>
   <Folder Name="/sdk/">
     <Project Path="sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
@@ -20,5 +21,6 @@
     <Project Path="tests/Fpas.Compiler.Tests/Fpas.Compiler.Tests.csproj" />
     <Project Path="tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj" />
     <Project Path="tests/Fpas.Ui.Gui.Cui.Tests/Fpas.Ui.Gui.Cui.Tests.csproj" />
+    <Project Path="tests/Fpas.Media.Audio.Tests/Fpas.Media.Audio.Tests.csproj" />
   </Folder>
 </Solution>

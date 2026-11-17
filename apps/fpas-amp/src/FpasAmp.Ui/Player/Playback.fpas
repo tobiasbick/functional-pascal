@@ -1,0 +1,102 @@
+// The GUI submits transport requests in order; file and device work runs on one worker.
+unit FpasAmp.Ui.Player.Playback;
+
+uses
+  FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Audio as Audio, Fpas.Ui.Mvu.Application as A,
+  System as Sys, System.Threading as T, System.Threading.Channels as Channels,
+  System.Threading.Tasks as Tasks;
+
+// Mailbox shared by the owner-thread controller and its lifetime subscriptions.
+public type Connection = record
+  // Caller-owned playback device session.
+  public Device: Audio.ISession;
+  // FIFO carrying the commands returned by the player reducer.
+  public Requests: Channels.Channel<M.Request> := Channels.Channel.CreateUnbounded<M.Request>();
+end record;
+
+// Silences `Port` immediately and freezes `Current` at the last matching rendered frame.
+// ## Returns
+// A paused bookmark, retaining a pending seek or track change when the decoder is behind.
+public function Stop(Current: M.State; Port: Connection): M.State;
+begin
+  const Final: Audio.PlaybackEvent? := Port.Device.StopPlayback();
+  const Track: Tracks.Entry? := M.Track(Current);
+  const Paused: M.State := Current with
+    Playing := false;
+    Levels := [0.0F, 0.0F];
+  end with;
+  if Final is Audio.PlaybackEvent and Track <> null and Final.Path = Track.Path
+    and Final.RequestId = Current.Revision
+  then
+    return Paused with
+      Position := Final.Position.TotalMilliseconds;
+      Duration := Final.Duration.TotalMilliseconds;
+    end with;
+  end if;
+
+  return Paused;
+end function;
+
+procedure Execute(Device: Audio.ISession; Item: M.Request);
+begin
+  case Item of
+    when M.Request.Resume(const Path: string, const Milliseconds: double, const Revision: long):
+      Device.Open(Path, Revision - 1L);
+      Device.Seek(Sys.TimeSpan.FromMilliseconds(Milliseconds), Revision);
+      Device.Play(Revision);
+    when M.Request.Load(const Path: string, const Playing: bool, const Revision: long):
+      Device.Open(Path, Revision);
+      if Playing then
+        Device.Play(Revision);
+      end if;
+    when M.Request.Transport(const Playing: bool, const Revision: long):
+      if Playing then
+        Device.Play(Revision);
+      else
+        Device.Pause(Revision);
+      end if;
+    when M.Request.Position(const Milliseconds: double, const Revision: long):
+      Device.Seek(Sys.TimeSpan.FromMilliseconds(Milliseconds), Revision);
+    when M.Request.Mixer(const Value: Audio.Settings):
+      Device.Apply(Value);
+  end case;
+end procedure;
+
+// Starts ordered command execution and forwards session events to the GUI mailbox.
+// ## Parameters
+// - `Port`: Connection whose device outlives both workers.
+// ## Returns
+// The two cancellable subscriptions for this shell.
+public function Watch(Port: Connection): array of A.Command<M.Msg>;
+requires Port.Device <> null;
+begin
+  return [
+    A.StartBackground<M.Msg>(
+      'audio-commands',
+      async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        while await Port.Requests.Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+          Cancellation.ThrowIfCancellationRequested();
+          const Item: M.Request := await Port.Requests.Reader.ReadAsync(
+            Cancellation
+          ).ConfigureAwait(false);
+          Execute(Port.Device, Item);
+        end while;
+      end function,
+      function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+    ),
+    A.StartBackground<M.Msg>(
+      'audio-events',
+      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        while await Port.Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+          const Value: Audio.PlaybackEvent := await Port.Device.Events.ReadAsync(
+            Cancellation
+          ).ConfigureAwait(false);
+          await Post(M.Msg.Observed(Value)).ConfigureAwait(false);
+        end while;
+      end function,
+      function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+    )
+  ];
+end function;
+
+end unit;

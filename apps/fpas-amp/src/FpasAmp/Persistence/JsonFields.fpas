@@ -78,4 +78,20 @@ begin
   return null;
 end function;
 
+// Reads a finite JSON number from `Value` in the inclusive range `Low` to `High`.
+// ## Returns
+// The number, or null when it cannot be used in that range.
+public function Number(Value: J.JsonElement; Low: double; High: double): double?;
+begin
+  var Numeric: double := 0.0;
+  if Value.ValueKind = J.JsonValueKind.Number and Value.TryGetDouble(
+    out Numeric
+  ) and Numeric >= Low and Numeric <= High
+  then
+    return Numeric;
+  end if;
+
+  return null;
+end function;
+
 end unit;

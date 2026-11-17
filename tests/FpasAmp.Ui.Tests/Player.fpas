@@ -3,6 +3,9 @@ unit FpasAmp.Ui.Tests.Player;
 
 uses
   FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Player.Update as Update,
+  Fpas.Media.Audio as Audio, System as Sys, System.IO as IO,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Persistence.PlayerState as Bookmark, FpasAmp.AppState as Storage, FpasAmp.Library.Tests.Support as H,
   FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I, Xunit as X;
 
 function Song(Id: long; Seconds: double): Tracks.Entry;
@@ -18,47 +21,173 @@ begin
   );
 end function;
 
+function Reduce(Current: M.State; Message: M.Msg): M.State;
+begin
+  return Update.Apply(Current, Message).Model;
+end function;
+
 function Started(): M.State;
 begin
-  return Update.Apply(
+  return Reduce(
     new M.State(),
-    M.Msg.Play(I.ImmutableArray.CreateRange<Tracks.Entry>([Song(1L, 200.0), Song(2L, 100.0)]), 0)
+    M.Msg.Play(
+      I.ImmutableArray.CreateRange<Tracks.Entry>([Song(1L, 200.0), Song(2L, 100.0)]),
+      0,
+      new Music.Selection()
+    )
   );
 end function;
 
 // Queue navigation, seeking and sound settings.
 public type PlayerTests = record
+  // Bookmark size is independent of the number of tracks, and catalogue edits apply on reopen.
+  [X.FactAttribute]
+  public procedure LargeSelectionsRestoreByTrackIdentityAndQuery();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const All: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>();
+    for N: int := 0 to 10009 do
+      All.Add(
+        Song(cast<long>(N), cast<double>(N + 1)) with
+          Rating := 8;
+        end with
+      );
+    end for;
+    const Origin: Music.Selection := new Music.Selection(
+      Search := 'song',
+      MinimumRating := 7,
+      Column := 3,
+      Descending := true
+    );
+    const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(All.ToImmutable(), Origin);
+    const Current: M.State := new M.State(
+      Queue := Queue,
+      Source := Origin,
+      Index := 10,
+      Position := 3400.0,
+      Duration := 90000.0
+    );
+    Storage.Save(Folder.Path, new Storage.Snapshot(Player := Bookmark.Capture(Current)));
+    X.Assert.True(new IO.FileInfo(IO.Path.Combine(Folder.Path, 'state.json')).Length < 2048L);
+    All.Add(
+      Song(20000L, 20000.0) with
+        Rating := 9;
+      end with
+    );
+    All.Add(
+      Song(20001L, 20001.0) with
+        Rating := 1;
+      end with
+    );
+    const Saved: Bookmark.Saved := Storage.Load(Folder.Path).Player;
+    const Restored: M.State := Bookmark.Restore(Saved, All.ToImmutable());
+    X.Assert.Equal<int>(10011, Restored.Queue.Length);
+    X.Assert.Equal<int>(11, Restored.Index);
+    X.Assert.Equal<string>(Current.Queue[10].TrackId, Restored.Queue[11].TrackId);
+    X.Assert.Equal<double>(3400.0, Restored.Position);
+    X.Assert.False(Restored.Playing);
+    discard All.Remove(Current.Queue[Current.Index]);
+    const Replaced: M.State := Bookmark.Restore(Saved, All.ToImmutable());
+    X.Assert.Equal<int>(Saved.Index, Replaced.Index);
+    X.Assert.NotEqual<string>(Saved.TrackId, Replaced.Queue[Replaced.Index].TrackId);
+    X.Assert.Equal<double>(0.0, Replaced.Position);
+  end procedure;
+
+  // Pausing and seeking keep the envelope. A result for the previous song cannot replace it.
+  [X.FactAttribute]
+  public procedure WaveformFollowsTheTrackAcrossTransportChanges();
+  begin
+    const First: Tracks.Entry := Song(1L, 40.0) with
+      Sha256 := 'first';
+    end with;
+    const Second: Tracks.Entry := Song(2L, 80.0) with
+      Sha256 := 'second';
+    end with;
+    const Playing: M.State := Reduce(
+      new M.State(), M.Msg.Play(
+        I.ImmutableArray.CreateRange<Tracks.Entry>([First, Second]), 0, new Music.Selection()
+      )
+    );
+    const Paused: M.State := Reduce(Reduce(Playing, M.Msg.Toggle), M.Msg.Seek(0.5F));
+    const Levels: array of float := [0.2F, 1.0F];
+    const Ready: M.State := Reduce(Paused, M.Msg.Measured('first', Levels));
+    X.Assert.Same(Levels, Ready.Waveform);
+    const Selected: M.State := Reduce(Ready, M.Msg.Next);
+    X.Assert.Equal<int>(0, Selected.Waveform.Length);
+    X.Assert.Equal<string>('', Selected.WaveformKey);
+    const Resumed: M.State := Reduce(Selected, M.Msg.Toggle);
+    X.Assert.Equal<string>('second', Resumed.WaveformKey);
+    X.Assert.Same(Resumed, Reduce(Resumed, M.Msg.Measured('first', Levels)));
+  end procedure;
+
+  // An old end event cannot skip a second queue entry that uses the same file.
+  [X.FactAttribute]
+  public procedure TerminalEventsBelongToTheirTransportRequest();
+  begin
+    const First: M.State := Started();
+    const Ended: M.Msg := M.Msg.Observed(
+      new Audio.PlaybackEvent(
+        'song.mp3', Audio.PlaybackState.Ended,
+        Sys.TimeSpan.FromSeconds(200), Sys.TimeSpan.FromSeconds(200), I.ImmutableArray<float>.Empty,
+        null, First.Revision
+      )
+    );
+    const Second: M.State := Reduce(First, Ended);
+    X.Assert.Equal<int>(1, Second.Index);
+    X.Assert.True(Second.Playing);
+    X.Assert.Same(Second, Reduce(Second, Ended));
+    const Failed: M.State := Reduce(
+      Second, M.Msg.Observed(
+        new Audio.PlaybackEvent(
+          'song.mp3',
+          Audio.PlaybackState.Failed,
+          Sys.TimeSpan.Zero,
+          Sys.TimeSpan.Zero,
+          I.ImmutableArray<float>.Empty,
+          'Could not open file',
+          Second.Revision
+        )
+      )
+    );
+    X.Assert.False(Failed.Playing);
+    X.Assert.True(Failed.Finished);
+    X.Assert.Contains('Could not open file', Failed.Error ?? '');
+    const Retry: M.State := Reduce(Failed, M.Msg.Toggle);
+    X.Assert.True(Retry.Playing);
+    X.Assert.True(Retry.Revision > Failed.Revision);
+  end procedure;
+
   // Transport proposals without a track, or beyond the queue, change nothing.
   [X.FactAttribute]
   public procedure TransportStaysWithinTheQueue();
   begin
     const Idle: M.State := new M.State();
-    X.Assert.Same(Idle, Update.Apply(Idle, M.Msg.Toggle));
-    X.Assert.Same(Idle, Update.Apply(Idle, M.Msg.Seek(0.5F)));
+    X.Assert.Same(Idle, Reduce(Idle, M.Msg.Toggle));
+    X.Assert.Same(Idle, Reduce(Idle, M.Msg.Seek(0.5F)));
     X.Assert.Same(
       Idle,
-      Update.Apply(Idle, M.Msg.Play(I.ImmutableArray<Tracks.Entry>.Empty, 0))
+      Reduce(Idle, M.Msg.Play(I.ImmutableArray<Tracks.Entry>.Empty, 0, new Music.Selection()))
     );
 
     const First: M.State := Started();
     X.Assert.True(First.Playing);
     X.Assert.Equal<long>(1L, (M.Track(First) ?? Song(0L, 0.0)).FileId);
-    const Last: M.State := Update.Apply(First, M.Msg.Next);
+    const Last: M.State := Reduce(First, M.Msg.Next);
     X.Assert.Equal<int>(1, Last.Index);
-    X.Assert.Same(Last, Update.Apply(Last, M.Msg.Next));
-    X.Assert.False(Update.Apply(Last, M.Msg.Toggle).Playing);
+    X.Assert.Same(Last, Reduce(Last, M.Msg.Next));
+    X.Assert.False(Reduce(Last, M.Msg.Toggle).Playing);
   end procedure;
 
   // Previous restarts a track after three seconds and otherwise goes back.
   [X.FactAttribute]
   public procedure PreviousRestartsOrGoesBack();
   begin
-    const Second: M.State := Update.Apply(Started(), M.Msg.Next);
-    const Early: M.State := Update.Apply(Second, M.Msg.Previous);
+    const Second: M.State := Reduce(Started(), M.Msg.Next);
+    const Early: M.State := Reduce(Second, M.Msg.Previous);
     X.Assert.Equal<int>(0, Early.Index);
 
-    const Late: M.State := Update.Apply(
-      Update.Apply(Second, M.Msg.Seek(0.5F)),
+    const Late: M.State := Reduce(
+      Reduce(Second, M.Msg.Seek(0.5F)),
       M.Msg.Previous
     );
     X.Assert.Equal<int>(1, Late.Index);
@@ -70,15 +199,15 @@ public type PlayerTests = record
   public procedure SoundSettingsAreClamped();
   begin
     const Current: M.State := Started();
-    X.Assert.Equal<double>(200000.0, Update.Apply(Current, M.Msg.Seek(3.0F)).Position);
-    X.Assert.Equal<double>(50000.0, Update.Apply(Current, M.Msg.Seek(0.25F)).Position);
-    X.Assert.Equal<float>(M.Quietest, Update.Apply(Current, M.Msg.Volume(-90.0F)).Volume);
-    X.Assert.Equal<float>(0.0F, Update.Apply(Current, M.Msg.Volume(6.0F)).Volume);
+    X.Assert.Equal<double>(200000.0, Reduce(Current, M.Msg.Seek(3.0F)).Position);
+    X.Assert.Equal<double>(50000.0, Reduce(Current, M.Msg.Seek(0.25F)).Position);
+    X.Assert.Equal<float>(M.Quietest, Reduce(Current, M.Msg.Volume(-90.0F)).Volume);
+    X.Assert.Equal<float>(0.0F, Reduce(Current, M.Msg.Volume(6.0F)).Volume);
 
-    const Boosted: M.State := Update.Apply(Current, M.Msg.Gain(9, 20.0F));
+    const Boosted: M.State := Reduce(Current, M.Msg.Gain(9, 20.0F));
     X.Assert.Equal<float>(M.Boost, Boosted.Gains[9]);
-    X.Assert.Same(Boosted, Update.Apply(Boosted, M.Msg.Gain(10, 1.0F)));
-    X.Assert.Equal<float>(0.0F, Update.Apply(Boosted, M.Msg.Flatten).Gains[9]);
+    X.Assert.Same(Boosted, Reduce(Boosted, M.Msg.Gain(10, 1.0F)));
+    X.Assert.Equal<float>(0.0F, Reduce(Boosted, M.Msg.Flatten).Gains[9]);
   end procedure;
 end record;
 

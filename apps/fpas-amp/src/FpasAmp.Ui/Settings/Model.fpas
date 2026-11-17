@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Settings.Model;
 
 uses
-  FpasAmp.Library.Sources as Locations,
+  FpasAmp.Library.Sources as Locations, Fpas.Media.Audio as Audio,
   FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
@@ -17,6 +17,8 @@ public type Preferences = record
   public Appearance: string := 'system';
   // Lowercase name of the selected CUI accent.
   public Accent: string := 'neutral';
+  // Master volume and ten band gains in dB.
+  public Mixer: Audio.Settings := Audio.Settings.Flat;
 end record;
 
 // Owner-thread settings state. The rest of the app reads `Saved`; only this

@@ -6,7 +6,7 @@ uses
   FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Worker as Worker,
   FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
   FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Metadata.Covers as Covers,
+  FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Metadata.Waveforms as Waveforms,
   FpasAmp.Library.Playlists.Access as Lists,
   FpasAmp.Library.Albums.Access as Albums,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
@@ -70,6 +70,31 @@ public type Session = record implements Sys.IAsyncDisposable
     ).ConfigureAwait(false);
   end function;
 
+  // Resolves the saved playback queue against current library paths and metadata.
+  // ## Parameters
+  // - `AlbumId`: Release identity, or empty for the whole library.
+  // - `Cancellation`: Cancels waiting and reading.
+  // ## Returns
+  // Current source entries in their default playback order.
+  public async function QueueAsync(AlbumId: string; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Entry>>;
+  requires AlbumId <> null;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.Task.Run<I.ImmutableArray<M.Entry>>(
+      function(): I.ImmutableArray<M.Entry> => Queries.ReadRelease(
+        self.Database,
+        self.UserDatabase,
+        AlbumId,
+        Linked.Token
+      ),
+      Linked.Token
+    ).ConfigureAwait(false);
+  end function;
+
   // Loads embedded artwork only on request and caches it by content hash.
   // `FileId` is an indexed file; cancellation bounds waiting and cache I/O.
   public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Covers.Cover?>;
@@ -86,6 +111,31 @@ public type Session = record implements Sys.IAsyncDisposable
           self.Database,
           self.UserDatabase,
           FileId,
+          Linked.Token
+        ),
+        Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+
+  // Gets the cached or newly measured waveform without blocking the caller.
+  // ## Parameters
+  // - `Track`: Indexed track selected for playback.
+  // - `Cancellation`: Cancels this request independently of the session lifetime.
+  // ## Returns
+  // Normalized RMS levels in playback order.
+  public async function WaveformAsync(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<array of float>;
+  requires Track.Path <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime, Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    return await Tasks.TaskExtensions.Unwrap<array of float>(
+      Tasks.Task.Run<Tasks.Task<array of float>>(
+        function(): Tasks.Task<array of float> => Waveforms.Read(
+          self.Database,
+          Track,
           Linked.Token
         ),
         Linked.Token

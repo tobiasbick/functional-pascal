@@ -9,6 +9,7 @@ uses
   Fpas.Ui.Composition as Composition,
   FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.View as SettingsView,
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.View as PlayerView,
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio,
   Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
@@ -142,11 +143,34 @@ public type Session = record implements Sys.IDisposable
   // Creates a shell for Window and Settings; Save persists preferences and
   // Library remains caller-owned. Optional Navigation restores the destination
   // and settings tab; a playlist is validated against its first background snapshot.
-  public static function Start(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null): Session;
+  // Output transfers ownership of an optional playback session to the shell.
+  // By default the shell opens the desktop's audio output on first playback.
+  // Restored supplies the paused queue and playhead from the previous window.
+  public static function Start(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null; Output: Audio.ISession? := null; Restored: PlayerModel.State? := null): Session;
   requires Settings.MusicSources <> null;
   begin
+    const Device: Audio.ISession := Output ?? new Audio.Session();
+    try
+      return Session.Connect(Window, Settings, Save, Library, Navigation, Device, Restored);
+    catch do
+      Device.Dispose();
+      raise;
+    end try;
+  end function;
+
+  static function Connect(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State?; Device: Audio.ISession; Restored: PlayerModel.State?): Session;
+  begin
+    const Port: Playback.Connection := new Playback.Connection(Device);
+    discard Port.Requests.Writer.TryWrite(PlayerModel.Request.Mixer(Settings.Mixer));
+    const Player: PlayerModel.State := Restored ?? new PlayerModel.State();
     const Initial: M.State := new M.State(
-      new SettingsModel.State(Settings), Navigation := Navigation ?? new Nav.State()
+      new SettingsModel.State(Settings), Navigation := Navigation ?? new Nav.State(),
+      Player := Player with
+        Playing := false;
+        NeedsOpen := PlayerModel.Track(Player) <> null;
+        Volume := Settings.Mixer.Volume;
+        Gains := Settings.Mixer.Gains;
+      end with
     );
     if Initial.Navigation.SettingsTab <> 0 and Initial.Navigation.SettingsTab <> 1 then
       raise new Sys.ArgumentOutOfRangeException('Navigation');
@@ -159,14 +183,15 @@ public type Session = record implements Sys.IDisposable
           Current,
           Message,
           Save,
-          Library
+          Library, Port
         );
         Last := Next.Model;
         return Next;
       end function,
       View,
       new Gui.Options(Title := 'FPas-Amp', Theme := M.Theme(Initial, null), Placement := Window),
-      M.Theme
+      M.Theme,
+      OnCloseRequested := function(): M.Msg => M.Msg.Closing(Playback.Stop(Last.Player, Port))
     );
     discard Native.Post(M.Msg.WatchLibrary);
     const Observed: Gui.Session<M.Msg> := Gui.Session<M.Msg>.Create(
@@ -211,7 +236,14 @@ public type Session = record implements Sys.IDisposable
       Native.Snapshot,
       Native.IsOpen,
       Native.IsSoftware,
-      Native.Dispose,
+      procedure() begin
+        try
+          discard Device.StopPlayback();
+          Native.Dispose();
+        finally
+          Device.Dispose();
+        end try;
+      end procedure,
       Native.CapturePng,
       Native.Placement
     );
@@ -222,14 +254,28 @@ end record;
 // Runs the shell for Window/Settings until close. Navigation is restored and
 // returned by reference, Save persists preferences, and Library stays caller-owned.
 // Returns the final host placement for storage alongside the selected destination.
-public function Run(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; ref Navigation: Nav.State; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
+// Player supplies the paused transport and receives the last observed state at close.
+public function Run(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; ref Navigation: Nav.State; ref Player: PlayerModel.State; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
 requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
 begin
-  using const Running: Session := Session.Start(Window, Settings, Save, Library, Navigation);
+  using const Running: Session := Session.Start(
+    Window,
+    Settings,
+    Save,
+    Library,
+    Navigation,
+    Restored := Player
+  );
   while Running.Window.Step() do
   end while;
 
-  Navigation := Running.State().Navigation;
+  const Last: M.State := Running.State();
+  Navigation := Last.Navigation;
+  Player := Last.Player;
+  if Updates.SaveMixer(Last, Save).SaveFailed then
+    Sys.Console.Error.WriteLine('Could not save the final mixer settings.');
+  end if;
+
   return Running.Window.Placement();
 end function;
 

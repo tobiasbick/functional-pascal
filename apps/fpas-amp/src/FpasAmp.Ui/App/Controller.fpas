@@ -13,6 +13,9 @@ uses
   FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Update as Player,
+  FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
+  FpasAmp.Library.Metadata.Waveforms as Waves, Fpas.Media.Audio as Audio,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -55,7 +58,90 @@ begin
   );
 end function;
 
-function Watch(Library: Monitoring.Session): array of Mvu.Command<M.Msg>;
+function Waveform(Current: PlayerModel.State; Service: Metadata.Session?): Mvu.Command<M.Msg>;
+begin
+  const Key: string := Current.WaveformKey;
+  const Track: Tracks.Entry? := PlayerModel.Track(Current);
+  if Key = '' or Track = null or Current.WaitingForAudio then
+    return Mvu.CancelBackground<M.Msg>('player-waveform');
+  end if;
+
+  return Mvu.StartBackground<M.Msg>(
+    'player-waveform',
+    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      const Measure: Tasks.Task<array of float> := if Service = null then
+        Audio.Analysis.LoudnessAsync(Track.Path, Waves.Buckets, Cancellation)
+      else
+        Service.WaveformAsync(Track, Cancellation)
+      end if;
+      const Levels: array of float := await Measure.ConfigureAwait(false);
+      await Post(M.Msg.Player(PlayerModel.Msg.Measured(Key, Levels))).ConfigureAwait(false);
+    end function,
+    function(_Failure: Sys.Exception): M.Msg => M.Msg.Player(PlayerModel.Msg.Measured(Key, []))
+  );
+end function;
+
+// Saves the current mixer alongside the latest source and appearance preferences.
+// ## Parameters
+// - `Current`: Shell state carrying the mixer and last saved preferences.
+// - `Save`: Atomic settings writer.
+// ## Returns
+// The updated settings state, including a save failure if one occurred.
+public function SaveMixer(Current: M.State; Save: procedure(SettingsModel.Preferences)): SettingsModel.State;
+begin
+  const Saved: SettingsModel.Preferences := Current.Settings.Saved;
+  if Saved.Mixer.Volume = Current.Player.Volume and Linq.Enumerable.SequenceEqual<float>(
+    Saved.Mixer.Gains,
+    Current.Player.Gains
+  )
+  then
+    return Current.Settings;
+  end if;
+  const Bands: array of float := new float[Current.Player.Gains.Length];
+  Current.Player.Gains.CopyTo(Bands);
+  return Editing.Persist(
+    Current.Settings, Saved with
+      Mixer := new Audio.Settings(Current.Player.Volume, Bands);
+    end with, Save
+  );
+end function;
+
+function Transport(Current: M.State; Message: PlayerModel.Msg; Port: Playback.Connection; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+begin
+  const Child: PlayerModel.Transition := Player.Apply(Current.Player, Message);
+  const Work: PlayerModel.Request? := Child.Command;
+  const Next: M.State := Current with
+    Player := Child.Model;
+  end with;
+  if Work <> null then
+    discard Port.Requests.Writer.TryWrite(Work);
+    case Work of
+      when PlayerModel.Request.Mixer(_):
+        return new Mvu.Transition<M.State, M.Msg>(
+          Next, [
+            Mvu.StartBackground<M.Msg>(
+              'save-mixer',
+              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                await Tasks.Task.Delay(350, Cancellation).ConfigureAwait(false);
+                await Post(M.Msg.SaveMixer).ConfigureAwait(false);
+              end function, Failure
+            )
+          ]
+        );
+      else
+    end case;
+  end if;
+
+  if Next.Player.WaveformKey <> Current.Player.WaveformKey or Next.Player.WaitingForAudio <>
+    Current.Player.WaitingForAudio
+  then
+    return new Mvu.Transition<M.State, M.Msg>(Next, [Waveform(Next.Player, Library.Metadata)]);
+  end if;
+
+  return new Mvu.Transition<M.State, M.Msg>(Next, []);
+end function;
+
+function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
 begin
   const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
     [
@@ -89,7 +175,14 @@ begin
       )
     ]
   );
+  for Work: Mvu.Command<PlayerModel.Msg> in Playback.Watch(Port) do
+    Commands.Add(Composition.MapCommand<PlayerModel.Msg, M.Msg>(Work, M.Msg.Player, 'player'));
+  end for;
   const Tags: Metadata.Session? := Library.Metadata;
+  if Current.WaveformKey <> '' then
+    Commands.Add(Waveform(Current, Tags));
+  end if;
+
   if Tags <> null then
     Commands.Add(
       Mvu.StartBackground<M.Msg>(
@@ -139,13 +232,20 @@ end function;
 // - `Message`: The proposal or background publication.
 // - `Save`: Persists accepted preferences.
 // - `Library`: Owns scanning, storage and metadata; stays caller-owned.
+// - `Port`: Ordered output mailbox and device event stream.
 // ## Returns
 // The next app state and the slices' mapped commands.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition<M.State, M.Msg>;
 begin
   var Next: M.State := Current;
   var Commands: array of Mvu.Command<M.Msg> := [];
   case Message of
+    when M.Msg.Closing(const FinalPlayer: PlayerModel.State):
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          Player := FinalPlayer;
+        end with, [Mvu.Exit<M.Msg>()]
+      );
     when M.Msg.Navigation(const NavigationMessage: Nav.Msg):
       Next := Current with
         Navigation := Navigation.Apply(Current.Navigation, NavigationMessage);
@@ -166,14 +266,17 @@ begin
     when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.Play(const Index: int))):
       const Page: Music.State? := Current.Albums.Music;
       if Page <> null then
-        Next := Current with
-          Player := Player.Apply(Current.Player, PlayerModel.Msg.Play(Page.Shown, Index));
-        end with;
+        if Index >= 0 and Index < Page.Shown.Length then
+          return Transport(
+            Current,
+            PlayerModel.Msg.Play(Page.Shown, Index, Browse.Selection(Page)),
+            Port,
+            Library
+          );
+        end if;
       end if;
     when M.Msg.Player(const PlayerMessage: PlayerModel.Msg):
-      Next := Current with
-        Player := Player.Apply(Current.Player, PlayerMessage);
-      end with;
+      return Transport(Current, PlayerMessage, Port, Library);
     when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):
       if Nav.Key(Current.Navigation.Active) = 'albums' then
         return Album(Current, AlbumMessage, Library);
@@ -186,7 +289,7 @@ begin
         else
       end case;
     when M.Msg.WatchLibrary:
-      Commands := Watch(Library);
+      Commands := Watch(Library, Port, Current.Player);
       if Nav.Key(Current.Navigation.Active) = 'albums' then
         const Transition: Mvu.Transition<M.State, M.Msg> := Album(
           Current,
@@ -200,6 +303,10 @@ begin
       end if;
     when M.Msg.Settings(const SettingsMessage: SettingsModel.Msg):
       return Settings(Current, SettingsMessage, Save, Library);
+    when M.Msg.SaveMixer:
+      Next := Current with
+        Settings := SaveMixer(Current, Save);
+      end with;
   end case;
 
   return new Mvu.Transition<M.State, M.Msg>(Next, Commands);

@@ -32,7 +32,8 @@ begin
     'file_id INTEGER NOT NULL REFERENCES metadata(file_id) ON DELETE CASCADE,' +
     'position INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL,' +
     'PRIMARY KEY(file_id,position));' +
-    'CREATE INDEX IF NOT EXISTS metadata_genres_name ON metadata_genres(name_key,file_id);',
+    'CREATE INDEX IF NOT EXISTS metadata_genres_name ON metadata_genres(name_key,file_id);' +
+    'CREATE TABLE IF NOT EXISTS waveforms(sha256 TEXT PRIMARY KEY, levels BLOB NOT NULL);',
     Transaction, [], []
   );
 end procedure;

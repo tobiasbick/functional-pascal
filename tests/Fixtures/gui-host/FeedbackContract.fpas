@@ -23,7 +23,12 @@ procedure Validate();
   end procedure;
 begin
   Reject(Alerts.Alert<int>('a', 'Title'), V.Target.Terminal, 'Graphical profile');
-  Reject(P.ProgressBar<int>('p', 0.5F), V.Target.Portable, 'Graphical profile');
+  discard V.Prepare<int>(P.ProgressBar<int>('p', 0.5F), V.Target.Portable);
+  Reject(
+    P.ProgressBar<int>('p', 0.5F, new P.Options(Indeterminate := true)),
+    V.Target.Portable,
+    'Graphical profile'
+  );
   Reject(Spin.Spinner<int>('s'), V.Target.Terminal, 'Graphical profile');
   Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Terminal, 'Graphical profile');
   Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Portable, 'Graphical profile');

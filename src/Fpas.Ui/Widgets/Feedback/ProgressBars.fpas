@@ -20,7 +20,7 @@ public type Options = record
   public Width: L.Extent := L.Extent.Content;
 end record;
 
-// Builds a progress bar with native interpolation and activity animation.
+// Builds a determinate progress bar for both hosts. The GUI also supports activity animation.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -28,7 +28,7 @@ end record;
 // - `Value`: Finite progress fraction from zero through one.
 // - `Settings`: Native caption, track, width and activity options.
 // ## Returns
-// A GUI-only progress bar with no input actions.
+// A display-only progress bar. Indeterminate, dither and custom height require the GUI.
 public function ProgressBar<TMsg>(Id: string; Value: float; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 requires Value >= 0.0F and Value <= 1.0F;

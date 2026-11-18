@@ -16,7 +16,7 @@ The interactive host restores terminal modes on normal exit and failure.
 
 Views use the shared Element tree. Supported widgets are buttons, icon buttons,
 button groups, segmented controls, dropdown menus, copy/hold/confirm/status/split buttons, theme selectors/toggles,
-sidebar navigation and sheets. Text, rows/columns, sizing, borders, styles,
+sidebar navigation, determinate progress bars and sheets. Text, rows/columns, sizing, borders, styles,
 cached subviews and scrolling provide their composition foundations.
 
 Preflight validates the view before rendering. Logical distances map to cells:
@@ -72,8 +72,10 @@ plus cell text and colors. The gallery's headless-control mode supports the
 Use Fpas.Ui.Widgets.Theming.Themes.Light/Dark and the same ThemeFor callback as GUI. Terminal
 styles derive from the shared palette, with alpha composited over cell
 backgrounds. Include relevant theme values in cached-subview dependencies.
-See [shared themes](../Fpas.Ui/README.md#shared-themes) and the
-[TUI gallery](../../examples/ui/tui/gallery/README.md).
+See [shared themes](../Fpas.Ui/README.md#shared-themes). The
+[TUI gallery](../../examples/ui/tui/gallery/README.md) applies them to two
+rounded panels with a 1:2 width ratio. Its scrollable sidebar opens a preview
+with text and a keyboard-adjustable progress sample.
 
 The [CUI inventory](../../docs/cui-widget-inventory.md) records the implemented
 terminal widgets and their behavior.

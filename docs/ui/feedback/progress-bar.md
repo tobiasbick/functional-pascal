@@ -1,6 +1,6 @@
 # Progress bar
 
-Use a progress bar for a task with measurable progress or work that has no known total. Available in **GUI**.
+Use a progress bar for a task with measurable progress or work that has no known total. Determinate progress is available in **GUI and TUI**.
 
 ![Progress bar in the FPAS gallery](images/progress-bar.png)
 
@@ -37,7 +37,9 @@ end unit;
 
 ## Interaction
 
-Pass the fraction from the application model and update it when the work reports progress. Set Indeterminate when a total is unavailable. CUI paints and interpolates the bar. It has no activation action.
+Pass the fraction from the application model and update it when the work reports progress. Set Indeterminate when a total is unavailable. CUI paints and interpolates the bar. It has no activation action. The TUI displays a one-row track with the optional
+label and percentage above it. Fixed widths are clipped to the available cells.
+Indeterminate mode, dither and custom track height require the GUI.
 
 ## See also
 

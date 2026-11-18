@@ -59,7 +59,7 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | [Native CUI painting](ui/gui/painting/README.md) | Scoped drawing, Unicode measurement, cached images, fonts and theme metrics |
 | [Native desktop commands](ui/gui/desktop-commands/README.md) | File/folder dialogs, close decisions, title updates and frame requests |
 | [Editor commands and shortcuts](ui/gui/editor-commands/README.md) | Native editor navigation/find/marks, application bindings and optional widget labels/images |
-| [TUI widget gallery](ui/tui/gallery/README.md) | Interactive widget previews, themes, and headless control |
+| [TUI gallery](ui/tui/gallery/README.md) | Scrollable navigation, text and progress previews, themes and headless control |
 
 ## Related documentation
 

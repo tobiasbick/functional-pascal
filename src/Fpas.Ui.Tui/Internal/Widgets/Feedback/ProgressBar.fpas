@@ -1,0 +1,88 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar;
+
+uses
+  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L,
+  Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs,
+  System as Sys, System.Collections.Generic as C;
+
+// Resolves a determinate progress bar into terminal cells.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Fraction`: Validated completion fraction.
+// - `Settings`: Caption, percentage, width and semantic color.
+// - `Theme`: Active shared palette.
+// ## Returns
+// A display-only progress track.
+public function Lower<TMsg>(Fraction: float; Settings: Bars.Options; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const Width: int? := case Settings.Width of
+    when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
+    else null;
+  end case;
+  var Caption: string := Glyphs.SingleLine(Settings.Label);
+  if Settings.ShowValue then
+    if Caption <> '' then
+      Caption := Caption + '  ';
+    end if;
+
+    Caption := Caption + cast<int>(Sys.MathF.Floor(100.0F * Fraction + 0.5F)).ToString() + '%';
+  end if;
+  const Fill: G.Color := case Settings.Tone of
+    when S.Tone.Accent: Theme.Colors.Accent;
+    when S.Tone.Info: Theme.Colors.Info;
+    when S.Tone.Success: Theme.Colors.Success;
+    when S.Tone.Warning: Theme.Colors.Warning;
+    when S.Tone.Danger: Theme.Colors.Danger;
+    when S.Tone.Violet: Theme.Colors.Series4;
+    when S.Tone.Teal: Theme.Colors.Series3;
+    when S.Tone.Rose: Theme.Colors.Series6;
+    else Theme.Colors.ControlOn;
+  end case;
+  return E.Element<TMsg>.Progress(Fraction, Caption, Width, Fill);
+end function;
+
+// Paints a one-row track with its optional caption above it.
+// ## Parameters
+// - `Operations`: Destination paint operations.
+// - `Area`: Allocated cell bounds.
+// - `Clip`: Visible cell bounds.
+// - `Fraction`: Completion fraction.
+// - `Caption`: Prepared literal caption.
+// - `Width`: Optional fixed width in cells.
+// - `Fill`: Fill color.
+// - `Style`: Enclosing text style.
+// - `Theme`: Active track palette.
+public procedure Paint(
+  Operations: C.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Fraction: float;
+  Caption: string; Width: int?; Fill: G.Color; Style: T.Style; Theme: Th.Theme
+);
+begin
+  const Span: int := Sys.Math.Min(Area.Width, Width ?? Area.Width);
+  var Row: int := Area.Y;
+  if Caption <> '' then
+    Operations.Add(new D.Operation(Caption, new F.Rect(Area.X, Row, Span, 1), Clip, Style, false));
+    Row := Row + 1;
+  end if;
+  const Filled: int := cast<int>(Sys.Math.Round(
+    cast<double>(Fraction) * Span,
+    Sys.MidpointRounding.AwayFromZero
+  ));
+  const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
+  Operations.Add(
+    new D.Operation(
+      new string(#9617, Span - Filled), new F.Rect(Area.X + Filled, Row, Span - Filled, 1),
+      Clip, new T.Style(Th.Rgb(Theme.Colors.ControlTrack, Back), Back), false
+    )
+  );
+  Operations.Add(
+    new D.Operation(
+      new string(#9608, Filled), new F.Rect(Area.X, Row, Filled, 1),
+      Clip, new T.Style(Th.Rgb(Fill, Back), Back), false
+    )
+  );
+end procedure;
+
+end unit;

@@ -165,7 +165,7 @@ uses software for additional windows on that thread.
 - [GUI host lifecycle and inspection](../../../src/Fpas.Ui.Gui/README.md)
 - [GUI gallery](../../../examples/ui/gui/gallery/README.md)
 - [Native assets and local distribution feed](../../build/distribution.md#native-cui-assets)
-- [Terminal widget gallery](../../../examples/ui/tui/gallery/README.md)
+- [Terminal panel gallery](../../../examples/ui/tui/gallery/README.md)
 
 ## Charts
 

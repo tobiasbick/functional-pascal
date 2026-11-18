@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -144,6 +144,8 @@ public function Prepare<TMsg>(
         raise new Sys.NotSupportedException('Formatted text requires the graphical host.');
       when Ui.Element.Label(const Text: string):
         return E.Element<TMsg>.Label(Text);
+      when Ui.Element.ProgressBar(_, const Fraction: float, const Settings: ProgressBars.Options):
+        return Progress.Lower<TMsg>(Fraction, Settings, Theme);
       when Ui.Element.Separator(const Title: string):
         return E.Element<TMsg>.Separator(Title);
       when Ui.Element.ButtonAction(
@@ -240,10 +242,6 @@ public function Prepare<TMsg>(
         );
       when Ui.Element.Alert(
         _,
-        _,
-        _,
-        _
-      ), Ui.Element.ProgressBar(
         _,
         _,
         _

@@ -830,7 +830,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Value: float,
         const Settings: ProgressBars.Options
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress');
+        if Settings.Indeterminate or Settings.Dither or Settings.Height <> 0.0F then
+          Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress');
+        end if;
         const At: string := Identify(Id, Location + '/progress');
         FeedbackRules.Progress(Value, Settings, At);
         Rules.CheckExtent(Settings.Width, Profile, At + '/width');

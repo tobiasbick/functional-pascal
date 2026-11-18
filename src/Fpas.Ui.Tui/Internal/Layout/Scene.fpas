@@ -34,12 +34,16 @@ public type Control<TMsg> = record
   public Appearance: Th.ButtonAppearance? := null;
 end record;
 
-// An enabled popup command, retaining its full bounds even outside the viewport.
+// An enabled keyboard destination with its full bounds, including scrolled-out rows.
 public type NavigationStop = record
   // Stable command identity to receive keyboard focus.
   public Id: string;
   // Unclipped command bounds at the current scroll offset.
   public Bounds: F.Rect;
+  // Owning sidebar for list navigation.
+  public Sidebar: string := '';
+  // Nearest enclosing scroll viewport.
+  public ScrollId: string := '';
 end record;
 
 public type Scope<TMsg> = record
@@ -76,6 +80,8 @@ public type Layout<TMsg> = record
   public Prepared: Validation.Prepared<TMsg>? := null;
   // Open modal and popup IDs, including those below the active scope.
   public Scopes: array of string := [];
+  // Enabled sidebar rows in display order, including rows outside a scroll viewport.
+  public SidebarRows: array of NavigationStop := [];
 end record;
 
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;

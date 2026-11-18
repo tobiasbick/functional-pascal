@@ -1,0 +1,97 @@
+unit Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation;
+
+uses
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
+  System as Sys, System.Collections.Generic as C;
+
+// Moves keyboard focus within one sidebar and reveals the target row.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Presented layout.
+// - `Current`: Focused destination.
+// - `Key`: Unmodified navigation key.
+// - `Offsets`: Host-owned scroll positions.
+// - `Apply`: Dispatches a controlled viewport's scroll request.
+// ## Returns
+// The new focus identity, or null when the sidebar does not own the key.
+public function Move<TMsg>(
+  Layout: A.Layout<TMsg>; Current: string; Key: K.Key;
+  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+): string?;
+begin
+  const Rows: array of A.NavigationStop := Layout.SidebarRows;
+  const At: int := Sys.Array.FindIndex<A.NavigationStop>(
+    Rows,
+    function(Item: A.NavigationStop): bool => Item.Id = Current
+  );
+  if At < 0 then
+    return null;
+  end if;
+  const Row: A.NavigationStop := Rows[At];
+  const Region: A.ScrollRegion? := Sys.Array.Find<A.ScrollRegion>(
+    Layout.Regions,
+    function(Item: A.ScrollRegion): bool => Item.Id = Row.ScrollId
+  );
+  const Page: int := if Region = null then
+    1
+  else
+    Sys.Math.Max(1, Region.Bounds.Height - 1)
+  end if;
+  const Delta: int := case Key of
+    when K.Key.Up: -1;
+    when K.Key.Down: 1;
+    when K.Key.PageUp: -Page;
+    when K.Key.PageDown: Page;
+    when K.Key.Home: -Rows.Length;
+    when K.Key.End: Rows.Length;
+    else 0;
+  end case;
+  if Delta = 0 then
+    return null;
+  end if;
+  const Direction: int := Sys.Math.Sign(Delta);
+  var Target: A.NavigationStop := Row;
+  for Step: int := 1 to Sys.Math.Abs(Delta) do
+    const Index: int := At + Step * Direction;
+    if Index < 0 or Index >= Rows.Length or Rows[Index].Sidebar <> Row.Sidebar then
+      break;
+    end if;
+
+    if Region = null and A.FindControl<TMsg>(Layout, Rows[Index].Id) = null then
+      break;
+    end if;
+
+    Target := Rows[Index];
+  end for;
+
+  if Region <> null then
+    const Distance: int := if Target.Bounds.Y < Region.Bounds.Y then
+      Target.Bounds.Y - Region.Bounds.Y
+    else
+      Sys.Math.Max(
+        0,
+        Target.Bounds.Y + Target.Bounds.Height - Region.Bounds.Y - Region.Bounds.Height
+      )
+    end if;
+    if Distance <> 0 then
+      if Region.Controlled then
+        const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
+        if Control <> null then
+          case Control.Action of
+            when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+              Scrolling.Move<TMsg>(View, Distance, Apply);
+            else
+          end case;
+        end if;
+      else
+        Offsets[Region.Id] := Sys.Math.Clamp(Offsets[Region.Id] + Distance, 0, Region.Maximum);
+      end if;
+    end if;
+  end if;
+
+  return Target.Id;
+end function;
+
+end unit;

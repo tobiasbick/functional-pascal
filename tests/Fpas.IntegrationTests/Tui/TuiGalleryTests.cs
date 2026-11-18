@@ -8,11 +8,11 @@ using Fpas.Workspaces.Processes;
 
 namespace Fpas.IntegrationTests.Tui;
 
-/// <summary>Verifies the public terminal gallery's supported pages, layout and interactions.</summary>
+/// <summary>Verifies the public terminal gallery's panel layout and themes.</summary>
 public sealed class TuiGalleryTests
 {
     [Fact]
-    public async Task Gallery_presents_the_confirmed_widgets_at_desktop_and_drawer_sizes()
+    public async Task Gallery_navigates_scrolls_and_previews_progress_and_text_across_resizes()
     {
         using var program = new Debuggee("tui-gallery");
         await TuiFixture.CompileExample(program, "gallery");
@@ -30,212 +30,65 @@ public sealed class TuiGalleryTests
         try
         {
             await pipe.WaitForConnectionAsync(token);
-            await Resize(134, 38);
-            var wide = await Request("snapshot");
-            Assert.Contains("FPas CUI", Screen(wide));
-            Assert.Contains("Components for FPAS", Screen(wide));
-            var pages = wide.GetProperty("controls").EnumerateArray()
-                .Where(item => item.GetProperty("role").GetString() == "navigation").ToArray();
-            Assert.Equal(new[] { "pages/overview", "pages/buttons", "pages/overlays", "pages/actions" },
-                pages.Select(item => item.GetProperty("id").GetString()));
-            Assert.InRange(pages[0].GetProperty("row").GetInt32(), 0, 5);
-            Assert.Equal("true", pages[0].GetProperty("value").GetString());
-            Assert.Equal("true", Control(wide, "theme/dark").GetProperty("value").GetString());
-            Assert.Equal(pages[0].GetProperty("row").GetInt32() + 2, pages[2].GetProperty("row").GetInt32());
-
-            Assert.Equal("presented", await Focus("pages/buttons"));
-            Assert.Equal("presented", await Key("Enter"));
+            var initial = await Request("snapshot");
+            AssertPanels(initial, 80, 24, 26);
+            Assert.Equal("Overview", Selected(initial));
+            AssertProgress(initial, 26, 60);
+            var dark = Colors(initial);
+            await Key("Down");
+            var moved = await Request("snapshot");
+            Assert.Equal("Buttons", Focused(moved));
+            Assert.Equal("Overview", Selected(moved));
+            await Key("Enter");
             var buttons = await Request("snapshot");
-            Assert.Equal("true", Control(buttons, "pages/buttons").GetProperty("value").GetString());
-            Assert.False(Control(buttons, "disabled").GetProperty("enabled").GetBoolean());
-            Assert.Contains("Variants", Screen(buttons));
-            Assert.Contains("Sizes and icons", Screen(buttons));
-            Assert.Contains("Groups, copy and hold to confirm", Screen(buttons));
-
-            await Choose("save");
-            Assert.Equal("loading", Control(await Request("snapshot"), "save").GetProperty("value").GetString());
-            Assert.Equal("unchanged", await Turn(new() { ["kind"] = "activate", ["control"] = "save" }));
-            await Choose("finish-save");
-            await Choose("format-bold");
-            await Choose("format-italic");
-            var group = await Request("snapshot");
-            Assert.Equal("true", Control(group, "format-bold").GetProperty("value").GetString());
-            Assert.Equal("true", Control(group, "format-italic").GetProperty("value").GetString());
-
-            Assert.Contains("npm i cui", Screen(group));
-            Assert.Equal("copy-button", Control(group, "copy-install").GetProperty("role").GetString());
-            Assert.False(Control(group, "copy-install").GetProperty("enabled").GetBoolean());
-
-            var hold = Control(group, "hold-delete");
-            Assert.Equal("hold-button", hold.GetProperty("role").GetString());
-            int column = hold.GetProperty("column").GetInt32();
-            int row = hold.GetProperty("row").GetInt32();
-            Assert.Equal("presented", await Focus("hold-delete"));
-            Assert.Equal("unchanged", await Key("Enter"));
-            await Point("click", column, row);
-            await Point("press", column, row);
-            var earlyRelease = new JsonObject { ["kind"] = "release", ["column"] = column, ["row"] = row };
-            Assert.Equal("queued", Status(await Request("send", new() { ["input"] = earlyRelease })));
-            await Task.Delay(1300, token);
-            await Request("step");
-            Assert.DoesNotContain("Confirmed:", Screen(await Request("snapshot")));
-
-            await Point("press", column, row);
-            await Task.Delay(1300, token);
-            await Request("step");
-            var filled = await Request("snapshot");
-            Assert.Equal("100", Control(filled, "hold-delete").GetProperty("value").GetString());
-            Assert.DoesNotContain("Confirmed:", Screen(filled));
-            await Point("move", 0, 0);
-            await Point("release", column, row);
-            Assert.DoesNotContain("Confirmed:", Screen(await Request("snapshot")));
-
-            await Point("press", column, row);
-            await Task.Delay(1300, token);
-            await Point("release", column, row);
-            await Point("release", column, row);
-            Assert.Contains("Confirmed: 1", Screen(await Request("snapshot")));
-
-            Assert.Equal("presented", await Turn(new()
-                { ["kind"] = "scroll", ["column"] = 100, ["row"] = 30, ["delta"] = 100 }));
-            await Choose("view/1");
-            Assert.Equal("true", Control(await Request("snapshot"), "view/1").GetProperty("value").GetString());
-            await Focus("range/0");
-            await Key("Right");
-            var segments = await Request("snapshot");
-            Assert.Equal("true", Control(segments, "range/1").GetProperty("value").GetString());
-            Assert.Equal("true", Control(segments, "view/1").GetProperty("value").GetString());
-
-            await Focus("options");
-            Assert.Equal("presented", await Key("Down"));
-            var dropdown = await Request("snapshot");
-            Assert.True(Control(dropdown, "options/rename").GetProperty("focused").GetBoolean());
-            Assert.Contains("Project", Screen(dropdown));
-            Assert.Contains("Ctrl D", Screen(dropdown));
-            await Key("Down");
-            await Key("Enter");
-            Assert.Equal("false", Control(await Request("snapshot"), "options").GetProperty("value").GetString());
-            await Focus("more-actions");
-            await Key("Down");
-            Assert.True(Control(await Request("snapshot"), "more-actions/archive").GetProperty("focused").GetBoolean());
-            await Key("Escape");
-
-            await Choose("pages/actions");
-            await Choose("split-save");
-            Assert.Contains("Saved", Screen(await Request("snapshot")));
-            await Focus("split-save/menu");
-            Assert.Equal("presented", await Key("Down"));
-            var menu = await Request("snapshot");
-            Assert.True(Control(menu, "split-save/menu/draft").GetProperty("focused").GetBoolean());
-            Assert.False(Control(menu, "split-save").GetProperty("enabled").GetBoolean());
-            await Key("Down");
-            Assert.True(Control(await Request("snapshot"), "split-save/menu/publish").GetProperty("focused").GetBoolean());
-            await Key("Enter");
-            var chosen = await Request("snapshot");
-            Assert.Contains("Save and publish", Screen(chosen));
-            Assert.True(Control(chosen, "split-save/menu").GetProperty("focused").GetBoolean());
-            Assert.DoesNotContain(chosen.GetProperty("controls").EnumerateArray(),
-                item => item.GetProperty("id").GetString() == "split-save/menu/draft");
-            await Key("Enter");
-            await Key("Escape");
-            Assert.True(Control(await Request("snapshot"), "split-save/menu").GetProperty("focused").GetBoolean());
-            await Focus("split-export/menu");
-            await Key("Down");
-            await Choose("split-export/menu/schedule");
-            Assert.Contains("Schedule…", Screen(await Request("snapshot")));
-            await Focus("split-save/menu");
-            await Key("Down");
-            await Point("click", 0, 0);
-            Assert.Equal("false", Control(await Request("snapshot"), "split-save/menu").GetProperty("value").GetString());
-            await Focus("confirm-delete");
-            await Key("Enter");
-            var armed = await Request("snapshot");
-            Assert.Equal("armed", Control(armed, "confirm-delete").GetProperty("value").GetString());
-            Assert.True(Control(armed, "confirm-delete").GetProperty("focused").GetBoolean());
-            Assert.Contains("Confirmed: 0", Screen(armed));
-            await Key("Enter");
-            var confirmed = await Request("snapshot");
-            Assert.Equal("", Control(confirmed, "confirm-delete").GetProperty("value").GetString());
-            Assert.Contains("Confirmed: 1", Screen(confirmed));
-            await Key("Enter");
-            await Key("Escape");
-            Assert.Equal("", Control(await Request("snapshot"), "confirm-delete").GetProperty("value").GetString());
-            await Focus("status-save");
-            await Key("Enter");
-            var busy = await Request("snapshot");
-            Assert.Equal("busy", Control(busy, "status-save").GetProperty("value").GetString());
-            Assert.True(Control(busy, "status-save").GetProperty("focused").GetBoolean());
-            await Key("Enter");
-            Assert.Contains("Requests: 1", Screen(await Request("snapshot")));
-            await Choose("status-success");
-            var success = await Request("snapshot");
-            Assert.Equal("success", Control(success, "status-save").GetProperty("value").GetString());
-            Assert.Equal("Saved", Control(success, "status-save").GetProperty("label").GetString());
-            await Focus("status-save");
-            await Key("Enter");
-            Assert.Contains("Requests: 1", Screen(await Request("snapshot")));
-            await Choose("status-reset");
-            await Choose("status-save");
-            await Choose("status-error");
-            var error = await Request("snapshot");
-            Assert.Equal("error", Control(error, "status-save").GetProperty("value").GetString());
-            await Focus("status-save");
-            await Key("Enter");
-            Assert.Contains("Requests: 2", Screen(await Request("snapshot")));
-            await Choose("theme-preview/light");
-            var light = await Request("snapshot");
-            Assert.Equal("true", Control(light, "theme/light").GetProperty("value").GetString());
-            await Focus("theme-preview/light");
-            await Key("Right");
-            var dark = await Request("snapshot");
-            Assert.Equal("true", Control(dark, "theme/dark").GetProperty("value").GetString());
-            Assert.True(Control(dark, "theme-preview/dark").GetProperty("focused").GetBoolean());
-            await Key("Right");
-            await Key("Right");
-            var system = await Request("snapshot");
-            Assert.Equal("true", Control(system, "theme/system").GetProperty("value").GetString());
-            Assert.True(Control(system, "theme-preview/system").GetProperty("focused").GetBoolean());
-            await Choose("system-appearance");
-            Assert.Equal("true", Control(await Request("snapshot"), "theme-preview/system").GetProperty("value").GetString());
-            await Focus("theme-toggle");
-            await Key("Enter");
-            var toggled = await Request("snapshot");
-            Assert.Equal("true", Control(toggled, "theme-preview/light").GetProperty("value").GetString());
-            Assert.True(Control(toggled, "theme-toggle").GetProperty("focused").GetBoolean());
-            Assert.Equal("light", Control(toggled, "theme-toggle").GetProperty("value").GetString());
-            await Key("Enter");
-            Assert.Equal("true", Control(await Request("snapshot"), "theme/dark").GetProperty("value").GetString());
-            Assert.Equal("unchanged", await Turn(new() { ["kind"] = "activate", ["control"] = "theme/dark" }));
-            await Choose("pages/buttons");
-
+            Assert.Equal("Buttons", Selected(buttons));
+            Assert.Contains("Actions triggered", Preview(buttons, 26));
+            await Resize(100, 28);
+            AssertPanels(await Request("snapshot"), 100, 28, 33);
             await Resize(40, 17);
             var narrow = await Request("snapshot");
-            Assert.DoesNotContain(narrow.GetProperty("controls").EnumerateArray(),
-                item => item.GetProperty("id").GetString() == "pages/buttons");
-            await Focus("drawer-open");
-            await Choose("drawer-open");
-            var drawer = await Request("snapshot");
-            Assert.True(Control(drawer, "drawer/close").GetProperty("focused").GetBoolean());
-            Assert.False(Control(drawer, "drawer-open").GetProperty("enabled").GetBoolean());
-            Assert.Equal("presented", await Key("Escape"));
-            Assert.True(Control(await Request("snapshot"), "drawer-open").GetProperty("focused").GetBoolean());
+            AssertPanels(narrow, 40, 17, 13);
+            Assert.Equal(dark, Colors(narrow));
+            await Key("End");
+            var end = await Request("snapshot");
+            Assert.Equal("App chrome", Focused(end));
+            await Key("Enter");
+            Assert.Equal("App chrome", Selected(await Request("snapshot")));
+            await Key("PageUp");
+            var previous = Focused(await Request("snapshot"));
+            Assert.NotEqual("App chrome", previous);
+            await Key("PageDown");
+            Assert.Equal("App chrome", Focused(await Request("snapshot")));
+            await Key("Home");
+            Assert.Equal("Overview", Focused(await Request("snapshot")));
+            await Click("Text");
+            var text = await Request("snapshot");
+            Assert.Equal("Text", Selected(text));
+            Assert.Contains("Field recording", Preview(text, 13));
+            await Click("Progress bar");
+            await Key("Right");
+            AssertProgress(await Request("snapshot"), 13, 70);
+            for (var i = 0; i < 8; i++) await Key("Left");
+            AssertProgress(await Request("snapshot"), 13, 0);
+            for (var i = 0; i < 11; i++) await Key("Right");
+            AssertProgress(await Request("snapshot"), 13, 100);
+            await Turn(new() { ["kind"] = "scroll", ["column"] = 3, ["row"] = 4, ["delta"] = 40 });
+            Assert.Contains(Controls(await Request("snapshot")), c => c.GetProperty("label").GetString() == "App chrome");
+            await Turn(new() { ["kind"] = "scroll", ["column"] = 3, ["row"] = 4, ["delta"] = -40 });
 
-            await Choose("drawer-open");
-            await Choose("pages/overlays");
-            await Focus("sheet-open");
-            await Choose("sheet-open");
-            var sheet = await Request("snapshot");
-            Assert.True(Control(sheet, "sheet/close").GetProperty("focused").GetBoolean());
-            Assert.Contains("Notifications", Screen(sheet));
-            Assert.Equal("presented", await Key("Escape"));
-            Assert.True(Control(await Request("snapshot"), "sheet-open").GetProperty("focused").GetBoolean());
-
-            await Resize(134, 38);
-            await Choose("theme/light");
-            await Choose("pages/buttons");
+            Assert.Equal("presented", await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 }));
+            var light = await Request("snapshot");
+            AssertPanels(light, 40, 17, 13);
+            var lightColors = Colors(light);
+            Assert.NotEqual(dark.Border, lightColors.Border);
+            Assert.NotEqual(dark.Surface, lightColors.Surface);
+            Assert.Equal("presented", await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 }));
+            await Resize(80, 24);
             var restored = await Request("snapshot");
-            Assert.Equal("true", Control(restored, "format-bold").GetProperty("value").GetString());
-            Assert.NotEqual("loading", Control(restored, "save").GetProperty("value").GetString());
+            AssertPanels(restored, 80, 24, 26);
+            Assert.Equal(dark, Colors(restored));
+            Assert.Equal("Progress bar", Selected(restored));
+            AssertProgress(restored, 26, 100);
 
             Assert.Equal("unchanged", await Turn(new() { ["kind"] = "key", ["key"] = "Q", ["modifiers"] = 4 }));
             await process.WaitForExitAsync(token);
@@ -250,20 +103,20 @@ public sealed class TuiGalleryTests
             }
         }
 
-        async Task Choose(string id) =>
-            Assert.Equal("presented", await Turn(new() { ["kind"] = "activate", ["control"] = id }));
+        Task<string?> Key(string key) => Turn(new() { ["kind"] = "key", ["key"] = key });
 
-        Task<string?> Point(string kind, int column, int row) =>
-            Turn(new() { ["kind"] = kind, ["column"] = column, ["row"] = row });
+        async Task Click(string label)
+        {
+            var control = Controls(await Request("snapshot")).Single(c => c.GetProperty("label").GetString() == label);
+            await Turn(new() { ["kind"] = "click", ["button"] = "left",
+                ["column"] = control.GetProperty("column").GetInt32() + 1, ["row"] = control.GetProperty("row").GetInt32() });
+        }
 
         async Task Resize(int columns, int rows)
         {
             Assert.Equal("queued", Status(await Request("resize", new() { ["columns"] = columns, ["rows"] = rows })));
             Assert.Equal("presented", Status(await Request("step")));
         }
-
-        Task<string?> Key(string key) => Turn(new() { ["kind"] = "key", ["key"] = key });
-        Task<string?> Focus(string id) => Turn(new() { ["kind"] = "focus", ["control"] = id });
 
         async Task<string?> Turn(JsonObject input)
         {
@@ -296,9 +149,51 @@ public sealed class TuiGalleryTests
         }
 
         static string? Status(JsonElement result) => result.GetProperty("status").GetString();
-        static string Screen(JsonElement frame) =>
-            string.Join('\n', frame.GetProperty("lines").EnumerateArray().Select(row => row.GetString()));
-        static JsonElement Control(JsonElement frame, string id) =>
-            Assert.Single(frame.GetProperty("controls").EnumerateArray(), item => item.GetProperty("id").GetString() == id);
+    }
+
+    private static JsonElement.ArrayEnumerator Controls(JsonElement frame) => frame.GetProperty("controls").EnumerateArray();
+
+    private static string? Focused(JsonElement frame) =>
+        Controls(frame).Single(c => c.GetProperty("focused").GetBoolean()).GetProperty("label").GetString();
+
+    private static string? Selected(JsonElement frame) =>
+        Controls(frame).Single(c => c.GetProperty("value").GetString() == "true").GetProperty("label").GetString();
+
+    private static string Preview(JsonElement frame, int leftWidth) => string.Join("\n",
+        frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()![(leftWidth + 2)..^1]));
+
+    private static void AssertProgress(JsonElement frame, int leftWidth, int percent)
+    {
+        var preview = Preview(frame, leftWidth);
+        Assert.Contains($"Loading tracks  {percent}%", preview);
+        var track = Assert.Single(preview.Split('\n'), line => line.Contains('░') || line.Contains('█')).Trim();
+        var filled = (int)Math.Round(track.Length * percent / 100.0, MidpointRounding.AwayFromZero);
+        Assert.Equal(new string('█', filled) + new string('░', track.Length - filled), track);
+    }
+
+    private static (int Border, int Surface) Colors(JsonElement frame)
+    {
+        var colors = frame.GetProperty("cells")[0].GetProperty("colors");
+        return (colors.GetProperty("foreground").GetInt32(), colors.GetProperty("background").GetInt32());
+    }
+
+    private static void AssertPanels(JsonElement frame, int columns, int rows, int leftWidth)
+    {
+        Assert.Equal(columns, frame.GetProperty("columns").GetInt32());
+        Assert.Equal(rows, frame.GetProperty("rows").GetInt32());
+        Assert.NotEmpty(Controls(frame));
+        var lines = frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()).ToArray();
+        Assert.Equal(rows, lines.Length);
+        int rightWidth = columns - leftWidth - 1;
+        string Row(char start, char fill, char end) =>
+            start + new string(fill, leftWidth - 2) + end + " " + start + new string(fill, rightWidth - 2) + end;
+        Assert.Equal(Row('╭', '─', '╮'), lines[0]);
+        Assert.All(lines[1..^1], line =>
+        {
+            Assert.Equal('│', line![0]);
+            Assert.Equal("│ │", line.Substring(leftWidth - 1, 3));
+            Assert.Equal('│', line[^1]);
+        });
+        Assert.Equal(Row('╰', '─', '╯'), lines[^1]);
     }
 }

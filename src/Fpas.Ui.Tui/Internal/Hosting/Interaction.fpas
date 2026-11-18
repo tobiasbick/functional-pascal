@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -354,6 +354,14 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Control <> null then
+      if Control.Role = 'navigation' and Modifiers = K.KeyModifiers.None then
+        const Id: string? := Sidebars.Move<TMsg>(Layout, Focus, Key, ScrollOffsets, Apply);
+        if Id <> null then
+          Focus := Id;
+          return;
+        end if;
+      end if;
+
       if (Key = K.Key.Left or Key = K.Key.Right) and Modifiers = K.KeyModifiers.None then
         const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
         case Handler of

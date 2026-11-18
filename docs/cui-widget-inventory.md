@@ -15,8 +15,8 @@ inspection. Compose existing CUI primitives before adding a native adapter.
 Do not build a second GUI widget or layout engine. Keep unavoidable knowledge
 of private CUI state and IDs inside the native bridge, not in C# or FPAS.
 
-TUI annotations record the capabilities implemented in the terminal host. New
-widget work targets the GUI while TUI development is paused. Shared changes
+TUI annotations record the capabilities implemented in the terminal host.
+CUI widget ports target the GUI. Shared changes
 must preserve the implemented terminal subset and reject unsupported GUI
 capabilities in TUI preflight.
 
@@ -34,11 +34,11 @@ publishing, deployment and Native AOT runs are excluded unless the user requests
 them. Record confirmed CUI defects with a stable local ID, a direct reproduction
 and a small tested workaround in the FPAS bridge.
 
-The FPAS gallery follows the pinned [CUI gallery][gallery] at the same viewport,
+The FPAS GUI gallery follows the pinned [CUI gallery][gallery] at the same viewport,
 scale, theme and renderer. It shows accepted widgets and includes supplementary
 examples for public widgets absent from the upstream gallery. Use it to test
-the visible pages and interactions. The TUI gallery shows its implemented
-subset.
+the visible pages and interactions. The independent [TUI gallery](../examples/ui/tui/gallery/README.md)
+exercises the shared layout and themes in a [tested two-panel view][tui-gallery-test].
 
 ### Widget source layout
 
@@ -454,8 +454,7 @@ editor bars, document tabs, docking and split panes.
 
 - [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`): [API][sidebar].
   TUI: implemented; top-aligned cell rows, labels and badges. Icons are omitted.
-  [GUI][gui-gallery-test] and [TUI][tui-gallery-test] gallery tests
-  cover destinations and the responsive drawer.
+  The [GUI gallery tests][gui-gallery-test] cover destinations and the responsive drawer.
 - [x] Tabs (`cui_tabs`): [API][fpas-navigation-controls]. Navigation shows the
   original underline and icon pill strips with model-selected content.
   TUI: graphical profile required.
@@ -611,6 +610,8 @@ and widget options.
   labeled upload percentage, indeterminate indexing bar and native dithered
   export/sync examples. CUI owns animation;
   validation, native dimensions, message mapping and resizing are tested.
+  TUI: determinate, single-row track with optional caption and percentage,
+  semantic color and content/fill/fixed width.
 - [x] Meter (`cui_meter`): [API][fpas-meter]. Feedback shows the original
   Storage example with 18.4 / 20 GB. CUI owns formatting, interpolation and warning
   colors. Tests cover zero/exceeded capacity, literal text, value validation,

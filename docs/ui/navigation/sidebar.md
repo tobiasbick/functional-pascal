@@ -40,7 +40,9 @@ end unit;
 
 ## Interaction
 
-Click a destination or activate it with Enter or Space while it has focus. The sidebar sends the item's message. Update the active key and displayed page together. Keys are unique across the sidebar. Use `ItemId(Id, Key)` for focus. Place the sidebar in a scroll view when its sections exceed the available height.
+Click a destination or activate it with Enter or Space while it has focus. The sidebar sends the item's message. Update the active key and displayed page together. Keys are unique across the sidebar. Use `ItemId(Id, Key)` for focus. Place the sidebar in a scroll view when its sections exceed the available height. In the TUI, Up/Down move focus
+within the sidebar. Page Up/Page Down move by a page and Home/End move to the
+first or last enabled destination. The scroll view reveals the focused row.
 
 ## Appearance controls
 

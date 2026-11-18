@@ -64,7 +64,8 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Centered modal dialog and action footer | | | Yes |
 | Banners, countdowns and onboarding checklists | | | Yes |
-| Alerts, progress bars, spinners, meters, rings, skeletons and timeline entries | | | Yes |
+| Determinate progress bar, label, percentage, tone and width | Yes | Yes | Yes |
+| Animated progress, alerts, spinners, meters, rings, skeletons and timeline entries | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | Yes | Yes | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
 | Inline links, avatars and hover cards | | | Yes |
@@ -313,8 +314,9 @@ selection, and an unknown key is rejected during preflight.
 
 Use `Navigation.ItemId(SidebarId, Key)` to address a destination for focus. The
 GUI uses CUI's native navigation rows and shared animated highlight. The TUI
-uses themed text rows. Both hosts display badge text, and the GUI can show a
-glyph from the CUI icon font. Use the normal layout and scroll view to place or
+uses themed text rows. Up/Down, Page Up/Page Down and Home/End move terminal
+focus within the sidebar and reveal the destination in its scroll view. Both
+hosts display badge text, and the GUI can show a glyph from the CUI icon font. Use the normal layout and scroll view to place or
 size the sidebar.
 
 ## Sheet and drawer
@@ -1132,13 +1134,16 @@ fraction from zero through one. Options map to CUI's `Label`, `ShowValue`,
 native default). `Dither` uses CUI's drifting ordered-dot fill for either progress
 mode. Indeterminate bars omit percentages. Use `Elements.Size` for width.
 CUI owns interpolation and activity motion. The noninteractive `progress`
-snapshot reports the invariant fraction or `indeterminate` in `Value`.
+GUI snapshot reports the invariant fraction or `indeterminate` in `Value`.
+The terminal paints determinate progress in one row with an optional caption
+and rounded percentage above it. Content and Fill widths use the available
+columns. Fixed caps the track and caption at the requested width.
 
 `Fpas.Ui.Widgets.Feedback.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` uses CUI's activity animation,
 theme color and logical diameter; zero selects its default. It has a
 noninteractive `spinner` snapshot. Dimensions must be finite and nonnegative.
-All three widgets require the graphical profile. The Feedback gallery shows
-the original four alerts, upload and indexing bars, dithered export and sync
+Alerts, spinners, indeterminate progress, dither and explicit track height require the
+graphical profile. The Feedback gallery shows the original four alerts, upload and indexing bars, dithered export and sync
 bars, and 16/22/28-point spinners.
 
 ## Skeleton

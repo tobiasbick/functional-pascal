@@ -79,8 +79,6 @@ Findings on hold, checked against `a5c9ef5`:
 
 ## Terminal icon experiment (deferred)
 
-This experiment is paused with TUI development.
-
 The [CUI icon set][icons] uses Lucide glyphs in a bundled font. FPAS currently
 passes CUI glyphs to GUI widgets. TUI buttons use explicit terminal glyphs or
 text fallbacks. Its sidebar omits icons while showing labels and badges.

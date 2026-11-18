@@ -1,6 +1,6 @@
 program RenderingContract;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -153,7 +153,55 @@ begin
   );
 end procedure;
 
+procedure ProgressTracks();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      Bars.ProgressBar<int>(
+        'plain',
+        0.5F,
+        new Bars.Options(Width := L.Extent.Fixed(L.Measure.Cells(7)))
+      ),
+      Bars.ProgressBar<int>(
+        'full',
+        1.0F,
+        new Bars.Options(ShowValue := true, Tone := Styles.Tone.Info)
+      ),
+      Bars.ProgressBar<int>(
+        'empty',
+        0.0F,
+        new Bars.Options(Width := L.Extent.Fixed(L.Measure.Cells(0)))
+      )
+    );
+  end function;
+  procedure Reject(Options: Bars.Options);
+  begin
+    try
+      discard V.Prepare<int>(Bars.ProgressBar<int>('sample', 0.5F, Options), V.Target.Terminal);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains('Graphical profile'), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Animated progress or a custom height requires GUI.');
+  end procedure;
 begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 12, 4);
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(Frame.Lines[0].TrimEnd() = '████░░░', 'Round and cap a fixed-width track.');
+  Check(Frame.Lines[1].TrimEnd() = '100%', 'Standalone percentage caption.');
+  Check(Frame.Lines[2] = new string(#9608, 12), 'Full track spans all available cells.');
+  Check(
+    Frame.Lines[3].Trim() = '' and Frame.Controls.Length = 0,
+    'Zero width and display-only input.'
+  );
+  Reject(new Bars.Options(Indeterminate := true));
+  Reject(new Bars.Options(Dither := true));
+  Reject(new Bars.Options(Height := 3.0F));
+end procedure;
+
+begin
+  ProgressTracks();
   WideIdeographs();
   ZeroWidthClusters();
   DisabledForeground();

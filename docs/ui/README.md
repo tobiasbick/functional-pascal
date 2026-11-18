@@ -73,5 +73,5 @@ screenshots.
   background work, snapshots and publishing.
 - [GUI widget gallery](../../examples/ui/gui/gallery/README.md) shows the full
   collection in one application.
-- [Terminal widget gallery](../../examples/ui/tui/gallery/README.md) shows the
-  supported terminal subset.
+- [TUI gallery](../../examples/ui/tui/gallery/README.md) shows sidebar navigation, text and determinate progress
+  in a weighted two-panel layout with shared light and dark themes.

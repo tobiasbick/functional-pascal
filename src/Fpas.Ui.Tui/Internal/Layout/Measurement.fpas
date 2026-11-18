@@ -133,6 +133,12 @@ public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E
 begin
   if Horizontal then
     case Node of
+      when E.Element.Progress(_, _, const Width: int?, _):
+        if Width <> null then
+          return new E.Flex(Basis := Width.Value, Maximum := Width.Value);
+        end if;
+
+        return new E.Flex(Grow := 1);
       when E.Element.Action(_, _, _, const View: E.ActionView):
         const Width: int? := View.FixedWidth;
         if Width <> null then
@@ -256,6 +262,16 @@ begin
       end if;
 
       return G.LineCount(Value, Columns);
+    when E.Element.Progress(_, const Caption: string, const Width: int?, _):
+      if Horizontal then
+        return Width ?? Sys.Math.Max(1, G.Measure(Caption));
+      end if;
+
+      return if Caption = '' then
+        1
+      else
+        2
+      end if;
     when E.Element.Separator(const Title: string):
       return if Horizontal and Title <> '' then
         G.Measure(G.SingleLine(Title)) + 4

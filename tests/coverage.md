@@ -190,19 +190,12 @@ and signing. The probe presents a button through both renderers.
 
 ## Terminal UI
 
-`TuiGalleryTests` drives the real gallery over the headless control pipe at
-desktop and drawer sizes. It checks the approved pages, top-aligned sidebar,
-keyboard selection, busy and disabled buttons, the formatting group, the copy
-control, drawer dismissal, and sheet focus restoration. The Actions page checks
-split-button messages, keyboard menu navigation, outside dismissal, modal input
-and focus restoration. The gallery DAP test
-checks copy feedback through terminal input, resizes the private terminal with
-a sheet open, and dismisses the sheet with Enter.
-
-The TUI gallery also checks hold progress, pointer cancellation, and exactly
-one confirmation on release. A release queued before the deadline stays
-early even if processed after it. The native link-and-render test checks
-short and complete holds through CUI keyboard and pointer input.
+`TuiGalleryTests` checks both rounded panel outlines, their 1:2 width ratio,
+the one-cell gap and preview at three terminal sizes. It exercises click and
+keyboard selection, scrolling across sections, text, and progress from 0–100%. It verifies
+theme colors through two Ctrl+T toggles and a clean exit with Ctrl+Q.
+The gallery DAP test sends the same shortcuts through the private terminal
+and checks that resizing and changing themes produce the expected frames.
 
 The terminal CUI fixture checks the four sheet edges, pinned header, button
 options and focus, button-group traversal, OSC 52 copy data, shared theme

@@ -1,6 +1,6 @@
 program HeadlessContract;
 
-uses Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
 
 type Msg = variant
   Start;
@@ -435,7 +435,42 @@ begin
   ExpectFocus(Session, 'cancel');
 end procedure;
 
+procedure CheckScrollableSidebar();
+  function Viewport(Position: L.ScrollPosition): E.Element<L.ScrollPosition>;
+  begin
+    const Pages: array of Nav.Item<L.ScrollPosition> := [
+      new Nav.Item<L.ScrollPosition>('a', 'A', Position),
+      new Nav.Item<L.ScrollPosition>('b', 'B', Position, Enabled := false),
+      new Nav.Item<L.ScrollPosition>('c', 'C', Position),
+      new Nav.Item<L.ScrollPosition>('d', 'D', Position)
+    ];
+    return E.ScrollView<L.ScrollPosition>(
+      'scroll', Nav.Sidebar<L.ScrollPosition>(
+        'nav',
+        [new Nav.Section<L.ScrollPosition>('', Pages)], 'a'
+      ), Position,
+      function(Change: L.ScrollChange): L.ScrollPosition => Change.Position
+    );
+  end function;
+  function SetPosition(State: L.ScrollPosition; Next: L.ScrollPosition): Mvu.Transition<L.ScrollPosition, L.ScrollPosition>;
+  begin
+    return new Mvu.Transition<L.ScrollPosition, L.ScrollPosition>(Next, []);
+  end function;
 begin
+  using const Session: App.HeadlessSession := App.StartHeadless<L.ScrollPosition, L.ScrollPosition>(
+    L.ScrollPosition.Start, SetPosition, Viewport, 12, 2
+  );
+  Turn(Session, App.Input.Focus('nav/a'));
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Down, InputKeys.KeyModifiers.None));
+  ExpectFocus(Session, 'nav/c');
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.End, InputKeys.KeyModifiers.None));
+  ExpectFocus(Session, 'nav/d');
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Home, InputKeys.KeyModifiers.None));
+  ExpectFocus(Session, 'nav/a');
+end procedure;
+
+begin
+  CheckScrollableSidebar();
   CheckCancellation();
   CheckQueue();
   CheckFailure();

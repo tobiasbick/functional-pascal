@@ -1,7 +1,7 @@
 # Feedback
 
 Use the model to supply progress, status and data. CUI draws the indicators
-and their transitions. These controls require the GUI host.
+and their transitions in the GUI. The TUI also supports determinate progress bars.
 
 | Widget | When to use it |
 | --- | --- |

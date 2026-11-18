@@ -1,9 +1,154 @@
 program TuiWidgetGallery;
 
-uses Gallery.State as G, Gallery.View as Views, Fpas.Ui.Tui.Application as App, System as Sys, System.Threading as Threads;
+uses
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
+  TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
+  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, System as Sys, System.Threading as Threads;
+
+type Msg = variant
+  SelectPage(Page: Catalog.Entry);
+  ChangeProgress(Delta: int);
+  ToggleTheme;
+  Quit;
+end variant;
+
+type Model = record
+  public Active: Catalog.Entry;
+  public Mode: Themes.Mode := Themes.Mode.Dark;
+  public Percent: int := 60;
+end record;
+
+function ThemeFor(State: Model): Themes.Theme;
+begin
+  const Base: Themes.Theme := if State.Mode = Themes.Mode.Dark then
+    Themes.Dark(Themes.Accent.Blue)
+  else
+    Themes.Light(Themes.Accent.Blue)
+  end if;
+  return Base with
+    Colors := Base.Colors with
+      Border := Base.Colors.Info;
+    end with;
+  end with;
+end function;
+
+function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  var Next: Model := State;
+  case Message of
+    when Msg.Quit:
+      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
+    when Msg.SelectPage(const Page: Catalog.Entry):
+      Next := State with
+        Active := Page;
+      end with;
+    when Msg.ChangeProgress(const Delta: int):
+      if State.Active.Demo = Catalog.Preview.Progress or State.Active.Demo =
+        Catalog.Preview.Overview
+      then
+        Next := State with
+          Percent := Sys.Math.Clamp(State.Percent + Delta, 0, 100);
+        end with;
+      end if;
+    when Msg.ToggleTheme:
+      Next := State with
+        Mode := if State.Mode = Themes.Mode.Dark then
+          Themes.Mode.Light
+        else
+          Themes.Mode.Dark
+        end if;
+      end with;
+  end case;
+
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+function Section(Title: string; Pages: array of Catalog.Entry): Nav.Section<Msg>;
+begin
+  return new Nav.Section<Msg>(
+    Title, Sys.Array.ConvertAll<Catalog.Entry, Nav.Item<Msg>>(
+      Pages,
+      function(Page: Catalog.Entry): Nav.Item<Msg> => new Nav.Item<Msg>(
+        Page.Title,
+        Page.Title,
+        Msg.SelectPage(Page)
+      )
+    )
+  );
+end function;
+
+function Panel(Weight: float; Content: E.Element<Msg>): E.Element<Msg>;
+begin
+  return E.Size<Msg>(
+    E.Styled<Msg>(E.Border<Msg>(Content), S.Role.Panel),
+    new L.Flex(Basis := L.Extent.Fill, Grow := Weight)
+  );
+end function;
+
+function Label(Value: string; Role: S.Role): E.Element<Msg>;
+begin
+  return E.Styled<Msg>(E.Text<Msg>(Value), Role);
+end function;
+
+function Detail(State: Model): E.Element<Msg>;
+begin
+  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
+  var Example: E.Element<Msg> := E.Column<Msg>();
+  case State.Active.Demo of
+    when Catalog.Preview.Progress, Catalog.Preview.Overview:
+      Example := E.Column<Msg>(
+        Flow,
+        Bars.ProgressBar<Msg>(
+          'sample-progress', cast<float>(State.Percent) / 100.0F,
+          new Bars.Options(Label := 'Loading tracks', ShowValue := true, Tone := S.Tone.Info)
+        ),
+        Label('←/→  Adjust by 10%', S.Role.Muted)
+      );
+    when Catalog.Preview.Text:
+      Example := E.Column<Msg>(
+        Flow, Label('Field recording', S.Role.Heading),
+        E.Text<Msg>(
+          'Rain drums softly on the roof. Footsteps cross the room, then fade into the distance.'
+        ),
+        Label('Recorded at dusk · Stereo', S.Role.Muted)
+      );
+    else
+  end case;
+
+  return E.ScrollView<Msg>(
+    'preview-scroll', E.Column<Msg>(
+      new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
+      Label(State.Active.Title, S.Role.Heading), E.Text<Msg>(State.Active.Description), Example
+    )
+  );
+end function;
+
+function View(State: Model): E.Element<Msg>;
+begin
+  const List: E.Element<Msg> := Nav.Sidebar<Msg>(
+    'navigation',
+    [Section('Components', Catalog.Components), Section('Extended', Catalog.Extended)],
+    State.Active.Title
+  );
+  return Views.Screen<Msg>(
+    E.Row<Msg>(
+      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),
+      Panel(1.0F, E.ScrollView<Msg>('navigation-scroll', List)), Panel(2.0F, Detail(State))
+    ),
+    [],
+    [
+      Keys.Shortcut<Msg>(Keys.Key.Left, Keys.KeyModifiers.None, Msg.ChangeProgress(-10)),
+      Keys.Shortcut<Msg>(Keys.Key.Right, Keys.KeyModifiers.None, Msg.ChangeProgress(10)),
+      Keys.Shortcut<Msg>(Keys.Key.T, Keys.KeyModifiers.Ctrl, Msg.ToggleTheme),
+      Keys.Shortcut<Msg>(Keys.Key.Q, Keys.KeyModifiers.Ctrl, Msg.Quit)
+    ]
+  );
+end function;
 
 begin
-  const Initial: G.Model := new G.Model();
+  const Initial: Model := new Model(Catalog.Components[0]);
   const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
   if Sys.Array.IndexOf<string>(Arguments, '--headless-control') >= 0 then
     if Sys.String.IsNullOrEmpty(
@@ -13,14 +158,14 @@ begin
       raise new Sys.InvalidOperationException('Set FPAS_TUI_CONTROL_PIPE for headless control.');
     end if;
 
-    using const Session: App.HeadlessSession := App.StartHeadless<G.Model, G.Msg>(
-      Initial, G.Update, Views.View, 80, 24, G.ThemeFor
+    using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+      Initial, Update, View, 80, 24, ThemeFor
     );
     while Session.IsOpen() do
       Threads.Thread.Sleep(20);
     end while;
   else
-    App.Run<G.Model, G.Msg>(Initial, G.Update, Views.View, G.ThemeFor);
+    App.Run<Model, Msg>(Initial, Update, View, ThemeFor);
   end if;
 end;
 

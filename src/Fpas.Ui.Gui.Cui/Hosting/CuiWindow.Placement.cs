@@ -4,6 +4,9 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    /// <summary>Gets the borrowed, backend-specific handle on the owner thread until the window is disposed.</summary>
+    public nint NativeWindow { get { CheckOpen(); return NativeMethods.NativeWindow(app); } }
+
     /// <summary>Gets whether the window is normal, maximized or minimized, as the system reports it now.</summary>
     /// <remarks>On X11 the window manager carries out state requests, so a change can take a few frames to show.</remarks>
     public CuiWindowState State { get { CheckOpen(); return (CuiWindowState)NativeMethods.WindowState(app); } }

@@ -68,19 +68,15 @@ Use AllowWhileEditing only for global commands such as Save.
 
 ## Desktop publishing and window configuration
 
-- [ ] Provide and document a supported Windows GUI executable without a console
-  window. The [FPAS compile task](../../src/Fpas.Build.Tasks/FpasCompile.cs)
-  currently accepts `Exe` and `Library`. Verify the executable launched
-  directly from Explorer for the supported desktop publish modes. Cover the
-  project's icon and version metadata in the publishing instructions.
+- [ ] Support the Windows executable's application icon and version metadata
+  and document how to provide them in the project.
   [CUI shipping guide][shipping]
 
 Use the supported [window options and commands](../../src/Fpas.Ui.Gui/README.md#window-state-and-placement).
 For Linux delivery, match application identity to the installed `.desktop`
 filename/icon and check X11 `WM_CLASS` and desktop grouping. CUI reads the ID at
 creation and ignores it on Windows. Verify restoring saved dimensions and
-changing a document title in Notes. Native handles/backend access need a concrete
-platform integration such as a tray icon.
+changing a document title in Notes.
 [CUI desktop identity][desktop-id] · [CUI window API][window-api]
 
 ## Appearance and accessibility

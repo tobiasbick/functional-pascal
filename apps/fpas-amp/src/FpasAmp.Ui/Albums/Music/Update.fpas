@@ -5,7 +5,7 @@ uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
   Fpas.Media.Images as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
-  System.Diagnostics as Diagnostics, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+  Fpas.Ui.Gui.Desktop as Desktop, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command<M.Msg> := [];
 
@@ -90,9 +90,10 @@ begin
             raise new IO.DirectoryNotFoundException('The track folder is unavailable.');
           end if;
 
-          const Start: Diagnostics.ProcessStartInfo := new Diagnostics.ProcessStartInfo(Folder);
-          Start.UseShellExecute := true;
-          using const Process: Diagnostics.Process? := Diagnostics.Process.Start(Start);
+          if not Desktop.TryOpen(Folder) then
+            raise new IO.IOException('The desktop could not open the track folder.');
+          end if;
+
           return Tasks.Task.CompletedTask;
         end function,
         function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)

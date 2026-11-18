@@ -36,6 +36,12 @@ executables run independently of compiler, sources and feed. PDBs are optional
 for execution; retain them for debugging. Project-requested content files can
 remain separate and must also be copied. Directory modes need all runtime files.
 
+Set `<OutputType>WinExe</OutputType>` in a desktop application's `.fpasproj` to
+start without a console on Windows. Native AOT and all apphost modes, including
+single-file, then produce an executable in the Windows GUI subsystem. Use
+`Exe` for console programs. On Linux both output types produce the same kind
+of executable. Framework-dependent mode still runs the managed DLL via `dotnet`.
+
 For applications using the [packaged CUI binding](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-binding),
 directory modes include the shared CUI library beside the application. Single-file
 publication bundles it for native extraction. Use the binding package for
@@ -86,8 +92,8 @@ dotnet publish App/App.fpasproj -c Debug -r win-x64 -p:PublishSingleFile=true -p
 dotnet publish App/App.fpasproj -c Release -r win-x64 -p:UseAppHost=true --self-contained false
 ```
 
-Native/apphost/single-file publication requires OutputType Exe. Managed libraries
-can be published without executable options. Direct `dotnet publish` retains
+Native/apphost/single-file publication requires OutputType Exe or WinExe.
+Managed libraries can be published without executable options. Direct `dotnet publish` retains
 normal .NET output-copy behavior; the directory transaction belongs to the FPAS CLI.
 
 ## Signing

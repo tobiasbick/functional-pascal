@@ -1,6 +1,18 @@
 unit Fpas.Ui.Gui.Windows;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+
+// Live information read from the native window on its owner thread.
+public type Info = record
+  // Logical window size most recently observed by the native event loop.
+  public Size: Cui.CuiSize;
+  // Current presentation state, including minimized.
+  public State: Cui.CuiWindowState;
+  // Backend name, such as win32, x11, sdl2 or glfw.
+  public Backend: string;
+  // Borrowed handle whose type depends on Backend. Valid while the session owns the window.
+  public NativeWindow: Sys.IntPtr;
+end record;
 
 // Changes how the owner window is shown.
 // ## Type parameters

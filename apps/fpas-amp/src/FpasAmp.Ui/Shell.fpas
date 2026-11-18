@@ -275,7 +275,8 @@ public type Session = record implements Sys.IDisposable
         end try;
       end procedure,
       Native.CapturePng,
-      Native.Placement
+      Native.Placement,
+      Native.InspectWindow
     );
     return new Session(Observed, function(): M.State => Last);
   end function;

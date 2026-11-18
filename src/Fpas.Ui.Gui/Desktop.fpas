@@ -1,0 +1,16 @@
+unit Fpas.Ui.Gui.Desktop;
+
+uses Fpas.Ui.Gui.Cui.CuiDesktop as Native;
+
+// Asks the desktop to open a trusted URL or path with its default handler.
+//
+// ## Parameters
+// - `Target`: A valid Unicode URL or absolute path.
+// ## Returns
+// Whether CUI could dispatch the request. The handler may finish asynchronously.
+public function TryOpen(Target: string): bool;
+begin
+  return Native.TryOpen(Target);
+end function;
+
+end unit;

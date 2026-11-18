@@ -23,10 +23,11 @@ The local SDK must be packaged before this project can restore. Follow the
 For projects outside the checkout, use the
 [standalone SDK walkthrough](../../build/standalone-sdk.md) with an explicit
 package source, SDK version, and independent cache.
-The current build scope is one net10.0 target, AnyCPU, Debug/Release, and Exe
-or Library output. A library contains units and no program; an executable has
-exactly one program plus optional units. The program/unit header determines
-source identity, not the source filename or Compile item order.
+The current build scope is one net10.0 target, AnyCPU, Debug/Release, and Exe,
+WinExe or Library output. WinExe selects the Windows GUI subsystem for
+[published executables](../../build/publishing.md). A library contains units
+and no program. An executable has exactly one program plus optional units.
+The program or unit header determines source identity.
 
 For [native .NET tests](../tools/testing.md), set IsTestProject=true and reference
 the framework, VSTest adapter and Microsoft.NET.Test.Sdk packages. The SDK selects

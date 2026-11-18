@@ -48,8 +48,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
         try
         {
             var platform = string.IsNullOrWhiteSpace(Platform) ? "AnyCPU" : Platform.Replace(" ", "", StringComparison.Ordinal);
-            if (TargetFramework != "net10.0" || platform != "AnyCPU" || OutputType is not ("Exe" or "Library"))
-                throw new InvalidOperationException("Analysis requires net10.0/AnyCPU and OutputType Exe or Library.");
+            if (TargetFramework != "net10.0" || platform != "AnyCPU" || OutputType is not ("Exe" or "WinExe" or "Library"))
+                throw new InvalidOperationException("Analysis requires net10.0/AnyCPU and OutputType Exe, WinExe or Library.");
             if (!Path.IsPathFullyQualified(ManifestFile)) throw new InvalidOperationException("The analysis manifest path must be absolute.");
             if (Phase == "resolved" && !File.Exists(ProjectAssetsFile))
                 throw new InvalidOperationException("Restore the project explicitly before analysis; restore assets are missing.");
@@ -76,7 +76,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             var compiler = CompilerAssemblyPath.Length > 0 ? CompilerAssemblyPath : Path.Combine(Path.GetDirectoryName(CompilerPath)!, "Fpas.Compiler.dll");
             hashes[Path.GetFullPath(compiler)] = Hash(compiler);
             var result = new ExportedContext(1, Phase, Path.GetFullPath(ProjectPath), Configuration, platform, TargetFramework,
-                AssemblyName, OutputType == "Exe" ? "exe" : "library", Hash(compiler), GenerateDocumentationFile, TreatWarningsAsErrors,
+                AssemblyName, OutputType == "Library" ? "library" : "exe", Hash(compiler), GenerateDocumentationFile, TreatWarningsAsErrors,
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
                 Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
                     .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),

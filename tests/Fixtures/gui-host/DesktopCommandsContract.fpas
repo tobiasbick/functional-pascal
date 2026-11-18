@@ -6,7 +6,7 @@ uses
   DesktopFocusContract as Focus,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Closing as Closing,
-  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames,
+  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames, Fpas.Ui.Gui.Desktop as Desktop,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu,
   System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
@@ -152,13 +152,29 @@ begin
       MinimumWidth := 240,
       MinimumHeight := 180,
       FixedSize := true,
-      AppId := 'org.example.DesktopCommands'
+      AppId := 'org.example.DesktopCommands',
+      Continuous := true,
+      NoVsync := true,
+      Hidden := true
     ),
     OnCloseRequested := function(): Msg begin
       raise new Sys.InvalidOperationException('Dispose must not prompt for confirmation.');
     end function
   );
   Check(Forced.Step(), 'Public start did not present.');
+  const Info: Windows.Info := Forced.InspectWindow();
+  Check(Info.Size.Width = 420 and Info.Size.Height = 300, 'Native size must use logical units.');
+  Check(Info.State = Cui.CuiWindowState.Normal, 'The new window must start in normal state.');
+  Check(
+    Info.Backend <> '' and Info.Backend <> 'unknown',
+    'The session must report its native backend.'
+  );
+  Check(
+    not Info.NativeWindow.Equals(Sys.IntPtr.Zero),
+    'The session must supply a native window handle.'
+  );
+  Check(Forced.Step(), 'Continuous rendering must produce another frame without a wake request.');
+  Check(not Desktop.TryOpen(''), 'An empty desktop target must fail.');
 end procedure;
 
 procedure VerifyFactoryFailure(Renderer: Cui.CuiRenderer);

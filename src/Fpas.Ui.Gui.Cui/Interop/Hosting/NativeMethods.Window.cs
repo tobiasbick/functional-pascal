@@ -5,6 +5,10 @@ namespace Fpas.Ui.Gui.Cui.Interop;
 
 internal static partial class NativeMethods
 {
+    [LibraryImport(Library, EntryPoint = "cui_app_native_window")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial nint NativeWindow(nint app);
+
     [LibraryImport(Library, EntryPoint = "cui_app_minimize")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Minimize(nint app);

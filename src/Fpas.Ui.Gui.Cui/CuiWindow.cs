@@ -34,7 +34,7 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="width">Positive logical width.</param>
     /// <param name="height">Positive logical height.</param>
     /// <param name="renderer">Requested rendering backend.</param>
-    /// <param name="continuous">Whether to request frames while idle; intended for bounded tests.</param>
+    /// <param name="continuous">Whether to request frames while idle.</param>
     /// <param name="placement">
     /// A saved placement to open at, whose size replaces <paramref name="width"/> and <paramref name="height"/>;
     /// null lets the system choose the place.
@@ -43,9 +43,12 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="minimumHeight">Minimum logical height, zero for CUI's default.</param>
     /// <param name="fixedSize">Whether the native window is nonresizable.</param>
     /// <param name="appId">Linux desktop identity; empty uses CUI's default.</param>
+    /// <param name="noVsync">Whether OpenGL presents without waiting for vertical sync.</param>
+    /// <param name="hidden">Whether to create the window without showing it.</param>
     public CuiWindow(string title, int width = 640, int height = 480,
         CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false, CuiWindowPlacement? placement = null,
-        int minimumWidth = 0, int minimumHeight = 0, bool fixedSize = false, string appId = "")
+        int minimumWidth = 0, int minimumHeight = 0, bool fixedSize = false, string appId = "",
+        bool noVsync = false, bool hidden = false)
     {
         Utf8.Validate(title, nameof(title));
         Utf8.Validate(appId, nameof(appId));
@@ -70,7 +73,7 @@ public sealed partial class CuiWindow : IDisposable
         app = NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0,
             placement.HasValue ? 1 : 0, at.X, at.Y, at.HasPosition ? 1 : 0,
             at.State == CuiWindowState.Maximized ? 1 : 0,
-            minimumWidth, minimumHeight, fixedSize ? 1 : 0, Optional(appId));
+            minimumWidth, minimumHeight, fixedSize ? 1 : 0, Optional(appId), noVsync ? 1 : 0, hidden ? 1 : 0);
         if (app == 0) throw new InvalidOperationException("CUI could not create a window. Check the native display connection.");
         wakeTarget = NativeMethods.OpenWakeTarget(app);
         if (wakeTarget == 0)

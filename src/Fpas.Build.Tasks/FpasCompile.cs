@@ -72,9 +72,9 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
 
     private bool ExecuteCore()
     {
-        if (Sources.Length == 0 || TargetFramework != "net10.0" || OutputType is not ("Exe" or "Library") || DebugType is not ("portable" or "none"))
+        if (Sources.Length == 0 || TargetFramework != "net10.0" || OutputType is not ("Exe" or "WinExe" or "Library") || DebugType is not ("portable" or "none"))
         {
-            Error("FP5001", "The FPAS SDK requires sources, net10.0, OutputType Exe or Library, and DebugType portable or none.");
+            Error("FP5001", "The FPAS SDK requires sources, net10.0, OutputType Exe, WinExe or Library, and DebugType portable or none.");
             return false;
         }
         try

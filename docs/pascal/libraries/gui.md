@@ -16,7 +16,7 @@ transitively. Use the same release of the libraries and SDK.
 <Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Fpas.Ui.Gui" Version="0.1.0-dev" />
@@ -144,6 +144,8 @@ the application. Single-file bundles it for .NET extraction. NativeAOT staticall
 links CUI so the executable needs no separate CUI library or extraction. All modes
 deliver license notices. NativeAOT still requires the .NET platform's native
 compiler/linker and development libraries when publishing.
+Set `<OutputType>WinExe</OutputType>` to publish an EXE that starts without a
+console on Windows.
 
 The initial targets are Windows x64 and Linux x64. Linux uses X11, including
 XWayland where available, and needs an accessible display. Headless validation

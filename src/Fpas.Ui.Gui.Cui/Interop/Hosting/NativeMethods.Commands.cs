@@ -5,6 +5,10 @@ namespace Fpas.Ui.Gui.Cui.Interop;
 
 internal static partial class NativeMethods
 {
+    [LibraryImport(Library, EntryPoint = "cui_app_open_url", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial byte OpenUrl(string target);
+
     [LibraryImport(Library, EntryPoint = "cui_app_set_title", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void SetTitle(nint app, string title);

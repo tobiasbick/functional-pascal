@@ -1,6 +1,6 @@
 unit Fpas.Ui.Gui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Gui.Internal.Hosting.ThemeApplication as ThemeApplication, Fpas.Ui.Gui.Internal.Hosting.KeyBindings as KeyBindings, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Internal.Hosting.FrameControls as FrameControls, Fpas.Ui.Gui.Internal.Hosting.Requests as Requests, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Gui.Internal.Hosting.ThemeApplication as ThemeApplication, Fpas.Ui.Gui.Internal.Hosting.KeyBindings as KeyBindings, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Internal.Hosting.FrameControls as FrameControls, Fpas.Ui.Gui.Internal.Hosting.Requests as Requests, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks, Fpas.Ui.Gui.Windows as Windows;
 
 // Takes ownership of a native window and drives shared MVU transitions on its creating thread.
 //
@@ -96,6 +96,12 @@ requires Capacity > 0;
   begin
     CheckOwner();
     return Window.IsSoftware;
+  end function;
+
+  function Inspect(): Windows.Info;
+  begin
+    CheckOwner();
+    return new Windows.Info(Window.Size, Window.State, Window.Backend, Window.NativeWindow);
   end function;
 
   function Placement(): Cui.CuiWindowPlacement;
@@ -431,7 +437,7 @@ begin
     ThemeApplication.Apply(Window, CurrentTheme);
     Window.SetResizeRenderer(ResizeDraw);
     return App.Session<TMsg>.Create(
-      Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture, Placement
+      Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture, Placement, Inspect
     );
   catch Error: Sys.Exception do
     Stop();

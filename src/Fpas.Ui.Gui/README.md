@@ -17,6 +17,10 @@ CUI's defaults. `FixedSize` disables interactive resizing/maximization.
 filename without its suffix; Windows ignores it. These are creation options.
 Set `Placement` to open at a saved place, maximized if it was; see
 [window state and placement](#window-state-and-placement).
+`Continuous` requests frames while idle, for example for video.
+`NoVsync` lets OpenGL present without waiting for vertical sync.
+`Hidden` creates the window without showing it, for example for off-screen tests.
+All three default to false.
 
 `TraceGeometry.ReadSpanRectangle` reads a trace span's logical rectangle through
 an owner-thread MVU command after presentation. The native trace determines
@@ -165,6 +169,11 @@ the update receives nothing. CUI also returns no selection when the platform
 helper is unavailable or Open returns a filter mismatch. Linux requires
 Zenity or KDialog on `PATH`. Dialog messages map through MVU feature slices.
 
+To ask the desktop to open a trusted URL or absolute path with its registered
+handler, call `Fpas.Ui.Gui.Desktop.TryOpen(Target)`. It returns whether CUI
+could dispatch the request. On Linux this requires `xdg-open`, and the
+handler may finish asynchronously.
+
 ## Clipboard
 
 Return `Fpas.Ui.Gui.Clipboard.WriteText<TMsg>(Text)` to copy plain text from an
@@ -239,6 +248,12 @@ replaces `Width` and `Height` and is clamped to CUI's minimum window size.
 Read the final placement for saving from the session: drive `Start` or `StartThemed` with `Step` and
 call `Session.Placement()` after the last step and before `Dispose`. It then
 returns the placement the window had when it closed.
+
+`Session.InspectWindow()` reads live logical size, current state, backend
+name and native handle on the owner thread. A minimized window reports its
+current state here and its restore state in the placement. Use the backend
+name to interpret the borrowed handle, such as an HWND on Win32 or an X11
+Window on X11. The handle belongs to the session while the window is live.
 
 The position is in desktop coordinates: pixels on Windows and X11, points on
 macOS. Keep it only to pass it back. A place on no screen is left to the

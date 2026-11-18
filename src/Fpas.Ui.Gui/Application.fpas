@@ -1,6 +1,9 @@
 unit Fpas.Ui.Gui.Application;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+uses
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Windows as Windows,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record
@@ -27,13 +30,29 @@ public type Options = record
   public FixedSize: bool := false;
   // Linux desktop identity, matching the .desktop filename without its suffix.
   public AppId: string := '';
+  // Whether to render even when there is no input or animation.
+  public Continuous: bool := false;
+  // Whether OpenGL presents without waiting for vertical sync.
+  public NoVsync: bool := false;
+  // Whether to create the window without showing it, for example during testing.
+  public Hidden: bool := false;
 end record;
 
 function CreateWindow(Settings: Options): Cui.CuiWindow;
 begin
   return new Cui.CuiWindow(
-    Settings.Title, Settings.Width, Settings.Height, Settings.Renderer, false, Settings.Placement,
-    Settings.MinimumWidth, Settings.MinimumHeight, Settings.FixedSize, Settings.AppId
+    Settings.Title,
+    Settings.Width,
+    Settings.Height,
+    Settings.Renderer,
+    Settings.Continuous,
+    Settings.Placement,
+    Settings.MinimumWidth,
+    Settings.MinimumHeight,
+    Settings.FixedSize,
+    Settings.AppId,
+    Settings.NoVsync,
+    Settings.Hidden
   );
 end function;
 
@@ -86,6 +105,7 @@ public type Session<TMsg> = record implements Sys.IDisposable
   Capture: procedure(string);
   Release: procedure();
   Place: function(): Cui.CuiWindowPlacement;
+  Inspect: function(): Windows.Info;
 
   // Wraps the host implementation's operations.
   //
@@ -98,16 +118,37 @@ public type Session<TMsg> = record implements Sys.IDisposable
   // - `Capture`: Writes the presented native frame on the owner.
   // - `Release`: Stops and releases the session on the owner.
   // - `Place`: Reads the window placement on the owner, or the one kept when the window closed.
+  // - `Inspect`: Reads the live window information on the owner.
   //
   // ## Returns
   // The owned session.
   public static function Create(
     Process: function(): bool; Enqueue: function(TMsg): Core.Admission;
     Read: function(): Frame; Status: function(): bool; Software: function(): bool;
-    Release: procedure(); Capture: procedure(string); Place: function(): Cui.CuiWindowPlacement
+    Release: procedure(); Capture: procedure(string); Place: function(): Cui.CuiWindowPlacement;
+    Inspect: function(): Windows.Info
   ): Session<TMsg>;
   begin
-    return new Session<TMsg>(Process, Enqueue, Read, Status, Software, Capture, Release, Place);
+    return new Session<TMsg>(
+      Process,
+      Enqueue,
+      Read,
+      Status,
+      Software,
+      Capture,
+      Release,
+      Place,
+      Inspect
+    );
+  end function;
+
+  // Reads the live native window on the owner thread.
+  //
+  // ## Returns
+  // Current size, state, backend and borrowed native handle. Throws after the window is released.
+  public function InspectWindow(): Windows.Info;
+  begin
+    return self.Inspect();
   end function;
 
   // Processes admitted messages and presents one frame, waiting for native input when idle.

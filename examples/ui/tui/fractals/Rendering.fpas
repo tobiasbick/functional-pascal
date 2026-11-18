@@ -1,0 +1,124 @@
+unit Fractals.Rendering;
+
+uses
+  Fractals.Camera as C, Fpas.Ui.TerminalExtensions.CellGrids as Grids,
+  Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys, System.Collections.Generic as Lists, System.Threading as Threads;
+
+const Ocean: array of int := [$051025, $143F79, $1884B3, $51C9D4, $DCF7F4];
+const Ember: array of int := [$300909, $9E2A15, $E16D1C, $FFC25E, $FFF2D3];
+const Aurora: array of int := [$12122D, $553D95, $407DAD, $3AC9A4, $DCF5C2];
+const Roots: array of int := [$E88167, $6FC393, $749CEB];
+const Interior: int := $080D19;
+
+function Blend(A: int; B: int; Amount: double): int;
+  function Channel(Shift: int): int;
+  begin
+    const From: int := (A shr Shift) and 255;
+    const Target: int := (B shr Shift) and 255;
+    return cast<int>(From + (Target - From) * Amount);
+  end function;
+begin
+  return (Channel(16) shl 16) or (Channel(8) shl 8) or Channel(0);
+end function;
+
+function Newton(X: double; Y: double; Limit: int): int;
+begin
+  var Re: double := X;
+  var Im: double := Y;
+  for N: int := 0 to Limit - 1 do
+    const R2: double := Re * Re - Im * Im;
+    const I2: double := 2.0 * Re * Im;
+    const Den: double := R2 * R2 + I2 * I2;
+    if Den < 1e-12 then
+      return Interior;
+    end if;
+    const NextX: double := (2.0 * Re + R2 / Den) / 3.0;
+    const NextY: double := (2.0 * Im - I2 / Den) / 3.0;
+    const Dx: double := NextX - Re;
+    const Dy: double := NextY - Im;
+    if Dx * Dx + Dy * Dy < 1e-6 then
+      const Root: int := if NextX > 0.0 then
+        0
+      elsif NextY > 0.0 then
+        1
+      else
+        2
+      end if;
+      return Blend(Interior, Roots[Root], 0.18 + 0.82 * Sys.Math.Exp(-0.09 * N));
+    end if;
+
+    Re := NextX;
+    Im := NextY;
+  end for;
+
+  return Interior;
+end function;
+
+function ColorAt(View: C.Camera; X: double; Y: double; Ramp: array of int): int;
+begin
+  if View.Family = C.Kind.Newton then
+    return Newton(X, Y, View.Iterations);
+  end if;
+  var Re: double := 0.0;
+  var Im: double := 0.0;
+  var Cr: double := X;
+  var Ci: double := Y;
+  if View.Family = C.Kind.Julia then
+    Re := X;
+    Im := Y;
+    Cr := View.JuliaX;
+    Ci := View.JuliaY;
+  end if;
+  var N: int := 0;
+  while N < View.Iterations and Re * Re + Im * Im <= 256.0 do
+    const Square: double := Re * Re - Im * Im;
+    const Cross: double := 2.0 * Re * Im;
+    Im := Ci + (case View.Family of
+      when C.Kind.BurningShip: Sys.Math.Abs(Cross);
+      when C.Kind.Tricorn: -Cross;
+      else Cross;
+    end case);
+    Re := Square + Cr;
+    N := N + 1;
+  end while;
+
+  if N = View.Iterations then
+    return Interior;
+  end if;
+  const Smooth: double := N + 1.0 - Sys.Math.Log2(0.5 * Sys.Math.Log(Re * Re + Im * Im));
+  const Phase: double := Sys.Math.Abs(
+    Sys.Math.IEEERemainder(Smooth / 10.0, 2.0)
+  ) * (Ramp.Length - 1);
+  const Index: int := Sys.Math.Min(cast<int>(Phase), Ramp.Length - 2);
+  return Blend(Ramp[Index], Ramp[Index + 1], Phase - Index);
+end function;
+
+// Renders `View` into an immutable `Columns` by `Rows` image.
+// Checks `Token` while sampling so a new camera can supersede this frame.
+public function Draw(View: C.Camera; Columns: int; Rows: int; Token: Threads.CancellationToken): Grids.Image;
+requires Columns > 0 and Rows > 0;
+begin
+  const Ramp: array of int := case View.Colors of
+    when C.Palette.Ember: Ember;
+    when C.Palette.Aurora: Aurora;
+    else Ocean;
+  end case;
+  const Step: double := C.PixelStep(View, Rows);
+  const Pixels: Lists.List<T.Cell> := new Lists.List<T.Cell>(Rows * Columns);
+  for Row: int := 0 to Rows - 1 do
+    const Top: double := View.Y + (Rows - 2.0 * Row - 0.5) * Step;
+    for Col: int := 0 to Columns - 1 do
+      if Col mod 32 = 0 then
+        Token.ThrowIfCancellationRequested();
+      end if;
+      const X: double := View.X + (Col + 0.5 - 0.5 * Columns) * Step;
+      const Above: int := ColorAt(View, X, Top, Ramp);
+      const Below: int := ColorAt(View, X, Top - Step, Ramp);
+      Pixels.Add(new T.Cell('▀', new T.Style(Above, Below)));
+    end for;
+  end for;
+
+  return Grids.Image.Create(Columns, Rows, Pixels.ToArray());
+end function;
+
+end unit;

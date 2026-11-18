@@ -10,7 +10,7 @@ public type Options = record
   public Tone: S.Tone := S.Tone.Neutral;
   // Track height in logical points; zero uses CUI's default.
   public Height: float := 0.0F;
-  // Optional literal caption above the track.
+  // Optional literal caption, above the GUI track and before the terminal track.
   public Label: string := '';
   // Whether to show the rounded percentage for determinate progress.
   public ShowValue: bool := false;

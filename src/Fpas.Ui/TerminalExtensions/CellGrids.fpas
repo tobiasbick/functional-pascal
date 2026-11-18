@@ -1,0 +1,65 @@
+unit Fpas.Ui.TerminalExtensions.CellGrids;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys;
+
+// An immutable row-major image for a terminal cell grid.
+public type Image = record
+  Stride: int;
+  Height: int;
+  Pixels: array of T.Cell;
+
+  // Copies the row-major `Cells` of a `Columns` by `Rows` image.
+  // Returns a snapshot which may safely be published from a background worker.
+  public static function Create(Columns: int; Rows: int; Cells: array of T.Cell): Image;
+  requires Columns >= 0 and Rows >= 0;
+  requires cast<long>(Columns) * Rows = Cells.Length;
+  begin
+    const Copy: array of T.Cell := cast<array of T.Cell>(Cells.Clone());
+    for Cell: T.Cell in Copy do
+      if Cell = null or Cell.Colors = null or Cell.Text = null then
+        raise new Sys.ArgumentException('Every grid cell needs text and a style.');
+      end if;
+
+      if (Cell.Colors.Foreground ?? 0) < 0 or (Cell.Colors.Foreground ?? 0) > $FFFFFF
+        or (Cell.Colors.Background ?? 0) < 0 or (Cell.Colors.Background ?? 0) > $FFFFFF
+      then
+        raise new Sys.ArgumentOutOfRangeException('Cells', 'Grid colors must be 24-bit RGB.');
+      end if;
+    end for;
+
+    return new Image(Columns, Rows, Copy);
+  end function;
+
+  // Returns the cell at zero-based `Column` and `Row`, or null outside the image.
+  public function At(Column: int; Row: int): T.Cell?;
+  begin
+    if Column < 0 or Row < 0 or Column >= self.Stride or Row >= self.Height then
+      return null;
+    end if;
+
+    return self.Pixels[Row * self.Stride + Column];
+  end function;
+end record;
+
+// Notifications from a presented cell grid, in grid-local cells.
+public type Event = variant
+  // First visible allocation or new allocated width and height, in cells.
+  Resized(Columns: int; Rows: int);
+  // A completed click at a zero-based column and row, with the originating button.
+  Clicked(Column: int; Row: int; Button: K.MouseButton);
+  // Wheel motion at a zero-based column and row. Negative delta scrolls up.
+  Wheel(Column: int; Row: int; Delta: int);
+end variant;
+
+// Builds a terminal cell grid, filling the available layout space.
+// `TMsg` is the application message type. `Id` identifies the grid across frames.
+// `Content` is the image to display, or null while waiting for its first frame.
+// `Changed` maps local input and allocated size notifications to application messages.
+// Returns a terminal-only element. Images are clipped or padded without rescaling.
+public function CellGrid<TMsg>(Id: string; Content: Image?; Changed: function(Event): TMsg): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TerminalCellGrid(Id, Content, Changed);
+end function;
+
+end unit;

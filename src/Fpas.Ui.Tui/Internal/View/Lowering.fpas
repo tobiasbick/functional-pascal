@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -142,10 +142,22 @@ public function Prepare<TMsg>(
     case Node of
       when Ui.Element.FormattedText(_, _, _, _):
         raise new Sys.NotSupportedException('Formatted text requires the graphical host.');
+      when Ui.Element.TerminalCellGrid(
+        const Id: string,
+        const Content: Grids.Image?,
+        const Changed: function(Grids.Event): TMsg
+      ):
+        return E.Element<TMsg>.CellGrid(Id, Content, Changed);
       when Ui.Element.Label(const Text: string):
         return E.Element<TMsg>.Label(Text);
       when Ui.Element.ProgressBar(_, const Fraction: float, const Settings: ProgressBars.Options):
         return Progress.Lower<TMsg>(Fraction, Settings, Theme);
+      when Ui.Element.StatusBar(
+        const Id: string,
+        const Items: array of StatusBars.Item<TMsg>,
+        const HideBorder: bool
+      ):
+        return StatusLine.Lower<TMsg>(Id, Items, HideBorder, Theme);
       when Ui.Element.Separator(const Title: string):
         return E.Element<TMsg>.Separator(Title);
       when Ui.Element.ButtonAction(
@@ -752,7 +764,7 @@ public function Prepare<TMsg>(
         _,
         _,
         _
-      ), Ui.Element.StatusBar(_, _, _), Ui.Element.Dockspace(_, _, _, _), Ui.Element.SplitView(
+      ), Ui.Element.Dockspace(_, _, _, _), Ui.Element.SplitView(
         _,
         _,
         _,

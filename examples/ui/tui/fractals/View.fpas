@@ -1,0 +1,209 @@
+unit Fractals.View;
+
+uses
+  Fractals.Camera as C, Fractals.Explorer as X, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.TerminalExtensions.Views as V,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.CellGrids as G,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars,
+  Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Globalization as Culture;
+
+function Fixed(Cells: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(Cells)));
+end function;
+
+function Fill(): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fill, Grow := 1);
+end function;
+
+function Number(Value: double; Format: string): string;
+begin
+  return Value.ToString(Format, Culture.CultureInfo.InvariantCulture);
+end function;
+
+function Gauge(Id: string; Caption: string; Keys: string; Value: string; Fraction: double; Tone: S.Tone): E.Element<X.Msg>;
+begin
+  return E.Row<X.Msg>(
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
+    E.Size<X.Msg>(E.Text<X.Msg>(Caption), Fixed(10)),
+    E.Size<X.Msg>(E.Styled<X.Msg>(E.Text<X.Msg>(Keys), S.Role.Muted), Fixed(9)),
+    Bars.ProgressBar<X.Msg>(Id, cast<float>(Fraction), new Bars.Options(Tone := Tone)),
+    E.Size<X.Msg>(E.Text<X.Msg>(Value), Fixed(11))
+  );
+end function;
+
+function Footer(State: X.Model): E.Element<X.Msg>;
+begin
+  const Camera: C.Camera := State.Camera;
+  const Palette: string := if Camera.Family = C.Kind.Newton then
+    'Root basins'
+  elsif Camera.Colors = C.Palette.DeepOcean then
+    'Deep Ocean'
+  else
+    Camera.Colors.ToString()
+  end if;
+  const Parameter: string := if Camera.Family = C.Kind.Julia then
+    '   c (' + Number(Camera.JuliaX, '0.###') + ', ' + Number(Camera.JuliaY, '0.###') + ')'
+  else
+    ''
+  end if;
+  const Details: string := 'Center (' + Number(
+    Camera.X,
+    '0.########'
+  ) + ', ' + Number(Camera.Y, '0.########') + ')   ' + Palette + Parameter;
+  const Body: E.Element<X.Msg> := E.Column<X.Msg>(
+    E.Text<X.Msg>(State.Status + '   ' + Details),
+    Gauge(
+      'iterations',
+      'Iterations',
+      'PgUp/PgDn',
+      Camera.Iterations.ToString() + ' / 2048',
+      Camera.Iterations / 2048.0,
+      S.Tone.Info
+    ),
+    Gauge(
+      'zoom', 'Zoom', '+/-', Number(Camera.Zoom, '0.##') + '×',
+      Sys.Math.Log(Camera.Zoom / 0.25) / Sys.Math.Log(1000000.0 / 0.25), S.Tone.Teal
+    ),
+    Status.StatusBar<X.Msg>(
+      'hints', [
+        Status.Item<X.Msg>.Text(
+          new Status.Label(
+            if State.InPlot then
+              'Tab: list'
+            else
+              'Tab: image'
+            end if
+          )
+        ),
+        Status.Item<X.Msg>.Text(new Status.Label('  Wheel zoom')),
+        Status.Item<X.Msg>.Text(new Status.Label('  Click center')),
+        Status.Item<X.Msg>.Text(new Status.Label('  R reset   H help   Esc quit'))
+      ], true
+    )
+  );
+  const Gutter: E.Element<X.Msg> := E.Size<X.Msg>(E.Text<X.Msg>(''), Fixed(1));
+  return E.Border<X.Msg>(
+    E.Row<X.Msg>(Gutter, E.Size<X.Msg>(Body, Fill()), Gutter), 'Status'
+  );
+end function;
+
+function Sidebar(State: X.Model): E.Element<X.Msg>;
+begin
+  const Items: array of Nav.Item<X.Msg> := Sys.Array.ConvertAll<C.Kind, Nav.Item<X.Msg>>(
+    Sys.Enum.GetValues<C.Kind>(),
+    function(Family: C.Kind): Nav.Item<X.Msg> => new Nav.Item<X.Msg>(
+      C.Title(Family),
+      C.Title(Family),
+      X.Msg.SelectFamily(Family)
+    )
+  );
+  return E.Border<X.Msg>(
+    E.ScrollView<X.Msg>(
+      'family-scroll',
+      Nav.Sidebar<X.Msg>(
+        'families',
+        [new Nav.Section<X.Msg>('', Items)],
+        C.Title(State.Camera.Family)
+      )
+    ), 'Fractals'
+  );
+end function;
+
+function Shortcuts(): array of K.ShortcutBinding<X.Msg>;
+begin
+  return [
+    K.Shortcut<X.Msg>(K.Key.Tab, K.KeyModifiers.None, X.Msg.SwitchPane),
+    K.Shortcut<X.Msg>(K.Key.Tab, K.KeyModifiers.Shift, X.Msg.SwitchPane),
+    K.Shortcut<X.Msg>(K.Key.Left, K.KeyModifiers.None, X.Msg.Pan(-1, 0)),
+    K.Shortcut<X.Msg>(K.Key.Right, K.KeyModifiers.None, X.Msg.Pan(1, 0)),
+    K.Shortcut<X.Msg>(K.Key.Up, K.KeyModifiers.None, X.Msg.Pan(0, 1)),
+    K.Shortcut<X.Msg>(K.Key.Down, K.KeyModifiers.None, X.Msg.Pan(0, -1)),
+    K.Shortcut<X.Msg>(K.Key.PageUp, K.KeyModifiers.None, X.Msg.Iterations(32)),
+    K.Shortcut<X.Msg>(K.Key.PageDown, K.KeyModifiers.None, X.Msg.Iterations(-32)),
+    K.Shortcut<X.Msg>(K.Key.Escape, K.KeyModifiers.None, X.Msg.Quit),
+    K.CharacterShortcut<X.Msg>('+', X.Msg.Magnify(1)),
+    K.CharacterShortcut<X.Msg>('-', X.Msg.Magnify(-1)),
+    K.CharacterShortcut<X.Msg>('1', X.Msg.Palette(C.Palette.DeepOcean)),
+    K.CharacterShortcut<X.Msg>('2', X.Msg.Palette(C.Palette.Ember)),
+    K.CharacterShortcut<X.Msg>('3', X.Msg.Palette(C.Palette.Aurora)),
+    K.CharacterShortcut<X.Msg>('w', X.Msg.Julia(0, 1)),
+    K.CharacterShortcut<X.Msg>(
+      's',
+      X.Msg.Julia(0, -1)
+    ),
+    K.CharacterShortcut<X.Msg>(
+      'a',
+      X.Msg.Julia(-1, 0)
+    ),
+    K.CharacterShortcut<X.Msg>('d', X.Msg.Julia(1, 0)),
+    K.CharacterShortcut<X.Msg>('W', X.Msg.Julia(0, 1)),
+    K.CharacterShortcut<X.Msg>(
+      'S',
+      X.Msg.Julia(0, -1)
+    ),
+    K.CharacterShortcut<X.Msg>(
+      'A',
+      X.Msg.Julia(-1, 0)
+    ),
+    K.CharacterShortcut<X.Msg>('D', X.Msg.Julia(1, 0)),
+    K.CharacterShortcut<X.Msg>('r', X.Msg.Reset),
+    K.CharacterShortcut<X.Msg>('h', X.Msg.Help(true)),
+    K.CharacterShortcut<X.Msg>('R', X.Msg.Reset),
+    K.CharacterShortcut<X.Msg>('H', X.Msg.Help(true))
+  ];
+end function;
+
+function HelpView(): E.Element<X.Msg>;
+begin
+  return E.Column<X.Msg>(
+    new L.Flow(Gap := L.Spacing.Tight),
+    E.Text<X.Msg>('Tab / Shift+Tab   Switch between the list and image'),
+    E.Text<X.Msg>('List: ↑/↓ to browse, Enter to select'),
+    E.Text<X.Msg>('Image: arrow keys to pan, click to center'),
+    E.Text<X.Msg>('Wheel   Zoom at the pointer     + / -   Zoom at center'),
+    E.Text<X.Msg>('Page Up / Page Down in the image   Raise / lower iterations by 32'),
+    E.Text<X.Msg>('1 / 2 / 3   Change the escape-time palette'),
+    E.Text<X.Msg>('W A S D   Adjust the Julia constant'),
+    E.Text<X.Msg>('R / middle click   Reset the current fractal'),
+    E.Text<X.Msg>('Esc   Close help or quit the explorer')
+  );
+end function;
+
+// Returns a dark theme with readable captions along the panel borders.
+public function Theme(): Themes.Theme;
+begin
+  const Base: Themes.Theme := Themes.Dark(Themes.Accent.Blue);
+  return Base with
+    Colors := Base.Colors with
+      Border := Base.Colors.TextMuted;
+    end with;
+  end with;
+end function;
+
+// Builds the explorer screen, controls and status panel from `State`.
+public function View(State: X.Model): E.Element<X.Msg>;
+begin
+  const Plot: E.Element<X.Msg> := E.Border<X.Msg>(
+    G.CellGrid<X.Msg>('plot', State.Image, X.Msg.Grid),
+    C.Title(State.Camera.Family)
+  );
+  const Panes: E.Element<X.Msg> := E.Row<X.Msg>(
+    new L.Flow(Align := L.Alignment.Stretch),
+    E.Size<X.Msg>(Sidebar(State), Fixed(16)), E.Size<X.Msg>(Plot, Fill())
+  );
+  const Screen: E.Element<X.Msg> := V.Screen<X.Msg>(
+    E.Column<X.Msg>(E.Size<X.Msg>(Panes, Fill()), Footer(State)), [], Shortcuts()
+  );
+  return Sheets.Sheet<X.Msg>(
+    'help',
+    Screen,
+    HelpView(),
+    State.Help,
+    new Sheets.Options('Controls'),
+    X.Msg.Help(false)
+  );
+end function;
+
+end unit;

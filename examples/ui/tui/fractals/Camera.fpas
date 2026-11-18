@@ -1,0 +1,89 @@
+unit Fractals.Camera;
+
+uses System as Sys;
+
+// Fractal families available in the explorer.
+public type Kind = enum
+  // Quadratic parameter plane.
+  Mandelbrot;
+  // Quadratic dynamical plane for a fixed constant.
+  Julia;
+  // Component-wise absolute value before squaring.
+  BurningShip;
+  // Conjugate before squaring.
+  Tricorn;
+  // Basins of the three cubic roots of unity.
+  Newton;
+end enum;
+
+// Color ramps for escape times.
+public type Palette = enum
+  // Blue through turquoise.
+  DeepOcean;
+  // Red through yellow.
+  Ember;
+  // Violet through green.
+  Aurora;
+end enum;
+
+// Coordinates and iteration parameters shared by input and rendering.
+public type Camera = record
+  // Active recurrence.
+  public Family: Kind := Kind.Mandelbrot;
+  // Real coordinate at the image center.
+  public X: double := -0.75;
+  // Imaginary coordinate at the image center.
+  public Y: double := 0.0;
+  // Vertical extent at unit magnification.
+  public BaseSpan: double := 2.4;
+  // Magnification relative to the initial view.
+  public Zoom: double := 1.0;
+  // Maximum recurrence steps per sample.
+  public Iterations: int := 160;
+  // Active escape-time palette.
+  public Colors: Palette := Palette.DeepOcean;
+  // Real part of the Julia constant.
+  public JuliaX: double := -0.8;
+  // Imaginary part of the Julia constant.
+  public JuliaY: double := 0.156;
+end record;
+
+// Returns the initial camera for the selected `Family`.
+public function Home(Family: Kind): Camera;
+ensures (Result: Camera): Result.Family = Family and Result.Zoom = 1.0;
+begin
+  case Family of
+    when Kind.Mandelbrot:
+      return new Camera();
+    when Kind.Julia:
+      return new Camera(Family, X := 0.0, Iterations := 96);
+    when Kind.BurningShip:
+      return new Camera(Family, X := -0.45, Y := -0.55, BaseSpan := 2.8, Colors := Palette.Ember);
+    when Kind.Tricorn:
+      return new Camera(Family, X := 0.0, BaseSpan := 2.8, Colors := Palette.Aurora);
+    when Kind.Newton:
+      return new Camera(Family, X := 0.0, BaseSpan := 3.0, Iterations := 48);
+    else
+      raise new Sys.ArgumentOutOfRangeException('Family');
+  end case;
+end function;
+
+// Returns the sidebar and plot title for `Family`.
+public function Title(Family: Kind): string;
+begin
+  return if Family = Kind.BurningShip then
+    'Burning Ship'
+  else
+    Family.ToString()
+  end if;
+end function;
+
+// Returns the complex-plane distance between horizontally adjacent cells for `View` at `Rows` height.
+// Two vertical half-block samples share each terminal cell.
+public function PixelStep(View: Camera; Rows: int): double;
+requires Rows > 0;
+begin
+  return View.BaseSpan / (2.0 * Rows * View.Zoom);
+end function;
+
+end unit;

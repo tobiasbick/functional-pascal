@@ -16,12 +16,13 @@ internal static class TuiFixture
 
     internal static string Fixtures => Path.Combine(AppContext.BaseDirectory, "Fixtures", "tui");
 
-    internal static async Task CompileExample(Debuggee program, string example)
+    internal static async Task CompileExample(Debuggee program, string example, string? fixture = null)
     {
         var library = await BuildLibrary(program);
         var folder = Path.Combine(Fixtures, example);
         var main = Path.Combine(folder, "main.fpas");
-        await program.Compile(await File.ReadAllTextAsync(main),
+        var entry = fixture is null ? main : Path.Combine(Fixtures, fixture);
+        await program.Compile(await File.ReadAllTextAsync(entry),
             [.. Directory.GetFiles(folder, "*.fpas").Where(path => path != main),
              .. References(program, library)]);
     }

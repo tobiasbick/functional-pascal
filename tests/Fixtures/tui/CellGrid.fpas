@@ -1,0 +1,173 @@
+program CellGridContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.CellGrids as G,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.Views as Views,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App,
+  System as Sys, System.Collections.Generic as C, System.Console as Console;
+
+procedure Check(Value: bool; Reason: string);
+begin
+  if not Value then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+type Msg = variant
+  Grid(Event: G.Event);
+  Toggle;
+  Scrolled;
+end variant;
+
+procedure Verify();
+  function Update(Visible: bool; Message: Msg): Mvu.Transition<bool, Msg>;
+  begin
+    case Message of
+      when Msg.Grid(const Event: G.Event):
+        Events.Add(Event);
+      when Msg.Toggle:
+        return new Mvu.Transition<bool, Msg>(not Visible, []);
+      when Msg.Scrolled:
+        raise new Sys.InvalidOperationException('Grid wheel escaped to the enclosing scroll view.');
+    end case;
+
+    return new Mvu.Transition<bool, Msg>(Visible, []);
+  end function;
+
+  function View(Visible: bool): E.Element<Msg>;
+  begin
+    const Grid: E.Element<Msg> := if Visible then
+      G.CellGrid<Msg>('grid', Image, Msg.Grid)
+    else
+      E.Text<Msg>('hidden')
+    end if;
+    const Tall: E.Element<Msg> := E.Column<Msg>(
+      E.Size<Msg>(Grid, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(6))))
+    );
+    return Views.Screen<Msg>(
+      E.Border<Msg>(
+        E.ScrollView<Msg>(
+          'clip', Tall, L.ScrollPosition.Offset(L.Measure.Cells(2)),
+          function(Value: L.ScrollChange): Msg => Msg.Scrolled, false
+        )
+      ), [],
+      [K.CharacterShortcut<Msg>('v', Msg.Toggle)]
+    );
+  end function;
+
+  procedure Drain(Session: App.HeadlessSession);
+  begin
+    for Attempt: int := 1 to 8 do
+      case Session.Step() of
+        when App.StepResult.Idle:
+          return;
+        when App.StepResult.Failed(_, _, const Stage: string, const Reason: string):
+          raise new Sys.InvalidOperationException(Stage + ': ' + Reason);
+        else
+      end case;
+    end for;
+
+    raise new Sys.InvalidOperationException('Layout notifications did not settle.');
+  end procedure;
+
+  procedure Send(Session: App.HeadlessSession; Input: App.Input);
+  begin
+    discard Session.Send(Input);
+    Drain(Session);
+  end procedure;
+begin
+  const Events: C.List<G.Event> := new C.List<G.Event>();
+  const Style: T.Style := new T.Style($123456, $654321);
+  const Dot: T.Cell := new T.Cell('.', Style);
+  const Cells: array of T.Cell := [
+    Dot,
+    Dot,
+    Dot,
+    Dot,
+    new T.Cell('▓', Style),
+    new T.Cell('界', Style)
+  ];
+  const Image: G.Image := G.Image.Create(2, 3, Cells);
+  Cells[4] := Dot;
+  using const Session: App.HeadlessSession := App.StartHeadless<bool, Msg>(
+    true,
+    Update,
+    View,
+    8,
+    5
+  );
+  Drain(Session);
+  Check(
+    Events.Count = 1 and Events[0] = G.Event.Resized(6, 6),
+    'First size must describe the full allocation.'
+  );
+  Send(Session, App.Input.Focus('grid'));
+  const Frame: App.Frame := Session.Snapshot();
+  Check(
+    Frame.Cells[9] = new T.Cell('▓', Style) and Frame.Cells[10] = new T.Cell(' ', Style),
+    'Clipped row, copied RGB cells and single-column glyphs.'
+  );
+  Check(Frame.Cells[11].Text = ' ', 'Narrow image is padded.');
+
+  Send(Session, App.Input.ButtonPointer(K.PointerKind.Press, K.MouseButton.Middle, 2, 2));
+  Send(Session, App.Input.ButtonPointer(K.PointerKind.Release, K.MouseButton.Middle, 2, 2));
+  Send(Session, App.Input.Scroll(1, 1, -3));
+  Send(Session, App.Input.Click(6, 3));
+  Send(Session, App.Input.Click(7, 3));
+  Check(
+    Events.Count = 4 and Events[1] = G.Event.Clicked(1, 3, K.MouseButton.Middle)
+    and Events[2] = G.Event.Wheel(0, 2, -3) and Events[3] = G.Event.Clicked(
+      5,
+      4,
+      K.MouseButton.Left
+    ),
+    'Pointer events use the original allocation and exclude the border.'
+  );
+
+  Send(Session, App.Input.Resize(8, 6));
+  Check(Events.Count = 4, 'Changing only the clip must not emit another size.');
+  Send(Session, App.Input.Resize(10, 6));
+  Check(Events.Count = 5 and Events[4] = G.Event.Resized(8, 6), 'A new allocation emits one size.');
+  Send(Session, App.Input.Character('v'));
+  Send(Session, App.Input.Character('v'));
+  Check(Events.Count = 6 and Events[5] = G.Event.Resized(8, 6), 'Remount reports size again.');
+end procedure;
+
+// One frame can contain more first-size notifications than the host mailbox can admit.
+procedure ManyVisibleGrids();
+  function View(State: int): E.Element<int>;
+  begin
+    const Children: C.List<E.Element<int>> := new C.List<E.Element<int>>();
+    for Index: int := 0 to 69 do
+      const Id: int := Index;
+      Children.Add(G.CellGrid<int>(Id.ToString(), null, function(Event: G.Event): int => Id));
+    end for;
+
+    return E.Column<int>(Children.ToArray());
+  end function;
+
+  function Update(State: int; Id: int): Mvu.Transition<int, int>;
+  begin
+    Check(Id = State, 'Size messages must arrive once in layout order.');
+    return new Mvu.Transition<int, int>(State + 1, []);
+  end function;
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(0, Update, View, 4, 70);
+  for Index: int := 0 to 69 do
+    case Session.Step() of
+      when App.StepResult.EffectProcessed(_):
+      else
+        raise new Sys.InvalidOperationException('Lost a size notification under backpressure.');
+    end case;
+  end for;
+
+  Check(Session.Step() = App.StepResult.Idle, 'The size backlog must settle.');
+end procedure;
+
+begin
+  ManyVisibleGrids();
+  Verify();
+  Console.WriteLine('Cell grid contracts verified');
+end;
+
+end program;

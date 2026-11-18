@@ -16,6 +16,8 @@ public procedure Apply<TMsg>(
 begin
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
+    when A.Binding.Grid(_, _):
+      return;
     when A.Binding.Scroll(const View: V.Viewport<TMsg>):
       if Focused then
         Mark(

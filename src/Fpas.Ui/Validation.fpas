@@ -2876,6 +2876,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Current: E.CacheEntry<TMsg> := Resolve(Old);
         Subviews.Add(Id, Current);
         Visit(Current.Tree, At);
+      when E.Element.TerminalCellGrid(const Id: string, _, _):
+        Rules.RequireProfile(Profile, Target.Terminal, Identify(Id, Location + '/cellGrid'));
       when E.Element.TerminalStyle(const Child: E.Element<TMsg>, const Colors: T.Style):
         const At: string := Location + '/cellStyle';
         Rules.RequireProfile(Profile, Target.Terminal, At);

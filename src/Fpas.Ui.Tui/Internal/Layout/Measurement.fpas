@@ -5,6 +5,8 @@ uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Inter
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
   case Node of
+    when E.Element.CellGrid(_, _, _):
+      return new E.Flex(Grow := 1);
     when E.Element.Sized(_, const Rule: E.Flex):
       return Rule;
     when E.Element.Decorated(const Child: E.Element<TMsg>, _):
@@ -29,6 +31,12 @@ end function;
 public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
+    when E.Element.StatusBar(_, _):
+      return if Horizontal then
+        0
+      else
+        Intrinsic<TMsg>(Node, false)
+      end if;
     when E.Element.Label(const Value: string):
       if not Horizontal then
         return if Value = '' then
@@ -133,7 +141,7 @@ public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E
 begin
   if Horizontal then
     case Node of
-      when E.Element.Progress(_, _, const Width: int?, _):
+      when E.Element.Progress(_, _, _, const Width: int?, _):
         if Width <> null then
           return new E.Flex(Basis := Width.Value, Maximum := Width.Value);
         end if;
@@ -262,16 +270,24 @@ begin
       end if;
 
       return G.LineCount(Value, Columns);
-    when E.Element.Progress(_, const Caption: string, const Width: int?, _):
+    when E.Element.StatusBar(const Row: E.Element<TMsg>, const HideBorder: bool):
       if Horizontal then
-        return Width ?? Sys.Math.Max(1, G.Measure(Caption));
+        return Intrinsic<TMsg>(Row, true);
       end if;
 
-      return if Caption = '' then
+      return if HideBorder then
         1
       else
         2
       end if;
+    when E.Element.CellGrid(_, _, _):
+      return 1;
+    when E.Element.Progress(_, const Caption: string, const Percent: string, const Width: int?, _):
+      if Horizontal then
+        return Width ?? (G.Measure(Caption) + Percent.Length + 8);
+      end if;
+
+      return 1;
     when E.Element.Separator(const Title: string):
       return if Horizontal and Title <> '' then
         G.Measure(G.SingleLine(Title)) + 4

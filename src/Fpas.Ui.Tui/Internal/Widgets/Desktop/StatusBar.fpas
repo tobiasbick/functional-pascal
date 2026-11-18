@@ -1,0 +1,81 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar;
+
+uses
+  Fpas.Ui.Widgets.Desktop.StatusBars as Bars, Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  System as Sys, System.Collections.Generic as C;
+
+// Resolves the shared status items into one terminal row and an optional divider.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity used to scope the actions.
+// - `Items`: Status items in visual order.
+// - `HideBorder`: Whether to omit the line above the row.
+// - `Theme`: Palette for the inline progress track.
+// ## Returns
+// A compact terminal status bar.
+public function Lower<TMsg>(Id: string; Items: array of Bars.Item<TMsg>; HideBorder: bool; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  for Item: Bars.Item<TMsg> in Items do
+    case Item of
+      when Bars.Item.Text(const Value: Bars.Label):
+        if Value.Text <> '' then
+          Parts.Add(E.Element<TMsg>.Label(Value.Text));
+        end if;
+      when Bars.Item.Action(
+        const Key: string,
+        const Value: Bars.Label,
+        const Tooltip: string,
+        const Enabled: bool,
+        const Clicked: TMsg
+      ):
+        const Caption: string := if Value.Text <> '' then
+          Value.Text
+        elsif Tooltip <> '' then
+          Tooltip
+        else
+          Key
+        end if;
+        Parts.Add(
+          E.Element<TMsg>.Action(
+            Menus.ItemId(Id, Key), new Actions.Direct<TMsg>(Clicked), Enabled,
+            new E.ActionView(
+              Caption, Role := 'status-item', Variant := S.ButtonVariant.Ghost,
+              ArrowFocus := false, Padding := 0, Joined := true, Hint := Tooltip
+            )
+          )
+        );
+      when Bars.Item.Progress(
+        const Value: float,
+        const Caption: string,
+        const Width: float,
+        const Indeterminate: bool
+      ):
+        if Caption <> '' then
+          Parts.Add(E.Element<TMsg>.Label(Caption));
+        end if;
+
+        if Indeterminate then
+          Parts.Add(E.Element<TMsg>.Label('…'));
+        else
+          const Cells: int := if Width > 0.0F then
+            cast<int>(Sys.Math.Min(cast<double>(E.MaximumColumns), Sys.Math.Ceiling(Width / 8.0)))
+          else
+            8
+          end if;
+          Parts.Add(E.Element<TMsg>.Progress(Value, '', '', Cells, Theme.Colors.ControlOn));
+        end if;
+      when Bars.Item.Spacer:
+        Parts.Add(E.Element<TMsg>.Sized(E.Element<TMsg>.Label(''), new E.Flex(Grow := 1)));
+    end case;
+  end for;
+  const Row: E.Element<TMsg> := E.Element<TMsg>.Stack(
+    Parts.ToArray(), true, new E.Flow(Gap := 1, Align := L.Alignment.Stretch)
+  );
+  return E.Element<TMsg>.StatusBar(Row, HideBorder);
+end function;
+
+end unit;

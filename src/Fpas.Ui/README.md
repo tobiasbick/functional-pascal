@@ -58,6 +58,7 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Copy button with transient feedback | Yes | Yes | Yes |
 | Icon button with tooltip, shortcut hint and busy state | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
+| Status bar with text, actions, progress and spacers | Yes | Yes | Yes |
 | Native table of contents and scroll anchors | | | Yes |
 | Native responsive grid, justification, cards, badges, metrics, avatar groups and empty states | | | Yes |
 | Tabs, breadcrumb, pagination and stepper | | | Yes |
@@ -1135,9 +1136,9 @@ native default). `Dither` uses CUI's drifting ordered-dot fill for either progre
 mode. Indeterminate bars omit percentages. Use `Elements.Size` for width.
 CUI owns interpolation and activity motion. The noninteractive `progress`
 GUI snapshot reports the invariant fraction or `indeterminate` in `Value`.
-The terminal paints determinate progress in one row with an optional caption
-and rounded percentage above it. Content and Fill widths use the available
-columns. Fixed caps the track and caption at the requested width.
+The terminal puts the caption, a two-color `─` line and the rounded percentage
+on one row. Content and Fill use the available columns. Fixed caps the entire
+row. On narrow rows the caption shortens to leave room for progress.
 
 `Fpas.Ui.Widgets.Feedback.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` uses CUI's activity animation,
 theme color and logical diameter; zero selects its default. It has a
@@ -1614,6 +1615,9 @@ tabs, status bar, docking workspace and split view.
   key before applying a move. Window-wide shortcuts are opt-in.
 - `StatusBars.StatusBar` takes text, keyed actions, progress and spacers. CUI
   chooses which items fit, and the callback on each action remains model-owned.
+  The terminal draws the items on one line with an optional divider above.
+  Spacers push trailing items to the right. Indeterminate progress displays an ellipsis.
+  Terminal actions use the caption, with the tooltip or key as a fallback for icon-only actions.
 - `Dockspaces.Dockspace` takes all panels on every frame, including closed and
   inactive panels. CUI draws the selected panel in each leaf and owns resizing,
   placement and tab drag. A panel with an `OnOpenChanged` callback can be closed.

@@ -90,6 +90,48 @@ public sealed class TuiGalleryTests
             Assert.Equal("Progress bar", Selected(restored));
             AssertProgress(restored, 26, 100);
 
+            await Click("Feedback");
+            var feedback = Preview(await Request("snapshot"), 26);
+            Assert.Matches(@"Uploading assets +─+ +68%", feedback);
+            Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", feedback);
+            await Key("Right");
+            Assert.Matches(@"Uploading assets +─+ +78%", Preview(await Request("snapshot"), 26));
+
+            await Click("Cell grid");
+            Assert.Equal("processed", Status(await Request("step")));
+            var gridFrame = await Request("snapshot");
+            var grid = Controls(gridFrame).Single(c => c.GetProperty("role").GetString() == "cell-grid");
+            int x = grid.GetProperty("column").GetInt32(), y = grid.GetProperty("row").GetInt32();
+            int width = grid.GetProperty("width").GetInt32(), height = grid.GetProperty("height").GetInt32();
+            Assert.True(width > 20 && height > 4);
+            Assert.Contains($"{width} × {height}", Preview(gridFrame, 26));
+            await Turn(new() { ["kind"] = "click", ["button"] = "left", ["column"] = x + 2, ["row"] = y + 1 });
+            var centered = await Request("snapshot");
+            Assert.Equal('+', centered.GetProperty("lines")[y + 1].GetString()![x + 2]);
+            await Turn(new() { ["kind"] = "scroll", ["column"] = x + 3, ["row"] = y, ["delta"] = -3 });
+            Assert.Contains("Wheel (3, 0) -3", Preview(await Request("snapshot"), 26));
+            await Resize(100, 30);
+            Assert.Equal("processed", Status(await Request("step")));
+            var resized = await Request("snapshot");
+            var bigger = Controls(resized).Single(c => c.GetProperty("role").GetString() == "cell-grid");
+            Assert.True(bigger.GetProperty("width").GetInt32() > width && bigger.GetProperty("height").GetInt32() > height);
+            Assert.Equal("idle", Status(await Request("step")));
+
+            await Click("Cell grid");
+            await Key("End");
+            await Key("Enter");
+            var chrome = await Request("snapshot");
+            var encoding = Controls(chrome).Single(c => c.GetProperty("role").GetString() == "status-item");
+            var footerRow = encoding.GetProperty("row").GetInt32();
+            Assert.InRange(footerRow, 26, 28);
+            var footer = chrome.GetProperty("lines")[footerRow].GetString()!;
+            Assert.Matches(@"main +Saved +Indexing 62% +─{8} +Ln 48, Col 17 +UTF-8", footer);
+            Assert.Contains("────────", chrome.GetProperty("lines")[footerRow - 1].GetString());
+            await Click("UTF-8");
+            Assert.Equal("UTF-16", Focused(await Request("snapshot")));
+            await Key("Enter");
+            Assert.Equal("UTF-8", Focused(await Request("snapshot")));
+
             Assert.Equal("unchanged", await Turn(new() { ["kind"] = "key", ["key"] = "Q", ["modifiers"] = 4 }));
             await process.WaitForExitAsync(token);
             Assert.Equal(0, process.ExitCode);
@@ -165,10 +207,12 @@ public sealed class TuiGalleryTests
     private static void AssertProgress(JsonElement frame, int leftWidth, int percent)
     {
         var preview = Preview(frame, leftWidth);
-        Assert.Contains($"Loading tracks  {percent}%", preview);
-        var track = Assert.Single(preview.Split('\n'), line => line.Contains('░') || line.Contains('█')).Trim();
-        var filled = (int)Math.Round(track.Length * percent / 100.0, MidpointRounding.AwayFromZero);
-        Assert.Equal(new string('█', filled) + new string('░', track.Length - filled), track);
+        var line = Assert.Single(preview.Split('\n'), row => row.TrimStart().StartsWith("Loading", StringComparison.Ordinal));
+        var parts = line.Split("  ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        Assert.Equal(3, parts.Length);
+        Assert.StartsWith(parts[0], "Loading tracks");
+        Assert.All(parts[1], cell => Assert.Equal('─', cell));
+        Assert.Equal($"{percent}%", parts[2]);
     }
 
     private static (int Border, int Surface) Colors(JsonElement frame)

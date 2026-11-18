@@ -1,6 +1,6 @@
 program RenderingContract;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -153,6 +153,34 @@ begin
   );
 end procedure;
 
+procedure BorderlessStatus();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      Status.StatusBar<int>(
+        'status', [
+          Status.Item<int>.Progress(0.0F, 'Scanning', 0.0F, true),
+          Status.Item<int>.Spacer,
+          Status.Item<int>.Action('encoding', new Status.Label(''), 'UTF-8', false, 1)
+        ], true
+      ),
+      E.Text<int>('Next row')
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 24, 2);
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(
+    Frame.Lines[0].StartsWith('Scanning …') and Frame.Lines[0].EndsWith('UTF-8'),
+    'A borderless status row aligns a trailing action across the available width.'
+  );
+  Check(Frame.Lines[1].TrimEnd() = 'Next row', 'A borderless status bar occupies exactly one row.');
+  Check(
+    Frame.Controls.Length = 1 and not Frame.Controls[0].Enabled and not Frame.Controls[0].Focused,
+    'A disabled status action is visible and cannot receive focus.'
+  );
+end procedure;
+
 procedure ProgressTracks();
   function View(State: int): E.Element<int>;
   begin
@@ -188,11 +216,16 @@ procedure ProgressTracks();
 begin
   using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 12, 4);
   const Frame: Tui.Frame := Session.Snapshot();
-  Check(Frame.Lines[0].TrimEnd() = '████░░░', 'Round and cap a fixed-width track.');
-  Check(Frame.Lines[1].TrimEnd() = '100%', 'Standalone percentage caption.');
-  Check(Frame.Lines[2] = new string(#9608, 12), 'Full track spans all available cells.');
+  Check(Frame.Lines[0].TrimEnd() = '───────', 'Fixed-width continuous track.');
+  const Filled: int? := Frame.Cells[0].Colors.Foreground;
+  const Remaining: int? := Frame.Cells[6].Colors.Foreground;
   Check(
-    Frame.Lines[3].Trim() = '' and Frame.Controls.Length = 0,
+    Filled <> Remaining and Frame.Cells[3].Colors.Foreground = Filled
+    and Frame.Cells[4].Colors.Foreground = Remaining, 'Half of seven rounds to four filled cells.'
+  );
+  Check(Frame.Lines[1] = '──────  100%', 'Track and percentage occupy one row.');
+  Check(
+    Frame.Lines[2].Trim() = '' and Frame.Controls.Length = 0,
     'Zero width and display-only input.'
   );
   Reject(new Bars.Options(Indeterminate := true));
@@ -201,6 +234,7 @@ begin
 end procedure;
 
 begin
+  BorderlessStatus();
   ProgressTracks();
   WideIdeographs();
   ZeroWidthClusters();

@@ -1,6 +1,7 @@
 unit Fpas.Ui.Composition;
 
 uses
+  Fpas.Ui.TerminalExtensions.CellGrids as CellGrids,
   Fpas.Ui.Internal.Mapping.EditingTools as EditingTools,
   Fpas.Ui.Internal.Mapping.SourceTools as SourceTools,
   Fpas.Ui.Internal.Mapping.Display as Display,
@@ -1458,6 +1459,15 @@ begin
       const FId: string,
       const FResolve: function(E.CacheEntry<TChild>?): E.CacheEntry<TChild>
     ): Deferred<TChild, TParent>(FId, FResolve, Messages);
+    when E.Element.TerminalCellGrid(
+      const Id: string,
+      const Content: CellGrids.Image?,
+      const Changed: function(CellGrids.Event): TChild
+    ): E.Element<TParent>.TerminalCellGrid(
+      Id,
+      Content,
+      function(Event: CellGrids.Event): TParent => Messages(Changed(Event))
+    );
     when E.Element.TerminalStyle(
       const FChild: E.Element<TChild>,
       const FColors: T.Style

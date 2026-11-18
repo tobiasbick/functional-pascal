@@ -2,7 +2,7 @@ unit Fpas.Ui.Widgets.Desktop.StatusBars;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
 
-// Text and icon for an entry in a native status bar.
+// Text for a status item and an optional graphical icon.
 public type Label = record
   // Visible caption.
   public Text: string;
@@ -12,7 +12,7 @@ public type Label = record
   public Tone: S.Tone := S.Tone.Neutral;
 end record;
 
-// Items shown in a native status bar.
+// Items shown in a graphical or terminal status bar.
 // ## Type parameters
 // - `TMsg`: Application message type.
 public type Item<TMsg> = variant
@@ -26,15 +26,15 @@ public type Item<TMsg> = variant
   Spacer;
 end variant;
 
-// Draws a native status bar.
+// Draws an application status bar on either host.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable element identity.
 // - `Items`: Contents in display order.
-// - `HideBorder`: Omit the native top hairline.
+// - `HideBorder`: Omit the top divider.
 // ## Returns
-// A graphical element.
+// A shared status bar element.
 public function StatusBar<TMsg>(Id: string; Items: array of Item<TMsg>; HideBorder: bool := false): E.Element<TMsg>;
 requires Id <> '';
 begin

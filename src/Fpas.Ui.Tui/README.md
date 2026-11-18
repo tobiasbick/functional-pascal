@@ -16,7 +16,7 @@ The interactive host restores terminal modes on normal exit and failure.
 
 Views use the shared Element tree. Supported widgets are buttons, icon buttons,
 button groups, segmented controls, dropdown menus, copy/hold/confirm/status/split buttons, theme selectors/toggles,
-sidebar navigation, determinate progress bars and sheets. Text, rows/columns, sizing, borders, styles,
+sidebar navigation, status bars, determinate progress bars and sheets. Text, rows/columns, sizing, borders, styles,
 cached subviews and scrolling provide their composition foundations.
 
 Preflight validates the view before rendering. Logical distances map to cells:
@@ -35,7 +35,8 @@ cached subviews.
 
 ## Input and controlled state
 
-Tab/Shift+Tab traverse enabled controls in the active scope. Enter and typed
+Tab/Shift+Tab traverse enabled controls in the active scope. An explicit Tab
+shortcut can move focus between panes. Enter and typed
 Space activate the focused action. Rows that support Up/Down focus navigation
 use unmodified arrows, leaving modified arrows available for application
 shortcuts. Theme segments use Left/Right without wrapping. Split menus support arrows, Enter, Escape, wheel and page keys.
@@ -59,6 +60,19 @@ Escape or a backdrop click proposes dismissal; closing restores available focus.
 ## Terminal extensions
 
 - Elements.CellStyled and Terminal.Style supply optional RGB overrides.
+- `TerminalExtensions.CellGrids.CellGrid` displays an immutable row-major image
+  of `Terminal.Cell` values. Create it with `CellGrids.Image.Create(columns,
+  rows, cells)`, or pass null while the first image is being computed. Each
+  slot occupies one terminal column. Empty, control, multi-grapheme or
+  double-width content appears as a space. Omitted colors inherit the grid style.
+  The host clips larger images and pads smaller ones.
+- A grid reports `Resized(columns, rows)` through its message mapper after
+  its first visible layout, whenever its allocated size changes, and when it
+  reappears. Coordinates start at (0, 0) at the unclipped top-left cell.
+  `Clicked(column, row, button)` supports left and middle clicks.
+  `Wheel(column, row, delta)` retains the signed terminal scroll distance
+  (negative is up) and consumes the wheel over the grid. An enclosing scroll
+  view can clip the image without changing the reported allocation.
 - TerminalExtensions.Views.Viewport resolves a view from exact columns/rows.
 - TerminalExtensions.Views.Screen and typed Input shortcuts bind application keys.
 - Application.Input/Frame support controlled input injection and cell snapshots.
@@ -75,7 +89,8 @@ backgrounds. Include relevant theme values in cached-subview dependencies.
 See [shared themes](../Fpas.Ui/README.md#shared-themes). The
 [TUI gallery](../../examples/ui/tui/gallery/README.md) applies them to two
 rounded panels with a 1:2 width ratio. Its scrollable sidebar opens a preview
-with text and a keyboard-adjustable progress sample.
+with a keyboard-adjustable progress line under **Feedback** and a status bar with
+an actionable encoding under **App chrome**.
 
 The [CUI inventory](../../docs/cui-widget-inventory.md) records the implemented
 terminal widgets and their behavior.

@@ -1,6 +1,7 @@
 unit Fpas.Ui.Elements;
 
 uses
+  Fpas.Ui.TerminalExtensions.CellGrids as CellGrids,
   Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors,
   Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs,
@@ -469,7 +470,7 @@ public type Element<TMsg> = variant
   MenuBar(Id: string; Menus: array of MenuBars.Menu<TMsg>; HideBorder: bool);
   // Native closable, reorderable document tabs.
   DocumentTabs(Id: string; Tabs: array of Documents.Tab; Selected: int; Changed: function(Documents.Change): TMsg; Settings: Documents.Options);
-  // Native status bar with messages and actions.
+  // Shared status bar with messages and actions.
   StatusBar(Id: string; Items: array of StatusBars.Item<TMsg>; HideBorder: bool);
   // Native split view with a draggable divider.
   SplitView(Id: string; Ratio: float; First: Element<TMsg>; Second: Element<TMsg>; Changed: function(float): TMsg; Settings: SplitViews.Options);
@@ -614,6 +615,8 @@ public type Element<TMsg> = variant
   Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
   // Apply terminal-specific RGB styling to a subtree.
   TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
+  // Display a cell image and route its local input and size changes.
+  TerminalCellGrid(Id: string; Content: CellGrids.Image?; Changed: function(CellGrids.Event): TMsg);
   // Compose terminal content, floating layers and scoped shortcuts.
   TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
   // Resolve a terminal-specific subtree using exact cell dimensions.

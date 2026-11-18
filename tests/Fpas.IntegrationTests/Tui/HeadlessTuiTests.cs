@@ -6,6 +6,15 @@ namespace Fpas.IntegrationTests.Tui;
 /// <summary>Checks standalone terminal host contracts.</summary>
 public sealed class HeadlessTuiTests
 {
+    /// <summary>Exercises the explorer with keyboard, pointer and resize input through the terminal host.</summary>
+    [Fact]
+    public async Task Fractal_explorer_renders_and_navigates_all_families()
+    {
+        using var program = new Debuggee("fractal-explorer");
+        await TuiFixture.CompileExample(program, "fractals", "fractal-explorer.fpas");
+        Assert.Equal("Fractal explorer verified\n", await program.Run());
+    }
+
     /// <summary>Builds and executes each terminal contract through the real FPAS compiler.</summary>
     /// <param name="fixture">Contract source copied into the test fixtures.</param>
     /// <param name="expected">Successful contract output.</param>
@@ -15,6 +24,7 @@ public sealed class HeadlessTuiTests
     [InlineData("effects.fpas", "effect contracts verified\n")]
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
     [InlineData("rendering.fpas", "Rendering contracts verified\n")]
+    [InlineData("cell-grid.fpas", "Cell grid contracts verified\n")]
     [InlineData("confirm.fpas", "Confirm button contracts verified\n")]
     [InlineData("status.fpas", "Status button contracts verified\n")]
     [InlineData("theme-switcher.fpas", "Theme switcher contracts verified\n")]

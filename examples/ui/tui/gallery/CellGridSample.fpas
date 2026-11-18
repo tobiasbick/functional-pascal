@@ -1,0 +1,121 @@
+unit TuiGallery.CellGridSample;
+
+uses
+  Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as C;
+
+// State of the interactive ripple field in the gallery.
+public type State = record
+  // Current allocated size in cells.
+  public Size: T.Viewport := new T.Viewport(0, 0);
+  // Selected ripple origin, or -1 to use the center.
+  public X: int := -1;
+  // Selected origin row, or -1 to use the center.
+  public Y: int := -1;
+  // Distance between wave crests in cells.
+  public Spacing: int := 5;
+  // Most recent local pointer event.
+  public Last: string := '';
+  // Immutable raster shared by subsequent views until the pattern changes.
+  public Image: Grids.Image? := null;
+end record;
+
+function Draw(Current: State): Grids.Image;
+begin
+  const Size: T.Viewport := Current.Size;
+  const X: int := if Current.X < 0 then
+    Size.Columns div 2
+  else
+    Current.X
+  end if;
+  const Y: int := if Current.Y < 0 then
+    Size.Rows div 2
+  else
+    Current.Y
+  end if;
+  const Ramp: string := '·░▒▓█▓▒░';
+  const Palette: array of int := [
+    $517B90,
+    $559DA9,
+    $63BDBB,
+    $8AE0CE,
+    $DFFAE4,
+    $8AE0CE,
+    $63BDBB,
+    $559DA9
+  ];
+  const Brushes: C.List<T.Cell> := new C.List<T.Cell>();
+  for Index: int := 0 to Ramp.Length - 1 do
+    Brushes.Add(new T.Cell(Ramp[Index].ToString(), new T.Style(Palette[Index], $142C36)));
+  end for;
+  const Cells: C.List<T.Cell> := new C.List<T.Cell>(Size.Columns * Size.Rows);
+  for Row: int := 0 to Size.Rows - 1 do
+    for Column: int := 0 to Size.Columns - 1 do
+      const DX: double := Column - X;
+      const DY: double := 2.0 * (Row - Y);
+      const Band: int := cast<int>(Sys.Math.Sqrt(
+        DX * DX + DY * DY
+      ) * Ramp.Length / Current.Spacing) mod Ramp.Length;
+      Cells.Add(
+        if Row = Y and Column = X then
+          new T.Cell('+', new T.Style($FFFFFF, $266E72))
+        else
+          Brushes[Band]
+        end if
+      );
+    end for;
+  end for;
+
+  return Grids.Image.Create(Size.Columns, Size.Rows, Cells.ToArray());
+end function;
+
+// Applies a grid `Event` to `Current` and returns the newly rendered sample.
+public function Update(Current: State; Event: Grids.Event): State;
+begin
+  const Next: State := case Event of
+    when Grids.Event.Resized(const Columns: int, const Rows: int): Current with
+      Size := new T.Viewport(Columns, Rows);
+      X := Sys.Math.Min(Current.X, Columns - 1);
+      Y := Sys.Math.Min(Current.Y, Rows - 1);
+    end with;
+    when Grids.Event.Clicked(
+      const Column: int,
+      const Row: int,
+      const Button: K.MouseButton
+    ): Current with
+      X := Column;
+      Y := Row;
+      Last := Button.ToString() + ' click (' + Column.ToString() + ', ' + Row.ToString() + ')';
+    end with;
+    when Grids.Event.Wheel(const Column: int, const Row: int, const Delta: int): Current with
+      Spacing := Sys.Math.Clamp(Current.Spacing - Sys.Math.Sign(Delta), 2, 16);
+      Last := 'Wheel (' + Column.ToString() + ', ' + Row.ToString() + ') ' + Delta.ToString();
+    end with;
+  end case;
+  return Next with
+    Image := Draw(Next);
+  end with;
+end function;
+
+// Builds the gallery preview for `Current`, returning local grid events.
+public function View(Current: State): E.Element<Grids.Event>;
+begin
+  return E.Column<Grids.Event>(
+    new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Tight),
+    E.Text<Grids.Event>('Cell grid'),
+    E.Text<Grids.Event>('Click to center · Wheel to change spacing'),
+    Grids.CellGrid<Grids.Event>(
+      'sample-cell-grid',
+      Current.Image,
+      function(Value: Grids.Event): Grids.Event => Value
+    ),
+    E.Size<Grids.Event>(
+      E.Text<Grids.Event>(
+        Current.Size.Columns.ToString() + ' × ' + Current.Size.Rows.ToString() + '  ' + Current.Last
+      ),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(1)))
+    )
+  );
+end function;
+
+end unit;

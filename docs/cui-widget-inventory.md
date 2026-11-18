@@ -495,7 +495,9 @@ editor bars, document tabs, docking and split panes.
 - [x] Status bar and its items (`cui_status_bar`, `cui_status_bar_text`,
   `cui_status_bar_item`, `cui_status_bar_progress`, `cui_status_bar_spacer`):
   the editor displays the branch, indexing progress and clickable status items.
-  The Windows gallery switches encoding through the keyed native item.
+  The Windows gallery switches encoding through the keyed native item. The TUI
+  App chrome page uses the same widget for text, inline progress, a spacer and
+  a keyboard- or mouse-activated encoding item.
 - [x] Docking workspace and panels (`cui_dockspace`, `cui_dock_panel`): App chrome
   shows the reference panel arrangement, panel toggles and layout reset. Tests
   cover native drag, close, reopen, layout serialization and invalid restore.
@@ -610,7 +612,7 @@ and widget options.
   labeled upload percentage, indeterminate indexing bar and native dithered
   export/sync examples. CUI owns animation;
   validation, native dimensions, message mapping and resizing are tested.
-  TUI: determinate, single-row track with optional caption and percentage,
+  TUI: determinate, two-color line between the optional caption and percentage,
   semantic color and content/fill/fixed width.
 - [x] Meter (`cui_meter`): [API][fpas-meter]. Feedback shows the original
   Storage example with 18.4 / 20 GB. CUI owns formatting, interpolation and warning

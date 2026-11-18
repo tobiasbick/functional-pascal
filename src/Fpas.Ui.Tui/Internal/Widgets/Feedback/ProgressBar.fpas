@@ -22,13 +22,11 @@ begin
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
     else null;
   end case;
-  var Caption: string := Glyphs.SingleLine(Settings.Label);
-  if Settings.ShowValue then
-    if Caption <> '' then
-      Caption := Caption + '  ';
-    end if;
-
-    Caption := Caption + cast<int>(Sys.MathF.Floor(100.0F * Fraction + 0.5F)).ToString() + '%';
+  const Caption: string := Glyphs.SingleLine(Settings.Label);
+  const Percent: string := if Settings.ShowValue then
+    cast<int>(Sys.MathF.Floor(100.0F * Fraction + 0.5F)).ToString() + '%'
+  else
+    ''
   end if;
   const Fill: G.Color := case Settings.Tone of
     when S.Tone.Accent: Theme.Colors.Accent;
@@ -41,46 +39,70 @@ begin
     when S.Tone.Rose: Theme.Colors.Series6;
     else Theme.Colors.ControlOn;
   end case;
-  return E.Element<TMsg>.Progress(Fraction, Caption, Width, Fill);
+  return E.Element<TMsg>.Progress(Fraction, Caption, Percent, Width, Fill);
 end function;
 
-// Paints a one-row track with its optional caption above it.
+// Paints a single line between the optional caption and percentage.
 // ## Parameters
 // - `Operations`: Destination paint operations.
 // - `Area`: Allocated cell bounds.
 // - `Clip`: Visible cell bounds.
 // - `Fraction`: Completion fraction.
 // - `Caption`: Prepared literal caption.
+// - `Percent`: Optional formatted percentage at the trailing edge.
 // - `Width`: Optional fixed width in cells.
 // - `Fill`: Fill color.
 // - `Style`: Enclosing text style.
 // - `Theme`: Active track palette.
 public procedure Paint(
   Operations: C.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Fraction: float;
-  Caption: string; Width: int?; Fill: G.Color; Style: T.Style; Theme: Th.Theme
+  Caption: string; Percent: string; Width: int?; Fill: G.Color; Style: T.Style; Theme: Th.Theme
 );
 begin
   const Span: int := Sys.Math.Min(Area.Width, Width ?? Area.Width);
-  var Row: int := Area.Y;
-  if Caption <> '' then
-    Operations.Add(new D.Operation(Caption, new F.Rect(Area.X, Row, Span, 1), Clip, Style, false));
-    Row := Row + 1;
+  if Span <= 0 or Area.Height <= 0 then
+    return;
+  end if;
+
+  var TrackWidth: int := Span;
+  var Left: int := Area.X;
+  if Percent <> '' and Percent.Length <= Span then
+    Operations.Add(
+      new D.Operation(
+        Percent,
+        new F.Rect(Left + Span - Percent.Length, Area.Y, Percent.Length, 1),
+        Clip,
+        Style,
+        false
+      )
+    );
+    TrackWidth := Sys.Math.Max(0, Span - Percent.Length - 2);
+  end if;
+  const LabelEnd: int := Glyphs.IndexAt(Caption, 0, TrackWidth - 3);
+  if LabelEnd > 0 then
+    const Label: string := Caption.Substring(0, LabelEnd);
+    const LabelWidth: int := Glyphs.Measure(Label);
+    Operations.Add(
+      new D.Operation(Label, new F.Rect(Left, Area.Y, LabelWidth, 1), Clip, Style, false)
+    );
+    Left := Left + LabelWidth + 2;
+    TrackWidth := TrackWidth - LabelWidth - 2;
   end if;
   const Filled: int := cast<int>(Sys.Math.Round(
-    cast<double>(Fraction) * Span,
-    Sys.MidpointRounding.AwayFromZero
+    cast<double>(Fraction) * TrackWidth, Sys.MidpointRounding.AwayFromZero
   ));
   const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
   Operations.Add(
     new D.Operation(
-      new string(#9617, Span - Filled), new F.Rect(Area.X + Filled, Row, Span - Filled, 1),
-      Clip, new T.Style(Th.Rgb(Theme.Colors.ControlTrack, Back), Back), false
+      new string(#9472, Filled), new F.Rect(Left, Area.Y, Filled, 1),
+      Clip, new T.Style(Th.Rgb(Fill, Back), Back), false
     )
   );
   Operations.Add(
     new D.Operation(
-      new string(#9608, Filled), new F.Rect(Area.X, Row, Filled, 1),
-      Clip, new T.Style(Th.Rgb(Fill, Back), Back), false
+      new string(#9472, TrackWidth - Filled),
+      new F.Rect(Left + Filled, Area.Y, TrackWidth - Filled, 1),
+      Clip, new T.Style(Th.Rgb(Theme.Colors.TextMuted, Back), Back), false
     )
   );
 end procedure;

@@ -3,13 +3,17 @@ program TuiWidgetGallery;
 uses
   Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status,
   TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
   Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, System as Sys, System.Threading as Threads;
 
 type Msg = variant
   SelectPage(Page: Catalog.Entry);
   ChangeProgress(Delta: int);
+  Grid(Event: Grids.Event);
+  ToggleEncoding;
   ToggleTheme;
   Quit;
 end variant;
@@ -18,6 +22,9 @@ type Model = record
   public Active: Catalog.Entry;
   public Mode: Themes.Mode := Themes.Mode.Dark;
   public Percent: int := 60;
+  public Upload: int := 68;
+  public Utf8: bool := true;
+  public Grid: GridSample.State := new GridSample.State();
 end record;
 
 function ThemeFor(State: Model): Themes.Theme;
@@ -44,14 +51,26 @@ begin
       Next := State with
         Active := Page;
       end with;
+    when Msg.Grid(const Event: Grids.Event):
+      Next := State with
+        Grid := GridSample.Update(State.Grid, Event);
+      end with;
     when Msg.ChangeProgress(const Delta: int):
-      if State.Active.Demo = Catalog.Preview.Progress or State.Active.Demo =
+      if State.Active.Demo = Catalog.Preview.Feedback then
+        Next := State with
+          Upload := Sys.Math.Clamp(State.Upload + Delta, 0, 100);
+        end with;
+      elsif State.Active.Demo = Catalog.Preview.Progress or State.Active.Demo =
         Catalog.Preview.Overview
       then
         Next := State with
           Percent := Sys.Math.Clamp(State.Percent + Delta, 0, 100);
         end with;
       end if;
+    when Msg.ToggleEncoding:
+      Next := State with
+        Utf8 := not State.Utf8;
+      end with;
     when Msg.ToggleTheme:
       Next := State with
         Mode := if State.Mode = Themes.Mode.Dark then
@@ -106,6 +125,52 @@ begin
         ),
         Label('←/→  Adjust by 10%', S.Role.Muted)
       );
+    when Catalog.Preview.Feedback:
+      Example := E.Column<Msg>(
+        Flow,
+        Bars.ProgressBar<Msg>(
+          'upload', cast<float>(State.Upload) / 100.0F,
+          new Bars.Options(Label := 'Uploading assets', ShowValue := true, Tone := S.Tone.Info)
+        ),
+        Bars.ProgressBar<Msg>(
+          'export', 0.42F,
+          new Bars.Options(Label := 'Exporting clip.mp4', ShowValue := true, Tone := S.Tone.Success)
+        ),
+        Label('←/→  Adjust upload by 10%', S.Role.Muted)
+      );
+    when Catalog.Preview.AppChrome:
+      return E.Column<Msg>(
+        new L.Flow(Padding := L.Spacing.Normal),
+        Label('App chrome', S.Role.Heading),
+        E.Size<Msg>(
+          E.Column<Msg>(
+            Flow, E.Text<Msg>('Status bar'),
+            Label('Select the encoding to change it.', S.Role.Muted)
+          ),
+          new L.Flex(Basis := L.Extent.Fill, Grow := 1)
+        ),
+        Status.StatusBar<Msg>(
+          'editor-status', [
+            Status.Item<Msg>.Text(new Status.Label('main')),
+            Status.Item<Msg>.Text(new Status.Label('Saved')),
+            Status.Item<Msg>.Progress(0.62F, 'Indexing 62%', 0.0F, false),
+            Status.Item<Msg>.Spacer,
+            Status.Item<Msg>.Text(new Status.Label('Ln 48, Col 17')),
+            Status.Item<Msg>.Action(
+              'encoding', new Status.Label(
+                if State.Utf8 then
+                  'UTF-8'
+                else
+                  'UTF-16'
+                end if
+              ),
+              'Change encoding', true, Msg.ToggleEncoding
+            )
+          ]
+        )
+      );
+    when Catalog.Preview.CellGrid:
+      return Composition.Map<Grids.Event, Msg>(GridSample.View(State.Grid), Msg.Grid);
     when Catalog.Preview.Text:
       Example := E.Column<Msg>(
         Flow, Label('Field recording', S.Role.Heading),

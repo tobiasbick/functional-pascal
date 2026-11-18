@@ -1,9 +1,15 @@
 # TUI gallery
 
 The left panel lists the GUI gallery's Components and Extended destinations plus
-**Progress bar** and **Text**. The right panel previews the selected entry.
-Progress bar shows a determinate track and percentage; Text shows a heading,
-wrapping body text and muted caption. Other categories give a short description.
+**Progress bar**, **Text** and **Cell grid**. The right panel previews the selected entry.
+**Components → Feedback** shows upload and export progress as colored lines with
+percentages. **Extended → App chrome** places the status bar at the bottom of
+the preview. Click the encoding or focus it and press Enter to switch between
+UTF-8 and UTF-16. Text shows a heading,
+wrapping body text and muted caption. Cell grid draws colored ripples. Click a cell
+with the left or middle button to move their center, or use the wheel to change
+their spacing. The footer shows the grid size and the last local input. Resizing
+the terminal redraws the field. Other categories give a short description.
 The panels share the terminal width in a 1:2 ratio with a one-cell gap.
 
 Use ↑/↓, Page Up/Page Down or Home/End to move through the list. Enter, Space
@@ -11,7 +17,9 @@ or a mouse click opens the destination. The wheel scrolls the list. On Overview,
 Feedback and Progress bar, ←/→ changes the sample by ten percentage points.
 Ctrl+T switches themes and Ctrl+Q exits.
 
-![Gallery in a 100 × 28 terminal](panels.png)
+![Feedback in the terminal gallery](panels.png)
+
+![App chrome with the status bar along the bottom](statusbar.png)
 
 After the [local SDK bootstrap](../../../../docs/build/development.md#build-an-fpas-application),
 build and run the gallery from the repository root.

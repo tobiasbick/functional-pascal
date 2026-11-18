@@ -30,6 +30,7 @@ independent examples are separate compilations.
 | Multiple sources | [Units and imports](../program-structure/imports.md#two-file-use) |
 | Shared MVU desktop widgets | [GUI gallery](../../../examples/ui/gui/gallery/README.md) |
 | Terminal navigation, text and progress | [TUI gallery](../../../examples/ui/tui/gallery/README.md) |
+| Interactive fractals, cell input and background rendering | [TUI fractal explorer](../../../examples/ui/tui/fractals/README.md) |
 
 The [agent reference](../agents/README.md) provides additional assertion-based
 programs. The repository's [examples directory](../../../examples/README.md)

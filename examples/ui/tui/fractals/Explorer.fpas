@@ -1,0 +1,226 @@
+unit Fractals.Explorer;
+
+uses
+  Fractals.Camera as C, Fractals.Rendering as Render, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.TerminalExtensions.CellGrids as G, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Widgets.Navigation.Navigation as Nav, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+// View and input state for the two-pane explorer.
+public type Model = record
+  // Parameters of the requested image.
+  public Camera: C.Camera := new C.Camera();
+  // Allocated grid width.
+  public Columns: int := 0;
+  // Allocated grid height.
+  public Rows: int := 0;
+  // Last published image of the current size and family.
+  public Image: G.Image? := null;
+  // Current rendering outcome.
+  public Status: string := 'Rendering';
+  // True while keyboard navigation belongs to the image.
+  public InPlot: bool := false;
+  // Whether the controls sheet is open.
+  public Help: bool := false;
+end record;
+
+// Input and worker replies processed by the explorer.
+public type Msg = variant
+  // Activate the selected fractal.
+  SelectFamily(Family: C.Kind);
+  // Handle local cell input and size notifications.
+  Grid(Event: G.Event);
+  // Switch keyboard focus between list and plot.
+  SwitchPane;
+  // Move the image center by horizontal and vertical steps.
+  Pan(X: int; Y: int);
+  // Zoom in or out around the center.
+  Magnify(Steps: int);
+  // Adjust the iteration limit.
+  Iterations(Delta: int);
+  // Select an escape-time palette.
+  Palette(Value: C.Palette);
+  // Adjust the real and imaginary parts of the Julia parameter.
+  Julia(X: int; Y: int);
+  // Restore the selected family's starting parameters.
+  Reset;
+  // Open or close the controls sheet.
+  Help(Open: bool);
+  // Publish a completed background render.
+  Ready(Image: G.Image);
+  // Show the reason a render failed.
+  Failed(Reason: string);
+  // Close the application.
+  Quit;
+end variant;
+
+function RequestFrame(Next: Model): Mvu.Transition<Model, Msg>;
+  function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    return Post(Msg.Ready(Render.Draw(Next.Camera, Next.Columns, Next.Rows, Token)));
+  end function;
+begin
+  if Next.Columns <= 0 or Next.Rows <= 0 then
+    return new Mvu.Transition<Model, Msg>(Next, []);
+  end if;
+
+  return new Mvu.Transition<Model, Msg>(
+    Next with
+      Status := 'Rendering';
+    end with,
+    [
+      Mvu.StartBackground<Msg>(
+        'render',
+        Work,
+        function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
+      )
+    ]
+  );
+end function;
+
+function Zoom(Camera: C.Camera; Steps: int; OffsetX: double; OffsetY: double): C.Camera;
+begin
+  const Value: double := Sys.Math.Clamp(Camera.Zoom * Sys.Math.Pow(1.25, Steps), 0.25, 1e6);
+  const Fraction: double := 1.0 - Camera.Zoom / Value;
+  return Camera with
+    Zoom := Value;
+    X := Camera.X + OffsetX * Fraction;
+    Y := Camera.Y + OffsetY * Fraction;
+  end with;
+end function;
+
+// Applies an input or worker `Message` to `State`, returning its model and owned effects.
+public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  const Camera: C.Camera := State.Camera;
+  var Next: Model := State;
+  case Message of
+    when Msg.SelectFamily(const Family: C.Kind):
+      Next := State with
+        InPlot := false;
+      end with;
+      if Camera.Family <> Family then
+        return RequestFrame(
+          Next with
+            Camera := C.Home(Family);
+            Image := null;
+          end with
+        );
+      end if;
+    when Msg.SwitchPane:
+      const Target: string := if State.InPlot then
+        Nav.ItemId('families', C.Title(Camera.Family))
+      else
+        'plot'
+      end if;
+      return new Mvu.Transition<Model, Msg>(
+        State with
+          InPlot := not State.InPlot;
+        end with, [Mvu.Focus<Msg>(Target)]
+      );
+    when Msg.Grid(const Event: G.Event):
+      case Event of
+        when G.Event.Resized(const Columns: int, const Rows: int):
+          return RequestFrame(
+            State with
+              Columns := Columns;
+              Rows := Rows;
+              Image := null;
+            end with
+          );
+        when G.Event.Clicked(const Col: int, const Row: int, const Button: K.MouseButton):
+          if State.Rows <= 0 then
+            return new Mvu.Transition<Model, Msg>(State, []);
+          end if;
+
+          if Button = K.MouseButton.Middle then
+            Next := State with
+              Camera := C.Home(Camera.Family);
+            end with;
+          else
+            const Step: double := C.PixelStep(Camera, State.Rows);
+            Next := State with
+              InPlot := true;
+              Camera := Camera with
+                X := Camera.X + (Col + 0.5 - 0.5 * State.Columns) * Step;
+                Y := Camera.Y + (State.Rows - 2.0 * Row - 1.0) * Step;
+              end with;
+            end with;
+          end if;
+        when G.Event.Wheel(const Col: int, const Row: int, const Delta: int):
+          if State.Rows <= 0 then
+            return new Mvu.Transition<Model, Msg>(State, []);
+          end if;
+          const Step: double := C.PixelStep(Camera, State.Rows);
+          Next := State with
+            Camera := Zoom(
+              Camera, -Sys.Math.Clamp(Delta, -16, 16),
+              (Col + 0.5 - 0.5 * State.Columns) * Step, (State.Rows - 2.0 * Row - 1.0) * Step
+            );
+          end with;
+      end case;
+    when Msg.Pan(const X: int, const Y: int):
+      if State.InPlot and State.Rows > 0 then
+        const Step: double := C.PixelStep(Camera, State.Rows);
+        Next := State with
+          Camera := Camera with
+            X := Camera.X + X * State.Columns * Step * 0.14;
+            Y := Camera.Y + Y * State.Rows * Step * 0.28;
+          end with;
+        end with;
+      end if;
+    when Msg.Magnify(const Steps: int):
+      Next := State with
+        Camera := Zoom(Camera, Steps, 0.0, 0.0);
+      end with;
+    when Msg.Iterations(const Delta: int):
+      Next := State with
+        Camera := Camera with
+          Iterations := Sys.Math.Clamp(Camera.Iterations + Delta, 32, 2048);
+        end with;
+      end with;
+    when Msg.Palette(const Value: C.Palette):
+      if Camera.Family <> C.Kind.Newton then
+        Next := State with
+          Camera := Camera with
+            Colors := Value;
+          end with;
+        end with;
+      end if;
+    when Msg.Julia(const X: int, const Y: int):
+      if Camera.Family = C.Kind.Julia then
+        Next := State with
+          Camera := Camera with
+            JuliaX := Camera.JuliaX + 0.02 * X;
+            JuliaY := Camera.JuliaY + 0.02 * Y;
+          end with;
+        end with;
+      end if;
+    when Msg.Reset:
+      Next := State with
+        Camera := C.Home(Camera.Family);
+      end with;
+    when Msg.Help(const Open: bool):
+      Next := State with
+        Help := Open;
+      end with;
+    when Msg.Ready(const Image: G.Image):
+      Next := State with
+        Image := Image;
+        Status := 'Ready';
+      end with;
+    when Msg.Failed(const Reason: string):
+      Next := State with
+        Status := 'Render failed: ' + Reason;
+      end with;
+    when Msg.Quit:
+      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
+  end case;
+
+  if Next.Camera <> Camera then
+    return RequestFrame(Next);
+  end if;
+
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+end unit;

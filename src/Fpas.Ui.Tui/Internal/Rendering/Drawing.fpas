@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Drawing;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Graphics as Graphics, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Graphics as Graphics, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;
 
 public type Operation = record
   public Value: string;
@@ -10,6 +10,8 @@ public type Operation = record
   public Wrap: bool;
   // Composites a scrim over previously drawn cells when present.
   public Tint: Graphics.Color? := null;
+  // Optional immutable cell surface, sampled in local coordinates.
+  public Grid: Grids.Image? := null;
 end record;
 
 public type PaintedRow = record
@@ -197,6 +199,30 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
 
   procedure Draw(Item: Operation);
   begin
+    const Image: Grids.Image? := Item.Grid;
+    if Image <> null then
+      for Column: int := Item.Clip.X to Item.Clip.X + Item.Clip.Width - 1 do
+        const Cell: T.Cell? := Image.At(Column - Item.Area.X, TargetRow - Item.Area.Y);
+        var Glyph: string := ' ';
+        var Style: T.Style := Item.Style;
+        if Cell <> null then
+          Style := new T.Style(
+            Cell.Colors.Foreground ?? Style.Foreground,
+            Cell.Colors.Background ?? Style.Background
+          );
+          if Cell.Text.Length > 0 and Global.StringInfo.GetNextTextElementLength(
+            Cell.Text
+          ) = Cell.Text.Length and G.Width(Cell.Text) = 1
+          then
+            Glyph := Cell.Text;
+          end if;
+        end if;
+
+        Put(Column, Glyph, Style, Item.Clip);
+      end for;
+
+      return;
+    end if;
     const Tint: Graphics.Color? := Item.Tint;
     if Tint <> null then
       for Column: int := Item.Clip.X to Item.Clip.X + Item.Clip.Width - 1 do

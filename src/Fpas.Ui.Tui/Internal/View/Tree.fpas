@@ -1,6 +1,9 @@
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+
+// Largest column count accepted by the terminal host.
+public const MaximumColumns: int := 500;
 
 // Resolved cell allocation data consumed only by terminal layout.
 public type Flex = record
@@ -84,8 +87,12 @@ end record;
 public type Element<TMsg> = variant
   // Paint literal text.
   Label(Value: string);
+  // Fill the allocated cell surface with an image and register its input mapper.
+  CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Paint a determinate progress track and optional caption.
-  Progress(Fraction: float; Caption: string; Width: int?; Fill: Color.Color);
+  Progress(Fraction: float; Caption: string; Percent: string; Width: int?; Fill: Color.Color);
+  // Fit one status row to the viewport, with an optional divider above.
+  StatusBar(Row: Element<TMsg>; HideBorder: bool);
   // Paint a titled or plain cell rule.
   Separator(Title: string);
   // Paint and route a direct action with semantic button styling.

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -75,15 +75,47 @@ public function Arrange<TMsg>(
     end if;
 
     case Node of
+      when E.Element.CellGrid(
+        const Id: string,
+        const Content: Grids.Image?,
+        const Changed: function(Grids.Event): TMsg
+      ):
+        if Content = null then
+          D.Fill(Operations, Clip, Style);
+        else
+          Operations.Add(new D.Operation('', Area, Clip, Style, false, Grid := Content));
+        end if;
+
+        Register(Id, Id, 'cell-grid', '', Clip, ScopeId, true, A.Binding<TMsg>.Grid(Area, Changed));
       when E.Element.Label(const Value: string):
         Draw(Value, Area, Clip, Style, true);
       when E.Element.Progress(
         const Fraction: float,
         const Caption: string,
+        const Percent: string,
         const Width: int?,
         const Fill: G.Color
       ):
-        Progress.Paint(Operations, Area, Clip, Fraction, Caption, Width, Fill, Style, Theme);
+        Progress.Paint(
+          Operations,
+          Area,
+          Clip,
+          Fraction,
+          Caption,
+          Percent,
+          Width,
+          Fill,
+          Style,
+          Theme
+        );
+      when E.Element.StatusBar(const Row: E.Element<TMsg>, const HideBorder: bool):
+        var Top: int := Area.Y;
+        if not HideBorder and Area.Height > 1 then
+          D.Divider(Operations, new F.Rect(Area.X, Top, Area.Width, 1), Clip, '', Style, Widgets);
+          Top := Top + 1;
+        end if;
+
+        Visit(Row, new F.Rect(Area.X, Top, Area.Width, 1), Clip, ScopeId, Style);
       when E.Element.Separator(const Title: string):
         D.Divider(Operations, Area, Clip, Title, Style, Widgets);
       when E.Element.Action(

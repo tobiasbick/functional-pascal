@@ -53,7 +53,12 @@ end procedure;
 // - `Visit`: Schedules validation of a child.
 public procedure Check<TMsg>(Node: E.Element<TMsg>; Path: string; Profile: V.Target; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
 begin
-  R.RequireProfile(Profile, V.Target.Graphical, Path + '/desktop-chrome');
+  case Node of
+    when E.Element.StatusBar(_, _, _):
+    else
+      R.RequireProfile(Profile, V.Target.Graphical, Path + '/desktop-chrome');
+  end case;
+
   case Node of
     when E.Element.MenuBar(const Id: string, const Items: array of M.Menu<TMsg>, _):
       const At: string := Identify(Id, Path + '/menu-bar');

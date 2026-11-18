@@ -13,15 +13,15 @@ still allowed: answering reviews, fixing CI and confirming applied changes. New
 findings go into the list below. Resume reporting once nothing in the following
 list is open:
 
-- PR [#97](https://github.com/yappologistic/CUI/pull/97) remains open for
-  confirmation. The maintainer applied the remaining test commit as
-  [`ba704f1`](https://github.com/yappologistic/CUI/commit/ba704f1) and
-  [reported the upstream test results](https://github.com/yappologistic/CUI/pull/97#issuecomment-6965977501).
-  Confirm the applied changes through the ChatGPT Codex Connector after
-  verification, as described in
-  [CUI contributions](../cui-contributions.md#confirming-upstream-fixes).
+- PR [#97](https://github.com/yappologistic/CUI/pull/97): applied as
+  [`ba704f1`](https://github.com/yappologistic/CUI/commit/ba704f1),
+  [confirmed](https://github.com/yappologistic/CUI/pull/97#issuecomment-6984247624);
+  waiting for the maintainer to close it.
 - PR [#99](https://github.com/yappologistic/CUI/pull/99): follow-ups to #93 and
-  #95 (week-calendar click and focus loss, GLFW and SDL2 restore), open.
+  #95 (week-calendar click and focus loss, GLFW and SDL2 restore), applied as
+  `51e77ca`..`71c383f`,
+  [confirmed](https://github.com/yappologistic/CUI/pull/99#issuecomment-6984251151);
+  waiting for the maintainer to close it.
 
 Findings on hold, checked against `a5c9ef5`:
 

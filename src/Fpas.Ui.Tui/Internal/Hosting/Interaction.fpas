@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -258,15 +258,21 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return;
     end if;
     const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
-    if Control = null or Button = K.MouseButton.Middle then
+    if Control = null then
       return;
     end if;
 
-    Focus := Control.Id;
+    if Button = K.MouseButton.Left then
+      Focus := Control.Id;
+    end if;
+
     case Control.Action of
-      when A.Binding.Invoke(_):
-        discard Invoke(Control);
-      when A.Binding.Scroll(_):
+      when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
+        Apply(Changed(Grids.Event.Clicked(Column - Area.X, Row - Area.Y, Button)));
+      else
+        if Button = K.MouseButton.Left then
+          discard Invoke(Control);
+        end if;
     end case;
   end procedure;
 
@@ -339,12 +345,6 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure RouteKey(Layout: A.Layout<TMsg>; Key: K.Key; Modifiers: K.KeyModifiers);
   begin
-    if Key = K.Key.Tab and (Modifiers = K.KeyModifiers.None or Modifiers =
-      K.KeyModifiers.Shift)
-    then
-      Cycle(Layout, Modifiers = K.KeyModifiers.Shift);
-      return;
-    end if;
     const Modal: A.Scope<TMsg>? := Layout.Active;
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Key = K.Key.Escape then
@@ -409,6 +409,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
             return;
           end if;
+        when A.Binding.Grid(_, _):
       end case;
     end if;
 
@@ -442,6 +443,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         return;
       end if;
     end for;
+
+    if Key = K.Key.Tab and (Modifiers = K.KeyModifiers.None or Modifiers =
+      K.KeyModifiers.Shift)
+    then
+      Cycle(Layout, Modifiers = K.KeyModifiers.Shift);
+    end if;
   end procedure;
 
   procedure Activate(Layout: A.Layout<TMsg>; Id: string);
@@ -469,6 +476,16 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     PointerKnown := true;
     PointerColumn := Column;
     PointerRow := Row;
+    const HitControl: A.Control<TMsg>? := Hit(Layout, Column, Row);
+    if HitControl <> null then
+      case HitControl.Action of
+        when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
+          Apply(Changed(Grids.Event.Wheel(Column - Area.X, Row - Area.Y, Delta)));
+          return;
+        else
+      end case;
+    end if;
+
     for Index: int := Layout.Regions.Length - 1 downto 0 do
       const Region: A.ScrollRegion := Layout.Regions[Index];
       if Region.Scope = FocusScope and Region.Bounds.Contains(Column, Row) then

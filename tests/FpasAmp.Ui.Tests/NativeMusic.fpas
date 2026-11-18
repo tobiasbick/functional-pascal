@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Tests.NativeMusic;
 
 uses
-  FpasAmp.Ui.Tests.CollectionFixture as Fixture, FpasAmp.Library.Tests.Support as H,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Tests.CollectionFixture as Fixture, FpasAmp.Library.Tests.Support as H,
   FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Inventory.Monitoring as Monitor,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Ui.Music.LibraryPage as LibraryPage, FpasAmp.Ui.Albums.Music.Model as Music,
@@ -17,6 +17,30 @@ public type LibraryMusicTests = record
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]
   public procedure WholeLibraryMusic();
+    function Indexed(Page: Music.State): bool;
+    begin
+      if Page.Shown.Length <> 22 then
+        return false;
+      end if;
+
+      for Track: Tracks.Entry in Page.Shown do
+        if Track.TrackId = '' then
+          return false;
+        end if;
+      end for;
+
+      return true;
+    end function;
+    function HasRating(Page: Music.State; Id: string; Value: int): bool;
+    begin
+      for Track: Tracks.Entry in Page.Shown do
+        if Track.TrackId = Id then
+          return Track.Rating = Value;
+        end if;
+      end for;
+
+      return false;
+    end function;
     procedure Song(Session: Shell.Session; Value: Music.Msg);
     begin
       discard Session.Window.Post(App.Msg.Songs(LibraryPage.Msg.Song(Value)));
@@ -52,22 +76,23 @@ public type LibraryMusicTests = record
       Library.Refresh('music');
       Fixture.Until(
         Session,
-        function(): bool => Session.State().Songs.Page.Shown.Length = 22
+        function(): bool => Indexed(Session.State().Songs.Page)
           and Session.State().Songs.Page.ReleaseTitles.Length = 9
           and Session.State().Songs.Covers.Count >= 5,
         'Music did not follow the scan and load visible covers.'
       );
       X.Assert.True(Session.State().Songs.Last < 22);
       X.Assert.True(Fixture.Has(Session, 'track-status'));
+      const Rows: I.ImmutableArray<Tracks.Entry> := Session.State().Songs.Page.Shown;
       for Index: int := 1 to 3 do
-        Song(Session, Music.Msg.Rate(Session.State().Songs.Page.Shown[Index].TrackId, Index + 5));
+        Song(Session, Music.Msg.Rate(Rows[Index].TrackId, Index + 5));
       end for;
 
       Fixture.Until(
         Session,
-        function(): bool => Session.State().Songs.Page.Shown[
-          1
-        ].Rating = 6 and Session.State().Songs.Page.Shown[3].Rating = 8,
+        function(): bool => HasRating(Session.State().Songs.Page, Rows[1].TrackId, 6)
+          and HasRating(Session.State().Songs.Page, Rows[2].TrackId, 7)
+          and HasRating(Session.State().Songs.Page, Rows[3].TrackId, 8),
         'Visible star ratings did not update.'
       );
       Fixture.Capture(Session, 'music', 'music');

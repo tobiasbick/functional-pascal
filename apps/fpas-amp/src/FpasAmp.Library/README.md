@@ -5,6 +5,15 @@ ratings, using .NET, `Microsoft.Data.Sqlite` and the [Fpas.Media.Tags](../../../
 filesystem entries; the optional second stage reads tags, technical audio
 properties and SHA-256 without decoding or modifying audio.
 
+## Acoustic fingerprints
+
+`Metadata.Session.FingerprintAsync(track, generate, cancellation)` reads the
+catalogue cache. Passing `true` also runs the packaged Chromaprint `fpcalc` on
+a cache miss. The cache stores the full encoded fingerprint, algorithm number
+and duration reported by the decoder, keyed by the file's SHA-256 and algorithm.
+Switching files or closing the app can cancel the child process. The inventory
+and metadata scans do not enqueue fingerprint work.
+
 ## Lifetime and control
 
 Call `Inventory.Monitoring.Session.Start` with `Sources.MusicSource` settings,

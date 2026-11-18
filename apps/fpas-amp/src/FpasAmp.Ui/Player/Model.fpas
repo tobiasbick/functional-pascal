@@ -1,7 +1,7 @@
 // Playback queue, transport, volume and equalizer state for the player strip.
 unit FpasAmp.Ui.Player.Model;
 
-uses FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music;
 
 // Equalizer band captions in ascending frequency, in hertz.
 public const Bands: array of string := [
@@ -65,6 +65,8 @@ public type State = record
   public Volume: float := 0.0F;
   // Equalizer gains in dB, one per entry of `Bands`.
   public Gains: I.ImmutableArray<float> := Flat();
+  // Local fingerprint request for the current track, after audio starts.
+  public Fingerprint: Fp.State? := null;
 end record;
 
 // Transport, volume and equalizer proposals.
@@ -95,6 +97,8 @@ public type Msg = variant
   Observed(Value: Audio.PlaybackEvent);
   // Background envelope for `Key`; empty when measurement was unavailable.
   Measured(Key: string; Levels: array of float);
+  // Local fingerprint or the diagnostic from its calculation.
+  Fingerprinted(Result: Fp.State);
   // The session worker or its subscription stopped unexpectedly.
   Unavailable(Reason: string);
 end variant;

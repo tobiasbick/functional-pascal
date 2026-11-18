@@ -1,0 +1,100 @@
+// Playback-triggered waveform and local acoustic fingerprint analysis.
+unit FpasAmp.Ui.App.Analysis;
+
+uses
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Fingerprints as Fp,
+  FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Waveforms as Waves,
+  Fpas.Media.Audio as Audio, Fpas.Ui.Mvu.Application as Mvu, System as Sys,
+  System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// Returns the waveform command for Current, using Service when the catalogue is available.
+public function Waveform(Current: PlayerModel.State; Service: Metadata.Session?): Mvu.Command<M.Msg>;
+begin
+  const Key: string := Current.WaveformKey;
+  const Track: Tracks.Entry? := PlayerModel.Track(Current);
+  if Key = '' or Track = null or Current.WaitingForAudio then
+    return Mvu.CancelBackground<M.Msg>('player-waveform');
+  end if;
+
+  return Mvu.StartBackground<M.Msg>(
+    'player-waveform',
+    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      const Measure: Tasks.Task<array of float> := if Service = null then
+        Audio.Analysis.LoudnessAsync(Track.Path, Waves.Buckets, Cancellation)
+      else
+        Service.WaveformAsync(Track, Cancellation)
+      end if;
+      const Levels: array of float := await Measure.ConfigureAwait(false);
+      await Post(M.Msg.Player(PlayerModel.Msg.Measured(Key, Levels))).ConfigureAwait(false);
+    end function,
+    function(_Failure: Sys.Exception): M.Msg => M.Msg.Player(PlayerModel.Msg.Measured(Key, []))
+  );
+end function;
+
+// Applies analysis changes between Before and Next. Service provides the local fingerprint cache.
+// Returns the shell state and only the background commands needed by this transition.
+public function After(Before: M.State; Next: M.State; Service: Metadata.Session?): Mvu.Transition<M.State, M.Msg>;
+begin
+  const WaveChanged: bool := Before.Player.WaveformKey <> Next.Player.WaveformKey
+    or Before.Player.WaitingForAudio <> Next.Player.WaitingForAudio;
+  const Result: Fp.State? := Next.Player.Fingerprint;
+  const Changed: bool := not Sys.Object.ReferenceEquals(Before.Player.Fingerprint, Result);
+  if not WaveChanged and not Changed then
+    return new Mvu.Transition<M.State, M.Msg>(Next, []);
+  end if;
+  const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>();
+  var Updated: M.State := Next;
+  if WaveChanged then
+    Commands.Add(Waveform(Next.Player, Service));
+  end if;
+
+  if Changed then
+    if Result = null then
+      Commands.Add(Mvu.CancelBackground<M.Msg>('player-fingerprint'));
+    elsif Result.Busy then
+      if Service <> null then
+        Commands.Add(
+          Fp.Read<M.Msg>(
+            'player-fingerprint',
+            Service,
+            Result.Track,
+            true,
+            function(Value: Fp.State): M.Msg => M.Msg.Player(PlayerModel.Msg.Fingerprinted(Value))
+          )
+        );
+      else
+        Updated := Next with
+          Player := Next.Player with
+            Fingerprint := new Fp.State(Result.Track, false, Error := 'Library unavailable.');
+          end with;
+        end with;
+      end if;
+    elsif Result.Value <> null then
+      const Page: Songs.State? := Next.Albums.Music;
+      if Fp.Matches(Result, Next.Songs.Page.Details) then
+        Updated := Updated with
+          Songs := Updated.Songs with
+            Page := Updated.Songs.Page with
+              Fingerprint := Result;
+            end with;
+          end with;
+        end with;
+      end if;
+
+      if Page <> null and Fp.Matches(Result, Page.Details) then
+        Updated := Updated with
+          Albums := Updated.Albums with
+            Music := Page with
+              Fingerprint := Result;
+            end with;
+          end with;
+        end with;
+      end if;
+    end if;
+  end if;
+
+  return new Mvu.Transition<M.State, M.Msg>(Updated, Commands.ToArray());
+end function;
+
+end unit;

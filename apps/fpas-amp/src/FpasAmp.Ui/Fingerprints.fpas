@@ -1,0 +1,46 @@
+// Background requests shared by playback and the two song-detail views.
+unit FpasAmp.Ui.Fingerprints;
+
+uses
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// One request or result, tied to the version of a library file.
+public type State = record
+  // File whose fingerprint was requested.
+  public Track: Tracks.Entry;
+  // True while reading the cache or calculating the fingerprint.
+  public Busy: bool := true;
+  // Complete encoded fingerprint, when available.
+  public Value: string? := null;
+  // Diagnostic for a failed request.
+  public Error: string? := null;
+end record;
+
+// Returns whether Result belongs to the same indexed version of Track.
+public function Matches(Result: State?; Track: Tracks.Entry?): bool;
+begin
+  return Result <> null and Track <> null and Result.Track.FileId = Track.FileId
+    and Result.Track.Path = Track.Path and Result.Track.Sha256 = Track.Sha256;
+end function;
+
+// Starts or replaces work named Key on Library for Track. Generate calculates missing values.
+// Reply wraps the result in the owner's message type TMsg. Returns the cancellable MVU command.
+public function Read<TMsg>(Key: string; Library: Metadata.Session; Track: Tracks.Entry; Generate: bool; Reply: function(State): TMsg): A.Command<TMsg>;
+requires Key <> '';
+begin
+  return A.StartBackground<TMsg>(
+    Key,
+    async function(Post: function(TMsg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      const Value: string? := await Library.FingerprintAsync(
+        Track,
+        Generate,
+        Cancellation
+      ).ConfigureAwait(false);
+      await Post(Reply(new State(Track, false, Value))).ConfigureAwait(false);
+    end function,
+    function(Error: Sys.Exception): TMsg => Reply(new State(Track, false, Error := Error.Message))
+  );
+end function;
+
+end unit;

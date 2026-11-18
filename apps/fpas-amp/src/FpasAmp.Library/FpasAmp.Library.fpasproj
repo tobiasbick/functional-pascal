@@ -10,4 +10,5 @@
     <ProjectReference Include="../../../../src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
+  <Import Project="../../third-party/chromaprint/Fpcalc.targets" />
 </Project>

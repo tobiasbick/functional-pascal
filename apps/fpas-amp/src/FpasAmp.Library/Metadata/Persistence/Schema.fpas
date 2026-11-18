@@ -33,7 +33,11 @@ begin
     'position INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL,' +
     'PRIMARY KEY(file_id,position));' +
     'CREATE INDEX IF NOT EXISTS metadata_genres_name ON metadata_genres(name_key,file_id);' +
-    'CREATE TABLE IF NOT EXISTS waveforms(sha256 TEXT PRIMARY KEY, levels BLOB NOT NULL);',
+    'CREATE TABLE IF NOT EXISTS waveforms(sha256 TEXT PRIMARY KEY, levels BLOB NOT NULL);' +
+    'CREATE TABLE IF NOT EXISTS acoustic_fingerprints(sha256 TEXT NOT NULL, algorithm INTEGER NOT NULL,' +
+    'fingerprint TEXT NOT NULL, duration_seconds REAL NOT NULL, PRIMARY KEY(sha256,algorithm));' +
+    'CREATE TABLE IF NOT EXISTS fingerprint_sources(file_id INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,' +
+    'size INTEGER NOT NULL, modified_utc INTEGER NOT NULL, sha256 TEXT NOT NULL);',
     Transaction, [], []
   );
 end procedure;

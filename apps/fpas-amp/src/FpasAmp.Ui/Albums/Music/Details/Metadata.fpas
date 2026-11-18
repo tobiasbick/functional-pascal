@@ -1,0 +1,155 @@
+// Formats the tagged values used by the track summary and its three detail panels.
+unit FpasAmp.Ui.Albums.Music.Details.Metadata;
+
+uses
+  Fpas.Media.Tags.AudioFiles as Tags, FpasAmp.Ui.Albums.Music.Model as M,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Display.Texts as Texts,
+  System as Sys, System.Collections.Generic as C, System.Globalization as G;
+
+const English: G.CultureInfo := G.CultureInfo.GetCultureInfo('en-US');
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+// Returns the year portion of the indexed ISO date Value, or the available partial date.
+public function Year(Value: string): string;
+begin
+  return if Value.Length >= 4 then
+    Value.Substring(0, 4)
+  else
+    Value
+  end if;
+end function;
+
+function Release(Value: string): string;
+begin
+  var Date: Sys.DateTime := Sys.DateTime.MinValue;
+  if Sys.DateTime.TryParseExact(Value, 'yyyy-MM-dd', English, G.DateTimeStyles.None, out Date) then
+    // The catalogue also stores year-only tags as January 1.
+    return if Date.Month = 1 and Date.Day = 1 then
+      Year(Value)
+    else
+      Date.ToString('d MMMM yyyy', English)
+    end if;
+  end if;
+
+  return Value;
+end function;
+
+function Number(Value: double?; Pattern: string; UnitName: string; Divisor: double := 1.0): string;
+begin
+  return if Value <> null and Value.Value > 0.0 then
+    (Value.Value / Divisor).ToString(Pattern, English) + UnitName
+  else
+    ''
+  end if;
+end function;
+
+procedure Add(Rows: C.List<E.Element<M.Msg>>; Label: string; Value: string; Compact: bool);
+begin
+  if not Sys.String.IsNullOrWhiteSpace(Value) then
+    Rows.Add(
+      E.Row<M.Msg>(
+        new L.Flow(Gap := Points(8), Align := L.Alignment.Start),
+        E.Size<M.Msg>(
+          Texts.Text<M.Msg>(Label, Texts.Appearance.Secondary), new L.Flex(
+            Basis := L.Extent.Fixed(
+              L.Measure.Logical(
+                if Compact then
+                  96
+                else
+                  144
+                end if
+              )
+            )
+          )
+        ),
+        E.Size<M.Msg>(E.Text<M.Msg>(Value), Fill)
+      )
+    );
+  end if;
+end procedure;
+
+function Column(Rows: C.List<E.Element<M.Msg>>): E.Element<M.Msg>;
+begin
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch),
+    Rows.ToArray()
+  );
+end function;
+
+// Returns the contents of Tab for the selected file's Info. Compact stacks audio fields vertically.
+public function Panel(Tab: M.DetailTab; Info: Tags.Info; Compact: bool): E.Element<M.Msg>;
+begin
+  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  case Tab of
+    when M.DetailTab.Overview:
+      Add(Rows, 'Genre', Sys.String.Join(', ', Info.Genres), Compact);
+      Add(Rows, 'Release date', Release(Info.ReleaseDate), Compact);
+      Add(Rows, 'Original release', Release(Info.OriginalReleaseDate), Compact);
+      Add(Rows, 'Tempo', Number(Info.Bpm, '0.##', ' BPM'), Compact);
+    when M.DetailTab.Credits:
+      const Performer: string := Sys.String.Join(', ', Info.Artists);
+      const AlbumArtist: string := Sys.String.Join(', ', Info.AlbumArtists);
+      Add(Rows, 'Performer', Performer, Compact);
+      if AlbumArtist <> Performer then
+        Add(Rows, 'Album artist', AlbumArtist, Compact);
+      end if;
+
+      Add(Rows, 'Composer', Sys.String.Join(', ', Info.Composers), Compact);
+      Add(Rows, 'Label', Info.Label, Compact);
+    when M.DetailTab.Audio:
+      Add(
+        Rows, 'Codec', if Info.Codec = 'Free Lossless Audio Codec' then
+          'FLAC'
+        else
+          Info.Codec
+        end if, Compact
+      );
+      Add(Rows, 'Bitrate', Number(Info.Bitrate, '#,##0', ' kbps'), Compact);
+      const Count: int := Info.Channels ?? 0;
+      if Count > 0 then
+        Add(
+          Rows, 'Channels', if Count = 1 then
+            'Mono'
+          elsif Count = 2 then
+            'Stereo'
+          else
+            Count.ToString()
+          end if, Compact
+        );
+      end if;
+      const Technical: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+      Add(Technical, 'Sample rate', Number(Info.SampleRate, '0.###', ' kHz', 1000.0), Compact);
+      if Info.BitDepth > 0 then
+        Add(Technical, 'Bit depth', (Info.BitDepth ?? 0).ToString() + '-bit', Compact);
+      end if;
+
+      if not Compact and Rows.Count > 0 and Technical.Count > 0 then
+        return E.Row<M.Msg>(
+          new L.Flow(Gap := Points(16), Align := L.Alignment.Start),
+          E.Size<M.Msg>(Column(Rows), Fill), E.Size<M.Msg>(Column(Technical), Fill)
+        );
+      end if;
+
+      Rows.AddRange(Technical);
+    else
+  end case;
+
+  if Rows.Count = 0 then
+    return Texts.Text<M.Msg>(
+      case Tab of
+        when M.DetailTab.Overview: 'No additional track information.';
+        when M.DetailTab.Credits: 'No credits available.';
+        else 'No audio information available.';
+      end case, Texts.Appearance.Secondary
+    );
+  end if;
+
+  return Column(Rows);
+end function;
+
+end unit;

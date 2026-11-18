@@ -1,0 +1,85 @@
+// Local acoustic fingerprint generation with the packaged Chromaprint tool.
+unit FpasAmp.Library.Metadata.Fingerprints.Calculator;
+
+uses
+  System as Sys, System.Diagnostics as D, System.IO as IO, System.Text.Json as J,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+// fpcalc's public algorithm number, stored alongside the encoded result.
+public const Algorithm: int := 2;
+
+// A complete encoded fingerprint and the duration of the whole recording.
+public type Measurement = record
+  // Chromaprint's compressed, base64-encoded fingerprint.
+  public Value: string;
+  // Whole recording duration in seconds, as reported by fpcalc.
+  public Duration: double;
+end record;
+
+// Fingerprints the beginning of the local file at Path; Cancellation terminates the child.
+// Returns fpcalc's encoded fingerprint and whole-file duration.
+public async function Measure(Path: string; Cancellation: T.CancellationToken): Tasks.Task<Measurement>;
+requires Path <> '';
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if not IO.Path.IsPathFullyQualified(Path) then
+    raise new Sys.ArgumentException('Expected an absolute local audio file path.', 'Path');
+  end if;
+  const Name: string := if Sys.OperatingSystem.IsWindows() then
+    'fpcalc.exe'
+  else
+    'fpcalc'
+  end if;
+  const Start: D.ProcessStartInfo := new D.ProcessStartInfo(
+    IO.Path.Combine(Sys.AppContext.BaseDirectory, 'tools', 'chromaprint', Name)
+  );
+  Start.UseShellExecute := false;
+  Start.CreateNoWindow := true;
+  Start.RedirectStandardOutput := true;
+  Start.RedirectStandardError := true;
+  for Argument: string in ['-json', '-algorithm', Algorithm.ToString(), '--', Path] do
+    Start.ArgumentList.Add(Argument);
+  end for;
+
+  using const Child: D.Process := new D.Process();
+  Child.StartInfo := Start;
+  discard Child.Start();
+  try
+    const Output: Tasks.Task<string> := Child.StandardOutput.ReadToEndAsync();
+    const Errors: Tasks.Task<string> := Child.StandardError.ReadToEndAsync();
+    await Child.WaitForExitAsync(Cancellation).ConfigureAwait(false);
+    const Json: string := await Output.ConfigureAwait(false);
+    const Error: string := (await Errors.ConfigureAwait(false)).Trim();
+    if Child.ExitCode <> 0 then
+      if Error.Contains('Empty fingerprint', Sys.StringComparison.OrdinalIgnoreCase) then
+        raise new IO.InvalidDataException(
+          'This track contains too little audio to generate a fingerprint.'
+        );
+      end if;
+
+      raise new IO.InvalidDataException(
+        if Error = '' then
+          'Fingerprint calculation failed.'
+        else
+          Error
+        end if
+      );
+    end if;
+
+    using const Document: J.JsonDocument := J.JsonDocument.Parse(Json);
+    const Value: string := Document.RootElement.GetProperty('fingerprint').GetString() ?? '';
+    const Duration: double := Document.RootElement.GetProperty('duration').GetDouble();
+    if Value = '' or not Sys.Double.IsFinite(Duration) or Duration <= 0.0 then
+      raise new IO.InvalidDataException('fpcalc returned an incomplete fingerprint.');
+    end if;
+
+    return new Measurement(Value, Duration);
+  finally
+    if not Child.HasExited then
+      Child.Kill();
+      Child.WaitForExit();
+    end if;
+  end try;
+end function;
+
+end unit;

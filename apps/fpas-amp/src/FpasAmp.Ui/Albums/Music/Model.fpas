@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Albums.Music.Model;
 
 uses
-  FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
   Fpas.Media.Images as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
 
 // Confirmed or draft track filters.
@@ -66,6 +66,16 @@ public type RatingReceipt = record
   public Written: long;
 end record;
 
+// Sections of the track details dialog in native tab order.
+public type DetailTab = enum: byte
+  // Musical properties of the recording and release.
+  Overview;
+  // Performer, composer and label credits.
+  Credits;
+  // Technical properties of the audio stream.
+  Audio;
+end enum;
+
 // The source tracks, confirmed selection and visible state of a song browser.
 public type State = record
   // The selected album header. An empty ID selects the whole library.
@@ -116,6 +126,10 @@ public type State = record
   public ReleaseTitles: array of string := [];
   // Stable release keys corresponding to the display labels.
   public ReleaseIds: array of string := [];
+  // Local analysis for the open details dialog.
+  public Fingerprint: Fp.State? := null;
+  // Section shown for the current track details visit.
+  public ActiveDetailTab: DetailTab := DetailTab.Overview;
 end record;
 
 // Proposals and scoped background completions for the album's songs.
@@ -158,6 +172,12 @@ public type Msg = variant
   Play(FileId: long);
   // Show metadata for one track.
   Details(Item: Tracks.Entry);
+  // Calculate the fingerprint of the track shown in the dialog.
+  GenerateFingerprint;
+  // Delivers a cache lookup or calculation for this Visit.
+  FingerprintRead(Visit: long; Result: Fp.State);
+  // Select Tab in the open track details dialog.
+  SelectDetailTab(Tab: DetailTab);
   // Close track details.
   DismissDetails;
   // Open the containing folder of an indexed path.

@@ -2,12 +2,42 @@
 unit FpasAmp.Ui.Albums.Music.Update;
 
 uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
+  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   Fpas.Media.Images as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
   Fpas.Ui.Gui.Desktop as Desktop, System.Diagnostics as D, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command<M.Msg> := [];
+
+function Fingerprint(Current: M.State; Track: Tracks.Entry; Generate: bool; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+begin
+  const Next: M.State := Current with
+    Details := Track;
+    Fingerprint := new Fp.State(
+      Track, Library <> null, Error := if Library = null then
+        'Library unavailable.'
+      else
+        null
+      end if
+    );
+  end with;
+  if Library = null then
+    return new A.Transition<M.State, M.Msg>(Next, Empty);
+  end if;
+
+  return new A.Transition<M.State, M.Msg>(
+    Next,
+    [
+      Fp.Read<M.Msg>(
+        'detail-fingerprint',
+        Library,
+        Track,
+        Generate,
+        function(Value: Fp.State): M.Msg => M.Msg.FingerprintRead(Current.Visit, Value)
+      )
+    ]
+  );
+end function;
 
 // Starts the selected release's query for `Current` through the borrowed `Library`.
 // `LoadCover` requests the thumbnail when the grid has not already resolved it.
@@ -234,13 +264,40 @@ begin
         );
       end if;
     when M.Msg.Details(const Item: Tracks.Entry):
-      Next := Current with
-        Details := Item;
-      end with;
+      return Fingerprint(
+        Current with
+          ActiveDetailTab := M.DetailTab.Overview;
+        end with, Item, false, Library
+      );
+    when M.Msg.SelectDetailTab(const Tab: M.DetailTab):
+      if Current.Details <> null then
+        Next := Current with
+          ActiveDetailTab := Tab;
+        end with;
+      end if;
+    when M.Msg.GenerateFingerprint:
+      const Track: Tracks.Entry? := Current.Details;
+      if Track <> null then
+        return Fingerprint(Current, Track, true, Library);
+      end if;
+    when M.Msg.FingerprintRead(const Visit: long, const Result: Fp.State):
+      const Previous: Fp.State? := Current.Fingerprint;
+      if Visit = Current.Visit and Fp.Matches(
+        Result,
+        Current.Details
+      ) and (Previous = null or Previous.Value = null or Result.Value <> null)
+      then
+        Next := Current with
+          Fingerprint := Result;
+        end with;
+      end if;
     when M.Msg.DismissDetails:
-      Next := Current with
-        Details := null;
-      end with;
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Details := null;
+          Fingerprint := null;
+        end with, [A.CancelBackground<M.Msg>('detail-fingerprint')]
+      );
     when M.Msg.ShowFolder(const Path: string):
       return OpenFolder(Current, Path);
   end case;

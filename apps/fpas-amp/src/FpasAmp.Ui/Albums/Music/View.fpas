@@ -3,15 +3,15 @@ unit FpasAmp.Ui.Albums.Music.View;
 
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Ui.Albums.Music.Details.View as Dialog, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
-  Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   Fpas.Media.Images as Imaging, System.Collections.Immutable as I, System as Sys, System.Collections.Generic as C;
 
@@ -20,16 +20,6 @@ const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 function Points(Value: int): L.Spacing;
 begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
-end function;
-
-function AlbumName(Current: M.State; Item: Tracks.Entry): string;
-begin
-  const Name: string := Browse.AlbumTitle(Item);
-  return if Name = '' then
-    Current.Album.Title
-  else
-    Name
-  end if;
 end function;
 
 function Sort(Current: M.State): E.Element<M.Msg>;
@@ -112,29 +102,6 @@ begin
   );
 end function;
 
-function Details(Current: M.State; Base: E.Element<M.Msg>): E.Element<M.Msg>;
-begin
-  const Item: Tracks.Entry? := Current.Details;
-  const Body: E.Element<M.Msg> := if Item = null then
-    E.Column<M.Msg>()
-  else
-    E.Column<M.Msg>(
-      new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch),
-      Texts.Text<M.Msg>(Browse.Title(Item), Texts.Appearance.HeadingThree),
-      E.Text<M.Msg>(Browse.Artist(Item)),
-      E.Text<M.Msg>(AlbumName(Current, Item)),
-      E.Text<M.Msg>(Sys.String.Join(', ', Browse.Genres(Item))),
-      E.Text<M.Msg>(Browse.Time(Browse.Duration(Item))),
-      Texts.Text<M.Msg>(Item.Path, Texts.Appearance.Secondary),
-      Copy.CopyButton<M.Msg>('track-copy-path', Item.Path)
-    )
-  end if;
-  return Dialogs.Dialog<M.Msg>(
-    'track-details', Base, Body, Item <> null,
-    new Dialogs.Options('Track details', Width := 540), M.Msg.DismissDetails
-  );
-end function;
-
 function Fixed(Value: int): L.Flex;
 begin
   return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Value)));
@@ -170,8 +137,14 @@ begin
   end if;
 
   Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, Inner, Playback, Covers), Fill));
-  return Details(
-    Current, E.Column<M.Msg>(
+  var Cover: Imaging.Bitmap? := null;
+  const Item: Tracks.Entry? := Current.Details;
+  if Item <> null then
+    discard Covers.TryGetValue(Item.AlbumId, out Cover);
+  end if;
+
+  return Dialog.Build(
+    Current, Playback, Width, Cover, E.Column<M.Msg>(
       new L.Flow(Align := L.Alignment.Stretch),
       E.Size<M.Msg>(
         E.Column<M.Msg>(
@@ -298,7 +271,10 @@ begin
       Fill
     )
   );
-  return Details(Current, E.Column<M.Msg>(Stretch, Heading, Rule, E.Size<M.Msg>(Columns, Fill)));
+  return Dialog.Build(
+    Current, Playback, Width, Current.Cover,
+    E.Column<M.Msg>(Stretch, Heading, Rule, E.Size<M.Msg>(Columns, Fill))
+  );
 end function;
 
 end unit;

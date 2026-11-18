@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Player.Update;
 
 uses
-  FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio,
   System as Sys, System.Collections.Immutable as I;
 
@@ -49,6 +49,11 @@ begin
   const Track: Tracks.Entry := Current.Queue[Index];
   const Next: M.State := Current with
     Index := Index;
+    Fingerprint := if Fp.Matches(Current.Fingerprint, Track) then
+      Current.Fingerprint
+    else
+      null
+    end if;
     Revision := Current.Revision + 1L;
     Position := 0.0;
     Duration := Browse.Duration(Track);
@@ -110,6 +115,16 @@ begin
   end if;
   const Next: M.State := Current with
     Position := Value.Position.TotalMilliseconds;
+    Fingerprint := if Current.Playing and Value.State = Audio.PlaybackState.Playing
+      and Value.Position.TotalMilliseconds > 0.0 and not Fp.Matches(
+      Current.Fingerprint,
+      Track
+    )
+    then
+      new Fp.State(Track)
+    else
+      Current.Fingerprint
+    end if;
     WaitingForAudio := Current.WaitingForAudio and not ((Value.State = Audio.PlaybackState.Playing
       and Value.Position.TotalMilliseconds > 0.0)
       or (not Current.Playing and Value.State = Audio.PlaybackState.Paused));
@@ -285,6 +300,14 @@ begin
           Current with
             Gains := Presets.Choices[Index].Gains;
             PresetsOpen := false;
+          end with
+        );
+      end if;
+    when M.Msg.Fingerprinted(const Result: Fp.State):
+      if Fp.Matches(Result, Track) and Fp.Matches(Current.Fingerprint, Track) then
+        return new M.Transition(
+          Current with
+            Fingerprint := Result;
           end with
         );
       end if;

@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Tests.NativePlayback;
 
 uses
-  FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Tests.PlaybackFixture as Fixture, FpasAmp.Ui.Albums.Music.Model as Music,
   FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.App.Model as App,
   FpasAmp.Ui.Player.Model as Player, FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Inventory.Monitoring as Monitor,
@@ -12,34 +12,6 @@ uses
   FpasAmp.Settings as Preferences, FpasAmp.Ui.Player.Presets as Presets,
   Fpas.Ui.Gui.Application as Gui, System as Sys, System.IO as IO,
   System.Collections.Immutable as I, System.Threading as T, Xunit as X;
-
-procedure Tone(Path: string; QuietPassage: bool := false);
-begin
-  using const File: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
-  const Frames: int := 44100 * 5;
-  File.Write($46464952);
-  File.Write(36 + Frames * 4);
-  File.Write($45564157);
-  File.Write($20746D66);
-  File.Write(16);
-  File.Write(cast<short>(1));
-  File.Write(cast<short>(2));
-  File.Write(44100);
-  File.Write(44100 * 4);
-  File.Write(cast<short>(4));
-  File.Write(cast<short>(16));
-  File.Write($61746164);
-  File.Write(Frames * 4);
-  for Frame: int := 0 to Frames - 1 do
-    const Sample: double := if QuietPassage and Frame >= 44100 and Frame < 88200 then
-      0.0
-    else
-      Sys.Math.Sin(2.0 * Sys.Math.PI * 500.0 * Frame / 44100.0)
-    end if;
-    File.Write(cast<short>(3277.0 * Sample));
-    File.Write(cast<short>(819.0 * Sample));
-  end for;
-end procedure;
 
 procedure WaitFor(Session: Shell.Session; Ready: function(Player.State): bool; Reason: string);
 begin
@@ -74,7 +46,7 @@ public type NativePlaybackTests = record
     using const Root: H.Folder := H.Folder.Create();
     using const Data: H.Folder := H.Folder.Create();
     const Path: string := IO.Path.Combine(Root.Path, 'resume.wav');
-    Tone(Path);
+    Fixture.Tone(Path);
     IO.File.Copy(Path, IO.Path.Combine(Root.Path, 'another.wav'));
     const Source: Sources.MusicSource := Fixtures.Source(Root.Path) with
       Extensions := ['.wav'];
@@ -174,7 +146,7 @@ public type NativePlaybackTests = record
     end with;
     const First: string := IO.Path.Combine(Root.Path, 'a.wav');
     const Second: string := IO.Path.Combine(Other.Path, 'b.wav');
-    Tone(First);
+    Fixture.Tone(First);
     IO.File.Copy(First, Second);
     const Store: Monitor.Session := Fixtures.Start([A, B], Data.Path);
     try
@@ -268,7 +240,7 @@ public type NativePlaybackTests = record
   begin
     using const Root: H.Folder := H.Folder.Create();
     const Path: string := IO.Path.Combine(Root.Path, 'tone.wav');
-    Tone(Path, true);
+    Fixture.Tone(Path, true);
     const First: Tracks.Entry := new Tracks.Entry(1L, 'one', Path, '', null, null, null, ['music']);
     const Second: Tracks.Entry := First with
       FileId := 2L;

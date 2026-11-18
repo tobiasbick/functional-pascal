@@ -1,0 +1,103 @@
+// File and acoustic fingerprint actions shared by all track detail tabs.
+unit FpasAmp.Ui.Albums.Music.Details.Source;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.Cards as Cards, System as Sys;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Fingerprint(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element<M.Msg>;
+begin
+  const Local: Fp.State? := Current.Fingerprint;
+  const Playing: Fp.State? := Playback.Fingerprint;
+  var Result: Fp.State? := Local;
+  if (Local = null or Local.Value = null) and Fp.Matches(
+    Playing,
+    Item
+  ) and Playing <> null and (Playing.Value <> null or Local = null or not Local.Busy)
+  then
+    Result := Playing;
+  end if;
+
+  if Result <> null then
+    const Value: string? := Result.Value;
+    if Value <> null then
+      const Preview: string := if Value.Length > 40 then
+        Value.Substring(0, 40) + '…'
+      else
+        Value
+      end if;
+      return E.Row<M.Msg>(
+        new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+        E.Size<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Preview), S.Role.SingleLine), Fill),
+        Copy.CopyButton<M.Msg>('track-copy-fingerprint', Value)
+      );
+    end if;
+
+    if Result.Busy then
+      return E.Text<M.Msg>('Checking fingerprint…');
+    end if;
+  end if;
+  const Generate: E.Element<M.Msg> := Buttons.Button<M.Msg>(
+    'track-generate-fingerprint',
+    'Generate fingerprint',
+    M.Msg.GenerateFingerprint,
+    new Buttons.Options(Variant := S.ButtonVariant.Outline, ControlSize := Buttons.Size.Small)
+  );
+  const Status: string := if Result <> null then
+    Result.Error ?? 'Not generated'
+  else
+    'Not generated'
+  end if;
+  return E.Row<M.Msg>(
+    new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+    E.Size<M.Msg>(Texts.Text<M.Msg>(Status, Texts.Appearance.Secondary), Fill), Generate
+  );
+end function;
+
+// Builds the source card for Item. Current and Playback supply pending or completed fingerprint work.
+public function Build(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element<M.Msg>;
+requires Item.Path <> '';
+begin
+  const Row: L.Flow := new L.Flow(Gap := Points(6), Align := L.Alignment.Center);
+  const Rule: E.Element<M.Msg> := E.Size<M.Msg>(
+    E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
+  );
+  return Cards.Card<M.Msg>(
+    'track-detail-source',
+    [
+      Texts.Text<M.Msg>('File path', Texts.Appearance.Label),
+      E.Row<M.Msg>(
+        Row,
+        E.Size<M.Msg>(E.Text<M.Msg>(Item.Path), Fill),
+        Copy.CopyButton<M.Msg>('track-copy-path', Item.Path),
+        Icons.IconButton<M.Msg>(
+          'track-open-folder',
+          Sys.Char.ConvertFromUtf32($E247),
+          'Show in folder',
+          M.Msg.ShowFolder(Item.Path)
+        )
+      ),
+      Rule,
+      Texts.Text<M.Msg>('Acoustic fingerprint', Texts.Appearance.Label),
+      Fingerprint(Current, Playback, Item)
+    ],
+    new Cards.Options(
+      Width := L.Extent.Fill,
+      Padding := 14.0F,
+      Gap := 5.0F,
+      Align := L.Alignment.Stretch
+    )
+  );
+end function;
+
+end unit;

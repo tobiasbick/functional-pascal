@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Tests.NativeAlbumMusic;
 
 uses
+  FpasAmp.Ui.Fingerprints as Fp,
   Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
   FpasAmp.Ui.Player.Model as Player, FpasAmp.Persistence.PlayerState as Bookmark,
@@ -17,10 +18,10 @@ uses
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Inputs.Selects as Selects, ATL as Audio,
   System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
 
-function Control(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
-    if Item.Id = Id then
+    if Item.Id = Id and Item.Key = Key then
       return Item;
     end if;
   end for;
@@ -93,6 +94,14 @@ public type AlbumMusicTests = record
       const Next: A.Transition<App.State, App.Msg> := Controller.Apply(
         Current, Message, procedure(_Value: Settings.Preferences) begin end procedure, Store, Port
       );
+      case Message of
+        when App.Msg.Albums(Albums.Msg.Music(Music.Msg.ShowFolder(const Path: string))):
+          // Observe the desktop request without opening a file manager on the user's desktop.
+          FolderRequest := Path;
+          return new A.Transition<App.State, App.Msg>(Next.Model, []);
+        else
+      end case;
+
       Last := Next.Model;
       return Next;
     end function;
@@ -133,6 +142,7 @@ public type AlbumMusicTests = record
       new Settings.State(new Settings.Preferences([Sources.Source(Root.Path)], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
     );
+    var FolderRequest: string := '';
     var XPos: float := -1.0F;
     var YPos: float := -1.0F;
     var Left: int := -1;
@@ -255,6 +265,60 @@ public type AlbumMusicTests = record
       Step(Session);
       Click(Session, Control(Session, 'track-menu-' + Id + '/details').Bounds);
       X.Assert.Contains<string>('Track details', Session.Snapshot().Text);
+      X.Assert.Contains<string>('120 BPM', Session.Snapshot().Text);
+      X.Assert.Contains<string>('Demo Release · 2024', Session.Snapshot().Text);
+      X.Assert.True(
+        Sys.Array.Exists<string>(
+          Session.Snapshot().Text,
+          function(Line: string): bool => Line.StartsWith('Disc 1 of 2 · Track 2 of 12')
+        )
+      );
+      const CopyPath: Cui.CuiRectangle := Control(Session, 'track-copy-path').Bounds;
+      const OpenPath: Cui.CuiRectangle := Control(Session, 'track-open-folder').Bounds;
+      X.Assert.True(CopyPath.Width > 0.0F and OpenPath.X >= CopyPath.X + CopyPath.Width);
+      Click(Session, OpenPath);
+      X.Assert.Equal<string>(Track.Path, FolderRequest);
+      const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+      if SaveAt <> null then
+        discard IO.Directory.CreateDirectory(SaveAt);
+        Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-overview.png'));
+      end if;
+
+      Click(Session, Control(Session, 'track-detail-tabs', '1').Bounds);
+      X.Assert.Contains<string>('Test label', Session.Snapshot().Text);
+      X.Assert.DoesNotContain<string>('120 BPM', Session.Snapshot().Text);
+      if SaveAt <> null then
+        Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-credits.png'));
+      end if;
+
+      Click(Session, Control(Session, 'track-detail-tabs', '2').Bounds);
+      X.Assert.Contains<string>('Stereo', Session.Snapshot().Text);
+      X.Assert.Contains<string>('Sample rate', Session.Snapshot().Text);
+      X.Assert.DoesNotContain<string>('Test label', Session.Snapshot().Text);
+      if SaveAt <> null then
+        Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-audio.png'));
+      end if;
+
+      Until(
+        Session,
+        function(): bool => Has(Session, 'track-generate-fingerprint'),
+        'Missing fingerprint action.'
+      );
+      Click(Session, Control(Session, 'track-generate-fingerprint').Bounds);
+      // The short MP3 fixture has too little audio for Chromaprint. The dialog offers a retry.
+      Until(
+        Session, function(): bool begin
+          const Open: Music.State? := Last.Albums.Music;
+          if Open = null then
+            return false;
+          end if;
+          const Result: Fp.State? := Open.Fingerprint;
+          return Result <> null and Result.Error <> null and Has(
+            Session,
+            'track-generate-fingerprint'
+          );
+        end function, 'The failed calculation did not release the generate action.'
+      );
       Send(Session, Albums.Msg.Music(Music.Msg.DismissDetails));
       Send(Session, Albums.Msg.Music(Music.Msg.Search('Intro')));
       X.Assert.Equal<string>('0:1', Control(Session, 'album-tracks').Value);
@@ -285,9 +349,7 @@ public type AlbumMusicTests = record
       Click(Session, Control(Session, 'track-filter-reset').Bounds);
       Click(Session, Control(Session, 'track-filter-apply').Bounds);
       X.Assert.Equal<string>('0:2', Control(Session, 'album-tracks').Value);
-      const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
       if SaveAt <> null then
-        discard IO.Directory.CreateDirectory(SaveAt);
         Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music.png'));
         Click(Session, Control(Session, 'track-filters').Bounds);
         Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music-filters.png'));

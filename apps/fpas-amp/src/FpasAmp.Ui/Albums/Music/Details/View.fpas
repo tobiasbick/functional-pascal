@@ -1,0 +1,147 @@
+// Shared track detail dialog for both the album and library song tables.
+unit FpasAmp.Ui.Albums.Music.Details.View;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Albums.Music.Details.Metadata as Metadata, FpasAmp.Ui.Albums.Music.Details.Source as Source,
+  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Player.Model as Player, FpasAmp.Library.Metadata.Model as Tracks,
+  Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Images as Images, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  System as Sys, System.Collections.Generic as C;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+const Sections: array of Tabs.Item := [
+  new Tabs.Item('Overview'),
+  new Tabs.Item('Credits'),
+  new Tabs.Item('Audio')
+];
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+procedure Position(Parts: C.List<string>; Label: string; Index: int?; Total: int?);
+begin
+  if Index > 0 then
+    Parts.Add(
+      Label + ' ' + (Index ?? 0).ToString() + if Total >= Index then
+        ' of ' + (Total ?? 0).ToString()
+      else
+        ''
+      end if
+    );
+  end if;
+end procedure;
+
+function Summary(Current: M.State; Item: Tracks.Entry; Info: Tags.Info; Cover: Images.Bitmap?; Compact: bool): E.Element<M.Msg>;
+begin
+  const Lines: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  Lines.Add(Texts.Text<M.Msg>(Browse.Title(Item), Texts.Appearance.HeadingThree));
+  const Artist: string := Browse.Artist(Item);
+  if Artist <> '' then
+    Lines.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Artist), S.Role.Introduction));
+  end if;
+
+  const Album: string := Browse.AlbumTitle(Item);
+  const Identity: C.List<string> := new C.List<string>();
+  if Album <> '' then
+    Identity.Add(Album);
+  elsif Current.Album.Id <> '' and Current.Album.Title <> '' then
+    Identity.Add(Current.Album.Title);
+  end if;
+
+  if Info.ReleaseDate <> '' then
+    Identity.Add(Metadata.Year(Info.ReleaseDate));
+  end if;
+
+  if Identity.Count > 0 then
+    Lines.Add(Texts.Text<M.Msg>(Sys.String.Join(' · ', Identity), Texts.Appearance.Secondary));
+  end if;
+
+  const Parts: C.List<string> := new C.List<string>();
+  Position(Parts, 'Disc', Info.DiscNumber, Info.DiscTotal);
+  Position(Parts, 'Track', Info.TrackNumber, Info.TrackTotal);
+  const Duration: double := Browse.Duration(Item);
+  if Duration > 0.0 then
+    Parts.Add(Browse.Time(Duration));
+  end if;
+
+  if Parts.Count > 0 then
+    Lines.Add(Texts.Text<M.Msg>(Sys.String.Join(' · ', Parts), Texts.Appearance.Secondary));
+  end if;
+
+  return E.Row<M.Msg>(
+    new L.Flow(
+      Gap := Points(
+        if Compact then
+          12
+        else
+          24
+        end if
+      ), Align := L.Alignment.Start
+    ),
+    Artwork.Build<M.Msg>(
+      'track-detail-cover', Cover, if Compact then
+        72
+      else
+        144
+      end if
+    ),
+    E.Size<M.Msg>(
+      E.Column<M.Msg>(new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch), Lines.ToArray()),
+      Fill
+    )
+  );
+end function;
+
+// Overlays the selected track's details on Base. Current owns the selected tab and file.
+// Playback supplies ongoing analysis, Width is the available width, and Cover is the album image.
+public function Build(Current: M.State; Playback: Player.State; Width: int; Cover: Images.Bitmap?; Base: E.Element<M.Msg>): E.Element<M.Msg>;
+begin
+  const Item: Tracks.Entry? := Current.Details;
+  const Compact: bool := Width < 585;
+  var Body: E.Element<M.Msg> := E.Column<M.Msg>();
+  if Item <> null then
+    const Info: Tags.Info := Item.Metadata ?? new Tags.Info();
+    Body := E.Column<M.Msg>(
+      new L.Flow(
+        Gap := Points(
+          if Compact then
+            8
+          else
+            14
+          end if
+        ), Align := L.Alignment.Stretch
+      ),
+      Summary(Current, Item, Info, Cover, Compact),
+      Tabs.Tabs<M.Msg>(
+        'track-detail-tabs', Sections, cast<int>(Current.ActiveDetailTab),
+        function(Index: int): M.Msg => M.Msg.SelectDetailTab(cast<M.DetailTab>(Index))
+      ),
+      E.Size<M.Msg>(
+        Metadata.Panel(Current.ActiveDetailTab, Info, Compact), new L.Flex(
+          Minimum := L.Measure.Logical(
+            if Compact then
+              64
+            else
+              98
+            end if
+          )
+        )
+      ),
+      Source.Build(Current, Playback, Item)
+    );
+  end if;
+
+  return Dialogs.Dialog<M.Msg>(
+    'track-details',
+    Base,
+    Body,
+    Item <> null,
+    new Dialogs.Options('Track details', Width := Sys.Math.Clamp(Width, 280, 820)),
+    M.Msg.DismissDetails
+  );
+end function;
+
+end unit;

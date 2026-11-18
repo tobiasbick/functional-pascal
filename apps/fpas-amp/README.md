@@ -48,6 +48,17 @@ lists genres that occur on some of the album's tracks and hides the genre field
 when every track has the same set of genres. Rate a
 track with its ten stars or use the row menu to inspect its tags, copy the path
 from the details or open the folder.
+
+**Track details** opens on **Overview** with the cover, track title, artist, album,
+year, disc and track numbers, and duration when available. Switch to **Credits**
+for performers, composers and the label, or **Audio** for the codec, bitrate,
+sample rate, bit depth and channels. Every tab includes buttons to copy the full
+file path and open its containing folder, plus a preview of the track's Chromaprint acoustic
+fingerprint. Use the copy button for the full value, or **Generate fingerprint**
+to identify an unplayed file locally. Playback starts the same calculation in
+the background once audio is flowing. FPas-Amp reuses results from `library.db`.
+Music files are opened read-only. Fingerprints stay on this computer.
+
 The player strip stays at the bottom of every destination except **Settings**.
 In Music and album track lists, click a track's play button or double-click its row
 to start it in the displayed queue. The current track's button uses the accent color

@@ -15,7 +15,7 @@ uses
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Update as Player,
   FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
-  FpasAmp.Library.Metadata.Waveforms as Waves, Fpas.Media.Audio as Audio,
+  FpasAmp.Ui.App.Analysis as Analysis, Fpas.Media.Audio as Audio,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -125,29 +125,6 @@ begin
   );
 end function;
 
-function Waveform(Current: PlayerModel.State; Service: Metadata.Session?): Mvu.Command<M.Msg>;
-begin
-  const Key: string := Current.WaveformKey;
-  const Track: Tracks.Entry? := PlayerModel.Track(Current);
-  if Key = '' or Track = null or Current.WaitingForAudio then
-    return Mvu.CancelBackground<M.Msg>('player-waveform');
-  end if;
-
-  return Mvu.StartBackground<M.Msg>(
-    'player-waveform',
-    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      const Measure: Tasks.Task<array of float> := if Service = null then
-        Audio.Analysis.LoudnessAsync(Track.Path, Waves.Buckets, Cancellation)
-      else
-        Service.WaveformAsync(Track, Cancellation)
-      end if;
-      const Levels: array of float := await Measure.ConfigureAwait(false);
-      await Post(M.Msg.Player(PlayerModel.Msg.Measured(Key, Levels))).ConfigureAwait(false);
-    end function,
-    function(_Failure: Sys.Exception): M.Msg => M.Msg.Player(PlayerModel.Msg.Measured(Key, []))
-  );
-end function;
-
 // Saves the current mixer alongside the latest source and appearance preferences.
 // ## Parameters
 // - `Current`: Shell state carrying the mixer and last saved preferences.
@@ -202,13 +179,7 @@ begin
     end case;
   end if;
 
-  if Next.Player.WaveformKey <> Current.Player.WaveformKey or Next.Player.WaitingForAudio <>
-    Current.Player.WaitingForAudio
-  then
-    return new Mvu.Transition<M.State, M.Msg>(Next, [Waveform(Next.Player, Library.Metadata)]);
-  end if;
-
-  return new Mvu.Transition<M.State, M.Msg>(Next, []);
+  return Analysis.After(Current, Next, Library.Metadata);
 end function;
 
 function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
@@ -250,7 +221,7 @@ begin
   end for;
   const Tags: Metadata.Session? := Library.Metadata;
   if Current.WaveformKey <> '' then
-    Commands.Add(Waveform(Current, Tags));
+    Commands.Add(Analysis.Waveform(Current, Tags));
   end if;
 
   if Tags <> null then

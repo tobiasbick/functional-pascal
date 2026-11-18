@@ -14,7 +14,7 @@ begin
   if Id = '' then
     Sql.Execute(
       Connection,
-      'DELETE FROM sources; DELETE FROM files; DELETE FROM waveforms;',
+      'DELETE FROM sources; DELETE FROM files; DELETE FROM waveforms; DELETE FROM acoustic_fingerprints;',
       Transaction,
       [],
       []

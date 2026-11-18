@@ -7,7 +7,7 @@ uses
   FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Worker as Worker,
   FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
   FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Metadata.Waveforms as Waveforms,
-  FpasAmp.Library.Playlists.Access as Lists,
+  FpasAmp.Library.Metadata.Fingerprints.Store as Fingerprints, FpasAmp.Library.Playlists.Access as Lists,
   FpasAmp.Library.Albums.Access as Albums,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
@@ -27,6 +27,7 @@ public type Session = record implements Sys.IAsyncDisposable
   Policy: P.Policy;
   Lifetime: T.CancellationToken;
   Stop: function(): Tasks.Task;
+  FingerprintGate: T.SemaphoreSlim;
 
   // Replaces isolated normalized source policy and wakes the bounded worker.
   public procedure Configure(Sources: array of S.MusicSource);
@@ -143,6 +144,37 @@ public type Session = record implements Sys.IAsyncDisposable
     ).ConfigureAwait(false);
   end function;
 
+  // Looks up the fingerprint for Track and optionally generates a missing value.
+  // Cancellation interrupts the request and its child process. Returns the full encoded value or null.
+  public async function FingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task<string?>;
+  requires Track.Path <> '';
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    if not Generate then
+      return await Tasks.Task.Run<string?>(
+        function(): string? => Fingerprints.Cached(self.Database, Track),
+        Linked.Token
+      ).ConfigureAwait(false);
+    end if;
+
+    return await Tasks.TaskExtensions.Unwrap<string?>(
+      Tasks.Task.Run<Tasks.Task<string?>>(
+        function(): Tasks.Task<string?> => Fingerprints.Generate(
+          self.Database,
+          Track,
+          self.Policy,
+          self.FingerprintGate,
+          Linked.Token
+        ),
+        Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+
   // Saves a user rating (one through ten, or null) for durable `TrackId`.
   // Imported tags and subsequent rescans never overwrite this value.
   public async function SetRatingAsync(TrackId: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
@@ -212,7 +244,7 @@ public type Session = record implements Sys.IAsyncDisposable
       UserDatabase,
       Policy,
       Stop.Token,
-      function(): Tasks.Task => Cleanup.Value
+      function(): Tasks.Task => Cleanup.Value, new T.SemaphoreSlim(1, 1)
     );
   end function;
 end record;

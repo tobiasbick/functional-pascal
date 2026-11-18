@@ -1,0 +1,148 @@
+// Validates the indexed file version before attaching an acoustic fingerprint to its content.
+unit FpasAmp.Library.Metadata.Fingerprints.Store;
+
+uses
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Fingerprints.Calculator as Calc,
+  FpasAmp.Library.Metadata.Internal.Reading as Reading, FpasAmp.Library.Metadata.Internal.Policy as Policy,
+  FpasAmp.Library.Sources as Sources, FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Security.Cryptography as Crypto,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+type FileVersion = record
+  // Indexed size in bytes.
+  public Size: long;
+  // Indexed UTC modification time in ticks.
+  public Modified: long;
+  // Full-file SHA-256 if already known.
+  public Hash: string;
+  // Encoded fingerprint for this content and algorithm, when stored.
+  public Cached: string?;
+end record;
+
+function Version(Database: string; Track: M.Entry): FileVersion;
+begin
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  using const Query: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT f.size,f.modified_utc,COALESCE(NULLIF(m.sha256,''''),s.sha256,''''),p.fingerprint FROM files f ' +
+    'LEFT JOIN metadata m ON m.file_id=f.id AND m.size=f.size AND m.modified_utc=f.modified_utc ' +
+    'LEFT JOIN fingerprint_sources s ON s.file_id=f.id AND s.size=f.size AND s.modified_utc=f.modified_utc ' +
+    'LEFT JOIN acoustic_fingerprints p ON p.sha256=COALESCE(NULLIF(m.sha256,''''),s.sha256) AND p.algorithm=$algorithm ' +
+    'WHERE f.kind=0 AND f.id=$id AND f.path_key=$path;',
+    null, ['$algorithm', '$id', '$path'], [Calc.Algorithm, Track.FileId, Sql.Key(Track.Path)]
+  );
+  using const Row: Db.SqliteDataReader := Query.ExecuteReader();
+  if not Row.Read() or Row.IsDBNull(0) or Row.IsDBNull(1) then
+    raise new IO.IOException('The track is no longer indexed.');
+  end if;
+  const Hash: string := Row.GetString(2);
+  if Track.Sha256 <> '' and Hash <> Track.Sha256 then
+    raise new IO.IOException('The track has changed. Reopen its details.');
+  end if;
+
+  return new FileVersion(
+    Row.GetInt64(0), Row.GetInt64(1), Hash,
+    if Row.IsDBNull(3) then
+      null
+    else
+      Row.GetString(3)
+    end if
+  );
+end function;
+
+procedure CheckSource(Configuration: Policy.Policy; Track: M.Entry; File: FileVersion);
+begin
+  for Source: Sources.MusicSource in Configuration.Read().Sources do
+    if not Source.Offline and Sys.Array.IndexOf<string>(Track.SourceIds, Source.Id) >= 0
+      and Sources.Within(Track.Path, Source.Path)
+    then
+      if Reading.Matches(Track.Path, File.Size, File.Modified) then
+        return;
+      end if;
+
+      raise new IO.IOException('The file has changed or is unavailable.');
+    end if;
+  end for;
+
+  raise new IO.IOException('The music source is offline or unavailable.');
+end procedure;
+
+// Returns the stored fingerprint for Track in Database, or null if one has yet to be generated.
+public function Cached(Database: string; Track: M.Entry): string?;
+requires Database <> '';
+begin
+  return Version(Database, Track).Cached;
+end function;
+
+// Reuses or calculates the fingerprint for Track in Database. Configuration identifies available
+// sources; Gate serializes generators in this library. Cancellation interrupts waiting and fpcalc.
+// Returns the encoded fingerprint only after it has been stored.
+public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task<string?>;
+requires Database <> '';
+begin
+  await Gate.WaitAsync(Cancellation).ConfigureAwait(false);
+  try
+    const File: FileVersion := Version(Database, Track);
+    if File.Cached <> null then
+      return File.Cached;
+    end if;
+
+    CheckSource(Configuration, Track, File);
+    var Hash: string := File.Hash;
+    if Hash = '' then
+      // Music can start a newly discovered track before the metadata worker reaches it.
+      using const Stream: IO.FileStream := IO.File.OpenRead(Track.Path);
+      Hash := Sys.Convert.ToHexString(
+        await Crypto.SHA256.HashDataAsync(Stream, Cancellation).ConfigureAwait(false)
+      );
+    end if;
+    const Result: Calc.Measurement := await Calc.Measure(
+      Track.Path,
+      Cancellation
+    ).ConfigureAwait(false);
+    CheckSource(Configuration, Track, File);
+    Cancellation.ThrowIfCancellationRequested();
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+    using const Save: Db.SqliteCommand := Sql.Command(
+      Connection,
+      'INSERT INTO acoustic_fingerprints(sha256,algorithm,fingerprint,duration_seconds) ' +
+      'SELECT $hash,$algorithm,$value,$duration FROM files WHERE id=$id AND path_key=$path ' +
+      'AND size=$size AND modified_utc=$modified ON CONFLICT(sha256,algorithm) DO UPDATE SET ' +
+      'fingerprint=excluded.fingerprint,duration_seconds=excluded.duration_seconds;',
+      Transaction,
+      ['$hash', '$algorithm', '$value', '$duration', '$id', '$path', '$size', '$modified'],
+      [
+        Hash,
+        Calc.Algorithm,
+        Result.Value,
+        Result.Duration,
+        Track.FileId,
+        Sql.Key(Track.Path),
+        File.Size,
+        File.Modified
+      ]
+    );
+    if Save.ExecuteNonQuery() <> 1 then
+      raise new IO.IOException('The track changed while calculating its fingerprint.');
+    end if;
+
+    if File.Hash = '' then
+      Sql.Execute(
+        Connection,
+        'INSERT INTO fingerprint_sources(file_id,size,modified_utc,sha256) VALUES($id,$size,$modified,$hash) ' +
+        'ON CONFLICT(file_id) DO UPDATE SET size=excluded.size,modified_utc=excluded.modified_utc,sha256=excluded.sha256;',
+        Transaction,
+        ['$id', '$size', '$modified', '$hash'],
+        [Track.FileId, File.Size, File.Modified, Hash]
+      );
+    end if;
+
+    Transaction.Commit();
+    return Result.Value;
+  finally
+    discard Gate.Release();
+  end try;
+end function;
+
+end unit;

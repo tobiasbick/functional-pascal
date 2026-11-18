@@ -8,6 +8,19 @@ namespace Fpas.Compiler.Tests.Routines;
 /// <summary>Checks which CLR conversions can participate in source constants.</summary>
 public sealed class ConstantConversionTests
 {
+    /// <summary>Rejects signed remainder expressions whose CLR evaluation overflows.</summary>
+    /// <param name="type">The signed integral type of the parameter.</param>
+    /// <param name="expression">The overflowing expression supplied as its default.</param>
+    [Theory]
+    [InlineData("int", "-2147483648 mod -1")]
+    [InlineData("long", "unchecked(-9223372036854775808L mod -1L)")]
+    public void Signed_remainder_overflow_is_rejected_in_optional_defaults(string type, string expression)
+    {
+        var result = TestCompilation.CompileAgainstFramework($"program Constants; procedure P(Value: {type} := {expression}); begin end procedure; begin end; end program;");
+        Assert.Null(result.Program);
+        Assert.Equal("FP3028", Assert.Single(result.Diagnostics).Code);
+    }
+
     /// <summary>Rejects operations that must unwrap runtime storage in optional defaults.</summary>
     /// <param name="expression">The runtime conversion used as an optional default.</param>
     [Theory]

@@ -48,13 +48,7 @@ int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacit
     const cui_code_editor_result event = cui_code_editor_ex(ui, id, text, capacity, &options);
     cui_pop_disabled(ui);
     fpas_creative_node(ui, root, key);
-    if (!prior->value || strcmp(prior->value, text)) {
-        fpas_text_binding_dispose(ui, prior);
-        prior->length = strlen(text);
-        prior->value = cui__alloc(ui, prior->length + 1);
-        memcpy(prior->value, text, prior->length + 1);
-    }
-    prior->capacity = capacity;
+    fpas_text_store(ui, prior, text, strlen(text), capacity);
     *observation = (fpas_code_editor_observation){ event.line, event.column, event.line_count,
         event.cursor, event.anchor, event.find_matches, event.find_index, event.focused };
     const bool moved = enabled && memcmp(&state->observation, observation, sizeof *observation) != 0;

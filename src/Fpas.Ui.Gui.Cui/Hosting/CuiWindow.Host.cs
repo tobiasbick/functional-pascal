@@ -11,6 +11,7 @@ public sealed partial class CuiWindow
     public void Separator() { CheckFrame(); NativeMethods.Separator(context); }
     private readonly Dictionary<string, (int Mode, float Offset)> scrollRequests = [];
     private readonly Dictionary<string, int> scrollNodes = [];
+    private readonly HashSet<int> scrollMetricNodes = [];
     private readonly Dictionary<string, uint> modalKeys = [];
     private readonly HashSet<string> usedModals = [];
     /// <summary>Begins a declarative traversal with host-owned modal admission.</summary>
@@ -179,6 +180,7 @@ public sealed partial class CuiWindow
         CheckFrame();
         int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0, fadeEdges ? 1 : 0, horizontal ? 1 : 0);
         scrollNodes[id] = node;
+        if (node >= 0) scrollMetricNodes.Add(node);
         layouts.Add(new(Layout.Scroll, Node: node));
     }
 
@@ -187,7 +189,13 @@ public sealed partial class CuiWindow
     /// <param name="offset">Resolved logical offset.</param>
     /// <param name="maximum">Current logical range.</param>
     public void ScrollMetrics(string id, out float offset, out float maximum)
-    { CheckOpen(); NativeMethods.ScrollMetrics(context, trackedNodes[id], out offset, out maximum); }
+    {
+        CheckOpen();
+        int node = trackedNodes[id];
+        if (!scrollMetricNodes.Contains(node))
+            throw new ArgumentException("The tracked identity must belong to a scroll container.", nameof(id));
+        NativeMethods.ScrollMetrics(context, node, out offset, out maximum);
+    }
 
     private void TrackModal(string id, uint? ownedKey = null)
     {

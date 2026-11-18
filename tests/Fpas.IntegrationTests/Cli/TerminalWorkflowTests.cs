@@ -43,6 +43,25 @@ public sealed class TerminalWorkflowTests
     }
 
     [Fact]
+    public async Task Expected_output_is_found_when_the_terminal_closes_immediately_after_writing()
+    {
+        using var target = new Debuggee("terminal-final-output");
+        await target.Compile("""
+            program TerminalOutput;
+            uses System.Console as Console;
+            begin
+              Console.Write('last output');
+            end;
+            end program;
+            """);
+        var script = Script(target, [new { action = "expect", text = "last output" }, new { action = "exit", exitCode = 0 }]);
+        var result = await Run(target, script);
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        using var report = JsonDocument.Parse(result.Output);
+        Assert.Equal(2, report.RootElement.GetProperty("terminal").GetProperty("completedSteps").GetInt32());
+    }
+
+    [Fact]
     public async Task Terminal_output_limit_fails_even_when_the_target_exits_successfully()
     {
         using var target = new Debuggee("terminal-output-limit");

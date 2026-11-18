@@ -51,7 +51,7 @@ internal sealed partial class ServerSession
                     case "textDocument/didChange":
                         if (parameters["contentChanges"] is not JArray edits || edits.Count is 0 or > 1000) throw Invalid("Supply 1..1,000 contentChanges.");
                         var changes = edits.Select(edit => new TextChange(RequiredString(edit, "text"), ChangeRange(edit["range"]))).ToArray();
-                        if (desynchronized.Contains(path) && changes.Any(change => change.Range is not null)) throw Invalid("Send a full-text change or close and reopen this document to resynchronize.");
+                        if (desynchronized.Contains(path) && changes[0].Range is not null) throw Invalid("Start with a full-text change or close and reopen this document to resynchronize.");
                         workspace!.Change(path, RequiredInteger(document, "version"), changes); desynchronized.Remove(path); break;
                     case "textDocument/didSave": workspace!.Save(path); break;
                     case "textDocument/didClose":
@@ -62,7 +62,7 @@ internal sealed partial class ServerSession
                 }
                 Changed(); return true;
             }
-            catch (Exception error) when (error is JsonException or ArgumentException or OverflowException or InvalidOperationException or ContextFailure or StreamJsonRpc.LocalRpcException)
+            catch (Exception error) when (error is JsonException or ArgumentException or UriFormatException or OverflowException or InvalidOperationException or ContextFailure or StreamJsonRpc.LocalRpcException)
             {
                 if (path is not null && workspace!.OpenDocuments.Documents.Any(document => PathComparer.Equals(document.Path, path)))
                 {

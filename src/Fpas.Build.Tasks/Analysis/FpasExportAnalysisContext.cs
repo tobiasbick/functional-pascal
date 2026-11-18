@@ -80,7 +80,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
                 Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
                     .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),
-                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(sources, references) : "", hashes);
+                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs() : "", hashes);
             using var stream = new FileStream(ManifestFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;
@@ -93,10 +93,11 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
         }
     }
 
-    private string BuildInputs(string[] sources, string[] references)
+    private string BuildInputs()
     {
         var documents = string.IsNullOrEmpty(DocumentationFile) ? [] : DocumentationOutputs.Paths(DocumentationFile, DocumentationDestination, DocumentationOutput);
-        return CompileFingerprint.Compute(sources, references, CompilerPath, CompileFingerprint.Options(OutputType, Configuration, TargetFramework,
+        return CompileFingerprint.Compute(Sources.Select(item => item.GetMetadata("FullPath")), References.Select(item => item.GetMetadata("FullPath")),
+            CompilerPath, CompileFingerprint.Options(OutputType, Configuration, TargetFramework,
             Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) +
             SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath);
     }

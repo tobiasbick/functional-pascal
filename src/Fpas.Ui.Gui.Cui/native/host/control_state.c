@@ -35,10 +35,15 @@ static void fpas_indexed_focus(cui_ctx *ui, cui_id group, int count, int focus) 
     }
 }
 
-static void fpas_forget_state(cui_ctx *ui, cui_id key) {
+static void fpas_clear_interaction(cui_ctx *ui, cui_id key) {
     if (!key) return;
     if (ui->focus == key) ui->focus = 0;
     if (ui->active == key) ui->active = 0;
+}
+
+static void fpas_forget_state(cui_ctx *ui, cui_id key) {
+    if (!key) return;
+    fpas_clear_interaction(ui, key);
     int bucket = (int)(key & (uint32_t)(ui->bucket_count - 1));
     int *link = &ui->state_buckets[bucket];
     while (*link >= 0) {
@@ -67,8 +72,12 @@ static void fpas_release_owned(cui_ctx *ui, fpas_owned_state state) {
 
 static void fpas_own(cui_ctx *ui, cui_id key, cui_id first, cui_id second, cui_id popup) {
     fpas_owned_state *state = cui_state(ui, fpas_owner_key(key), sizeof *state);
-    if (state->first != first || state->second != second || state->popup != popup)
-        fpas_release_owned(ui, *state);
+    const fpas_owned_state removed = {
+        .first = state->first != first && state->first != second ? state->first : 0,
+        .second = state->second != first && state->second != second ? state->second : 0,
+        .popup = state->popup != popup ? state->popup : 0
+    };
+    fpas_release_owned(ui, removed);
     *state = (fpas_owned_state){.first = first, .second = second, .popup = popup};
 }
 
@@ -84,6 +93,7 @@ void fpas_cui_forget(cui_ctx *ui, unsigned int key) {
     const cui_id owner = fpas_owner_key(key);
     const fpas_owned_state *entry = cui__state_lazy(ui, owner, sizeof *entry, false);
     if (entry) {
+        fpas_clear_interaction(ui, entry->focus);
         if (entry->on_forget) entry->on_forget(ui, key);
         fpas_release_owned(ui, *entry);
         fpas_forget_state(ui, owner);

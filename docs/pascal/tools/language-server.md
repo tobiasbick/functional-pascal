@@ -34,8 +34,8 @@ Windows file URIs accept a percent-encoded drive separator as sent by VS Code.
 Open documents with language ID `fpas`. Full and incremental `didChange` batches
 apply in order, with strictly increasing integer versions. `didSave` retains the
 open text; `didClose` drops it and clears its diagnostics. Invalid changes clear
-diagnostics and pause analysis until a newer full-text change or close/reopen
-resynchronizes the document. Sources are never saved by the server.
+diagnostics and pause analysis until a newer batch starts with a full-text change
+or the document is closed and reopened. Sources are never saved by the server.
 
 The server publishes diagnostics for open documents with their exact version,
 range, severity, code and related locations. Unowned open files receive syntax

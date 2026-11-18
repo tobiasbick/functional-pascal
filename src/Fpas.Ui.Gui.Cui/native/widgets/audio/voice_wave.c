@@ -5,7 +5,7 @@ int fpas_cui_voice_wave(cui_ctx *ui, const char *id, const float *levels, const 
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id);
     const bool enabled = fpas_ai_enabled(ui, flags, key);
-    if (!enabled) fpas_voice_stop_drag(ui, key);
+    if (!enabled || !progress) fpas_voice_stop_drag(ui, key);
     const cui_voice_wave_opts opts = { .clip = (flags & 4) != 0, .progress = progress, .owners = owners,
         .owner = (cui_voice_owner)owner, .color = fpas_chart_color(palette, rgba), .pitch = pitch, .step = step,
         .width = fpas_extent(width_kind, width) };

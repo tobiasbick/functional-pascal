@@ -10,7 +10,7 @@ typedef struct {
     int cursor, anchor;
 } fpas_grid_frame;
 
-typedef struct { cui_id row, current; int capacity; char draft[256]; } fpas_grid_edit;
+typedef struct { cui_id row, current; int capacity; bool seen; char draft[256]; } fpas_grid_edit;
 
 static cui_grid_column *fpas_grid_columns(cui_ctx *ui, const char *const *titles,
     const float *widths, const int *flags, int count) {
@@ -62,6 +62,10 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
         if (frame->cursor < 0) retained->cursor = -1;
         retained->anchor = frame->anchor;
         if (retained->edit_row >= rows || !frame->enabled) fpas_grid_cancel_edit(ui, key, retained);
+        if (retained->edit_row >= 0) {
+            fpas_grid_edit *edit = cui_state(ui, edit_key, sizeof *edit);
+            edit->seen = false;
+        }
         if (!frame->enabled) retained->resizing = -1;
     }
     fpas_own(ui, key, key ^ 0x5C011u, edit_key, 0);
@@ -124,10 +128,13 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
     }
     char *buffer = active ? edit->draft : value;
     const bool committed = cui_data_grid_edit(ui, buffer, (size_t)capacity);
-    if (!active && state->edit_row == grid->row && state->edit_col == grid->col - 1) {
-        edit->row = edit->current;
-        edit->capacity = capacity;
-        memcpy(edit->draft, value, (size_t)capacity);
+    if (state->edit_row == grid->row && state->edit_col == grid->col - 1) {
+        edit->seen = true;
+        if (!active) {
+            edit->row = edit->current;
+            edit->capacity = capacity;
+            memcpy(edit->draft, value, (size_t)capacity);
+        }
     }
     if (committed) memcpy(value, edit->draft, (size_t)capacity);
     return committed;
@@ -136,9 +143,10 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
 void fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *state) {
     fpas_grid_frame *frame = handle;
     const struct cui_grid_build *grid = ui->building.grid;
-    if (grid->st->edit_row >= 0 &&
-        (grid->st->edit_row < grid->first || grid->st->edit_row >= grid->last))
-        fpas_grid_cancel_edit(ui, grid->id, grid->st);
+    if (grid->st->edit_row >= 0) {
+        const fpas_grid_edit *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
+        if (!edit->seen) fpas_grid_cancel_edit(ui, grid->id, grid->st);
+    }
     cui_data_grid_end(ui);
     cui_pop_disabled(ui);
     if (selected) for (int k = 0; k < frame->rows; ++k) selected[k] = frame->selected[k];

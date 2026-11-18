@@ -1,5 +1,6 @@
 #include "../fpas_cui.h"
 #include <stdio.h>
+#include <string.h>
 
 static int failures;
 
@@ -83,6 +84,78 @@ static void regex(void) {
     cui_end_frame(ui);
     check(!result.flags, "An invalid regex must be reported after an edit.");
     cui_destroy(ui);
+}
+
+typedef enum { REQUEST_URL, REGEX_PATTERN, REGEX_SAMPLE } text_field;
+
+static void developer_text_replacement(text_field field, int tabs) {
+    cui_ctx *ui = create();
+    if (!ui) { check(false, "Could not open developer editor context."); return; }
+    char pattern[32] = "old", sample[32] = "old";
+    char *value = field == REGEX_SAMPLE ? sample : pattern;
+    for (int frame = 0; frame <= tabs + 5; ++frame) {
+        if (frame > 0 && frame <= tabs) {
+            cui_input_key(ui, CUI_KEY_TAB, true, 0);
+            cui_input_key(ui, CUI_KEY_TAB, false, 0);
+        }
+        if (frame == tabs + 1 || frame == tabs + 4) {
+            cui_input_key(ui, CUI_KEY_NONE, false, 0);
+            cui_input_text(ui, "x");
+        }
+        if (frame == tabs + 2) strcpy(value, "replacement");
+        if (frame == tabs + 3 || frame == tabs + 5) {
+            cui_input_key(ui, CUI_KEY_Z, true, CUI_MOD_CTRL);
+            cui_input_key(ui, CUI_KEY_Z, false, CUI_MOD_CTRL);
+        }
+        cui_begin_frame(ui, 0.016f);
+        fpas_dev_result result;
+        if (field == REQUEST_URL)
+            fpas_cui_request_bar(ui, "editor", 0, pattern, sizeof pattern, 0, "URL", 1, 0, 1, &result);
+        else
+            fpas_cui_regex_tester(ui, "editor", pattern, sizeof pattern, sample, sizeof sample, 0, 110, 1, 0, 1, &result);
+        cui_end_frame(ui);
+        if (frame == tabs + 1)
+            check(strcmp(value, "xold") == 0, "The developer field must accept the initial edit.");
+        if (frame == tabs + 3)
+            check(strcmp(value, "replacement") == 0, "Undo must preserve replacement developer field text.");
+        if (frame == tabs + 4)
+            check(strcmp(value, "replacementx") == 0, "Editing must resume at the end of replacement text.");
+        if (frame == tabs + 5)
+            check(strcmp(value, "replacement") == 0, "Undo must still work for edits to replacement text.");
+    }
+    cui_destroy(ui);
+}
+
+static void developer_placeholders(void) {
+    enum { WIDTH = 640, HEIGHT = 240 };
+    static unsigned char pixels[2][WIDTH * HEIGHT * 4];
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        cui_ctx *ui = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(renderer) });
+        if (!ui) {
+            check(false, "Could not open developer placeholder renderer.");
+            cui_sw_destroy(renderer);
+            return;
+        }
+        cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+        for (int frame = 0; frame < 2; ++frame) {
+            char url[32] = "", placeholder[] = "Original target";
+            char key[] = "Original key", value[] = "Original value";
+            cui_kv_pair pairs[1] = {0};
+            int count = 0;
+            fpas_dev_result result;
+            cui_begin_frame(ui, 0.016f);
+            fpas_cui_request_bar(ui, "request", 0, url, sizeof url, 0, placeholder, 1, 0, 1, &result);
+            fpas_cui_key_value_editor(ui, "pairs", pairs, &count, 1, key, value, 0, 0, 0, 1, 0, 1, &result);
+            if (pass) placeholder[0] = key[0] = value[0] = '\0';
+            cui_end_frame(ui);
+        }
+        cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    check(memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0,
+        "Developer field placeholders must survive caller buffer changes before painting.");
 }
 
 static void histogram(void) {
@@ -207,6 +280,10 @@ int main(int argc, char **argv) {
     if (argc > 1) return spinner_stops(false) ? 0 : 1;
     trace(true);
     regex();
+    developer_text_replacement(REQUEST_URL, 2);
+    developer_text_replacement(REGEX_PATTERN, 1);
+    developer_text_replacement(REGEX_SAMPLE, 5);
+    developer_placeholders();
     histogram();
     histogram_disable_drag();
     query_builder_disabled();

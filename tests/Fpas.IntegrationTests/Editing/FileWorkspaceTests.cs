@@ -24,7 +24,25 @@ public sealed class FileWorkspaceTests(SdkPackageFixture sdk) : IClassFixture<Sd
         var workspace = await FileWorkspace.OpenAsync(new(directory.File("Game/Game.fpasproj"), NoRestore: true), deadline.Token);
         var plan = workspace.Corrections(deadline.Token); Assert.Equal(source, Assert.Single(plan.Edits.Documents).Original.Text);
         Assert.Equal(System.Text.Encoding.UTF8.GetBytes(source), File.ReadAllBytes(path));
-        await workspace.ApplyAsync(plan.Edits, token: deadline.Token);
+        var verifying = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var publish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var application = workspace.ApplyAsync(plan.Edits, token =>
+        {
+            verifying.SetResult();
+            return publish.Task.WaitAsync(token);
+        }, deadline.Token);
+        try
+        {
+            await Task.WhenAny(application, verifying.Task).WaitAsync(deadline.Token);
+            if (application.IsCompleted) await application;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.ApplyAsync(plan.Edits,
+                _ => throw new IOException("A concurrent publication reached verification."), deadline.Token));
+        }
+        finally
+        {
+            publish.SetResult();
+            await application;
+        }
         Assert.True(workspace.Analysis!.Success); Assert.True(workspace.Rechecked); Assert.Equal([path], workspace.Written);
         Assert.Empty(workspace.Corrections(deadline.Token).Edits.Documents);
         await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.ApplyAsync(plan.Edits, token: deadline.Token));

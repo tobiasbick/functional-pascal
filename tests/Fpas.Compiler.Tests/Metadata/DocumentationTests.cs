@@ -5,6 +5,22 @@ namespace Fpas.Compiler.Tests.Metadata;
 
 public sealed class DocumentationTests
 {
+    /// <summary>Uses the whole delimiter run when rendering inline Markdown code.</summary>
+    [Fact]
+    public void Markdown_inline_code_delimiters_match_the_entire_backtick_run()
+    {
+        var result = Compile("""
+            unit Markdown;
+            // Compare `one`` then` and ``a`b``. Keep ```unmatched.
+            public procedure Read(); begin end procedure;
+            end unit;
+            """);
+        Assert.True(result.Success);
+        var summary = XDocument.Parse(System.Text.Encoding.UTF8.GetString(result.Program!.XmlDocumentation!)).Descendants("summary").Single();
+        Assert.Equal(new[] { "one`` then", "a`b" }, summary.Elements("c").Select(code => code.Value));
+        Assert.Equal("Compare one`` then and a`b. Keep ```unmatched.", summary.Value);
+    }
+
     [Fact]
     public void Global_documentation_uses_field_ids_and_omits_private_fields_and_initializers()
     {

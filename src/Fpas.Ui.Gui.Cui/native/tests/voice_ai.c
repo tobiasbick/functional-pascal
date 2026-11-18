@@ -75,6 +75,39 @@ static bool status_stops_when_motion_is_reduced(bool adapter) {
     return stopped;
 }
 
+static bool voice_wave_passive_cancels_seek(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 480, 240, 1);
+    const float peaks[] = { .3f, .5f };
+    cui_rect bounds = {0};
+    bool ok = true;
+    for (int frame = 0; frame < 7; ++frame) {
+        if (frame == 1 || frame == 6) {
+            cui_input_mouse_move(ui, bounds.x + bounds.w / 2, bounds.y + bounds.h / 2);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        }
+        if (frame == 2 || frame == 5) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        if (frame == 3) {
+            cui_input_mouse_move(ui, bounds.x + bounds.w * .8f, bounds.y + bounds.h + 10);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        }
+        float position = .1f;
+        const bool passive = frame == 2 || frame == 3;
+        cui_begin_frame(ui, .016f);
+        const int changed = fpas_cui_voice_wave(ui, "voice", peaks, NULL, 2, passive ? NULL : &position,
+            2, 300, 0, 0, 0, 0, 0, 1);
+        cui_end_frame(ui);
+        bounds = cui_get_rect(ui, cui_make_id(ui, "voice"));
+        if (changed != (frame == 1 || frame == 6) || (changed ? position < .4f || position > .6f : position != .1f)) {
+            fprintf(stderr, "Voice waveform frame %d: position=%g, changed=%d\n", frame, position, changed);
+            ok = false;
+        }
+    }
+    cui_destroy(ui);
+    return ok;
+}
+
 int main(int argc, char **argv) {
     (void)argv;
     if (argc > 1) return status_stops_when_motion_is_reduced(false) ? 0 : 1;
@@ -94,5 +127,6 @@ int main(int argc, char **argv) {
     if (!models) fprintf(stderr, "The model menu did not commit its highlighted model.\n");
     const bool reduced = status_stops_when_motion_is_reduced(true);
     if (!reduced) fprintf(stderr, "A running status still requested frames under reduced motion.\n");
-    return composer && models && reduced ? 0 : 1;
+    const bool seek = voice_wave_passive_cancels_seek();
+    return composer && models && reduced && seek ? 0 : 1;
 }

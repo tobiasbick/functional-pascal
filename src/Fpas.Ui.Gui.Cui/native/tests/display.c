@@ -51,8 +51,35 @@ static bool check_canvas(bool covered, bool bridge) {
     return false;
 }
 
+static bool check_literal_link(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 280, 180, 1);
+    const char *labels[] = {"Docs", "Docs#", "#"};
+    cui_id identity = 0;
+    float plain_width = 0;
+    bool ok = true;
+    for (int frame = 0; frame < 3; ++frame) {
+        cui_begin_frame(ui, .016f);
+        int node;
+        fpas_cui_link(ui, "###docs", labels[frame], 1, frame == 0, &node);
+        cui_end_frame(ui);
+        const cui_id key = fpas_cui_node_key(ui, node);
+        const float width = fpas_cui_node_rect(ui, node).w;
+        if (frame == 0) {
+            identity = key;
+            plain_width = width;
+        }
+        if (!key || key != identity || !fpas_cui_focused(ui, node) || width <= 0 ||
+            (frame == 1 && width <= plain_width)) ok = false;
+    }
+    cui_destroy(ui);
+    if (!ok) fprintf(stderr, "A trailing # changed the link's caption or focused identity.\n");
+    return ok;
+}
+
 int main(int argc, char **argv) {
     (void)argv;
     if (argc > 1) return check_canvas(true, false) ? 0 : 1;
-    return check_canvas(false, true) && check_canvas(true, true) ? 0 : 1;
+    return check_canvas(false, true) && check_canvas(true, true) && check_literal_link() ? 0 : 1;
 }

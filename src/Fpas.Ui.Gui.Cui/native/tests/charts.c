@@ -94,8 +94,29 @@ static void range_regression(void) {
     destroy(s);
 }
 
+static void pattern_meter_retirement(void) {
+    sample s = create(600, false);
+    const fpas_meter_part parts[] = {{"Photos", 81}, {"Apps", 41}};
+    const fpas_meter_options options = {.total = 256, .label = "Storage", .unit = "GB"};
+    int node;
+    unsigned int key;
+
+    cui_begin_frame(s.ui, .04f);
+    fpas_cui_pattern_meter(s.ui, "storage", parts, 2, &options, 1, 1, &node, &key);
+    CHECK(fpas_cui_focus_key(s.ui, key));
+    cui_end_frame(s.ui);
+
+    fpas_cui_forget(s.ui, key);
+    cui_begin_frame(s.ui, .04f);
+    fpas_cui_pattern_meter(s.ui, "storage", parts, 2, &options, 1, 0, &node, &key);
+    CHECK(!fpas_cui_focus_key(s.ui, key));
+    cui_end_frame(s.ui);
+    destroy(s);
+}
+
 int main(void) {
     range_regression();
+    pattern_meter_retirement();
     for(int dark=0;dark<2;dark++) for(int compact=0;compact<2;compact++) for(int kind=0;kind<10;kind++) {
         int width=compact?300:700; sample reference=create(width,dark), actual=create(width,dark);
         for(int frame=0;frame<8;frame++) {

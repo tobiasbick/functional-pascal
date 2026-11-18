@@ -5,6 +5,23 @@ namespace Fpas.IntegrationTests.Debugging;
 
 public sealed partial class DapDebuggerTests
 {
+    /// <summary>Verifies that a rejected shutdown leaves initialization and later shutdown available.</summary>
+    /// <param name="command">The DAP shutdown command sent before initialization.</param>
+    [Theory]
+    [InlineData("disconnect")]
+    [InlineData("terminate")]
+    public async Task Rejected_shutdown_before_initialization_leaves_the_adapter_available(string command)
+    {
+        await using var client = new DapProbe();
+        var rejected = await client.Request(command);
+        Assert.False(rejected.GetProperty("success").GetBoolean());
+        Assert.Equal("Initialize the adapter first.", rejected.GetProperty("body").GetProperty("error").GetProperty("format").GetString());
+
+        await client.Success("initialize");
+        await client.Success("disconnect");
+        await client.End();
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

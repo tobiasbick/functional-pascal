@@ -13,7 +13,7 @@ public enum CompilationTarget
 }
 
 /// <summary>One FPAS source file supplied to the compiler.</summary>
-/// <param name="Path">The logical path reported in diagnostics and debug information.</param>
+/// <param name="Path">The logical path reported in diagnostics and debug information, unique within the request under ordinal comparison.</param>
 /// <param name="Text">The complete source text.</param>
 public sealed record CompilationSource(string Path, string Text);
 

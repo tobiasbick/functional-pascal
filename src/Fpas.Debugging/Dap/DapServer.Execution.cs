@@ -69,7 +69,9 @@ internal sealed partial class DapServer
                 }).ToArray();
                 var bound = await Host.SetBreakpoints(new(source, positions), token);
                 foreach (var point in bound) knownBreakpoints[point.Id] = point.State;
-                return new() { ["breakpoints"] = new JsonArray(bound.Select(point => (JsonNode)Breakpoint(point)).ToArray()) };
+                var byPosition = bound.ToDictionary(point => (point.Requested.Line, point.Requested.Column));
+                return new() { ["breakpoints"] = new JsonArray(positions.Select(position =>
+                    (JsonNode)Breakpoint(byPosition[(position.Line, position.Column)])).ToArray()) };
             case "setExceptionBreakpoints":
                 if (args["filterOptions"] is not null || args["exceptionOptions"] is not null) throw new DebugException("unsupported", "Use raised/unhandled exception filter names.");
                 var filters = args.Array("filters").Select(item => item?.GetValue<string>() ?? throw DapArguments.Invalid("filters")).ToArray();

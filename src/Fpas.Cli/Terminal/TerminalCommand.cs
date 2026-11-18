@@ -66,12 +66,15 @@ internal sealed class TerminalCommand
                 {
                     while (true)
                     {
+                        var finished = reading.IsCompleted;
+                        if (finished) await reading;
                         lock (text)
                         {
                             var index = text.ToString().IndexOf(step.Text!, cursor, StringComparison.Ordinal);
                             if (index >= 0) { cursor = index + step.Text!.Length; break; }
                         }
-                        if (reading.IsCompleted) { await reading; throw new IOException("Terminal closed before the expected output."); }
+                        token.ThrowIfCancellationRequested();
+                        if (finished) throw new IOException("Terminal closed before the expected output.");
                         await Task.Delay(10, token);
                     }
                 }

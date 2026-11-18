@@ -28,7 +28,8 @@ int fpas_cui_fader(cui_ctx *ui, const char *id, const char *label, float *value,
         fpas_text(ui, (horizontal ? ui->nodes[ui->nodes[root].first].last : ui->nodes[root].first), cui__dl_text(ui, format, unit, next));
     ui->last_node = root;
     fpas_own(ui, key, group, wheel, 0);
-    if (!allowed || !isfinite(next) || next == idle || next == *value) return 0;
+    if (!allowed || !isfinite(next) || next == *value ||
+        (next == idle && !fpas_dial_reset_requested(ui, key))) return 0;
     *value = next;
     return 1;
 }

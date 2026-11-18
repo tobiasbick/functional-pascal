@@ -69,6 +69,27 @@ public type CacheTests = record
     X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
   end procedure;
 
+  // A memory-cached cover can be stored again after disk eviction and survives a restart.
+  [X.FactAttribute]
+  public procedure EvictedArtworkCanBeStoredAgain();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const First: array of byte := Art.Picture(220, 40, 30);
+    discard Cache.Store('first', 'v1', First, T.CancellationToken.None);
+    const Oldest: string := IO.Directory.GetFiles(Root.Path, '*.rgba')[0];
+    IO.File.SetLastWriteTimeUtc(Oldest, Sys.DateTime.UnixEpoch);
+    using const Filler: IO.FileStream := IO.File.Create(IO.Path.Combine(Root.Path, 'filler.rgba'));
+    Filler.SetLength(256 * 1024 * 1024 - new IO.FileInfo(Oldest).Length);
+    Filler.Close();
+
+    discard Cache.Store('second', 'v1', Art.Picture(30, 40, 220), T.CancellationToken.None);
+    X.Assert.False(IO.File.Exists(Oldest));
+    X.Assert.Null(Cache.TryGet('first', 'v1'));
+    discard Cache.Store('first', 'v2', First, T.CancellationToken.None);
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('first', 'v2'));
+  end procedure;
+
   // Cancelled and unsupported images cannot publish cache associations.
   [X.FactAttribute]
   public procedure InvalidImagesAndCancellation();

@@ -18,6 +18,7 @@ public sealed partial class CuiWindow
     public void DiscardFrame()
     {
         CheckOpen();
+        CheckOutsideResizeRenderer();
         NativeMethods.FinishFrameForDestroy(app);
         SnapshotShortcutKeys();
         ReleaseFrameCallbacks();
@@ -25,6 +26,7 @@ public sealed partial class CuiWindow
         editorRequests.Clear();
         layouts.Clear();
         trackedNodes.Clear();
+        scrollMetricNodes.Clear();
         inFrame = false;
     }
 

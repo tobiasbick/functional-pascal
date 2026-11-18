@@ -84,7 +84,16 @@ public sealed class LspDiagnosticsTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.Empty(Values(await client.Diagnostics(path, 2)).EnumerateArray()); await client.Notification("window/logMessage");
         await client.FullChange(path, new string('x', 4_194_305), 3);
         await client.Notification("window/logMessage", message => message.GetProperty("params").GetProperty("message").GetString()!.Contains("budget", StringComparison.Ordinal));
-        await client.FullChange(path, Source.Replace("Missing", "42", StringComparison.Ordinal), 4);
+        var character = Source.Split("\r\n")[3].IndexOf("Missing", StringComparison.Ordinal);
+        await client.Notify("textDocument/didChange", new
+        {
+            textDocument = new { uri = new Uri(path).AbsoluteUri, version = 4 },
+            contentChanges = new object[]
+            {
+                new { text = Source },
+                new { range = new { start = new { line = 3, character }, end = new { line = 3, character = character + 7 } }, text = "42" }
+            }
+        });
         Assert.Empty(Values(await client.Diagnostics(path, 4)).EnumerateArray()); await client.Stop();
     }
 

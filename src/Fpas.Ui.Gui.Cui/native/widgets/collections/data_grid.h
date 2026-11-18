@@ -26,7 +26,7 @@ CUI_API void fpas_cui_data_grid_cell(cui_ctx *ui, const char *text);
  * copying the draft into value then. Model input is otherwise preserved; changing capacity
  * cancels a draft. The caller may discard a committed proposal to reject it. */
 CUI_API int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity);
-/** Ends the matching grid, cancels drafts outside its realized range and copies outputs.
+/** Ends the matching grid, cancels any draft whose editable cell was omitted and copies outputs.
  * selected is NULL or rows writable bytes; state has four writable entries as above.
  * Restores the enclosing grid and makes the grid root the last layout target. */
 CUI_API void fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *state);

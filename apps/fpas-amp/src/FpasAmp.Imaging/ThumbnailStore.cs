@@ -66,18 +66,20 @@ public sealed class ThumbnailStore
             cancellation.ThrowIfCancellationRequested();
             Directory.CreateDirectory(directory);
             string hash = Hash(encoded);
+            string name = hash + ".rgba";
+            string path = Path.Combine(directory, name);
             Bitmap? bitmap = Read(hash);
-            if (bitmap is null)
+            if (bitmap is null || !File.Exists(path))
             {
-                bitmap = CoverDecoder.Decode(encoded, Edge, cancellation);
+                bitmap ??= CoverDecoder.Decode(encoded, Edge, cancellation);
                 var pixels = bitmap.Pixels;
                 var bytes = new byte[pixels.Length + 8];
                 BitConverter.TryWriteBytes(bytes.AsSpan(0, 4), Edge);
                 BitConverter.TryWriteBytes(bytes.AsSpan(4, 4), Edge);
                 pixels.CopyTo(bytes, 8);
-                Atomic(Path.Combine(directory, hash + ".rgba"), bytes);
+                Atomic(path, bytes);
                 Remember(hash, bitmap);
-                Prune();
+                Prune(name);
             }
             cancellation.ThrowIfCancellationRequested();
             Atomic(Reference(album), Encoding.UTF8.GetBytes(Hash(revision) + "\n" + hash));
@@ -119,14 +121,17 @@ public sealed class ThumbnailStore
         }
     }
 
-    private void Prune()
+    private void Prune(string retainedBlob)
     {
         var files = new DirectoryInfo(directory).GetFiles("*.rgba").OrderBy(file => file.LastWriteTimeUtc).ToArray();
         long bytes = files.Sum(file => file.Length);
+        if (bytes <= DiskLimit) return;
         foreach (var file in files)
         {
             if (bytes <= DiskLimit) break;
-            file.Delete(); bytes -= file.Length;
+            if (file.Name == retainedBlob) continue;
+            bytes -= file.Length;
+            file.Delete();
         }
         // References are tiny and reconstructible; discard those whose pixels were evicted.
         foreach (var file in new DirectoryInfo(directory).EnumerateFiles("*.ref"))

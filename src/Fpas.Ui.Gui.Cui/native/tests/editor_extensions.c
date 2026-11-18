@@ -47,8 +47,35 @@ static bool matches(bool dark, int command) {
     return valid;
 }
 
+static bool retire_focused_inspector(bool hex) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 640, 300, 1);
+    cui_begin_frame(ui, .04f);
+    const cui_id key = cui_make_id(ui, "inspector");
+    const int focus_enabled = 16 | 1;
+    uint8_t data[] = {0, 1, 2, 3, 4, 5};
+    if (hex) {
+        int start = 0, length = 0, cursor = 0, edit_at, edit_length;
+        fpas_cui_hex_view(ui, "inspector", data, sizeof data, &start, &length, &cursor,
+            NULL, 0, 0, -1, 16, 1, 0, 220, 0, focus_enabled, &edit_at, &edit_length);
+    } else {
+        int selected, count, inline_mode;
+        fpas_cui_diff_view(ui, "inspector", "one\ntwo\n", "one\nthree\n", -1,
+            "text", NULL, NULL, 3, 1, 0, 220, 0, focus_enabled, &selected, &count, &inline_mode);
+    }
+    cui_end_frame(ui);
+    const bool focused = fpas_cui_focus_key(ui, key) != 0;
+    fpas_cui_forget(ui, key);
+    const bool released = (fpas_cui_shortcut_owners(ui) & 4) == 0;
+    cui_destroy(ui);
+    if (!focused || !released) fprintf(stderr, "%s must release native focus when retired.\n", hex ? "Hex view" : "Diff view");
+    return focused && released;
+}
+
 int main(void) {
-    bool valid = true;
+    bool valid = retire_focused_inspector(true);
+    valid = retire_focused_inspector(false) && valid;
     for (int dark = 0; dark < 2; dark++)
         for (int command = 0; command < 3; command++)
             valid = matches(dark != 0, command) && valid;

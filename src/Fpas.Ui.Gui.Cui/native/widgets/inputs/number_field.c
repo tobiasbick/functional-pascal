@@ -4,17 +4,20 @@ void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double mi
     const char *label, const char *suffix, double step, int decimals, int enabled, int focus, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
     const cui_id number_key = key ^ 0x4E554Du;
+    const cui_id precision_key = key ^ 0x4E5546u;
     cui__number_state *state = cui_state(ui, number_key, sizeof *state);
-    fpas_own(ui, key, number_key, 0, 0);
+    int *precision = cui_state(ui, precision_key, sizeof *precision);
+    fpas_own(ui, key, number_key, precision_key, 0);
     const double original = *value;
     const bool allowed = enabled && !cui_is_disabled(ui);
-    if (state->init && state->last != original) {
-        /* Reconcile an external MVU replacement, including while editing. */
+    if (state->init && (state->last != original || *precision != decimals)) {
+        /* Reconcile model changes to the value or its display precision. */
         snprintf(state->text, sizeof state->text, "%.*f", decimals, original);
         cui_edit_state *edit = cui__state_lazy(ui, key, sizeof *edit, false);
         if (edit) fpas_text_reset(ui, edit, (int)strlen(state->text));
         state->last = original;
     }
+    *precision = decimals;
     if (allowed && focus) ui->focus_next_request = key;
     const cui_number_opts options = { .label = label, .suffix = suffix, .step = step,
         .decimals = decimals, .disabled = !allowed, .width = CUI_FILL };

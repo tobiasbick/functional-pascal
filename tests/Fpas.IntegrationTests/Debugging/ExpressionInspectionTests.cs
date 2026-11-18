@@ -95,7 +95,7 @@ public sealed class ExpressionInspectionTests
         foreach (var (expression, type, expected) in new[]
         {
             ("Value + 1", "int", "42"), ("Input * (2 + 4)", "int", "42"), ("Global", "int", "99"), ("Expressions.Global", "int", "21"),
-            ("1_000 div 3", "int", "333"), ("$FF and 15", "int", "15"), ("not 0", "int", "-1"), ("1 shl 33", "int", "2"),
+            ("1_000 div 3", "int", "333"), ("-2147483648 mod -2", "int", "0"), ("$FF and 15", "int", "15"), ("not 0", "int", "-1"), ("1 shl 33", "int", "2"),
             ("Unsigned + 1", "uint", "43"), ("NativeSigned + 1", "nint", "42"), ("NativeUnsigned + 1", "nuint", "42"),
             ("Amount + 1.25M", "decimal", "2.5000"), ("Wide - Rounded", "float", "0"), ("1.0 / 0.0", "double", "Infinity"),
             ("1 / 2", "double", "0.5"), ("NativeUnsigned / -2", "double", "-20.5"),
@@ -123,6 +123,7 @@ public sealed class ExpressionInspectionTests
         foreach (var (expression, code) in new[]
         {
             ("Value div 0", "division_by_zero"), ("int.MaxValue + 1", "overflow"),
+            ("-2147483648 mod -1", "overflow"), ("-9223372036854775808L mod -1L", "overflow"),
             ("Amount + 1.0", "unsupported_expression"), ("false and 1", "unsupported_expression"), ("Values[3]", "index_out_of_range"),
             ("false and (NativeUnsigned + -1 = NativeUnsigned)", "unsupported_expression"),
             ("false and (1 shl NativeUnsigned = 0)", "unsupported_expression"),

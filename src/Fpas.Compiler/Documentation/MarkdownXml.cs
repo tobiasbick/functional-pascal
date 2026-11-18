@@ -94,12 +94,15 @@ internal static class MarkdownXml
             if (index >= nextCancellationCheck) { cancellationToken.ThrowIfCancellationRequested(); nextCancellationCheck = index + 1024; }
             if (text[index] == '`')
             {
-                var count = 1; while (index + count < text.Length && text[index + count] == '`') count++;
-                var end = text.IndexOf(new string('`', count), index + count, StringComparison.Ordinal);
+                var content = BacktickRunEnd(text, index);
+                var count = content - index;
+                var end = ClosingBackticks(text, content, count, cancellationToken);
                 if (end >= 0)
                 {
-                    Flush(); nodes.Add(new XElement("c", Clean(text[(index + count)..end], cancellationToken))); index = end + count; continue;
+                    Flush(); nodes.Add(new XElement("c", Clean(text[content..end], cancellationToken))); index = end + count;
                 }
+                else { plain.Append(text.AsSpan(index, count)); index = content; }
+                continue;
             }
             if (text[index] == '[')
             {
@@ -122,6 +125,24 @@ internal static class MarkdownXml
             plain.Append(text[index++]);
         }
         Flush(); return nodes;
+    }
+
+    private static int ClosingBackticks(string text, int start, int count, CancellationToken cancellationToken)
+    {
+        for (var index = text.IndexOf('`', start); index >= 0;)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var end = BacktickRunEnd(text, index);
+            if (end - index == count) return index;
+            index = text.IndexOf('`', end);
+        }
+        return -1;
+    }
+
+    private static int BacktickRunEnd(string text, int index)
+    {
+        do { index++; } while (index < text.Length && text[index] == '`');
+        return index;
     }
 
     private static string Clean(string text, CancellationToken cancellationToken)

@@ -66,7 +66,7 @@ internal static partial class ScalarOperations
         if (shift && !Widens(Kind(right.Type), 8) && !(right.Constant && Fits(y, 8))) throw Error("A shift count must convert implicitly to int.");
         if (op is "div" or "mod" && y.IsZero) throw new DebugException("division_by_zero", "Integral division by zero.");
         if (op is "div" or "mod" && !Unsigned(kind) && x == Minimum(kind) && y == -1)
-        { if (op == "div") throw new DebugException("overflow", "Integral division overflows its type."); return Integer(kind, BigInteger.Zero); }
+            throw new DebugException("overflow", "The integral operation overflows its type.");
         var count = (int)(y & (Bits(kind) == 64 ? 63 : 31));
         var number = op switch
         {

@@ -34,14 +34,7 @@ int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity,
     cui_push_disabled(ui, !enabled);
     const int result = cui_chat_composer_ex(ui, id, draft, capacity, &opts);
     cui_pop_disabled(ui);
-    length = strlen(draft);
-    if (binding->length != length || !binding->value || memcmp(binding->value, draft, length) != 0) {
-        fpas_text_binding_dispose(ui, binding);
-        binding->value = cui__alloc(ui, length + 1);
-        memcpy(binding->value, draft, length + 1);
-        binding->length = length;
-    }
-    binding->capacity = capacity;
+    fpas_text_store(ui, binding, draft, strlen(draft), capacity);
     nodes[0] = fpas_find(ui, field);
     nodes[1] = fpas_find(ui, send);
     nodes[2] = fpas_find(ui, mic);

@@ -1,11 +1,14 @@
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Fpas.Processes.Terminal;
 
 internal sealed class LinuxTerminal : PseudoTerminal
 {
+    private const int CloseOnExec = 0x80000; // O_CLOEXEC
+    private const int DuplicateCloseOnExec = 1030; // F_DUPFD_CLOEXEC
     private readonly SafeFileHandle master;
     private readonly FileStream input;
     private readonly FileStream output;
@@ -33,15 +36,18 @@ internal sealed class LinuxTerminal : PseudoTerminal
     internal static PseudoTerminal Start(string path, IReadOnlyList<string> arguments, string cwd, int columns, int rows, bool suspended)
     {
         if (Prctl(36, 1, 0, 0, 0) != 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
-        var fd = PosixOpenPt(0x102); // O_RDWR | O_NOCTTY; the slave becomes the child's controlling terminal.
+        var fd = PosixOpenPt(0x102 | CloseOnExec); // O_RDWR | O_NOCTTY; the slave becomes the child's controlling terminal.
         if (fd < 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
         var handle = new SafeFileHandle(fd, true);
+        SafeFileHandle? duplicate = null;
         IntPtr actions = IntPtr.Zero, attributes = IntPtr.Zero, argv = IntPtr.Zero, environment = IntPtr.Zero;
         var strings = new List<IntPtr>(); var actionsReady = false; var attributesReady = false;
         try
         {
             Check(GrantPt(fd)); Check(UnlockPt(fd));
-            var slave = Marshal.PtrToStringUTF8(PtsName(fd)) ?? throw new IOException("No PTY slave name.");
+            var name = new byte[128];
+            Check(PtsName(fd, name, (nuint)name.Length));
+            var slave = Encoding.UTF8.GetString(name, 0, Array.IndexOf(name, (byte)0));
             var size = new WindowSize { Columns = (ushort)columns, Rows = (ushort)rows }; Check(Ioctl(fd, 0x5414, ref size));
             actions = Marshal.AllocHGlobal(1024); attributes = Marshal.AllocHGlobal(1024);
             Check(PosixSpawnFileActionsInit(actions)); actionsReady = true;
@@ -49,7 +55,7 @@ internal sealed class LinuxTerminal : PseudoTerminal
             Check(PosixSpawnAttrSetFlags(attributes, 0x80)); // POSIX_SPAWN_SETSID (glibc).
             Check(PosixSpawnFileActionsAddOpen(actions, 0, slave, 2, 0));
             Check(PosixSpawnFileActionsAddDup2(actions, 0, 1)); Check(PosixSpawnFileActionsAddDup2(actions, 0, 2));
-            Check(PosixSpawnFileActionsAddClose(actions, fd)); Check(PosixSpawnFileActionsAddChdir(actions, cwd));
+            Check(PosixSpawnFileActionsAddChdir(actions, cwd));
             IntPtr Vector(IEnumerable<string> values)
             {
                 var items = values.Select(value => { var pointer = Marshal.StringToCoTaskMemUTF8(value); strings.Add(pointer); return pointer; }).ToArray();
@@ -62,18 +68,14 @@ internal sealed class LinuxTerminal : PseudoTerminal
                 ? new[] { "/bin/sh", "-c", "kill -STOP \"$$\" && exec \"$@\"", "fpas-terminal", path }.Concat(arguments)
                 : new[] { path }.Concat(arguments));
             environment = Vector(Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().Select(item => item.Key + "=" + item.Value));
+            var outputFd = Fcntl(fd, DuplicateCloseOnExec, 0);
+            if (outputFd < 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
+            duplicate = new(outputFd, true);
             Check(PosixSpawn(out var pid, suspended ? "/bin/sh" : path, actions, attributes, argv, environment));
-            var duplicate = Dup(fd);
-            if (duplicate < 0) { Kill(-pid, 9); WaitPid(pid, out _, 0); throw new Win32Exception(Marshal.GetLastPInvokeError()); }
-            var output = new SafeFileHandle(duplicate, true);
-            try
-            {
-                if (suspended) WaitForStartupStop(pid);
-                return new LinuxTerminal(pid, handle, output, suspended);
-            }
-            catch { output.Dispose(); throw; }
+            if (suspended) WaitForStartupStop(pid);
+            return new LinuxTerminal(pid, handle, duplicate, suspended);
         }
-        catch { handle.Dispose(); throw; }
+        catch { duplicate?.Dispose(); handle.Dispose(); throw; }
         finally
         {
             if (actionsReady) PosixSpawnFileActionsDestroy(actions); if (attributesReady) PosixSpawnAttrDestroy(attributes);
@@ -130,8 +132,8 @@ internal sealed class LinuxTerminal : PseudoTerminal
     [DllImport("libc", EntryPoint = "posix_openpt", SetLastError = true)] private static extern int PosixOpenPt(int flags);
     [DllImport("libc", EntryPoint = "grantpt", SetLastError = true)] private static extern int GrantPt(int fd);
     [DllImport("libc", EntryPoint = "unlockpt", SetLastError = true)] private static extern int UnlockPt(int fd);
-    [DllImport("libc", EntryPoint = "ptsname")] private static extern IntPtr PtsName(int fd);
-    [DllImport("libc", EntryPoint = "dup", SetLastError = true)] private static extern int Dup(int fd);
+    [DllImport("libc", EntryPoint = "ptsname_r")] private static extern int PtsName(int fd, [Out] byte[] name, nuint length);
+    [DllImport("libc", EntryPoint = "fcntl", SetLastError = true)] private static extern int Fcntl(int fd, int command, int minimumFd);
     [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)] private static extern int Ioctl(int fd, nuint request, ref WindowSize size);
     [DllImport("libc", EntryPoint = "prctl", SetLastError = true)] private static extern int Prctl(int option, nuint a2, nuint a3, nuint a4, nuint a5);
     [DllImport("libc", EntryPoint = "kill", SetLastError = true)] private static extern int Kill(int pid, int signal);
@@ -141,7 +143,6 @@ internal sealed class LinuxTerminal : PseudoTerminal
     [DllImport("libc", EntryPoint = "posix_spawn_file_actions_destroy")] private static extern int PosixSpawnFileActionsDestroy(IntPtr actions);
     [DllImport("libc", EntryPoint = "posix_spawn_file_actions_addopen")] private static extern int PosixSpawnFileActionsAddOpen(IntPtr actions, int fd, [MarshalAs(UnmanagedType.LPUTF8Str)] string path, int flags, uint mode);
     [DllImport("libc", EntryPoint = "posix_spawn_file_actions_adddup2")] private static extern int PosixSpawnFileActionsAddDup2(IntPtr actions, int oldFd, int newFd);
-    [DllImport("libc", EntryPoint = "posix_spawn_file_actions_addclose")] private static extern int PosixSpawnFileActionsAddClose(IntPtr actions, int fd);
     [DllImport("libc", EntryPoint = "posix_spawn_file_actions_addchdir_np")] private static extern int PosixSpawnFileActionsAddChdir(IntPtr actions, [MarshalAs(UnmanagedType.LPUTF8Str)] string path);
     [DllImport("libc", EntryPoint = "posix_spawnattr_init")] private static extern int PosixSpawnAttrInit(IntPtr attributes);
     [DllImport("libc", EntryPoint = "posix_spawnattr_destroy")] private static extern int PosixSpawnAttrDestroy(IntPtr attributes);

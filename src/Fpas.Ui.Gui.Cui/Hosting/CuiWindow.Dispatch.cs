@@ -24,15 +24,23 @@ public sealed partial class CuiWindow
 
     /// <summary>Installs a cached-view renderer for the platform's modal resize loop.</summary>
     /// <param name="renderer">Owner-only drawing callback without application transitions; null detaches it.</param>
+    /// <remarks>The native resize loop owns frame completion while the renderer runs.</remarks>
     public unsafe void SetResizeRenderer(Action? renderer)
     {
         CheckOpen();
+        CheckOutsideResizeRenderer();
         NativeMethods.ResizeRenderer(app, null, 0);
         if (resizeRoot.IsAllocated) resizeRoot.Free();
         resizeRenderer = renderer;
         if (renderer is null) return;
         resizeRoot = GCHandle.Alloc(this);
         NativeMethods.ResizeRenderer(app, &RenderResize, GCHandle.ToIntPtr(resizeRoot));
+    }
+
+    private void CheckOutsideResizeRenderer()
+    {
+        if (renderingResize)
+            throw new InvalidOperationException("A live-resize renderer cannot change the window or frame lifecycle.");
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
@@ -45,7 +53,9 @@ public sealed partial class CuiWindow
             window.renderingResize = true;
             window.inFrame = true;
             window.trackedNodes.Clear();
-            window.scrollRequests.Clear(); window.scrollNodes.Clear();
+            window.scrollRequests.Clear();
+            window.scrollNodes.Clear();
+            window.scrollMetricNodes.Clear();
             window.usedModals.Clear();
             window.moneyDrawn.Clear();
             window.resizeRenderer?.Invoke();

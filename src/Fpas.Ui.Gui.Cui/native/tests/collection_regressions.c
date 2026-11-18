@@ -86,6 +86,54 @@ static bool check_focus(bool bridge) {
     return focused && header_draws && row_draws;
 }
 
+static bool check_table_row_identity(void) {
+    cui_ctx *ui = cui_create(NULL);
+    cui_set_viewport(ui, 400, 220, 1);
+    cui_set_reduced_motion(ui, true);
+    const char *titles[] = { "Title" };
+    const int kinds[] = { 1 }, aligns[] = { 0 }, sortable[] = { 0 };
+    const float widths[] = { 1 };
+    bool valid = true;
+    cui_rect target = {0};
+    for (int frame = 0; frame < 9; ++frame) {
+        if (frame == 2) {
+            cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+            cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+        }
+        if (frame == 3 || frame == 6) {
+            cui_input_mouse_move(ui, target.x + target.w / 2, target.y + target.h / 2);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        }
+        /* Release once in the reordering frame and once after the new layout has presented. */
+        if (frame == 4 || frame == 8) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+
+        cui_begin_frame(ui, .016f);
+        int sort = -2, descending = 0, target_node = -1;
+        const int table = fpas_cui_table_begin(ui, "table", titles, kinds, widths, aligns, sortable, 1,
+            0, 0, 0, 0, 1, 1, &sort, &descending, -1, NULL);
+        for (int index = 0; index < 2; ++index) {
+            const bool reordered = (frame >= 1 && frame < 4) || frame >= 7;
+            const bool original = index == (reordered ? 1 : 0);
+            const char *id = original ? "original" : "other";
+            int node;
+            const bool clicked = fpas_cui_table_row(ui, id, 0, 1, frame == 0 && original, &node);
+            fpas_cui_table_cell(ui, id);
+            fpas_cui_table_row_end(ui);
+            if (original) target_node = node;
+            valid &= clicked == (original && (frame == 2 || frame == 4));
+            valid &= (fpas_cui_focused(ui, node) != 0) == original;
+            if (frame == 4 || frame == 8)
+                valid &= (fpas_cui_hovered(ui, node) != 0) == (original == (frame == 4));
+        }
+        fpas_cui_table_end(ui, table);
+        cui_end_frame(ui);
+        target = fpas_cui_node_rect(ui, target_node);
+    }
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "A table row lost stable focus or activation after reordering.\n");
+    return valid;
+}
+
 static bool check_range(bool bridge) {
     cui_ctx *ui = cui_create(NULL);
     cui_set_viewport(ui, 400, 220, 1);
@@ -168,9 +216,10 @@ static bool check_palette_close(bool bridge) {
 int main(int argc, char **argv) {
     const bool bridge = argc < 2 || strcmp(argv[1], "upstream") != 0;
     const bool focus = check_focus(bridge);
+    const bool identity = !bridge || check_table_row_identity();
     const bool range = check_range(bridge);
     const bool list_item = !bridge || check_list_item();
     const bool palette_close = check_palette_close(bridge);
     if (!list_item) fprintf(stderr, "List item did not activate from keyboard focus.\n");
-    return focus && range && list_item && palette_close ? 0 : 1;
+    return focus && identity && range && list_item && palette_close ? 0 : 1;
 }

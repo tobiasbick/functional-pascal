@@ -35,12 +35,28 @@ int fpas_cui_table_begin(cui_ctx *ui, const char *id, const char *const *titles,
 int fpas_cui_table_row(cui_ctx *ui, const char *id, int selected, int enabled, int focus, int *node) {
     struct cui_table_build *table = ui->building.table;
     const int index = table->row_index;
-    const cui_id key = cui__hash(&index, sizeof index, table->id ^ 0x20Bu);
+    const cui_id seed = table->id ^ 0x20Bu;
+    const cui_id position = cui__hash(&index, sizeof index, seed), key = cui__hash_str(id, seed);
     if (table->selectable && enabled && focus && !cui_is_disabled(ui)) ui->focus_next_request = key;
+
+    /* CUI processes rows by position. Keep focus and pointer capture keyed to the model row. */
+    const int first_focus = ui->focus_count;
+    if (ui->focus_next_request == key) ui->focus_next_request = position;
+    if (ui->focus == key) ui->focus = position;
+    if (ui->hot == key) ui->hot = position;
+    if (ui->active == key) ui->active = position;
     cui_push_disabled(ui, !enabled || !table->selectable);
     const bool clicked = cui_table_row(ui, selected != 0);
     cui_pop_disabled(ui);
     *node = cui__current(ui);
+    if (ui->nodes[*node].id == position) ui->nodes[*node].id = key;
+    for (int part = first_focus; part < ui->focus_count; ++part)
+        if (ui->focus_order[part] == position) ui->focus_order[part] = key;
+    if (ui->focus_next_request == position) ui->focus_next_request = key;
+    if (ui->focus == position) ui->focus = key;
+    if (ui->hot == position) ui->hot = key;
+    if (ui->active == position) ui->active = key;
+    if (ui->last_id == position) ui->last_id = key;
     cui_push_id(ui, id);
     return clicked;
 }

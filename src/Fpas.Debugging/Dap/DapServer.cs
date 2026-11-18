@@ -85,6 +85,7 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
             {
                 if (command == "disconnect" && !args.Flag("terminateDebuggee", true) || args.Flag("restart"))
                     throw new DebugException("unsupported", "Shutdown must terminate the owned target; detach and restart are unsupported.");
+                if (!initialized) throw new DebugException("invalid_state", "Initialize the adapter first.");
                 if (Interlocked.CompareExchange(ref closeRequest, id, 0) != 0) throw new DebugException("invalid_state", "Shutdown is already in progress.");
                 foreach (var item in pending.Where(item => item.Key != id)) { try { item.Value.Cancel(); } catch (ObjectDisposedException) { } }
             }
@@ -102,7 +103,7 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
             if (command is "disconnect" or "terminate")
             {
                 await operations.WaitAsync(request.Token); held = true;
-                Output(); FlushOutputLoss();
+                if (host is not null) { Output(); FlushOutputLoss(); }
             }
             Reply(id, command, body); replied = true;
             if (command is "continue" or "next" or "stepIn" or "stepOut")

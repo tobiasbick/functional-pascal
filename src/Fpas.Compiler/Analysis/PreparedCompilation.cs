@@ -44,8 +44,12 @@ internal sealed partial class PreparedCompilation : IDisposable
         var allSources = new List<SourceText>();
         var invalid = new Dictionary<SourceText, IReadOnlyList<(int Start, int End)>>();
         var names = new Dictionary<SourceText, string?>();
+        var paths = new HashSet<string>(StringComparer.Ordinal);
         foreach (var input in request.Sources.OrderBy(input => input.Path, StringComparer.Ordinal))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!paths.Add(input.Path))
+                throw new CompilationFailure(new("FP2006", $"Source path '{input.Path}' is supplied more than once.", null) { InputPath = input.Path });
             var text = new SourceText(input.Path, input.Text, cancellationToken, diagnosticsBag);
             if (editor is { } cursor && cursor.Path == input.Path) text.Editor = cursor.Probe;
             allSources.Add(text);

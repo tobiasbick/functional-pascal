@@ -16,6 +16,17 @@ static void fpas_text_binding_dispose(cui_ctx *ui, void *data) {
     cui__free(ui, binding->value);
 }
 
+static void fpas_text_store(cui_ctx *ui, fpas_text_binding *binding, const char *text,
+    size_t length, size_t capacity) {
+    if (!binding->value || length != binding->length || memcmp(binding->value, text, length) != 0) {
+        fpas_text_binding_dispose(ui, binding);
+        binding->value = cui__alloc(ui, length + 1);
+        memcpy(binding->value, text, length + 1);
+        binding->length = length;
+    }
+    binding->capacity = capacity;
+}
+
 static void fpas_text_reset(cui_ctx *ui, cui_edit_state *edit, int length) {
     cui__edit_dtor(ui, edit);
     edit->undo_pos = 0;
@@ -93,13 +104,7 @@ static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_
         paint->password = !edit->show_password;
         cui__wakeup_after(ui, 0.001f);
     }
-    if (!binding->value || length != binding->length || memcmp(value, binding->value, length) != 0) {
-        fpas_text_binding_dispose(ui, binding);
-        binding->value = cui__alloc(ui, length + 1);
-        memcpy(binding->value, value, length + 1);
-        binding->length = length;
-    }
-    binding->capacity = capacity;
+    fpas_text_store(ui, binding, value, length, capacity);
     binding->password = options.password;
     return allowed ? flags & (CUI_CHANGED | CUI_SUBMITTED) : 0;
 }

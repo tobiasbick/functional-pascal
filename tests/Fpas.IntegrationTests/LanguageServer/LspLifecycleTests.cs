@@ -87,6 +87,19 @@ public sealed class LspLifecycleTests(SdkPackageFixture sdk) : IClassFixture<Sdk
     }
 
     [Fact]
+    public async Task A_malformed_notification_URI_leaves_the_connection_running()
+    {
+        using var project = sdk.CreateProject();
+        await using var client = new LspProbe();
+        await client.Initialize(project.File("Game/Game.fpasproj"));
+        await client.Notify("initialized", new { });
+        await client.Notify("textDocument/didClose", new { textDocument = new { uri = "file://[" } });
+        var log = await client.Notification("window/logMessage");
+        Assert.Contains("Invalid textDocument/didClose", log.GetProperty("params").GetProperty("message").GetString());
+        await client.Stop();
+    }
+
+    [Fact]
     public async Task Argument_errors_keep_stdout_empty()
     {
         var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "lsp", "--context", "Example.fpasproj"]);

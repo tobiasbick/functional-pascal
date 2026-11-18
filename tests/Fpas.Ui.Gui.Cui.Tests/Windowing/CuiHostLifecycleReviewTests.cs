@@ -1,4 +1,6 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using Fpas.Ui.Gui.Cui.Widgets.Desktop;
@@ -8,6 +10,64 @@ namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 /// <summary>Checks frame completion, keyed focus and retirement of managed host state.</summary>
 public sealed class CuiHostLifecycleReviewTests
 {
+    /// <summary>A native live-resize callback can draw while its enclosing pump retains ownership of the frame.</summary>
+    [GuiFact]
+    public unsafe void ResizeRendererCannotChangeTheFrameLifecycle()
+    {
+        using var window = new CuiWindow("Resize rendering", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame()); window.Text("Previous"); window.Present();
+        Assert.True(window.NextFrame());
+        bool rendered = false;
+        window.SetResizeRenderer(() =>
+        {
+            Assert.Throws<InvalidOperationException>(() => window.NextFrame());
+            Assert.Throws<InvalidOperationException>(() => window.Present());
+            Assert.Throws<InvalidOperationException>(() => window.CapturePng("unused.png"));
+            Assert.Throws<InvalidOperationException>(() => window.DiscardFrame());
+            Assert.Throws<InvalidOperationException>(() => window.SetResizeRenderer(null));
+            Assert.Throws<InvalidOperationException>(() => window.Dispose());
+            window.Text("Resizing");
+            rendered = true;
+        });
+
+        // Invoke the bridge callback on an active frame without a platform resize loop.
+        var method = typeof(CuiWindow).GetMethod("RenderResize", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var render = (delegate* unmanaged[Cdecl]<nint, nint, void>)method.MethodHandle.GetFunctionPointer();
+        render(0, GCHandle.ToIntPtr(GetResizeRoot(window)));
+        window.DiscardFrame();
+        Assert.True(window.NextFrame());
+        Assert.True(rendered);
+    }
+
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "resizeRoot")]
+    private static extern ref GCHandle GetResizeRoot(CuiWindow window);
+
+    /// <summary>Only tracked scroll containers can be used to read native scroll metrics.</summary>
+    [GuiFact]
+    public void ScrollMetricsRequireATrackedScrollContainer()
+    {
+        using var window = new CuiWindow("Scroll metrics", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        window.BeginColumn();
+        window.BeginViewport("viewport", false);
+        window.TrackLastControl("viewport-alias");
+        window.Text("Not a viewport");
+        window.TrackLastControl("text");
+        window.EndScroll();
+        window.BeginScroll("scroll", height: 40);
+        window.TrackLastControl("scroll-alias");
+        window.Gap(100);
+        window.EndScroll();
+        window.EndColumn();
+        window.Present();
+
+        window.ScrollMetrics("viewport-alias", out float offset, out _);
+        Assert.Equal(0, offset);
+        window.ScrollMetrics("scroll-alias", out _, out float maximum);
+        Assert.True(maximum > 0);
+        Assert.Throws<ArgumentException>("id", () => window.ScrollMetrics("text", out _, out _));
+    }
+
     /// <summary>Capture surfaces deferred painting errors and permits a clean following frame.</summary>
     /// <param name="axis">Whether to exercise a chart label instead of a canvas painter.</param>
     [GuiTheory]

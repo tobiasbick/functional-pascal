@@ -115,6 +115,7 @@ public sealed partial class CuiWindow : IDisposable
     public bool NextFrame()
     {
         CheckOpen();
+        CheckOutsideResizeRenderer();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before beginning another frame.");
         bool presented = inFrame;
         if (presented) editorRequests.Clear();
@@ -133,7 +134,15 @@ public sealed partial class CuiWindow : IDisposable
         shortcutsRead = false;
         if (inFrame) shortcutOwners = NativeMethods.ShortcutOwners(context);
         hasPresentedFrame |= presented;
-        if (inFrame) { trackedNodes.Clear(); scrollRequests.Clear(); scrollNodes.Clear(); usedModals.Clear(); moneyDrawn.Clear(); }
+        if (inFrame)
+        {
+            trackedNodes.Clear();
+            scrollRequests.Clear();
+            scrollNodes.Clear();
+            scrollMetricNodes.Clear();
+            usedModals.Clear();
+            moneyDrawn.Clear();
+        }
         else { editorRequests.Clear(); moneyFields.Clear(); moneyDrawn.Clear(); CloseWakeTarget(); }
         if (resizeFailure is { } failure)
         {
@@ -157,6 +166,7 @@ public sealed partial class CuiWindow : IDisposable
     public void Present()
     {
         CheckFrame();
+        CheckOutsideResizeRenderer();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before presenting.");
         ResolveHostLayout();
         int presented = 0;
@@ -242,6 +252,8 @@ public sealed partial class CuiWindow : IDisposable
         ArgumentException.ThrowIfNullOrEmpty(id);
         if (!float.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
         NativeMethods.BeginScroll(context, Stable(id), height, horizontal ? 1 : 0);
+        int node = NativeMethods.LastNode(context);
+        if (node >= 0) scrollMetricNodes.Add(node);
         layouts.Add(new(Layout.Scroll));
     }
 
@@ -290,7 +302,9 @@ public sealed partial class CuiWindow : IDisposable
     /// <remarks>An active frame is completed and its deferred callback failures are propagated, as with Present.</remarks>
     public void CapturePng(string path)
     {
-        CheckOpen(); Utf8.Validate(path, nameof(path));
+        CheckOpen();
+        CheckOutsideResizeRenderer();
+        Utf8.Validate(path, nameof(path));
         ArgumentException.ThrowIfNullOrEmpty(path);
         if (layouts.Count != 0 || !hasPresentedFrame)
             throw new InvalidOperationException("Capture needs closed layouts and a previously presented frame.");
@@ -309,9 +323,11 @@ public sealed partial class CuiWindow : IDisposable
     {
         if (app == 0) return;
         CheckOpen();
+        CheckOutsideResizeRenderer();
         CloseWakeTarget();
         SetResizeRenderer(null);
         trackedNodes.Clear();
+        scrollMetricNodes.Clear();
         controlKeys.Clear();
         modalKeys.Clear();
         editorRequests.Clear();

@@ -80,8 +80,17 @@ if(FPAS_CUI_BUILD_TESTS)
         add_test(NAME fpas_cui_${widget} COMMAND fpas_cui_${widget})
         set_tests_properties(fpas_cui_${widget} PROPERTIES TIMEOUT 30)
     endforeach()
-    add_test(NAME fpas_cui_planning_upstream COMMAND fpas_cui_planning upstream)
-    set_tests_properties(fpas_cui_planning_upstream PROPERTIES TIMEOUT 30)
+    foreach(widget IN ITEMS
+        planning code_instruments voice_ai grid_regressions motion creative
+        collection_regressions developer_tools social canvas_bars display editing_tools)
+        add_test(NAME fpas_cui_${widget}_upstream COMMAND fpas_cui_${widget} upstream)
+        set_tests_properties(fpas_cui_${widget}_upstream PROPERTIES TIMEOUT 30)
+    endforeach()
+    add_test(NAME fpas_cui_desktop_chrome_upstream COMMAND fpas_cui_desktop_chrome native)
+    add_test(NAME fpas_cui_developer_tools_upstream_measurement
+        COMMAND fpas_cui_developer_tools measurement)
+    set_tests_properties(fpas_cui_desktop_chrome_upstream fpas_cui_developer_tools_upstream_measurement
+        PROPERTIES TIMEOUT 30)
     if(WIN32)
         foreach(window_test IN ITEMS live_resize swipe_wheel)
             add_executable(fpas_cui_${window_test} tests/${window_test}.c)

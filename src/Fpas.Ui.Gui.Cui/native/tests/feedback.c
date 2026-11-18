@@ -36,9 +36,21 @@ static bool pixels_match(int kind, int tone, bool decorated, bool dark, int widt
                     if (pass) fpas_cui_progress(ui, "###progress", .68f, tone, !decorated,
                         options.height, options.label ? options.label : "", decorated, dither, 0, 0);
                     else cui_progress_ex(ui, .68f, &options);
-                } else {
+                } else if (kind == 2) {
                     if (pass) fpas_cui_spinner(ui, "###spinner", decorated ? 28 : 0);
                     else cui_spinner(ui, decorated ? 28 : 0);
+                } else {
+                    const char *text = decorated ? "Update available#" : "";
+                    if (pass) {
+                        int node, action, dismiss;
+                        unsigned int key;
+                        fpas_cui_banner(ui, "###banner", text, 1, "Install", NULL, tone, 1, 1, 0,
+                            &node, &action, &dismiss, &key);
+                    } else {
+                        bool shown = true;
+                        const cui_banner_opts options = { .tone = (cui_tone)tone, .action = "Install", .dismissible = true };
+                        cui_banner_ex(ui, text, &shown, &options);
+                    }
                 }
             }
             cui_end_frame(ui);
@@ -80,15 +92,59 @@ static bool activity_requests_frames(int kind) {
     return active && stopped;
 }
 
+static bool banner_preserves_dismiss_focus(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 640, 200, 1);
+    cui_set_reduced_motion(ui, true);
+    int node, action, dismiss;
+    unsigned int key;
+
+    cui_begin_frame(ui, .04f);
+    fpas_cui_banner(ui, "###banner", "Update available", 1, "Install", NULL,
+        CUI_TONE_INFO, 1, 1, 2, &node, &action, &dismiss, &key);
+    cui_end_frame(ui);
+    const unsigned int banner_key = key;
+    const unsigned int dismiss_key = fpas_cui_node_key(ui, dismiss);
+    const bool initially_focused = fpas_cui_focus_key(ui, dismiss_key);
+
+    cui_begin_frame(ui, .04f);
+    fpas_cui_banner(ui, "###banner", "Update available", 1, "Install now", NULL,
+        CUI_TONE_INFO, 1, 1, 0, &node, &action, &dismiss, &key);
+    cui_end_frame(ui);
+    const bool still_focused = fpas_cui_node_key(ui, dismiss) == dismiss_key &&
+        fpas_cui_focus_key(ui, dismiss_key);
+
+    cui_begin_frame(ui, .04f);
+    fpas_cui_banner(ui, "###banner", "Update available#", 1, "Install now", NULL,
+        CUI_TONE_INFO, 1, 1, 0, &node, &action, &dismiss, &key);
+    cui_end_frame(ui);
+    const bool literal_focus = key == banner_key && fpas_cui_node_key(ui, dismiss) == dismiss_key &&
+        fpas_cui_focus_key(ui, dismiss_key);
+
+    cui_begin_frame(ui, .04f);
+    cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+    cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+    const int result = fpas_cui_banner(ui, "###banner", "Update available#", 1, "Install now", NULL,
+        CUI_TONE_INFO, 1, 1, 0, &node, &action, &dismiss, &key);
+    cui_end_frame(ui);
+    cui_destroy(ui);
+
+    if (!initially_focused || !still_focused || !literal_focus || !(result & 2))
+        fprintf(stderr, "Banner action and caption changes must preserve keyboard dismissal.\n");
+    return initially_focused && still_focused && literal_focus && (result & 2);
+}
+
 int main(void) {
     bool valid = true;
-    for (int kind = 0; kind < 3; ++kind)
-        for (int tone = 0; tone < (kind == 2 ? 1 : 9); ++tone)
+    for (int kind = 0; kind < 4; ++kind)
+        for (int tone = 0; tone < (kind >= 2 ? 1 : 9); ++tone)
             for (int decorated = 0; decorated < 2; ++decorated)
                 for (int dark = 0; dark < 2; ++dark)
                     for (int narrow = 0; narrow < 2; ++narrow)
                         for (int dither = 0; dither < (kind == 1 ? 2 : 1); ++dither)
                             valid = pixels_match(kind, tone, decorated != 0, dark != 0,
                                 narrow ? 280 : 640, dither != 0) && valid;
-    return activity_requests_frames(0) && activity_requests_frames(1) && valid ? 0 : 1;
+    return banner_preserves_dismiss_focus() &&
+        activity_requests_frames(0) && activity_requests_frames(1) && valid ? 0 : 1;
 }

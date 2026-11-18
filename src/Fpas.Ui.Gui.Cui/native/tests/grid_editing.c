@@ -7,6 +7,7 @@ typedef struct {
     cui_ctx *ui;
     int state[4], capacity, enabled, first, last, commits;
     const char *identity;
+    bool readonly;
     char proposal[256];
     cui_rect row;
 } fixture;
@@ -33,8 +34,8 @@ static void draw(fixture *test) {
         snprintf(id, sizeof id, "row-%d", row);
         const int node = fpas_cui_data_grid_row(test->ui, row, row ? id : test->identity);
         if (!row) first_node = node;
-        fpas_cui_data_grid_cell(test->ui, NULL);
-        if (fpas_cui_data_grid_edit(test->ui, value, test->capacity)) {
+        fpas_cui_data_grid_cell(test->ui, test->readonly ? value : NULL);
+        if (!test->readonly && fpas_cui_data_grid_edit(test->ui, value, test->capacity)) {
             ++test->commits;
             memcpy(test->proposal, value, sizeof value);
         } else {
@@ -117,7 +118,9 @@ static void cancel(int reason) {
         scroll(&test, -60);
         check(test.first > 0, "Virtualization cancellation must actually unrealize the edited row.");
     }
+    if (reason == 4) test.readonly = true;
     draw(&test);
+    test.readonly = false;
     key(&test, CUI_KEY_ENTER, 0);
     check(test.commits == 0, "A canceled stale draft must not commit on Enter.");
     test.enabled = 1;
@@ -136,6 +139,6 @@ static void cancel(int reason) {
 /** Runs successful/rejected commits and each adapter-owned draft cancellation path. */
 int main(void) {
     commit_and_reject();
-    for (int reason = 0; reason < 4; ++reason) cancel(reason);
+    for (int reason = 0; reason < 5; ++reason) cancel(reason);
     return failures ? 1 : 0;
 }

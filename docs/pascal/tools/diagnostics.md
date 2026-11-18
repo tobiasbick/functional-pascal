@@ -144,6 +144,7 @@ reported problems and check again to reach later phases.
 | FP0003 | Diagnostic error limit reached; further errors were not analyzed |
 | FP1001–FP1004 | Invalid character, string, separator, or unsupported numeric form |
 | FP2001–FP2005 | Syntax/terminator error, missing type annotation, unsupported form, source/output-kind mismatch, or duplicate container |
+| FP2006 | Duplicate logical source path in a compiler API request |
 | FP3001–FP3008 | Name, type, overload, binding, unsupported type, unused result, missing return, or unreachable statement |
 | FP3009 / FP3010 | Non-writable assignment target / loop exit outside a loop |
 | FP3011 / FP3012 | Private routine/member/constructor access / importing a program |

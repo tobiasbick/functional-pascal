@@ -87,6 +87,26 @@ public sealed class AnalysisContextTests(SdkPackageFixture sdk) : IClassFixture<
     }
 
     [Fact]
+    public async Task Conflicting_platforms_for_one_project_are_rejected()
+    {
+        using var project = sdk.CreateProject();
+        var path = project.File("Game/Game.fpasproj");
+        var root = XDocument.Load(path);
+        var reference = root.Descendants("ProjectReference").Single();
+        reference.SetAttributeValue("SetPlatform", "Platform=x86");
+        var alternate = new XElement(reference);
+        alternate.SetAttributeValue("SetPlatform", "Platform=x64");
+        reference.AddAfterSelf(alternate);
+        root.Save(path);
+
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var failure = await Assert.ThrowsAsync<ContextFailure>(() => WorkspaceLoader.LoadAsync(new(path), deadline.Token));
+        Assert.Equal("ambiguous_project", failure.Code);
+        Assert.Contains("x86", failure.Message);
+        Assert.Contains("x64", failure.Message);
+    }
+
+    [Fact]
     public async Task Solution_mapping_can_check_Debug_FPAs_against_a_Release_dependency()
     {
         using var project = sdk.CreateProject();

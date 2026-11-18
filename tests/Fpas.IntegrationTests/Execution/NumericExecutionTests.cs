@@ -49,6 +49,10 @@ public sealed class NumericExecutionTests
     public Task Typed_expressions_execute_with_CLR_semantics(string type, string expression, string expected)
         => ProgramExecution.Output($"program Numbers; uses System.Console as Console; begin const Value: {type} := {expression}; Console.WriteLine(Value); end; end program;", expected);
 
+    /// <summary>Checks that emitted numeric failures surface as CLR exceptions.</summary>
+    /// <param name="expression">The expression evaluated at runtime.</param>
+    /// <param name="exception">The expected CLR exception type name.</param>
+    /// <returns>The test operation.</returns>
     [Theory]
     [InlineData("2147483647 + 1", "OverflowException")]
     [InlineData("-2147483648 - 1", "OverflowException")]
@@ -56,11 +60,13 @@ public sealed class NumericExecutionTests
     [InlineData("-(-2147483648)", "OverflowException")]
     [InlineData("cast<int>(2147483648D)", "OverflowException")]
     [InlineData("1 div 0", "DivideByZeroException")]
+    [InlineData("-2147483648 mod -1", "OverflowException")]
+    [InlineData("unchecked(-9223372036854775808L mod -1L)", "OverflowException")]
     [InlineData("unchecked(-2147483648 div -1)", "OverflowException")]
     [InlineData("unchecked(1 + 2147483647) + -1", "OverflowException")]
     public async Task Numeric_failures_use_ordinary_CLR_exceptions(string expression, string exception)
     {
-        var result = await ProgramExecution.Run($"program Failure; begin const Value: int := {expression}; end; end program;");
+        var result = await ProgramExecution.Run($"program Failure; begin discard {expression}; end; end program;");
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("System." + exception, result.Error);
     }

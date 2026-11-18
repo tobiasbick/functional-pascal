@@ -3,14 +3,20 @@ static void fpas_creative_node(cui_ctx *ui, int node, cui_id key) {
     ui->last_id = ui->nodes[node].id = key;
 }
 
+/* A trailing hash would merge with CUI's identity delimiter. */
+static bool fpas_well_needs_literal(const char *label) {
+    const size_t length = strlen(label);
+    return length && strncmp(label, "##", 2) && (label[length - 1] == '#' || strstr(label, "##"));
+}
+
 static const char *fpas_well_label(cui_ctx *ui, const char *label, const char *id) {
-    const char *caption = label[0] == '#' && label[1] == '#' ? "" :
-        strstr(label, "##") ? "x" : label;
+    const char *caption = strncmp(label, "##", 2) == 0 ? "" :
+        fpas_well_needs_literal(label) ? "x" : label;
     return cui__frame_printf(ui, "%s###%s", caption, id);
 }
 
 static void fpas_well_literal(cui_ctx *ui, int node, const char *label) {
-    if (strstr(label, "##") && !(label[0] == '#' && label[1] == '#'))
+    if (fpas_well_needs_literal(label))
         fpas_text(ui, fpas_label_node(ui, node), label);
 }
 

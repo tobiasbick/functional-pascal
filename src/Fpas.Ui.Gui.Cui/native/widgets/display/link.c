@@ -10,14 +10,13 @@ int fpas_cui_link(cui_ctx *ui, const char *id, const char *label, int enabled, i
     const cui_id key = cui_make_id(ui, id) ^ 0x11AC0009u;
     const bool allowed = enabled && !cui_is_disabled(ui);
     if (allowed && focus) ui->focus_next_request = key;
-    const char *caption = cui__frame_printf(ui, "%.*s%s", cui__display_len(label), label, id);
     cui_push_disabled(ui, !enabled);
-    const bool clicked = cui_link(ui, caption);
+    const bool clicked = cui_link(ui, id);
     cui_pop_disabled(ui);
 
     *node = ui->last_node;
     cui_node *link = &ui->nodes[*node];
-    if (strstr(label, "##")) fpas_text(ui, *node, label);
+    fpas_text(ui, *node, label);
     if (!allowed) link->opacity = CUI__DISABLED;
     /* Draw the focus ring alongside the link's hover underline. */
     if (allowed) link->paint = fpas_paint_link;

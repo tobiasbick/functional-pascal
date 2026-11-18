@@ -65,7 +65,7 @@ public static class WorkspaceLoader
         var environment = options.Preparation == ContextPreparation.BuildDependencies ? null : await WorkspacePreparation.InstalledSdkEnvironment(context, scratch, token);
         var described = new Dictionary<string, (ProjectSelection Selection, ProjectManifest Manifest)>(Paths);
         var resolved = new Dictionary<string, ProjectManifest>(Paths);
-        var visited = new Dictionary<string, string>(Paths);
+        var visited = new Dictionary<string, ProjectSelection>(Paths);
         var queue = new Queue<ProjectSelection>(scope.Projects);
         while (queue.TryDequeue(out var pending))
         {
@@ -76,13 +76,15 @@ public static class WorkspaceLoader
                 if (environment is not null) await PassiveEvaluation.Check(pending.Path, Arguments(pending, scope, options.Preparation), scratch, environment, token);
                 selection = await ResolveSelection(pending, scope, options.Preparation, environment, token);
             }
-            catch (ContextFailure failure) { visited.TryAdd(pending.Path, pending.Configuration); issues.Add(new(pending.Path, failure.Code, failure.Message, failure.OutputTruncated)); continue; }
-            if (visited.TryGetValue(selection.Path, out var configuration))
+            catch (ContextFailure failure) { visited.TryAdd(pending.Path, pending); issues.Add(new(pending.Path, failure.Code, failure.Message, failure.OutputTruncated)); continue; }
+            if (visited.TryGetValue(selection.Path, out var previous))
             {
-                if (configuration != selection.Configuration) throw new ContextFailure("ambiguous_project", "A project is required in multiple configurations: " + selection.Path);
+                if (previous.Configuration != selection.Configuration || !previous.Platform.Replace(" ", "", StringComparison.Ordinal)
+                    .Equals(selection.Platform.Replace(" ", "", StringComparison.Ordinal), StringComparison.OrdinalIgnoreCase))
+                    throw new ContextFailure("ambiguous_project", $"A project is required as both {previous.Configuration}|{previous.Platform} and {selection.Configuration}|{selection.Platform}: {selection.Path}");
                 continue;
             }
-            visited.Add(selection.Path, selection.Configuration);
+            visited.Add(selection.Path, selection);
             try
             {
                 if (Path.GetExtension(selection.Path).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase))

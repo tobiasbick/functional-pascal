@@ -6,6 +6,27 @@ namespace Fpas.Compiler.Tests.Analysis;
 
 public sealed class AnalysisTests
 {
+    /// <summary>Reports duplicate logical document identities across analysis and both compilation modes.</summary>
+    [Fact]
+    public void Duplicate_logical_source_paths_report_the_same_input_diagnostic()
+    {
+        CompilationSource[] sources = [new("shared.fpas", "program App; begin end; end program;"),
+            new("shared.fpas", "unit Library; end unit;")];
+        var request = new CompilationRequest(sources, "App", TestCompilation.References, EmitDebugInformation: true);
+        var withSymbols = FpasCompiler.Compile(request);
+        var withoutSymbols = FpasCompiler.Compile(request with { EmitDebugInformation = false });
+        var analysis = FpasCompiler.Analyze(new(sources, request.AssemblyName, request.References));
+
+        Assert.Null(withSymbols.Program);
+        Assert.Null(withoutSymbols.Program);
+        Assert.Null(analysis.Snapshot);
+        var diagnostic = Assert.Single(withSymbols.Diagnostics);
+        Assert.Equal("FP2006", diagnostic.Code);
+        Assert.Equal("shared.fpas", diagnostic.InputPath);
+        Assert.Equal(diagnostic, Assert.Single(withoutSymbols.Diagnostics));
+        Assert.Equal(diagnostic, Assert.Single(analysis.Diagnostics));
+    }
+
     [Theory]
     [InlineData("program Empty; begin end; end program;", CompilationTarget.Exe)]
     [InlineData("unit Library; public function Read(): int; begin return 42; end function; end unit;", CompilationTarget.Library)]

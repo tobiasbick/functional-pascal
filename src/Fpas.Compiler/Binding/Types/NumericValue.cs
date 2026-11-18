@@ -94,10 +94,7 @@ internal static class NumericValue
         var x = Integer(left); var y = Integer(right);
         if (op is "=" or "<>" or "<" or ">" or "<=" or ">=") return Compare(op, x == y, x < y, x > y, x <= y, x >= y);
         if (op is "div" or "mod" && !NumericFacts.Unsigned(type) && x == NumericFacts.Min(type, nativeBits) && y == -1)
-        {
-            if (op == "div") throw new OverflowException();
-            return ConvertTo(BigInteger.Zero, type, false, nativeBits);
-        }
+            throw new OverflowException();
         var count = (int)(y & (NumericFacts.Bits(type, nativeBits) == 64 ? 63 : 31));
         var result = op switch
         {

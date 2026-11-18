@@ -12,13 +12,17 @@ int fpas_cui_option_action(cui_ctx *ui, const char *id,
     cui_pop_id(ui);
     const cui_option_action_opts options = { .tooltip = tooltip, .action_on = (flags & 4) != 0,
         .action_disabled = !(flags & 16), .value = display, .plain = (flags & 8) != 0 };
+    const char **captions = cui__frame_alloc(ui, (size_t)CUI_MAX(count, 1) * sizeof *captions);
+    for (int i = 0; i < count; ++i)
+        captions[i] = strstr(items[i], "##") ? "x" : items[i];
     fpas_well_focus(ui, enabled, row, key, count, !options.action_disabled, focus);
     cui_push_disabled(ui, !enabled);
-    const int result = cui_option_action_ex(ui, label, items, count, value, icon, &options);
+    const int result = cui_option_action_ex(ui, label, captions, count, value, icon, &options);
     cui_pop_disabled(ui);
     for (int i = 0; i < count; ++i) {
         parts[i] = fpas_find(ui, fpas_well_part(row, i));
-        if (parts[i] >= 0 && strstr(items[i], "##")) fpas_text(ui, fpas_label_node(ui, parts[i]), items[i]);
+        if (parts[i] >= 0 && captions[i] != items[i])
+            fpas_text(ui, fpas_label_node(ui, parts[i]), items[i]);
     }
     parts[count] = icon ? fpas_find(ui, key ^ CUI__WELL_TOOL_SALT) : -1;
     fpas_own(ui, key, row, 0, 0);

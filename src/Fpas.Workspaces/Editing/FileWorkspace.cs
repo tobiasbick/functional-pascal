@@ -9,6 +9,7 @@ namespace Fpas.Workspaces.Editing;
 public sealed class FileWorkspace
 {
     private readonly ContextOptions input;
+    private int applying;
     /// <summary>Gets the currently captured context, refreshed after publication.</summary>
     public WorkspaceContext Context { get; private set; }
     /// <summary>Gets current analysis, or null when publication invalidated it and reanalysis failed.</summary>
@@ -69,12 +70,19 @@ public sealed class FileWorkspace
     public async Task VerifyAsync(CancellationToken token = default)
     { await Context.VerifyInputsAsync(token); token.ThrowIfCancellationRequested(); }
 
-    /// <summary>Publishes one checked edit batch, then reloads, analyzes and verifies current inputs.</summary>
+    /// <summary>Publishes one checked edit batch, then reloads, analyzes and verifies current inputs. Concurrent publications are rejected.</summary>
     /// <param name="edits">Edits matching this workspace's captured texts and versions.</param>
     /// <param name="verifyPublicationInput">Optional final verification of adapter-owned inputs such as a plan file.</param>
     /// <param name="token">Cancels publication or reanalysis; written/recovery state remains observable.</param>
     /// <returns>A task completing after the post-publication check; inspect analysis for remaining errors.</returns>
     public async Task ApplyAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput = null, CancellationToken token = default)
+    {
+        if (Interlocked.Exchange(ref applying, 1) != 0) throw new InvalidOperationException("An editing operation is already publishing changes.");
+        try { await ApplyBatchAsync(edits, verifyPublicationInput, token); }
+        finally { Volatile.Write(ref applying, 0); }
+    }
+
+    private async Task ApplyBatchAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput, CancellationToken token)
     {
         if (Written.Count != 0) throw new InvalidOperationException("An editing operation has already published changes.");
         foreach (var document in edits.Documents)

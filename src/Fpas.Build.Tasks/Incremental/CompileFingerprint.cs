@@ -11,21 +11,35 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
         IReadOnlyList<string> documents, bool warningsAsErrors, string promoted, string excluded, string suppressed)
         => $"{target}\0{configuration}\0{framework}\0{output}\0{debug}\0{optimize}\0{string.Join('\0', documents)}\0{warningsAsErrors}\0{promoted}\0{excluded}\0{suppressed}";
 
-    internal static IEnumerable<string> Tools(string compiler) => (compiler.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-        ? Directory.GetFiles(Path.GetDirectoryName(compiler)!, "*").Where(path => Path.GetExtension(path) is ".dll" or ".json")
-        : new[] { compiler }).Append(typeof(CompileFingerprint).Assembly.Location);
+    internal static IEnumerable<string> Tools(string compiler)
+    {
+        var path = Path.GetFullPath(compiler);
+        var siblings = path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+            ? Directory.EnumerateFiles(Path.GetDirectoryName(path)!).Where(asset => Path.GetExtension(asset) is ".dll" or ".json")
+            : [];
+        return siblings.Append(path).Append(typeof(CompileFingerprint).Assembly.Location).Distinct(StringComparer.Ordinal);
+    }
 
     internal static string Compute(IEnumerable<string> sources, IEnumerable<string> references, string compiler, string options, string compilerAssembly = "")
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        hash.AppendData(Encoding.UTF8.GetBytes(options + "\0" + Environment.Version + "\0"));
-        foreach (var path in sources.Concat(references).Concat(Tools(compiler)).Concat(compilerAssembly.Length == 0 ? [] : new[] { compilerAssembly }).Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
-        {
-            hash.AppendData(Encoding.UTF8.GetBytes(path + "\0"));
-            using var stream = File.OpenRead(path);
-            hash.AppendData(SHA256.HashData(stream));
-        }
+        hash.AppendData(Encoding.UTF8.GetBytes(options + "\0" + Environment.Version + "\0" + Path.GetFullPath(compiler) + "\0"));
+        AddPaths("sources", sources);
+        AddPaths("references", references);
+        AddPaths("tools", Tools(compiler));
+        AddPaths("compiler assembly", compilerAssembly.Length == 0 ? [] : [compilerAssembly]);
         return Convert.ToHexString(hash.GetHashAndReset());
+
+        void AddPaths(string kind, IEnumerable<string> paths)
+        {
+            hash.AppendData(Encoding.UTF8.GetBytes(kind + "\0"));
+            foreach (var path in paths.Select(Path.GetFullPath).Order(StringComparer.Ordinal))
+            {
+                hash.AppendData(Encoding.UTF8.GetBytes(path + "\0"));
+                using var stream = File.OpenRead(path);
+                hash.AppendData(SHA256.HashData(stream));
+            }
+        }
     }
 
     internal static CompileFingerprint? Read(string cache)

@@ -1,5 +1,12 @@
 #include "../../fpas_cui.h"
 
+/* A reset may propose the same snapped value that native paint computes on an idle frame. */
+static bool fpas_dial_reset_requested(cui_ctx *ui, cui_id key) {
+    return (ui->focus == key &&
+            (cui_key_pressed(ui, CUI_KEY_DELETE) || cui_key_pressed(ui, CUI_KEY_BACKSPACE))) ||
+        (ui->active == key && ui->hot == key && ui->mpressed[0] && ui->click_count >= 2);
+}
+
 int fpas_cui_knob(cui_ctx *ui, const char *id, const char *label, float *value,
     float minimum, float maximum, float step, float reset, const char *format, const char *unit,
     int hide_value, float size, int bipolar, int log_scale, uint32_t rgba, int enabled, int focus, int *control) {
@@ -33,7 +40,8 @@ int fpas_cui_knob(cui_ctx *ui, const char *id, const char *label, float *value,
         fpas_text(ui, ui->nodes[*control].next, cui__dl_text(ui, format, unit, next));
     ui->last_node = root;
     fpas_own(ui, key, group, wheel, 0);
-    if (!allowed || !isfinite(next) || next == idle || next == *value) return 0;
+    if (!allowed || !isfinite(next) || next == *value ||
+        (next == idle && !fpas_dial_reset_requested(ui, key))) return 0;
     *value = next;
     return 1;
 }

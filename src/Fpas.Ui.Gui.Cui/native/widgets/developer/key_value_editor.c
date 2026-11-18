@@ -5,7 +5,9 @@ void fpas_cui_key_value_editor(cui_ctx *ui, const char *id, cui_kv_pair *pairs, 
     const cui_id key = cui_make_id(ui,id);
     *out = fpas_dev_empty();
     cui_push_disabled(ui,!enabled);
-    const cui_kv_editor_opts o = { .key_placeholder=key_label, .value_placeholder=value_label,
+    const cui_kv_editor_opts o = {
+        .key_placeholder = key_label ? cui__frame_strdup(ui, key_label, -1) : NULL,
+        .value_placeholder = value_label ? cui__frame_strdup(ui, value_label, -1) : NULL,
         .no_toggles=toggles, .no_secrets=secrets, .read_only=read_only || !enabled, .width=fpas_extent(width_kind,width) };
     out->flags = cui_kv_editor_ex(ui,id,pairs,count,capacity,&o);
     cui_pop_disabled(ui);

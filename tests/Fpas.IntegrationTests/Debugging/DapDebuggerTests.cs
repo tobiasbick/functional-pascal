@@ -31,8 +31,12 @@ public sealed partial class DapDebuggerTests
         await client.Success("launch", new() { ["program"] = new Uri(program.Assembly).AbsoluteUri, ["cwd"] = new Uri(program.DirectoryPath).AbsoluteUri });
         await client.Event("initialized");
         var points = await client.Success("setBreakpoints", new() { ["source"] = new JsonObject { ["path"] = new Uri(program.Source).AbsoluteUri },
-            ["breakpoints"] = new JsonArray(new JsonObject { ["line"] = 6 }) });
-        Assert.True(points.GetProperty("breakpoints")[0].GetProperty("verified").GetBoolean());
+            ["breakpoints"] = new JsonArray(new JsonObject { ["line"] = 6 }, new JsonObject { ["line"] = 6 }) });
+        var breakpoints = points.GetProperty("breakpoints");
+        Assert.Equal(2, breakpoints.GetArrayLength());
+        Assert.True(breakpoints[0].GetProperty("verified").GetBoolean());
+        Assert.True(breakpoints[1].GetProperty("verified").GetBoolean());
+        Assert.Equal(breakpoints[0].GetProperty("id").GetInt32(), breakpoints[1].GetProperty("id").GetInt32());
         await client.Success("setExceptionBreakpoints", new() { ["filters"] = new JsonArray("unhandled") });
         await client.Success("configurationDone");
         var stopped = await client.Event("stopped"); Assert.Equal("breakpoint", stopped.GetProperty("reason").GetString());

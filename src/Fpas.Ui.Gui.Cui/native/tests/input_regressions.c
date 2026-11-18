@@ -65,6 +65,63 @@ static void check_number(cui_ctx *ui) {
     check_copied_number(ui, &value);
 }
 
+typedef struct { double value; int decimals; } number_precision;
+
+static void precise_number(cui_ctx *ui, void *state) {
+    number_precision *number = state;
+    int nodes[3];
+    fpas_cui_number_field(ui, "number", &number->value, 0, 10, NULL, NULL, .01,
+        number->decimals, 1, 0, nodes);
+}
+
+static void check_number_precision(cui_ctx *ui) {
+    number_precision number = {1.25, 1};
+    frames(ui, precise_number, &number, 2);
+    key(ui, precise_number, &number, CUI_KEY_TAB, 0);
+    key(ui, precise_number, &number, CUI_KEY_A, CUI_MOD_PRIMARY);
+    key(ui, precise_number, &number, CUI_KEY_C, CUI_MOD_PRIMARY);
+    CHECK(strcmp(clipboard, "1.2") == 0);
+
+    number.decimals = 3;
+    frames(ui, precise_number, &number, 1);
+    key(ui, precise_number, &number, CUI_KEY_A, CUI_MOD_PRIMARY);
+    key(ui, precise_number, &number, CUI_KEY_C, CUI_MOD_PRIMARY);
+    CHECK(strcmp(clipboard, "1.250") == 0 && number.value == 1.25);
+}
+
+typedef struct { bool parent_disabled, enabled; int result; } picker_state;
+
+static int empty_folder(void *user, const char *path, cui_file_entry *entries, int capacity,
+    char *names, size_t name_capacity, bool hidden) {
+    (void)user; (void)path; (void)entries; (void)capacity; (void)names; (void)name_capacity; (void)hidden;
+    return 0;
+}
+
+static void picker(cui_ctx *ui, void *state) {
+    picker_state *picker = state;
+    char path[1024];
+    int nodes[5];
+    cui_push_disabled(ui, picker->parent_disabled);
+    picker->result = fpas_cui_file_picker(ui, "picker", 1, picker->enabled, 0, NULL,
+        NULL, NULL, NULL, NULL, empty_folder, NULL, path, sizeof path, nodes);
+    cui_pop_disabled(ui);
+}
+
+static void check_disabled_picker(cui_ctx *ui) {
+    picker_state state = {.enabled = true};
+    frames(ui, picker, &state, 2);
+    state.parent_disabled = true;
+    key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
+    CHECK(state.result == 0);
+    state.parent_disabled = false;
+    state.enabled = false;
+    key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
+    CHECK(state.result == 0);
+    state.enabled = true;
+    key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
+    CHECK(state.result == 1);
+}
+
 static void tags(cui_ctx *ui, void *state) {
     int nodes[2];
     fpas_cui_tag_input(ui, "tags", state, 128, NULL, NULL, 1, 1, 0, 0, nodes);
@@ -156,8 +213,9 @@ static void check_area(cui_ctx *ui) {
 }
 
 int main(void) {
-    void (*checks[])(cui_ctx *) = { check_area, check_tags, check_code, check_select, check_number };
-    for (int i = 0; i < 5; ++i) {
+    void (*checks[])(cui_ctx *) = { check_area, check_tags, check_code, check_select, check_number,
+        check_number_precision, check_disabled_picker };
+    for (size_t i = 0; i < sizeof checks / sizeof *checks; ++i) {
         cui_sw_renderer *sw = cui_sw_create();
         cui_ctx *ui = cui_create(&(cui_ctx_desc){ .renderer = cui_sw_iface(sw) });
         const cui_platform_iface platform = { .get_clipboard = get_clipboard, .set_clipboard = set_clipboard };

@@ -62,6 +62,23 @@ public sealed partial class MsBuildTests
     }
 
     [Fact]
+    public async Task An_incremental_build_rejects_a_duplicate_source_item()
+    {
+        using var project = sdk.CreateProject();
+        var first = await sdk.Run(project, "build", "Game/Game.fpasproj");
+        Assert.True(first.ExitCode == 0, first.Output + first.Error);
+
+        var path = project.File("Game/Game.fpasproj");
+        var definition = XDocument.Load(path);
+        definition.Root!.Add(new XElement("ItemGroup", new XElement("Compile", new XAttribute("Include", "Bridge.fpas"))));
+        definition.Save(path);
+
+        var duplicate = await sdk.Run(project, "build", "Game/Game.fpasproj", "--no-restore");
+        Assert.NotEqual(0, duplicate.ExitCode);
+        Assert.Contains("Specify each source only once", duplicate.Output + duplicate.Error);
+    }
+
+    [Fact]
     public async Task Compiler_assets_and_reference_list_changes_invalidate_incremental_state()
     {
         using var project = sdk.CreateProject();
@@ -95,5 +112,9 @@ public sealed partial class MsBuildTests
         Assert.Contains("FPAS: compiling", (await Build()).Output);
         Assert.Equal(assembly, File.ReadAllBytes(project.File("Game/bin/Debug/net10.0/Game.dll")));
         Assert.DoesNotContain("FPAS: compiling", (await Build()).Output);
+        var wrongCompiler = await sdk.Run(project, "build", path, "--no-restore",
+            "-p:FpasCompilerPath=" + project.File("compiler/Fpas.Workspaces.dll"));
+        Assert.NotEqual(0, wrongCompiler.ExitCode);
+        Assert.Contains("FP5003", wrongCompiler.Output + wrongCompiler.Error);
     }
 }

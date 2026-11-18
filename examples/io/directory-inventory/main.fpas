@@ -31,8 +31,13 @@ begin
 
   try
     const Root: string := IO.Path.GetFullPath(args[0]);
+    const Options: IO.EnumerationOptions := new IO.EnumerationOptions();
+    Options.RecurseSubdirectories := true;
+    Options.AttributesToSkip := IO.FileAttributes.ReparsePoint;
+    Options.IgnoreInaccessible := false;
+    Options.MatchType := IO.MatchType.Win32;
     const Visible: Collections.IEnumerable<string> := Seq.Where<string>(
-      IO.Directory.EnumerateFiles(Root, Pattern, IO.SearchOption.AllDirectories),
+      IO.Directory.EnumerateFiles(Root, Pattern, Options),
       function(Path: string): bool => not (IO.Path.GetFileName(Path) ?? '').StartsWith('.')
     );
     const Paths: Collections.List<string> := Seq.ToList<string>(Visible);

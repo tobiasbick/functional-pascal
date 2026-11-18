@@ -82,6 +82,16 @@ public type ConsumerTests = record
           );
         end procedure
       );
+      discard X.Assert.Throws<Sys.ArgumentException>(
+        procedure() begin
+          Lists.WriteM3u8(
+            Path,
+            [new Lists.Item('file:///media/first%0Asecond.mp3', 'Song')],
+            true,
+            T.CancellationToken.None
+          );
+        end procedure
+      );
       X.Assert.Equal<string>('#EXTM3U' + #10, IO.File.ReadAllText(Path));
       X.Assert.Equal<int>(1, Folder.GetFiles().Length);
     finally
@@ -119,6 +129,31 @@ public type ConsumerTests = record
         end procedure
       );
       X.Assert.Equal<int>(2, Lists.Read(Output, T.CancellationToken.None).Length);
+    finally
+      Folder.Delete(true);
+    end try;
+  end procedure;
+
+  // A leading hash in a relative filename must not turn the reference into a directive.
+  [X.FactAttribute]
+  public procedure ExportHashPrefixedReference();
+  begin
+    const Folder: IO.DirectoryInfo := IO.Directory.CreateTempSubdirectory();
+    try
+      const Path: string := IO.Path.Combine(Folder.FullName, 'mix.m3u8');
+      const Song: string := IO.Path.Combine(Folder.FullName, '#song.mp3');
+      Lists.WriteM3u8(
+        Path,
+        [new Lists.Item('#song.mp3', 'Song'), new Lists.Item(Song, 'Second title')],
+        false,
+        T.CancellationToken.None
+      );
+      const Items: array of Lists.Item := Lists.Read(Path, T.CancellationToken.None);
+      X.Assert.Equal<int>(2, Items.Length);
+      X.Assert.Equal<string>('./#song.mp3', Items[0].Location);
+      X.Assert.Equal<string>(Items[0].Location, Items[1].Location);
+      X.Assert.Equal<string>('Song', Items[0].Title);
+      X.Assert.Equal<string>('Second title', Items[1].Title);
     finally
       Folder.Delete(true);
     end try;

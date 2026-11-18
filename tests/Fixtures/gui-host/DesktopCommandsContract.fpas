@@ -3,6 +3,7 @@ unit DesktopCommandsContract;
 uses
   DesktopCommandMappingContract as Mapping,
   DesktopSchedulingContract as Scheduling,
+  DesktopFocusContract as Focus,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Closing as Closing,
   Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames,
@@ -198,6 +199,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
 begin
   Mapping.Verify();
   Scheduling.Verify(Renderer);
+  Focus.Verify(Renderer);
   VerifyClose(Renderer);
   VerifyDefaultAndDispose(Renderer);
   VerifyFactoryFailure(Renderer);

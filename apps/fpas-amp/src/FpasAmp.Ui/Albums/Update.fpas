@@ -152,7 +152,7 @@ begin
       );
     when M.Msg.Received(const Items: I.ImmutableArray<Albums.Album>):
       const Collections: Groups.Catalog := Groups.Build(Items, Current.Scope);
-      return Grid.Project(
+      const Projection: A.Transition<M.State, M.Msg> := Grid.Project(
         Current with
           Releases := Items;
           Collections := Collections;
@@ -160,6 +160,7 @@ begin
           Error := null;
         end with
       );
+      return RefreshMusic(Projection, Library);
     when M.Msg.Visible(const First: int, const Last: int):
       const Start: int := Sys.Math.Clamp(First, 0, Current.Shown.Length);
       const Finish: int := Sys.Math.Clamp(Last, Start, Current.Shown.Length);
@@ -344,6 +345,51 @@ begin
 
       return new A.Transition<M.State, M.Msg>(Grid.Show(Next), []);
   end case;
+end function;
+
+function RefreshMusic(Projection: A.Transition<M.State, M.Msg>; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+begin
+  const Current: M.State := Projection.Model;
+  const Page: Music.State? := Current.Music;
+  if Page = null then
+    return Projection;
+  end if;
+
+  for Album: Albums.Album in Current.Items do
+    if Album.Id = Page.Album.Id then
+      const Updated: Music.State := Page with
+        Album := Album;
+      end with;
+      if Album.Revision = Page.Album.Revision then
+        return new A.Transition<M.State, M.Msg>(
+          Current with
+            Music := Updated;
+          end with, Projection.Commands
+        );
+      end if;
+
+      const Reloaded: A.Transition<M.State, M.Msg> := MusicTransition(
+        Current,
+        Songs.Open(
+          Updated with
+            Cover := null;
+            Error := null;
+          end with, Library
+        )
+      );
+      const Work: C.List<A.Command<M.Msg>> := new C.List<A.Command<M.Msg>>(Projection.Commands);
+      Work.AddRange(Reloaded.Commands);
+      return new A.Transition<M.State, M.Msg>(Reloaded.Model, Work.ToArray());
+    end if;
+  end for;
+
+  const Work: C.List<A.Command<M.Msg>> := new C.List<A.Command<M.Msg>>(Projection.Commands);
+  Work.Add(A.CancelBackground<M.Msg>('music/load'));
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Music := null;
+    end with, Work.ToArray()
+  );
 end function;
 
 function MusicTransition(Current: M.State; Child: A.Transition<Music.State, Music.Msg>): A.Transition<M.State, M.Msg>;

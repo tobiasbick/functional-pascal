@@ -74,33 +74,21 @@ begin
           ), Nav.Route.GenreAlbum(_, const ReleaseId: string): ReleaseId;
           else '';
         end case;
-        if Id <> '' then
-          var Found: bool := false;
+        if Id <> '' and Page = null then
           for Item: Releases.Album in Next.Albums.Items do
             if Item.Id = Id then
-              Found := true;
-              break;
+              const Opened: Mvu.Transition<M.State, M.Msg> := Album(
+                Next,
+                AlbumModel.Msg.OpenMusic(Id),
+                Library
+              );
+              const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+                Child.Commands
+              );
+              Commands.AddRange(Opened.Commands);
+              return new Mvu.Transition<M.State, M.Msg>(Opened.Model, Commands.ToArray());
             end if;
           end for;
-
-          if Found and Page = null then
-            const Opened: Mvu.Transition<M.State, M.Msg> := Album(
-              Next,
-              AlbumModel.Msg.OpenMusic(Id),
-              Library
-            );
-            const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
-              Child.Commands
-            );
-            Commands.AddRange(Opened.Commands);
-            return new Mvu.Transition<M.State, M.Msg>(Opened.Model, Commands.ToArray());
-          elsif not Found then
-            Next := Next with
-              Albums := Next.Albums with
-                Music := null;
-              end with;
-            end with;
-          end if;
         end if;
       end if;
 
@@ -349,17 +337,33 @@ begin
         Next := Transition.Model;
         Commands := Transition.Commands;
       elsif After and Current.Navigation.Active <> Next.Navigation.Active then
+        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>();
+        if Next.Albums.Scope <> Current.Albums.Scope or Next.Albums.GroupId <>
+          Current.Albums.GroupId
+        then
+          Work.Add(Mvu.CancelBackground<M.Msg>('albums/images'));
+          Work.Add(Mvu.CancelBackground<M.Msg>('albums/music/load'));
+        end if;
+
+        var Transition: Mvu.Transition<M.State, M.Msg> := new Mvu.Transition<M.State, M.Msg>(
+          Next,
+          []
+        );
         case Next.Navigation.Active of
           when Nav.Route.Album(const Id: string), Nav.Route.ArtistAlbum(
             _,
             const Id: string
           ), Nav.Route.GenreAlbum(_, const Id: string):
             if Next.Albums.Loaded then
-              return Album(Next, AlbumModel.Msg.OpenMusic(Id), Library);
+              Transition := Album(Next, AlbumModel.Msg.OpenMusic(Id), Library);
             end if;
           else
-            return Album(Next, AlbumModel.Msg.BackToAlbums, Library);
+            Transition := Album(Next, AlbumModel.Msg.BackToAlbums, Library);
         end case;
+
+        Next := Transition.Model;
+        Work.AddRange(Transition.Commands);
+        Commands := Work.ToArray();
       end if;
       const MusicRoute: Nav.Route := Nav.Route.Page(Nav.Page.Music);
       if Next.Navigation.Active <> Current.Navigation.Active then

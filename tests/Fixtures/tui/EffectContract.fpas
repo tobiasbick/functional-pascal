@@ -364,8 +364,47 @@ begin
   end try;
 end procedure;
 
+procedure CheckCloseFromHostRequest();
+  procedure Notify(Request: Mvu.HostRequest);
+  begin
+    discard Close();
+  end procedure;
+  function Propose(State: string; Message: Msg): Mvu.Transition<string, Msg>;
+  begin
+    return new Mvu.Transition<string, Msg>(
+      State, [
+        Mvu.Focus<Msg>('close-from-host'),
+        Mvu.StartBackground<Msg>(
+          'after-close',
+          function(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task => Finish.Task.WaitAsync(
+            Deadline
+          ),
+          Failed
+        )
+      ]
+    );
+  end function;
+begin
+  const Finish: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource();
+  var Close: function(): Tasks.Task := function(): Tasks.Task => Tasks.Task.CompletedTask;
+  const Core: Runtime.Runtime<string, Msg, string> := Runtime.Start<string, Msg, string>(
+    'initial', Propose, Notify, 1
+  );
+  Close := Core.Close;
+  try
+    Core.Dispatch(Msg.Touch);
+    Core.Close().WaitAsync(Deadline).GetAwaiter().GetResult();
+    if Core.PendingEffects() <> 0 then
+      raise new Sys.InvalidOperationException('A host close started an unowned effect.');
+    end if;
+  finally
+    Finish.SetResult();
+  end try;
+end procedure;
+
 begin
   CheckCore();
+  CheckCloseFromHostRequest();
   CheckReplacementAndFailure();
   CheckExit();
   Console.WriteLine('effect contracts verified');

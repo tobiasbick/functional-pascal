@@ -4,9 +4,11 @@ A small text-file inventory using actual .NET APIs. The program takes a director
 and an optional search pattern, recursively filters paths with LINQ Where<string>,
 materializes them in List<string>, sorts them, and uses Select<string, string>
 to read and format each file with StreamReader. Files whose basename starts with
-a dot are skipped. The row lambda captures the root directory and a shared mutable
-total. Rows are enumerated once, so each selected file is read once. Sources and streams are evaluated/opened
-once; using const releases each reader and enumeration releases its enumerator.
+a dot are skipped. Symbolic links and other reparse points within the scan are
+skipped so aliases and directory cycles do not duplicate files. The row lambda
+captures the root directory and a shared mutable total. Rows are enumerated once,
+so each selected file is read once. Using const releases each reader and
+enumeration releases its enumerator.
 
 After building and packaging the local SDK (see the
 [bootstrap instructions](../../../docs/build/development.md#build-an-fpas-application)):

@@ -7,7 +7,7 @@ uses
   FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Library.Albums.Model as M,
   FpasAmp.Library.Albums.Persistence.Queries as Query, FpasAmp.Library.Inventory.Monitoring as Monitor,
   FpasAmp.Library.Metadata.Model as Tags, FpasAmp.Library.Sources as Sources,
-  Fpas.Media.Images as Images, ATL as A, System.IO as IO,
+  Fpas.Media.Images as Images, ATL as A, System as Sys, System.IO as IO,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users,
   Microsoft.Data.Sqlite as Db, System.Text.Json as Json,
@@ -166,6 +166,41 @@ public type AlbumTests = record
     IO.File.Delete(First);
     IO.File.Delete(Second);
     X.Assert.NotNull(await F.Tags(Session).Albums.ThumbnailAsync(Album, T.CancellationToken.None));
+  end function;
+
+  // An unsupported back-cover image on the first track leaves later embedded covers eligible.
+  [X.FactAttribute]
+  public async function LaterBackCoverWinsOverSidecarWhenFirstCannotDecode(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const First: string := Art.Track(Root.Path, 'a.mp3', 'Album');
+    const Second: string := Art.Track(Root.Path, 'b.mp3', 'Album');
+    const Gif: array of byte := Sys.Convert.FromBase64String(
+      'R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
+    );
+    Art.Embed(First, Gif, A.PictureInfo.PIC_TYPE.Back);
+    Art.Embed(Second, Art.Picture(20, 20, 220), A.PictureInfo.PIC_TYPE.Back);
+    IO.File.WriteAllBytes(IO.Path.Combine(Root.Path, 'cover.png'), Art.Picture(220, 20, 20));
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    discard await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 2
+    );
+    const Album: M.Album := Read(Data.Path)[0];
+    const Picture: Images.Bitmap? := await F.Tags(Session).Albums.ThumbnailAsync(
+      Album,
+      T.CancellationToken.None
+    );
+    case Picture of
+      when is Images.Bitmap as Pixels:
+        X.Assert.True(
+          Pixels.Pixels[2] > Pixels.Pixels[0],
+          'Expected the blue embedded back cover.'
+        );
+      else
+        X.Assert.True(false, 'Expected album artwork.');
+    end case;
   end function;
 
   // Sidecar creation/replacement/deletion changes the album revision and cached choice.

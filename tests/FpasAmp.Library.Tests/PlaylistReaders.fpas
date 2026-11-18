@@ -36,6 +36,17 @@ public type ReaderTests = record
     X.Assert.Equal<string>('https://example.invalid/a%20b', Result.Items[1].Reference.Location);
   end procedure;
 
+  // Rooted XML paths decode once, while absolute plain-text paths remain literal.
+  [X.FactAttribute]
+  public procedure AbsolutePathEscaping();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Escaped: string := IO.Path.Combine(Root.Path, 'a%20b%2520.ogg');
+    const Expected: string := IO.Path.Combine(Root.Path, 'a b%20.ogg');
+    X.Assert.Equal<string>(Expected, References.Resolve(Escaped, Root.Path, true).Location);
+    X.Assert.Equal<string>(Escaped, References.Resolve(Escaped, Root.Path).Location);
+  end procedure;
+
   // The reference-only parser rejects excessive entries even in a small text file.
   [X.FactAttribute]
   public procedure EntryCountIsBounded();

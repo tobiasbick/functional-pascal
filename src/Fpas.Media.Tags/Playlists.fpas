@@ -1,7 +1,7 @@
 // ATL's playlist extensions remain independent of audio-format selection.
 unit Fpas.Media.Tags.Playlists;
 
-uses ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO, System.Threading as T, System.Collections.Generic as C;
+uses ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO, System.Text as Text, System.Threading as T, System.Collections.Generic as C;
 
 // Checks a dot-prefixed `Extension` against the supported playlist readers.
 // ## Returns
@@ -117,6 +117,42 @@ begin
   end if;
 end procedure;
 
+function ExportLocation(Location: string; Directory: string): string;
+begin
+  if not Sys.OperatingSystem.IsWindows() and (Location.StartsWith(
+    '\\',
+    Sys.StringComparison.Ordinal
+  )
+    or (Location.Length >= 3 and Location[1] = #58 and (Location[2] = #92 or Location[2] = #47)))
+  then
+    return Location;
+  end if;
+
+  var Local: string := Location;
+  var Parsed: Sys.Uri? := null;
+  if not IO.Path.IsPathFullyQualified(Local) and Sys.Uri.TryCreate(
+    Local,
+    Sys.UriKind.Absolute,
+    out Parsed
+  )
+  then
+    case Parsed of
+      when is Sys.Uri as Uri if Uri.IsFile:
+        Local := Uri.LocalPath;
+      else
+        return Location;
+    end case;
+  end if;
+
+  const Absolute: string := IO.Path.GetFullPath(Local, Directory);
+  const Relative: string := IO.Path.GetRelativePath(Directory, Absolute);
+  if Relative.StartsWith('#') then
+    return './' + Relative;
+  end if;
+
+  return Relative;
+end function;
+
 // Atomically writes an ordered UTF-8 playlist without reading media targets.
 // ## Parameters
 // - `Destination`: Absolute .m3u8 output path.
@@ -135,40 +171,37 @@ begin
   then
     raise new Sys.ArgumentException('Expected an absolute .m3u8 export path.', 'Destination');
   end if;
-  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
-  if Factory = null then
-    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
-  end if;
+  const Directory: string := IO.Path.GetDirectoryName(Destination) ?? '';
   const Temporary: string := IO.Path.Combine(
-    IO.Path.GetDirectoryName(Destination) ?? '',
+    Directory,
     '.' + Sys.Guid.NewGuid().ToString('N') + '.m3u8'
   );
   try
-    const Writer: A.IPlaylistIO? := Factory.GetPlaylistIO(
-      Temporary,
-      A.PlaylistFormat.LocationFormatting.FilePath,
-      A.PlaylistFormat.FileEncoding.UTF8_NO_BOM,
-      readTrackMetadata := false
-    );
-    if Writer = null then
-      raise new Sys.InvalidOperationException('ATL M3U8 writer is unavailable.');
-    end if;
-    const Tracks: C.List<Audio.Track?> := new C.List<Audio.Track?>();
-    for Entry: Item in Entries do
-      Cancellation.ThrowIfCancellationRequested();
-      Validate(Entry.Location, 'Reference');
-      if Entry.Title <> '' then
-        Validate(Entry.Title, 'Title');
-      end if;
-      const Track: Audio.Track := new Audio.Track(Entry.Location, false);
-      Track.Title := Entry.Title;
-      Tracks.Add(Track);
-    end for;
+    begin
+      using const Writer: IO.StreamWriter := new IO.StreamWriter(
+        Temporary,
+        false,
+        new Text.UTF8Encoding(false)
+      );
+      Writer.WriteLine('#EXTM3U');
+      for Entry: Item in Entries do
+        Cancellation.ThrowIfCancellationRequested();
+        Validate(Entry.Location, 'Reference');
+        const Title: string := if Entry.Title <> '' then
+          Entry.Title
+        else
+          IO.Path.GetFileNameWithoutExtension(Entry.Location) ?? ''
+        end if;
+        if Entry.Title <> '' then
+          Validate(Title, 'Title');
+        end if;
 
-    Writer.Tracks := Tracks;
-    if not Writer.Save() then
-      raise new IO.IOException('ATL could not write the playlist.');
-    end if;
+        const Location: string := ExportLocation(Entry.Location, Directory);
+        Validate(Location, 'Reference');
+        Writer.WriteLine('#EXTINF:-1,' + Title);
+        Writer.WriteLine(Location);
+      end for;
+    end;
 
     Cancellation.ThrowIfCancellationRequested();
     IO.File.Move(Temporary, Destination, Overwrite);

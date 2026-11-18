@@ -1,0 +1,106 @@
+unit DesktopFocusContract;
+
+uses
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Windows as Windows,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.Dialogs as D,
+  System as Sys;
+
+type Message = variant
+  Focus;
+  Open;
+  Close;
+  Placement;
+end variant;
+
+procedure Step(Session: Gui.Session<Message>; Window: Cui.CuiWindow);
+begin
+  discard Window.TryWake();
+  if not Session.Step() then
+    raise new Sys.InvalidOperationException('Focus test session closed.');
+  end if;
+end procedure;
+
+procedure RequireFocus(Session: Gui.Session<Message>; Id: string);
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id and Control.Focused then
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Lost focus target ' + Id + ' across a host result.');
+end procedure;
+
+// Checks that focus commands and modal focus survive a frame with pending host results.
+// ## Parameters
+// - `Renderer`: Native renderer used for the owned window.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Update(Open: bool; Msg: Message): Mvu.Transition<bool, Message>;
+  begin
+    const Placement: Mvu.Command<Message> := Windows.ReadPlacement<Message>(
+      function(Value: Cui.CuiWindowPlacement): Message => Message.Placement
+    );
+    return case Msg of
+      when Message.Focus: new Mvu.Transition<bool, Message>(
+        Open,
+        [Mvu.Focus<Message>('base-target'), Placement]
+      );
+      when Message.Open: new Mvu.Transition<bool, Message>(true, [Placement]);
+      when Message.Close: new Mvu.Transition<bool, Message>(false, [Placement]);
+      when Message.Placement: new Mvu.Transition<bool, Message>(Open, []);
+    end case;
+  end function;
+
+  function View(Open: bool; Size: L.Viewport): E.Element<Message>;
+  begin
+    return D.Dialog<Message>(
+      'dialog',
+      E.Column<Message>(
+        new L.Flow(),
+        B.Button<Message>('first', 'First', Message.Focus),
+        B.Button<Message>('base-target', 'Base target', Message.Open)
+      ),
+      E.Column<Message>(
+        new L.Flow(),
+        B.Button<Message>('other', 'Other', Message.Close),
+        B.Button<Message>('modal-target', 'Modal target', Message.Close)
+      ),
+      Open,
+      new D.Options('Modal', InitialFocus := 'modal-target'),
+      Message.Close
+    );
+  end function;
+
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Desktop deferred focus',
+    420,
+    300,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<Message> := Host.Start<bool, Message>(
+    false, Update, View, Window, 1
+  );
+  Step(Session, Window);
+  discard Session.Post(Message.Focus);
+  Step(Session, Window);
+  Step(Session, Window);
+  RequireFocus(Session, 'base-target');
+
+  discard Session.Post(Message.Open);
+  Step(Session, Window);
+  Step(Session, Window);
+  RequireFocus(Session, 'modal-target');
+
+  discard Session.Post(Message.Close);
+  Step(Session, Window);
+  Step(Session, Window);
+  Step(Session, Window);
+  RequireFocus(Session, 'base-target');
+end procedure;
+
+end unit;

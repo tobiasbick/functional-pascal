@@ -46,7 +46,13 @@ begin
   end if;
 
   if IO.Path.IsPathFullyQualified(Path) then
-    Path := IO.Path.GetFullPath(Path);
+    Path := IO.Path.GetFullPath(
+      if Escaped then
+        Sys.Uri.UnescapeDataString(Path)
+      else
+        Path
+      end if
+    );
     return new Reference(Path, Sql.Key(Path));
   end if;
   var Parsed: Sys.Uri? := null;

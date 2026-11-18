@@ -17,7 +17,6 @@ public type Tree = record
   Entries: C.Dictionary<string, C.HashSet<string>>;
   Attempted: C.HashSet<string>;
   Catalog: Data.Catalog;
-  Children: C.Dictionary<string, C.HashSet<string>>;
 
   // Creates an empty traversal cache and source catalog.
   public static function Create(): Tree;
@@ -25,7 +24,7 @@ public type Tree = record
     return new Tree(
       new C.Dictionary<string, C.HashSet<string>>(S.PathComparer()),
       new C.HashSet<string>(S.PathComparer()),
-      Data.Catalog.Create(), new C.Dictionary<string, C.HashSet<string>>(S.PathComparer())
+      Data.Catalog.Create()
     );
   end function;
 
@@ -37,56 +36,6 @@ public type Tree = record
     end if;
 
     self.Catalog.RestoreDirectory(Id, Path, Error);
-    const Parent: string := IO.Path.GetDirectoryName(Path) ?? '';
-    if Parent <> '' then
-      if not self.Children.ContainsKey(Parent) then
-        self.Children[Parent] := new C.HashSet<string>(S.PathComparer());
-      end if;
-
-      discard self.Children[Parent].Add(Path);
-    end if;
-  end procedure;
-
-  procedure ReconcileChildren(Value: O.DirectoryObservation; Sources: array of S.MusicSource);
-  begin
-    if not self.Children.ContainsKey(Value.Path) then
-      self.Children[Value.Path] := new C.HashSet<string>(S.PathComparer());
-    end if;
-
-    if not Value.Complete then
-      self.Children[Value.Path].UnionWith(Value.Children);
-      return;
-    end if;
-    const Removed: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
-    const Pending: C.Stack<string> := new C.Stack<string>();
-    for Child: string in self.Children[Value.Path] do
-      if not Value.Children.Contains(Child) then
-        Pending.Push(Child);
-      end if;
-    end for;
-
-    while Pending.Count > 0 do
-      const Path: string := Pending.Pop();
-      if not Removed.Add(Path) then
-        continue;
-      end if;
-
-      if self.Children.ContainsKey(Path) then
-        for Child: string in self.Children[Path] do
-          Pending.Push(Child);
-        end for;
-      end if;
-    end while;
-
-    if Removed.Count > 0 then
-      self.Catalog.RemoveDirectories(Removed, Sources);
-      for Path: string in Removed do
-        discard self.Entries.Remove(Path);
-        discard self.Children.Remove(Path);
-      end for;
-    end if;
-
-    self.Children[Value.Path] := new C.HashSet<string>(Value.Children, S.PathComparer());
   end procedure;
 
   // Restores one normalized file under its source identity.
@@ -274,10 +223,12 @@ public type Tree = record
       end case;
 
       discard self.Attempted.Add(Directory);
-      self.Catalog.Apply(Value, Sources);
       // Mirror a committed parent's deletions immediately, even if a pause/clear
       // invalidates the generation before the rest of this subtree can be read.
-      self.ReconcileChildren(Value, Sources);
+      for Removed: string in self.Catalog.Apply(Value, Sources) do
+        discard self.Entries.Remove(Removed);
+      end for;
+
       if not Complete then
         if self.Entries.ContainsKey(Directory) then
           Found.UnionWith(self.Entries[Directory]);
@@ -306,7 +257,6 @@ public type Tree = record
     self.Catalog.Clear(Id);
     if Id = '' then
       self.Entries.Clear();
-      self.Children.Clear();
       return;
     end if;
     const Known: C.HashSet<string> := self.Catalog.KnownFiles();
@@ -336,14 +286,6 @@ public type Tree = record
 
     for Directory: string in Remove do
       discard self.Entries.Remove(Directory);
-      discard self.Children.Remove(Directory);
-      const Parent: string := IO.Path.GetDirectoryName(Directory) ?? '';
-      if self.Children.ContainsKey(Parent) then
-        discard self.Children[Parent].Remove(Directory);
-        if self.Children[Parent].Count = 0 and not self.Entries.ContainsKey(Parent) then
-          discard self.Children.Remove(Parent);
-        end if;
-      end if;
     end for;
   end procedure;
 end record;

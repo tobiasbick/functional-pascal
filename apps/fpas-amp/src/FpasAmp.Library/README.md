@@ -264,8 +264,8 @@ into a new local list, independently of sources and the input file's lifetime.
 `ExportAsync(Key, Destination, Cancellation, Overwrite)` writes any cached/local
 list to an absolute `.m3u8` path using current track paths. It writes a temporary
 file in the destination directory and renames it after success; replacement
-requires `Overwrite := true`. Missing entries are retained. Empty titles may
-receive ATL's filename fallback on export. No playback/editor view is implied.
+requires `Overwrite := true`. Missing entries are retained. When an entry has
+no title, the export uses its filename without the extension.
 
 Summary queries have at most **200** rows and support store/source filters.
 Parsing uses a bounded temporary snapshot: **sixteen MiB** and **100000** entries

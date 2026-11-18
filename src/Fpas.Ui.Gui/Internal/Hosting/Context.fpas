@@ -47,6 +47,8 @@ public type State<TMsg> = record
   public CompletedAnimations: C.Dictionary<string, AnimationCompletion> := new C.Dictionary<string, AnimationCompletion>();
   // Animations visible during this traversal, for removal reconciliation.
   public SeenAnimations: C.HashSet<string> := new C.HashSet<string>();
+  // The native focus token from the preceding input-enabled presentation.
+  public PreviousFocus: string := '';
 end record;
 
 // Retires completion observations for animations removed from a successful owner frame.

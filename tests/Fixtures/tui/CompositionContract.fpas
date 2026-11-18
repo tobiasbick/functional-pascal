@@ -5,6 +5,9 @@ uses
   Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Popovers as Popovers,
+  Fpas.Ui.Widgets.Navigation.ScrollAnchors as Anchors, Fpas.Ui.Widgets.Navigation.TableOfContents as Toc,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans,
   System as Sys, System.Console as Console, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
 
@@ -254,10 +257,118 @@ begin
   Check(Builds = 2, 'Mapping ignored changed child dependencies.');
 end procedure;
 
+procedure Outline();
+  function TableRow(Id: string; params Children: array of E.Element<string>): Tables.Row<string>;
+  begin
+    return new Tables.Row<string>(Id, [Tables.Cell<string>.Content(Children)]);
+  end function;
+  function Table(params Rows: array of Tables.Row<string>): E.Element<string>;
+  begin
+    return Tables.Table<string>('table', [new Tables.Column('Section')], Rows);
+  end function;
+  function Board(params Cards: array of Kanbans.Card<string>): E.Element<string>;
+  begin
+    return Kanbans.Kanban<string>(
+      'board', [new Kanbans.Column<string>('Articles', Cards)],
+      function(Event: Kanbans.Event): string => 'change'
+    );
+  end function;
+  function Article(): E.Element<string>;
+  begin
+    return E.ScrollView<string>(
+      'article', E.Column<string>(
+        Anchors.ScrollAnchor<string>('first'),
+        Anchors.ScrollAnchor<string>('unlisted'),
+        Anchors.ScrollAnchor<string>('last')
+      )
+    );
+  end function;
+  function Reader(Items: array of Toc.Item): E.Element<string>;
+  begin
+    return E.Row<string>(Toc.TableOfContents<string>('outline', 'article', Items), Article());
+  end function;
+  procedure RejectOutline(Tree: E.Element<string>; Expected: string);
+  begin
+    try
+      discard V.Prepare<string>(Tree, V.Target.Graphical);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains(Expected), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Validation accepted an invalid outline: ' + Expected);
+  end procedure;
+begin
+  const First: Toc.Item := new Toc.Item('First', 'first');
+  const Last: Toc.Item := new Toc.Item('Last', 'last');
+  discard V.Prepare<string>(Reader([First, Last]), V.Target.Graphical);
+  RejectOutline(Reader([Last, First]), 'in document order');
+  const Settings: Dialogs.Options := new Dialogs.Options('Reader');
+  discard V.Prepare<string>(
+    Dialogs.Dialog<string>(
+      'dialog',
+      E.Spacer<string>(),
+      Reader([First, Last]),
+      true,
+      Settings,
+      'close'
+    ),
+    V.Target.Graphical
+  );
+  RejectOutline(
+    Dialogs.Dialog<string>(
+      'dialog', Article(), Toc.TableOfContents<string>('outline', 'article', [First, Last]),
+      true, Settings, 'close'
+    ),
+    'same CUI scope'
+  );
+  const Trigger: E.Element<string> := B.Button<string>('show-outline', 'Outline', 'open');
+  RejectOutline(
+    E.Row<string>(
+      Article(), Popovers.Popover<string>(
+        'popup', Trigger, Toc.TableOfContents<string>('outline', 'article', [First, Last]),
+        true, 'close'
+      )
+    ),
+    'same CUI scope'
+  );
+  const Index: E.Element<string> := Toc.TableOfContents<string>(
+    'outline',
+    'article',
+    [First, Last]
+  );
+  discard V.Prepare<string>(Table(TableRow('row', Reader([First, Last]))), V.Target.Graphical);
+  discard V.Prepare<string>(
+    E.Row<string>(
+      Index, E.ScrollView<string>(
+        'article', Table(
+          TableRow('first-row', Anchors.ScrollAnchor<string>('first')),
+          TableRow('last-row', Anchors.ScrollAnchor<string>('last'))
+        )
+      )
+    ),
+    V.Target.Graphical
+  );
+  RejectOutline(Table(TableRow('a', Index), TableRow('b', Article())), 'same CUI scope');
+  RejectOutline(E.Row<string>(Index, Table(TableRow('row', Article()))), 'same CUI scope');
+  discard V.Prepare<string>(
+    Board(new Kanbans.Card<string>(1, 'Reader', Reader([First, Last]))),
+    V.Target.Graphical
+  );
+  RejectOutline(
+    Board(
+      new Kanbans.Card<string>(1, 'Outline', Index),
+      new Kanbans.Card<string>(2, 'Article', Article())
+    ),
+    'same CUI scope'
+  );
+end procedure;
+
 begin
   Commands();
   Callbacks();
   Cached();
+  Outline();
   Console.WriteLine('Composition contracts verified');
 end;
 

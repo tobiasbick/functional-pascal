@@ -5,7 +5,8 @@ uses
   Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards,
   Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Widgets.Containers.CardStacks as CardStacks,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Veils as Veils,
-  Fpas.Ui.Widgets.Planning.Kanbans as Kanbans, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes, System as Sys;
+  Fpas.Ui.Widgets.Planning.Kanbans as Kanbans, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes,
+  System as Sys, System.Collections.Generic as Generic;
 
 // Finds the last/deepest active modal scope in traversal order.
 //
@@ -318,18 +319,11 @@ public procedure Enter<TMsg>(State: C.State<TMsg>; Id: string; Content: E.Elemen
   end function;
 begin
   discard State.SeenModals.Add(Id);
-  if State.Modals.ContainsKey(Id) then
+  if not State.Interactive or State.Modals.ContainsKey(Id) then
     return;
   end if;
 
-  var Restore: string := '';
-  for Control: App.Control in State.Previous do
-    if Control.Focused then
-      Restore := C.Token(Control.Role, Control.Id, Control.Key);
-    end if;
-  end for;
-
-  State.Modals.Add(Id, Restore);
+  State.Modals.Add(Id, State.PreviousFocus);
 
   var Requested: string? := null;
   if State.Focus.Count > 0 and State.Focus.Peek().StartsWith(
@@ -348,6 +342,41 @@ begin
   if Target <> null then
     State.Focus.Enqueue('app:' + Target);
   end if;
+end procedure;
+
+// Queues focus restoration for modals absent from a successful input-enabled frame.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Presented frame and its modal focus state.
+public procedure RestoreClosed<TMsg>(State: C.State<TMsg>);
+begin
+  if not State.Interactive then
+    return;
+  end if;
+
+  for Id: string in new Generic.List<string>(State.Modals.Keys) do
+    if State.SeenModals.Contains(Id) then
+      continue;
+    end if;
+
+    const Restore: string := State.Modals[Id];
+    discard State.Modals.Remove(Id);
+    var Target: string? := null;
+    for Control: App.Control in State.Controls do
+      if Control.Enabled and Control.Role <> 'scroll' then
+        const Token: string := C.Token(Control.Role, Control.Id, Control.Key);
+        if Target = null or Token = Restore then
+          Target := Token;
+        end if;
+      end if;
+    end for;
+
+    if Target <> null then
+      State.Focus.Enqueue('native:' + Target);
+      discard State.Window.TryWake();
+    end if;
+  end for;
 end procedure;
 
 end unit;

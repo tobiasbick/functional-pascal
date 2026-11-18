@@ -92,6 +92,20 @@ type Work<TMsg> = variant
   Resume(Action: procedure());
 end variant;
 
+type AnchorPlacement = record
+  // The enclosing scroll viewport.
+  public Owner: string;
+  // The anchor's position in the validated tree's traversal order.
+  public Ordinal: int;
+end record;
+
+type OutlineTarget = record
+  // The enclosing native ID scope, or zero for the root scope.
+  public Scope: int;
+  // Entries in the order shown by the outline.
+  public Items: array of Toc.Item;
+end record;
+
 // Validates the entire view and resolves deferred subtrees before presentation.
 //
 // ## Type parameters
@@ -443,7 +457,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         PlanningRules.Kanban<TMsg>(Columns, Settings, At);
         for Column: Kanbans.Column<TMsg> in Columns do
           for Card: Kanbans.Card<TMsg> in Column.Cards do
-            Visit(Card.Content, At);
+            VisitScopedContent(Card.Content, At);
           end for;
         end for;
       else
@@ -741,7 +755,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Visit(Base, At + '/base');
-        Visit(Content, At + '/content');
+        VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
         const At: string := Location + '/actionFooter';
         Rules.RequireProfile(Profile, Target.Graphical, At);
@@ -1178,7 +1192,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             HoverDepth := HoverDepth + 1;
           end procedure
         );
-        Visit(Content, At + '/content');
+        VisitScopedContent(Content, At + '/content', Detached := true);
         After(
           procedure() begin
             HoverDepth := HoverDepth - 1;
@@ -1193,7 +1207,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         PopupRules.CheckPanel(Settings, At);
         PopupRules.CheckTrigger<TMsg>(Trigger, At);
         Visit(Trigger, At + '/trigger');
-        Visit(Content, At + '/content');
+        VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.ConfirmPopover(
         const Id: string,
         const Trigger: E.Element<TMsg>,
@@ -2753,7 +2767,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'A table of contents needs one to 64 entries.');
         end if;
 
-        if not TocTargets.TryAdd(ScrollId, Items) then
+        if not TocTargets.TryAdd(ScrollId, new OutlineTarget(NativeScope, Items)) then
           Rules.Reject(At, 'Each scroll viewport can have only one table of contents.');
         end if;
 
@@ -2776,7 +2790,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.RequireProfile(Profile, Target.Graphical, At);
         case ScrollOwner of
           when is string as Owner:
-            AnchorOwners.Add(Id, Owner);
+            AnchorPlacements.Add(Id, new AnchorPlacement(Owner, AnchorPlacements.Count));
           else
             Rules.Reject(At, 'A scroll anchor needs an enclosing scroll viewport.');
         end case;
@@ -2795,7 +2809,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         if Position = null then
-          discard UncontrolledScrolls.Add(Id);
+          UncontrolledScrolls.Add(Id, NativeScope);
         end if;
 
         if (Position = null) <> (OnScroll = null) then
@@ -2843,7 +2857,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Visit(Base, At + '/base');
-        Visit(Content, At + '/content');
+        VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.Deferred(
         const Id: string,
         const Resolve: function(E.CacheEntry<TMsg>?): E.CacheEntry<TMsg>
@@ -2936,9 +2950,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'A row needs one cell per column.');
         end if;
 
-        for Cell: Tables.Cell<TMsg> in Row.Cells do
-          CheckTableCell(Cell, At + '/cell');
-        end for;
+        InNativeScope(
+          false,
+          procedure() begin
+            for Cell: Tables.Cell<TMsg> in Row.Cells do
+              CheckTableCell(Cell, At + '/cell');
+            end for;
+          end procedure
+        );
       end procedure
     );
   end procedure;
@@ -2953,6 +2972,40 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
   procedure After(Action: procedure());
   begin
     Pending.Add(Work<TMsg>.Resume(Action));
+  end procedure;
+
+  // Native widgets can scope IDs without lifting their content out of an enclosing scroll.
+  procedure InNativeScope(Detached: bool; Content: procedure());
+  begin
+    const ParentScope: int := NativeScope;
+    const ParentScroll: string? := ScrollOwner;
+    ScopeCount := ScopeCount + 1;
+    const ChildScope: int := ScopeCount;
+    After(
+      procedure() begin
+        NativeScope := ChildScope;
+        if Detached then
+          ScrollOwner := null;
+        end if;
+      end procedure
+    );
+    Content();
+    After(
+      procedure() begin
+        NativeScope := ParentScope;
+        ScrollOwner := ParentScroll;
+      end procedure
+    );
+  end procedure;
+
+  procedure VisitScopedContent(Node: E.Element<TMsg>; Location: string; Detached: bool := false);
+  begin
+    InNativeScope(
+      Detached,
+      procedure() begin
+        Visit(Node, Location);
+      end procedure
+    );
   end procedure;
 
   procedure VisitReasoning(Node: E.Element<TMsg>; Location: string);
@@ -3093,22 +3146,46 @@ begin
   const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
   var HoverDepth: int := 0;
   var ReasoningDepth: int := 0;
-  const UncontrolledScrolls: Generic.HashSet<string> := new Generic.HashSet<string>();
-  const AnchorOwners: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
-  const TocTargets: Generic.Dictionary<string, array of Toc.Item> := new Generic.Dictionary<string, array of Toc.Item>();
+  const UncontrolledScrolls: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const AnchorPlacements: Generic.Dictionary<string, AnchorPlacement> := new Generic.Dictionary<string, AnchorPlacement>();
+  const TocTargets: Generic.Dictionary<string, OutlineTarget> := new Generic.Dictionary<string, OutlineTarget>();
   var ScrollOwner: string? := null;
+  var NativeScope: int := 0;
+  var ScopeCount: int := 0;
   ValidateTree();
-  for TargetEntries: Generic.KeyValuePair<string, array of Toc.Item> in TocTargets do
-    const ScrollId: string := TargetEntries.Key;
-    if not UncontrolledScrolls.Contains(ScrollId) then
+  for EntryTarget: Generic.KeyValuePair<string, OutlineTarget> in TocTargets do
+    const ScrollId: string := EntryTarget.Key;
+    const OutlineView: OutlineTarget := EntryTarget.Value;
+    var ScrollScope: int := 0;
+    if not UncontrolledScrolls.TryGetValue(ScrollId, out ScrollScope) then
       Rules.Reject('root', 'Table of contents needs an uncontrolled viewport: ' + ScrollId);
     end if;
 
-    for Entry: Toc.Item in TargetEntries.Value do
-      var Owner: string := '';
-      if not AnchorOwners.TryGetValue(Entry.Anchor, out Owner) or Owner <> ScrollId then
+    if OutlineView.Scope <> ScrollScope then
+      Rules.Reject(
+        'root',
+        'Table of contents needs a viewport in the same CUI scope: ' + ScrollId
+      );
+    end if;
+
+    var PreviousOrdinal: int := -1;
+    for Entry: Toc.Item in OutlineView.Items do
+      if not AnchorPlacements.ContainsKey(Entry.Anchor) then
         Rules.Reject('root', 'Anchor ' + Entry.Anchor + ' needs to be inside viewport ' + ScrollId);
       end if;
+      const Placement: AnchorPlacement := AnchorPlacements[Entry.Anchor];
+      if Placement.Owner <> ScrollId then
+        Rules.Reject('root', 'Anchor ' + Entry.Anchor + ' needs to be inside viewport ' + ScrollId);
+      end if;
+
+      if Placement.Ordinal <= PreviousOrdinal then
+        Rules.Reject(
+          'root',
+          'Outline entries must follow anchors in document order in viewport ' + ScrollId
+        );
+      end if;
+
+      PreviousOrdinal := Placement.Ordinal;
     end for;
   end for;
 

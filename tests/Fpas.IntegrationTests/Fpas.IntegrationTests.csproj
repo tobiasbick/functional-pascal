@@ -8,6 +8,7 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <None Include="../../apps/doc-examples/**/*" Exclude="../../apps/doc-examples/bin/**/*;../../apps/doc-examples/obj/**/*" Link="Fixtures/doc-examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Workflows/*.fpas" Link="Fixtures/workflows/lib/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Processes.Workflows/Capture.fpas" Link="Fixtures/workflows/process/Capture.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/workflows/*.fpas" Link="Fixtures/workflows/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/ui/**/*.md" Link="Fixtures/repository/docs/ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

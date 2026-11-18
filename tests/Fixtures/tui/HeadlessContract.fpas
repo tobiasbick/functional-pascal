@@ -409,6 +409,32 @@ begin
   end if;
 end procedure;
 
+procedure CheckModifiedArrowShortcuts();
+  function Bindings(State: int): E.Element<Msg>;
+  begin
+    return Views.Screen<Msg>(
+      View(State), [], [
+        InputKeys.Shortcut<Msg>(InputKeys.Key.Down, InputKeys.KeyModifiers.Ctrl, Msg.Progress)
+      ]
+    );
+  end function;
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(
+    0, Update, Bindings, 20, 5
+  );
+  ExpectFocus(Session, 'start');
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Down, InputKeys.KeyModifiers.Ctrl));
+  if Session.Snapshot().Lines[0].TrimEnd() <> '1' then
+    raise new Sys.InvalidOperationException(
+      'Focus navigation swallowed a modified arrow shortcut.'
+    );
+  end if;
+
+  ExpectFocus(Session, 'start');
+  Turn(Session, App.Input.KeyPress(InputKeys.Key.Down, InputKeys.KeyModifiers.None));
+  ExpectFocus(Session, 'cancel');
+end procedure;
+
 begin
   CheckCancellation();
   CheckQueue();
@@ -417,6 +443,7 @@ begin
   CheckPresentation();
   CheckReuse();
   CheckLiveTheme();
+  CheckModifiedArrowShortcuts();
   Console.WriteLine('headless contracts verified');
 end;
 

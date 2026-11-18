@@ -77,7 +77,9 @@ begin
   end if;
 
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  const Others: C.List<Pictures.Cover> := new C.List<Pictures.Cover>();
+  var FirstOther: Pictures.Cover? := null;
+  // Keep only one encoded fallback while looking for a front cover.
+  const Remaining: C.List<C.KeyValuePair<long, string>> := new C.List<C.KeyValuePair<long, string>>();
   begin
     using const Query: Db.SqliteCommand := Sql.Command(
       Connection,
@@ -107,8 +109,10 @@ begin
             if Image <> null then
               return Image;
             end if;
-          elsif Others.Count = 0 then
-            Others.Add(Value);
+          elsif FirstOther = null then
+            FirstOther := Value;
+          else
+            Remaining.Add(new C.KeyValuePair<long, string>(Rows.GetInt64(0), Rows.GetString(1)));
           end if;
         end if;
       catch Unavailable: IO.IOException do
@@ -117,12 +121,27 @@ begin
     end while;
   end;
 
-  if Others.Count > 0 then
-    const Image: Imaging.Bitmap? := Store(Cache, Album, Revision, Others[0], Cancellation);
-    if Image <> null then
-      return Image;
-    end if;
+  const Fallback: Imaging.Bitmap? := Store(Cache, Album, Revision, FirstOther, Cancellation);
+  if Fallback <> null then
+    return Fallback;
   end if;
+
+  for Candidate: C.KeyValuePair<long, string> in Remaining do
+    Cancellation.ThrowIfCancellationRequested();
+    if MayRead(Candidate.Value) then
+      try
+        const Value: Pictures.Cover? := await Covers.Read(
+          Database, Users, Candidate.Key, Cancellation, UseCache := false
+        ).ConfigureAwait(false);
+        const Image: Imaging.Bitmap? := Store(Cache, Album, Revision, Value, Cancellation);
+        if Image <> null then
+          return Image;
+        end if;
+      catch Unavailable: IO.IOException do
+      catch Unavailable: Sys.UnauthorizedAccessException do
+      end try;
+    end if;
+  end for;
   const Paths: C.List<string> := new C.List<string>();
   begin
     using const Query: Db.SqliteCommand := Sql.Command(

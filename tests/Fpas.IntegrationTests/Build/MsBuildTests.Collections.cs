@@ -21,6 +21,11 @@ public sealed partial class MsBuildTests
         File.WriteAllText(Path.Combine(input, "nested", "ü.txt"), "text\n");
         File.WriteAllText(Path.Combine(input, "skip.bin"), "ignored\n");
         File.WriteAllText(Path.Combine(input, ".hidden.txt"), "excluded\n");
+        if (OperatingSystem.IsLinux())
+        {
+            Directory.CreateSymbolicLink(Path.Combine(input, "nested", "cycle"), input);
+            File.CreateSymbolicLink(Path.Combine(input, "alias.txt"), Path.Combine(input, "a.txt"));
+        }
         const string executable = "Inventory/bin/Debug/net10.0/DirectoryInventory.dll";
         var run = await sdk.Run(project, executable, input, "*.txt");
         Assert.True(run.ExitCode == 0, run.Output + run.Error);

@@ -208,6 +208,10 @@ requires Capacity > 0;
     const Next: App.Transition<TModel, TMsg> := Update(Current, Message);
     Current := Next.Model;
     for Command: App.Command<TMsg> in Next.Commands do
+      if not IsOpen() then
+        return;
+      end if;
+
       case Command of
         when App.Command.Cancel(const Id: string):
           Workers.Cancel(Id);

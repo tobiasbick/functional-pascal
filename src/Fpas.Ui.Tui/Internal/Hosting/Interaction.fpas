@@ -391,7 +391,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
       case Control.Action of
         when A.Binding.Invoke(_):
-          if Control.ArrowFocus and (Key = K.Key.Up or Key = K.Key.Down) then
+          if Control.ArrowFocus and Modifiers = K.KeyModifiers.None
+            and (Key = K.Key.Up or Key = K.Key.Down)
+          then
             Cycle(Layout, Key = K.Key.Up);
             return;
           end if;

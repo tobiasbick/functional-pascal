@@ -142,7 +142,8 @@ requires Capacity > 0;
       Accept,
       Modal,
       ObserveTransitions := ObserveTransitions,
-      CompletedAnimations := CompletedAnimations
+      CompletedAnimations := CompletedAnimations,
+      PreviousFocus := PreviousFocus
     );
   end function;
 
@@ -161,7 +162,10 @@ requires Capacity > 0;
     const State: C.State<TMsg> := Context(Candidate, Accept, Cleanup = null);
     P.Draw<TMsg>(State);
     KeyBindings.Collect<TMsg>(Window, Bindings, Accept, State.Messages);
-    Focus.Clear();
+    if Accept then
+      Focus.Clear();
+    end if;
+
     while PendingFrames.Count > 0 do
       Window.RequestFrame(PendingFrames.Dequeue());
     end while;
@@ -169,6 +173,14 @@ requires Capacity > 0;
     Window.Present();
     C.CommitAnimations<TMsg>(State);
     FrameControls.Resolve(Window, State.Controls);
+    if Accept then
+      PreviousFocus := '';
+      for Control: App.Control in State.Controls do
+        if Control.Focused then
+          PreviousFocus := C.Token(Control.Role, Control.Id, Control.Key);
+        end if;
+      end for;
+    end if;
 
     Tooltip.Collect<TMsg>(State);
     if ActiveToasts.Count > 0 then
@@ -184,29 +196,7 @@ requires Capacity > 0;
       Pending.Enqueue(Message);
     end for;
 
-    for Id: string in new Generic.List<string>(Modals.Keys) do
-      if not State.SeenModals.Contains(Id) then
-        const Restore: string := Modals[Id];
-        discard Modals.Remove(Id);
-        if Accept then
-          var Target: string? := null;
-          for Control: App.Control in State.Controls do
-            const Token: string := C.Token(Control.Role, Control.Id, Control.Key);
-            if Control.Enabled and Control.Role <> 'scroll' and (Target = null or Token =
-              Restore)
-            then
-              Target := Token;
-            end if;
-          end for;
-
-          if Target <> null then
-            Focus.Enqueue('native:' + Target);
-            discard Window.TryWake();
-          end if;
-        end if;
-      end if;
-    end for;
-
+    F.RestoreClosed<TMsg>(State);
     if Pending.Count > 0 then
       discard Window.TryWake();
     end if;
@@ -401,6 +391,7 @@ begin
   var SystemAppearance: Themes.Mode? := null;
   var FrameId: long := 0L;
   var Published: App.Frame? := null;
+  var PreviousFocus: string := '';
   var Prepared: V.Prepared<TMsg>? := null;
   var Bindings: KeyBindings.Prepared<TMsg> := new KeyBindings.Prepared<TMsg>([], []);
   var PreviousSize: Cui.CuiSize := new Cui.CuiSize();

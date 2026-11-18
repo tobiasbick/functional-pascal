@@ -41,7 +41,7 @@ begin
   );
 end function;
 
-// Exports `Identity` from both stores to absolute `.m3u8` `Destination` using ATL.
+// Exports `Identity` from both stores to absolute `.m3u8` `Destination`.
 // `Overwrite` explicitly authorizes replacing an existing file. A same-directory
 // temporary write is renamed atomically only after success and cancellation checks.
 public procedure Export(Database: string; Users: string; Identity: M.Key; Destination: string; Overwrite: bool; Cancellation: T.CancellationToken);

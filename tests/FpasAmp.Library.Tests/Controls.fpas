@@ -287,6 +287,50 @@ public type ControlTests = record
       )[0].Files.Length
     );
   end procedure;
+
+  // An overlapping source must reconcile its own retained subtree when it resumes.
+  [X.FactAttribute]
+  public procedure ResumeReconcilesSubtreeRemovedWhilePaused();
+    procedure Scan(Owners: array of S.MusicSource);
+    begin
+      D.Configure(Connection, Owners);
+      Index.Scan(
+        Root.Path, Owners, function(): bool => true, true, T.CancellationToken.None,
+        function(Value: O.DirectoryObservation): bool begin
+          D.Save(Connection, Owners, Value);
+          return true;
+        end function
+      );
+    end procedure;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Connection: Db.SqliteConnection := D.Open(':memory:');
+    const Child: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'album', 'disc')
+    ).FullName;
+    const Track: string := IO.Path.Combine(Child, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const First: S.MusicSource := H.Source('first', Root.Path);
+    const Second: S.MusicSource := H.Source('second', Root.Path);
+    const Sources: array of S.MusicSource := [First, Second];
+    const Paused: array of S.MusicSource := [
+      First,
+      Second with
+        Paused := true;
+      end with
+    ];
+    const Index: Trees.Tree := Trees.Tree.Create();
+    Scan(Sources);
+    IO.Directory.Delete(IO.Path.GetDirectoryName(Child) ?? '', true);
+    Scan(Paused);
+    X.Assert.Equal<int>(0, Index.Describe(Paused, [])[0].Files.Length);
+    X.Assert.True(H.Has(Index.Describe(Paused, [])[1], Track));
+    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+
+    Scan(Sources);
+    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal<int>(0, Index.Describe(Sources, [])[1].Files.Length);
+  end procedure;
 end record;
 
 end unit;

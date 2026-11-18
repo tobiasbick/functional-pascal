@@ -64,7 +64,11 @@ begin
   end while;
 
   Bytes.Position := 0;
-  using const Reader: IO.StreamReader := new IO.StreamReader(Bytes, Text.Encoding.UTF8);
+  using const Reader: IO.StreamReader := new IO.StreamReader(
+    Bytes,
+    Text.Encoding.UTF8,
+    detectEncodingFromByteOrderMarks := false
+  );
   return Reader.ReadToEnd();
 end function;
 

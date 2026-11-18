@@ -12,6 +12,8 @@ public type Catalog = record
   Members: C.Dictionary<string, C.HashSet<string>>;
   Errors: C.Dictionary<string, C.Dictionary<string, string>>;
   Roots: C.Dictionary<string, string>;
+  // An overlapping active scan cannot discard the directory links of a paused source.
+  Children: C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>;
   ByDirectory: C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>;
 
   // Creates empty source-scoped collections.
@@ -21,6 +23,7 @@ public type Catalog = record
       new C.Dictionary<string, C.HashSet<string>>(Sys.StringComparer.Ordinal),
       new C.Dictionary<string, C.Dictionary<string, string>>(Sys.StringComparer.Ordinal),
       new C.Dictionary<string, string>(Sys.StringComparer.Ordinal),
+      new C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>(Sys.StringComparer.Ordinal),
       new C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>(Sys.StringComparer.Ordinal)
     );
   end function;
@@ -29,6 +32,7 @@ public type Catalog = record
   begin
     if not self.Members.ContainsKey(Id) then
       self.Members[Id] := new C.HashSet<string>(S.PathComparer());
+      self.Children[Id] := new C.Dictionary<string, C.HashSet<string>>(S.PathComparer());
     end if;
 
     if not self.Errors.ContainsKey(Id) then
@@ -54,10 +58,22 @@ public type Catalog = record
     self.Roots[Source.Id] := Source.Path;
   end procedure;
 
-  // Restores one source-owned directory error. `Id` is a configured source and `Path` is normalized.
+  function ChildrenOf(Id: string; Path: string): C.HashSet<string>;
+  begin
+    const Directories: C.Dictionary<string, C.HashSet<string>> := self.Children[Id];
+    if not Directories.ContainsKey(Path) then
+      Directories[Path] := new C.HashSet<string>(S.PathComparer());
+    end if;
+
+    return Directories[Path];
+  end function;
+
+  // Restores one source-owned directory entry and optional error. `Id` is a configured source and `Path` is normalized.
   public procedure RestoreDirectory(Id: string; Path: string; Error: string?);
   begin
     self.Ensure(Id);
+    const Parent: string := IO.Path.GetDirectoryName(Path) ?? '';
+    discard self.ChildrenOf(Id, Parent).Add(Path);
     if Error <> null then
       self.Errors[Id][Path] := Error;
     end if;
@@ -76,9 +92,48 @@ public type Catalog = record
     discard self.ByDirectory[Id][Directory].Add(Path);
   end procedure;
 
-  // Applies a committed observation to active normalized `Sources` only.
-  public procedure Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource);
+  procedure ReconcileChildren(Id: string; Value: O.DirectoryObservation; Removed: C.HashSet<string>);
   begin
+    const Children: C.HashSet<string> := self.ChildrenOf(Id, Value.Path);
+    if not Value.Complete then
+      Children.UnionWith(Value.Children);
+      return;
+    end if;
+
+    const Pending: C.Stack<string> := new C.Stack<string>();
+    for Child: string in Children do
+      if not Value.Children.Contains(Child) then
+        Pending.Push(Child);
+      end if;
+    end for;
+    const Directories: C.Dictionary<string, C.HashSet<string>> := self.Children[Id];
+    while Pending.Count > 0 do
+      const Path: string := Pending.Pop();
+      if Directories.ContainsKey(Path) then
+        for Child: string in Directories[Path] do
+          Pending.Push(Child);
+        end for;
+
+        discard Directories.Remove(Path);
+      end if;
+
+      if self.ByDirectory[Id].ContainsKey(Path) then
+        self.Members[Id].ExceptWith(self.ByDirectory[Id][Path]);
+        discard self.ByDirectory[Id].Remove(Path);
+      end if;
+
+      discard self.Errors[Id].Remove(Path);
+      discard Removed.Add(Path);
+    end while;
+
+    Directories[Value.Path] := new C.HashSet<string>(Value.Children, S.PathComparer());
+  end procedure;
+
+  // Applies a committed observation to active normalized `Sources` only.
+  // Returns the disappeared directory paths to evict from the physical scan cache.
+  public function Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource): C.HashSet<string>;
+  begin
+    const Removed: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
     for Source: S.MusicSource in Sources do
       if Source.Offline or Source.Paused or not S.HasWork(Source) or not S.Within(
         Value.Path,
@@ -89,6 +144,8 @@ public type Catalog = record
       end if;
 
       self.Bind(Source);
+      self.RestoreDirectory(Source.Id, Value.Path, null);
+      self.ReconcileChildren(Source.Id, Value, Removed);
       const Extensions: C.HashSet<string> := new C.HashSet<string>(
         Source.Extensions,
         Sys.StringComparer.OrdinalIgnoreCase
@@ -132,31 +189,9 @@ public type Catalog = record
 
       self.Members[Source.Id].UnionWith(Found);
     end for;
-  end procedure;
 
-  // Removes a confirmed missing subtree from covering sources, retaining a source
-  // whose root itself disappeared. `Path` and `Sources` are normalized.
-  public procedure RemoveDirectories(Directories: C.HashSet<string>; Sources: array of S.MusicSource);
-  begin
-    for Source: S.MusicSource in Sources do
-      if Source.Offline or Source.Paused or Directories.Contains(Source.Path) then
-        continue;
-      end if;
-
-      self.Ensure(Source.Id);
-      for Directory: string in Directories do
-        if self.ByDirectory[Source.Id].ContainsKey(Directory) then
-          for File: string in self.ByDirectory[Source.Id][Directory] do
-            discard self.Members[Source.Id].Remove(File);
-          end for;
-
-          discard self.ByDirectory[Source.Id].Remove(Directory);
-        end if;
-
-        discard self.Errors[Source.Id].Remove(Directory);
-      end for;
-    end for;
-  end procedure;
+    return Removed;
+  end function;
 
   // Forgets the indexed view for `Id`, or every source when Id is empty.
   public procedure Clear(Id: string);
@@ -165,11 +200,13 @@ public type Catalog = record
       self.Members.Clear();
       self.Errors.Clear();
       self.Roots.Clear();
+      self.Children.Clear();
       self.ByDirectory.Clear();
     else
       discard self.Members.Remove(Id);
       discard self.Errors.Remove(Id);
       discard self.Roots.Remove(Id);
+      discard self.Children.Remove(Id);
       discard self.ByDirectory.Remove(Id);
     end if;
   end procedure;

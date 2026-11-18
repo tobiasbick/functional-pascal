@@ -45,6 +45,16 @@ layout, and themes in a Functional Pascal application.
 
 ![FPas GUI based on CUI, showing the widget gallery overview and its theme controls](examples/ui/gui/gallery/gallery.png)
 
+## Terminal TUI
+
+FPas includes a [declarative terminal UI](src/Fpas.Ui.Tui/README.md) with keyboard
+and mouse input. The [TUI widget gallery](examples/ui/tui/gallery/README.md)
+shows terminal controls, layout, and themes using the shared UI model.
+The [fractal explorer](examples/ui/tui/fractals/README.md) renders Mandelbrot
+and other fractals with interactive panning and zooming.
+
+![FPas TUI fractal explorer showing the Mandelbrot set, fractal selection, and render status](examples/ui/tui/fractals/mandelbrot.png)
+
 ## Quickstart
 
 ### Build from source

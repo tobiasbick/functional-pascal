@@ -33,8 +33,11 @@ sound-alike spellings forgiven, best matches first. **Filters** narrows the grid
 to one album artist, one genre or a minimum rating once applied, and its button
 shows how many filters are active. The sort menu orders by title, artist, rating or song
 count in either direction, and by best match while searching; clearing the search
-returns to the order chosen before. The status bar shows how many albums match. The playlist list updates
-in the background; same-name source lists show their location alongside the name.
+returns to the order chosen before. The status bar counts all tracks, albums, artists or genres in the library.
+Searching, applying a filter or opening a collection also shows how many are displayed.
+For example, two matching albums in an artist’s discography read `2 of 9 albums`
+when the library contains nine albums. An open album uses the total for all library tracks.
+Playlists update in the background. Source lists with the same name show their location.
 Open an album to see its cover, title and album artist beside the track list. Each row
 shows the performer below the track title, followed by duration, rating and a menu.
 The open album updates as the catalogue changes. If the release disappears,
@@ -46,8 +49,10 @@ when every track has the same set of genres. Rate a
 track with its ten stars or use the row menu to inspect its tags, copy the path
 from the details or open the folder.
 The player strip stays at the bottom of every destination except **Settings**.
-The play button beside each title starts that track and queues the shown tracks
-after it. Until then, the strip shows **Nothing playing** with its transport and
+In Music and album track lists, click a track's play button or double-click its row
+to start it in the displayed queue. The current track's button uses the accent color
+and shows Pause during playback or Play when paused. Either gesture pauses or
+resumes that track at its current position. Before playback, the strip shows **Nothing playing** with its transport and
 position bar disabled; the equalizer and volume stay editable. It shows
 the title and artist, previous/play-pause/next, a ten-band equalizer (±12 dB with
 **Reset**), a vertical volume fader (−60 to 0 dB) beside the stereo level meters,
@@ -189,9 +194,8 @@ Writes run in the background and persist in `userdata.db` across catalogue reset
 Resting the pointer on an album card for 700 ms opens native CUI hover details:
 a small cover beside the title, artist and song count, with a read-only rating
 below. Details reuse the loaded thumbnail and require no additional source reads.
-The native status bar stays below the scrolling grid and shows the album count,
-or how many of all albums match while search or filters hide some. Loading and
-initial failures have their own status.
+The native status bar stays below the scrolling grid. Loading and initial failures
+have their own status.
 
 The gray album toolbar uses native CUI widgets: the search editor, the filter
 popover with draft/Apply/Reset behavior, and the combined sort field/direction

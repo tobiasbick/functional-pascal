@@ -3,7 +3,9 @@ program FractalExplorerContract;
 uses
   Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T,
-  System as Sys, System.Console as Console, System.Diagnostics as Diag, System.Threading as Threads;
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Tests.Support.Mvu.EffectReplies as Replies,
+  System as Sys, System.Console as Console, System.Threading as Threads,
+  System.Threading.Channels as Channels;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -51,12 +53,14 @@ begin
   raise new Sys.InvalidOperationException('Missing control: ' + Label);
 end function;
 
-procedure Step(Session: App.HeadlessSession);
+procedure StepEffect(Session: App.HeadlessSession);
 begin
   case Session.Step() of
+    when App.StepResult.EffectProcessed(_):
     when App.StepResult.Failed(_, _, const Stage: string, const Reason: string):
       raise new Sys.InvalidOperationException(Stage + ': ' + Reason);
     else
+      raise new Sys.InvalidOperationException('Expected one application message.');
   end case;
 end procedure;
 
@@ -81,26 +85,30 @@ begin
   raise new Sys.InvalidOperationException('Input was not processed.');
 end procedure;
 
-// Waits for the current background frame while pumping the actual terminal host.
-function Ready(Session: App.HeadlessSession): App.Frame;
-begin
-  const Timer: Diag.Stopwatch := Diag.Stopwatch.StartNew();
-  while Timer.ElapsedMilliseconds < 10000 do
-    Step(Session);
-    const Frame: App.Frame := Session.Snapshot();
-    if RowWith(Frame, 'Ready') <> '' then
-      return Frame;
-    end if;
-
-    Threads.Thread.Sleep(1);
-  end while;
-
-  raise new Sys.InvalidOperationException(
-    'Render timed out: ' + Sys.String.Join(' ', Session.Snapshot().Lines)
-  );
-end function;
-
 procedure Verify();
+  function Ready(): App.Frame;
+  begin
+    using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
+      10000
+    );
+    const Reply: Replies.Reply<X.Msg> := Render.ReadAsync(
+      Limit.Token
+    ).AsTask().GetAwaiter().GetResult();
+    Check(
+      RowWith(Session.Snapshot(), 'Rendering') <> '',
+      'Show rendering before the image arrives.'
+    );
+
+    Reply.Release().WaitAsync(Limit.Token).GetAwaiter().GetResult();
+    StepEffect(Session);
+    const Frame: App.Frame := Session.Snapshot();
+    Check(
+      RowWith(Frame, 'Ready') <> '',
+      'Expected a completed render: ' + Sys.String.Join(' ', Frame.Lines)
+    );
+    Render := Effects.Watch('render');
+    return Frame;
+  end function;
   procedure Key(Pressed: K.Key);
   begin
     Send(Session, App.Input.KeyPress(Pressed, K.KeyModifiers.None));
@@ -109,17 +117,26 @@ procedure Verify();
   begin
     Send(Session, App.Input.Character(Value));
   end procedure;
-  procedure Choose(Name: string);
+  function Choose(Name: string): App.Frame;
   begin
     const Item: App.ControlSnapshot := Control(Session.Snapshot(), Name);
     Send(Session, App.Input.Click(Item.Column + 1, Item.Row));
-    Check(Control(Ready(Session), Name).Value = 'true', 'Selected family: ' + Name);
-  end procedure;
+    const Frame: App.Frame := Ready();
+    Check(Control(Frame, Name).Value = 'true', 'Selected family: ' + Name);
+    return Frame;
+  end function;
 begin
+  const Effects: Replies.Effects<X.Msg> := Replies.Effects<X.Msg>.Create();
+  var Render: Channels.ChannelReader<Replies.Reply<X.Msg>> := Effects.Watch('render');
   using const Session: App.HeadlessSession := App.StartHeadless<X.Model, X.Msg>(
-    new X.Model(), X.Update, V.View, 90, 28, V.Theme()
+    new X.Model(),
+    function(State: X.Model; Message: X.Msg): Mvu.Transition<X.Model, X.Msg> => Effects.Wrap<X.Model>(
+      X.Update(State, Message)
+    ),
+    V.View, 90, 28, V.Theme()
   );
-  const Initial: App.Frame := Ready(Session);
+  StepEffect(Session);
+  const Initial: App.Frame := Ready();
   CheckFooter(Initial);
   const Plot: App.ControlSnapshot := Control(Initial, 'plot');
   Check(
@@ -140,33 +157,34 @@ begin
     'Browsing must wait for activation.'
   );
   Key(K.Key.Enter);
-  Check(RowWith(Ready(Session), 'c (-0.8, 0.156)') <> '', 'Julia initial parameter.');
+  Check(RowWith(Ready(), 'c (-0.8, 0.156)') <> '', 'Julia initial parameter.');
   Key(K.Key.Tab);
   Check(
     Control(Session.Snapshot(), 'plot').Focused,
     'Tab from a middle list item goes straight to the plot.'
   );
   Key(K.Key.Up);
-  Check(RowWith(Ready(Session), 'Center (0, 0.336)') <> '', 'Arrow pans the image.');
+  Check(RowWith(Ready(), 'Center (0, 0.336)') <> '', 'Arrow pans the image.');
   CharKey('w');
+  Check(RowWith(Ready(), 'c (-0.8, 0.176)') <> '', 'Julia parameter changes.');
   CharKey('2');
-  Check(RowWith(Ready(Session), 'Ember   c (-0.8, 0.176)') <> '', 'Julia parameter and palette.');
+  Check(RowWith(Ready(), 'Ember   c (-0.8, 0.176)') <> '', 'Julia parameter and palette.');
   Key(K.Key.PageUp);
-  Check(RowWith(Ready(Session), '128 / 2048') <> '', 'Iteration limit changes in the image.');
+  Check(RowWith(Ready(), '128 / 2048') <> '', 'Iteration limit changes in the image.');
   Key(K.Key.PageDown);
-  Check(RowWith(Ready(Session), '96 / 2048') <> '', 'Page Down lowers the iteration limit.');
+  Check(RowWith(Ready(), '96 / 2048') <> '', 'Page Down lowers the iteration limit.');
   Send(Session, App.Input.Scroll(Plot.Column + 1, Plot.Row + 1, -1));
-  Check(RowWith(Ready(Session), '1.25×') <> '', 'Wheel zooms in.');
+  Check(RowWith(Ready(), '1.25×') <> '', 'Wheel zooms in.');
   CharKey('-');
-  Check(RowWith(Ready(Session), '1×') <> '', 'Keyboard zooms out.');
+  Check(RowWith(Ready(), '1×') <> '', 'Keyboard zooms out.');
   Send(Session, App.Input.ButtonClick(K.MouseButton.Middle, Plot.Column, Plot.Row));
   Check(
-    RowWith(Ready(Session), 'Center (0, 0)   Deep Ocean') <> '',
+    RowWith(Ready(), 'Center (0, 0)   Deep Ocean') <> '',
     'Middle click resets the camera and palette.'
   );
   Send(Session, App.Input.Click(Plot.Column, Plot.Row));
   Check(
-    RowWith(Ready(Session), 'Center (0, 0)') = '',
+    RowWith(Ready(), 'Center (0, 0)') = '',
     'Click centers using local image coordinates.'
   );
   CharKey('h');
@@ -178,13 +196,15 @@ begin
   );
   Send(Session, App.Input.KeyPress(K.Key.Tab, K.KeyModifiers.Shift));
   Check(Control(Session.Snapshot(), 'Julia').Focused, 'Shift+Tab returns to the selected family.');
-  Choose('Burning Ship');
-  Check(RowWith(Ready(Session), 'Center (-0.45, -0.55)   Ember') <> '', 'Burning Ship home.');
-  Choose('Tricorn');
-  Check(RowWith(Ready(Session), 'Aurora') <> '', 'Tricorn home.');
-  Choose('Newton');
+  Check(
+    RowWith(Choose('Burning Ship'), 'Center (-0.45, -0.55)   Ember') <> '',
+    'Burning Ship home.'
+  );
+  Check(RowWith(Choose('Tricorn'), 'Aurora') <> '', 'Tricorn home.');
+  discard Choose('Newton');
   Send(Session, App.Input.Resize(74, 22));
-  const Small: App.Frame := Ready(Session);
+  StepEffect(Session);
+  const Small: App.Frame := Ready();
   CheckFooter(Small);
   const Grid: App.ControlSnapshot := Control(Small, 'plot');
   Check(

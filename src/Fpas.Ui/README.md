@@ -868,6 +868,8 @@ the preceding control when it closes. The graphical profile is required.
   Set their UTF-8 capacity to at most 256 bytes, including the terminator.
   Native proposals report sort, selection, cursor and range anchor in display
   order. The model controls how sorting changes the row order.
+  An optional `OnDoubleClick` receives the display index when the user
+  double-clicks a row. Embedded buttons and editable cells handle their own input.
 - `TreeTables.TreeCell` adds CUI's indented label and disclosure chevron to a
   cell in an ordinary table. `TreeTables.TreeTable` uses CUI's virtual tree
   grid. Supply a parent-first node array, one text cell per additional column

@@ -176,8 +176,9 @@ returns one score per document, zero for no match.
 
 ## Albums and artwork
 
-The borrowed `Metadata.Albums` handle provides `ObserveAsync` for sorted lightweight
-headers and `ThumbnailAsync(Album, Cancellation)` for one immutable RGBA thumbnail.
+The borrowed `Metadata.Albums` handle publishes sorted release headers and the indexed
+audio count through `ObserveAsync`. The count includes tracks awaiting metadata.
+`ThumbnailAsync(Album, Cancellation)` returns one immutable RGBA thumbnail.
 `SetRatingAsync(Id, Value, Cancellation)` stores an independent album rating from
 one to ten, or null to clear it. Ratings live in `userdata.db`, survive catalogue
 resets/rescans, and never change track ratings or source tags. Header observations

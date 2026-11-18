@@ -164,7 +164,7 @@ public type ToolbarTests = record
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums), Loaded := true),
       Albums := Update.Apply(
         new Albums.State(Images := Pictures),
-        Albums.Msg.Received(Items),
+        Albums.Msg.Received(new Library.Snapshot(Items, 31L)),
         null
       ).Model with
         Images := Pictures;

@@ -196,7 +196,7 @@ begin
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
-    when E.Element.DataGrid(const Id: string, _, _, _, _, _, const Settings: DataGrid.Options):
+    when E.Element.DataGrid(const Id: string, _, _, _, _, _, const Settings: DataGrid.Options, _):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;

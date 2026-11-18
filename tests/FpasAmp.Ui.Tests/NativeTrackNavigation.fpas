@@ -1,0 +1,344 @@
+unit FpasAmp.Ui.Tests.NativeTrackNavigation;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Model as Releases,
+  FpasAmp.Ui.Music.LibraryPage as Music, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Inventory.Monitoring as Inventory, FpasAmp.Library.Tests.Support as H, Fpas.Media.Audio as Audio,
+  Fpas.Media.Images as Images,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Native pointer and keyboard navigation across virtual song rows.
+public type TrackNavigationTests = record
+  // Library selects the whole-library or album table layout.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(true)]
+  [X.InlineDataAttribute(false)]
+  [X.TraitAttribute('Category', 'Gui')]
+  public async function ScrolledRowsKeepFocus(Library: bool): Tasks.Task;
+    procedure Inject();
+    begin
+      Window.MovePointer(PointerX, PointerY);
+      if Wheel <> 0.0F then
+        Window.Wheel(0.0F, Wheel);
+        Wheel := 0.0F;
+      end if;
+
+      if Button >= 0 then
+        Window.SetLeftButton(Button = 1);
+        Button := -1;
+      end if;
+
+      if Key <> 0 then
+        Window.SetKey(Key, true);
+        Window.SetKey(Key, false);
+        Key := 0;
+      end if;
+    end procedure;
+    procedure Frame(Session: Gui.Session<App.Msg>);
+    begin
+      discard Window.TryWake();
+      X.Assert.True(Session.Step());
+    end procedure;
+    function FirstRow(Session: Gui.Session<App.Msg>): int;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Role = 'grid-row' then
+          return Sys.Int32.Parse(Item.Id);
+        end if;
+      end for;
+
+      raise new Sys.InvalidOperationException('No track rows were presented.');
+    end function;
+    function Control(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Id = Id then
+          return Item;
+        end if;
+      end for;
+
+      raise new Sys.InvalidOperationException('Missing control: ' + Id);
+    end function;
+    function VisibleSong(Session: Gui.Session<App.Msg>; Grid: Cui.CuiRectangle): Gui.Control;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Role = 'grid-row' and Item.Bounds.Y >= Grid.Y + Grid.Height / 3.0F
+          and Item.Bounds.Y + 2.0F * Item.Bounds.Height <= Grid.Y + Grid.Height
+        then
+          return Item;
+        end if;
+      end for;
+
+      raise new Sys.InvalidOperationException(
+        'Expected two visible songs below the sticky header.'
+      );
+    end function;
+    procedure CheckAccent(Session: Gui.Session<App.Msg>; ActiveId: string; OtherId: string);
+      function Fill(Id: string): int;
+      begin
+        const Bounds: Cui.CuiRectangle := Control(Session, Id).Bounds;
+        const PixelX: int := cast<int>(Bounds.X + Bounds.Width * 0.2F);
+        // CoverDecoder fits the landscape screenshot into a square of the same logical width.
+        const PixelY: int := cast<int>(Bounds.Y + Bounds.Height / 2.0F + (Size.Width -
+          Size.Height) /
+          2.0F);
+        return Sys.BitConverter.ToInt32(Image.Pixels, 4 * (PixelY * Image.Width + PixelX));
+      end function;
+    begin
+      const Path: string := IO.Path.Combine(Root.Path, 'transport.png');
+      Session.CapturePng(Path);
+      const Size: Cui.CuiSize := Session.Snapshot().Size;
+      const Image: Images.Bitmap := Images.CoverDecoder.Decode(
+        IO.File.ReadAllBytes(Path),
+        cast<int>(Size.Width),
+        T.CancellationToken.None
+      );
+      const Accent: int := Fill('player-toggle');
+      X.Assert.Equal<int>(Accent, Fill(ActiveId));
+      X.Assert.NotEqual<int>(Accent, Fill(OtherId));
+    end procedure;
+    procedure Click(Session: Gui.Session<App.Msg>);
+    begin
+      Button := 1;
+      Frame(Session);
+      Button := 0;
+      Frame(Session);
+      Frame(Session);
+    end procedure;
+    function Page(): M.State;
+    begin
+      return Current.Albums.Music ?? Current.Songs.Page;
+    end function;
+    function Song(Message: M.Msg): App.Msg;
+    begin
+      return if Library then
+        App.Msg.Songs(Music.Msg.Song(Message))
+      else
+        App.Msg.Albums(Releases.Msg.Music(Message))
+      end if;
+    end function;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    await using const Store: Inventory.Session := H.Start([], T.CancellationToken.None);
+    using const Device: Audio.Session := new Audio.Session(true);
+    const Port: Playback.Connection := new Playback.Connection(Device);
+    const Count: int := if Library then
+      22299
+    else
+      96
+    end if;
+    const Items: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>(
+      Count
+    );
+    for Id: int := 0 to Count - 1 do
+      Items.Add(
+        new Tracks.Entry(
+          cast<long>(Id + 1),
+          Id.ToString(),
+          IO.Path.Combine(Root.Path, Id.ToString(), ((Id + 1) div 2).ToString('D5') + '.mp3'),
+          '',
+          null,
+          null,
+          null, SourceIds := ['music']
+        )
+      );
+    end for;
+    const Songs: I.ImmutableArray<Tracks.Entry> := Items.MoveToImmutable();
+    const Initial: M.State := new M.State(
+      new Albums.Album(
+        if Library then
+          ''
+        else
+          'album'
+        end if, 'Album', '', 1L, ''
+      ), 1L,
+      Tracks := Songs, Shown := Songs, Loaded := true
+    );
+    var Current: App.State := new App.State(
+      new Settings.State(
+        new Settings.Preferences([H.Source('music', Root.Path)], 'light', 'violet')
+      ),
+      Navigation := new Nav.State(
+        Active := if Library then
+          Nav.Route.Page(Nav.Page.Music)
+        else
+          Nav.Route.Album('album')
+        end if
+      ),
+      Songs := new Music.State(Page := Initial),
+      Albums := new Releases.State(
+        Music := if Library then
+          null
+        else
+          Initial
+        end if
+      )
+    );
+    var Wheel: float := 0.0F;
+    var Button: int := -1;
+    var Key: int := 0;
+    var PointerX: float := 220.0F;
+    var PointerY: float := 180.0F;
+    using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+      'Song navigation',
+      1520,
+      860,
+      Cui.CuiRenderer.Software,
+      true
+    );
+    Window.SetReducedMotion(true);
+    using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+      Current,
+      function(State: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg> begin
+        const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+          State,
+          Message,
+          procedure(_Value: Settings.Preferences) begin end procedure,
+          Store,
+          Port
+        );
+        Current := Next.Model;
+        return Next;
+      end function,
+      Shell.View,
+      Window,
+      64,
+      Inject,
+      App.Theme(Current, null),
+      App.Theme,
+      false
+    );
+    Frame(Session);
+    Frame(Session);
+    X.Assert.Equal<int>(1, FirstRow(Session));
+    const GridId: string := if Library then
+      'music-tracks'
+    else
+      'album-tracks'
+    end if;
+    const Grid: Cui.CuiRectangle := Control(Session, GridId).Bounds;
+    const Column: Cui.CuiRectangle := Control(Session, GridId + '/header/1').Bounds;
+    const RowX: float := Column.X + Column.Width / 2.0F;
+    PointerX := RowX;
+    PointerY := Grid.Y + Grid.Height / 2.0F;
+    Frame(Session);
+    Wheel := -18.0F;
+    Frame(Session);
+    Frame(Session);
+    const Scrolled: int := FirstRow(Session);
+    X.Assert.True(Scrolled > 1, 'The wheel must move beyond the first rows.');
+    const Visible: Gui.Control := VisibleSong(Session, Grid);
+    const File: int := Sys.Int32.Parse(Visible.Id);
+    const Row: Cui.CuiRectangle := Visible.Bounds;
+    PointerY := Row.Y + Row.Height / 2.0F;
+    Frame(Session);
+    Click(Session);
+    X.Assert.False(Current.Player.Playing);
+    X.Assert.Equal<int>(File - 1, Page().Cursor);
+    Click(Session);
+    X.Assert.True(Current.Player.Playing);
+    X.Assert.Equal<long>(cast<long>(File), Current.Player.Queue[Current.Player.Index].FileId);
+    const ButtonId: string := 'track-play-' + File.ToString();
+    X.Assert.StartsWith('Pause ', Control(Session, ButtonId).Text);
+    const OtherVersion: int := if File mod 2 = 0 then
+      File + 1
+    else
+      File - 1
+    end if;
+    const OtherButton: string := 'track-play-' + OtherVersion.ToString();
+    const Title: string := (File div 2).ToString('D5');
+    X.Assert.Equal<string>('Play ' + Title, Control(Session, OtherButton).Text);
+    CheckAccent(Session, ButtonId, OtherButton);
+    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+
+    // Select a different row, then pause and resume the playing file at its own button.
+    const Other: Cui.CuiRectangle := Control(Session, (File + 1).ToString()).Bounds;
+    PointerY := Other.Y + Other.Height / 2.0F;
+    Frame(Session);
+    Click(Session);
+    const Cursor: int := Page().Cursor;
+    const Anchor: int := Page().Anchor;
+    X.Assert.Equal<int>(File, Cursor);
+    const Toggle: Cui.CuiRectangle := Control(Session, ButtonId).Bounds;
+    PointerX := Toggle.X + Toggle.Width / 2.0F;
+    PointerY := Toggle.Y + Toggle.Height / 2.0F;
+    Frame(Session);
+    Click(Session);
+    X.Assert.False(Current.Player.Playing);
+    X.Assert.StartsWith('Resume ', Control(Session, ButtonId).Text);
+    PointerX := RowX;
+    Frame(Session);
+    CheckAccent(Session, ButtonId, OtherButton);
+    PointerX := Toggle.X + Toggle.Width / 2.0F;
+    Frame(Session);
+    Click(Session);
+    X.Assert.True(Current.Player.Playing);
+    X.Assert.Equal<int>(Cursor, Page().Cursor);
+    X.Assert.Equal<int>(Anchor, Page().Anchor);
+    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+
+    PointerX := RowX;
+    Frame(Session);
+    Click(Session);
+    Click(Session);
+    X.Assert.False(Current.Player.Playing);
+    discard Session.Post(App.Msg.Player(Player.Msg.Next));
+    Frame(Session);
+    Frame(Session);
+    X.Assert.StartsWith('Play ', Control(Session, ButtonId).Text);
+    X.Assert.StartsWith('Resume ', Control(Session, 'track-play-' + (File + 1).ToString()).Text);
+    X.Assert.Equal<int>(File - 1, Page().Cursor);
+    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+
+    Wheel := -10.0F;
+    Frame(Session);
+    Frame(Session);
+    X.Assert.True(FirstRow(Session) > Scrolled, 'The wheel must still scroll the focused grid.');
+    PointerX := Grid.X + Grid.Width - 5.0F;
+    PointerY := Grid.Y + Grid.Height * 0.75F;
+    Frame(Session);
+    Button := 1;
+    Frame(Session);
+    Button := 0;
+    Frame(Session);
+    Frame(Session);
+    X.Assert.True(
+      FirstRow(Session) > Count div 2,
+      'Clicking the scrollbar must move the viewport.'
+    );
+
+    Key := 11;
+    Frame(Session);
+    Frame(Session);
+    X.Assert.Equal<int>(1, FirstRow(Session));
+    for Press: int := 1 to 24 do
+      Key := 10;
+      Frame(Session);
+      Frame(Session);
+    end for;
+
+    X.Assert.True(FirstRow(Session) > 1, 'Down must advance past the first viewport.');
+    discard Session.Post(Song(M.Msg.Sort(new Tables.Sort(0, true))));
+    Frame(Session);
+    Frame(Session);
+    const FocusedRow: Cui.CuiRectangle := Control(Session, '25').Bounds;
+    const SortedGrid: Cui.CuiRectangle := Control(Session, GridId).Bounds;
+    X.Assert.True(
+      FocusedRow.Y >= Sys.MathF.Round(SortedGrid.Y)
+      and FocusedRow.Y + FocusedRow.Height <= Sys.MathF.Round(SortedGrid.Y + SortedGrid.Height),
+      'Sorting must keep the focused song in view.'
+    );
+    discard Session.Post(Song(M.Msg.Search('00000')));
+    Frame(Session);
+    Frame(Session);
+    X.Assert.Equal<int>(1, FirstRow(Session));
+  end function;
+end record;
+
+end unit;

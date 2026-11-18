@@ -70,18 +70,26 @@ end function;
 
 // Observes committed album changes in `Database`/`Users`; `Publish` is awaited and only
 // receives changed complete snapshots. `Cancellation` closes the borrowed lifetime.
-public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(Database: string; Users: string; Publish: function(M.Snapshot): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
 begin
   var Published: bool := false;
-  var Previous: I.ImmutableArray<M.Album> := I.ImmutableArray<M.Album>.Empty;
+  var Previous: M.Snapshot := new M.Snapshot();
   await Changes(
     Database, Users, async function(): Tasks.Task begin
-      const Snapshot: I.ImmutableArray<M.Album> := Queries.Read(Database, Users, Cancellation);
-      if not Published or not Same(Previous, Snapshot) then
-        await Publish(Snapshot).ConfigureAwait(false);
-        Previous := Snapshot;
-        Published := true;
+      var Snapshot: M.Snapshot := Queries.Read(Database, Users, Cancellation);
+      if Published and Same(Previous.Releases, Snapshot.Releases) then
+        if Previous.TrackCount = Snapshot.TrackCount then
+          return;
+        end if;
+
+        Snapshot := Previous with
+          TrackCount := Snapshot.TrackCount;
+        end with;
       end if;
+
+      await Publish(Snapshot).ConfigureAwait(false);
+      Previous := Snapshot;
+      Published := true;
     end function, Cancellation
   ).ConfigureAwait(false);
 end function;

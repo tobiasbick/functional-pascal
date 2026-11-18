@@ -9,7 +9,7 @@ uses
   FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Persistence.PlayerState as Bookmark, FpasAmp.AppState as Storage,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Gui.Cui as Cui, Fpas.Media.Audio as Audio,
-  System as Sys, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
 
 // End-to-end checks for the Music destination.
 public type LibraryMusicTests = record
@@ -45,7 +45,10 @@ public type LibraryMusicTests = record
         ),
         'Missing empty Music state.'
       );
-      Fixture.Seed(Root.Path);
+      // Finish writing tags before the watcher can open the audio files.
+      const Prepared: string := IO.Path.Combine(Data.Path, 'collection');
+      Fixture.Seed(Prepared);
+      IO.Directory.Move(Prepared, IO.Path.Combine(Root.Path, 'collection'));
       Library.Refresh('music');
       Fixture.Until(
         Session,
@@ -85,14 +88,16 @@ public type LibraryMusicTests = record
       X.Assert.Equal<int>(3, Session.State().Songs.Page.Shown.Length);
       X.Assert.Equal<int>(22, Session.State().Songs.Page.Tracks.Length);
       const Id: string := Session.State().Songs.Page.Shown[0].TrackId;
+      Song(Session, Music.Msg.Play(Session.State().Songs.Page.Shown[1].FileId));
+      const Playing: Player.State := Session.State().Player;
+      X.Assert.True(Playing.Playing);
       Song(Session, Music.Msg.Rate(Id, 8));
       Fixture.Until(
         Session,
-        function(): bool => Session.State().Songs.Page.Shown[0].Rating = 8,
+        function(): bool => not Session.State().Songs.Page.Saving.ContainsKey(Id)
+          and Session.State().Songs.Page.Shown[0].Rating = 8,
         'Track rating was not saved.'
       );
-      Song(Session, Music.Msg.Play(1));
-      const Playing: Player.State := Session.State().Player;
       X.Assert.Equal<int>(3, Playing.Queue.Length);
       Storage.Save(
         Data.Path,

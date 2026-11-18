@@ -10,7 +10,7 @@ uses
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Shell as Shell,
   Fpas.Ui.Gui.Cui as Cui,
   Fpas.Media.Audio as Audio,
-  System.Threading as T, Xunit as X;
+  System as Sys, System.Threading as T, Xunit as X;
 
 procedure Send(Session: Shell.Session; Message: Albums.Msg);
 begin
@@ -223,7 +223,12 @@ public type CollectionNavigationTests = record
         Fixture.Capture(Session, 'genre-tracks-filter', 'genres');
         Send(Session, Albums.Msg.Music(Music.Msg.Reset));
         Send(Session, Albums.Msg.Music(Music.Msg.ApplyFilters));
-        Send(Session, Albums.Msg.Music(Music.Msg.Play(0)));
+        const Page: Music.State? := Session.State().Albums.Music;
+        if Page = null then
+          raise new Sys.InvalidOperationException('Expected the filtered album.');
+        end if;
+
+        Send(Session, Albums.Msg.Music(Music.Msg.Play(Page.Shown[0].FileId)));
         X.Assert.Equal<int>(4, Session.State().Player.Queue.Length);
         X.Assert.Equal<string>(['Jazz'], Session.State().Player.Source.Genres);
         Send(Session, Albums.Msg.BackToAlbums);

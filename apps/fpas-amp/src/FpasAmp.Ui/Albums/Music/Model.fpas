@@ -17,6 +17,25 @@ public type Filters = record
   public Performer: string := '';
   // Stable release identity selected by the album filter, or empty for all.
   public ReleaseFilter: string := '';
+
+  // Returns the number of selected genres plus the other active track filters.
+  public function Count(): int;
+  begin
+    var Active: int := self.Genres.Count;
+    if self.Performer <> '' then
+      Active := Active + 1;
+    end if;
+
+    if self.ReleaseFilter <> '' then
+      Active := Active + 1;
+    end if;
+
+    if self.MinimumRating > 0 then
+      Active := Active + 1;
+    end if;
+
+    return Active;
+  end function;
 end record;
 
 // Reproducible selection captured when playback starts, independent of later navigation.
@@ -39,6 +58,14 @@ public type Selection = record
   public ReleaseFilter: string := '';
 end record;
 
+// A saved track rating protected from library reads that began before the write completed.
+public type RatingReceipt = record
+  // User rating, or null after clearing the stars.
+  public Value: int?;
+  // Monotonic Stopwatch timestamp taken after the durable write.
+  public Written: long;
+end record;
+
 // The source tracks, confirmed selection and visible state of a song browser.
 public type State = record
   // The selected album header. An empty ID selects the whole library.
@@ -51,6 +78,10 @@ public type State = record
   public GenreChoices: array of string := [];
   // Filtered and sorted release tracks.
   public Shown: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  // Keyboard cursor in Shown, or -1 when unset.
+  public Cursor: int := -1;
+  // Range anchor in Shown, or -1 when unset.
+  public Anchor: int := -1;
   // Whether the first query returned.
   public Loaded: bool := false;
   // Search text for this release.
@@ -63,8 +94,12 @@ public type State = record
   public FiltersOpen: bool := false;
   // Grid sort; column -1 uses disc and track order.
   public Order: Tables.Sort := new Tables.Sort(-1);
-  // Track identities with a write in flight.
-  public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+  // Proposed ratings shown while the corresponding writes are in flight.
+  public Saving: I.ImmutableDictionary<string, int?> := I.ImmutableDictionary<string, int?>.Empty;
+  // Confirmed edits newer than the last track query, keyed by track identity.
+  public Receipts: I.ImmutableDictionary<string, RatingReceipt> := I.ImmutableDictionary<string, RatingReceipt>.Empty;
+  // Monotonic start of the last track query delivered to this visit.
+  public ReadStarted: long := 0L;
   // Details dialog's track, when open.
   public Details: Tracks.Entry? := null;
   // Last read or action error.
@@ -87,8 +122,8 @@ end record;
 public type Msg = variant
   // Return to the parent album grid.
   Back;
-  // Successfully loaded tracks for a visit.
-  Loaded(Visit: long; Items: I.ImmutableArray<Tracks.Entry>);
+  // Tracks loaded for Visit, with the monotonic timestamp Started from before the query.
+  Loaded(Visit: long; Started: long; Items: I.ImmutableArray<Tracks.Entry>);
   // Publishes the selected release's thumbnail for this visit.
   CoverLoaded(Visit: long; Image: Imaging.Bitmap?);
   // Reports a failure for a visit.
@@ -111,15 +146,16 @@ public type Msg = variant
   Reset;
   // Set the song sort order.
   Sort(Order: Tables.Sort);
+  // Cursor and anchor proposed against the rows presented in the input frame.
+  Navigate(Rows: I.ImmutableArray<Tracks.Entry>; Cursor: int; Anchor: int);
   // Propose a rating, with zero clearing it.
   Rate(Id: string; Value: int);
-  // Apply a successful rating receipt.
-  Rated(Visit: long; Id: string; Value: int?);
+  // Confirm the rating for Id in Visit. Written timestamps completion of the durable write.
+  Rated(Visit: long; Id: string; Value: int?; Written: long);
   // Release the saving indicator and show the failure.
   RatingFailed(Visit: long; Id: string; Text: string);
-  // Play the shown track at `Index`, queueing the shown tracks after it.
-  // The app routes this to the player; the music slice keeps its state.
-  Play(Index: int);
+  // Toggle the current file or start FileId in the displayed queue.
+  Play(FileId: long);
   // Show metadata for one track.
   Details(Item: Tracks.Entry);
   // Close track details.

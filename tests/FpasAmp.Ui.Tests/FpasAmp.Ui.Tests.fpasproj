@@ -9,6 +9,8 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
     <ProjectReference Include="../../apps/fpas-amp/src/FpasAmp/FpasAmp.fpasproj" />
+    <Compile Include="../TestSupport/Mvu/EffectReplies.fpas" Link="TestSupport/EffectReplies.fpas" />
+    <Compile Include="../TestSupport/Mvu/EffectRepliesTests.fpas" Link="TestSupport/EffectRepliesTests.fpas" />
     <Compile Include="../FpasAmp.Library.Tests/Support.fpas" Link="Support.fpas" />
     <Compile Include="../FpasAmp.Library.Tests/MetadataSupport.fpas" Link="MetadataSupport.fpas" />
     <Compile Include="../FpasAmp.Library.Tests/AlbumSupport.fpas" Link="AlbumSupport.fpas" />

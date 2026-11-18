@@ -8,7 +8,7 @@ uses
   FpasAmp.Library.Albums.Artwork.Names as Artwork,
   FpasAmp.Library.Albums.Persistence.Ratings as Ratings,
   FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Queries as Queries,
-  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.Diagnostics as D, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
 // Detached read operations; the caller owns observations, not the metadata session.
@@ -56,9 +56,9 @@ public type Session = record
     ).ConfigureAwait(false);
   end function;
 
-  // Publishes changed sorted album headers through awaited `Publish` until
+  // Publishes changed release headers and the library-wide indexed audio count through awaited `Publish` until
   // `Cancellation` or the parent lifetime ends. All database work is off the caller.
-  public async function ObserveAsync(Publish: function(I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveAsync(Publish: function(M.Snapshot): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -74,8 +74,9 @@ public type Session = record
   end function;
 
   // Observes all library songs and their release headers off the UI thread.
-  // The initial publication includes untagged audio. Later commits refresh the open page.
-  public async function ObserveSongsAsync(Publish: function(I.ImmutableArray<Tracks.Entry>, I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  // Publish receives the monotonic Stopwatch timestamp from before the read, the songs,
+  // and their headers. Cancellation ends observation. The returned task covers its lifetime.
+  public async function ObserveSongsAsync(Publish: function(long, I.ImmutableArray<Tracks.Entry>, I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -86,13 +87,18 @@ public type Session = record
       Tasks.Task.Run<Tasks.Task>(
         function(): Tasks.Task => Observing.Changes(
           self.Database, self.Users, function(): Tasks.Task begin
+            const Started: long := D.Stopwatch.GetTimestamp();
             const Songs: I.ImmutableArray<Tracks.Entry> := Queries.ReadRelease(
               self.Database,
               self.Users,
               '',
               Linked.Token
             );
-            return Publish(Songs, Headers.Read(self.Database, self.Users, Linked.Token));
+            return Publish(
+              Started,
+              Songs,
+              Headers.Read(self.Database, self.Users, Linked.Token).Releases
+            );
           end function, Linked.Token
         ), Linked.Token
       )

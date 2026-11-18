@@ -427,10 +427,12 @@ begin
     when E.Element.DataGrid(
       const Id: string, const Columns: array of DataGrids.Column, const Count: int,
       const Build: function(int): DataGrids.Row<TChild>, const Current: DataGrids.Value,
-      const Change: function(DataGrids.Value): TChild, const Settings: DataGrids.Options
+      const Change: function(DataGrids.Value): TChild, const Settings: DataGrids.Options,
+      const DoubleClick: Sys.Func<int, TChild>?
     ): E.Element<TParent>.DataGrid(
       Id, Columns, Count, function(Index: int): DataGrids.Row<TParent> => MapGridRow(Build(Index)),
-      Current, function(Next: DataGrids.Value): TParent => Messages(Change(Next)), Settings
+      Current, function(Next: DataGrids.Value): TParent => Messages(Change(Next)), Settings,
+      M.Callback<int, TChild, TParent>(DoubleClick, Messages)
     );
     when E.Element.TreeCell(
       const Id: string, const Label: string, const Depth: int, const Open: bool?,

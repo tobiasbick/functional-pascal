@@ -93,7 +93,7 @@ end function;
 // and cancels pending thumbnails if their candidate revisions have changed.
 public function Project(Current: M.State): A.Transition<M.State, M.Msg>;
 begin
-  var Items: I.ImmutableArray<Albums.Album> := Current.Releases;
+  var Items: I.ImmutableArray<Albums.Album> := Current.Library.Releases;
   var Name: string := '';
   if Toolbar.IsGroup(Current.Scope) then
     Items := Current.Collections.Headers;
@@ -153,7 +153,7 @@ begin
     new M.Position()
   end if;
   const Collections: Groups.Catalog := if Toolbar.Root(Current.Scope) <> Toolbar.Root(Scope) then
-    Groups.Build(Current.Releases, Scope)
+    Groups.Build(Current.Library.Releases, Scope)
   else
     Current.Collections
   end if;

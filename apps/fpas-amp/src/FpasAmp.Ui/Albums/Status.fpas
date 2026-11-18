@@ -1,41 +1,72 @@
-// A native CUI status bar sits outside the scrolling album viewport.
+// Status bars for library collection grids and song tables.
 unit FpasAmp.Ui.Albums.Status;
 
 uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, Fpas.Ui.Elements as E,
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Library.Search.Text as Tokens, Fpas.Ui.Elements as E,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status;
 
-// Formats `Shown` album matches and optional unfiltered `Total` for the status bar.
-// `Noun` is the singular name of the collection item. Without filtering, only the overall album count is shown.
-public function Caption(Shown: int; Total: int? := null; Noun: string := 'album'): string;
-requires Shown >= 0;
-requires Total = null or Total >= Shown;
+function Caption(Shown: int; Total: long; Noun: string; Search: string; Filtered: bool): string;
 begin
-  if Total <> null and Total <> Shown then
-    return Shown.ToString() + ' of ' + Total.ToString() + ' ' + Noun + 's';
+  var Count: string := Total.ToString();
+  if Filtered or (Search <> '' and Tokens.Words(Search).Length > 0) then
+    Count := Shown.ToString() + ' of ' + Count;
   end if;
 
-  return Shown.ToString() + if Shown = 1 then
-    ' ' + Noun
+  return Count + ' ' + Noun + if Total = 1 then
+    ''
   else
-    ' ' + Noun + 's'
+    's'
   end if;
 end function;
 
-// Presents the shown album count in `Current`, and the total while search or
-// filters hide albums. Loading and initial failures remain distinguishable from
-// an empty catalogue.
+// Returns the status bar for the album, artist or genre grid in `Current`.
 public function Build(Current: M.State): E.Element<M.Msg>;
 begin
+  const Scoped: bool := Toolbar.Root(Current.Scope) <> Current.Scope;
   const Noun: string := Toolbar.ItemName(Current.Scope).ToLowerInvariant();
   const Text: string := if not Current.Loaded then
     'Loading ' + Noun + 's…'
   elsif Current.Error <> null and Current.Items.Length = 0 then
     'Library unavailable'
   else
-    Caption(Current.Shown.Length, Current.Items.Length, Noun)
+    Caption(
+      Current.Shown.Length,
+      if Scoped then
+        Current.Library.Releases.Length
+      else
+        Current.Items.Length
+      end if,
+      Noun,
+      Current.Toolbar.Search,
+      Scoped or Toolbar.Count(Current.Toolbar.Applied) > 0
+    )
   end if;
   return Status.StatusBar<M.Msg>('album-status', [Status.Item<M.Msg>.Text(new Status.Label(Text))]);
+end function;
+
+// Returns the visible track count and duration for `Current` against the indexed `LibraryTotal`.
+public function Tracks(Current: Music.State; LibraryTotal: long): E.Element<Music.Msg>;
+begin
+  const Text: string := if Current.Loaded then
+    Caption(
+      Current.Shown.Length,
+      LibraryTotal,
+      'track',
+      Current.Search,
+      Current.Album.Id <> '' or Current.Applied.Count() > 0
+    )
+  else
+    'Loading tracks…'
+  end if;
+  return Status.StatusBar<Music.Msg>(
+    'track-status', [
+      Status.Item<Music.Msg>.Text(new Status.Label(Text)),
+      Status.Item<Music.Msg>.Spacer,
+      Status.Item<Music.Msg>.Text(new Status.Label(Browse.Time(Current.TotalMilliseconds)))
+    ]
+  );
 end function;
 
 end unit;

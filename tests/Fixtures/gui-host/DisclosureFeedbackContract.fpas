@@ -5,7 +5,9 @@ uses
   GuiGallery.App.Update as G, GuiGallery.Pages.Disclosure.State as D,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Feedback.Banners as B, Fpas.Ui.Widgets.Feedback.Checklists as C,
-  System as Sys, System.Threading as Threads;
+  GuiGallery.Pages.Disclosure.Clock as Clock, Fpas.Tests.Support.Mvu.EffectReplies as Replies,
+  System as Sys, System.Threading as Threads, System.Threading.Channels as Channels,
+  System.Globalization as Culture;
 
 // Exercises the original banner, countdowns and onboarding examples.
 // ## Parameters
@@ -24,8 +26,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       return new Mvu.Transition<State.Model, State.Msg>(Next.Model, [Mvu.Focus<State.Msg>(Target)]);
     end if;
 
-    Seconds := Next.Model.Disclosure.SecondsLeft;
-    return Next;
+    return Effects.Wrap<State.Model>(Next);
   end function;
 
   procedure Inject();
@@ -95,8 +96,9 @@ begin
   var Left: int := -1;
   var Key: int := 0;
   var Target: string := '';
-  var Seconds: double := D.InitialSeconds;
   var Activations: int := 0;
+  const Effects: Replies.Effects<State.Msg> := Replies.Effects<State.Msg>.Create();
+  const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5.0);
   const Banner: string := 'release-banner';
   const Checklist: string := 'workspace-onboarding';
   const First: string := C.StepId(Checklist, 0);
@@ -226,14 +228,32 @@ begin
   A.Check(A.Control(Session, B.ActionId(Banner)).Enabled, 'The announcement must reopen.');
 
   A.Send(Session, State.Msg.Show(State.Page.Overview));
+  const Countdown: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(Clock.Id);
   A.Send(Session, State.Msg.Show(State.Page.Disclosure));
-  const Until: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(4.0);
-  while Seconds >= D.InitialSeconds and Sys.DateTime.UtcNow < Until do
-    Threads.Thread.Sleep(30);
-    Step(Session);
-  end while;
+  const Initial: Replies.Reply<State.Msg> := Countdown.ReadAsync().AsTask().WaitAsync(
+    Timeout
+  ).GetAwaiter().GetResult();
+  Initial.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+  Step(Session);
+  const Before: string := A.Control(Session, 'disclosure-launch').Value;
 
-  A.Check(Seconds < D.InitialSeconds, 'The live countdown must advance after opening Disclosure.');
+  const Tick: Replies.Reply<State.Msg> := Countdown.ReadAsync().AsTask().WaitAsync(
+    Timeout
+  ).GetAwaiter().GetResult();
+  Step(Session);
+  A.Check(
+    A.Control(Session, 'disclosure-launch').Value = Before
+    and A.Control(Session, B.ActionId(Banner)).Enabled,
+    'While a countdown reply is held, the displayed seconds must stay fixed and the banner usable.'
+  );
+  Tick.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+  Step(Session);
+  const After: string := A.Control(Session, 'disclosure-launch').Value;
+  A.Check(
+    Sys.Double.Parse(After, Culture.CultureInfo.InvariantCulture) <
+    Sys.Double.Parse(Before, Culture.CultureInfo.InvariantCulture),
+    'Releasing one countdown reply must advance the displayed countdown.'
+  );
 end procedure;
 
 end unit;

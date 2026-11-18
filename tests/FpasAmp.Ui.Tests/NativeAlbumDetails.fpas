@@ -157,7 +157,11 @@ public type DetailTests = record
     var Last: App.State := new App.State(
       new SettingsModel.State(new SettingsModel.Preferences([], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums), Loaded := true),
-      Albums := Update.Apply(new Albums.State(), Albums.Msg.Received(Items), null).Model with
+      Albums := Update.Apply(
+        new Albums.State(),
+        Albums.Msg.Received(new Library.Snapshot(Items, 47L)),
+        null
+      ).Model with
         Images := Pictures;
         Saving := I.ImmutableHashSet<string>.Empty.Add('album-0');
       end with
@@ -295,7 +299,7 @@ public type DetailTests = record
     X.Assert.Equal<int>(36, Last.Albums.Items.Length);
     Capture(Session, 'albums-scrolled-' + Width.ToString());
     discard Session.Post(
-      App.Msg.Albums(Albums.Msg.Received(I.ImmutableArray<Library.Album>.Empty))
+      App.Msg.Albums(Albums.Msg.Received(new Library.Snapshot()))
     );
     Step(Session);
     X.Assert.True(Has(Session, 'albums-empty'));

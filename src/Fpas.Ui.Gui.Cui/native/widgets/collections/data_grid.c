@@ -10,7 +10,12 @@ typedef struct {
     int cursor, anchor;
 } fpas_grid_frame;
 
-typedef struct { cui_id row, current; int capacity; bool seen; char draft[256]; } fpas_grid_edit;
+typedef struct {
+    cui_id row, current;
+    int capacity, double_clicked;
+    bool seen;
+    char draft[256];
+} fpas_grid_row_state;
 
 static cui_grid_column *fpas_grid_columns(cui_ctx *ui, const char *const *titles,
     const float *widths, const int *flags, int count) {
@@ -58,12 +63,13 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
         for (int k = 0; k < rows; ++k) frame->selected[k] = selected[k] != 0;
     }
     cui__grid_state *retained = cui_state(ui, key, sizeof *retained);
+    fpas_grid_row_state *edit = cui_state(ui, edit_key, sizeof *edit);
+    edit->double_clicked = -1;
     if (retained->init) {
         if (frame->cursor < 0) retained->cursor = -1;
         retained->anchor = frame->anchor;
         if (retained->edit_row >= rows || !frame->enabled) fpas_grid_cancel_edit(ui, key, retained);
         if (retained->edit_row >= 0) {
-            fpas_grid_edit *edit = cui_state(ui, edit_key, sizeof *edit);
             edit->seen = false;
         }
         if (!frame->enabled) retained->resizing = -1;
@@ -100,9 +106,12 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
 
 int fpas_cui_data_grid_row(cui_ctx *ui, int row, const char *id) {
     struct cui_grid_build *grid = ui->building.grid;
-    cui_data_grid_row(ui, row);
+    const bool clicked = cui_data_grid_row(ui, row);
     const int node = cui__current(ui);
-    fpas_grid_edit *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
+    fpas_grid_row_state *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
+    /* CUI reports row_double on press and release. Deliver each completed pair once. */
+    if (clicked && grid->row_double && ui->click_count % 2 == 0 && grid->st->edit_row != row)
+        edit->double_clicked = row;
     const cui_id row_key = cui__hash_str(id, grid->id);
     if (grid->st->edit_row == row && edit->row != row_key)
         fpas_grid_cancel_edit(ui, grid->id, grid->st);
@@ -120,7 +129,7 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
     struct cui_grid_build *grid = ui->building.grid;
     if (!grid || grid->col <= 0) return 0;
     cui__grid_state *state = grid->st;
-    fpas_grid_edit *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
+    fpas_grid_row_state *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
     bool active = state->edit_row == grid->row && state->edit_col == grid->col - 1;
     if (active && capacity != edit->capacity) {
         fpas_grid_cancel_edit(ui, grid->id, state);
@@ -129,6 +138,7 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
     char *buffer = active ? edit->draft : value;
     const bool committed = cui_data_grid_edit(ui, buffer, (size_t)capacity);
     if (state->edit_row == grid->row && state->edit_col == grid->col - 1) {
+        if (edit->double_clicked == grid->row) edit->double_clicked = -1;
         edit->seen = true;
         if (!active) {
             edit->row = edit->current;
@@ -140,13 +150,12 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
     return committed;
 }
 
-void fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *state) {
+int fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *state) {
     fpas_grid_frame *frame = handle;
     const struct cui_grid_build *grid = ui->building.grid;
-    if (grid->st->edit_row >= 0) {
-        const fpas_grid_edit *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
-        if (!edit->seen) fpas_grid_cancel_edit(ui, grid->id, grid->st);
-    }
+    const fpas_grid_row_state *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
+    const int double_clicked = edit->double_clicked;
+    if (grid->st->edit_row >= 0 && !edit->seen) fpas_grid_cancel_edit(ui, grid->id, grid->st);
     cui_data_grid_end(ui);
     cui_pop_disabled(ui);
     if (selected) for (int k = 0; k < frame->rows; ++k) selected[k] = frame->selected[k];
@@ -155,4 +164,5 @@ void fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *s
     state[2] = frame->cursor;
     state[3] = frame->anchor;
     fpas_grid_restore(ui, frame->node, frame->previous);
+    return double_clicked;
 }

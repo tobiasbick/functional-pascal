@@ -19,7 +19,7 @@ begin
     IO.Path.Combine(Data, 'library.db'),
     IO.Path.Combine(Data, 'userdata.db'),
     T.CancellationToken.None
-  );
+  ).Releases;
 end function;
 
 async function Until(Data: string; Accept: function(I.ImmutableArray<M.Album>): bool): Tasks.Task<I.ImmutableArray<M.Album>>;

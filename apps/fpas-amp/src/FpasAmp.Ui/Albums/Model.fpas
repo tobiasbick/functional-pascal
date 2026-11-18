@@ -17,8 +17,8 @@ end record;
 
 // Owner-thread album view state; pixels are never mutated after publication.
 public type State = record
-  // All catalogue releases, independent of the active grid.
-  public Releases: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  // Complete library snapshot, independent of the active grid and its filters.
+  public Library: Library.Snapshot := new Library.Snapshot();
   // Groups and their member releases for the current snapshot.
   public Collections: Groups.Catalog := new Groups.Catalog();
   // Current grid and the selected group for a discography.
@@ -66,7 +66,7 @@ public type Msg = variant
   // Stop observations/image work and release decoded images.
   Close;
   // Replace album headers after a catalogue change.
-  Received(Items: I.ImmutableArray<Library.Album>);
+  Received(Value: Library.Snapshot);
   // Realized album indices reported after native layout, never from the pure row factory.
   Visible(First: int; Last: int);
   // One completed thumbnail request, scoped to a generation.

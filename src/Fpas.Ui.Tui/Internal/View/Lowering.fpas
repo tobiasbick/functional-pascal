@@ -630,6 +630,7 @@ public function Prepare<TMsg>(
         _,
         _,
         _,
+        _,
         _
       ), Ui.Element.TreeCell(_, _, _, _, _, _), Ui.Element.TreeTable(_, _, _, _, _, _, _):
         raise new Sys.NotSupportedException(

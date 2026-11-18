@@ -45,18 +45,7 @@ public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Fields: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
-  var Count: int := Current.Applied.Genres.Count;
-  if Current.Applied.Performer <> '' then
-    Count := Count + 1;
-  end if;
-
-  if Current.Applied.ReleaseFilter <> '' then
-    Count := Count + 1;
-  end if;
-
-  if Current.Applied.MinimumRating > 0 then
-    Count := Count + 1;
-  end if;
+  const Count: int := Current.Applied.Count();
 
   if not Current.FiltersOpen then
     return Toolbar.Popup<M.Msg>('track', E.Column<M.Msg>(), Count, false, M.Msg.ShowFilters, Width);

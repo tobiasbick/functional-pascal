@@ -54,8 +54,9 @@ end function;
 // - `Current`: Model-owned selection, sort, cursor and anchor.
 // - `Change`: Maps native changes to application messages.
 // - `Settings`: Viewport and input settings.
+// - `DoubleClick`: Optional action for a double-clicked row.
 // - `Visit`: Host traversal for composed cell content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Defs: array of D.Column; Count: int; Build: function(int): D.Row<TMsg>; Current: D.Value; Change: function(D.Value): TMsg; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Defs: array of D.Column; Count: int; Build: function(int): D.Row<TMsg>; Current: D.Value; Change: function(D.Value): TMsg; Settings: D.Options; DoubleClick: Sys.Func<int, TMsg>?; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
   procedure Children(Items: array of E.Element<TMsg>);
   begin
     if Items.Length = 0 then
@@ -175,7 +176,7 @@ begin
     end for;
   end for;
 
-  Frame.Window.EndDataGrid();
+  const Activated: int := Frame.Window.EndDataGrid();
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, '', 'data-grid', new Cui.CuiRectangle(), Enabled,
@@ -198,6 +199,14 @@ begin
 
   if Enabled and Changed then
     Frame.Messages.Add(Change(new D.Value(Selected, Sort(State), State[2], State[3])));
+  end if;
+
+  if Enabled and Activated >= 0 then
+    case DoubleClick of
+      when is Sys.Func<int, TMsg> as Notify:
+        Frame.Messages.Add(Notify.Invoke(Activated));
+      else
+    end case;
   end if;
 end procedure;
 

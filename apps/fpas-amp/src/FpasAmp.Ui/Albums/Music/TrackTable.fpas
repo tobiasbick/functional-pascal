@@ -4,6 +4,7 @@ unit FpasAmp.Ui.Albums.Music.TrackTable;
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.RatingStyle as RatingStyle, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Artwork as Artwork, Fpas.Media.Images as Imaging, System.Collections.Immutable as I,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
@@ -16,11 +17,35 @@ const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const SortKeys: array of int := [0, 3, 4];
 const LibraryKeys: array of int := [0, 1, 2, 5, 3, 4];
 
-function Play(Id: string; Name: string; Index: int): E.Element<M.Msg>;
+function Play(Item: Tracks.Entry; Name: string; Playback: Player.State): E.Element<M.Msg>;
 begin
+  const Track: Tracks.Entry? := Player.Track(Playback);
+  const Active: bool := Track <> null and Track.FileId = Item.FileId;
+  const Playing: bool := Active and Playback.Playing;
   return Icons.IconButton<M.Msg>(
-    'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
-    M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
+    'track-play-' + Item.FileId.ToString(),
+    Sys.Char.ConvertFromUtf32(
+      if Playing then
+        $E12E
+      else
+        $E13C
+      end if
+    ),
+    (if Playing then
+      'Pause '
+    elsif Active then
+      'Resume '
+    else
+      'Play '
+    end if) + Name,
+    M.Msg.Play(Item.FileId), new Icons.Options(
+      Variant := if Active then
+        S.ButtonVariant.Primary
+      else
+        S.ButtonVariant.Ghost
+      end if,
+      ControlSize := Icons.Size.Small
+    )
   );
 end function;
 
@@ -45,7 +70,7 @@ begin
         Item.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
         Maximum := 10,
-        Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
+        Enabled := Item.TrackId <> '' and not Current.Saving.ContainsKey(Item.TrackId),
         StarSize := RatingStyle.StarSize
       )
     ]
@@ -70,7 +95,7 @@ begin
   );
 end function;
 
-function Song(Current: M.State; Index: int): Grid.Row<M.Msg>;
+function Song(Current: M.State; Index: int; Playback: Player.State): Grid.Row<M.Msg>;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString();
@@ -81,7 +106,7 @@ begin
         [
           E.Row<M.Msg>(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-            Play(Id, Name, Index),
+            Play(Item, Name, Playback),
             E.Size<M.Msg>(
               E.Column<M.Msg>(
                 new L.Flow(
@@ -103,7 +128,7 @@ begin
   );
 end function;
 
-function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>): Grid.Row<M.Msg>;
+function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State): Grid.Row<M.Msg>;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString();
@@ -116,7 +141,7 @@ begin
         [
           E.Row<M.Msg>(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-            Play(Id, Name, Index), Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
+            Play(Item, Name, Playback), Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
             E.Size<M.Msg>(
               E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
               Fill
@@ -133,14 +158,19 @@ end function;
 
 // Builds the virtual track table for `Current` using the available `Width` in logical points.
 // Covers selects the whole-library layout and supplies realized album thumbnails.
+// Playback identifies the current file and its transport state in either layout.
 // Returns the virtual table or the appropriate empty state.
-public function Build(Current: M.State; Width: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null): E.Element<M.Msg>;
 requires Width > 0;
+  function Activate(Index: int): M.Msg;
+  begin
+    return M.Msg.Play(Current.Shown[Index].FileId);
+  end function;
   function Change(Value: Grid.Value): M.Msg;
   begin
     const Order: Tables.Sort? := Value.Order;
     if Order = null or Order = Display then
-      return M.Msg.Sort(Current.Order);
+      return M.Msg.Navigate(Current.Shown, Value.Cursor, Value.Anchor);
     end if;
     const Key: int := if Order.Column >= 0 and Order.Column < Keys.Length then
       Keys[Order.Column]
@@ -181,6 +211,11 @@ begin
     Sys.Array.IndexOf<int>(Keys, Current.Order.Column),
     Current.Order.Descending
   );
+  const Value: Grid.Value := new Grid.Value(
+    Order := Display,
+    Cursor := Current.Cursor,
+    Anchor := Current.Anchor
+  );
   if Covers <> null then
     return Grid.DataGrid<M.Msg>(
       'music-tracks',
@@ -194,13 +229,13 @@ begin
         new Grid.Column('', 44.0F, Fixed := true)
       ],
       Current.Shown.Length,
-      function(Index: int): Grid.Row<M.Msg> => LibrarySong(Current, Index, Covers),
-      new Grid.Value(Order := Display),
+      function(Index: int): Grid.Row<M.Msg> => LibrarySong(Current, Index, Covers, Playback),
+      Value,
       Change,
       new Grid.Options(
         RowHeight := 37.0F,
         HideCheckboxes := true
-      )
+      ), Activate
     );
   end if;
 
@@ -220,9 +255,9 @@ begin
       new Grid.Column('', 42.0F, Fixed := true)
     ],
     Current.Shown.Length,
-    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index),
-    new Grid.Value(Order := Display), Change,
-    new Grid.Options(RowHeight := 54.0F, HideCheckboxes := true)
+    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index, Playback),
+    Value, Change,
+    new Grid.Options(RowHeight := 54.0F, HideCheckboxes := true), Activate
   );
 end function;
 

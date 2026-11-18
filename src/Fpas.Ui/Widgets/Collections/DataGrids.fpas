@@ -1,6 +1,6 @@
 unit Fpas.Ui.Widgets.Collections.DataGrids;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, System as Sys;
 
 // A column in a native data grid.
 public type Column = record
@@ -77,9 +77,10 @@ end record;
 // - `Current`: Model-owned selection, sort, cursor and anchor.
 // - `OnChange`: Maps a native state proposal to a message.
 // - `Settings`: Optional viewport and input configuration.
+// - `OnDoubleClick`: Optional action for a double-click on a row, with its display index.
 // ## Returns
 // The graphical grid.
-public function DataGrid<TMsg>(Id: string; Columns: array of Column; Count: int; BuildRow: function(int): Row<TMsg>; Current: Value; OnChange: function(Value): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function DataGrid<TMsg>(Id: string; Columns: array of Column; Count: int; BuildRow: function(int): Row<TMsg>; Current: Value; OnChange: function(Value): TMsg; Settings: Options? := null; OnDoubleClick: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
   return E.Element<TMsg>.DataGrid(
@@ -89,7 +90,7 @@ begin
     BuildRow,
     Current,
     OnChange,
-    Settings ?? new Options()
+    Settings ?? new Options(), OnDoubleClick
   );
 end function;
 

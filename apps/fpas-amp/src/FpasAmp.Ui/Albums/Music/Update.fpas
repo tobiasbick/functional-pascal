@@ -2,10 +2,10 @@
 unit FpasAmp.Ui.Albums.Music.Update;
 
 uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   Fpas.Media.Images as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
-  Fpas.Ui.Gui.Desktop as Desktop, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+  Fpas.Ui.Gui.Desktop as Desktop, System.Diagnostics as D, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command<M.Msg> := [];
 
@@ -27,10 +27,11 @@ begin
       A.StartBackground<M.Msg>(
         'load',
         async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          const Started: long := D.Stopwatch.GetTimestamp();
           const Items: I.ImmutableArray<Tracks.Entry> := await Library.Albums.TracksAsync(
             Current.Album.Id, Cancellation
           ).ConfigureAwait(false);
-          await Post(M.Msg.Loaded(Current.Visit, Items)).ConfigureAwait(false);
+          await Post(M.Msg.Loaded(Current.Visit, Started, Items)).ConfigureAwait(false);
           if LoadCover then
             const Image: Imaging.Bitmap? := await Artwork.Load(
               Library.Albums,
@@ -48,7 +49,7 @@ end function;
 
 function Rating(Current: M.State; Library: Metadata.Session?; Id: string; Value: int): A.Transition<M.State, M.Msg>;
 begin
-  if Library = null or Id = '' or Current.Saving.Contains(Id) or Value < 0 or Value > 10 then
+  if Library = null or Id = '' or Current.Saving.ContainsKey(Id) or Value < 0 or Value > 10 then
     return new A.Transition<M.State, M.Msg>(Current, Empty);
   end if;
   const Selected: int? := if Value = 0 then
@@ -57,15 +58,19 @@ begin
     Value
   end if;
   return new A.Transition<M.State, M.Msg>(
-    Current with
-      Saving := Current.Saving.Add(Id);
-      Error := null;
-    end with, [
+    Browse.Select(
+      Current with
+        Saving := Current.Saving.Add(Id, Selected);
+        Error := null;
+      end with
+    ), [
       A.StartBackground<M.Msg>(
         'rate/' + Id,
         async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
           await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
-          await Post(M.Msg.Rated(Current.Visit, Id, Selected)).ConfigureAwait(false);
+          await Post(
+            M.Msg.Rated(Current.Visit, Id, Selected, D.Stopwatch.GetTimestamp())
+          ).ConfigureAwait(false);
         end function,
         function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(
           Current.Visit,
@@ -110,16 +115,19 @@ begin
   case Message of
     when M.Msg.Back, M.Msg.Play(_):
       return new A.Transition<M.State, M.Msg>(Current, Empty);
-    when M.Msg.Loaded(const Visit: long, const Items: I.ImmutableArray<Tracks.Entry>):
-      if Visit = Current.Visit then
+    when M.Msg.Loaded(
+      const Visit: long,
+      const Started: long,
+      const Items: I.ImmutableArray<Tracks.Entry>
+    ):
+      if Visit = Current.Visit and Started >= Current.ReadStarted then
         const Scoped: I.ImmutableArray<Tracks.Entry> := if Current.RequiredGenre = '' then
           Items
         else
           Browse.Songs(Items, new M.Selection(Genres := [Current.RequiredGenre]))
         end if;
         Next := Browse.Select(
-          Current with
-            Tracks := Scoped;
+          Ratings.Receive(Current, Scoped, Started) with
             GenreChoices := if Current.RequiredGenre = '' then
               Browse.GenreChoices(Scoped)
             else
@@ -188,6 +196,15 @@ begin
       Next := Current with
         Draft := new M.Filters();
       end with;
+    when M.Msg.Navigate(
+      const Rows: I.ImmutableArray<Tracks.Entry>,
+      const Cursor: int,
+      const Anchor: int
+    ):
+      Next := Current with
+        Cursor := Browse.RowIndex(Rows, Cursor, Current.Shown);
+        Anchor := Browse.RowIndex(Rows, Anchor, Current.Shown);
+      end with;
     when M.Msg.Sort(const Order: Tables.Sort):
       if Order = Current.Order then
         return new A.Transition<M.State, M.Msg>(Current, Empty);
@@ -200,30 +217,21 @@ begin
       );
     when M.Msg.Rate(const Id: string, const Value: int):
       return Rating(Current, Library, Id, Value);
-    when M.Msg.Rated(const Visit: long, const Id: string, const Value: int?):
-      if Visit = Current.Visit then
-        const Items: I.ImmutableArray<Tracks.Entry>.Builder := Current.Tracks.ToBuilder();
-        for Index: int := 0 to Items.Count - 1 do
-          if Items[Index].TrackId = Id then
-            Items[Index] := Items[Index] with
-              Rating := Value;
-            end with;
-          end if;
-        end for;
-
-        Next := Browse.Select(
-          Current with
-            Tracks := Items.ToImmutable();
-            Saving := Current.Saving.Remove(Id);
-          end with
-        );
+    when M.Msg.Rated(const Visit: long, const Id: string, const Value: int?, const Written: long):
+      if Visit = Current.Visit and Current.Saving.ContainsKey(Id) then
+        Next := Ratings.Confirm(Current, Id, new M.RatingReceipt(Value, Written));
+        if Current.ReadStarted > Written then
+          Next := Browse.Select(Next);
+        end if;
       end if;
     when M.Msg.RatingFailed(const Visit: long, const Id: string, const Text: string):
-      if Visit = Current.Visit then
-        Next := Current with
-          Saving := Current.Saving.Remove(Id);
-          Error := Text;
-        end with;
+      if Visit = Current.Visit and Current.Saving.ContainsKey(Id) then
+        Next := Browse.Select(
+          Current with
+            Saving := Current.Saving.Remove(Id);
+            Error := Text;
+          end with
+        );
       end if;
     when M.Msg.Details(const Item: Tracks.Entry):
       Next := Current with

@@ -21,7 +21,11 @@ end function;
 
 function Loaded(): M.State;
 begin
-  return Update.Apply(new M.State(), M.Msg.Received(Catalogue()), null).Model;
+  return Update.Apply(
+    new M.State(),
+    M.Msg.Received(new Library.Snapshot(Catalogue(), 65L)),
+    null
+  ).Model;
 end function;
 
 function Send(Current: M.State; Message: Toolbar.Msg): M.State;

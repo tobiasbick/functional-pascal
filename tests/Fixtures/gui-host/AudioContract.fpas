@@ -5,7 +5,8 @@ uses
   GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
   GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
-  System.Threading as Threads, System.Globalization as Culture;
+  GuiGallery.Pages.Audio.Clock as Clock, Fpas.Tests.Support.Mvu.EffectReplies as Replies,
+  System.Threading.Channels as Channels, System.Globalization as Culture;
 
 // Exercises the original synth and mixer in the published gallery.
 // ## Parameters
@@ -20,7 +21,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
     end if;
 
-    return Next;
+    return Effects.Wrap<State.Model>(Next);
   end function;
 
   procedure Inject();
@@ -110,6 +111,8 @@ begin
   var PendingKey: int := 0;
   var Target: string := '';
   var Phase: int := 1;
+  const Effects: Replies.Effects<State.Msg> := Replies.Effects<State.Msg>.Create();
+  const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5.0);
   const Cutoff: string := 'audio-cutoff';
   const Pan: string := 'audio-pan';
   const Kick: string := 'audio-kick';
@@ -130,10 +133,10 @@ begin
     and A.Control(Session, 'audio-master').Bounds.Width >= 240.0F,
     'The synth must show the original knob values and master meter.'
   );
-  const Channels: array of string := ['kick', 'snare', 'bass', 'keys', 'vocals', 'fx'];
+  const StripNames: array of string := ['kick', 'snare', 'bass', 'keys', 'vocals', 'fx'];
   const Gains: array of string := ['-4', '-9', '0', '-15', '-6', '-2'];
-  for Index: int := 0 to Channels.Length - 1 do
-    const Strip: Gui.Control := A.Control(Session, 'audio-' + Channels[Index]);
+  for Index: int := 0 to StripNames.Length - 1 do
+    const Strip: Gui.Control := A.Control(Session, 'audio-' + StripNames[Index]);
     A.Check(Strip.Value = Gains[Index] and Strip.Bounds.Height = 180.0F, 'Unexpected mixer strip.');
   end for;
 
@@ -217,21 +220,33 @@ begin
   );
 
   A.Send(Session, State.Msg.Show(State.Page.Overview));
+  const Signal: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(Clock.Id);
   A.Send(Session, State.Msg.Show(State.Page.Audio));
   const StartPhase: int := Phase;
-  const Deadline: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(2.0);
-  while Phase = StartPhase and Sys.DateTime.UtcNow < Deadline do
-    Threads.Thread.Sleep(16);
-    Step(Session);
-  end while;
-
-  A.Check(Phase <> StartPhase, 'Entering Audio must start the synthetic signal.');
-  A.Check(A.Control(Session, Kick).Value = '-48', 'Navigation must preserve the mixer value.');
-  A.Send(Session, State.Msg.Show(State.Page.Overview));
-  const StoppedPhase: int := Phase;
-  Threads.Thread.Sleep(40);
+  const Tick: Replies.Reply<State.Msg> := Signal.ReadAsync().AsTask().WaitAsync(
+    Timeout
+  ).GetAwaiter().GetResult();
   Step(Session);
-  A.Check(Phase = StoppedPhase, 'Leaving Audio must cancel its background signal.');
+  A.Check(
+    Phase = StartPhase and A.Control(Session, Kick).Enabled,
+    'While a signal reply is held, the mixer must stay usable at its previous signal phase.'
+  );
+  A.Check(A.Control(Session, Kick).Value = '-48', 'Navigation must preserve the mixer value.');
+
+  Tick.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+  Step(Session);
+  A.Check(
+    Phase = StartPhase + 1 and A.Control(Session, 'audio-master').Role = 'level-meter',
+    'Releasing one signal reply must advance the meter by one tick.'
+  );
+  const Pending: Replies.Reply<State.Msg> := Signal.ReadAsync().AsTask().WaitAsync(
+    Timeout
+  ).GetAwaiter().GetResult();
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  Signal.Completion.WaitAsync(Timeout).GetAwaiter().GetResult();
+  A.Check(Pending.Release().IsCanceled, 'Leaving Audio must cancel the held signal reply.');
+  Step(Session);
+  A.Check(Phase = StartPhase + 1, 'The cancelled reply must leave the signal phase unchanged.');
 end procedure;
 
 end unit;

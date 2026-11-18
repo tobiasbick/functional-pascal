@@ -1,0 +1,67 @@
+unit Fpas.Tests.Support.Mvu.EffectRepliesTests;
+
+uses
+  Fpas.Tests.Support.Mvu.EffectReplies as Replies, Fpas.Ui.Mvu.Application as A,
+  Fpas.Ui.Mvu.Session as Runtime, System as Sys, System.Threading as T,
+  System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises held replies across two real MVU runs that use the same effect ID.
+public type EffectRepliesTests = record
+  // Superseding a held post cancels it. The replacement's failure is released once.
+  [X.FactAttribute]
+  public procedure SupersededReplyAndMappedFailure();
+    function Update(Model: string; Message: string): A.Transition<string, string>;
+    begin
+      if Message <> 'start' and Message <> 'replace' then
+        return new A.Transition<string, string>(Message, []);
+      end if;
+
+      return Gate.Wrap<string>(
+        new A.Transition<string, string>(
+          Model, [
+            A.StartBackground<string>(
+              'load',
+              function(Post: function(string): Tasks.Task; Token: T.CancellationToken): Tasks.Task begin
+                if Message = 'replace' then
+                  raise new Sys.InvalidOperationException('Read failed');
+                end if;
+
+                return Post('First result');
+              end function, function(Error: Sys.Exception): string => Error.Message
+            )
+          ]
+        )
+      );
+    end function;
+  begin
+    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      'Waiting', Update, procedure(_Request: A.HostRequest) begin end procedure, 4
+    );
+    try
+      const First: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      Session.Dispatch('start');
+      const Held: Replies.Reply<string> := First.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      const Second: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      Session.Dispatch('replace');
+      const Failure: Replies.Reply<string> := Second.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      First.Completion.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.True(Held.Release().IsCanceled);
+      X.Assert.Equal<int>(0, Session.QueueCount());
+      Failure.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      Failure.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.Equal<int>(1, Session.QueueCount());
+      discard Session.Advance();
+      X.Assert.Equal<string>('Read failed', Session.Model());
+    finally
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

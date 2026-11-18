@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Music.LibraryPage;
 
 uses
   FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Artwork as Artwork,
+  FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Images as Imaging,
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition, Fpas.Ui.Widgets.Collections.Tables as Tables,
@@ -51,8 +51,8 @@ public type Msg = variant
   Open;
   // Release the catalogue observer and viewport images.
   Close;
-  // Publish the prepared catalogue for Visit.
-  Received(Visit: long; Value: Catalogue);
+  // Publish the catalogue read for Visit, with its monotonic start timestamp.
+  Received(Visit: long; Started: long; Value: Catalogue);
   // Realize the half-open row range reported by CUI.
   Visible(First: int; Last: int);
   // Publish one album thumbnail for the current viewport generation.
@@ -191,8 +191,8 @@ begin
             'observe',
             async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
               await Library.Albums.ObserveSongsAsync(
-                function(Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task => Post(
-                  Msg.Received(Visit, Prepare(Entries, Releases, Cancellation))
+                function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task => Post(
+                  Msg.Received(Visit, Started, Prepare(Entries, Releases, Cancellation))
                 ),
                 Cancellation
               ).ConfigureAwait(false);
@@ -201,8 +201,8 @@ begin
           )
         ]
       );
-    when Msg.Received(const Visit: long, const Value: Catalogue):
-      if Visit = Current.Page.Visit then
+    when Msg.Received(const Visit: long, const Started: long, const Value: Catalogue):
+      if Visit = Current.Page.Visit and Started >= Current.Page.ReadStarted then
         var Kept: I.ImmutableDictionary<string, Imaging.Bitmap?> := Current.Covers;
         for Id: string in Current.Covers.Keys do
           if Current.Covers[Id] = null or not Value.Releases.ContainsKey(
@@ -222,9 +222,8 @@ begin
           Last := -1;
           Generation := Current.Generation + 1L;
           Page := Browse.Select(
-            Current.Page with
+            Ratings.Receive(Current.Page, Value.Tracks, Started) with
               Loaded := true;
-              Tracks := Value.Tracks;
               Performers := Value.Performers;
               ReleaseTitles := Value.Titles;
               ReleaseIds := Value.ReleaseIds;

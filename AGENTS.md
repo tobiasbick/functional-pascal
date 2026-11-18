@@ -29,6 +29,9 @@ for the task.
 - Before changing public CLR names, namespaces, signatures, or representations,
   follow the owning interop and CLR mapping specifications. Update them in the
   same change when revising a mapping. Consume actual .NET APIs.
+- When UI behavior depends on the timing or order of MVU effect replies, tests
+  must use [EffectReplies](tests/TestSupport/Mvu/EffectReplies.fpas) to release
+  replies individually and verify what the user sees or can do before and after each release.
 
 ## Approach
 

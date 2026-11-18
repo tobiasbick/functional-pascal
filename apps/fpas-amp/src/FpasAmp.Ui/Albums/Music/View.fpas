@@ -3,15 +3,16 @@ unit FpasAmp.Ui.Albums.Music.View;
 
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
-  FpasAmp.Ui.Albums.Status as Counts, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
+  FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   Fpas.Media.Images as Imaging, System.Collections.Immutable as I, System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
@@ -111,26 +112,6 @@ begin
   );
 end function;
 
-function StatusLine(Current: M.State): E.Element<M.Msg>;
-begin
-  const Count: string := Counts.Caption(Current.Shown.Length, Current.Tracks.Length, 'track');
-  return Status.StatusBar<M.Msg>(
-    'track-status', [
-      Status.Item<M.Msg>.Text(
-        new Status.Label(
-          if Current.Loaded then
-            Count
-          else
-            'Loading tracks…'
-          end if
-        )
-      ),
-      Status.Item<M.Msg>.Spacer,
-      Status.Item<M.Msg>.Text(new Status.Label(Browse.Time(Current.TotalMilliseconds)))
-    ]
-  );
-end function;
-
 function Details(Current: M.State; Base: E.Element<M.Msg>): E.Element<M.Msg>;
 begin
   const Item: Tracks.Entry? := Current.Details;
@@ -161,8 +142,9 @@ end function;
 
 // Builds the whole-library Music page for Current and its viewport-owned Covers.
 // Width and Padding are the available content width and inset in logical points.
+// Playback supplies the current song and transport state.
 // Returns the toolbar, virtual table, status bar and track-details overlay.
-public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>): E.Element<M.Msg>;
+public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State): E.Element<M.Msg>;
 begin
   const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
@@ -187,7 +169,7 @@ begin
     );
   end if;
 
-  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, Inner, Covers), Fill));
+  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, Inner, Playback, Covers), Fill));
   return Details(
     Current, E.Column<M.Msg>(
       new L.Flow(Align := L.Alignment.Stretch),
@@ -198,7 +180,7 @@ begin
         ),
         Fill
       ),
-      StatusLine(Current)
+      Status.Tracks(Current, Current.Tracks.Length)
     )
   );
 end function;
@@ -206,11 +188,13 @@ end function;
 // Builds the selected album page with a return to its retained grid.
 // ## Parameters
 // - `Current`: Release metadata, tracks and browse state.
+// - `LibraryTrackCount`: Total indexed tracks across all releases and sources.
 // - `GroupName`: Parent heading when reached through Artists or Genres.
 // - `Width`: Full width of the Albums content area in logical points.
+// - `Playback`: Player state for the current track's button.
 // ## Returns
 // The album sleeve beside the searchable track list and its status bar.
-public function Build(Current: M.State; Width: int; GroupName: string := ''): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Narrow: bool := Width < 700;
@@ -289,7 +273,7 @@ begin
     );
   end if;
 
-  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, TrackWidth), Fill));
+  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, TrackWidth, Playback), Fill));
   const Songs: E.Element<M.Msg> := E.Column<M.Msg>(
     new L.Flow(
       PaddingStart := Points(Gutter),
@@ -305,7 +289,14 @@ begin
   const Columns: E.Element<M.Msg> := E.Row<M.Msg>(
     Stretch,
     E.Size<M.Msg>(Sleeve, Fixed(Inset + Edge + Gutter)), Rule,
-    E.Size<M.Msg>(E.Column<M.Msg>(Stretch, E.Size<M.Msg>(Songs, Fill), StatusLine(Current)), Fill)
+    E.Size<M.Msg>(
+      E.Column<M.Msg>(
+        Stretch,
+        E.Size<M.Msg>(Songs, Fill),
+        Status.Tracks(Current, LibraryTrackCount)
+      ),
+      Fill
+    )
   );
   return Details(Current, E.Column<M.Msg>(Stretch, Heading, Rule, E.Size<M.Msg>(Columns, Fill)));
 end function;

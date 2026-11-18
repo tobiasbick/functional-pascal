@@ -27,5 +27,5 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_data_grid_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void DataGridEnd(nint context, nint handle, byte* selected, int* state);
+    internal static unsafe partial int DataGridEnd(nint context, nint handle, byte* selected, int* state);
 }

@@ -132,7 +132,14 @@ public type NativeNavigationTests = record
         Person := Session.State().Albums.Items[1].Credits[0].Id;
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.OpenMusic(Playing)));
         Until(Session, function(_State: Nav.State): bool => ShowsTracks(Session, Playing));
-        discard Session.Window.Post(App.Msg.Albums(Albums.Msg.Music(Music.Msg.Play(0))));
+        const Page: Music.State? := Session.State().Albums.Music;
+        if Page = null then
+          raise new Sys.InvalidOperationException('Expected the opened album.');
+        end if;
+
+        discard Session.Window.Post(
+          App.Msg.Albums(Albums.Msg.Music(Music.Msg.Play(Page.Shown[0].FileId)))
+        );
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));
         if FromArtist then
           SetRoute(Session, Nav.Route.Artist(Person));

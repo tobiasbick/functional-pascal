@@ -333,7 +333,7 @@ public type Element<TMsg> = variant
   // Native search and multi-value filters.
   FilterBar(Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg; Capacity: int; Enabled: bool);
   // Virtualized native grid with lazily built cells.
-  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row<TMsg>; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options);
+  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row<TMsg>; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options; OnDoubleClick: Sys.Func<int, TMsg>?);
   // Indented tree content for an existing table cell.
   TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
   // Virtualized native tree table with model-owned nodes.

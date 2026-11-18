@@ -125,9 +125,7 @@ begin
             'observe',
             async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
               await Service.ObserveAsync(
-                function(Items: I.ImmutableArray<Albums.Album>): Tasks.Task => Post(
-                  M.Msg.Received(Items)
-                ),
+                function(Value: Albums.Snapshot): Tasks.Task => Post(M.Msg.Received(Value)),
                 Cancellation
               ).ConfigureAwait(false);
             end function, Failure
@@ -150,11 +148,22 @@ begin
           A.CancelBackground<M.Msg>('music/load')
         ]
       );
-    when M.Msg.Received(const Items: I.ImmutableArray<Albums.Album>):
-      const Collections: Groups.Catalog := Groups.Build(Items, Current.Scope);
+    when M.Msg.Received(const Snapshot: Albums.Snapshot):
+      if Current.Loaded and Current.Error = null and Current.Library.Releases.Equals(
+        Snapshot.Releases
+      )
+      then
+        // Newly indexed audio can change only the footer while its tags are pending.
+        return new A.Transition<M.State, M.Msg>(
+          Current with
+            Library := Snapshot;
+          end with, []
+        );
+      end if;
+      const Collections: Groups.Catalog := Groups.Build(Snapshot.Releases, Current.Scope);
       const Projection: A.Transition<M.State, M.Msg> := Grid.Project(
         Current with
-          Releases := Items;
+          Library := Snapshot;
           Collections := Collections;
           Loaded := true;
           Error := null;
@@ -280,7 +289,7 @@ begin
         ]
       );
     when M.Msg.Rated(const Id: string, const Value: int?):
-      const Releases: I.ImmutableArray<Albums.Album>.Builder := Current.Releases.ToBuilder();
+      const Releases: I.ImmutableArray<Albums.Album>.Builder := Current.Library.Releases.ToBuilder();
       const Genre: bool := Id.StartsWith('genre-');
       const Grouped: bool := Genre or Id.StartsWith('artist-');
       for Index: int := 0 to Releases.Count - 1 do
@@ -322,7 +331,11 @@ begin
       return Apply(
         Current with
           Saving := Current.Saving.Remove(Id);
-        end with, M.Msg.Received(Releases.ToImmutable()), Service, Library
+        end with, M.Msg.Received(
+          Current.Library with
+            Releases := Releases.ToImmutable();
+          end with
+        ), Service, Library
       );
     when M.Msg.RatingFailed(const Id: string, const Text: string):
       return new A.Transition<M.State, M.Msg>(

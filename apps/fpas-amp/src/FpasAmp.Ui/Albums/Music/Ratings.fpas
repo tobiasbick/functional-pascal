@@ -1,0 +1,74 @@
+// Reconciles committed user ratings with overlapping library reads.
+unit FpasAmp.Ui.Albums.Music.Ratings;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
+  System.Collections.Immutable as I;
+
+function ApplyReceipts(Items: I.ImmutableArray<Tracks.Entry>; Receipts: I.ImmutableDictionary<string, M.RatingReceipt>): I.ImmutableArray<Tracks.Entry>;
+begin
+  if Receipts.IsEmpty then
+    return Items;
+  end if;
+  var Changed: I.ImmutableArray<Tracks.Entry>.Builder? := null;
+  var Receipt: M.RatingReceipt := new M.RatingReceipt(null, 0L);
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: Tracks.Entry := Items[Index];
+    if Receipts.TryGetValue(Item.TrackId, out Receipt) and Item.Rating <> Receipt.Value then
+      if Changed = null then
+        Changed := Items.ToBuilder();
+      end if;
+
+      Changed[Index] := Item with
+        Rating := Receipt.Value;
+      end with;
+    end if;
+  end for;
+
+  return if Changed = null then
+    Items
+  else
+    Changed.ToImmutable()
+  end if;
+end function;
+
+// Returns Current with the new catalogue Items. Started is the monotonic timestamp
+// taken before SQLite read the rows. Only newer confirmed edits take precedence.
+public function Receive(Current: M.State; Items: I.ImmutableArray<Tracks.Entry>; Started: long): M.State;
+begin
+  var Kept: I.ImmutableDictionary<string, M.RatingReceipt> := Current.Receipts;
+  for Id: string in Current.Receipts.Keys do
+    if Started > Current.Receipts[Id].Written then
+      Kept := Kept.Remove(Id);
+    end if;
+  end for;
+
+  return Current with
+    Tracks := ApplyReceipts(Items, Kept);
+    ReadStarted := Started;
+    Receipts := Kept;
+  end with;
+end function;
+
+// Returns Current after confirming Receipt for Id and releasing its pending edit.
+// A read begun after the write already contains the authoritative rating.
+public function Confirm(Current: M.State; Id: string; Receipt: M.RatingReceipt): M.State;
+requires Id <> '';
+begin
+  const Next: M.State := Current with
+    Saving := Current.Saving.Remove(Id);
+  end with;
+  if Current.ReadStarted > Receipt.Written then
+    return Next;
+  end if;
+
+  return Next with
+    Tracks := ApplyReceipts(
+      Current.Tracks,
+      I.ImmutableDictionary<string, M.RatingReceipt>.Empty.Add(Id, Receipt)
+    );
+    Receipts := Current.Receipts.SetItem(Id, Receipt);
+  end with;
+end function;
+
+end unit;

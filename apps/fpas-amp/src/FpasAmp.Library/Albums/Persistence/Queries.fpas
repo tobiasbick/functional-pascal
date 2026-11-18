@@ -7,10 +7,14 @@ uses
   System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
   System.Threading as T;
 
-function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
 begin
   Connection.CreateFunction<string, string>('amp_tag_key', M.TagKey, isDeterministic := true);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
+  using const Tracks: Db.SqliteCommand := Sql.Command(
+    Connection, 'SELECT COUNT(*) FROM files WHERE kind=0;', Transaction, [], []
+  );
+  const TrackCount: long := Sys.Convert.ToInt64(Tracks.ExecuteScalar());
   const Ratings: C.Dictionary<string, int> := new C.Dictionary<string, int>();
   using const RatingsQuery: Db.SqliteCommand := Sql.Command(
     Connection,
@@ -129,7 +133,7 @@ begin
     );
   end while;
 
-  return I.ImmutableArray.CreateRange<M.Album>(Albums);
+  return new M.Snapshot(I.ImmutableArray.CreateRange<M.Album>(Albums), TrackCount);
 end function;
 
 // Reads headers on a caller-owned catalogue connection with the ratings store attached as users.
@@ -137,21 +141,21 @@ end function;
 // - `Connection`: Open SQLite connection dedicated to this read.
 // - `Cancellation`: Interrupts SQLite even before it can produce the first sorted row.
 // ## Returns
-// One detached header per release, including its artwork revision.
-public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+// Release headers and the total number of indexed tracks in the same read transaction.
+public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
 requires Connection <> null;
 begin
-  return Sql.Interruptible<I.ImmutableArray<M.Album>>(
+  return Sql.Interruptible<M.Snapshot>(
     Connection, Cancellation,
-    function(): I.ImmutableArray<M.Album> => Headers(Connection, Cancellation)
+    function(): M.Snapshot => Headers(Connection, Cancellation)
   );
 end function;
 
-// Reads the sorted album headers from `Database` with ratings from `Users`.
+// Reads the indexed track count and sorted album headers from `Database` with ratings from `Users`.
 // `Cancellation` also interrupts SQLite while it prepares the first sorted row.
 // ## Returns
-// One detached header per release, including its artwork revision.
-public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+// Release headers and the total number of indexed tracks in the same read transaction.
+public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): M.Snapshot;
 requires Database.Length > 0;
 requires Users.Length > 0;
 begin

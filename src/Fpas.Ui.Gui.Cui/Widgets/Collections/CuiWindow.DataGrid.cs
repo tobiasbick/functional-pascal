@@ -100,13 +100,16 @@ public sealed partial class CuiWindow
     }
 
     /// <summary>Closes a native grid and collects the proposed state.</summary>
-    public unsafe void EndDataGrid()
+    /// <returns>The double-clicked row in display order, or -1.</returns>
+    public unsafe int EndDataGrid()
     {
         var output = (GridOutput)RequireLayout(Layout.DataGrid).Data!;
+        int doubleClicked;
         fixed (byte* selected = output.Frame.Selected)
         fixed (int* state = output.Frame.State)
-            NativeMethods.DataGridEnd(context, output.Handle, selected, state);
+            doubleClicked = NativeMethods.DataGridEnd(context, output.Handle, selected, state);
         layouts.RemoveAt(layouts.Count - 1);
+        return doubleClicked;
     }
 
     private static (string[] Titles, float[] Widths, int[] Flags) GridColumns(CuiGridColumn[] columns)

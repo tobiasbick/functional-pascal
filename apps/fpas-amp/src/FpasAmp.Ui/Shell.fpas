@@ -58,12 +58,18 @@ begin
     )
   elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
     Composition.Map<TrackModel.Msg, M.Msg>(
-      TrackView.LibraryPage(Current.Songs.Page, Content, Padding, Current.Songs.Covers),
+      TrackView.LibraryPage(
+        Current.Songs.Page,
+        Content,
+        Padding,
+        Current.Songs.Covers,
+        Current.Player
+      ),
       function(Value: TrackModel.Msg): M.Msg => M.Msg.Songs(Songs.Msg.Song(Value))
     )
   elsif Nav.Browsing(Current.Navigation.Active) then
     Composition.Map<AlbumModel.Msg, M.Msg>(
-      AlbumView.Build(Current.Albums, Content, Padding), M.Msg.Albums
+      AlbumView.Build(Current.Albums, Content, Padding, Current.Player), M.Msg.Albums
     )
   else
     NavView.Placeholder(Current, Padding)

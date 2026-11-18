@@ -306,6 +306,20 @@ end function;
 // ## Returns
 // The next app state and the slices' mapped commands.
 public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition<M.State, M.Msg>;
+  function Activate(Page: Music.State; FileId: long): Mvu.Transition<M.State, M.Msg>;
+  begin
+    const Index: int := Browse.FindFile(Page.Shown, FileId);
+    if Index < 0 then
+      return new Mvu.Transition<M.State, M.Msg>(Current, []);
+    end if;
+    const Track: Tracks.Entry? := PlayerModel.Track(Current.Player);
+    const Action: PlayerModel.Msg := if Track <> null and Track.FileId = FileId then
+      PlayerModel.Msg.Toggle
+    else
+      PlayerModel.Msg.Play(Page.Shown, Index, Browse.Selection(Page))
+    end if;
+    return Transport(Current, Action, Port, Library);
+  end function;
 begin
   var Next: M.State := Current;
   var Commands: array of Mvu.Command<M.Msg> := [];
@@ -376,31 +390,16 @@ begin
     when M.Msg.Songs(const Action: LibrarySongs.Msg):
       if Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
         case Action of
-          when LibrarySongs.Msg.Song(Music.Msg.Play(const Index: int)):
-            const Page: Music.State := Current.Songs.Page;
-            if Index >= 0 and Index < Page.Shown.Length then
-              return Transport(
-                Current,
-                PlayerModel.Msg.Play(Page.Shown, Index, Browse.Selection(Page)),
-                Port,
-                Library
-              );
-            end if;
+          when LibrarySongs.Msg.Song(Music.Msg.Play(const FileId: long)):
+            return Activate(Current.Songs.Page, FileId);
           else
             return Songs(Current, Action, Library, []);
         end case;
       end if;
-    when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.Play(const Index: int))):
+    when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.Play(const FileId: long))):
       const Page: Music.State? := Current.Albums.Music;
-      if Page <> null then
-        if Index >= 0 and Index < Page.Shown.Length then
-          return Transport(
-            Current,
-            PlayerModel.Msg.Play(Page.Shown, Index, Browse.Selection(Page)),
-            Port,
-            Library
-          );
-        end if;
+      if Page <> null and Nav.Browsing(Current.Navigation.Active) then
+        return Activate(Page, FileId);
       end if;
     when M.Msg.Player(const PlayerMessage: PlayerModel.Msg):
       return Transport(Current, PlayerMessage, Port, Library);

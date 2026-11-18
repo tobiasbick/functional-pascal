@@ -1224,7 +1224,8 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
         const Build: function(int): DataGrids.Row<TMsg>, const Value: DataGrids.Value,
-        const Change: function(DataGrids.Value): TMsg, const Settings: DataGrids.Options
+        const Change: function(DataGrids.Value): TMsg, const Settings: DataGrids.Options,
+        const DoubleClick: Sys.Func<int, TMsg>?
       ):
         GridDataWidget.Draw<TMsg>(
           Current,
@@ -1235,6 +1236,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Value,
           Change,
           Settings,
+          DoubleClick,
           Visit
         );
       when E.Element.TreeCell(

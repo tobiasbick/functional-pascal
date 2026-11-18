@@ -6,6 +6,7 @@ uses
   FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
+  FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
   Fpas.Ui.Composition as Composition, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Media.Images as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
@@ -99,9 +100,10 @@ end function;
 // - `Current`: Album browser state.
 // - `Width`: Available width of the main area.
 // - `Padding`: Shell viewport inset.
+// - `Playback`: Player state for the selected album's track buttons.
 // ## Returns
 // The current Albums view.
-public function Build(Current: M.State; Width: int; Padding: int): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State): E.Element<M.Msg>;
   function Row(Index: int): E.Element<M.Msg>;
   begin
     const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
@@ -122,7 +124,13 @@ begin
   const Selected: Music.State? := Current.Music;
   if Selected <> null then
     return Composition.Map<Music.Msg, M.Msg>(
-      Songs.Build(Selected, Sys.Math.Max(1, Width), Current.GroupName),
+      Songs.Build(
+        Selected,
+        Sys.Math.Max(1, Width),
+        Current.GroupName,
+        Playback,
+        Current.Library.TrackCount
+      ),
       function(Value: Music.Msg): M.Msg => case Value of
         when Music.Msg.Back: M.Msg.BackToAlbums;
         else M.Msg.Music(Value);

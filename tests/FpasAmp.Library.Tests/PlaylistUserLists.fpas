@@ -93,7 +93,8 @@ public type UserListTests = record
       T.CancellationToken.None
     );
     X.Assert.False((await P.Read(Lists, Key)).Entries[0].Indexed);
-    discard F.Write(Root.Path, 'later.mp3');
+    // Publish the finished fixture to the watched source after its tags have been saved.
+    IO.File.Move(F.Write(Data.Path, 'later.mp3'), Path);
     const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
       F.Tags(Session),
       function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[

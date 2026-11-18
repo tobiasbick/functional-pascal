@@ -42,7 +42,9 @@ static void draw(fixture *test) {
             check(!strcmp(value, "Alpha"), "An uncommitted draft must leave model text unchanged.");
         }
     }
-    fpas_cui_data_grid_end(test->ui, grid, NULL, test->state);
+    const int activated = fpas_cui_data_grid_end(test->ui, grid, NULL, test->state);
+    if (!test->readonly)
+        check(activated == -1, "A double-click in an editable cell must only open its editor.");
     cui_end_frame(test->ui);
     if (first_node >= 0) test->row = fpas_cui_node_rect(test->ui, first_node);
 }

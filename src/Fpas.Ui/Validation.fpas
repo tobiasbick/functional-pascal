@@ -1909,7 +1909,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
-        _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options
+        _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options, _
       ):
         const At: string := Identify(Id, Location + '/dataGrid');
         Rules.RequireProfile(Profile, Target.Graphical, At);

@@ -1,7 +1,7 @@
 // Detached album headers; image bytes are requested independently for visible tiles.
 unit FpasAmp.Library.Albums.Model;
 
-uses System as Sys, System.Security.Cryptography as Crypto, System.Text as Text;
+uses System as Sys, System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text;
 
 // A named catalogue group that contains tracks from a release.
 public type Membership = record
@@ -58,6 +58,14 @@ public type Album = record
   public Credits: array of Membership := [];
   // Per-genre song counts and independent genre ratings.
   public GenreMemberships: array of Membership := [];
+end record;
+
+// Release headers and the library-wide audio count from the same catalogue revision.
+public type Snapshot = record
+  // One header per release in catalogue order.
+  public Releases: I.ImmutableArray<Album> := I.ImmutableArray<Album>.Empty;
+  // All indexed audio files, including those awaiting tags or album assignment.
+  public TrackCount: long := 0L;
 end record;
 
 end unit;

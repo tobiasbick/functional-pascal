@@ -144,9 +144,10 @@ begin
 end function;
 
 // Filters and orders source `TracksInOrder` according to `Source` for display or playback.
+// Pending supplies the local edits to use for filtering, sorting and displayed values.
 // ## Returns
 // The same track order for a freshly opened page and a restored session.
-public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.Selection): I.ImmutableArray<Tracks.Entry>;
+public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.Selection; Pending: I.ImmutableDictionary<string, int?>? := null): I.ImmutableArray<Tracks.Entry>;
   function Compare(Left: Tracks.Entry; Right: Tracks.Entry): int;
   begin
     const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
@@ -185,7 +186,15 @@ begin
     I.ImmutableHashSet.Create<string>(Albums.TagKey(Source.Performer))
   end if;
   const Items: C.List<Tracks.Entry> := new C.List<Tracks.Entry>();
-  for Entry: Tracks.Entry in TracksInOrder do
+  for Item: Tracks.Entry in TracksInOrder do
+    var Entry: Tracks.Entry := Item;
+    var Value: int? := null;
+    if Pending <> null and not Pending.IsEmpty and Pending.TryGetValue(Item.TrackId, out Value) then
+      Entry := Item with
+        Rating := Value;
+      end with;
+    end if;
+
     if (Entry.Rating ?? 0) >= Source.MinimumRating
       and (GenresFilter.IsEmpty or Has(Genres(Entry), GenresFilter)) and Matches(
       Entry,
@@ -209,10 +218,42 @@ begin
   return I.ImmutableArray.CreateRange<Tracks.Entry>(Items);
 end function;
 
+// Returns the position of FileId in Shown, or -1 if that file is absent.
+public function FindFile(Shown: I.ImmutableArray<Tracks.Entry>; FileId: long): int;
+ensures (Position: int): Position >= -1;
+begin
+  for Position: int := 0 to Shown.Length - 1 do
+    if Shown[Position].FileId = FileId then
+      return Position;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Returns the new position of the file at Index in Previous, or -1 when absent from Shown.
+public function RowIndex(Previous: I.ImmutableArray<Tracks.Entry>; Index: int; Shown: I.ImmutableArray<Tracks.Entry>): int;
+ensures (Position: int): Position >= -1;
+begin
+  if Index < 0 or Index >= Previous.Length then
+    return -1;
+  end if;
+  const FileId: long := Previous[Index].FileId;
+  if Index < Shown.Length and Shown[Index].FileId = FileId then
+    return Index;
+  end if;
+
+  return FindFile(Shown, FileId);
+end function;
+
 // Returns `Current` with its visible tracks rebuilt from search, filters and sort.
 public function Select(Current: M.State): M.State;
 begin
-  const Shown: I.ImmutableArray<Tracks.Entry> := Songs(Current.Tracks, Selection(Current));
+  const Shown: I.ImmutableArray<Tracks.Entry> := Songs(
+    Current.Tracks,
+    Selection(Current),
+    Current.Saving
+  );
   var Total: double := 0.0;
   for Track: Tracks.Entry in Shown do
     Total := Total + Duration(Track);
@@ -220,6 +261,8 @@ begin
 
   return Current with
     Shown := Shown;
+    Cursor := RowIndex(Current.Shown, Current.Cursor, Shown);
+    Anchor := RowIndex(Current.Shown, Current.Anchor, Shown);
     TotalMilliseconds := Total;
   end with;
 end function;

@@ -1,0 +1,122 @@
+// Controls when posts from selected background runs reach the real MVU mailbox.
+unit Fpas.Tests.Support.Mvu.EffectReplies;
+
+uses
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as C,
+  System.Threading as T, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
+
+// One actual message from a background run, held just before mailbox admission.
+// TMsg is the application's message type.
+public type Reply<TMsg> = record
+  // The value produced by the worker.
+  public Message: TMsg;
+  // Releases this message once. Repeated calls return the same admission task.
+  public Release: function(): Tasks.Task;
+end record;
+
+function Hold<TMsg>(
+  Writer: Channels.ChannelWriter<Reply<TMsg>>; Message: TMsg;
+  Post: function(TMsg): Tasks.Task; Token: T.CancellationToken
+): Tasks.Task;
+  async function Forward(): Tasks.Task;
+  begin
+    await Permit.Task.WaitAsync(Token).ConfigureAwait(false);
+    await Post(Message).ConfigureAwait(false);
+  end function;
+begin
+  const Permit: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Admitted: Tasks.Task := Forward();
+  if not Writer.TryWrite(
+    new Reply<TMsg>(
+      Message, function(): Tasks.Task begin
+        discard Permit.TrySetResult();
+        return Admitted;
+      end function
+    )
+  )
+  then
+    discard Permit.TrySetException(new Channels.ChannelClosedException());
+  end if;
+
+  return Admitted;
+end function;
+
+function Observe<TMsg>(
+  Id: string; Work: function(function(TMsg): Tasks.Task, T.CancellationToken): Tasks.Task;
+  Failure: function(Sys.Exception): TMsg; Writer: Channels.ChannelWriter<Reply<TMsg>>
+): A.Command<TMsg>;
+  async function Run(Post: function(TMsg): Tasks.Task; Token: T.CancellationToken): Tasks.Task;
+    function Publish(Message: TMsg): Tasks.Task;
+    begin
+      return Hold<TMsg>(Writer, Message, Post, Token);
+    end function;
+  begin
+    try
+      try
+        await Work(Publish, Token).ConfigureAwait(false);
+      catch Error: Sys.Exception when not Token.IsCancellationRequested do
+        await Publish(Failure(Error)).ConfigureAwait(false);
+      end try;
+    finally
+      discard Writer.TryComplete();
+    end try;
+  end function;
+begin
+  return A.StartBackground<TMsg>(
+    Id, Run, function(Error: Sys.Exception): TMsg begin
+      raise Error;
+    end function
+  );
+end function;
+
+// Owner-thread test helper for real MVU transitions. TMsg is the host message type.
+public type Effects<TMsg> = record
+  Expected: C.Dictionary<string, Channels.Channel<Reply<TMsg>>> := new C.Dictionary<string, Channels.Channel<Reply<TMsg>>>();
+
+  // Returns an empty set of expectations for a single test owner.
+  public static function Create(): Effects<TMsg>;
+  begin
+    return new Effects<TMsg>();
+  end function;
+
+  // Watches the next start of Id, including its mapped failure. Read a reply with
+  // a test deadline and await its release before stepping the host. A later start
+  // with the same Id needs its own call to Watch.
+  public function Watch(Id: string): Channels.ChannelReader<Reply<TMsg>>;
+  requires Id <> '';
+  begin
+    const Channel: Channels.Channel<Reply<TMsg>> := Channels.Channel.CreateUnbounded<Reply<TMsg>>();
+    self.Expected.Add(Id, Channel);
+    return Channel.Reader;
+  end function;
+
+  // Returns Next with watched starts intercepted, preserving command order and model.
+  // TModel is the model type of the update being driven by the test.
+  public function Wrap<TModel>(Next: A.Transition<TModel, TMsg>): A.Transition<TModel, TMsg>;
+  begin
+    if self.Expected.Count = 0 then
+      return Next;
+    end if;
+    const Commands: array of A.Command<TMsg> := cast<array of A.Command<TMsg>>(Next.Commands.Clone());
+    for Index: int := 0 to Commands.Length - 1 do
+      case Commands[Index] of
+        when A.Command.Start(
+          const Id: string,
+          const Work: function(function(TMsg): Tasks.Task, T.CancellationToken): Tasks.Task,
+          const Failure: function(Sys.Exception): TMsg
+        ):
+          if self.Expected.ContainsKey(Id) then
+            Commands[Index] := Observe<TMsg>(Id, Work, Failure, self.Expected[Id].Writer);
+            discard self.Expected.Remove(Id);
+          end if;
+        else
+      end case;
+    end for;
+
+    return new A.Transition<TModel, TMsg>(Next.Model, Commands);
+  end function;
+end record;
+
+end unit;

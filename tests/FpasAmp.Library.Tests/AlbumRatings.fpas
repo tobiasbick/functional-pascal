@@ -16,7 +16,7 @@ begin
     IO.Path.Combine(Data, 'library.db'),
     IO.Path.Combine(Data, 'userdata.db'),
     T.CancellationToken.None
-  );
+  ).Releases;
 end function;
 
 // Database, observation and rebuild contracts for independent album ratings.
@@ -100,8 +100,8 @@ public type RatingTests = record
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
     const Updates: Channels.Channel<I.ImmutableArray<M.Album>> := Channels.Channel.CreateUnbounded<I.ImmutableArray<M.Album>>();
     const Running: Tasks.Task := Albums.ObserveAsync(
-      function(Items: I.ImmutableArray<M.Album>): Tasks.Task => Updates.Writer.WriteAsync(
-        Items,
+      function(Value: M.Snapshot): Tasks.Task => Updates.Writer.WriteAsync(
+        Value.Releases,
         Stop.Token
       ).AsTask(),
       Stop.Token

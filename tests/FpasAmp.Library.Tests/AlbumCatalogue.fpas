@@ -1,14 +1,53 @@
-// Cold album loads and cancellation on a catalogue with one cover per directory.
+// Catalogue reads and publications during scanning.
 unit FpasAmp.Library.Tests.AlbumCatalogue;
 
 uses
-  FpasAmp.Library.Metadata.Persistence.Queries as Songs, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
+  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observer, FpasAmp.Library.Metadata.Persistence.Queries as Songs, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
 
-// Exercises the initial album snapshot, before SQLite can return its first sorted row.
+// Verifies the library snapshot and its observation during catalogue changes.
 public type CatalogueTests = record
+  // The album observer publishes the new library count as soon as an untagged song is indexed.
+  [X.FactAttribute]
+  public async function PendingTrackUpdatesLibraryCount(): Tasks.Task;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Database: string := IO.Path.Combine(Folder.Path, 'library.db');
+    const Ratings: string := IO.Path.Combine(Folder.Path, 'userdata.db');
+    using const UserData: Db.SqliteConnection := Users.Open(Ratings);
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    Schema.Ensure(Connection);
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
+    var Publications: int := 0;
+    try
+      await Observer.Run(
+        Database, Ratings, function(Value: M.Snapshot): Tasks.Task begin
+          X.Assert.Empty(Value.Releases);
+          X.Assert.Equal<long>(Publications, Value.TrackCount);
+          Publications := Publications + 1;
+          if Publications = 1 then
+            Sql.Execute(
+              Connection,
+              'INSERT INTO files(path_key,path,directory_key,kind,size,modified_utc) VALUES ' +
+              '(''pending'',''pending'',''dir'',0,1,1),(''cover'',''cover'',''dir'',2,1,1);',
+              null, [], []
+            );
+          else
+            Stop.Cancel();
+          end if;
+
+          return Tasks.Task.CompletedTask;
+        end function, Stop.Token
+      );
+    catch Cancelled: Sys.OperationCanceledException do
+      X.Assert.Equal<T.CancellationToken>(Stop.Token, Cancelled.CancellationToken);
+    end try;
+
+    X.Assert.Equal<int>(2, Publications);
+  end function;
+
   // Closing during the initial sort cancels promptly; re-opening still returns every release.
   [X.FactAttribute]
   public procedure LargeAlbumSnapshotCanBeCancelledAndReopened();
@@ -60,7 +99,9 @@ public type CatalogueTests = record
     X.Assert.InRange<int>(Scanned, 1, Count - 1);
 
     using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    X.Assert.Equal<int>(Count, Albums.Read(Database, Ratings, Startup.Token).Length);
+    const Catalog: M.Snapshot := Albums.Read(Database, Ratings, Startup.Token);
+    X.Assert.Equal<int>(Count, Catalog.Releases.Length);
+    X.Assert.Equal<long>(Count, Catalog.TrackCount);
     // A whole-library queue includes every audio file, but no cover files or page-size limit.
     X.Assert.Equal<int>(
       Count,

@@ -567,6 +567,7 @@ struct cui_ctx {
     float mx, my, pmx, pmy;
     bool mouse_inside;
     bool mdown[3], mpressed[3], mreleased[3];
+    float press_x, press_y, release_x, release_y;   /* where the left button was last pressed and released */
     int click_count;
     double last_click_time;
     float last_click_x, last_click_y;
@@ -10003,6 +10004,7 @@ void cui_input_mouse_button(cui_ctx *ui, cui_mouse_button b, bool down) {
     if (down && !ui->mdown[b]) {
         ui->mpressed[b] = true;
         if (b == CUI_MOUSE_LEFT) {
+            ui->press_x = ui->mx; ui->press_y = ui->my;
             if (!ui->pending_clicks.count) {
                 ui->pending_clicks.first_x = ui->mx;
                 ui->pending_clicks.first_y = ui->my;
@@ -10019,7 +10021,10 @@ void cui_input_mouse_button(cui_ctx *ui, cui_mouse_button b, bool down) {
             if (ui->in_frame) cui__flush_clicks(ui);
         }
     }
-    if (!down && ui->mdown[b]) ui->mreleased[b] = true;
+    if (!down && ui->mdown[b]) {
+        ui->mreleased[b] = true;
+        if (b == CUI_MOUSE_LEFT) { ui->release_x = ui->mx; ui->release_y = ui->my; }
+    }
     ui->mdown[b] = down;
 }
 
@@ -10088,6 +10093,8 @@ void cui_input_focus(cui_ctx *ui, bool focused) {
     ui->window_focused = focused;
     if (!focused) {
         memset(ui->kdown, 0, sizeof ui->kdown);
+        /* a held left button counts as released where the pointer was last seen */
+        if (ui->mdown[CUI_MOUSE_LEFT]) { ui->release_x = ui->mx; ui->release_y = ui->my; }
         for (int i = 0; i < 3; i++) { if (ui->mdown[i]) ui->mreleased[i] = true; ui->mdown[i] = false; }
         ui->mods = 0;
     }
@@ -55772,8 +55779,10 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
     /* drag in progress */
     if (st->drag > 0 && st->drag <= count) {
         cui_cal_event *e = &ev[st->drag - 1];
-        /* Motion and release can arrive before the same frame. */
-        if (fabsf(ui->mx - st->press_x) + fabsf(ui->my - st->press_y) > 4) st->moved = true;
+        /* Motion and release can arrive before the same frame: measure up to the release,
+         * not motion after it */
+        float px = ui->mdown[0] ? ui->mx : ui->release_x, py = ui->mdown[0] ? ui->my : ui->release_y;
+        if (fabsf(px - st->press_x) + fabsf(py - st->press_y) > 4) st->moved = true;
         if (ui->mdown[0]) {
             if (st->moved && gr.w > 0 && !o->read_only) {
                 float gy = ui->my - gr.y;
@@ -55907,9 +55916,10 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
         }
         cui_rect er = cui__prev_rect(ui, eid);
         if (r.hovered && ui->mpressed[0] && st->drag == 0) {
-            st->drag = k + 1; st->moved = false; st->press_x = ui->mx; st->press_y = ui->my;
-            st->mode = (!o->read_only && ui->my > er.y + er.h - 7) ? 2 : 1;
-            st->grab = ui->my - er.y;
+            /* the press event's position: the pointer may have moved on before this frame */
+            st->drag = k + 1; st->moved = false; st->press_x = ui->press_x; st->press_y = ui->press_y;
+            st->mode = (!o->read_only && st->press_y > er.y + er.h - 7) ? 2 : 1;
+            st->grab = st->press_y - er.y;
         }
         float lane_w = (dw - 6) / ncol[k], x;
         bool cascade = !lanes[k] && ncol[k] > 1;
@@ -78460,7 +78470,9 @@ void cui__plat_gl_release(cui_app *app) { (void)app; }   /* not used: these keep
 
 void cui__plat_maximize(cui_app *app) {
     cui__sdl *s = cui__s(app);
-    if (s && s->win) SDL_MaximizeWindow(s->win);
+    if (!s || !s->win) return;
+    SDL_MaximizeWindow(s->win);
+    s->was_maximized = true;   /* also for a minimize before the next frame confirms it */
 }
 
 void cui__plat_minimize(cui_app *app) { SDL_MinimizeWindow(cui__s(app)->win); }
@@ -78469,6 +78481,7 @@ void cui__plat_restore(cui_app *app) {
     cui__sdl *s = cui__s(app);
     bool minimized = (SDL_GetWindowFlags(s->win) & SDL_WINDOW_MINIMIZED) != 0;
     SDL_RestoreWindow(s->win);
+    if (!minimized) s->was_maximized = false;   /* normal now, also for a minimize before the next frame */
     if (minimized && s->was_maximized) SDL_MaximizeWindow(s->win);
     else if (minimized && s->normal_pos_known && cui__sdl_positions()) s->hold_place_until = cui__plat_now() + 0.5;
 }
@@ -78827,7 +78840,11 @@ void cui__plat_maximize(cui_app *app) {
 }
 
 void cui__plat_minimize(cui_app *app) { glfwIconifyWindow(cui__g(app)->win); }
-void cui__plat_restore(cui_app *app) { glfwRestoreWindow(cui__g(app)->win); }
+void cui__plat_restore(cui_app *app) {
+    cui__glfw *g = cui__g(app);
+    g->maximize_after_frame = false;   /* a restore before the first frame wins over opening maximized */
+    glfwRestoreWindow(g->win);
+}
 
 cui_window_state cui__plat_window_state(cui_app *app) {
     GLFWwindow *win = cui__g(app)->win;

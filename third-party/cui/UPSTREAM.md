@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream `master` after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0), mirrored in the source fork |
-| Commit | [`a5c9ef5efc39b3fc783758362f6b8f9f130f5883`](https://github.com/yappologistic/CUI/commit/a5c9ef5efc39b3fc783758362f6b8f9f130f5883) |
+| Commit | [`71c383fd3c20cfaf06adb2faf7dbbbdaa7074441`](https://github.com/yappologistic/CUI/commit/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -19,7 +19,7 @@ is needed.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `9e9e70c3af71fd4b23be4445eb515f1ca79e2bc21fba3924082c457fb7b7b7b5` |
+| `cui.c` | `0f0bf605d82ade1209d206d6f0cd5b9d4c366f02ee36033a61c904a71ae009c3` |
 | `cui.h` | `63e6ecd1de3ff994f423f79385a59294c5ef580efdfbe8b434b8951e92e425e7` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
@@ -39,24 +39,44 @@ The release-frame calendar fix from
 CUI-032 workaround. Both the direct-CUI and FPAS-adapter regression checks now
 require a drag ending in the release frame to return no activation.
 
-Linux x64 verification on this snapshot:
+The native integration suite passed all 57 tests on Windows x64 with MSVC and
+all 55 tests on Linux x64 under WSL with GCC. The planning checks exercise
+both direct CUI and the adapter, distinguishing movement before release from
+movement after a completed click.
 
-- All 36 native bridge tests passed, including direct-CUI planning and widget
-  rendering comparisons.
-- The CLR binding build completed without warnings; 173 binding tests passed
-  under Xvfb, with two Windows-only cases skipped. Software and OpenGL cases
-  ran. `FpasProjectTests`, `GuiHostTests` and `GuiPublishingTests` were excluded.
-- Upstream `cui_test_file_places` passed all 42 checks. The mount-namespace
-  fixture was skipped because the environment does not permit mount namespaces.
-- Upstream `cui_test_window_state` passed with X11/Openbox under Xvfb, once with
-  software rendering and once with OpenGL: zero failures and no skipped steps.
-  It covers saved placement, moving, maximizing, minimizing, restoring and
-  opening a saved maximized window.
+The upstream unit, file-place, no-home and window-state tests passed on
+Windows. The first three passed under WSL, and the window-state test passed
+with X11/Openbox under Xvfb with both software and OpenGL rendering.
 
-Windows, macOS, FPAS-consumer integration, distribution/deployment, publishing
-and NativeAOT checks were not run for this update.
+The chart regression still reproduces CUI-019. Removing the CUI-033 guards in
+an isolated copy fails all six interrupted-drag cases, so those guards remain.
+
+The managed binding suite passed 271 tests on Windows and 270 on Linux under
+WSL, with two and three platform or availability skips respectively. Both
+FPAS-consumer tests passed on each platform, including the gallery with the
+software and OpenGL renderers. The Windows build reports the existing upstream
+Gantt shadowing warning C4456.
+
+Publishing, NativeAOT, macOS, and SDL2/GLFW runtime checks were not run for
+this update.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
+
+## Changes from the previous snapshot
+
+The seven commits after `a5c9ef5` leave the generated public header byte-identical.
+The public API and widget inventory are unchanged.
+
+- The week calendar measures movement between the recorded press and release
+  positions. Motion after release preserves a completed click. Focus loss
+  records a release position only while the left button is held.
+- GLFW restoration before the first frame cancels a queued initial maximize.
+  SDL2 retains a maximize or restore command until the next frame confirms it.
+- File-place tests now cover a missing home directory and disabled native
+  filesystem support.
+
+The planning regression uses these event-order semantics. Existing bindings
+continue to use the same public declarations.
 
 ## License inventory
 

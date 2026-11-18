@@ -5,7 +5,7 @@
 - Fixes: [`a33a7ec`](https://github.com/yappologistic/CUI/commit/a33a7ec), [`1e172ba`](https://github.com/yappologistic/CUI/commit/1e172ba), [`ee913d1`](https://github.com/yappologistic/CUI/commit/ee913d1)
 - Follow-ups: [`89f7a11`](https://github.com/yappologistic/CUI/commit/89f7a11), [`961f096`](https://github.com/yappologistic/CUI/commit/961f096), [`5848bf8`](https://github.com/yappologistic/CUI/commit/5848bf8)
 - [Upstream confirmation](https://github.com/yappologistic/CUI/pull/95#issuecomment-6907824603)
-- Pinned snapshot: [`a5c9ef5`](https://github.com/yappologistic/CUI/commit/a5c9ef5efc39b3fc783758362f6b8f9f130f5883)
+- Pinned snapshot: [`71c383f`](https://github.com/yappologistic/CUI/commit/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441)
 
 ## Open points
 

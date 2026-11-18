@@ -7,7 +7,7 @@ Keep the identifiers stable.
 
 ## CUI-019 — Large constant chart ranges produce non-finite geometry
 
-- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `a5c9ef5`.
+- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `71c383f` on Windows and Linux under WSL.
 
 Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
 Use one series containing three `1e10f` samples with automatic bounds and reduced
@@ -30,6 +30,10 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 Reproduced on Windows using direct `cui_gantt` and `cui_week_calendar` calls
 with the vendored snapshot at `a5c9ef5`.
+
+Still reproduced at `71c383f` on Windows by removing only the adapter's drag
+guards in an isolated copy. All six read-only, disabled-input and removed-item
+cases resume the stale drag. The integration suite passes with the guards.
 
 Start moving the second task or appointment with the left mouse button held.
 Set `read_only` for a frame, then restore editing while the button is still

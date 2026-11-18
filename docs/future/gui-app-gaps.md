@@ -118,14 +118,14 @@ prototype at `00eddec` adds an experimental title bar on Win32 and X11.
 The vendored CUI revision lacks that API. Revisit it after the Notes workflow
 and desktop publishing work.
 
-[apps]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/apps.md
-[recipes]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/recipes.md
-[getting-started]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/getting-started.md
-[theming]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/theming.md
-[file-dialogs]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/getting-started.md#7-files-and-links
-[shortcuts]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/apps.md#your-own-shortcuts-and-input
-[shipping]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/apps.md#shipping
-[desktop-id]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/getting-started.md#your-apps-name-and-icon-on-linux
-[window-api]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/apps.md#the-window
-[app-options]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/apps.md#two-ways-to-run
-[limitations]: https://github.com/yappologistic/CUI/blob/a5c9ef5efc39b3fc783758362f6b8f9f130f5883/docs/faq.md#what-can-it-not-do
+[apps]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md
+[recipes]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/recipes.md
+[getting-started]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md
+[theming]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/theming.md
+[file-dialogs]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md#7-files-and-links
+[shortcuts]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#your-own-shortcuts-and-input
+[shipping]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#shipping
+[desktop-id]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md#your-apps-name-and-icon-on-linux
+[window-api]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#the-window
+[app-options]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#two-ways-to-run
+[limitations]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/faq.md#what-can-it-not-do

@@ -5,25 +5,11 @@ and current terminal coverage. Desktop host and publishing work is tracked in
 [Desktop GUI application gaps](gui-app-gaps.md). Confirmed defects with FPAS
 workarounds are tracked in [CUI upstream bugs](cui-upstream-bugs.md).
 
-## Upstream reporting pause
+## Findings awaiting upstream reporting
 
-We have sent upstream CUI many reports recently. Until all of them are closed,
-do not open new issues or pull requests. Finishing the open contributions is
-still allowed: answering reviews, fixing CI and confirming applied changes. New
-findings go into the list below. Resume reporting once nothing in the following
-list is open:
-
-- PR [#97](https://github.com/yappologistic/CUI/pull/97): applied as
-  [`ba704f1`](https://github.com/yappologistic/CUI/commit/ba704f1),
-  [confirmed](https://github.com/yappologistic/CUI/pull/97#issuecomment-6984247624);
-  waiting for the maintainer to close it.
-- PR [#99](https://github.com/yappologistic/CUI/pull/99): follow-ups to #93 and
-  #95 (week-calendar click and focus loss, GLFW and SDL2 restore), applied as
-  `51e77ca`..`71c383f`,
-  [confirmed](https://github.com/yappologistic/CUI/pull/99#issuecomment-6984251151);
-  waiting for the maintainer to close it.
-
-Findings on hold, checked against `a5c9ef5`:
+The following findings were checked against `a5c9ef5`. CUI-033 also reproduces
+at `71c383f`. Follow the [contribution workflow](../cui-contributions.md) before
+publishing a report or fix.
 
 - [ ] Wheel regions ignore paint transforms. `cui__paint_wheel_hit`
   (`src/cui_layout.c:1076`) registers the rectangle in layout coordinates, but

@@ -18,23 +18,25 @@ static bool read_only_week(bool adapter) {
     cui_cal_event e = {"Review", NULL, 0, 9, 11, CUI_TONE_INFO};
     fpas_week_event model = {"Review", NULL, 0, 9, 11, CUI_TONE_INFO};
     bool ok = true;
-    for (int frame = 0; frame < 10; ++frame) {
+    for (int frame = 0; frame < 12; ++frame) {
         if (frame == 1) key(ui, CUI_KEY_TAB);
         if (frame == 2) key(ui, CUI_KEY_ENTER);
         if (frame == 3) key(ui, CUI_KEY_DOWN);
         if (frame == 4) key(ui, CUI_KEY_ENTER);
         if (frame == 5) cui_input_mouse_move(ui, 100, 145);
-        if (frame == 6 || frame == 8) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
-        if (frame == 7 || frame == 9) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        if (frame == 10) cui_input_mouse_move(ui, 100, 145);
+        if (frame == 6 || frame == 8 || frame == 10) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
         if (frame == 9) cui_input_mouse_move(ui, 125, 164);
+        if (frame == 7 || frame == 9 || frame == 11) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        if (frame == 11) cui_input_mouse_move(ui, 125, 164);
         cui_begin_frame(ui, .016f);
         result = adapter
             ? fpas_cui_week_calendar(ui, "week", date, &model, 1, 8, 18, 0, 0, 0, 3,
                 -1, &part)
             : cui_week_calendar(ui, "week", monday, &e, 1, .start_hour = 8, .end_hour = 18, .read_only = true);
         cui_end_frame(ui);
-        /* A drag coalesced into the release frame must not activate the event. */
-        const int expected = frame == 2 || frame == 4 || frame == 7 ? 0 : -1;
+        /* Motion before release is a drag; motion after release preserves the click. */
+        const int expected = frame == 2 || frame == 4 || frame == 7 || frame == 11 ? 0 : -1;
         if (result != expected) {
             fprintf(stderr, "%s: read-only week activation at frame %d was %d, expected %d\n",
                 adapter ? "FPAS" : "CUI", frame, result, expected);

@@ -66,9 +66,12 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
                     <OutputType>Library</OutputType>
                     <EnableDefaultFpasCompileItems>false</EnableDefaultFpasCompileItems>
                   </PropertyGroup>
-                  <ItemGroup><Compile Include="../Shared.fpas" /></ItemGroup>
+                  <ItemGroup><Compile Include="../Shared.fpas" /><Compile Include="Options.fpas" /></ItemGroup>
                 </Project>
                 """);
+            var firstName = owner == "First" ? "X" : "Column";
+            File.WriteAllText(directory.File(owner + "/Options.fpas"),
+                $"unit Options; public function Map({firstName}: int; Y: int): int; begin return Y; end function; end unit;");
         }
         var context = directory.File("Linked.slnx");
         File.WriteAllText(context, """
@@ -83,13 +86,15 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         var path = directory.File("Shared.fpas");
         var original = """
             unit Shared;
+            uses Options as Opt;
+            function Ignore(Dead: int): int; begin return 5; end function;
             function Sum(Value: int; Extra: int := 4): int;
             begin
               return Value + Extra;
             end function;
             public function Run(): int;
             begin
-              const Text: string := '😀'; return Sum(2, 3);
+              const Text: string := '😀'; return Sum(2, 3) + Ignore(1) + Opt.Map(1, 2);
             end function;
             end unit;
             """.ReplaceLineEndings("\r\n");
@@ -117,6 +122,35 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.Equal(new[] { "Added: int; ", "Extra := ", ", Added := 99" },
             document.GetProperty("edits").EnumerateArray().Select(edit => edit.GetProperty("newText").GetString()));
         Error(await client.Request("fpas/applyRefactoring", applyRequest), -32801);
+
+        var selectedCall = Position(original, "Sum(2, 3)");
+        var naming = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "name-arguments", planRequest.textDocument, position = selectedCall, end = selectedCall, planRequest.projectUri
+        }));
+        var named = Result(await client.Request("fpas/applyRefactoring", new { schemaVersion = 1, id = naming.GetProperty("id").GetString() }));
+        var namedFile = Assert.Single(named.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(7, namedFile.GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.Equal(new[] { "Value := ", "Extra := " }, namedFile.GetProperty("edits").EnumerateArray()
+            .Select(edit => edit.GetProperty("newText").GetString()));
+
+        var divergent = Position(original, "Map(1, 2)");
+        var rejected = await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "name-arguments", planRequest.textDocument, position = divergent, end = divergent, planRequest.projectUri
+        });
+        Error(rejected, -32803);
+        Assert.Contains("Different owners", rejected.GetProperty("error").GetProperty("message").GetString());
+
+        var removed = Position(original, "Dead: int");
+        var removal = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "remove-parameter", planRequest.textDocument, position = removed, end = removed, planRequest.projectUri
+        }));
+        var removalFile = Assert.Single(removal.GetProperty("files").EnumerateArray());
+        Assert.Equal(new[] { "Dead: int", "1" },
+            removalFile.GetProperty("edits").EnumerateArray().Select(edit => edit.GetProperty("expectedText").GetString()));
+        var removalEdit = Result(await client.Request("fpas/applyRefactoring", new { schemaVersion = 1, id = removal.GetProperty("id").GetString() }));
+        var changes = Assert.Single(removalEdit.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(7, changes.GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.All(changes.GetProperty("edits").EnumerateArray(), edit => Assert.Equal("", edit.GetProperty("newText").GetString()));
 
         preview = Result(await client.Request("fpas/prepareRefactoring", planRequest));
         await client.Close(path);

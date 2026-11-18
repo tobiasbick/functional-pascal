@@ -10,7 +10,14 @@ namespace Fpas.Cli.Documentation;
 internal sealed class DocCommand
 {
     private readonly ContextCommandOptions options = new();
-    private readonly Option<string> name = new("--name") { Required = true, Description = "Case-sensitive simple or qualified declaration name. A type also lists its directly declared members." };
+    private readonly Option<string> name = new("--name") { Description = "Case-sensitive simple or qualified declaration name. A type also lists its directly declared members." };
+    private readonly Option<string> usage = new("--usage") { Description = "Generate checked FPAS usage for an exact M:, P: or F: .NET documentation ID." };
+    private readonly Option<string> access = new("--access") { Description = "Select read (default) or write for property, indexer and field usage." };
+    private readonly Option<string[]> typeArguments = new("--type-arg")
+    {
+        Description = "Concrete FPAS type for --usage. Repeat in declaration order, enclosing types first, then method.",
+        Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false
+    };
     private readonly Option<string> match = new("--match") { DefaultValueFactory = _ => "exact", Description = "Name matching: exact, prefix or contains." };
     private readonly Option<string> project = new("--project") { Description = "Restrict source declarations and reference lookup to one analyzed FPAS project." };
     private readonly Option<string> assembly = new("--assembly") { Description = "Restrict entries to an assembly's exact simple name." };
@@ -21,13 +28,15 @@ internal sealed class DocCommand
         Look up FPAS declarations and public APIs from the project's actual .NET references.
         Shows source Markdown or adjacent assembly XML documentation, with explicit missing-text states.
         Reads metadata without executing referenced code. Preparation may restore/build dependencies.
-        External signatures describe CLR metadata; they do not certify FPAS call support.
+        Choose --name to look up declarations or --usage to check a selected call or member access.
         Exit codes: 0 success/not found/help, 1 analysis/setup/deadline failure, 2 arguments, 130 cancellation.
 
         Examples:
           fpas doc examples/numerics/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
 
           fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
+
+          fpas doc Example.fpasproj --usage "M:System.IO.File.OpenRead(System.String)"
 
           fpas doc Example.slnx --name System.Collections.Generic.List --limit 50 --report json
         """);
@@ -36,7 +45,8 @@ internal sealed class DocCommand
     {
         options.AddTo(Command); match.AcceptOnlyFromAmong("exact", "prefix", "contains"); report.AcceptOnlyFromAmong("json");
         ContextCommandOptions.Range(limit, 1, 100); ContextCommandOptions.Range(offset, 0, int.MaxValue);
-        foreach (var option in new Option[] { name, match, project, assembly, limit, offset, report }) Command.Options.Add(option);
+        access.AcceptOnlyFromAmong("read", "write");
+        foreach (var option in new Option[] { name, usage, access, typeArguments, match, project, assembly, limit, offset, report }) Command.Options.Add(option);
         Command.SetAction(Execute);
     }
     private bool Json(ParseResult result) => result.GetResult(report)?.Tokens.Any(token => token.Value == "json") == true;
@@ -51,7 +61,12 @@ internal sealed class DocCommand
         CheckResult? check = null; DocReport response; int exit;
         try
         {
-            var search = new DocumentationSearch(result.GetValue(name)!, result.GetValue(match)!, result.GetValue(project), result.GetValue(assembly), result.GetValue(limit), result.GetValue(offset));
+            var memberId = result.GetValue(usage);
+            var lookup = result.GetValue(name);
+            if ((lookup is null) == (memberId is null))
+                throw new ContextFailure("invalid_argument", "Specify exactly one of --name and --usage.");
+            var search = new DocumentationSearch(memberId ?? lookup!, result.GetValue(match)!, result.GetValue(project), result.GetValue(assembly), result.GetValue(limit), result.GetValue(offset),
+                Usage: memberId is not null, TypeArguments: result.GetValue(typeArguments), Access: result.GetValue(access));
             DocumentationQuery.Validate(search);
             var workspace = await WorkspaceLoader.LoadAsync(options.Read(result), combined.Token);
             var analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token); check = CheckResult.From(analysis);

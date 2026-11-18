@@ -57,6 +57,8 @@
       { "command": "functionalPascalClr.refreshTests", "title": "Refresh Tests", "category": "Functional Pascal" },
       { "command": "functionalPascalClr.buildTests", "title": "Build Test Outputs", "category": "Functional Pascal" },
       { "command": "functionalPascalClr.addParameter", "title": "Preview Add Parameter", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.removeParameter", "title": "Preview Remove Parameter", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.nameArguments", "title": "Preview Name Arguments", "category": "Functional Pascal" },
       { "command": "functionalPascalClr.extractVariable", "title": "Preview Extract Variable", "category": "Functional Pascal" },
       { "command": "functionalPascalClr.organizeImports", "title": "Preview Organize Imports", "category": "Functional Pascal" },
       { "command": "functionalPascalClr.applyRefactoring", "title": "Apply Refactoring", "category": "Functional Pascal", "icon": "$(check)" },

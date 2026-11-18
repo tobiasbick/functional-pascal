@@ -31,7 +31,8 @@ internal sealed partial class SemanticRecorder
         var source = method.SourceMethod;
         var parameters = source?.Parameters.Select(parameter => Clr(parameter.SignatureType, source)) ?? (method.SignatureParameters ?? method.Parameters).Select(type => Clr(type));
         return Metadata(method.Owner, "method", method.Name, source?.GenericParameters.Count ?? method.MethodArguments?.Count ?? 0,
-            parameters, Clr(source?.Result ?? method.SignatureResult ?? method.Result, source));
+            parameters, Clr(source?.Result ?? method.SignatureResult ?? method.Result, source)) with
+        { DefinitionToken = method.DefinitionHandle.IsNil ? 0 : System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(method.DefinitionHandle) };
     }
 
     private string TypeName(TypeSymbol type)

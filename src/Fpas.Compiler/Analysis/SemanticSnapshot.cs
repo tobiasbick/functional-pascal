@@ -15,6 +15,9 @@ namespace Fpas.Compiler.Analysis;
 public sealed record MetadataIdentity(string Assembly, string Version, string Culture, string PublicKeyToken,
     string Type, string Kind, string Name, int Arity, IReadOnlyList<string> Parameters, string? Result, string? AssemblyHash = null)
 {
+    // Exact MethodDef selected by the binder within AssemblyHash.
+    internal int DefinitionToken { get; init; }
+
     /// <summary>Builds a stable string key for this identity.</summary>
     /// <param name="includeAssemblyHash">Whether the key distinguishes reference contents.</param>
     /// <returns>The identity key.</returns>
@@ -87,7 +90,11 @@ public sealed record DeclarationContext(string? Owner, string QualifiedName, str
 /// <param name="Symbol">The snapshot symbol id.</param>
 /// <param name="Span">The mentioned name.</param>
 /// <param name="Role">How the mention uses the symbol, such as declaration, read, write, or read_write.</param>
-public sealed record SymbolOccurrence(string Symbol, SourceSpan Span, string Role);
+public sealed record SymbolOccurrence(string Symbol, SourceSpan Span, string Role)
+{
+    // The actual FieldDef or accessor MethodDef for this access, including ordinary storage outside the call graph.
+    internal int AccessToken { get; init; }
+}
 
 /// <summary>Records that a member implements a protocol member.</summary>
 /// <param name="Implementation">The symbol id of the implementing member.</param>

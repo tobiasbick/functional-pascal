@@ -9,8 +9,11 @@ namespace Fpas.Workspaces.Documentation;
 /// <param name="Assembly">Optional exact assembly simple name.</param>
 /// <param name="Limit">Page size, 1..100.</param>
 /// <param name="Offset">Nonnegative sorted-entry offset.</param>
+/// <param name="Usage">Select an exact method, property or field XML ID in Name and generate a checked usage unit.</param>
+/// <param name="TypeArguments">Concrete FPAS types for the declaring type and then the selected method, in declaration order.</param>
+/// <param name="Access">Optional read or write selection for a property, indexer or field. The default is read.</param>
 public sealed record DocumentationSearch(string Name, string Match = "exact", string? Project = null,
-    string? Assembly = null, int Limit = 20, int Offset = 0);
+    string? Assembly = null, int Limit = 20, int Offset = 0, bool Usage = false, IReadOnlyList<string>? TypeArguments = null, string? Access = null);
 /// <summary>Contains documentation text or an explicit absence/omission state.</summary>
 /// <param name="Availability">Availability or missing/invalid-budget reason.</param>
 /// <param name="Format">markdown or xml.</param>
@@ -34,6 +37,8 @@ public sealed record DocumentationEntry(string Project, string Origin, string Ki
     string Signature, string SignatureFormat, string Assembly, string? AssemblyPath, string? DocumentationId,
     SourceSpan? Span, DocumentationContent Documentation)
 {
+    /// <summary>Generated usage or an explanation for the selected method, when requested.</summary>
+    public ApiUsage? Usage { get; init; }
     /// <summary>Gets captured metadata image/token identity, when lookup used a private image.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public string? Identity { get; init; }

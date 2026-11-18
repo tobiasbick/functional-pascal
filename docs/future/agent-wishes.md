@@ -10,34 +10,15 @@ until a concrete failure case justifies further work.
 
 ## Tooling and authoring
 
-### T1. Compiler-checked API usage templates
-
-**Priority: highest**
-
-Extend [API discovery](../pascal/tools/api-documentation.md) so selecting a
-concrete .NET member can produce an appropriate FPAS usage template, accounting
-for imports/aliases, generic arguments, `ref`/`out`/`in`, return-value handling,
-applicable resource cleanup, asynchronous calls and `await`, nullability and
-compiler restrictions.
-
-Use actual project reference assemblies and the current compiler's capabilities.
-Explain specific unsupported signatures. Keep application-specific values as
-explicit placeholders and distinguish incomplete templates from complete,
-compiler-checked examples. Do not claim that CLR signature rendering is valid
-FPAS source or that a discarded result has been disposed.
-
-This reduces manual interop translation and syntax mistakes. Build on `fpas doc`,
-metadata inspection, structured diagnostics and semantic analysis.
-
 ### T2. Semantic refactorings beyond rename
 
 **Priority: highest**
 
 Extend the [checked refactoring workflow](../pascal/tools/refactoring.md) to
-remove/change function parameters, update affected call sites and generate
-required protocol members. Broaden adding parameters beyond the existing VS Code
-**Add Parameter** operation, which covers checked direct calls to selected
-private routines and requires an explicit argument expression.
+change parameter types or modes, update affected call sites and generate
+required protocol members. Broaden parameter refactorings beyond private routines
+where the editable context covers all consumers. Expose Add Parameter on the CLI
+with an explicit argument expression.
 
 Operate on resolved symbols and bindings. Produce reviewable plans, reject stale
 inputs and validate resulting source against every affected owner/reference
@@ -47,21 +28,6 @@ Report semantic decisions explicitly, including values needed for new arguments
 and behavior needed by an implementation. Never invent application behavior or
 fill incomplete members with misleading defaults. This prevents missed callers
 and edits to unrelated same-named symbols.
-
-### T3. Named-argument assistance
-
-**Priority: high**
-
-[Named arguments](../pascal/language/functions/declarations.md) already work for
-FPAS routines and supported CLR calls, using `Name := Value`. Positional
-arguments precede named ones; names match the selected declaration exactly and
-arguments evaluate once in written order. No new named-argument syntax is needed.
-
-Use this existing form in generated usage templates and refactoring guidance
-where several parameters share a type, particularly strings, numbers and Boolean
-options. Names make argument roles visible and reduce accidental swaps without
-requiring agents to retain parameter order in working context. Preserve existing
-evaluation order and overload bindings when suggesting changes.
 
 ### T4. Limited type inference for local constants
 
@@ -117,9 +83,9 @@ whole project in context.
 
 ## Implementation order and evaluation
 
-Start with API usage templates and semantic refactorings. Reuse named arguments
-within those tools and connect them to checked recipes. Local inference remains
-a separate syntax proposal requiring evaluation and user approval.
+Connect [API usage templates](../pascal/tools/api-documentation.md#generate-checked-fpas-usage)
+to checked recipes. Local inference remains a separate syntax
+proposal requiring evaluation and user approval.
 
 Evaluate repeatable tasks: use an unfamiliar .NET API, change a function signature
 and its callers, implement a protocol and reproduce a language rule in a minimal

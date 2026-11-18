@@ -39,13 +39,13 @@ public sealed class FileWorkspaceTests(SdkPackageFixture sdk) : IClassFixture<Sd
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
         var workspace = await FileWorkspace.OpenAsync(new(directory.File("Game/Game.fpasproj")), deadline.Token);
         var plan = workspace.Rename(RenameFixture.Select(directory, source, "Read():"), "Fetch", deadline.Token).Plan;
-        Assert.Equal(plan.Id, workspace.ValidateRename(plan, deadline.Token).Plan.Id);
-        Assert.Equal("invalid_plan", Assert.Throws<ContextFailure>(() => workspace.ValidateRename(plan with { NewName = "Other" }, deadline.Token)).Code);
-        var foreign = plan with { Configuration = "Release" }; foreign = foreign with { Id = RenamePlanJson.Identity(foreign) };
-        Assert.Equal("plan_context_mismatch", Assert.Throws<ContextFailure>(() => workspace.ValidateRename(foreign, deadline.Token)).Code);
+        Assert.Equal(plan.Id, workspace.ValidateRefactoring(plan, deadline.Token).Plan.Id);
+        Assert.Equal("invalid_plan", Assert.Throws<ContextFailure>(() => workspace.ValidateRefactoring(plan with { NewName = "Other" }, deadline.Token)).Code);
+        var foreign = plan with { Configuration = "Release" }; foreign = foreign with { Id = RefactorPlanJson.Identity(foreign) };
+        Assert.Equal("plan_context_mismatch", Assert.Throws<ContextFailure>(() => workspace.ValidateRefactoring(foreign, deadline.Token)).Code);
         File.AppendAllText(directory.File("Game/Bridge.fpas"), "\n// changed\n");
         var fresh = await FileWorkspace.OpenAsync(new(directory.File("Game/Game.fpasproj"), NoRestore: true), deadline.Token);
-        Assert.Equal("stale_plan", Assert.Throws<ContextFailure>(() => fresh.ValidateRename(plan, deadline.Token)).Code);
+        Assert.Equal("stale_plan", Assert.Throws<ContextFailure>(() => fresh.ValidateRefactoring(plan, deadline.Token)).Code);
         Assert.Empty(Directory.GetFiles(directory.Path, "*.json"));
     }
 

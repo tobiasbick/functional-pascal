@@ -92,6 +92,9 @@ evaluation and exception filters. See the [CLR debugger reference](../../docs/pa
 
 Place the cursor on a private routine or one of its calls for **Preview Add
 Parameter**. Enter a parameter name, FPAS type and expression for each call.
+For **Preview Remove Parameter**, place the cursor on an unused private value
+parameter or a named argument that supplies it.
+For **Preview Name Arguments**, place the cursor on a call with repeated input types.
 For **Preview Extract Variable**, select the complete value expression and enter
 the new constant's name. **Preview Organize Imports** removes unused CLR
 imports where the compiler can prove the remaining bindings are preserved.

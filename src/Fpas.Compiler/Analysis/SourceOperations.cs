@@ -35,7 +35,29 @@ public sealed record OperationReceiver(SourceSpan Span, string? Symbol, string T
 public sealed record SourceOperation(string Id, string Body, SourceSpan Span, SourceSpan? Anchor,
     string Kind, string Phase, string? Target, string? TargetBody, MetadataIdentity? Operation,
     string Dispatch, string? UnknownReason, CallableSignature? Signature,
-    string? OwnerType, string? ResultType, OperationReceiver? Receiver);
+    string? OwnerType, string? ResultType, OperationReceiver? Receiver)
+{
+    internal IReadOnlyList<(int Offset, string Label)> Labels { get; init; } = [];
+
+    /// <summary>Gets proposed parameter labels for positional arguments of this call. The resulting overload still needs verification.</summary>
+    /// <returns>UTF-16 insertion offsets and escaped parameter names in written order.</returns>
+    public IReadOnlyList<(int Offset, string Label)> SuggestedArgumentLabels() => Labels;
+
+    /// <summary>Compares dispatch and the selected CLR member signature and definition token across analyses of the same references.</summary>
+    /// <param name="other">The operation checked after a source edit.</param>
+    /// <returns>True for matching dispatch and metadata. Source declaration bindings and generic substitutions require separate checks.</returns>
+    public bool HasSameDispatch(SourceOperation other) => Kind == other.Kind && Dispatch == other.Dispatch &&
+        Operation?.DefinitionToken == other.Operation?.DefinitionToken &&
+        Operation?.GetKey(includeAssemblyHash: false) == other.Operation?.GetKey(includeAssemblyHash: false);
+
+    internal bool[]? InertArguments { get; init; }
+
+    /// <summary>Checks whether omitting this evaluated argument preserves side effects and exceptions.</summary>
+    /// <param name="parameterIndex">Index in the selected signature, including defaulted slots.</param>
+    /// <returns>True only for a proven inert bound value, including its conversion.</returns>
+    public bool CanOmitArgument(int parameterIndex) => InertArguments is { } slots &&
+        (uint)parameterIndex < (uint)slots.Length && slots[parameterIndex];
+}
 
 /// <summary>An operation the snapshot deliberately does not model, such as an implicit dispose.</summary>
 /// <param name="Body">The id of the containing body.</param>

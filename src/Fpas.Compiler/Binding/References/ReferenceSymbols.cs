@@ -54,5 +54,6 @@ internal sealed record ImportedMethod(TypeSymbol Owner, string Name, TypeSymbol 
     internal bool Flexible => ParameterInfo?.Any(parameter => parameter.Mode != "" || parameter.Default is not null) == true;
     internal IReadOnlyList<TypeSymbol> DelegateParameters => Parameters.Select((type, index) => Parameter(index).ByRef ? TypeSymbol.ByRef(type) : type).ToArray();
 }
-internal sealed record ImportedField(TypeSymbol Owner, string Name, TypeSymbol Type, bool IsStatic, bool IsReadOnly, object? Constant = null, bool IsLiteral = false, TypeSymbol? SignatureType = null);
+internal sealed record ImportedField(TypeSymbol Owner, string Name, TypeSymbol Type, bool IsStatic, bool IsReadOnly, object? Constant = null,
+    bool IsLiteral = false, TypeSymbol? SignatureType = null, FieldDefinitionHandle DefinitionHandle = default);
 internal sealed record ImportedProperty(TypeSymbol Type, ImportedMethod? Getter, ImportedMethod? Setter);

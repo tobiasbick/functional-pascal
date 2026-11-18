@@ -85,7 +85,7 @@ internal sealed partial class ReferenceCatalog
 
     // allowSpans admits Span<T>/ReadOnlySpan<T> by-value parameters for direct invocation;
     // returns, ref/out parameters, nested spans and delegate signatures stay unsupported.
-    private ImportedMethod? ReadMethod(TypeSymbol owner, MethodDefinitionHandle handle, TypeList? methodArguments = null, bool includePrivate = false, bool allowOpen = false,
+    internal ImportedMethod? ReadMethod(TypeSymbol owner, MethodDefinitionHandle handle, TypeList? methodArguments = null, bool includePrivate = false, bool allowOpen = false,
         bool allowSpans = false)
     {
         var definition = Definition(owner);
@@ -226,7 +226,7 @@ internal sealed partial class ReferenceCatalog
                     value = MetadataConstants.Read(definition.Assembly.Reader, field.GetDefaultValue());
                 else if (isStatic && result == TypeSymbol.Decimal && MetadataConstants.Decimal(definition.Assembly.Reader, field.GetCustomAttributes()) is { } decimalValue)
                 { literal = true; value = decimalValue; }
-                return new(type, name, result, isStatic, literal || field.Attributes.HasFlag(FieldAttributes.InitOnly), value, literal, raw);
+                return new(type, name, result, isStatic, literal || field.Attributes.HasFlag(FieldAttributes.InitOnly), value, literal, raw, handle);
             }
         }
         return null;

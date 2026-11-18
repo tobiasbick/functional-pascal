@@ -4,18 +4,22 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
-/// <summary>Parameter extents of a private routine for adding a parameter.</summary>
+/// <summary>Parameter extents of a private routine.</summary>
 /// <param name="Insertion">The offset where a new required parameter is inserted: before the first optional parameter, or at the closing parenthesis.</param>
 /// <param name="FirstOptional">The index of the first parameter with a default, or the parameter count.</param>
-/// <param name="Parameters">The parameter names in declaration order.</param>
+/// <param name="Parameters">Parameters in declaration order.</param>
 /// <param name="HasVariadicParameter">Whether the last parameter is a params parameter.</param>
-public sealed record RefactoringRoutine(int Insertion, int FirstOptional, IReadOnlyList<string> Parameters, bool HasVariadicParameter);
+public sealed record RefactoringRoutine(int Insertion, int FirstOptional, IReadOnlyList<RefactoringListItem> Parameters, bool HasVariadicParameter);
 
 /// <summary>Argument extents of one call.</summary>
 /// <param name="Close">The offset of the closing parenthesis.</param>
-/// <param name="PositionalArguments">The start offsets of the arguments before the first named argument.</param>
-/// <param name="HasArguments">Whether the call has any argument.</param>
-public sealed record RefactoringCall(int Close, IReadOnlyList<int> PositionalArguments, bool HasArguments);
+/// <param name="Arguments">Arguments in written evaluation order.</param>
+public sealed record RefactoringCall(int Close, IReadOnlyList<RefactoringListItem> Arguments);
+
+/// <summary>One parameter or argument in its original source list.</summary>
+/// <param name="Name">Declared parameter name or supplied argument label, null for a positional argument.</param>
+/// <param name="Span">Exact source extent including the label or mode.</param>
+public sealed record RefactoringListItem(string? Name, SourceSpan Span);
 
 /// <summary>Extents of one import in a uses clause.</summary>
 /// <param name="Start">The offset of the imported name.</param>
@@ -76,8 +80,33 @@ public sealed class RefactoringSyntax
         var insertion = optional < routine.Parameters.Count
             ? unit.Declarations[routine.Parameters[optional].Name.Position].Start
             : tokens[close].Position;
-        return new(insertion, optional, routine.Parameters.Select(parameter => parameter.Name.Text).ToArray(),
+        return new(insertion, optional, routine.Parameters.Select(parameter =>
+        {
+            var declaration = unit.Declarations[parameter.Name.Position];
+            return new RefactoringListItem(parameter.Name.Text, document.Span(declaration.Start, declaration.End - declaration.Start));
+        }).ToArray(),
             routine.Parameters.LastOrDefault()?.Mode == "params");
+    }
+
+    /// <summary>Finds the declaring routine of an ordinary value parameter selected by name.</summary>
+    /// <param name="offset">Start of the parameter name token.</param>
+    /// <returns>The routine name offset, or null for other declarations and parameter modes.</returns>
+    public int? ValueParameterOwner(int offset) =>
+        unit.Declarations.TryGetValue(offset, out var declaration) && declaration.Kind == "parameter" && declaration.Start == offset
+            ? declaration.Owner : null;
+
+    /// <summary>Selects one item and an adjacent separator for deletion without erasing comments.</summary>
+    /// <param name="items">Parameters or arguments in source order.</param>
+    /// <param name="index">Index to delete.</param>
+    /// <returns>The deletion range, or null when the range contains a comment.</returns>
+    public SourceSpan? RemovalRange(IReadOnlyList<RefactoringListItem> items, int index)
+    {
+        var span = items[index].Span;
+        var start = span.Offset;
+        var end = start + span.Length;
+        if (index + 1 < items.Count) end = items[index + 1].Span.Offset;
+        else if (index > 0) start = items[index - 1].Span.Offset + items[index - 1].Span.Length;
+        return comments.Any(comment => comment.Start < end && start < comment.End) ? null : document.Span(start, end - start);
     }
 
     /// <summary>Finds the argument extents of a call expression.</summary>
@@ -92,8 +121,8 @@ public sealed class RefactoringSyntax
         var fragment = tokens.Skip(first).Take(close - first + 1).Append(tokens[^1]).ToArray();
         var parsed = new Parser(source, fragment).ParseExpressionFragment();
         return parsed is CallSyntax call && call.SpanEnd == span.Offset + span.Length
-            ? new(tokens[close].Position, call.Arguments.TakeWhile(argument => argument is not NamedArgumentSyntax)
-                .Select(argument => argument.SpanStart).ToArray(), call.Arguments.Count != 0)
+            ? new(tokens[close].Position, call.Arguments.Select(argument => new RefactoringListItem(
+                (argument as NamedArgumentSyntax)?.Name.Text, document.Span(argument.SpanStart, argument.SpanEnd - argument.SpanStart))).ToArray())
             : null;
     }
 

@@ -3,6 +3,8 @@ using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Syntax;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Fpas.Compiler.Binding.Semantics;
 
@@ -52,7 +54,7 @@ internal sealed partial class SemanticRecorder
             _ => throw new InvalidOperationException("Unrecognized capture identity.")
         },
         BoundRecordField field => Entry(field.Field, "property", field.Field.Name),
-        BoundField field => External(Metadata(field.Field.Owner, "field", field.Field.Name), "field", field.Field.Name),
+        BoundField field => External(EditorField(field.Field), "field", field.Field.Name),
         BoundProperty property when (property.Property.Getter ?? property.Property.Setter) is { } accessor => Property(accessor),
         BoundMethodDelegate method => Method(method.Method),
         BoundCall call => Method(call.Method),
@@ -104,7 +106,13 @@ internal sealed partial class SemanticRecorder
         }
         if (written is NameExpressionSyntax or MemberSyntax or GenericNameSyntax && NameToken(written) is { } name && Resolved(bound) is { } symbol)
         {
-            Occurrence(source, name, symbol, role);
+            EntityHandle member = value switch
+            {
+                BoundField field => field.Field.DefinitionHandle,
+                BoundProperty property => (role == "write" ? property.Property.Setter : property.Property.Getter)?.DefinitionHandle ?? default,
+                _ => default
+            };
+            Occurrence(source, name, symbol, role, member.IsNil ? 0 : MetadataTokens.GetToken(member));
             Typed(source, name.Position, name.Length, selectedType, declared);
         }
     }

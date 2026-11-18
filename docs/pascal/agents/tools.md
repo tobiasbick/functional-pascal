@@ -49,7 +49,15 @@ annotations. Use static extension-method calls. An unsupported signature must
 produce a useful diagnostic rather than trigger reflection/dynamic invocation.
 
 Use `fpas doc <project|solution> --name System.Console.WriteLine --report json`
-to find actual FPAS/.NET declarations, overloads and source Markdown/reference XML.
+to find declarations and overloads. Pass the selected XML ID to
+`fpas doc <project> --usage '<ID>' --report json` for a compiler-checked
+unit, its required inputs, or the reason a template is unavailable. Use `M:`
+for calls, `P:` for properties and indexers, and `F:` for fields. Member
+access defaults to read. Add `--access write` for an assignment. Instance
+members take the receiver as the first input. For repeated argument types,
+usage templates prefer checked calls with parameter labels.
+For generic APIs, repeat `--type-arg` for the enclosing types and then the
+method, using FPAS primitives or fully qualified reference types.
 An exact type name includes direct members. Narrow with --project/--assembly;
 page with --limit/--offset and equal snapshotId. Metadata signatures are CLR
 descriptions, not a guarantee of FPAS call support. Missing text is explicit.
@@ -71,11 +79,14 @@ flags distinguish applied changes from check success. Non-source failures have
 no location. See [diagnostics](../tools/diagnostics.md).
 
 Use `refactor rename <context> --file <source> --line <n> --column <n> --new-name <name> --plan <path.json>`
-to prepare a checked rename. Inspect the plan, then use `refactor apply <context>
+to prepare a checked rename. Use `refactor remove-parameter <context> --file <source>
+--line <n> --column <n> --plan <path.json>` for an unused private value parameter.
+For parameter labels on an existing call, use `refactor name-arguments` with the same options.
+Inspect the edits, then use `refactor apply <context>
 --plan <path.json>`. --report json provides bounded reports. Binding changes and
 stale plans are refused; source interface implementations are grouped together.
 Only analyzed FPAS sources are edited; public API/foreign-consumer boundaries
-remain explicit. See [renaming](../tools/refactoring.md).
+remain explicit. See [checked refactorings](../tools/refactoring.md).
 
 The C# compiler API also provides FpasCompiler.Analyze for semantic validation
 of explicit source/reference inputs without emitted output, including async

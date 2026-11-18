@@ -1,8 +1,8 @@
 # Checked FPAS refactorings
 
-`fpas refactor rename` prepares a checked JSON edit plan in an explicit `.fpasproj`
-or `.slnx` context. `fpas refactor apply` validates and applies that plan. Both
-use compiler symbols and the project's actual references.
+`fpas refactor rename`, `remove-parameter` and `name-arguments` prepare a checked
+JSON edit plan in an explicit `.fpasproj` or `.slnx` context.
+`fpas refactor apply` validates and applies the selected plan.
 
 ```sh
 fpas refactor rename Example.fpasproj --file main.fpas --line 5 --column 10 --new-name Calculate --plan .temp-data/rename.json --report json
@@ -38,6 +38,54 @@ plan; unknown consumers and foreign-language bodies are not checked or rewritten
 Documentation validation can require manual comment changes after a parameter
 rename.
 
+## Remove an unused parameter
+
+Place the cursor on the parameter declaration or a named argument that resolves
+to it. Preview the edits, then apply the saved plan.
+
+```sh
+fpas refactor remove-parameter Example.fpasproj --file main.fpas --line 5 --column 20 --plan .temp-data/remove.json
+fpas refactor apply Example.fpasproj --plan .temp-data/remove.json
+```
+
+The operation removes one unused value parameter from a private unit, program or
+record routine. It removes the matching positional or named argument at each
+direct call. Calls that use the parameter's default can keep their original text.
+The remaining arguments retain their written order, parameter types and overload
+binding in every analyzed project that owns the source.
+
+The compiler must prove that skipping argument evaluation and conversion preserves
+behavior. Simple literals and ordinary local or value-parameter reads qualify.
+For example, removing the second parameter from `Choose(Keep, 0)` can produce
+`Choose(Keep)`. An argument such as `ReadNext()` or `Total div Count` needs a
+manual decision because evaluating it may have effects or throw. A used
+parameter (including a contract or capture), a routine used as a delegate,
+an external contract, a variadic or attributed routine, or a deletion spanning
+a comment also prevents automatic removal.
+
+## Name arguments at a call
+
+Use `fpas refactor name-arguments` to preview labels for the positional arguments
+of one call. Place the cursor on the callee name. Inside a nested call, the
+innermost call takes precedence.
+
+```sh
+fpas refactor name-arguments Example.fpasproj --file main.fpas --line 8 --column 14 --plan .temp-data/names.json
+fpas refactor apply Example.fpasproj --plan .temp-data/names.json
+```
+
+For example, `Text.Substring(Offset, Count)` becomes
+`Text.Substring(startIndex := Offset, length := Count)`. At least two supplied
+parameters must share an input type. Generic substitution, nullable references
+and array inputs for spans follow the [API usage template rules](api-documentation.md#generate-checked-fpas-usage).
+
+The preview inserts only the missing labels. Expressions, comments, existing
+labels, argument modes and written evaluation order stay intact. A named
+`params` argument can supply an array. Expanded variadic elements have no
+individual label. Parameter names must be usable and distinct, and every owner
+of a linked file must agree on the insertions. The compiler rechecks the target,
+overload and concrete call signature before the edit can be applied.
+
 ## Validation and plans
 
 The original context must analyze successfully. Rename finds exact declaration
@@ -54,13 +102,13 @@ The validation is limited to the compiler's indexed source facts and declared
 context, rather than reflection strings or unknown consumers.
 
 The plan contains version/kind, context/configuration, input snapshot, original
-selection, semantic new name, affected declarations, exact edits, original/result
+selection, new name for a rename, affected declarations, exact edits, original/result
 file hashes, source projects, binary boundaries and a canonical SHA-256 identity.
 The .json output is created without overwriting an existing file. Inspect the
 plan or the CLI's readable edit list before applying.
 
 Apply requires the original context/configuration. It checks plan identity and
-input snapshot, regenerates the entire rename from compiler facts, and requires
+input snapshot, regenerates the requested refactoring from compiler facts, and requires
 the regenerated plan to match. Supplied edit lists are never applied directly.
 Source/context bytes and the loaded plan file are reverified before publication.
 Changes to source, projects, references, build inputs or compiler can invalidate
@@ -85,9 +133,9 @@ dependencies; it follows the [check contract](../program-structure/cli.md).
 --configuration defaults to Debug; --no-restore skips restore only. --timeout
 covers the whole operation, defaults to 120 seconds and accepts 1..3600. Cancellation
 stops and joins owned build processes. Preview/apply work is bounded to 1,000 edit
-occurrences, 100,000 indexed occurrences, 64 MiB of distinct source input,
-64 MiB of changed original/replacement bytes and a 64 MiB retained cache of
-overlay analysis and dependency images. Plans and JSON reports are bounded to 4 MiB.
+occurrences, 100,000 indexed occurrences, 64 MiB of changed original/replacement
+bytes and a 64 MiB retained cache of overlay analysis and dependency images.
+Rename also limits distinct source input to 64 MiB. Plans and JSON reports are bounded to 4 MiB.
 
 Human output shows the plan path and edits; diagnostics use stderr. --report json
 owns stdout with one object, including failures. It contains success/status,
@@ -112,6 +160,9 @@ the language server.
   after the existing explicit arguments. The routine body stays intact.
   Routines with attributes, `params`, external contracts, callable references
   or untracked callers require a manual signature change.
+- **Remove Parameter** previews the [unused parameter removal](#remove-an-unused-parameter)
+  for the declaration or named argument under the cursor.
+- **Name Arguments** previews the [parameter labels](#name-arguments-at-a-call) for the call under the cursor.
 - **Extract Variable** creates a typed local `const` in the same block.
   Select an expression evaluated first in an initializer, return, raise,
   initial condition or case selector. Extraction can traverse a leading
@@ -123,7 +174,7 @@ the language server.
   endings and the order of surviving imports. Entries adjacent to comments
   stay in place when deletion would consume the comment.
 
-All three check the proposed overlay with the actual project references.
+Each refactoring checks the proposed overlay with the actual project references.
 Existing source bindings and relationships must survive the edit. A changed
 overload, invalid type, name collision or changed input prevents application.
 Plans expire after five minutes and each application consumes its preview.

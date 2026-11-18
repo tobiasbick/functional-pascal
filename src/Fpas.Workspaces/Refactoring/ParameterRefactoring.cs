@@ -4,7 +4,7 @@ using Fpas.Workspaces.Queries;
 
 namespace Fpas.Workspaces.Refactoring;
 
-/// <remarks>Parameter addition preserves existing direct-call bindings and argument evaluation order.</remarks>
+/// <remarks>Parameter refactorings preserve existing direct-call bindings and argument evaluation order.</remarks>
 public static partial class CheckedRefactoring
 {
     private static IReadOnlyList<string> AddParameter(Draft draft, RefactoringRequest request, SourceSelection selection, SourceDocument source)
@@ -24,13 +24,77 @@ public static partial class CheckedRefactoring
         if (routine is null)
             throw Refuse("Add Parameter requires a private FPAS routine without attributes or an external contract.");
         if (routine.HasVariadicParameter) throw Refuse("A routine with a params parameter requires a manual signature change.");
-        if (routine.Parameters.Contains(request.Name, StringComparer.Ordinal)) throw Refuse("The routine already declares that parameter.");
+        if (routine.Parameters.Any(parameter => parameter.Name == request.Name)) throw Refuse("The routine already declares that parameter.");
 
+        var parameter = name + ": " + type;
+        var insertion = routine.FirstOptional < routine.Parameters.Count ? parameter + "; " :
+            (routine.Parameters.Count == 0 ? "" : "; ") + parameter;
+        draft.Edit(declarationSource, routine.Insertion, routine.Insertion, insertion);
+        foreach (var site in DirectCalls(draft, declarationSource, declaration.Offset))
+        {
+            var call = site.Syntax;
+            for (var index = routine.FirstOptional; index < call.Arguments.Count && call.Arguments[index].Name is null; index++)
+            {
+                var at = call.Arguments[index].Span.Offset;
+                draft.Edit(site.Source, at, at, IdentifierFacts.Spell(routine.Parameters[index].Name!) + " := ");
+            }
+            draft.Edit(site.Source, call.Close, call.Close, (call.Arguments.Count > 0 ? ", " : "") + name + " := " + argument);
+            draft.Calls.Add(new(site.Project, site.Snapshot, site.Operation, 1, routine.FirstOptional));
+        }
+        return ["The new value argument is evaluated after the existing explicit arguments. The routine body is preserved."];
+    }
+
+    private static IReadOnlyList<string> RemoveParameter(Draft draft, SourceSelection selection)
+    {
+        var definition = draft.Before.Query.Execute("definition", selection, cancellationToken: draft.Token).Definition;
+        if (definition is not { Origin: "source", Symbol: { Kind: "parameter", Declaration: { } declaration } })
+            throw Refuse("Select the unused value parameter of a private FPAS routine.");
+        var source = draft.Source(declaration.Path);
+        var syntax = draft.Syntax(source);
+        if (syntax.ValueParameterOwner(declaration.Offset) is not int owner || syntax.PrivateRoutine(owner) is not { } routine || routine.HasVariadicParameter)
+            throw Refuse("Remove Parameter requires an ordinary value parameter of a private routine without attributes or params.");
+        int slot = Enumerable.Range(0, routine.Parameters.Count).Single(index => routine.Parameters[index].Span.Offset == declaration.Offset);
+        foreach (var (project, snapshot) in draft.Owners(source.Path).OrderBy(owner => owner.Project, StringComparer.Ordinal))
+        {
+            var parameter = snapshot.OccurrenceAt(source.Path, declaration.Offset);
+            if (parameter?.Role != "declaration" || snapshot.Symbol(parameter.Symbol).Kind != "parameter" ||
+                snapshot.Occurrences.Any(site => site.Symbol == parameter.Symbol && site.Role is not ("declaration" or "argument")))
+                throw Refuse("The parameter is used by the routine, a contract or a nested body.");
+            draft.Targets.Add(new(project, "parameter", definition.Symbol.Name, declaration, false));
+        }
+        Remove(source, routine.Parameters, slot);
+        foreach (var site in DirectCalls(draft, source, owner))
+        {
+            if (!site.Operation.CanOmitArgument(slot))
+                throw Refuse($"Cannot omit argument '{definition.Symbol.Name}' at {site.Source.Path}:{site.Operation.Span.Line}. Its evaluation or conversion may have effects or throw.");
+            var args = site.Syntax.Arguments;
+            for (int index = 0; index < args.Count; index++)
+                if (args[index].Name is { } name ? name == definition.Symbol.Name : index == slot)
+                {
+                    Remove(site.Source, args, index);
+                    break;
+                }
+            draft.Calls.Add(new(site.Project, site.Snapshot, site.Operation, -1, slot));
+        }
+        return [$"Remove unused parameter '{definition.Symbol.Name}'. Remaining arguments keep their evaluation order."];
+
+        void Remove(SourceDocument document, IReadOnlyList<RefactoringListItem> items, int index)
+        {
+            var range = draft.Syntax(document).RemovalRange(items, index) ?? throw Refuse("Deleting this list item would erase a source comment.");
+            draft.Removed.Add(range);
+            draft.Edit(document, range.Offset, range.Offset + range.Length, "");
+        }
+    }
+
+    private sealed record DirectCall(string Project, SemanticSnapshot Snapshot, SourceOperation Operation, SourceDocument Source, RefactoringCall Syntax);
+
+    private static List<DirectCall> DirectCalls(Draft draft, SourceDocument declarationSource, int routineOffset)
+    {
         var targets = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (project, snapshot) in draft.Owners(declaration.Path))
+        foreach (var (project, snapshot) in draft.Owners(declarationSource.Path))
         {
             var owner = snapshot.Symbols.SingleOrDefault(symbol => symbol.Kind == "routine" &&
-                symbol.Declaration is { } at && Paths.Equals(at.Path, declaration.Path) && at.Offset == declaration.Offset);
+                symbol.Declaration is { } at && Paths.Equals(at.Path, declarationSource.Path) && at.Offset == routineOffset);
             if (owner is null || owner.Context?.Accessibility != "private")
                 throw Refuse("The routine is not private in every linked owner.");
             targets.Add(draft.Before.Key(project, owner.Id));
@@ -39,10 +103,7 @@ public static partial class CheckedRefactoring
             targets.Contains(relation.Implementation) || targets.Contains(relation.Contract)))
             throw Refuse("The selected signature participates in an interface or external contract.");
 
-        var parameter = name + ": " + type;
-        var insertion = routine.FirstOptional < routine.Parameters.Count ? parameter + "; " :
-            (routine.Parameters.Count == 0 ? "" : "; ") + parameter;
-        draft.Edit(declarationSource, routine.Insertion, routine.Insertion, insertion);
+        var sites = new List<DirectCall>();
         foreach (var (project, snapshot) in draft.Projects)
         {
             var calls = new Dictionary<(string Path, int Offset), SourceOperation>();
@@ -63,18 +124,15 @@ public static partial class CheckedRefactoring
             }
             foreach (var ((path, offset), operation) in calls)
             {
-                var caller = Paths.Equals(path, source.Path) ? source : draft.Source(path);
+                var caller = Paths.Equals(path, declarationSource.Path) ? declarationSource : draft.Source(path);
                 var call = draft.Syntax(caller).Call(operation.Span, offset)
                     ?? throw Refuse("A call could not be mapped back to its original argument list.");
-                for (var index = routine.FirstOptional; index < call.PositionalArguments.Count; index++)
-                {
-                    var at = call.PositionalArguments[index];
-                    draft.Edit(caller, at, at, IdentifierFacts.Spell(routine.Parameters[index]) + " := ");
-                }
-                draft.Edit(caller, call.Close, call.Close, (call.HasArguments ? ", " : "") + name + " := " + argument);
-                draft.Calls.Add(new(project, snapshot, operation, routine.FirstOptional));
+                sites.Add(new(project, snapshot, operation, caller, call));
             }
         }
-        return ["The new value argument is evaluated after the existing explicit arguments. The routine body is preserved."];
+        foreach (var group in sites.GroupBy(site => (site.Source.Path, site.Operation.Anchor!.Offset)))
+            if (group.Count() != draft.Owners(group.Key.Path).Count())
+                throw Refuse("A call binds to a different routine in another owner of the shared file.");
+        return sites;
     }
 }

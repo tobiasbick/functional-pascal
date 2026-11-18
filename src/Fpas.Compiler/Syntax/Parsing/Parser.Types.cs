@@ -4,6 +4,14 @@ internal sealed partial class Parser
 {
     private int typeDepth;
 
+    internal TypeSyntax ParseStandaloneType()
+    {
+        var type = ReadType();
+        if (Current.Kind != TokenKind.End)
+            throw source.Error("FP2003", "Unexpected content after the type argument.", Current.Position, Current.Length);
+        return type;
+    }
+
     private TypeSyntax ReadType(bool arrays = true)
     {
         if (typeDepth == 256)

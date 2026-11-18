@@ -35,7 +35,8 @@ Reference variance follows CLR in/out flags. Invariant nullable arguments and
 array element annotations cannot be weakened to permit unsafe writes.
 
 Indexers resolve the CLR DefaultMember property and public getter/setter
-separately. Receiver, indices, and assigned value execute once in written order.
+separately. FPAS index expressions pass their arguments by value. Receiver,
+indices, and assigned value execute once in written order.
 Writable struct elements/receivers retain their storage; no synthetic collection
 operation or reflection fallback replaces the selected accessor.
 

@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 namespace Fpas.Cli.Refactoring;
 
 internal sealed record RefactorFile(string Path, bool Written);
-internal sealed record RefactorReport(bool Success, string Status, string? PlanPath, RenamePlan? Plan,
+internal sealed record RefactorReport(bool Success, string Status, string? PlanPath, RefactorPlan? Plan,
     IReadOnlyList<RefactorFile> Files, bool Rechecked, IReadOnlyList<AnalysisDiagnostic> Diagnostics,
     AnalysisError? Error = null, IReadOnlyList<string>? RecoveryBackups = null)
 {
@@ -18,7 +18,7 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
     {
         if (json)
         {
-            var bytes = Bytes(); var limited = bytes.Length > RenamePlanJson.MaximumBytes;
+            var bytes = Bytes(); var limited = bytes.Length > RefactorPlanJson.MaximumBytes;
             if (limited) bytes = (this with { Success = false, Plan = null, Error = new("result_limit", "Refactoring response exceeds 4 MiB.", true) }).Bytes();
             using var output = Console.OpenStandardOutput(); output.Write(bytes); Console.WriteLine(); return !limited;
         }
@@ -26,7 +26,13 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
         if (Error is { } error) Console.Error.WriteLine(DiagnosticRenderer.Safe(error.Code + ": " + error.Message));
         if (Plan is { } plan)
         {
-            Console.WriteLine(DiagnosticRenderer.Safe($"Rename to {plan.NewName}: {Status}; {plan.EditCount} edits in {plan.Files.Count} files. Plan: {PlanPath}"));
+            var operation = plan.Kind switch
+            {
+                "rename" => "Rename to " + plan.NewName,
+                "remove-parameter" => "Remove parameter " + plan.Targets[0].Name,
+                _ => "Name arguments"
+            };
+            Console.WriteLine(DiagnosticRenderer.Safe($"{operation}: {Status}; {plan.EditCount} edits in {plan.Files.Count} files. Plan: {PlanPath}"));
             foreach (var file in plan.Files)
                 foreach (var edit in file.Edits)
                     Console.WriteLine(DiagnosticRenderer.Safe($"  {file.Path}({edit.Location.Line},{edit.Location.Column}): {edit.ExpectedText} -> {edit.NewText}"));

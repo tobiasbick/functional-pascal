@@ -14,30 +14,33 @@ internal sealed class RefactorCommand
     private sealed class Operation(string name)
     {
         internal ContextCommandOptions Context { get; } = new();
-        internal Option<string> Plan { get; } = new("--plan") { Required = true, Description = "Explicit .json plan path; rename creates it without overwriting, apply reads it." };
+        internal Option<string> Plan { get; } = new("--plan") { Required = true, Description = "Explicit .json plan path; preparation creates it without overwriting, apply reads it." };
         internal Option<string> File { get; } = new("--file") { Required = true, Description = "Source path for symbol selection." };
         internal Option<int> Line { get; } = new("--line") { Required = true, Description = "One-based source line." };
         internal Option<int> Column { get; } = new("--column") { Required = true, Description = "One-based UTF-16 source column." };
         internal Option<string> Project { get; } = new("--project") { Description = "Owning FPAS project for a linked source selection." };
         internal Option<string> NewName { get; } = new("--new-name") { Required = true, Description = "Unescaped simple ASCII identifier; keyword escaping is chosen automatically." };
         internal Option<string> Report { get; } = new("--report") { Description = "Write one JSON response to stdout." };
-        internal Command Command { get; } = new(name, name == "rename" ? "Prepare a checked FPAS rename plan without changing sources." : "Revalidate and explicitly apply a rename plan.");
+        internal Command Command { get; } = new(name, name == "apply" ? "Revalidate and explicitly apply a checked refactoring plan." : $"Prepare a checked {name} plan without changing sources.");
         internal bool Json(ParseResult result) => result.GetResult(Report)?.Tokens.Any(token => token.Value == "json") == true;
         internal void Bind(RefactorCommand owner)
         {
             Context.AddTo(Command); Report.AcceptOnlyFromAmong("json"); Command.Options.Add(Plan); Command.Options.Add(Report);
-            if (name == "rename")
+            if (name != "apply")
             {
                 ContextCommandOptions.Range(Line, 1, int.MaxValue); ContextCommandOptions.Range(Column, 1, int.MaxValue);
-                foreach (var option in new Option[] { File, Line, Column, Project, NewName }) Command.Options.Add(option);
+                foreach (var option in new Option[] { File, Line, Column, Project }) Command.Options.Add(option);
+                if (name == "rename") Command.Options.Add(NewName);
             }
-            Command.SetAction((result, token) => owner.Execute(this, result, token, name == "rename"));
+            Command.SetAction((result, token) => owner.Execute(this, result, token, name != "apply"));
         }
     }
-    private readonly Operation[] operations = [new("rename"), new("apply")];
+    private readonly Operation[] operations = [new("rename"), new("remove-parameter"), new("name-arguments"), new("apply")];
     internal Command Command { get; } = new("refactor", """
         Prepare and explicitly apply checked source refactorings in an FPAS project/solution.
         Rename follows resolved source symbols, including their source interface implementations.
+        Remove Parameter drops an unused private value parameter and arguments proven safe to omit.
+        Name Arguments labels positional arguments at one checked call with repeated input types.
         Plans cover analyzed FPAS sources; C#/F# sources, strings and comments are not rewritten.
         Dependency preparation may restore/build. Source bindings are checked before publication.
         Exit codes: 0 success/help, 1 conflict/setup/stale plan, 2 arguments, 130 cancellation.
@@ -62,29 +65,34 @@ internal sealed class RefactorCommand
         {
             var input = operation.Context.Read(result); var planPath = Path.GetFullPath(result.GetValue(operation.Plan)!);
             if (!Path.GetExtension(planPath).Equals(".json", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("--plan requires a .json path.");
-            RenamePlan? stored = null; byte[]? storedBytes = null;
-            if (preparing) _ = IdentifierFacts.Spell(result.GetValue(operation.NewName)!);
-            else
+            RefactorPlan? stored = null; byte[]? storedBytes = null;
+            if (operation.Command.Name == "rename") _ = IdentifierFacts.Spell(result.GetValue(operation.NewName)!);
+            if (!preparing)
             {
                 SourcePublication.ValidateRegularPath(planPath);
-                if (new FileInfo(planPath).Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("invalid_plan", "Plan exceeds 4 MiB.");
-                try { storedBytes = await File.ReadAllBytesAsync(planPath, token); stored = RenamePlanJson.Read(storedBytes); }
+                if (new FileInfo(planPath).Length > RefactorPlanJson.MaximumBytes) throw new ContextFailure("invalid_plan", "Plan exceeds 4 MiB.");
+                try { storedBytes = await File.ReadAllBytesAsync(planPath, token); stored = RefactorPlanJson.Read(storedBytes); }
                 catch (Exception error) when (error is JsonException or ArgumentException) { throw new ContextFailure("invalid_plan", error.Message); }
-                RenameService.ValidateContext(stored, input.Context, input.Configuration);
+                FileRefactorPlans.ValidateContext(stored, input.Context, input.Configuration);
             }
             operationWorkspace = await FileWorkspace.OpenAsync(input, token);
             var analysis = operationWorkspace.Analysis!;
             current = new(false, "validating", planPath, null, [], false, CheckResult.From(analysis).Diagnostics);
             var selection = stored?.Selection ?? new SourceSelection(result.GetValue(operation.File)!, result.GetValue(operation.Line), result.GetValue(operation.Column), result.GetValue(operation.Project));
-            var prepared = stored is null ? operationWorkspace.Rename(selection, result.GetValue(operation.NewName)!, token)
-                : operationWorkspace.ValidateRename(stored, token);
+            var prepared = operation.Command.Name switch
+            {
+                "rename" => operationWorkspace.Rename(selection, result.GetValue(operation.NewName)!, token),
+                "name-arguments" => operationWorkspace.NameArguments(selection, token),
+                "remove-parameter" => operationWorkspace.RemoveParameter(selection, token),
+                _ => operationWorkspace.ValidateRefactoring(stored!, token)
+            };
             current = new(true, preparing ? "planned" : "applied", planPath, prepared.Plan,
                 prepared.Plan.Files.Select(file => new RefactorFile(file.Path, false)).ToArray(), false, CheckResult.From(analysis).Diagnostics);
-            if (current.Bytes().Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("result_limit", "Rename report exceeds 4 MiB; no sources were changed.");
+            if (current.Bytes().Length > RefactorPlanJson.MaximumBytes) throw new ContextFailure("result_limit", "Refactoring report exceeds 4 MiB; no sources were changed.");
             if (preparing)
             {
                 await operationWorkspace.VerifyAsync(token);
-                await WritePlan(planPath, RenamePlanJson.Serialize(prepared.Plan), token);
+                await WritePlan(planPath, RefactorPlanJson.Serialize(prepared.Plan), token);
             }
             else
             {
@@ -92,7 +100,7 @@ internal sealed class RefactorCommand
                 {
                     SourcePublication.ValidateRegularPath(planPath);
                     if (!(await File.ReadAllBytesAsync(planPath, check)).AsSpan().SequenceEqual(storedBytes))
-                        throw new ContextFailure("inputs_changed", "Rename plan changed during application.");
+                        throw new ContextFailure("inputs_changed", "Refactoring plan changed during application.");
                 }, token);
                 current = current with { Files = current.Files.Select(file => file with { Written = true }).ToArray(), Diagnostics = [] };
                 var checkedResult = CheckResult.From(operationWorkspace.Analysis!);

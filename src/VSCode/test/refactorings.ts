@@ -88,6 +88,19 @@ export async function refactorings(data: Fixture): Promise<void> {
   assert.equal(await command('applyRefactoring'), true);
   assert.match(source.document.getText(), /const Rows: array of \(array of string\?\)\? := CheckedRows;/);
 
+  await select('Added: int');
+  assert.equal(await command('removeParameter'), true);
+  assert.match(preview().document.getText(), /Added := 99/);
+  assert.equal(await command('applyRefactoring'), true);
+  assert(!source.document.getText().includes('Added'));
+  assert(source.document.getText().includes('Compute(Local, Extra := Step(4))'));
+
+  await select('Compute(Local, Extra := Step(4))');
+  assert.equal(await command('nameArguments'), true);
+  assert.match(preview().document.getText(), /Value := /);
+  assert.equal(await command('applyRefactoring'), true);
+  assert(source.document.getText().includes('Compute(Value := Local, Extra := Step(4))'));
+
   await select('System.Text');
   assert.equal(await command('organizeImports'), true);
   assert.match(preview().document.getText(), /System\.Text as Unused/);

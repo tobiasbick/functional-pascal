@@ -130,8 +130,8 @@ internal sealed partial class Binder
                 : indices.Length == 1 ? Supply(indices[0]) : Convert(selected.Method.Parameter(slot).Default!, selected.Method.Parameters[slot], position);
         }
         ForgetCapturedFacts();
-        BoundExpression call = constructed is null ? new BoundCall(selected.Method, supplied, receiver, written)
-            : new BoundNew(constructed, selected.Method, supplied, written);
+        BoundExpression call = constructed is null ? new BoundCall(selected.Method, supplied, receiver, written, selected.Expanded)
+            : new BoundNew(constructed, selected.Method, supplied, written, selected.Expanded);
         return bindings.Count == 0 ? call : new BoundSequence(bindings, call);
     }
 

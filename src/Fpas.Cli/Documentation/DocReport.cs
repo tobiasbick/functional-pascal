@@ -29,6 +29,13 @@ internal sealed record DocReport(bool Success, string Status, string? Context, s
             {
                 Console.WriteLine(DiagnosticRenderer.Safe(entry.QualifiedName + " [" + entry.Origin + ", " + entry.Assembly + "]"));
                 Console.WriteLine(DiagnosticRenderer.Safe(entry.Signature));
+                if (entry.DocumentationId is { } id) Console.WriteLine(DiagnosticRenderer.Safe(id));
+                if (entry.Usage is { } usage)
+                {
+                    Console.WriteLine(DiagnosticRenderer.Safe("Usage: " + usage.Status + ". " + usage.Reason));
+                    if (usage.Source is { } source)
+                        foreach (var line in source.Split('\n')) Console.WriteLine(DiagnosticRenderer.Safe(line));
+                }
                 foreach (var line in DocumentationDisplay.Text(entry.Documentation).Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n'))
                     Console.WriteLine(DiagnosticRenderer.Safe(line));
                 Console.WriteLine();

@@ -42,7 +42,7 @@ public sealed class LiveSnapshot
     /// <param name="name">New unescaped simple identifier.</param>
     /// <param name="token">Cancels planning and validation.</param>
     /// <returns>The checked plan and detached edits.</returns>
-    public PreparedRename Rename(SourceSelection selection, string name, CancellationToken token = default) => RenameService.Prepare(Analysis, selection, name, token);
+    public PreparedFileRefactoring Rename(SourceSelection selection, string name, CancellationToken token = default) => RenameService.Prepare(Analysis, selection, name, token);
     /// <summary>Collects automatic corrections and review-only proposals.</summary>
     /// <param name="token">Cancels proposal validation.</param>
     /// <returns>A detached correction plan.</returns>

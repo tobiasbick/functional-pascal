@@ -56,6 +56,8 @@ internal sealed partial class ReferenceCatalog
             var method = definition.Assembly.Reader.GetMethodDefinition(field.Default!.DefinitionHandle);
             if ((method.Attributes & MethodAttributes.MemberAccessMask) != (publicConstructor ? MethodAttributes.Public : MethodAttributes.Private)) throw InvalidRecord(type);
         }
+        // FPAS record construction binds labels to fields in declaration order.
+        constructor = constructor with { ParameterInfo = all.Select((field, index) => new ParameterSymbol(field.Name, field.Type, index)).ToArray() };
         var result = new RecordInfo(type, all, constructor, publicConstructor);
         records.Add(type, result);
         return result;

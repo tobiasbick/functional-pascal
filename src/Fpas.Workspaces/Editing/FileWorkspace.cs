@@ -42,14 +42,26 @@ public sealed class FileWorkspace
     /// <param name="name">New unescaped simple identifier.</param>
     /// <param name="token">Cancels rename planning.</param>
     /// <returns>A checked plan and detached edits.</returns>
-    public PreparedRename Rename(SourceSelection selection, string name, CancellationToken token = default)
+    public PreparedFileRefactoring Rename(SourceSelection selection, string name, CancellationToken token = default)
         => RenameService.Prepare(Checked(), selection, name, token);
-    /// <summary>Regenerates a stored rename against the current context and snapshot.</summary>
+    /// <summary>Prepares removal of an unused parameter and the corresponding direct-call arguments.</summary>
+    /// <param name="selection">Checked parameter declaration or named argument.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring RemoveParameter(SourceSelection selection, CancellationToken token = default)
+        => FileRefactorPlans.RemoveParameter(Checked(), selection, token);
+    /// <summary>Prepares insertion of verified parameter labels at one call.</summary>
+    /// <param name="selection">Position within the selected call and optional project owner.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>The checked plan and detached insertion edits.</returns>
+    public PreparedFileRefactoring NameArguments(SourceSelection selection, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), "name-arguments", selection, token);
+    /// <summary>Regenerates a stored refactoring against the current context and snapshot.</summary>
     /// <param name="plan">Original checked plan to validate.</param>
     /// <param name="token">Cancels semantic revalidation.</param>
     /// <returns>The regenerated matching plan and edits.</returns>
-    public PreparedRename ValidateRename(RenamePlan plan, CancellationToken token = default)
-        => RenameService.Validate(Checked(), plan, token);
+    public PreparedFileRefactoring ValidateRefactoring(RefactorPlan plan, CancellationToken token = default)
+        => FileRefactorPlans.Validate(Checked(), plan, token);
 
     /// <summary>Rechecks disk bytes and evaluated context inputs before answers or edits are published.</summary>
     /// <param name="token">Cancels input verification.</param>

@@ -9,11 +9,6 @@ using System.Text;
 
 namespace Fpas.Workspaces.Refactoring;
 
-/// <summary>Pairs a portable checked rename plan with its detached edits.</summary>
-/// <param name="Plan">Versioned plan and its semantic/input identity.</param>
-/// <param name="Edits">Validated source changes.</param>
-public sealed record PreparedRename(RenamePlan Plan, TextEditSet Edits);
-
 /// <summary>Plans source-identity renames and revalidates plans without filesystem publication.</summary>
 public static class RenameService
 {
@@ -24,7 +19,7 @@ public static class RenameService
     /// <param name="newName">Unescaped simple identifier; keyword escaping is chosen automatically.</param>
     /// <param name="token">Cancels planning and semantic verification.</param>
     /// <returns>A checked plan and edits, bounded to 1,000 source edits and 4 MiB of plan data.</returns>
-    public static PreparedRename Prepare(WorkspaceAnalysis analysis, SourceSelection selection, string newName, CancellationToken token = default)
+    public static PreparedFileRefactoring Prepare(WorkspaceAnalysis analysis, SourceSelection selection, string newName, CancellationToken token = default)
     {
         var spelling = IdentifierFacts.Spell(newName); token.ThrowIfCancellationRequested();
         var before = new RenameBindings(analysis);
@@ -89,17 +84,15 @@ public static class RenameService
                 !new RenameBindings(analysis, Map).Relations(token).SetEquals(new RenameBindings(changed).Relations(token)))
                 throw new ContextFailure("rename_conflict", "The rename changes a source binding, overload selection or declaration relationship.");
         }
-        var files = editPlan.Documents.Select(document => new RenameFile(document.Original.Path, document.OriginalHash,
+        var files = editPlan.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
             document.ReplacementHash, grouped[document.Original.Path])).ToArray();
-        var descriptors = targets.Select(key => definitions[key]).Select(item => new RenameTarget(item.Project!, item.Symbol.Kind, Token(item),
+        var descriptors = targets.Select(key => definitions[key]).Select(item => new RefactorTarget(item.Project!, item.Symbol.Kind, Token(item),
             item.Symbol.Declaration!, Public(item))).OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Declaration.Path, StringComparer.Ordinal)
             .ThenBy(item => item.Declaration.Offset).ToArray();
-        var plan = new RenamePlan(1, "rename", analysis.Context.Path, analysis.Context.Configuration, analysis.Context.SnapshotId,
+        var plan = new RefactorPlan(1, "rename", analysis.Context.Path, analysis.Context.Configuration, analysis.Context.SnapshotId,
             selection with { File = Path.GetFullPath(selection.File), Project = selection.Project is null ? null : Path.GetFullPath(selection.Project) }, newName,
             descriptors, files, analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), before.Query.Boundaries());
-        plan = plan with { Id = RenamePlanJson.Identity(plan) };
-        if (RenamePlanJson.Serialize(plan).Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("rename_limit", "Rename plan exceeds 4 MiB.");
-        return new(plan, editPlan);
+        return FileRefactorPlans.Seal(plan, editPlan);
 
         string Token(DefinitionResult item) => documents[item.Symbol.Declaration!.Path].Substring(item.Symbol.Declaration.Offset, item.Symbol.Declaration.Length).TrimStart('@');
         bool Public(DefinitionResult item)
@@ -116,30 +109,4 @@ public static class RenameService
         }
     }
 
-    /// <summary>Regenerates a plan and requires its context, input snapshot and identity to match exactly.</summary>
-    /// <param name="analysis">Current successful complete analysis.</param>
-    /// <param name="plan">Original checked rename plan.</param>
-    /// <param name="token">Cancels semantic regeneration.</param>
-    /// <returns>The matching regenerated plan and edits.</returns>
-    public static PreparedRename Validate(WorkspaceAnalysis analysis, RenamePlan plan, CancellationToken token = default)
-    {
-        if (plan.Version != 1 || plan.Kind != "rename" || RenamePlanJson.Identity(plan) != plan.Id)
-            throw new ContextFailure("invalid_plan", "Invalid or modified rename plan.");
-        ValidateContext(plan, analysis.Context.Path, analysis.Context.Configuration);
-        if (plan.InputSnapshotId != analysis.Context.SnapshotId)
-            throw new ContextFailure("stale_plan", "Project inputs changed after rename planning.");
-        var prepared = Prepare(analysis, plan.Selection, plan.NewName, token);
-        if (prepared.Plan.Id != plan.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked rename.");
-        return prepared;
-    }
-
-    /// <summary>Rejects applying a plan to another context or configuration.</summary>
-    /// <param name="plan">Plan containing the original context.</param>
-    /// <param name="context">Requested project or solution path.</param>
-    /// <param name="configuration">Requested context configuration.</param>
-    public static void ValidateContext(RenamePlan plan, string context, string configuration)
-    {
-        if (plan.Context != Path.GetFullPath(context) || plan.Configuration != configuration)
-            throw new ContextFailure("plan_context_mismatch", "Supply the plan's original context and configuration.");
-    }
 }

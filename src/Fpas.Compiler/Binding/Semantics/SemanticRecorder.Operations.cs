@@ -41,7 +41,8 @@ internal sealed partial class SemanticRecorder
             var constructor = value is BoundNew initialized ? initialized.Constructor : null;
             Store(span, location, "construct", target, null, constructor is null ? null : MethodMetadata(constructor),
                 value.Type.IsParameter ? "constrained" : "direct", constructor is null ? value.Type.IsParameter ? "type_parameter_constructor" : "value_initialization" : null,
-                constructor is null ? new(Array.Empty<SemanticParameter>(), Type(value.Type), Array.Empty<string>()) : Signature(constructor), value.Type, value.Type);
+                constructor is null ? new(Array.Empty<SemanticParameter>(), Type(value.Type), Array.Empty<string>()) : Signature(constructor), value.Type, value.Type,
+                labels: value is BoundNew { Constructor: { } ctor } construction ? NamedCallArguments.Suggestions(ctor, creation.Arguments, construction.ExpandedParams) : null);
         }
         else if (syntax is CallSyntax && value is BoundCall invocation)
         {
@@ -52,7 +53,8 @@ internal sealed partial class SemanticRecorder
                 var receiverSpan = Span(source, receiver.SpanStart, receiver.SpanEnd - receiver.SpanStart);
                 var receiverSymbol = NameToken(receiver) is { } name ? occurrences.GetValueOrDefault((source.Path, name.Position, "read")).Symbol?.Id : null;
                 Store(span, location, "delegate_invoke", null, null, MethodMetadata(invocation.Method), "delegate", "runtime_delegate_target", Signature(invocation.Method),
-                    invocation.Method.Owner, invocation.Method.Result, new(receiverSpan, receiverSymbol, Type(invocation.Method.Owner)));
+                    invocation.Method.Owner, invocation.Method.Result, new(receiverSpan, receiverSymbol, Type(invocation.Method.Owner)),
+                    labels: NamedCallArguments.Suggestions(invocation.Method, ((CallSyntax)syntax).Arguments, invocation.ExpandedParams));
             }
             else Add(invocation.Method, VariantFactory(invocation.Method) ? "construct" : "invoke");
         }
@@ -94,8 +96,29 @@ internal sealed partial class SemanticRecorder
             var dispatch = method.ConstrainedType is not null ? "constrained" : method.Owner.IsInterface ? "interface" : method.IsVirtual ? "virtual" : "direct";
             var unknown = dispatch == "direct" ? null : "runtime_dispatch_target";
             Store(span, location, kind, logical ?? Method(method), null, method.Owner.Kind == TypeKind.Generated ? null : MethodMetadata(method), dispatch, unknown, Signature(method),
-                method.Owner, kind == "callable_reference" ? bound.Type : method.Result);
+                method.Owner, kind == "callable_reference" ? bound.Type : method.Result,
+                inertArguments: kind == "invoke" && method.SourceMethod is { IsPublic: false } && value is BoundCall direct
+                    ? InertArguments(bound, direct) : null,
+                labels: syntax is CallSyntax callSyntax && value is BoundCall callValue
+                    ? NamedCallArguments.Suggestions(method, callSyntax.Arguments, callValue.ExpandedParams) : null);
         }
+    }
+
+    private static bool[] InertArguments(BoundExpression bound, BoundCall call)
+    {
+        // Named arguments are saved in source order, then passed in formal parameter order.
+        var saved = bound is BoundSequence sequence && ReferenceEquals(sequence.Value, call)
+            ? sequence.Bindings.ToDictionary(binding => binding.Local, binding => binding.Initializer) : null;
+        return call.Arguments.Select(value =>
+        {
+            if (value is BoundLocal temporary && saved?.TryGetValue(temporary.Local, out var initializer) == true)
+                value = initializer;
+            return value is BoundString or BoundInteger or BoundDouble or BoundNumber or BoundBoolean or BoundCharacter or BoundNull
+                or BoundField { Field.IsLiteral: true, Receiver: null }
+                or BoundParameter { Parameter.ByRef: false, FlowType: null }
+                or BoundConversion { Operand: BoundNull, Target.CanHaveNull: true }
+                || value is BoundLocal { FlowType: null } local && !local.Local.Name.StartsWith('<');
+        }).ToArray();
     }
 
     private IEnumerable<ImportedMethod> Operators(BoundExpression expression)
@@ -122,13 +145,14 @@ internal sealed partial class SemanticRecorder
 
     private void Store(SourceSpan span, SourceSpan? anchor, string kind, SymbolEntry? target, string? targetBody,
         MetadataIdentity? operation, string dispatch, string? unknown, CallableSignature? signature,
-        TypeSymbol? owner = null, TypeSymbol? result = null, OperationReceiver? receiver = null)
+        TypeSymbol? owner = null, TypeSymbol? result = null, OperationReceiver? receiver = null, bool[]? inertArguments = null,
+        IReadOnlyList<(int Offset, string Label)>? labels = null)
     {
         if (activeBody is null) return;
         var key = (activeBody.Body.Id, span.Offset, span.Length, kind);
         var id = operations.TryGetValue(key, out var previous) ? previous.Fact.Id : snapshotId + ":o" + operations.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
         operations[key] = new(new(id, activeBody.Body.Id, span, anchor, kind, operationPhase, target?.Id, targetBody, operation, dispatch, unknown, signature,
-            owner is null || owner.Kind == TypeKind.Generated ? null : Type(owner), result is null ? null : Type(result), receiver), target);
+            owner is null || owner.Kind == TypeKind.Generated ? null : Type(owner), result is null ? null : Type(result), receiver) { InertArguments = inertArguments, Labels = labels ?? [] }, target);
     }
 
     private void RetargetOperation(BoundMethodGroup group, ImportedMethod method)

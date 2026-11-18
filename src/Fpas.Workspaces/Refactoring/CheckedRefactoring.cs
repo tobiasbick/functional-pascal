@@ -8,8 +8,8 @@ using Fpas.Workspaces.Snapshots;
 
 namespace Fpas.Workspaces.Refactoring;
 
-/// <summary>Requests a checked editor refactoring over an exact source selection.</summary>
-/// <param name="Kind">add-parameter, extract-variable or organize-imports.</param>
+/// <summary>Requests a checked refactoring over an exact source selection.</summary>
+/// <param name="Kind">add-parameter, remove-parameter, name-arguments, extract-variable or organize-imports.</param>
 /// <param name="Selection">One-based UTF-16 selection start and optional project owner.</param>
 /// <param name="EndLine">One-based exclusive end line.</param>
 /// <param name="EndColumn">One-based UTF-16 exclusive end column.</param>
@@ -28,7 +28,10 @@ public sealed record RefactoringRequest(string Kind, SourceSelection Selection, 
 /// <param name="Notes">Behavior and limitation explanations.</param>
 /// <param name="BinaryBoundaries">Reference assemblies outside editable source ownership.</param>
 public sealed record PreparedRefactoring(RefactoringRequest Request, string Project, SourceSpan Selection, string SnapshotId,
-    TextEditSet Edits, IReadOnlyList<string> Notes, IReadOnlyList<string> BinaryBoundaries);
+    TextEditSet Edits, IReadOnlyList<string> Notes, IReadOnlyList<string> BinaryBoundaries)
+{
+    internal IReadOnlyList<RefactorTarget> Targets { get; init; } = [];
+}
 
 /// <summary>Proposes FPAS source edits and checks them in an isolated overlay.</summary>
 public static partial class CheckedRefactoring
@@ -54,6 +57,8 @@ public static partial class CheckedRefactoring
         var details = request.Kind switch
         {
             "add-parameter" => AddParameter(draft, request, selection, syntax),
+            "remove-parameter" => RemoveParameter(draft, selection),
+            "name-arguments" => NameArguments(draft, syntax, start),
             "extract-variable" => ExtractVariable(draft, request, syntax, start, end),
             "organize-imports" => OrganizeImports(draft, syntax),
             _ => throw Refuse("Unknown FPAS refactoring.")
@@ -61,7 +66,7 @@ public static partial class CheckedRefactoring
         var edits = TextEditSet.Create(analysis.Context.Texts, draft.Edits, token);
         if (edits.EditCount != 0) draft.Verify(edits);
         return new(request with { Selection = selection }, project, syntax.Span(start, end - start),
-            analysis.Context.SnapshotId, edits, details, before.Query.Boundaries());
+            analysis.Context.SnapshotId, edits, details, before.Query.Boundaries()) { Targets = draft.Targets };
     }
 
     private static ContextFailure Refuse(string message) => new("refactor_not_supported", message);
@@ -69,7 +74,7 @@ public static partial class CheckedRefactoring
     private static bool In(SourceSpan span, string file, int start, int end)
         => Paths.Equals(span.Path, file) && start <= span.Offset && span.Offset < end;
 
-    private sealed record ParameterCall(string Project, SemanticSnapshot Snapshot, SourceOperation Call, int ParameterIndex);
+    private sealed record ParameterCall(string Project, SemanticSnapshot Snapshot, SourceOperation Call, int ParameterCountChange, int ParameterIndex = -1);
 
     private sealed class Draft(WorkspaceAnalysis analysis, RenameBindings before, CancellationToken token)
     {
@@ -79,6 +84,7 @@ public static partial class CheckedRefactoring
         internal CancellationToken Token => token;
         internal List<DiagnosticEdit> Edits { get; } = [];
         internal List<SourceSpan> Removed { get; } = [];
+        internal List<RefactorTarget> Targets { get; } = [];
         internal List<ParameterCall> Calls { get; } = [];
         internal (SourceSpan Original, int Insertion, int Relative)? Move { get; set; }
         internal (SourceSpan Span, int Insertion, string Name)? Extracted { get; set; }
@@ -126,7 +132,7 @@ public static partial class CheckedRefactoring
 
             if (Extracted is { } extraction)
                 VerifyExtraction(updated, extraction, offsetMap.Before(extraction.Span.Path, extraction.Insertion), Move!.Value.Relative);
-            foreach (var call in Calls) VerifyCall(updated, call, offsetMap);
+            foreach (var call in Calls) VerifyCall(updated, call, offsetMap, oldBindings, newBindings);
         }
 
         private void VerifyExtraction(WorkspaceAnalysis updated, (SourceSpan Span, int Insertion, string Name) extraction, int insertion, int expressionOffset)
@@ -145,26 +151,33 @@ public static partial class CheckedRefactoring
             }
         }
 
-        private void VerifyCall(WorkspaceAnalysis updated, ParameterCall original, OffsetMap offsets)
+        private void VerifyCall(WorkspaceAnalysis updated, ParameterCall original, OffsetMap offsets, RenameBindings oldBindings, RenameBindings newBindings)
         {
             token.ThrowIfCancellationRequested();
             var snapshot = updated.Projects.Single(item => Paths.Equals(item.Project, original.Project)).Result!.Snapshot!;
-            var anchor = original.Call.Anchor!;
-            var position = offsets.After(anchor.Path, anchor.Offset);
-            var call = snapshot.Operations.SingleOrDefault(operation => operation.Kind == "invoke" &&
-                operation.Anchor is { } at && Paths.Equals(at.Path, anchor.Path) && at.Offset == position);
+            var span = original.Call.Span;
+            var start = offsets.After(span.Path, span.Offset);
+            var end = offsets.Before(span.Path, span.Offset + span.Length);
+            var call = snapshot.Operations.SingleOrDefault(operation => operation.Kind == original.Call.Kind &&
+                Paths.Equals(operation.Span.Path, span.Path) && operation.Span.Offset == start && start + operation.Span.Length == end);
             if (original.Call.Signature is not { } before || call?.Signature is not { } after ||
-                after.Parameters.Count != before.Parameters.Count + 1 ||
+                after.Parameters.Count != before.Parameters.Count + original.ParameterCountChange ||
                 before.TypeParameters.Count != after.TypeParameters.Count ||
                 !TypesMatch(before.Result, after.Result) ||
                 !before.TypeParameters.Zip(after.TypeParameters).All(pair => TypesMatch(pair.First, pair.Second)))
                 throw Conflict("The proposed argument changes the selected call's types or generic substitution.");
-            var retained = after.Parameters.Where((_, index) => index != original.ParameterIndex);
-            if (!before.Parameters.Zip(retained).All(pair =>
+            if (original.ParameterCountChange == 0 && (!original.Call.HasSameDispatch(call) ||
+                (original.Call.Target is { } oldTarget ? oldBindings.Key(original.Project, oldTarget) : null) !=
+                (call.Target is { } newTarget ? newBindings.Key(original.Project, newTarget) : null) ||
+                !TypesMatch(original.Call.OwnerType, call.OwnerType)))
+                throw Conflict("Naming arguments changes the selected call target.");
+            var retainedBefore = before.Parameters.Where((_, index) => original.ParameterCountChange >= 0 || index != original.ParameterIndex);
+            var retainedAfter = after.Parameters.Where((_, index) => original.ParameterCountChange <= 0 || index != original.ParameterIndex);
+            if (!retainedBefore.Zip(retainedAfter).All(pair =>
                 pair.First.Name == pair.Second.Name && pair.First.Mode == pair.Second.Mode && TypesMatch(pair.First.Type, pair.Second.Type)))
                 throw Conflict("The proposed argument changes an existing parameter binding or mode.");
 
-            bool TypesMatch(string left, string right) => SameType(original.Snapshot.Types.Single(type => type.Id == left),
+            bool TypesMatch(string? left, string? right) => left is null || right is null ? left == right : SameType(original.Snapshot.Types.Single(type => type.Id == left),
                 snapshot.Types.Single(type => type.Id == right));
         }
     }

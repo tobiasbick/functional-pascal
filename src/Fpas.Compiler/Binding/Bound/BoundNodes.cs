@@ -39,8 +39,8 @@ internal sealed record BoundBoolean(bool Value) : BoundExpression(TypeSymbol.Boo
 internal sealed record BoundDouble(double Value) : BoundExpression(TypeSymbol.Double);
 internal sealed record BoundLocal(LocalSymbol Local, TypeSymbol? FlowType = null) : BoundExpression(FlowType ?? Local.Type);
 internal sealed record BoundParameter(ParameterSymbol Parameter, TypeSymbol? FlowType = null) : BoundExpression(FlowType ?? Parameter.Type);
-internal sealed record BoundCall(ImportedMethod Method, IReadOnlyList<BoundExpression> Arguments, BoundExpression? Receiver = null, IReadOnlyList<ParameterSymbol>? WrittenParameters = null) : BoundExpression(Method.Result);
-internal sealed record BoundNew(TypeSymbol Result, ImportedMethod? Constructor, IReadOnlyList<BoundExpression> Arguments, IReadOnlyList<ParameterSymbol>? WrittenParameters = null) : BoundExpression(Result);
+internal sealed record BoundCall(ImportedMethod Method, IReadOnlyList<BoundExpression> Arguments, BoundExpression? Receiver = null, IReadOnlyList<ParameterSymbol>? WrittenParameters = null, bool ExpandedParams = false) : BoundExpression(Method.Result);
+internal sealed record BoundNew(TypeSymbol Result, ImportedMethod? Constructor, IReadOnlyList<BoundExpression> Arguments, IReadOnlyList<ParameterSymbol>? WrittenParameters = null, bool ExpandedParams = false) : BoundExpression(Result);
 internal sealed record BoundNull() : BoundExpression(TypeSymbol.Null);
 internal sealed record BoundTypeOf(TypeSymbol Operand, ImportedMethod Resolve) : BoundExpression(Resolve.Result.NonNullable);
 internal sealed record BoundField(ImportedField Field, BoundExpression? Receiver) : BoundExpression(Field.Type);

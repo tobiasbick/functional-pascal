@@ -126,7 +126,9 @@ The server advertises `experimental.fpasRefactoring: 1` for clients supporting
 versioned document changes. `fpas/prepareRefactoring` takes `schemaVersion: 1`,
 `kind`, an open `textDocument` with version, UTF-16 `position` and `end`,
 and optional `projectUri` for linked ownership. Add Parameter also takes
-`name`, `type` and `argument`. Extract Variable takes `name`.
+`name`, `type` and `argument`. For `remove-parameter`, use the same position
+for both endpoints on the parameter or its named argument. For `name-arguments`, place both endpoints at the call.
+Extract Variable takes `name`.
 
 The response identifies the selected project and input snapshot. It contains
 the preview ID, exact original ranges and text, replacements, notes and binary

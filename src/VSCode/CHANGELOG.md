@@ -13,7 +13,7 @@ host.
 - CLR debugging for FPAS and mixed solutions with the `fpas-clr` launch type.
   Supports breakpoints, stepping, scopes, passive evaluation and exception
   filters.
-- Checked previews for Add Parameter, Extract Variable and Organize Imports.
+- Checked previews for Add Parameter, Remove Parameter, Name Arguments, Extract Variable and Organize Imports.
   Apply revalidates the edit, preserves open buffers and supports undo.
 
 Restricted Mode provides syntax highlighting and snippets. Toolchain

@@ -13,7 +13,7 @@ Use [API documentation lookup](../tools/api-documentation.md) for `fpas doc`:
 name-based FPAS/.NET lookup, overloads, source Markdown, reference XML and bounded
 text/JSON reports.
 
-Use [checked renaming](../tools/refactoring.md) for `refactor rename` and
+Use [checked refactorings](../tools/refactoring.md) for `refactor rename`, `refactor remove-parameter`, `refactor name-arguments` and
 `refactor apply`: explicit source selection, binding-preserving validation,
 reviewable plans and stale-checked source publication.
 

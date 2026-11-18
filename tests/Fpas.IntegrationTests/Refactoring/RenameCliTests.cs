@@ -16,7 +16,7 @@ public sealed class RenameCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
             "--new-name", "Fetch", "--plan", ".temp-data/rename.json", "--report", "json" };
         var planned = await RenameFixture.Cli(directory, arguments); Assert.True(planned.ExitCode == 0, planned.Output + planned.Error); Assert.Empty(planned.Error);
         var path = directory.File(".temp-data/rename.json"); var original = File.ReadAllBytes(path);
-        var plan = RenamePlanJson.Read(original); Assert.Equal(2, plan.EditCount); Assert.True(plan.ChangesPublicApi);
+        var plan = RefactorPlanJson.Read(original); Assert.Equal(2, plan.EditCount); Assert.True(plan.ChangesPublicApi);
         Assert.Equal(Source, File.ReadAllText(directory.File("Game/Bridge.fpas"))); Assert.False(File.Exists(directory.File("Game/bin/Debug/net10.0/Game.dll")));
         var overwrite = await RenameFixture.Cli(directory, arguments); Assert.Equal(1, overwrite.ExitCode); Assert.Equal(original, File.ReadAllBytes(path));
         var mismatch = await RenameFixture.Cli(directory, "apply", "Missing.fpasproj", "--plan", path, "--report", "json");

@@ -1,0 +1,71 @@
+using Fpas.Workspaces.Analysis;
+using Fpas.Workspaces.Editing;
+using Fpas.Workspaces.Loading;
+using Fpas.Workspaces.Queries;
+
+namespace Fpas.Workspaces.Refactoring;
+
+/// <summary>Pairs a portable checked refactoring plan with its detached edits.</summary>
+/// <param name="Plan">Versioned plan and its semantic/input identity.</param>
+/// <param name="Edits">Validated source changes.</param>
+public sealed record PreparedFileRefactoring(RefactorPlan Plan, TextEditSet Edits);
+
+/// <summary>Creates and revalidates portable refactoring plans against the original project inputs.</summary>
+public static class FileRefactorPlans
+{
+    internal static PreparedFileRefactoring Seal(RefactorPlan plan, TextEditSet edits)
+    {
+        plan = plan with { Id = RefactorPlanJson.Identity(plan) };
+        if (RefactorPlanJson.Serialize(plan).Length > RefactorPlanJson.MaximumBytes)
+            throw new ContextFailure(plan.Kind == "rename" ? "rename_limit" : "result_limit", "Refactoring plan exceeds 4 MiB.");
+        return new(plan, edits);
+    }
+
+    /// <summary>Prepares the same checked parameter removal used by editor clients for file publication.</summary>
+    /// <param name="analysis">Checked project or solution context.</param>
+    /// <param name="selection">One-based parameter selection and optional project owner.</param>
+    /// <param name="token">Cancels plan preparation.</param>
+    /// <returns>The portable plan and its validated source edits.</returns>
+    public static PreparedFileRefactoring RemoveParameter(WorkspaceAnalysis analysis, SourceSelection selection, CancellationToken token)
+        => Prepare(analysis, "remove-parameter", selection, token);
+
+    internal static PreparedFileRefactoring Prepare(WorkspaceAnalysis analysis, string kind, SourceSelection selection, CancellationToken token)
+    {
+        selection = selection with { File = Path.GetFullPath(selection.File), Project = selection.Project is null ? null : Path.GetFullPath(selection.Project) };
+        var prepared = CheckedRefactoring.Prepare(analysis, new(kind, selection, selection.Line, selection.Column), token);
+        var files = prepared.Edits.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
+            document.ReplacementHash, document.Edits)).ToArray();
+        var plan = new RefactorPlan(1, kind, analysis.Context.Path, analysis.Context.Configuration, prepared.SnapshotId,
+            selection, null, prepared.Targets, files,
+            analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), prepared.BinaryBoundaries);
+        return Seal(plan, prepared.Edits);
+    }
+
+    /// <summary>Regenerates a plan and requires its context, input snapshot and identity to match exactly.</summary>
+    /// <param name="analysis">Current successful complete analysis.</param>
+    /// <param name="plan">Original checked refactoring plan.</param>
+    /// <param name="token">Cancels semantic regeneration.</param>
+    /// <returns>The matching regenerated plan and edits.</returns>
+    public static PreparedFileRefactoring Validate(WorkspaceAnalysis analysis, RefactorPlan plan, CancellationToken token = default)
+    {
+        if (!plan.HasValidOperation || RefactorPlanJson.Identity(plan) != plan.Id)
+            throw new ContextFailure("invalid_plan", "Invalid or modified refactoring plan.");
+        ValidateContext(plan, analysis.Context.Path, analysis.Context.Configuration);
+        if (plan.InputSnapshotId != analysis.Context.SnapshotId)
+            throw new ContextFailure("stale_plan", "Project inputs changed after refactoring planning.");
+        var prepared = plan.Kind == "rename" ? RenameService.Prepare(analysis, plan.Selection, plan.NewName!, token)
+            : Prepare(analysis, plan.Kind, plan.Selection, token);
+        if (prepared.Plan.Id != plan.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked refactoring.");
+        return prepared;
+    }
+
+    /// <summary>Rejects applying a plan to another context or configuration.</summary>
+    /// <param name="plan">Plan containing the original context.</param>
+    /// <param name="context">Requested project or solution path.</param>
+    /// <param name="configuration">Requested context configuration.</param>
+    public static void ValidateContext(RefactorPlan plan, string context, string configuration)
+    {
+        if (plan.Context != Path.GetFullPath(context) || plan.Configuration != configuration)
+            throw new ContextFailure("plan_context_mismatch", "Supply the plan's original context and configuration.");
+    }
+}

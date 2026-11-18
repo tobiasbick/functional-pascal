@@ -29,7 +29,7 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
     private readonly Dictionary<string, MetadataIdentity> metadataIdentities = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SourceDocument> documents = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly Dictionary<string, IReadOnlyDictionary<int, Token>> tokens = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-    private readonly Dictionary<(string Path, int Offset, string Role), (SymbolEntry Symbol, SourceSpan Span)> occurrences = [];
+    private readonly Dictionary<(string Path, int Offset, string Role), (SymbolEntry Symbol, SourceSpan Span, int AccessToken)> occurrences = [];
     private readonly Dictionary<(string Path, int Offset, int Length), ExpressionType> expressions = [];
     private readonly Dictionary<TypeSymbol, string> typeIds = [];
     private readonly Dictionary<string, SemanticType> types = new(StringComparer.Ordinal);
@@ -75,8 +75,8 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
 
     private SourceSpan Span(SourceText source, int position, int length) => documents[source.Path].Span(position, length);
     private Token? TokenAt(SourceText source, int position) => tokens[source.Path].GetValueOrDefault(position);
-    private void Occurrence(SourceText source, Token name, SymbolEntry symbol, string role)
-        => occurrences[(source.Path, name.Position, role)] = (symbol, Span(source, name.Position, name.Length));
+    private void Occurrence(SourceText source, Token name, SymbolEntry symbol, string role, int accessToken = 0)
+        => occurrences[(source.Path, name.Position, role)] = (symbol, Span(source, name.Position, name.Length), accessToken);
 
     private void Declare(object identity, string kind, string name, SourceText source, Token nameToken, TypeSymbol? type = null, MetadataIdentity? metadata = null, CallableSignature? callable = null)
     {
@@ -130,7 +130,7 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
         var ids = allSymbols.Select(symbol => symbol.Id).ToHashSet(StringComparer.Ordinal);
         return new(snapshotId, assemblyName, documents.Values.OrderBy(document => document.Path, StringComparer.Ordinal), allSymbols,
             retained.Types.OrderBy(type => type.Id, StringComparer.Ordinal),
-            occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role)).Distinct()
+            occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role) { AccessToken = item.Value.AccessToken }).Distinct()
                 .OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Role, StringComparer.Ordinal),
             expressions.Values.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Span.Length),
             metadataIdentities.Where(item => ids.Contains(metadataSymbols[item.Key].Id)).OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
@@ -150,6 +150,6 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
         foreach (var identity in symbols.Where(item => ReferenceEquals(item.Value, previous)).Select(item => item.Key).ToArray()) symbols[identity] = current;
         foreach (var key in metadataSymbols.Where(item => ReferenceEquals(item.Value, previous)).Select(item => item.Key).ToArray()) metadataSymbols[key] = current;
         foreach (var (key, occurrence) in occurrences.Where(item => ReferenceEquals(item.Value.Symbol, previous)).ToArray())
-            occurrences[key] = (current, occurrence.Span);
+            occurrences[key] = (current, occurrence.Span, occurrence.AccessToken);
     }
 }

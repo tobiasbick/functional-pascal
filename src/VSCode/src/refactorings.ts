@@ -6,6 +6,8 @@ const scheme = 'fpas-refactoring';
 const stale = 'The FPAS preview is out of date. Prepare it again.';
 const operations = [
   ['addParameter', 'add-parameter', 'Add Parameter', vscode.CodeActionKind.RefactorRewrite],
+  ['removeParameter', 'remove-parameter', 'Remove Parameter', vscode.CodeActionKind.RefactorRewrite],
+  ['nameArguments', 'name-arguments', 'Name Arguments', vscode.CodeActionKind.RefactorRewrite],
   ['extractVariable', 'extract-variable', 'Extract Variable', vscode.CodeActionKind.RefactorExtract],
   ['organizeImports', 'organize-imports', 'Organize Imports', vscode.CodeActionKind.SourceOrganizeImports],
 ] as const;
@@ -56,8 +58,8 @@ export class Refactorings implements vscode.TextDocumentContentProvider, vscode.
       }),
       vscode.languages.registerCodeActionsProvider({ scheme: 'file', language: 'fpas' }, {
         provideCodeActions: (_, range, context) => vscode.workspace.isTrusted && this.session()
-          ? operations.filter((operation, index) => (index !== 1 || !range.isEmpty) &&
-            (context.only ? context.only.contains(operation[3]) : index < 2))
+          ? operations.filter(operation => (operation[1] !== 'extract-variable' || !range.isEmpty) &&
+            (context.only ? context.only.contains(operation[3]) : operation[1] !== 'organize-imports'))
             .map(operation => {
               const title = 'FPAS: Preview ' + operation[2];
               const action = new vscode.CodeAction(title, operation[3]);
@@ -202,7 +204,7 @@ function progress<T>(title: string, action: (token: vscode.CancellationToken) =>
 }
 
 async function inputs(operation: Operation): Promise<Options | undefined> {
-  if (operation[1] === 'organize-imports') return {};
+  if (operation[1] !== 'add-parameter' && operation[1] !== 'extract-variable') return {};
   const name = await vscode.window.showInputBox({ prompt: operation[1] === 'extract-variable' ? 'New constant name' : 'New parameter name' });
   if (!name) return undefined;
   if (operation[1] === 'extract-variable') return { name };

@@ -21,6 +21,12 @@ public sealed class DocumentationQuery
     /// <param name="search">Documentation filter to validate.</param>
     public static void Validate(DocumentationSearch search)
     {
+        if (search.TypeArguments is { Count: > 0 } arguments && (!search.Usage || arguments.Any(string.IsNullOrWhiteSpace)))
+            throw new ContextFailure("invalid_argument", "--type-arg requires --usage and a nonempty FPAS type.");
+        if (search.Usage && (search.Match != "exact" || search.Name is not { Length: > 2 } || search.Name[1] != ':' || search.Name[0] is not ('M' or 'P' or 'F')))
+            throw new ContextFailure("invalid_argument", "--usage requires an exact M:, P: or F: documentation ID from --name lookup.");
+        if (search.Access is not null && (search.Access is not ("read" or "write") || !search.Usage || search.Name[0] == 'M'))
+            throw new ContextFailure("invalid_argument", "--access read or write requires a property or field ID with --usage.");
         if (string.IsNullOrWhiteSpace(search.Name)) throw new ContextFailure("invalid_argument", "--name must not be empty.");
         if (search.Match is not ("exact" or "prefix" or "contains")) throw new ContextFailure("invalid_argument", "--match must be exact, prefix or contains.");
         if (search.Limit is < 1 or > 100 || search.Offset < 0) throw new ContextFailure("invalid_argument", "--limit must be 1..100 and --offset must be nonnegative.");
@@ -41,16 +47,16 @@ public sealed class DocumentationQuery
         inputs = new(analysis.Context.SnapshotId, references, token);
         var xml = new XmlDocumentation(inputs, token);
         using var metadata = new MetadataCatalog();
-        var candidates = metadataOnly ? [] : source.Documentation(search, token).ToList();
+        var candidates = metadataOnly || search.Usage ? [] : source.Documentation(search, token).ToList();
         var sourceProjects = projects.Select(project => project.Path).ToHashSet(Paths);
         var sourceOutputs = analysis.Context.DependencyOutputs.Where(output => sourceProjects.Contains(output.Project)).Select(output => output.Path).ToHashSet(Paths);
         foreach (var project in projects)
             foreach (var path in project.Request.References.Distinct(Paths).Where(path => !sourceOutputs.Contains(path)))
             {
                 token.ThrowIfCancellationRequested();
-                var image = metadataOnly ? project.Request.ReferenceImages?.FirstOrDefault(item => Paths.Equals(item.Path, path)) : null;
+                var image = metadataOnly || search.Usage ? project.Request.ReferenceImages?.FirstOrDefault(item => Paths.Equals(item.Path, path)) : null;
                 if (metadataOnly && image is null) continue;
-                foreach (var candidate in metadata.Search(project.Path, path, search, token, image))
+                foreach (var candidate in metadata.Search(project.Path, path, search, token, image, search.Usage ? project.Request : null))
                 {
                     if (metadataOnly && candidates.Count == 1000)
                         throw new ContextFailure("documentation_limit", "Metadata search exceeds 1,000 matches. Narrow the name or project.");

@@ -22,18 +22,31 @@ internal sealed partial class ReferenceCatalog
                     (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) continue;
                 if (isStatic && method.Attributes.HasFlag(MethodAttributes.Virtual) && !owner.IsParameter)
                     throw source.Error("FP3005", "Static virtual interface members require a constrained type parameter.", position);
-                var limits = new SignatureLimits(this, definition.Assembly);
-                var signature = method.DecodeSignature(limits, null);
-                if (argumentCount is not null && signature.ParameterTypes.Length != argumentCount) continue;
-                if (signature.ReturnType.Kind == TypeKind.ByRef) limits.Reasons.Add("ref returns");
-                if (signature.Header.CallingConvention != SignatureCallingConvention.Default) limits.Reasons.Add("non-managed-default calling conventions");
-                limits.Spans(signature.ReturnType, allowed: false);
-                foreach (var parameter in signature.ParameterTypes)
-                    if (parameter.Kind == TypeKind.ByRef) limits.Spans(parameter.Element!, allowed: false);
-                    else limits.Spans(parameter, allowSpanParameters);
-                limits.Diagnose(source, position, $"{type}.{name}");
+                CheckMethodSignature(definition.Assembly, method, $"{type}.{name}", source, position, argumentCount, allowSpanParameters);
             }
         }
+    }
+
+    internal void CheckMethodSignature(ReferenceAssembly assembly, MethodDefinition method, string member, SourceText source,
+        int position, int? argumentCount, bool allowSpanParameters)
+    {
+        var limits = new SignatureLimits(this, assembly);
+        var signature = method.DecodeSignature(limits, null);
+        if (argumentCount is not null && signature.ParameterTypes.Length != argumentCount) return;
+        if (signature.ReturnType.Kind == TypeKind.ByRef) limits.Reasons.Add("ref returns");
+        if (signature.Header.CallingConvention != SignatureCallingConvention.Default) limits.Reasons.Add("non-managed-default calling conventions");
+        limits.Spans(signature.ReturnType, allowed: false);
+        foreach (var parameter in signature.ParameterTypes)
+            if (parameter.Kind == TypeKind.ByRef) limits.Spans(parameter.Element!, allowed: false);
+            else limits.Spans(parameter, allowSpanParameters);
+        limits.Diagnose(source, position, member);
+    }
+
+    internal void CheckFieldSignature(ReferenceAssembly assembly, FieldDefinition field, string member, SourceText source, int position)
+    {
+        var limits = new SignatureLimits(this, assembly);
+        limits.Spans(field.DecodeSignature(limits, null), allowed: false);
+        limits.Diagnose(source, position, member);
     }
 
     internal void DiagnoseUnsupportedMember(TypeSymbol owner, string name, bool isStatic, bool writing, SourceText source, int position)
@@ -55,9 +68,7 @@ internal sealed partial class ReferenceCatalog
                 var field = reader.GetFieldDefinition(handle);
                 if (reader.GetString(field.Name) != name || field.Attributes.HasFlag(FieldAttributes.Static) != isStatic ||
                     (field.Attributes & FieldAttributes.FieldAccessMask) != FieldAttributes.Public) continue;
-                var limits = new SignatureLimits(this, definition.Assembly);
-                limits.Spans(field.DecodeSignature(limits, null), allowed: false);
-                limits.Diagnose(source, position, $"{type}.{name}");
+                CheckFieldSignature(definition.Assembly, field, $"{type}.{name}", source, position);
             }
         }
     }

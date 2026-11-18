@@ -1,4 +1,5 @@
 using Fpas.Compiler.Tests.Support;
+using Fpas.Compiler.Analysis;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -9,6 +10,45 @@ namespace Fpas.Compiler.Tests.Types;
 
 public sealed class RecordMetadataTests
 {
+    [Fact]
+    public void Record_argument_labels_follow_field_slots_even_if_CLR_constructor_parameters_have_other_names()
+    {
+        using var directory = new TemporaryDirectory();
+        var path = directory.File("Library.dll");
+        const string source = "unit Coordinates; public type Point = record public X: int; public Y: int; end record; end unit;";
+        var library = FpasCompiler.Compile(new([new("point.fpas", source)], "Library", TestCompilation.References, CompilationTarget.Library));
+        Assert.True(library.Success);
+        var bytes = library.Program!.AssemblyImage.ToArray();
+        int ctorToken;
+        Guid moduleId;
+        using (var pe = new PEReader(new MemoryStream(bytes)))
+        {
+            var reader = pe.GetMetadataReader();
+            var point = reader.TypeDefinitions.Select(reader.GetTypeDefinition).Single(type => reader.GetString(type.Name) == "Point");
+            var ctor = point.GetMethods().Single(handle => reader.GetString(reader.GetMethodDefinition(handle).Name) == ".ctor");
+            ctorToken = MetadataTokens.GetToken(ctor);
+            moduleId = reader.GetGuid(reader.GetModuleDefinition().Mvid);
+            var rows = reader.GetMethodDefinition(ctor).GetParameters().Where(handle => reader.GetParameter(handle).SequenceNumber > 0).ToArray();
+            Assert.Equal(2, rows.Length);
+            var table = pe.PEHeaders.MetadataStartOffset + reader.GetTableMetadataOffset(TableIndex.Param);
+            var stride = reader.GetTableRowSize(TableIndex.Param);
+            // Each Param row ends in a string-heap index following its flags and sequence number.
+            Span<byte> Name(ParameterHandle handle) => bytes.AsSpan(table + (MetadataTokens.GetRowNumber(handle) - 1) * stride + 4, stride - 4);
+            var x = Name(rows[0]).ToArray();
+            Name(rows[1]).CopyTo(Name(rows[0]));
+            x.CopyTo(Name(rows[1]));
+        }
+        const string consumer = "program Test; uses Coordinates as C; begin discard new C.Point(1, 2); end; end program;";
+        var request = new AnalysisRequest([new("test.fpas", consumer)], "Test", [.. TestCompilation.References, path],
+            ReferenceImages: [new(path, bytes)]);
+        var result = FpasCompiler.Analyze(request);
+        Assert.True(result.Success, string.Join(";", result.Diagnostics));
+        var call = Assert.Single(result.Snapshot!.Operations, op => op.Kind == "construct");
+        Assert.Equal(new[] { "X", "Y" }, call.SuggestedArgumentLabels().Select(item => item.Label));
+        var template = ApiUsageTemplates.Create(request, "Coordinates+Point", moduleId, ctorToken, [], false);
+        Assert.True(template.Source?.Contains("(X := X, Y := Y)", StringComparison.Ordinal) == true, template.Reason + template.Source);
+    }
+
     [Theory]
     [InlineData("version")]
     [InlineData("copy")]

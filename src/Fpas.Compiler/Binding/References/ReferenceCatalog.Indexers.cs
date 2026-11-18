@@ -26,7 +26,8 @@ internal sealed partial class ReferenceCatalog
                 var method = definition.Assembly.Reader.GetMethodDefinition(methodHandle);
                 if (method.Attributes.HasFlag(MethodAttributes.Static) || (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) continue;
                 var imported = ReadMethod(type, methodHandle);
-                if (imported is null || imported.Parameters.Count != arguments.Count + (writing ? 1 : 0)) continue;
+                if (imported is null || imported.Parameters.Count != arguments.Count + (writing ? 1 : 0) ||
+                    imported.ParameterInfo?.Any(parameter => parameter.ByRef) == true) continue;
                 var indices = writing ? imported.Parameters.SkipLast(1).ToArray() : imported.Parameters;
                 if (indices.Where((parameter, index) => !Applicable(arguments[index], parameter)).Any()) continue;
                 candidates.Add(imported);

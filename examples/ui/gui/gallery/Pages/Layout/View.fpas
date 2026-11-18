@@ -64,7 +64,10 @@ begin
     ),
     DirectionRow<TMsg>('ltr', L.Direction.LeftToRight, Message),
     DirectionRow<TMsg>('rtl', L.Direction.RightToLeft, Message),
-    G.Heading<TMsg>('Horizontal scrolling', 'Use a horizontal wheel or drag the native scrollbar.'),
+    G.Heading<TMsg>(
+      'Horizontal scrolling',
+      'Scroll sideways or hold Shift while using the mouse wheel.'
+    ),
     E.Size<TMsg>(
       E.ScrollView<TMsg>(
         'layout-horizontal',

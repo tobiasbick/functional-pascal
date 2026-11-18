@@ -33,15 +33,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value.Times / Selected` | Supply sorted times. Selection defaults to minus one. |
+| `Value.Times / Selected` | Supply sorted, finite times within the inclusive axis bounds. Selection defaults to minus one. |
 | `Capacity / Minimum / Maximum` | 32 / 0 / 1. Use the same bounds as the chart when sharing an axis. |
 | `Step / LabelStep / Units` | 0 / 0 / Number. Zero selects continuous input or automatic label spacing. |
+| `Width / Format / Label` | Fill / null / null. Use a format or a callback to customize axis and selected-event labels. |
 | `Add / Remove / Axis / Enabled` | All true. |
 
 ## Interaction
 
-Drag a marker to change its time. Double-click a marker to remove it when
-removal is enabled. The focused track also supports keyboard movement.
+Click an empty part of the track to add a marker when adding is enabled and
+capacity is available. Drag a marker to change its time. Double-click a
+marker to remove it when removal is enabled.
+
+With the track focused, use Up and Down to select a marker and Left or Right
+to move it. Home and End select the first and last marker. Escape clears
+selection. Enter or Space adds a marker when adding is enabled and capacity
+is available. Delete or Backspace removes the selected marker when removal
+is enabled.
+
 Store `Change.Current` to accept a proposal, including selection changes.
 `Added` and `Removed` identify the affected index or return minus one.
 `Dragging` reports whether the drag is still in progress.

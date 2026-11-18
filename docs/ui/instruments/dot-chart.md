@@ -42,9 +42,11 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Bands / Count` | Supply equally spaced samples, with `Count` samples in every band. Pass the intended sample count for an empty plot. |
+| `Bands / Count` | Supply up to 16 bands with `Count` finite, equally spaced samples in each. Pass the intended sample count for an empty plot. |
 | `XMinimum / XMaximum / Units` | 0 / 0 / Number. Equal bounds use sample indices. Hours formats 12.25 as 12:15 and wraps at midnight. |
+| `XFormat / XStep` | null / 0. Zero chooses automatic X label spacing. |
 | `Range / Format / Unit` | null / null / empty. The chart derives value bounds and formatting when omitted. |
+| `XLabel / ValueLabel` | Both null. Optional callbacks format X-axis and readout coordinates or the readout value during painting. |
 | `Width / Height / Pitch` | Fill / 0 / 0. Zero uses native height or dot spacing. |
 | `Grid / Axis / Readout / Enabled` | All true. |
 | `Annotations` | Empty. Reference lines and points use axis units. |

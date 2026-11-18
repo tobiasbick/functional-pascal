@@ -70,13 +70,14 @@ result. Keep related bindings and operations together, including in tests.
 `fpas fmt` preserves authored sections before `const` and `var`; inspect the result
 for readability.
 
-The documentation checker compiles examples from the repository README, handbook,
-and agent reference.
-LanguageSpecificationTests runs the complete programs and checks their behavior.
+The documentation checker compiles examples from the repository README, Pascal
+handbook, agent reference, and UI handbook.
+LanguageSpecificationTests runs the complete programs from the repository README
+and the Pascal handbook, including the agent reference, and checks their behavior.
 Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)
 and [reference maintenance](../../../docs/pascal/agents/maintenance.md).
-Debug/profile actual generated programs with supported .NET tools before writing
-variants; use [fpas-bench](../fpas-bench/SKILL.md) for authorized measurements.
+Debug or profile generated programs with supported .NET tools before writing
+variants. Follow the [benchmark guide](../../../docs/pascal/tools/benchmarks.md) for measurements.
 Write maintenance helpers in FPAS when supported CLR APIs suffice. Record concrete
 blockers in a task-specific document under `docs/future/`, including a reproducer
 and the required API.

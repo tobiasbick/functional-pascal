@@ -173,6 +173,9 @@ Linux X11 case sends native pointer, resize, Escape and window-close events
 to the gallery. Run GUI tests under Xvfb on headless Linux. Window tests skip
 on Linux without `DISPLAY`.
 
+The desktop commands contract checks that explicit focus, initial dialog focus
+and focus restoration survive frames with pending host results.
+
 The native suite also checks renderer and frame ownership, capture, weighted
 layout, scroll offsets, and native wakeup. The link-and-render test drives
 the copy button against a local clipboard callback, including repeated
@@ -206,20 +209,28 @@ options and focus, button-group traversal, OSC 52 copy data, shared theme
 colors, and cell allocation. `TerminalBoundaryTests` builds it without GUI
 assets and checks the generated assembly references.
 
-`HeadlessTuiTests` checks frame updates, bounded input, cached views, and
-effect completion, cancellation and cleanup. `TerminalModeTests` checks
+`HeadlessTuiTests` checks frame updates, bounded input, cached views and
+modified arrow shortcuts alongside plain-arrow focus navigation. Effect
+coverage includes completion, cancellation and cleanup, and checks that a host
+request which closes a session skips subsequent commands. `TerminalModeTests` checks
 restoration of native terminal modes after exit and output failure.
 The rendering fixture checks sanitized orphan Unicode clusters against actual
-cells and output positions; the theme fixture compares all default palette colors.
+cells and output positions. The theme fixture compares all default palette colors.
+The composition fixture also checks graphical outline validation, including
+anchor order and scope boundaries for dialogs, popovers, tables and Kanban cards.
 
 ## Workflows and Amp
 
 `WorkflowTests` covers cleanup failure preserving completed outcomes, throwing
 cancellation callbacks, late resource acquisition after scope closure, and
-deadline/caller/unrelated cancellation precedence.
-`FpasAmp.Library.Tests` checks malformed cover-cache rebuilding and offline reuse.
-`FpasAmp.Ui.Tests` checks rating receipts after navigation, stale messages, and
-music-source settings repair and save rejection for playlist extensions.
+deadline/caller/unrelated cancellation precedence. It also verifies UTF-8
+decoding on both captured process streams.
+`FpasAmp.Library.Tests` checks malformed cover-cache rebuilding, offline reuse,
+embedded artwork fallback before sidecars, and reconciliation of a subtree
+removed during a pause. Playlist tests check how URI escaping is interpreted.
+`FpasAmp.Ui.Tests` checks rating receipts after navigation, stale messages,
+open-album catalogue refresh, cancellation when switching browser sections,
+and music-source settings repair and save rejection for playlist extensions.
 
 ## Language and metadata
 

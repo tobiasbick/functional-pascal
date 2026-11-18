@@ -274,8 +274,8 @@ src, sdk, and tests without introducing separate solutions for each component.
 - Fpas.Build.Tasks launches the matching Fpas.Cli in a separate process. Compiler
   dependencies stay outside the MSBuild host process. Resolve the compiler from
   the selected SDK's assets, with normal .NET host invocation where needed.
-- Fpas.NET.Sdk delivers the task and compiler together and resolves the matching
-  Fpas.Core reference/runtime asset when required. Build/package ordering must
+- Fpas.NET.Sdk delivers the task and compiler together and supplies the matching
+  Fpas.Core reference/runtime asset to projects. Build/package ordering must
   account for those inputs without creating a dependency cycle.
 - Generated FPAS assemblies reference Fpas.Core only for the language support
   they need. Fpas.Core has no dependency on compiler or MSBuild implementation.

@@ -22,7 +22,8 @@ fallback. Integer/string/CLR-enum selectors require a catch-all or else; CLR enu
 metadata cannot exclude unnamed values. A subrange can prove complete interval
 coverage with constant/range patterns. Guards never prove coverage. Duplicate,
 unreachable, and out-of-domain arms are errors. A fallback after full coverage
-is also unreachable.
+is also unreachable. A nullable selector needs coverage for null even when an
+earlier check has established that the current value is non-null.
 
 Use is T as Name for a type pattern with an arm-local non-null binding. The
 ordinary expression Value is T tests CLR type compatibility without binding a
@@ -48,8 +49,8 @@ See [nullable operator rules](../language/types/nullable-types.md#lifted-value-o
 
 Use ordinary CLR exceptions and existing Try-pattern APIs for failures.
 Raise Expression throws a non-null exception; raise; rethrows only inside the
-lexical catch body, preserving the original stack. Catch clauses are ordered,
-may use when filters, and can omit the binding with catch do. A throwing filter
+lexical catch body, preserving the original stack. Typed catches are ordered
+and may use `when` filters. `catch do` catches any managed exception. A throwing filter
 counts as false. Finally executes on normal/exceptional exits; control cannot
 transfer out of it. An exception from cleanup replaces an earlier exception
 according to CLR rules. Application variants model normal domain outcomes, without
@@ -115,6 +116,6 @@ end;
 end program;
 ```
 
-Read [control flow](../language/control-flow/README.md) for matching/coverage,
+Read [pattern matching](../language/pattern-matching/README.md) for matching/coverage,
 [nullable types](../language/types/nullable-types.md) for flow restrictions, and
 [errors/resources](../language/error-handling/README.md) for cleanup ordering.

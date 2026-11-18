@@ -92,8 +92,9 @@ and any cancellation callbacks finish.
 ## Cancellation and shutdown
 
 `Close` and the close request from `Exit` end admission, discard pending
-entries and request cancellation of active effects. Waiting producers are
-released. `Close` returns the same task on repeated calls. Observe that task
+entries and request cancellation of active effects. If a host request closes
+the session during command dispatch, the remaining commands are skipped.
+Waiting producers are released. `Close` returns the same task on repeated calls. Observe that task
 before disposing resources used by effects. It completes after workers and
 cancellation callbacks finish and reports cleanup failures. Workers and
 callbacks must finish cooperatively for shutdown to complete.

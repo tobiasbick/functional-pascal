@@ -128,8 +128,11 @@ The [shared reference](../Fpas.Ui/README.md) owns options and interaction contra
 
 Visible labels and stable IDs are separate, including literal ## text. Disabled
 and covered controls accept no input or focus. Tab/Shift+Tab traverse enabled
-controls within the active modal. Native CUI supplies rendering and interaction;
-the host maps proposals to messages without applying application updates itself.
+controls within the active modal. When a modal closes, the host tries to
+return focus to the last control focused before it opened. If that control
+is unavailable, focus goes to the first enabled control in the presented
+scope, when available. Native CUI supplies rendering and interaction.
+The host maps proposals to messages without applying application updates itself.
 
 Prepare validates the active view before drawing. GUI distances use logical
 units; terminal-specific elements and cell distances are rejected. View records,

@@ -1,7 +1,7 @@
 # Scroll view
 
 Layout shows a strip of cards inside a horizontal viewport with an edge fade.
-The horizontal mode and edge fade require the GUI host.
+Horizontal scrolling and edge fades require the GUI host.
 Available in **GUI and TUI**.
 
 ![Horizontal card strip in the FPAS gallery](images/scroll-view.png)
@@ -35,13 +35,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `ShowScrollbar / FadeEdges / Horizontal` | true / false / false. The edge fade and horizontal mode are graphical options. |
+| `ShowScrollbar / FadeEdges / Horizontal` | true / false / false. Enable Horizontal to allow scrolling on both axes. |
 | `Position / OnScroll` | Use the controlled overload to store the vertical position in the model and receive scroll proposals. |
 
 ## Interaction
 
 Constrain the viewport along the scroll axis so overflow can scroll. In
-the horizontal example, use horizontal wheel input or drag the scrollbar.
+the horizontal example, use horizontal wheel input or hold Shift while
+turning a vertical scroll wheel. Drag the scrollbar to scroll vertically
+when content overflows that axis.
 For anchored navigation, let the host own the offset and put the outline
 in the same CUI scope.
 

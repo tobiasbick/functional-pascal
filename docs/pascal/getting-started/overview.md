@@ -47,10 +47,12 @@ events, protocol declarations, interface implementation, and asynchronous method
 It supports ordinary managed .NET APIs.
 
 It does not include user-authored class hierarchies,
-unsafe pointers, `ref struct` values, spans, ref returns,
+unsafe pointers, `ref struct` values, ref returns,
 byref locals, expression-tree conversion, custom awaiter patterns, async iterators,
 dynamic binding, operator declarations, or compiler plug-ins. An unsupported
 metadata signature produces a diagnostic identifying the unsupported feature.
+Arrays can supply [by-value span parameters](../interop/supported-signatures.md#span-parameters)
+when calling imported methods and constructors.
 This scope does not promise access to every possible .NET API.
 
 Finish this baseline before adding language extensions. Track confirmed omissions

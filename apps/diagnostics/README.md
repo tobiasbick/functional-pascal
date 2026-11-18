@@ -12,9 +12,10 @@ dotnet build apps/diagnostics/Measure/Measure.fpasproj -c Release -warnaserror
 dotnet tool restore
 ```
 
-Repeat with `-c Debug` for diagnostic builds. `Measure` references the existing
-Fpas.Processes project for Windows job/Linux process-group ownership; Workload
-has only framework/Core dependencies and can also be published with Native AOT.
+Repeat with `-c Debug` for diagnostic builds. `Measure` uses
+`Fpas.Processes.Workflows` for capture and cleanup of processes owned through
+Windows jobs or Linux process groups. Workload has only framework/Core
+dependencies and can also be published with Native AOT.
 
 ## Workload
 

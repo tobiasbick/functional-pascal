@@ -28,11 +28,13 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height` | Content / Content. The width can also take a minimum or maximum. |
+| `Width / Height` | Content / Content. |
+| `MinimumWidth / MaximumWidth` | Both 0, which uses the native defaults. |
 | `Padding / Gap` | 0 / 0 use native defaults. PaddingX and PaddingY can override the main inset. |
 | `Horizontal / Align / Wrap` | false / Default / false. Wrap applies to a horizontal card. |
 | `Muted / Selected / Enabled` | false / false / true. Muted uses a borderless surface, and Selected uses an accent border. |
 | `OnActivate` | Optional callback that makes the card itself interactive. |
+| `Hoverable` | false. Enable it to use a card without an activation callback as a hover card trigger. |
 
 ## Interaction
 

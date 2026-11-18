@@ -66,9 +66,10 @@ IDE project loaders need separate acceptance.
 
 ## FPAS Project SDK
 
-The SDK identifier is `Fpas.NET.Sdk`. It supplies Sdk.props, Sdk.targets, and
-compiler invocation; a compiler-support reference is added when emitted features
-need one. The following project enables XML documentation:
+The SDK identifier is `Fpas.NET.Sdk`. It supplies Sdk.props, Sdk.targets,
+compiler invocation, and an assembly reference to the matching `Fpas.Core`
+assembly. FPAS emits a dependency on `Fpas.Core` when language features use it.
+The following project enables XML documentation:
 
 ```xml
 <Project Sdk="Fpas.NET.Sdk/0.1.0-dev">

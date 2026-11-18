@@ -32,7 +32,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value / Minimum / Maximum` | Finite values with distinct bounds and an inclusive range. |
+| `Value / Minimum / Maximum` | Finite values with Minimum strictly less than Maximum. Value must be within the inclusive range. |
 | `Step` | 0 selects one percent of the range. |
 | `DecimalPlaces` | 0. Use 0 to 6 fractional digits for display. |
 | `Suffix / Icon` | Empty. An icon replaces the caption. |

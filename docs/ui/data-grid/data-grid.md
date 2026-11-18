@@ -42,13 +42,20 @@ end unit;
 | `Selected / Order` | Both null. Provide a selection mask or sort record to enable each feature. |
 | `Cursor / Anchor` | Both minus one. When set, they index the displayed order. |
 | `Height / RowHeight` | Fill / 40 logical points. |
+| `Striped / HideCheckboxes / Enabled` | false / false / true. |
 
 ## Interaction
 
-Click sortable headings to propose an order. Shift selects a range and Ctrl
-allows multiple selections. Double-click an editable cell to start editing.
-Its commit mapper reports the text. Store row selections by stable identity
-when sorting or filtering changes their positions.
+Click sortable headings to propose an order. Shift-click selects a range and
+Ctrl-click toggles one row. Store selections by stable row ID when sorting or
+filtering changes their positions.
+
+Double-click an editable cell to start a draft. Pressing Enter on the
+grid's focused row starts editing its first editable cell. During editing,
+Enter sends the text to the commit mapper, leaving the cell commits a changed
+draft, and Escape cancels. The grid also discards the draft if the row leaves
+the realized range, its identity changes, the cell stops being editable,
+its capacity changes, or the grid is disabled.
 
 Declare open modal scopes outside the row factory. The GUI validates realized
 `Content` children and `Editable` leading children before drawing them and

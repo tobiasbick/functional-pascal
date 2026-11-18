@@ -36,8 +36,9 @@ cached subviews.
 ## Input and controlled state
 
 Tab/Shift+Tab traverse enabled controls in the active scope. Enter and typed
-Space activate the focused action. Theme segments use Left/Right without
-wrapping. Split menus support arrows, Enter, Escape, wheel and page keys.
+Space activate the focused action. Rows that support Up/Down focus navigation
+use unmodified arrows, leaving modified arrows available for application
+shortcuts. Theme segments use Left/Right without wrapping. Split menus support arrows, Enter, Escape, wheel and page keys.
 The model owns accepted state changes; rendering never calls change mappers.
 
 Dropdown and split buttons share the session's popup foundation. Menu sections

@@ -31,8 +31,8 @@ the current terminators. Include imports, explicit types, and meaningful runtime
 assertions; failures should throw normal CLR exceptions. Programs print a stable
 verification result that the test checks. Use text/sh fences for command examples.
 
-Companion sources share an explicit fence label, for example
-`pascal project=agent-units`. Give that project exactly one program and its units.
+Keep companion sources together on one page. Give each project in this reference
+its own label, e.g. `pascal project=agent-units`, shared by one program and its units.
 Sources are compiled together by the same documentation runner used for handbook
 examples. A unit also compiles independently with its unit companions. Do not
 depend on snippets from unrelated projects or introduce per-example source rewrites.

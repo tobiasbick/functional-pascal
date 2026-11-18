@@ -63,6 +63,7 @@ public sealed class LanguageSpecificationTests(DocExamplesFixture checker)
             "MoveOutcomes" => ["The edge of the map"],
             "ReadWorld" => ["{\"world\":\"test\"}", "Read attempt finished"],
             "Interop" => ["3", "{\"sample_name\":\"Alpha\",\"Value\":10}"],
+            "SpanArguments" => ["258", "4"],
             "TypeRules" => ["8080", "Branch", "-1", "An unnamed CLR enum value"],
             "Identities" => ["42", "Alpha", "False"],
             "RecordMembers" => ["2", "3", "Alpha", "1", "1"],

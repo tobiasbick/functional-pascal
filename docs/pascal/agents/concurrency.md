@@ -54,15 +54,17 @@ CLR calls and lexical resource lifetimes.
 Add a project reference to
 [Fpas.Workflows.fpasproj](../../../src/Fpas.Workflows/Fpas.Workflows.fpasproj).
 `Workflow<A, E, R>` describes a success value `A`, an expected failure `E`,
-and a required environment `R`. Wrap a body with `Defer`. Compose it with
-`Map` and `AndThen`, then call `Run` with the environment and caller token.
+and a required environment `R`. Alias `Fpas.Workflows.Operations` as `W`.
+Use `W.Workflow<A, E, R>.Defer(Body)`, compose with `W.Map` or `W.AndThen`,
+then call the workflow's `Run(Environment, Cancellation)`. Each run executes the body again.
 Match `Outcome.Success` and `Outcome.Failure`. Unexpected CLR exceptions and
 cooperative cancellation propagate through the task.
 
 Use layers for scoped dependencies, `Scope.Use` and `Fork` for child tasks that
 must be joined before cleanup, `Parallel.All` for bounded parallelism, and
 `Stream.Consume` for bounded event delivery with backpressure. Forward the
-scope token to its work. `WithDeadline` requests cancellation and awaits cleanup.
+scope token to its work. On expiry, `WithDeadline` requests cancellation and
+waits for the work and cleanup. Work that ignores the token can outlast the deadline.
 
 Use `requires` and `ensures` at workflow entry routines. Report expected execution
 failures through `Outcome.Failure`. Returning that variant completes the task

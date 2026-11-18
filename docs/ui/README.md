@@ -62,8 +62,8 @@ the next view shows it. Close sends a command that ends the application.
 
 The widget pages show the FPAS gallery at scale 1 with the software renderer.
 The FPAS examples return widgets for a view like the counter's `View`
-function, or toast commands for an update. Each page links to the public API
-and the complete gallery example.
+function, or toast commands for an update. The examples link to their gallery
+source and to widget references or public API declarations.
 The [capture workflow](../../apps/gui-doc-captures/README.md) regenerates its
 screenshots.
 

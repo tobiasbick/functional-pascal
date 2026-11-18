@@ -55,6 +55,7 @@ public sealed class AgentReferenceTests(ITestOutputHelper output)
             Assert.EndsWith(example.Library ? "end unit;" : "end program;", example.Source.Trim());
         foreach (var project in examples.Where(example => example.Project is not null).GroupBy(example => example.Project))
         {
+            Assert.Single(project.Select(example => example.Document).Distinct(StringComparer.Ordinal));
             Assert.Single(project, example => !example.Library);
             Assert.Contains(project, example => example.Library);
         }

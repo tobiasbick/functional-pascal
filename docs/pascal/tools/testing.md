@@ -1,7 +1,8 @@
 # Native .NET tests
 
 FPAS tests use existing .NET framework packages, attributes and assertions.
-VSTest and the framework's adapter discover and execute the emitted CLR methods.
+VSTest adapters or a self-hosted Microsoft.Testing.Platform application discover
+and execute the emitted CLR methods.
 No FPAS naming convention, assertion wrapper or test-specific syntax is needed.
 
 ## Create a test project
@@ -19,7 +20,7 @@ NuGet package versions. It disables inherited central package management for thi
 self-contained project; use your own central versions when managing dependencies
 centrally. Restore needs the FPAS SDK feed and the framework packages.
 
-Test projects contain units. The FPAS SDK compiles them as libraries, disables
+VSTest projects contain units. The FPAS SDK compiles them as libraries, disables
 generated source entry points and requests ordinary deps/runtimeconfig files.
 Do not add a dummy program. Public routines become static methods on the unit's
 CLR container. Public records provide instance methods and class-level attributes.

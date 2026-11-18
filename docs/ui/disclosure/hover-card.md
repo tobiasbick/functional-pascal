@@ -30,13 +30,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Position / Width` | BottomStart / 300 logical points. |
-| `Delay` | 0.45 seconds. |
+| `Trigger` | Supply a single interactive control or a card with `Hoverable` enabled. |
+| `Position / Width` | BottomStart / 300 logical points. Zero width uses the default. |
+| `Delay` | 0.45 seconds. Zero uses the default. |
 | `Enabled` | true. |
 
 ## Interaction
 
 Rest the pointer on the link to open the card after the delay. It remains open while the pointer is over the trigger or the card. Escape dismisses it until the pointer leaves the trigger. The link still sends its own activation message.
+
+Declare dialogs and sheets outside the hover card body. If the body has scroll
+anchors, put them in a viewport inside that body.
 
 ## See also
 

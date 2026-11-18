@@ -12,14 +12,12 @@
 Record the CUI commit, session type and the test output verbatim. The KDE
 VM keeps the builds, the diagnostic programs and the raw outputs of every run.
 
-- [ ] SDL 3 on KWin X11 maps a window 28 pixels lower when it opens or is
-  restored from minimized (reproduced without CUI). CUI moves it back, so it
-  flickers for a few frames. Mention it in the pull request together with
-  the dropped maximize in the next point; decide whether to report both to SDL.
-- [ ] SDL2 on KWin X11: after a minimize from maximized, SDL 3.4 (also
-  through sdl2-compat) restores the window to normal and ignores a following
-  `SDL_MaximizeWindow`. Reproduced without CUI. The test reports a skip.
-  Mention it in the pull request; decide whether to report it to SDL.
+- [ ] Decide whether to report the two SDL 3 behavior differences on KWin X11
+  documented in [PR #95](https://github.com/yappologistic/CUI/pull/95). These
+  reproduce with SDL alone. A window opens or restores from minimized 28 pixels
+  lower, and a window minimized from maximized restores to normal and ignores
+  a following `SDL_MaximizeWindow`. CUI corrects the position after a few frames.
+  The window-state test skips the dropped maximize step.
 - [ ] X11: the on-screen check uses the bounding box of all monitors. With
   monitors of different sizes, a place in an empty corner of that box passes.
   KWin re-centers such windows. A second monitor was not available in the VM.
@@ -30,9 +28,6 @@ VM keeps the builds, the diagnostic programs and the raw outputs of every run.
 - [ ] X11 under XWayland: CUI rounds the 130 % desktop scale to 125 %
   (`Xft.dpi` 124). This is the existing X11 scale handling, not part of this
   change; decide separately whether to report it.
-- [ ] WSLg's Weston ignores `StaticGravity`: X11 positions land 6 and 27
-  pixels off, the size of its frame. KWin and Openbox honor it. Mention it
-  in the pull request.
 - [ ] Windows: placement across monitors with different scales. Only one
   monitor was available; a taskbar on the left is verified.
 - [ ] macOS: local interactive verification remains unavailable. The maintainer

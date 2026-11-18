@@ -17,11 +17,18 @@ are limited to 16 MiB.
 
 Playlist readers support M3U/M3U8, PLS, XSPF, ASX/WAX/WVX, B4S, DPL,
 SMIL/SMI/WPL/ZPL and ATL's experimental FPL reader. The local file limit is
-16 MiB and the entry limit is 100,000. Read operations preserve relative paths
-and URLs without opening them. A malformed playlist reports an exception.
-The cancellation token is checked around synchronous parsing and while copying
-entries. M3U8 export writes UTF-8 to a temporary file beside the destination,
-then moves it into place. Cancellation before publication preserves an existing file.
+16 MiB. Read operations preserve relative paths and URLs without opening them.
+A malformed playlist reports an exception. The cancellation token is checked
+around synchronous parsing and while copying entries.
+
+M3U8 export accepts up to 100,000 entries and requires an absolute `.m3u8`
+destination. Relative inputs are interpreted against the destination directory.
+Host-local file URIs are converted to paths. Local paths are written relative
+to the destination when possible. Non-file URIs and Windows drive or UNC paths
+exported on Linux keep their spelling. For an empty title, the export uses the
+filename stem. The writer publishes the UTF-8 file by moving a temporary file
+beside the destination into place. Cancellation before publication preserves
+an existing file.
 
 See the [FPAS media guide](../../docs/pascal/libraries/media.md) for usage and
 [ATL provenance](../../third-party/atl/UPSTREAM.md) for backend changes and licensing.

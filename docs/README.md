@@ -8,7 +8,7 @@ workflow to work on the compiler/toolchain.
 | --- | --- |
 | Language, projects, interop, libraries, and user tools | [Pascal handbook](pascal/README.md) |
 | Compact authoring guidance and verified examples | [FPAS for agents](pascal/agents/README.md) |
-| Repository task skills | [Authoring](../.agents/skills/fpas-authoring/SKILL.md), [projects](../.agents/skills/fpas-projects/SKILL.md), [performance](../.agents/skills/fpas-bench/SKILL.md) |
+| Repository task skills | [Authoring](../.agents/skills/fpas-authoring/SKILL.md), [projects](../.agents/skills/fpas-projects/SKILL.md) |
 | Repository commands and application SDK bootstrap | [Development workflow](build/development.md) |
 | Single-file Windows/Linux compiler, offline SDK export and asset caches | [Compiler distribution](build/distribution.md) |
 | Native AOT, apphosts, application bundles and signing | [Application publishing](build/publishing.md) |

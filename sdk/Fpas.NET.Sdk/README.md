@@ -15,8 +15,9 @@ The SDK supports multiple FPAS sources per project, net10.0,
 AnyCPU, Debug/Release, and executable or library output. Executables contain one
 program plus optional units; libraries contain units only. ProjectReference and
 PackageReference work in mixed C#/FPAS solutions. Portable PDBs and optional XML
-documentation propagate through ordinary output/reference copying. Embedded
-resources and IDE integration remain outside the supported build scope.
+documentation propagate through ordinary output/reference copying. The SDK
+rejects embedded resources with `FP5001`. See the
+[VS Code extension](../../src/VSCode/README.md) for editor integration.
 Records, variants, domains, and public aliases use Fpas.Core metadata attributes.
 The SDK supplies and copies its matching Core assembly. See the
 [CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.

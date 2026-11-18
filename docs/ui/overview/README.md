@@ -1,8 +1,9 @@
 # Overview
 
-Overview opens with a row of metrics, a workspace form and a team card.
-Browse components opens Buttons. Open command palette opens the same
-searchable command list as on the Overlays page.
+Overview opens with an introduction and two actions, followed by a row of
+metrics, a workspace form and a team card. Browse components opens Buttons.
+Open command palette opens the same searchable command list as on the
+Overlays page.
 
 ![Overview with three metrics, the workspace form and the team card](images/overview.png)
 

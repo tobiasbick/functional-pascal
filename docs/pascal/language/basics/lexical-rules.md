@@ -14,8 +14,9 @@ parameter/return descriptions, and .NET XML export.
 Keywords and identifiers are **case-sensitive**. Keywords are lowercase;
 `Count` and `count` are different identifiers. Identifiers use ASCII letters,
 digits, and `_`, with no leading digit. `_` alone is a pattern wildcard, not a
-value binding. Prefix a keyword with `@` to use it as an identifier, including
-in an imported CLR name: `Value.@event`. The `@` is not part of its metadata name.
+value binding. Prefix a keyword with `@` to use it as an identifier, as in
+`const @end: int := 1;`. The same escape works when referring to an imported
+CLR name, and the `@` is omitted from the metadata name.
 
 Primitive aliases are predefined type names, not keywords. They cannot be
 redeclared in a type namespace. See [types](../types/README.md).

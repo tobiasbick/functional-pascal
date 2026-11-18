@@ -38,13 +38,13 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 ## Rules before writing
 
 - Keywords and identifiers are case-sensitive. Keywords are lowercase. Escape
-  foreign keyword names with `@`, as in `Value.@event`.
-- Every binding needs a type and initializer: `const Count: int := 3;`.
-  Parameters, results, fields, loop variables, and pattern bindings also need types.
+  foreign names that match an FPAS keyword with `@`, as in `Value.@end`.
+- Declare each `const` or `var` with a type and initializer, as in `const Count: int := 3;`.
+  Parameters, function results, fields, loop variables, and pattern bindings also need types.
 - Use CLR aliases such as `int`, `long`, `double`, `decimal`, `bool`, and `string`.
   A `char` is one UTF-16 code unit. Strings use apostrophes, doubled inside text.
-- `const` prevents rebinding; `var` permits assignment. Arrays, collections, and
-  records retain reference semantics. Const does not freeze referenced objects.
+- `const` prevents rebinding. Arrays and FPAS records are references. Imported
+  collections follow their CLR type. A const reference can still point to a mutable object.
 - Import namespaces, types, and units explicitly with aliases. Call real .NET
   APIs through those aliases. Mark declarations and record members `public` to
   expose them. Unmarked record members are private to the declaring record.

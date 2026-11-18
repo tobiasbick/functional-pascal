@@ -1453,14 +1453,17 @@ content changes recompute the visible offset without emitting messages.
 ## Table of contents and scroll anchors
 
 Add `Fpas.Ui.Widgets.Navigation.ScrollAnchors.ScrollAnchor<TMsg>(Id)` before each heading in an
-uncontrolled graphical `ScrollView`. Anchor IDs are unique within the view.
+graphical `ScrollView`. Anchor IDs are unique throughout the view tree.
 The marker has zero height and takes its place in the containing stack.
 
 `Fpas.Ui.Widgets.Navigation.TableOfContents.TableOfContents<TMsg>(Id, ScrollId, Items)` takes one
 to 64 entries in document order. Give each entry its title, anchor ID and an
-optional indentation level from zero through four. Place the outline in the
-same GUI layer as its viewport. CUI handles jumps, tracks scroll progress
-and highlights the active entry. Supply `OnActiveChange` to turn changes
+optional indentation level from zero through four. Each entry references an
+anchor inside the outline's uncontrolled viewport. An outline can omit anchors.
+A viewport accepts one outline, and both must share a native CUI scope.
+For example, place them together inside a dialog, popover, table row or Kanban
+card when composing there. CUI handles jumps, tracks scroll progress and
+highlights the active entry. Supply `OnActiveChange` to turn changes
 to the active anchor into messages. Use `TableOfContents.ItemId(Id, Index)`
 to address a row for focus.
 

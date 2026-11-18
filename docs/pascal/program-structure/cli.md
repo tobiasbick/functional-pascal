@@ -335,6 +335,7 @@ does not bind whichever assemblies happen to be loaded in its process.
 | --documentation path.xml | Select an explicit XML documentation output |
 | --diagnostics json | Emit a structured success/output/diagnostics result |
 | --response-file path.json | Read a JSON string array of compile arguments |
+| `--key-file path.snk`, `--public-sign`, `--delay-sign` | Select [strong-name signing](../../build/publishing.md#signing) |
 | Warning policy options | Promote, exclude, or suppress documentation warnings |
 
 Response files replace inline compile arguments; nesting is unsupported. Paths

@@ -36,7 +36,9 @@ count in either direction, and by best match while searching; clearing the searc
 returns to the order chosen before. The status bar shows how many albums match. The playlist list updates
 in the background; same-name source lists show their location alongside the name.
 Open an album to see its cover, title and album artist beside the track list. Each row
-shows the performer below the track title, followed by duration, rating and a menu. The table uses
+shows the performer below the track title, followed by duration, rating and a menu.
+The open album updates as the catalogue changes. If the release disappears,
+the view returns to its parent grid. The table uses
 disc and track order by default. It uses the same toolbar as the album grid, with
 title and genre search. The filter popup always offers a minimum rating. It also
 lists genres that occur on some of the album's tracks and hides the genre field
@@ -175,8 +177,9 @@ be recognized reliably by a full-file hash. Embedded covers are cached separatel
 on explicit request. Ratings for genres, artists, albums and tracks are stored separately in user data.
 
 The Albums grid creates only visible rows plus a small overscan. It loads covers
-on background workers, preferring an embedded front cover, another embedded image,
-then `cover`, `folder` or `front` JPG/JPEG/PNG files in an unambiguous album folder.
+on background workers, trying embedded front covers across the album's tracks first.
+The workers try other embedded cover candidates before checking for `cover`,
+`folder` or `front` JPG/JPEG/PNG files in an unambiguous album folder.
 Missing/invalid pictures use a placeholder. Sidecar image changes are monitored.
 The borderless grid fits square covers to the available width. Each tile centers
 the bold album title below the cover, followed by the artist and song count on

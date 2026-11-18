@@ -195,7 +195,8 @@ tags are present. Missing album titles use that folder's name. Equal display nam
 alone never merge unrelated releases.
 
 Artwork resolution first tries tagged front covers across album members, then
-another embedded picture. It next tries local `cover`, `folder`, `front` names, each
+tries the remaining embedded cover candidates across those members. It next
+tries local `cover`, `folder`, `front` names, each
 in JPG/JPEG/PNG order, case-insensitively. A sidecar folder must belong to exactly one
 indexed album; mixed folders cannot give several releases the same accidental image.
 Only observed files inside active sources are opened. Invalid/missing art becomes
@@ -262,7 +263,8 @@ only removes a local list, retaining tracks/ratings. Local lists live in
 `ImportAsync(Path, Cancellation, Name)` explicitly copies a supported playlist
 into a new local list, independently of sources and the input file's lifetime.
 `ExportAsync(Key, Destination, Cancellation, Overwrite)` writes any cached/local
-list to an absolute `.m3u8` path using current track paths. It writes a temporary
+list to an absolute `.m3u8` path using current track paths. Local paths are
+written relative to the destination directory when possible. It writes a temporary
 file in the destination directory and renames it after success; replacement
 requires `Overwrite := true`. Missing entries are retained. When an entry has
 no title, the export uses its filename without the extension.

@@ -10,8 +10,14 @@ uses
 
 Each import has an explicit alias. Its target may be a CLR namespace, a CLR
 non-generic type, or an FPAS unit container. Use `Console.WriteLine`,
-`Collections.List<int>`, and `Geometry.Translate`. An import does not expose
-unqualified members or acquire dependencies.
+`Collections.List<int>`, and `Geometry.Translate`. Import a CLR namespace to
+access its generic types. An import does not expose unqualified members or
+acquire dependencies.
+
+A public type or type alias declared in an FPAS companion unit can also be
+imported directly by its qualified name. For example, `uses Numerics.Geometry.Point as Point;`
+lets you write `new Point(X := 1.0, Y := 2.0)`. For a generic source type, supply
+the type arguments when using the alias, as in `Box<int>`.
 
 An alias is unique in its source and cannot be shadowed. Targets are resolved
 case-sensitively against supplied assembly metadata and source declarations.

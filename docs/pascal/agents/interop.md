@@ -4,9 +4,10 @@ Read this when using collections, libraries, interfaces, events, or attributes.
 
 ## Discover and consume actual APIs
 
-Import an explicit alias for a namespace, nongeneric CLR type, or source unit.
-Project/package references supply metadata; imports only resolve names. Use exact
-case-sensitive CLR names and generic arities. New Type(Arguments) constructs an
+Import a CLR namespace for generic types, or alias a nongeneric CLR type directly.
+For source imports see [types and units](types.md#units-and-global-initialization).
+Project/package references supply metadata. Use exact case-sensitive CLR names
+and generic arities. `new Type(Arguments)` constructs an
 accessible class/struct/record or constrained type. Fields, properties, indexers,
 and ordinary instance/static methods retain .NET meaning. Read-only accessors/
 storage cannot be assigned; a const reference can still point to a mutable collection.
@@ -46,8 +47,9 @@ cannot be authored by a record. Protocol declarations cannot contain bodies,
 contracts, private/static members, setters, indexers, or events. Task-returning
 signatures support async implementations; async is only on the implementation.
 
-Attribute lists precede a type, routine, record field, or protocol property. Use the complete
-Attribute type name. Positional arguments select its constructor; subsequent
+Place attributes on emitted types, routines, record fields or protocol properties.
+Transparent aliases and globals cannot carry attributes. Use the complete
+attribute type name, including `Attribute`. Positional arguments select its constructor; subsequent
 named arguments set public writable properties/fields. Values must be legal CLR
 metadata constants, closed typeof values, or supported array literals. Record
 field annotations target emitted properties. Assembly/parameter/return/backing-
@@ -128,8 +130,10 @@ end;
 end program;
 ```
 
-Pass arrays to imported Span<T>/ReadOnlySpan<T> parameters; spans are otherwise
-unavailable. Imported `unmanaged` generics accept unmanaged value types. Other ref
+Imported methods and constructors accept vectors or array literals for by-value
+`Span<T>` and `ReadOnlySpan<T>` parameters. Writable spans require the exact
+element type. See [span parameters](../interop/supported-signatures.md#span-parameters)
+for read-only conversions and overload selection. Imported `unmanaged` generics accept unmanaged value types. Other ref
 structs, pointers, ref returns, init-only setters, and unsupported
 modifiers/calling conventions receive diagnostics.
 Use an ordinary supported API overload; runtime reflection is not a compiler

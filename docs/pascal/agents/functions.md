@@ -6,8 +6,9 @@ behavior as values.
 ## Parameters and calls
 
 Every routine has parentheses. Separate declared parameters with semicolons,
-supplied arguments with commas. Functions declare their result type and return
-on every normal path; procedures return no value and may use return;.
+supplied arguments with commas. Synchronous functions return a value on every
+normal path. Procedures and async functions returning non-generic `Task` may
+use `return;` or reach the end of the body.
 Consume returned values or explicitly use discard. Discarding a task does not
 wait, cancel, or supervise it.
 
@@ -50,10 +51,10 @@ Capturing a reference does not copy the object. Mutable captures need ordinary
 
 ## Type parameters and contracts
 
-Use Identity<T>, Box<T>, and explicit calls such as Identity<int>(7). Routine
-calls can infer arguments from supplied argument types, not only an expected
-return type. Generic method groups require explicit arguments. Variant constructor
-inference also uses the expected variant type. Binding annotations remain mandatory.
+Routine calls infer type arguments from supplied arguments. For a parameterless
+`Create<T>()`, even a typed destination needs `Create<int>()`. A generic method
+group also needs explicit arguments, as in `Identity<int>`. A variant constructor
+can use the expected type, as in `const Empty: Tree<int> := Tree.Empty;`.
 
 Where clauses follow a routine's header, or a type declaration's equals sign.
 Use real CLR requirements: class, class?, struct, base/interface constraints,
@@ -88,7 +89,6 @@ begin
 end function;
 
 procedure Increase(ref Value: int);
-ensures Value > 0;
 begin
   Value := Value + 1;
 end procedure;
@@ -111,11 +111,11 @@ begin
 end function;
 
 begin
-  var Value: int := 1;
+  var Value: int := -2;
   Increase(ref Value);
   const Counter: function(): int := MakeCounter(Value);
   const Double: function(int): int := function(Item: int): int => Item * 2;
-  if Counter() <> 3 or Counter() <> 4 or Double(Identity(7)) <> 14
+  if Value <> -1 or Counter() <> 0 or Counter() <> 1 or Double(Identity(7)) <> 14
     or Add(Right := 3, Left := 2) <> 5 or Add(2) <> 3
   then
     raise new Sys.InvalidOperationException('Incorrect call or closure behavior');

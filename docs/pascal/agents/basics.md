@@ -63,13 +63,13 @@ Use `array of int` for vectors, `array[,] of int` for rectangles, and
 elements. `(array of string)?` allows a null array.
 Literals such as [1, 2] produce vectors; empty [] needs an expected element type.
 Allocate with new int[Count] or new double[Rows, Columns]. Length is a property,
-and indexes start at zero. Nonempty default-initialized reference arrays require
-nullable elements, such as new string?[Count]. Use initialized literals for
-non-null elements. Arrays are mutable references even through const bindings.
+and indexes start at zero. Use `new string?[Count]` for a variable length, even
+when Count happens to be zero. A literal zero dimension permits `new string[0]`.
+Use initialized literals for non-null elements. Const bindings still allow element writes.
 
-Strings are immutable UTF-16. Text.Length and Text[Index] count code units;
-indexing returns char, so a non-BMP character occupies two indexes. Use
-System.Text.Rune and other .NET text APIs for Unicode scalars/graphemes.
+Strings are immutable UTF-16. `Text.Length` counts code units and `Text[Index]`
+returns one `char`. A non-BMP scalar occupies two indexes. Use `System.Text.Rune`
+for scalars and `System.Globalization.StringInfo` for grapheme clusters.
 
 Counting loops declare a read-only typed variable and include both bounds.
 Bounds evaluate once; reversed ranges are empty; endpoints never overflow while

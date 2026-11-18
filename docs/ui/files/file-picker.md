@@ -41,10 +41,10 @@ end unit;
 
 ## Interaction
 
-Set Open in the model to show the CUI modal. On a result, clear Open and
-handle the path if present. Dismissal returns null. OpenFile returns the
-existing selection, and SaveFile returns a path to use in the application's
-save operation.
+Set `Open` in the model to show the CUI modal. On a result, clear `Open` and
+handle the path if present. Cancel or Escape dismisses the active picker and
+returns null. OpenFile returns the existing selection, and SaveFile returns
+a path to use in the application's save operation.
 
 ![Save file picker with a filename field in the FPAS gallery](images/file-picker-save.png)
 

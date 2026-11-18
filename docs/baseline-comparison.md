@@ -102,13 +102,14 @@ Handbook/agent-reference checks validate current copied sources, complete exampl
 behavior, local links/anchors and the exact o200k_base token budget. The source
 graph regression is additionally checked against the unchanged compiler.
 
-Within these contracts, the comparison leaves no confirmed baseline compiler or
-MSBuild omission open. This is bounded acceptance, not a claim that all possible
-.NET metadata combinations or external tools are supported. Source events, class hierarchies,
-unsafe/byref-like features (except arrays passed to imported span parameters),
-custom awaiters, async iterators, extension discovery,
-and IDE integration retain their documented separate scope. Application publication,
-Native AOT and signing follow the [publishing contract](build/publishing.md).
+See [language gaps](future/language-gaps.md) for confirmed compiler and SDK
+omissions, including statement-level diagnostic recovery and embedded resources.
+Source events, class hierarchies, unsafe/byref-like features (except arrays
+passed to imported span parameters), custom awaiters, async iterators and
+extension discovery retain their documented separate scope. Application
+publication, Native AOT and signing follow the
+[publishing contract](build/publishing.md). The
+[VS Code extension](../src/VSCode/README.md) documents editor integration.
 
 Source interface declarations are now implemented as an approved extension;
 see [interfaces](pascal/interop/interfaces.md) and SourceInterfaceTests/

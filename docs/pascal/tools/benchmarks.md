@@ -128,6 +128,9 @@ dotnet "$measure" --output "$run/startup-aot.csv" --label aot-Release --boundary
 
 ## Interpret and retain
 
+Keep measured values in CSV files and timing summaries in plain-text logs under
+`.temp-data/`. Markdown documents describe the CLR measurement procedure.
+
 CSV contains each raw elapsed value in milliseconds, the warmup count, workload
 rounds, boundary, label, local/cloud marker, runtime, OS, architecture and tiering
 settings. External process cases use rounds 0. Labels identify configuration and

@@ -90,16 +90,17 @@ entry block or separate initialization/finalization section. Top-level routines,
 types, and initialized globals are private unless public. Public signatures may
 not expose less-accessible types. Program free declarations cannot be public.
 
-Imports always have aliases: uses Agent.Values as Values. An import exposes
-qualified names, not unqualified members, and does not restore a dependency.
-Aliases cannot be shadowed. Supply application units as sources/project
-references and CLR libraries as resolved references. A library has units and
-no program; an executable has exactly one program plus optional units.
+Import a unit to qualify its members, or import a public type or type alias
+directly from a unit compiled alongside the program. Each import needs a unique
+alias. Supply dependencies as companion sources or assembly/project references.
+A library contains units. An executable also needs exactly one program.
 
 The following two sources share the documented project label and compile together:
 
 ```pascal project=agent-units
 unit Agent.Values;
+
+public type Count = int;
 
 public const Step: int := 2;
 
@@ -117,10 +118,11 @@ end unit;
 ```pascal project=agent-units
 program AgentUnits;
 
-uses Agent.Values as Values, System as Sys, System.Console as Console;
+uses Agent.Values as Values, Agent.Values.Count as Count, System as Sys, System.Console as Console;
 
 begin
-  if Values.Advance() <> 2 or Values.Advance() <> 4 then
+  const First: Count := Values.Advance();
+  if First <> 2 or Values.Advance() <> 4 then
     raise new Sys.InvalidOperationException('Unit state was not shared');
   end if;
 

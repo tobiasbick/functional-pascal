@@ -38,7 +38,10 @@ display `Title`. A location can be relative, remote or missing. Reading the
 playlist never opens its targets. Resolve relative paths against the playlist
 directory when the application needs local files. Use
 `Lists.WriteM3u8(Destination, Items, false, Token)` to write a new UTF-8 playlist
-at an absolute path. Pass `true` to allow atomic replacement.
+at an absolute path. Pass `true` to allow atomic replacement. Resolve
+entries to absolute paths before exporting to a different directory to
+keep their targets. The writer expresses local paths relative to the
+destination when possible.
 
 ## Play or analyse a local track
 

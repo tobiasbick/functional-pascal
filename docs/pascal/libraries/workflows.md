@@ -78,7 +78,7 @@ attaching environment or result payloads.
 
 The [process capture adapter](../../../src/Fpas.Processes.Workflows/Capture.fpas)
 combines a process layer, concurrent readers, a byte limit per stream, and a
-deadline. The [documentation checker](../../../apps/doc-examples/src/validation.fpas)
+deadline. Both output streams are decoded as UTF-8. The [documentation checker](../../../apps/doc-examples/src/validation.fpas)
 uses it to compile and execute examples. [Measure](../../../apps/diagnostics/Measure/main.fpas)
 reuses the workflow for each sample. The [contract programs](../../../tests/Fixtures/workflows)
 exercise composition, dependency cleanup, and bounded streams.

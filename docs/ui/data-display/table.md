@@ -49,9 +49,10 @@ end unit;
 ## Interaction
 
 Activate a sortable heading to propose a column and direction. Sort the rows
-in the update and pass them back with the new sort. Keep selection by row ID
-so sorting preserves the selected record. Use `HeaderId(Id, Index)` to address
-a heading for focus.
+in the update and pass them back with the new sort. Keep each row ID stable
+across sorting so focus follows the row. Store selection by row ID in the model
+to preserve the selected record. Use `HeaderId(Id, Index)` to address a heading
+for focus.
 
 ## See also
 

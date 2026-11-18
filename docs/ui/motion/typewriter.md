@@ -42,11 +42,11 @@ Append to the current string to let typing continue from its previous
 position. Replace the text or change Replay to start again. Completion
 applies to the supplied text. Reduced motion reveals it immediately.
 
-`OnComplete` runs once for each completed text and replay revision while
-the ID remains in the view. Appending more text allows another completion
-when that text is visible. Removing the widget releases this notification
-state, so showing it again can complete again. Cached resize painting does
-not call the factory; the next application frame observes completion.
+`OnComplete` runs when the current text first becomes fully visible for
+the current replay revision. A change to the text or revision allows
+another notification, including when the text returns to an earlier value.
+Removing the widget clears its completion state. The next application
+frame can report a completion reached during cached resize painting.
 
 ## See also
 

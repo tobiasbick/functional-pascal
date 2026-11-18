@@ -39,7 +39,11 @@ end unit;
 
 ## Interaction
 
-Escape, the native close button or a press on the scrim sends the dismiss message. A focused text field gets Escape first. Keep the dialog body available during its exit transition. The host restores focus to the preceding control when the dialog closes.
+Click the close button, press Escape or click the scrim to send the dismiss
+message. A focused text field gets Escape first. With Persistent enabled,
+the close button still sends the message when shown. Keep the dialog body
+available during its exit transition. The host restores focus to the
+preceding control when the dialog closes.
 
 ## See also
 

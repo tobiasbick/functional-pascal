@@ -20,4 +20,22 @@ public sealed class CuiPropertyInspectorTests
         window.Present();
         Assert.True(window.GetControlRectangle("properties").Height > 0);
     }
+
+    /// <summary>Rejects text that cannot be represented by the native UTF-8 field.</summary>
+    [GuiTheory]
+    [InlineData("left\0right", 32)]
+    [InlineData("é", 2)]
+    [InlineData("", 0)]
+    public void ValidatesTheNativeTextBuffer(string text, int capacity)
+    {
+        using var window = new CuiWindow("Property text", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        var property = new CuiProperty("Text", 2, 0, [], text, 0, [], 0, 0, 0, -1, "", "", "", capacity, 1);
+        Assert.Throws<ArgumentException>("groups", () => Draw(property));
+        Draw(property with { Text = "é", Capacity = 3 });
+        window.Present();
+
+        void Draw(CuiProperty row) =>
+            window.PropertyInspector("properties", [new("Details", [row], true, false)], 0, 1, 0, true);
+    }
 }

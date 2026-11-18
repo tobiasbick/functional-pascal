@@ -19,17 +19,22 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
+        if (!float.IsFinite(labelWidth) || labelWidth < 0)
+            throw new ArgumentOutOfRangeException(nameof(labelWidth));
+        ArgumentNullException.ThrowIfNull(groups);
         using var memory = new ChartMemory();
         var native = new NativePropertyGroup[groups.Length];
         for (int index = 0; index < native.Length; index++)
         {
             var item = groups[index];
+            ArgumentNullException.ThrowIfNull(item, nameof(groups));
+            Utf8.Validate(item.Title, nameof(groups));
+            ArgumentNullException.ThrowIfNull(item.Properties, nameof(groups));
             var rows = new NativeProperty[item.Properties.Length];
             for (int row = 0; row < rows.Length; row++)
             {
                 var property = item.Properties[row];
-                if (property.Values.Length > NativeProperty.MaxComponents)
-                    throw new ArgumentException($"A property can contain at most {NativeProperty.MaxComponents} numeric components.", nameof(groups));
+                CheckProperty(property, nameof(groups));
                 rows[row] = PackProperty(property, memory);
             }
             native[index] = new() { Title = memory.Text(item.Title), Properties = memory.Copy<NativeProperty>(rows),
@@ -56,6 +61,36 @@ public sealed partial class CuiWindow
             }
         }
         return events.ToArray();
+    }
+
+    private static void CheckProperty(CuiProperty property, string parameter)
+    {
+        ArgumentNullException.ThrowIfNull(property, parameter);
+        Utf8.Validate(property.Label, parameter);
+        Utf8.Validate(property.Suffix, parameter);
+        Utf8.Validate(property.Placeholder, parameter);
+        Utf8.Validate(property.Tooltip, parameter);
+        ArgumentNullException.ThrowIfNull(property.Values, parameter);
+        ArgumentNullException.ThrowIfNull(property.Choices, parameter);
+        if (property.Kind is < 0 or > 6 || property.Values.Length > NativeProperty.MaxComponents ||
+            property.Kind == 0 && property.Values.Length != 1 ||
+            property.Kind == 6 && property.Values.Length == 0)
+            throw new ArgumentException("Invalid property kind or numeric component count.", parameter);
+        if (property.Digits is < -1 or > 9 || !float.IsFinite(property.Minimum) ||
+            !float.IsFinite(property.Maximum) || !float.IsFinite(property.Step) || property.Step < 0 ||
+            property.Values.Any(value => !float.IsFinite(value)))
+            throw new ArgumentException("Property bounds, values and precision must be valid.", parameter);
+        if (property.Kind == 4 && (property.Choices.Length == 0 ||
+            property.Integer < -1 || property.Integer >= property.Choices.Length))
+            throw new ArgumentException("Expected a nonempty choice list and a valid selection or minus one.", parameter);
+        foreach (string choice in property.Choices) Utf8.Validate(choice, parameter);
+        if (property.Kind == 2)
+        {
+            string content = property.Text ?? "";
+            Utf8.Validate(content, parameter);
+            if (property.Capacity is < 1 or > 1_048_576 || Utf8.Encoding.GetByteCount(content) >= property.Capacity)
+                throw new ArgumentException("Property text must fit its native UTF-8 buffer.", parameter);
+        }
     }
 
     private static unsafe NativeProperty PackProperty(CuiProperty value, ChartMemory memory)

@@ -36,26 +36,29 @@ public sealed partial class CuiWindow
             throw new ArgumentException("Invalid grid sort, cursor or anchor.", nameof(state));
 
         var (titles, widths, flags) = GridColumns(columns);
-        var selection = selected is null ? null : new byte[Math.Max(1, rows)];
+        var selection = selected is null ? null : new byte[rows];
         if (selected is not null)
             for (int index = 0; index < rows; index++) selection![index] = selected[index] ? (byte)1 : (byte)0;
 
         int* range = stackalloc int[3];
         var headers = new int[columns.Length];
+        // Preserve the checkbox column when selection is enabled in an empty grid.
+        byte emptySelection = 0;
         nint handle;
         fixed (float* w = widths)
         fixed (int* f = flags, s = state, h = headers)
         fixed (byte* mask = selection)
             handle = NativeMethods.DataGridBegin(context, Stable(id), titles, w, f, titles.Length,
-                rows, mask, s, heightKind, height, rowHeight, options, range, h);
+                rows, selection is { Length: 0 } ? &emptySelection : mask, s,
+                heightKind, height, rowHeight, options, range, h);
         var shown = new bool[columns.Length];
+        var frame = new CuiGridFrame(range[0], range[1], selection, state, shown);
+        layouts.Add(new(Layout.DataGrid, range[2], new GridOutput(handle, frame)));
         for (int index = 0; index < headers.Length; index++)
         {
             shown[index] = headers[index] >= 0;
             if (shown[index] && headerId is not null) TrackControl(headerId(index), headers[index]);
         }
-        var frame = new CuiGridFrame(range[0], range[1], selection, state, shown);
-        layouts.Add(new(Layout.DataGrid, range[2], new GridOutput(handle, frame)));
         return frame;
     }
 

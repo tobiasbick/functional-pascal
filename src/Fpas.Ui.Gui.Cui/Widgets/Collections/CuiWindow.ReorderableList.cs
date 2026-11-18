@@ -4,6 +4,8 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    private sealed record ReorderList(int Count, bool Enabled);
+
     /// <summary>Opens CUI's drag-to-reorder list with a frame-owned copy of the model order.</summary>
     /// <param name="id">Stable list identity.</param>
     /// <param name="order">Current permutation of canonical item indices.</param>
@@ -26,7 +28,7 @@ public sealed partial class CuiWindow
         int node;
         fixed (int* input = order, output = proposed)
             node = NativeMethods.ReorderBegin(context, Stable(id), input, order.Length, enabled ? 1 : 0, output);
-        layouts.Add(new(Layout.Reorder, Node: node));
+        layouts.Add(new(Layout.Reorder, Node: node, Data: new ReorderList(order.Length, enabled)));
         return proposed;
     }
 
@@ -35,8 +37,10 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether the row's handle accepts input.</param>
     public void BeginReorderItem(int position, bool enabled)
     {
-        RequireLayout(Layout.Reorder);
-        layouts.Add(new(Layout.ReorderItem, Node: NativeMethods.ReorderItemBegin(context, position, enabled ? 1 : 0)));
+        var list = (ReorderList)RequireLayout(Layout.Reorder).Data!;
+        if ((uint)position >= (uint)list.Count) throw new ArgumentOutOfRangeException(nameof(position));
+        int node = NativeMethods.ReorderItemBegin(context, position, enabled && list.Enabled ? 1 : 0);
+        layouts.Add(new(Layout.ReorderItem, Node: node));
     }
 
     /// <summary>Closes the innermost native reorder row.</summary>

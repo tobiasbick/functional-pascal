@@ -9,9 +9,12 @@
   </Configurations>
   <Project Path="src/FpasAmp/FpasAmp.fpasproj" />
   <Project Path="src/FpasAmp.Ui/FpasAmp.Ui.fpasproj" />
+  <Project Path="../../src/Fpas.Media.Tags/Fpas.Media.Tags.fpasproj" />
+  <Project Path="../../src/Fpas.Media.Images/Fpas.Media.Images.csproj" />
   <Project Path="../../src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
   <Project Path="src/FpasAmp.Library/FpasAmp.Library.fpasproj" />
   <Project Path="src/FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
+  <Project Path="../../tests/Fpas.Media.Tests/Fpas.Media.Tests.fpasproj" />
   <Project Path="../../tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj" />
   <Project Path="../../tests/FpasAmp.Ui.Tests/FpasAmp.Ui.Tests.fpasproj" />
 </Solution>

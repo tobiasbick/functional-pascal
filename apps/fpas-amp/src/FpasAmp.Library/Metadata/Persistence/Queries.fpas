@@ -2,9 +2,13 @@
 unit FpasAmp.Library.Metadata.Persistence.Queries;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Text.Json as J, System.Threading as T;
+
+const Columns: string := 'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error,' +
+  '(SELECT json_group_array(s.source_id) FROM source_files s WHERE s.file_id=f.id)';
 
 function Order(Value: M.Sort): string;
 begin
@@ -55,7 +59,7 @@ begin
   end if;
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error' +
+    Columns +
     ' FROM files f JOIN metadata m ON m.file_id=f.id LEFT JOIN users.tracks u ON u.id=m.track_id' +
     ' WHERE ($source IS NULL OR EXISTS(SELECT 1 FROM source_files s WHERE s.file_id=f.id AND s.source_id=$source))' +
     ' AND ($album IS NULL OR m.album_key=$album)' +
@@ -95,7 +99,7 @@ begin
   end if;
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error' +
+    Columns +
     ' FROM album_tracks a JOIN files f ON f.id=a.file_id JOIN metadata m ON m.file_id=f.id' +
     ' LEFT JOIN users.tracks u ON u.id=m.track_id' + Scope +
     'COALESCE(json_extract(m.tags_json,''$.DiscNumber''),1),' +
@@ -126,13 +130,16 @@ begin
         if Reader.IsDBNull(5) then
           null
         else
-          J.JsonSerializer.Deserialize<M.Tags>(Reader.GetString(5))
+          J.JsonSerializer.Deserialize<MediaTags.Info>(Reader.GetString(5))
         end if,
         if Reader.IsDBNull(6) then
           null
         else
           Reader.GetString(6)
-        end if
+        end if,
+        J.JsonSerializer.Deserialize<array of string>(
+          Reader.GetString(7)
+        ) ?? Sys.Array.Empty<string>()
       )
     );
   end while;

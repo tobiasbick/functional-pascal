@@ -73,6 +73,15 @@ uses `Fpas.Ui.Gui.Cui.Widgets.<Topic>` for widget data and
 `Fpas.Ui.Gui.Cui.CuiWindow` partial type owns the window context and its widget
 methods across the topic source files.
 
+The FPAS assembly `Fpas.Media.Tags` exposes its records as nested CLR types
+`Fpas.Media.Tags.AudioFiles+Info`, `Fpas.Media.Tags.Pictures+Cover` and
+`Fpas.Media.Tags.Playlists+Item`. The public methods exchange these records,
+streams, strings, arrays and cancellation tokens. The backend keeps its `ATL`
+assembly identity. The separate C# assemblies expose ordinary namespace-level
+types, including `Fpas.Media.Images.Bitmap`, `Fpas.Media.Images.CoverDecoder`,
+`Fpas.Media.Audio.ISession` and `Fpas.Media.Audio.PlaybackEvent`.
+See the [FPAS media guide](../pascal/libraries/media.md).
+
 The same container rule applies to a qualified program name. Visibility is checked
 at both source and metadata boundaries. Public nested types in accessible
 containers are available to C# and other .NET consumers using ordinary nested

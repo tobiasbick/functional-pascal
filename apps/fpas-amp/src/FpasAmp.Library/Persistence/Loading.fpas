@@ -101,7 +101,7 @@ begin
           M.Availability.Cached
         end if
       end if,
-      I.ImmutableArray.CreateRange<string>(Files),
+      I.ImmutableArray.CreateRange<string>(Files).Sort(S.PathComparer()),
       I.ImmutableArray.CreateRange<M.ScanIssue>(Issues),
       false
     );

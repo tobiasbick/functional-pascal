@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Albums.Artwork;
 
 uses
-  FpasAmp.Imaging as Imaging, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Albums.Access as Access,
+  Fpas.Media.Images as Imaging, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Albums.Access as Access,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Media.Images as Images, Fpas.Ui.Widgets.Media.MediaImages as Media,
   System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;

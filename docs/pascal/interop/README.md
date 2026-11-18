@@ -22,5 +22,6 @@ are specified in [CLR mapping](../../specs/clr-mapping.md).
 ## See also
 
 - [Using .NET libraries](../libraries/README.md)
+- [Media libraries from FPAS and their CLR types](../libraries/media.md)
 - [Projects and references](../program-structure/projects.md)
 - [Types](../language/types/README.md)

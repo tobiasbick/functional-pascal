@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Albums.Music.View;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
@@ -23,7 +24,7 @@ end function;
 
 function AlbumName(Current: M.State; Item: Tracks.Entry): string;
 begin
-  const Name: string := (Item.Metadata ?? new Tracks.Tags()).Album;
+  const Name: string := (Item.Metadata ?? new MediaTags.Info()).Album;
   return if Name = '' then
     Current.Album.Title
   else

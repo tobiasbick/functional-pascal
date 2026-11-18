@@ -143,3 +143,5 @@ Before changing public identities/signatures/representations, read the binding
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).
 Read [attributes](../interop/attributes.md) and
 [events](../interop/events.md) for their precise supported contracts.
+
+For tag, image and audio project references and FPAS calls, see [media libraries](../libraries/media.md).

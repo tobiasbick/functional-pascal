@@ -2,11 +2,12 @@
 unit FpasAmp.Library.Tests.Albums;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Library.Albums.Model as M,
   FpasAmp.Library.Albums.Persistence.Queries as Query, FpasAmp.Library.Inventory.Monitoring as Monitor,
   FpasAmp.Library.Metadata.Model as Tags, FpasAmp.Library.Sources as Sources,
-  FpasAmp.Imaging as Images, ATL as A, System as Sys, System.IO as IO,
+  Fpas.Media.Images as Images, ATL as A, System.IO as IO,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users,
   Microsoft.Data.Sqlite as Db, System.Text.Json as Json,
@@ -59,8 +60,8 @@ public type AlbumTests = record
         [
           Path,
           IO.Path.GetDirectoryName(Path),
-          Json.JsonSerializer.Serialize<Tags.Tags>(
-            new Tags.Tags(Album := 'Cached release', AlbumArtists := ['Example'])
+          Json.JsonSerializer.Serialize<MediaTags.Info>(
+            new MediaTags.Info(Album := 'Cached release', AlbumArtists := ['Example'])
           )
         ]
       );

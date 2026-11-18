@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Albums.Music.Model;
 
 uses
   FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Imaging as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
+  Fpas.Media.Images as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
 
 // Genre and rating filters for the selected album's tracks.
 public type Filters = record
@@ -39,6 +39,8 @@ public type State = record
   public Visit: long;
   // Full release in disc and track order.
   public Tracks: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  // Genre choices that distinguish tracks within the full release.
+  public GenreChoices: array of string := [];
   // Filtered and sorted release tracks.
   public Shown: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
   // Whether the first query returned.

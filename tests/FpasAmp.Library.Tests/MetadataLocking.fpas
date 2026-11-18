@@ -2,6 +2,7 @@
 unit FpasAmp.Library.Tests.MetadataLocking;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Tests.StorageSupport as D, FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Inventory.Internal.Observations as O,
@@ -55,7 +56,7 @@ begin
   for Entry: M.Entry in Entries do
     if (IO.Path.GetFileName(Entry.Path) ?? '') = 'pending.mp3' then
       X.Assert.Null(Entry.Error);
-      X.Assert.Equal<string>('Pending track', (Entry.Metadata ?? new M.Tags()).Title);
+      X.Assert.Equal<string>('Pending track', (Entry.Metadata ?? new MediaTags.Info()).Title);
       return;
     end if;
   end for;

@@ -17,6 +17,7 @@ the referenced package version determine which overloads are available.
 | Semaphore ownership and Task success/fault/cancellation | [Task coordination](task-coordination.md) |
 | Bounded queues, backpressure, completion, and joined workers | [Channels](channels.md) |
 | Deferred workflows, typed failures, dependencies, and scoped tasks | [Workflows](workflows.md) |
+| Music tags, embedded artwork, playlists, image decoding, audio playback and waveforms | [Media libraries](media.md) |
 | Native desktop windows, MVU widgets, effects and publishing | [Desktop GUI](gui.md), [UI handbook](../../ui/README.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |
 

@@ -308,7 +308,7 @@ public type Catalog = record
           Source.Id,
           Source.Path,
           Status,
-          I.ImmutableArray.CreateRange<string>(self.Members[Source.Id]),
+          I.ImmutableArray.CreateRange<string>(self.Members[Source.Id]).Sort(S.PathComparer()),
           I.ImmutableArray.CreateRange<M.ScanIssue>(Issues),
           Watching
         )

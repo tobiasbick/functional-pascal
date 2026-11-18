@@ -3,10 +3,10 @@ unit FpasAmp.Library.Playlists.Internal.Reading;
 
 uses
   FpasAmp.Library.Playlists.Internal.References as R,
-  FpasAmp.Library.Playlists.Formats as Formats,
+  Fpas.Media.Tags.Playlists as Formats,
   FpasAmp.Library.Metadata.Internal.Reading as Facts,
   FpasAmp.Library.Inventory.Internal.Directories as Directories,
-  ATL.Playlist as A, ATL as Audio, System as Sys, System.IO as IO,
+  System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Threading as T;
 
 // One retained location and its playlist-specific title.
@@ -101,52 +101,17 @@ begin
     end;
 
     Check();
-    const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
-    if Factory = null then
-      raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
-    end if;
-    const Parsed: A.IPlaylistIO? := Factory.GetPlaylistIO(Temporary, readTrackMetadata := false);
-    if Parsed = null then
-      raise new IO.InvalidDataException('Unsupported playlist format.');
-    end if;
-    const Failure: Sys.Exception? := Parsed.LoadError;
-    if Failure <> null then
-      raise new IO.InvalidDataException(
-        'ATL could not parse the playlist: ' + Failure.Message,
-        Failure
-      );
-    end if;
-    const Locations: C.IReadOnlyList<string?>? := Parsed.OriginalLocations;
-    const Tracks: C.IList<Audio.Track?>? := Parsed.Tracks;
-    if Locations = null or Tracks = null or Locations.Count <> Tracks.Count then
-      raise new IO.InvalidDataException('ATL returned inconsistent playlist entries.');
-    end if;
-    const Entries: C.List<Item> := new C.List<Item>();
     const Extension: string := (IO.Path.GetExtension(Path) ?? '').ToLowerInvariant();
     const Escaped: bool := Extension = '.xspf' or Extension = '.b4s' or Extension = '.asx'
       or Extension = '.wax' or Extension = '.wvx' or Extension = '.smil' or Extension = '.smi'
       or Extension = '.wpl' or Extension = '.zpl';
-    for Position: int := 0 to Locations.Count - 1 do
+    const Entries: C.List<Item> := new C.List<Item>();
+    for Entry: Formats.Item in Formats.Read(Temporary, Cancellation) do
       Check();
-      const Track: Audio.Track? := Tracks[Position];
-      const Artist: string := if Track <> null then
-        Track.Artist ?? ''
-      else
-        ''
-      end if;
-      const Title: string := (if Artist <> '' then
-        Artist + ' - '
-      else
-        ''
-      end if) + (if Track <> null then
-        Track.Title ?? ''
-      else
-        ''
-      end if);
       Entries.Add(
         new Item(
-          R.Resolve(Locations[Position] ?? '', IO.Path.GetDirectoryName(Path) ?? '', Escaped),
-          Title
+          R.Resolve(Entry.Location, IO.Path.GetDirectoryName(Path) ?? '', Escaped),
+          Entry.Title
         )
       );
     end for;

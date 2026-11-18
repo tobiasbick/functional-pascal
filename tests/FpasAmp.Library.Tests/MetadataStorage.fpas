@@ -2,6 +2,7 @@
 unit FpasAmp.Library.Tests.MetadataStorage;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Tests.StorageSupport as D, FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Persistence.Schema as Schema, FpasAmp.Library.Metadata.Model as M,
@@ -92,7 +93,7 @@ public type MetadataStorageTests = record
     );
     X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
     X.Assert.Equal<int?>(5, After[0].Rating);
-    X.Assert.Equal<string>('Stück', (After[0].Metadata ?? new M.Tags()).Title);
+    X.Assert.Equal<string>('Stück', (After[0].Metadata ?? new MediaTags.Info()).Title);
   end function;
 
   // Ordering/paging use database keys, filters are bound, and rating bounds are enforced.
@@ -109,13 +110,13 @@ public type MetadataStorageTests = record
       Tags,
       function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
     );
-    X.Assert.Equal<string>('Alpha', (Entries[0].Metadata ?? new M.Tags()).Title);
+    X.Assert.Equal<string>('Alpha', (Entries[0].Metadata ?? new MediaTags.Info()).Title);
     const Page: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
       new M.Query(Limit := 1, Offset := 1),
       T.CancellationToken.None
     );
     X.Assert.Equal<int>(1, Page.Length);
-    X.Assert.Equal<string>('Zulu', (Page[0].Metadata ?? new M.Tags()).Title);
+    X.Assert.Equal<string>('Zulu', (Page[0].Metadata ?? new MediaTags.Info()).Title);
     await Tags.SetRatingAsync(Entries[0].TrackId, 1, T.CancellationToken.None);
     await Tags.SetRatingAsync(Entries[1].TrackId, 10, T.CancellationToken.None);
     const Rated: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(

@@ -2,7 +2,8 @@
 unit FpasAmp.Library.Metadata.Persistence.Store;
 
 uses
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Albums.Persistence.Store as Albums,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Text.Json as J, System.Threading as T;
 
@@ -40,7 +41,7 @@ end procedure;
 // `Tags=null` records `Error` but preserves earlier tags/relationships. Empty `TrackId`
 // or `Hash` retain earlier values. Cancellation or `Current=false` rolls back the write.
 // Returns whether this attempt was committed.
-public function Save(Connection: Db.SqliteConnection; Id: long; Size: long; Modified: long; TrackId: string; Hash: string; Tags: M.Tags?; Error: string?; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+public function Save(Connection: Db.SqliteConnection; Id: long; Size: long; Modified: long; TrackId: string; Hash: string; Tags: MediaTags.Info?; Error: string?; Current: function(): bool; Cancellation: T.CancellationToken): bool;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
@@ -86,7 +87,7 @@ begin
       ],
       [
         Id,
-        J.JsonSerializer.Serialize<M.Tags>(Tags),
+        J.JsonSerializer.Serialize<MediaTags.Info>(Tags),
         Tags.Title,
         Tags.Album,
         Tags.Album.ToUpperInvariant(),

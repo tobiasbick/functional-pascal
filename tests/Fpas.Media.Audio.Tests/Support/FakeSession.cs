@@ -21,6 +21,8 @@ internal sealed class FakeSession : ISession
     /// <inheritdoc />
     public void Seek(TimeSpan position, long requestId = 0) => Commands.Add((nameof(Seek), position));
     /// <inheritdoc />
+    public void Unload() => Commands.Add((nameof(Unload), null));
+    /// <inheritdoc />
     public PlaybackEvent? StopPlayback() { Commands.Add((nameof(StopPlayback), null)); return null; }
     /// <inheritdoc />
     public void Apply(Settings settings) => Commands.Add((nameof(Apply), settings));

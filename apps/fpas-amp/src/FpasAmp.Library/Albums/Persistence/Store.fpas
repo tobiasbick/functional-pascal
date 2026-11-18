@@ -2,14 +2,15 @@
 unit FpasAmp.Library.Albums.Persistence.Store;
 
 uses
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
   System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
   System.Text.RegularExpressions as Regex;
 
 // Replaces album membership for tag `Value` at indexed `Id`, inside `Transaction`.
 // Path/directory facts are read from `Connection`; no music/image file is opened.
-public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Value: M.Tags);
+public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Value: MediaTags.Info);
 begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,

@@ -2,12 +2,13 @@
 unit FpasAmp.Library.Albums.Artwork.Reading;
 
 uses
+  Fpas.Media.Tags.Pictures as Pictures,
   FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Albums.Artwork.Names as Names,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Metadata.Internal.Reading as Facts,
-  FpasAmp.Imaging as Images, Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
+  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
 
-function Store(Cache: Images.ThumbnailStore; Album: string; Revision: string; Value: Covers.Cover?; Cancellation: T.CancellationToken): Images.Bitmap?;
+function Store(Cache: Thumbnails.ThumbnailStore; Album: string; Revision: string; Value: Pictures.Cover?; Cancellation: T.CancellationToken): Imaging.Bitmap?;
 begin
   if Value = null then
     return null;
@@ -67,16 +68,16 @@ end function;
 // Resolves embedded front/other images, then unambiguous cover/folder/front sidecars.
 // `MayRead` rejects paused/offline sources; cached `Album`/`Revision` works offline.
 // All I/O runs on the background caller; returned pixels are immutable by contract.
-public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Images.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Thumbnails.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
 begin
   Cancellation.ThrowIfCancellationRequested();
-  const Cached: Images.Bitmap? := Cache.TryGet(Album, Revision);
+  const Cached: Imaging.Bitmap? := Cache.TryGet(Album, Revision);
   if Cached <> null then
     return Cached;
   end if;
 
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  const Others: C.List<Covers.Cover> := new C.List<Covers.Cover>();
+  const Others: C.List<Pictures.Cover> := new C.List<Pictures.Cover>();
   begin
     using const Query: Db.SqliteCommand := Sql.Command(
       Connection,
@@ -93,7 +94,7 @@ begin
       end if;
 
       try
-        const Value: Covers.Cover? := await Covers.Read(
+        const Value: Pictures.Cover? := await Covers.Read(
           Database,
           Users,
           Rows.GetInt64(0),
@@ -102,7 +103,7 @@ begin
         ).ConfigureAwait(false);
         if Value <> null then
           if Value.Front then
-            const Image: Images.Bitmap? := Store(Cache, Album, Revision, Value, Cancellation);
+            const Image: Imaging.Bitmap? := Store(Cache, Album, Revision, Value, Cancellation);
             if Image <> null then
               return Image;
             end if;
@@ -117,7 +118,7 @@ begin
   end;
 
   if Others.Count > 0 then
-    const Image: Images.Bitmap? := Store(Cache, Album, Revision, Others[0], Cancellation);
+    const Image: Imaging.Bitmap? := Store(Cache, Album, Revision, Others[0], Cancellation);
     if Image <> null then
       return Image;
     end if;
@@ -161,11 +162,11 @@ begin
     Cancellation.ThrowIfCancellationRequested();
     try
       const Bytes: array of byte := await ReadFile(Path, Cancellation).ConfigureAwait(false);
-      const Image: Images.Bitmap? := Store(
+      const Image: Imaging.Bitmap? := Store(
         Cache,
         Album,
         Revision,
-        new Covers.Cover('application/octet-stream', Bytes),
+        new Pictures.Cover('application/octet-stream', Bytes),
         Cancellation
       );
       if Image <> null then

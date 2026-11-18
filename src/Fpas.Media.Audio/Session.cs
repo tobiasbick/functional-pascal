@@ -97,6 +97,17 @@ public sealed class Session : ISession
     public void Seek(TimeSpan position, long requestId = 0) => Command(requestId, output => output.Seek(position));
 
     /// <inheritdoc />
+    public void Unload()
+    {
+        lock (commands)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            CloseTrack();
+            failure = null;
+        }
+    }
+
+    /// <inheritdoc />
     public PlaybackEvent? StopPlayback()
     {
         // Independent of the command lock: opening and seeking a compressed file can take seconds.

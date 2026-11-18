@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Albums.Model;
 
 uses
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Model as Music,
   System.Collections.Immutable as I;

@@ -15,7 +15,9 @@ in the background; same-name source lists show their location alongside the name
 Open an album to see its cover, title and album artist beside the track list. Each row
 shows the performer below the track title, followed by duration, rating and a menu. The table uses
 disc and track order by default. It uses the same toolbar as the album grid, with
-title and genre search and a filter popup for genres and minimum rating. Rate a
+title and genre search. The filter popup always offers a minimum rating. It also
+lists genres that occur on some of the album's tracks and hides the genre field
+when every track has the same set of genres. Rate a
 track with its ten stars or use the row menu to inspect its tags, copy the path
 from the details or open the folder.
 The player strip stays at the bottom of every destination except **Settings**.
@@ -35,7 +37,12 @@ The dropdown beside **Reset** offers Rock, Pop, Jazz, Classical, Bass Boost and 
 **None** and **Reset** set all ten bands to zero. A manually adjusted curve is
 shown as **Custom** when it differs from every preset.
 At the end of a song the next queued track starts automatically. Playback
-stops at the end of the queue.
+stops at the end of the queue. Queue navigation skips tracks that belong only
+to offline sources, even when the file remains readable. Taking the current
+source offline advances to the next eligible track. Removing or resetting its
+last online owner stops playback, as does clearing the whole index. A track
+shared with another online, indexed source remains playable. Pausing a scan
+keeps indexed tracks available for playback.
 The status bar shows the matching track count and duration. The back arrow restores
 the album grid's search, applied filters, sort order and scroll position.
 Below 760 logical pixels, the sidebar becomes a left-hand drawer opened through
@@ -149,8 +156,10 @@ The Albums grid creates only visible rows plus a small overscan. It loads covers
 on background workers, preferring an embedded front cover, another embedded image,
 then `cover`, `folder` or `front` JPG/JPEG/PNG files in an unambiguous album folder.
 Missing/invalid pictures use a placeholder. Sidecar image changes are monitored.
-Each card centers a bold title, artist and song count below the cover. Ten native CUI stars
-above it set an independent album rating; clicking the selected star clears it.
+The borderless grid fits square covers to the available width. Each tile centers
+the bold album title below the cover, followed by the artist and song count on
+one line. Ten native CUI stars below the caption set the album rating. Clicking
+the selected star clears it.
 Writes run in the background and persist in `userdata.db` across catalogue resets.
 Resting the pointer on an album card for 700 ms opens native CUI hover details:
 a small cover beside the title, artist and song count, with a read-only rating

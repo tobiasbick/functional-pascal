@@ -1,4 +1,4 @@
-namespace FpasAmp.Imaging;
+namespace Fpas.Media.Images;
 
 /// <summary>A detached square thumbnail. Consumers must retain pixels unchanged.</summary>
 /// <param name="Width">Pixel width.</param>

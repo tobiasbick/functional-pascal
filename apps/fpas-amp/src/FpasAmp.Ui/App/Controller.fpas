@@ -13,7 +13,7 @@ uses
   FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Update as Player,
-  FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
   FpasAmp.Library.Metadata.Waveforms as Waves, Fpas.Media.Audio as Audio,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
@@ -139,7 +139,10 @@ end function;
 
 function Transport(Current: M.State; Message: PlayerModel.Msg; Port: Playback.Connection; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
-  const Child: PlayerModel.Transition := Player.Apply(Current.Player, Message);
+  const Child: PlayerModel.Transition := Player.Apply(
+    Current.Player, Message,
+    function(Entry: Tracks.Entry): bool => Availability.Allows(Current.Settings, Entry)
+  );
   const Work: PlayerModel.Request? := Child.Command;
   const Next: M.State := Current with
     Player := Child.Model;
@@ -329,10 +332,15 @@ begin
         else
       end case;
     when M.Msg.WatchLibrary:
-      Commands := Watch(Library, Port, Current.Player);
+      const Restored: Tracks.Entry? := PlayerModel.Track(Current.Player);
+      if Restored <> null and not Availability.Allows(Current.Settings, Restored) then
+        Next := Transport(Current, PlayerModel.Msg.SourceLost(true), Port, Library).Model;
+      end if;
+
+      Commands := Watch(Library, Port, Next.Player);
       if Nav.SectionKey(Current.Navigation.Active) = 'albums' then
         const Transition: Mvu.Transition<M.State, M.Msg> := Album(
-          Current,
+          Next,
           AlbumModel.Msg.Open,
           Library
         );
@@ -342,7 +350,41 @@ begin
         Commands := All.ToArray();
       end if;
     when M.Msg.Settings(const SettingsMessage: SettingsModel.Msg):
-      return Settings(Current, SettingsMessage, Save, Library);
+      const Changed: Mvu.Transition<M.State, M.Msg> := Settings(
+        Current,
+        SettingsMessage,
+        Save,
+        Library
+      );
+      const Track: Tracks.Entry? := PlayerModel.Track(Changed.Model.Player);
+      if Track <> null then
+        var Advance: bool := false;
+        case SettingsMessage of
+          when SettingsModel.Msg.SetOffline(_, const Offline: bool):
+            Advance := Offline;
+          when SettingsModel.Msg.Cleared(
+            _,
+            _
+          ), SettingsModel.Msg.ConfirmRemove, SettingsModel.Msg.InventoryReceived(
+            _
+          ), SettingsModel.Msg.SaveSource:
+          else
+            return Changed;
+        end case;
+
+        if not Availability.Allows(Changed.Model.Settings, Track) then
+          const StoppedPlayer: Mvu.Transition<M.State, M.Msg> := Transport(
+            Changed.Model, PlayerModel.Msg.SourceLost(Advance), Port, Library
+          );
+          const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+            Changed.Commands
+          );
+          Work.AddRange(StoppedPlayer.Commands);
+          return new Mvu.Transition<M.State, M.Msg>(StoppedPlayer.Model, Work.ToArray());
+        end if;
+      end if;
+
+      return Changed;
     when M.Msg.SaveMixer:
       Next := Current with
         Settings := SaveMixer(Current, Save);

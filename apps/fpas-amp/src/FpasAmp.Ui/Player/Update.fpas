@@ -17,13 +17,18 @@ begin
   end if;
 end function;
 
-function SelectWaveform(Current: M.State; Track: Tracks.Entry): M.State;
+function WaveformKey(Track: Tracks.Entry): string;
 begin
-  const Key: string := if Track.Sha256 <> '' then
+  return if Track.Sha256 <> '' then
     Track.Sha256
   else
     Track.Path
   end if;
+end function;
+
+function SelectWaveform(Current: M.State; Track: Tracks.Entry): M.State;
+begin
+  const Key: string := WaveformKey(Track);
   if Current.WaveformKey = Key then
     return Current;
   end if;
@@ -64,7 +69,31 @@ begin
   return new M.Transition(Current, M.Request.Mixer(new Audio.Settings(Current.Volume, Gains)));
 end function;
 
-function Observe(Current: M.State; Value: Audio.PlaybackEvent): M.Transition;
+function AvailableIndex(Current: M.State; Index: int; Direction: int; Allowed: function(Tracks.Entry): bool): int;
+begin
+  var Slot: int := Index;
+  while Slot >= 0 and Slot < Current.Queue.Length do
+    if Allowed(Current.Queue[Slot]) then
+      return Slot;
+    end if;
+
+    Slot := Slot + Direction;
+  end while;
+
+  return -1;
+end function;
+
+function Idle(Current: M.State): M.Transition;
+begin
+  return new M.Transition(
+    new M.State(
+      Revision := Current.Revision + 1L, Volume := Current.Volume,
+      Gains := Current.Gains, PresetsOpen := Current.PresetsOpen
+    ), M.Request.Unload
+  );
+end function;
+
+function Observe(Current: M.State; Value: Audio.PlaybackEvent; Allowed: function(Tracks.Entry): bool): M.Transition;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
   if Track = null or Value.RequestId <> Current.Revision or Value.Path <> Track.Path then
@@ -96,8 +125,9 @@ begin
         Current.Error
       end if;
     end with;
-    if Current.Playing and Current.Index + 1 < Current.Queue.Length then
-      return Start(Terminal, Current.Index + 1);
+    const Following: int := AvailableIndex(Current, Current.Index + 1, 1, Allowed);
+    if Current.Playing and Following >= 0 then
+      return Start(Terminal, Following);
     end if;
 
     return new M.Transition(
@@ -114,9 +144,10 @@ end function;
 // ## Parameters
 // - `Current`: Owner-thread playback state.
 // - `Message`: Control input or audio status.
+// - `Allowed`: Current source membership predicate for queue navigation.
 // ## Returns
 // The updated strip state and optional ordered session request.
-public function Apply(Current: M.State; Message: M.Msg): M.Transition;
+public function Apply(Current: M.State; Message: M.Msg; Allowed: function(Tracks.Entry): bool): M.Transition;
 requires Current.Index >= -1;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
@@ -128,15 +159,38 @@ begin
       const Source: Music.Selection
     ):
       if Index >= 0 and Index < Queue.Length then
-        return Start(
-          Current with
-            Queue := Queue;
-            Source := Source;
-            Playing := true;
-            Error := null;
-          end with, Index
-        );
+        const Selected: M.State := Current with
+          Queue := Queue;
+          Source := Source;
+          Playing := true;
+          Error := null;
+        end with;
+        const Slot: int := AvailableIndex(Selected, Index, 1, Allowed);
+        if Slot >= 0 then
+          return Start(Selected, Slot);
+        end if;
+
+        return Idle(Current);
       end if;
+    when M.Msg.SourceLost(const Advance: bool):
+      if Advance and Track <> null then
+        const Slot: int := AvailableIndex(Current, Current.Index + 1, 1, Allowed);
+        if Slot >= 0 then
+          const Selected: M.Transition := Start(Current, Slot);
+          if Current.NeedsOpen and not Current.Playing then
+            return new M.Transition(
+              Selected.Model with
+                NeedsOpen := true;
+                WaveformKey := WaveformKey(Current.Queue[Slot]);
+              end with, M.Request.Unload
+            );
+          end if;
+
+          return Selected;
+        end if;
+      end if;
+
+      return Idle(Current);
     when M.Msg.Toggle:
       if Track <> null then
         const Next: M.State := Current with
@@ -164,22 +218,27 @@ begin
       end if;
     when M.Msg.Previous:
       if Track <> null then
+        var Slot: int := Current.Index;
+        if Current.Position <= RestartAfter then
+          const Earlier: int := AvailableIndex(Current, Current.Index - 1, -1, Allowed);
+          if Earlier >= 0 then
+            Slot := Earlier;
+          end if;
+        end if;
+
         return Start(
           Current with
             Error := null;
-          end with, if Current.Position > RestartAfter or Current.Index = 0 then
-            Current.Index
-          else
-            Current.Index - 1
-          end if
+          end with, Slot
         );
       end if;
     when M.Msg.Next:
-      if Track <> null and Current.Index + 1 < Current.Queue.Length then
+      const Slot: int := AvailableIndex(Current, Current.Index + 1, 1, Allowed);
+      if Track <> null and Slot >= 0 then
         return Start(
           Current with
             Error := null;
-          end with, Current.Index + 1
+          end with, Slot
         );
       end if;
     when M.Msg.Seek(const Fraction: float):
@@ -213,7 +272,7 @@ begin
         );
       end if;
     when M.Msg.Flatten:
-      return Apply(Current, M.Msg.Preset(0));
+      return Apply(Current, M.Msg.Preset(0), Allowed);
     when M.Msg.ShowPresets(const Open: bool):
       return new M.Transition(
         Current with
@@ -230,7 +289,7 @@ begin
         );
       end if;
     when M.Msg.Observed(const Value: Audio.PlaybackEvent):
-      return Observe(Current, Value);
+      return Observe(Current, Value, Allowed);
     when M.Msg.Measured(const Key: string, const Levels: array of float):
       if Key = Current.WaveformKey and Key <> '' then
         return new M.Transition(

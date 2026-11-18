@@ -4,7 +4,7 @@ unit FpasAmp.Library.Tests.ThumbnailCache;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
   PhotoSauce.MagicScaler as Magic,
-  FpasAmp.Imaging as Images, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
 
 // Detached thumbnails remain reusable across album IDs and cache sessions.
 public type CacheTests = record
@@ -13,21 +13,21 @@ public type CacheTests = record
   public procedure PngAndJpegFitTransparentSquare();
   begin
     using const Root: H.Folder := H.Folder.Create();
-    const Cache: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     const Encoded: array of byte := Art.Picture(220, 40, 30, 512, 128);
-    const Png: Images.Bitmap := Cache.Store('png', 'revision', Encoded, T.CancellationToken.None);
+    const Png: Imaging.Bitmap := Cache.Store('png', 'revision', Encoded, T.CancellationToken.None);
     using const Input: IO.MemoryStream := new IO.MemoryStream(Encoded, false);
     using const Output: IO.MemoryStream := new IO.MemoryStream();
     const Settings: Magic.ProcessImageSettings := new Magic.ProcessImageSettings();
     X.Assert.True(Settings.TrySetEncoderFormat(Magic.ImageMimeTypes.Jpeg));
     discard Magic.MagicImageProcessor.ProcessImage(Input, Output, Settings);
-    const Jpeg: Images.Bitmap := Cache.Store(
+    const Jpeg: Imaging.Bitmap := Cache.Store(
       'jpeg',
       'revision',
       Output.ToArray(),
       T.CancellationToken.None
     );
-    for Image: Images.Bitmap in [Png, Jpeg] do
+    for Image: Imaging.Bitmap in [Png, Jpeg] do
       X.Assert.Equal<int>(384, Image.Width);
       X.Assert.Equal<int>(384, Image.Height);
       X.Assert.Equal<byte>(0, Image.Pixels[3]);
@@ -43,15 +43,15 @@ public type CacheTests = record
   public procedure SharedPixelsRevisionsAndCorruption();
   begin
     using const Root: H.Folder := H.Folder.Create();
-    const Cache: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     const Bytes: array of byte := Art.Picture(220, 40, 30);
-    const One: Images.Bitmap := Cache.Store(
+    const One: Imaging.Bitmap := Cache.Store(
       'album-one',
       'revision-one',
       Bytes,
       T.CancellationToken.None
     );
-    const Two: Images.Bitmap := Cache.Store(
+    const Two: Imaging.Bitmap := Cache.Store(
       'album-two',
       'revision-one',
       Bytes,
@@ -59,14 +59,14 @@ public type CacheTests = record
     );
     X.Assert.Same(One, Two);
     X.Assert.Equal<int>(1, IO.Directory.GetFiles(Root.Path, '*.rgba').Length);
-    const Reloaded: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
+    const Reloaded: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     X.Assert.NotNull(Reloaded.TryGet('album-one', 'revision-one'));
     X.Assert.Null(Reloaded.TryGet('album-one', 'revision-two'));
     IO.File.WriteAllBytes(IO.Directory.GetFiles(Root.Path, '*.rgba')[0], [0]);
-    const Damaged: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
+    const Damaged: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     X.Assert.Null(Damaged.TryGet('album-one', 'revision-one'));
     discard Damaged.Store('album-one', 'revision-one', Bytes, T.CancellationToken.None);
-    X.Assert.NotNull(new Images.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
   end procedure;
 
   // Cancelled and unsupported images cannot publish cache associations.
@@ -74,7 +74,7 @@ public type CacheTests = record
   public procedure InvalidImagesAndCancellation();
   begin
     using const Root: H.Folder := H.Folder.Create();
-    const Cache: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     var Invalid: bool := false;
     try
       discard Cache.Store('album', 'revision', [0, 1, 2], T.CancellationToken.None);

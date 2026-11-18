@@ -4,10 +4,10 @@ using PhotoSauce.MagicScaler.Transforms;
 using PhotoSauce.NativeCodecs.Libjpeg;
 using PhotoSauce.NativeCodecs.Libpng;
 
-namespace FpasAmp.Imaging;
+namespace Fpas.Media.Images;
 
-// The only image-processing boundary: MagicScaler owns decoding and resampling.
-internal static class CoverDecoder
+/// <summary>Decodes JPEG and PNG images using MagicScaler.</summary>
+public static class CoverDecoder
 {
     static CoverDecoder()
     {
@@ -18,8 +18,18 @@ internal static class CoverDecoder
         });
     }
 
-    internal static Bitmap Decode(byte[] encoded, int edge, CancellationToken cancellation)
+    /// <summary>Orients and fits an encoded picture into a transparent square.</summary>
+    /// <param name="encoded">JPEG or PNG bytes, up to 16 MiB and 64 megapixels.</param>
+    /// <param name="edge">Output width and height in pixels, from 1 to 8000.</param>
+    /// <param name="cancellation">Checked before decoding and after copying pixels.</param>
+    /// <returns>Detached straight-alpha RGBA pixels in row order.</returns>
+    public static Bitmap Decode(byte[] encoded, int edge, CancellationToken cancellation)
     {
+        ArgumentNullException.ThrowIfNull(encoded);
+        ArgumentOutOfRangeException.ThrowIfLessThan(edge, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(edge, 8000);
+        cancellation.ThrowIfCancellationRequested();
+        if (encoded.Length > 16 * 1024 * 1024) throw new InvalidDataException("Image exceeds sixteen MiB.");
         try
         {
             var info = ImageFileInfo.Load(encoded);

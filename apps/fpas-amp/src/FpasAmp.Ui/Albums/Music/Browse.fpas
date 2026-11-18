@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Albums.Music.Browse;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Library.Search.Text as Text, System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Collections.Immutable as I;
@@ -9,7 +10,7 @@ uses
 // Returns the title of `Track`, using its file name when no title is tagged.
 public function Title(Track: Tracks.Entry): string;
 begin
-  const Caption: string := (Track.Metadata ?? new Tracks.Tags()).Title;
+  const Caption: string := (Track.Metadata ?? new MediaTags.Info()).Title;
   return if Caption = '' then
     IO.Path.GetFileNameWithoutExtension(Track.Path) ?? ''
   else
@@ -20,19 +21,19 @@ end function;
 // Returns the genres tagged on `Track`.
 public function Genres(Track: Tracks.Entry): array of string;
 begin
-  return (Track.Metadata ?? new Tracks.Tags()).Genres;
+  return (Track.Metadata ?? new MediaTags.Info()).Genres;
 end function;
 
 // Joins the performer credits of `Track` for display.
 public function Artist(Track: Tracks.Entry): string;
 begin
-  return Sys.String.Join(', ', (Track.Metadata ?? new Tracks.Tags()).Artists);
+  return Sys.String.Join(', ', (Track.Metadata ?? new MediaTags.Info()).Artists);
 end function;
 
 // Returns the reported duration of `Track` in milliseconds, or zero if unknown.
 public function Duration(Track: Tracks.Entry): double;
 begin
-  return (Track.Metadata ?? new Tracks.Tags()).DurationMilliseconds ?? 0.0;
+  return (Track.Metadata ?? new MediaTags.Info()).DurationMilliseconds ?? 0.0;
 end function;
 
 // Formats a nonnegative duration `Milliseconds` as a compact time value.
@@ -43,18 +44,23 @@ begin
   return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
 end function;
 
-// Returns the distinct genres in `Items` in display order.
+// Returns the sorted genres that match some but not all tracks in `Items`.
 public function GenreChoices(Items: I.ImmutableArray<Tracks.Entry>): array of string;
 begin
-  const Names: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
+  if Items.Length < 2 then
+    return [];
+  end if;
+  const Comparer: Sys.StringComparer := Sys.StringComparer.OrdinalIgnoreCase;
+  const Names: C.SortedSet<string> := new C.SortedSet<string>(Comparer);
+  const Common: C.HashSet<string> := new C.HashSet<string>(Genres(Items[0]), Comparer);
   for Track: Tracks.Entry in Items do
-    for Name: string in Genres(Track) do
-      if Name <> '' then
-        discard Names.Add(Name);
-      end if;
-    end for;
+    const Tags: array of string := Genres(Track);
+    Names.UnionWith(Tags);
+    Common.IntersectWith(Tags);
   end for;
 
+  Names.ExceptWith(Common);
+  discard Names.Remove('');
   return (new C.List<string>(Names)).ToArray();
 end function;
 
@@ -118,8 +124,8 @@ public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.S
       when 0: Names.Compare(Title(Left), Title(Right));
       when 1: Names.Compare(Artist(Left), Artist(Right));
       when 2: Names.Compare(
-        (Left.Metadata ?? new Tracks.Tags()).Album,
-        (Right.Metadata ?? new Tracks.Tags()).Album
+        (Left.Metadata ?? new MediaTags.Info()).Album,
+        (Right.Metadata ?? new MediaTags.Info()).Album
       );
       when 3: Duration(Left).CompareTo(Duration(Right));
       when 4: (Left.Rating ?? 0).CompareTo(Right.Rating ?? 0);

@@ -2,6 +2,7 @@
 unit FpasAmp.Ui.Tests.NativeAlbumMusic;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
   FpasAmp.Ui.Player.Model as Player, FpasAmp.Persistence.PlayerState as Bookmark,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Fixtures,
@@ -129,7 +130,7 @@ public type AlbumMusicTests = record
     using const Device: Media.Session := new Media.Session(true);
     const Port: Playback.Connection := new Playback.Connection(Device);
     var Last: App.State := new App.State(
-      new Settings.State(new Settings.Preferences([], 'light')),
+      new Settings.State(new Settings.Preferences([Sources.Source(Root.Path)], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
     );
     var XPos: float := -1.0F;
@@ -210,7 +211,10 @@ public type AlbumMusicTests = record
       X.Assert.Equal<string>(Selected.Id, 'album-' + Page.Album.Id);
       X.Assert.Equal<int>(2, Page.Tracks.Length);
       const Track: Metadata.Entry := Page.Tracks[0];
-      X.Assert.Equal<string>(Page.Album.Artist, (Track.Metadata ?? new Metadata.Tags()).Artists[0]);
+      X.Assert.Equal<string>(
+        Page.Album.Artist,
+        (Track.Metadata ?? new MediaTags.Info()).Artists[0]
+      );
       X.Assert.Contains<string>('Albums', Session.Snapshot().Text);
       X.Assert.Equal<string>('albums', Nav.SectionKey(Last.Navigation.Active));
       const TrackSearch: Cui.CuiRectangle := Control(Session, 'track-search').Bounds;
@@ -263,8 +267,9 @@ public type AlbumMusicTests = record
       Send(Session, Albums.Msg.Music(Music.Msg.Search('')));
       Click(Session, Control(Session, 'track-filters').Bounds);
       Click(Session, Control(Session, 'track-filter-genre').Bounds);
-      const Genre: string := Selects.OptionId('track-filter-genre', 1);
+      const Genre: string := Selects.OptionId('track-filter-genre', 0);
       X.Assert.Equal<string>('Rock', Control(Session, Genre).Text);
+      X.Assert.False(Has(Session, Selects.OptionId('track-filter-genre', 1)));
       Click(Session, Control(Session, Genre).Bounds);
       X.Assert.Equal<string>('Rock', Control(Session, 'track-filter-genre').Value);
       X.Assert.Equal<string>('0:2', Control(Session, 'album-tracks').Value);

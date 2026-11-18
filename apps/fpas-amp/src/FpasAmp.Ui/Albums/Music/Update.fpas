@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Albums.Music.Update;
 
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
-  FpasAmp.Imaging as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  Fpas.Media.Images as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
   System.Diagnostics as Diagnostics, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -114,6 +114,7 @@ begin
         Next := Browse.Select(
           Current with
             Tracks := Items;
+            GenreChoices := Browse.GenreChoices(Items);
             Loaded := true;
           end with
         );

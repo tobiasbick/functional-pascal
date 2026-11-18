@@ -289,6 +289,12 @@ design-time metadata preparation retain staged documentation before copying. See
 
 ## FPas-Amp library
 
+[Fpas.Media.Tests](Fpas.Media.Tests/) references the three media libraries directly
+from FPAS and exercises tags, playlists, artwork, pixel layout and waveform analysis.
+[Fpas.Media.Audio.Tests](Fpas.Media.Audio.Tests/) checks decoder, device, transport,
+equalizer and session lifetime. The native FPas-Amp UI tests exercise offline,
+remove, reset and clear actions during playback.
+
 [FpasAmp.Library.Tests](FpasAmp.Library.Tests/) is a focused FPAS xUnit project
 in the [application solution](../apps/fpas-amp/fpas-amp.slnx). It verifies filesystem
 discovery, overlapping source policies, native watcher changes, unavailable roots,

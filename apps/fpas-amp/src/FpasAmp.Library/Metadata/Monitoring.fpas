@@ -2,11 +2,11 @@
 unit FpasAmp.Library.Metadata.Monitoring;
 
 uses
+  Fpas.Media.Tags.Pictures as Pictures,
   FpasAmp.Library.Sources as S, FpasAmp.Library.Metadata.Model as M,
   FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Worker as Worker,
   FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
-  FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Metadata.Waveforms as Waveforms,
+  FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Metadata.Waveforms as Waveforms,
   FpasAmp.Library.Playlists.Access as Lists,
   FpasAmp.Library.Albums.Access as Albums,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
@@ -97,7 +97,7 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Loads embedded artwork only on request and caches it by content hash.
   // `FileId` is an indexed file; cancellation bounds waiting and cache I/O.
-  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Covers.Cover?>;
+  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Pictures.Cover?>;
   requires FileId > 0L;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -105,9 +105,9 @@ public type Session = record implements Sys.IAsyncDisposable
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.TaskExtensions.Unwrap<Covers.Cover?>(
-      Tasks.Task.Run<Tasks.Task<Covers.Cover?>>(
-        function(): Tasks.Task<Covers.Cover?> => Covers.Read(
+    return await Tasks.TaskExtensions.Unwrap<Pictures.Cover?>(
+      Tasks.Task.Run<Tasks.Task<Pictures.Cover?>>(
+        function(): Tasks.Task<Pictures.Cover?> => Covers.Read(
           self.Database,
           self.UserDatabase,
           FileId,

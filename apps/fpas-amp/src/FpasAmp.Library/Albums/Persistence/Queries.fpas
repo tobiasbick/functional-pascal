@@ -62,17 +62,16 @@ begin
   return I.ImmutableArray.CreateRange<M.Album>(Albums);
 end function;
 
-// Reads the sorted album headers from `Database` with ratings from `Users`.
-// `Cancellation` also interrupts SQLite while it prepares the first sorted row.
+// Reads headers on a caller-owned catalogue connection with the ratings store attached as users.
+// ## Parameters
+// - `Connection`: Open SQLite connection dedicated to this read.
+// - `Cancellation`: Interrupts SQLite even before it can produce the first sorted row.
 // ## Returns
 // One detached header per release, including its artwork revision.
-public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
-requires Database.Length > 0;
-requires Users.Length > 0;
+public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+requires Connection <> null;
 begin
   Cancellation.ThrowIfCancellationRequested();
-  using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
   if Cancellation.CanBeCanceled then
     Native.raw.sqlite3_progress_handler(
       Connection.Handle, 4096,
@@ -89,7 +88,25 @@ begin
   catch Interrupted: Db.SqliteException when Interrupted.SqliteErrorCode =
     Native.raw.SQLITE_INTERRUPT and Cancellation.IsCancellationRequested do
     raise new Sys.OperationCanceledException(Cancellation);
+  finally
+    if Cancellation.CanBeCanceled then
+      Native.raw.sqlite3_progress_handler(Connection.Handle, 0, null, null);
+    end if;
   end try;
+end function;
+
+// Reads the sorted album headers from `Database` with ratings from `Users`.
+// `Cancellation` also interrupts SQLite while it prepares the first sorted row.
+// ## Returns
+// One detached header per release, including its artwork revision.
+public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
+requires Database.Length > 0;
+requires Users.Length > 0;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Sql.Open(Database);
+  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  return ReadAttached(Connection, Cancellation);
 end function;
 
 end unit;

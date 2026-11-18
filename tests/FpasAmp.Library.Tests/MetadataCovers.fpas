@@ -2,6 +2,7 @@
 unit FpasAmp.Library.Tests.MetadataCovers;
 
 uses
+  Fpas.Media.Tags.Pictures as ArtFiles,
   ATL as A, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Covers as Covers,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Inventory.Monitoring as Monitor,
@@ -41,7 +42,7 @@ public type MetadataCoverTests = record
     discard IO.Directory.CreateDirectory(Directory);
     const CachedPath: string := IO.Path.Combine(Directory, Entries[0].Sha256 + '.json');
     IO.File.WriteAllText(CachedPath, Contents);
-    const Restored: Covers.Cover? := await Tags.CoverAsync(
+    const Restored: ArtFiles.Cover? := await Tags.CoverAsync(
       Entries[0].FileId,
       T.CancellationToken.None
     );
@@ -103,7 +104,7 @@ public type MetadataCoverTests = record
     );
     const Cache: string := Covers.DirectoryPath(IO.Path.Combine(Data.Path, 'userdata.db'));
     X.Assert.False(IO.Directory.Exists(Cache));
-    const Cover: Covers.Cover? := await Tags.CoverAsync(
+    const Cover: ArtFiles.Cover? := await Tags.CoverAsync(
       Entries[0].FileId,
       T.CancellationToken.None
     );
@@ -129,7 +130,7 @@ public type MetadataCoverTests = record
       ].Status = Inventory.Availability.Offline
     );
     IO.File.Delete(Path);
-    const Cached: Covers.Cover? := await Tags.CoverAsync(
+    const Cached: ArtFiles.Cover? := await Tags.CoverAsync(
       Entries[0].FileId,
       T.CancellationToken.None
     );

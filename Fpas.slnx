@@ -12,6 +12,7 @@
     <Project Path="src/Fpas.Debugging/Fpas.Debugging.csproj" />
     <Project Path="src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
     <Project Path="src/Fpas.Atl/Fpas.Atl.csproj" />
+    <Project Path="src/Fpas.Media.Images/Fpas.Media.Images.csproj" />
     <Project Path="src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
   </Folder>
   <Folder Name="/sdk/">

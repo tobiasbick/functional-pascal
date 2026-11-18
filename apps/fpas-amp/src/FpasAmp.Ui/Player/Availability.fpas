@@ -1,0 +1,46 @@
+// Resolves playback against configured sources and their latest index membership.
+unit FpasAmp.Ui.Player.Availability;
+
+uses
+  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Library.Sources as Sources,
+  FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
+  FpasAmp.Ui.Settings.InventoryState as Index, FpasAmp.Library.Metadata.Model as Tracks;
+
+// Tests whether an online source still owns a queued path. Scan pause keeps indexed files playable.
+// ## Parameters
+// - `Current`: Saved source policies and latest accepted inventory.
+// - `Track`: Queue entry with the ownership from its catalogue query.
+// ## Returns
+// True if at least one available source contains the file.
+public function Allows(Current: Settings.State; Track: Tracks.Entry): bool;
+begin
+  const Snapshot: Inventory.Snapshot? := Current.Inventory;
+  for Source: Sources.MusicSource in Current.Saved.MusicSources do
+    if Source.Offline or not Sources.Within(Track.Path, Source.Path) then
+      continue;
+    end if;
+
+    if Snapshot <> null then
+      const View: Inventory.SourceSnapshot? := Index.View(Current, Source.Id);
+      if View <> null and Sources.PathComparer().Equals(View.Path, Source.Path)
+        and I.ImmutableArray.BinarySearch<string>(
+        View.Files,
+        Track.Path,
+        Sources.PathComparer()
+      ) >= 0
+      then
+        return true;
+      end if;
+    else
+      for Id: string in Track.SourceIds do
+        if Id = Source.Id then
+          return true;
+        end if;
+      end for;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+end unit;

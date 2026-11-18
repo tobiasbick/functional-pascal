@@ -40,6 +40,8 @@ end function;
 procedure Execute(Device: Audio.ISession; Item: M.Request);
 begin
   case Item of
+    when M.Request.Unload:
+      Device.Unload();
     when M.Request.Resume(const Path: string, const Milliseconds: double, const Revision: long):
       Device.Open(Path, Revision - 1L);
       Device.Seek(Sys.TimeSpan.FromMilliseconds(Milliseconds), Revision);

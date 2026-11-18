@@ -2,6 +2,9 @@
 unit FpasAmp.Ui.Tests.Player;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Sources as Sources,
   FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Player.Update as Update,
   Fpas.Media.Audio as Audio, System as Sys, System.IO as IO,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
@@ -16,14 +19,14 @@ begin
     'song.mp3',
     '',
     null,
-    new Tracks.Tags(Title := 'Song ' + Id.ToString(), DurationMilliseconds := Seconds * 1000.0),
+    new MediaTags.Info(Title := 'Song ' + Id.ToString(), DurationMilliseconds := Seconds * 1000.0),
     null
   );
 end function;
 
 function Reduce(Current: M.State; Message: M.Msg): M.State;
 begin
-  return Update.Apply(Current, Message).Model;
+  return Update.Apply(Current, Message, function(_Entry: Tracks.Entry): bool => true).Model;
 end function;
 
 function Started(): M.State;
@@ -40,6 +43,124 @@ end function;
 
 // Queue navigation, seeking and sound settings.
 public type PlayerTests = record
+  // An overlapping online source must have actually indexed the queued file.
+  [X.FactAttribute]
+  public procedure OverlappingSourcesUseActualOwnership();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Child: string := IO.Path.Combine(Root.Path, 'albums');
+    const Path: string := IO.Path.Combine(Child, 'song.mp3');
+    const Outer: Sources.MusicSource := H.Source('outer', Root.Path) with
+      Offline := true;
+    end with;
+    const Inner: Sources.MusicSource := H.Source('inner', Child) with
+      Paused := true;
+    end with;
+    const Owned: Inventory.SourceSnapshot := new Inventory.SourceSnapshot(
+      Outer.Id,
+      Outer.Path,
+      Inventory.Availability.Offline,
+      I.ImmutableArray.Create<string>(Path),
+      I.ImmutableArray<Inventory.ScanIssue>.Empty,
+      false
+    );
+    const Shared: Inventory.SourceSnapshot := Owned with
+      Id := Inner.Id;
+      Path := Inner.Path;
+      Status := Inventory.Availability.Paused;
+    end with;
+    const State: Settings.State := new Settings.State(new Settings.Preferences([Outer, Inner]));
+    const Track: Tracks.Entry := Song(1L, 3.0) with
+      Path := Path;
+      SourceIds := [Outer.Id];
+    end with;
+    X.Assert.False(Availability.Allows(State, Track));
+    X.Assert.True(
+      Availability.Allows(
+        State, Track with
+          SourceIds := [Outer.Id, Inner.Id];
+        end with
+      )
+    );
+    const Views: I.ImmutableArray<Inventory.SourceSnapshot> := I.ImmutableArray.CreateRange<Inventory.SourceSnapshot>(
+      [Owned, Shared]
+    );
+    const Snapshot: Inventory.Snapshot := new Inventory.Snapshot(1L, 0L, Views);
+    X.Assert.True(
+      Availability.Allows(
+        State with
+          Inventory := Snapshot;
+        end with, Track
+      )
+    );
+    const Cleared: Inventory.SourceSnapshot := Shared with
+      Files := I.ImmutableArray<string>.Empty;
+    end with;
+    X.Assert.False(
+      Availability.Allows(
+        State with
+          Inventory := Snapshot with
+            Sources := Views.SetItem(1, Cleared);
+          end with;
+        end with, Track
+      )
+    );
+  end procedure;
+
+  // Every route through the queue skips offline paths, including failed and naturally ended tracks.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  public procedure NavigationSkipsOfflineSlots(Failed: bool);
+  begin
+    const Base: Tracks.Entry := Song(1L, 3.0);
+    const Queue: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [
+        Base with
+          Path := 'offline';
+        end with, Base with
+          Path := 'one';
+        end with,
+        Base with
+          Path := 'offline';
+        end with, Base with
+          Path := 'two';
+        end with
+      ]
+    );
+    const Allowed: function(Tracks.Entry): bool := function(Track: Tracks.Entry): bool => Track.Path <>
+      'offline';
+    const First: M.State := Update.Apply(
+      new M.State(),
+      M.Msg.Play(Queue, 0, new Music.Selection()),
+      Allowed
+    ).Model;
+    X.Assert.Equal<int>(1, First.Index);
+    const Next: M.State := Update.Apply(First, M.Msg.Next, Allowed).Model;
+    X.Assert.Equal<int>(3, Next.Index);
+    X.Assert.Equal<int>(1, Update.Apply(Next, M.Msg.Previous, Allowed).Model.Index);
+    const Event: Audio.PlaybackEvent := new Audio.PlaybackEvent(
+      'one',
+      if Failed then
+        Audio.PlaybackState.Failed
+      else
+        Audio.PlaybackState.Ended
+      end if,
+      Sys.TimeSpan.Zero, Sys.TimeSpan.Zero, I.ImmutableArray<float>.Empty, null, First.Revision
+    );
+    X.Assert.Equal<int>(3, Update.Apply(First, M.Msg.Observed(Event), Allowed).Model.Index);
+    const Restored: M.State := Update.Apply(
+      First with
+        Playing := false;
+        NeedsOpen := true;
+      end with,
+      M.Msg.SourceLost(true), Allowed
+    ).Model;
+    X.Assert.True(Restored.NeedsOpen);
+    X.Assert.False(Restored.Playing);
+    X.Assert.Equal<string>('two', Restored.WaveformKey);
+  end procedure;
+
   // Bookmark size is independent of the number of tracks, and catalogue edits apply on reopen.
   [X.FactAttribute]
   public procedure LargeSelectionsRestoreByTrackIdentityAndQuery();

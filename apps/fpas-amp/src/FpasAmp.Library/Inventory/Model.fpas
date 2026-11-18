@@ -35,7 +35,7 @@ public type SourceSnapshot = record
   public Path: string;
   // Availability; a failed scan retains previously discovered entries.
   public Status: Availability;
-  // Selected absolute file paths; an overlapping source may contain the same path.
+  // Selected absolute paths sorted by the platform path comparer for membership lookup.
   public Files: I.ImmutableArray<string>;
   // Unreadable directories within this source.
   public Issues: I.ImmutableArray<ScanIssue>;

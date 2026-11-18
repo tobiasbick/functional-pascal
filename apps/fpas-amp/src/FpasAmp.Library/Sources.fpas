@@ -3,7 +3,7 @@ unit FpasAmp.Library.Sources;
 
 uses
   System as Sys, System.IO as IO, System.Collections.Generic as C,
-  FpasAmp.Library.Playlists.Formats as Playlists;
+  Fpas.Media.Tags.Playlists as Playlists;
 
 // One configured location, including its ordinary subdirectories.
 public type MusicSource = record

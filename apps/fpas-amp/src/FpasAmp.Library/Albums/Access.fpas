@@ -8,7 +8,7 @@ uses
   FpasAmp.Library.Albums.Artwork.Names as Artwork,
   FpasAmp.Library.Albums.Persistence.Ratings as Ratings,
   FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Queries as Queries,
-  FpasAmp.Imaging as Images, System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
 // Detached read operations; the caller owns observations, not the metadata session.
@@ -18,7 +18,7 @@ public type Session = record
   Ready: Tasks.Task;
   Lifetime: T.CancellationToken;
   Configuration: Policy.Policy;
-  Cache: Images.ThumbnailStore;
+  Cache: Thumbnails.ThumbnailStore;
 
   // Creates a handle for validated `Database`/`Users` after `Ready`, sharing parent
   // `Lifetime` and normalized source `Configuration`. Creation starts no I/O.
@@ -26,7 +26,7 @@ public type Session = record
   begin
     return new Session(
       Database, Users, Ready, Lifetime, Configuration,
-      new Images.ThumbnailStore(IO.Path.Combine(Covers.DirectoryPath(Users), 'thumbnails-v1'))
+      new Thumbnails.ThumbnailStore(IO.Path.Combine(Covers.DirectoryPath(Users), 'thumbnails-v1'))
     );
   end function;
 
@@ -93,7 +93,7 @@ public type Session = record
 
   // Loads a bounded cached thumbnail for `Album`; missing/invalid art returns null.
   // `Cancellation` owns this request. Paused/offline sources are never opened.
-  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
   requires Album.Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -101,9 +101,9 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.TaskExtensions.Unwrap<Images.Bitmap?>(
-      Tasks.Task.Run<Tasks.Task<Images.Bitmap?>>(
-        function(): Tasks.Task<Images.Bitmap?> => Reading.Read(
+    return await Tasks.TaskExtensions.Unwrap<Imaging.Bitmap?>(
+      Tasks.Task.Run<Tasks.Task<Imaging.Bitmap?>>(
+        function(): Tasks.Task<Imaging.Bitmap?> => Reading.Read(
           self.Database, self.Users, Album.Id, Album.Revision, self.Cache,
           function(Path: string): bool begin
             for Source: Sources.MusicSource in self.Configuration.Read().Sources do

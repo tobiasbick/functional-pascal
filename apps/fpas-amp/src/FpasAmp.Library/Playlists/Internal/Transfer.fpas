@@ -3,10 +3,10 @@ unit FpasAmp.Library.Playlists.Internal.Transfer;
 
 uses
   FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Internal.Reading as Reading,
-  FpasAmp.Library.Playlists.Internal.References as References,
+  Fpas.Media.Tags.Playlists as Files,
   FpasAmp.Library.Playlists.Persistence.UserLists as Lists,
   FpasAmp.Library.Playlists.Persistence.Queries as Queries,
-  ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO,
+  System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Threading as T;
 
 // Imports supported absolute `Path` into durable `Database`, preserving ordered
@@ -46,58 +46,16 @@ end function;
 // temporary write is renamed atomically only after success and cancellation checks.
 public procedure Export(Database: string; Users: string; Identity: M.Key; Destination: string; Overwrite: bool; Cancellation: T.CancellationToken);
 begin
-  if not IO.Path.IsPathFullyQualified(Destination) or not Sys.String.Equals(
-    IO.Path.GetExtension(Destination),
-    '.m3u8',
-    Sys.StringComparison.OrdinalIgnoreCase
-  )
-  then
-    raise new Sys.ArgumentException('Expected an absolute .m3u8 export path.', 'Destination');
-  end if;
   const Value: M.Playlist? := Queries.Read(Database, Users, Identity, Cancellation);
   if Value = null then
     raise new Sys.ArgumentException('Unknown playlist.', 'Identity');
   end if;
-  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
-  if Factory = null then
-    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
-  end if;
-  const Temporary: string := IO.Path.Combine(
-    IO.Path.GetDirectoryName(Destination) ?? '',
-    '.' + Sys.Guid.NewGuid().ToString('N') + '.m3u8'
-  );
-  try
-    const Writer: A.IPlaylistIO? := Factory.GetPlaylistIO(
-      Temporary,
-      A.PlaylistFormat.LocationFormatting.FilePath,
-      A.PlaylistFormat.FileEncoding.UTF8_NO_BOM,
-      readTrackMetadata := false
-    );
-    if Writer = null then
-      raise new Sys.InvalidOperationException('ATL M3U8 writer is unavailable.');
-    end if;
-    const Tracks: C.List<Audio.Track?> := new C.List<Audio.Track?>();
-    for Entry: M.Entry in Value.Entries do
-      Cancellation.ThrowIfCancellationRequested();
-      References.Validate(Entry.CurrentReference, 'Reference');
-      if Entry.Title <> '' then
-        References.Validate(Entry.Title, 'Title');
-      end if;
-      const Track: Audio.Track := new Audio.Track(Entry.CurrentReference, false);
-      Track.Title := Entry.Title;
-      Tracks.Add(Track);
-    end for;
+  const Items: C.List<Files.Item> := new C.List<Files.Item>();
+  for Entry: M.Entry in Value.Entries do
+    Items.Add(new Files.Item(Entry.CurrentReference, Entry.Title));
+  end for;
 
-    Writer.Tracks := Tracks;
-    if not Writer.Save() then
-      raise new IO.IOException('ATL could not write the playlist.');
-    end if;
-
-    Cancellation.ThrowIfCancellationRequested();
-    IO.File.Move(Temporary, Destination, Overwrite);
-  finally
-    IO.File.Delete(Temporary);
-  end try;
+  Files.WriteM3u8(Destination, Items.ToArray(), Overwrite, Cancellation);
 end procedure;
 
 end unit;

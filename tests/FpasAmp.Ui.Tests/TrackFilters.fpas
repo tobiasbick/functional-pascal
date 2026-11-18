@@ -1,0 +1,41 @@
+unit FpasAmp.Ui.Tests.TrackFilters;
+
+uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Library.Metadata.Model as Tracks,
+  System as Sys, System.Collections.Immutable as I, Xunit as X;
+
+function Track(Genres: string): Tracks.Entry;
+begin
+  const Tags: MediaTags.Info? := if Genres = '' then
+    null
+  else
+    new MediaTags.Info(Genres := Genres.Split('|'))
+  end if;
+  return new Tracks.Entry(0L, '', '', '', null, Tags, null);
+end function;
+
+// Checks which track-level genres can narrow the album.
+public type TrackFilterTests = record
+  // Checks the ordered genre choices for two tracks.
+  // ## Parameters
+  // - `First`, `Second`: Pipe-separated genre tags, or empty for missing metadata.
+  // - `Expected`: Pipe-separated choices that narrow the album.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('', '', '')]
+  [X.InlineDataAttribute('Rock', 'rock', '')]
+  [X.InlineDataAttribute('Rock|Jazz|Rock', 'JAZZ|rock', '')]
+  [X.InlineDataAttribute('Rock|Jazz', 'Rock', 'Jazz')]
+  [X.InlineDataAttribute('Rock', '', 'Rock')]
+  [X.InlineDataAttribute('', 'Rock', 'Rock')]
+  [X.InlineDataAttribute('Rock', 'Jazz', 'Jazz|Rock')]
+  public procedure GenresThatNarrowTheAlbum(First: string; Second: string; Expected: string);
+  begin
+    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [Track(First), Track(Second)]
+    );
+    X.Assert.Equal<string>(Expected, Sys.String.Join('|', Browse.GenreChoices(Items)));
+  end procedure;
+end record;
+
+end unit;

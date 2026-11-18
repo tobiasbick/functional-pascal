@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Albums.Music.Filters;
 
 uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Albums.Music.Model as M,
   FpasAmp.Ui.Albums.Toolbar.Filters as Toolbar,
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as Selects,
   Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, System.Collections.Generic as C,
@@ -44,9 +44,8 @@ end function;
 public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
 requires Width > 0;
 begin
-  const Names: array of string := Browse.GenreChoices(Current.Tracks);
-  const Fields: array of E.Element<M.Msg> := if Names.Length > 0 then
-    [Genres(Names, Current.Draft)]
+  const Fields: array of E.Element<M.Msg> := if Current.GenreChoices.Length > 0 then
+    [Genres(Current.GenreChoices, Current.Draft)]
   else
     []
   end if;

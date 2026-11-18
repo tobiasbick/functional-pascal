@@ -2,21 +2,10 @@
 unit FpasAmp.Library.Metadata.Covers;
 
 uses
-  ATL as A, FpasAmp.Library.Persistence.Sql as Sql,
+  Fpas.Media.Tags.Pictures as Pictures, FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Metadata.Internal.Reading as Reading, Microsoft.Data.Sqlite as Db,
   System as Sys, System.IO as IO, System.Text.Json as J,
-  System.Collections.Generic as C,
   System.Threading as T, System.Threading.Tasks as Tasks;
-
-// Detached original artwork; no image decoding or resizing occurs here.
-public type Cover = record
-  // MIME type reported by ATL.
-  public MimeType: string;
-  // Original encoded image bytes, limited to sixteen MiB.
-  public Data: array of byte;
-  // Whether ATL marked the selected picture as a front cover.
-  public Front: bool := false;
-end record;
 
 // Returns the cover cache beside `UserDatabase`, outside the reconstructible index.
 public function DirectoryPath(UserDatabase: string): string;
@@ -24,12 +13,12 @@ begin
   return IO.Path.Combine(IO.Path.GetDirectoryName(UserDatabase) ?? '', 'covers');
 end function;
 
-// Reads the first embedded picture for current `FileId`, or null when absent.
+// Reads the preferred embedded cover for current `FileId`, or null when absent.
 // `Database`/`UserDatabase` belong to a validated session. Call on a background task.
 // Cache entries are addressed by SHA-256; cached artwork remains usable offline.
 // `UseCache` can be disabled by album thumbnail resolution to avoid duplicating
 // original artwork for every track; callers then own their thumbnail cache.
-public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken; UseCache: bool := true): Tasks.Task<Cover?>;
+public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken; UseCache: bool := true): Tasks.Task<Pictures.Cover?>;
 begin
   Cancellation.ThrowIfCancellationRequested();
   var Path: string := '';
@@ -69,7 +58,7 @@ begin
   const Cache: string := IO.Path.Combine(CacheDirectory, Hash + '.json');
   if UseCache and IO.File.Exists(Cache) and new IO.FileInfo(Cache).Length <= 23000000L then
     try
-      const Cached: Cover? := J.JsonSerializer.Deserialize<Cover>(
+      const Cached: Pictures.Cover? := J.JsonSerializer.Deserialize<Pictures.Cover>(
         await IO.File.ReadAllTextAsync(Cache, Cancellation).ConfigureAwait(false)
       );
       if Cached = null then
@@ -79,7 +68,7 @@ begin
       const Data: (array of byte)? := Cached.Data;
       const MimeType: string? := Cached.MimeType;
       if Data <> null and Data.Length <= 16777216 and MimeType <> null then
-        return new Cover(MimeType, Data, Cached.Front);
+        return new Pictures.Cover(MimeType, Data, Cached.Front);
       end if;
     catch Damaged: J.JsonException do
     end try;
@@ -88,36 +77,7 @@ begin
   if not Reading.Matches(Path, Size, Modified) then
     raise new IO.IOException('Artwork is unavailable until the file is reconciled.');
   end if;
-  const Track: A.Track := new A.Track(Path);
-  const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
-  var Value: Cover? := null;
-  if Pictures <> null and Pictures.Count > 0 then
-    var Selected: A.PictureInfo? := null;
-    for Item: A.PictureInfo? in Pictures do
-      if Item <> null then
-        if Selected = null or Item.PicType = A.PictureInfo.PIC_TYPE.Front then
-          Selected := Item;
-        end if;
-
-        if Item.PicType = A.PictureInfo.PIC_TYPE.Front then
-          break;
-        end if;
-      end if;
-    end for;
-    const Picture: A.PictureInfo? := Selected;
-    if Picture <> null then
-      const Bytes: array of byte := Picture.PictureData ?? Sys.Array.Empty<byte>();
-      if Bytes.Length > 16777216 then
-        raise new IO.InvalidDataException('Embedded artwork exceeds sixteen MiB.');
-      end if;
-
-      Value := new Cover(
-        Picture.MimeType ?? 'application/octet-stream',
-        Bytes,
-        Picture.PicType = A.PictureInfo.PIC_TYPE.Front
-      );
-    end if;
-  end if;
+  const Value: Pictures.Cover? := Pictures.Read(Path);
 
   Cancellation.ThrowIfCancellationRequested();
   if not Reading.Matches(Path, Size, Modified) then
@@ -133,7 +93,7 @@ begin
   try
     await IO.File.WriteAllTextAsync(
       Temporary,
-      J.JsonSerializer.Serialize<Cover?>(Value),
+      J.JsonSerializer.Serialize<Pictures.Cover?>(Value),
       Cancellation
     ).ConfigureAwait(false);
     Cancellation.ThrowIfCancellationRequested();

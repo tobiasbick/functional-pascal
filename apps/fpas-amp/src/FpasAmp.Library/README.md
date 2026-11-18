@@ -1,7 +1,7 @@
 # FpasAmp.Library
 
 UI-independent FPAS directory discovery, audio metadata, playlists and durable user
-ratings, using .NET, `Microsoft.Data.Sqlite` and the [ATL source dependency](../../../../third-party/atl/UPSTREAM.md). Discovery enumerates
+ratings, using .NET, `Microsoft.Data.Sqlite` and the [Fpas.Media.Tags](../../../../src/Fpas.Media.Tags/README.md) library. Discovery enumerates
 filesystem entries; the optional second stage reads tags, technical audio
 properties and SHA-256 without decoding or modifying audio.
 
@@ -209,8 +209,8 @@ Albums or closing the window cancels work; generation checks reject stale result
 The view retains only the requested images. Cached positive thumbnails work offline.
 All source reads, decoding and resizing stay outside the GUI thread.
 
-[FpasAmp.Imaging](../FpasAmp.Imaging/README.md) provides bounded MagicScaler decoding
-and content-addressed thumbnail storage: 384 × 384 RGBA, 32 MiB decoded cache and
+[Fpas.Media.Images](../../../../src/Fpas.Media.Images/README.md) decodes the artwork.
+[FpasAmp.Imaging](../FpasAmp.Imaging/README.md) owns content-addressed thumbnail storage: 384 × 384 RGBA, 32 MiB decoded cache and
 256 MiB disk pixel cache. Shared picture bytes share a blob across albums. Album
 thumbnail requests bypass the per-track original-image cache to avoid duplication.
 

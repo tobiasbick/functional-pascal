@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Tests.NativeAlbumToolbar;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Navigation.Model as Nav,
@@ -133,8 +133,8 @@ public type ToolbarTests = record
     end procedure;
   begin
     using const Root: H.Folder := H.Folder.Create();
-    const Cache: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
-    const Image: Images.Bitmap := Cache.Store(
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const Image: Imaging.Bitmap := Cache.Store(
       'cover',
       'fixture',
       Art.Picture(35, 80, 100),
@@ -155,7 +155,7 @@ public type ToolbarTests = record
         )
       ]
     );
-    const Pictures: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add(
+    const Pictures: I.ImmutableDictionary<string, Imaging.Bitmap?> := I.ImmutableDictionary<string, Imaging.Bitmap?>.Empty.Add(
       'one',
       Image
     ).Add('two', Image).Add('three', Image);

@@ -71,6 +71,8 @@ end record;
 public type Msg = variant
   // Start `Queue[Index]` and retain `Source` to reconstruct the selection.
   Play(Queue: I.ImmutableArray<Tracks.Entry>; Index: int; Source: Music.Selection);
+  // Drop an unavailable current track. Offline sources can advance to the next eligible entry.
+  SourceLost(Advance: bool);
   // Pause or resume the current track.
   Toggle;
   // Restart the current track, or go to the previous one near its beginning.
@@ -99,6 +101,8 @@ end variant;
 
 // Ordered work for the audio worker.
 public type Request = variant
+  // Release the current file while keeping the session available for another track.
+  Unload;
   // Replace the active file and optionally start it.
   Load(Path: string; Playing: bool; Revision: long);
   // Open a restored track, seek, then start playback.

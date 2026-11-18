@@ -5,7 +5,7 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Diagnostics as Diagnostics, System.Threading as T, Xunit as X;
+  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
 
 // Exercises the initial album snapshot, before SQLite can return its first sorted row.
 public type CatalogueTests = record
@@ -32,16 +32,32 @@ public type CatalogueTests = record
     );
 
     using const Close: T.CancellationTokenSource := new T.CancellationTokenSource();
-    const Elapsed: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
-    Close.CancelAfter(20);
+    // SQLite evaluates this view while materializing directory artwork, before yielding an album.
+    // Cancel from that evaluation so the test does not race an unrelated thread-pool timer.
+    Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Ratings]);
+    var Scanned: int := 0;
+    Connection.CreateFunction<long, long>(
+      'observed_size', function(Size: long): long begin
+        Scanned := Scanned + 1;
+        if Scanned = 1 then
+          Close.Cancel();
+        end if;
+
+        return Size;
+      end function
+    );
+    Sql.Execute(
+      Connection, 'CREATE TEMP VIEW files AS SELECT id,path_key,directory_key,kind,' +
+        'observed_size(size) AS size,modified_utc FROM main.files;', null, [], []
+    );
     try
-      discard Albums.Read(Database, Ratings, Close.Token);
+      discard Albums.ReadAttached(Connection, Close.Token);
       X.Assert.Fail('The cancelled album snapshot completed.');
     catch Cancelled: Sys.OperationCanceledException do
       X.Assert.Equal<T.CancellationToken>(Close.Token, Cancelled.CancellationToken);
     end try;
 
-    X.Assert.True(Elapsed.ElapsedMilliseconds < 2500L, 'Closing waited for the full album query.');
+    X.Assert.InRange<int>(Scanned, 1, Count - 1);
 
     using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
     X.Assert.Equal<int>(Count, Albums.Read(Database, Ratings, Startup.Token).Length);

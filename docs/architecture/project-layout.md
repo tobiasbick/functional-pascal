@@ -18,6 +18,11 @@ It preserves ATL's CLR namespace/assembly name and owns the dependency build and
 license delivery; the compiler has no dependency on it. Local playlist changes
 and snapshot/update details live in the [ATL provenance](../../third-party/atl/UPSTREAM.md).
 
+The [media libraries](../pascal/libraries/media.md) can each be referenced directly.
+`Fpas.Media.Tags` exposes FPAS records over ATL, `Fpas.Media.Images` owns image
+decoding and `Fpas.Media.Audio` owns playback and waveform analysis. FPas-Amp
+owns its catalogue, ratings, queue and thumbnail cache.
+
 ## Repository tree
 
 ```text

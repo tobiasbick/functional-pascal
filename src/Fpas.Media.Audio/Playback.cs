@@ -46,6 +46,8 @@ public interface ISession : IDisposable
     /// <param name="position">Desired presentation time, clamped to the track boundaries.</param>
     /// <param name="requestId">Caller correlation ID for this action and subsequent progress.</param>
     void Seek(TimeSpan position, long requestId = 0);
+    /// <summary>Stops playback and releases the current track. The session can open another file.</summary>
+    void Unload();
     /// <summary>Silences the session permanently and cancels ongoing decoder work before GUI cleanup.</summary>
     /// <returns>The last rendered track position, or null if no track is open.</returns>
     PlaybackEvent? StopPlayback();

@@ -1,81 +1,7 @@
 // Detached metadata and bounded catalogue queries, independent of the GUI.
 unit FpasAmp.Library.Metadata.Model;
 
-// Selected audio tags; missing text is empty and missing numeric values are null.
-public type Tags = record
-  // Display title.
-  public Title: string := '';
-  // Optional subtitle/description supplied by ATL.
-  public Subtitle: string := '';
-  // Album title, without assuming that equal names identify the same release.
-  public Album: string := '';
-  // Ordered credited performers, using ATL's multi-value convention.
-  public Artists: array of string := [];
-  // Ordered album-wide artist credits.
-  public AlbumArtists: array of string := [];
-  // Ordered musical genres.
-  public Genres: array of string := [];
-  // Ordered composer credits.
-  public Composers: array of string := [];
-  // Release/recording date normalized from ATL to invariant ISO form.
-  public ReleaseDate: string := '';
-  // Original release date in invariant ISO form where supplied.
-  public OriginalReleaseDate: string := '';
-  // One-based track position, when supplied.
-  public TrackNumber: int? := null;
-  // Number of tracks on the disc.
-  public TrackTotal: int? := null;
-  // One-based disc position within the release.
-  public DiscNumber: int? := null;
-  // Number of discs in the release.
-  public DiscTotal: int? := null;
-  // Explicit title sort tag; an empty value falls back to Title in database queries.
-  public SortTitle: string := '';
-  // Explicit performer sort tag, falling back to the first performer.
-  public SortArtist: string := '';
-  // Explicit album-artist sort tag, falling back to the first album artist.
-  public SortAlbumArtist: string := '';
-  // Explicit album sort tag, falling back to Album.
-  public SortAlbum: string := '';
-  // Whether the file is tagged as part of a compilation.
-  public Compilation: bool := false;
-  // File-supplied comment, independent of any user annotation.
-  public Comment: string := '';
-  // File-supplied musical grouping.
-  public Grouping: string := '';
-  // Publisher/label supplied by the file.
-  public Label: string := '';
-  // File-supplied copyright text.
-  public Copyright: string := '';
-  // Tempo in beats per minute where supplied.
-  public Bpm: double? := null;
-  // External recording identity, if present in the file.
-  public MusicBrainzRecordingId: string := '';
-  // External release identity, if present in the file.
-  public MusicBrainzReleaseId: string := '';
-  // Ordered external artist identities, where supplied.
-  public MusicBrainzArtistIds: array of string := [];
-  // Audio duration in milliseconds, without decoding the audio.
-  public DurationMilliseconds: double? := null;
-  // Format name detected by ATL.
-  public Codec: string := '';
-  // Average bitrate in kbit/s.
-  public Bitrate: double? := null;
-  // Sample rate in hertz.
-  public SampleRate: double? := null;
-  // Number of audio channels.
-  public Channels: int? := null;
-  // Bits per sample where meaningful for the format.
-  public BitDepth: int? := null;
-  // File-supplied track ReplayGain in dB.
-  public ReplayGainTrack: double? := null;
-  // File-supplied album ReplayGain in dB.
-  public ReplayGainAlbum: double? := null;
-  // File-supplied linear track peak.
-  public ReplayPeakTrack: double? := null;
-  // File-supplied linear album peak.
-  public ReplayPeakAlbum: double? := null;
-end record;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
 
 // One indexed file and its independent durable user identity.
 public type Entry = record
@@ -90,9 +16,11 @@ public type Entry = record
   // User rating, null when unassigned and otherwise one through ten.
   public Rating: int?;
   // Selected tags from the last successful read, or null if none succeeded.
-  public Metadata: Tags?;
+  public Metadata: MediaTags.Info?;
   // Last read failure, or null after a successful read.
   public Error: string?;
+  // Indexed source memberships at query time, including offline and paused sources.
+  public SourceIds: array of string := [];
 end record;
 
 // Supported stable database ordering, with file ID as a final tie breaker.

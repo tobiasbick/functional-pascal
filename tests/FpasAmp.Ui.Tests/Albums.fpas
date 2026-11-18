@@ -4,7 +4,7 @@ unit FpasAmp.Ui.Tests.Albums;
 uses
   FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Inventory.Monitoring as Monitor,

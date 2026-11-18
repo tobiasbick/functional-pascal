@@ -2,9 +2,9 @@
 unit FpasAmp.Library.Metadata.Internal.Reading;
 
 uses
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Internal.Mapping as Mapping,
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Inventory.Internal.Directories as Directories,
-  ATL as A, System as Sys, System.IO as IO, System.Security.Cryptography as Crypto,
+  System as Sys, System.IO as IO, System.Security.Cryptography as Crypto,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
 // A detached read attempt. An empty hash means fingerprinting did not succeed.
@@ -12,7 +12,7 @@ public type Result = record
   // SHA-256 of the complete file, independent of its path.
   public Hash: string;
   // Tags from a successful ATL read, or null after a failure.
-  public Tags: M.Tags?;
+  public Tags: MediaTags.Info?;
   // Reported failure, or null on success.
   public Error: string?;
 end record;
@@ -97,11 +97,7 @@ begin
         'The file is too short to contain a supported audio stream.'
       );
     end if;
-    const Track: A.Track := new A.Track(Stream, IO.Path.GetExtension(Path));
-    if Track.DurationMs <= 0.0 then
-      raise new IO.InvalidDataException('ATL could not read a supported audio stream.');
-    end if;
-    const Tags: M.Tags := Mapping.Read(Track);
+    const Tags: MediaTags.Info := MediaTags.Read(Stream, IO.Path.GetExtension(Path) ?? '');
     Check();
     if not Matches(Path, Size, Modified) then
       raise new IO.IOException('The file changed during metadata reading.');

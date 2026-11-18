@@ -1,0 +1,180 @@
+// ATL's playlist extensions remain independent of audio-format selection.
+unit Fpas.Media.Tags.Playlists;
+
+uses ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO, System.Threading as T, System.Collections.Generic as C;
+
+// Checks a dot-prefixed `Extension` against the supported playlist readers.
+// ## Returns
+// True for a supported extension, ignoring case.
+public function IsExtension(Extension: string): bool;
+begin
+  for Known: string in [
+    '.m3u',
+    '.m3u8',
+    '.pls',
+    '.xspf',
+    '.fpl',
+    '.asx',
+    '.wax',
+    '.wvx',
+    '.b4s',
+    '.dpl',
+    '.smil',
+    '.smi',
+    '.wpl',
+    '.zpl'
+  ] do
+    if Sys.String.Equals(Extension, Known, Sys.StringComparison.OrdinalIgnoreCase) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Tests `Path` without opening or parsing the file.
+// ## Returns
+// True when the path has a supported playlist extension.
+public function IsPlaylist(Path: string): bool;
+begin
+  return IsExtension(IO.Path.GetExtension(Path) ?? '');
+end function;
+
+// Ordered playlist entry, detached from the parser and its mutable track objects.
+public type Item = record
+  // Original location, including relative paths, URIs and missing targets.
+  public Location: string;
+  // Display title supplied by the playlist.
+  public Title: string := '';
+end record;
+
+// Reads a local playlist without opening its media targets.
+// ## Parameters
+// - `Path`: Local playlist in a supported format, at most sixteen MiB.
+// - `Cancellation`: Cancels before parsing and between returned entries.
+// ## Returns
+// Ordered entries, preserving duplicate targets and original location spelling.
+public function Read(Path: string; Cancellation: T.CancellationToken): array of Item;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Local: string := IO.Path.GetFullPath(Path);
+  if not IsPlaylist(Local) or new IO.FileInfo(Local).Length > 16777216L then
+    raise new IO.InvalidDataException('Expected a supported playlist of at most sixteen MiB.');
+  end if;
+  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
+  if Factory = null then
+    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
+  end if;
+  const Parsed: A.IPlaylistIO? := Factory.GetPlaylistIO(Local, readTrackMetadata := false);
+  if Parsed = null then
+    raise new IO.InvalidDataException('Unsupported playlist format.');
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  const Failure: Sys.Exception? := Parsed.LoadError;
+  if Failure <> null then
+    raise new IO.InvalidDataException(
+      'ATL could not parse the playlist: ' + Failure.Message,
+      Failure
+    );
+  end if;
+  const Locations: C.IReadOnlyList<string?>? := Parsed.OriginalLocations;
+  const Tracks: C.IList<Audio.Track?>? := Parsed.Tracks;
+  if Locations = null or Tracks = null or Locations.Count <> Tracks.Count then
+    raise new IO.InvalidDataException('ATL returned inconsistent playlist entries.');
+  end if;
+  const Entries: C.List<Item> := new C.List<Item>(Locations.Count);
+  for Position: int := 0 to Locations.Count - 1 do
+    Cancellation.ThrowIfCancellationRequested();
+    const Track: Audio.Track? := Tracks[Position];
+    const Artist: string := if Track <> null then
+      Track.Artist ?? ''
+    else
+      ''
+    end if;
+    const Title: string := (if Artist <> '' then
+      Artist + ' - '
+    else
+      ''
+    end if) + (if Track <> null then
+      Track.Title ?? ''
+    else
+      ''
+    end if);
+    Entries.Add(new Item(Locations[Position] ?? '', Title));
+  end for;
+
+  return Entries.ToArray();
+end function;
+
+procedure Validate(Value: string; Name: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(
+    Value
+  ) or Value.Contains(#0) or Value.Contains(#10) or Value.Contains(#13)
+  then
+    raise new Sys.ArgumentException('Expected a nonempty single-line value.', Name);
+  end if;
+end procedure;
+
+// Atomically writes an ordered UTF-8 playlist without reading media targets.
+// ## Parameters
+// - `Destination`: Absolute .m3u8 output path.
+// - `Entries`: Ordered locations and optional display titles.
+// - `Overwrite`: Allows replacement of an existing file.
+// - `Cancellation`: Cancels before publication.
+public procedure WriteM3u8(Destination: string; Entries: array of Item; Overwrite: bool; Cancellation: T.CancellationToken);
+requires Entries.Length <= 100000;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if not IO.Path.IsPathFullyQualified(Destination) or not Sys.String.Equals(
+    IO.Path.GetExtension(Destination),
+    '.m3u8',
+    Sys.StringComparison.OrdinalIgnoreCase
+  )
+  then
+    raise new Sys.ArgumentException('Expected an absolute .m3u8 export path.', 'Destination');
+  end if;
+  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
+  if Factory = null then
+    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
+  end if;
+  const Temporary: string := IO.Path.Combine(
+    IO.Path.GetDirectoryName(Destination) ?? '',
+    '.' + Sys.Guid.NewGuid().ToString('N') + '.m3u8'
+  );
+  try
+    const Writer: A.IPlaylistIO? := Factory.GetPlaylistIO(
+      Temporary,
+      A.PlaylistFormat.LocationFormatting.FilePath,
+      A.PlaylistFormat.FileEncoding.UTF8_NO_BOM,
+      readTrackMetadata := false
+    );
+    if Writer = null then
+      raise new Sys.InvalidOperationException('ATL M3U8 writer is unavailable.');
+    end if;
+    const Tracks: C.List<Audio.Track?> := new C.List<Audio.Track?>();
+    for Entry: Item in Entries do
+      Cancellation.ThrowIfCancellationRequested();
+      Validate(Entry.Location, 'Reference');
+      if Entry.Title <> '' then
+        Validate(Entry.Title, 'Title');
+      end if;
+      const Track: Audio.Track := new Audio.Track(Entry.Location, false);
+      Track.Title := Entry.Title;
+      Tracks.Add(Track);
+    end for;
+
+    Writer.Tracks := Tracks;
+    if not Writer.Save() then
+      raise new IO.IOException('ATL could not write the playlist.');
+    end if;
+
+    Cancellation.ThrowIfCancellationRequested();
+    IO.File.Move(Temporary, Destination, Overwrite);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+end unit;

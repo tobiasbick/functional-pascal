@@ -3,7 +3,7 @@ unit FpasAmp.Settings;
 
 uses
   FpasAmp.Library.Sources as Locations,
-  FpasAmp.Library.Playlists.Formats as Playlists,
+  Fpas.Media.Tags.Playlists as Playlists,
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player,

@@ -8,7 +8,7 @@ uses
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
   FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
   Fpas.Ui.Composition as Composition,
-  FpasAmp.Imaging as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Media.Images as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.VirtualLists as Virtual,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.HoverCards as Hover,
@@ -19,10 +19,9 @@ uses
 // Native virtual viewport identity, also used by post-layout range observation.
 public const GridId: string := 'album-grid';
 
-const CardGap: int := 12;
-const CardPadding: int := 8;
-const CoverLimit: int := 171;
-const ColumnStep: int := 188;
+const TileGap: int := 20;
+const TilePadding: int := 2;
+const PreferredCover: int := 216;
 
 // Returns the number of album columns that fit in the available content.
 // ## Parameters
@@ -31,7 +30,8 @@ const ColumnStep: int := 188;
 // The column count used for rendering and thumbnail visibility.
 public function Columns(Width: int): int;
 begin
-  return Sys.Math.Clamp((Width + CardGap) div ColumnStep, 1, 12);
+  const Step: int := PreferredCover + TilePadding * 2 + TileGap;
+  return Sys.Math.Max(1, (Width + TileGap + Step div 2) div Step);
 end function;
 
 function Points(Value: int): L.Spacing;
@@ -46,14 +46,14 @@ begin
   else
     null
   end if;
+  const SongCount: string := Details.Songs(Album.Tracks);
+  const Caption: string := if Album.Artist = '' then
+    SongCount
+  else
+    Album.Artist + ' · ' + SongCount
+  end if;
   const Card: E.Element<M.Msg> := Cards.Card<M.Msg>(
     'album-' + Album.Id, [
-      Ratings.Rating<M.Msg>(
-        'album-rating-' + Album.Id, 'Rate ' + Album.Title + ' (1–10)', Album.Rating ?? 0,
-        function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value),
-        Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id),
-        StarSize := Sys.Math.Clamp(cast<float>(Edge - 18) / 10.0F, 1.0F, RatingStyle.StarSize)
-      ),
       Artwork.Build<M.Msg>('cover-' + Album.Id, Image, Edge),
       E.Column<M.Msg>(
         new L.Flow(Gap := Points(2), Align := L.Alignment.Center),
@@ -62,26 +62,28 @@ begin
           S.Role.SingleLine
         ),
         E.Styled<M.Msg>(
-          Texts.Text<M.Msg>(Album.Artist, Texts.Appearance.Secondary),
+          Texts.Text<M.Msg>(Caption, Texts.Appearance.Secondary),
           S.Role.SingleLine
-        ),
-        Texts.Text<M.Msg>(
-          Details.Songs(Album.Tracks),
-          Texts.Appearance.Muted
         )
+      ),
+      Ratings.Rating<M.Msg>(
+        'album-rating-' + Album.Id, 'Rate ' + Album.Title + ' (1–10)', Album.Rating ?? 0,
+        function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value),
+        Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id),
+        StarSize := Sys.Math.Clamp(cast<float>(Edge - 18) / 10.0F, 1.0F, RatingStyle.StarSize)
       )
     ],
     new Cards.Options(
-      Width := L.Extent.Fixed(L.Measure.Logical(Edge + CardPadding * 2)),
-      Height := L.Extent.Fixed(L.Measure.Logical(RowHeight - CardGap)),
-      Padding := cast<float>(CardPadding),
+      Width := L.Extent.Fixed(L.Measure.Logical(Edge + TilePadding * 2)),
+      Height := L.Extent.Fixed(L.Measure.Logical(RowHeight - TileGap)),
+      Padding := cast<float>(TilePadding),
       Gap := 6.0F,
       Align := L.Alignment.Center,
-      Hoverable := true
+      Muted := true
     ), function(): M.Msg => M.Msg.OpenMusic(Album.Id)
   );
   return Hover.HoverCard<M.Msg>(
-    'album-details-' + Album.Id, Card, Details.Build(Album, Image),
+    'album-details-' + Album.Id, E.Styled<M.Msg>(Card, S.Role.Panel), Details.Build(Album, Image),
     new Hover.Options(Width := 380.0F, Delay := 0.7F)
   );
 end function;
@@ -104,9 +106,9 @@ public function Build(Current: M.State; Width: int; Padding: int): E.Element<M.M
       Cells.Add(Tile(Current, Current.Shown[Position], Edge, RowHeight));
     end for;
 
-    // a little room above the cards keeps their hover border inside the clipped viewport
+    // Leave room for the native card's lift on hover.
     return E.Row<M.Msg>(
-      new L.Flow(PaddingTop := Points(4), Gap := Points(CardGap)), Cells.ToArray()
+      new L.Flow(PaddingTop := Points(4), Gap := Points(TileGap)), Cells.ToArray()
     );
   end function;
 begin
@@ -122,10 +124,10 @@ begin
     );
   end if;
   const Count: int := Columns(Available);
-  const Edge: int := Sys.Math.Clamp(
-    (Available - (Count - 1) * CardGap) div Count - CardPadding * 2, 1, CoverLimit
+  const Edge: int := Sys.Math.Max(
+    1, (Available - (Count - 1) * TileGap) div Count - TilePadding * 2
   );
-  const RowHeight: int := Edge + 112;
+  const RowHeight: int := Edge + 76 + TileGap;
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [
       Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne),

@@ -8,7 +8,7 @@ public sealed class SpanArgumentTests
 {
     /// <summary>Executes span-only APIs, inference, overload preference and a later awaited argument.</summary>
     [Fact]
-    public void Arrays_are_passed_to_imported_span_parameters()
+    public async Task Arrays_are_passed_to_imported_span_parameters()
     {
         var result = TestCompilation.Compile("""
             unit Spans;
@@ -44,7 +44,7 @@ public sealed class SpanArgumentTests
             var owner = context.LoadFromStream(new MemoryStream(result.Program!.AssemblyImage)).GetType("Spans")!;
             Assert.Equal("258 4 1 2 xy", owner.GetMethod("Run")!.Invoke(null, []));
             var mixed = (Task<string>)owner.GetMethod("Mixed")!.Invoke(null, [new byte[] { 0, 0, 1, 2 }])!;
-            Assert.Equal("00000102 33619968", mixed.GetAwaiter().GetResult());
+            Assert.Equal("00000102 33619968", await mixed);
         }
         finally { context.Unload(); }
     }

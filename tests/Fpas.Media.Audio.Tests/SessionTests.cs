@@ -88,6 +88,27 @@ public sealed class SessionTests
         await session.Events.Completion.WaitAsync(TimeSpan.FromSeconds(2));
     }
 
+    /// <summary>Unloading a playing track releases its file and allows reuse of the session.</summary>
+    [Fact]
+    public async Task UnloadReleasesTrackWithoutClosingSession()
+    {
+        using var dir = new TemporaryDirectory();
+        string path = dir.File("track.wav");
+        Wave.Write(path, 44100, _ => (1000, 1000));
+        using var session = new Session(true);
+        session.Open(path, 1);
+        session.Play(1);
+        await Until(session, e => e.RequestId == 1 && e.Position > TimeSpan.Zero);
+        session.Unload();
+        session.Unload();
+        using (File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+        session.Open(path, 2);
+        var next = await Until(session, e => e.RequestId == 2 && e.State == PlaybackState.Paused);
+        Assert.Equal(TimeSpan.Zero, next.Position);
+        session.Play(3);
+        await Until(session, e => e.RequestId == 3 && e.Position > TimeSpan.Zero);
+    }
+
     /// <summary>Checks live volume and 500 Hz EQ changes against known independent stereo amplitudes.</summary>
     [Fact]
     public async Task ReportsPostFaderPeaksForEachChannel()

@@ -170,6 +170,9 @@ public type NativeNavigationTests = record
       Until(Reopened, function(_State: Nav.State): bool => ShowsTracks(Reopened, Browsed));
       Until(Reopened, function(_State: Nav.State): bool => Has(Reopened, 'track-album-cover'));
       X.Assert.True(Has(Reopened, 'album-tracks'));
+      discard Reopened.Window.Post(App.Msg.Albums(Albums.Msg.Music(Music.Msg.ShowFilters(true))));
+      Until(Reopened, function(_State: Nav.State): bool => Has(Reopened, 'track-filter-rating'));
+      X.Assert.False(Has(Reopened, 'track-filter-genre'));
       X.Assert.Equal<string>(Playing, Reopened.State().Player.Source.AlbumId);
       X.Assert.False(Reopened.State().Player.Playing);
       discard Reopened.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));

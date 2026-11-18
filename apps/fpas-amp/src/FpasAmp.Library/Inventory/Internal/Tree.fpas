@@ -7,7 +7,7 @@ uses
   FpasAmp.Library.Inventory.Internal.Directories as Directories,
   FpasAmp.Library.Inventory.Internal.Observations as O,
   FpasAmp.Library.Inventory.Internal.Catalog as Data,
-  FpasAmp.Library.Playlists.Formats as PlaylistFormats,
+  Fpas.Media.Tags.Playlists as PlaylistFormats,
   FpasAmp.Library.Albums.Artwork.Names as ArtworkNames,
   System as Sys, System.IO as IO, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Threading as T;

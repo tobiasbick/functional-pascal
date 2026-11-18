@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Tests.NativeAlbumDetails;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Images,
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update,
   FpasAmp.Ui.Navigation.Model as Nav,
@@ -68,10 +68,12 @@ end procedure;
 public type DetailTests = record
   // Whole-card hover survives a disabled nested rating; footer stays outside scrolling.
   [X.TheoryAttribute]
-  [X.InlineDataAttribute(1000)]
-  [X.InlineDataAttribute(620)]
+  [X.InlineDataAttribute(1280, 4)]
+  [X.InlineDataAttribute(1000, 3)]
+  [X.InlineDataAttribute(620, 3)]
+  [X.InlineDataAttribute(480, 2)]
   [X.TraitAttribute('Category', 'Gui')]
-  public procedure HoverDetailsAndFixedStatus(Width: int);
+  public procedure HoverDetailsAndFixedStatus(Width: int; ExpectedColumns: int);
     procedure Inject();
     begin
       Window.MovePointer(PointerX, PointerY);
@@ -118,15 +120,15 @@ public type DetailTests = record
     end function;
   begin
     using const Root: H.Folder := H.Folder.Create();
-    const Cache: Images.ThumbnailStore := new Images.ThumbnailStore(Root.Path);
-    const Image: Images.Bitmap := Cache.Store(
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const Image: Imaging.Bitmap := Cache.Store(
       'cover',
       'fixture',
       Art.Picture(35, 80, 100),
       T.CancellationToken.None
     );
     var Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
-    var Pictures: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+    var Pictures: I.ImmutableDictionary<string, Imaging.Bitmap?> := I.ImmutableDictionary<string, Imaging.Bitmap?>.Empty;
     for Index: int := 0 to 35 do
       const Id: string := 'album-' + Index.ToString();
       Items := Items.Add(
@@ -193,10 +195,12 @@ public type DetailTests = record
       end if;
     end for;
 
-    X.Assert.Equal<int>(3, FirstRow);
-    X.Assert.True(FirstCard.Width <= 187.0F);
+    X.Assert.Equal<int>(ExpectedColumns, FirstRow);
     const Cover: Cui.CuiRectangle := Find(Session, 'cover-album-0').Bounds;
-    X.Assert.True(Cover.Width <= 171.0F);
+    X.Assert.Equal<float>(Cover.Width, Cover.Height);
+    X.Assert.InRange<float>(FirstCard.Width - Cover.Width, 0.0F, 4.0F);
+    X.Assert.Contains<string>('Example artist · 12 songs', Session.Snapshot().Text);
+    X.Assert.Contains<string>('Example artist · 1 song', Session.Snapshot().Text);
     PointerX := Cover.X + Cover.Width / 2.0F;
     PointerY := Cover.Y + Cover.Height / 2.0F;
     Step(Session);
@@ -259,6 +263,8 @@ public type DetailTests = record
     PointerY := -1.0F;
     Step(Session);
     const TileRating: Cui.CuiRectangle := Find(Session, 'album-rating-album-0').Bounds;
+    X.Assert.True(TileRating.Y >= Cover.Y + Cover.Height);
+    X.Assert.True(TileRating.Y + TileRating.Height <= FirstCard.Y + FirstCard.Height);
     X.Assert.True(TileRating.X >= FirstCard.X);
     X.Assert.True(TileRating.X + TileRating.Width <= FirstCard.X + FirstCard.Width);
     PointerX := TileRating.X + TileRating.Width * 0.15F;

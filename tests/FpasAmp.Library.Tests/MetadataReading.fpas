@@ -2,6 +2,7 @@
 unit FpasAmp.Library.Tests.MetadataReading;
 
 uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Inventory.Monitoring as Monitor,
   FpasAmp.Library.Metadata.Monitoring as Metadata, ATL as A,
@@ -26,7 +27,7 @@ public type MetadataReadingTests = record
       function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
     );
     X.Assert.Null(Values[0].Error);
-    const Tags: M.Tags := Values[0].Metadata ?? new M.Tags();
+    const Tags: MediaTags.Info := Values[0].Metadata ?? new MediaTags.Info();
     X.Assert.Equal<string>('', Tags.Title);
     X.Assert.Equal<int>(0, Tags.Artists.Length);
     X.Assert.Null(Tags.TrackNumber);
@@ -57,7 +58,7 @@ public type MetadataReadingTests = record
     X.Assert.True(Entry.TrackId.Length = 32);
     X.Assert.Equal<int>(64, Entry.Sha256.Length);
     X.Assert.Null(Entry.Rating);
-    const Fields: M.Tags? := Entry.Metadata;
+    const Fields: MediaTags.Info? := Entry.Metadata;
     X.Assert.True(Fields <> null);
     if Fields = null then
       return;
@@ -124,7 +125,7 @@ public type MetadataReadingTests = record
     );
     X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
     X.Assert.Equal<int?>(7, After[0].Rating);
-    X.Assert.Equal<string>('New title', (After[0].Metadata ?? new M.Tags()).Title);
+    X.Assert.Equal<string>('New title', (After[0].Metadata ?? new MediaTags.Info()).Title);
   end function;
 
   // One malformed file records its failure without preventing other files from being read.

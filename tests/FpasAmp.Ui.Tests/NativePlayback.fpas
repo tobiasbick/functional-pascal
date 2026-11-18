@@ -13,7 +13,7 @@ uses
   Fpas.Ui.Gui.Application as Gui, System as Sys, System.IO as IO,
   System.Collections.Immutable as I, System.Threading as T, Xunit as X;
 
-procedure Tone(Path: string);
+procedure Tone(Path: string; QuietPassage: bool := false);
 begin
   using const File: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
   const Frames: int := 44100 * 5;
@@ -31,7 +31,7 @@ begin
   File.Write($61746164);
   File.Write(Frames * 4);
   for Frame: int := 0 to Frames - 1 do
-    const Sample: double := if Frame >= 44100 and Frame < 88200 then
+    const Sample: double := if QuietPassage and Frame >= 44100 and Frame < 88200 then
       0.0
     else
       Sys.Math.Sin(2.0 * Sys.Math.PI * 500.0 * Frame / 44100.0)
@@ -154,6 +154,113 @@ public type NativePlaybackTests = record
     end try;
   end procedure;
 
+  // Offline skips a readable file. Removing or clearing the owner also invalidates a stale album queue.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('offline')]
+  [X.InlineDataAttribute('remove')]
+  [X.InlineDataAttribute('reset')]
+  [X.InlineDataAttribute('clear')]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure SourceActionsControlPlayback(Action: string);
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Other: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const A: Sources.MusicSource := Fixtures.Source(Root.Path, 'first') with
+      Extensions := ['.wav'];
+    end with;
+    const B: Sources.MusicSource := Fixtures.Source(Other.Path, 'second') with
+      Extensions := ['.wav'];
+    end with;
+    const First: string := IO.Path.Combine(Root.Path, 'a.wav');
+    const Second: string := IO.Path.Combine(Other.Path, 'b.wav');
+    Tone(First);
+    IO.File.Copy(First, Second);
+    const Store: Monitor.Session := Fixtures.Start([A, B], Data.Path);
+    try
+      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+        Fixtures.Tags(Store),
+        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
+      ).GetAwaiter().GetResult();
+      const Queue: I.ImmutableArray<Tracks.Entry> := if Items[0].Path = First then
+        Items
+      else
+        I.ImmutableArray.CreateRange<Tracks.Entry>([Items[1], Items[0]])
+      end if;
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := 900;
+      Placement.Height := 640;
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement,
+        new Settings.Preferences([A, B]),
+        procedure(_Value: Settings.Preferences) begin end procedure,
+        Store,
+        Output := new Audio.Session(true)
+      );
+      Send(Session, Player.Msg.Play(Queue, 0, new Music.Selection()));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Playing and S.Position > 0.0,
+        'First source did not play.'
+      );
+      discard Session.Window.Post(App.Msg.Settings(Settings.Msg.SetPaused(A.Id, true)));
+      discard Session.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
+      X.Assert.True(Session.Window.Step());
+      X.Assert.True(Session.State().Player.Playing);
+      if Action = 'offline' then
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.SetOffline(A.Id, true)));
+      elsif Action = 'remove' then
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.AskRemove(A.Id)));
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.ConfirmRemove));
+      else
+        discard Session.Window.Post(
+          App.Msg.Settings(
+            Settings.Msg.AskClear(
+              if Action = 'clear' then
+                ''
+              else
+                A.Id
+              end if
+            )
+          )
+        );
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.ConfirmClear));
+      end if;
+
+      if Action = 'offline' then
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Index = 1 and S.Position > 0.0,
+          'Offline source did not advance.'
+        );
+      else
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Queue.IsEmpty and not S.Playing,
+          'Clearing or removing the playing source did not stop playback.'
+        );
+      end if;
+
+      X.Assert.True(IO.File.Exists(First));
+      Send(Session, Player.Msg.Play(Queue, 0, new Music.Selection()));
+      if Action = 'clear' then
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Queue.IsEmpty,
+          'Cleared tracks could still play.'
+        );
+      else
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Index = 1 and S.Position > 0.0,
+          'The stale queue re-opened the first file or skipped the remaining source.'
+        );
+      end if;
+    finally
+      Store.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
   // Plays a stereo tone twice to exercise same-path queue entries and the final end.
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]
@@ -161,19 +268,22 @@ public type NativePlaybackTests = record
   begin
     using const Root: H.Folder := H.Folder.Create();
     const Path: string := IO.Path.Combine(Root.Path, 'tone.wav');
-    Tone(Path);
-    const First: Tracks.Entry := new Tracks.Entry(1L, 'one', Path, '', null, null, null);
+    Tone(Path, true);
+    const First: Tracks.Entry := new Tracks.Entry(1L, 'one', Path, '', null, null, null, ['music']);
     const Second: Tracks.Entry := First with
       FileId := 2L;
     end with;
-    const Library: Monitor.Session := H.Start([], T.CancellationToken.None);
+    const Source: Sources.MusicSource := Fixtures.Source(Root.Path) with
+      Extensions := ['.wav'];
+    end with;
+    const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
     try
       var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
       Placement.Width := 1320;
       Placement.Height := 720;
       using const Session: Shell.Session := Shell.Session.Start(
         Placement,
-        new Settings.Preferences([]),
+        new Settings.Preferences([Source]),
         procedure(_Value: Settings.Preferences) begin end procedure,
         Library,
         Output := new Audio.Session(

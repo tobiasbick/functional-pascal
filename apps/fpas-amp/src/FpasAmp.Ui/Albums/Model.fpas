@@ -4,12 +4,32 @@ unit FpasAmp.Ui.Albums.Model;
 uses
   FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Groups as Groups,
   System.Collections.Immutable as I;
+
+// Browse settings to restore on returning to a top-level grid.
+public type Position = record
+  // Applied search, filters and ordering.
+  public ToolbarState: Toolbar.State := new Toolbar.State();
+  // Vertical offset of the virtual grid.
+  public Offset: float := 0.0F;
+end record;
 
 // Owner-thread album view state; pixels are never mutated after publication.
 public type State = record
-  // Lightweight headers for all albums, sorted by the library.
+  // All catalogue releases, independent of the active grid.
+  public Releases: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  // Groups and their member releases for the current snapshot.
+  public Collections: Groups.Catalog := new Groups.Catalog();
+  // Current grid and the selected group for a discography.
+  public Scope: Toolbar.Scope := Toolbar.Scope.Albums;
+  // Identity and display name of the selected group.
+  public GroupId: string := '';
+  // Name shown above the grouped albums.
+  public GroupName: string := '';
+  // Independent toolbar and scroll positions for the three top-level grids.
+  public Positions: I.ImmutableDictionary<Toolbar.Scope, Position> := I.ImmutableDictionary<Toolbar.Scope, Position>.Empty;
+  // Lightweight headers for the active grid.
   public Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
   // Search documents and filter choices prepared from Items.
   public Catalog: Browse.Catalog := new Browse.Catalog();
@@ -61,6 +81,10 @@ public type Msg = variant
   RatingFailed(Id: string; Message: string);
   // Edit the search text, filters or order.
   Toolbar(Value: Toolbar.Msg);
+  // Open the releases behind an artist or genre card.
+  OpenGroup(Id: string);
+  // Return to the retained artist or genre grid.
+  BackToGroups;
   // Open the exact release represented by the activated card.
   OpenMusic(Id: string);
   // Return to the retained album grid.

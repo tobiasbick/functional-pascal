@@ -16,23 +16,32 @@ end function;
 //
 // ## Parameters
 // - `Current`: The toolbar state.
+// - `Scope`: Selects controls relevant to this collection.
 // - `Artists`: Distinct album artists offered by the artist filter.
 // - `Genres`: Distinct genres offered by the genre filter.
 // - `Width`: Positive content width in logical points.
 // ## Returns
 // The search field, the filter button and the sort menu.
 public function Build(
-  Current: M.State; Artists: array of string; Genres: array of string; Width: int
+  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
 ): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
     'album-search', Current.Search, M.Msg.Search,
-    new Search.Options(Placeholder := 'Search titles, artists and genres…')
+    new Search.Options(
+      Placeholder := case Scope of
+        when M.Scope.Genres: 'Search genres…';
+        when M.Scope.GenreAlbums: 'Search albums and artists…';
+        when M.Scope.Artists: 'Search artists and genres…';
+        when M.Scope.ArtistAlbums: 'Search albums and genres…';
+        else 'Search titles, artists and genres…';
+      end case
+    )
   );
   return Arrange<M.Msg>(
-    Field, Filters.Build(Current, Artists, Genres, Width),
-    Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty()), Width
+    Field, Filters.Build(Current, Artists, Genres, Width, Scope),
+    Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty(), Scope), Width
   );
 end function;
 

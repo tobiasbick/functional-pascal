@@ -15,24 +15,35 @@ begin
 end function;
 
 // Builds a select with an "All" entry first, followed by `Values`; `Chosen` is
-// the selected value, or empty for all.
-function Choice(
+// the selected value, or empty for all. Optional Captions label stable keys in Values.
+// Id identifies the native control, Label titles the field and All names the empty choice.
+// Change maps a selection to its TMsg message.
+public function Choice<TMsg>(
   Id: string; Label: string; All: string; Values: array of string; Chosen: string;
-  Change: function(string): M.Msg
-): E.Element<M.Msg>;
+  Change: function(string): TMsg; Captions: (array of string)? := null
+): E.Element<TMsg>;
+requires Captions = null or Captions.Length = Values.Length;
 begin
   const Items: C.List<Selects.Item> := new C.List<Selects.Item>([new Selects.Item(All)]);
   var Selected: int := 0;
   for Index: int := 0 to Values.Length - 1 do
-    Items.Add(new Selects.Item(Values[Index]));
-    if Values[Index] = Chosen then
+    Items.Add(
+      new Selects.Item(
+        if Captions = null then
+          Values[Index]
+        else
+          Captions[Index]
+        end if
+      )
+    );
+    if Sys.String.Equals(Values[Index], Chosen, Sys.StringComparison.OrdinalIgnoreCase) then
       Selected := Index + 1;
     end if;
   end for;
 
-  return Selects.Select<M.Msg>(
+  return Selects.Select<TMsg>(
     Id, Items.ToArray(), Selected,
-    function(Index: int): M.Msg => Change(
+    function(Index: int): TMsg => Change(
       if Index <= 0 or Index > Values.Length then
         ''
       else
@@ -53,10 +64,11 @@ end function;
 // - `Rating`: Draft minimum rating from zero to ten.
 // - `Change`: Maps a rating proposal to a message.
 // - `Reset`: Message to clear the draft.
+// - `RatingLabel`: Identifies the entity being rated.
 // - `Apply`: Message to confirm the draft.
 // ## Returns
 // The title, choice controls, rating slider and form buttons.
-public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg): E.Element<TMsg>;
+public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element<TMsg>;
 begin
   const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
   Parts.Add(Texts.Text<TMsg>(Title, Texts.Appearance.HeadingThree));
@@ -67,7 +79,7 @@ begin
       E.Size<TMsg>(
         Sliders.Slider<TMsg>(
           Id + '-filter-rating',
-          'Minimum rating',
+          RatingLabel,
           cast<float>(Rating),
           0.0F,
           10.0F,
@@ -153,28 +165,48 @@ end function;
 //
 // ## Parameters
 // - `Current`: The toolbar state.
+// - `Scope`: Selects controls relevant to this collection.
 // - `Artists`: Distinct album artists of the catalogue, in display order.
 // - `Genres`: Distinct genres of the catalogue, in display order.
 // - `Width`: Positive content width in logical points.
 // ## Returns
 // The button, labelled with the number of applied filters, and its popover.
 public function Build(
-  Current: M.State; Artists: array of string; Genres: array of string; Width: int
+  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
 ): E.Element<M.Msg>;
 requires Width > 0;
 begin
-  const Panel: E.Element<M.Msg> := Form<M.Msg>(
-    'album', 'Filter albums', [
-      Choice(
+  const Fields: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  if (Scope = M.Scope.Albums or Scope = M.Scope.GenreAlbums) and Artists.Length > 0 then
+    Fields.Add(
+      Choice<M.Msg>(
         'album-filter-artist',
         'Artist',
         'All artists',
         Artists,
         Current.Draft.Artist,
         M.Msg.Artist
-      ),
-      Choice('album-filter-genre', 'Genre', 'All genres', Genres, Current.Draft.Genre, M.Msg.Genre)
-    ], Current.Draft.MinimumRating, M.Msg.MinimumRating, M.Msg.Reset, M.Msg.Apply
+      )
+    );
+  end if;
+
+  if M.Root(Scope) <> M.Scope.Genres and Genres.Length > 0 then
+    Fields.Add(
+      Choice<M.Msg>(
+        'album-filter-genre',
+        'Genre',
+        'All genres',
+        Genres,
+        Current.Draft.Genre,
+        M.Msg.Genre
+      )
+    );
+  end if;
+  const Panel: E.Element<M.Msg> := Form<M.Msg>(
+    'album',
+    'Filter ' + M.ItemName(Scope).ToLowerInvariant() + 's',
+    Fields.ToArray(), Current.Draft.MinimumRating, M.Msg.MinimumRating, M.Msg.Reset, M.Msg.Apply,
+    'Minimum ' + M.ItemName(Scope).ToLowerInvariant() + ' rating'
   );
   return Popup<M.Msg>('album', Panel, M.Count(Current.Applied), Current.Open, M.Msg.SetOpen, Width);
 end function;

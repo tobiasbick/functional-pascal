@@ -1,0 +1,68 @@
+// Maps the three sidebar destinations and their nested pages to the shared catalogue.
+unit FpasAmp.Ui.App.Browsing;
+
+uses
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
+  FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Ui.Albums.Music.Model as Music;
+
+// Returns the persisted route for the selected grid or track list in `Browser`.
+public function Destination(Browser: AlbumModel.State): Nav.Route;
+begin
+  const MusicPage: Music.State? := Browser.Music;
+  if Browser.Scope = Toolbar.Scope.Genres then
+    return Nav.Route.Page(Nav.Page.Genres);
+  end if;
+
+  if Browser.Scope = Toolbar.Scope.GenreAlbums then
+    if MusicPage <> null then
+      return Nav.Route.GenreAlbum(Browser.GroupId, MusicPage.Album.Id);
+    end if;
+
+    return Nav.Route.Genre(Browser.GroupId);
+  end if;
+
+  if Browser.Scope = Toolbar.Scope.Artists then
+    return Nav.Route.Page(Nav.Page.Artists);
+  end if;
+
+  if Browser.Scope = Toolbar.Scope.ArtistAlbums then
+    if MusicPage <> null then
+      return Nav.Route.ArtistAlbum(Browser.GroupId, MusicPage.Album.Id);
+    end if;
+
+    return Nav.Route.Artist(Browser.GroupId);
+  end if;
+
+  if MusicPage <> null then
+    return Nav.Route.Album(MusicPage.Album.Id);
+  end if;
+
+  return Nav.Route.Page(Nav.Page.Albums);
+end function;
+
+// Selects the browser scope matching the restored or selected route in `Current`.
+public function Enter(Current: M.State): M.State;
+begin
+  var Scope: Toolbar.Scope := Toolbar.Scope.Albums;
+  var Id: string := '';
+  case Current.Navigation.Active of
+    when Nav.Route.Page(Nav.Page.Genres):
+      Scope := Toolbar.Scope.Genres;
+    when Nav.Route.Genre(const Tag: string), Nav.Route.GenreAlbum(const Tag: string, _):
+      Scope := Toolbar.Scope.GenreAlbums;
+      Id := Tag;
+    when Nav.Route.Page(Nav.Page.Artists):
+      Scope := Toolbar.Scope.Artists;
+    when Nav.Route.Artist(const Person: string), Nav.Route.ArtistAlbum(const Person: string, _):
+      Scope := Toolbar.Scope.ArtistAlbums;
+      Id := Person;
+    else
+  end case;
+
+  return Current with
+    Albums := Grid.Enter(Current.Albums, Scope, Id);
+  end with;
+end function;
+
+end unit;

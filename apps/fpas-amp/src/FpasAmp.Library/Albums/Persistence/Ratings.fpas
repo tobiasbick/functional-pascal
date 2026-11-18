@@ -44,4 +44,35 @@ begin
   Transaction.Commit();
 end procedure;
 
+// Writes or clears the independent artist or genre rating in `UserDatabase`.
+// `Id` identifies a normalized group tag. `Cancellation` bounds the write.
+public procedure SaveGroup(UserDatabase: string; Id: string; Value: int?; Cancellation: T.CancellationToken);
+requires Id <> '';
+requires Value = null or (Value >= 1 and Value <= 10);
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := Users.Open(UserDatabase);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  if Value = null then
+    Sql.Execute(
+      Connection,
+      'DELETE FROM group_ratings WHERE group_id=$id;',
+      Transaction,
+      ['$id'],
+      [Id]
+    );
+  else
+    Sql.Execute(
+      Connection,
+      'INSERT INTO group_ratings(group_id,rating) VALUES($id,$value) ON CONFLICT(group_id) DO UPDATE SET rating=excluded.rating;',
+      Transaction,
+      ['$id', '$value'],
+      [Id, cast<object?>(Value)]
+    );
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+end procedure;
+
 end unit;

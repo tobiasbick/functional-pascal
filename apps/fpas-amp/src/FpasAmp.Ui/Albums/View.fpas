@@ -7,7 +7,7 @@ uses
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
   FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  Fpas.Ui.Composition as Composition,
+  Fpas.Ui.Composition as Composition, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Media.Images as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.VirtualLists as Virtual,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
@@ -80,10 +80,16 @@ begin
       Gap := 6.0F,
       Align := L.Alignment.Center,
       Muted := true
-    ), function(): M.Msg => M.Msg.OpenMusic(Album.Id)
+    ), function(): M.Msg => if Toolbar.IsGroup(Current.Scope) then
+      M.Msg.OpenGroup(Album.Id)
+    else
+      M.Msg.OpenMusic(Album.Id)
+    end if
   );
   return Hover.HoverCard<M.Msg>(
-    'album-details-' + Album.Id, E.Styled<M.Msg>(Card, S.Role.Panel), Details.Build(Album, Image),
+    'album-details-' + Album.Id,
+    E.Styled<M.Msg>(Card, S.Role.Panel),
+    Details.Build(Album, Image, Toolbar.ItemName(Current.Scope)),
     new Hover.Options(Width := 380.0F, Delay := 0.7F)
   );
 end function;
@@ -116,7 +122,7 @@ begin
   const Selected: Music.State? := Current.Music;
   if Selected <> null then
     return Composition.Map<Music.Msg, M.Msg>(
-      Songs.Build(Selected, Sys.Math.Max(1, Width)),
+      Songs.Build(Selected, Sys.Math.Max(1, Width), Current.GroupName),
       function(Value: Music.Msg): M.Msg => case Value of
         when Music.Msg.Back: M.Msg.BackToAlbums;
         else M.Msg.Music(Value);
@@ -128,12 +134,31 @@ begin
     1, (Available - (Count - 1) * TileGap) div Count - TilePadding * 2
   );
   const RowHeight: int := Edge + 76 + TileGap;
+  const Plural: string := Toolbar.ItemName(Current.Scope) + 's';
+  const Noun: string := Plural.ToLowerInvariant();
+  const Parent: string := Toolbar.ItemName(Toolbar.Root(Current.Scope)).ToLowerInvariant() + 's';
+  const Heading: E.Element<M.Msg> := if Toolbar.Root(Current.Scope) <> Current.Scope then
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+      Icons.IconButton<M.Msg>(
+        Parent + '-back',
+        Sys.Char.ConvertFromUtf32($E048),
+        'Back to ' + Parent,
+        M.Msg.BackToGroups
+      ),
+      Texts.Text<M.Msg>(Current.GroupName, Texts.Appearance.HeadingOne)
+    )
+  else
+    Texts.Text<M.Msg>(
+      Plural, Texts.Appearance.HeadingOne
+    )
+  end if;
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [
-      Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingOne),
+      Heading,
       Composition.Map<Toolbar.Msg, M.Msg>(
         ToolbarView.Build(
-          Current.Toolbar, Current.Catalog.Artists, Current.Catalog.Genres, Available
+          Current.Toolbar, Current.Catalog.Artists, Current.Catalog.Genres, Available, Current.Scope
         ),
         M.Msg.Toolbar
       )
@@ -144,7 +169,7 @@ begin
     Parts.Add(
       Alerts.Alert<M.Msg>(
         'album-error',
-        'Albums unavailable',
+        'Library unavailable',
         new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
       )
     );
@@ -154,20 +179,20 @@ begin
     Parts.Add(
       Empty.EmptyState<M.Msg>(
         'albums-empty', if Current.Loaded then
-          'No albums yet'
+          'No ' + Noun + ' yet'
         else
-          'Loading albums…'
+          'Loading ' + Noun + '…'
         end if,
         new Empty.Options(
           Icon := Sys.Char.ConvertFromUtf32($E1C1),
-          Description := 'Albums appear as your music is scanned.'
+          Description := 'Your scanned music appears here.'
         )
       )
     );
   elsif Current.Shown.Length = 0 then
     Parts.Add(
       Empty.EmptyState<M.Msg>(
-        'albums-no-match', 'No matching albums',
+        'albums-no-match', 'No matching ' + Noun,
         new Empty.Options(
           Icon := Sys.Char.ConvertFromUtf32($E151),
           Description := 'Try other words or fewer filters.'

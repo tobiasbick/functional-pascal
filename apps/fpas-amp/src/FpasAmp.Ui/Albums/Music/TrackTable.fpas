@@ -4,6 +4,7 @@ unit FpasAmp.Ui.Albums.Music.TrackTable;
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.RatingStyle as RatingStyle, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Albums.Artwork as Artwork, Fpas.Media.Images as Imaging, System.Collections.Immutable as I,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
@@ -13,6 +14,61 @@ uses
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 // Persisted selection keys for the three sortable headers: title, time and rating.
 const SortKeys: array of int := [0, 3, 4];
+const LibraryKeys: array of int := [0, 1, 2, 5, 3, 4];
+
+function Play(Id: string; Name: string; Index: int): E.Element<M.Msg>;
+begin
+  return Icons.IconButton<M.Msg>(
+    'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
+    M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
+  );
+end function;
+
+function TimeCell(Item: Tracks.Entry): Grid.Cell<M.Msg>;
+begin
+  return Grid.Cell<M.Msg>.Text(
+    if Browse.Duration(Item) > 0.0 then
+      Browse.Time(Browse.Duration(Item))
+    else
+      '—'
+    end if
+  );
+end function;
+
+function RatingCell(Current: M.State; Item: Tracks.Entry; Id: string; Name: string): Grid.Cell<M.Msg>;
+begin
+  return Grid.Cell<M.Msg>.Content(
+    [
+      Ratings.Rating<M.Msg>(
+        'track-rating-' + Id,
+        'Rate ' + Name + ' (1–10)',
+        Item.Rating ?? 0,
+        function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
+        Maximum := 10,
+        Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
+        StarSize := RatingStyle.StarSize
+      )
+    ]
+  );
+end function;
+
+function MenuCell(Item: Tracks.Entry; Id: string; Name: string): Grid.Cell<M.Msg>;
+begin
+  return Grid.Cell<M.Msg>.Content(
+    [
+      Menus.Menu<M.Msg>(
+        'track-menu-' + Id, 'More actions for ' + Name, [
+          Menus.Entry<M.Msg>.Action(
+            new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
+          ),
+          Menus.Entry<M.Msg>.Action(
+            new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
+          )
+        ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
+      )
+    ]
+  );
+end function;
 
 function Song(Current: M.State; Index: int): Grid.Row<M.Msg>;
 begin
@@ -25,10 +81,7 @@ begin
         [
           E.Row<M.Msg>(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-            Icons.IconButton<M.Msg>(
-              'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
-              M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
-            ),
+            Play(Id, Name, Index),
             E.Size<M.Msg>(
               E.Column<M.Msg>(
                 new L.Flow(
@@ -45,47 +98,43 @@ begin
           )
         ]
       ),
-      Grid.Cell<M.Msg>.Text(
-        if Browse.Duration(Item) > 0.0 then
-          Browse.Time(Browse.Duration(Item))
-        else
-          '—'
-        end if
-      ),
+      TimeCell(Item), RatingCell(Current, Item, Id, Name), MenuCell(Item, Id, Name)
+    ]
+  );
+end function;
+
+function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>): Grid.Row<M.Msg>;
+begin
+  const Item: Tracks.Entry := Current.Shown[Index];
+  const Id: string := Item.FileId.ToString();
+  const Name: string := Browse.Title(Item);
+  var Cover: Imaging.Bitmap? := null;
+  discard Covers.TryGetValue(Item.AlbumId, out Cover);
+  return new Grid.Row<M.Msg>(
+    Id, [
       Grid.Cell<M.Msg>.Content(
         [
-          Ratings.Rating<M.Msg>(
-            'track-rating-' + Id,
-            'Rate ' + Name + ' (1–10)',
-            Item.Rating ?? 0,
-            function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
-            Maximum := 10,
-            Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
-            StarSize := RatingStyle.StarSize
+          E.Row<M.Msg>(
+            new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
+            Play(Id, Name, Index), Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
+            E.Size<M.Msg>(
+              E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
+              Fill
+            )
           )
         ]
       ),
-      Grid.Cell<M.Msg>.Content(
-        [
-          Menus.Menu<M.Msg>(
-            'track-menu-' + Id, 'More actions for ' + Name, [
-              Menus.Entry<M.Msg>.Action(
-                new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
-              ),
-              Menus.Entry<M.Msg>.Action(
-                new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
-              )
-            ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
-          )
-        ]
-      )
+      Grid.Cell<M.Msg>.Text(Browse.Artist(Item)), Grid.Cell<M.Msg>.Text(Browse.AlbumTitle(Item)),
+      Grid.Cell<M.Msg>.Text(Sys.String.Join(', ', Browse.Genres(Item))),
+      TimeCell(Item), RatingCell(Current, Item, Id, Name), MenuCell(Item, Id, Name)
     ]
   );
 end function;
 
 // Builds the virtual track table for `Current` using the available `Width` in logical points.
-// Returns the title/artist rows or the appropriate empty state.
-public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+// Covers selects the whole-library layout and supplies realized album thumbnails.
+// Returns the virtual table or the appropriate empty state.
+public function Build(Current: M.State; Width: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null): E.Element<M.Msg>;
 requires Width > 0;
   function Change(Value: Grid.Value): M.Msg;
   begin
@@ -93,10 +142,14 @@ requires Width > 0;
     if Order = null or Order = Display then
       return M.Msg.Sort(Current.Order);
     end if;
-    const Key: int := if Order.Column >= 0 and Order.Column < SortKeys.Length then
-      SortKeys[Order.Column]
+    const Key: int := if Order.Column >= 0 and Order.Column < Keys.Length then
+      Keys[Order.Column]
     else
-      -1
+      if Covers = null then
+        -1
+      else
+        0
+      end if
     end if;
     return M.Msg.Sort(new Tables.Sort(Key, Order.Descending));
   end function;
@@ -108,17 +161,49 @@ begin
       elsif Current.Error <> null and Current.Tracks.Length = 0 then
         'Tracks unavailable'
       elsif Current.Tracks.Length = 0 then
-        'No tracks in this album'
+        if Covers = null then
+          'No tracks in this album'
+        else
+          'No music in your library'
+        end if
       else
         'No matching tracks'
       end if
     );
   end if;
 
+  const Keys: array of int := if Covers = null then
+    SortKeys
+  else
+    LibraryKeys
+  end if;
   const Display: Tables.Sort := new Tables.Sort(
-    Sys.Array.IndexOf<int>(SortKeys, Current.Order.Column),
+    Sys.Array.IndexOf<int>(Keys, Current.Order.Column),
     Current.Order.Descending
   );
+  if Covers <> null then
+    return Grid.DataGrid<M.Msg>(
+      'music-tracks',
+      [
+        new Grid.Column('Title', cast<float>(Sys.Math.Max(190, Width - 832)), Sortable := true),
+        new Grid.Column('Artist', 178.0F, Sortable := true, Priority := 1),
+        new Grid.Column('Album', 205.0F, Sortable := true, Priority := 2),
+        new Grid.Column('Genre', 135.0F, Sortable := true, Priority := 5),
+        new Grid.Column('Time', 80.0F, Sortable := true, Priority := 3),
+        new Grid.Column('Rating', 190.0F, Sortable := true, Priority := 4),
+        new Grid.Column('', 44.0F, Fixed := true)
+      ],
+      Current.Shown.Length,
+      function(Index: int): Grid.Row<M.Msg> => LibrarySong(Current, Index, Covers),
+      new Grid.Value(Order := Display),
+      Change,
+      new Grid.Options(
+        RowHeight := 37.0F,
+        HideCheckboxes := true
+      )
+    );
+  end if;
+
   return Grid.DataGrid<M.Msg>(
     'album-tracks',
     [

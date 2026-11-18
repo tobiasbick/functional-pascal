@@ -1,6 +1,43 @@
 // Detached album headers; image bytes are requested independently for visible tiles.
 unit FpasAmp.Library.Albums.Model;
 
+uses System as Sys, System.Security.Cryptography as Crypto, System.Text as Text;
+
+// A named catalogue group that contains tracks from a release.
+public type Membership = record
+  // Stable key across rescans and case changes.
+  public Id: string;
+  // Name as displayed in tags.
+  public Name: string;
+  // User rating of this group, independent of release and song ratings.
+  public Rating: int? := null;
+  // Number of distinct tracks in this release belonging to the group.
+  public Tracks: long := 0L;
+end record;
+
+// Canonical spelling used to group tags and match tracks during browsing and playback.
+public function TagKey(Name: string): string;
+begin
+  return Name.Trim().Normalize().ToUpperInvariant();
+end function;
+
+function Digest(Name: string): string;
+begin
+  return Sys.Convert.ToHexString(Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(TagKey(Name))));
+end function;
+
+// Returns the stable artist identity for the album credit `Name`.
+public function ArtistId(Name: string): string;
+begin
+  return 'artist-' + Digest(Name);
+end function;
+
+// Returns the stable genre identity for the tag `Name`.
+public function GenreId(Name: string): string;
+begin
+  return 'genre-' + Digest(Name);
+end function;
+
 // A logical release with stable identity and observed artwork freshness.
 public type Album = record
   // Content-derived identity, independent of list position.
@@ -17,6 +54,10 @@ public type Album = record
   public Rating: int? := null;
   // Distinct genre tags of the album's tracks, in no particular order.
   public Genres: array of string := [];
+  // Individual album credits, retaining collaboration membership.
+  public Credits: array of Membership := [];
+  // Per-genre song counts and independent genre ratings.
+  public GenreMemberships: array of Membership := [];
 end record;
 
 end unit;

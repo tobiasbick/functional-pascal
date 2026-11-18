@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Shell;
 
 uses
   FpasAmp.Library.Inventory.Monitoring as Monitoring,
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Controller as Updates,
+  FpasAmp.Ui.Music.LibraryPage as Songs, FpasAmp.Ui.Albums.Music.Model as TrackModel, FpasAmp.Ui.Albums.Music.View as TrackView, FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Controller as Updates,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.View as NavView,
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.View as AlbumView,
   Fpas.Ui.Composition as Composition,
@@ -56,7 +56,12 @@ begin
       Current.Settings, Current.Navigation.SettingsTab, Theme, Padding, M.Msg.Settings,
       function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
     )
-  elsif Nav.SectionKey(Current.Navigation.Active) = 'albums' then
+  elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
+    Composition.Map<TrackModel.Msg, M.Msg>(
+      TrackView.LibraryPage(Current.Songs.Page, Content, Padding, Current.Songs.Covers),
+      function(Value: TrackModel.Msg): M.Msg => M.Msg.Songs(Songs.Msg.Song(Value))
+    )
+  elsif Nav.Browsing(Current.Navigation.Active) then
     Composition.Map<AlbumModel.Msg, M.Msg>(
       AlbumView.Build(Current.Albums, Content, Padding), M.Msg.Albums
     )
@@ -200,7 +205,8 @@ public type Session = record implements Sys.IDisposable
           return false;
         end if;
 
-        if Nav.Key(Last.Navigation.Active) = 'albums' then
+        const Music: bool := Last.Navigation.Active = Nav.Route.Page(Nav.Page.Music);
+        if Music or (Nav.Browsing(Last.Navigation.Active) and Last.Albums.Music = null) then
           const Frame: Gui.Frame := Native.Snapshot();
           const WindowWidth: int := Sys.Convert.ToInt32(Frame.Size.Width);
           const Compact: bool := WindowWidth < NavView.DrawerBreakpoint;
@@ -209,9 +215,25 @@ public type Session = record implements Sys.IDisposable
           else
             NavView.Width + 65
           end if);
-          const Columns: int := AlbumView.Columns(Sys.Math.Max(1, Available));
+          const Columns: int := if Music then
+            1
+          else
+            AlbumView.Columns(Sys.Math.Max(1, Available))
+          end if;
+          const Count: int := if Music then
+            Last.Songs.Page.Shown.Length
+          else
+            Last.Albums.Shown.Length
+          end if;
+          const Id: string := if Music then
+            'music-tracks'
+          else
+            AlbumView.GridId
+          end if;
+          var Seen: bool := false;
           for Control: Gui.Control in Frame.Controls do
-            if Control.Id = AlbumView.GridId then
+            if Control.Id = Id then
+              Seen := true;
               const Parts: array of string := Control.Value.Split(#58);
               var First: int := 0;
               var End: int := 0;
@@ -220,14 +242,22 @@ public type Session = record implements Sys.IDisposable
                 out First
               ) and int.TryParse(Parts[1], out End)
               then
-                const Start: int := Sys.Math.Min(Last.Albums.Shown.Length, First * Columns);
-                const Finish: int := Sys.Math.Min(Last.Albums.Shown.Length, End * Columns);
-                if Start <> Last.Albums.First or Finish <> Last.Albums.Last then
+                const Start: int := Sys.Math.Min(Count, First * Columns);
+                const Finish: int := Sys.Math.Min(Count, End * Columns);
+                if Music then
+                  if Start <> Last.Songs.First or Finish <> Last.Songs.Last then
+                    discard Native.Post(M.Msg.Songs(Songs.Msg.Visible(Start, Finish)));
+                  end if;
+                elsif Start <> Last.Albums.First or Finish <> Last.Albums.Last then
                   discard Native.Post(M.Msg.Albums(AlbumModel.Msg.Visible(Start, Finish)));
                 end if;
               end if;
             end if;
           end for;
+
+          if Music and not Seen and (Last.Songs.First <> 0 or Last.Songs.Last <> 0) then
+            discard Native.Post(M.Msg.Songs(Songs.Msg.Visible(0, 0)));
+          end if;
         end if;
 
         return true;

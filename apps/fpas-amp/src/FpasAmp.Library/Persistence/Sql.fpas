@@ -2,7 +2,7 @@
 unit FpasAmp.Library.Persistence.Sql;
 
 uses
-  Microsoft.Data.Sqlite as Db,
+  Microsoft.Data.Sqlite as Db, SQLitePCL as Native, System.Threading as T,
   System as Sys, System.IO as IO;
 
 // Produces a stable lexical key for an absolute normalized path, including Unicode.
@@ -14,6 +14,34 @@ begin
   else
     Path
   end if;
+end function;
+
+// Runs Operation on a dedicated Connection and interrupts SQLite sorting or scanning on Cancellation.
+// Returns the operation's TResult and always removes its connection-local progress handler.
+public function Interruptible<TResult>(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken; Operation: function(): TResult): TResult;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if Cancellation.CanBeCanceled then
+    Native.raw.sqlite3_progress_handler(
+      Connection.Handle, 4096,
+      function(_State: object?): int => if Cancellation.IsCancellationRequested then
+        1
+      else
+        0
+      end if, null
+    );
+  end if;
+
+  try
+    return Operation();
+  catch Interrupted: Db.SqliteException when Interrupted.SqliteErrorCode =
+    Native.raw.SQLITE_INTERRUPT and Cancellation.IsCancellationRequested do
+    raise new Sys.OperationCanceledException(Cancellation);
+  finally
+    if Cancellation.CanBeCanceled then
+      Native.raw.sqlite3_progress_handler(Connection.Handle, 0, null, null);
+    end if;
+  end try;
 end function;
 
 // Creates a bound command. `Connection` is open and worker-owned, `Text` contains

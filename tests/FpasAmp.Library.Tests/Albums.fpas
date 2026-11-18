@@ -61,7 +61,11 @@ public type AlbumTests = record
           Path,
           IO.Path.GetDirectoryName(Path),
           Json.JsonSerializer.Serialize<MediaTags.Info>(
-            new MediaTags.Info(Album := 'Cached release', AlbumArtists := ['Example'])
+            new MediaTags.Info(
+              Album := 'Cached release',
+              AlbumArtists := ['Example', 'Echo; Lane', 'example'],
+              Genres := ['Électro', ' e' + #769 + 'LECTRO ', 'Folk', '  ']
+            )
           )
         ]
       );
@@ -74,7 +78,20 @@ public type AlbumTests = record
     const Items: I.ImmutableArray<M.Album> := Read(Data.Path);
     X.Assert.Equal<int>(1, Items.Length);
     X.Assert.Equal<string>('Cached release', Items[0].Title);
-    X.Assert.Equal<string>('Example', Items[0].Artist);
+    X.Assert.Equal<string>('Example; Echo; Lane; example', Items[0].Artist);
+    X.Assert.Equal<int>(2, Items[0].Credits.Length);
+    X.Assert.Equal<string>('Echo; Lane', Items[0].Credits[0].Name);
+    X.Assert.Equal<string>(M.ArtistId('example'), Items[0].Credits[1].Id);
+    X.Assert.Equal<int>(2, Items[0].GenreMemberships.Length);
+    var HasElectro: bool := false;
+    for Group: M.Membership in Items[0].GenreMemberships do
+      X.Assert.Equal<long>(1L, Group.Tracks);
+      if Group.Id = M.GenreId('Électro') then
+        HasElectro := true;
+      end if;
+    end for;
+
+    X.Assert.True(HasElectro);
   end procedure;
 
   // Equal names in different folders remain distinct; a release ID joins disc folders.

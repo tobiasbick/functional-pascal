@@ -21,6 +21,10 @@ public type Entry = record
   public Error: string?;
   // Indexed source memberships at query time, including offline and paused sources.
   public SourceIds: array of string := [];
+  // Stable indexed release identity, or empty until membership is known.
+  public AlbumId: string := '';
+  // Catalogue album title, including the folder-derived fallback.
+  public AlbumTitle: string := '';
 end record;
 
 // Supported stable database ordering, with file ID as a final tie breaker.

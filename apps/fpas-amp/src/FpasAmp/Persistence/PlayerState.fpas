@@ -43,7 +43,12 @@ begin
     Valid := false;
   end if;
 
-  if Album = null or Search = null or Desc = null or Column < -1 or Column > 4 or Rating < 0
+  const MaxColumn: int := if Album = '' then
+    5
+  else
+    4
+  end if;
+  if Album = null or Search = null or Desc = null or Column < -1 or Column > MaxColumn or Rating < 0
     or Rating > 10
   then
     Valid := false;
@@ -54,8 +59,10 @@ begin
     Search ?? '',
     Genres.ToArray(),
     Sys.Math.Clamp(Rating, 0, 10),
-    Sys.Math.Clamp(Column, -1, 4),
-    Desc ?? false
+    Sys.Math.Clamp(Column, -1, MaxColumn),
+    Desc ?? false,
+    Fields.StringValue(Fields.Field(Field, 'performer')) ?? '',
+    Fields.StringValue(Fields.Field(Field, 'releaseFilter')) ?? ''
   );
 end function;
 

@@ -2,18 +2,17 @@
 unit FpasAmp.Ui.Albums.Music.View;
 
 uses
-  Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
-  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
+  FpasAmp.Ui.Albums.Status as Counts, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  System as Sys, System.Collections.Generic as C;
+  Fpas.Media.Images as Imaging, System.Collections.Immutable as I, System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 
@@ -24,7 +23,7 @@ end function;
 
 function AlbumName(Current: M.State; Item: Tracks.Entry): string;
 begin
-  const Name: string := (Item.Metadata ?? new MediaTags.Info()).Album;
+  const Name: string := Browse.AlbumTitle(Item);
   return if Name = '' then
     Current.Album.Title
   else
@@ -34,22 +33,30 @@ end function;
 
 function Sort(Current: M.State): E.Element<M.Msg>;
 begin
-  const Names: array of string := ['Title', 'Artist', 'Album', 'Time', 'Rating'];
+  const Whole: bool := Current.Album.Id = '';
+  const Names: array of string := if Whole then
+    ['Title', 'Artist', 'Album', 'Time', 'Rating', 'Genre']
+  else
+    ['Title', 'Artist', 'Album', 'Time', 'Rating']
+  end if;
   const Entries: C.List<Menus.Entry<M.Msg>> := new C.List<Menus.Entry<M.Msg>>(
     [
       Menus.Entry<M.Msg>.Label('Sort by')
     ]
   );
-  Entries.Add(
-    Menus.Entry<M.Msg>.Action(
-      new Menus.Item<M.Msg>(
-        'release',
-        'Disc and track',
-        M.Msg.Sort(new Tables.Sort(-1)),
-        Checked := Current.Order.Column = -1
+  if not Whole then
+    Entries.Add(
+      Menus.Entry<M.Msg>.Action(
+        new Menus.Item<M.Msg>(
+          'release',
+          'Disc and track',
+          M.Msg.Sort(new Tables.Sort(-1)),
+          Checked := Current.Order.Column = -1
+        )
       )
-    )
-  );
+    );
+  end if;
+
   for Index: int := 0 to Names.Length - 1 do
     Entries.Add(
       Menus.Entry<M.Msg>.Action(
@@ -66,7 +73,7 @@ begin
   const Column: int := Current.Order.Column;
   var Label: string := 'Disc and track';
   if Column >= 0 then
-    const Direction: string := if Column <= 2 then
+    const Direction: string := if Column <= 2 or Column = 5 then
       if Current.Order.Descending then
         'Z–A'
       else
@@ -106,18 +113,7 @@ end function;
 
 function StatusLine(Current: M.State): E.Element<M.Msg>;
 begin
-  const Count: string := if Current.Shown.Length <> Current.Tracks.Length then
-    Current.Shown.Length.ToString() + ' of ' + Current.Tracks.Length.ToString() + ' tracks'
-  elsif Current.Shown.Length = 1 then
-    '1 track'
-  else
-    Current.Shown.Length.ToString() + ' tracks'
-  end if;
-  var Total: double := 0.0;
-  for Item: Tracks.Entry in Current.Shown do
-    Total := Total + Browse.Duration(Item);
-  end for;
-
+  const Count: string := Counts.Caption(Current.Shown.Length, Current.Tracks.Length, 'track');
   return Status.StatusBar<M.Msg>(
     'track-status', [
       Status.Item<M.Msg>.Text(
@@ -130,7 +126,7 @@ begin
         )
       ),
       Status.Item<M.Msg>.Spacer,
-      Status.Item<M.Msg>.Text(new Status.Label(Browse.Time(Total)))
+      Status.Item<M.Msg>.Text(new Status.Label(Browse.Time(Current.TotalMilliseconds)))
     ]
   );
 end function;
@@ -163,13 +159,58 @@ begin
   return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Value)));
 end function;
 
+// Builds the whole-library Music page for Current and its viewport-owned Covers.
+// Width and Padding are the available content width and inset in logical points.
+// Returns the toolbar, virtual table, status bar and track-details overlay.
+public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>): E.Element<M.Msg>;
+begin
+  const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
+  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+    [
+      Texts.Text<M.Msg>('Music', Texts.Appearance.HeadingOne),
+      LibraryToolbar.Arrange<M.Msg>(
+        Search.SearchField<M.Msg>(
+          'track-search', Current.Search, M.Msg.Search,
+          new Search.Options(Placeholder := 'Search titles, artists and albums…')
+        ), Filters.Build(Current, Inner), Sort(Current), Inner
+      )
+    ]
+  );
+  const Error: string? := Current.Error;
+  if Error <> null then
+    Parts.Add(
+      Alerts.Alert<M.Msg>(
+        'track-error',
+        'Track operation failed',
+        new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
+      )
+    );
+  end if;
+
+  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, Inner, Covers), Fill));
+  return Details(
+    Current, E.Column<M.Msg>(
+      new L.Flow(Align := L.Alignment.Stretch),
+      E.Size<M.Msg>(
+        E.Column<M.Msg>(
+          new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
+          Parts.ToArray()
+        ),
+        Fill
+      ),
+      StatusLine(Current)
+    )
+  );
+end function;
+
 // Builds the selected album page with a return to its retained grid.
 // ## Parameters
 // - `Current`: Release metadata, tracks and browse state.
+// - `GroupName`: Parent heading when reached through Artists or Genres.
 // - `Width`: Full width of the Albums content area in logical points.
 // ## Returns
 // The album sleeve beside the searchable track list and its status bar.
-public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; GroupName: string := ''): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Narrow: bool := Width < 700;
@@ -196,7 +237,13 @@ begin
       'Back to albums',
       M.Msg.Back
     ),
-    Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingThree)
+    Texts.Text<M.Msg>(
+      if GroupName = '' then
+        'Albums'
+      else
+        GroupName
+      end if, Texts.Appearance.HeadingThree
+    )
   );
   const Sleeve: E.Element<M.Msg> := E.Column<M.Msg>(
     new L.Flow(

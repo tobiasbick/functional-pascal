@@ -2,7 +2,7 @@
 unit FpasAmp.Library.Tests.AlbumCatalogue;
 
 uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
+  FpasAmp.Library.Metadata.Persistence.Queries as Songs, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
   System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
@@ -61,6 +61,11 @@ public type CatalogueTests = record
 
     using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
     X.Assert.Equal<int>(Count, Albums.Read(Database, Ratings, Startup.Token).Length);
+    // A whole-library queue includes every audio file, but no cover files or page-size limit.
+    X.Assert.Equal<int>(
+      Count,
+      Songs.ReadRelease(Database, Ratings, '', T.CancellationToken.None).Length
+    );
   end procedure;
 end record;
 

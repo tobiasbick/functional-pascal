@@ -3,8 +3,31 @@
 FPas-Amp is a desktop music player in development, written in Functional Pascal.
 The navigation groups **Music**, **Albums**, **Artists**, **Genres** and **Ratings**
 under **Library**, followed by all discovered/local **Playlists** in name order.
-Albums shows a responsive virtual grid of covers and titles; the other destinations
-currently open placeholder pages. Its search field finds albums by title, artist
+
+**Music** lists all songs across your sources in a virtual table. Each row shows the
+album cover, title, performer, album, genre, duration and track rating. Search across
+titles, performers and albums, or filter by performer, album, genre and minimum track
+rating. The album filter distinguishes releases with the same title. Click a column header or use the sort menu to change the order. The status
+bar shows the matching count and playing time. Playing a row uses this selection and
+order for the queue. The list follows library scans while open.
+
+**Artists** groups releases by individual album artist. Collaborations appear under each
+credited artist. Each tile shows the first available cover in catalogue order, album
+and song counts, and ten stars for an independent artist rating. Open an artist to
+browse their albums, then open an album for its tracks. Back returns one level at
+a time and the sidebar keeps **Artists** selected. The artist grid filters by genre
+and artist rating. A discography filters by genre and album rating. Genre choices
+appear when they distinguish entries in the current collection.
+
+**Genres** groups tracks by their genre tags. Each tile shows the first available
+album cover, album and song counts, and an independent ten-star genre rating.
+An album can appear in several genres. Opening it through **Genres** limits its
+song count, track list and playback queue to the selected genre. A song with
+multiple genres counts once in each. Songs without a genre remain accessible
+through **Albums**. The genre overview filters by genre rating, its albums by
+album artist and album rating, and its tracks by track rating.
+
+**Albums** shows the full virtual cover grid. Its search field finds albums by title, artist
 and genre as you type: words in any order, any of them, with typos, accents and
 sound-alike spellings forgiven, best matches first. **Filters** narrows the grid
 to one album artist, one genre or a minimum rating once applied, and its button
@@ -121,10 +144,11 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   window there, maximized if it was. A window closed while minimized keeps
   the state it would have come back in.
 - `state.json` also stores `settingsTab`, with `0` for General and `1` for Library,
-  and `activePage`: `music`, `albums`, `album:<release ID>`, `artists`, `genres`,
+  and `activePage`: `music`, `albums`, `album:<release ID>`, `artists`, `artist:<artist ID>`,
+  `artist:<artist ID>:<release ID>`, `genres`, `genre:<genre ID>`, `genre:<genre ID>:<release ID>`,
   `ratings`, `settings` or `playlist:<file|local>:<UUID>`. Closing inside an album
   reopens its track list, independently of the playing track. If the catalogue
-  no longer contains that release, the album grid opens. Defaults are Music and General. Malformed
+  no longer contains that release, its parent grid opens. A missing artist or genre returns to its overview. Defaults are Music and General. Malformed
   routes/tabs are repaired to these defaults. The drawer's open state is transient.
   The selected destination is saved when the window closes, including a fallback
   after the selected playlist has disappeared.
@@ -148,9 +172,7 @@ New paths recover an existing identity only for an unambiguous SHA-256 match
 whose previous path is confirmed absent; existing copies stay separate.
 Known-path tag changes retain the identity. Moving and editing together cannot
 be recognized reliably by a full-file hash. Embedded covers are cached separately
-on explicit request. The current UI provides settings, the Albums grid and its
-track list with independent song ratings. Other library
-destinations remain navigation placeholders.
+on explicit request. Ratings for genres, artists, albums and tracks are stored separately in user data.
 
 The Albums grid creates only visible rows plus a small overscan. It loads covers
 on background workers, preferring an embedded front cover, another embedded image,

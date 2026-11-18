@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.Albums.Music.Browse;
 
 uses
-  Fpas.Media.Tags.AudioFiles as MediaTags,
+  Fpas.Media.Tags.AudioFiles as MediaTags, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Library.Search.Text as Text, System as Sys, System.IO as IO,
   System.Collections.Generic as C, System.Collections.Immutable as I;
@@ -30,6 +30,16 @@ begin
   return Sys.String.Join(', ', (Track.Metadata ?? new MediaTags.Info()).Artists);
 end function;
 
+// Returns the tagged album title or the catalogue's folder-derived title.
+public function AlbumTitle(Item: Tracks.Entry): string;
+begin
+  return if Item.AlbumTitle <> '' then
+    Item.AlbumTitle
+  else
+    (Item.Metadata ?? new MediaTags.Info()).Album
+  end if;
+end function;
+
 // Returns the reported duration of `Track` in milliseconds, or zero if unknown.
 public function Duration(Track: Tracks.Entry): double;
 begin
@@ -41,6 +51,12 @@ public function Time(Milliseconds: double): string;
 begin
   const Seconds: long := cast<long>(Sys.Math.Max(0.0, Milliseconds) / 1000.0);
   const Minutes: long := Seconds div 60L;
+  if Minutes >= 60L then
+    return (Minutes div 60L).ToString() + ':' + (Minutes mod 60L).ToString(
+      '00'
+    ) + ':' + (Seconds mod 60L).ToString('00');
+  end if;
+
   return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
 end function;
 
@@ -71,7 +87,7 @@ begin
   end if;
 
   for Value: string in Values do
-    if Selected.Contains(Value) then
+    if Selected.Contains(Albums.TagKey(Value)) then
       return true;
     end if;
   end for;
@@ -79,13 +95,17 @@ begin
   return false;
 end function;
 
-function Matches(Entry: Tracks.Entry; Terms: array of string): bool;
+function Matches(Entry: Tracks.Entry; Terms: array of string; Library: bool): bool;
 begin
   if Terms.Length = 0 then
     return true;
   end if;
   const Fields: array of string := Text.Words(
-    Title(Entry) + ' ' + Sys.String.Join(' ', Genres(Entry))
+    Title(Entry) + ' ' + if Library then
+      Artist(Entry) + ' ' + AlbumTitle(Entry)
+    else
+      Sys.String.Join(' ', Genres(Entry))
+    end if
   );
   for Term: string in Terms do
     var Found: bool := false;
@@ -108,8 +128,18 @@ end function;
 public function Selection(Current: M.State): M.Selection;
 begin
   return new M.Selection(
-    Current.Album.Id, Current.Search, new C.List<string>(Current.Applied.Genres).ToArray(),
-    Current.Applied.MinimumRating, Current.Order.Column, Current.Order.Descending
+    Current.Album.Id,
+    Current.Search,
+    if Current.RequiredGenre <> '' then
+      [Current.RequiredGenre]
+    else
+      new C.List<string>(Current.Applied.Genres).ToArray()
+    end if,
+    Current.Applied.MinimumRating,
+    Current.Order.Column,
+    Current.Order.Descending,
+    Current.Applied.Performer,
+    Current.Applied.ReleaseFilter
   );
 end function;
 
@@ -123,9 +153,10 @@ public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.S
     const Value: int := case Source.Column of
       when 0: Names.Compare(Title(Left), Title(Right));
       when 1: Names.Compare(Artist(Left), Artist(Right));
-      when 2: Names.Compare(
-        (Left.Metadata ?? new MediaTags.Info()).Album,
-        (Right.Metadata ?? new MediaTags.Info()).Album
+      when 2: Names.Compare(AlbumTitle(Left), AlbumTitle(Right));
+      when 5: Names.Compare(
+        Sys.String.Join(', ', Genres(Left)),
+        Sys.String.Join(', ', Genres(Right))
       );
       when 3: Duration(Left).CompareTo(Duration(Right));
       when 4: (Left.Rating ?? 0).CompareTo(Right.Rating ?? 0);
@@ -143,14 +174,29 @@ public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.S
   end function;
 begin
   const Terms: array of string := Text.Words(Source.Search);
-  const GenresFilter: I.ImmutableHashSet<string> := I.ImmutableHashSet.CreateRange<string>(
-    Sys.StringComparer.OrdinalIgnoreCase,
-    Source.Genres
-  );
+  const Keys: I.ImmutableHashSet<string>.Builder := I.ImmutableHashSet.CreateBuilder<string>();
+  for Genre: string in Source.Genres do
+    discard Keys.Add(Albums.TagKey(Genre));
+  end for;
+  const GenresFilter: I.ImmutableHashSet<string> := Keys.ToImmutable();
+  const Performer: I.ImmutableHashSet<string> := if Source.Performer = '' then
+    I.ImmutableHashSet<string>.Empty
+  else
+    I.ImmutableHashSet.Create<string>(Albums.TagKey(Source.Performer))
+  end if;
   const Items: C.List<Tracks.Entry> := new C.List<Tracks.Entry>();
   for Entry: Tracks.Entry in TracksInOrder do
     if (Entry.Rating ?? 0) >= Source.MinimumRating
-      and Has(Genres(Entry), GenresFilter) and Matches(Entry, Terms)
+      and (GenresFilter.IsEmpty or Has(Genres(Entry), GenresFilter)) and Matches(
+      Entry,
+      Terms,
+      Source.AlbumId = ''
+    )
+      and (Source.Performer = '' or Has(
+      (Entry.Metadata ?? new MediaTags.Info()).Artists,
+      Performer
+    ))
+      and (Source.ReleaseFilter = '' or Entry.AlbumId = Source.ReleaseFilter)
     then
       Items.Add(Entry);
     end if;
@@ -166,8 +212,15 @@ end function;
 // Returns `Current` with its visible tracks rebuilt from search, filters and sort.
 public function Select(Current: M.State): M.State;
 begin
+  const Shown: I.ImmutableArray<Tracks.Entry> := Songs(Current.Tracks, Selection(Current));
+  var Total: double := 0.0;
+  for Track: Tracks.Entry in Shown do
+    Total := Total + Duration(Track);
+  end for;
+
   return Current with
-    Shown := Songs(Current.Tracks, Selection(Current));
+    Shown := Shown;
+    TotalMilliseconds := Total;
   end with;
 end function;
 

@@ -36,38 +36,87 @@ end function;
 // Prepares the search documents and the filter choices of `Items`.
 //
 // ## Parameters
-// - `Items`: The album headers of one catalogue snapshot.
+// - `Items`: The headers of one catalogue snapshot.
+// - `Scope`: Determines whether individual artist credits are searchable and filterable.
 // ## Returns
 // The catalog; titles weigh most in searches, then artists, then genres.
-public function Prepare(Items: I.ImmutableArray<Library.Album>): Catalog;
+public function Prepare(Items: I.ImmutableArray<Library.Album>; Scope: Toolbar.Scope := Toolbar.Scope.Albums): Catalog;
 begin
   const Documents: I.ImmutableArray<Matching.Document>.Builder := I.ImmutableArray.CreateBuilder<Matching.Document>(
     Items.Length
   );
   const Artists: C.HashSet<string> := new C.HashSet<string>(Names());
   const Genres: C.HashSet<string> := new C.HashSet<string>(Names());
+  const CommonGenres: C.HashSet<string> := new C.HashSet<string>(Names());
+  const CommonArtists: C.HashSet<string> := new C.HashSet<string>(Names());
+  var First: bool := true;
   for Album: Library.Album in Items do
     const Fields: C.List<Matching.Field> := new C.List<Matching.Field>(
-      [new Matching.Field(Album.Title, Weights[0]), new Matching.Field(Album.Artist, Weights[1])]
+      [new Matching.Field(Album.Title, Weights[0])]
     );
+    if (Scope = Toolbar.Scope.Albums or Scope = Toolbar.Scope.GenreAlbums) then
+      Fields.Add(new Matching.Field(Album.Artist, Weights[1]));
+    end if;
+
     for Genre: string in Album.Genres do
-      Fields.Add(new Matching.Field(Genre, Weights[2]));
+      if Scope <> Toolbar.Scope.GenreAlbums then
+        Fields.Add(new Matching.Field(Genre, Weights[2]));
+      end if;
+
       discard Genres.Add(Genre);
     end for;
 
     Documents.Add(Matching.Document.Create(Fields.ToArray()));
-    if not Sys.String.IsNullOrWhiteSpace(Album.Artist) then
-      discard Artists.Add(Album.Artist);
+    if First then
+      CommonGenres.UnionWith(Album.Genres);
+    else
+      CommonGenres.IntersectWith(Album.Genres);
     end if;
+
+    if (Scope = Toolbar.Scope.Albums or Scope = Toolbar.Scope.GenreAlbums) then
+      const Members: C.List<string> := new C.List<string>();
+      if Album.Credits.Length > 0 then
+        for Credit: Library.Membership in Album.Credits do
+          Members.Add(Credit.Name);
+        end for;
+      elsif not Sys.String.IsNullOrWhiteSpace(Album.Artist) then
+        Members.Add(Album.Artist);
+      end if;
+
+      Artists.UnionWith(Members);
+      if First then
+        CommonArtists.UnionWith(Members);
+      else
+        CommonArtists.IntersectWith(Members);
+      end if;
+    end if;
+
+    First := false;
   end for;
+
+  Genres.ExceptWith(CommonGenres);
+  Artists.ExceptWith(CommonArtists);
 
   return new Catalog(Documents.MoveToImmutable(), Sorted(Artists), Sorted(Genres));
 end function;
 
 function Allowed(Album: Library.Album; Filters: Toolbar.Filters): bool;
 begin
-  if Filters.Artist <> '' and Names().Compare(Album.Artist, Filters.Artist) <> 0 then
-    return false;
+  if Filters.Artist <> '' then
+    var Found: bool := Album.Credits.Length = 0 and Names().Compare(
+      Album.Artist,
+      Filters.Artist
+    ) = 0;
+    for Credit: Library.Membership in Album.Credits do
+      if Names().Compare(Credit.Name, Filters.Artist) = 0 then
+        Found := true;
+        break;
+      end if;
+    end for;
+
+    if not Found then
+      return false;
+    end if;
   end if;
 
   if (Album.Rating ?? 0) < Filters.MinimumRating then

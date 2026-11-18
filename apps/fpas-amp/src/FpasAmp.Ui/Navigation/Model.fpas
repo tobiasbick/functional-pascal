@@ -25,6 +25,14 @@ public type Route = variant
   Page(Value: Page);
   // The track list of the release identified by its catalogue ID.
   Album(Id: string);
+  // Releases credited to one artist.
+  Artist(Id: string);
+  // Tracks of a release reached through an artist.
+  ArtistAlbum(ArtistId: string; AlbumId: string);
+  // Albums containing songs in the selected genre.
+  Genre(Id: string);
+  // Songs of one release within the selected genre.
+  GenreAlbum(GenreId: string; AlbumId: string);
   // A playlist identified independently of its display name.
   Playlist(Identity: Lists.Key);
 end variant;
@@ -67,6 +75,14 @@ begin
       return Value.ToString().ToLowerInvariant();
     when Route.Album(const Id: string):
       return 'album:' + Id;
+    when Route.Artist(const Id: string):
+      return 'artist:' + Id;
+    when Route.ArtistAlbum(const ArtistId: string, const AlbumId: string):
+      return 'artist:' + ArtistId + ':' + AlbumId;
+    when Route.Genre(const Id: string):
+      return 'genre:' + Id;
+    when Route.GenreAlbum(const Id: string, const AlbumId: string):
+      return 'genre:' + Id + ':' + AlbumId;
     when Route.Playlist(const Identity: Lists.Key):
       return 'playlist:' + Identity.Storage.ToString().ToLowerInvariant() + ':' + Identity.Id;
   end case;
@@ -76,11 +92,37 @@ end function;
 public function SectionKey(Destination: Route): string;
 begin
   case Destination of
+    when Route.Genre(_), Route.GenreAlbum(_, _):
+      return 'genres';
+    when Route.Artist(_), Route.ArtistAlbum(_, _):
+      return 'artists';
     when Route.Album(_):
       return 'albums';
     else
       return Key(Destination);
   end case;
+end function;
+
+// Whether the destination uses the shared release/artist browser.
+public function Browsing(Destination: Route): bool;
+begin
+  const Section: string := SectionKey(Destination);
+  return Section = 'albums' or Section = 'artists' or Section = 'genres';
+end function;
+
+function HexId(Value: string): bool;
+begin
+  if Value.Length <> 64 then
+    return false;
+  end if;
+
+  for Digit: char in Value do
+    if not Sys.Uri.IsHexDigit(Digit) then
+      return false;
+    end if;
+  end for;
+
+  return true;
 end function;
 
 // Parses a stored `Value`; malformed/unknown destinations return null.
@@ -99,14 +141,36 @@ begin
     end if;
   end for;
   const Parts: array of string := Value.Split(#58);
-  if Parts.Length = 2 and Parts[0] = 'album' and Parts[1].Length = 64 then
-    for Digit: char in Parts[1] do
-      if not Sys.Uri.IsHexDigit(Digit) then
-        return null;
-      end if;
-    end for;
-
+  if Parts.Length = 2 and Parts[0] = 'album' and HexId(Parts[1]) then
     return Route.Album(Parts[1].ToUpperInvariant());
+  end if;
+
+  if (Parts.Length = 2 or Parts.Length = 3) and (Parts[0] = 'artist' or Parts[0] = 'genre') then
+    const Prefix: string := Parts[0] + '-';
+    if not Parts[1].StartsWith(Prefix, Sys.StringComparison.Ordinal) then
+      return null;
+    end if;
+    const Hash: string := Parts[1].Substring(Prefix.Length);
+    if not HexId(Hash) then
+      return null;
+    end if;
+    const GroupId: string := Prefix + Hash.ToUpperInvariant();
+    if Parts.Length = 2 then
+      return if Parts[0] = 'genre' then
+        Route.Genre(GroupId)
+      else
+        Route.Artist(GroupId)
+      end if;
+    end if;
+
+    if HexId(Parts[2]) then
+      const Release: string := Parts[2].ToUpperInvariant();
+      return if Parts[0] = 'genre' then
+        Route.GenreAlbum(GroupId, Release)
+      else
+        Route.ArtistAlbum(GroupId, Release)
+      end if;
+    end if;
   end if;
   var Id: Sys.Guid := Sys.Guid.Empty;
   if Parts.Length = 3 and Parts[

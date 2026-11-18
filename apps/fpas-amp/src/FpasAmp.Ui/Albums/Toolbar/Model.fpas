@@ -1,6 +1,46 @@
 // Search text, applied filters and the sort order of the album page.
 unit FpasAmp.Ui.Albums.Toolbar.Model;
 
+// The collection whose cards are being searched, filtered and rated.
+public type Scope = enum
+  // The complete release catalogue.
+  Albums;
+  // Individual credited artists.
+  Artists;
+  // Releases credited to one artist.
+  ArtistAlbums;
+  // Named genres discovered in track tags.
+  Genres;
+  // Releases containing tracks with a selected genre.
+  GenreAlbums;
+end enum;
+
+// Returns the top-level collection containing `Value`.
+public function Root(Value: Scope): Scope;
+begin
+  return case Value of
+    when Scope.ArtistAlbums: Scope.Artists;
+    when Scope.GenreAlbums: Scope.Genres;
+    else Value;
+  end case;
+end function;
+
+// Whether `Value` displays artist or genre tiles.
+public function IsGroup(Value: Scope): bool;
+begin
+  return Value = Scope.Artists or Value = Scope.Genres;
+end function;
+
+// Singular display name of the item shown in `Value`.
+public function ItemName(Value: Scope): string;
+begin
+  return case Value of
+    when Scope.Artists: 'Artist';
+    when Scope.Genres: 'Genre';
+    else 'Album';
+  end case;
+end function;
+
 // Album orders offered by the sort menu.
 public type Order = enum
   // Best search matches first; offered while a search is active.

@@ -7,8 +7,8 @@ uses
   Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Text.Json as J, System.Threading as T;
 
-const Columns: string := 'SELECT f.id,m.track_id,f.path,m.sha256,u.rating,m.tags_json,m.error,' +
-  '(SELECT json_group_array(s.source_id) FROM source_files s WHERE s.file_id=f.id)';
+const Columns: string := 'SELECT f.id,COALESCE(m.track_id,''''),f.path,COALESCE(m.sha256,''''),u.rating,m.tags_json,m.error,' +
+  '(SELECT json_group_array(s.source_id) FROM source_files s WHERE s.file_id=f.id),COALESCE(a.album_id,''''),COALESCE(a.title,'''')';
 
 function Order(Value: M.Sort): string;
 begin
@@ -61,7 +61,7 @@ begin
     Connection,
     Columns +
     ' FROM files f JOIN metadata m ON m.file_id=f.id LEFT JOIN users.tracks u ON u.id=m.track_id' +
-    ' WHERE ($source IS NULL OR EXISTS(SELECT 1 FROM source_files s WHERE s.file_id=f.id AND s.source_id=$source))' +
+    ' LEFT JOIN album_tracks a ON a.file_id=f.id WHERE ($source IS NULL OR EXISTS(SELECT 1 FROM source_files s WHERE s.file_id=f.id AND s.source_id=$source))' +
     ' AND ($album IS NULL OR m.album_key=$album)' +
     ' AND ($artist IS NULL OR EXISTS(SELECT 1 FROM metadata_people p WHERE p.file_id=f.id AND p.role=''artist'' AND p.name_key=$artist))' +
     ' AND ($genre IS NULL OR EXISTS(SELECT 1 FROM metadata_genres g WHERE g.file_id=f.id AND g.name_key=$genre))' +
@@ -82,7 +82,7 @@ end function;
 // ## Parameters
 // - `Database`: Validated catalogue path.
 // - `UserDatabase`: Validated durable ratings store path.
-// - `Id`: Stable release identity, or empty for all indexed releases.
+// - `Id`: Stable release identity, or empty for all indexed audio, including pending tags.
 // - `Cancellation`: Cancels row iteration.
 // ## Returns
 // Detached tracks for the release, including their independent user ratings.
@@ -93,14 +93,14 @@ begin
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
   Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [UserDatabase]);
   const Scope: string := if Id = '' then
-    ' ORDER BY m.sort_album_artist,m.sort_album,a.album_id,'
+    ' WHERE f.kind=0 ORDER BY m.sort_album_artist,m.sort_album,a.album_id,'
   else
     ' WHERE a.album_id=$album ORDER BY '
   end if;
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     Columns +
-    ' FROM album_tracks a JOIN files f ON f.id=a.file_id JOIN metadata m ON m.file_id=f.id' +
+    ' FROM files f LEFT JOIN album_tracks a ON a.file_id=f.id LEFT JOIN metadata m ON m.file_id=f.id' +
     ' LEFT JOIN users.tracks u ON u.id=m.track_id' + Scope +
     'COALESCE(json_extract(m.tags_json,''$.DiscNumber''),1),' +
     ' COALESCE(json_extract(m.tags_json,''$.TrackNumber''),2147483647),m.sort_title,f.id;',
@@ -110,7 +110,10 @@ begin
     discard Query.Parameters.AddWithValue('$album', Id);
   end if;
 
-  return Entries(Query, Cancellation);
+  return Sql.Interruptible<I.ImmutableArray<M.Entry>>(
+    Connection, Cancellation,
+    function(): I.ImmutableArray<M.Entry> => Entries(Query, Cancellation)
+  );
 end function;
 
 function Entries(Query: Db.SqliteCommand; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
@@ -139,7 +142,7 @@ begin
         end if,
         J.JsonSerializer.Deserialize<array of string>(
           Reader.GetString(7)
-        ) ?? Sys.Array.Empty<string>()
+        ) ?? Sys.Array.Empty<string>(), Reader.GetString(8), Reader.GetString(9)
       )
     );
   end while;

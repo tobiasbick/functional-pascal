@@ -1,0 +1,86 @@
+// Groups artists or genres while preserving the catalogue order of their releases.
+unit FpasAmp.Ui.Albums.Groups;
+
+uses
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.Text as Text, System.Linq as Linq;
+
+// Collection headers and the releases backing their artwork and drill-down.
+public type Catalog = record
+  // One grid header per group, with its own rating.
+  public Headers: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  // Members keyed by stable group identity, in album catalogue order.
+  public Releases: I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>> := I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>>.Empty;
+end record;
+
+// Groups the artists or genres in the detached catalogue snapshot `Albums` according to `Scope`.
+// Returns lightweight headers and ordered cover candidates without opening any images.
+public function Build(Albums: I.ImmutableArray<Library.Album>; Scope: Toolbar.Scope): Catalog;
+begin
+  const Kind: Toolbar.Scope := Toolbar.Root(Scope);
+  if not Toolbar.IsGroup(Kind) then
+    return new Catalog();
+  end if;
+  const Buckets: C.Dictionary<string, C.List<Library.Album>> := new C.Dictionary<string, C.List<Library.Album>>();
+  const Tags: C.Dictionary<string, Library.Membership> := new C.Dictionary<string, Library.Membership>();
+  for Album: Library.Album in Albums do
+    const Memberships: array of Library.Membership := if Kind = Toolbar.Scope.Artists then
+      Album.Credits
+    else
+      Album.GenreMemberships
+    end if;
+    for Credit: Library.Membership in Memberships do
+      if not Buckets.ContainsKey(Credit.Id) then
+        Buckets[Credit.Id] := new C.List<Library.Album>();
+        Tags[Credit.Id] := Credit;
+      end if;
+
+      Buckets[Credit.Id].Add(
+        if Kind = Toolbar.Scope.Genres then
+          Album with
+            Tracks := Credit.Tracks;
+          end with
+        else
+          Album
+        end if
+      );
+    end for;
+  end for;
+  const Headers: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+    Buckets.Count
+  );
+  const Releases: I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>>.Builder := I.ImmutableDictionary.CreateBuilder<string, I.ImmutableArray<Library.Album>>();
+  for Id: string in Buckets.Keys do
+    const Members: C.List<Library.Album> := Buckets[Id];
+    const Genres: C.SortedSet<string> := new C.SortedSet<string>(
+      Sys.StringComparer.OrdinalIgnoreCase
+    );
+    const Revision: Text.StringBuilder := new Text.StringBuilder();
+    var Tracks: long := 0L;
+    for Album: Library.Album in Members do
+      Tracks := Tracks + Album.Tracks;
+      if Kind = Toolbar.Scope.Artists then
+        Genres.UnionWith(Album.Genres);
+      end if;
+
+      discard Revision.Append(Album.Id).Append(Album.Revision);
+    end for;
+    const Labels: array of string := Linq.Enumerable.ToArray<string>(Genres);
+    const Credit: Library.Membership := Tags[Id];
+    Headers.Add(
+      new Library.Album(
+        Id, Credit.Name, Members.Count.ToString() + if Members.Count = 1 then
+          ' album'
+        else
+          ' albums'
+        end if,
+        Tracks, Revision.ToString(), Credit.Rating, Labels
+      )
+    );
+    Releases[Id] := I.ImmutableArray.CreateRange<Library.Album>(Members);
+  end for;
+
+  return new Catalog(Headers.MoveToImmutable(), Releases.ToImmutable());
+end function;
+
+end unit;

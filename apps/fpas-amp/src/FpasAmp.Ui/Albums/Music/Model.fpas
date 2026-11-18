@@ -1,11 +1,11 @@
-// Album-scoped music browser state and messages.
+// Shared song browsing and playback selection for releases and the Music destination.
 unit FpasAmp.Ui.Albums.Music.Model;
 
 uses
   FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
   Fpas.Media.Images as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
 
-// Genre and rating filters for the selected album's tracks.
+// Confirmed or draft track filters.
 public type Filters = record
   // Selected genres. An empty set includes all genres.
   public Genres: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty.WithComparer(
@@ -13,13 +13,17 @@ public type Filters = record
   );
   // Inclusive rating floor. Zero includes every rating.
   public MinimumRating: int := 0;
+  // Individual performer credit, or empty for all.
+  public Performer: string := '';
+  // Stable release identity selected by the album filter, or empty for all.
+  public ReleaseFilter: string := '';
 end record;
 
 // Reproducible selection captured when playback starts, independent of later navigation.
 public type Selection = record
   // Stable release ID, empty for the whole music library.
   public AlbumId: string := '';
-  // Track title and genre search.
+  // Search terms for this source.
   public Search: string := '';
   // Applied genre names.
   public Genres: array of string := [];
@@ -29,15 +33,19 @@ public type Selection = record
   public Column: int := -1;
   // Reverse the selected column order.
   public Descending: bool := false;
+  // Performer filter captured when the queue was built.
+  public Performer: string := '';
+  // Stable release identity selected by the album filter, or empty for all.
+  public ReleaseFilter: string := '';
 end record;
 
-// A loaded release and its independent song filters.
+// The source tracks, confirmed selection and visible state of a song browser.
 public type State = record
-  // The selected album header.
+  // The selected album header. An empty ID selects the whole library.
   public Album: Albums.Album;
   // Identity of this visit, used to reject late background results.
   public Visit: long;
-  // Full release in disc and track order.
+  // Tracks belonging to this page, in disc and track order.
   public Tracks: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
   // Genre choices that distinguish tracks within the full release.
   public GenreChoices: array of string := [];
@@ -61,8 +69,18 @@ public type State = record
   public Details: Tracks.Entry? := null;
   // Last read or action error.
   public Error: string? := null;
+  // Genre fixed by navigation, or empty when browsing the whole release.
+  public RequiredGenre: string := '';
   // Thumbnail for this visit, shared with the album grid when available.
   public Cover: Imaging.Bitmap? := null;
+  // Sum of the shown durations, computed when the selection changes.
+  public TotalMilliseconds: double := 0.0;
+  // Individual performers offered in the whole-library filter.
+  public Performers: array of string := [];
+  // Display labels in catalogue order; duplicate titles include their artist.
+  public ReleaseTitles: array of string := [];
+  // Stable release keys corresponding to the display labels.
+  public ReleaseIds: array of string := [];
 end record;
 
 // Proposals and scoped background completions for the album's songs.
@@ -83,6 +101,10 @@ public type Msg = variant
   Genres(Values: I.ImmutableHashSet<string>);
   // Set the draft rating floor.
   Minimum(Value: int);
+  // Select a performer in the draft filters.
+  Performer(Name: string);
+  // Select a stable release identity in the draft filters.
+  ReleaseFilter(Id: string);
   // Confirm the draft and close the popup.
   ApplyFilters;
   // Clear the draft filters.

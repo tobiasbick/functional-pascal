@@ -2,7 +2,7 @@
 unit FpasAmp.Ui.App.Model;
 
 uses
-  FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Music.LibraryPage as LibrarySongs, FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Albums.Model as AlbumView,
   FpasAmp.Ui.Settings.Model as SettingsView,
   FpasAmp.Ui.Player.Model as Player,
@@ -20,6 +20,8 @@ public type State = record
   public Albums: AlbumView.State := new AlbumView.State();
   // Queue, transport, volume and equalizer shared by every destination.
   public Player: Player.State := new Player.State();
+  // Whole-library tracks and their visible cover cache.
+  public Songs: LibrarySongs.State := new LibrarySongs.State();
 end record;
 
 // Typed proposals routed by the app controller.
@@ -28,6 +30,8 @@ public type Msg = variant
   Navigation(Message: Nav.Msg);
   // Album slice lifecycle, headers and visible thumbnail completions.
   Albums(Message: AlbumView.Msg);
+  // Whole-library song browser and its catalogue subscription.
+  Songs(Message: LibrarySongs.Msg);
   // Settings edits and library status publications.
   Settings(Message: SettingsView.Msg);
   // Transport, volume and equalizer edits.

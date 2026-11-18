@@ -111,10 +111,19 @@ begin
       return new A.Transition<M.State, M.Msg>(Current, Empty);
     when M.Msg.Loaded(const Visit: long, const Items: I.ImmutableArray<Tracks.Entry>):
       if Visit = Current.Visit then
+        const Scoped: I.ImmutableArray<Tracks.Entry> := if Current.RequiredGenre = '' then
+          Items
+        else
+          Browse.Songs(Items, new M.Selection(Genres := [Current.RequiredGenre]))
+        end if;
         Next := Browse.Select(
           Current with
-            Tracks := Items;
-            GenreChoices := Browse.GenreChoices(Items);
+            Tracks := Scoped;
+            GenreChoices := if Current.RequiredGenre = '' then
+              Browse.GenreChoices(Scoped)
+            else
+              Sys.Array.Empty<string>()
+            end if;
             Loaded := true;
           end with
         );
@@ -149,6 +158,18 @@ begin
           Genres := Values;
         end with;
       end with;
+    when M.Msg.Performer(const Name: string):
+      Next := Current with
+        Draft := Current.Draft with
+          Performer := Name;
+        end with;
+      end with;
+    when M.Msg.ReleaseFilter(const Id: string):
+      Next := Current with
+        Draft := Current.Draft with
+          ReleaseFilter := Id;
+        end with;
+      end with;
     when M.Msg.Minimum(const Value: int):
       Next := Current with
         Draft := Current.Draft with
@@ -167,6 +188,10 @@ begin
         Draft := new M.Filters();
       end with;
     when M.Msg.Sort(const Order: Tables.Sort):
+      if Order = Current.Order then
+        return new A.Transition<M.State, M.Msg>(Current, Empty);
+      end if;
+
       Next := Browse.Select(
         Current with
           Order := Order;

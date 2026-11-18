@@ -5,7 +5,7 @@ uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Library.Albums.Access as Access, Fpas.Media.Images as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
-  FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
+  FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Ui.Albums.Groups as Groups, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
   FpasAmp.Library.Metadata.Monitoring as Metadata, Fpas.Ui.Mvu.Composition as Composition,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
@@ -14,88 +14,6 @@ uses
 function Failure(Error: Sys.Exception): M.Msg;
 begin
   return M.Msg.Failed(Error.Message);
-end function;
-
-function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
-begin
-  if Left.Length <> Right.Length then
-    return false;
-  end if;
-
-  for Index: int := 0 to Left.Length - 1 do
-    if Left[Index].Id <> Right[Index].Id or Left[Index].Revision <> Right[Index].Revision then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-// Keeps the covers of albums whose artwork revision did not change, so a catalogue
-// update does not blank covers that are still current.
-function Fresh(
-  Previous: I.ImmutableArray<Albums.Album>; Items: I.ImmutableArray<Albums.Album>;
-  Loaded: I.ImmutableDictionary<string, Images.Bitmap?>
-): I.ImmutableDictionary<string, Images.Bitmap?>;
-begin
-  const Revisions: C.Dictionary<string, string> := new C.Dictionary<string, string>();
-  for Album: Albums.Album in Previous do
-    Revisions[Album.Id] := Album.Revision;
-  end for;
-
-  var Kept: I.ImmutableDictionary<string, Images.Bitmap?> := Loaded;
-  const Current: C.HashSet<string> := new C.HashSet<string>();
-  for Album: Albums.Album in Items do
-    var Revision: string := '';
-    if Revisions.TryGetValue(Album.Id, out Revision) and Revision = Album.Revision then
-      discard Current.Add(Album.Id);
-    end if;
-  end for;
-
-  for Id: string in Loaded.Keys do
-    if not Current.Contains(Id) then
-      Kept := Kept.Remove(Id);
-    end if;
-  end for;
-
-  return Kept;
-end function;
-
-function SameOrder(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
-begin
-  if Left.Length <> Right.Length then
-    return false;
-  end if;
-
-  for Index: int := 0 to Left.Length - 1 do
-    if Left[Index].Id <> Right[Index].Id then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-// Selects the shown albums again. A changed order asks for a new visible range,
-// so thumbnails follow the albums that are actually shown.
-function Show(Current: M.State): M.State;
-begin
-  const Shown: I.ImmutableArray<Albums.Album> := Browse.Select(
-    Current.Items,
-    Current.Catalog,
-    Current.Toolbar
-  );
-  if SameOrder(Current.Shown, Shown) then
-    return Current with
-      Shown := Shown;
-    end with;
-  end if;
-
-  return Current with
-    Shown := Shown;
-    First := -1;
-    Last := -1;
-  end with;
 end function;
 
 // Updates album browsing or delegates a message to the selected release.
@@ -109,7 +27,31 @@ end function;
 public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?; Library: Metadata.Session? := null): A.Transition<M.State, M.Msg>;
 begin
   case Message of
+    when M.Msg.OpenGroup(const Id: string):
+      if Toolbar.IsGroup(Current.Scope) and Current.Collections.Releases.ContainsKey(Id) then
+        return new A.Transition<M.State, M.Msg>(
+          Grid.Enter(
+            Current, if Current.Scope = Toolbar.Scope.Artists then
+              Toolbar.Scope.ArtistAlbums
+            else
+              Toolbar.Scope.GenreAlbums
+            end if, Id
+          ),
+          [A.CancelBackground<M.Msg>('images')]
+        );
+      end if;
+
+      return new A.Transition<M.State, M.Msg>(Current, []);
+    when M.Msg.BackToGroups:
+      return new A.Transition<M.State, M.Msg>(
+        Grid.Enter(Current, Toolbar.Root(Current.Scope), ''),
+        [A.CancelBackground<M.Msg>('images'), A.Focus<M.Msg>('album-' + Current.GroupId)]
+      );
     when M.Msg.OpenMusic(const Id: string):
+      if Toolbar.IsGroup(Current.Scope) then
+        return new A.Transition<M.State, M.Msg>(Current, []);
+      end if;
+
       for Album: Albums.Album in Current.Items do
         if Album.Id = Id then
           const Visit: long := Current.MusicVisit + 1L;
@@ -120,7 +62,16 @@ begin
               MusicVisit := Visit;
             end with,
             Songs.Open(
-              new Music.State(Album, Visit, Cover := Cover),
+              new Music.State(
+                Album,
+                Visit,
+                Cover := Cover,
+                RequiredGenre := if Current.Scope = Toolbar.Scope.GenreAlbums then
+                  Current.GroupName
+                else
+                  ''
+                end if
+              ),
               Library,
               LoadCover := not Resolved
             )
@@ -157,7 +108,9 @@ begin
     when M.Msg.Open:
       if Service = null then
         return new A.Transition<M.State, M.Msg>(
-          new M.State(Loaded := true, Toolbar := Current.Toolbar),
+          Current with
+            Loaded := true;
+          end with,
           []
         );
       end if;
@@ -198,34 +151,14 @@ begin
         ]
       );
     when M.Msg.Received(const Items: I.ImmutableArray<Albums.Album>):
-      const Prepared: Browse.Catalog := Browse.Prepare(Items);
-      if SameArtwork(Current.Items, Items) then
-        return new A.Transition<M.State, M.Msg>(
-          Show(
-            Current with
-              Items := Items;
-              Catalog := Prepared;
-              Loaded := true;
-              Error := null;
-            end with
-          ), []
-        );
-      end if;
-
-      return new A.Transition<M.State, M.Msg>(
-        Show(
-          Current with
-            Items := Items;
-            Catalog := Prepared;
-            Loaded := true;
-            Images := Fresh(Current.Items, Items, Current.Images);
-            First := -1;
-            Last := -1;
-            Generation := Current.Generation + 1L;
-            Error := null;
-          end with
-        ),
-        [A.CancelBackground<M.Msg>('images')]
+      const Collections: Groups.Catalog := Groups.Build(Items, Current.Scope);
+      return Grid.Project(
+        Current with
+          Releases := Items;
+          Collections := Collections;
+          Loaded := true;
+          Error := null;
+        end with
       );
     when M.Msg.Visible(const First: int, const Last: int):
       const Start: int := Sys.Math.Clamp(First, 0, Current.Shown.Length);
@@ -266,11 +199,22 @@ begin
                 while Index < Pending.Length do
                   Cancellation.ThrowIfCancellationRequested();
                   const Album: Albums.Album := Next.Shown[Pending[Index]];
-                  const Image: Images.Bitmap? := await Artwork.Load(
-                    Service,
-                    Album,
-                    Cancellation
-                  ).ConfigureAwait(false);
+                  var Image: Images.Bitmap? := null;
+                  if Toolbar.IsGroup(Next.Scope) then
+                    for Release: Albums.Album in Next.Collections.Releases[Album.Id] do
+                      Cancellation.ThrowIfCancellationRequested();
+                      Image := await Artwork.Load(
+                        Service,
+                        Release,
+                        Cancellation
+                      ).ConfigureAwait(false);
+                      if Image <> null then
+                        break;
+                      end if;
+                    end for;
+                  else
+                    Image := await Artwork.Load(Service, Album, Cancellation).ConfigureAwait(false);
+                  end if;
 
                   await Post(M.Msg.Image(Next.Generation, Album.Id, Image)).ConfigureAwait(false);
                   Index := Index + 2;
@@ -335,25 +279,49 @@ begin
         ]
       );
     when M.Msg.Rated(const Id: string, const Value: int?):
-      var Items: I.ImmutableArray<Albums.Album> := Current.Items;
-      for Index: int := 0 to Items.Length - 1 do
-        if Items[Index].Id = Id then
-          Items := Items.SetItem(
-            Index, Items[Index] with
-              Rating := Value;
-            end with
-          );
+      const Releases: I.ImmutableArray<Albums.Album>.Builder := Current.Releases.ToBuilder();
+      const Genre: bool := Id.StartsWith('genre-');
+      const Grouped: bool := Genre or Id.StartsWith('artist-');
+      for Index: int := 0 to Releases.Count - 1 do
+        const Release: Albums.Album := Releases[Index];
+        if not Grouped and Release.Id = Id then
+          Releases[Index] := Release with
+            Rating := Value;
+          end with;
           break;
+        elsif Grouped then
+          const Members: array of Albums.Membership := if Genre then
+            Release.GenreMemberships
+          else
+            Release.Credits
+          end if;
+          for Member: int := 0 to Members.Length - 1 do
+            if Members[Member].Id = Id then
+              const Credits: array of Albums.Membership := new C.List<Albums.Membership>(
+                Members
+              ).ToArray();
+              Credits[Member] := Credits[Member] with
+                Rating := Value;
+              end with;
+              Releases[Index] := if Genre then
+                Release with
+                  GenreMemberships := Credits;
+                end with
+              else
+                Release with
+                  Credits := Credits;
+                end with
+              end if;
+              break;
+            end if;
+          end for;
         end if;
       end for;
 
-      return new A.Transition<M.State, M.Msg>(
-        Show(
-          Current with
-            Items := Items;
-            Saving := Current.Saving.Remove(Id);
-          end with
-        ), []
+      return Apply(
+        Current with
+          Saving := Current.Saving.Remove(Id);
+        end with, M.Msg.Received(Releases.ToImmutable()), Service, Library
       );
     when M.Msg.RatingFailed(const Id: string, const Text: string):
       return new A.Transition<M.State, M.Msg>(
@@ -374,7 +342,7 @@ begin
         return new A.Transition<M.State, M.Msg>(Next, []);
       end if;
 
-      return new A.Transition<M.State, M.Msg>(Show(Next), []);
+      return new A.Transition<M.State, M.Msg>(Grid.Show(Next), []);
   end case;
 end function;
 

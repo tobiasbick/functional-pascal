@@ -4,7 +4,7 @@ unit FpasAmp.Ui.Tests.NativeNavigation;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
-  FpasAmp.Library.Tests.AlbumSupport as Fixtures, FpasAmp.Library.Tests.MetadataSupport as Metadata,
+  FpasAmp.Library.Albums.Model as Releases, FpasAmp.Library.Tests.AlbumSupport as Fixtures, FpasAmp.Library.Tests.MetadataSupport as Metadata,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Music.Model as Music,
   FpasAmp.Persistence.PlayerState as Bookmark, Fpas.Media.Audio as Audio,
   FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
@@ -93,9 +93,11 @@ end function;
 // Window-level checks run only with a native display (Xvfb on headless Linux).
 public type NativeNavigationTests = record
   // Closing on one release restores its tracks even when the player holds another release.
-  [X.FactAttribute]
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
   [X.TraitAttribute('Category', 'Gui')]
-  public procedure AlbumTracksAfterRestart();
+  public procedure AlbumTracksAfterRestart(FromArtist: bool);
   begin
     using const Root: H.Folder := H.Folder.Create();
     using const Data: H.Folder := H.Folder.Create();
@@ -109,6 +111,7 @@ public type NativeNavigationTests = record
     const Save: procedure(SettingsModel.Preferences) := procedure(_Value: SettingsModel.Preferences) begin end procedure;
     const Library: Monitor.Session := Start(Source, Data.Path);
     var Browsed: string := '';
+    var Person: string := '';
     var Playing: string := '';
     try
       begin
@@ -126,10 +129,15 @@ public type NativeNavigationTests = record
         );
         Playing := Session.State().Albums.Items[0].Id;
         Browsed := Session.State().Albums.Items[1].Id;
+        Person := Session.State().Albums.Items[1].Credits[0].Id;
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.OpenMusic(Playing)));
         Until(Session, function(_State: Nav.State): bool => ShowsTracks(Session, Playing));
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.Music(Music.Msg.Play(0))));
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));
+        if FromArtist then
+          SetRoute(Session, Nav.Route.Artist(Person));
+        end if;
+
         discard Session.Window.Post(App.Msg.Albums(Albums.Msg.OpenMusic(Browsed)));
         Until(Session, function(_State: Nav.State): bool => ShowsTracks(Session, Browsed));
         discard Session.Window.Post(App.Msg.Closing(Session.State().Player));
@@ -179,7 +187,11 @@ public type NativeNavigationTests = record
       Pump(Reopened);
       X.Assert.Null(Reopened.State().Albums.Music);
       X.Assert.Equal<string>(
-        'albums',
+        if FromArtist then
+          Nav.Key(Nav.Route.Artist(Person))
+        else
+          'albums'
+        end if,
         Storage.FromWindow(Reopened.Window.Placement(), Reopened.State().Navigation).ActivePage
       );
     finally
@@ -188,14 +200,22 @@ public type NativeNavigationTests = record
   end procedure;
 
   // A saved release absent from the catalogue returns to the album grid.
-  [X.FactAttribute]
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
   [X.TraitAttribute('Category', 'Gui')]
-  public procedure MissingAlbumAfterRestart();
+  public procedure MissingAlbumAfterRestart(FromArtist: bool);
   begin
     using const Data: H.Folder := H.Folder.Create();
     const Library: Monitor.Session := Metadata.Start([], Data.Path);
     try
-      const Saved: Nav.State := new Nav.State(Active := Nav.Route.Album(new string(#65, 64)));
+      const Saved: Nav.State := new Nav.State(
+        Active := if FromArtist then
+          Nav.Route.ArtistAlbum(Releases.ArtistId('Missing'), new string(#65, 64))
+        else
+          Nav.Route.Album(new string(#65, 64))
+        end if
+      );
       using const Session: Shell.Session := Shell.Session.Start(
         Placement(1000), new SettingsModel.Preferences([]),
         procedure(_Value: SettingsModel.Preferences) begin end procedure, Library, Saved
@@ -203,7 +223,11 @@ public type NativeNavigationTests = record
       Until(Session, function(_State: Nav.State): bool => Session.State().Albums.Loaded);
       X.Assert.True(Has(Session, 'albums-empty'));
       X.Assert.Equal<string>(
-        'albums',
+        if FromArtist then
+          'artists'
+        else
+          'albums'
+        end if,
         Storage.FromWindow(Session.Window.Placement(), Session.State().Navigation).ActivePage
       );
     finally
@@ -264,7 +288,9 @@ public type NativeNavigationTests = record
           X.Assert.Contains<string>(Page.ToString(), Session.Window.Snapshot().Text);
           X.Assert.True(
             Has(
-              Session, if Page = Nav.Page.Albums then
+              Session, if Page = Nav.Page.Music then
+                'track-search'
+              elsif Nav.Browsing(Nav.Route.Page(Page)) then
                 'albums-empty'
               else
                 'page-placeholder'

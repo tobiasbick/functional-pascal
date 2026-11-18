@@ -24,8 +24,9 @@ begin
 end function;
 
 // Builds the compact cover/details design from existing `Album` and cached `Image`.
+// `Kind` labels the rating for this album, artist or genre.
 // Content is informational; rating changes remain on the album tile itself.
-public function Build(Album: Library.Album; Image: Imaging.Bitmap?): E.Element<M.Msg>;
+public function Build(Album: Library.Album; Image: Imaging.Bitmap?; Kind: string := 'Album'): E.Element<M.Msg>;
 requires Album.Id <> '';
 begin
   return E.Column<M.Msg>(
@@ -49,7 +50,7 @@ begin
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
       Ratings.Rating<M.Msg>(
-        'album-detail-rating-' + Album.Id, 'Album rating', Album.Rating ?? 0,
+        'album-detail-rating-' + Album.Id, Kind + ' rating', Album.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value), Maximum := 10, Enabled := false
       ),
       E.Size<M.Msg>(E.Column<M.Msg>(), new L.Flex(Basis := L.Extent.Fill)),

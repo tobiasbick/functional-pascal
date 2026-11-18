@@ -38,6 +38,12 @@ public type RatingTests = record
       );
       const Before: M.Album := Read(Data.Path)[0];
       Id := Before.Id;
+      X.Assert.Equal<string>('Example artist', Before.Credits[0].Name);
+      await F.Tags(Session).Albums.SetRatingAsync(
+        Before.Credits[0].Id,
+        5,
+        T.CancellationToken.None
+      );
       await F.Tags(Session).SetRatingAsync(Tracks[0].TrackId, 9, T.CancellationToken.None);
       await F.Tags(Session).Albums.SetRatingAsync(Id, 7, T.CancellationToken.None);
       X.Assert.Equal<int?>(7, Read(Data.Path)[0].Rating);
@@ -64,6 +70,11 @@ public type RatingTests = record
       F.Tags(Restart),
       function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 2
     );
+    X.Assert.Equal<int?>(7, Read(Data.Path)[0].Rating);
+    const Person: M.Membership := Read(Data.Path)[0].Credits[0];
+    X.Assert.Equal<int?>(5, Person.Rating);
+    await F.Tags(Restart).Albums.SetRatingAsync(Person.Id, null, T.CancellationToken.None);
+    X.Assert.Null(Read(Data.Path)[0].Credits[0].Rating);
     X.Assert.Equal<int?>(7, Read(Data.Path)[0].Rating);
     await F.Tags(Restart).Albums.SetRatingAsync(Id, null, T.CancellationToken.None);
     X.Assert.Null(Read(Data.Path)[0].Rating);
@@ -141,6 +152,32 @@ public type RatingTests = record
       end try;
     end try;
   end function;
+
+  // A schema-four library keeps its artist stars when genre ratings become available.
+  [X.FactAttribute]
+  public procedure UpgradeGroupRatings();
+  begin
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Data.Path, 'userdata.db');
+    begin
+      using const Connection: Db.SqliteConnection := Sql.Open(Path);
+      Sql.Execute(
+        Connection,
+        'CREATE TABLE artist_ratings(artist_id TEXT PRIMARY KEY,rating INTEGER NOT NULL);' +
+        'INSERT INTO artist_ratings VALUES(''artist-fixture'',8); PRAGMA user_version=4;',
+        null,
+        [],
+        []
+      );
+    end;
+
+    using const Upgraded: Db.SqliteConnection := Users.Open(Path);
+    using const ReadRating: Db.SqliteCommand := Sql.Command(
+      Upgraded,
+      'SELECT rating FROM group_ratings WHERE group_id=''artist-fixture'';', null, [], []
+    );
+    X.Assert.Equal<long>(8L, Sys.Convert.ToInt64(ReadRating.ExecuteScalar()));
+  end procedure;
 
   // Existing user data upgrades in place and preserves track identities/ratings.
   [X.FactAttribute]

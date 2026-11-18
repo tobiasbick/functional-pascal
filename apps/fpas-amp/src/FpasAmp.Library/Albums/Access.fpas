@@ -2,7 +2,7 @@
 unit FpasAmp.Library.Albums.Access;
 
 uses
-  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observing,
+  FpasAmp.Library.Albums.Persistence.Queries as Headers, FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observing,
   FpasAmp.Library.Albums.Artwork.Reading as Reading, FpasAmp.Library.Metadata.Internal.Policy as Policy,
   FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Albums.Artwork.Names as Artwork,
@@ -73,7 +73,33 @@ public type Session = record
     ).ConfigureAwait(false);
   end function;
 
-  // Saves an independent album `Value` (one through ten, or null to clear) for
+  // Observes all library songs and their release headers off the UI thread.
+  // The initial publication includes untagged audio. Later commits refresh the open page.
+  public async function ObserveSongsAsync(Publish: function(I.ImmutableArray<Tracks.Entry>, I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  begin
+    using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      self.Lifetime,
+      Cancellation
+    );
+    await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
+    await Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Observing.Changes(
+          self.Database, self.Users, function(): Tasks.Task begin
+            const Songs: I.ImmutableArray<Tracks.Entry> := Queries.ReadRelease(
+              self.Database,
+              self.Users,
+              '',
+              Linked.Token
+            );
+            return Publish(Songs, Headers.Read(self.Database, self.Users, Linked.Token));
+          end function, Linked.Token
+        ), Linked.Token
+      )
+    ).ConfigureAwait(false);
+  end function;
+
+  // Saves an independent album, artist or genre `Value` (one through ten, or null to clear) for
   // `Id` in user data. All I/O is off the caller; `Cancellation` bounds the write.
   public async function SetRatingAsync(Id: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
   requires Id <> '';
@@ -86,7 +112,11 @@ public type Session = record
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     await Tasks.Task.Run(
       procedure() begin
-        Ratings.Save(self.Database, self.Users, Id, Value, Linked.Token);
+        if Id.StartsWith('artist-') or Id.StartsWith('genre-') then
+          Ratings.SaveGroup(self.Users, Id, Value, Linked.Token);
+        else
+          Ratings.Save(self.Database, self.Users, Id, Value, Linked.Token);
+        end if;
       end procedure, Linked.Token
     ).ConfigureAwait(false);
   end function;

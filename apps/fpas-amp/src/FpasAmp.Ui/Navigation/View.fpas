@@ -196,6 +196,12 @@ begin
     when M.Route.Page(const Page: M.Page):
       Heading := Title(Page);
       Glyph := Icon(Page);
+    when M.Route.Genre(_), M.Route.GenreAlbum(_, _):
+      Heading := Title(M.Page.Genres);
+      Glyph := Icon(M.Page.Genres);
+    when M.Route.Artist(_), M.Route.ArtistAlbum(_, _):
+      Heading := Title(M.Page.Artists);
+      Glyph := Icon(M.Page.Artists);
     when M.Route.Album(_):
       Heading := Title(M.Page.Albums);
       Glyph := Icon(M.Page.Albums);

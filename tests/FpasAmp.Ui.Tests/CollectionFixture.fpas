@@ -1,0 +1,161 @@
+// Shared native-window and indexed media fixture for library browsing tests.
+unit FpasAmp.Ui.Tests.CollectionFixture;
+
+uses
+  FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Shell as Shell,
+  Fpas.Ui.Gui.Application as Gui, ATL as Tags, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+
+// Renders a native frame for Session, including queued messages.
+public procedure Pump(Session: Shell.Session);
+begin
+  discard Session.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
+  X.Assert.True(Session.Window.Step());
+end procedure;
+
+// Pumps Session until Ready or fails with Reason at the deadline.
+public procedure Until(Session: Shell.Session; Ready: function(): bool; Reason: string);
+begin
+  const Deadline: long := Sys.Environment.TickCount64 + 20000L;
+  while Sys.Environment.TickCount64 < Deadline do
+    Pump(Session);
+    if Ready() then
+      return;
+    end if;
+
+    T.Thread.Sleep(8);
+  end while;
+
+  X.Assert.True(false, Reason);
+end procedure;
+
+// Tests whether Session exposes a realized native control with Id.
+public function Has(Session: Shell.Session; Id: string): bool;
+begin
+  for Control: Gui.Control in Session.Window.Snapshot().Controls do
+    if Control.Id = Id then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Captures the current Section of Session as Name when screenshots are enabled.
+public procedure Capture(Session: Shell.Session; Name: string; Section: string := 'artists');
+begin
+  X.Assert.Equal<string>(Section, Nav.SectionKey(Session.State().Navigation.Active));
+  X.Assert.True(Has(Session, 'player-toggle'));
+  const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+  if Directory <> null then
+    for Frame: int := 1 to 15 do
+      Pump(Session);
+      T.Thread.Sleep(16);
+    end for;
+
+    discard IO.Directory.CreateDirectory(Directory);
+    Session.Window.CapturePng(IO.Path.Combine(Directory, Name + '.png'));
+  end if;
+end procedure;
+
+// Creates a multi-release synthetic music library below Root.
+public procedure Seed(Root: string);
+begin
+  const Artists: array of string := [
+    'Aster Vale',
+    'Aster Vale',
+    'Aster Vale',
+    'Aster Vale',
+    'Harbor Lights',
+    'Juniper Lane',
+    'Ocean Atlas',
+    'The Glass Trio',
+    'Westward'
+  ];
+  const Titles: array of string := [
+    'Acoustic Sketches',
+    'Blue Hour',
+    'Northern Lines',
+    'Soft Signals',
+    'Last Ferry',
+    'Daybreak',
+    'Tidal Maps',
+    'Glassworks',
+    'After Rain'
+  ];
+  const Styles: array of string := [
+    'Folk',
+    'Jazz',
+    'Ambient',
+    'Jazz',
+    'Soul',
+    'Folk',
+    'Ambient',
+    'Jazz',
+    'Rock'
+  ];
+  const Songs: array of string := [
+    'First Light',
+    'Between Stations',
+    'The Long Crossing',
+    'Still Water',
+    'North Window',
+    'Homeward'
+  ];
+  const FirstSongs: array of string := [
+    'Cedar Grove',
+    '',
+    'Northern Lines',
+    'Soft Signal',
+    'After Midnight',
+    'Across the Fields',
+    'Coast Road',
+    'Amber Glass',
+    'After Rain'
+  ];
+  for Index: int := 0 to Titles.Length - 1 do
+    const Folder: string := IO.Path.Combine(Root, Titles[Index]);
+    for Track: int := 1 to if Index = 1 then
+      Songs.Length
+    else
+      2
+    end if do
+      const Name: string := if Index = 1 then
+        Songs[Track - 1]
+      elsif Track = 1 then
+        FirstSongs[Index]
+      else
+        Titles[Index] + ' (Reprise)'
+      end if;
+      const File: string := Art.Track(
+        Folder,
+        Name + '.mp3',
+        Titles[Index],
+        Artists[Index]
+      );
+      const Tag: Tags.Track := new Tags.Track(File);
+      Tag.Title := Name;
+      Tag.TrackNumber := Track;
+      Tag.Genre := if Index = 1 and Track = 6 then
+        'Jazz' + Tags.Settings.DisplayValueSeparator + 'Soul'
+      elsif Index = 1 and Track mod 2 = 0 then
+        'Soul'
+      else
+        Styles[Index]
+      end if;
+      X.Assert.True(Tag.Save());
+    end for;
+
+    if Index > 0 then
+      IO.File.WriteAllBytes(
+        IO.Path.Combine(Folder, 'cover.png'), Art.Picture(
+          cast<byte>(38 + Index * 19),
+          cast<byte>(69 + Index mod 3 * 38),
+          cast<byte>(130 - Index mod 4 * 21)
+        )
+      );
+    end if;
+  end for;
+end procedure;
+
+end unit;

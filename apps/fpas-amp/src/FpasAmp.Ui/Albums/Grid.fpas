@@ -1,0 +1,176 @@
+// Selects visible headers and keeps each top-level grid’s filters and scroll position.
+unit FpasAmp.Ui.Albums.Grid;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
+  FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Groups as Groups, Fpas.Media.Images as Images,
+  System.Collections.Immutable as I, System.Collections.Generic as C, Fpas.Ui.Mvu.Application as A;
+
+function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index].Id <> Right[Index].Id or Left[Index].Revision <> Right[Index].Revision then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Keeps the covers of albums whose artwork revision did not change, so a catalogue
+// update does not blank covers that are still current.
+function Fresh(
+  Previous: I.ImmutableArray<Albums.Album>; Items: I.ImmutableArray<Albums.Album>;
+  Loaded: I.ImmutableDictionary<string, Images.Bitmap?>
+): I.ImmutableDictionary<string, Images.Bitmap?>;
+begin
+  const Revisions: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  for Album: Albums.Album in Previous do
+    Revisions[Album.Id] := Album.Revision;
+  end for;
+
+  var Kept: I.ImmutableDictionary<string, Images.Bitmap?> := Loaded;
+  const Current: C.HashSet<string> := new C.HashSet<string>();
+  for Album: Albums.Album in Items do
+    var Revision: string := '';
+    if Revisions.TryGetValue(Album.Id, out Revision) and Revision = Album.Revision then
+      discard Current.Add(Album.Id);
+    end if;
+  end for;
+
+  for Id: string in Loaded.Keys do
+    if not Current.Contains(Id) then
+      Kept := Kept.Remove(Id);
+    end if;
+  end for;
+
+  return Kept;
+end function;
+
+function SameOrder(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index].Id <> Right[Index].Id then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Selects the shown albums again. A changed order asks for a new visible range,
+// so thumbnails follow the albums that are actually shown.
+public function Show(Current: M.State): M.State;
+begin
+  const Shown: I.ImmutableArray<Albums.Album> := Browse.Select(
+    Current.Items,
+    Current.Catalog,
+    Current.Toolbar
+  );
+  if SameOrder(Current.Shown, Shown) then
+    return Current with
+      Shown := Shown;
+    end with;
+  end if;
+
+  return Current with
+    Shown := Shown;
+    First := -1;
+    Last := -1;
+  end with;
+end function;
+
+// Rebuilds the active grid from the catalogue in `Current`. Returns the new grid
+// and cancels pending thumbnails if their candidate revisions have changed.
+public function Project(Current: M.State): A.Transition<M.State, M.Msg>;
+begin
+  var Items: I.ImmutableArray<Albums.Album> := Current.Releases;
+  var Name: string := '';
+  if Toolbar.IsGroup(Current.Scope) then
+    Items := Current.Collections.Headers;
+  elsif Current.Scope <> Toolbar.Scope.Albums then
+    if not Current.Collections.Releases.TryGetValue(Current.GroupId, out Items) then
+      Items := I.ImmutableArray<Albums.Album>.Empty;
+    else
+      for Header: Albums.Album in Current.Collections.Headers do
+        if Header.Id = Current.GroupId then
+          Name := Header.Title;
+          break;
+        end if;
+      end for;
+    end if;
+  end if;
+  const Next: M.State := Show(
+    Current with
+      Items := Items;
+      GroupName := Name;
+      Catalog := Browse.Prepare(Items, Current.Scope);
+    end with
+  );
+  if SameArtwork(Current.Items, Items) then
+    return new A.Transition<M.State, M.Msg>(Next, []);
+  end if;
+
+  return new A.Transition<M.State, M.Msg>(
+    Next with
+      Images := Fresh(Current.Items, Items, Current.Images);
+      First := -1;
+      Last := -1;
+      Generation := Current.Generation + 1L;
+    end with, [A.CancelBackground<M.Msg>('images')]
+  );
+end function;
+
+// Selects the grid for the destination, restoring the parent filters and scroll position on Back.
+// `Current` carries the catalogue, `Scope` selects the grid and `Id` identifies the selected artist or genre.
+public function Enter(Current: M.State; Scope: Toolbar.Scope; Id: string): M.State;
+begin
+  if Current.Scope = Scope and Current.GroupId = Id then
+    return Current;
+  end if;
+  var Positions: I.ImmutableDictionary<Toolbar.Scope, M.Position> := Current.Positions;
+  if Toolbar.Root(Current.Scope) = Current.Scope then
+    Positions := Positions.SetItem(
+      Current.Scope,
+      new M.Position(
+        ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false)),
+        Current.Offset
+      )
+    );
+  end if;
+  const Position: M.Position := if Positions.ContainsKey(Scope) then
+    Positions[Scope]
+  else
+    new M.Position()
+  end if;
+  const Collections: Groups.Catalog := if Toolbar.Root(Current.Scope) <> Toolbar.Root(Scope) then
+    Groups.Build(Current.Releases, Scope)
+  else
+    Current.Collections
+  end if;
+  return Project(
+    Current with
+      Scope := Scope;
+      GroupId := Id;
+      Collections := Collections;
+      Music := null;
+      Positions := Positions;
+      Toolbar := Position.ToolbarState;
+      Offset := Position.Offset;
+      First := -1;
+      Last := -1;
+      Generation := Current.Generation + 1L;
+    end with
+  ).Model;
+end function;
+
+end unit;

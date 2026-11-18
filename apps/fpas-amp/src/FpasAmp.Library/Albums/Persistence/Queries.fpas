@@ -4,12 +4,25 @@ unit FpasAmp.Library.Albums.Persistence.Queries;
 uses
   FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text,
-  System.Threading as T, SQLitePCL as Native;
+  System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
+  System.Threading as T;
 
 function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
 begin
+  Connection.CreateFunction<string, string>('amp_tag_key', M.TagKey, isDeterministic := true);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
+  const Ratings: C.Dictionary<string, int> := new C.Dictionary<string, int>();
+  using const RatingsQuery: Db.SqliteCommand := Sql.Command(
+    Connection,
+    'SELECT group_id,rating FROM users.group_ratings;', Transaction, [], []
+  );
+  begin
+    using const Values: Db.SqliteDataReader := RatingsQuery.ExecuteReader();
+    while Values.Read() do
+      Ratings[Values.GetString(0)] := Values.GetInt32(1);
+    end while;
+  end;
+  const Credits: C.Dictionary<string, M.Membership> := new C.Dictionary<string, M.Membership>();
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     'WITH directory_art(dir,facts) AS MATERIALIZED (' +
@@ -22,9 +35,16 @@ begin
     ' UNION SELECT root_key FROM album_tracks WHERE album_id=a.album_id' +
     ') ad JOIN directory_art d ON d.dir=ad.dir),''''),' +
     '(SELECT r.rating FROM users.album_ratings r WHERE r.album_id=a.album_id),' +
-    '(SELECT GROUP_CONCAT(v,char(31)) FROM (SELECT DISTINCT TRIM(g.value) AS v FROM album_tracks t' +
+    '(SELECT json_group_array(json_object(''name'',name,''tracks'',tracks) ORDER BY name) FROM (' +
+    'SELECT MIN(TRIM(g.value)) AS name,COUNT(DISTINCT t.file_id) AS tracks FROM album_tracks t' +
     ' JOIN metadata gm ON gm.file_id=t.file_id, json_each(gm.tags_json,''$.Genres'') g' +
-    ' WHERE t.album_id=a.album_id AND gm.tags_json IS NOT NULL AND TRIM(g.value)<>''''))' +
+    ' WHERE t.album_id=a.album_id AND g.type=''text'' GROUP BY amp_tag_key(g.value) HAVING amp_tag_key(g.value)<>'''')),' +
+    '(SELECT json_group_array(DISTINCT trim(c.value) ORDER BY trim(c.value)) FROM album_tracks t' +
+    ' JOIN metadata cm ON cm.file_id=t.file_id, json_each(CASE' +
+    ' WHEN json_array_length(cm.tags_json,''$.AlbumArtists'')>0 THEN json_extract(cm.tags_json,''$.AlbumArtists'')' +
+    ' WHEN json_extract(cm.tags_json,''$.Compilation'')=1 THEN json_array(''Various artists'')' +
+    ' ELSE json_extract(cm.tags_json,''$.Artists'') END) c' +
+    ' WHERE t.album_id=a.album_id AND trim(c.value)<>'''')' +
     ' FROM album_tracks a JOIN metadata m ON m.file_id=a.file_id JOIN files f ON f.id=a.file_id' +
     ' GROUP BY a.album_id ORDER BY MIN(a.sort_title),MIN(a.sort_artist),a.album_id;',
     Transaction,
@@ -38,6 +58,60 @@ begin
     const Revision: string := Sys.Convert.ToHexString(
       Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Rows.GetString(4)))
     );
+    var Names: array of string := Json.JsonSerializer.Deserialize<array of string>(
+      Rows.GetString(7)
+    ) ?? Sys.Array.Empty<string>();
+    if Names.Length = 0 then
+      Names := [''];
+    end if;
+    const Members: C.List<M.Membership> := new C.List<M.Membership>();
+    const Seen: C.HashSet<string> := new C.HashSet<string>();
+    for Name: string in Names do
+      if not Credits.ContainsKey(Name) then
+        const Id: string := M.ArtistId(Name);
+        var Rating: int := 0;
+        Credits[Name] := new M.Membership(
+          Id, if Name = '' then
+            'Unknown artist'
+          else
+            Name
+          end if,
+          if Ratings.TryGetValue(Id, out Rating) then
+            Rating
+          else
+            null
+          end if
+        );
+      end if;
+      const Person: M.Membership := Credits[Name];
+      if Seen.Add(Person.Id) then
+        Members.Add(
+          Person with
+            Tracks := Rows.GetInt64(3);
+          end with
+        );
+      end if;
+    end for;
+
+    const Styles: C.List<M.Membership> := new C.List<M.Membership>();
+    const Labels: C.List<string> := new C.List<string>();
+    using const StylesJson: Json.JsonDocument := Json.JsonDocument.Parse(Rows.GetString(6));
+    for Style: Json.JsonElement in StylesJson.RootElement.EnumerateArray() do
+      const Label: string := (Style.GetProperty('name').GetString() ?? '').Trim();
+      const Key: string := M.GenreId(Label);
+      var Stars: int := 0;
+      Styles.Add(
+        new M.Membership(
+          Key, Label, if Ratings.TryGetValue(Key, out Stars) then
+            Stars
+          else
+            null
+          end if, Style.GetProperty('tracks').GetInt64()
+        )
+      );
+      Labels.Add(Label);
+    end for;
+
     Albums.Add(
       new M.Album(
         Rows.GetString(0),
@@ -50,11 +124,7 @@ begin
         else
           Rows.GetInt32(5)
         end if,
-        if Rows.IsDBNull(6) then
-          []
-        else
-          Rows.GetString(6).Split(#31)
-        end if
+        Labels.ToArray(), Members.ToArray(), Styles.ToArray()
       )
     );
   end while;
@@ -71,28 +141,10 @@ end function;
 public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Album>;
 requires Connection <> null;
 begin
-  Cancellation.ThrowIfCancellationRequested();
-  if Cancellation.CanBeCanceled then
-    Native.raw.sqlite3_progress_handler(
-      Connection.Handle, 4096,
-      function(_State: object?): int => if Cancellation.IsCancellationRequested then
-        1
-      else
-        0
-      end if, null
-    );
-  end if;
-
-  try
-    return Headers(Connection, Cancellation);
-  catch Interrupted: Db.SqliteException when Interrupted.SqliteErrorCode =
-    Native.raw.SQLITE_INTERRUPT and Cancellation.IsCancellationRequested do
-    raise new Sys.OperationCanceledException(Cancellation);
-  finally
-    if Cancellation.CanBeCanceled then
-      Native.raw.sqlite3_progress_handler(Connection.Handle, 0, null, null);
-    end if;
-  end try;
+  return Sql.Interruptible<I.ImmutableArray<M.Album>>(
+    Connection, Cancellation,
+    function(): I.ImmutableArray<M.Album> => Headers(Connection, Cancellation)
+  );
 end function;
 
 // Reads the sorted album headers from `Database` with ratings from `Users`.

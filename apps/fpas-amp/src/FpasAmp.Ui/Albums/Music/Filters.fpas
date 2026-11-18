@@ -44,24 +44,58 @@ end function;
 public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
 requires Width > 0;
 begin
-  const Fields: array of E.Element<M.Msg> := if Current.GenreChoices.Length > 0 then
-    [Genres(Current.GenreChoices, Current.Draft)]
-  else
-    []
+  const Fields: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  var Count: int := Current.Applied.Genres.Count;
+  if Current.Applied.Performer <> '' then
+    Count := Count + 1;
   end if;
-  const Count: int := Current.Applied.Genres.Count + if Current.Applied.MinimumRating > 0 then
-    1
-  else
-    0
+
+  if Current.Applied.ReleaseFilter <> '' then
+    Count := Count + 1;
+  end if;
+
+  if Current.Applied.MinimumRating > 0 then
+    Count := Count + 1;
+  end if;
+
+  if not Current.FiltersOpen then
+    return Toolbar.Popup<M.Msg>('track', E.Column<M.Msg>(), Count, false, M.Msg.ShowFilters, Width);
+  end if;
+
+  if Current.Album.Id = '' then
+    Fields.Add(
+      Toolbar.Choice<M.Msg>(
+        'track-filter-artist',
+        'Artist',
+        'All artists',
+        Current.Performers,
+        Current.Draft.Performer,
+        M.Msg.Performer
+      )
+    );
+    Fields.Add(
+      Toolbar.Choice<M.Msg>(
+        'track-filter-album',
+        'Album',
+        'All albums',
+        Current.ReleaseIds,
+        Current.Draft.ReleaseFilter,
+        M.Msg.ReleaseFilter, Current.ReleaseTitles
+      )
+    );
+  end if;
+
+  if Current.GenreChoices.Length > 0 then
+    Fields.Add(Genres(Current.GenreChoices, Current.Draft));
   end if;
   const Form: E.Element<M.Msg> := Toolbar.Form<M.Msg>(
     'track',
     'Filter tracks',
-    Fields,
+    Fields.ToArray(),
     Current.Draft.MinimumRating,
     M.Msg.Minimum,
     M.Msg.Reset,
-    M.Msg.ApplyFilters
+    M.Msg.ApplyFilters, 'Minimum track rating'
   );
   return Toolbar.Popup<M.Msg>('track', Form, Count, Current.FiltersOpen, M.Msg.ShowFilters, Width);
 end function;

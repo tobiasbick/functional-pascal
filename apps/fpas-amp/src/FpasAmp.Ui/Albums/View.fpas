@@ -12,7 +12,6 @@ uses
   Fpas.Ui.Widgets.Collections.VirtualLists as Virtual,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.HoverCards as Hover,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Widgets.Inputs.Ratings as Ratings,
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   System as Sys, System.Collections.Generic as C;
@@ -55,7 +54,7 @@ begin
         Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id),
         StarSize := Sys.Math.Clamp(cast<float>(Edge - 18) / 10.0F, 1.0F, RatingStyle.StarSize)
       ),
-      Artwork.Build('cover-' + Album.Id, Image, Edge),
+      Artwork.Build<M.Msg>('cover-' + Album.Id, Image, Edge),
       E.Column<M.Msg>(
         new L.Flow(Gap := Points(2), Align := L.Alignment.Center),
         E.Styled<M.Msg>(
@@ -114,18 +113,8 @@ begin
   const Available: int := Sys.Math.Max(1, Width - Padding * 2);
   const Selected: Music.State? := Current.Music;
   if Selected <> null then
-    const Heading: E.Element<Music.Msg> := E.Row<Music.Msg>(
-      new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-      Icons.IconButton<Music.Msg>(
-        'tracks-back',
-        Sys.Char.ConvertFromUtf32($E048),
-        'Back to albums',
-        Music.Msg.Back
-      ),
-      Texts.Text<Music.Msg>('Music', Texts.Appearance.HeadingOne)
-    );
     return Composition.Map<Music.Msg, M.Msg>(
-      Songs.Build(Selected, Heading, Available, Padding),
+      Songs.Build(Selected, Sys.Math.Max(1, Width)),
       function(Value: Music.Msg): M.Msg => case Value of
         when Music.Msg.Back: M.Msg.BackToAlbums;
         else M.Msg.Music(Value);

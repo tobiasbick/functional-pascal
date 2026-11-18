@@ -2,16 +2,17 @@
 unit FpasAmp.Ui.Albums.Music.Update;
 
 uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
+  FpasAmp.Imaging as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
   System.Diagnostics as Diagnostics, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command<M.Msg> := [];
 
 // Starts the selected release's query for `Current` through the borrowed `Library`.
+// `LoadCover` requests the thumbnail when the grid has not already resolved it.
 // Returns a transition whose visit key accompanies both results and errors.
-public function Open(Current: M.State; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+public function Open(Current: M.State; Library: Metadata.Session?; LoadCover: bool := true): A.Transition<M.State, M.Msg>;
 begin
   if Library = null then
     return new A.Transition<M.State, M.Msg>(
@@ -30,6 +31,14 @@ begin
             Current.Album.Id, Cancellation
           ).ConfigureAwait(false);
           await Post(M.Msg.Loaded(Current.Visit, Items)).ConfigureAwait(false);
+          if LoadCover then
+            const Image: Imaging.Bitmap? := await Artwork.Load(
+              Library.Albums,
+              Current.Album,
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(M.Msg.CoverLoaded(Current.Visit, Image)).ConfigureAwait(false);
+          end if;
         end function,
         function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
       )
@@ -108,6 +117,12 @@ begin
             Loaded := true;
           end with
         );
+      end if;
+    when M.Msg.CoverLoaded(const Visit: long, const Image: Imaging.Bitmap?):
+      if Visit = Current.Visit then
+        Next := Current with
+          Cover := Image;
+        end with;
       end if;
     when M.Msg.Failed(const Visit: long, const Text: string):
       if Visit = Current.Visit then

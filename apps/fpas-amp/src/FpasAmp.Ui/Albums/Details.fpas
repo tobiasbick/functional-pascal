@@ -32,7 +32,7 @@ begin
     new L.Flow(Gap := Points(12), Align := L.Alignment.Stretch, Clip := false),
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(16), Align := L.Alignment.Start, Clip := false),
-      Artwork.Build('album-detail-cover-' + Album.Id, Image, 80),
+      Artwork.Build<M.Msg>('album-detail-cover-' + Album.Id, Image, 80),
       E.Size<M.Msg>(
         E.Column<M.Msg>(
           new L.Flow(Gap := Points(4), Clip := false),

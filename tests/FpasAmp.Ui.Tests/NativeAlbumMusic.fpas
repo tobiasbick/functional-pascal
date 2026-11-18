@@ -13,7 +13,7 @@ uses
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Shell as Shell,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as A,
-  Fpas.Ui.Widgets.Inputs.Selects as Selects, ATL as Audio,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Inputs.Selects as Selects, ATL as Audio,
   System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
 
 function Control(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
@@ -65,6 +65,15 @@ public type AlbumMusicTests = record
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]
   public procedure AlbumCardOpensItsTracksAndBackRestoresGrid();
+    function TrackSortColumn(Current: App.State): int;
+    begin
+      const Selected: Music.State? := Current.Albums.Music;
+      return if Selected <> null then
+        Selected.Order.Column
+      else
+        -1
+      end if;
+    end function;
     procedure Inject();
     begin
       Window.MovePointer(XPos, YPos);
@@ -112,6 +121,7 @@ public type AlbumMusicTests = record
       const Finale: Audio.Track := new Audio.Track(
         Fixtures.Track(Folder, 'Finale.mp3', 'Demo Release', Artist)
       );
+      IO.File.WriteAllBytes(IO.Path.Combine(Folder, 'cover.png'), Fixtures.Picture(32, 96, 120));
       Finale.Genre := 'Pop';
       X.Assert.True(Finale.Save());
     end for;
@@ -162,16 +172,17 @@ public type AlbumMusicTests = record
       );
       Step(Session);
       const Before: Albums.State := Last.Albums;
-      var Selected: Gui.Control? := null;
+      var Candidate: Gui.Control? := null;
       for Item: Gui.Control in Session.Snapshot().Controls do
         if Item.Role = 'card' and Item.Id.StartsWith('album-') and Item.Bounds.Y >= Grid.Y
           and Item.Bounds.Y + Item.Bounds.Height / 2.0F < Grid.Y + Grid.Height
         then
-          Selected := Item;
+          Candidate := Item;
           break;
         end if;
       end for;
 
+      const Selected: Gui.Control? := Candidate;
       if Selected = null then
         raise new Sys.InvalidOperationException('No visible album card.');
       end if;
@@ -183,7 +194,11 @@ public type AlbumMusicTests = record
       Until(
         Session, function(): bool begin
           const Page: Music.State? := Last.Albums.Music;
-          return Page <> null and Page.Loaded;
+          if Page = null then
+            return false;
+          end if;
+
+          return Page.Loaded and Page.Cover <> null;
         end function, 'Clicking the album did not open its music page.'
       );
 
@@ -196,12 +211,17 @@ public type AlbumMusicTests = record
       X.Assert.Equal<int>(2, Page.Tracks.Length);
       const Track: Metadata.Entry := Page.Tracks[0];
       X.Assert.Equal<string>(Page.Album.Artist, (Track.Metadata ?? new Metadata.Tags()).Artists[0]);
-      X.Assert.Contains<string>('Music', Session.Snapshot().Text);
+      X.Assert.Contains<string>('Albums', Session.Snapshot().Text);
       X.Assert.Equal<string>('albums', Nav.SectionKey(Last.Navigation.Active));
       const TrackSearch: Cui.CuiRectangle := Control(Session, 'track-search').Bounds;
       const TrackFilter: Cui.CuiRectangle := Control(Session, 'track-filters').Bounds;
       const TrackSort: Cui.CuiRectangle := Control(Session, 'track-sort').Bounds;
-      X.Assert.Equal<float>(AlbumSearch.X, TrackSearch.X);
+      const Cover: Cui.CuiRectangle := Control(Session, 'track-album-cover').Bounds;
+      X.Assert.Equal<float>(174.0F, Cover.Width);
+      X.Assert.Equal<float>(Cover.Y, TrackSearch.Y);
+      X.Assert.True(TrackSearch.X > Cover.X + Cover.Width);
+      X.Assert.Equal<string>('Time', Control(Session, 'album-tracks/header/1').Text);
+      X.Assert.Equal<string>('Rating', Control(Session, 'album-tracks/header/2').Text);
       X.Assert.Equal<float>(AlbumSearch.Height, TrackSearch.Height);
       X.Assert.Equal<float>(AlbumFilter.Height, TrackFilter.Height);
       X.Assert.Equal<float>(AlbumSort.Height, TrackSort.Height);
@@ -210,6 +230,7 @@ public type AlbumMusicTests = record
       const Toggle: Gui.Control := Control(Session, 'player-toggle');
       X.Assert.False(Toggle.Enabled);
       X.Assert.True(Footer.Y + Footer.Height <= Toggle.Bounds.Y);
+      X.Assert.True(Footer.X > Cover.X + Cover.Width and Footer.X < TrackSearch.X);
       const Id: string := Track.FileId.ToString();
       const TrackRating: Cui.CuiRectangle := Control(Session, 'track-rating-' + Id).Bounds;
       X.Assert.True(AlbumRating.Height > 0.0F);
@@ -221,6 +242,11 @@ public type AlbumMusicTests = record
           return Details <> null and (Details.Tracks[0].Rating ?? 0) = 10;
         end function, 'The clicked track rating was not saved.'
       );
+      Click(Session, Control(Session, 'album-tracks/header/2').Bounds);
+      X.Assert.Equal<int>(4, TrackSortColumn(Last));
+      Click(Session, Control(Session, 'album-tracks/header/1').Bounds);
+      X.Assert.Equal<int>(3, TrackSortColumn(Last));
+      Send(Session, Albums.Msg.Music(Music.Msg.Sort(new Tables.Sort(-1))));
       Click(Session, Control(Session, 'track-menu-' + Id).Bounds);
       Step(Session);
       Click(Session, Control(Session, 'track-menu-' + Id + '/details').Bounds);

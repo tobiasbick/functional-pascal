@@ -101,6 +101,9 @@ public type NativeNavigationTests = record
     using const Data: H.Folder := H.Folder.Create();
     discard Fixtures.Track(IO.Path.Combine(Root.Path, 'a'), 'First.mp3', 'Live', 'First artist');
     discard Fixtures.Track(IO.Path.Combine(Root.Path, 'b'), 'Second.mp3', 'Live', 'Second artist');
+    for Folder: string in IO.Directory.GetDirectories(Root.Path) do
+      IO.File.WriteAllBytes(IO.Path.Combine(Folder, 'cover.png'), Fixtures.Picture(48, 80, 110));
+    end for;
     const Source: Sources.MusicSource := Metadata.Source(Root.Path);
     const Preferences: SettingsModel.Preferences := new SettingsModel.Preferences([Source]);
     const Save: procedure(SettingsModel.Preferences) := procedure(_Value: SettingsModel.Preferences) begin end procedure;
@@ -165,6 +168,7 @@ public type NativeNavigationTests = record
       Until(Reopened, function(_State: Nav.State): bool => Reopened.State().Albums.Loaded);
       X.Assert.NotNull(Reopened.State().Albums.Music);
       Until(Reopened, function(_State: Nav.State): bool => ShowsTracks(Reopened, Browsed));
+      Until(Reopened, function(_State: Nav.State): bool => Has(Reopened, 'track-album-cover'));
       X.Assert.True(Has(Reopened, 'album-tracks'));
       X.Assert.Equal<string>(Playing, Reopened.State().Player.Source.AlbumId);
       X.Assert.False(Reopened.State().Player.Playing);

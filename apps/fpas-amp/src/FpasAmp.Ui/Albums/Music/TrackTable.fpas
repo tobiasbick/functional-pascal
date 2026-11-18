@@ -1,0 +1,144 @@
+// Virtual release tracks with title and performer in the same cell.
+unit FpasAmp.Ui.Albums.Music.TrackTable;
+
+uses
+  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Albums.RatingStyle as RatingStyle, FpasAmp.Library.Metadata.Model as Tracks,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Inputs.Ratings as Ratings, Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, System as Sys;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+// Persisted selection keys for the three sortable headers: title, time and rating.
+const SortKeys: array of int := [0, 3, 4];
+
+function Song(Current: M.State; Index: int): Grid.Row<M.Msg>;
+begin
+  const Item: Tracks.Entry := Current.Shown[Index];
+  const Id: string := Item.FileId.ToString();
+  const Name: string := Browse.Title(Item);
+  return new Grid.Row<M.Msg>(
+    Id, [
+      Grid.Cell<M.Msg>.Content(
+        [
+          E.Row<M.Msg>(
+            new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
+            Icons.IconButton<M.Msg>(
+              'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
+              M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
+            ),
+            E.Size<M.Msg>(
+              E.Column<M.Msg>(
+                new L.Flow(
+                  Gap := L.Spacing.Fixed(L.Measure.Logical(2)),
+                  Align := L.Alignment.Stretch
+                ),
+                E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
+                E.Styled<M.Msg>(
+                  Texts.Text<M.Msg>(Browse.Artist(Item), Texts.Appearance.Muted),
+                  S.Role.SingleLine
+                )
+              ), Fill
+            )
+          )
+        ]
+      ),
+      Grid.Cell<M.Msg>.Text(
+        if Browse.Duration(Item) > 0.0 then
+          Browse.Time(Browse.Duration(Item))
+        else
+          '—'
+        end if
+      ),
+      Grid.Cell<M.Msg>.Content(
+        [
+          Ratings.Rating<M.Msg>(
+            'track-rating-' + Id,
+            'Rate ' + Name + ' (1–10)',
+            Item.Rating ?? 0,
+            function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
+            Maximum := 10,
+            Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
+            StarSize := RatingStyle.StarSize
+          )
+        ]
+      ),
+      Grid.Cell<M.Msg>.Content(
+        [
+          Menus.Menu<M.Msg>(
+            'track-menu-' + Id, 'More actions for ' + Name, [
+              Menus.Entry<M.Msg>.Action(
+                new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
+              ),
+              Menus.Entry<M.Msg>.Action(
+                new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
+              )
+            ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
+          )
+        ]
+      )
+    ]
+  );
+end function;
+
+// Builds the virtual track table for `Current` using the available `Width` in logical points.
+// Returns the title/artist rows or the appropriate empty state.
+public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+requires Width > 0;
+  function Change(Value: Grid.Value): M.Msg;
+  begin
+    const Order: Tables.Sort? := Value.Order;
+    if Order = null or Order = Display then
+      return M.Msg.Sort(Current.Order);
+    end if;
+    const Key: int := if Order.Column >= 0 and Order.Column < SortKeys.Length then
+      SortKeys[Order.Column]
+    else
+      -1
+    end if;
+    return M.Msg.Sort(new Tables.Sort(Key, Order.Descending));
+  end function;
+begin
+  if Current.Shown.Length = 0 then
+    return Empty.EmptyState<M.Msg>(
+      'tracks-empty', if not Current.Loaded then
+        'Loading tracks…'
+      elsif Current.Error <> null and Current.Tracks.Length = 0 then
+        'Tracks unavailable'
+      elsif Current.Tracks.Length = 0 then
+        'No tracks in this album'
+      else
+        'No matching tracks'
+      end if
+    );
+  end if;
+
+  const Display: Tables.Sort := new Tables.Sort(
+    Sys.Array.IndexOf<int>(SortKeys, Current.Order.Column),
+    Current.Order.Descending
+  );
+  return Grid.DataGrid<M.Msg>(
+    'album-tracks',
+    [
+      new Grid.Column('Title', cast<float>(Sys.Math.Max(110, Width - 302)), Sortable := true),
+      new Grid.Column(
+        'Time',
+        62.0F,
+        Tables.Alignment.Right,
+        Sortable := true,
+        Fixed := true,
+        Priority := 2
+      ),
+      new Grid.Column('Rating', 190.0F, Sortable := true, Fixed := true, Priority := 1),
+      new Grid.Column('', 42.0F, Fixed := true)
+    ],
+    Current.Shown.Length,
+    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index),
+    new Grid.Value(Order := Display), Change,
+    new Grid.Options(RowHeight := 54.0F, HideCheckboxes := true)
+  );
+end function;
+
+end unit;

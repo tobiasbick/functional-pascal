@@ -12,7 +12,8 @@ shows how many filters are active. The sort menu orders by title, artist, rating
 count in either direction, and by best match while searching; clearing the search
 returns to the order chosen before. The status bar shows how many albums match. The playlist list updates
 in the background; same-name source lists show their location alongside the name.
-Click an album card to open its **Music** view inside **Albums**. The table uses
+Open an album to see its cover, title and album artist beside the track list. Each row
+shows the performer below the track title, followed by duration, rating and a menu. The table uses
 disc and track order by default. It uses the same toolbar as the album grid, with
 title and genre search and a filter popup for genres and minimum rating. Rate a
 track with its ten stars or use the row menu to inspect its tags, copy the path
@@ -141,7 +142,7 @@ whose previous path is confirmed absent; existing copies stay separate.
 Known-path tag changes retain the identity. Moving and editing together cannot
 be recognized reliably by a full-file hash. Embedded covers are cached separately
 on explicit request. The current UI provides settings, the Albums grid and its
-Music view with track browsing and independent track ratings. Other library
+track list with independent song ratings. Other library
 destinations remain navigation placeholders.
 
 The Albums grid creates only visible rows plus a small overscan. It loads covers

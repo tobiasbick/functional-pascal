@@ -1,21 +1,37 @@
-// Album tiles and hover details share the same immutable thumbnail pixels.
+// Album tiles, hover details and track lists share one thumbnail presentation.
 unit FpasAmp.Ui.Albums.Artwork;
 
 uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Imaging as Imaging,
+  FpasAmp.Imaging as Imaging, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Albums.Access as Access,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Media.Images as Images, Fpas.Ui.Widgets.Media.MediaImages as Media,
-  System as Sys;
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+
+// Requests the thumbnail for `Album` through `Service`, observing `Cancellation`.
+// Returns null when the artwork is unavailable so the view can show its placeholder.
+public async function Load(Service: Access.Session; Album: Albums.Album; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
+requires Album.Id <> '';
+begin
+  try
+    return await Service.ThumbnailAsync(Album, Cancellation).ConfigureAwait(false);
+  catch Invalid: IO.IOException do
+  catch Invalid: Sys.UnauthorizedAccessException do
+  catch Invalid: Sys.ArgumentException do
+  end try;
+
+  return null;
+end function;
 
 // Presents cached `Image` at logical `Edge` with stable `Id`, or a square placeholder.
 // This pure view performs no I/O and does not retain additional decoded image data.
-public function Build(Id: string; Image: Imaging.Bitmap?; Edge: int): E.Element<M.Msg>;
+// `TMsg` is the message type of the containing view.
+public function Build<TMsg>(Id: string; Image: Imaging.Bitmap?; Edge: int): E.Element<TMsg>;
 requires Id <> '';
 requires Edge > 0;
 begin
   case Image of
     when is Imaging.Bitmap as Bitmap:
-      return Images.Image<M.Msg>(
+      return Images.Image<TMsg>(
         Id, Media.Source.Rgba(Bitmap.Width, Bitmap.Height, Bitmap.Pixels),
         new Images.Options(
           Width := L.Extent.Fixed(L.Measure.Logical(Edge)),
@@ -24,10 +40,10 @@ begin
       );
     else
       const Size: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(Edge)));
-      return E.Size<M.Msg>(
-        E.Column<M.Msg>(
+      return E.Size<TMsg>(
+        E.Column<TMsg>(
           new L.Flow(Align := L.Alignment.Center, Justify := L.Justification.Center),
-          E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32($E122)), S.Role.MutedIcon)
+          E.Styled<TMsg>(E.Text<TMsg>(Sys.Char.ConvertFromUtf32($E122)), S.Role.MutedIcon)
         ), new L.Flex(Width := Size, Height := Size)
       );
   end case;

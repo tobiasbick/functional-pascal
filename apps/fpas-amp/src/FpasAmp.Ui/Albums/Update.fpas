@@ -5,10 +5,10 @@ uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Library.Albums.Access as Access, FpasAmp.Imaging as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
-  FpasAmp.Ui.Albums.Browse as Browse,
+  FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
   FpasAmp.Library.Metadata.Monitoring as Metadata, Fpas.Ui.Mvu.Composition as Composition,
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -113,11 +113,17 @@ begin
       for Album: Albums.Album in Current.Items do
         if Album.Id = Id then
           const Visit: long := Current.MusicVisit + 1L;
+          var Cover: Images.Bitmap? := null;
+          const Resolved: bool := Current.Images.TryGetValue(Id, out Cover);
           return MusicTransition(
             Current with
               MusicVisit := Visit;
             end with,
-            Songs.Open(new Music.State(Album, Visit), Library)
+            Songs.Open(
+              new Music.State(Album, Visit, Cover := Cover),
+              Library,
+              LoadCover := not Resolved
+            )
           );
         end if;
       end for;
@@ -260,18 +266,11 @@ begin
                 while Index < Pending.Length do
                   Cancellation.ThrowIfCancellationRequested();
                   const Album: Albums.Album := Next.Shown[Pending[Index]];
-                  var Image: Images.Bitmap? := null;
-                  try
-                    Image := await Service.ThumbnailAsync(
-                      Album,
-                      Cancellation
-                    ).ConfigureAwait(false);
-                  catch Invalid: Sys.OperationCanceledException do
-                    raise;
-                  catch Invalid: IO.IOException do
-                  catch Invalid: Sys.UnauthorizedAccessException do
-                  catch Invalid: Sys.ArgumentException do
-                  end try;
+                  const Image: Images.Bitmap? := await Artwork.Load(
+                    Service,
+                    Album,
+                    Cancellation
+                  ).ConfigureAwait(false);
 
                   await Post(M.Msg.Image(Next.Generation, Album.Id, Image)).ConfigureAwait(false);
                   Index := Index + 2;

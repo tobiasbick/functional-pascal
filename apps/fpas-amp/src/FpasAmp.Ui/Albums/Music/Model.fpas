@@ -3,7 +3,7 @@ unit FpasAmp.Ui.Albums.Music.Model;
 
 uses
   FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
+  FpasAmp.Imaging as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
 
 // Genre and rating filters for the selected album's tracks.
 public type Filters = record
@@ -59,6 +59,8 @@ public type State = record
   public Details: Tracks.Entry? := null;
   // Last read or action error.
   public Error: string? := null;
+  // Thumbnail for this visit, shared with the album grid when available.
+  public Cover: Imaging.Bitmap? := null;
 end record;
 
 // Proposals and scoped background completions for the album's songs.
@@ -67,6 +69,8 @@ public type Msg = variant
   Back;
   // Successfully loaded tracks for a visit.
   Loaded(Visit: long; Items: I.ImmutableArray<Tracks.Entry>);
+  // Publishes the selected release's thumbnail for this visit.
+  CoverLoaded(Visit: long; Image: Imaging.Bitmap?);
   // Reports a failure for a visit.
   Failed(Visit: long; Text: string);
   // Change search text.

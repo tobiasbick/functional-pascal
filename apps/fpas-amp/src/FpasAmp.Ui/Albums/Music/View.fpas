@@ -5,14 +5,13 @@ uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
   FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
-  FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
+  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Inputs.Ratings as Ratings, Fpas.Ui.Widgets.Inputs.SearchFields as Search,
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
@@ -30,106 +29,6 @@ begin
   else
     Name
   end if;
-end function;
-
-function Song(Current: M.State; Index: int): Grid.Row<M.Msg>;
-begin
-  const Item: Tracks.Entry := Current.Shown[Index];
-  const Id: string := Item.FileId.ToString();
-  const Name: string := Browse.Title(Item);
-  return new Grid.Row<M.Msg>(
-    Id, [
-      Grid.Cell<M.Msg>.Content(
-        [
-          E.Row<M.Msg>(
-            new L.Flow(Gap := Points(6), Align := L.Alignment.Center),
-            Icons.IconButton<M.Msg>(
-              'track-play-' + Id, Sys.Char.ConvertFromUtf32($E13C), 'Play ' + Name,
-              M.Msg.Play(Index), new Icons.Options(ControlSize := Icons.Size.Small)
-            ),
-            E.Size<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Name), S.Role.SingleLine), Fill)
-          )
-        ]
-      ),
-      Grid.Cell<M.Msg>.Text(Browse.Artist(Item)),
-      Grid.Cell<M.Msg>.Text(AlbumName(Current, Item)),
-      Grid.Cell<M.Msg>.Text(
-        if Browse.Duration(Item) > 0.0 then
-          Browse.Time(Browse.Duration(Item))
-        else
-          '—'
-        end if
-      ),
-      Grid.Cell<M.Msg>.Content(
-        [
-          Ratings.Rating<M.Msg>(
-            'track-rating-' + Id,
-            'Rate ' + Name + ' (1–10)',
-            Item.Rating ?? 0,
-            function(Value: int): M.Msg => M.Msg.Rate(Item.TrackId, Value),
-            Maximum := 10,
-            Enabled := Item.TrackId <> '' and not Current.Saving.Contains(Item.TrackId),
-            StarSize := RatingStyle.StarSize
-          )
-        ]
-      ),
-      Grid.Cell<M.Msg>.Content(
-        [
-          Menus.Menu<M.Msg>(
-            'track-menu-' + Id, 'More actions for ' + Name, [
-              Menus.Entry<M.Msg>.Action(
-                new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
-              ),
-              Menus.Entry<M.Msg>.Action(
-                new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
-              )
-            ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
-          )
-        ]
-      )
-    ]
-  );
-end function;
-
-function Table(Current: M.State): E.Element<M.Msg>;
-begin
-  if Current.Shown.Length = 0 then
-    return Empty.EmptyState<M.Msg>(
-      'tracks-empty', if not Current.Loaded then
-        'Loading tracks…'
-      elsif Current.Error <> null and Current.Tracks.Length = 0 then
-        'Tracks unavailable'
-      elsif Current.Tracks.Length = 0 then
-        'No tracks in this album'
-      else
-        'No matching tracks'
-      end if
-    );
-  end if;
-
-  return Grid.DataGrid<M.Msg>(
-    'album-tracks',
-    [
-      new Grid.Column('Title', 185.0F, Sortable := true),
-      new Grid.Column('Artist', 125.0F, Sortable := true, Priority := 1),
-      new Grid.Column('Album', 124.0F, Sortable := true, Priority := 3),
-      new Grid.Column(
-        'Time',
-        62.0F,
-        Tables.Alignment.Right,
-        Sortable := true,
-        Fixed := true,
-        Priority := 2
-      ),
-      new Grid.Column('Rating', 180.0F, Sortable := true, Fixed := true),
-      new Grid.Column('', 42.0F, Fixed := true)
-    ],
-    Current.Shown.Length,
-    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index),
-    new Grid.Value(Order := Current.Order),
-    function(Value: Grid.Value): M.Msg => M.Msg.Sort(Value.Order ?? Current.Order),
-    new Grid.Options(RowHeight := 40.0F, HideCheckboxes := true)
-  );
 end function;
 
 function Sort(Current: M.State): E.Element<M.Msg>;
@@ -258,35 +157,78 @@ begin
   );
 end function;
 
-// Builds the album's music table and library toolbar for `Current`.
+function Fixed(Value: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Value)));
+end function;
+
+// Builds the selected album page with a return to its retained grid.
 // ## Parameters
-// - `Current`: Album and song view state.
-// - `Heading`: Title row, including the parent's back button.
-// - `Width`: Available content width in logical points.
-// - `Padding`: Inset of the page body.
+// - `Current`: Release metadata, tracks and browse state.
+// - `Width`: Full width of the Albums content area in logical points.
 // ## Returns
-// The release table, filters and status line.
-public function Build(Current: M.State; Heading: E.Element<M.Msg>; Width: int; Padding: int): E.Element<M.Msg>;
+// The album sleeve beside the searchable track list and its status bar.
+public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
 requires Width > 0;
 begin
+  const Narrow: bool := Width < 700;
+  const Inset: int := if Narrow then
+    16
+  else
+    28
+  end if;
+  const Gutter: int := if Narrow then
+    12
+  else
+    20
+  end if;
+  const Edge: int := Sys.Math.Clamp((Width - 480) div 2, 72, 174);
+  const TrackWidth: int := Sys.Math.Max(1, Width - 2 * (Inset + Gutter) - Edge - 1);
+  const Heading: E.Element<M.Msg> := E.Row<M.Msg>(
+    new L.Flow(
+      PaddingStart := Points(Inset), PaddingTop := Points(Inset), PaddingBottom := Points(Inset),
+      Gap := Points(6), Align := L.Alignment.Center
+    ),
+    Icons.IconButton<M.Msg>(
+      'tracks-back',
+      Sys.Char.ConvertFromUtf32($E048),
+      'Back to albums',
+      M.Msg.Back
+    ),
+    Texts.Text<M.Msg>('Albums', Texts.Appearance.HeadingThree)
+  );
+  const Sleeve: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(
+      PaddingStart := Points(Inset), PaddingTop := Points(Inset), PaddingEnd := Points(Gutter),
+      Gap := Points(12), Align := L.Alignment.Stretch
+    ),
+    Artwork.Build<M.Msg>('track-album-cover', Current.Cover, Edge),
+    E.Column<M.Msg>(
+      new L.Flow(Gap := Points(4), Align := L.Alignment.Stretch),
+      Texts.Text<M.Msg>(
+        Current.Album.Title, if Narrow then
+          Texts.Appearance.HeadingFour
+        else
+          Texts.Appearance.HeadingTwo
+        end if
+      ),
+      Texts.Text<M.Msg>(Current.Album.Artist, Texts.Appearance.Secondary)
+    )
+  );
   const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
     'track-search',
     Current.Search,
     M.Msg.Search,
     new Search.Options(Placeholder := 'Search titles and genres…')
   );
-  const Toolbar: E.Element<M.Msg> := LibraryToolbar.Arrange<M.Msg>(
-    Field, Filters.Build(Current, Width), Sort(Current), Width
-  );
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [
-      Heading,
-      E.Column<M.Msg>(
-        new L.Flow(Gap := Points(4)),
-        Texts.Text<M.Msg>(Current.Album.Title, Texts.Appearance.HeadingThree),
-        Texts.Text<M.Msg>(Current.Album.Artist, Texts.Appearance.Secondary)
-      ),
-      Toolbar
+      LibraryToolbar.Arrange<M.Msg>(
+        Field,
+        Filters.Build(Current, TrackWidth),
+        Sort(Current),
+        TrackWidth
+      )
     ]
   );
   const Error: string? := Current.Error;
@@ -299,19 +241,25 @@ begin
     );
   end if;
 
-  Parts.Add(E.Size<M.Msg>(Table(Current), Fill));
-  return Details(
-    Current, E.Column<M.Msg>(
-      new L.Flow(Align := L.Alignment.Stretch),
-      E.Size<M.Msg>(
-        E.Column<M.Msg>(
-          new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
-          Parts.ToArray()
-        ), Fill
-      ),
-      StatusLine(Current)
-    )
+  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, TrackWidth), Fill));
+  const Songs: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(
+      PaddingStart := Points(Gutter),
+      PaddingEnd := Points(Inset), PaddingTop := Points(Inset), PaddingBottom := Points(Inset),
+      Gap := Points(16), Align := L.Alignment.Stretch
+    ), Parts.ToArray()
   );
+  const Stretch: L.Flow := new L.Flow(Align := L.Alignment.Stretch);
+  const Rule: E.Element<M.Msg> := E.Size<M.Msg>(
+    E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+    Fixed(1)
+  );
+  const Columns: E.Element<M.Msg> := E.Row<M.Msg>(
+    Stretch,
+    E.Size<M.Msg>(Sleeve, Fixed(Inset + Edge + Gutter)), Rule,
+    E.Size<M.Msg>(E.Column<M.Msg>(Stretch, E.Size<M.Msg>(Songs, Fill), StatusLine(Current)), Fill)
+  );
+  return Details(Current, E.Column<M.Msg>(Stretch, Heading, Rule, E.Size<M.Msg>(Columns, Fill)));
 end function;
 
 end unit;

@@ -1,0 +1,263 @@
+// [Documentation](../../../docs/ui/tui/inputs/select.md)
+
+program SelectContract;
+
+uses
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
+
+const Items: array of S.Item := [
+  new S.Item('Ada'),
+  new S.Item('C99'),
+  new S.Item('Rust'),
+  new S.Item('C11'),
+  new S.Item('Zig'),
+  new S.Item('C17'),
+  new S.Item('C23'),
+  new S.Item('Odin'),
+  new S.Item('F#'),
+  new S.Item('Objective-C')
+];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(Model: int; Proposed: int): M.Transition<int, int>;
+begin
+  Check(
+    Proposed >= 0 and Proposed <> Model,
+    'Background, disabled or redundant change dispatched.'
+  );
+  return new M.Transition<int, int>(
+    if Proposed = 4 then
+      Model
+    else
+      Proposed
+    end if, []
+  );
+end function;
+
+function Form(Model: int): E.Element<int>;
+begin
+  return E.Column<int>(
+    B.Button<int>('back', 'Background', -1),
+    S.Select<int>(
+      'picker', Items, Model, function(Index: int): int => Index,
+      new S.Options(Label := 'Language', Placeholder := 'Choose', Searchable := true)
+    ),
+    S.Select<int>(
+      'disabled',
+      Items,
+      -1,
+      function(Index: int): int => -1,
+      new S.Options(Enabled := false)
+    )
+  );
+end function;
+
+function Dialog(Model: int): E.Element<int>;
+begin
+  return Dialogs.Dialog<int>(
+    'modal', B.Button<int>('outside', 'Outside', -1),
+    S.Select<int>('plain', Items, Model, function(Index: int): int => Index), true,
+    new Dialogs.Options('Settings', InitialFocus := 'plain'), -1
+  );
+end function;
+
+function Compact(Model: int; Size: L.Viewport): E.Element<int>;
+begin
+  return if Size.Width = L.SizeClass.Compact then
+    B.Button<int>('back', 'Background', -1)
+  else
+    S.Select<int>(
+      'picker', Items, Model, function(Index: int): int => Index,
+      new S.Options(Searchable := Size.Width = L.SizeClass.Regular)
+    )
+  end if;
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  for Item: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Row(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item <> null then
+    return Item;
+  end if;
+
+  raise new Sys.InvalidOperationException('Missing control ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key);
+begin
+  Send(Session, T.Input.KeyPress(Value, K.KeyModifiers.None));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Row(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+begin
+  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Form, 32, 16);
+  Check(
+    Row(Session, 'picker').Value = 'Choose' and Row(Session, 'disabled').Value = 'Select',
+    'Custom and default placeholders.'
+  );
+  Click(Session, 'disabled');
+  Send(Session, T.Input.Activate('disabled'));
+  Check(Find(Session, 'disabled/option/0') = null, 'Disabled selects stay closed.');
+  Key(Session, K.Key.Tab);
+  Check(Row(Session, 'picker').Focused, 'Tab reaches the trigger.');
+  Key(Session, K.Key.Enter);
+  Check(
+    Row(Session, 'picker/option/0').Focused and not Row(Session, 'back').Enabled,
+    'The open popup owns focus and input.'
+  );
+  Send(Session, T.Input.Paste('c'));
+  Check(
+    Find(Session, 'picker/option/0') = null and Row(Session, 'picker/option/1').Focused,
+    'Search preserves original indices.'
+  );
+  Key(Session, K.Key.Down);
+  Check(Row(Session, 'picker/option/3').Focused, 'Down highlights the next match.');
+  Key(Session, K.Key.Escape);
+  Check(
+    Row(Session, 'picker').Focused and Row(Session, 'picker').Value = 'Choose',
+    'Escape returns focus without changing the model.'
+  );
+  Key(Session, K.Key.Enter);
+  Key(Session, K.Key.End);
+  Check(Row(Session, 'picker/option/9').Focused, 'The last row scrolls into view.');
+  Key(Session, K.Key.Enter);
+  Check(
+    Row(Session, 'picker').Value = 'Objective-C',
+    'Enter commits the highlighted original index.'
+  );
+  Click(Session, 'picker');
+  Check(Row(Session, 'picker/option/9').Focused, 'Reopening restores the committed row.');
+  Key(Session, K.Key.Enter);
+  Click(Session, 'picker');
+  Send(Session, T.Input.TextInput('RU'));
+  Click(Session, 'picker/option/2');
+  Check(
+    Row(Session, 'picker').Focused and Row(Session, 'picker').Value = 'Rust',
+    'Pointer commits a case-insensitive match.'
+  );
+  Key(Session, K.Key.Enter);
+  Send(Session, T.Input.Paste('e' + #769));
+  Check(
+    Sys.String.Join(#10, Session.Snapshot().Lines).Contains('No results'),
+    'Empty filtered list is announced.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(not Row(Session, 'back').Enabled, 'Enter with no result does not commit or dismiss.');
+  Key(Session, K.Key.Backspace);
+  Check(
+    Find(Session, 'picker/option/0') <> null,
+    'Backspace removes one grapheme and restores results.'
+  );
+  Send(Session, T.Input.Character('Z'));
+  Key(Session, K.Key.Enter);
+  Check(Row(Session, 'picker').Value = 'Rust', 'A model may decline the proposal.');
+  Send(Session, T.Input.Focus('back'));
+  Send(Session, T.Input.Activate('picker'));
+  Click(Session, 'back');
+  Check(
+    Row(Session, 'picker').Focused,
+    'Outside click dismisses without activating the underlying button.'
+  );
+  Click(Session, 'picker');
+  Send(Session, T.Input.Resize(12, 4));
+  const Visible: T.ControlSnapshot := Row(Session, 'picker/option/2');
+  Check(
+    Visible.Row >= 0 and Visible.Row < 4 and Visible.Column + Visible.Width <= 12,
+    'The popup fits after resizing.'
+  );
+  Key(Session, K.Key.End);
+  Check(Row(Session, 'picker/option/9').Focused, 'Offscreen items remain reachable after resize.');
+
+  using const Responsive: T.HeadlessSession := T.StartHeadless<int, int>(
+    -1,
+    Update,
+    Compact,
+    90,
+    16
+  );
+  Check(Row(Responsive, 'picker').Height = 1, 'A standalone trigger occupies one row.');
+  Send(Responsive, T.Input.Activate('picker'));
+  Send(Responsive, T.Input.TextInput('rust'));
+  Check(Find(Responsive, 'picker/option/0') = null, 'Responsive search filter is active.');
+  Send(Responsive, T.Input.Resize(120, 16));
+  Check(
+    Find(Responsive, 'picker/option/0') <> null,
+    'Disabling search in an open list clears its hidden query.'
+  );
+  Send(Responsive, T.Input.Resize(40, 12));
+  Check(
+    Row(Responsive, 'back').Focused and Row(Responsive, 'back').Enabled,
+    'Removing the trigger releases popup focus and input.'
+  );
+  Send(Responsive, T.Input.Resize(90, 16));
+  Check(
+    Find(Responsive, 'picker/option/0') = null,
+    'A removed popup stays closed when its trigger returns.'
+  );
+  using const Modal: T.HeadlessSession := T.StartHeadless<int, int>(1, Update, Dialog, 55, 16);
+  Key(Modal, K.Key.Enter);
+  Check(
+    Row(Modal, 'plain/option/1').Focused and not Row(Modal, 'modal/close').Enabled,
+    'The list has its own scope inside an open dialog.'
+  );
+  Send(Modal, T.Input.Character('R'));
+  Check(
+    Row(Modal, 'plain/option/1').Focused,
+    'Typing in a plain list preserves the current option.'
+  );
+  const Anchor: T.ControlSnapshot := Row(Modal, 'plain/option/1');
+  Send(Modal, T.Input.Scroll(Anchor.Column, Anchor.Row, 2));
+  Check(
+    Row(Modal, 'plain/option/3').Focused,
+    'The wheel browses visible options without committing.'
+  );
+  Key(Modal, K.Key.Escape);
+  Check(
+    Row(
+      Modal,
+      'plain'
+    ).Focused and Row(
+      Modal,
+      'plain'
+    ).Value = 'C99' and Row(Modal, 'modal/close').Enabled and not Row(Modal, 'outside').Enabled,
+    'Escape restores the parent dialog and leaves its background inert.'
+  );
+  Console.WriteLine('Select contracts verified');
+end;
+
+end program;

@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Inputs.State;
 
 uses
-  GuiGallery.Shared.State as Demo, Fpas.Ui.Graphics as G, System as Sys;
+  Gallery.Shared.PickerChoices as Choices, GuiGallery.Shared.State as Demo, Fpas.Ui.Graphics as G, System as Sys;
 
 // State owned by this gallery feature.
 public type Model = record
@@ -18,9 +18,9 @@ public type Model = record
   // Partial verification code in the example.
   public VerificationCode: string := '418';
   // Current country in the picker example.
-  public Country: int := 2;
+  public Country: int := Choices.InitialCountry;
   // Current language, or minus one before selection.
-  public Language: int := -1;
+  public Language: int := Choices.InitialLanguage;
   // Due date shared by the date field and standalone calendar.
   public DueDate: Sys.DateOnly? := new Sys.DateOnly(2026, 11, 14);
   // Bounded seat count.

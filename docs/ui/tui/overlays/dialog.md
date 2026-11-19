@@ -1,8 +1,10 @@
 # Dialog
 
-Center a short decision over the current view. The gallery asks before clearing the queue and initially focuses Cancel.
+Center a short decision over the current view. Under **Components → Overlays → Dialogs and sheets**, **Delete project** initially focuses Cancel. **Edit profile** opens the shared name, email and Public profile switch.
 
-![Centered Clear queue dialog above the dimmed gallery with Cancel focused](../../../../examples/ui/tui/gallery/dialog.png)
+![Profile dialog with the Public profile switch below the email field](../../../../examples/ui/tui/gallery/profile-switch.png)
+
+![Centered Delete this project? dialog above the dimmed gallery with Cancel focused](../../../../examples/ui/tui/gallery/dialog.png)
 
 ## Example
 
@@ -19,10 +21,10 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Dialogs as W, Fpas.Ui.Widge
 // The resulting view.
 public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
 begin
-  return W.Dialog<string>('clear-queue', Base,
-    E.Column<string>(E.Text<string>('Remove the queued tracks?'),
-      E.Row<string>(B.Button<string>('cancel', 'Cancel', 'close'), B.Button<string>('clear', 'Clear', 'clear'))),
-    Open, new W.Options('Clear queue?', Width := 304, InitialFocus := 'cancel'), 'close');
+  return W.Dialog<string>('delete-project', Base,
+    E.Column<string>(E.Text<string>('This removes the project and its history for everyone. You cannot undo this.'),
+      E.Row<string>(B.Button<string>('cancel', 'Cancel', 'close'), B.Button<string>('delete', 'Delete project', 'delete'))),
+    Open, new W.Options('Delete this project?', Width := 400, InitialFocus := 'cancel'), 'close');
 end function;
 
 end unit;
@@ -37,4 +39,4 @@ Tab stays inside the open dialog. Escape, the close button or a backdrop click s
 - [Overlays](README.md)
 - [Shared API](../../widgets.md#dialog-and-action-footer)
 - [GUI dialog](../../gui/overlays/dialog.md)
-- [Gallery source](../../../../examples/ui/tui/gallery/QueueSample.fpas)
+- [Gallery source](../../../../examples/ui/tui/gallery/ProfileSample.fpas)

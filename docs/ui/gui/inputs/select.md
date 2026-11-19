@@ -1,6 +1,6 @@
 # Select
 
-Use Select for one choice from a list. Enable search to filter a longer list inside its popup. Available in **GUI**.
+Use Select for one choice from a list. Enable search to filter a longer list inside its popup. Available in **GUI** and [TUI](../../tui/inputs/select.md).
 
 ![Select in the FPAS gallery](images/select.png)
 
@@ -46,6 +46,8 @@ Open the popup with the pointer or Enter. Choosing a row reports its original in
 - [Inputs](README.md)
 
 ## Source files
+
+- [Shared Country and Language examples](../../../../examples/ui/gui/gallery/Shared/PickerChoices.fpas)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
   - [Select.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Select.fpas)

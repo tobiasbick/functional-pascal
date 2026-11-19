@@ -1,6 +1,6 @@
 # Table
 
-Use a table for a collection with columns, optional sorting and row selection. The gallery puts avatars and badges directly into cells. Available in **GUI**.
+Use a table for a collection with columns, optional sorting and row selection. The gallery puts avatars and badges directly into cells. The [terminal table](../../tui/data-display/table.md) displays text cells.
 
 ![Table in the FPAS gallery](images/table.png)
 
@@ -63,6 +63,8 @@ for focus.
 - [Data display](README.md)
 
 ## Source files
+
+- [PeopleTable.fpas](../../../../examples/ui/gui/gallery/Shared/PeopleTable.fpas) supplies the sample people, headings and stable sort to both galleries.
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
   - [Table.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/Table.fpas)

@@ -1,0 +1,252 @@
+// [Documentation](../../../../../docs/ui/tui/data-display/table.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Collections.Table;
+
+uses
+  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene,
+  Fpas.Ui.Tui.Internal.Layout.ScrollViews as Scroll, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as C;
+
+function Caption<TMsg>(Cell: T.Cell<TMsg>): string;
+begin
+  case Cell of
+    when T.Cell.Text(const Value: string):
+      return Glyphs.SingleLine(Value);
+    else
+      raise new Sys.InvalidOperationException('Expected a validated terminal text cell.');
+  end case;
+end function;
+
+function Heading(Column: T.Column; Order: T.Sort?; Index: int): string;
+begin
+  const Title: string := Glyphs.SingleLine(Column.Title);
+  if Order <> null and Order.Column = Index then
+    return Title + (if Order.Descending then
+      ' ↓'
+    else
+      ' ↑'
+    end if);
+  end if;
+
+  return Title;
+end function;
+
+// Measures intrinsic column widths for terminal layout and cell alignment.
+// ## Type parameters
+// - `TMsg`: Row message type.
+// ## Parameters
+// - `Columns`: Column titles and width rules.
+// - `Rows`: Validated text cells.
+// - `Order`: Current sort indicator.
+// ## Returns
+// One preferred width in terminal cells per column.
+public function MeasureColumns<TMsg>(Columns: array of T.Column; Rows: array of T.Row<TMsg>; Order: T.Sort?): array of int;
+begin
+  const Preferred: array of int := new int[Columns.Length];
+  for Index: int := 0 to Columns.Length - 1 do
+    case Columns[Index].Width of
+      when L.Extent.Fixed(const Distance: L.Measure):
+        Preferred[Index] := F.Cells(Distance);
+      else
+        Preferred[Index] := Glyphs.Measure(Heading(Columns[Index], Order, Index));
+        for Row: T.Row<TMsg> in Rows do
+          Preferred[Index] := Sys.Math.Max(
+            Preferred[Index],
+            Glyphs.Measure(Caption<TMsg>(Row.Cells[Index]))
+          );
+        end for;
+    end case;
+  end for;
+
+  return Preferred;
+end function;
+
+function Widths<TMsg>(Value: E.TableView<TMsg>; Width: int): array of int;
+begin
+  const Count: int := Value.Columns.Length;
+  const Rules: C.List<E.Flex> := new C.List<E.Flex>(Count);
+  for Index: int := 0 to Count - 1 do
+    const Column: T.Column := Value.Columns[Index];
+    case Column.Width of
+      when L.Extent.Fixed(_):
+        Rules.Add(new E.Flex(Basis := Sys.Math.Min(Width, Value.Preferred[Index])));
+      when L.Extent.Content:
+        Rules.Add(new E.Flex());
+      when L.Extent.Fill:
+        Rules.Add(new E.Flex(Grow := Column.Grow));
+      else
+        raise new Sys.InvalidOperationException('Expected a validated terminal column width.');
+    end case;
+  end for;
+
+  return F.Allocate(Value.Preferred, Rules.ToArray(), Sys.Math.Max(0, Width - Count + 1));
+end function;
+
+// Arranges and paints the pinned header and scrollable body.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Value`: Validated table.
+// - `Area`: Allocated cells.
+// - `Clip`: Visible portion of the allocation.
+// - `Style`: Inherited text and background.
+// - `Theme`: Active terminal palette.
+// - `Scope`: Owning focus scope.
+// - `FocusReturn`: Control to refocus when the scope closes.
+// - `Offsets`: Host-owned scroll positions.
+// - `Regions`: Wheel destinations.
+// - `Stops`: Keyboard destinations, including scrolled-out rows.
+// - `Operations`: Cell paint operations.
+// - `Register`: Registers a visible input target.
+public procedure Arrange<TMsg>(
+  Value: E.TableView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  Scope: string; FocusReturn: string; Offsets: C.Dictionary<string, int>;
+  Regions: C.List<Scene.ScrollRegion>; Stops: C.List<Scene.NavigationStop>; Operations: C.List<D.Operation>;
+  Register: procedure(Scene.Control<TMsg>)
+);
+  procedure PaintCell(Text: string; Alignment: T.Alignment; Box: F.Rect; Limit: F.Rect; Colors: Terminal.Style);
+  begin
+    const Visible: F.Rect := F.Intersect(Box, Limit);
+    if Visible.Width = 0 or Visible.Height = 0 then
+      return;
+    end if;
+    const Space: int := Sys.Math.Max(0, Box.Width - Glyphs.Measure(Text));
+    const Indent: int := case Alignment of
+      when T.Alignment.Right: Space;
+      when T.Alignment.Center: Space div 2;
+      else 0;
+    end case;
+    Operations.Add(
+      new D.Operation(
+        Text,
+        new F.Rect(Box.X + Indent, Box.Y, Box.Width - Indent, 1),
+        Visible,
+        Colors,
+        false
+      )
+    );
+  end procedure;
+begin
+  const Body: F.Rect := new F.Rect(Area.X, Area.Y + 1, Area.Width, Area.Height - 1);
+  var Offset: int := 0;
+  discard Offsets.TryGetValue(Value.Id, out Offset);
+  const View: Scroll.Viewport<TMsg> := Scroll.Resolve<TMsg>(
+    E.ScrollPosition.Offset(Offset),
+    Value.Rows.Length,
+    Body,
+    true,
+    null
+  );
+  Offsets[Value.Id] := View.Offset;
+  const Limit: F.Rect := F.Intersect(Body, Clip);
+  if View.Maximum > 0 and Limit.Height > 0 then
+    Regions.Add(new Scene.ScrollRegion(Value.Id, Scope, Limit, View.Maximum));
+  end if;
+  const Width: int := Area.Width - (if View.Bar then
+    1
+  else
+    0
+  end if);
+  const Sizes: array of int := Widths<TMsg>(Value, Width);
+  var X: int := Area.X;
+  for Index: int := 0 to Sizes.Length - 1 do
+    const Col: T.Column := Value.Columns[Index];
+    const Header: F.Rect := new F.Rect(X, Area.Y, Sizes[Index], 1);
+    PaintCell(Heading(Col, Value.Order, Index), Col.Align, Header, Clip, Style);
+    const Bounds: F.Rect := F.Intersect(Header, Clip);
+    case Value.OnSort of
+      when is Sys.Func<T.Sort, TMsg> as Notify:
+        if Col.Sortable and Bounds.Width > 0 and Bounds.Height > 0 then
+          const Order: T.Sort? := Value.Order;
+          const Next: T.Sort := new T.Sort(
+            Index,
+            Order <> null and Order.Column = Index and not Order.Descending
+          );
+          Register(
+            new Scene.Control<TMsg>(
+              T.HeaderId(Value.Id, Index),
+              Col.Title,
+              'table-header',
+              '',
+              Bounds,
+              Scope,
+              FocusReturn,
+              Value.Settings.Enabled,
+              Scene.Binding<TMsg>.Invoke(
+                new Actions.Proposal<T.Sort, TMsg>(Notify, Next)
+              ),
+              S.ButtonVariant.Ghost
+            )
+          );
+        end if;
+      else
+    end case;
+
+    X := X + Sizes[Index] + 1;
+  end for;
+
+  const Striped: Terminal.Style := new Terminal.Style(
+    Style.Foreground,
+    Th.Rgb(Theme.Colors.SurfaceMuted, Style.Background ?? 0)
+  );
+  for Index: int := 0 to Value.Rows.Length - 1 do
+    const Row: T.Row<TMsg> := Value.Rows[Index];
+    const Box: F.Rect := new F.Rect(Area.X, Body.Y + Index - View.Offset, Width, 1);
+    if Value.OnSelect <> null and Value.Settings.Enabled and Limit.Height > 0 then
+      Stops.Add(new Scene.NavigationStop(Row.Id, Box, Value.Id, Value.Id));
+    end if;
+    const Bounds: F.Rect := F.Intersect(Box, Limit);
+    if Bounds.Height = 0 or Bounds.Width = 0 then
+      continue;
+    end if;
+    const Colors: Terminal.Style := if Row.Selected then
+      Theme.Buttons.Active.Normal
+    else
+      if Value.Settings.Striped and Index mod 2 = 1 then
+        Striped
+      else
+        Style
+      end if
+    end if;
+    D.Fill(Operations, Bounds, Colors);
+    X := Area.X;
+    for Column: int := 0 to Sizes.Length - 1 do
+      PaintCell(
+        Caption<TMsg>(Row.Cells[Column]),
+        Value.Columns[Column].Align,
+        new F.Rect(X, Box.Y, Sizes[Column], 1),
+        Bounds,
+        Colors
+      );
+      X := X + Sizes[Column] + 1;
+    end for;
+
+    case Value.OnSelect of
+      when is Sys.Func<string, TMsg> as Notify:
+        Register(
+          new Scene.Control<TMsg>(
+            Row.Id,
+            Caption<TMsg>(Row.Cells[0]),
+            'table-row',
+            Row.Selected.ToString(),
+            Bounds,
+            Scope,
+            FocusReturn,
+            Value.Settings.Enabled,
+            Scene.Binding<TMsg>.Invoke(
+              new Actions.Proposal<string, TMsg>(Notify, Row.Id)
+            ),
+            S.ButtonVariant.Ghost
+          )
+        );
+      else
+    end case;
+  end for;
+
+  Scroll.DrawBar<TMsg>(View, Operations, Body, Limit, Style, Theme.Widgets);
+end procedure;
+
+end unit;

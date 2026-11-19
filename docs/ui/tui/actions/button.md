@@ -1,6 +1,6 @@
 # Button
 
-Run a command such as saving the current draft.
+Run a command such as saving the current draft. Open **Components → Buttons** for the shared variants, sizes, icons and states.
 
 ![Button rendered in terminal cells](../../../../examples/ui/tui/gallery/buttons.png)
 
@@ -16,7 +16,7 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles
 // The control for this view.
 public function View(): E.Element<string>;
 begin
-  return B.Button<string>('add', 'Add track', 'add', new B.Options(Variant := S.ButtonVariant.Primary));
+  return B.Button<string>('save', 'Save changes', 'save', new B.Options(Variant := S.ButtonVariant.Primary));
 end function;
 
 end unit;

@@ -1,6 +1,6 @@
 # Switch
 
-Use a switch for an on/off setting such as Wi-Fi. Available in **GUI**.
+Use a switch for an on/off setting such as Wi-Fi. Available in **GUI and TUI**.
 
 ![Switch in the FPAS gallery](images/switch.png)
 
@@ -40,10 +40,13 @@ Click anywhere on the row, or press Space or Enter while it has focus. The callb
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Switches.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Switch.fpas)
+- [Terminal switch](../../tui/selection/switch.md)
 - [Checkbox](checkbox.md)
 - [Selection](README.md)
 
 ## Source files
+
+- [Shared gallery switch examples](../../../../examples/ui/gui/gallery/Shared/SwitchExamples.fpas)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
   - [Switch.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Switch.fpas)

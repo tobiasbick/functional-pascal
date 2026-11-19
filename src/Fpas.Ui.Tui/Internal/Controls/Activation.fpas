@@ -26,4 +26,23 @@ public type Direct<TMsg> = record implements IActivatable<TMsg>
   end function;
 end record;
 
+// Defers mapping a proposed value to a message until the user activates a control.
+// ## Type parameters
+// - `TValue`: Value proposed to the application.
+// - `TMsg`: Application message type.
+public type Proposal<TValue, TMsg> = record implements IActivatable<TMsg>
+  // Maps an accepted activation to an application message.
+  public Notify: function(TValue): TMsg;
+  // Value proposed by this presentation of the widget.
+  public Value: TValue;
+
+  // Invokes the application's mapper once.
+  // ## Returns
+  // The message to dispatch.
+  public function Activate(): Result<TMsg>;
+  begin
+    return Result<TMsg>.Send(self.Notify(self.Value));
+  end function;
+end record;
+
 end unit;

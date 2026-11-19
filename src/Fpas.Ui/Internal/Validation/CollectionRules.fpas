@@ -8,8 +8,9 @@ uses Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Inter
 // ## Parameters
 // - `Columns`: Columns in display order.
 // - `Order`: Current optional sort.
+// - `Profile`: Host receiving the table.
 // - `At`: Diagnostic location.
-public procedure Table(Columns: array of T.Column; Order: T.Sort?; At: string);
+public procedure Table(Columns: array of T.Column; Order: T.Sort?; Profile: V.Target; At: string);
 begin
   if Columns.Length = 0 then
     R.Reject(At, 'A table needs at least one column.');
@@ -25,7 +26,7 @@ begin
 
   for Column: T.Column in Columns do
     R.CheckText(Column.Title, At + '/header');
-    R.CheckExtent(Column.Width, V.Target.Graphical, At + '/width');
+    R.CheckExtent(Column.Width, Profile, At + '/width');
     if not Sys.Enum.IsDefined<T.Alignment>(
       Column.Align
     ) or not Sys.Single.IsFinite(Column.Grow) or Column.Grow <= 0.0F

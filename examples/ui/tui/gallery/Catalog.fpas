@@ -7,10 +7,12 @@ public type Preview = enum
   Description;
   Overview;
   Buttons;
+  Inputs;
+  Selection;
   Overlays;
   Feedback;
+  DataDisplay;
   AppChrome;
-  Progress;
   Text;
   CellGrid;
 end enum;
@@ -25,24 +27,25 @@ public type Entry = record
   public Demo: Preview := Preview.Description;
 end record;
 
-// Core gallery destinations followed by the terminal samples.
+// Core destinations in GUI gallery order.
 public const Components: array of Entry := [
-  new Entry('Overview', '↑/↓ to browse · Enter or click to select', Preview.Overview),
-  new Entry('Buttons', 'Add or remove a track from the play queue.', Preview.Buttons),
-  new Entry('Inputs', 'Enter a title to add it to the play queue.', Preview.Buttons),
-  new Entry('Selection', 'Controls for choosing one option or several.'),
+  new Entry('Overview', 'Components for FPas', Preview.Overview),
+  new Entry('Buttons', 'Variants, sizes and states.', Preview.Buttons),
+  new Entry('Inputs', 'Text fields', Preview.Inputs),
+  new Entry('Selection', 'Controls for choosing one option or several.', Preview.Selection),
   new Entry('Navigation', 'Sidebars, tabs and paths between views.'),
   new Entry(
     'Overlays',
-    'Inspect the play queue in a sheet or clear it with a dialog.',
+    'Dialogs and sheets',
     Preview.Overlays
   ),
   new Entry('Feedback', 'Show how far a task has progressed.', Preview.Feedback),
-  new Entry('Data display', 'Rows and lists for presenting structured information.'),
-  new Entry('Charts', 'Visual summaries of values and trends.'),
-  new Entry('Progress bar', 'A determinate task from zero to completion.', Preview.Progress),
-  new Entry('Text', 'One passage in three theme roles.', Preview.Text),
-  new Entry('Cell grid', 'Explore a colored ripple field.', Preview.CellGrid)
+  new Entry(
+    'Data display',
+    'Rows and lists for presenting structured information.',
+    Preview.DataDisplay
+  ),
+  new Entry('Charts', 'Visual summaries of values and trends.')
 ];
 
 // Supplementary destinations in GUI gallery order.
@@ -72,6 +75,11 @@ public const Extended: array of Entry := [
   new Entry('Text and display', 'Typography and secondary information.', Preview.Text),
   new Entry('Editing tools', 'Actions for editing and formatting content.'),
   new Entry('App chrome', 'The panels and bars that frame an application.', Preview.AppChrome)
+];
+
+// Additional widgets specific to terminal applications.
+public const Terminal: array of Entry := [
+  new Entry('Cell grid', 'Explore a colored ripple field.', Preview.CellGrid)
 ];
 
 end unit;

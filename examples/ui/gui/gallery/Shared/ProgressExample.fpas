@@ -1,0 +1,37 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/progress-bar.md)
+
+unit Gallery.Shared.ProgressExample;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as P;
+
+// Builds the determinate upload indicator.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Returns
+// The gallery upload at 68 percent.
+public function Upload<TMsg>(): E.Element<TMsg>;
+begin
+  return P.ProgressBar<TMsg>(
+    'upload',
+    0.68F,
+    new P.Options(Label := 'Uploading assets', ShowValue := true)
+  );
+end function;
+
+// Builds the determinate export indicator.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Dither`: Enable the graphical dither pattern.
+// ## Returns
+// The gallery export at 42 percent.
+public function ExportBar<TMsg>(Dither: bool): E.Element<TMsg>;
+begin
+  return P.ProgressBar<TMsg>(
+    'export',
+    0.42F,
+    new P.Options(Label := 'Exporting clip.mp4', ShowValue := true, Dither := Dither)
+  );
+end function;
+
+end unit;

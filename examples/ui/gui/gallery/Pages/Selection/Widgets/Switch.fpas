@@ -5,7 +5,7 @@ unit GuiGallery.Pages.Selection.Widgets.Switch;
 uses
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.Widgets.Inputs.Switches as S,
+  Gallery.Shared.SwitchExamples as S,
   Fpas.Ui.Elements as E;
 
 // Builds the three switches from the native Selection page.
@@ -18,19 +18,17 @@ uses
 public function Rows(Model: State.Model; Data: Demo.Model): array of E.Element<State.Msg>;
 begin
   return [
-    S.Switch<State.Msg>(
-      'wifi',
-      'Wi-Fi',
+    S.View<State.Msg>(
+      S.Wifi,
       Data.Wifi,
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetWifi(SharedValue))
     ),
-    S.Switch<State.Msg>(
-      'bluetooth', 'Bluetooth', Data.Bluetooth,
+    S.View<State.Msg>(
+      S.Bluetooth, Data.Bluetooth,
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetBluetooth(SharedValue))
     ),
-    S.Switch<State.Msg>(
-      'airplane', 'Airplane mode', Model.Airplane, State.Msg.SetAirplane,
-      Description := 'Turns off all radios.'
+    S.View<State.Msg>(
+      S.Airplane, Model.Airplane, State.Msg.SetAirplane
     )
   ];
 end function;

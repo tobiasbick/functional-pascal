@@ -231,15 +231,12 @@ See the illustrated [Actions](ui/gui/actions/README.md) and
 - [x] Toggle group (`cui_toggle_group`): [API][fpas-toggle-group]. The GUI
   Actions page shows the original independent formatting and exclusive
   alignment examples. TUI: deferred; graphical profile required.
-- [x] Checkbox (`cui_checkbox`): [API][fpas-selection]. Selection shows the
-  original notification and disabled examples. TUI: graphical profile required.
+- [x] Checkbox (`cui_checkbox`): [API][fpas-selection]. Both galleries use the same notification choices under Selection and the weekly summary option in the workspace form. The [terminal checkbox](ui/tui/selection/checkbox.md) supports the mixed state, marker-only display and disabled rows.
 - [x] Switch (`cui_switch`): [API][fpas-selection]. Selection shows Wi-Fi,
-  Bluetooth and airplane mode. TUI: graphical profile required.
+  Bluetooth and airplane mode. The [terminal switch](ui/tui/selection/switch.md) uses the same options and accepts keyboard and pointer input.
 - [x] Radio button (`cui_radio`): [API][fpas-selection]. The native rows
   accept a controlled value, caption and description. TUI: graphical profile required.
-- [x] Radio group (`cui_radio_group`): [API][fpas-selection]. Selection
-  composes native radio rows for the original save-frequency choices.
-  TUI: graphical profile required.
+- [x] Radio group (`cui_radio_group`): [API][fpas-selection]. Both galleries show the same three save frequencies on Selection. The [terminal group](ui/tui/selection/radio-group.md) supports arrow-key selection, one tab stop and clickable descriptions.
 - [x] Radio cards (`cui_radio_cards`): [API][fpas-radio-cards]. Selection shows
   the original save destinations and tests pointer selection and arrow-key focus.
   TUI: graphical profile required.
@@ -323,8 +320,7 @@ caption as an intentional FPAS adaptation.
 - [x] Select, including searchable combobox (`cui_select`): [API][fpas-select].
   Inputs shows Country and searchable Language choices with stable option
   indices. CUI restores trigger focus after dismissing its search; native adapter
-  regressions cover Escape followed by Enter to reopen.
-  TUI: deferred; graphical profile required.
+  regressions cover Escape followed by Enter to reopen. The [terminal select](ui/tui/inputs/select.md) shares both examples, with keyboard and pointer selection and focus return.
 - [x] Multi-select (`cui_multi_select`): [API][fpas-multi-select]. Pickers
   shows the original searchable Languages example. Gallery tests cover
   filtering, controlled selection, and dismissal with focus return.
@@ -487,8 +483,8 @@ editor bars, document tabs, docking and split panes.
   `cui_status_bar_item`, `cui_status_bar_progress`, `cui_status_bar_spacer`):
   the editor displays the branch, indexing progress and clickable status items.
   The Windows gallery switches encoding through the keyed native item. The TUI
-  App chrome page uses the same widget for text, inline progress, a spacer and
-  a keyboard- or mouse-activated encoding item.
+  App chrome page uses the same status items and lets users cycle indentation,
+  encoding and language. Narrow terminals show fewer items.
 - [x] Docking workspace and panels (`cui_dockspace`, `cui_dock_panel`): App chrome
   shows the reference panel arrangement, panel toggles and layout reset. Tests
   cover native drag, close, reopen, layout serialization and invalid restore.
@@ -678,12 +674,13 @@ table, tree, list items, reorderable list, accordion and virtual list.
 - [x] Table, rows, and cells (`cui_table`, `cui_table_row`, `cui_table_cell`,
   `cui_table_cell_text`): [API][fpas-data-display]. Data display shows the
   original People example. Windows checks cover reversing the sort, selecting a
-  row and the focus rings on headers and rows.
+  row and the focus rings on headers and rows. The [terminal table](ui/tui/data-display/table.md)
+  shows the same people, sort and selection with text cells.
 
 Data display content and the Notifications sheet interior match the pinned
 Windows reference in Software and OpenGL at 1100×1800 and scale one. The
 reference uses the same reserved example domain for the People addresses.
-These widgets require the graphical profile.
+Composed table cells and the other Data display widgets require the graphical profile.
 
 See [Data grid](ui/gui/data-grid/README.md) for screenshots and FPAS examples.
 

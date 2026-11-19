@@ -1,6 +1,6 @@
 # Radio group
 
-Use a radio group for exclusive choices in a vertical list. Available in **GUI**.
+Use a radio group for exclusive choices in a vertical list. Available in **GUI** and [TUI](../../tui/selection/radio-group.md).
 
 ![Radio group in the FPAS gallery](images/radio-group.png)
 
@@ -44,7 +44,7 @@ Click or activate an enabled row with Space or Enter to propose its index. Activ
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RadioGroups.fpas)
-- [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RadioGroup.fpas)
+- [Gallery example](../../../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas)
 - [Radio cards](radio-cards.md)
 - [Selection](README.md)
 

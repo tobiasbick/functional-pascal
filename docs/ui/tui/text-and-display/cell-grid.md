@@ -1,6 +1,6 @@
 # Cell grid
 
-Draw a character and foreground/background colors per cell. The fractal explorer uses the same terminal widget as the gallery’s ripple field.
+Draw a character and foreground/background colors per cell. The fractal explorer uses the same terminal widget as the gallery’s **Terminal → Cell grid** ripple field.
 
 ![Colored ripples and their cell coordinates in the terminal gallery](images/cell-grid.png)
 

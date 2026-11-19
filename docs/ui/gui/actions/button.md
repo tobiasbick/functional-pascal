@@ -49,6 +49,8 @@ suppresses activation. GUI shows a spinner and TUI shows an ellipsis.
 
 ## Source files
 
+- [Shared gallery example](../../../../examples/ui/gui/gallery/Shared/ButtonExamples.fpas)
+
 - `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
   - [Button.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/Button.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Actions/`

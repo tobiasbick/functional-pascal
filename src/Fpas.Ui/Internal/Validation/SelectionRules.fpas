@@ -6,6 +6,20 @@ uses
   Fpas.Ui.Internal.Validation.Rules as Rules, Fpas.Ui.Validation as V,
   Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Widgets.Inputs.RadioCards as Cards, System as Sys;
 
+// Validates the visible and accessible text shared by selection controls.
+// ## Parameters
+// - `Label`: Required row caption.
+// - `Description`: Optional supporting text.
+// - `At`: Registered row location for diagnostics.
+public procedure CheckRowText(Label: string; Description: string; At: string);
+begin
+  Rules.CheckText(Label, At + '/label');
+  Rules.CheckText(Description, At + '/description');
+  if Sys.String.IsNullOrWhiteSpace(Label) then
+    Rules.Reject(At, 'A selection row needs an accessible label.');
+  end if;
+end procedure;
+
 // Checks the identity and text of a native selection row.
 //
 // ## Parameters
@@ -22,11 +36,7 @@ public procedure CheckRow(
 begin
   const At: string := Identify(Id, Location);
   Rules.RequireProfile(Profile, V.Target.Graphical, At);
-  Rules.CheckText(Label, At + '/label');
-  Rules.CheckText(Description, At + '/description');
-  if Sys.String.IsNullOrWhiteSpace(Label) then
-    Rules.Reject(At, 'A selection row needs an accessible label.');
-  end if;
+  CheckRowText(Label, Description, At);
 end procedure;
 
 // Checks radio group selection and registers every positional row.
@@ -36,7 +46,7 @@ end procedure;
 // - `Items`: Positional radio choices.
 // - `Selected`: Selected index, or minus one.
 // - `Gap`: Native row spacing.
-// - `Profile`: Target profile, which must be graphical.
+// - `Profile`: Target profile for spacing validation.
 // - `Location`: View path used for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckGroup(
@@ -45,7 +55,6 @@ public procedure CheckGroup(
 );
 begin
   const At: string := Identify(Id, Location);
-  Rules.RequireProfile(Profile, V.Target.Graphical, At);
   Rules.CheckSpacing(Gap, Profile, At + '/gap');
   if Items.Length = 0 or Selected < -1 or Selected >= Items.Length then
     Rules.Reject(At, 'A radio group needs choices and a selected index or minus one.');
@@ -53,7 +62,7 @@ begin
 
   for Index: int := 0 to Items.Length - 1 do
     const Item: R.Item := Items[Index];
-    CheckRow(R.ItemId(Id, Index), Item.Label, Item.Description, Profile, At + '/item', Identify);
+    CheckRowText(Item.Label, Item.Description, Identify(R.ItemId(Id, Index), At + '/item'));
   end for;
 end procedure;
 

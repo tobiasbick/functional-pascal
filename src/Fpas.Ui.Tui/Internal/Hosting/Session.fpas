@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -210,45 +210,6 @@ public function Start<TModel, TMsg>(
   end procedure;
 
   procedure Paint();
-    function Arrange(Theme: Th.Theme; Previous: A.Layout<TMsg>?): A.Layout<TMsg>;
-    begin
-      Phase := 'view';
-      const Size: L.Viewport := new L.Viewport(
-        if Viewport.Columns < 60 then
-          L.SizeClass.Compact
-        elsif Viewport.Columns < 100 then
-          L.SizeClass.Regular
-        else
-          L.SizeClass.Expanded
-        end if,
-        if Viewport.Rows < 20 then
-          L.SizeClass.Compact
-        elsif Viewport.Rows < 35 then
-          L.SizeClass.Regular
-        else
-          L.SizeClass.Expanded
-        end if,
-        Viewport.Columns * 8, Viewport.Rows * 16
-      );
-      const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
-        View(Core.Model(), Size),
-        Validation.Target.Terminal,
-        if Previous = null then
-          null
-        else
-          Previous.Prepared
-        end if,
-        new T.Viewport(Viewport.Columns, Viewport.Rows)
-      );
-      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme);
-      Phase := 'layout_or_drawing';
-      const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
-        Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
-      );
-      return Native with
-        Prepared := Candidate;
-      end with;
-    end function;
   begin
     const Routing: I.State<TMsg>? := Interaction;
     if Routing = null then
@@ -256,13 +217,70 @@ public function Start<TModel, TMsg>(
     end if;
 
     Phase := 'view';
-    var Theme: Th.Theme := Th.Resolve(ThemeFor(Core.Model()));
-    var Layout: A.Layout<TMsg> := Arrange(Theme, Current);
-
+    const Theme: Th.Theme := Th.Resolve(ThemeFor(Core.Model()));
+    const Size: L.Viewport := new L.Viewport(
+      if Viewport.Columns < 60 then
+        L.SizeClass.Compact
+      elsif Viewport.Columns < 100 then
+        L.SizeClass.Regular
+      else
+        L.SizeClass.Expanded
+      end if,
+      if Viewport.Rows < 20 then
+        L.SizeClass.Compact
+      elsif Viewport.Rows < 35 then
+        L.SizeClass.Regular
+      else
+        L.SizeClass.Expanded
+      end if,
+      Viewport.Columns * 8, Viewport.Rows * 16
+    );
+    const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
+      View(Core.Model(), Size),
+      Validation.Target.Terminal,
+      if Current = null then
+        null
+      else
+        Current.Prepared
+      end if,
+      new T.Viewport(Viewport.Columns, Viewport.Rows)
+    );
+    const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme, Popup);
     Phase := 'layout_or_drawing';
+    var Layout: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+      Root,
+      Viewport.Columns,
+      Viewport.Rows,
+      Current,
+      ScrollOffsets,
+      Theme, Popup
+    );
     Routing.Reconcile(Layout, Current);
     const Target: string? := PendingFocus;
     PendingFocus := null;
+    const Entry: string := Target ?? Routing.FocusId();
+    if Entry <> '' and A.FindControl<TMsg>(Layout, Entry) = null and Navigation.Reveal<TMsg>(
+      Layout,
+      Entry,
+      ScrollOffsets,
+      Core.Dispatch,
+      false
+    )
+    then
+      Layout := Arrangement.Arrange<TMsg>(
+        Root,
+        Viewport.Columns,
+        Viewport.Rows,
+        Layout,
+        ScrollOffsets,
+        Theme, Popup
+      );
+      Routing.Reconcile(Layout, Current);
+    end if;
+
+    Layout := Layout with
+      Prepared := Candidate;
+    end with;
     if Target <> null then
       Routing.SetFocus(Layout, Target);
     end if;
@@ -435,6 +453,7 @@ begin
       end case;
     end procedure, 64
   );
+  const Popup: Select.State<TMsg> := Select.Start<TMsg>(Core.Dispatch);
   const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
   CheckSize(Columns, Rows);
   try

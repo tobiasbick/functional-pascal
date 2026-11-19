@@ -1,6 +1,6 @@
 # Scroll view
 
-Keep a long list or body inside a bounded area. The left gallery panel scrolls independently of the right preview.
+Keep a long list or body inside a bounded area. The left gallery panel scrolls independently of the right preview. When the list overflows, a heavier vertical line (`┃`) marks the visible portion on a thin track (`│`).
 
 ![Long sidebar clipped by its panel with the scrollbar thumb along its right edge](../../../../examples/ui/tui/gallery/panels.png)
 

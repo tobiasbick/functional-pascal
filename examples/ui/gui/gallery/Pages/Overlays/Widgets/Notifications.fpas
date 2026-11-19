@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Overlays.Widgets.Notifications;
 
 uses
   GuiGallery.Shared.State as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Styles as Style, Fpas.Ui.Widgets.Inputs.Switches as S, Fpas.Ui.Widgets.Overlays.Sheets as Sheet, GuiGallery.Shared.Sections as G;
+  Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Styles as Style, Gallery.Shared.SwitchExamples as S, Fpas.Ui.Widgets.Overlays.Sheets as Sheet, GuiGallery.Shared.Sections as G;
 
 // Presents the three original notification preferences in the native right sheet.
 // ## Type parameters
@@ -25,20 +25,17 @@ begin
     'sheet', Base,
     E.Column<TMsg>(
       new L.Flow(Gap := G.Points(16)),
-      S.Switch<TMsg>(
-        'notifications-comments', 'Comments', Data.Newsletter,
-        function(Value: bool): TMsg => Messages(Demo.Msg.SetNewsletter(Value)),
-        Description := 'When someone replies to you.'
+      S.View<TMsg>(
+        S.Comments, Data.Newsletter,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetNewsletter(Value))
       ),
-      S.Switch<TMsg>(
-        'notifications-mentions', 'Mentions', Data.Wifi,
-        function(Value: bool): TMsg => Messages(Demo.Msg.SetWifi(Value)),
-        Description := 'When someone mentions you.'
+      S.View<TMsg>(
+        S.Mentions, Data.Wifi,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetWifi(Value))
       ),
-      S.Switch<TMsg>(
-        'notifications-weekly', 'Weekly digest', Data.Bluetooth,
-        function(Value: bool): TMsg => Messages(Demo.Msg.SetBluetooth(Value)),
-        Description := 'A summary every Monday.'
+      S.View<TMsg>(
+        S.WeeklyDigest, Data.Bluetooth,
+        function(Value: bool): TMsg => Messages(Demo.Msg.SetBluetooth(Value))
       ),
       E.Divider<TMsg>(),
       E.Styled<TMsg>(E.Text<TMsg>('Recent'), Style.Role.Label),

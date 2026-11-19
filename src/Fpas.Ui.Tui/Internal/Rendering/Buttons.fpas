@@ -85,11 +85,12 @@ end function;
 // - `Center`: Whether to center the face and caption across the allocation.
 // - `Foreground`: Optional caption color.
 // - `Joined`: Whether a surrounding group supplies the outline.
+// - `Description`: Optional supporting text displayed below the caption.
 public procedure Paint(
   Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: T.Style;
   Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool;
   MinimumWidth: int := 0; Padding: int := 1; Center: bool := false;
-  Foreground: Graphics.Color? := null; Joined: bool := false
+  Foreground: Graphics.Color? := null; Joined: bool := false; Description: string := ''
 );
 begin
   if not IsButton then
@@ -134,6 +135,21 @@ begin
   const Content: int := Width - Padding - (X - Area.X);
   if Content > 0 and Caption <> '' then
     Operations.Add(new D.Operation(Caption, new F.Rect(X, Y, Content, 1), Clip, Color, false));
+  end if;
+
+  if Description <> '' and Area.Height > 1 then
+    const Body: F.Rect := new F.Rect(
+      Area.X + Padding,
+      Y + 1,
+      Sys.Math.Max(0, Area.Width - 2 * Padding),
+      Area.Height - 1
+    );
+    Operations.Add(
+      new D.Operation(
+        Description, Body, Clip,
+        new T.Style(Th.Rgb(Theme.Colors.TextMuted, Color.Background ?? 0), Color.Background), true
+      )
+    );
   end if;
 
   if Width > 0 and not Joined and (Theme.Widgets = null or Variant =

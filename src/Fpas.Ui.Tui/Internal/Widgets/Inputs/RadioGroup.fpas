@@ -1,0 +1,131 @@
+// [Documentation](../../../../../docs/ui/tui/selection/radio-group.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup;
+
+uses
+  Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Styles as S, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as C;
+
+type Choice<TMsg> = record implements A.IActivatable<TMsg>
+  public Group: string;
+  public Items: array of R.Item;
+  public Index: int;
+  public Selected: int;
+  public Change: function(int): TMsg;
+
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return if self.Index = self.Selected then
+      A.Result<TMsg>.NoAction
+    else
+      A.Result<TMsg>.Send(self.Change(self.Index))
+    end if;
+  end function;
+end record;
+
+// Moves to the next enabled option on an arrow key and proposes it to the model.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Handler`: Binding of the focused radio row.
+// - `Key`: Unmodified terminal key.
+// - `Apply`: Dispatches a change when the target differs from the model.
+// ## Returns
+// Target focus identity, or null for an unrelated key or control.
+public function Move<TMsg>(Handler: A.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
+begin
+  const Delta: int := case Key of
+    when K.Key.Left, K.Key.Up: -1;
+    when K.Key.Right, K.Key.Down: 1;
+    else 0;
+  end case;
+  if Delta <> 0 then
+    case Handler of
+      when is Choice<TMsg> as Row:
+        var Next: int := Row.Index;
+        repeat
+          Next := if Delta > 0 then
+            (Next + 1) mod Row.Items.Length
+          elsif Next = 0 then
+            Row.Items.Length - 1
+          else
+            Next - 1
+          end if;
+        until Row.Items[Next].Enabled;
+
+        if Next <> Row.Selected then
+          Apply(Row.Change(Next));
+        end if;
+
+        return R.ItemId(Row.Group, Next);
+      else
+    end case;
+  end if;
+
+  return null;
+end function;
+
+// Arranges the group around the model-owned index.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: Validated positional choices.
+// - `Selected`: Selected index or minus one.
+// - `Change`: Maps a new index to a message.
+// - `Enabled`: Input permission for the whole group.
+// - `Gap`: Terminal rows between choices.
+// ## Returns
+// A vertical group with one tab stop and individually addressable choices.
+public function Lower<TMsg>(Id: string; Items: array of R.Item; Selected: int; Change: function(int): TMsg; Enabled: bool; Gap: int): E.Element<TMsg>;
+begin
+  const Entry: int := if Selected >= 0 and Items[Selected].Enabled then
+    Selected
+  else
+    Sys.Array.FindIndex<R.Item>(Items, function(Item: R.Item): bool => Item.Enabled)
+  end if;
+  const Target: string := if Entry >= 0 then
+    R.ItemId(Id, Entry)
+  else
+    ''
+  end if;
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: R.Item := Items[Index];
+    const Active: bool := Index = Selected;
+    Rows.Add(
+      E.Element<TMsg>.Action(
+        R.ItemId(Id, Index),
+        new Choice<TMsg>(Id, Items, Index, Selected, Change),
+        Enabled and Item.Enabled,
+        new E.ActionView(
+          (if Active then
+            '(*) '
+          else
+            '( ) '
+          end if) + Item.Label,
+          Name := Item.Label,
+          Role := 'radio',
+          Value := if Active then
+            'true'
+          else
+            'false'
+          end if,
+          Variant := S.ButtonVariant.Ghost,
+          NavigationGroup := Id,
+          TabTarget := Target,
+          Description := Item.Description,
+          ArrowFocus := false,
+          FillWidth := true,
+          Padding := 0,
+          Joined := true,
+          Center := false
+        )
+      )
+    );
+  end for;
+
+  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow(Gap := Gap));
+end function;
+
+end unit;

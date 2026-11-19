@@ -44,7 +44,7 @@ begin
             else
               S.ButtonVariant.Ghost
             end if,
-            ArrowFocus := false, Sidebar := Id
+            ArrowFocus := false, NavigationGroup := Id
           )
         )
       );

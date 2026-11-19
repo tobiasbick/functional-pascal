@@ -1,6 +1,6 @@
 # Sidebar navigation
 
-Group destinations under headings. In the gallery, the selected destination determines what appears in the right panel.
+Group destinations under headings. In the gallery, the selected destination determines what appears in the right panel. The sidebar follows the GUI gallery’s destination order and appends **Terminal** for the cell grid.
 
 ![Scrollable Components and Extended navigation beside the selected preview](../../../../examples/ui/tui/gallery/panels.png)
 
@@ -40,5 +40,5 @@ Up/Down moves focus without changing the page. Enter, Space or a click sends the
 
 ## Source files
 
-- [SidebarNavigation.fpas](../../../../src/Fpas.Ui.Tui/Internal/Hosting/SidebarNavigation.fpas)
+- [RowNavigation.fpas](../../../../src/Fpas.Ui.Tui/Internal/Hosting/RowNavigation.fpas)
 - [Sidebar.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Navigation/Sidebar.fpas)

@@ -1,0 +1,114 @@
+// [Documentation](../../../docs/ui/tui/selection/checkbox.md)
+
+program CheckboxContract;
+
+uses
+  Fpas.Ui.Widgets.Inputs.Checkboxes as C, Fpas.Ui.Elements as E, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.TerminalExtensions.Input as Keys, System as Sys, System.Console as Console;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: bool; Proposed: bool): Mvu.Transition<bool, bool>;
+begin
+  return new Mvu.Transition<bool, bool>(Proposed, []);
+end function;
+
+function View(State: bool): E.Element<bool>;
+  function DisabledChange(Value: bool): bool;
+  begin
+    raise new Sys.InvalidOperationException('The disabled checkbox dispatched a change.');
+  end function;
+begin
+  return E.ScrollView<bool>(
+    'choices', E.Column<bool>(
+      C.Checkbox<bool>(
+        'email',
+        'Email',
+        State,
+        function(Value: bool): bool => Value,
+        'Deliver update messages'
+      ),
+      C.Checkbox<bool>('disabled', 'Disabled', true, DisabledChange, Enabled := false),
+      C.Checkbox<bool>(
+        'mixed',
+        'All items',
+        State,
+        function(Value: bool): bool => Value,
+        'Hidden description',
+        Indeterminate := true,
+        HideLabel := true
+      ),
+      C.Checkbox<bool>('locked', 'Locked', State, function(Value: bool): bool => State)
+    )
+  );
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+begin
+  using const Session: T.HeadlessSession := T.StartHeadless<bool, bool>(false, Update, View, 16, 9);
+  const Initial: T.Frame := Session.Snapshot();
+  const Email: T.ControlSnapshot := Initial.Controls[0];
+  Check(
+    Email.Id = 'email' and Email.Role = 'checkbox' and Email.Value = 'false' and Email.Focused,
+    'The enabled checkbox takes focus.'
+  );
+  Check(
+    Initial.Lines[0].StartsWith('[ ] Email') and Email.Height = 3,
+    'Caption and wrapped description belong to one control.'
+  );
+  const Disabled: T.ControlSnapshot := Initial.Controls[1];
+  Check(
+    not Disabled.Enabled and Disabled.Value = 'true',
+    'Disabled checkboxes retain their value.'
+  );
+  Send(Session, T.Input.Click(Disabled.Column, Disabled.Row));
+  Send(Session, T.Input.Activate('disabled'));
+  Send(Session, T.Input.Click(Email.Column, Email.Row + Email.Height - 1));
+  const Checked: T.Frame := Session.Snapshot();
+  Check(
+    Checked.Lines[0].StartsWith('[x] Email') and Checked.Controls[0].Value = 'true',
+    'Clicking the description checks the box.'
+  );
+  const Mixed: T.ControlSnapshot := Checked.Controls[2];
+  Check(
+    Mixed.Label = 'All items' and Mixed.Value = 'mixed' and Mixed.Width = 3 and Mixed.Height = 1,
+    'Marker-only controls keep their accessible name and compact bounds.'
+  );
+  Check(
+    Checked.Lines[Mixed.Row].Trim() = '[-]' and not Sys.String.Join(
+      #10,
+      Checked.Lines
+    ).Contains('Hidden description'),
+    'Only the mixed marker is painted.'
+  );
+  Send(Session, T.Input.KeyPress(Keys.Key.Tab, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[2].Focused, 'Tab skips the disabled row.');
+  Send(Session, T.Input.Character(' '));
+  Check(
+    Session.Snapshot().Controls[2].Value = 'false' and Session.Snapshot().Lines[
+      Mixed.Row
+    ].Trim() = '[ ]',
+    'Space on a mixed box proposes false.'
+  );
+  Send(Session, T.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[2].Value = 'mixed', 'Enter on an unchecked box proposes true.');
+  Send(Session, T.Input.Activate('locked'));
+  Check(Session.Snapshot().Controls[3].Value = 'true', 'The model can decline a change.');
+  Console.WriteLine('Checkbox contracts verified');
+end;
+
+end program;

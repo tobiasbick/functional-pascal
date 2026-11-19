@@ -1,0 +1,285 @@
+// [Documentation](../../../../docs/ui/mvu/README.md#composing-larger-views)
+
+unit TuiGallery.ProfileSample;
+
+uses
+  Gallery.Shared.SwitchExamples as Switches,
+  Gallery.Shared.Profile as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Composition as Composition;
+
+// Modal example presented over the gallery.
+public type Layer = enum
+  Closed;
+  Profile;
+  Notifications;
+  Delete;
+end enum;
+
+// Profile shared by Overview, Inputs and Overlays.
+public type State = record
+  // Full name shown by all three views.
+  public Name: string := Demo.Name;
+  // Email address shared by the same views.
+  public Email: string := Demo.Email;
+  // Wi-Fi, profile visibility and mention notifications.
+  public Wifi: bool := true;
+  // Bluetooth and weekly digest.
+  public Bluetooth: bool := false;
+  // Reply notifications.
+  public Newsletter: bool := true;
+  // Independent airplane mode setting.
+  public Airplane: bool := false;
+  // Current modal.
+  public Open: Layer := Layer.Closed;
+end record;
+
+// Profile edits and modal actions.
+public type Msg = variant
+  // Edit the full name.
+  SetName(Value: string);
+  // Edit the email address.
+  SetEmail(Value: string);
+  // Set the shared connectivity and profile switch.
+  SetWifi(Value: bool);
+  // Set Bluetooth and weekly notifications.
+  SetBluetooth(Value: bool);
+  // Set reply notifications.
+  SetNewsletter(Value: bool);
+  // Set airplane mode.
+  SetAirplane(Value: bool);
+  // Open or dismiss a modal.
+  Show(Value: Layer);
+end variant;
+
+// Applies a profile edit or overlay request.
+// ## Parameters
+// - `Model`: Current sample.
+// - `Message`: Requested change.
+// ## Returns
+// Updated sample.
+public function Update(Model: State; Message: Msg): State;
+begin
+  return case Message of
+    when Msg.SetName(const Value: string): Model with
+      Name := Value;
+    end with;
+    when Msg.SetEmail(const Value: string): Model with
+      Email := Value;
+    end with;
+    when Msg.SetWifi(const Value: bool): Model with
+      Wifi := Value;
+    end with;
+    when Msg.SetBluetooth(const Value: bool): Model with
+      Bluetooth := Value;
+    end with;
+    when Msg.SetNewsletter(const Value: bool): Model with
+      Newsletter := Value;
+    end with;
+    when Msg.SetAirplane(const Value: bool): Model with
+      Airplane := Value;
+    end with;
+    when Msg.Show(const Value: Layer): Model with
+      Open := Value;
+    end with;
+  end case;
+end function;
+
+// Builds the two supported profile fields in their page-specific presentation.
+// ## Parameters
+// - `Model`: Shared name and email.
+// - `Prefix`: Stable ID prefix used by the GUI example.
+// - `SideBySide`: Use the wide Inputs layout.
+// ## Returns
+// Name and email editors in gallery order.
+public function Editors(Model: State; Prefix: string; SideBySide: bool := false): E.Element<Msg>;
+begin
+  const Inputs: bool := Prefix = 'input';
+  const Workspace: bool := Prefix = 'workspace';
+  const Name: E.Element<Msg> := Fields.TextField<Msg>(
+    Prefix + '-name', Model.Name, Msg.SetName,
+    new Fields.Options(
+      Label := if Inputs then
+        'Full name'
+      else
+        'Name'
+      end if,
+      Placeholder := if Inputs then
+        Demo.Name
+      elsif Workspace then
+        'Your name'
+      else
+        ''
+      end if, MaxUtf8Bytes := 63
+    )
+  );
+  const Email: E.Element<Msg> := Fields.TextField<Msg>(
+    Prefix + '-email', Model.Email, Msg.SetEmail,
+    new Fields.Options(
+      Label := 'Email', Hint := if Inputs then
+        'We never share your email.'
+      else
+        ''
+      end if,
+      Placeholder := if Workspace then
+        'you@example.com'
+      else
+        ''
+      end if, MaxUtf8Bytes := 95
+    )
+  );
+  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Normal);
+  const Half: L.Flex := new L.Flex(Basis := L.Extent.Fill, Grow := 1);
+  return if SideBySide then
+    E.Row<Msg>(Flow, E.Size<Msg>(Name, Half), E.Size<Msg>(Email, Half))
+  else
+    E.Column<Msg>(Flow, Name, Email)
+  end if;
+end function;
+
+// Displays the switches under Components → Selection in GUI order.
+// ## Parameters
+// - `Model`: Current shared preferences.
+// ## Returns
+// Wi-Fi, Bluetooth and airplane mode.
+public function Selection(Model: State): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    Switches.View<Msg>(Switches.Wifi, Model.Wifi, Msg.SetWifi),
+    Switches.View<Msg>(Switches.Bluetooth, Model.Bluetooth, Msg.SetBluetooth),
+    Switches.View<Msg>(Switches.Airplane, Model.Airplane, Msg.SetAirplane)
+  );
+end function;
+
+// Builds the supported triggers in the GUI's Dialogs and sheets section.
+// ## Parameters
+// - `Wide`: Whether all three actions fit on one row.
+// ## Returns
+// Three overlay actions.
+public function Openers(Wide: bool): E.Element<Msg>;
+begin
+  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
+  const Triggers: array of E.Element<Msg> := [
+    B.Button<Msg>('edit-profile-open', 'Edit profile', Msg.Show(Layer.Profile)),
+    B.Button<Msg>('sheet-open', 'Open sheet', Msg.Show(Layer.Notifications)),
+    B.Button<Msg>(
+      'delete-project-open', 'Delete project', Msg.Show(Layer.Delete),
+      new B.Options(Variant := S.ButtonVariant.Destructive)
+    )
+  ];
+  return if Wide then
+    E.Row<Msg>(Flow, Triggers)
+  else
+    E.Column<Msg>(Flow, Triggers)
+  end if;
+end function;
+
+// Presents the selected example over the complete gallery.
+// ## Type parameters
+// - `TMsg`: Parent message type.
+// ## Parameters
+// - `Base`: Gallery screen.
+// - `Model`: Shared fields and open overlay.
+// - `Lift`: Maps an edit into the parent update.
+// ## Returns
+// The screen with its active dialog or sheet.
+public function Present<TMsg>(Base: E.Element<TMsg>; Model: State; Lift: function(Msg): TMsg): E.Element<TMsg>;
+begin
+  const Close: TMsg := Lift(Msg.Show(Layer.Closed));
+  const Flow: L.Flow := new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal);
+  case Model.Open of
+    when Layer.Profile:
+      return Dialogs.Dialog<TMsg>(
+        'edit-profile',
+        Base,
+        E.Column<TMsg>(
+          Flow,
+          Composition.Map<Msg, TMsg>(Editors(Model, 'edit-profile'), Lift),
+          Switches.View<TMsg>(
+            Switches.PublicProfile,
+            Model.Wifi,
+            function(Value: bool): TMsg => Lift(Msg.SetWifi(Value))
+          ),
+          E.Row<TMsg>(
+            new L.Flow(Gap := L.Spacing.Tight),
+            B.Button<TMsg>('edit-profile-cancel', 'Cancel', Close),
+            B.Button<TMsg>(
+              'edit-profile-save',
+              'Save changes',
+              Close,
+              new B.Options(Variant := S.ButtonVariant.Primary)
+            )
+          )
+        ),
+        true,
+        new Dialogs.Options(
+          'Edit profile',
+          Description := 'Changes are visible to your team.',
+          InitialFocus := 'edit-profile-name'
+        ),
+        Close
+      );
+    when Layer.Notifications:
+      return Sheets.Sheet<TMsg>(
+        'sheet',
+        Base,
+        E.Column<TMsg>(
+          Flow,
+          Switches.View<TMsg>(
+            Switches.Comments,
+            Model.Newsletter,
+            function(Value: bool): TMsg => Lift(Msg.SetNewsletter(Value))
+          ),
+          Switches.View<TMsg>(
+            Switches.Mentions,
+            Model.Wifi,
+            function(Value: bool): TMsg => Lift(Msg.SetWifi(Value))
+          ),
+          Switches.View<TMsg>(
+            Switches.WeeklyDigest,
+            Model.Bluetooth,
+            function(Value: bool): TMsg => Lift(Msg.SetBluetooth(Value))
+          ),
+          E.Styled<TMsg>(E.Text<TMsg>('Recent'), S.Role.Heading),
+          E.Text<TMsg>('Jonas commented on Release 1.0'), E.Text<TMsg>('2 minutes ago'),
+          E.Text<TMsg>('Priya invited you to Engines'), E.Text<TMsg>('1 hour ago')
+        ),
+        true,
+        new Sheets.Options('Notifications', Description := 'Choose what we tell you about.'),
+        Close
+      );
+    when Layer.Delete:
+      return Dialogs.Dialog<TMsg>(
+        'delete-project',
+        Base,
+        E.Column<TMsg>(
+          Flow,
+          E.Text<TMsg>(
+            'This removes the project and its history for everyone. You cannot undo this.'
+          ),
+          E.Row<TMsg>(
+            new L.Flow(Gap := L.Spacing.Tight),
+            B.Button<TMsg>('delete-project-cancel', 'Cancel', Close),
+            B.Button<TMsg>(
+              'delete-project-confirm',
+              'Delete project',
+              Close,
+              new B.Options(Variant := S.ButtonVariant.Destructive)
+            )
+          )
+        ),
+        true,
+        new Dialogs.Options(
+          'Delete this project?',
+          Width := 400,
+          InitialFocus := 'delete-project-cancel'
+        ),
+        Close
+      );
+    else
+      return Base;
+  end case;
+end function;
+
+end unit;

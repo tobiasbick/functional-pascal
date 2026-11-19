@@ -52,4 +52,6 @@ Indeterminate mode, dither and custom track height require the GUI.
 
 ## Source files
 
+- [Shared gallery example](../../../../examples/ui/gui/gallery/Shared/ProgressExample.fpas)
+
 - [ProgressBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/ProgressBar.fpas)

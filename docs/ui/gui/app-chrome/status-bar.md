@@ -56,6 +56,8 @@ as a fraction and choose indeterminate progress for work without a known total.
 
 ## Source files
 
+- [Shared gallery example](../../../../examples/ui/gui/gallery/Shared/EditorStatus.fpas)
+
 - `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
   - [StatusBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/StatusBar.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`

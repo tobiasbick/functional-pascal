@@ -1,8 +1,8 @@
 # Text field
 
-Edit one line of model-owned text. The gallery lets the user type a track title and add it to the play queue.
+Edit one line of model-owned text. The **Components → Inputs → Text fields** example shares its full name and email with Overview and Edit profile.
 
-![Track title with the caret inside Midnight on the Rhine](../../../../examples/ui/tui/gallery/text-field.png)
+![Full name and email with the caret at the end of Maya Okafor](../../../../examples/ui/tui/gallery/text-field.png)
 
 ## Example
 
@@ -13,13 +13,13 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextFields as W;
 
 // Builds the text field example.
 // ## Parameters
-// - `Title`: Current track title.
+// - `Name`: Current full name.
 // ## Returns
 // The resulting view.
-public function View(Title: string): E.Element<string>;
+public function View(Name: string): E.Element<string>;
 begin
-  return W.TextField<string>('track-title', Title, function(Value: string): string => Value,
-    new W.Options(Label := 'Track title', Placeholder := 'Enter a track title', MaxUtf8Bytes := 120));
+  return W.TextField<string>('input-name', Name, function(Value: string): string => Value,
+    new W.Options(Label := 'Full name', Placeholder := 'Maya Okafor', MaxUtf8Bytes := 63));
 end function;
 
 end unit;
@@ -34,7 +34,7 @@ Click to place the caret. Left/Right and Backspace/Delete move or delete by grap
 - [Inputs](README.md)
 - [Shared API](../../widgets.md#text-field)
 - [GUI text field](../../gui/inputs/text-field.md)
-- [Gallery source](../../../../examples/ui/tui/gallery/QueueSample.fpas)
+- [Gallery source](../../../../examples/ui/tui/gallery/ProfileSample.fpas)
 
 ## Source files
 

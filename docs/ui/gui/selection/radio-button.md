@@ -40,7 +40,7 @@ Click the row or activate it with Space or Enter while focused. The callback run
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RadioButtons.fpas)
-- [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RadioGroup.fpas)
+- [Gallery example](../../../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas)
 - [Radio group](radio-group.md)
 - [Selection](README.md)
 

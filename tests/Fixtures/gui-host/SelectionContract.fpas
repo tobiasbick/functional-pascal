@@ -59,11 +59,69 @@ procedure Validate();
 begin
   const Items: array of Radios.Item := [new Radios.Item('First'), new Radios.Item('Second')];
   const Places: array of Cards.Item := [new Cards.Item('First'), new Cards.Item('Second')];
+  const Toggle: E.Element<int> := Switches.Switch<int>(
+    'switch',
+    'Switch',
+    false,
+    function(Value: bool): int => 2
+  );
+  const CheckBox: E.Element<int> := Checkboxes.Checkbox<int>(
+    'check',
+    'Check',
+    true,
+    function(Value: bool): int => 1,
+    Indeterminate := true,
+    HideLabel := true
+  );
+  for Profile: V.Target in [V.Target.Portable, V.Target.Terminal, V.Target.Graphical] do
+    const Group: E.Element<int> := Radios.RadioGroup<int>(
+      'group',
+      Items,
+      -1,
+      function(Value: int): int => Value
+    );
+    discard V.Prepare<int>(Group, Profile);
+    Reject(
+      E.Column<int>(
+        Group,
+        Checkboxes.Checkbox<int>(
+          Radios.ItemId('group', 1),
+          'Duplicate',
+          true,
+          function(Value: bool): int => 1
+        )
+      ),
+      Profile,
+      'Duplicate'
+    );
+    Reject(
+      Radios.RadioGroup<int>('invalid', Items, 2, function(Value: int): int => Value),
+      Profile,
+      'selected index'
+    );
+    discard V.Prepare<int>(CheckBox, Profile);
+    Reject(
+      Checkboxes.Checkbox<int>(
+        'check',
+        ' ',
+        false,
+        function(Value: bool): int => 1,
+        HideLabel := true
+      ),
+      Profile,
+      'accessible label'
+    );
+    Reject(E.Column<int>(CheckBox, CheckBox), Profile, 'Duplicate');
+    discard V.Prepare<int>(Toggle, Profile);
+    Reject(
+      Switches.Switch<int>('switch', ' ', false, function(Value: bool): int => 2),
+      Profile,
+      'accessible label'
+    );
+    Reject(E.Column<int>(Toggle, Toggle), Profile, 'Duplicate');
+  end for;
   const Nodes: array of E.Element<int> := [
-    Checkboxes.Checkbox<int>('check', 'Check', true, function(Value: bool): int => 1),
-    Switches.Switch<int>('switch', 'Switch', false, function(Value: bool): int => 2),
     Radio.RadioButton<int>('radio', 'Radio', false, function(): int => 3),
-    Radios.RadioGroup<int>('group', Items, -1, function(Value: int): int => Value),
     Cards.RadioCards<int>('cards', Places, -1, function(Value: int): int => Value),
     S.Slider<int>('slider', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4),
     R.RangeSlider<int>(
@@ -84,10 +142,6 @@ begin
     Reject(Node, V.Target.Portable, 'Graphical profile');
   end for;
 
-  Reject(
-    Radios.RadioGroup<int>('invalid', Items, 2, function(Value: int): int => Value),
-    V.Target.Graphical, 'selected index'
-  );
   Reject(
     S.Slider<int>('invalid', 'Slider', 0.0F, 0.0F, 0.0F, function(Value: float): int => 4),
     V.Target.Graphical, 'finite increasing bounds'

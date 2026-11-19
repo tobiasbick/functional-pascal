@@ -1034,7 +1034,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Selects.Options
       ):
         const Path: string := Location + '/select';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
         const At: string := Identify(Id, Path);
         SelectRules.Check(Items, Selected, Settings, At);
         for Index: int := 0 to Items.Length - 1 do
@@ -1322,6 +1321,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
       when E.Element.Label(const Value: string):
         Rules.CheckText(Value, Location + '/text');
+      when E.Element.SwitchAction(
+        const Id: string,
+        const Label: string,
+        _,
+        _,
+        const Description: string,
+        _
+      ):
+        SelectionRules.CheckRowText(Label, Description, Identify(Id, Location + '/switch'));
       when E.Element.CheckboxAction(
         const Id: string,
         const Label: string,
@@ -1330,14 +1338,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Description: string,
         _,
         _, _
-      ), E.Element.SwitchAction(
-        const Id: string,
-        const Label: string,
-        _,
-        _,
-        const Description: string,
-        _
-      ), E.Element.RadioAction(
+      ):
+        SelectionRules.CheckRowText(Label, Description, Identify(Id, Location + '/checkbox'));
+      when E.Element.RadioAction(
         const Id: string,
         const Label: string,
         _,
@@ -1874,12 +1877,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Tables.Options
       ):
         const At: string := Identify(Id, Location + '/table');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
         if (Order = null) <> (OnSort = null) then
           Rules.Reject(At, 'Supply both the current sort and its callback.');
         end if;
 
-        CollectionRules.Table(Columns, Order, At);
+        CollectionRules.Table(Columns, Order, Profile, At);
         Rules.CheckExtent(Settings.Height, Profile, At + '/height');
         for Index: int := 0 to Columns.Length - 1 do
           discard Identify(Tables.HeaderId(Id, Index), At + '/header');
@@ -2949,6 +2951,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
         for Child: E.Element<TMsg> in Nodes do
           Visit(Child, Location);
         end for;

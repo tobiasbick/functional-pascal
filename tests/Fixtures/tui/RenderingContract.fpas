@@ -2,7 +2,7 @@
 
 program RenderingContract;
 
-uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -289,7 +289,108 @@ begin
   Reject(new Bars.Options(Height := 3.0F));
 end procedure;
 
+procedure SwitchRows();
+  function DisabledChange(Value: bool): int;
+  begin
+    raise new Sys.InvalidOperationException('Disabled or unactivated switch invoked its mapper.');
+  end function;
+  function View(State: int): E.Element<int>;
+  begin
+    return E.ScrollView<int>(
+      'settings', E.Column<int>(
+        Switches.Switch<int>(
+          'first', 'Wi-Fi', State = 1, function(Value: bool): int => if Value then
+            1
+          else
+            0
+          end if, 'Two lines of description'
+        ),
+        Switches.Switch<int>('blocked', 'Disabled', false, DisabledChange, Enabled := false),
+        Switches.Switch<int>('locked', 'Locked', false, function(Value: bool): int => State)
+      )
+    );
+  end function;
+  procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+  begin
+    discard Session.Send(Input);
+    case Session.Step() of
+      when Tui.StepResult.Failed(_, _, _, const Reason: string):
+        raise new Sys.Exception(Reason);
+      else
+    end case;
+  end procedure;
 begin
+  discard V.Prepare<int>(View(0), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 14, 8);
+  const Initial: Tui.Frame := Session.Snapshot();
+  const Row: Tui.ControlSnapshot := Initial.Controls[0];
+  Check(
+    Row.Role = 'switch' and Row.Value = 'false' and Row.Focused and Row.Height = 3,
+    'Wrapped description belongs to one switch.'
+  );
+  Check(
+    Initial.Lines[0].Contains('[●─] Off') and Initial.Lines[1].Contains('Two lines'),
+    'Switch is readable without color.'
+  );
+  Send(Session, Tui.Input.Click(Row.Column + 1, Row.Row + 2));
+  Check(
+    Session.Snapshot().Controls[
+      0
+    ].Value = 'true' and Session.Snapshot().Lines[0].Contains('[─●] On'),
+    'Clicking the wrapped description proposes the next value.'
+  );
+  Send(Session, Tui.Input.Character(' '));
+  Check(Session.Snapshot().Controls[0].Value = 'false', 'Space toggles the model-owned value.');
+  const Blocked: Tui.ControlSnapshot := Session.Snapshot().Controls[1];
+  Send(Session, Tui.Input.Click(Blocked.Column, Blocked.Row));
+  Send(Session, Tui.Input.Activate('blocked'));
+  Check(
+    not Blocked.Enabled and not Session.Snapshot().Controls[1].Focused,
+    'Disabled switch ignores mouse and direct activation.'
+  );
+  Send(Session, Tui.Input.KeyPress(Keys.Key.Tab, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[2].Focused, 'Tab skips disabled switches.');
+  Send(Session, Tui.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
+  Check(Session.Snapshot().Controls[2].Value = 'false', 'A model can decline the proposed change.');
+end procedure;
+
+procedure TextTable();
+  function View(State: int): E.Element<int>;
+  begin
+    return Tables.Table<int>(
+      'measures', [
+        new Tables.Column('Key', L.Extent.Fixed(L.Measure.Cells(3))),
+        new Tables.Column('N', Align := Tables.Alignment.Right)
+      ], [new Tables.Row<int>('value', [Tables.Cell<int>.Text('A界Z'), Tables.Cell<int>.Text('7')])]
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 9, 3);
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(Frame.Lines[0] = 'Key     N' and Frame.Controls.Length = 0, 'Read-only table headings.');
+  Check(
+    Frame.Cells[9].Text = 'A' and Frame.Cells[10].Text = '界' and Frame.Cells[11].Text = ''
+    and Frame.Cells[12].Text = ' ' and Frame.Cells[17].Text = '7',
+    'Clip a wide text cell at its own boundary and right-align the next cell.'
+  );
+  try
+    discard V.Prepare<int>(
+      Tables.Table<int>(
+        'people', [new Tables.Column('Person')],
+        [new Tables.Row<int>('person', [Tables.Cell<int>.Content([E.Text<int>('Name')])])]
+      ), V.Target.Terminal
+    );
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains('Graphical profile'), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Composed table cells require the GUI.');
+end procedure;
+
+begin
+  SwitchRows();
+  TextTable();
   BorderlessStatus();
   PersistentDialog();
   ProgressTracks();

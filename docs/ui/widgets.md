@@ -53,6 +53,9 @@ and input support. [GUI adapter](gui/host.md),
 | Reactions and user menus | | | Yes |
 | Popover and confirmation popover anchored to a button | | | Yes |
 | Tooltip attached to a single control | | | Yes |
+| Checkbox with checked, unchecked and mixed states, or a switch with an on/off state | Yes | Yes | Yes |
+| Radio group with one model-owned selection | Yes | Yes | Yes |
+| Select with optional search and model-owned choice | Yes | Yes | Yes |
 | Single-line text field with label, placeholder, hint or error | Yes | Yes | Yes |
 | Field icons, affixes, clear and password buttons, and size variants | | | Yes |
 | Search field and wrapping multiline text area with affixes | | | Yes |
@@ -60,6 +63,7 @@ and input support. [GUI adapter](gui/host.md),
 | Single-selection segmented control, sizes, icons and full width | | | Yes |
 | Copy button with transient feedback | | | Yes |
 | Icon button with tooltip, shortcut hint and busy state | | | Yes |
+| Table with text cells, sortable headings and selectable rows | Yes | Yes | Yes |
 | Sidebar navigation | Yes | Yes | Yes |
 | Status bar with text, actions, progress and spacers | Yes | Yes | Yes |
 | Native table of contents and scroll anchors | | | Yes |
@@ -459,14 +463,12 @@ dash.
 
 `Fpas.Ui.Widgets.Inputs.RadioButtons.RadioButton` proposes selecting an unselected row
 through its `OnSelect` mapper. `Fpas.Ui.Widgets.Inputs.RadioGroups.RadioGroup` arranges
-native radio rows in a column. Its model owns a selected index, or `-1`
+the choices in a column. Its model owns a selected index, or `-1`
 before a choice is made. Each item can have a description and its own
 input permission. Activating the selected item proposes no change. Use
 `RadioGroups.ItemId(Id, Index)` to focus or inspect a specific row.
 
-These controls require the graphical profile. The GUI gallery's Selection
-page shows the original notification checkboxes, connectivity switches
-and save-frequency radio group.
+Checkboxes, switches and radio groups support all three profiles. The [terminal checkbox](tui/selection/checkbox.md) exposes `true`, `false` or `mixed`. The [terminal switch](tui/selection/switch.md) shows On or Off. The [terminal radio group](tui/selection/radio-group.md) occupies one tab stop and supports arrow-key selection. Individual `RadioButton` controls require the graphical profile. Both galleries show the notification checkboxes, connectivity switches and save-frequency choices on Selection.
 
 ## Radio cards
 
@@ -817,8 +819,8 @@ opening them requires moving the scope outside the factory. Validation realizes
 only the native visible range and overscan.
 
 The graphical gallery shows these controls on Data display and uses list items
-for Recent in the Notifications sheet. Terminal and portable preflight reject
-these elements.
+for Recent in the Notifications sheet. The [terminal table](tui/data-display/table.md)
+supports plain text cells. The other Data display widgets and composed table cells require the graphical profile.
 
 ## Command palette
 
@@ -1415,9 +1417,9 @@ All three widgets require the graphical profile.
 `Fpas.Ui.Widgets.Inputs.Selects.Select<TMsg>(Id, Items, Selected, OnChange, Settings)` uses
 zero-based indices in model order. Use minus one for an unselected trigger.
 Items supply a literal caption and an optional glyph. Enable `Searchable`
-to filter the native popup. Choosing a row reports its original index and
+to filter the popup. Choosing a row reports its original index and
 returns focus to the trigger. Escape dismisses the popup. Visible option
-rows use `Selects.OptionId(Id, Index)` in GUI snapshots.
+rows use `Selects.OptionId(Id, Index)` in GUI and terminal snapshots. The [terminal select](tui/inputs/select.md) displays text labels.
 
 ## Number field
 
@@ -1428,7 +1430,7 @@ Shift with an arrow applies ten steps. Input is clamped to the bounds and
 Enter or loss of focus displays the accepted value. `DecimalPlaces` sets
 display precision. `Suffix` adds unit text beside the editor. The buttons
 use `NumberFields.DecreaseId(Id)` and `NumberFields.IncreaseId(Id)` in GUI
-snapshots. Both widgets require the Graphical profile.
+snapshots. The number field requires the Graphical profile.
 
 ## Scrolling
 

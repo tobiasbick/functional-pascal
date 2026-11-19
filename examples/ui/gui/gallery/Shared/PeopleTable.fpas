@@ -1,0 +1,131 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/table.md)
+
+unit Gallery.Shared.PeopleTable;
+
+uses Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// One person in the GUI and terminal Data display examples.
+public type Person = record
+  // Stable selection identity in both galleries.
+  public Id: string;
+  // Display name.
+  public Name: string;
+  // Example email address.
+  public Email: string;
+  // Team role.
+  public Role: string;
+  // Membership status.
+  public Status: string;
+  // Semantic tone of the GUI status badge.
+  public Tone: S.Tone;
+  // Formatted revenue.
+  public Revenue: string;
+end record;
+
+function SortKey(Item: Person; Index: int): string;
+begin
+  return case Index of
+    when 0: Item.Name;
+    when 2: Item.Role;
+    else Item.Status;
+  end case;
+end function;
+
+// Returns the five sample people in stable display order.
+// ## Parameters
+// - `Sort`: Current sortable heading and direction.
+// ## Returns
+// A fresh array of people with stable IDs.
+public function Ordered(Sort: T.Sort): array of Person;
+begin
+  const People: array of Person := [
+    new Person(
+      'person-0',
+      'Jonas Berg',
+      'jonas@example.com',
+      'Owner',
+      'Active',
+      S.Tone.Success,
+      '$12,384'
+    ),
+    new Person(
+      'person-1',
+      'Priya Nair',
+      'priya@example.com',
+      'Admin',
+      'Active',
+      S.Tone.Success,
+      '$9,846'
+    ),
+    new Person(
+      'person-2',
+      'Tomas Rivera',
+      'tomas@example.com',
+      'Editor',
+      'Invited',
+      S.Tone.Warning,
+      '$7,215'
+    ),
+    new Person(
+      'person-3',
+      'Lena Fischer',
+      'lena@example.com',
+      'Viewer',
+      'Active',
+      S.Tone.Success,
+      '$3,127'
+    ),
+    new Person(
+      'person-4',
+      'Aiko Tanaka',
+      'aiko@example.com',
+      'Editor',
+      'Suspended',
+      S.Tone.Danger,
+      '$1,962'
+    )
+  ];
+
+  for Index: int := 1 to People.Length - 1 do
+    const Current: Person := People[Index];
+    var Position: int := Index;
+    while Position > 0 do
+      const Compare: int := Sys.String.CompareOrdinal(
+        SortKey(People[Position - 1], Sort.Column),
+        SortKey(Current, Sort.Column)
+      );
+      if (not Sort.Descending and Compare <= 0) or (Sort.Descending and Compare >=
+        0)
+      then
+        break;
+      end if;
+
+      People[Position] := People[Position - 1];
+      Position := Position - 1;
+    end while;
+
+    People[Position] := Current;
+  end for;
+
+  return People;
+end function;
+
+// Builds the shared headings with host-appropriate widths for the trailing columns.
+// ## Parameters
+// - `RoleWidth`: Width of the role column.
+// - `StatusWidth`: Width of the status column.
+// - `RevenueWidth`: Width of the right-aligned revenue column.
+// ## Returns
+// The five columns in gallery order.
+public function Columns(RoleWidth: L.Extent; StatusWidth: L.Extent; RevenueWidth: L.Extent): array of T.Column;
+begin
+  return [
+    new T.Column('Name', Sortable := true),
+    new T.Column('Email', Grow := 1.2F),
+    new T.Column('Role', RoleWidth, Sortable := true),
+    new T.Column('Status', StatusWidth, Sortable := true),
+    new T.Column('Revenue', RevenueWidth, Align := T.Alignment.Right)
+  ];
+end function;
+
+end unit;

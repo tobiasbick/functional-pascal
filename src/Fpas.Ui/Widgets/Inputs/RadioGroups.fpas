@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.RadioGroups;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
-// One positional choice in a graphical radio group.
+// One positional choice in a radio group.
 public type Item = record
   // Literal caption.
   public Label: string;
@@ -14,7 +14,7 @@ public type Item = record
   public Enabled: bool := true;
 end record;
 
-// Composes native CUI radio rows around a single model-owned choice.
+// Composes radio rows around a single model-owned choice.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -26,7 +26,7 @@ end record;
 // - `Enabled`: Whether the group accepts input.
 // - `Gap`: Distance between rows, defaulting to CUI's ten logical points.
 // ## Returns
-// A radio group for the graphical profile.
+// A radio group for graphical and terminal views.
 public function RadioGroup<TMsg>(
   Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
   Enabled: bool := true; Gap: L.Spacing? := null

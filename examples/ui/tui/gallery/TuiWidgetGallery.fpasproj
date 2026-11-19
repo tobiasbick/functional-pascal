@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../gui/gallery/Shared/PeopleTable.fpas;../../gui/gallery/Shared/ButtonExamples.fpas;../../gui/gallery/Shared/EditorStatus.fpas;../../gui/gallery/Shared/Profile.fpas;../../gui/gallery/Shared/ProgressExample.fpas;../../gui/gallery/Shared/SwitchExamples.fpas;../../gui/gallery/Shared/CheckboxExamples.fpas;../../gui/gallery/Shared/SaveFrequency.fpas;../../gui/gallery/Shared/PickerChoices.fpas" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj" />
   </ItemGroup>
 </Project>

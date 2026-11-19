@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Selection.State;
 
 uses
+  Gallery.Shared.SaveFrequency as Frequency,
   Fpas.Ui.Widgets.Inputs.RangeSliders as R,
   GuiGallery.Shared.State as Demo;
 
@@ -11,7 +12,7 @@ public type Model = record
   // Airplane-mode switch value.
   public Airplane: bool := false;
   // Selected save-frequency example.
-  public SaveFrequency: int := 1;
+  public SaveFrequency: int := Frequency.Initial;
   // Selected destination in the radio cards.
   public SavePlace: int := 1;
   // Current volume on the continuous slider.

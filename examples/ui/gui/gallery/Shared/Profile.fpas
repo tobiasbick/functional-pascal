@@ -1,0 +1,10 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/text-field.md)
+
+unit Gallery.Shared.Profile;
+
+// Initial full name in the workspace, Inputs and profile dialog.
+public const Name: string := 'Maya Okafor';
+// Initial example email in all profile views.
+public const Email: string := 'maya@example.com';
+
+end unit;

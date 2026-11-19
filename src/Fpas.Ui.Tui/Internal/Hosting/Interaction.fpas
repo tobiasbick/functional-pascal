@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -63,6 +63,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return false;
     end if;
 
+    if Control.Role = 'select' then
+      Focus := Control.Id;
+    end if;
+
     case Handler.Activate() of
       when Actions.Result.Send(const Message: TMsg):
         Apply(Message);
@@ -116,6 +120,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end if;
     end if;
 
+    const Layer: A.Scope<TMsg>? := Layout.Active;
+    if Layer <> null and Layer.LocalInput <> null then
+      Focus := Layer.Initial;
+      return;
+    end if;
+
     for Control: A.Control<TMsg> in Layout.Controls do
       if Eligible(Control, Scope) and Control.Id = Focus then
         return;
@@ -134,38 +144,30 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       Old := A.FindControl<TMsg>(Previous, Parent);
     end while;
 
-    Focus := '';
-    for Control: A.Control<TMsg> in Layout.Controls do
-      if Eligible(Control, Scope) then
-        Focus := Control.Id;
-        return;
-      end if;
-    end for;
+    Focus := Navigation.NextTab<TMsg>(Layout, Scope, '', false);
+    if Previous <> null and A.FindControl<TMsg>(Layout, Focus) = null then
+      // Manual scrolling can hide the selected row. Leave the viewport where the user put it.
+      Focus := '';
+      for Control: A.Control<TMsg> in Layout.Controls do
+        if Eligible(Control, Scope) then
+          Focus := Control.Id;
+          return;
+        end if;
+      end for;
+    end if;
+  end procedure;
+
+  procedure MoveFocus(Layout: A.Layout<TMsg>; Target: string);
+  begin
+    Focus := Target;
+    if Target <> '' and A.FindControl<TMsg>(Layout, Target) = null then
+      discard Navigation.Reveal<TMsg>(Layout, Target, ScrollOffsets, Apply);
+    end if;
   end procedure;
 
   procedure Cycle(Layout: A.Layout<TMsg>; Backwards: bool);
   begin
-    const Keys: Generic.List<string> := new Generic.List<string>();
-    var Index: int := 0;
-    for Control: A.Control<TMsg> in Layout.Controls do
-      if Eligible(Control, FocusScope) then
-        if Control.Id = Focus then
-          Index := Keys.Count;
-        end if;
-
-        Keys.Add(Control.Id);
-      end if;
-    end for;
-
-    if Keys.Count > 0 then
-      Focus := Keys[
-        (Index + (if Backwards then
-          Keys.Count - 1
-        else
-          1
-        end if)) mod Keys.Count
-      ];
-    end if;
+    MoveFocus(Layout, Navigation.NextTab<TMsg>(Layout, FocusScope, Focus, Backwards));
   end procedure;
 
   function Focused(Layout: A.Layout<TMsg>): A.Control<TMsg>?;
@@ -210,6 +212,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   function Dismiss(Modal: A.Scope<TMsg>?): bool;
   begin
     if Modal <> null then
+      case Modal.LocalInput of
+        when is Sys.Func<App.Input, bool> as Popup:
+          return Popup.Invoke(App.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
+        else
+      end case;
+
       case Modal.Escape of
         when is Sys.Func<TMsg> as Callback:
           Apply(Callback.Invoke());
@@ -328,8 +336,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Control <> null then
-      if Control.Role = 'navigation' and Modifiers = K.KeyModifiers.None then
-        const Id: string? := Sidebars.Move<TMsg>(Layout, Focus, Key, ScrollOffsets, Apply);
+      if Control.Role = 'radio' and Modifiers = K.KeyModifiers.None then
+        const Next: string? := Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+        if Next <> null then
+          Focus := Next;
+          discard Navigation.Reveal<TMsg>(Layout, Next, ScrollOffsets, Apply);
+          return;
+        end if;
+      end if;
+
+      if (Control.Role = 'navigation' or Control.Role = 'table-row') and Modifiers =
+        K.KeyModifiers.None
+      then
+        const Id: string? := Navigation.Move<TMsg>(Layout, Focus, Key, ScrollOffsets, Apply);
         if Id <> null then
           Focus := Id;
           return;
@@ -518,6 +537,17 @@ end function;
 // - `Event`: Input to route.
 public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
 begin
+  const Scope: A.Scope<TMsg>? := Layout.Active;
+  if Scope <> null then
+    case Scope.LocalInput of
+      when is Sys.Func<App.Input, bool> as Popup:
+        if Popup.Invoke(Event) then
+          return;
+        end if;
+      else
+    end case;
+  end if;
+
   case Event of
     when App.Input.Focus(const Id: string):
       Routing.SetFocus(Layout, Id);

@@ -1,0 +1,67 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/select.md)
+
+unit Gallery.Shared.PickerChoices;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+
+const Countries: array of S.Item := [
+  new S.Item('Canada'), new S.Item('Denmark'), new S.Item('Germany'), new S.Item('Iran'),
+  new S.Item('Japan'), new S.Item('Kenya'), new S.Item('Netherlands'), new S.Item('Portugal'),
+  new S.Item('United States')
+];
+const Languages: array of S.Item := [
+  new S.Item('C99'),
+  new S.Item('C11'),
+  new S.Item('C17'),
+  new S.Item('C23'),
+  new S.Item('C++17'),
+  new S.Item('Objective-C'),
+  new S.Item('Zig'),
+  new S.Item('Odin'),
+  new S.Item('Rust')
+];
+
+// Germany is initially selected in the Country field.
+public const InitialCountry: int := 2;
+// Language starts with its placeholder.
+public const InitialLanguage: int := -1;
+
+// Builds the Country field for the Inputs page.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Index`: Current model selection.
+// - `Change`: Maps a new choice to a message.
+// ## Returns
+// The shared Country select.
+public function Country<TMsg>(Index: int; Change: function(int): TMsg): E.Element<TMsg>;
+begin
+  return S.Select<TMsg>(
+    'input-country',
+    Countries,
+    Index,
+    Change,
+    new S.Options(Label := 'Country')
+  );
+end function;
+
+// Builds the Language field for the Inputs page.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Index`: Current model selection.
+// - `Change`: Maps a new choice to a message.
+// ## Returns
+// The shared Language select.
+public function Language<TMsg>(Index: int; Change: function(int): TMsg): E.Element<TMsg>;
+begin
+  return S.Select<TMsg>(
+    'input-language',
+    Languages,
+    Index,
+    Change,
+    new S.Options(Label := 'Language', Placeholder := 'Pick a language', Searchable := true)
+  );
+end function;
+
+end unit;

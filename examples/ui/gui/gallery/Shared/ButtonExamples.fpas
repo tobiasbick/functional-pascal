@@ -1,0 +1,178 @@
+// [Documentation](../../../../../docs/ui/gui/actions/button.md)
+
+unit Gallery.Shared.ButtonExamples;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
+
+const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
+const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
+
+function Sample<TMsg>(Preview: TMsg; Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element<TMsg>;
+begin
+  return B.Button<TMsg>(
+    Id,
+    Label,
+    Preview,
+    new B.Options(Variant := Style, ControlSize := Size)
+  );
+end function;
+
+// Builds the six gallery button variants.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Preview`: Message for a harmless sample activation.
+// - `Wide`: Whether the samples fit on one row.
+// ## Returns
+// Variant buttons in gallery order.
+public function Variants<TMsg>(Preview: TMsg; Wide: bool): E.Element<TMsg>;
+begin
+  const Primary: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'primary',
+    'Primary',
+    S.ButtonVariant.Primary
+  );
+  const Secondary: E.Element<TMsg> := Sample<TMsg>(Preview, 'secondary', 'Secondary');
+  const Outline: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'outline',
+    'Outline',
+    S.ButtonVariant.Outline
+  );
+  const Ghost: E.Element<TMsg> := Sample<TMsg>(Preview, 'ghost', 'Ghost', S.ButtonVariant.Ghost);
+  const Danger: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'danger',
+    'Danger',
+    S.ButtonVariant.Destructive
+  );
+  const Link: E.Element<TMsg> := Sample<TMsg>(Preview, 'link', 'Link', S.ButtonVariant.Link);
+
+  return if Wide then
+    E.Row<TMsg>(
+      Row,
+      Primary,
+      Secondary,
+      Outline,
+      Ghost,
+      Danger,
+      Link
+    )
+  else
+    E.Column<TMsg>(
+      Stack,
+      E.Row<TMsg>(Row, Primary, Secondary, Outline),
+      E.Row<TMsg>(Row, Ghost, Danger, Link)
+    )
+  end if;
+end function;
+
+// Builds the gallery button sizes.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Preview`: Message for a harmless sample activation.
+// ## Returns
+// The small, medium and large buttons.
+public function Sizes<TMsg>(Preview: TMsg): E.Element<TMsg>;
+begin
+  return E.Row<TMsg>(
+    Row,
+    Sample<TMsg>(Preview, 'small', 'Small', Size := B.Size.Small),
+    Sample<TMsg>(Preview, 'medium', 'Medium'),
+    Sample<TMsg>(Preview, 'large', 'Large', Size := B.Size.Large)
+  );
+end function;
+
+// Builds the labelled icon actions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Preview`: Message for a harmless sample activation.
+// ## Returns
+// New project, Download and Continue.
+public function Icons<TMsg>(Preview: TMsg): array of E.Element<TMsg>;
+begin
+  const Project: E.Element<TMsg> := B.Button<TMsg>(
+    'new-project', 'New project', Preview,
+    new B.Options(
+      Variant := S.ButtonVariant.Primary,
+      Icon := Sys.Char.ConvertFromUtf32($E13D),
+      TerminalIcon := '+'
+    )
+  );
+  const Download: E.Element<TMsg> := B.Button<TMsg>(
+    'download',
+    'Download',
+    Preview,
+    new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2), TerminalIcon := '↓')
+  );
+  const Continue: E.Element<TMsg> := B.Button<TMsg>(
+    'continue', 'Continue', Preview,
+    new B.Options(
+      Variant := S.ButtonVariant.Outline,
+      IconRight := Sys.Char.ConvertFromUtf32($E049),
+      TerminalIconRight := '→'
+    )
+  );
+  return [Project, Download, Continue];
+end function;
+
+// Builds the interactive and disabled button states.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Preview`: Message for a harmless sample activation.
+// - `Wide`: Whether the samples fit on one row.
+// - `Loading`: Current save state.
+// - `Toggle`: Maps a save or reset action.
+// ## Returns
+// The four state examples.
+public function States<TMsg>(Preview: TMsg; Wide: bool; Loading: bool; Toggle: function(bool): TMsg): E.Element<TMsg>;
+begin
+  const Save: E.Element<TMsg> := B.Button<TMsg>(
+    'save',
+    if Loading then
+      'Saving'
+    else
+      'Save changes'
+    end if,
+    Toggle(true),
+    new B.Options(Loading := Loading, Variant := S.ButtonVariant.Primary)
+  );
+  const Reset: E.Element<TMsg> := B.Button<TMsg>(
+    'finish-save',
+    'Reset',
+    Toggle(false)
+  );
+  const Disabled: E.Element<TMsg> := B.Button<TMsg>(
+    'disabled', 'Disabled', Preview, new B.Options(Enabled := false)
+  );
+  const Selected: E.Element<TMsg> := B.Button<TMsg>(
+    'selected', 'Selected', Preview,
+    new B.Options(
+      Variant := S.ButtonVariant.Ghost,
+      Selected := true,
+      Icon := Sys.Char.ConvertFromUtf32($E06C),
+      TerminalIcon := '✓'
+    )
+  );
+  return if Wide then
+    E.Row<TMsg>(
+      Row,
+      Save,
+      Reset,
+      Disabled,
+      Selected
+    )
+  else
+    E.Column<TMsg>(
+      Stack,
+      E.Row<TMsg>(Row, Save, Reset),
+      E.Row<TMsg>(Row, Disabled, Selected)
+    )
+  end if;
+end function;
+
+end unit;

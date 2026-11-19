@@ -28,7 +28,7 @@ end unit;
 
 ## Interaction
 
-Pass a fraction from zero to one. Update it when work reports progress. The bar has no focus stop. In the gallery, the page binds Left and Right to adjust the sample. The TUI supports determinate progress with a fixed or available width.
+Pass a fraction from zero to one. Update it when work reports progress. The bar has no focus stop. **Components → Feedback → Progress** uses the GUI examples at 68% and 42%. The TUI supports determinate progress with a fixed or available width.
 
 ## See also
 

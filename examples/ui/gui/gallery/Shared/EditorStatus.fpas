@@ -1,0 +1,82 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/status-bar.md)
+
+unit Gallery.Shared.EditorStatus;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style, System.Collections.Generic as C;
+
+// Source excerpt shown above the editor status bar.
+public const CodeLines: array of string := [
+  'static tile *cache_lookup(tile_cache *c, uint32_t key) {',
+  '    uint32_t slot = key & (c->capacity - 1);',
+  '    while (c->tiles[slot].key != key) {',
+  '        if (!c->tiles[slot].used) return NULL;',
+  '        slot = (slot + 1) & (c->capacity - 1);',
+  '    }',
+  '    return &c->tiles[slot];',
+  '}'
+];
+
+// Builds the editor status bar in gallery order.
+// ## Type parameters
+// - `TMsg`: Host message type.
+// ## Parameters
+// - `Indent`: Spacing choice (2, 4 or 8).
+// - `Encoding`: UTF-8 or UTF-16 choice.
+// - `Language`: Markdown, C or plain text choice.
+// - `Command`: Maps an item key to a host action.
+// - `Columns`: Available terminal cells, or unlimited for the full editor.
+// ## Returns
+// The shared status bar.
+public function View<TMsg>(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg; Columns: int := int.MaxValue): E.Element<TMsg>;
+requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
+  and Language < 3;
+  function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item<TMsg>;
+  begin
+    return Status.Item<TMsg>.Action(
+      Key,
+      new Status.Label(Text, Icon),
+      Tip,
+      true,
+      Command(Key)
+    );
+  end function;
+
+begin
+  const Spaces: array of string := ['2', '4', '8'];
+  const Encodings: array of string := ['UTF-8', 'UTF-16'];
+  const Languages: array of string := ['Markdown', 'C', 'Plain text'];
+  const Items: C.List<Status.Item<TMsg>> := new C.List<Status.Item<TMsg>>();
+  if Columns >= 12 then
+    Items.Add(Item('branch', 'main', 'Switch branch', ''));
+  end if;
+
+  if Columns >= 18 then
+    Items.Add(Status.Item<TMsg>.Text(new Status.Label('Saved', '', Style.Tone.Success)));
+  end if;
+
+  if Columns >= 40 then
+    Items.Add(Status.Item<TMsg>.Progress(0.62F, 'Indexing 62%', 0.0F, false));
+  end if;
+
+  Items.Add(Status.Item<TMsg>.Spacer);
+  if Columns >= 55 then
+    Items.Add(Item('line', 'Ln 48, Col 17', 'Go to line'));
+  end if;
+
+  if Columns >= 65 then
+    Items.Add(Item('spaces', 'Spaces: ' + Spaces[Indent]));
+  end if;
+
+  Items.Add(Item('encoding', Encodings[Encoding]));
+  if Columns >= 76 then
+    Items.Add(Item('language', Languages[Language]));
+  end if;
+
+  if Columns >= 90 then
+    Items.Add(Item('notifications', '', 'Notifications', ''));
+  end if;
+
+  return Status.StatusBar<TMsg>('desktop-status', Items.ToArray());
+end function;
+
+end unit;

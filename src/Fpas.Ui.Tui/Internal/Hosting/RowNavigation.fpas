@@ -1,0 +1,177 @@
+// [Documentation](../../../../docs/ui/tui/navigation/sidebar.md)
+
+unit Fpas.Ui.Tui.Internal.Hosting.RowNavigation;
+
+uses
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
+  System as Sys, System.Collections.Generic as C;
+
+function Distance(Target: A.NavigationStop; Region: A.ScrollRegion): int;
+begin
+  return if Target.Bounds.Y < Region.Bounds.Y then
+    Target.Bounds.Y - Region.Bounds.Y
+  else
+    Sys.Math.Max(0, Target.Bounds.Y + Target.Bounds.Height - Region.Bounds.Y - Region.Bounds.Height)
+  end if;
+end function;
+
+// Finds the next logical tab stop within the active focus scope.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Current traversal order.
+// - `Scope`: Active focus scope.
+// - `Current`: Focused row, or empty to enter this scope.
+// - `Backwards`: Traverse in reverse.
+// ## Returns
+// The entry row of the next control, or empty for a scope without stops.
+public function NextTab<TMsg>(Layout: A.Layout<TMsg>; Scope: string; Current: string; Backwards: bool): string;
+begin
+  const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Current);
+  const From: string := if Control <> null and Control.TabTarget <> '' then
+    Control.TabTarget
+  else
+    Current
+  end if;
+  const Stops: array of A.TabStop := Sys.Array.FindAll<A.TabStop>(
+    Layout.TabStops,
+    function(Stop: A.TabStop): bool => Stop.Scope = Scope
+  );
+  if Stops.Length = 0 then
+    return '';
+  end if;
+  const At: int := Sys.Array.FindIndex<A.TabStop>(
+    Stops,
+    function(Stop: A.TabStop): bool => Stop.Id = From
+  );
+  if Backwards then
+    return Stops[
+      if At <= 0 then
+        Stops.Length - 1
+      else
+        At - 1
+      end if
+    ].Id;
+  end if;
+
+  return Stops[(At + 1) mod Stops.Length].Id;
+end function;
+
+// Reveals an offscreen row requested by an application focus command.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Current focus scope and row geometry.
+// - `Id`: Requested row identity.
+// - `Offsets`: Host-owned scroll positions.
+// - `Apply`: Dispatcher for model-owned scroll positions.
+// - `RequestScroll`: Allow a controlled viewport to receive a scroll request during input.
+// ## Returns
+// Whether a host-owned scroll position changed. Controlled views can receive a request during input.
+public function Reveal<TMsg>(Layout: A.Layout<TMsg>; Id: string; Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg); RequestScroll: bool := true): bool;
+begin
+  const Target: A.NavigationStop? := Sys.Array.Find<A.NavigationStop>(
+    Layout.NavigationRows,
+    function(Item: A.NavigationStop): bool => Item.Id = Id
+  );
+  if Target = null then
+    return false;
+  end if;
+  const Active: A.Scope<TMsg>? := Layout.Active;
+  const Scope: string := if Active = null then
+    ''
+  else
+    Active.Id
+  end if;
+  for Region: A.ScrollRegion in Layout.Regions do
+    if Region.Id = Target.ScrollId and Region.Scope = Scope then
+      const Shift: int := Distance(Target, Region);
+      if Region.Controlled then
+        const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
+        if Shift <> 0 and RequestScroll and Control <> null then
+          case Control.Action of
+            when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+              Scrolling.Move<TMsg>(View, Shift, Apply);
+            else
+          end case;
+        end if;
+
+        return false;
+      end if;
+      const Current: int := Offsets[Region.Id];
+      const Next: int := Sys.Math.Clamp(Current + Shift, 0, Region.Maximum);
+      Offsets[Region.Id] := Next;
+      return Current <> Next;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Moves keyboard focus within one group of rows and reveals the target row.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Presented layout.
+// - `Current`: Focused destination.
+// - `Key`: Unmodified navigation key.
+// - `Offsets`: Host-owned scroll positions.
+// - `Apply`: Dispatches a controlled viewport's scroll request.
+// ## Returns
+// The new focus identity, or null when the row does not own the key.
+public function Move<TMsg>(
+  Layout: A.Layout<TMsg>; Current: string; Key: K.Key;
+  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+): string?;
+begin
+  const Rows: array of A.NavigationStop := Layout.NavigationRows;
+  const At: int := Sys.Array.FindIndex<A.NavigationStop>(
+    Rows,
+    function(Item: A.NavigationStop): bool => Item.Id = Current
+  );
+  if At < 0 then
+    return null;
+  end if;
+  const Row: A.NavigationStop := Rows[At];
+  const Region: A.ScrollRegion? := Sys.Array.Find<A.ScrollRegion>(
+    Layout.Regions,
+    function(Item: A.ScrollRegion): bool => Item.Id = Row.ScrollId
+  );
+  const Page: int := if Region = null then
+    1
+  else
+    Sys.Math.Max(1, Region.Bounds.Height - 1)
+  end if;
+  const Delta: int := case Key of
+    when K.Key.Up: -1;
+    when K.Key.Down: 1;
+    when K.Key.PageUp: -Page;
+    when K.Key.PageDown: Page;
+    when K.Key.Home: -Rows.Length;
+    when K.Key.End: Rows.Length;
+    else 0;
+  end case;
+  if Delta = 0 then
+    return null;
+  end if;
+  const Direction: int := Sys.Math.Sign(Delta);
+  var Target: A.NavigationStop := Row;
+  for Step: int := 1 to Sys.Math.Abs(Delta) do
+    const Index: int := At + Step * Direction;
+    if Index < 0 or Index >= Rows.Length or Rows[Index].NavigationGroup <> Row.NavigationGroup then
+      break;
+    end if;
+
+    if Region = null and A.FindControl<TMsg>(Layout, Rows[Index].Id) = null then
+      break;
+    end if;
+
+    Target := Rows[Index];
+  end for;
+
+  discard Reveal<TMsg>(Layout, Target.Id, Offsets, Apply);
+  return Target.Id;
+end function;
+
+end unit;

@@ -1,6 +1,6 @@
 # Checkbox
 
-Use a checkbox for an independent option, such as email notifications. Available in **GUI**.
+Use a checkbox for an independent option, such as email notifications. Available in **GUI and TUI**.
 
 ![Checkbox in the FPAS gallery](images/checkbox.png)
 
@@ -42,7 +42,8 @@ Click the row or focus it with Tab and press Space or Enter. The callback receiv
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Checkboxes.fpas)
-- [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Checkbox.fpas)
+- [Shared gallery examples](../../../../examples/ui/gui/gallery/Shared/CheckboxExamples.fpas)
+- [Terminal checkbox](../../tui/selection/checkbox.md)
 - [Switch](switch.md)
 - [Selection](README.md)
 

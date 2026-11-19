@@ -3,6 +3,7 @@
 unit GuiGallery.Shared.State;
 
 uses
+  Gallery.Shared.Profile as Profile,
   Fpas.Ui.Gui.Toasts as Toasts,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Widgets.Theming.Themes as Themes;
@@ -28,9 +29,9 @@ public type Model = record
   // Last harmless dropdown command; previews do not alter files or projects.
   public MenuResult: string := '';
   // Sample name in the text-field example.
-  public Name: string := 'Maya Okafor';
+  public Name: string := Profile.Name;
   // Sample email in the reserved example domain.
-  public Email: string := 'maya@example.com';
+  public Email: string := Profile.Email;
 end record;
 
 // Messages handled by this gallery feature.

@@ -46,7 +46,7 @@ triggers a full repaint.
 ## Input and controlled state
 
 Tab/Shift+Tab traverse enabled controls in the active scope. An explicit Tab
-shortcut can move focus between panes. Enter and typed
+shortcut can move focus between panes. A [radio group](selection/radio-group.md) has one tab stop. Its unmodified arrow keys move focus and propose a selection. Enter and typed
 Space activate the focused action. Rows that support Up/Down focus navigation
 use unmodified arrows, leaving modified arrows available for application
 shortcuts.
@@ -96,8 +96,7 @@ backgrounds. Include relevant theme values in cached-subview dependencies.
 See [shared themes](../widgets.md#shared-themes). The
 [TUI gallery](../../../examples/ui/tui/gallery/README.md) applies them to two
 rounded panels with a 1:2 width ratio. Its scrollable sidebar opens a preview
-with a keyboard-adjustable progress line under **Feedback** and a status bar with
-an actionable encoding under **App chrome**.
+with the GUI’s upload and export examples under **Feedback** and the editor status bar under **App chrome**.
 
 The [CUI inventory](../../cui-widget-inventory.md) records the implemented
 terminal widgets and their behavior.

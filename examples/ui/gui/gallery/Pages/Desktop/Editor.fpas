@@ -4,8 +4,8 @@ unit GuiGallery.Pages.Desktop.Editor;
 
 uses
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Styles as Style,
-  Fpas.Ui.Widgets.Desktop.MenuBars as Bar, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Desktop.StatusBars as Status,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
+  Fpas.Ui.Widgets.Desktop.MenuBars as Bar, Fpas.Ui.Widgets.Overlays.Menus as M, Gallery.Shared.EditorStatus as StatusExample,
   Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Motion.Motion as Glyphs,
   System as Sys, System.Collections.Generic as Lists;
 
@@ -119,52 +119,17 @@ begin
   );
 end function;
 
-function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item<S.Msg>;
-begin
-  return Status.Item<S.Msg>.Action(
-    Key,
-    new Status.Label(Text, Icon),
-    Tip,
-    true,
-    S.Msg.Command(Key)
-  );
-end function;
-
 function Statusbar(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
 begin
-  const Spaces: array of string := ['2', '4', '8'];
-  const Encodings: array of string := ['UTF-8', 'UTF-16'];
-  const Languages: array of string := ['Markdown', 'C', 'Plain text'];
   return E.Column<S.Msg>(
     new L.Flow(Background := Colors.SurfaceMuted),
-    Status.StatusBar<S.Msg>(
-      'desktop-status', [
-        Item('branch', 'main', 'Switch branch', ''),
-        Status.Item<S.Msg>.Text(new Status.Label('Saved', '', Style.Tone.Success)),
-        Status.Item<S.Msg>.Progress(0.62F, 'Indexing 62%', 0.0F, false),
-        Status.Item<S.Msg>.Spacer,
-        Item('line', 'Ln 48, Col 17', 'Go to line'),
-        Item('spaces', 'Spaces: ' + Spaces[Model.Spaces]),
-        Item('encoding', Encodings[Model.Encoding]),
-        Item('language', Languages[Model.Language]),
-        Item('notifications', '', 'Notifications', '')
-      ]
-    )
+    StatusExample.View<S.Msg>(Model.Spaces, Model.Encoding, Model.Language, S.Msg.Command)
   );
 end function;
 
 function Code(Colors: Theme.Palette): E.Element<S.Msg>;
 begin
-  const Lines: array of string := [
-    'static tile *cache_lookup(tile_cache *c, uint32_t key) {',
-    '    uint32_t slot = key & (c->capacity - 1);',
-    '    while (c->tiles[slot].key != key) {',
-    '        if (!c->tiles[slot].used) return NULL;',
-    '        slot = (slot + 1) & (c->capacity - 1);',
-    '    }',
-    '    return &c->tiles[slot];',
-    '}'
-  ];
+  const Lines: array of string := StatusExample.CodeLines;
   const Rows: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
   for Index: int := 0 to Lines.Length - 1 do
     Rows.Add(

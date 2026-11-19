@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.Selects;
 
 uses Fpas.Ui.Elements as E;
 
-// A choice in a native select list.
+// A choice in a select list.
 public type Item = record
   // The visible label and filter text.
   public Label: string;
@@ -12,7 +12,7 @@ public type Item = record
   public Icon: string := '';
 end record;
 
-// Presentation and input settings for a graphical select.
+// Presentation and input settings for a select.
 public type Options = record
   // Caption above the trigger.
   public Label: string := '';
@@ -24,7 +24,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Builds CUI's select, with an optional search field.
+// Builds a select, with an optional search field.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -35,7 +35,7 @@ end record;
 // - `OnChange`: Maps a selected index to a message.
 // - `Settings`: Optional caption, search and input settings.
 // ## Returns
-// A graphical select with model-owned selection.
+// A select with model-owned selection.
 public function Select<TMsg>(
   Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
   Settings: Options? := null

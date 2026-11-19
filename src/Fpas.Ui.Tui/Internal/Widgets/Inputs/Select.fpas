@@ -1,0 +1,130 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/select.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.Select;
+
+uses
+  Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Styles as Styles;
+
+// Transient popup state. The application owns the committed selection.
+public type Cursor = record
+  // Open trigger, or empty when closed.
+  public Id: string := '';
+  // Case-insensitive option filter.
+  public Query: string := '';
+  // Highlighted original option index.
+  public Highlight: int := -1;
+  // First displayed position in the filtered list.
+  public Top: int := 0;
+end record;
+
+// Session-local popup access shared by successive views.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type State<TMsg> = record
+  // Reads the open popup.
+  public Read: function(): Cursor;
+  // Replaces transient state without sending an application message.
+  public Write: procedure(Cursor);
+  // Delivers a committed choice to the model.
+  public Apply: procedure(TMsg);
+end record;
+
+// Creates empty popup state for one terminal session.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Apply`: The session dispatcher.
+// ## Returns
+// Independent state for this session.
+public function Start<TMsg>(Apply: procedure(TMsg)): State<TMsg>;
+begin
+  var Current: Cursor := new Cursor();
+  return new State<TMsg>(
+    function(): Cursor => Current, procedure(Value: Cursor) begin
+      Current := Value;
+    end procedure, Apply
+  );
+end function;
+
+// The select trigger and current model bindings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
+  // Stable control identity.
+  public Id: string;
+  // Options in original index order.
+  public Items: array of S.Item;
+  // Model-owned index or minus one.
+  public Selected: int;
+  // Maps a new selection to a message.
+  public Change: function(int): TMsg;
+  // Label, placeholder and input policy.
+  public Settings: S.Options;
+  // The owning terminal session.
+  public Popup: State<TMsg>;
+
+  // Opens the popup at the model selection with a fresh query.
+  // ## Returns
+  // Opening does not send a message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    self.Popup.Write(new Cursor(self.Id, Highlight := self.Selected));
+    return A.Result<TMsg>.NoAction;
+  end function;
+
+  // Closes the popup and proposes a different option exactly once.
+  // ## Parameters
+  // - `Index`: Original position of the chosen option.
+  // ## Returns
+  // A model message if the choice changed.
+  public function Choose(Index: int): A.Result<TMsg>;
+  begin
+    self.Popup.Write(new Cursor());
+    return if self.Selected = Index then
+      A.Result<TMsg>.NoAction
+    else
+      A.Result<TMsg>.Send(self.Change(Index))
+    end if;
+  end function;
+end record;
+
+// Builds the collapsed field with its optional label.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Model binding and popup state.
+// ## Returns
+// A trigger and optional caption in a single column.
+public function Lower<TMsg>(Field: Trigger<TMsg>): E.Element<TMsg>;
+begin
+  const Value: string := if Field.Selected >= 0 then
+    Field.Items[Field.Selected].Label
+  elsif Field.Settings.Placeholder <> '' then
+    Field.Settings.Placeholder
+  else
+    'Select'
+  end if;
+  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+    Field.Id, Field, Field.Settings.Enabled,
+    new E.ActionView(
+      '▾ ' + G.SingleLine(Value),
+      Name := Field.Settings.Label,
+      Role := 'select',
+      Value := Value,
+      Variant := Styles.ButtonVariant.Secondary,
+      FillWidth := true,
+      Center := false,
+      Joined := true,
+      ArrowFocus := false
+    )
+  );
+  const Rows: array of E.Element<TMsg> := if Field.Settings.Label = '' then
+    [Button]
+  else
+    [E.Element<TMsg>.Label(Field.Settings.Label), Button]
+  end if;
+  return E.Element<TMsg>.Stack(Rows, false, new E.Flow());
+end function;
+
+end unit;

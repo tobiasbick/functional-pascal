@@ -29,7 +29,7 @@ end unit;
 
 ## Interaction
 
-Tab to the encoding and press Enter or click to change it. Text, spacers and inline progress do not take focus. Place a growing content area above the bar to keep it at the bottom as the terminal resizes.
+Under **Extended → App chrome**, activate the encoding, indentation or language to cycle its value. The gallery keeps the encoding available on narrow terminals and shows more items as space permits. Text, spacers and inline progress do not take focus. Place a growing content area above the bar to keep it at the bottom as the terminal resizes.
 
 ## See also
 

@@ -5,7 +5,7 @@ unit GuiGallery.Pages.Overview.Widgets.Workspace;
 uses
   GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as T, Fpas.Ui.Widgets.Inputs.Checkboxes as C,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as T, Gallery.Shared.CheckboxExamples as C,
   Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
 // Builds the original workspace form.
@@ -41,12 +41,7 @@ begin
           MaxUtf8Bytes := 95
         )
       ),
-      C.Checkbox<State.Msg>(
-        'workspace-summary',
-        'Email me a weekly summary',
-        Model.WeeklySummary,
-        State.Msg.SetWeeklySummary
-      ),
+      C.WeeklySummary<State.Msg>(Model.WeeklySummary, State.Msg.SetWeeklySummary),
       B.Button<State.Msg>(
         'workspace-create', 'Create workspace', State.Msg.CreateWorkspace,
         new B.Options(Variant := S.ButtonVariant.Primary, Width := L.Extent.Fill)

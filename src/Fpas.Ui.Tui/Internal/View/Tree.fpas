@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Largest column count accepted by the terminal host.
 public const MaximumColumns: int := 500;
@@ -53,8 +53,10 @@ public type ActionView = record
   public Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
   // Allow Up and Down to cycle focus as well as Tab.
   public ArrowFocus: bool := true;
-  // Sidebar identity for vertical keyboard navigation.
-  public Sidebar: string := '';
+  // Group identity for vertical keyboard navigation.
+  public NavigationGroup: string := '';
+  // Shared tab-entry identity for rows inside one radio group.
+  public TabTarget: string := '';
   // Minimum total width in cells, including button padding.
   public MinimumWidth: int := 0;
   // Optional contextual hint for the hovered control.
@@ -73,6 +75,8 @@ public type ActionView = record
   public Joined: bool := false;
   // Center captions in explicit or filled widths; false keeps leading padding.
   public Center: bool := true;
+  // Supporting text painted below the caption inside the same hit target.
+  public Description: string := '';
 end record;
 
 // Shared terminal geometry and input policy for dialogs and edge sheets.
@@ -93,6 +97,28 @@ public type ModalOptions = record
   public Dismissible: bool := true;
 end record;
 
+// Text table with the model's current order and activation mappers.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type TableView<TMsg> = record
+  // Stable identity for scrolling and row navigation.
+  public Id: string;
+  // Columns in display order.
+  public Columns: array of Tables.Column;
+  // Plain text rows in model order.
+  public Rows: array of Tables.Row<TMsg>;
+  // Current model-owned sort.
+  public Order: Tables.Sort?;
+  // Sort proposal on a heading activation.
+  public OnSort: Sys.Func<Tables.Sort, TMsg>?;
+  // Selection proposal on a row activation.
+  public OnSelect: Sys.Func<string, TMsg>?;
+  // Height, row appearance and input policy.
+  public Settings: Tables.Options;
+  // Intrinsic widths measured once per prepared view.
+  public Preferred: array of int;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -101,6 +127,8 @@ end record;
 public type Element<TMsg> = variant
   // Paint literal text.
   Label(Value: string);
+  // Plain text table with a pinned header.
+  Table(Value: TableView<TMsg>);
   // Single editable row with its model-owned value.
   TextField(Field: Edit.Field<TMsg>);
   // Fill the allocated cell surface with an image and register its input mapper.

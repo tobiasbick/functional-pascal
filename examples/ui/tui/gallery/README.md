@@ -2,41 +2,47 @@
 
 [Illustrated TUI widget guide](../../../../docs/ui/tui/README.md)
 
-The left panel lists the GUI gallery's Components and Extended destinations plus
-**Progress bar**, **Text** and **Cell grid**. The right panel previews the selected entry.
-**Components → Inputs** and **Buttons** share a three-track play queue. Enter a
-track title and press Enter or choose **Add track**. **Remove last** takes the
-most recently added title off the queue. **Components → Overlays** shows the same queue in a right-hand sheet
-or asks for confirmation before clearing it in a centered dialog.
-**Components → Feedback** shows upload and export progress as colored lines with
-percentages. **Extended → App chrome** places the status bar at the bottom of
-the preview. Click the encoding or focus it and press Enter to switch between
-UTF-8 and UTF-16. Text shows a heading,
-wrapping body text and muted caption. Cell grid draws colored ripples. Click a cell
-with the left or middle button to move their center, or use the wheel to change
-their spacing. The footer shows the grid size and the last local input. Resizing
-the terminal redraws the field. Other categories give a short description.
-The panels share the terminal width in a 1:2 ratio with a one-cell gap.
+The sidebar follows the GUI gallery’s **Components** and **Extended** sections in the same order. The preview shows the examples supported by the terminal. Destinations without a terminal example show a short description.
 
-Use ↑/↓, Page Up/Page Down or Home/End to move through the list. Enter, Space
-or a mouse click opens the destination. The wheel scrolls the list. On Overview,
-Feedback and Progress bar, ←/→ changes the sample by ten percentage points.
-On Inputs, Buttons and Overlays, → moves into the preview. In the title field
-←/→ moves the caret, Home/End jumps to either end and Escape returns to the
-selected sidebar entry. Tab moves between controls. Escape closes an overlay.
-Ctrl+T switches themes and Ctrl+Q exits.
+| Gallery destination | Terminal example |
+| --- | --- |
+| Components → Overview | Browse components or create a workspace with the shared name and email fields and an optional weekly summary. |
+| Components → Buttons | Variants, sizes and icons, then states. Choose **Save changes** to see **Saving**, or **Reset** to return to the initial state. |
+| Components → Inputs | Edit the full name and email side by side or stacked on narrow terminals. Overview and the profile dialog show the same values. |
+| Components → Inputs → Pickers | Choose a country or filter languages by typing in the open list. |
+| Components → Selection → Checkbox | Email notifications, Marketing and a disabled option. Email notifications also controls Comments in the Notifications sheet. |
+| Components → Selection → Switch | Toggle Wi-Fi, Bluetooth or Airplane mode. Wi-Fi and Bluetooth also control the corresponding preferences in Overlays. |
+| Components → Selection → Radio group | Choose how often to save with the arrow keys or a click. |
+| Components → Overlays | Edit the profile, open the Notifications sheet, or confirm project deletion. The sheet has three editable notification switches and two recent events. |
+| Components → Feedback → Progress | Uploading assets at 68% and exporting a clip at 42%. |
+| Components → Data display → Table | The five people from the GUI example, with the same columns, sort order and initial selection. |
+| Extended → Text and display → Text and inline code | Heading, body, label, secondary text, muted text and a command. |
+| Extended → App chrome | Editor excerpt and status bar. Activate the indentation, encoding or language to cycle its value. |
+| Terminal → Cell grid | Click the ripple field to move its center or use the wheel to change its spacing. |
 
-![Typing a track title in the terminal gallery](text-field.png)
+The sidebar and preview share the terminal width in a 1:2 ratio. Use ↑/↓, Page Up/Page Down or Home/End to navigate. Enter, Space or a click opens a destination. → focuses the first preview control and Tab moves between controls. Escape closes the current overlay or returns focus to the sidebar. In the table, ↑/↓ moves between people and Enter selects the focused row. Click or activate a sortable heading to change the order. Ctrl+T switches themes and Ctrl+Q exits.
 
-![Buttons for editing the queue](buttons.png)
+![Gallery button variants, sizes, icons and states](buttons.png)
 
-![Play queue in a right-hand sheet](sheet.png)
+![Editable full name and email on Inputs](text-field.png)
 
-![Centered dialog with Cancel focused](dialog.png)
+![Searchable Language select under Inputs](select.png)
 
-![Feedback in the terminal gallery](panels.png)
+![Checkboxes and connectivity switches on Selection](checkbox.png)
 
-![App chrome with the status bar along the bottom](statusbar.png)
+![Save-frequency radio group on Selection](radio-group.png)
+
+![Weekly summary checkbox in the workspace form](workspace.png)
+
+![Notification settings and recent events in a right-hand sheet](sheet.png)
+
+![Delete project confirmation with Cancel focused](dialog.png)
+
+![Upload and export progress under Feedback](panels.png)
+
+![People table under Data display](table.png)
+
+![Editor and status bar under App chrome](statusbar.png)
 
 After the [local SDK bootstrap](../../../../docs/build/development.md#build-an-fpas-application),
 build and run the gallery from the repository root.

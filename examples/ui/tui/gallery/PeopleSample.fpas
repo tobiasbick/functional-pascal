@@ -1,0 +1,45 @@
+// [Documentation](../../../../docs/ui/tui/data-display/table.md)
+
+unit TuiGallery.PeopleSample;
+
+uses
+  Gallery.Shared.PeopleTable as People, Fpas.Ui.Widgets.Collections.Tables as T,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as C;
+
+// Displays the GUI gallery's people using terminal text cells.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Order`: Current sort.
+// - `Selected`: Selected person's stable ID.
+// - `SortBy`: Maps a header activation.
+// - `SelectPerson`: Maps a row activation.
+// ## Returns
+// The Data display table.
+public function View<TMsg>(
+  Order: T.Sort; Selected: string; SortBy: function(T.Sort): TMsg;
+  SelectPerson: function(string): TMsg
+): E.Element<TMsg>;
+begin
+  const Rows: C.List<T.Row<TMsg>> := new C.List<T.Row<TMsg>>();
+  for Item: People.Person in People.Ordered(Order) do
+    Rows.Add(
+      new T.Row<TMsg>(
+        Item.Id, [
+          T.Cell<TMsg>.Text(Item.Name),
+          T.Cell<TMsg>.Text(Item.Email),
+          T.Cell<TMsg>.Text(Item.Role),
+          T.Cell<TMsg>.Text(Item.Status),
+          T.Cell<TMsg>.Text(Item.Revenue)
+        ], Item.Id = Selected
+      )
+    );
+  end for;
+
+  return T.Table<TMsg>(
+    'people', People.Columns(L.Extent.Content, L.Extent.Content, L.Extent.Content),
+    Rows.ToArray(), Order, SortBy, SelectPerson
+  );
+end function;
+
+end unit;

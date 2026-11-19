@@ -30,9 +30,9 @@ Return an empty command array for a state-only change. Use `Focus` to request fo
 
 ## Composing larger views
 
-Give each independently updated feature its own model, messages, update function and view. The parent owns the child model and wraps child messages in a case of its own message type. Use `Fpas.Ui.Composition.Map` to translate the child view's messages into that case. The terminal gallery's queue editor shows this composition in a small application. The GUI gallery uses slices for larger pages.
+Give each independently updated feature its own model, messages, update function and view. The parent owns the child model and wraps child messages in a case of its own message type. Use `Fpas.Ui.Composition.Map` to translate the child view's messages into that case. The terminal gallery’s profile editor shows this composition in a small application. The GUI gallery uses slices for larger pages.
 
-- [Queue editor](../../../examples/ui/tui/gallery/QueueSample.fpas) and [parent view](../../../examples/ui/tui/gallery/main.fpas)
+- [Profile editor](../../../examples/ui/tui/gallery/ProfileSample.fpas) and [parent view](../../../examples/ui/tui/gallery/main.fpas)
 - [Runtime, commands and slice helpers](runtime.md)
 - [Subview composition](../widgets.md#subview-composition)
 - [GUI handbook](../gui/README.md) and [TUI handbook](../tui/README.md)

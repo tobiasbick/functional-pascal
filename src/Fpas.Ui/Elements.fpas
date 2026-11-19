@@ -174,9 +174,9 @@ public type Element<TMsg> = variant
   SpeedDialAction(Id: string; Items: array of Speed.Item; OnChoose: function(int): TMsg; Settings: Speed.Options);
   // Foreground content with native swipe actions on either side.
   SwipeRow(Id: string; Content: Element<TMsg>; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
-  // Propose a changed checkbox value through native CUI.
+  // Propose a changed model-owned checkbox value.
   CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool);
-  // Propose a changed switch value through native CUI.
+  // Propose a changed model-owned switch value.
   SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool);
   // Propose selecting one native CUI radio row.
   RadioAction(Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg; Description: string; Enabled: bool);

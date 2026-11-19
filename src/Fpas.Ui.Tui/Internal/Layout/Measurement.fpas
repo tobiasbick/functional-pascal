@@ -33,7 +33,7 @@ end function;
 public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
-    when E.Element.TextField(_):
+    when E.Element.Table(_), E.Element.TextField(_):
       return 1;
     when E.Element.StatusBar(_, _):
       return if Horizontal then
@@ -137,6 +137,20 @@ end function;
 // Constraints with a resolved minimum content size.
 public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E.Flex;
 begin
+  case Node of
+    when E.Element.Table(const Table: E.TableView<TMsg>):
+      if not Horizontal then
+        case Table.Settings.Height of
+          when L.Extent.Fill:
+            return new E.Flex(Minimum := 1, Grow := 1);
+          when L.Extent.Fixed(const Distance: L.Measure):
+            return new E.Flex(Basis := F.Cells(Distance, false));
+          else
+        end case;
+      end if;
+    else
+  end case;
+
   if Horizontal then
     case Node of
       when E.Element.TextField(_):
@@ -256,6 +270,22 @@ end function;
 public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
 begin
   case Node of
+    when E.Element.Table(const Table: E.TableView<TMsg>):
+      if Horizontal then
+        var Width: int := Sys.Math.Min(E.MaximumColumns, Table.Columns.Length - 1);
+        for Cells: int in Table.Preferred do
+          Width := Width + Sys.Math.Min(Cells, E.MaximumColumns - Width);
+        end for;
+
+        return Width;
+      end if;
+
+      case Table.Settings.Height of
+        when L.Extent.Fixed(const Distance: L.Measure):
+          return F.Cells(Distance, false);
+        else
+          return Table.Rows.Length + 1;
+      end case;
     when E.Element.Label(const Value: string):
       if Horizontal then
         return G.LineWidth(Value);
@@ -287,14 +317,23 @@ begin
 
       return 1;
     when E.Element.Action(_, _, _, const View: E.ActionView):
-      return if Horizontal then
-        View.FixedWidth ?? Sys.Math.Max(
-          View.MinimumWidth,
-          G.Measure(View.Caption) + 2 * View.Padding
-        )
-      else
-        View.Height
+      if Horizontal then
+        if View.FixedWidth <> null then
+          return View.FixedWidth.Value;
+        end if;
+        var Width: int := G.Measure(View.Caption);
+        if View.Description <> '' then
+          Width := Sys.Math.Max(Width, G.LineWidth(View.Description));
+        end if;
+
+        return Sys.Math.Max(View.MinimumWidth, Width + 2 * View.Padding);
       end if;
+
+      if View.Description = '' then
+        return View.Height;
+      end if;
+
+      return View.Height + G.LineCount(View.Description, Columns - 2 * View.Padding);
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
       const Axis: bool,

@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.Checkboxes;
 
 uses Fpas.Ui.Elements as E;
 
-// Creates a model-controlled checkbox for the graphical profile.
+// Creates a model-controlled checkbox for graphical and terminal views.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -18,7 +18,7 @@ uses Fpas.Ui.Elements as E;
 // - `Indeterminate`: Draw a dash in place of the check mark while checked.
 // - `HideLabel`: Draw only the checkbox while retaining its accessible label.
 // ## Returns
-// The graphical control that proposes changes to the model.
+// The control that proposes changes to the model.
 public function Checkbox<TMsg>(
   Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
   Description: string := ''; Enabled: bool := true; Indeterminate: bool := false; HideLabel: bool := false

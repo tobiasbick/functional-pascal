@@ -1,0 +1,104 @@
+// [Documentation](../../../../../docs/ui/tui/selection/README.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows;
+
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Styles as S;
+
+function Row<TMsg>(
+  Id: string; Name: string; Checked: bool; Change: function(bool): TMsg;
+  Role: string; Caption: string; Description: string; Enabled: bool; Mixed: bool := false; Compact: bool := false
+): E.Element<TMsg>;
+begin
+  return E.Element<TMsg>.Action(
+    Id, new A.Proposal<bool, TMsg>(Change, not Checked), Enabled,
+    new E.ActionView(
+      Caption,
+      Name := Name,
+      Role := Role,
+      Value := if Mixed then
+        'mixed'
+      elsif Checked then
+        'true'
+      else
+        'false'
+      end if,
+      Variant := S.ButtonVariant.Ghost,
+      Description := Description,
+      ArrowFocus := false,
+      FillWidth := not Compact,
+      FixedWidth := if Compact then
+        3
+      else
+        null
+      end if,
+      Padding := 0,
+      Joined := true,
+      Center := false
+    )
+  );
+end function;
+
+// Builds a single focusable switch row.
+// ## Type parameters
+// - `TMsg`: The application's message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Label`: Accessible name.
+// - `On`: Value supplied by the model.
+// - `Change`: Maps activation to a proposed value.
+// - `Description`: Optional supporting text within the same hit target.
+// - `Enabled`: Whether input may activate the row.
+// ## Returns
+// A terminal action with a visible and inspectable Boolean state.
+public function Switch<TMsg>(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Description: string; Enabled: bool): E.Element<TMsg>;
+begin
+  const Marker: string := if On then
+    '[─●] On   '
+  else
+    '[●─] Off  '
+  end if;
+  return Row<TMsg>(Id, Label, On, Change, 'switch', Marker + Label, Description, Enabled);
+end function;
+
+// Builds a controlled checkbox with a single focus stop.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable row identity.
+// - `Label`: Accessible name, including when hidden.
+// - `Checked`: Current model value.
+// - `Change`: Maps the opposite Boolean to a message on activation.
+// - `Description`: Optional supporting text within the hit target.
+// - `Enabled`: Whether the control accepts input.
+// - `Indeterminate`: Show a dash when checked.
+// - `HideLabel`: Show just the three-cell marker.
+// ## Returns
+// An action whose inspection value is true, false or mixed.
+public function Checkbox<TMsg>(
+  Id: string; Label: string; Checked: bool; Change: function(bool): TMsg;
+  Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool
+): E.Element<TMsg>;
+begin
+  const Mixed: bool := Checked and Indeterminate;
+  const Marker: string := if Mixed then
+    '[-]'
+  elsif Checked then
+    '[x]'
+  else
+    '[ ]'
+  end if;
+  return Row<TMsg>(
+    Id, Label, Checked, Change, 'checkbox', if HideLabel then
+      Marker
+    else
+      Marker + ' ' + Label
+    end if,
+    if HideLabel then
+      ''
+    else
+      Description
+    end if, Enabled, Mixed, HideLabel
+  );
+end function;
+
+end unit;

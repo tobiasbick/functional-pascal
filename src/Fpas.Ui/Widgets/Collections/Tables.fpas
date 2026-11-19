@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Collections.Tables;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Globalization as Culture;
 
-// Text alignment within a native table column.
+// Text alignment within a table column.
 public type Alignment = enum: byte
   // Align to the left.
   Left;
@@ -14,7 +14,7 @@ public type Alignment = enum: byte
   Right;
 end enum;
 
-// Native column heading and width.
+// Column heading and width.
 public type Column = record
   // Literal column title.
   public Title: string;
@@ -36,12 +36,12 @@ public type Sort = record
   public Descending: bool := false;
 end record;
 
-// A native table cell.
+// A cell in a table row.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
 public type Cell<TMsg> = variant
-  // Use CUI's plain cell text and alignment.
+  // Show plain text with the column's alignment.
   Text(Value: string);
   // Draw a row of graphical children directly in the cell.
   Content(Children: array of E.Element<TMsg>);
@@ -59,13 +59,13 @@ public type Row<TMsg> = record
   public Selected: bool := false;
 end record;
 
-// Native table settings.
+// Table presentation and input settings.
 public type Options = record
   // Explicit viewport height. Content fits all rows.
   public Height: L.Extent := L.Extent.Content;
   // Whether alternate rows have a tint.
   public Striped: bool := false;
-  // Whether to use smaller rows.
+  // Whether to use smaller graphical rows. Terminal rows occupy one line.
   public Compact: bool := false;
   // Whether headers and rows accept activation.
   public Enabled: bool := true;
@@ -82,7 +82,7 @@ begin
   return Id + '/header/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
 end function;
 
-// Builds a native table with sortable headers and composable cells.
+// Builds a table with sortable headers and model-owned row selection. Graphical cells may contain widgets.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -92,9 +92,9 @@ end function;
 // - `Order`: Current sort, paired with OnSort.
 // - `OnSort`: Optional sort proposal mapper.
 // - `OnSelect`: Optional row activation mapper receiving its ID.
-// - `Settings`: Optional native table settings.
+// - `Settings`: Optional table settings.
 // ## Returns
-// The graphical element.
+// The shared table element.
 public function Table<TMsg>(Id: string; Columns: array of Column; Rows: array of Row<TMsg>; Order: Sort? := null; OnSort: Sys.Func<Sort, TMsg>? := null; OnSelect: Sys.Func<string, TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

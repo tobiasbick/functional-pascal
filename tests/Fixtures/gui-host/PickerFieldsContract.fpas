@@ -62,7 +62,11 @@ begin
   const Edit: function(double): string := function(Value: double): string => Value.ToString();
   const Items: array of S.Item := [new S.Item('Canada')];
   Reject(S.Select<string>('select', Items, 1, Pick), V.Target.Graphical, 'valid index');
-  Reject(S.Select<string>('select', Items, -1, Pick), V.Target.Terminal, 'Graphical profile');
+  for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
+    discard V.Prepare<string>(S.Select<string>('select', Items, -1, Pick), Profile);
+    Reject(S.Select<string>('select', Items, 1, Pick), Profile, 'valid index');
+  end for;
+
   Reject(
     N.NumberField<string>('number', Sys.Double.NaN, 0.0, 99.0, Edit),
     V.Target.Graphical,

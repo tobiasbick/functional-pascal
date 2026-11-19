@@ -1,15 +1,15 @@
 # Sheet and drawer
 
-Dock a secondary view to an edge while retaining the current page in the background. The gallery uses a right-hand sheet for the play queue.
+Dock a secondary view to an edge while retaining the current page in the background. Under **Components → Overlays → Dialogs and sheets**, **Open sheet** shows the Notifications example. The Comments, Mentions and Weekly digest [switches](../selection/switch.md) appear above the recent activity.
 
-![Right-hand Play queue sheet listing two tracks and a Done button](../../../../examples/ui/tui/gallery/sheet.png)
+![Right-hand Notifications sheet with preferences and recent activity](../../../../examples/ui/tui/gallery/sheet.png)
 
 ## Example
 
 ```pascal
 unit Docs.Tui.Widgets.Sheet;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Sheets as W, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Sheets as W;
 
 // Builds the sheet and drawer example.
 // ## Parameters
@@ -19,9 +19,9 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Sheets as W, Fpas.Ui.Widget
 // The resulting view.
 public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
 begin
-  return W.Sheet<string>('queue', Base,
-    E.Column<string>(E.Text<string>('1. First light'), B.Button<string>('done', 'Done', 'close')),
-    Open, new W.Options('Play queue', Size := 272, InitialFocus := 'done'), 'close');
+  return W.Sheet<string>('sheet', Base,
+    E.Column<string>(E.Text<string>('Recent'), E.Text<string>('Jonas commented on Release 1.0')),
+    Open, new W.Options('Notifications', Description := 'Choose what we tell you about.'), 'close');
 end function;
 
 end unit;
@@ -36,4 +36,4 @@ The edge defaults to Right. Size sets the width for a side sheet or height for a
 - [Overlays](README.md)
 - [Shared API](../../widgets.md#sheet-and-drawer)
 - [GUI sheet and drawer](../../gui/overlays/sheet.md)
-- [Gallery source](../../../../examples/ui/tui/gallery/QueueSample.fpas)
+- [Gallery source](../../../../examples/ui/tui/gallery/ProfileSample.fpas)

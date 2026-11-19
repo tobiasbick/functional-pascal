@@ -25,6 +25,9 @@ public sealed class HeadlessTuiTests
     [InlineData("effects.fpas", "effect contracts verified\n")]
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
     [InlineData("rendering.fpas", "Rendering contracts verified\n")]
+    [InlineData("checkbox.fpas", "Checkbox contracts verified\n")]
+    [InlineData("radio-group.fpas", "Radio group contracts verified\n")]
+    [InlineData("select.fpas", "Select contracts verified\n")]
     [InlineData("cell-grid.fpas", "Cell grid contracts verified\n")]
     [InlineData("text-field.fpas", "Text field contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)

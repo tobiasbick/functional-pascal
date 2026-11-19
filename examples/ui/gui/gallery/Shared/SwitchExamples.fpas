@@ -1,0 +1,58 @@
+// [Documentation](../../../../../docs/ui/gui/selection/switch.md)
+
+unit Gallery.Shared.SwitchExamples;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as S;
+
+// Identity and copy for one switch used by both galleries.
+public type Sample = record
+  // Stable widget identity.
+  public Id: string;
+  // Visible label.
+  public Label: string;
+  // Optional supporting text.
+  public Description: string := '';
+end record;
+
+// Wi-Fi setting on Selection.
+public const Wifi: Sample := new Sample('wifi', 'Wi-Fi');
+// Bluetooth setting on Selection.
+public const Bluetooth: Sample := new Sample('bluetooth', 'Bluetooth');
+// Independent airplane mode setting on Selection.
+public const Airplane: Sample := new Sample('airplane', 'Airplane mode', 'Turns off all radios.');
+// Profile visibility in the Edit profile dialog.
+public const PublicProfile: Sample := new Sample('edit-profile-public', 'Public profile');
+// Reply notifications in the sheet.
+public const Comments: Sample := new Sample(
+  'notifications-comments',
+  'Comments',
+  'When someone replies to you.'
+);
+// Mention notifications in the sheet.
+public const Mentions: Sample := new Sample(
+  'notifications-mentions',
+  'Mentions',
+  'When someone mentions you.'
+);
+// Weekly notifications in the sheet.
+public const WeeklyDigest: Sample := new Sample(
+  'notifications-weekly',
+  'Weekly digest',
+  'A summary every Monday.'
+);
+
+// Connects the gallery example to its owning model.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Item`: Sample definition.
+// - `On`: Current model value.
+// - `Change`: Maps an activation to a new value.
+// ## Returns
+// Shared switch with the example's label and description.
+public function View<TMsg>(Item: Sample; On: bool; Change: function(bool): TMsg): E.Element<TMsg>;
+begin
+  return S.Switch<TMsg>(Item.Id, Item.Label, On, Change, Description := Item.Description);
+end function;
+
+end unit;

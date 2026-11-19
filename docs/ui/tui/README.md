@@ -1,6 +1,6 @@
 # Terminal UI handbook
 
-Build terminal applications with `Fpas.Ui.Tui`. The gallery uses the shared theme and layout rules to place a navigation panel beside a scrollable preview. Its panels share the available width in a 1:2 ratio.
+Build terminal applications with `Fpas.Ui.Tui`. The gallery uses the shared theme and layout rules to place a navigation panel beside a scrollable preview. Its panels share the available width in a 1:2 ratio. Shared examples appear under the same gallery destinations as in the GUI. The cell grid has a separate **Terminal** destination.
 
 ![Navigation and progress bars in the terminal gallery](../../../examples/ui/tui/gallery/panels.png)
 
@@ -44,8 +44,10 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
 | [Navigation](navigation/README.md) | Sidebar with selectable destinations |
 | [Actions](actions/README.md) | Button |
-| [Inputs](inputs/README.md) | Single-line text field |
+| [Inputs](inputs/README.md) | Single-line text field, select with optional search |
+| [Selection](selection/README.md) | Checkbox, switch and radio group |
 | [Overlays](overlays/README.md) | Dialog and sheet |
+| [Data display](data-display/README.md) | Table with sortable headings and selectable rows |
 | [Feedback](feedback/README.md) | Determinate progress bar |
 | [App chrome](app-chrome/README.md) | Status bar |
 | [Text and display](text-and-display/README.md) | Text, semantic colors and cell grid |

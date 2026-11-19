@@ -13,7 +13,7 @@ namespace Fpas.IntegrationTests.Tui;
 public sealed class TuiGalleryTests
 {
     [Fact]
-    public async Task Gallery_navigates_scrolls_and_previews_progress_and_text_across_resizes()
+    public async Task Gallery_uses_GUI_sections_and_sample_data_and_keeps_terminal_navigation_working()
     {
         using var program = new Debuggee("tui-gallery");
         await TuiFixture.CompileExample(program, "gallery");
@@ -34,63 +34,161 @@ public sealed class TuiGalleryTests
             var initial = await Request("snapshot");
             AssertPanels(initial, 80, 24, 26);
             Assert.Equal("Overview", Selected(initial));
-            AssertProgress(initial, 26, 60);
+            Assert.Contains("Components for FPas", Preview(initial, 26));
+            Assert.Equal("Maya Okafor", Control(initial, "workspace-name").GetProperty("value").GetString());
             var dark = Colors(initial);
-            await Key("Down");
-            var moved = await Request("snapshot");
-            Assert.Equal("Buttons", Focused(moved));
-            Assert.Equal("Overview", Selected(moved));
-            await Key("Enter");
+
+            // Traverse the sidebar without changing the active page. The terminal extension follows both GUI groups.
+            string[] destinations = ["Overview", "Buttons", "Inputs", "Selection", "Navigation", "Overlays", "Feedback",
+                "Data display", "Charts", "Actions", "Smart inputs", "Pickers", "Capture", "Disclosure", "Reader",
+                "Data grid", "Code", "Social and media", "Planning", "More charts", "Motion", "AI", "Audio", "Files",
+                "Developer tools", "More developer tools", "Instruments", "Creative controls", "Canvas and bars",
+                "Voice", "Layout", "Text and display", "Editing tools", "App chrome", "Cell grid"];
+            foreach (var destination in destinations.Skip(1))
+            {
+                await Key("Down");
+                Assert.Equal(destination, Focused(await Request("snapshot")));
+            }
+            Assert.Contains("Components for FPas", Preview(await Request("snapshot"), 26));
+            await Key("Home");
+            Assert.Equal("Overview", Selected(await Request("snapshot")));
+            await Resize(144, 36);
+            var workspace = await Request("snapshot");
+            Assert.Equal("false", Control(workspace, "workspace-summary").GetProperty("value").GetString());
+            await Click("Email me a weekly summary");
+            await Click("Browse components");
             var buttons = await Request("snapshot");
             Assert.Equal("Buttons", Selected(buttons));
-            Assert.Contains("2 tracks queued", Preview(buttons, 26));
+            foreach (var id in new[] { "primary", "secondary", "outline", "ghost", "danger", "link", "small", "medium",
+                "large", "new-project", "download", "continue", "save", "finish-save", "disabled", "selected" })
+                Assert.Equal("button", Control(buttons, id).GetProperty("role").GetString());
+            Assert.False(Control(buttons, "disabled").GetProperty("enabled").GetBoolean());
+            await Click("Save changes");
+            Assert.Equal("Saving", Control(await Request("snapshot"), "save").GetProperty("label").GetString());
+            await Click("Reset");
+
+            await Click("Inputs");
             await Key("Right");
-            Assert.Equal("Track title", Focused(await Request("snapshot")));
-            Assert.False(Control(buttons, "queue-add").GetProperty("enabled").GetBoolean());
-            await Turn(new() { ["kind"] = "paste", ["text"] = "Evening rain" });
-            await Key("Left");
-            await Turn(new() { ["kind"] = "character", ["text"] = "i" });
-            await Key("Backspace");
-            Assert.Equal("Evening rain", Control(await Request("snapshot"), "queue-title").GetProperty("value").GetString());
-            await Key("Enter");
-            var fullQueue = await Request("snapshot");
-            Assert.Contains("3 tracks queued", Preview(fullQueue, 26));
-            Assert.False(Control(fullQueue, "queue-add").GetProperty("enabled").GetBoolean());
-            Assert.Equal("Remove last", Focused(fullQueue));
-            await Key("Left");
-            await Click("Overlays");
-            await Key("Right");
-            await Key("Enter");
-            var sheet = await Request("snapshot");
-            Assert.Equal("Done", Focused(sheet));
-            Assert.Contains("Evening rain", Preview(sheet, 26));
-            Assert.False(Control(sheet, "navigation/Overview").GetProperty("enabled").GetBoolean());
+            Assert.Equal("Full name", Focused(await Request("snapshot")));
+            await Key("End");
+            await Turn(new() { ["kind"] = "paste", ["text"] = "!" });
+            var inputs = await Request("snapshot");
+            Assert.Contains("We never share your email.", Preview(inputs, 48));
+            Assert.Equal("Maya Okafor!", Control(inputs, "input-name").GetProperty("value").GetString());
+            var nameField = Control(inputs, "input-name");
+            var emailField = Control(inputs, "input-email");
+            Assert.Equal("maya@example.com", emailField.GetProperty("value").GetString());
+            Assert.Equal(nameField.GetProperty("row").GetInt32(), emailField.GetProperty("row").GetInt32());
+            Assert.True(nameField.GetProperty("column").GetInt32() < emailField.GetProperty("column").GetInt32());
+            await Resize(80, 24);
+            var stacked = await Request("snapshot");
+            Assert.True(Control(stacked, "input-name").GetProperty("row").GetInt32()
+                < Control(stacked, "input-email").GetProperty("row").GetInt32());
+            await Resize(144, 36);
+
+            Assert.Equal("Germany", Control(inputs, "input-country").GetProperty("value").GetString());
+            Assert.Equal("Pick a language", Control(inputs, "input-language").GetProperty("value").GetString());
+            Assert.Equal(Control(inputs, "input-country").GetProperty("row").GetInt32(),
+                Control(inputs, "input-language").GetProperty("row").GetInt32());
+            Assert.True(Control(stacked, "input-country").GetProperty("row").GetInt32()
+                < Control(stacked, "input-language").GetProperty("row").GetInt32());
+            await Click("Country");
+            Assert.Equal("Germany", Focused(await Request("snapshot")));
+            await Key("Down");
             await Key("Escape");
-            Assert.Equal("View queue", Focused(await Request("snapshot")));
-            await Key("Tab");
+            Assert.Equal("Country", Focused(await Request("snapshot")));
+            await Click("Language");
+            await Turn(new() { ["kind"] = "paste", ["text"] = "RU" });
+            Assert.Equal("Rust", Focused(await Request("snapshot")));
             await Key("Enter");
+            Assert.Equal("Rust", Control(await Request("snapshot"), "input-language").GetProperty("value").GetString());
+
+            await Click("Selection");
+            await Key("Right");
+            var selection = await Request("snapshot");
+            Assert.Equal("Email notifications", Focused(selection));
+            var newsletter = Control(selection, "newsletter");
+            var wifi = Control(selection, "wifi");
+            Assert.Equal("true", newsletter.GetProperty("value").GetString());
+            Assert.Equal(newsletter.GetProperty("row").GetInt32(), wifi.GetProperty("row").GetInt32());
+            Assert.True(newsletter.GetProperty("column").GetInt32() < wifi.GetProperty("column").GetInt32());
+            Assert.False(Control(selection, "disabled-option").GetProperty("enabled").GetBoolean());
+            await Turn(new() { ["kind"] = "character", ["text"] = " " });
+            await Key("Tab");
+            Assert.Equal("Marketing", Focused(await Request("snapshot")));
+            await Key("Enter");
+            await Key("Tab");
+            Assert.Equal("Wi-Fi", Focused(await Request("snapshot")));
+            await Resize(80, 24);
+            var narrowSelection = await Request("snapshot");
+            Assert.True(Control(narrowSelection, "disabled-option").GetProperty("row").GetInt32()
+                < Control(narrowSelection, "wifi").GetProperty("row").GetInt32());
+            await Resize(144, 36);
+            Assert.Equal("true", Control(selection, "wifi").GetProperty("value").GetString());
+            Assert.Equal("false", Control(selection, "bluetooth").GetProperty("value").GetString());
+            Assert.Contains("Turns off all radios.", Preview(selection, 48));
+            await Turn(new() { ["kind"] = "character", ["text"] = " " });
+            await Key("Tab");
+            Assert.Equal("Bluetooth", Focused(await Request("snapshot")));
+            await Key("Enter");
+
+            await Key("Tab");
+            Assert.Equal("Airplane mode", Focused(await Request("snapshot")));
+            await Key("Tab");
+            Assert.Equal("Every 5 minutes", Focused(await Request("snapshot")));
+            await Key("Right");
+            var frequency = await Request("snapshot");
+            Assert.Equal("Only when I save", Focused(frequency));
+            Assert.Equal("true", Control(frequency, "save-frequency/2").GetProperty("value").GetString());
+
+            await Click("Overlays");
+            await Click("Edit profile");
+            var profile = await Request("snapshot");
+            Assert.Equal("Name", Focused(profile));
+            Assert.Equal("Maya Okafor!", Control(profile, "edit-profile-name").GetProperty("value").GetString());
+            await Key("End");
+            await Key("Backspace");
+            Assert.Equal("false", Control(profile, "edit-profile-public").GetProperty("value").GetString());
+            await Click("Public profile");
+            await Click("Save changes");
+            await Click("Open sheet");
+            var sheet = await Request("snapshot");
+            Assert.Contains("Jonas commented on Release 1.0", Preview(sheet, 48));
+            Assert.Contains("Priya invited you to Engines", Preview(sheet, 48));
+            Assert.False(Control(sheet, "navigation/Overview").GetProperty("enabled").GetBoolean());
+            Assert.Equal("true", Control(sheet, "notifications-mentions").GetProperty("value").GetString());
+            Assert.Equal("true", Control(sheet, "notifications-weekly").GetProperty("value").GetString());
+            Assert.Equal("false", Control(sheet, "notifications-comments").GetProperty("value").GetString());
+            await Click("Weekly digest");
+            await Click("Comments");
+            await Key("Escape");
+            await Click("Selection");
+            var changed = await Request("snapshot");
+            Assert.Equal("true", Control(changed, "save-frequency/2").GetProperty("value").GetString());
+            Assert.Equal("true", Control(changed, "newsletter").GetProperty("value").GetString());
+            Assert.Equal("true", Control(changed, "marketing").GetProperty("value").GetString());
+            await Click("Overview");
+            Assert.Equal("true", Control(await Request("snapshot"), "workspace-summary").GetProperty("value").GetString());
+            Assert.Equal("true", Control(changed, "wifi").GetProperty("value").GetString());
+            Assert.Equal("false", Control(changed, "bluetooth").GetProperty("value").GetString());
+            await Click("Overlays");
+            await Click("Open sheet");
+            Assert.Equal("true", Control(await Request("snapshot"), "notifications-comments").GetProperty("value").GetString());
+            await Key("Escape");
+            Assert.Equal("Open sheet", Focused(await Request("snapshot")));
+            await Click("Delete project");
             var dialog = await Request("snapshot");
             Assert.Equal("Cancel", Focused(dialog));
             AssertCenteredDialog(dialog);
             await Resize(40, 12);
             AssertCenteredDialog(await Request("snapshot"));
-            await Resize(80, 24);
-            await Turn(new() { ["kind"] = "click", ["button"] = "left", ["column"] = 2, ["row"] = 2 });
-            var dismissed = await Request("snapshot");
-            Assert.Equal("Clear queue…", Focused(dismissed));
-            Assert.Equal("Overlays", Selected(dismissed));
-            Assert.Contains("3 tracks queued", Preview(dismissed, 26));
-            await Key("Enter");
-            await Key("Enter");
-            Assert.Equal("Clear queue…", Focused(await Request("snapshot")));
+            await Resize(144, 36);
+            await Turn(new() { ["kind"] = "click", ["button"] = "left", ["column"] = 1, ["row"] = 0 });
+            Assert.Equal("Delete project", Focused(await Request("snapshot")));
             await Key("Enter");
             await Key("Tab");
-            Assert.Equal("Clear", Focused(await Request("snapshot")));
             await Key("Enter");
-            var cleared = await Request("snapshot");
-            Assert.Contains("0 tracks queued", Preview(cleared, 26));
-            Assert.Equal("View queue", Focused(cleared));
-            await Key("Left");
+            await Key("Escape");
             await Resize(100, 28);
             AssertPanels(await Request("snapshot"), 100, 28, 33);
             await Resize(40, 17);
@@ -98,54 +196,74 @@ public sealed class TuiGalleryTests
             AssertPanels(narrow, 40, 17, 13);
             Assert.Equal(dark, Colors(narrow));
             await Key("End");
-            var end = await Request("snapshot");
-            Assert.Equal("App chrome", Focused(end));
-            await Key("Enter");
-            Assert.Equal("App chrome", Selected(await Request("snapshot")));
+            Assert.Equal("Cell grid", Focused(await Request("snapshot")));
             await Key("PageUp");
-            var previous = Focused(await Request("snapshot"));
-            Assert.NotEqual("App chrome", previous);
-            await Key("PageDown");
-            Assert.Equal("App chrome", Focused(await Request("snapshot")));
+            Assert.NotEqual("Cell grid", Focused(await Request("snapshot")));
+            await Key("End");
+            await Key("Up");
+            await Key("Up");
+            await Key("Up");
+            await Key("Enter");
+            Assert.Equal("Text and display", Selected(await Request("snapshot")));
+            await Resize(100, 28);
+            Assert.Contains("Components are functions.", Preview(await Request("snapshot"), 33));
+            await Resize(40, 17);
+
             await Key("Home");
-            Assert.Equal("Overview", Focused(await Request("snapshot")));
-            await Click("Text");
-            var text = await Request("snapshot");
-            Assert.Equal("Text", Selected(text));
-            Assert.Contains("Field recording", Preview(text, 13));
-            await Click("Progress bar");
-            await Key("Right");
-            AssertProgress(await Request("snapshot"), 13, 70);
-            for (var i = 0; i < 8; i++) await Key("Left");
-            AssertProgress(await Request("snapshot"), 13, 0);
-            for (var i = 0; i < 11; i++) await Key("Right");
-            AssertProgress(await Request("snapshot"), 13, 100);
+            await Click("Feedback");
             await Turn(new() { ["kind"] = "scroll", ["column"] = 3, ["row"] = 4, ["delta"] = 40 });
             Assert.Contains(Controls(await Request("snapshot")), c => c.GetProperty("label").GetString() == "App chrome");
             await Turn(new() { ["kind"] = "scroll", ["column"] = 3, ["row"] = 4, ["delta"] = -40 });
-
             Assert.Equal("presented", await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 }));
-            var light = await Request("snapshot");
-            AssertPanels(light, 40, 17, 13);
-            var lightColors = Colors(light);
-            Assert.NotEqual(dark.Border, lightColors.Border);
-            Assert.NotEqual(dark.Surface, lightColors.Surface);
-            Assert.Equal("presented", await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 }));
+            Assert.NotEqual(dark, Colors(await Request("snapshot")));
+            await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 });
             await Resize(80, 24);
-            var restored = await Request("snapshot");
-            AssertPanels(restored, 80, 24, 26);
-            Assert.Equal(dark, Colors(restored));
-            Assert.Equal("Progress bar", Selected(restored));
-            AssertProgress(restored, 26, 100);
+            var feedback = await Request("snapshot");
+            AssertPanels(feedback, 80, 24, 26);
+            Assert.Equal(dark, Colors(feedback));
+            Assert.Matches(@"Uploading assets +─+ +68%", Preview(feedback, 26));
+            Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", Preview(feedback, 26));
 
-            await Click("Feedback");
-            var feedback = Preview(await Request("snapshot"), 26);
-            Assert.Matches(@"Uploading assets +─+ +68%", feedback);
-            Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", feedback);
+            await Resize(120, 24);
+            await Click("Data display");
+            var people = await Request("snapshot");
+            Assert.Contains("aiko@example.com", Preview(people, 40));
+            Assert.Equal("True", Control(people, "person-1").GetProperty("value").GetString());
             await Key("Right");
-            Assert.Matches(@"Uploading assets +─+ +78%", Preview(await Request("snapshot"), 26));
+            Assert.Equal("Priya Nair", Focused(await Request("snapshot")));
+            await Key("Down");
+            await Key("Enter");
+            Assert.Equal("True", Control(await Request("snapshot"), "person-2").GetProperty("value").GetString());
+            await Click("Name");
+            people = await Request("snapshot");
+            Assert.Contains("Name ↓", Preview(people, 40));
+            Assert.True(Control(people, "person-2").GetProperty("row").GetInt32()
+                < Control(people, "person-4").GetProperty("row").GetInt32());
+            await Click("Aiko Tanaka");
+            Assert.Equal("True", Control(await Request("snapshot"), "person-4").GetProperty("value").GetString());
+            await Resize(120, 10);
+            people = await Request("snapshot");
+            var headerRow = Control(people, "people/header/0").GetProperty("row").GetInt32();
+            var firstRow = Control(people, "person-2");
+            await Turn(new() { ["kind"] = "scroll", ["column"] = firstRow.GetProperty("column").GetInt32(),
+                ["row"] = firstRow.GetProperty("row").GetInt32(), ["delta"] = 10 });
+            people = await Request("snapshot");
+            Assert.Equal(headerRow, Control(people, "people/header/0").GetProperty("row").GetInt32());
+            Assert.DoesNotContain(Controls(people), c => c.GetProperty("id").GetString() == "person-2");
+            await Click("Aiko Tanaka");
+            await Key("Escape");
+            Assert.Equal("Data display", Focused(await Request("snapshot")));
+            await Turn(new() { ["kind"] = "scroll", ["column"] = firstRow.GetProperty("column").GetInt32(),
+                ["row"] = firstRow.GetProperty("row").GetInt32(), ["delta"] = -10 });
+            await Key("Right");
+            Assert.Equal("Aiko Tanaka", Focused(await Request("snapshot")));
+            await Key("Home");
+            Assert.Equal("Tomas Rivera", Focused(await Request("snapshot")));
+            await Resize(80, 24);
 
-            await Click("Cell grid");
+            await Key("Escape");
+            await Key("End");
+            await Key("Enter");
             Assert.Equal("processed", Status(await Request("step")));
             var gridFrame = await Request("snapshot");
             var grid = Controls(gridFrame).Single(c => c.GetProperty("role").GetString() == "cell-grid");
@@ -165,16 +283,23 @@ public sealed class TuiGalleryTests
             Assert.True(bigger.GetProperty("width").GetInt32() > width && bigger.GetProperty("height").GetInt32() > height);
             Assert.Equal("idle", Status(await Request("step")));
 
-            await Click("Cell grid");
+            await Key("Escape");
             await Key("End");
+            await Key("Up");
             await Key("Enter");
+            Assert.Equal("App chrome", Selected(await Request("snapshot")));
+            await Resize(156, 30);
             var chrome = await Request("snapshot");
-            var encoding = Controls(chrome).Single(c => c.GetProperty("role").GetString() == "status-item");
+            var encoding = Control(chrome, "desktop-status/encoding");
             var footerRow = encoding.GetProperty("row").GetInt32();
             Assert.InRange(footerRow, 26, 28);
             var footer = chrome.GetProperty("lines")[footerRow].GetString()!;
-            Assert.Matches(@"main +Saved +Indexing 62% +─{8} +Ln 48, Col 17 +UTF-8", footer);
+            Assert.Matches(@"main +Saved +Indexing 62% +─{8} +Ln 48, Col 17 +Spaces: 4 +UTF-8 +Markdown +Notifications", footer);
             Assert.Contains("────────", chrome.GetProperty("lines")[footerRow - 1].GetString());
+            await Click("Spaces: 4");
+            Assert.Equal("Spaces: 8", Focused(await Request("snapshot")));
+            await Click("Markdown");
+            Assert.Equal("C", Focused(await Request("snapshot")));
             await Click("UTF-8");
             Assert.Equal("UTF-16", Focused(await Request("snapshot")));
             await Key("Enter");
@@ -250,36 +375,26 @@ public sealed class TuiGalleryTests
     {
         var rows = frame.GetProperty("lines").EnumerateArray().Select(row => row.GetString()!).ToArray();
         var width = frame.GetProperty("columns").GetInt32();
-        var top = Array.FindIndex(rows, row => row.Contains("Clear queue?", StringComparison.Ordinal));
+        var top = Array.FindIndex(rows, row => row.Contains("Delete this project?", StringComparison.Ordinal));
         Assert.InRange(top, 0, rows.Length - 1);
-        var left = rows[top].LastIndexOf('╭', rows[top].IndexOf("Clear queue?", StringComparison.Ordinal));
+        var left = rows[top].LastIndexOf('╭', rows[top].IndexOf("Delete this project?", StringComparison.Ordinal));
         var right = rows[top].IndexOf('╮', left + 1);
-        Assert.Equal((width - 38) / 2, left);
-        Assert.Equal(38, right - left + 1);
+        Assert.Equal((width - Math.Min(width - 2, 50)) / 2, left);
+        Assert.Equal(Math.Min(width - 2, 50), right - left + 1);
         var bottom = Array.FindIndex(rows, top + 1, row => row[left] == '╰' && row[right] == '╯');
         Assert.InRange(rows.Length - 1 - bottom - top, 0, 1);
-        Assert.False(Control(frame, "queue-show").GetProperty("enabled").GetBoolean());
+        Assert.DoesNotContain(Controls(frame), c => c.GetProperty("id").GetString() == "sheet-open"
+            && c.GetProperty("enabled").GetBoolean());
     }
 
     private static string? Focused(JsonElement frame) =>
         Controls(frame).Single(c => c.GetProperty("focused").GetBoolean()).GetProperty("label").GetString();
 
     private static string? Selected(JsonElement frame) =>
-        Controls(frame).Single(c => c.GetProperty("value").GetString() == "true").GetProperty("label").GetString();
+        Controls(frame).Single(c => c.GetProperty("role").GetString() == "navigation" && c.GetProperty("value").GetString() == "true").GetProperty("label").GetString();
 
     private static string Preview(JsonElement frame, int leftWidth) => string.Join("\n",
         frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()![(leftWidth + 2)..^1]));
-
-    private static void AssertProgress(JsonElement frame, int leftWidth, int percent)
-    {
-        var preview = Preview(frame, leftWidth);
-        var line = Assert.Single(preview.Split('\n'), row => row.TrimStart().StartsWith("Loading", StringComparison.Ordinal));
-        var parts = line.Split("  ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.Equal(3, parts.Length);
-        Assert.StartsWith(parts[0], "Loading tracks");
-        Assert.All(parts[1], cell => Assert.Equal('─', cell));
-        Assert.Equal($"{percent}%", parts[2]);
-    }
 
     private static (int Border, int Surface) Colors(JsonElement frame)
     {

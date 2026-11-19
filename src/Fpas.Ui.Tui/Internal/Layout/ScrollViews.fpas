@@ -24,7 +24,18 @@ begin
   return Sys.Math.Max(Area.Height, M.Intrinsic<TMsg>(Child, false, Area.Width));
 end function;
 
-function Resolve<TMsg>(
+// Resolves the offset, visible rows and thumb for a vertical viewport.
+// ## Type parameters
+// - `TMsg`: Scroll message type.
+// ## Parameters
+// - `Position`: Requested start or end.
+// - `ContentRows`: Number of rows in the content.
+// - `Area`: Allocated viewport.
+// - `ShowScrollbar`: Allow the track on overflow.
+// - `OnScroll`: Optional model-owned scroll mapper.
+// ## Returns
+// The clamped viewport.
+public function Resolve<TMsg>(
   Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
   ShowScrollbar: bool; OnScroll: Sys.Func<L.ScrollChange, TMsg>?
 ): Viewport<TMsg>;
@@ -99,7 +110,7 @@ begin
     Operations.Add(
       new D.Operation(
         if Active then
-          '█'
+          '┃'
         else
           '│'
         end if, BarCell, Clip,

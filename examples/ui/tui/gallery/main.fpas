@@ -4,20 +4,30 @@ program TuiWidgetGallery;
 
 uses
   Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  TuiGallery.PeopleSample as People, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
   TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status,
-  TuiGallery.QueueSample as Queue, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
-  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, System as Sys, System.Threading as Threads;
+  Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency, Gallery.Shared.CheckboxExamples as Checks, Gallery.Shared.EditorStatus as Status, Gallery.Shared.ButtonExamples as Buttons, Gallery.Shared.ProgressExample as Progress,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Developer.Terminal as Term,
+  TuiGallery.ProfileSample as Profile, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
+  System as Sys, System.Threading as Threads;
 
 type Msg = variant
   SelectPage(Page: Catalog.Entry);
-  ChangeProgress(Delta: int);
+  Preview;
+  SetSaving(Value: bool);
+  DesktopCommand(Id: string);
+  CreateWorkspace;
+  SetWeeklySummary(Value: bool);
+  SetMarketing(Value: bool);
+  SetSaveFrequency(Value: int);
+  SetCountry(Value: int);
+  SetPickerLanguage(Value: int);
   Grid(Event: Grids.Event);
-  QueueAction(Action: Queue.Msg);
+  ProfileAction(Action: Profile.Msg);
   Focus(Id: string);
-  ToggleEncoding;
+  SortPeople(Order: Tables.Sort);
+  SelectPerson(Id: string);
   ToggleTheme;
   Quit;
 end variant;
@@ -25,10 +35,19 @@ end variant;
 type Model = record
   public Active: Catalog.Entry;
   public Mode: Themes.Mode := Themes.Mode.Dark;
-  public Percent: int := 60;
-  public Upload: int := 68;
-  public QueueState: Queue.State := new Queue.State();
-  public Utf8: bool := true;
+  public Saving: bool := false;
+  public WeeklySummary: bool := false;
+  public Marketing: bool := false;
+  public Country: int := Pickers.InitialCountry;
+  public PickerLanguage: int := Pickers.InitialLanguage;
+  public SaveFrequency: int := Frequency.Initial;
+  public WorkspaceCreated: bool := false;
+  public ProfileState: Profile.State := new Profile.State();
+  public PeopleOrder: Tables.Sort := new Tables.Sort(0);
+  public Person: string := 'person-1';
+  public Encoding: int := 0;
+  public Indent: int := 1;
+  public Language: int := 0;
   public Grid: GridSample.State := new GridSample.State();
 end record;
 
@@ -60,42 +79,64 @@ begin
       Next := State with
         Grid := GridSample.Update(State.Grid, Event);
       end with;
-    when Msg.ChangeProgress(const Delta: int):
-      if State.Active.Demo = Catalog.Preview.Feedback then
-        Next := State with
-          Upload := Sys.Math.Clamp(State.Upload + Delta, 0, 100);
-        end with;
-      elsif State.Active.Demo = Catalog.Preview.Progress or State.Active.Demo =
-        Catalog.Preview.Overview
-      then
-        Next := State with
-          Percent := Sys.Math.Clamp(State.Percent + Delta, 0, 100);
-        end with;
-      end if;
+    when Msg.Preview:
+    when Msg.SetSaving(const Value: bool):
+      Next := State with
+        Saving := Value;
+      end with;
+    when Msg.SetWeeklySummary(const Value: bool):
+      Next := State with
+        WeeklySummary := Value;
+      end with;
+    when Msg.SetCountry(const Value: int):
+      Next := State with
+        Country := Value;
+      end with;
+    when Msg.SetPickerLanguage(const Value: int):
+      Next := State with
+        PickerLanguage := Value;
+      end with;
+    when Msg.SetSaveFrequency(const Value: int):
+      Next := State with
+        SaveFrequency := Value;
+      end with;
+    when Msg.SetMarketing(const Value: bool):
+      Next := State with
+        Marketing := Value;
+      end with;
+    when Msg.CreateWorkspace:
+      Next := State with
+        WorkspaceCreated := true;
+      end with;
     when Msg.Focus(const Id: string):
       return new Mvu.Transition<Model, Msg>(State, [Mvu.Focus<Msg>(Id)]);
-    when Msg.QueueAction(const Action: Queue.Msg):
+    when Msg.ProfileAction(const Action: Profile.Msg):
       Next := State with
-        QueueState := Queue.Update(State.QueueState, Action);
+        ProfileState := Profile.Update(State.ProfileState, Action);
       end with;
-      case Action of
-        when Queue.Msg.Add:
-          if Next.QueueState.Tracks.Length = Queue.Capacity then
-            return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-remove')]);
-          end if;
-
-          return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-title')]);
-        when Queue.Msg.Remove:
-          if Next.QueueState.Tracks.Length = 0 then
-            return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-title')]);
-          end if;
-        when Queue.Msg.Clear:
-          return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-show')]);
+    when Msg.DesktopCommand(const Id: string):
+      case Id of
+        when 'encoding':
+          Next := State with
+            Encoding := 1 - State.Encoding;
+          end with;
+        when 'spaces':
+          Next := State with
+            Indent := (State.Indent + 1) mod 3;
+          end with;
+        when 'language':
+          Next := State with
+            Language := (State.Language + 1) mod 3;
+          end with;
         else
       end case;
-    when Msg.ToggleEncoding:
+    when Msg.SelectPerson(const Id: string):
       Next := State with
-        Utf8 := not State.Utf8;
+        Person := Id;
+      end with;
+    when Msg.SortPeople(const Order: Tables.Sort):
+      Next := State with
+        PeopleOrder := Order;
       end with;
     when Msg.ToggleTheme:
       Next := State with
@@ -137,123 +178,227 @@ begin
   return E.Styled<Msg>(E.Text<Msg>(Value), Role);
 end function;
 
-function Detail(State: Model): E.Element<Msg>;
+function Selection(State: Model; Wide: bool): E.Element<Msg>;
+begin
+  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Normal);
+  const Boxes: E.Element<Msg> := E.Column<Msg>(
+    Flow, Label('Checkbox', S.Role.Heading),
+    E.Column<Msg>(
+      Flow, Checks.Rows<Msg>(
+        State.ProfileState.Newsletter,
+        State.Marketing,
+        function(Value: bool): Msg => Msg.ProfileAction(Profile.Msg.SetNewsletter(Value)),
+        Msg.SetMarketing,
+        Msg.Preview
+      )
+    )
+  );
+  const Switches: E.Element<Msg> := E.Column<Msg>(
+    Flow, Label('Switch', S.Role.Heading),
+    Composition.Map<Profile.Msg, Msg>(Profile.Selection(State.ProfileState), Msg.ProfileAction)
+  );
+  const Half: L.Flex := new L.Flex(Basis := L.Extent.Fill, Grow := 1);
+  const Toggles: E.Element<Msg> := if Wide then
+    E.Row<Msg>(
+      new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Start),
+      E.Size<Msg>(Boxes, Half),
+      E.Size<Msg>(Switches, Half)
+    )
+  else
+    E.Column<Msg>(Flow, Boxes, Switches)
+  end if;
+  return E.Column<Msg>(
+    Flow,
+    Toggles,
+    Label('Radio group', S.Role.Heading),
+    Frequency.View<Msg>(State.SaveFrequency, Msg.SetSaveFrequency)
+  );
+end function;
+
+function Detail(State: Model; Columns: int): E.Element<Msg>;
 begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
   var Example: E.Element<Msg> := E.Column<Msg>();
   case State.Active.Demo of
-    when Catalog.Preview.Progress, Catalog.Preview.Overview:
+    when Catalog.Preview.Overview:
       Example := E.Column<Msg>(
         Flow,
-        Bars.ProgressBar<Msg>(
-          'sample-progress', cast<float>(State.Percent) / 100.0F,
-          new Bars.Options(Label := 'Loading tracks', ShowValue := true, Tone := S.Tone.Info)
+        Label('Components for FPas', S.Role.Heading),
+        E.Text<Msg>(
+          'Forms, tables, charts, planning boards and chat pieces with native rendering on Windows and Linux.'
         ),
-        Label('←/→  Adjust by 10%', S.Role.Muted)
+        B.Button<Msg>(
+          'browse',
+          'Browse components',
+          Msg.SelectPage(Catalog.Components[1]),
+          new B.Options(Variant := S.ButtonVariant.Primary, TerminalIconRight := '→')
+        ),
+        Label('Create a workspace', S.Role.Heading),
+        E.Text<Msg>('You can invite people once it exists.'),
+        Composition.Map<Profile.Msg, Msg>(
+          Profile.Editors(State.ProfileState, 'workspace'),
+          Msg.ProfileAction
+        ),
+        Checks.WeeklySummary<Msg>(State.WeeklySummary, Msg.SetWeeklySummary),
+        B.Button<Msg>(
+          'workspace-create',
+          'Create workspace',
+          Msg.CreateWorkspace,
+          new B.Options(Variant := S.ButtonVariant.Primary)
+        ),
+        E.Text<Msg>(
+          if State.WorkspaceCreated then
+            'Workspace created'
+          else
+            ''
+          end if
+        )
+      );
+    when Catalog.Preview.DataDisplay:
+      return E.Column<Msg>(
+        new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
+        Label(State.Active.Title, S.Role.Heading), Label('Table', S.Role.Heading),
+        People.View<Msg>(State.PeopleOrder, State.Person, Msg.SortPeople, Msg.SelectPerson)
       );
     when Catalog.Preview.Feedback:
       Example := E.Column<Msg>(
         Flow,
-        Bars.ProgressBar<Msg>(
-          'upload', cast<float>(State.Upload) / 100.0F,
-          new Bars.Options(Label := 'Uploading assets', ShowValue := true, Tone := S.Tone.Info)
-        ),
-        Bars.ProgressBar<Msg>(
-          'export', 0.42F,
-          new Bars.Options(Label := 'Exporting clip.mp4', ShowValue := true, Tone := S.Tone.Success)
-        ),
-        Label('←/→  Adjust upload by 10%', S.Role.Muted)
+        Label('Progress', S.Role.Heading),
+        Progress.Upload<Msg>(),
+        Progress.ExportBar<Msg>(false)
       );
     when Catalog.Preview.Buttons:
-      Example := Composition.Map<Queue.Msg, Msg>(Queue.Buttons(State.QueueState), Msg.QueueAction);
+      const Wide: bool := Columns >= 62;
+      const Icons: array of E.Element<Msg> := Buttons.Icons<Msg>(Msg.Preview);
+      Example := E.Column<Msg>(
+        Flow,
+        Label('Variants', S.Role.Heading),
+        E.Text<Msg>('One primary action per view. Secondary for everything else.'),
+        Buttons.Variants<Msg>(Msg.Preview, Wide),
+        Label('Sizes and icons', S.Role.Heading),
+        Buttons.Sizes<Msg>(Msg.Preview),
+        E.Row<Msg>(new L.Flow(Gap := L.Spacing.Normal), Icons),
+        Label('States', S.Role.Heading),
+        E.Text<Msg>('Loading keeps the label so the layout does not jump.'),
+        Buttons.States<Msg>(Msg.Preview, Wide, State.Saving, Msg.SetSaving)
+      );
+    when Catalog.Preview.Inputs:
+      const Wide: bool := Columns >= 66;
+      const Country: E.Element<Msg> := Pickers.Country<Msg>(State.Country, Msg.SetCountry);
+      const Language: E.Element<Msg> := Pickers.Language<Msg>(
+        State.PickerLanguage,
+        Msg.SetPickerLanguage
+      );
+      const Half: L.Flex := new L.Flex(Basis := L.Extent.Fill, Grow := 1);
+      const Choices: E.Element<Msg> := if Wide then
+        E.Row<Msg>(
+          new L.Flow(Gap := L.Spacing.Normal),
+          E.Size<Msg>(Country, Half),
+          E.Size<Msg>(Language, Half)
+        )
+      else
+        E.Column<Msg>(Flow, Country, Language)
+      end if;
+      Example := E.Column<Msg>(
+        Flow,
+        Label('Text fields', S.Role.Heading),
+        E.Text<Msg>('Labels above, hints and errors below.'),
+        Composition.Map<Profile.Msg, Msg>(
+          Profile.Editors(State.ProfileState, 'input', Wide),
+          Msg.ProfileAction
+        ), Label('Pickers', S.Role.Heading), Choices
+      );
+    when Catalog.Preview.Selection:
+      Example := Selection(State, Columns >= 66);
     when Catalog.Preview.Overlays:
-      Example := Composition.Map<Queue.Msg, Msg>(Queue.Openers(State.QueueState), Msg.QueueAction);
+      Example := E.Column<Msg>(
+        Flow, Label('Dialogs and sheets', S.Role.Heading),
+        E.Text<Msg>('Esc or a click outside closes them. Focus stays inside.'),
+        Composition.Map<Profile.Msg, Msg>(Profile.Openers(Columns >= 42), Msg.ProfileAction)
+      );
     when Catalog.Preview.AppChrome:
       return E.Column<Msg>(
-        new L.Flow(Padding := L.Spacing.Normal),
-        Label('App chrome', S.Role.Heading),
+        new L.Flow(Padding := L.Spacing.Normal), Label('App chrome', S.Role.Heading),
         E.Size<Msg>(
-          E.Column<Msg>(
-            Flow, E.Text<Msg>('Status bar'),
-            Label('Select the encoding to change it.', S.Role.Muted)
-          ),
-          new L.Flex(Basis := L.Extent.Fill, Grow := 1)
-        ),
-        Status.StatusBar<Msg>(
-          'editor-status', [
-            Status.Item<Msg>.Text(new Status.Label('main')),
-            Status.Item<Msg>.Text(new Status.Label('Saved')),
-            Status.Item<Msg>.Progress(0.62F, 'Indexing 62%', 0.0F, false),
-            Status.Item<Msg>.Spacer,
-            Status.Item<Msg>.Text(new Status.Label('Ln 48, Col 17')),
-            Status.Item<Msg>.Action(
-              'encoding', new Status.Label(
-                if State.Utf8 then
-                  'UTF-8'
-                else
-                  'UTF-16'
-                end if
-              ),
-              'Change encoding', true, Msg.ToggleEncoding
+          E.ScrollView<Msg>(
+            'editor-code', E.Column<Msg>(
+              Flow,
+              E.Text<Msg>('Menu bar, toolbar, document tabs and status bar around an editor.'),
+              E.Text<Msg>(Sys.String.Join(#10, Status.CodeLines))
             )
-          ]
-        )
+          ), new L.Flex(Basis := L.Extent.Fill, Grow := 1)
+        ),
+        Status.View<Msg>(State.Indent, State.Encoding, State.Language, Msg.DesktopCommand, Columns)
       );
     when Catalog.Preview.CellGrid:
       return Composition.Map<Grids.Event, Msg>(GridSample.View(State.Grid), Msg.Grid);
     when Catalog.Preview.Text:
       Example := E.Column<Msg>(
-        Flow, Label('Field recording', S.Role.Heading),
-        E.Text<Msg>(
-          'Rain drums softly on the roof. Footsteps cross the room, then fade into the distance.'
-        ),
-        Label('Recorded at dusk · Stereo', S.Role.Muted)
+        Flow,
+        Label('Text and inline code', S.Role.Heading),
+        Label('Components for FPas', S.Role.Heading),
+        E.Text<Msg>('Components are functions.'),
+        E.Text<Msg>('Label'),
+        Label('Secondary text', S.Role.Secondary),
+        Label('Muted text', S.Role.Muted),
+        E.Text<Msg>('Run the gallery with  fpas run')
       );
     else
+      Example := E.Text<Msg>(State.Active.Description);
   end case;
 
-  return E.ScrollView<Msg>(
-    'preview-scroll', E.Column<Msg>(
-      new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
-      Label(State.Active.Title, S.Role.Heading), E.Text<Msg>(State.Active.Description), Example
-    )
-  );
+  const PageFlow: L.Flow := new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal);
+  const Content: E.Element<Msg> := if State.Active.Demo = Catalog.Preview.Overview then
+    E.Column<Msg>(PageFlow, Example)
+  else
+    E.Column<Msg>(PageFlow, Label(State.Active.Title, S.Role.Heading), Example)
+  end if;
+  return E.ScrollView<Msg>('preview-' + State.Active.Title, Content);
 end function;
 
 function View(State: Model): E.Element<Msg>;
 begin
   const List: E.Element<Msg> := Nav.Sidebar<Msg>(
     'navigation',
-    [Section('Components', Catalog.Components), Section('Extended', Catalog.Extended)],
+    [
+      Section('Components', Catalog.Components),
+      Section('Extended', Catalog.Extended),
+      Section('Terminal', Catalog.Terminal)
+    ],
     State.Active.Title
   );
-  const Editing: bool := State.Active.Demo = Catalog.Preview.Buttons or State.Active.Demo =
-    Catalog.Preview.Overlays;
-  const FirstButton: string := if State.Active.Demo = Catalog.Preview.Overlays then
-    'queue-show'
-  else
-    'queue-title'
-  end if;
+  const FirstControl: string := case State.Active.Demo of
+    when Catalog.Preview.Overview: 'browse';
+    when Catalog.Preview.Buttons: 'primary';
+    when Catalog.Preview.Inputs: 'input-name';
+    when Catalog.Preview.Selection: 'newsletter';
+    when Catalog.Preview.Overlays: 'edit-profile-open';
+    when Catalog.Preview.DataDisplay: State.Person;
+    when Catalog.Preview.AppChrome: 'desktop-status/encoding';
+    else '';
+  end case;
   const SidebarFocus: Msg := Msg.Focus(Nav.ItemId('navigation', State.Active.Title));
   const Screen: E.Element<Msg> := Views.Screen<Msg>(
     E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),
-      Panel(1.0F, E.ScrollView<Msg>('navigation-scroll', List)), Panel(2.0F, Detail(State))
+      Panel(1.0F, E.ScrollView<Msg>('navigation-scroll', List)), Panel(
+        2.0F, Views.Viewport<Msg>(
+          'gallery-preview',
+          function(Size: Term.Viewport): E.Element<Msg> => Detail(
+            State,
+            Size.Columns - (Size.Columns - 1) div 3 - 5
+          )
+        )
+      )
     ),
     [],
     [
+      Keys.Shortcut<Msg>(Keys.Key.Left, Keys.KeyModifiers.None, SidebarFocus),
       Keys.Shortcut<Msg>(
-        Keys.Key.Left, Keys.KeyModifiers.None, if Editing then
-          SidebarFocus
+        Keys.Key.Right, Keys.KeyModifiers.None, if FirstControl = '' then
+          Msg.Preview
         else
-          Msg.ChangeProgress(-10)
-        end if
-      ),
-      Keys.Shortcut<Msg>(
-        Keys.Key.Right, Keys.KeyModifiers.None, if Editing then
-          Msg.Focus(FirstButton)
-        else
-          Msg.ChangeProgress(10)
+          Msg.Focus(FirstControl)
         end if
       ),
       Keys.Shortcut<Msg>(Keys.Key.Escape, Keys.KeyModifiers.None, SidebarFocus),
@@ -261,7 +406,7 @@ begin
       Keys.Shortcut<Msg>(Keys.Key.Q, Keys.KeyModifiers.Ctrl, Msg.Quit)
     ]
   );
-  return Queue.Present<Msg>(Screen, State.QueueState, Msg.QueueAction);
+  return Profile.Present<Msg>(Screen, State.ProfileState, Msg.ProfileAction);
 end function;
 
 begin

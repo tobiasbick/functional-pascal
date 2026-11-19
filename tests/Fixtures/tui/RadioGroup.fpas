@@ -1,0 +1,217 @@
+// [Documentation](../../../docs/ui/tui/selection/radio-group.md)
+
+program RadioGroupContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  System as Sys, System.Console as Console;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(Selected: int; Proposed: int): M.Transition<int, int>;
+begin
+  Check(Proposed <> Selected and Proposed <> 1, 'Redundant or disabled selection dispatched.');
+  return new M.Transition<int, int>(
+    if Proposed < 0 then
+      Selected
+    else
+      Proposed
+    end if, []
+  );
+end function;
+
+function Choices(Selected: int): E.Element<int>;
+begin
+  return R.RadioGroup<int>(
+    'speed', [
+      new R.Item('Slow', 'First option'), new R.Item('Medium', Enabled := false),
+      new R.Item('Fast', 'A longer description that wraps'), new R.Item('Instant')
+    ], Selected, function(Index: int): int => Index
+  );
+end function;
+
+function View(Selected: int): E.Element<int>;
+begin
+  return E.Column<int>(
+    B.Button<int>('before', 'Before', -2), Choices(Selected),
+    R.RadioGroup<int>(
+      'locked',
+      [new R.Item('Locked')],
+      0,
+      function(Index: int): int => 1,
+      Enabled := false
+    ),
+    R.RadioGroup<int>(
+      'declined',
+      [new R.Item('A'), new R.Item('B')],
+      0,
+      function(Index: int): int => -2
+    ),
+    B.Button<int>('after', 'After', -2)
+  );
+end function;
+
+function ScrollView(Selected: int): E.Element<int>;
+begin
+  return E.ScrollView<int>('scroll', E.Column<int>(E.Text<int>('Heading'), Choices(Selected)));
+end function;
+
+function Form(Selected: int): E.Element<int>;
+begin
+  return E.ScrollView<int>(
+    'scroll', E.Column<int>(
+      B.Button<int>('before', 'Before', -2), E.Text<int>('First'), E.Text<int>('Second'),
+      Choices(Selected), B.Button<int>('after', 'After', -2)
+    )
+  );
+end function;
+
+function Row(Frame: T.Frame; Id: string): T.ControlSnapshot;
+begin
+  for Item: T.ControlSnapshot in Frame.Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing row ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Value, Modifiers));
+end procedure;
+
+begin
+  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(2, Update, View, 20, 24);
+  Key(Session, K.Key.Tab);
+  const Chosen: T.ControlSnapshot := Row(Session.Snapshot(), 'speed/2');
+  Check(
+    Chosen.Focused and Chosen.Value = 'true' and Chosen.Role = 'radio' and Chosen.Height > 1,
+    'Tab enters on the selected row.'
+  );
+  Check(Session.Snapshot().Lines[Chosen.Row].Contains('(*) Fast'), 'Selected marker.');
+  Key(Session, K.Key.Enter);
+  Send(Session, T.Input.Character(' '));
+  Key(Session, K.Key.Tab, K.KeyModifiers.Shift);
+  Check(Row(Session.Snapshot(), 'before').Focused, 'Shift+Tab exits the whole group.');
+  Key(Session, K.Key.Tab);
+  Key(Session, K.Key.Up);
+  Check(
+    Row(
+      Session.Snapshot(),
+      'speed/0'
+    ).Focused and Row(Session.Snapshot(), 'speed/0').Value = 'true',
+    'Up skips the disabled row.'
+  );
+  Key(Session, K.Key.Left);
+  Check(Row(Session.Snapshot(), 'speed/3').Focused, 'Left wraps to the last choice.');
+  Key(Session, K.Key.Down);
+  Check(Row(Session.Snapshot(), 'speed/0').Focused, 'Down wraps to the first choice.');
+  const Disabled: T.ControlSnapshot := Row(Session.Snapshot(), 'speed/1');
+  Send(Session, T.Input.Click(Disabled.Column, Disabled.Row));
+  Send(Session, T.Input.Activate('locked/0'));
+  Send(Session, T.Input.Click(Chosen.Column, Chosen.Row + Chosen.Height - 1));
+  Send(Session, T.Input.Click(Chosen.Column, Chosen.Row));
+  Check(
+    Row(
+      Session.Snapshot(),
+      'speed/2'
+    ).Focused and Row(Session.Snapshot(), 'speed/2').Value = 'true',
+    'Clicking a description selects one row.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(Row(Session.Snapshot(), 'declined/0').Focused, 'Tab skips a disabled group.');
+  Key(Session, K.Key.Right);
+  Check(
+    Row(
+      Session.Snapshot(),
+      'declined/1'
+    ).Focused and Row(Session.Snapshot(), 'declined/0').Value = 'true',
+    'The model can decline a proposal.'
+  );
+  Send(Session, T.Input.Character(' '));
+  Key(Session, K.Key.Tab);
+  Check(Row(Session.Snapshot(), 'after').Focused, 'Tab exits a group after a declined proposal.');
+  Key(Session, K.Key.Tab, K.KeyModifiers.Shift);
+  Check(Row(Session.Snapshot(), 'declined/0').Focused, 'Reverse entry uses the model selection.');
+
+  for Selected: int in [-1, 1] do
+    using const Empty: T.HeadlessSession := T.StartHeadless<int, int>(
+      Selected,
+      Update,
+      Choices,
+      20,
+      15
+    );
+    Check(
+      Row(Empty.Snapshot(), 'speed/0').Focused and Row(Empty.Snapshot(), 'speed/0').Value = 'false',
+      'Missing or disabled selection focuses the first enabled choice without selecting it.'
+    );
+    Key(Empty, K.Key.Enter);
+    Check(Row(Empty.Snapshot(), 'speed/0').Value = 'true', 'Enter selects the focused choice.');
+  end for;
+
+  using const Scrolled: T.HeadlessSession := T.StartHeadless<int, int>(
+    3,
+    Update,
+    ScrollView,
+    20,
+    3
+  );
+  Check(
+    Row(Scrolled.Snapshot(), 'speed/3').Focused,
+    'Initial focus reveals an offscreen selection.'
+  );
+  Key(Scrolled, K.Key.Right);
+  Check(
+    Row(
+      Scrolled.Snapshot(),
+      'speed/0'
+    ).Focused and Row(Scrolled.Snapshot(), 'speed/0').Value = 'true',
+    'Wrapping back scrolls the target into view.'
+  );
+  Send(Scrolled, T.Input.Scroll(0, 1, 30));
+  Check(
+    Row(Scrolled.Snapshot(), 'speed/3').Value = 'false',
+    'The wheel can scroll away from the selected row without selecting another choice.'
+  );
+  using const Small: T.HeadlessSession := T.StartHeadless<int, int>(3, Update, Form, 20, 2);
+  Check(Row(Small.Snapshot(), 'before').Focused, 'Entry button is initially visible.');
+  Key(Small, K.Key.Tab);
+  Check(
+    Row(Small.Snapshot(), 'speed/3').Focused,
+    'Tab reveals the selection in a group below the fold.'
+  );
+  Key(Small, K.Key.Tab);
+  Check(
+    Row(Small.Snapshot(), 'after').Focused,
+    'Tab exits to the following button below the fold.'
+  );
+  Key(Small, K.Key.Tab, K.KeyModifiers.Shift);
+  Check(Row(Small.Snapshot(), 'speed/3').Focused, 'Reverse Tab enters the group.');
+  Key(Small, K.Key.Tab, K.KeyModifiers.Shift);
+  Check(
+    Row(Small.Snapshot(), 'before').Focused,
+    'Reverse Tab exits to the preceding button above the fold.'
+  );
+  Console.WriteLine('Radio group contracts verified');
+end;
+
+end program;

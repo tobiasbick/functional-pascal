@@ -74,6 +74,8 @@ Build the full URL from the address in the update when you need it.
 
 ## Source files
 
+- [Shared gallery example](../../../../examples/ui/gui/gallery/Shared/Profile.fpas)
+
 - `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
   - [TextField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/TextField.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Feedback.View;
 
 uses
+  Gallery.Shared.ProgressExample as Samples,
   GuiGallery.Pages.Feedback.State as Model, GuiGallery.Pages.Feedback.Widgets.Loading as Loading,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Feedback.Alerts as A, Fpas.Ui.Widgets.Feedback.ProgressBars as P, Fpas.Ui.Widgets.Feedback.Spinners as Spin,
@@ -61,20 +62,13 @@ begin
       Cards.Card<TMsg>(
         'progress-card', [
           E.Styled<TMsg>(E.Text<TMsg>('Progress'), S.Role.Heading),
-          P.ProgressBar<TMsg>(
-            'upload',
-            0.68F,
-            new P.Options(Label := 'Uploading assets', ShowValue := true)
-          ),
+          Samples.Upload<TMsg>(),
           P.ProgressBar<TMsg>(
             'index',
             0.0F,
             new P.Options(Label := 'Indexing', Indeterminate := true)
           ),
-          P.ProgressBar<TMsg>(
-            'export', 0.42F,
-            new P.Options(Label := 'Exporting clip.mp4', ShowValue := true, Dither := true)
-          ),
+          Samples.ExportBar<TMsg>(true),
           P.ProgressBar<TMsg>(
             'sync', 0.0F,
             new P.Options(Label := 'Syncing library', Indeterminate := true, Dither := true)

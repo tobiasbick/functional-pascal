@@ -202,11 +202,14 @@ and signing. The probe presents a button through both renderers.
 
 ## Terminal UI
 
-`TuiGalleryTests` checks both rounded panel outlines, their 1:2 width ratio,
-the one-cell gap and preview at three terminal sizes. It exercises click and
-keyboard selection, scrolling across sections, text, and progress from 0–100%. It verifies
-queue actions, disabled buttons, sheet and dialog focus, dismissal, dialog
-centering after resize, theme switching and a clean exit with Ctrl+Q.
+`TuiGalleryTests` checks the two rounded panels, their 1:2 width ratio and the
+sidebar’s destination order. It follows the shared profile through Overview,
+Inputs and Edit profile, checks both text-field layouts and exercises the button
+states, workspace and notification checkboxes, shared preferences across Selection and both overlays, deletion confirmation, focus and resize. It verifies
+the GUI’s progress values, sortable people table and editor status actions,
+along with the terminal cell grid, theme switching and Ctrl+Q.
+The terminal select contract checks filtered original indices, focus return, pointer dismissal, disabled controls, Unicode backspace, constrained viewports and removing the open trigger. The gallery checks the shared Country and Language examples in wide and stacked layouts.
+The radio-group contract covers one tab stop per group, wrapping past disabled options, pointer selection, model-declined changes and focus across a scroll boundary. The gallery also checks that the save-frequency selection survives page navigation.
 The gallery DAP test sends the same shortcuts through the private terminal
 and checks that resizing and changing themes produce the expected frames.
 

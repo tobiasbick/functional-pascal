@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Buttons.View;
 
 uses
+  Gallery.Shared.ButtonExamples as Samples,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Buttons.Widgets.DropdownMenu as Dropdown,
   GuiGallery.Pages.Buttons.Widgets.SegmentedControl as Segmented,
@@ -10,7 +11,6 @@ uses
   GuiGallery.Pages.Buttons.Widgets.ButtonGroup as Group,
   GuiGallery.Pages.Buttons.Widgets.CopyButton as Copy,
   GuiGallery.Pages.Buttons.Widgets.HoldButton as Hold,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Actions.IconButtons as I,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
@@ -25,16 +25,6 @@ const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
 function Glyph(Code: int): string;
 begin
   return Sys.Char.ConvertFromUtf32(Code);
-end function;
-
-function Sample(Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element<State.Msg>;
-begin
-  return B.Button<State.Msg>(
-    Id,
-    Label,
-    State.Msg.Preview,
-    new B.Options(Variant := Style, ControlSize := Size)
-  );
 end function;
 
 function IconSample(Id: string; Code: int; Caption: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element<State.Msg>;
@@ -83,28 +73,8 @@ end function;
 // The button variants, sizes, states, group and copy action.
 public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
 begin
-  const Sizes: E.Element<State.Msg> := E.Row<State.Msg>(
-    Row, Sample('small', 'Small', Size := B.Size.Small), Sample('medium', 'Medium'),
-    Sample('large', 'Large', Size := B.Size.Large)
-  );
-  const Project: E.Element<State.Msg> := B.Button<State.Msg>(
-    'new-project', 'New project', State.Msg.Preview,
-    new B.Options(Variant := S.ButtonVariant.Primary, Icon := Glyph($E13D), TerminalIcon := '+')
-  );
-  const Download: E.Element<State.Msg> := B.Button<State.Msg>(
-    'download',
-    'Download',
-    State.Msg.Preview,
-    new B.Options(Icon := Glyph($E0B2), TerminalIcon := '↓')
-  );
-  const Continue: E.Element<State.Msg> := B.Button<State.Msg>(
-    'continue', 'Continue', State.Msg.Preview,
-    new B.Options(
-      Variant := S.ButtonVariant.Outline,
-      IconRight := Glyph($E049),
-      TerminalIconRight := '→'
-    )
-  );
+  const Sizes: E.Element<State.Msg> := Samples.Sizes<State.Msg>(State.Msg.Preview);
+  const Actions: array of E.Element<State.Msg> := Samples.Icons<State.Msg>(State.Msg.Preview);
   const CopyIcon: E.Element<State.Msg> := IconSample(
     'icon-copy',
     $E09E,
@@ -124,63 +94,13 @@ begin
     'Delete',
     S.ButtonVariant.Secondary
   );
-  const Save: E.Element<State.Msg> := B.Button<State.Msg>(
-    'save',
-    if Model.ButtonLoading then
-      'Saving'
-    else
-      'Save changes'
-    end if,
-    State.Msg.SetButtonLoading(true),
-    new B.Options(Loading := Model.ButtonLoading, Variant := S.ButtonVariant.Primary)
-  );
-  const Reset: E.Element<State.Msg> := B.Button<State.Msg>(
-    'finish-save',
-    'Reset',
-    State.Msg.SetButtonLoading(false)
-  );
-  const Disabled: E.Element<State.Msg> := B.Button<State.Msg>(
-    'disabled', 'Disabled', State.Msg.Preview, new B.Options(Enabled := false)
-  );
-  const Selected: E.Element<State.Msg> := B.Button<State.Msg>(
-    'selected', 'Selected', State.Msg.Preview,
-    new B.Options(
-      Variant := S.ButtonVariant.Ghost,
-      Selected := true,
-      Icon := Glyph($E06C),
-      TerminalIcon := '✓'
-    )
-  );
-  const Primary: E.Element<State.Msg> := Sample('primary', 'Primary', S.ButtonVariant.Primary);
-  const Secondary: E.Element<State.Msg> := Sample('secondary', 'Secondary');
-  const Outline: E.Element<State.Msg> := Sample('outline', 'Outline', S.ButtonVariant.Outline);
-  const Ghost: E.Element<State.Msg> := Sample('ghost', 'Ghost', S.ButtonVariant.Ghost);
-  const Danger: E.Element<State.Msg> := Sample('danger', 'Danger', S.ButtonVariant.Destructive);
-  const Link: E.Element<State.Msg> := Sample('link', 'Link', S.ButtonVariant.Link);
-
-  const Variants: E.Element<State.Msg> := if Wide then
-    E.Row<State.Msg>(
-      Row,
-      Primary,
-      Secondary,
-      Outline,
-      Ghost,
-      Danger,
-      Link
-    )
-  else
-    E.Column<State.Msg>(
-      Stack,
-      E.Row<State.Msg>(Row, Primary, Secondary, Outline),
-      E.Row<State.Msg>(Row, Ghost, Danger, Link)
-    )
-  end if;
+  const Variants: E.Element<State.Msg> := Samples.Variants<State.Msg>(State.Msg.Preview, Wide);
   const Icons: E.Element<State.Msg> := if Wide then
     E.Row<State.Msg>(
       Row,
-      Project,
-      Download,
-      Continue,
+      Actions[0],
+      Actions[1],
+      Actions[2],
       CopyIcon,
       Share,
       Like,
@@ -189,25 +109,16 @@ begin
   else
     E.Column<State.Msg>(
       Stack,
-      E.Row<State.Msg>(Row, Project, Download),
-      E.Row<State.Msg>(Row, Continue, CopyIcon, Share, Like, Delete)
+      E.Row<State.Msg>(Row, Actions[0], Actions[1]),
+      E.Row<State.Msg>(Row, Actions[2], CopyIcon, Share, Like, Delete)
     )
   end if;
-  const States: E.Element<State.Msg> := if Wide then
-    E.Row<State.Msg>(
-      Row,
-      Save,
-      Reset,
-      Disabled,
-      Selected
-    )
-  else
-    E.Column<State.Msg>(
-      Stack,
-      E.Row<State.Msg>(Row, Save, Reset),
-      E.Row<State.Msg>(Row, Disabled, Selected)
-    )
-  end if;
+  const States: E.Element<State.Msg> := Samples.States<State.Msg>(
+    State.Msg.Preview,
+    Wide,
+    Model.ButtonLoading,
+    State.Msg.SetButtonLoading
+  );
   const GroupAndCopy: E.Element<State.Msg> := if Wide then
     E.Row<State.Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))),

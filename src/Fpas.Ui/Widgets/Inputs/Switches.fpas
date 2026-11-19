@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.Switches;
 
 uses Fpas.Ui.Elements as E;
 
-// Creates a model-controlled switch for the graphical profile.
+// Creates a model-controlled switch for graphical and terminal views.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -16,7 +16,7 @@ uses Fpas.Ui.Elements as E;
 // - `Description`: Optional secondary text below the caption.
 // - `Enabled`: Whether the row accepts input.
 // ## Returns
-// The graphical control that proposes changes to the model.
+// The control that proposes changes to the model.
 public function Switch<TMsg>(
   Id: string; Label: string; On: bool; OnChange: function(bool): TMsg;
   Description: string := ''; Enabled: bool := true

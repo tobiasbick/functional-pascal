@@ -2,7 +2,7 @@
 
 Keep the displayed order, selection and expansion in the model. For a
 large collection of equal-height rows, use a virtual list with a row factory.
-These controls require the GUI host.
+The [terminal table](../../tui/data-display/table.md) shares the text-cell API.
 
 | Widget | When to use it |
 | --- | --- |

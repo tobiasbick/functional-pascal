@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../../../doc/desktop.md#browsing-music-and-collections)
 
 // Formats the tagged values used by the track summary and its three detail panels.
 unit FpasAmp.Ui.Albums.Music.Details.Metadata;

@@ -1,0 +1,182 @@
+// [Documentation](../../doc/desktop.md#browsing-music-and-collections)
+
+unit FpasAmp.Ui.Tests.StatusCounts;
+
+uses
+  FpasAmp.Ui.Albums.Status as Footer, FpasAmp.Ui.Albums.Model as Albums,
+  FpasAmp.Ui.Albums.Update as Catalog, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
+  FpasAmp.Library.Albums.Model as Library, FpasAmp.Library.Metadata.Model as Tracks,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Bars,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I, Xunit as X;
+
+function Caption<TMsg>(Bar: E.Element<TMsg>): string;
+begin
+  case Bar of
+    when E.Element.StatusBar(_, const Items: array of Bars.Item<TMsg>, _):
+      case Items[0] of
+        when Bars.Item.Text(const Label: Bars.Label):
+          return Label.Text;
+        else
+      end case;
+    else
+  end case;
+
+  raise new Sys.InvalidOperationException('Expected a count in the status bar.');
+end function;
+
+// Counts shown to the user while browsing and filtering a library view.
+public type StatusCountTests = record
+  // Scope chooses the grid. Expected is its count when all entries match a search or filter.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(Toolbar.Scope.Albums, '1 of 1 album')]
+  [X.InlineDataAttribute(Toolbar.Scope.Artists, '2 of 2 artists')]
+  [X.InlineDataAttribute(Toolbar.Scope.Genres, '2 of 2 genres')]
+  public procedure AllGridItemsMatch(Scope: Toolbar.Scope; Expected: string);
+  begin
+    const Release: Library.Album := new Library.Album(
+      'release', 'Atlas', 'Atlas North', 2L, '', Rating := 8,
+      Credits := [
+        new Library.Membership('north', 'Atlas North', 7),
+        new Library.Membership('south', 'Atlas South', 9)
+      ],
+      GenreMemberships := [
+        new Library.Membership('rock', 'Atlas Rock', 6),
+        new Library.Membership('pop', 'Atlas Pop', 8)
+      ]
+    );
+    const Current: Albums.State := Catalog.Apply(
+      new Albums.State(Scope := Scope),
+      Albums.Msg.Received(
+        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Release), 2L)
+      ),
+      null
+    ).Model;
+    const Searched: Albums.State := Catalog.Apply(
+      Current,
+      Albums.Msg.Toolbar(Toolbar.Msg.Search('atlas')),
+      null
+    ).Model;
+    X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Searched)));
+    const Draft: Albums.State := Catalog.Apply(
+      Current,
+      Albums.Msg.Toolbar(Toolbar.Msg.MinimumRating(6)),
+      null
+    ).Model;
+    const Filtered: Albums.State := Catalog.Apply(
+      Draft,
+      Albums.Msg.Toolbar(Toolbar.Msg.Apply),
+      null
+    ).Model;
+    X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Filtered)));
+  end procedure;
+
+  // Both drill-downs count visible releases against every release in the catalogue.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(Toolbar.Scope.Artists)]
+  [X.InlineDataAttribute(Toolbar.Scope.Genres)]
+  public procedure ScopedAlbums(Scope: Toolbar.Scope);
+    procedure Check(Expected: string);
+    begin
+      X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Current)));
+    end procedure;
+    procedure Send(Message: Albums.Msg);
+    begin
+      Current := Catalog.Apply(Current, Message, null).Model;
+    end procedure;
+  begin
+    const Items: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+      9
+    );
+    for Index: int := 0 to 8 do
+      const GroupId: string := if Index < 4 then
+        'first'
+      else
+        'second'
+      end if;
+      const Group: Library.Membership := new Library.Membership(GroupId, GroupId, Tracks := 1L);
+      Items.Add(
+        new Library.Album(
+          Index.ToString(), if Index < 2 then
+            'Atlas'
+          else
+            'Piano'
+          end if, '', 1L, '',
+          Credits := [Group], GenreMemberships := [Group]
+        )
+      );
+    end for;
+    var Current: Albums.State := new Albums.State(Scope := Scope);
+    Send(Albums.Msg.Received(new Library.Snapshot(Items.MoveToImmutable(), 9L)));
+    Send(Albums.Msg.OpenGroup('first'));
+    Check('4 of 9 albums');
+    Send(Albums.Msg.Toolbar(Toolbar.Msg.Search('atlas')));
+    Check('2 of 9 albums');
+    Send(Albums.Msg.Toolbar(Toolbar.Msg.Search('xylophone')));
+    Check('0 of 9 albums');
+    Send(Albums.Msg.Toolbar(Toolbar.Msg.Search('')));
+    Check('4 of 9 albums');
+    Send(Albums.Msg.BackToGroups);
+    Check(
+      if Scope = Toolbar.Scope.Artists then
+        '2 artists'
+      else
+        '2 genres'
+      end if
+    );
+  end procedure;
+
+  // The footer follows applied filters and search words throughout one visit.
+  // AlbumId is empty in Music. LibraryTotal includes songs outside the opened album.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('', 2L)]
+  [X.InlineDataAttribute('release', 9L)]
+  public procedure TrackFiltersAndSearch(AlbumId: string; LibraryTotal: long);
+    procedure Send(Message: Music.Msg);
+    begin
+      Current := Songs.Apply(Current, Message, null).Model;
+    end procedure;
+    procedure Check(Shown: int; Filtered: bool);
+    begin
+      const Expected: string := if Filtered or AlbumId <> '' then
+        Shown.ToString() + ' of ' + LibraryTotal.ToString() + ' tracks'
+      else
+        '2 tracks'
+      end if;
+      X.Assert.Equal<string>(Expected, Caption<Music.Msg>(Footer.Tracks(Current, LibraryTotal)));
+    end procedure;
+  begin
+    var Current: Music.State := new Music.State(
+      new Library.Album(AlbumId, 'Songs', '', 2L, ''),
+      1L
+    );
+    Send(
+      Music.Msg.Loaded(
+        1L, 1L, I.ImmutableArray.CreateRange<Tracks.Entry>(
+          [
+            new Tracks.Entry(1L, 'a', 'First song.mp3', '', 6, null, null),
+            new Tracks.Entry(2L, 'b', 'Second song.mp3', '', 8, null, null)
+          ]
+        )
+      )
+    );
+    Send(Music.Msg.Sort(new Tables.Sort(0, true)));
+    Send(Music.Msg.Minimum(6));
+    Check(2, false);
+    Send(Music.Msg.ApplyFilters);
+    Check(2, true);
+    Send(Music.Msg.Minimum(8));
+    Send(Music.Msg.ApplyFilters);
+    Check(1, true);
+    Send(Music.Msg.Reset);
+    Send(Music.Msg.ApplyFilters);
+    Send(Music.Msg.Search('song'));
+    Check(2, true);
+    Send(Music.Msg.Search('missing'));
+    Check(0, true);
+    Send(Music.Msg.Search('  - '));
+    Check(2, false);
+  end procedure;
+end record;
+
+end unit;

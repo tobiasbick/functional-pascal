@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+// [Documentation](../../../../doc/library.md#albums-and-artwork)
 
 // One explicit sidecar convention, shared by discovery and artwork resolution.
 unit FpasAmp.Library.Albums.Artwork.Names;

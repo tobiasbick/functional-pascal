@@ -1,0 +1,127 @@
+// [Documentation](../../doc/library.md#metadata-and-queries)
+
+// Exercise the owned metadata lifetime with a competing SQLite writer.
+unit FpasAmp.Library.Tests.MetadataLocking;
+
+uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Tests.StorageSupport as D, FpasAmp.Library.Persistence.Sql as Sql,
+  FpasAmp.Library.Inventory.Internal.Observations as O,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as M,
+  FpasAmp.Library.Sources as S, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+procedure Queue(Catalogue: Db.SqliteConnection; Source: S.MusicSource; Path: string);
+begin
+  const Info: IO.FileInfo := new IO.FileInfo(Path);
+  const Stamps: C.Dictionary<string, O.FileStamp> := new C.Dictionary<string, O.FileStamp>(
+    S.PathComparer()
+  );
+  Stamps.Add(Path, new O.FileStamp(Info.Length, Info.LastWriteTimeUtc.Ticks));
+  D.Save(
+    Catalogue, [Source], D.Observation(Source.Path, [Path], [], Complete := false) with
+      Stamps := Stamps;
+    end with
+  );
+end procedure;
+
+async function HoldCatalogue(Session: Metadata.Session; Catalogue: Db.SqliteConnection; UserDatabase: string; Source: S.MusicSource): Tasks.Task<Db.SqliteTransaction>;
+begin
+  using const Users: Db.SqliteConnection := Sql.Open(UserDatabase);
+  // Hold identity writes until the target file is queued and the catalogue is locked.
+  using const Identity: Db.SqliteTransaction := Users.BeginTransaction();
+  Queue(Catalogue, Source, F.Write(Source.Path, 'pending.mp3', 'Pending track'));
+  const Lock: Db.SqliteTransaction := Catalogue.BeginTransaction();
+  try
+    Identity.Rollback();
+    Session.Wake();
+    // A committed identity shows that this file reached the catalogue save boundary.
+    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    while D.Number(Users, 'SELECT count(*) FROM tracks;') <> 2L do
+      await Tasks.Task.Delay(10, Deadline.Token).ConfigureAwait(false);
+    end while;
+
+    return Lock;
+  catch do
+    Lock.Dispose();
+    raise;
+  end try;
+end function;
+
+async function VerifySaved(Tags: Metadata.Session): Tasks.Task;
+begin
+  const Entries: I.ImmutableArray<M.Entry> := await F.Until(
+    Tags, function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+  );
+  for Entry: M.Entry in Entries do
+    if (IO.Path.GetFileName(Entry.Path) ?? '') = 'pending.mp3' then
+      X.Assert.Null(Entry.Error);
+      X.Assert.Equal<string>('Pending track', (Entry.Metadata ?? new MediaTags.Info()).Title);
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('The queued track is missing.');
+end function;
+
+// Exercises the production metadata session without a scanner that could requeue the file.
+public type MetadataLockingTests = record
+  // `Restart` closes with the lock held and consumes the persisted job in a new session.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  public async function BusyCatalogueKeepsThePendingTrack(Restart: bool): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := F.Source(Root.Path);
+    const Database: string := IO.Path.Combine(Data.Path, 'library.db');
+    const UserDatabase: string := IO.Path.Combine(Data.Path, 'userdata.db');
+    using const Catalogue: Db.SqliteConnection := D.Open(Database);
+    D.Configure(Catalogue, [Source]);
+    Queue(Catalogue, Source, F.Write(Root.Path, 'first.mp3', 'First track'));
+    begin
+      await using const Session: Metadata.Session := Metadata.Session.Start(
+        [Source], Database, UserDatabase, T.CancellationToken.None
+      );
+      discard await F.Until(
+        Session,
+        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      );
+      using const Lock: Db.SqliteTransaction := await HoldCatalogue(
+        Session, Catalogue, UserDatabase, Source
+      );
+      // Outlast the old five-second timeout so a provider-only retry cannot pass.
+      await Tasks.Task.Delay(6500).ConfigureAwait(false);
+      if Restart then
+        await Session.DisposeAsync().AsTask().WaitAsync(Sys.TimeSpan.FromSeconds(4));
+        Lock.Rollback();
+        X.Assert.Equal<long>(
+          1L,
+          D.Number(Catalogue, 'SELECT count(*) FROM content_jobs WHERE kind=0;')
+        );
+        X.Assert.Equal<long>(1L, D.Number(Catalogue, 'SELECT count(*) FROM metadata;'));
+      else
+        X.Assert.False(
+          Session.Completion.IsCompleted,
+          'The metadata worker stopped while SQLite was busy.'
+        );
+        Lock.Rollback();
+        await VerifySaved(Session);
+        X.Assert.Equal<long>(0L, D.Number(Catalogue, 'SELECT count(*) FROM content_jobs;'));
+      end if;
+    end;
+
+    if Restart then
+      await using const Reopened: Metadata.Session := Metadata.Session.Start(
+        [Source], Database, UserDatabase, T.CancellationToken.None
+      );
+      await VerifySaved(Reopened);
+      X.Assert.Equal<long>(0L, D.Number(Catalogue, 'SELECT count(*) FROM content_jobs;'));
+    end if;
+  end function;
+end record;
+
+end unit;

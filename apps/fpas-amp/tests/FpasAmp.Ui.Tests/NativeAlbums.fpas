@@ -1,0 +1,179 @@
+// [Documentation](../../doc/desktop.md#browsing-music-and-collections)
+
+// A native virtual album grid uses synthetic tagged audio and generated cover art.
+unit FpasAmp.Ui.Tests.NativeAlbums;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
+  FpasAmp.Library.Tests.MetadataSupport as F, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
+  FpasAmp.Library.Sources as Sources,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Albums.Model as Albums,
+  FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui,
+  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+
+procedure Pump(Session: Shell.Session);
+begin
+  discard Session.Window.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
+  X.Assert.True(Session.Window.Step());
+end procedure;
+
+procedure Ready(Session: Shell.Session; Count: int);
+begin
+  const Deadline: long := Sys.Environment.TickCount64 + 20000L;
+  while Sys.Environment.TickCount64 < Deadline do
+    Pump(Session);
+    const State: Albums.State := Session.State().Albums;
+    if State.Loaded and State.Items.Length = Count and State.First >= 0 and State.Last >
+      State.First and State.Images.Count = State.Last - State.First
+    then
+      return;
+    end if;
+
+    T.Thread.Sleep(5);
+  end while;
+
+  X.Assert.True(false, 'Album headers/thumbnails did not reach the native viewport.');
+end procedure;
+
+procedure Capture(Session: Shell.Session; Name: string);
+begin
+  const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+  if Directory <> null then
+    for Index: int := 0 to 15 do
+      Pump(Session);
+      T.Thread.Sleep(16);
+    end for;
+
+    discard IO.Directory.CreateDirectory(Directory);
+    Session.Window.CapturePng(IO.Path.Combine(Directory, Name + '.png'));
+  end if;
+end procedure;
+
+procedure Rate(Session: Shell.Session; Index: int; Value: int);
+begin
+  const Id: string := Session.State().Albums.Items[Index].Id;
+  discard Session.Window.Post(App.Msg.Albums(Albums.Msg.Rate(Id, Value)));
+  const Deadline: long := Sys.Environment.TickCount64 + 15000L;
+  while Sys.Environment.TickCount64 < Deadline do
+    Pump(Session);
+    const Current: Albums.State := Session.State().Albums;
+    if not Current.Saving.Contains(Id) and (Current.Items[Index].Rating ?? 0) = Value then
+      for Control: Gui.Control in Session.Window.Snapshot().Controls do
+        if Control.Id = 'album-rating-' + Id then
+          X.Assert.Equal<string>(Value.ToString(), Control.Value);
+          X.Assert.True(Control.Enabled);
+          return;
+        end if;
+      end for;
+    end if;
+
+    T.Thread.Sleep(5);
+  end while;
+
+  X.Assert.True(false, 'The native album rating did not reach its durable value.');
+end procedure;
+
+// Native album view layout, visible-only decoding and slice resource release.
+public type NativeAlbumTests = record
+  // Responsive native grids realize fewer cards than the full collection and load art.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(1000)]
+  [X.InlineDataAttribute(620)]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure VirtualCoverGrid(Width: int);
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Titles: array of string := [
+      'Blue horizon',
+      'City lights',
+      'Echoes',
+      'Far away',
+      'Golden hour',
+      'Night drive',
+      'Open sky',
+      'Paper planes',
+      'Quiet waves',
+      'Sunrise',
+      'Velvet room',
+      'Winter garden'
+    ];
+    for Index: int := 0 to 35 do
+      const Title: string := Titles[Index mod Titles.Length] + if Index >= Titles.Length then
+        ' ' + (Index div Titles.Length + 1).ToString()
+      else
+        ''
+      end if;
+      const Folder: string := IO.Path.Combine(Root.Path, Index.ToString('D2'));
+      const Path: string := Art.Track(Folder, 'track.mp3', Title);
+      const Songs: int := if Index = 0 then
+        12
+      elsif Index = 1 then
+        9
+      else
+        1
+      end if;
+      for Track: int := 2 to Songs do
+        discard Art.Track(Folder, 'track-' + Track.ToString() + '.mp3', Title);
+      end for;
+      const Picture: array of byte := Art.Picture(
+        cast<byte>(35 + Index mod 4 * 35),
+        cast<byte>(80 + Index mod 3 * 40),
+        cast<byte>(100 + Index mod 5 * 25)
+      );
+      if Index mod 3 = 0 then
+        Art.Embed(Path, Picture);
+      elsif Index mod 3 = 1 then
+        IO.File.WriteAllBytes(IO.Path.Combine(Folder, 'cover.png'), Picture);
+      end if;
+    end for;
+    const Source: Sources.MusicSource := F.Source(Root.Path);
+    const Library: Monitor.Session := Monitor.Session.Start(
+      [Source], IO.Path.Combine(Data.Path, 'library.db'), T.CancellationToken.None,
+      new Inventory.Options(0, 60000, 16), IO.Path.Combine(Data.Path, 'userdata.db')
+    );
+    try
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := Width;
+      Placement.Height := 820;
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement, new SettingsModel.Preferences([Source], 'light'),
+        procedure(_Value: SettingsModel.Preferences) begin end procedure, Library,
+        new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
+      );
+      Ready(Session, 36);
+      Rate(Session, 0, 8);
+      Rate(Session, 0, 0);
+      Rate(Session, 0, 8);
+      Rate(Session, 1, 6);
+      var Cards: int := 0;
+      var Covers: int := 0;
+      for Control: Gui.Control in Session.Window.Snapshot().Controls do
+        if Control.Id.StartsWith('album-') and Control.Role = 'card' then
+          Cards := Cards + 1;
+        end if;
+
+        if Control.Id.StartsWith('cover-') and Control.Role = 'image' then
+          Covers := Covers + 1;
+        end if;
+      end for;
+
+      X.Assert.True(
+        Cards > 0 and Cards < 36,
+        'Native rows must realize only the viewport and overscan.'
+      );
+      X.Assert.True(Covers > 0, 'Expected decoded embedded/sidecar thumbnails.');
+      Capture(Session, 'albums-' + Width.ToString());
+      discard Session.Window.Post(
+        App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Music)))
+      );
+      Pump(Session);
+      X.Assert.Equal<int>(0, Session.State().Albums.Images.Count);
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

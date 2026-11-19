@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+// [Documentation](../../../doc/library.md#reconciliation-and-persistence)
 
 // Rehydrates cached source views and the worker-owned directory index.
 unit FpasAmp.Library.Persistence.Loading;

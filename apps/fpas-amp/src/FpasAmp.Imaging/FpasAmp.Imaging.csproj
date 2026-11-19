@@ -1,4 +1,4 @@
-<!-- [Documentation](../../../../docs/apps/fpas-amp/imaging.md) -->
+<!-- [Documentation](../../doc/imaging.md) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../../../../src/Fpas.Media.Images/Fpas.Media.Images.csproj" />

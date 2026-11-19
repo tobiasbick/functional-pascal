@@ -20,8 +20,7 @@ and snapshot/update details live in the [ATL provenance](../../third-party/atl/U
 
 The [media libraries](../pascal/libraries/media/README.md) can each be referenced directly.
 `Fpas.Media.Tags` exposes FPAS records over ATL, `Fpas.Media.Images` owns image
-decoding and `Fpas.Media.Audio` owns playback and waveform analysis. FPas-Amp
-owns its catalogue, ratings, queue and thumbnail cache.
+decoding and `Fpas.Media.Audio` owns playback and waveform analysis.
 
 ## Repository tree
 
@@ -136,6 +135,7 @@ src/
       Presentation/
       Widgets/<Topic>/
   Fpas.Ui.Mvu/
+  Fpas.Ui.Mvu.Testing/
   Fpas.Ui/
     Internal/
     Widgets/<Topic>/
@@ -150,6 +150,10 @@ sdk/
   feed/
     README.md
 tests/
+  Fpas.Library.Tests.slnx
+  Fpas.Media.Tests/
+  Fpas.Media.Audio.Tests/
+  Fpas.Ui.Mvu.Tests/
   Fpas.Compiler.Tests/
     Fpas.Compiler.Tests.csproj
     ControlFlow/

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#startup-and-user-files)
+// [Documentation](../../../doc/desktop.md#startup-and-user-files)
 
 // Reads and replaces FPas-Amp's per-user JSON files.
 unit FpasAmp.Persistence.UserFiles;

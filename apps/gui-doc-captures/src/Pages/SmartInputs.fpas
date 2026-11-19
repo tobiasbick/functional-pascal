@@ -1,0 +1,39 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.SmartInputs;
+
+uses
+  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Rendering.Regions as Regions,
+  GuiGallery.App.State as Gallery, GuiGallery.Pages.SmartInputs.State as Smart,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji;
+
+// Captures the Smart inputs controls and the open emoji palette.
+// ## Parameters
+// - `Session`: Presented Smart inputs page.
+// - `Output`: Directory for full-frame PNGs and crop coordinates.
+public procedure Capture(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'inline-edit', 'title', 'owner');
+  Regions.Shot(Session, Output, 'scrub-field', 'opacity', 'radius', 'blur');
+  Regions.Capture(
+    Session, Output, 'money-field', new Regions.Insets(Top := 17, Bottom := 20),
+    'amount', 'salary'
+  );
+  Regions.Shot(Session, Output, 'text-field-affixes', 'input-url', 'input-weight');
+  Regions.Shot(Session, Output, 'shortcut-recorder', 'palette-key', 'search-key');
+  Regions.Shot(Session, Output, 'emoji-message', 'smart-message', 'smart-emoji-trigger');
+
+  Presented.Send(Session, Gallery.Msg.SmartInputs(Smart.Msg.SetEmojiOpen(true)));
+  Presented.AwaitVisible(Session, Emoji.SearchId('smart-emoji'));
+  // CUI rasterizes a bounded number of new emoji glyphs each frame.
+  for Frame: int := 1 to 12 do
+    Presented.Step(Session);
+  end for;
+
+  Regions.Shot(
+    Session, Output, 'emoji-picker',
+    'smart-message', 'smart-emoji-trigger', 'smart-emoji-popup', 'smart-emoji'
+  );
+end procedure;
+
+end unit;

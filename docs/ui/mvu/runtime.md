@@ -107,6 +107,16 @@ drives the same update function directly and through the terminal adapter.
 The [GUI host](../gui/host.md) also uses this runtime for shared commands,
 native event wakeup and responsive asynchronous cleanup.
 
+## Testing effect replies
+
+Reference [Fpas.Ui.Mvu.Testing](../../../src/Fpas.Ui.Mvu.Testing/Fpas.Ui.Mvu.Testing.fpasproj)
+from a test project. Use `Effects<TMsg>.Watch(id)` before dispatching the operation
+and wrap the resulting transition with `Wrap`. Read a held reply from the watcher,
+assert the intermediate model, then await `Release()` and advance the session.
+The [effect reply test](../../../tests/Fpas.Ui.Mvu.Tests/EffectRepliesTests.fpas)
+drives supersession and failure through a real mailbox. Run it through the
+[MVU test project](../../../tests/Fpas.Ui.Mvu.Tests/Fpas.Ui.Mvu.Tests.fpasproj).
+
 ## Source files
 
 - `src/Fpas.Ui.Mvu/`
@@ -116,6 +126,5 @@ native event wakeup and responsive asynchronous cleanup.
   - [Session.fpas](../../../src/Fpas.Ui.Mvu/Session.fpas)
 - `src/Fpas.Ui.Mvu/Internal/`
   - [Effects.fpas](../../../src/Fpas.Ui.Mvu/Internal/Effects.fpas)
-- `tests/TestSupport/Mvu/`
-  - [EffectReplies.fpas](../../../tests/TestSupport/Mvu/EffectReplies.fpas)
-  - [EffectRepliesTests.fpas](../../../tests/TestSupport/Mvu/EffectRepliesTests.fpas)
+- `src/Fpas.Ui.Mvu.Testing/`
+  - [EffectReplies.fpas](../../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas)

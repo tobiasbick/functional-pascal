@@ -1,0 +1,144 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.OverlaysAndDisclosure;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiDocCaptures.Rendering.Gestures as Gestures, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui, GuiGallery.Pages.Overlays.State as Overlays, GuiGallery.Pages.Disclosure.State as Disclosure,
+  GuiGallery.Shared.State as Demo, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Toasts as Toasts;
+
+// Captures the overlays chapter from its presented gallery page.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Output`: Directory for frame PNGs and crop bounds.
+// - `Input`: Native gestures for this session.
+// - `Window`: Gallery window resized for the responsive drawer.
+public procedure CaptureOverlays(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls; Window: Cui.CuiWindow);
+begin
+  Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetProfileDialog(true)));
+  Regions.Shot(
+    Session,
+    Output,
+    'dialog',
+    'edit-profile',
+    'edit-profile/close',
+    'edit-profile-save'
+  );
+  Regions.Capture(
+    Session, Output, 'action-footer', new Regions.Insets(Left := 188, Right := 16),
+    'edit-profile-cancel', 'edit-profile-save'
+  );
+  Input.Key(Gestures.Escape);
+  Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetSheet(true)));
+  Regions.Shot(
+    Session, Output, 'sheet',
+    'sheet/close',
+    'notifications-comments',
+    'recent-comment',
+    'recent-invitation'
+  );
+  Input.Key(Gestures.Escape);
+  Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetPalette(true)));
+  Regions.CaptureParts(
+    Session,
+    Output,
+    'command-palette',
+    'gallery-palette',
+    new Regions.Insets(Bottom := -70)
+  );
+  Input.Key(Gestures.Escape);
+  Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetFilters(true)));
+  Regions.Shot(Session, Output, 'popover', 'filters-trigger', 'filters', 'filters-apply');
+  Input.Key(Gestures.Escape);
+  Input.ContextClick('context', 0.08F);
+  Regions.Shot(Session, Output, 'context-menu', 'context/cut', 'context/delete');
+  Input.Key(Gestures.Escape);
+  Input.Hover('tooltip-bold');
+  Presented.AwaitVisible(Session, 'native-tooltip');
+  Regions.Shot(Session, Output, 'tooltip', 'tooltip-bold', 'native-tooltip');
+  Input.Leave();
+  Window.Resize(620, 840);
+  Presented.Step(Session);
+  Presented.Send(Session, Gallery.Msg.SetDrawer(true));
+  Regions.Capture(
+    Session, Output, 'drawer', new Regions.Insets(Top := 22),
+    'drawer/close', 'navigation/overview', 'navigation/charts'
+  );
+  Presented.Send(Session, Gallery.Msg.SetDrawer(false));
+  Window.Resize(1240, 1540);
+  Presented.Step(Session);
+  Presented.Send(
+    Session, Gallery.Msg.Shared(
+      Demo.Msg.Notify(
+        'Changes saved',
+        new Toasts.Options(
+          Description := 'Your profile is up to date.',
+          Appearance := Toasts.Tone.Success
+        )
+      )
+    )
+  );
+  Presented.CaptureToast(Session, Output, 'toast', 'Changes saved');
+end procedure;
+
+// Captures the disclosure chapter from its presented gallery page.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Output`: Directory for frame PNGs and crop bounds.
+// - `Input`: Native gestures for this session.
+public procedure CaptureDisclosure(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls);
+begin
+  Regions.Shot(
+    Session,
+    Output,
+    'banner',
+    'release-banner',
+    'release-banner/action',
+    'release-banner/dismiss'
+  );
+  Regions.Capture(
+    Session,
+    Output,
+    'link',
+    new Regions.Insets(Left := 79, Right := 99),
+    'jonas-link'
+  );
+  Regions.Shot(Session, Output, 'expandable-text', 'about-cui', 'about-cui/toggle');
+  Regions.Shot(Session, Output, 'expandable-card', 'billing', 'security', 'change-plan');
+  Regions.Shot(Session, Output, 'countdown', 'disclosure-launch', 'disclosure-sale');
+  Regions.Shot(Session, Output, 'onboarding-checklist', 'workspace-onboarding');
+  Regions.Shot(Session, Output, 'veil', 'photo', 'sample-key', 'reveal-sample-key', 'spoiler');
+  Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetPhoto(true)));
+  Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetKey(true)));
+  Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetSpoiler(true)));
+  Regions.Shot(
+    Session,
+    Output,
+    'veil-revealed',
+    'photo',
+    'sample-key',
+    'reveal-sample-key',
+    'spoiler'
+  );
+  Input.Hover('jonas-link');
+  Presented.AwaitVisible(Session, 'jonas-avatar');
+  Regions.Shot(Session, Output, 'hover-card', 'jonas-link', 'jonas-card', 'jonas-avatar');
+  Regions.Shot(Session, Output, 'avatar', 'jonas-avatar');
+  Input.Key(Gestures.Escape);
+  Input.Leave();
+  Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.SetBranchQuestion(true)));
+  Regions.Shot(
+    Session, Output, 'confirm-popover',
+    'branch-trigger',
+    'branch-question',
+    'branch-question/confirm'
+  );
+  Input.Key(Gestures.Escape);
+  Input.Activate('about-cui/toggle', Gestures.Enter);
+  Regions.Shot(Session, Output, 'expandable-text-expanded', 'about-cui', 'about-cui/toggle');
+  Presented.Send(Session, Gallery.Msg.Disclosure(Disclosure.Msg.ArchiveConversations));
+  Presented.CaptureToast(Session, Output, 'undo-toast', '3 conversations archived');
+end procedure;
+
+end unit;

@@ -136,6 +136,31 @@ public type ConsumerTests = record
     end try;
   end procedure;
 
+  // XML readers retain the supplied locations so that callers can resolve them.
+  [X.FactAttribute]
+  public procedure ReadXspfLocationsWithoutResolvingThem();
+  begin
+    const Temp: IO.DirectoryInfo := IO.Directory.CreateTempSubdirectory();
+    try
+      const Path: string := IO.Path.Combine(Temp.FullName, 'list.XSPF');
+      X.Assert.True(Lists.IsPlaylist(Path));
+      IO.File.WriteAllText(
+        Path,
+        '<playlist xmlns="http://xspf.org/ns/0/"><trackList>' +
+        '<track><location>music/a%20b.ogg</location><title>Live &amp; loud</title></track>' +
+        '<track><location>https://example.invalid/a%20b</location></track>' +
+        '</trackList></playlist>'
+      );
+      const Items: array of Lists.Item := Lists.Read(Path, T.CancellationToken.None);
+      X.Assert.Equal<int>(2, Items.Length);
+      X.Assert.Equal<string>('music/a%20b.ogg', Items[0].Location);
+      X.Assert.Equal<string>('Live & loud', Items[0].Title);
+      X.Assert.Equal<string>('https://example.invalid/a%20b', Items[1].Location);
+    finally
+      Temp.Delete(true);
+    end try;
+  end procedure;
+
   // A leading hash in a relative filename must not turn the reference into a directive.
   [X.FactAttribute]
   public procedure ExportHashPrefixedReference();

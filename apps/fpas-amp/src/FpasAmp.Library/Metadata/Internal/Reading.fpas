@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../../doc/library.md#metadata-and-queries)
 
 // One bounded stream read for hashing, followed by ATL's seek-based tag read.
 unit FpasAmp.Library.Metadata.Internal.Reading;

@@ -1,0 +1,140 @@
+// [Documentation](../doc/captures.md#capture-session)
+
+unit GuiDocCaptures.Chapters;
+
+uses GuiGallery.App.State as Gallery, System as Sys;
+
+// Command-line selection of a capture output and a handbook chapter.
+public type Request = record
+  // Directory for full-frame captures.
+  public Destination: string;
+  // Name of the handbook chapter.
+  public Chapter: string;
+end record;
+
+// Reads the output path and chapter from the capture command line.
+// ## Returns
+// The requested destination and chapter. The chapter defaults to Actions.
+public function ReadRequest(): Request;
+begin
+  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
+  if Arguments.Length < 2 or Arguments.Length > 3 or Arguments[1] = '' then
+    raise new Sys.ArgumentException(
+      'Pass an output directory and optionally a handbook chapter name.'
+    );
+  end if;
+
+  const Chapter: string := if Arguments.Length = 3 then
+    Arguments[2]
+  else
+    'actions'
+  end if;
+  return new Request(Arguments[1], Chapter);
+end function;
+
+// Resolves the gallery page that presents a chapter's first widgets.
+// ## Parameters
+// - `Chapter`: The directory name of a supported handbook chapter.
+// ## Returns
+// The gallery page to open at the start of capture.
+public function PageForChapter(Chapter: string): Gallery.Page;
+begin
+  var Page: Gallery.Page := Gallery.Page.Buttons;
+  case Chapter of
+    when 'overview':
+      Page := Gallery.Page.Overview;
+    when 'actions':
+    when 'selection':
+      Page := Gallery.Page.Selection;
+    when 'navigation':
+      Page := Gallery.Page.Navigation;
+    when 'inputs':
+      Page := Gallery.Page.Inputs;
+    when 'smart-inputs':
+      Page := Gallery.Page.SmartInputs;
+    when 'pickers':
+      Page := Gallery.Page.Pickers;
+    when 'overlays':
+      Page := Gallery.Page.Overlays;
+    when 'disclosure':
+      Page := Gallery.Page.Disclosure;
+    when 'feedback':
+      Page := Gallery.Page.Feedback;
+    when 'data-display':
+      Page := Gallery.Page.Lists;
+    when 'charts':
+      Page := Gallery.Page.Charts;
+    when 'more-charts':
+      Page := Gallery.Page.MoreCharts;
+    when 'instruments':
+      Page := Gallery.Page.Instruments;
+    when 'audio':
+      Page := Gallery.Page.Audio;
+    when 'capture':
+      Page := Gallery.Page.Capture;
+    when 'data-grid':
+      Page := Gallery.Page.DataGrid;
+    when 'files':
+      Page := Gallery.Page.Files;
+    when 'planning':
+      Page := Gallery.Page.Planning;
+    when 'code':
+      Page := Gallery.Page.Code;
+    when 'editing-tools':
+      Page := Gallery.Page.EditingTools;
+    when 'developer-tools':
+      Page := Gallery.Page.DeveloperTools;
+    when 'more-developer-tools':
+      Page := Gallery.Page.MoreDeveloperTools;
+    when 'creative-controls':
+      Page := Gallery.Page.CreativeControls;
+    when 'canvas-and-bars':
+      Page := Gallery.Page.CanvasAndBars;
+    when 'social-and-media':
+      Page := Gallery.Page.Social;
+    when 'voice':
+      Page := Gallery.Page.Voice;
+    when 'ai':
+      Page := Gallery.Page.AI;
+    when 'motion':
+      Page := Gallery.Page.Motion;
+    when 'text-and-display':
+      Page := Gallery.Page.Display;
+    when 'reader':
+      Page := Gallery.Page.Reader;
+    when 'app-chrome':
+      Page := Gallery.Page.Desktop;
+    when 'layout':
+      Page := Gallery.Page.Layout;
+    else
+      raise new Sys.ArgumentException('Unknown capture chapter: ' + Chapter);
+  end case;
+
+  return Page;
+end function;
+
+// Selects the viewport height that fits the gallery examples for a chapter.
+// ## Parameters
+// - `Page`: Initial gallery page.
+// ## Returns
+// Height in logical points at scale one.
+public function ViewportHeight(Page: Gallery.Page): int;
+begin
+  return if Page = Gallery.Page.MoreCharts then
+    4100
+  elsif Page = Gallery.Page.Charts or Page = Gallery.Page.Disclosure or Page = Gallery.Page.Feedback
+    or Page = Gallery.Page.Lists or Page = Gallery.Page.Planning or Page = Gallery.Page.Code
+    or Page = Gallery.Page.EditingTools or Page = Gallery.Page.DeveloperTools
+    or Page = Gallery.Page.MoreDeveloperTools or Page = Gallery.Page.CanvasAndBars
+    or Page = Gallery.Page.CreativeControls or Page = Gallery.Page.Social
+    or Page = Gallery.Page.AI or Page = Gallery.Page.Motion
+  then
+    2260
+  elsif Page = Gallery.Page.Inputs or Page = Gallery.Page.Pickers then
+    1900
+  else
+    1540
+  end if;
+end function;
+
+end unit;

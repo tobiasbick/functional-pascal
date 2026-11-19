@@ -47,6 +47,8 @@ picture when no front cover is marked. It returns null when no picture is
 available. An oversized selected picture raises `InvalidDataException`.
 `Cover.Data` contains the original encoded bytes, limited to 16 MiB.
 `Cover.MimeType` falls back to `application/octet-stream` when ATL omits the value.
+The [tag and cover tests](../../../../tests/Fpas.Media.Tests/Tags.fpas) write MP3 and
+Vorbis fixtures and verify both the fallback and front-cover selection.
 Use [Fpas.Media.Images](images.md) to decode JPEG or PNG pictures into pixels.
 
 ## Playlist recognition and import

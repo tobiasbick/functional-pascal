@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
 // The settings slice: saved preferences, open dialogs and library status.
 unit FpasAmp.Ui.Settings.Model;

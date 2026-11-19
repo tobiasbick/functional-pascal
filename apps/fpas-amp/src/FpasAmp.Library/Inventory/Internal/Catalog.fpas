@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+// [Documentation](../../../../doc/library.md#reconciliation-and-persistence)
 
 // Source-scoped membership and errors over a shared physical directory traversal.
 unit FpasAmp.Library.Inventory.Internal.Catalog;

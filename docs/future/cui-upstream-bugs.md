@@ -97,3 +97,19 @@ case.
 
 FPAS has no workaround: hover and other transitions jump whenever the pointer
 rests before moving onto a control.
+
+<a id="cui-045"></a>
+
+## CUI-045 — Repeated software screenshots omit unchanged tiles
+
+At the pinned revision `71c383f`, capture a static frame with
+`cui_app_screenshot`, clear the destination buffer and capture the same frame
+into it again. On Linux/X11 the second image differs from the first. The
+incremental software renderer recognizes the buffer address and skips tiles
+whose drawing commands are unchanged. A fresh allocation can reuse that
+address, so consecutive gallery captures can contain blank widgets.
+
+The [PNG capture bridge](../../src/Fpas.Ui.Gui.Cui/native/host/bridge.c)
+invalidates the previous software buffer address before each screenshot.
+The [gallery capture tests](../../apps/gui-doc-captures/tests/test_capture.py)
+exercise consecutive screenshots and check the cropped results.

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+// [Documentation](../../../doc/desktop.md#shell-and-navigation)
 
 // Typed destinations and detached navigation data, independent of rendering.
 unit FpasAmp.Ui.Navigation.Model;

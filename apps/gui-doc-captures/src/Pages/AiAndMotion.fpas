@@ -1,0 +1,116 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.AiAndMotion;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiGallery.App.State as Gallery, GuiGallery.Pages.Ai.State as Ai,
+  GuiGallery.Pages.Motion.State as Motion, Fpas.Ui.Widgets.Ai.Composers as Composer,
+  Fpas.Ui.Gui.Application as Gui, System as Sys;
+
+procedure RequireOpen(Session: Gui.Session<Gallery.Msg>; Id: string);
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id and Control.Value = 'True' then
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Expected the expanded AI example: ' + Id);
+end procedure;
+
+// Captures the AI page with the reasoning and search payloads opened.
+// ## Parameters
+// - `Session`: Presented AI page with the two disclosures open.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureAi(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  RequireOpen(Session, 'ai-reasoning/toggle');
+  RequireOpen(Session, 'ai-search/toggle');
+  Regions.Shot(Session, Output, 'reasoning', 'ai-reasoning');
+  Regions.Shot(Session, Output, 'tool-call', 'ai-search', 'ai-read');
+  Regions.Shot(Session, Output, 'agent-plan', 'ai-plan');
+  Regions.Shot(Session, Output, 'citation', 'ai-cite-1', 'ai-cite-2', 'ai-cite-3');
+  Regions.Shot(Session, Output, 'source-list', 'ai-sources');
+  Regions.Shot(Session, Output, 'response-actions', 'ai-response');
+  Regions.Shot(Session, Output, 'context-meter', 'ai-context');
+  Regions.Shot(Session, Output, 'prompt-suggestions', 'ai-suggestions');
+  Regions.Shot(Session, Output, 'model-picker', 'ai-model');
+  Regions.Shot(Session, Output, 'composer-ai', 'ai-composer');
+
+  Presented.Send(
+    Session,
+    Gallery.Msg.AI(Ai.Msg.Editor(Composer.Event.Send('Summarize the report.')))
+  );
+  Presented.Send(Session, Gallery.Msg.AI(Ai.Msg.Tick(3.2F)));
+  Regions.Shot(Session, Output, 'agent-status', 'ai-status');
+end procedure;
+
+// Captures the standalone model picker's open menu above its trigger.
+// ## Parameters
+// - `Session`: AI page with the model menu open.
+// - `Output`: Directory for the frame image and crop bounds.
+public procedure CaptureModelMenu(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Capture(
+    Session, Output, 'model-picker-menu',
+    new Regions.Insets(Top := 172, Right := 244),
+    'ai-model'
+  );
+end procedure;
+
+// Captures the text effects, loaders and compact controls on the Motion page.
+// ## Parameters
+// - `Session`: Presented Motion page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureMotion(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'shimmer-text', 'motion-thinking', 'motion-shimmer');
+  Regions.Shot(Session, Output, 'typewriter', 'motion-typewriter');
+  Regions.Shot(Session, Output, 'text-reveal', 'motion-reveal');
+  Regions.Capture(
+    Session,
+    Output,
+    'rotating-words',
+    new Regions.Insets(Left := 175),
+    'motion-words'
+  );
+  Regions.Shot(Session, Output, 'gradient-text', 'motion-gradient');
+  Regions.Shot(
+    Session,
+    Output,
+    'spotlight-card',
+    'motion-spot-software',
+    'motion-spot-opengl',
+    'motion-spot-custom'
+  );
+  Regions.Shot(
+    Session,
+    Output,
+    'loader',
+    'motion-dots',
+    'motion-bars',
+    'motion-pulse',
+    'motion-orbit',
+    'motion-grid-loader'
+  );
+  Regions.Shot(Session, Output, 'dock', 'motion-dock');
+  Regions.Shot(
+    Session,
+    Output,
+    'control-tile',
+    'motion-wifi',
+    'motion-hotspot',
+    'motion-focus',
+    'motion-airshare',
+    'motion-dark'
+  );
+  Regions.Shot(Session, Output, 'now-playing', 'motion-player');
+  Regions.Shot(Session, Output, 'waveform', 'motion-wave-card');
+  Regions.Shot(Session, Output, 'tab-bar', 'motion-tabs');
+  Regions.Shot(Session, Output, 'rolling-number', 'motion-roll', 'motion-roll-change');
+  Presented.Send(Session, Gallery.Msg.Motion(Motion.Msg.Roll));
+  Regions.Shot(Session, Output, 'rolling-number-changed', 'motion-roll', 'motion-roll-change');
+end procedure;
+
+end unit;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/apps/fpas-amp/library.md#lifetime-and-control)
+// [Documentation](../../doc/library.md#lifetime-and-control)
 
 // UI-independent music locations and path rules.
 unit FpasAmp.Library.Sources;

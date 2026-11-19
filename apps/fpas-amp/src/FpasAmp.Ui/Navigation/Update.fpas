@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+// [Documentation](../../../doc/desktop.md#shell-and-navigation)
 
 // A stale saved playlist can never leave the app on an invalid destination.
 unit FpasAmp.Ui.Navigation.Update;

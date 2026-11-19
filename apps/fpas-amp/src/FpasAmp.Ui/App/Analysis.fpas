@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#playback-and-analysis)
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
 
 // Playback-triggered waveform and local acoustic fingerprint analysis.
 unit FpasAmp.Ui.App.Analysis;

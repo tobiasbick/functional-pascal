@@ -110,6 +110,9 @@ CUI_API int fpas_cui_capture(cui_app *app, const char *path) {
         (size_t)height > SIZE_MAX / ((size_t)width * 4)) return 0;
     unsigned char *pixels = malloc((size_t)width * (size_t)height * 4);
     if (!pixels) return 0;
+    /* CUI-045 (docs/future/cui-upstream-bugs.md#cui-045): malloc can reuse the
+     * previous screenshot address. A fresh PNG needs every tile repainted. */
+    if (app->sw) app->sw->last_px = NULL;
     bool ok = cui_app_screenshot(app, pixels, width, height);
     if (ok) {
         draw = cui_get_draw_data(ui);

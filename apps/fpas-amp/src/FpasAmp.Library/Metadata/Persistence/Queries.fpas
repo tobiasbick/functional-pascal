@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../../doc/library.md#metadata-and-queries)
 
 // Bound queries use explicit sort keys and parameterized exact filters.
 unit FpasAmp.Library.Metadata.Persistence.Queries;

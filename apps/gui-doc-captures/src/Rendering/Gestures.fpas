@@ -1,0 +1,28 @@
+// [Documentation](../../doc/captures.md#capture-session)
+
+unit GuiDocCaptures.Rendering.Gestures;
+
+// CUI key ordinal for activation.
+public const Enter: int := 2;
+// CUI key ordinal for dismissal.
+public const Escape: int := 3;
+// CUI key ordinal for opening a focused dropdown.
+public const Down: int := 10;
+
+// Native input supplied by the current gallery session to interactive recipes.
+public type Controls = record
+  // Focus the control by ID and send the given activation key.
+  public Activate: procedure(string, int);
+  // Send one key press and release, then present the resulting frames.
+  public Key: procedure(int);
+  // Aim at a control by ID to trigger its hover state on subsequent frames.
+  public Hover: procedure(string);
+  // Move the pointer outside the window and present the frame.
+  public Leave: procedure();
+  // Right-click the control at the specified fraction of its width.
+  public ContextClick: procedure(string, float);
+  // Drag left from the control center by the given number of pixels.
+  public SwipeLeft: procedure(string, float);
+end record;
+
+end unit;

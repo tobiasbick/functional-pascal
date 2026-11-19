@@ -1,0 +1,95 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.Actions;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiDocCaptures.Rendering.Gestures as Gestures, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui, GuiGallery.Pages.Actions.State as Actions, Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+
+// Captures the actions chapter from its presented gallery page.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Output`: Directory for frame PNGs and crop bounds.
+// - `Input`: Native gestures for this session.
+public procedure CaptureActions(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls);
+begin
+  Regions.Shot(
+    Session,
+    Output,
+    'button',
+    'primary',
+    'secondary',
+    'outline',
+    'ghost',
+    'danger',
+    'link'
+  );
+  Regions.Shot(
+    Session,
+    Output,
+    'icon-button',
+    'icon-copy',
+    'icon-share',
+    'icon-like',
+    'icon-delete'
+  );
+  Regions.Shot(Session, Output, 'button-group', 'format-bold', 'format-italic', 'format-underline');
+  Regions.Capture(Session, Output, 'copy-button', new Regions.Insets(Left := 68), 'copy-install');
+  Regions.Shot(Session, Output, 'hold-button', 'hold-delete');
+  Regions.Shot(Session, Output, 'segmented-control', 'view', 'range');
+  Input.Activate('options', Gestures.Down);
+  Regions.Shot(
+    Session, Output, 'dropdown-menu',
+    'options',
+    'options/rename',
+    'options/duplicate',
+    'options/share',
+    'options/delete'
+  );
+  Input.Key(Gestures.Escape);
+
+  Presented.Send(Session, Gallery.Msg.Show(Gallery.Page.Actions));
+  Regions.Shot(Session, Output, 'toggle-group', 'action-format', 'action-align');
+  Regions.Shot(Session, Output, 'reactions', 'action-reactions');
+  Regions.Shot(Session, Output, 'theme-switcher', 'theme-preview');
+  Regions.Shot(Session, Output, 'theme-toggle', 'theme-toggle');
+  Input.Activate('split-save/menu', Gestures.Down);
+  Regions.Shot(
+    Session, Output, 'split-button',
+    'split-save',
+    'split-save/menu',
+    'split-save/menu/draft',
+    'split-save/menu/schedule'
+  );
+  Input.Key(Gestures.Escape);
+  Input.Activate('confirm-delete', Gestures.Enter);
+  Regions.Shot(Session, Output, 'confirm-button', 'confirm-delete');
+  Input.Key(Gestures.Escape);
+  Presented.Send(Session, Gallery.Msg.Actions(Actions.Msg.SetSaveStatus(Status.Status.Success)));
+  Regions.Shot(Session, Output, 'status-button', 'status-save');
+  Input.Activate('action-user', Gestures.Enter);
+  Regions.Shot(
+    Session,
+    Output,
+    'user-menu',
+    'action-user',
+    'action-user/profile',
+    'action-user/log-out'
+  );
+  Input.Key(Gestures.Escape);
+  Input.Activate('action-speed-dial', Gestures.Enter);
+  Regions.Shot(
+    Session, Output, 'speed-dial',
+    'action-speed-dial',
+    'action-speed-dial/0',
+    'action-speed-dial/1',
+    'action-speed-dial/2'
+  );
+  Input.Key(Gestures.Escape);
+  Regions.Shot(Session, Output, 'swipe-actions-closed', 'swipe-design');
+  Input.SwipeLeft('swipe-design', 110.0F);
+  Regions.Shot(Session, Output, 'swipe-actions', 'swipe-design');
+end procedure;
+
+end unit;

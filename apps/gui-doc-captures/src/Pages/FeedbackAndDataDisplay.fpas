@@ -1,0 +1,70 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.FeedbackAndDataDisplay;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui;
+
+// Captures the feedback widgets from their presented gallery page.
+// ## Parameters
+// - `Session`: Gallery session on Feedback with a visible upload status.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureFeedback(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'alert', 'update', 'payment', 'storage', 'build');
+  Regions.Shot(Session, Output, 'progress-bar', 'upload', 'index', 'export', 'sync');
+  Regions.Shot(Session, Output, 'meter', 'storage-usage');
+  Regions.Shot(Session, Output, 'spinner', 'spinner-small', 'spinner-medium', 'spinner-large');
+  Regions.Shot(Session, Output, 'spinner-styles', 'dither-spinners-card');
+  Regions.Capture(
+    Session, Output, 'status-spinner', new Regions.Insets(Right := 72),
+    'feedback-upload', 'feedback-upload-status'
+  );
+  Regions.Shot(
+    Session, Output, 'skeleton', 'loading-avatar', 'loading-title', 'loading-subtitle',
+    'loading-body', 'loading-line-1', 'loading-line-2'
+  );
+  Regions.Shot(
+    Session,
+    Output,
+    'skeleton-group',
+    'loading-dither',
+    'loading-dither-avatar',
+    'loading-dither-line'
+  );
+  Regions.Shot(Session, Output, 'timeline-item', 'deployed', 'review', 'failed');
+  Regions.Shot(Session, Output, 'progress-ring', 'onboarding', 'quota');
+  Regions.Shot(
+    Session, Output, 'badge', 'badge-draft', 'badge-recommended', 'badge-active', 'badge-pending',
+    'badge-overdue', 'badge-beta', 'badge-new'
+  );
+  Regions.Shot(Session, Output, 'avatar-group', 'feedback-team');
+  Regions.Shot(Session, Output, 'empty-state', 'no-projects', 'no-projects/action');
+  Regions.Shot(Session, Output, 'grid', 'activity-card', 'goals-card');
+  Regions.Shot(Session, Output, 'card', 'badges-and-avatars-card');
+end procedure;
+
+// Captures the collections and accordion from the gallery's Data display page.
+// ## Parameters
+// - `Session`: Gallery session on Data display.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureDataDisplay(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'table', 'people');
+  Regions.Shot(Session, Output, 'tree', 'tree-card');
+  Regions.Shot(Session, Output, 'list-item', 'design-review', 'release', 'planning');
+  Regions.Shot(Session, Output, 'reorderable-list', 'task-order');
+  Regions.Shot(
+    Session,
+    Output,
+    'accordion',
+    'accordion-card',
+    'accordion/0',
+    'accordion/1',
+    'accordion/2'
+  );
+  Regions.Shot(Session, Output, 'virtual-list', 'invoices');
+end procedure;
+
+end unit;

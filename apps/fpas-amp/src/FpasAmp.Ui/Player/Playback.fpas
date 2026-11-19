@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#playback-and-analysis)
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
 
 // The GUI submits transport requests in order; file and device work runs on one worker.
 unit FpasAmp.Ui.Player.Playback;

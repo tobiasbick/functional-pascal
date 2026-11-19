@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#acoustic-fingerprints)
+// [Documentation](../../../../doc/library.md#acoustic-fingerprints)
 
 // Local acoustic fingerprint generation with the packaged Chromaprint tool.
 unit FpasAmp.Library.Metadata.Fingerprints.Calculator;

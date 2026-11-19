@@ -6,7 +6,8 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="../Fpas.Media.Audio.Tests/Fixtures/step.mp3" Link="Fixtures/step.mp3" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Fixtures/wide.jpg" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../Fpas.Media.Audio.Tests/Fixtures/step.mp3;../Fpas.Media.Audio.Tests/Fixtures/step.ogg" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />

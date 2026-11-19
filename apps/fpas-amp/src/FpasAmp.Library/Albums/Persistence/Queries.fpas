@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+// [Documentation](../../../../doc/library.md#albums-and-artwork)
 
 // Compact indexed album headers, without materializing audio tags or image data.
 unit FpasAmp.Library.Albums.Persistence.Queries;

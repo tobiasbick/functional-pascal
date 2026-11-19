@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+// [Documentation](../../../../doc/library.md#reconciliation-and-persistence)
 
 // Combines dirty directories into minimal active scan scopes.
 unit FpasAmp.Library.Inventory.Internal.Planning;

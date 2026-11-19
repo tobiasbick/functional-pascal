@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#startup-and-user-files)
+// [Documentation](../../../doc/desktop.md#startup-and-user-files)
 
 // Compact playback bookmark: the catalogue supplies the queue on restart.
 unit FpasAmp.Persistence.PlayerState;

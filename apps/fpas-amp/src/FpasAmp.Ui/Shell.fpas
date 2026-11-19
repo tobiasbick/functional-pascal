@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+// [Documentation](../../doc/desktop.md#shell-and-navigation)
 
 // Responsive native shell; all destinations share the same MVU navigation state.
 unit FpasAmp.Ui.Shell;

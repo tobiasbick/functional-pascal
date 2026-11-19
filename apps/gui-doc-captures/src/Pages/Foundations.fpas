@@ -1,0 +1,134 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.Foundations;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiGallery.App.State as Gallery, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  GuiGallery.Pages.Overlays.State as Overlays,
+  Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, System as Sys;
+
+procedure CaptureDisplay(Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string));
+  procedure Specimen(Name: string; Above: int; Width: int; Height: int);
+  begin
+    const Top: int := ImageTop - Above;
+    Regions.CaptureRectangle(Session, Output, Name, [Left, Top, Left + Width, Top + Height]);
+  end procedure;
+begin
+  // Passive text and glyphs have no snapshot IDs. Anchor their scale-one
+  // crops to the illustration directly below the specimens.
+  const Picture: Cui.CuiRectangle := Presented.Bounds(Session, 'picture');
+  const Left: int := cast<int>(Picture.X) - 8;
+  const ImageTop: int := cast<int>(Picture.Y);
+  Specimen('text', 497, 374, 249);
+  Specimen('icon', 184, 92, 35);
+  Specimen('emoji', 146, 127, 32);
+  Specimen('keycap', 108, 109, 36);
+  Regions.Shot(Session, Output, 'image', 'picture');
+  Regions.Shot(Session, Output, 'canvas', 'accent-0', 'accent-7');
+  Click('accent-2');
+  Regions.Shot(Session, Output, 'canvas-selected', 'accent-0', 'accent-7');
+end procedure;
+
+procedure CaptureReader(Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string));
+begin
+  Regions.Capture(
+    Session, Output, 'table-of-contents', new Regions.Insets(Top := 20),
+    'reader-outline'
+  );
+  Click(Toc.ItemId('reader-outline', 1));
+  Presented.Step(Session);
+  Presented.Step(Session);
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = 'reader-outline' and Control.Value = 'install' then
+      Regions.Shot(Session, Output, 'scroll-anchor', 'reader', 'reader-outline');
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('The Reader outline did not jump to Install.');
+end procedure;
+
+procedure CaptureDesktop(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string); Scroll: procedure(float)
+);
+begin
+  Regions.Capture(Session, Output, 'menu-bar', new Regions.Insets(Bottom := -8), 'desktop-menu');
+  Regions.Capture(
+    Session, Output, 'toolbar-editor', new Regions.Insets(Top := -8, Bottom := -8), 'desktop-tools'
+  );
+  Regions.Capture(
+    Session, Output, 'document-tabs', new Regions.Insets(Top := -8), 'desktop-documents'
+  );
+  const Tabs: Cui.CuiRectangle := Presented.Bounds(Session, 'desktop-documents');
+  const Status: Cui.CuiRectangle := Presented.Bounds(Session, 'desktop-status');
+  const Left: int := cast<int>(Tabs.X);
+  Regions.CaptureRectangle(
+    Session, Output, 'formatted-text', [
+      Left, cast<int>(Tabs.Y + Tabs.Height), Left + 532, cast<int>(Status.Y)
+    ]
+  );
+  Regions.Shot(Session, Output, 'status-bar', 'desktop-status');
+  Regions.Shot(Session, Output, 'dockspace', 'dock-tools', 'workspace');
+  Regions.Shot(Session, Output, 'split-view', 'desktop-split');
+  Click('desktop-menu/view');
+  Regions.Shot(
+    Session, Output, 'menu-bar-open',
+    'desktop-menu', 'desktop-menu/view/sidebar', 'desktop-menu/view/zoom-out'
+  );
+  // The window actions sit at the end of the page; the open menu takes the first wheel event.
+  Scroll(-60.0F);
+  Scroll(-60.0F);
+  for Frame: int := 1 to 4 do
+    Presented.Step(Session);
+  end for;
+
+  Regions.Shot(Session, Output, 'window-actions', 'desktop-maximize', 'desktop-placement');
+end procedure;
+
+procedure CaptureLayout(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'stack', 'layout-back', 'layout-front');
+  Regions.Shot(
+    Session,
+    Output,
+    'reading-direction',
+    'ltr-start',
+    'ltr-end',
+    'rtl-start',
+    'rtl-end'
+  );
+  Regions.Shot(Session, Output, 'scroll-view', 'layout-horizontal');
+
+  Presented.Send(Session, Gallery.Msg.Show(Gallery.Page.Overlays));
+  Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetSheet(true)));
+  Regions.Shot(Session, Output, 'divider', 'notifications-weekly', 'recent-comment');
+end procedure;
+
+// Captures the display primitives, Reader, app chrome or supplementary layout examples.
+// ## Parameters
+// - `Session`: Presented gallery page.
+// - `Output`: Directory for the frame images and crop bounds.
+// - `Page`: Active gallery page.
+// - `Click`: Activates a control by its rendered identity.
+// - `Scroll`: Injects a vertical wheel delta over the page margin.
+public procedure Capture(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Page: Gallery.Page; Click: procedure(string);
+  Scroll: procedure(float)
+);
+begin
+  case Page of
+    when Gallery.Page.Display:
+      CaptureDisplay(Session, Output, Click);
+    when Gallery.Page.Reader:
+      CaptureReader(Session, Output, Click);
+    when Gallery.Page.Desktop:
+      CaptureDesktop(Session, Output, Click, Scroll);
+    when Gallery.Page.Layout:
+      CaptureLayout(Session, Output);
+    else
+      raise new Sys.ArgumentException('No foundation captures for ' + Page.ToString());
+  end case;
+end procedure;
+
+end unit;

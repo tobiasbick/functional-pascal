@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#search)
+// [Documentation](../../../doc/library.md#search)
 
 // Language-independent search keys: folded words, phonetic codes and typo distance.
 unit FpasAmp.Library.Search.Text;

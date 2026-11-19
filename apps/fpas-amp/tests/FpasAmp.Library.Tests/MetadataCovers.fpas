@@ -1,0 +1,146 @@
+// [Documentation](../../doc/library.md#albums-and-artwork)
+
+// Cover images remain outside the normal metadata scan and can be reused offline.
+unit FpasAmp.Library.Tests.MetadataCovers;
+
+uses
+  Fpas.Media.Tags.Pictures as ArtFiles,
+  ATL as A, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Covers as Covers,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Sources as S,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises real embedded pictures written and read through ATL.
+public type MetadataCoverTests = record
+  // Valid JSON with missing/null required fields is rebuilt from the original media.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('{}')]
+  [X.InlineDataAttribute('{"MimeType":"image/png","Data":null}')]
+  public async function IncompleteCachedCoverIsRebuilt(Contents: string): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track.mp3');
+    const Bytes: array of byte := Sys.Convert.FromBase64String(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aO9sAAAAASUVORK5CYII='
+    );
+    const Track: A.Track := new A.Track(Path);
+    const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+    if Pictures = null then
+      raise new Sys.InvalidOperationException('Missing picture collection.');
+    end if;
+
+    Pictures.Add(A.PictureInfo.fromBinaryData(Bytes));
+    X.Assert.True(Track.Save());
+    const Source: S.MusicSource := F.Source(Root.Path);
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Entries: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags, function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    const Directory: string := Covers.DirectoryPath(IO.Path.Combine(Data.Path, 'userdata.db'));
+    discard IO.Directory.CreateDirectory(Directory);
+    const CachedPath: string := IO.Path.Combine(Directory, Entries[0].Sha256 + '.json');
+    IO.File.WriteAllText(CachedPath, Contents);
+    const Restored: ArtFiles.Cover? := await Tags.CoverAsync(
+      Entries[0].FileId,
+      T.CancellationToken.None
+    );
+    X.Assert.NotNull(Restored);
+    if Restored <> null then
+      X.Assert.Equal<string>(
+        Sys.Convert.ToHexString(Bytes),
+        Sys.Convert.ToHexString(Restored.Data)
+      );
+      X.Assert.Equal<string>('image/png', Restored.MimeType);
+    end if;
+
+    X.Assert.NotEqual<string>(Contents, IO.File.ReadAllText(CachedPath));
+    // Keep the indexed file ID available for the offline cache lookup.
+    Session.Configure(
+      [
+        Source with
+          Offline := true;
+        end with
+      ]
+    );
+    discard await H.Until(
+      Session,
+      function(Value: Inventory.Snapshot): bool => Value.Sources[
+        0
+      ].Status = Inventory.Availability.Offline
+    );
+    IO.File.Delete(Path);
+    X.Assert.NotNull(await Tags.CoverAsync(Entries[0].FileId, T.CancellationToken.None));
+  end function;
+
+  // Tag reads leave pictures unloaded; an explicit cover request creates a reusable cache.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('.mp3')]
+  [X.InlineDataAttribute('.ogg')]
+  public async function CoversAreLazyAndRemainAvailableOffline(Extension: string): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track' + Extension);
+    // A synthetic one-pixel PNG, containing no user image or private data.
+    const Bytes: array of byte := Sys.Convert.FromBase64String(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aO9sAAAAASUVORK5CYII='
+    );
+    const Track: A.Track := new A.Track(Path);
+    const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+    if Pictures = null then
+      raise new Sys.InvalidOperationException('Missing picture collection.');
+    end if;
+
+    Pictures.Add(A.PictureInfo.fromBinaryData(Bytes));
+    X.Assert.True(Track.Save());
+    const Source: S.MusicSource := F.Source(Root.Path);
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Entries: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    const Cache: string := Covers.DirectoryPath(IO.Path.Combine(Data.Path, 'userdata.db'));
+    X.Assert.False(IO.Directory.Exists(Cache));
+    const Cover: ArtFiles.Cover? := await Tags.CoverAsync(
+      Entries[0].FileId,
+      T.CancellationToken.None
+    );
+    X.Assert.True(Cover <> null);
+    if Cover = null then
+      return;
+    end if;
+
+    X.Assert.Equal<string>('image/png', Cover.MimeType);
+    X.Assert.Equal<string>(Sys.Convert.ToHexString(Bytes), Sys.Convert.ToHexString(Cover.Data));
+    X.Assert.Equal<int>(1, IO.Directory.GetFiles(Cache).Length);
+    Session.Configure(
+      [
+        Source with
+          Offline := true;
+        end with
+      ]
+    );
+    discard await H.Until(
+      Session,
+      function(Value: Inventory.Snapshot): bool => Value.Sources[
+        0
+      ].Status = Inventory.Availability.Offline
+    );
+    IO.File.Delete(Path);
+    const Cached: ArtFiles.Cover? := await Tags.CoverAsync(
+      Entries[0].FileId,
+      T.CancellationToken.None
+    );
+    X.Assert.True(Cached <> null);
+    if Cached <> null then
+      X.Assert.Equal<string>(Sys.Convert.ToHexString(Bytes), Sys.Convert.ToHexString(Cached.Data));
+    end if;
+  end function;
+end record;
+
+end unit;

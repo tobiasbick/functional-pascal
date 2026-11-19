@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+// [Documentation](../../../../doc/library.md#albums-and-artwork)
 
 // Album cover precedence is explicit; no network or arbitrary folder image is used.
 unit FpasAmp.Library.Albums.Artwork.Reading;

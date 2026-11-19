@@ -1,11 +1,13 @@
-<!-- [Documentation](README.md) -->
+<!-- [Documentation](doc/captures.md#capture-session) -->
 <Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <EnableDefaultFpasCompileItems>false</EnableDefaultFpasCompileItems>
     <Gallery>../../examples/ui/gui/gallery</Gallery>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="src/**/*.fpas" />
     <ProjectReference Include="../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
     <Compile Include="$(Gallery)/**/*.fpas"
              Exclude="$(Gallery)/main.fpas;$(Gallery)/bin/**;$(Gallery)/obj/**" />

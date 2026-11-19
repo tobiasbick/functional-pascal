@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+// [Documentation](../../../doc/desktop.md#shell-and-navigation)
 
 // MVU boundary: routes slice messages and owns the library subscriptions.
 unit FpasAmp.Ui.App.Controller;

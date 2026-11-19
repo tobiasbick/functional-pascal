@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#lifetime-and-control)
+// [Documentation](../../../doc/library.md#lifetime-and-control)
 
 // Lightweight latest-value scan progress, independent of full inventory snapshots.
 unit FpasAmp.Library.Inventory.Progress;

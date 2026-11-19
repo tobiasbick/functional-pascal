@@ -1,0 +1,123 @@
+// [Documentation](../../doc/captures.md#capture-session)
+
+unit GuiDocCaptures.Rendering.Presented;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, System as Sys,
+  Fpas.Ui.Mvu.Session as Mvu,
+  System.Threading as Threads, System.Diagnostics as Diagnostics;
+
+// Presents the next gallery frame.
+// ## Parameters
+// - `Session`: Open gallery session.
+public procedure Step(Session: Gui.Session<Gallery.Msg>);
+begin
+  if not Session.Step() then
+    raise new Sys.InvalidOperationException('The gallery closed during capture.');
+  end if;
+end procedure;
+
+// Posts a gallery message and presents the resulting view.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Message`: Gallery action to apply.
+public procedure Send(Session: Gui.Session<Gallery.Msg>; Message: Gallery.Msg);
+begin
+  case Session.Post(Message) of
+    when Mvu.Admission.Queued:
+    else
+      raise new Sys.InvalidOperationException('The gallery did not accept a message.');
+  end case;
+
+  Step(Session);
+  Step(Session);
+end procedure;
+
+// Finds the on-screen rectangle of a rendered control.
+// ## Parameters
+// - `Session`: Gallery session with a presented frame.
+// - `Id`: Control identity.
+// ## Returns
+// Positive-width and positive-height bounds in logical window coordinates.
+public function Bounds(Session: Gui.Session<Gallery.Msg>; Id: string): Cui.CuiRectangle;
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id and Control.Bounds.Width > 0.0F and Control.Bounds.Height > 0.0F then
+      return Control.Bounds;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('No usable pointer target for ' + Id);
+end function;
+
+// Advances frames until a delayed native control supplies usable bounds.
+// ## Parameters
+// - `Session`: Gallery session receiving the pointer input.
+// - `Id`: Control identity to wait for.
+public procedure AwaitVisible(Session: Gui.Session<Gallery.Msg>; Id: string);
+begin
+  const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
+  while Time.Elapsed.TotalSeconds < 2.0 do
+    Step(Session);
+
+    for Control: Gui.Control in Session.Snapshot().Controls do
+      if Control.Id = Id and Control.Bounds.Width > 0.0F and Control.Bounds.Height > 0.0F then
+        return;
+      end if;
+    end for;
+
+    Threads.Thread.Sleep(15);
+  end while;
+
+  raise new Sys.InvalidOperationException('No presented overlay for ' + Id);
+end procedure;
+
+// Captures a visible native toast identified by its title.
+// ## Parameters
+// - `Session`: Gallery session with a presented toast.
+// - `Output`: Directory for the full-frame image and crop bounds.
+// - `Name`: Basename of the screenshot.
+// - `Title`: Gallery toast title.
+public procedure CaptureToast(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Title: string);
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Role = 'toast' and Control.Text = Title then
+      Regions.Capture(Session, Output, Name, new Regions.Insets(), Control.Id);
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing gallery toast: ' + Title);
+end procedure;
+
+// Captures controls after scrolling their bounds into the main viewport.
+// ## Parameters
+// - `Session`: Presented gallery page.
+// - `Output`: Directory for frame images and crop bounds.
+// - `Name`: Name of the capture.
+// - `Scroll`: Injects a vertical wheel delta over the page margin.
+// - `Ids`: The controls to include in the crop.
+public procedure CaptureInView(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string;
+  Scroll: procedure(float); params Ids: array of string
+);
+begin
+  const Height: float := cast<float>(Session.Snapshot().Size.Height);
+  var Top: float := Height;
+  var Bottom: float := 0.0F;
+  for Id: string in Ids do
+    const Bounds: Cui.CuiRectangle := Bounds(Session, Id);
+    Top := Sys.Math.Min(Top, Bounds.Y);
+    Bottom := Sys.Math.Max(Bottom, Bounds.Y + Bounds.Height);
+  end for;
+
+  if Top < 24.0F or Bottom > Height - 24.0F then
+    // One native wheel line moves the main gallery viewport 44 logical points.
+    Scroll((48.0F - Top) / 44.0F);
+  end if;
+
+  Regions.Capture(Session, Output, Name, new Regions.Insets(), Ids);
+end procedure;
+
+end unit;

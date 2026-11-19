@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../../doc/desktop.md#browsing-music-and-collections)
 
 // Shared song browsing and playback selection for releases and the Music destination.
 unit FpasAmp.Ui.Albums.Music.Model;

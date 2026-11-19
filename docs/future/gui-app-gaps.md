@@ -105,7 +105,7 @@ Font coverage and bidirectional editing are separate concerns.
   decoding, cropping and writing those PNGs because the shared .NET runtime
   and the FPAS GUI API have no portable bitmap crop operation. Verify the
   replacement against the same scale-one frame and crop bounds.
-  [Capture workflow](../../apps/gui-doc-captures/README.md)
+  [Capture workflow](../../apps/gui-doc-captures/doc/captures.md)
 
 ## Deferred window chrome
 

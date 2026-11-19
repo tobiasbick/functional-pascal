@@ -1,0 +1,69 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.CreativeAndCanvas;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiGallery.App.State as Gallery, GuiGallery.Pages.Canvas.State as Canvas,
+  Fpas.Ui.Gui.Application as Gui;
+
+// Captures the original Creative controls page.
+// ## Parameters
+// - `Session`: Presented Creative controls page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureControls(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(
+    Session,
+    Output,
+    'status-tag',
+    'creative-tag-0',
+    'creative-tag-6',
+    'creative-remove-0',
+    'creative-remove-6'
+  );
+  Regions.Shot(Session, Output, 'ratio-slider', 'creative-coffee', 'creative-train');
+  Regions.Shot(Session, Output, 'gradient-slider', 'creative-hue', 'creative-kelvin');
+  Regions.Shot(Session, Output, 'gradient-slider-opacity', 'creative-opacity');
+  Regions.Shot(Session, Output, 'step-slider', 'creative-variations');
+  Regions.Shot(Session, Output, 'palette-strip', 'creative-palette');
+  Regions.Shot(Session, Output, 'aspect-ratio-picker', 'creative-aspect');
+  Regions.Shot(Session, Output, 'option-action', 'creative-background', 'creative-format');
+  Regions.Shot(Session, Output, 'seed-field', 'creative-seed');
+end procedure;
+
+// Captures the original Canvas and bars page with its active selection and collaborators.
+// ## Parameters
+// - `Session`: Presented Canvas and bars page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureCanvas(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Presented.Send(Session, Gallery.Msg.Canvas(Canvas.Msg.Tick(2.0F)));
+  Regions.Shot(Session, Output, 'toolbar', 'canvas-tools');
+  Regions.Shot(Session, Output, 'format-bar', 'canvas-format');
+  Regions.Shot(Session, Output, 'node-editor', 'canvas-graph');
+  Regions.Shot(Session, Output, 'presence-pill', 'canvas-here');
+  // These overlays are painted over the canvas and share its reported bounds.
+  Regions.Capture(
+    Session, Output, 'canvas-controls',
+    new Regions.Insets(Left := -780, Top := -60, Right := -8, Bottom := -59),
+    'canvas-graph'
+  );
+  Regions.Capture(
+    Session, Output, 'selection-ring',
+    new Regions.Insets(Left := -325, Top := -98, Right := -307, Bottom := -102),
+    'canvas-graph'
+  );
+  Regions.Shot(Session, Output, 'result-card', 'canvas-result');
+  Regions.Shot(Session, Output, 'toolbar-floating', 'canvas-result-actions');
+  Regions.Capture(
+    Session,
+    Output,
+    'selection-bar',
+    new Regions.Insets(Left := 10, Top := 12, Right := 421, Bottom := 90),
+    'canvas-file-0',
+    'canvas-file-4'
+  );
+end procedure;
+
+end unit;

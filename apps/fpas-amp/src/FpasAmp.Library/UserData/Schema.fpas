@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#durable-identities-and-ratings)
+// [Documentation](../../../doc/library.md#durable-identities-and-ratings)
 
 // Durable user data is never cleared with the reconstructible library index.
 unit FpasAmp.Library.UserData.Schema;

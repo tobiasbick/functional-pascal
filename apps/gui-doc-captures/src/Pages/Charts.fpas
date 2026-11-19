@@ -1,0 +1,63 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.Charts;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui;
+
+// Captures the chart widgets and their variants on the Charts page.
+// ## Parameters
+// - `Session`: Gallery session on Charts.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureCharts(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'line-chart', 'revenue');
+  Regions.Shot(Session, Output, 'line-chart-dither', 'requests');
+  Regions.Shot(Session, Output, 'bar-chart', 'visits');
+  Regions.Shot(Session, Output, 'bar-chart-stacked', 'runs');
+  Regions.Shot(Session, Output, 'donut-chart', 'platforms');
+  Regions.Shot(Session, Output, 'pattern-meter', 'storage');
+  Regions.Shot(Session, Output, 'gauge', 'cpu', 'memory');
+  Regions.Shot(Session, Output, 'sparkline', 'chart-sparkline');
+end procedure;
+
+// Captures the pattern meter after selecting the grayscale option.
+// ## Parameters
+// - `Session`: Gallery session on Charts with Grayscale selected.
+// - `Output`: Directory for the full-frame image and crop bounds.
+public procedure CaptureGrayscale(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'pattern-meter-grayscale', 'storage', 'grayscale');
+end procedure;
+
+// Captures the visualizations at the top of More charts.
+// ## Parameters
+// - `Session`: Gallery session on More charts.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureMoreChartsTop(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'heatmap', 'traffic');
+  Regions.Shot(Session, Output, 'calendar-heatmap', 'activity');
+  Regions.Shot(Session, Output, 'treemap', 'bundle');
+  Regions.Shot(Session, Output, 'radar-chart', 'radar');
+  Regions.Shot(Session, Output, 'funnel', 'funnel');
+  Regions.Shot(Session, Output, 'split-bar', 'split');
+  Regions.Shot(Session, Output, 'waffle', 'waffle');
+  Regions.Shot(Session, Output, 'sankey', 'flow');
+end procedure;
+
+// Captures the ranked charts and instruments at the bottom of More charts.
+// ## Parameters
+// - `Session`: Gallery session scrolled to the bottom of More charts.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureMoreChartsBottom(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Shot(Session, Output, 'bar-list', 'pages', 'shuffle-pages');
+  Regions.Shot(Session, Output, 'activity-rings', 'rings');
+  Regions.Shot(Session, Output, 'scatter-chart', 'scatter');
+  Regions.Shot(Session, Output, 'radial-gauge', 'cpu-radial', 'temp', 'mem');
+  Regions.Shot(Session, Output, 'candlestick', 'price');
+end procedure;
+
+end unit;

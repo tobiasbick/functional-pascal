@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
 // Editor for the name and formats of a music source.
 unit FpasAmp.Ui.Settings.Editor;

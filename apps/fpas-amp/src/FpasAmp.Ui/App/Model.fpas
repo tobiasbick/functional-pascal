@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+// [Documentation](../../../doc/desktop.md#shell-and-navigation)
 
 // App state composed of the navigation, album and settings slices.
 unit FpasAmp.Ui.App.Model;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
 // Preference and source edits; each accepted change is saved before it is shown.
 unit FpasAmp.Ui.Settings.Editing;

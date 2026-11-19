@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
 // Native source-removal confirmation; media and durable user data are retained.
 unit FpasAmp.Ui.Settings.SourceActions;

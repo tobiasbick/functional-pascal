@@ -1,0 +1,147 @@
+// [Documentation](../../doc/desktop.md#browsing-music-and-collections)
+
+// Search, filters and sorting select the albums the grid shows.
+unit FpasAmp.Ui.Tests.AlbumBrowse;
+
+uses
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Library.Albums.Model as Library,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I, System.Linq as L,
+  Xunit as X;
+
+function Catalogue(): I.ImmutableArray<Library.Album>;
+begin
+  return I.ImmutableArray.CreateRange<Library.Album>(
+    [
+      new Library.Album('wall', 'The Wall', 'Pink Floyd', 26L, 'r', 9, ['Progressive rock']),
+      new Library.Album('road', 'Abbey Road', 'The Beatles', 17L, 'r', 8, ['Rock']),
+      new Library.Album('date', 'Last Date', 'Floyd Cramer', 12L, 'r', null, ['Country']),
+      new Library.Album('home', 'Homogenic', 'Björk', 10L, 'r', 7, ['Electronic', 'Rock'])
+    ]
+  );
+end function;
+
+function Loaded(): M.State;
+begin
+  return Update.Apply(
+    new M.State(),
+    M.Msg.Received(new Library.Snapshot(Catalogue(), 65L)),
+    null
+  ).Model;
+end function;
+
+function Send(Current: M.State; Message: Toolbar.Msg): M.State;
+begin
+  return Update.Apply(Current, M.Msg.Toolbar(Message), null).Model;
+end function;
+
+function Ids(Current: M.State): string;
+begin
+  return Sys.String.Join(
+    ',',
+    L.Enumerable.Select<Library.Album, string>(
+      Current.Shown,
+      function(Album: Library.Album): string => Album.Id
+    )
+  );
+end function;
+
+// Pure checks of the album slice, independent of a native display.
+public type AlbumBrowseTests = record
+  // The catalogue offers its artists and genres, and the default order is by title.
+  [X.FactAttribute]
+  public procedure DefaultShowsAllByTitle();
+  begin
+    const Current: M.State := Loaded();
+    X.Assert.Equal<string>('road,home,date,wall', Ids(Current));
+    X.Assert.Equal<string>(
+      ['Björk', 'Floyd Cramer', 'Pink Floyd', 'The Beatles'],
+      Current.Catalog.Artists
+    );
+    X.Assert.Equal<string>(
+      ['Country', 'Electronic', 'Progressive rock', 'Rock'],
+      Current.Catalog.Genres
+    );
+  end procedure;
+
+  // Searching switches to best matches and clearing returns to the order before.
+  [X.FactAttribute]
+  public procedure SearchRanksAndRestoresOrder();
+  begin
+    var Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Rating));
+    Current := Send(Current, Toolbar.Msg.Search('floyd'));
+    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Relevance, Current.Toolbar.Sort);
+    X.Assert.Equal<int>(2, Current.Shown.Length);
+    X.Assert.Contains('wall', Ids(Current));
+    X.Assert.Contains('date', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.Search('wall pink'));
+    X.Assert.Equal<string>('wall', Current.Shown[0].Id);
+    Current := Send(Current, Toolbar.Msg.Search('  '));
+    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Rating, Current.Toolbar.Sort);
+    X.Assert.Equal<int>(4, Current.Shown.Length);
+  end procedure;
+
+  // Filters apply only when confirmed, and they combine with each other.
+  [X.FactAttribute]
+  public procedure FiltersApplyOnConfirm();
+  begin
+    var Current: M.State := Send(Loaded(), Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.Genre('rock'));
+    X.Assert.Equal<int>(4, Current.Shown.Length);
+    Current := Send(Current, Toolbar.Msg.Apply);
+    X.Assert.Equal<string>('road,home', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.MinimumRating(8));
+    Current := Send(Current, Toolbar.Msg.Apply);
+    X.Assert.Equal<string>('road', Ids(Current));
+    X.Assert.Equal<int>(2, Toolbar.Count(Current.Toolbar.Applied));
+    Current := Send(Current, Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.Reset);
+    Current := Send(Current, Toolbar.Msg.Artist('Pink Floyd'));
+    Current := Send(Current, Toolbar.Msg.Apply);
+    X.Assert.Equal<string>('wall', Ids(Current));
+  end procedure;
+
+  // Each order sorts in both directions; unrated albums count as zero.
+  [X.FactAttribute]
+  public procedure OrdersSortBothWays();
+  begin
+    var Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Rating));
+    X.Assert.Equal<string>('date,home,road,wall', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.Descending(true));
+    X.Assert.Equal<string>('wall,road,home,date', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.Sort(Toolbar.Order.Songs));
+    X.Assert.Equal<string>('wall,road,date,home', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.Sort(Toolbar.Order.Artist));
+    X.Assert.Equal<string>('road,wall,date,home', Ids(Current));
+  end procedure;
+
+  // Best match cannot be chosen without search words.
+  [X.FactAttribute]
+  public procedure BestMatchNeedsWords();
+  begin
+    const Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Relevance));
+    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Title, Current.Toolbar.Sort);
+  end procedure;
+
+  // A new order asks for a new visible range, so thumbnails follow the shown albums.
+  [X.FactAttribute]
+  public procedure NewOrderRequestsNewRange();
+  begin
+    const Current: M.State := Loaded() with
+      First := 0;
+      Last := 4;
+    end with;
+    const Sorted: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current, M.Msg.Toolbar(Toolbar.Msg.Descending(true)), null
+    );
+    X.Assert.Equal<int>(-1, Sorted.Model.First);
+    X.Assert.Empty(Sorted.Commands);
+    const Same: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current, M.Msg.Toolbar(Toolbar.Msg.SetOpen(true)), null
+    );
+    X.Assert.Equal<int>(0, Same.Model.First);
+  end procedure;
+end record;
+
+end unit;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+// [Documentation](../../../../doc/library.md#playlists)
 
 // File lists are replaceable caches; user-owned lists are written separately.
 unit FpasAmp.Library.Playlists.Persistence.Store;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/apps/fpas-amp/desktop.md#startup-and-user-files)
+// [Documentation](../../doc/desktop.md#startup-and-user-files)
 
 // Stores window placement and a validated navigation selection.
 unit FpasAmp.AppState;

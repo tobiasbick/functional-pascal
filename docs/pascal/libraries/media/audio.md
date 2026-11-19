@@ -12,9 +12,9 @@ after a natural end leaves the track paused. `Unload()` does not publish a
 transport event.
 
 `Open` and `Seek` can do blocking decoder work. In a GUI, send transport
-requests to an ordered background worker. The [FPas-Amp playback
-connection](../../../../apps/fpas-amp/src/FpasAmp.Ui/Player/Playback.fpas)
-shows a request mailbox and a separate event consumer.
+requests to an ordered background worker and consume events separately.
+The [session tests](../../../../tests/Fpas.Media.Audio.Tests/SessionTests.cs)
+show how to distinguish notifications by request ID.
 Tracks with the same PCM format share an output device. The outgoing track
 fades to silence and the incoming track fades in over five milliseconds each.
 The output supplies silence during decoder seeks and between tracks.

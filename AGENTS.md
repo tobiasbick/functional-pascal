@@ -37,7 +37,7 @@ for the task.
   follow the owning interop and CLR mapping specifications. Update them in the
   same change when revising a mapping. Consume actual .NET APIs.
 - When UI behavior depends on the timing or order of MVU effect replies, tests
-  must use `tests/TestSupport/Mvu/EffectReplies.fpas` to release
+  must use `Fpas.Ui.Mvu.Testing.EffectReplies` to release
   replies individually and verify what the user sees or can do before and after each release.
 
 ## Approach

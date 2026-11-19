@@ -228,18 +228,19 @@ cells and output positions.
 The composition fixture also checks graphical outline validation, including
 anchor order and scope boundaries for dialogs, popovers, tables and Kanban cards.
 
-## Workflows and Amp
+## Workflows
 
 `WorkflowTests` covers cleanup failure preserving completed outcomes, throwing
 cancellation callbacks, late resource acquisition after scope closure, and
 deadline/caller/unrelated cancellation precedence. It also verifies UTF-8
 decoding on both captured process streams.
-`FpasAmp.Library.Tests` checks malformed cover-cache rebuilding, offline reuse,
-embedded artwork fallback before sidecars, and reconciliation of a subtree
-removed during a pause. Playlist tests check how URI escaping is interpreted.
-`FpasAmp.Ui.Tests` checks rating receipts after navigation, stale messages,
-open-album catalogue refresh, cancellation when switching browser sections,
-and music-source settings repair and save rejection for playlist extensions.
+
+## Media libraries
+
+The [FPAS library tests](README.md#fpas-library-tests) read MP3 and Vorbis tags
+and embedded covers, decode JPEG and PNG pixels, preserve playlist locations,
+and check atomic M3U8 replacement. The [audio tests](Fpas.Media.Audio.Tests/)
+exercise codec seeking, playback events, output devices, mixing and waveforms.
 
 ## Language and metadata
 

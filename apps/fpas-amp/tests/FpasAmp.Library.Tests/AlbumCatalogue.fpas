@@ -1,0 +1,115 @@
+// [Documentation](../../doc/library.md#albums-and-artwork)
+
+// Catalogue reads and publications during scanning.
+unit FpasAmp.Library.Tests.AlbumCatalogue;
+
+uses
+  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observer, FpasAmp.Library.Metadata.Persistence.Queries as Songs, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
+  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
+  FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Verifies the library snapshot and its observation during catalogue changes.
+public type CatalogueTests = record
+  // The album observer publishes the new library count as soon as an untagged song is indexed.
+  [X.FactAttribute]
+  public async function PendingTrackUpdatesLibraryCount(): Tasks.Task;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Database: string := IO.Path.Combine(Folder.Path, 'library.db');
+    const Ratings: string := IO.Path.Combine(Folder.Path, 'userdata.db');
+    using const UserData: Db.SqliteConnection := Users.Open(Ratings);
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    Schema.Ensure(Connection);
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
+    var Publications: int := 0;
+    try
+      await Observer.Run(
+        Database, Ratings, function(Value: M.Snapshot): Tasks.Task begin
+          X.Assert.Empty(Value.Releases);
+          X.Assert.Equal<long>(Publications, Value.TrackCount);
+          Publications := Publications + 1;
+          if Publications = 1 then
+            Sql.Execute(
+              Connection,
+              'INSERT INTO files(path_key,path,directory_key,kind,size,modified_utc) VALUES ' +
+              '(''pending'',''pending'',''dir'',0,1,1),(''cover'',''cover'',''dir'',2,1,1);',
+              null, [], []
+            );
+          else
+            Stop.Cancel();
+          end if;
+
+          return Tasks.Task.CompletedTask;
+        end function, Stop.Token
+      );
+    catch Cancelled: Sys.OperationCanceledException do
+      X.Assert.Equal<T.CancellationToken>(Stop.Token, Cancelled.CancellationToken);
+    end try;
+
+    X.Assert.Equal<int>(2, Publications);
+  end function;
+
+  // Closing during the initial sort cancels promptly; re-opening still returns every release.
+  [X.FactAttribute]
+  public procedure LargeAlbumSnapshotCanBeCancelledAndReopened();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Database: string := IO.Path.Combine(Folder.Path, 'library.db');
+    const Ratings: string := IO.Path.Combine(Folder.Path, 'userdata.db');
+    using const UserData: Db.SqliteConnection := Users.Open(Ratings);
+    using const Connection: Db.SqliteConnection := Sql.Open(Database);
+    Schema.Ensure(Connection);
+    const Count: int := 6500;
+    Sql.Execute(
+      Connection,
+      'CREATE TEMP TABLE sequence(n INTEGER PRIMARY KEY);' +
+      'WITH RECURSIVE seq(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM seq WHERE n<$count) INSERT INTO sequence SELECT n FROM seq;' +
+      'INSERT INTO files(id,path_key,path,directory_key,kind,size,modified_utc) SELECT n,''song''||n,''song''||n,''dir''||n,0,1,1 FROM sequence;' +
+      'INSERT INTO metadata(file_id,track_id,sha256,size,modified_utc,read_utc,tags_json) SELECT n,''id''||n,''hash''||n,1,1,1,''{}'' FROM sequence;' +
+      'INSERT INTO album_tracks SELECT n,''album''||n,''title''||n,''artist'',''sort''||n,''artist'',''dir''||n,''dir''||n,''dir''||n,''dir''||n FROM sequence;' +
+      'INSERT INTO files(id,path_key,path,directory_key,kind,size,modified_utc) SELECT n+$count,''art''||n,''art''||n,''dir''||n,2,1,1 FROM sequence;',
+      null, ['$count'], [Count]
+    );
+
+    using const Close: T.CancellationTokenSource := new T.CancellationTokenSource();
+    // SQLite evaluates this view while materializing directory artwork, before yielding an album.
+    // Cancel from that evaluation so the test does not race an unrelated thread-pool timer.
+    Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Ratings]);
+    var Scanned: int := 0;
+    Connection.CreateFunction<long, long>(
+      'observed_size', function(Size: long): long begin
+        Scanned := Scanned + 1;
+        if Scanned = 1 then
+          Close.Cancel();
+        end if;
+
+        return Size;
+      end function
+    );
+    Sql.Execute(
+      Connection, 'CREATE TEMP VIEW files AS SELECT id,path_key,directory_key,kind,' +
+        'observed_size(size) AS size,modified_utc FROM main.files;', null, [], []
+    );
+    try
+      discard Albums.ReadAttached(Connection, Close.Token);
+      X.Assert.Fail('The cancelled album snapshot completed.');
+    catch Cancelled: Sys.OperationCanceledException do
+      X.Assert.Equal<T.CancellationToken>(Close.Token, Cancelled.CancellationToken);
+    end try;
+
+    X.Assert.InRange<int>(Scanned, 1, Count - 1);
+
+    using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Catalog: M.Snapshot := Albums.Read(Database, Ratings, Startup.Token);
+    X.Assert.Equal<int>(Count, Catalog.Releases.Length);
+    X.Assert.Equal<long>(Count, Catalog.TrackCount);
+    // A whole-library queue includes every audio file, but no cover files or page-size limit.
+    X.Assert.Equal<int>(
+      Count,
+      Songs.ReadRelease(Database, Ratings, '', T.CancellationToken.None).Length
+    );
+  end procedure;
+end record;
+
+end unit;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../doc/library.md#metadata-and-queries)
 
 // Detached metadata and bounded catalogue queries, independent of the GUI.
 unit FpasAmp.Library.Metadata.Model;

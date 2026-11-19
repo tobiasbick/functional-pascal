@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#search)
+// [Documentation](../../../doc/library.md#search)
 
 // Ranked search over prepared documents: words in any order, any of them, typos and
 // sound-alike spellings, weighted by how rare a word is across the documents.

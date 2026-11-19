@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
 
 // Read-only album details reuse CUI layout, images, text and the native star display.
 unit FpasAmp.Ui.Albums.Details;

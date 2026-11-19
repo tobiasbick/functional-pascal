@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#acoustic-fingerprints)
+// [Documentation](../../../../doc/library.md#acoustic-fingerprints)
 
 // Validates the indexed file version before attaching an acoustic fingerprint to its content.
 unit FpasAmp.Library.Metadata.Fingerprints.Store;

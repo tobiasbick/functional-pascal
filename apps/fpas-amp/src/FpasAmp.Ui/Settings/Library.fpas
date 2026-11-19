@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
 // Native source cards with independent offline/pause controls and index actions.
 unit FpasAmp.Ui.Settings.Library;

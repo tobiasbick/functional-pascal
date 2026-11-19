@@ -1,0 +1,188 @@
+// [Documentation](../../doc/desktop.md#browsing-music-and-collections)
+
+unit FpasAmp.Ui.Tests.NativeTrackRating;
+
+uses
+  Fpas.Ui.Mvu.Testing.EffectReplies as Effects, Fpas.Ui.Mvu.Application as Mvu,
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as Sources,
+  FpasAmp.Library.Inventory.Monitoring as Inventory, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Music.LibraryPage as Page,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Settings.Model as Settings,
+  Fpas.Media.Audio as Audio, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host, System as Sys, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Channels as Channels, Xunit as X;
+
+function Stars(Session: Gui.Session<App.Msg>; Song: Tracks.Entry): Gui.Control;
+begin
+  const Id: string := 'track-rating-' + Song.FileId.ToString();
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id then
+      return Control;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing visible stars for ' + Id);
+end function;
+
+function CatalogueRating(Message: App.Msg; Id: string): int?;
+begin
+  case Message of
+    when App.Msg.Songs(Page.Msg.Received(_, _, const Catalogue: Page.Catalogue)):
+      for Item: Tracks.Entry in Catalogue.Tracks do
+        if Item.TrackId = Id then
+          return Item.Rating;
+        end if;
+      end for;
+    else
+      raise new Sys.InvalidOperationException('Expected a catalogue from the observer.');
+  end case;
+
+  return null;
+end function;
+
+procedure Exercise(Store: Inventory.Session; Root: string);
+  procedure Frame(Session: Gui.Session<App.Msg>);
+  begin
+    discard Window.TryWake();
+    X.Assert.True(Session.Step());
+  end procedure;
+  procedure Send(Session: Gui.Session<App.Msg>; Message: App.Msg);
+  begin
+    discard Session.Post(Message);
+    Frame(Session);
+  end procedure;
+  procedure Deliver(Session: Gui.Session<App.Msg>; Reply: Effects.Reply<App.Msg>);
+  begin
+    Reply.Release().WaitAsync(Deadline.Token).GetAwaiter().GetResult();
+    Frame(Session);
+  end procedure;
+  function NextRead(): Effects.Reply<App.Msg>;
+  begin
+    return Reads.ReadAsync(Deadline.Token).AsTask().GetAwaiter().GetResult();
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(XPos, YPos);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+begin
+  const Library: Metadata.Session := Sources.Tags(Store);
+  const Items: I.ImmutableArray<Tracks.Entry> := Sources.Until(
+    Library,
+    function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2 and Rows[
+      0
+    ].TrackId <> '' and Rows[1].TrackId <> ''
+  ).GetAwaiter().GetResult();
+  const Song: Tracks.Entry := Items[0];
+  const Other: Tracks.Entry := Items[1];
+  using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(20000);
+  Library.SetRatingAsync(Song.TrackId, 3, Deadline.Token).GetAwaiter().GetResult();
+  Library.SetRatingAsync(Other.TrackId, 4, Deadline.Token).GetAwaiter().GetResult();
+
+  const Gate: Effects.Effects<App.Msg> := Effects.Effects<App.Msg>.Create();
+  const Reads: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
+  const Saves: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch(
+    'songs/song/rate/' + Song.TrackId
+  );
+  using const Device: Audio.Session := new Audio.Session(true);
+  const Port: Playback.Connection := new Playback.Connection(Device);
+  var Current: App.State := new App.State(
+    new Settings.State(new Settings.Preferences([Sources.Source(Root)], 'light'))
+  );
+  var XPos: float := -1.0F;
+  var YPos: float := -1.0F;
+  var Button: int := -1;
+  using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Track rating',
+    1440,
+    900,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+    Current,
+    function(State: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg> begin
+      const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+        State, Message,
+        procedure(_Value: Settings.Preferences) begin end procedure, Store, Port
+      );
+      Current := Next.Model;
+      return Gate.Wrap<App.State>(Next);
+    end function, Shell.View, Window, 128, Inject, App.Theme(Current, null), App.Theme, false
+  );
+
+  Send(Session, App.Msg.WatchLibrary);
+  Deliver(Session, NextRead());
+  Send(Session, App.Msg.Songs(Page.Msg.Song(Music.Msg.Minimum(2))));
+  Send(Session, App.Msg.Songs(Page.Msg.Song(Music.Msg.ApplyFilters)));
+  X.Assert.Equal<string>('3', Stars(Session, Song).Value);
+  X.Assert.Equal<string>('4', Stars(Session, Other).Value);
+
+  // A second track changes so the drawn frame proves which read actually arrived.
+  Library.SetRatingAsync(Other.TrackId, 6, Deadline.Token).GetAwaiter().GetResult();
+  var Older: Effects.Reply<App.Msg> := NextRead();
+  while CatalogueRating(Older.Message, Other.TrackId) <> 6 do
+    Deliver(Session, Older);
+    X.Assert.Equal<string>('3', Stars(Session, Song).Value);
+    Older := NextRead();
+  end while;
+
+  X.Assert.Equal<int?>(3, CatalogueRating(Older.Message, Song.TrackId));
+  Send(Session, App.Msg.Songs(Page.Msg.Song(Music.Msg.Play(Current.Songs.Page.Shown[0].FileId))));
+  X.Assert.True(Current.Player.Playing);
+  const Bounds: Cui.CuiRectangle := Stars(Session, Song).Bounds;
+  XPos := Bounds.X + Bounds.Width * 0.75F;
+  YPos := Bounds.Y + Bounds.Height * 0.5F;
+  Frame(Session);
+  Button := 1;
+  Frame(Session);
+  Button := 0;
+  Frame(Session);
+  Frame(Session);
+  X.Assert.Equal<string>('8', Stars(Session, Song).Value);
+  X.Assert.False(Stars(Session, Song).Enabled);
+
+  const Saved: Effects.Reply<App.Msg> := Saves.ReadAsync(
+    Deadline.Token
+  ).AsTask().GetAwaiter().GetResult();
+  Deliver(Session, Saved);
+  X.Assert.Equal<string>('8', Stars(Session, Song).Value);
+  X.Assert.True(Stars(Session, Song).Enabled);
+  X.Assert.Equal<string>('4', Stars(Session, Other).Value);
+
+  Deliver(Session, Older);
+  X.Assert.Equal<string>('8', Stars(Session, Song).Value);
+  X.Assert.Equal<string>('6', Stars(Session, Other).Value);
+
+  const Fresh: Effects.Reply<App.Msg> := NextRead();
+  X.Assert.Equal<int?>(8, CatalogueRating(Fresh.Message, Song.TrackId));
+  Deliver(Session, Fresh);
+  X.Assert.Equal<string>('8', Stars(Session, Song).Value);
+end procedure;
+
+// Native frame regression for a filtered library being refreshed during playback.
+public type NativeTrackRatingTests = record
+  // A rating click, its save receipt and a delayed catalogue each get their own frame.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure StarsStayAtEight();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    discard Sources.Write(Root.Path, 'first.mp3', 'First');
+    discard Sources.Write(Root.Path, 'second.ogg', 'Second');
+    const Store: Inventory.Session := Sources.Start([Sources.Source(Root.Path)], Data.Path);
+    try
+      Exercise(Store, Root.Path);
+    finally
+      Store.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

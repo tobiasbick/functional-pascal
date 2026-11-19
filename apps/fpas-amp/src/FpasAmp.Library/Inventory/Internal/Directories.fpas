@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+// [Documentation](../../../../doc/library.md#reconciliation-and-persistence)
 
 // Directory traversal policy shared by scanner and watcher installation.
 unit FpasAmp.Library.Inventory.Internal.Directories;

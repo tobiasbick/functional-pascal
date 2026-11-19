@@ -1,0 +1,121 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.InputsAndPickers;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiDocCaptures.Rendering.Gestures as Gestures, GuiGallery.App.State as Gallery,
+  Fpas.Ui.Gui.Application as Gui, GuiGallery.Pages.Inputs.State as Inputs;
+
+procedure OpenAndCapture(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls; Name: string; Id: string; Padding: Regions.Insets);
+begin
+  Input.Activate(Id, Gestures.Enter);
+  Regions.CaptureParts(Session, Output, Name, Id, Padding);
+  Input.Key(Gestures.Escape);
+end procedure;
+
+// Captures the inputs chapter from its presented gallery page.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Output`: Directory for frame PNGs and crop bounds.
+// - `Input`: Native gestures for this session.
+public procedure CaptureInputs(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls);
+begin
+  const Caption: Regions.Insets := new Regions.Insets(Top := 22);
+  const Hint: Regions.Insets := new Regions.Insets(Top := 22, Bottom := 16);
+  Regions.Capture(Session, Output, 'text-field', Hint, 'input-name', 'input-email');
+  Regions.Capture(Session, Output, 'search-field', Caption, 'input-search');
+  Regions.Capture(Session, Output, 'text-area', Hint, 'input-about');
+  Regions.Capture(
+    Session, Output, 'tag-input', new Regions.Insets(Left := 56, Top := 22, Right := 12),
+    'input-topics', 'input-topics/remove/0', 'input-topics/remove/1', 'input-topics/remove/2'
+  );
+  Regions.Capture(Session, Output, 'one-time-code', Caption, 'input-code');
+  Presented.Send(Session, Gallery.Msg.Inputs(Inputs.Msg.SetPassword('copper lantern demo 42!')));
+  Regions.Capture(
+    Session, Output, 'password-strength', Caption,
+    'input-new-password', 'input-password-strength'
+  );
+  Regions.Capture(
+    Session, Output, 'number-field', Caption, 'input-seats',
+    'input-seats/decrease', 'input-seats/increase'
+  );
+  Regions.CaptureParts(Session, Output, 'calendar', 'input-calendar', new Regions.Insets());
+  OpenAndCapture(Session, Output, Input, 'select', 'input-language', Caption);
+  OpenAndCapture(
+    Session, Output, Input, 'date-picker',
+    'input-due-date',
+    new Regions.Insets(Top := 22, Bottom := 12)
+  );
+  OpenAndCapture(
+    Session, Output, Input, 'color-picker',
+    'input-brand-color',
+    new Regions.Insets(Top := 22, Right := 10, Bottom := 10)
+  );
+end procedure;
+
+// Captures the pickers chapter from its presented gallery page.
+// ## Parameters
+// - `Session`: Open gallery session.
+// - `Output`: Directory for frame PNGs and crop bounds.
+// - `Input`: Native gestures for this session.
+public procedure CapturePickers(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls);
+begin
+  Regions.CaptureParts(
+    Session,
+    Output,
+    'date-range-calendar',
+    'picker-inline-range',
+    new Regions.Insets()
+  );
+  Regions.Shot(
+    Session,
+    Output,
+    'wheel-picker',
+    'picker-wheel-day',
+    'picker-wheel-month',
+    'picker-wheel-year'
+  );
+  Regions.Shot(
+    Session, Output, 'time-dial',
+    'picker-time-dial/hours',
+    'picker-time-dial/minutes',
+    'picker-time-dial/face'
+  );
+  Regions.Capture(
+    Session,
+    Output,
+    'ruler-slider',
+    new Regions.Insets(Top := 58),
+    'picker-height',
+    'picker-temperature'
+  );
+  Regions.Capture(
+    Session,
+    Output,
+    'histogram-slider',
+    new Regions.Insets(Top := 84, Bottom := 15),
+    'picker-price'
+  );
+  OpenAndCapture(
+    Session,
+    Output,
+    Input,
+    'multi-select',
+    'picker-languages',
+    new Regions.Insets(Top := 22)
+  );
+  OpenAndCapture(
+    Session, Output, Input, 'date-range-picker',
+    'picker-date-range',
+    new Regions.Insets(Right := 10, Bottom := 10)
+  );
+  Regions.Shot(Session, Output, 'time-picker-fields', 'picker-start-time', 'picker-end-time');
+  OpenAndCapture(
+    Session, Output, Input, 'time-picker',
+    'picker-end-time',
+    new Regions.Insets(Top := -53, Right := 10, Bottom := -64)
+  );
+end procedure;
+
+end unit;

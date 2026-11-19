@@ -1,0 +1,137 @@
+// [Documentation](../../doc/library.md#playlists)
+
+// Source file lists follow discovery/watchers while audio inventories stay separate.
+unit FpasAmp.Library.Tests.PlaylistDiscovery;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Tests.PlaylistSupport as P, FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
+  FpasAmp.Library.Metadata.Model as Tags,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Automatic playlist import, stale-content errors and filter lifecycle.
+public type DiscoveryTests = record
+  // Watcher updates change ordered entries and deletion removes only the cached list.
+  [X.FactAttribute]
+  public async function WatchCreateEditDeleteAndAudioCounts(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    discard F.Write(Root.Path, 'track.mp3');
+    const Source: S.MusicSource := F.Source(Root.Path) with
+      ScanPlaylists := true;
+    end with;
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+    );
+    const Subfolder: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'lists')
+    ).FullName;
+    const Path: string := IO.Path.Combine(Subfolder, 'mix.m3u8');
+    IO.File.WriteAllText(
+      Path,
+      '../track.mp3' + #10 + '../track.mp3' + #10 + 'missing.ogg' + #10 +
+      'https://example.invalid/live' + #10
+    );
+    const Initial: I.ImmutableArray<M.Summary> := await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 4L
+    );
+    const Value: M.Playlist := await P.Read(Lists, Initial[0].Identity);
+    X.Assert.Equal<M.Target>(M.Target.Track(Audio[0].TrackId), Value.Entries[0].Destination);
+    X.Assert.Equal<M.Target>(Value.Entries[0].Destination, Value.Entries[1].Destination);
+    X.Assert.True(Value.Entries[0].Indexed);
+    X.Assert.False(Value.Entries[2].Indexed);
+    X.Assert.Equal<string>('https://example.invalid/live', Value.Entries[3].CurrentReference);
+    const Snapshot: Inventory.Snapshot := await H.Until(
+      Session,
+      function(State: Inventory.Snapshot): bool => State.Sources.Length = 1 and State.Sources[
+        0
+      ].Files.Length = 1
+    );
+    X.Assert.Equal<int>(1, Snapshot.Sources[0].Files.Length);
+    IO.File.WriteAllText(Path, '../track.mp3' + #10);
+    const Changed: I.ImmutableArray<M.Summary> := await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 1L
+    );
+    X.Assert.Equal<string>(Initial[0].Identity.Id, Changed[0].Identity.Id);
+    IO.File.Delete(Path);
+    discard await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 0
+    );
+    X.Assert.True(IO.File.Exists(Audio[0].Path));
+  end function;
+
+  // Playlist-only sources work; failed XML reads retain successful cached entries.
+  [X.FactAttribute]
+  public async function PlaylistOnlyErrorsPauseAndDisable(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'mix.xspf');
+    IO.File.WriteAllText(
+      Path,
+      '<playlist><trackList><track><location>missing.ogg</location></track></trackList></playlist>'
+    );
+    const Source: S.MusicSource := new S.MusicSource(
+      'lists',
+      'Lists',
+      Root.Path,
+      false,
+      [],
+      ScanPlaylists := true
+    );
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    const Initial: I.ImmutableArray<M.Summary> := await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 1L
+    );
+    Session.Configure(
+      [
+        Source with
+          Paused := true;
+        end with
+      ]
+    );
+    IO.File.WriteAllText(Path, '<playlist><track>');
+    const Cached: M.Playlist := await P.Read(Lists, Initial[0].Identity);
+    X.Assert.Null(Cached.Description.Error);
+    Session.Configure([Source]);
+    const Failed: I.ImmutableArray<M.Summary> := await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[
+        0
+      ].Error <> null
+    );
+    X.Assert.Equal<long>(1L, Failed[0].Count);
+    IO.File.WriteAllText(Path, '<playlist/>');
+    discard await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[
+        0
+      ].Error = null and Items[0].Count = 0L
+    );
+    Session.Configure(
+      [
+        Source with
+          ScanPlaylists := false;
+        end with
+      ]
+    );
+    discard await P.Until(
+      Lists,
+      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 0
+    );
+  end function;
+end record;
+
+end unit;

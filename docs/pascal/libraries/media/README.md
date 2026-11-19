@@ -1,7 +1,7 @@
 # Audio, music tags, playlists and cover images
 
 Reference the media project that owns the operation from your `.fpasproj`.
-All three libraries work independently of FPas-Amp and the GUI.
+Each library can be used from a console application, service or GUI.
 
 | Operation | Project reference | FPAS import |
 | --- | --- | --- |
@@ -50,9 +50,10 @@ lifetime of the player. `Open(Path)` prepares a paused track and `Play()`
 starts it. Read `Session.Events` from one consumer for position, channel peaks,
 natural ends and failures. Use `Pause()` to keep the playhead, `Unload()` to
 release the file and `StopPlayback()` when closing the player. Dispose the session
-after its workers stop. The [FPas-Amp playback connection](../../../../apps/fpas-amp/src/FpasAmp.Ui/Player/Playback.fpas)
-shows the ordered request worker and the event subscription. Optional request IDs identify events from earlier tracks
-or seeks.
+after its workers stop. Use one ordered worker for transport requests that may
+block and one reader for events. Optional request IDs identify events from
+earlier tracks or seeks. The [session tests](../../../../tests/Fpas.Media.Audio.Tests/SessionTests.cs)
+exercise the ordering.
 
 For a waveform alone, await `Audio.Analysis.LoudnessAsync(Path, Buckets, Token)`.
 It runs without an output device and returns one relative RMS value per interval.
@@ -65,7 +66,6 @@ Windows x64 and Linux x64.
 - [Image formats, limits and native codecs](images.md)
 - [Audio session, mixer and waveform reference](audio.md)
 - [FPAS consumer tests](../../../../tests/Fpas.Media.Tests/Consumer.fpas)
-- [FPas-Amp desktop application](../../../apps/fpas-amp/desktop.md)
 - [GUI image widget](../../../ui/gui/text-and-display/image.md)
 - [Projects and references](../../program-structure/projects.md)
 

@@ -32,6 +32,10 @@ dotnet build Fpas.slnx --no-restore --configuration Debug -warnaserror
 dotnet test Fpas.slnx --no-build --no-restore --configuration Debug
 ```
 
+The SDK-based [FPAS library tests](../../tests/README.md#fpas-library-tests) run
+after the local SDK is available. They exercise the media and MVU libraries
+directly.
+
 Debug is the development configuration. Use Release for release validation and
 controlled performance measurements:
 

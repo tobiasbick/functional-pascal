@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
 
 // Groups artists or genres while preserving the catalogue order of their releases.
 unit FpasAmp.Ui.Albums.Groups;

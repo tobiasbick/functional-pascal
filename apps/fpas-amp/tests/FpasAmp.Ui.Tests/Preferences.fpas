@@ -1,0 +1,164 @@
+// [Documentation](../../doc/desktop.md#settings-and-scan-control)
+
+// Preference persistence and failure-safe UI proposals, without opening a window.
+unit FpasAmp.Ui.Tests.Preferences;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
+  FpasAmp.Ui.Settings.Update as Update, FpasAmp.Settings as Store,
+  Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO, System.Threading as T,
+  FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
+  System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;
+
+// Verifies pause preferences and accepted/failed settings updates.
+public type PreferenceTests = record
+  // Damaged extension policies are repaired to settings that discovery can accept.
+  [X.FactAttribute]
+  public procedure PlaylistExtensionsAreRepairedAndCannotBeSaved();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
+    IO.File.WriteAllText(
+      Path,
+      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+        Folder.Path
+      ) +
+      ',"offline":false,"extensions":[".M3U",".mp3"]}]}'
+    );
+    const Loaded: M.Preferences := Store.Load(Folder.Path);
+    X.Assert.Equal<string>(['.mp3'], Loaded.MusicSources[0].Extensions);
+    X.Assert.Equal<int>(1, S.Normalize(Loaded.MusicSources).Length);
+    X.Assert.Equal<int>(
+      1,
+      IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
+    );
+    X.Assert.DoesNotContain('.M3U', IO.File.ReadAllText(Path));
+    var Rejected: bool := false;
+    try
+      Store.Save(
+        Folder.Path, new M.Preferences(
+          [
+            H.Source('music', Folder.Path) with
+              Extensions := ['.m3u8'];
+            end with
+          ]
+        )
+      );
+    catch Invalid: Sys.ArgumentException do
+      Rejected := true;
+    end try;
+
+    X.Assert.True(Rejected);
+    X.Assert.Equal<string>(['.mp3'], Store.Load(Folder.Path).MusicSources[0].Extensions);
+  end procedure;
+
+  // App settings enable playlist discovery by default and retain an explicit opt-out.
+  [X.FactAttribute]
+  public procedure PlaylistDiscoveryDefaultsAndPersists();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path);
+    Store.Save(
+      Folder.Path, new M.Preferences(
+        [
+          Source with
+            ScanPlaylists := true;
+          end with
+        ]
+      )
+    );
+    X.Assert.True(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+    Store.Save(Folder.Path, new M.Preferences([Source]));
+    X.Assert.False(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+    const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
+    IO.File.WriteAllText(
+      Path,
+      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+        Folder.Path
+      ) + ',"offline":false,"extensions":[".mp3"]}]}'
+    );
+    X.Assert.True(Store.Load(Folder.Path).MusicSources[0].ScanPlaylists);
+  end procedure;
+
+  // An index-clear acknowledgement cannot hide a failed metadata/discovery lifetime.
+  [X.FactAttribute]
+  public async function ClearDoesNotDismissATerminalWorkerFailure(): Tasks.Task;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path);
+    await using const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
+    const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin end procedure;
+    const Current: M.State := Update.Apply(
+      new M.State(new M.Preferences([Source])),
+      M.Msg.LibraryStopped('test worker failure'),
+      Save,
+      Library
+    ).Model;
+    const Cleared: M.State := Update.Apply(
+      Current,
+      M.Msg.Cleared(
+        '',
+        new Inventory.Snapshot(1L, 1L, I.ImmutableArray<Inventory.SourceSnapshot>.Empty)
+      ),
+      Save,
+      Library
+    ).Model;
+    X.Assert.Equal<string>('test worker failure', Cleared.TerminalError);
+    X.Assert.Null(Cleared.LibraryError);
+  end function;
+
+  // Pause is serialized independently of Offline and survives a load/save cycle.
+  [X.FactAttribute]
+  public procedure PausePersistsIndependentlyFromOffline();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path) with
+      Paused := true;
+    end with;
+    Store.Save(Folder.Path, new M.Preferences([Source]));
+    const Loaded: M.Preferences := Store.Load(Folder.Path);
+    X.Assert.True(Loaded.MusicSources[0].Paused);
+    X.Assert.False(Loaded.MusicSources[0].Offline);
+  end procedure;
+
+  // A failed settings write cannot start destructive work or alter the source flags.
+  [X.FactAttribute]
+  public async function FailedPauseOrClearSaveLeavesTheIndexUntouched(): Tasks.Task;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Source: S.MusicSource := H.Source('music', Folder.Path);
+    await using const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
+    const Current: M.State := new M.State(new M.Preferences([Source]));
+    const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin
+      raise new IO.IOException('test save failure');
+    end procedure;
+    const Pause: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+      Current,
+      M.Msg.SetPaused(Source.Id, true),
+      Save,
+      Library
+    );
+    X.Assert.True(Pause.Model.SaveFailed);
+    X.Assert.False(Pause.Model.Saved.MusicSources[0].Paused);
+    const Clear: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+      Current with
+        ConfirmClear := Source.Id;
+      end with, M.Msg.ConfirmClear, Save, Library
+    );
+    X.Assert.True(Clear.Model.SaveFailed);
+    X.Assert.False(Clear.Model.Saved.MusicSources[0].Paused);
+    X.Assert.True(Clear.Model.Clearing = null);
+    X.Assert.Equal<int>(0, Clear.Commands.Length);
+    const Remove: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+      Current with
+        ConfirmRemove := Source.Id;
+      end with, M.Msg.ConfirmRemove, Save, Library
+    );
+    X.Assert.True(Remove.Model.SaveFailed);
+    X.Assert.Equal<int>(1, Remove.Model.Saved.MusicSources.Length);
+    X.Assert.Equal<int>(0, Remove.Commands.Length);
+  end function;
+end record;
+
+end unit;

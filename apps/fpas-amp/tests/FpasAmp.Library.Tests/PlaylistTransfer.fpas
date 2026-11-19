@@ -1,0 +1,111 @@
+// [Documentation](../../doc/library.md#playlists)
+
+// Round trips use ATL and a single export format without touching source media.
+unit FpasAmp.Library.Tests.PlaylistTransfer;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Tests.PlaylistSupport as P, FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Import/export durability, validation and file replacement safeguards.
+public type TransferTests = record
+  // Unicode, outside-folder relative paths, duplicate targets and URLs round-trip.
+  [X.FactAttribute]
+  public async function Utf8ImportExportAndOverwrite(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Audio: string := IO.Path.Combine(Root.Path, 'ü space%20.mp3');
+    const ListsFolder: string := IO.Directory.CreateDirectory(
+      IO.Path.Combine(Root.Path, 'lists')
+    ).FullName;
+    const Original: string := IO.Path.Combine(ListsFolder, 'original.m3u8');
+    const Contents: string := '#EXTM3U' + #10 + '#EXTINF:-1,Artist - Song: One, Two' + #10 +
+      '../ü space%20.mp3' + #10 + '../ü space%20.mp3' + #10 +
+      'https://example.invalid/radio?x=1&y=2' + #10;
+    IO.File.WriteAllText(Original, Contents);
+    await using const Session: Monitor.Session := F.Start([], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    const Key: M.Key := await Lists.ImportAsync(Original, T.CancellationToken.None);
+    IO.File.Delete(Original);
+    const Before: M.Playlist := await P.Read(Lists, Key);
+    X.Assert.Equal<string>(Audio, Before.Entries[0].CurrentReference);
+    X.Assert.Equal<string>('Artist - Song: One, Two', Before.Entries[0].Title);
+    const Destination: string := IO.Path.Combine(ListsFolder, 'export.m3u8');
+    await Lists.ExportAsync(Key, Destination, T.CancellationToken.None);
+    const Exported: string := IO.File.ReadAllText(Destination);
+    X.Assert.Contains('ü space%20.mp3', Exported);
+    X.Assert.Contains('..', Exported);
+    X.Assert.DoesNotContain(Root.Path, Exported);
+    const Roundtrip: M.Key := await Lists.ImportAsync(Destination, T.CancellationToken.None);
+    const After: M.Playlist := await P.Read(Lists, Roundtrip);
+    X.Assert.Equal<int>(3, After.Entries.Length);
+    for Position: int := 0 to 2 do
+      X.Assert.Equal<string>(
+        Before.Entries[Position].CurrentReference,
+        After.Entries[Position].CurrentReference
+      );
+      X.Assert.Equal<string>(Before.Entries[Position].Title, After.Entries[Position].Title);
+    end for;
+    var Rejected: bool := false;
+    try
+      await Lists.ExportAsync(Key, Destination, T.CancellationToken.None);
+    catch Existing: IO.IOException do
+      Rejected := true;
+    end try;
+
+    X.Assert.True(Rejected);
+    X.Assert.Equal<string>(Exported, IO.File.ReadAllText(Destination));
+    await Lists.ExportAsync(Key, Destination, T.CancellationToken.None, Overwrite := true);
+    X.Assert.Equal<int>(1, IO.Directory.GetFiles(ListsFolder).Length);
+  end function;
+
+  // Empty lists export, and cancellation/invalid entries never replace a good list.
+  [X.FactAttribute]
+  public async function AtomicValidationAndCancellation(): Tasks.Task;
+  begin
+    using const Data: H.Folder := H.Folder.Create();
+    await using const Session: Monitor.Session := F.Start([], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    const Key: M.Key := await Lists.SaveAsync(null, 'Empty', [], T.CancellationToken.None);
+    const Path: string := IO.Path.Combine(Data.Path, 'empty.m3u8');
+    await Lists.ExportAsync(Key, Path, T.CancellationToken.None);
+    const Imported: M.Key := await Lists.ImportAsync(Path, T.CancellationToken.None);
+    X.Assert.Equal<int>(0, (await P.Read(Lists, Imported)).Entries.Length);
+    var Rejected: int := 0;
+    for Target: M.Target in [
+      M.Target.Location('relative.mp3'),
+      M.Target.Location('https://example.invalid/a' + #10 + 'another.mp3'),
+      M.Target.Track('unknown')
+    ] do
+      try
+        discard await Lists.SaveAsync(
+          Key.Id,
+          'Invalid',
+          [new M.Input(Target)],
+          T.CancellationToken.None
+        );
+      catch Invalid: Sys.ArgumentException do
+        Rejected := Rejected + 1;
+      end try;
+    end for;
+
+    X.Assert.Equal<int>(3, Rejected);
+    X.Assert.Equal<string>('Empty', (await P.Read(Lists, Key)).Description.Name);
+    using const Cancel: T.CancellationTokenSource := new T.CancellationTokenSource();
+    Cancel.Cancel();
+    var Cancelled: bool := false;
+    try
+      discard await Lists.SaveAsync(Key.Id, 'Cancelled', [], Cancel.Token);
+    catch Expected: Sys.OperationCanceledException do
+      Cancelled := true;
+    end try;
+
+    X.Assert.True(Cancelled);
+    X.Assert.Equal<string>('Empty', (await P.Read(Lists, Key)).Description.Name);
+  end function;
+end record;
+
+end unit;

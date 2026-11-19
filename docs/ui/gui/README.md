@@ -63,7 +63,7 @@ The widget pages show the FPAS gallery at scale 1 with the software renderer.
 The FPAS examples return widgets for a view like the counter's `View`
 function, or toast commands for an update. The examples link to their gallery
 source and to widget references or public API declarations.
-The [capture workflow](../../../apps/gui-doc-captures/README.md) regenerates its
+The [capture workflow](../../../apps/gui-doc-captures/doc/captures.md) regenerates its
 screenshots.
 
 ## Application guides

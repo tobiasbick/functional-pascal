@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../doc/library.md#metadata-and-queries)
 
 // Owned metadata lifetime and asynchronous catalogue/rating access.
 unit FpasAmp.Library.Metadata.Monitoring;

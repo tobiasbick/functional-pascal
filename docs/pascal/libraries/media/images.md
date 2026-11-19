@@ -18,6 +18,8 @@ bytes, with no row padding.
 
 MagicScaler and its libjpeg and libpng plugins supply managed code and native
 codecs. Build and publish outputs carry the package licenses and native notices.
+The [JPEG fit test](../../../../tests/Fpas.Media.Tests/Images.fpas) checks the decoded
+color and transparent padding using an eight-by-two solid red fixture.
 Cache storage, album identity, revision tracking and eviction belong to the
 caller.
 

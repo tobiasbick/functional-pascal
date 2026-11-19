@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#playback-and-analysis)
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
 
 // Ten-band equalizer curves, ordered from 31 Hz to 16 kHz.
 unit FpasAmp.Ui.Player.Presets;

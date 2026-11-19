@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../../doc/library.md#metadata-and-queries)
 
 // Reconstructible tag rows and indexed multi-value relationships.
 unit FpasAmp.Library.Metadata.Persistence.Schema;

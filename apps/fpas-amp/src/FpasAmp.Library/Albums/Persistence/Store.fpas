@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+// [Documentation](../../../../doc/library.md#albums-and-artwork)
 
 // Album memberships are replaced atomically with their corresponding tag rows.
 unit FpasAmp.Library.Albums.Persistence.Store;

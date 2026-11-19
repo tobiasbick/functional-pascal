@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+// [Documentation](../../../../doc/library.md#albums-and-artwork)
 
 // Album observation owns its read connection and never runs on the UI thread.
 unit FpasAmp.Library.Albums.Internal.Observing;

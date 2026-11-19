@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+// [Documentation](../../../../doc/library.md#playlists)
 
 // Location normalization never opens media or contacts URI targets.
 unit FpasAmp.Library.Playlists.Internal.References;

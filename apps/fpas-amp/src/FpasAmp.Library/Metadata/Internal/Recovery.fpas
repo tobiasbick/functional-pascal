@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../../doc/library.md#metadata-and-queries)
 
 // Retained unavailable/paused views cannot prove that an old location disappeared.
 unit FpasAmp.Library.Metadata.Internal.Recovery;

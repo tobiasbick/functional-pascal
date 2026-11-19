@@ -27,7 +27,7 @@ under **Source files**.
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
 | Desktop GUI, shared widgets and terminal UI | [UI handbook](ui/README.md), [shared MVU model](ui/mvu/README.md) |
-| FPas-Amp desktop player, music library and album covers | [Desktop player](apps/fpas-amp/desktop.md), [library](apps/fpas-amp/library.md), [thumbnail cache](apps/fpas-amp/imaging.md) |
+| Audio playback, metadata, playlists and cover decoding | [Media libraries](pascal/libraries/media/README.md) |
 | Implemented CUI widgets, gallery acceptance and terminal coverage | [CUI widget inventory](cui-widget-inventory.md) |
 | GUI host, desktop publishing and application tutorial gaps | [Desktop GUI application gaps](future/gui-app-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |

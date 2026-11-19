@@ -287,38 +287,21 @@ design-time metadata preparation retain staged documentation before copying. See
 [documentation acceptance](coverage.md#documentation-acceptance) and
 [example conventions](../docs/pascal/tools/documentation-examples.md).
 
-## FPas-Amp library
+## FPAS library tests
 
-[Fpas.Media.Tests](Fpas.Media.Tests/) references the three media libraries directly
-from FPAS and exercises tags, playlists, artwork, pixel layout and waveform analysis.
-[Fpas.Media.Audio.Tests](Fpas.Media.Audio.Tests/) checks decoder, device, transport,
-equalizer and session lifetime. The native FPas-Amp UI tests exercise offline,
-remove, reset and clear actions during playback.
+After [setting up the local SDK](../docs/build/development.md#build-an-fpas-application),
+run the [library test solution](Fpas.Library.Tests.slnx) from the repository root:
 
-[FpasAmp.Library.Tests](FpasAmp.Library.Tests/) is a focused FPAS xUnit project
-in the [application solution](../apps/fpas-amp/fpas-amp.slnx). It verifies filesystem
-discovery, overlapping source policies, native watcher changes, unavailable roots,
-bounded invalidation and asynchronous cleanup without opening a GUI or reading audio.
-SQLite cases verify disk restart, shared/stable path IDs, safe directory checkpoints,
-transaction rollback, source policy changes and corrupt/unsupported database handling.
-Unix permissions and symbolic-link cases require a normal Unix user.
-Control cases cover independent pause/resume, shared-source clearing, explicit
-rescan, real progress counters and prevention of cleared-membership resurrection.
-Metadata cases read synthetic MP3/Vorbis/Opus fixtures through ATL and verify
-multi-value Unicode filters, paging/order, durable ratings, moves/copies,
-streaming cancellation, lazy/offline artwork, index upgrade and damaged user stores.
-The fixtures contain generated silence; running tests does not require FFmpeg.
-See the [library reference](../docs/apps/fpas-amp/library.md#focused-verification)
-for its standalone test command.
+```sh
+dotnet test tests/Fpas.Library.Tests.slnx
+```
 
-[FpasAmp.Ui.Tests](FpasAmp.Ui.Tests/) checks pause preference persistence,
-failure-safe settings/clear proposals and the native shell's controls, progress,
-confirmations, source removal and background acknowledgements, including failure-safe
-preference writes, and the player strip's queue, transport, equalizer and compact
-layout. Native checks have the `Gui` trait and require a real display
-or Xvfb. `FPAS_AMP_UI_ARTIFACTS` optionally names
-an ignored directory for General, scanning, confirmation, paused, album music and
-player screenshots.
+[Fpas.Media.Tests](Fpas.Media.Tests/) exercises public FPAS calls for tags, embedded
+artwork, playlists, RGBA decoding and waveforms using synthetic media.
+[Fpas.Ui.Mvu.Tests](Fpas.Ui.Mvu.Tests/) exercises effect cancellation and release
+through the public runtime. The [audio backend tests](Fpas.Media.Audio.Tests/)
+run with the main compiler solution and cover decoders, devices, transport,
+equalization and session lifetime.
 
 ## See also
 

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../../doc/desktop.md#browsing-music-and-collections)
 
 // Virtual release tracks with title and performer in the same cell.
 unit FpasAmp.Ui.Albums.Music.TrackTable;

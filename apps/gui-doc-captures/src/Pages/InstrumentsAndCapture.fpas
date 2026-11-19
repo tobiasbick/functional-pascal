@@ -1,0 +1,103 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.InstrumentsAndCapture;
+
+uses
+  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
+  GuiGallery.App.State as Gallery, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui;
+
+// Captures the readouts, dot-matrix widgets and event track on Instruments.
+// ## Parameters
+// - `Session`: Presented Instruments page.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureInstruments(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  const Margin: Regions.Insets := new Regions.Insets();
+  Regions.Capture(Session, Output, 'readout', Margin, 'bed', 'peak', 'cup-count');
+  Regions.Capture(Session, Output, 'dot-chart', new Regions.Insets(Bottom := -7), 'caffeine');
+  Regions.Capture(Session, Output, 'event-track', new Regions.Insets(Top := -8), 'cups');
+  Regions.Capture(Session, Output, 'dot-display', Margin, 'bed-display');
+end procedure;
+
+// Captures the synth controls, master meter and mixer strips on Audio.
+// ## Parameters
+// - `Session`: Presented Audio page with its tour closed.
+// - `Output`: Directory for full-frame images and crop bounds.
+public procedure CaptureAudio(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  const Margin: Regions.Insets := new Regions.Insets();
+  Regions.Capture(
+    Session, Output, 'knob', new Regions.Insets(Bottom := 26),
+    'audio-cutoff', 'audio-resonance', 'audio-attack', 'audio-pan'
+  );
+  Regions.Capture(Session, Output, 'level-meter', Margin, 'audio-master');
+  Regions.Capture(
+    Session, Output, 'fader', new Regions.Insets(Top := 18, Bottom := 20),
+    'audio-kick', 'audio-fx'
+  );
+end procedure;
+
+// Captures the first Audio tour step and the highlighted Cutoff knob.
+// ## Parameters
+// - `Session`: Presented Audio page with its tour open.
+// - `Output`: Directory for the full-frame image and crop bounds.
+public procedure CaptureTour(Session: Gui.Session<Gallery.Msg>; Output: string);
+begin
+  Regions.Capture(
+    Session,
+    Output,
+    'guided-tour',
+    new Regions.Insets(Top := 6, Left := 10, Right := 24, Bottom := 17),
+    'audio-cutoff',
+    'audio-tour/close',
+    'audio-tour/next'
+  );
+end procedure;
+
+procedure DrawSampleStroke(Session: Gui.Session<Gallery.Msg>; Pointer: procedure(float, float, int));
+begin
+  const Pad: Cui.CuiRectangle := Presented.Bounds(Session, 'capture-signature');
+  const BaseX: float := Pad.X + 46.0F;
+  const BaseY: float := Pad.Y + 110.0F;
+  const Points: array of float := [
+    0.0F, 0.0F, 12.0F, -18.0F, 25.0F, -42.0F, 34.0F, -46.0F, 40.0F, -39.0F,
+    39.0F, -22.0F, 29.0F, -5.0F, 32.0F, 2.0F, 48.0F, -7.0F, 67.0F, -27.0F,
+    76.0F, -31.0F, 82.0F, -23.0F, 79.0F, -9.0F, 85.0F, -5.0F, 95.0F, -10.0F,
+    110.0F, -24.0F, 119.0F, -22.0F, 125.0F, -13.0F, 139.0F, -12.0F, 156.0F, -17.0F
+  ];
+  Pointer(BaseX, BaseY, 1);
+  for Index: int := 1 to Points.Length div 2 - 1 do
+    Pointer(BaseX + Points[Index * 2], BaseY + Points[Index * 2 + 1], -1);
+  end for;
+
+  Pointer(-1.0F, -1.0F, 0);
+end procedure;
+
+// Captures the Dropzone, Avatar upload and Signature pad on Capture.
+// ## Parameters
+// - `Session`: Presented Capture page.
+// - `Output`: Directory for full-frame images and crop bounds.
+// - `Pointer`: Advances a frame after moving the pointer and pressing (1),
+//   releasing (0) or preserving (-1) the left button.
+public procedure CaptureFileControls(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Pointer: procedure(float, float, int)
+);
+begin
+  const Margin: Regions.Insets := new Regions.Insets();
+  Regions.Capture(
+    Session, Output, 'dropzone', Margin,
+    'capture-files', 'capture-attach', 'capture-images'
+  );
+  Regions.Capture(
+    Session,
+    Output,
+    'avatar-upload',
+    new Regions.Insets(Right := 210),
+    'capture-avatar'
+  );
+  DrawSampleStroke(Session, Pointer);
+  Regions.Capture(Session, Output, 'signature-pad', Margin, 'capture-signature');
+end procedure;
+
+end unit;

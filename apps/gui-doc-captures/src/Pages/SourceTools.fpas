@@ -1,0 +1,76 @@
+// [Documentation](../../doc/captures.md#chapter-recipes)
+
+unit GuiDocCaptures.Pages.SourceTools;
+
+uses
+  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Pages.DeveloperTools as Developer,
+  GuiGallery.App.State as Gallery, GuiGallery.Pages.Code.State as Code,
+  Fpas.Ui.Gui.Application as Gui;
+
+procedure CaptureCode(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+begin
+  Presented.CaptureInView(Session, Output, 'code-block', Scroll, 'c-sample');
+  Presented.CaptureInView(Session, Output, 'code-block-sql', Scroll, 'sql-sample');
+  Presented.CaptureInView(Session, Output, 'json-viewer', Scroll, 'json');
+  Presented.CaptureInView(Session, Output, 'json-viewer-error', Scroll, 'broken');
+  Presented.CaptureInView(Session, Output, 'markdown', Scroll, 'markdown-notes', 'markdown-replay');
+  Presented.CaptureInView(Session, Output, 'code-editor', Scroll, 'code-editor');
+  Presented.CaptureInView(Session, Output, 'code-editor-sql', Scroll, 'sql-editor');
+  Presented.CaptureInView(Session, Output, 'diff-viewer', Scroll, 'diff-mode', 'diff-next', 'diff');
+  Presented.Send(Session, Gallery.Msg.Code(Code.Msg.Mode(1)));
+  Presented.CaptureInView(
+    Session,
+    Output,
+    'diff-viewer-inline',
+    Scroll,
+    'diff-mode',
+    'diff-next',
+    'diff'
+  );
+  Presented.CaptureInView(Session, Output, 'hex-viewer', Scroll, 'hex', 'hex-offset');
+  Presented.CaptureInView(Session, Output, 'log-console', Scroll, 'log-console');
+end procedure;
+
+procedure CaptureEditing(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+begin
+  Presented.CaptureInView(Session, Output, 'property-inspector', Scroll, 'crate-material', 'props');
+  Presented.CaptureInView(Session, Output, 'flame-graph', Scroll, 'capture');
+  Presented.CaptureInView(Session, Output, 'curve-editor', Scroll, 'ease');
+  Presented.CaptureInView(Session, Output, 'gradient-editor', Scroll, 'flame-ramp');
+  Presented.CaptureInView(
+    Session,
+    Output,
+    'timeline-editor',
+    Scroll,
+    'shot-playback',
+    'shot',
+    'track-curve-3'
+  );
+end procedure;
+
+// Captures the tools on a gallery page, repositioning the main viewport as needed.
+// ## Parameters
+// - `Session`: Presented gallery page.
+// - `Output`: Directory for full-frame images and crop bounds.
+// - `Page`: Code, Editing tools, Developer tools or More developer tools.
+// - `Scroll`: Injects a vertical wheel delta in native lines over the page margin.
+public procedure Capture(
+  Session: Gui.Session<Gallery.Msg>; Output: string; Page: Gallery.Page; Scroll: procedure(float)
+);
+requires Page = Gallery.Page.Code or Page = Gallery.Page.EditingTools
+  or Page = Gallery.Page.DeveloperTools or Page = Gallery.Page.MoreDeveloperTools;
+begin
+  case Page of
+    when Gallery.Page.Code:
+      CaptureCode(Session, Output, Scroll);
+    when Gallery.Page.EditingTools:
+      CaptureEditing(Session, Output, Scroll);
+    when Gallery.Page.DeveloperTools:
+      Developer.Capture(Session, Output, Scroll);
+    when Gallery.Page.MoreDeveloperTools:
+      Developer.CaptureMore(Session, Output, Scroll);
+    else
+  end case;
+end procedure;
+
+end unit;

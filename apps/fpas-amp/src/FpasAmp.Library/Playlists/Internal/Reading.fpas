@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+// [Documentation](../../../../doc/library.md#playlists)
 
 // ATL reads a bounded snapshot with target metadata/network access disabled.
 unit FpasAmp.Library.Playlists.Internal.Reading;

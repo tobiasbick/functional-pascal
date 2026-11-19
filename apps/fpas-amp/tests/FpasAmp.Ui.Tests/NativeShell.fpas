@@ -1,0 +1,244 @@
+// [Documentation](../../doc/desktop.md#shell-and-navigation)
+
+// Focused native UI checks with real MVU/background routing and optional captures.
+unit FpasAmp.Ui.Tests.NativeShell;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.App.Model as M,
+  FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm, System as Sys, System.IO as IO,
+  System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+
+function Control(Session: Shell.Session; Id: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Window.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Step(Session: Shell.Session; Tab: int);
+begin
+  discard Session.Window.Post(M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Tab)));
+  X.Assert.True(Session.Window.Step());
+end procedure;
+
+procedure Send(Session: Shell.Session; Message: Settings.Msg);
+begin
+  discard Session.Window.Post(M.Msg.Settings(Message));
+end procedure;
+
+procedure Capture(Session: Shell.Session; Name: string);
+begin
+  const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+  if Directory <> null then
+    for Index: int := 0 to 11 do
+      Step(Session, Session.State().Navigation.SettingsTab);
+      T.Thread.Sleep(16);
+    end for;
+
+    discard IO.Directory.CreateDirectory(Directory);
+    Session.Window.CapturePng(IO.Path.Combine(Directory, Name + '.png'));
+  end if;
+end procedure;
+
+// Tests native cards/buttons/progress and background clear completion on one owner thread.
+public type NativeShellTests = record
+  // Uses only existing CUI widgets and verifies geometry, confirmation and paused clear state.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure SettingsControlsAndClearAcknowledgement();
+  begin
+    X.Assert.True(
+      Sys.OperatingSystem.IsWindows() or not Sys.String.IsNullOrEmpty(
+        Sys.Environment.GetEnvironmentVariable('DISPLAY')
+      ),
+      'Native UI checks require a desktop display; on headless Linux run under Xvfb.'
+    );
+    using const Root: H.Folder := H.Folder.Create();
+    const Track: string := IO.Path.Combine(Root.Path, 'track.flac');
+    IO.File.WriteAllText(Track, '');
+    const Source: S.MusicSource := H.Source('music', Root.Path) with
+      Name := 'Music';
+    end with;
+    const Library: Monitor.Session := H.Start(
+      [Source],
+      T.CancellationToken.None,
+      new Inventory.Options(0, 60000, 4)
+    );
+    var Saved: Settings.Preferences := new Settings.Preferences([Source]);
+    try
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := 1000;
+      Placement.Height := 720;
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement,
+        Saved, procedure(Value: Settings.Preferences) begin
+          Saved := Value;
+        end procedure, Library, new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings))
+      );
+      Step(Session, 0);
+      X.Assert.True(Control(Session, 'clear-database').Enabled);
+      Capture(Session, 'general');
+      Step(Session, 1);
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-pause'
+        ).Bounds.Y > Control(Session, 'source-music-offline').Bounds.Y
+      );
+      X.Assert.Equal<float>(
+        Control(Session, 'source-music-offline').Bounds.X,
+        Control(Session, 'source-music-pause').Bounds.X
+      );
+      X.Assert.True(Control(Session, 'source-music-clear').Enabled);
+      X.Assert.Equal<string>('Delete', Control(Session, 'source-music-remove').Text);
+      X.Assert.Equal<string>('Reset', Control(Session, 'source-music-clear').Text);
+      X.Assert.Equal<string>('Refresh', Control(Session, 'source-music-rescan').Text);
+      X.Assert.Equal<string>('Edit', Control(Session, 'source-music-edit').Text);
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-remove'
+        ).Bounds.X < Control(Session, 'source-music-clear').Bounds.X
+      );
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-clear'
+        ).Bounds.X < Control(Session, 'source-music-rescan').Bounds.X
+      );
+      X.Assert.True(
+        Control(
+          Session,
+          'source-music-rescan'
+        ).Bounds.X < Control(Session, 'source-music-edit').Bounds.X
+      );
+      const Deadline: long := Sys.Environment.TickCount64 + 15000L;
+      var Ready: bool := false;
+      while not Ready and Sys.Environment.TickCount64 < Deadline do
+        Step(Session, 1);
+        const Snapshot: Inventory.Snapshot? := Session.State().Settings.Inventory;
+        Ready := Snapshot <> null and Snapshot.Sources[0].Files.Length = 1;
+        T.Thread.Sleep(1);
+      end while;
+
+      X.Assert.True(Ready, 'The UI did not receive the background inventory.');
+      // Feed a controlled progress state to check its native indeterminate rendering.
+      Send(
+        Session, Settings.Msg.ProgressReceived(
+          new Progress.Snapshot(
+            1000000L, 1L,
+            I.ImmutableArray.Create<Progress.SourceProgress>(
+              new Progress.SourceProgress(Source.Id, Progress.Phase.Scanning, 12480L, 318L)
+            )
+          )
+        )
+      );
+      Step(Session, 1);
+      X.Assert.Equal<string>('indeterminate', Control(Session, 'source-music-progress').Value);
+      X.Assert.False(Control(Session, 'source-music-rescan').Enabled);
+      Capture(Session, 'library-scanning');
+      Send(Session, Settings.Msg.SetPaused(Source.Id, true));
+      Step(Session, 1);
+      X.Assert.True(Saved.MusicSources[0].Paused);
+      X.Assert.False(Control(Session, 'source-music-rescan').Enabled);
+      Send(Session, Settings.Msg.AskClear(Source.Id));
+      Step(Session, 1);
+      X.Assert.True(Control(Session, Confirm.ConfirmId('source-music-clear-confirm')).Enabled);
+      Capture(Session, 'library-confirm');
+      Send(Session, Settings.Msg.CancelClear);
+      Step(Session, 1);
+      X.Assert.True(IO.File.Exists(Track));
+      Send(Session, Settings.Msg.AskClear(Source.Id));
+      Step(Session, 1);
+      Send(Session, Settings.Msg.ConfirmClear);
+      Step(Session, 1);
+      var Cleared: bool := false;
+      while not Cleared and Sys.Environment.TickCount64 < Deadline do
+        Step(Session, 1);
+        const State: Settings.State := Session.State().Settings;
+        const Snapshot: Inventory.Snapshot? := State.Inventory;
+        Cleared := State.Clearing = null and Snapshot <> null and Snapshot.Sources[
+          0
+        ].Files.Length = 0;
+        T.Thread.Sleep(1);
+      end while;
+
+      X.Assert.True(Cleared, 'The clear acknowledgement did not reach the UI.');
+      X.Assert.True(Saved.MusicSources[0].Paused);
+      X.Assert.True(IO.File.Exists(Track));
+      Capture(Session, 'library-paused');
+      Send(Session, Settings.Msg.SetPaused(Source.Id, false));
+      Step(Session, 1);
+      var Resumed: bool := false;
+      const ResumeDeadline: long := Sys.Environment.TickCount64 + 15000L;
+      while not Resumed and Sys.Environment.TickCount64 < ResumeDeadline do
+        Step(Session, 1);
+        const Snapshot: Inventory.Snapshot? := Session.State().Settings.Inventory;
+        Resumed := Snapshot <> null and Snapshot.Sources[0].Files.Length = 1;
+        T.Thread.Sleep(1);
+      end while;
+
+      X.Assert.True(Resumed);
+      const Before: Inventory.Snapshot? := Session.State().Settings.Inventory;
+      Send(Session, Settings.Msg.Rescan(Source.Id));
+      Step(Session, 1);
+      var Rescanned: bool := false;
+      while not Rescanned and Sys.Environment.TickCount64 < ResumeDeadline do
+        Step(Session, 1);
+        const After: Inventory.Snapshot? := Session.State().Settings.Inventory;
+        Rescanned := Before <> null and After <> null and After.Revision > Before.Revision;
+        T.Thread.Sleep(1);
+      end while;
+
+      X.Assert.True(Rescanned);
+      Step(Session, 0);
+      Send(Session, Settings.Msg.AskClear(''));
+      Step(Session, 0);
+      X.Assert.True(Control(Session, Confirm.ConfirmId('clear-database-confirm')).Enabled);
+      Send(Session, Settings.Msg.ConfirmClear);
+      Step(Session, 0);
+      var AllCleared: bool := false;
+      while not AllCleared and Sys.Environment.TickCount64 < ResumeDeadline do
+        Step(Session, 0);
+        const State: Settings.State := Session.State().Settings;
+        const Snapshot: Inventory.Snapshot? := State.Inventory;
+        AllCleared := State.Clearing = null and Snapshot <> null and Snapshot.Sources[
+          0
+        ].Files.Length = 0;
+        T.Thread.Sleep(1);
+      end while;
+
+      X.Assert.True(AllCleared);
+      X.Assert.True(Saved.MusicSources[0].Paused);
+      X.Assert.True(IO.File.Exists(Track));
+      Step(Session, 1);
+      X.Assert.True(Control(Session, 'source-music-remove').Enabled);
+      Send(Session, Settings.Msg.AskRemove(Source.Id));
+      Step(Session, 1);
+      X.Assert.True(Control(Session, Confirm.ConfirmId('source-music-remove-confirm')).Enabled);
+      Capture(Session, 'library-remove');
+      Send(Session, Settings.Msg.CancelRemove);
+      Step(Session, 1);
+      X.Assert.Equal<int>(1, Saved.MusicSources.Length);
+      Send(Session, Settings.Msg.AskRemove(Source.Id));
+      Step(Session, 1);
+      Send(Session, Settings.Msg.ConfirmRemove);
+      Step(Session, 1);
+      X.Assert.Equal<int>(0, Saved.MusicSources.Length);
+      X.Assert.True(IO.File.Exists(Track));
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

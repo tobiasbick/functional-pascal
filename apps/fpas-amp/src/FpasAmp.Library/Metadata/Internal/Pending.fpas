@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+// [Documentation](../../../../doc/library.md#metadata-and-queries)
 
 // Indexed durable jobs bound memory and keep changed earlier files responsive.
 unit FpasAmp.Library.Metadata.Internal.Pending;

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
 
 // Derives the shown albums from the catalogue, the search text, the filters and the order.
 unit FpasAmp.Ui.Albums.Browse;

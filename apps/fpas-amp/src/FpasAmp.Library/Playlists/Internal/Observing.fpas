@@ -1,4 +1,4 @@
-// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+// [Documentation](../../../../doc/library.md#playlists)
 
 // Background observers query full summaries only after a database commit changes.
 unit FpasAmp.Library.Playlists.Internal.Observing;

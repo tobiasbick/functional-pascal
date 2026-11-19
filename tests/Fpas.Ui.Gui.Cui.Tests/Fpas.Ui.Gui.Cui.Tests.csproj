@@ -27,7 +27,7 @@
           Exclude="../../examples/ui/gui/gallery/bin/**/*;../../examples/ui/gui/gallery/obj/**/*"
           Link="Fixtures/host/examples/ui/gui/gallery/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../TestSupport/Mvu/EffectReplies.fpas" Link="Fixtures/host/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/host/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/ui/widgets.md" Link="Fixtures/host/docs/ui/widgets.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/ui/gui/host.md" Link="Fixtures/host/docs/ui/gui/host.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/ui/mvu/runtime.md" Link="Fixtures/host/docs/ui/mvu/runtime.md" CopyToOutputDirectory="PreserveNewest" />

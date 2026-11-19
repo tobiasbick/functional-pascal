@@ -1,0 +1,33 @@
+// [Documentation](../../docs/pascal/libraries/media/images.md)
+
+unit Fpas.Media.Tests.Images;
+
+uses
+  Fpas.Media.Images as Images, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+
+// Exercises the JPEG codec through the public FPAS image library.
+public type ImageTests = record
+  // An eight-by-two source fits inside an eight-pixel square with transparent rows.
+  [X.FactAttribute]
+  public procedure FitWideJpeg();
+  begin
+    const Path: string := IO.Path.Combine(Sys.AppContext.BaseDirectory, 'Fixtures', 'wide.jpg');
+    const Bitmap: Images.Bitmap := Images.CoverDecoder.Decode(
+      IO.File.ReadAllBytes(Path), 8, T.CancellationToken.None
+    );
+    X.Assert.Equal<int>(8, Bitmap.Width);
+    X.Assert.Equal<int>(8, Bitmap.Height);
+    X.Assert.Equal<int>(8 * 8 * 4, Bitmap.Pixels.Length);
+    for Row: int := 0 to 7 do
+      const Pixel: int := Row * 8 * 4;
+      if Row = 3 or Row = 4 then
+        X.Assert.Equal<byte>(255, Bitmap.Pixels[Pixel + 3]);
+        X.Assert.True(Bitmap.Pixels[Pixel] > Bitmap.Pixels[Pixel + 2]);
+      else
+        X.Assert.Equal<byte>(0, Bitmap.Pixels[Pixel + 3]);
+      end if;
+    end for;
+  end procedure;
+end record;
+
+end unit;

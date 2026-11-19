@@ -1,0 +1,258 @@
+// [Documentation](../doc/captures.md#capture-session)
+
+program GuiDocCaptures;
+
+uses
+  GuiDocCaptures.Rendering.Gestures as Gestures,
+  GuiDocCaptures.Pages.Actions as ActionPage, GuiDocCaptures.Pages.InputsAndPickers as FormPages,
+  GuiDocCaptures.Pages.OverlaysAndDisclosure as OverlayPages,
+  GuiDocCaptures.Pages.SelectionAndNavigation as Guides,
+  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Pages.FeedbackAndDataDisplay as Collections,
+  GuiDocCaptures.Chapters as Chapters, GuiDocCaptures.Pages.Charts as Charts,
+  GuiDocCaptures.Pages.InstrumentsAndCapture as Devices,
+  GuiDocCaptures.Pages.Workspaces as Workspaces,
+  GuiDocCaptures.Pages.SourceTools as SourceTools,
+  GuiDocCaptures.Pages.CreativeAndCanvas as Creative,
+  GuiDocCaptures.Pages.SocialAndVoice as Social,
+  GuiDocCaptures.Pages.AiAndMotion as Effects, GuiDocCaptures.Pages.Foundations as Foundations, GuiDocCaptures.Pages.SmartInputs as Smart,
+  GuiDocCaptures.Pages.Overview as Overview,
+  GuiGallery.App.State as Gallery,
+  GuiGallery.App.Update as Update, GuiGallery.App.View as View,
+  GuiGallery.Pages.Feedback.State as Feedback,
+  GuiGallery.Pages.Charts.State as ChartState,
+  GuiGallery.Pages.Audio.State as Audio,
+  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Mvu.Application as App,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Status,
+  System as Sys, System.IO as IO;
+
+procedure Run(Destination: string; Chapter: string);
+requires Destination <> '';
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+
+    if RightButton >= 0 then
+      Window.SetRightButton(RightButton = 1);
+      RightButton := -1;
+    end if;
+
+    if KeyCode <> 0 then
+      Window.SetKey(KeyCode, true);
+      Window.SetKey(KeyCode, false);
+      KeyCode := 0;
+    end if;
+  end procedure;
+
+  procedure CapturePages(Session: Gui.Session<Gallery.Msg>);
+    procedure Key(Value: int);
+    begin
+      KeyCode := Value;
+      Presented.Step(Session);
+      Presented.Step(Session);
+    end procedure;
+
+    procedure OpenMenu(Id: string; Activation: int);
+    begin
+      FocusId := Id;
+      Presented.Send(Session, Gallery.Msg.Preview);
+      FocusId := '';
+      Key(Activation);
+    end procedure;
+
+    procedure Aim(Id: string; Horizontal: float := 0.5F);
+    begin
+      const Bounds: Cui.CuiRectangle := Presented.Bounds(Session, Id);
+      X := Bounds.X + Bounds.Width * Horizontal;
+      Y := Bounds.Y + Bounds.Height / 2.0F;
+    end procedure;
+
+    procedure Leave();
+    begin
+      X := -1.0F;
+      Y := -1.0F;
+      Presented.Step(Session);
+    end procedure;
+
+    procedure ScrollPage(Lines: float := -60.0F);
+    begin
+      X := 1200.0F;
+      Y := 600.0F;
+      Wheel := Lines;
+      Presented.Step(Session);
+      Presented.Step(Session);
+      Leave();
+    end procedure;
+
+    procedure ContextClick(Id: string; Fraction: float);
+    begin
+      Aim(Id, Fraction);
+      RightButton := 1;
+      Presented.Step(Session);
+      RightButton := 0;
+      Presented.Step(Session);
+    end procedure;
+
+    procedure SwipeLeft(Id: string; Pixels: float);
+    begin
+      Aim(Id);
+      Button := 1;
+      Presented.Step(Session);
+      X := X - Pixels;
+      Presented.Step(Session);
+      Button := 0;
+      Presented.Step(Session);
+      Leave();
+    end procedure;
+  begin
+    Presented.Step(Session);
+    Presented.Step(Session);
+
+    const Input: Gestures.Controls := new Gestures.Controls(
+      OpenMenu, Key, procedure(Id: string) begin
+        Aim(Id);
+      end procedure,
+      Leave, ContextClick, SwipeLeft
+    );
+    case Page of
+      when Gallery.Page.Overview:
+        Overview.Capture(Session, Output);
+      when Gallery.Page.Buttons:
+        ActionPage.CaptureActions(Session, Output, Input);
+      when Gallery.Page.Selection:
+        Guides.CaptureSelection(Session, Output);
+      when Gallery.Page.Navigation:
+        Guides.CaptureNavigation(Session, Output);
+      when Gallery.Page.Inputs:
+        FormPages.CaptureInputs(Session, Output, Input);
+      when Gallery.Page.SmartInputs:
+        Smart.Capture(Session, Output);
+      when Gallery.Page.Pickers:
+        FormPages.CapturePickers(Session, Output, Input);
+      when Gallery.Page.Overlays:
+        OverlayPages.CaptureOverlays(Session, Output, Input, Window);
+      when Gallery.Page.Disclosure:
+        OverlayPages.CaptureDisclosure(Session, Output, Input);
+      when Gallery.Page.Feedback:
+        Presented.Send(Session, Gallery.Msg.Feedback(Feedback.Msg.Finish(Status.Status.Success)));
+        Collections.CaptureFeedback(Session, Output);
+      when Gallery.Page.Lists:
+        Collections.CaptureDataDisplay(Session, Output);
+      when Gallery.Page.Charts:
+        Charts.CaptureCharts(Session, Output);
+        Presented.Send(Session, Gallery.Msg.Charts(ChartState.Msg.SetGrayscale(true)));
+        Charts.CaptureGrayscale(Session, Output);
+      when Gallery.Page.MoreCharts:
+        Charts.CaptureMoreChartsTop(Session, Output);
+        ScrollPage();
+        Charts.CaptureMoreChartsBottom(Session, Output);
+      when Gallery.Page.Instruments:
+        Devices.CaptureInstruments(Session, Output);
+      when Gallery.Page.Audio:
+        Devices.CaptureAudio(Session, Output);
+        Presented.Send(Session, Gallery.Msg.Audio(Audio.Msg.StartTour));
+        Devices.CaptureTour(Session, Output);
+      when Gallery.Page.Capture:
+        Devices.CaptureFileControls(
+          Session, Output, procedure(PointerX: float; PointerY: float; Press: int) begin
+            X := PointerX;
+            Y := PointerY;
+            Button := Press;
+            Presented.Step(Session);
+          end procedure
+        );
+      when Gallery.Page.DataGrid:
+        Workspaces.CaptureDataGrid(Session, Output);
+      when Gallery.Page.Files:
+        Workspaces.CaptureFiles(Session, Output);
+      when Gallery.Page.Planning:
+        Workspaces.CapturePlanningTop(Session, Output);
+        ScrollPage();
+        Workspaces.CapturePlanningBottom(Session, Output);
+      when Gallery.Page.Code, Gallery.Page.EditingTools, Gallery.Page.DeveloperTools, Gallery.Page.MoreDeveloperTools:
+        SourceTools.Capture(
+          Session, Output, Page, procedure(Lines: float) begin
+            ScrollPage(Lines);
+          end procedure
+        );
+      when Gallery.Page.CreativeControls:
+        Creative.CaptureControls(Session, Output);
+      when Gallery.Page.CanvasAndBars:
+        Creative.CaptureCanvas(Session, Output);
+      when Gallery.Page.Social, Gallery.Page.Voice:
+        Social.Capture(Session, Output, Page);
+      when Gallery.Page.AI:
+        OpenMenu('ai-reasoning/toggle', Gestures.Enter);
+        OpenMenu('ai-search/toggle', Gestures.Enter);
+        Effects.CaptureAi(Session, Output);
+        OpenMenu('ai-model', Gestures.Enter);
+        Effects.CaptureModelMenu(Session, Output);
+      when Gallery.Page.Motion:
+        Effects.CaptureMotion(Session, Output);
+      when Gallery.Page.Display, Gallery.Page.Reader, Gallery.Page.Desktop, Gallery.Page.Layout:
+        Foundations.Capture(
+          Session, Output, Page, procedure(Id: string) begin
+            Aim(Id);
+            Button := 1;
+            Presented.Step(Session);
+            Button := 0;
+            Presented.Step(Session);
+            Leave();
+          end procedure, procedure(Lines: float) begin
+            ScrollPage(Lines);
+          end procedure
+        );
+      else
+        raise new Sys.InvalidOperationException('No capture steps for ' + Page.ToString());
+    end case;
+  end procedure;
+begin
+  const Page: Gallery.Page := Chapters.PageForChapter(Chapter);
+  const Output: string := IO.Path.GetFullPath(Destination);
+
+  discard IO.Directory.CreateDirectory(Output);
+  Sys.Environment.SetEnvironmentVariable('CUI_SCALE', '1');
+  Sys.Environment.SetEnvironmentVariable('CUI_SCREENSHOT', null);
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  var RightButton: int := -1;
+  var Wheel: float := 0.0F;
+  var KeyCode: int := 0;
+  var FocusId: string := '';
+  const Height: int := Chapters.ViewportHeight(Page);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas widget documentation', 1240, Height, Cui.CuiRenderer.Software, true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<Gallery.Msg> := Host.Start<Gallery.Model, Gallery.Msg>(
+    Workspaces.InitialModel(Page, Output),
+    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition<Gallery.Model, Gallery.Msg> => if FocusId =
+      ''
+    then
+      Update.Update(Model, Message)
+    else
+      new App.Transition<Gallery.Model, Gallery.Msg>(Model, [App.Focus<Gallery.Msg>(FocusId)])
+    end if,
+    View.Build, Window, 128,
+    Inject, ThemeFor := Update.ThemeFor
+  );
+  CapturePages(Session);
+end procedure;
+
+begin
+  const Request: Chapters.Request := Chapters.ReadRequest();
+  Run(Request.Destination, Request.Chapter);
+end;
+
+end program;

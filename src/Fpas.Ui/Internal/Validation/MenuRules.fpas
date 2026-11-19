@@ -22,7 +22,6 @@ begin
 
   if Settings <> null then
     Rules.CheckText(Settings.Icon, At + '/icon');
-    Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
     if Settings.Variant = S.ButtonVariant.Active or not Sys.Enum.IsDefined<S.ButtonVariant>(
       Settings.Variant
     )
@@ -42,7 +41,6 @@ begin
         const Path: string := Identify(M.ItemId(Id, Item.Key), At + '/item');
         Rules.CheckText(Item.Label, Path + '/label');
         Rules.CheckText(Item.Icon, Path + '/icon');
-        Rules.CheckText(Item.TerminalIcon, Path + '/terminalIcon');
         Rules.CheckText(Item.Shortcut, Path + '/shortcut');
         if Item.Label = '' or Item.Label.Contains(#10) or Item.Label.Contains(#13)
           or Item.Shortcut.Contains(#10) or Item.Shortcut.Contains(#13)

@@ -32,6 +32,7 @@ public sealed class DocExamplesFixture : IAsyncLifetime
         xml.Save(project);
         StageUiProject("ui", "Fpas.Ui");
         StageUiProject("mvu", "Fpas.Ui.Mvu");
+        StageUiProject("tui", "Fpas.Ui.Tui");
         StageUiProject("gui", "Fpas.Ui.Gui");
         sdk.WriteFeedConfig(directory.Path);
         var restore = await ProcessRunner.RunAsync(["restore", project], workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(2));
@@ -58,6 +59,10 @@ public sealed class DocExamplesFixture : IAsyncLifetime
             Path.GetFileName((string?)reference.Attribute("Include")) == "Fpas.Ui.Gui.Cui.csproj");
         binding?.ReplaceWith(new XElement("Reference", new XAttribute("Include", "Fpas.Ui.Gui.Cui"),
             new XElement("HintPath", typeof(Fpas.Ui.Gui.Cui.CuiWindow).Assembly.Location)));
+        var processes = project.Descendants("ProjectReference").SingleOrDefault(reference =>
+            Path.GetFileName((string?)reference.Attribute("Include")) == "Fpas.Processes.csproj");
+        processes?.ReplaceWith(new XElement("Reference", new XAttribute("Include", "Fpas.Processes"),
+            new XElement("HintPath", typeof(Fpas.Processes.OwnedProcess).Assembly.Location)));
         project.Save(path);
     }
 

@@ -17,8 +17,8 @@ the referenced package version determine which overloads are available.
 | Semaphore ownership and Task success/fault/cancellation | [Task coordination](task-coordination.md) |
 | Bounded queues, backpressure, completion, and joined workers | [Channels](channels.md) |
 | Deferred workflows, typed failures, dependencies, and scoped tasks | [Workflows](workflows.md) |
-| Music tags, embedded artwork, playlists, image decoding, audio playback and waveforms | [Media libraries](media.md) |
-| Native desktop windows, MVU widgets, effects and publishing | [Desktop GUI](gui.md), [UI handbook](../../ui/README.md) |
+| Music tags, embedded artwork, playlists, image decoding, audio playback and waveforms | [Media libraries](media/README.md) |
+| Build graphical or terminal applications | [GUI](../../ui/gui/README.md), [TUI](../../ui/tui/README.md), [MVU](../../ui/mvu/README.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |
 
 These are task guides, not a replacement API catalog. Consult the selected .NET

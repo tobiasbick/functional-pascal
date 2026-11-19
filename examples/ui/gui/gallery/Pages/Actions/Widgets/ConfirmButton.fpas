@@ -14,7 +14,7 @@ public function View(): E.Element<State.Msg>;
 begin
   return Confirm.ConfirmButton<State.Msg>(
     'confirm-delete', 'Delete project', State.Msg.ConfirmDelete,
-    new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
+    new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
   );
 end function;
 

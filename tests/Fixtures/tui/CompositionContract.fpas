@@ -180,7 +180,6 @@ begin
             'Action',
             3,
             Icon := 'i',
-            TerminalIcon := 't',
             Shortcut := 'Ctrl A',
             Enabled := false,
             Danger := true,
@@ -197,7 +196,7 @@ begin
         when Menus.Entry.Action(const Item: Menus.Item<string>):
           Check(
             Item.Message = 'parent/3' and Item.Key = 'item' and Item.Icon = 'i'
-            and Item.TerminalIcon = 't' and Item.Shortcut = 'Ctrl A' and not Item.Enabled
+            and Item.Shortcut = 'Ctrl A' and not Item.Enabled
             and Item.Danger and Item.Checked,
             'A menu action lost its message or decoration.'
           );

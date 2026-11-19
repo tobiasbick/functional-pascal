@@ -6,10 +6,10 @@ Use the SDK's default build parallelism unless the user requests a limit.
 
 The solution includes the CUI binding and its tests. Building it also requires
 CMake 3.20 or newer, a C99 compiler and the platform development libraries listed
-in the [native build reference](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
+in the [native build reference](../ui/gui/native-build.md#prerequisites).
 GUI tests need a display; on headless Linux, run them under Xvfb with software
 OpenGL support. Without `DISPLAY`, window tests are skipped. Native tests that
-use no window still run through CTest. See the [GUI test reference](../../src/Fpas.Ui.Gui.Cui/README.md#source-build-and-verification).
+use no window still run through CTest. See the [GUI test reference](../ui/gui/cui.md#source-build-and-verification).
 Use Xvfb's `-noreset` option to keep the display available between short-lived
 GUI test processes.
 
@@ -142,7 +142,7 @@ to inspect the deployed server, then explicitly restore the consumer before
 connecting a client. See the [language-server contract](../pascal/tools/language-server.md).
 
 Distribution builds require the .NET 10 SDK and the
-[CUI native toolchain](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
+[CUI native toolchain](../ui/gui/native-build.md#prerequisites).
 The delivered compiler contains its runtime. Copy `fpas.exe` on Windows x64 or
 `fpas` on Linux x64 with glibc. It uses compressed,
 untrimmed single-file deployment because the complete protocol dependency graph

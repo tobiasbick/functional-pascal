@@ -80,7 +80,7 @@ streams, strings, arrays and cancellation tokens. The backend keeps its `ATL`
 assembly identity. The separate C# assemblies expose ordinary namespace-level
 types, including `Fpas.Media.Images.Bitmap`, `Fpas.Media.Images.CoverDecoder`,
 `Fpas.Media.Audio.ISession` and `Fpas.Media.Audio.PlaybackEvent`.
-See the [FPAS media guide](../pascal/libraries/media.md).
+See the [FPAS media guide](../pascal/libraries/media/README.md).
 
 The same container rule applies to a qualified program name. Visibility is checked
 at both source and metadata boundaries. Public nested types in accessible

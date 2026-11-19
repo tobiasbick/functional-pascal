@@ -13,13 +13,13 @@
     <Using Include="Xunit" />
     <None Include="../Fixtures/gui/*" Link="Fixtures/gui/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../third-party/cui/upstream/cui.c" Link="Fixtures/CuiFonts.c" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/*.fpasproj;../../src/Fpas.Ui.Gui/README.md"
+    <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/*.fpasproj"
           Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
           Link="Fixtures/host/src/Fpas.Ui.Gui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/*.fpasproj;../../src/Fpas.Ui.Mvu/README.md"
+    <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/*.fpasproj"
           Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
           Link="Fixtures/host/src/Fpas.Ui.Mvu/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/*.fpasproj;../../src/Fpas.Ui/README.md"
+    <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/*.fpasproj"
           Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"
           Link="Fixtures/host/src/Fpas.Ui/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/**/*.fpas;../../examples/ui/gui/gallery/*.fpasproj"
@@ -27,13 +27,16 @@
           Link="Fixtures/host/examples/ui/gui/gallery/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../TestSupport/Mvu/EffectReplies.fpas" Link="Fixtures/host/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../docs/pascal/libraries/gui.md" Link="Fixtures/GuiHandbook.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/ui/widgets.md" Link="Fixtures/host/docs/ui/widgets.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/ui/gui/host.md" Link="Fixtures/host/docs/ui/gui/host.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/ui/mvu/runtime.md" Link="Fixtures/host/docs/ui/mvu/runtime.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/ui/gui/desktop.md" Link="Fixtures/GuiHandbook.md" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasCuiProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
     <AssemblyMetadata Include="FpasProcessesProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Processes/Fpas.Processes.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
   </ItemGroup>
   <Target Name="RemoveStaleHostFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/host/examples;$(OutputPath)Fixtures/host/src" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/host/docs;$(OutputPath)Fixtures/host/examples;$(OutputPath)Fixtures/host/src" />
   </Target>
 </Project>

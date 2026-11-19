@@ -1,6 +1,6 @@
 # CUI window state follow-ups
 
-- [Window API](../ui/app-chrome/window.md) · [FPAS application gaps](gui-app-gaps.md)
+- [Window API](../ui/gui/app-chrome/window.md) · [FPAS application gaps](gui-app-gaps.md)
 - [Issue #94](https://github.com/yappologistic/CUI/issues/94) · [PR #95](https://github.com/yappologistic/CUI/pull/95)
 - Fixes: [`a33a7ec`](https://github.com/yappologistic/CUI/commit/a33a7ec), [`1e172ba`](https://github.com/yappologistic/CUI/commit/1e172ba), [`ee913d1`](https://github.com/yappologistic/CUI/commit/ee913d1)
 - Follow-ups: [`89f7a11`](https://github.com/yappologistic/CUI/commit/89f7a11), [`961f096`](https://github.com/yappologistic/CUI/commit/961f096), [`5848bf8`](https://github.com/yappologistic/CUI/commit/5848bf8)

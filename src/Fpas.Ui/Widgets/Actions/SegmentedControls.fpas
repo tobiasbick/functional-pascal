@@ -8,13 +8,11 @@ public type Item = record
   public Label: string;
   // Optional CUI icon-font glyph.
   public Icon: string := '';
-  // Optional cell-based equivalent of Icon; empty keeps the label in the TUI.
-  public TerminalIcon: string := '';
-  // Hide the GUI caption; requires an icon. TUI keeps the readable label.
+  // Hide the GUI caption; requires an icon.
   public IconOnly: bool := false;
 end record;
 
-// Native segment sizing and input permission, shared by both hosts.
+// Native segment sizing and input permission.
 public type Options = record
   // Medium, small or large, matching CUI's control sizes.
   public ControlSize: B.Size := B.Size.Medium;

@@ -8,8 +8,6 @@ public type Options = record
   public DurationMilliseconds: int := 1200;
   // Optional CUI icon glyph.
   public Icon: string := '';
-  // Optional terminal equivalent of the icon.
-  public TerminalIcon: string := '';
   // CUI button appearance. Active belongs to selection controls.
   public Variant: S.ButtonVariant := S.ButtonVariant.Destructive;
   // Whether this action accepts input.

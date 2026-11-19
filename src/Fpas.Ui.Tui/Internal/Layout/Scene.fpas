@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
 public type Binding<TMsg> = variant
   // Single-line editor with its insertion point and first editable column.
@@ -30,12 +30,6 @@ public type Control<TMsg> = record
   public Hint: string := '';
   // Optional foreground retained when the control is focused or hovered.
   public Foreground: G.Color? := null;
-  // Positive duration for an action that requires a pointer hold.
-  public HoldMilliseconds: int := 0;
-  // Filled percentage of an active hold.
-  public HoldProgress: int := 0;
-  // Optional state-specific normal, focus and hover colors.
-  public Appearance: Th.ButtonAppearance? := null;
 end record;
 
 // An enabled keyboard destination with its full bounds, including scrolled-out rows.
@@ -57,10 +51,6 @@ public type Scope<TMsg> = record
   public Shortcuts: array of K.ShortcutBinding<TMsg>;
   // Panel bounds for dismissible scrim input.
   public Panel: F.Rect? := null;
-  // Optional host-owned dismissal for transient widget menus.
-  public Dismiss: Sys.Action? := null;
-  // Enabled popup commands in traversal order, including scrolled-out commands.
-  public Navigation: array of NavigationStop := [];
 end record;
 
 public type ScrollRegion = record
@@ -82,7 +72,7 @@ public type Layout<TMsg> = record
   public Allocations: array of F.AllocationMemo;
   // Last successful shared preflight/cache, retained by the owner.
   public Prepared: Validation.Prepared<TMsg>? := null;
-  // Open modal and popup IDs, including those below the active scope.
+  // Open modal IDs, including those below the active scope.
   public Scopes: array of string := [];
   // Enabled sidebar rows in display order, including rows outside a scroll viewport.
   public SidebarRows: array of NavigationStop := [];

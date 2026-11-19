@@ -38,7 +38,7 @@ Known missing baseline work and deferred extensions are listed in
 ## Desktop GUI
 
 FPas includes a declarative desktop GUI based on [CUI](https://github.com/yappologistic/CUI).
-The [UI handbook](docs/ui/README.md) starts with a runnable app and illustrated
+The [graphical UI handbook](docs/ui/gui/README.md) starts with a runnable app and illustrated
 widget examples.
 The [FPas widget gallery](examples/ui/gui/gallery/README.md) shows native controls,
 layout, and themes in a Functional Pascal application.
@@ -47,7 +47,7 @@ layout, and themes in a Functional Pascal application.
 
 ## Terminal TUI
 
-FPas includes a [declarative terminal UI](src/Fpas.Ui.Tui/README.md) with keyboard
+FPas includes a [declarative terminal UI](docs/ui/tui/README.md) with keyboard
 and mouse input. The [TUI widget gallery](examples/ui/tui/gallery/README.md)
 shows terminal controls, layout, and themes using the shared UI model.
 The [fractal explorer](examples/ui/tui/fractals/README.md) renders Mandelbrot
@@ -61,7 +61,7 @@ and other fractals with interactive panning and zooming.
 
 Install a stable .NET 10 SDK satisfying [global.json](global.json). It selects
 10.0.100 or a later installed 10.0 feature band and excludes preview SDKs.
-Install the [native CUI build prerequisites](src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites)
+Install the [native CUI build prerequisites](docs/ui/gui/native-build.md#prerequisites)
 for the full solution build.
 From the root of this CLR checkout, build the toolchain and package its local SDK:
 

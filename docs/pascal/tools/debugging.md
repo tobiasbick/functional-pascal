@@ -101,7 +101,7 @@ source mapping, native supervision, stepping and exception policy.
 
 ## DAP protocol and bounds
 
-The [adapter source reference](../../../src/Fpas.Debugging/Dap/README.md) pins the
+The [DAP frontend reference](../../architecture/debugger-dap.md) pins the
 Microsoft DAP schema. Transport uses UTF-8 JSON with byte-counted Content-Length
 headers. It supports initialize, launch, configurationDone, source breakpoints,
 raised/unhandled exception filters, threads, stackTrace, scopes, variables,

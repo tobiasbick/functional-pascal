@@ -12,7 +12,7 @@ The crop step requires Python with Pillow installed.
 
 ```sh
 dotnet run --project apps/gui-doc-captures/GuiDocCaptures.fpasproj -- .temp-data/ui-selection selection
-python apps/gui-doc-captures/crop.py .temp-data/ui-selection docs/ui/selection/images
+python apps/gui-doc-captures/crop.py .temp-data/ui-selection docs/ui/gui/selection/images
 ```
 
 The chapter argument accepts `overview`, `actions` (the default), `selection`, `navigation`,
@@ -41,12 +41,12 @@ appearances. Layout captures the divider in the Notifications sheet.
 Files creates a separate sample directory within the capture output and
 lists those files.
 Use a fresh capture directory for each run and crop into the chapter's
-`images` folder. Move Audio's `guided-tour.png` to `docs/ui/overlays/images`,
-AI's `composer-ai.png` to `docs/ui/voice/images` and Smart inputs'
-`text-field-affixes.png` to `docs/ui/inputs/images`. Move App chrome's
-`toolbar-editor.png` to `docs/ui/canvas-and-bars/images` and
-`formatted-text.png` to `docs/ui/text-and-display/images`. Move Overview's
-two `sidebar-appearance` captures to `docs/ui/navigation/images`.
+`images` folder. Move Audio's `guided-tour.png` to `docs/ui/gui/overlays/images`,
+AI's `composer-ai.png` to `docs/ui/gui/voice/images` and Smart inputs'
+`text-field-affixes.png` to `docs/ui/gui/inputs/images`. Move App chrome's
+`toolbar-editor.png` to `docs/ui/gui/canvas-and-bars/images` and
+`formatted-text.png` to `docs/ui/gui/text-and-display/images`. Move Overview's
+two `sidebar-appearance` captures to `docs/ui/gui/navigation/images`.
 Review the output at its original size.
 The crop keeps the widget and its open menu entries. If a capture is blank
 while the desktop is busy, rerun the capture with the gallery window visible.

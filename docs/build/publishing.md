@@ -42,7 +42,7 @@ single-file, then produce an executable in the Windows GUI subsystem. Use
 `Exe` for console programs. On Linux both output types produce the same kind
 of executable. Framework-dependent mode still runs the managed DLL via `dotnet`.
 
-For applications using the [packaged CUI binding](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-binding),
+For applications using the [packaged CUI binding](../ui/gui/cui.md#packaged-binding),
 directory modes include the shared CUI library beside the application. Single-file
 publication bundles it for native extraction. Use the binding package for
 Native AOT so its transitive targets link CUI statically.
@@ -141,12 +141,12 @@ reuse, independent RSA signature verification and incremental re-signing,
 public/delay signing, pinned CMS certificates and tampering controls for FPAS and
 C# hosts.
 
-The [packaged GUI fixture](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-publishing-fixture)
+The [packaged GUI fixture](../ui/gui/cui.md#packaged-publishing-fixture)
 publishes and signs all five modes with the CUI binding referenced transitively.
 It runs both renderers on Windows and Linux and verifies native asset placement,
 extraction and static linking.
 
-The [public GUI host](../../src/Fpas.Ui.Gui/README.md) is consumed through the
+The [public GUI host](../ui/gui/host.md) is consumed through the
 Fpas.Ui.Gui package, which brings its MVU/widget libraries and the native binding
 transitively. GuiPublishingTests publishes the full FPAS gallery in all five
 modes and checks controlled state, background completion/cancellation, resource

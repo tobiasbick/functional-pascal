@@ -78,7 +78,7 @@ Application outputs use the [publishing contract](publishing.md).
 ## Native CUI assets
 
 Distribution builds compile CUI from the pinned upstream sources using the
-[native build prerequisites](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
+[native build prerequisites](../ui/gui/native-build.md#prerequisites).
 The embedded SDK package carries the native files for the distribution's RID.
 
 | SDK package path | `win-x64` | `linux-x64` |
@@ -93,7 +93,7 @@ native files and transitive build targets. Supply this package alongside the SDK
 in the local feed for GUI projects. Use separate feeds for distributions built
 for different RIDs at the same version. The compiler and terminal programs have
 no CUI runtime dependency. Ordinary compiler and SDK development builds can
-omit the distribution property. See the [packaged binding](../../src/Fpas.Ui.Gui.Cui/README.md#packaged-binding)
+omit the distribution property. See the [packaged binding](../ui/gui/cui.md#packaged-binding)
 for project references and RID selection.
 
 The application-facing Fpas.Ui.Gui package depends on Fpas.Ui.Mvu, Fpas.Ui and the

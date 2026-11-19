@@ -19,7 +19,7 @@ begin
   return Work.StatusButton<State.Msg>(
     'status-save', 'Save changes', Model.SaveStatus, State.Msg.StartSave,
     new Work.Options(
-      Icon := Sys.Char.ConvertFromUtf32($E14D), TerminalIcon := '↓', SuccessLabel := 'Saved'
+      Icon := Sys.Char.ConvertFromUtf32($E14D), SuccessLabel := 'Saved'
     )
   );
 end function;

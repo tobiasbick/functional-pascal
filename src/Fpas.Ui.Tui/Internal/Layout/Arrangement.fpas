@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -28,8 +28,7 @@ public function Arrange<TMsg>(
     Id: string; Label: string; Role: string; Value: string;
     Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
-    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null;
-    HoldMilliseconds: int := 0; HoldProgress: int := 0; Appearance: Th.ButtonAppearance? := null
+    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null
   );
   begin
     AddControl(
@@ -47,10 +46,7 @@ public function Arrange<TMsg>(
         ButtonStyle,
         ArrowFocus,
         Hint,
-        Foreground,
-        HoldMilliseconds,
-        HoldProgress,
-        Appearance
+        Foreground
       )
     );
   end procedure;
@@ -61,10 +57,6 @@ public function Arrange<TMsg>(
       when E.Element.Action(const Id: string, _, const Enabled: bool, const View: E.ActionView):
         if Enabled and View.Sidebar <> '' then
           SidebarRows.Add(new A.NavigationStop(Id, Area, View.Sidebar, ScrollId));
-        elsif Enabled and NavigationScope <> '' and ScopeId = NavigationScope and View.Role =
-          'menu-item'
-        then
-          Navigation.Add(new A.NavigationStop(Id, Area));
         end if;
       else
     end case;
@@ -125,13 +117,17 @@ public function Arrange<TMsg>(
       when E.Element.StatusBar(const Row: E.Element<TMsg>, const HideBorder: bool):
         var Top: int := Area.Y;
         if not HideBorder and Area.Height > 1 then
-          D.Divider(Operations, new F.Rect(Area.X, Top, Area.Width, 1), Clip, '', Style, Widgets);
+          D.HorizontalRule(
+            Operations,
+            new F.Rect(Area.X, Top, Area.Width, 1),
+            Clip,
+            Style,
+            Widgets
+          );
           Top := Top + 1;
         end if;
 
         Visit(Row, new F.Rect(Area.X, Top, Area.Width, 1), Clip, ScopeId, Style);
-      when E.Element.Separator(const Title: string):
-        D.Divider(Operations, Area, Clip, Title, Style, Widgets);
       when E.Element.Action(
         const Id: string,
         const Handler: Actions.IActivatable<TMsg>,
@@ -152,8 +148,7 @@ public function Arrange<TMsg>(
           View.Padding,
           View.Center and (View.FixedWidth <> null or View.FillWidth),
           View.Foreground,
-          View.Joined,
-          View.Appearance
+          View.Joined
         );
         const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(Handler);
         Register(
@@ -169,10 +164,7 @@ public function Arrange<TMsg>(
           ButtonStyle := true,
           ArrowFocus := View.ArrowFocus,
           Hint := View.Hint,
-          Foreground := View.Foreground,
-          HoldMilliseconds := View.HoldMilliseconds,
-          HoldProgress := View.HoldProgress,
-          Appearance := View.Appearance
+          Foreground := View.Foreground
         );
       when E.Element.Sized(const Child: E.Element<TMsg>, _):
         Visit(Child, Area, Clip, ScopeId, Style);
@@ -188,39 +180,6 @@ public function Arrange<TMsg>(
         const Flow: E.Flow
       ):
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
-      when E.Element.ButtonGroup(const Body: E.Element<TMsg>, const FullWidth: bool):
-        Visit(Body, Group.Bounds<TMsg>(Body, Area, FullWidth), Clip, ScopeId, Style);
-      when E.Element.PopupAnchor(
-        const Trigger: E.Element<TMsg>,
-        const Id: string,
-        const Content: E.Element<TMsg>,
-        const Initial: string,
-        const Close: procedure(),
-        const Position: Menus.Placement,
-        const Width: int
-      ):
-        const Before: int := Controls.Count;
-        const TriggerWidth: int := Sys.Math.Min(Area.Width, M.Intrinsic<TMsg>(Trigger, true));
-        const TriggerArea: F.Rect := new F.Rect(
-          Area.X, Area.Y, TriggerWidth,
-          Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Trigger, false, TriggerWidth))
-        );
-        Visit(Trigger, TriggerArea, Clip, ScopeId, Style);
-        for Index: int := Before to Controls.Count - 1 do
-          const Part: A.Control<TMsg> := Controls[Index];
-          if Part.Id = Id then
-            Popup := new MenuWidget.Pending<TMsg>(
-              Id, ScopeId,
-              new F.Rect(
-                Clip.X,
-                Part.Bounds.Y,
-                Part.Bounds.X + Part.Bounds.Width - Clip.X,
-                Part.Bounds.Height
-              ),
-              Content, Initial, Close, Position, Width
-            );
-          end if;
-        end for;
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
         D.Border(Operations, Area, Clip, Title, Style, Widgets);
         Visit(
@@ -318,39 +277,6 @@ public function Arrange<TMsg>(
     return 0;
   end function;
 
-  function InitialMenuOffset(Content: E.Element<TMsg>; Area: F.Rect; Initial: string): int;
-  begin
-    // Menu.Rows supplies one direct action per command in its vertical stack.
-    const Geometry: V.Geometry<TMsg> := V.Arrange<TMsg>(
-      Content, E.ScrollPosition.Offset(0), Area, Area, false, null
-    );
-    case Content of
-      when E.Element.Stack(
-        const Children: array of E.Element<TMsg>,
-        const Axis: bool,
-        const Flow: E.Flow
-      ):
-        const Bounds: array of F.Rect := Stacks.Bounds<TMsg>(
-          Children, Axis, Flow, Geometry.Content, PreviousAllocations, Allocations, true
-        );
-        for Index: int := 0 to Children.Length - 1 do
-          case Children[Index] of
-            when E.Element.Action(const Id: string, _, const Enabled: bool, _):
-              if Enabled and Id = Initial then
-                return Sys.Math.Clamp(
-                  Bounds[Index].Y + Bounds[Index].Height - Area.Y - Area.Height,
-                  0, Geometry.View.Maximum
-                );
-              end if;
-            else
-          end case;
-        end for;
-      else
-    end case;
-
-    return 0;
-  end function;
-
   procedure VisitStack(
     Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow;
     Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style
@@ -381,66 +307,15 @@ begin
   const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
   const Scopes: Generic.List<string> := new Generic.List<string>();
   const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
-  const Navigation: Generic.List<A.NavigationStop> := new Generic.List<A.NavigationStop>();
   const SidebarRows: Generic.List<A.NavigationStop> := new Generic.List<A.NavigationStop>();
   var ScrollId: string := '';
-  var NavigationScope: string := '';
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
-  var Popup: MenuWidget.Pending<TMsg>? := null;
   var FocusReturn: string := '';
   var WrapText: bool := false;
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
-  const Pending: MenuWidget.Pending<TMsg>? := Popup;
-  if Pending <> null and Pending.Parent = (if Active = null then
-    ''
-  else
-    Active.Id
-  end if)
-  then
-    const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
-    const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
-    const Width: int := Sys.Math.Max(21, M.Intrinsic<TMsg>(Pending.Content, true));
-    const Height: int := Sys.Math.Min(26, M.Intrinsic<TMsg>(Pending.Content, false, Width));
-    const Bounds: array of F.Rect := MenuWidget.Place(
-      Operations,
-      Screen,
-      Pending.Anchor,
-      Width,
-      Height,
-      Colors,
-      Theme,
-      Pending.Position,
-      Pending.Width
-    );
-    const PreviousScope: A.Scope<TMsg>? := if Previous = null then
-      null
-    else
-      Previous.Active
-    end if;
-    if PreviousScope = null or PreviousScope.Id <> Pending.Id then
-      Scroll[Pending.Id] := InitialMenuOffset(Pending.Content, Bounds[1], Pending.Initial);
-    end if;
-
-    Scopes.Add(Pending.Id);
-    const PopupScope: A.Scope<TMsg> := new A.Scope<TMsg>(
-      Pending.Id, Pending.Initial, null, [], Bounds[0], Dismiss := Pending.Close
-    );
-    Active := PopupScope;
-    NavigationScope := Pending.Id;
-    Visit(
-      E.Element<TMsg>.Scrollable(Pending.Id, Pending.Content, false),
-      Bounds[1],
-      Bounds[1],
-      Pending.Id,
-      Colors
-    );
-    Active := PopupScope with
-      Navigation := Navigation.ToArray();
-    end with;
-  end if;
   const PreviousRows: array of D.PaintedRow := if Previous = null then
     []
   else

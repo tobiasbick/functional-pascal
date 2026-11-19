@@ -36,7 +36,7 @@ describes native Windows and WSL verification for Debug and Release tool builds.
 executable. `Fpas.Processes.OwnedProcess` establishes a Windows kill-on-close Job
 Object or a Linux process session before the worker can launch a target.
 The host never discovers ownership by scanning PIDs. The native dependency and
-callback contract are described in the [native reference](../../src/Fpas.Debugging/Native/README.md).
+callback contract are described in the [native reference](debugger-native.md).
 
 The [single-file distribution](../build/distribution.md) uses this same executable
 for workers and Linux target brokers. Its shim is materialized from the bundle

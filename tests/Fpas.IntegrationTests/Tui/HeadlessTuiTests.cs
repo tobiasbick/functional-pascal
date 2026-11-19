@@ -25,13 +25,7 @@ public sealed class HeadlessTuiTests
     [InlineData("cui.fpas", "CUI terminal contracts verified\n")]
     [InlineData("rendering.fpas", "Rendering contracts verified\n")]
     [InlineData("cell-grid.fpas", "Cell grid contracts verified\n")]
-    [InlineData("confirm.fpas", "Confirm button contracts verified\n")]
     [InlineData("text-field.fpas", "Text field contracts verified\n")]
-    [InlineData("status.fpas", "Status button contracts verified\n")]
-    [InlineData("theme-switcher.fpas", "Theme switcher contracts verified\n")]
-    [InlineData("theme-toggle.fpas", "Theme toggle contracts verified\n")]
-    [InlineData("segmented.fpas", "Segmented control contracts verified\n")]
-    [InlineData("dropdown.fpas", "Dropdown menu contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {
         using var program = new Debuggee("headless-tui");

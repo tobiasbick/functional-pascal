@@ -43,7 +43,7 @@ paths with spaces.
 `--document` is repeatable and replaces the default selection. By default, the
 checker recursively reads Markdown under `docs/pascal` and `docs/ui` and reads the
 repository README. When `docs/ui` is present, the default run uses `Fpas.Ui.dll`
-and the managed `Fpas.Ui.Mvu.dll`, `Fpas.Ui.Gui.dll` and
+and the managed `Fpas.Ui.Mvu.dll`, `Fpas.Ui.Tui.dll`, `Fpas.Ui.Gui.dll` and
 `Fpas.Ui.Gui.Cui.dll` built beside the checker. An explicit `--reference` to
 one of these filenames takes precedence. For a targeted run on a widget page,
 pass the required assemblies with `--reference`.

@@ -18,7 +18,7 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
 begin
   const Button: E.Element<State.Msg> := Holds.HoldButton<State.Msg>(
     'hold-delete', 'Hold to delete', State.Msg.ConfirmHold,
-    new Holds.Options(Icon := Sys.Char.ConvertFromUtf32($E18E), TerminalIcon := '×')
+    new Holds.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
   );
   if Model.HoldCount = 0 then
     return Button;

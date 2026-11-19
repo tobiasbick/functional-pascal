@@ -14,5 +14,5 @@ input/animation. It neither changes the model nor creates a timer task. Use
 `Mvu.StartBackground` and typed messages for time-driven application updates.
 
 Creation options set native minimum dimensions and Linux desktop identity.
-See the [GUI reference](../../../../src/Fpas.Ui.Gui/README.md) for size, placement,
+See the [GUI reference](../../../../docs/ui/gui/host.md) for size, placement,
 fixed-size windows, owner-thread rules and cleanup.

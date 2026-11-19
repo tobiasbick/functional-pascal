@@ -1,14 +1,12 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as Confirm, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as Copy, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
   public Id: long;
   // The raw event to route against the presented layout.
   public Event: App.Input;
-  // Monotonic arrival time before owner-thread processing.
-  public ReceivedAt: long;
   // The control pipe's acknowledgement when the event came from a debugger.
   public Acknowledgement: Tasks.Task?;
 end record;
@@ -37,7 +35,6 @@ end procedure;
 // - `Present`: Publishes a successfully rendered frame.
 // - `Manual`: Allows stepping through the control pipe.
 // - `ThemeFor`: Selects the theme for the current model.
-// - `WriteClipboard`: Optional terminal clipboard transport.
 //
 // ## Returns
 // The host session.
@@ -45,7 +42,7 @@ public function Start<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
   View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
   Present: procedure(App.Frame); Manual: bool;
-  ThemeFor: function(TModel): SharedThemes.Theme; WriteClipboard: Sys.Action<string>? := null
+  ThemeFor: function(TModel): SharedThemes.Theme
 ): App.HeadlessSession;
   function Close(): Tasks.Task;
   begin
@@ -68,7 +65,7 @@ public function Start<TModel, TMsg>(
     Threads.Monitor.Enter(Gate);
     try
       const Id: long := InputId + 1L;
-      case Core.Send(new PendingInput(Id, Event, Sys.Environment.TickCount64, Acknowledgement)) of
+      case Core.Send(new PendingInput(Id, Event, Acknowledgement)) of
         when Runtime.Admission.Queued:
           InputId := Id;
           return App.Admission.Queued(Id);
@@ -241,48 +238,16 @@ public function Start<TModel, TMsg>(
         end if,
         new T.Viewport(Viewport.Columns, Viewport.Rows)
       );
-      var Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
-        Candidate,
-        Theme,
-        CopyFeedback,
-        HoldFeedback,
-        Menus,
-        Confirmations
-      );
+      const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme);
       Phase := 'layout_or_drawing';
-      var Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+      const Native: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
         Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme
       );
-      if Confirm.Reconcile<TMsg>(Confirmations, Native) then
-        Root := Lower.Prepare<TMsg>(
-          Candidate,
-          Theme,
-          CopyFeedback,
-          HoldFeedback,
-          Menus,
-          Confirmations
-        );
-        Native := Arrangement.Arrange<TMsg>(
-          Root,
-          Viewport.Columns,
-          Viewport.Rows,
-          Previous,
-          ScrollOffsets,
-          Theme
-        );
-      end if;
-      const ActiveMenu: A.Scope<TMsg>? := Native.Active;
-      if Menus.Id() <> '' and (ActiveMenu = null or ActiveMenu.Id <> Menus.Id()) then
-        Menus.Close();
-      end if;
-
       return Native with
         Prepared := Candidate;
       end with;
     end function;
   begin
-    discard CopyFeedback.Expire();
-    discard Confirmations.Refresh();
     const Routing: I.State<TMsg>? := Interaction;
     if Routing = null then
       raise new Sys.InvalidOperationException('Missing interaction state.');
@@ -352,26 +317,11 @@ public function Start<TModel, TMsg>(
       return;
     end if;
 
-    if Confirm.Handle<TMsg>(
-      Confirmations,
-      Layout,
-      Entry.Event,
-      Routing.FocusId(),
-      Routing.HoverId()
-    )
-    then
-      return;
-    end if;
-
     case Entry.Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
-        HoldFeedback.Cancel();
         Viewport := new T.Viewport(NewColumns, NewRows);
-      when App.Input.Pointer(_, _, _), App.Input.ButtonPointer(_, _, _, _):
-        I.Dispatch<TMsg>(Routing, Layout, Entry.Event, Entry.ReceivedAt);
       else
-        HoldFeedback.Cancel();
-        I.Dispatch<TMsg>(Routing, Layout, Entry.Event, Entry.ReceivedAt);
+        I.Dispatch<TMsg>(Routing, Layout, Entry.Event);
     end case;
   end procedure;
 
@@ -408,15 +358,6 @@ public function Start<TModel, TMsg>(
       Grids.Flush<TMsg>(PendingSizes, Core.Post);
       case Advanced of
         when Runtime.Step.Idle:
-          if Core.IsOpen() then
-            const CopyChanged: bool := CopyFeedback.Expire();
-            const HoldChanged: bool := HoldFeedback.Refresh();
-            const ConfirmChanged: bool := Confirmations.Refresh();
-            if CopyChanged or HoldChanged or ConfirmChanged then
-              Paint();
-            end if;
-          end if;
-
           return App.StepResult.Idle;
         when Runtime.Step.Input(const Entry: PendingInput):
           // A breakpoint in Update can stop every thread in the debuggee.
@@ -471,10 +412,6 @@ begin
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const PendingSizes: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
-  const CopyFeedback: Copy.State := Copy.Create(WriteClipboard);
-  const HoldFeedback: Hold.State := Hold.Create();
-  const Menus: MenuWidget.State := MenuWidget.Create();
-  const Confirmations: Confirm.State := Confirm.Create();
   var PendingFocus: string? := null;
   var Viewport: T.Viewport := new T.Viewport(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
@@ -496,7 +433,7 @@ begin
       end case;
     end procedure, 64
   );
-  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets, HoldFeedback);
+  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
   CheckSize(Columns, Rows);
   try
     Paint();

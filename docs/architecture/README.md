@@ -14,6 +14,8 @@ the CLR provides execution, garbage collection, exceptions, and tasks.
 | [Async and cleanup](async-and-cleanup.md) | Resumable control flow, reference lifetimes, contracts, and disposal |
 | [Debug information](debug-information.md) | Portable symbols, source scopes, generated methods, and async stepping |
 | [Own debugger core](debugger-core.md) | Native session workers, process containment, state and bounded shutdown |
+| [Native CoreCLR connection](debugger-native.md) | Runtime discovery, shim selection and callback lifetime |
+| [DAP frontend](debugger-dap.md) | Protocol revision, transport framing and session handles |
 | [Passive debugger expressions](debugger-expressions.md) | Bounded source reads, primitive operations and independent inspection errors |
 | [Debugger frontends](../pascal/tools/debugging.md) | DAP sessions, batch reports, protocol limits and editor launch |
 

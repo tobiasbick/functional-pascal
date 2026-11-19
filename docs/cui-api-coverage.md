@@ -21,8 +21,8 @@ C function or adding another spelling for an existing operation.
 | Native open/save/folder dialogs, clipboard, file drops and URL activation | GUI commands and existing file/link widgets |
 | Deferred axis labels, native trace links/hover/geometry, avatars and captions | Existing widget options and `TraceGeometry` |
 
-See the [GUI host](../src/Fpas.Ui.Gui/README.md) and
-[shared widget reference](../src/Fpas.Ui/README.md) for contracts. Font resources,
+See the [GUI host](ui/gui/host.md) and
+[shared widget reference](ui/widgets.md) for contracts. Font resources,
 painting and native caption tables require the GUI host. The terminal host
 retains its semantic palette and cell-based widget subset.
 
@@ -54,4 +54,4 @@ twenty-eight fractional digits. CUI's text field supplies native editing and
 presentation; amount parsing/formatting stays in the CLR and rejects implicit
 rounding. Model values must fit the selected precision. No amount is converted
 through `double`; application currency, rounding and storage policies remain
-explicit. See the [money contract](ui/smart-inputs/money-field.md).
+explicit. See the [money contract](ui/gui/smart-inputs/money-field.md).

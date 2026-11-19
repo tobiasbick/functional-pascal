@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -46,7 +46,6 @@ begin
       return;
     else
   end case;
-  const Widgets: Th.WidgetStyles? := Theme.Widgets;
   const Standard: T.Style := if not Focused then
     Theme.Hover
   else
@@ -60,8 +59,7 @@ begin
         Control.Variant,
         Control.Enabled,
         Focused,
-        not Focused,
-        Control.Appearance
+        not Focused
       ) ?? Standard,
       if Control.Enabled then
         Control.Foreground
@@ -72,24 +70,9 @@ begin
   else
     Standard
   end if;
-  const Filled: int := Bounds.Width * Control.HoldProgress div 100;
-  const FillStyle: T.Style := if Filled > 0 then
-    Hold.FillStyle(
-      Style,
-      Theme.Text.Background ?? 0
-    )
-  else
-    Style
-  end if;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
-      Mark(
-        X, Y, if X < Bounds.X + Filled then
-          FillStyle
-        else
-          Style
-        end if
-      );
+      Mark(X, Y, Style);
     end for;
   end for;
 end procedure;

@@ -12,7 +12,7 @@ uses Fpas.Ui.Elements as E, System as Sys;
 // - `OnCopied`: Optional message factory invoked after submitting the text.
 // - `Enabled`: Whether the control accepts input.
 // ## Returns
-// A portable copy button.
+// A graphical copy button.
 public function CopyButton<TMsg>(
   Id: string; Text: string; OnCopied: Sys.Func<TMsg>? := null; Enabled: bool := true
 ): E.Element<TMsg>;

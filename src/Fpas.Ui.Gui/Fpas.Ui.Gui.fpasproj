@@ -13,6 +13,6 @@
     <ProjectReference Include="../Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" />
     <ProjectReference Include="../Fpas.Ui/Fpas.Ui.fpasproj" />
     <ProjectReference Include="../Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
-    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../docs/ui/gui/host.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 </Project>

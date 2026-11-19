@@ -11,7 +11,7 @@ uses
   System as Sys;
 
 function Items(ShowResult: bool): array of Split.Item<State.Msg>;
-  function Item(Key: string; Caption: string; Glyph: int; TerminalIcon: string): Split.Item<State.Msg>;
+  function Item(Key: string; Caption: string; Glyph: int): Split.Item<State.Msg>;
   begin
     return new Split.Item<State.Msg>(
       Key, Caption, if ShowResult then
@@ -23,19 +23,14 @@ function Items(ShowResult: bool): array of Split.Item<State.Msg>;
         Sys.Char.ConvertFromUtf32(Glyph)
       else
         ''
-      end if,
-      if ShowResult then
-        TerminalIcon
-      else
-        ''
       end if
     );
   end function;
 begin
   return [
-    Item('draft', 'Save as draft', $E0CC, '▤'),
-    Item('publish', 'Save and publish', $E152, '↑'),
-    Item('schedule', 'Schedule…', $E087, '◷')
+    Item('draft', 'Save as draft', $E0CC),
+    Item('publish', 'Save and publish', $E152),
+    Item('schedule', 'Schedule…', $E087)
   ];
 end function;
 
@@ -50,14 +45,13 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
 begin
   const Save: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
     'split-save', 'Save', State.Msg.SplitChoice('Saved'), Items(true),
-    new Split.Options(Icon := Sys.Char.ConvertFromUtf32($E14D), TerminalIcon := '↓')
+    new Split.Options(Icon := Sys.Char.ConvertFromUtf32($E14D))
   );
   const Export: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
     'split-export', 'Export', State.Msg.Preview, Items(false),
     new Split.Options(
       Variant := S.ButtonVariant.Outline,
-      Icon := Sys.Char.ConvertFromUtf32($E0B2),
-      TerminalIcon := '↓'
+      Icon := Sys.Char.ConvertFromUtf32($E0B2)
     )
   );
   const Content: array of E.Element<State.Msg> := if Model.SplitResult = '' then

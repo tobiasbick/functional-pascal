@@ -58,42 +58,24 @@ begin
   end if;
 end function;
 
-public procedure Divider(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
+// Paints the horizontal border of the status bar in the visible cells.
+public procedure HorizontalRule(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
   Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
-  const Width: int := Clip.X + Clip.Width - Area.X;
-  const Edge: char := HorizontalEdge(Widgets);
-  var Caption: string := '';
-  if Title <> '' and Width > 4 then
-    const Normalized: string := G.SingleLine(Title);
-    Caption := Normalized.Substring(0, G.IndexAt(Normalized, 0, Width - 4));
+  const Line: F.Rect := F.Intersect(Area, Clip);
+  if Line.Width > 0 and Line.Height > 0 then
+    Operations.Add(
+      new Operation(
+        new string(HorizontalEdge(Widgets), Line.Width),
+        Line,
+        Line,
+        BorderStyle(Style, Widgets),
+        false
+      )
+    );
   end if;
-
-  const Prefix: string := if Caption = '' then
-    ''
-  else
-    new string(
-      Edge,
-      1
-    ) + ' ' + Caption + ' '
-  end if;
-  const Length: int := if Prefix = '' then
-    0
-  else
-    G.Measure(Prefix)
-  end if;
-  const Line: F.Rect := new F.Rect(Area.X, Area.Y, Width, 1);
-  Operations.Add(
-    new Operation(
-      Prefix + new string(Edge, Width - Length),
-      Line,
-      Clip,
-      BorderStyle(Style, Widgets),
-      false
-    )
-  );
 end procedure;
 
 public procedure Border(

@@ -9,17 +9,6 @@ public type IActivatable<TMsg> = protocol
   function Activate(): Result<TMsg>;
 end protocol;
 
-// A composite action whose Left/Right keys move focus to a neighboring action.
-public type IArrowFocus = protocol
-  // Resolves an adjacent application focus identity without changing the model.
-  //
-  // ## Parameters
-  // - `Direction`: Minus one for Left or one for Right.
-  // ## Returns
-  // An adjacent identity, or null at a non-wrapping boundary.
-  function Neighbor(Direction: int): string?;
-end protocol;
-
 public type Direct<TMsg> = record implements IActivatable<TMsg>
   public Message: TMsg;
   // Whether activation is suspended while the widget is busy.

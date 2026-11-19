@@ -10,8 +10,6 @@ public type Options = record
   public TimeoutMilliseconds: int := 3000;
   // Optional native glyph before the resting caption.
   public Icon: string := '';
-  // Terminal equivalent of the resting glyph; empty omits it.
-  public TerminalIcon: string := '';
   // Resting appearance; the confirmation uses the destructive style.
   public Variant: S.ButtonVariant := S.ButtonVariant.Secondary;
   // Requested control size.
@@ -30,7 +28,7 @@ end record;
 // - `Message`: Proposed once when the second activation confirms.
 // - `Settings`: Confirmation caption, timeout, appearance and input permission.
 // ## Returns
-// A portable confirmation button. Escape, an outside click or timeout disarms it.
+// A graphical confirmation button. Escape, an outside click or timeout disarms it.
 public function ConfirmButton<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

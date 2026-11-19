@@ -2,7 +2,7 @@
 
 All 220 catalog entries have GUI acceptance. Each entry records the tested
 behavior, gallery example and terminal coverage where available. See the
-[FPAS widget reference](../src/Fpas.Ui/README.md) for public API contracts.
+[FPAS widget reference](ui/widgets.md) for public API contracts.
 The [CUI API coverage](cui-api-coverage.md) classifies native application services,
 custom painting and backend/helper functions outside the widget catalog.
 
@@ -15,7 +15,7 @@ inspection. Compose existing CUI primitives before adding a native adapter.
 Do not build a second GUI widget or layout engine. Keep unavoidable knowledge
 of private CUI state and IDs inside the native bridge, not in C# or FPAS.
 
-TUI annotations record the capabilities implemented in the terminal host.
+The [terminal widget guide](ui/tui/README.md) lists the controls demonstrated in the TUI gallery.
 CUI widget ports target the GUI. Shared changes
 must preserve the implemented terminal subset and reject unsupported GUI
 capabilities in TUI preflight.
@@ -95,11 +95,11 @@ primitives without changing the native palette themselves. GUI `StartThemed` and
 `RunThemed` supply CUI's
 system appearance hint to the application's theme provider; the provider chooses
 the palette. Terminal theme detection remains application-owned. See the
-[system appearance contract](../src/Fpas.Ui.Gui/README.md#system-appearance).
+[system appearance contract](ui/gui/host.md#system-appearance).
 
 ### Layout compatibility
 
-The [Layout chapter](ui/layout/README.md) shows the layered stack, logical
+The [Layout chapter](ui/gui/layout/README.md) shows the layered stack, logical
 spacing and horizontal scroll viewport in the gallery.
 
 The GUI passes the [shared box-layout subset][fpas-layout] to CUI's native
@@ -142,7 +142,7 @@ by the FPAS adapters.
 
 ### Text, icons, and display
 
-The [Text and display chapter](ui/text-and-display/README.md) shows native
+The [Text and display chapter](ui/gui/text-and-display/README.md) shows native
 text, glyphs, keycaps, images and the interactive swatch canvas.
 
 - [x] Text, including heading, label, secondary, muted, and inline code
@@ -170,7 +170,7 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
   cards in responsive grids. The gallery checks equal row heights and reflow
   after resizing. Feedback uses CUI's Around justification for the Goals rings.
   The graphical profile is required.
-- [x] [Metric](ui/overview/metric.md) (`cui_metric`). [API][fpas-surfaces]. Overview shows the original
+- [x] [Metric](ui/gui/overview/metric.md) (`cui_metric`). [API][fpas-surfaces]. Overview shows the original
   three tiles, including the Frame time trend and sparkline. The graphical
   profile is required.
 - [x] Empty state (`cui_empty_state`). [API][fpas-surfaces]. Feedback shows
@@ -181,7 +181,7 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
 - [x] Interactive canvas (`cui_canvas`): native rectangle, circle and line
   commands and local click coordinates. The gallery reuses the original
   sidebar swatch drawings in a standalone selection example. The native test
-  checks the click coordinates. [Custom paint callbacks](ui/canvas-and-bars/painting.md)
+  checks the click coordinates. [Custom paint callbacks](ui/gui/canvas-and-bars/painting.md)
   expose native drawing and text measurement; `OnPointer` reports hover and
   press transitions with local coordinates. Optional `OnWheel` maps horizontal/vertical
   line deltas using `cui_wheel_region` and `cui_wheel_take`; CUI owns clipping,
@@ -194,33 +194,25 @@ contract checks the keycap and inline code text and clicks a swatch.
 
 ### Actions and selection
 
-See the illustrated [Actions](ui/actions/README.md) and
-[Selection](ui/selection/README.md) chapters for examples, options and interaction.
+See the illustrated [Actions](ui/gui/actions/README.md) and
+[Selection](ui/gui/selection/README.md) chapters for examples, options and interaction.
 
 - [x] Button (`cui_button`): [API][fpas-button]. TUI: implemented; explicit terminal
   glyphs, static busy mark, one- or two-row sizes.
-- [x] Icon button (`cui_icon_button`): [API][fpas-icon-button]. TUI: implemented;
-  explicit terminal glyph or tooltip text.
-- [x] Button group (`cui_button_group`): [API][fpas-button-group]. TUI: implemented;
-  connected cell outline and dividers, independent member focus and messages.
+- [x] Icon button (`cui_icon_button`): [API][fpas-icon-button].
+- [x] Button group (`cui_button_group`): [API][fpas-button-group].
 - [x] Copy button (`cui_copy_button`): [API][fpas-copy-button]. GUI uses CUI's
-  clipboard provider. TUI: implemented; OSC 52 requires terminal clipboard permission.
+  clipboard provider.
 - [x] Hold-to-confirm button (`cui_hold_button`): [API][fpas-hold-button]. GUI
-  fires at completion through native pointer, Space or Enter holds. TUI: implemented;
-  confirm on pointer release after the same duration. Terminal input supplies no
-  key release events, so keyboard holds cannot be reproduced.
+  fires at completion through native pointer, Space or Enter holds.
 - [x] Split button (`cui_split_button`): [API][fpas-split-button]. GUI delegates
-  popup navigation to CUI. TUI: implemented; fitted cell popup, wheel/page-key scrolling.
-- [x] Confirm button (`cui_confirm_button`): [API][fpas-confirm-button]. TUI:
-  implemented; remaining seconds replace animated countdown faces, with pointer,
-  Enter and typed Space activation.
-- [x] Status button (`cui_status_button`): [API][fpas-status-button]. TUI: implemented;
-  static busy mark, result symbols and semantic status colors replace animations.
+  popup navigation to CUI.
+- [x] Confirm button (`cui_confirm_button`): [API][fpas-confirm-button].
+- [x] Status button (`cui_status_button`): [API][fpas-status-button].
 - [x] Theme switcher (`cui_theme_switcher`): [API][fpas-theme-switcher]. GUI
-  composes native segments. TUI: implemented; joined text segments preserve the
-  controlled selection, focus, keyboard and application-provider contract.
+  composes native segments.
 - [x] Theme toggle (`cui_theme_toggle`): [API][fpas-theme-toggle]. GUI composes
-  the native icon button. TUI: implemented; target caption with sun/moon symbol.
+  the native icon button.
 - [x] Reactions (`cui_reactions`): [API][fpas-reactions]. GUI delegates the
   count animation and interaction to CUI and returns the changed item to the model.
 - [x] Speed dial (`cui_speed_dial`): [API][fpas-speed-dial]. Actions shows the
@@ -236,8 +228,6 @@ See the illustrated [Actions](ui/actions/README.md) and
   touchpads inside a vertical scroll view.
 - [x] Segmented control (`cui_segmented`): [API][fpas-segmented]. GUI uses native
   CUI; Buttons contains the upstream view and compact date-range examples.
-  TUI: implemented; joined cell segments, explicit glyphs or labels, Tab and
-  non-wrapping Left/Right selection, with the model owning acceptance.
 - [x] Toggle group (`cui_toggle_group`): [API][fpas-toggle-group]. The GUI
   Actions page shows the original independent formatting and exclusive
   alignment examples. TUI: deferred; graphical profile required.
@@ -265,8 +255,8 @@ See the illustrated [Actions](ui/actions/README.md) and
 
 ### Inputs and pickers
 
-See [Inputs](ui/inputs/README.md), [Smart inputs](ui/smart-inputs/README.md)
-and [Pickers](ui/pickers/README.md) for gallery screenshots, FPAS examples
+See [Inputs](ui/gui/inputs/README.md), [Smart inputs](ui/gui/smart-inputs/README.md)
+and [Pickers](ui/gui/pickers/README.md) for gallery screenshots, FPAS examples
 and widget options.
 
 - [x] Text field, including password mode, prefix, and suffix (`cui_input`):
@@ -386,7 +376,7 @@ caption as an intentional FPAS adaptation.
   Pickers shows the original 24-bin Price example and verifies both endpoints.
   Windows captures of the complete page at rest and after price adjustment
   match the CUI content within one level per color channel.
-- [x] Knob (`cui_knob`): [API][fpas-audio]. See [Audio](ui/audio/README.md)
+- [x] Knob (`cui_knob`): [API][fpas-audio]. See [Audio](ui/gui/audio/README.md)
   for screenshots and examples. The gallery shows the original Cutoff,
   Resonance, Attack and Pan. The gallery verifies logarithmic reset and drag.
   TUI: graphical profile required.
@@ -398,7 +388,7 @@ caption as an intentional FPAS adaptation.
   The accepted Audio content matches CUI pixel for pixel in Windows software
   captures at 1201 and 900 points with the same signal phase.
   TUI: graphical profile required.
-- [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. See [Capture](ui/capture/README.md)
+- [x] Dropzone (`cui_dropzone`): [API][fpas-capture]. See [Capture](ui/gui/capture/README.md)
   for screenshots and examples. The gallery shows the original
   tall and compact targets. Windows tests verify accepted and rejected shell
   drops and confirmation and cancellation in the native file dialog.
@@ -415,7 +405,7 @@ caption as an intentional FPAS adaptation.
 
 ### Creative controls
 
-See [Creative controls](ui/creative-controls/README.md) for gallery screenshots
+See [Creative controls](ui/gui/creative-controls/README.md) for gallery screenshots
 and FPAS examples.
 
 - [x] Status tag (`cui_status_tag`): [API][fpas-creative]. Creative controls
@@ -448,9 +438,9 @@ checks that the slider wells stack in one column.
 
 ### Navigation and app chrome
 
-The [Navigation chapter](ui/navigation/README.md) shows the sidebar, tabs,
-breadcrumb, pagination and stepper. [Reader](ui/reader/README.md) covers
-outlines and anchors. [App chrome](ui/app-chrome/README.md) covers the native
+The [Navigation chapter](ui/gui/navigation/README.md) shows the sidebar, tabs,
+breadcrumb, pagination and stepper. [Reader](ui/gui/reader/README.md) covers
+outlines and anchors. [App chrome](ui/gui/app-chrome/README.md) covers the native
 editor bars, document tabs, docking and split panes.
 
 - [x] Sidebar navigation (`cui_nav_item`, `cui_nav_section`): [API][sidebar].
@@ -489,7 +479,7 @@ editor bars, document tabs, docking and split panes.
   and flyout markers (`cui_toolbar_group`, `cui_toolbar_radio`,
   `cui_toolbar_primary`, `cui_toolbar_cycle`, `cui_flyout_mark`). Canvas and
   bars shows the grouped and floating examples. The native test advances a
-  cycle control. [API](../src/Fpas.Ui/README.md#canvas-and-bars)
+  cycle control. [API](ui/widgets.md#canvas-and-bars)
 - [x] Document tabs (`cui_doc_tabs`): the App chrome editor shows the native
   strip with dirty markers and tooltips. The Windows gallery checks selecting,
   moving and closing the same document with the keyboard.
@@ -505,7 +495,7 @@ editor bars, document tabs, docking and split panes.
 - [x] Split view (`cui_split`): App chrome includes a resizable two-pane example.
   The Windows tests drag the divider with pane minimums that exceed the allocated width.
 
-The [desktop chrome APIs](../src/Fpas.Ui/README.md#desktop-chrome) require
+The [desktop chrome APIs](ui/widgets.md#desktop-chrome) require
 the graphical profile. The native Windows test compares all five widgets with
 direct CUI at 740 and 360 points, in light and dark, with zero differing pixels.
 The Windows gallery contract exercises keyboard and pointer input in Software
@@ -515,14 +505,12 @@ gallery pixel parity.
 
 ### Overlays and disclosure
 
-See [Overlays](ui/overlays/README.md) and [Disclosure](ui/disclosure/README.md)
+See [Overlays](ui/gui/overlays/README.md) and [Disclosure](ui/gui/disclosure/README.md)
 for gallery screenshots, FPAS examples and widget options.
 
 - [x] Dropdown menu and its items (`cui_menu`, `cui_menu_item`, `cui_menu_label`,
-  `cui_menu_separator`): [API][fpas-menu]. Both galleries show the original
-  Options and More actions examples. GUI uses native CUI. TUI: implemented;
-  shared split-button popup, fitted cell placement, keyboard selection,
-  command states, shortcut hints, sections and separators.
+  `cui_menu_separator`): [API][fpas-menu]. The GUI gallery shows the original
+  Options and More actions examples using native CUI.
 - [x] Context menu (`cui_context_menu`): [API][fpas-context-menu]. GUI attaches
   native CUI menus to existing target components and shares dropdown commands,
   conversion and inspection. The Overlays gallery shows Cut/Copy/Paste/Delete.
@@ -580,7 +568,7 @@ for gallery screenshots, FPAS examples and widget options.
   Native pixel comparisons cover all three widgets in light/dark and narrow/wide
   configurations. Gallery captures cover Data display and Disclosure.
 - [x] Guided tour (`cui_tour`): [API][fpas-tour].
-  See the [guide](ui/overlays/guided-tour.md). Audio shows the original
+  See the [guide](ui/gui/overlays/guided-tour.md). Audio shows the original
   three-step tour of the Cutoff knob, master meter and Bass fader. CUI owns
   the spotlight, card, positioning, animation and input. Software/OpenGL tests
   cover Next, Back, Done, Escape, closing, reopening, focus, model proposals
@@ -597,7 +585,7 @@ for gallery screenshots, FPAS examples and widget options.
 
 ### Feedback and progress
 
-See [Feedback](ui/feedback/README.md) for gallery screenshots, FPAS examples
+See [Feedback](ui/gui/feedback/README.md) for gallery screenshots, FPAS examples
 and widget options.
 
 - [x] Toast, including timed undo toast (`cui_toast`, `cui_toast_action_clicked`):
@@ -673,7 +661,7 @@ and widget options.
 
 ### Lists, tables, and files
 
-The [Data display chapter](ui/data-display/README.md) covers the gallery's
+The [Data display chapter](ui/gui/data-display/README.md) covers the gallery's
 table, tree, list items, reorderable list, accordion and virtual list.
 
 - [x] List item (`cui_list_item`): [API][fpas-data-display]. Data display
@@ -697,12 +685,12 @@ Windows reference in Software and OpenGL at 1100×1800 and scale one. The
 reference uses the same reserved example domain for the People addresses.
 These widgets require the graphical profile.
 
-See [Data grid](ui/data-grid/README.md) for screenshots and FPAS examples.
+See [Data grid](ui/gui/data-grid/README.md) for screenshots and FPAS examples.
 
 - [x] Data grid, including editable cells (`cui_data_grid_begin`,
   `cui_data_grid_row`, `cui_data_grid_cell`, `cui_data_grid_cell_text`,
   `cui_data_grid_edit`, `cui_data_grid_cell_edit`):
-  [API](../src/Fpas.Ui/README.md#data-grid-filter-bar-and-tree-table).
+  [API](ui/widgets.md#data-grid-filter-bar-and-tree-table).
   The original People demo realizes rows on demand from 2,000 records.
   Windows checks cover sorting, column resizing, range selection, editing and
   scrolling, including shrinking while scrolled.
@@ -721,7 +709,7 @@ default `qsort` can order tied rows differently. A direct CUI rendering of the
 supplementary example also matches in both renderers. The new widgets require
 the graphical profile.
 
-See [Files](ui/files/README.md) for screenshots and FPAS examples.
+See [Files](ui/gui/files/README.md) for screenshots and FPAS examples.
 
 - [x] Path bar and its dropdown (`cui_path_bar`, `cui_path_bar_menu_begin`):
   native segment navigation, editable path and child menus. Files shows
@@ -738,7 +726,7 @@ is tracked under code and tool panels. [Files API][fpas-files-planning]
 
 ### Code and tool panels
 
-See [Code](ui/code/README.md) and [Editing tools](ui/editing-tools/README.md)
+See [Code](ui/gui/code/README.md) and [Editing tools](ui/gui/editing-tools/README.md)
 for gallery screenshots and FPAS examples.
 
 - [x] Code block (`cui_code_block`): the Code page reproduces the C, Python
@@ -766,7 +754,7 @@ for gallery screenshots and FPAS examples.
 - [x] Log console (`cui_log_view`): original timestamped build log with native
   filters, copy, follow and clear. The native test verifies timestamped
   clipboard contents and the clear proposal.
-- [x] Terminal widget (`cui_terminal`): [guide](ui/files/terminal.md).
+- [x] Terminal widget (`cui_terminal`): [guide](ui/gui/files/terminal.md).
   Original Files shell with built-in
   commands, ANSI output, native input and history. The native test verifies
   submission, history and Ctrl+C; the gallery contract verifies command
@@ -796,8 +784,8 @@ positions per width. The supplementary Files path bar is outside the comparison.
 
 ### Developer tools
 
-See [Developer tools](ui/developer-tools/README.md) and
-[More developer tools](ui/more-developer-tools/README.md) for gallery
+See [Developer tools](ui/gui/developer-tools/README.md) and
+[More developer tools](ui/gui/more-developer-tools/README.md) for gallery
 screenshots and FPAS examples.
 
 - [x] Key-value editor (`cui_kv_editor`)
@@ -826,7 +814,7 @@ screenshots and FPAS examples.
 - [x] API explorer (`cui_api_explorer`)
 
 The original Developer tools and More developer tools pages exercise these
-[graphical APIs](../src/Fpas.Ui/README.md#developer-tools). The page content
+[graphical APIs](ui/widgets.md#developer-tools). The page content
 matches the pinned CUI reference on Windows at 1100 × 1700 and scale 1.
 Software and OpenGL comparisons covered three scroll positions per page with
 the same animation clock. Focused tests cover trace folding and measurement,
@@ -835,13 +823,13 @@ and query-parameter synchronization.
 
 ### Charts and instruments
 
-See [Charts](ui/charts/README.md), [More charts](ui/more-charts/README.md)
-and [Instruments](ui/instruments/README.md) for gallery screenshots, FPAS
+See [Charts](ui/gui/charts/README.md), [More charts](ui/gui/more-charts/README.md)
+and [Instruments](ui/gui/instruments/README.md) for gallery screenshots, FPAS
 examples and widget options.
 
 - [x] Line/area chart, smoothing and stacked dither (`cui_line_chart`),
   grouped/stacked bars (`cui_bar_chart`) and responsive donut
-  (`cui_donut_chart`): [API](../src/Fpas.Ui/README.md#charts).
+  (`cui_donut_chart`): [API](ui/widgets.md#charts).
   Charts reproduces their original data, labels, formatting and theme palette.
 - [x] Sparkline (`cui_sparkline`): a standalone example on Charts shows
   the native compact line and endpoint.
@@ -858,7 +846,7 @@ examples and widget options.
 - [x] Heatmap (`cui_heatmap`), calendar heatmap (`cui_calendar_heatmap`),
   treemap (`cui_treemap`), radar (`cui_radar_chart`), funnel (`cui_funnel`),
   split bar (`cui_split_bar`) and waffle (`cui_waffle`):
-  [API](../src/Fpas.Ui/README.md#visualizations). More charts reproduces the
+  [API](ui/widgets.md#visualizations). More charts reproduces the
   original first seven examples, including their data, text, 1.3:1 column ratio,
   palette, labels and native responsive behavior. CUI owns drawing and input;
   the bridge supplies frame-owned text and optional activation/selection messages.
@@ -870,7 +858,7 @@ examples and widget options.
 - [x] Sankey (`cui_sankey`), bar list (`cui_bar_list`), activity rings
   (`cui_activity_rings`), scatter/bubble chart (`cui_scatter_chart`), radial
   gauge (`cui_radial_gauge`) and candlestick/OHLC chart (`cui_candlestick`):
-  [API](../src/Fpas.Ui/README.md#flows-ranks-and-instruments).
+  [API](ui/widgets.md#flows-ranks-and-instruments).
   More charts reproduces the complete original page, including Shuffle,
   native ring progress above one, bubble sizes, all three radial styles and
   2,000 OHLC periods. CUI owns layout, animation, hit-testing, zoom, panning,
@@ -917,13 +905,13 @@ which remains a separate native build option.
 
 ### Conversation and media
 
-See [Social and media](ui/social-and-media/README.md) and
-[Voice](ui/voice/README.md) for gallery screenshots and FPAS examples.
+See [Social and media](ui/gui/social-and-media/README.md) and
+[Voice](ui/gui/voice/README.md) for gallery screenshots and FPAS examples.
 
 - [x] Chat message (`cui_chat_message`): the original grouped conversation
   shows outgoing and incoming bubbles, sender information and read receipts.
   The API accepts avatar paths and renders native Markdown in the message.
-  The standalone [Markdown widget](ui/code/markdown.md) reports link and task events.
+  The standalone [Markdown widget](ui/gui/code/markdown.md) reports link and task events.
 - [x] Chat divider (`cui_chat_divider`): the original Today divider.
 - [x] Typing indicator (`cui_typing_indicator`): Jonas and the native dots.
   The dots stay still with reduced motion.
@@ -970,7 +958,7 @@ standalone sparkline matches direct CUI in the fixed-frame Software comparison.
 
 ### Planning and diagram editors
 
-See [Planning](ui/planning/README.md) for screenshots and FPAS examples.
+See [Planning](ui/gui/planning/README.md) for screenshots and FPAS examples.
 
 - [x] Kanban board, columns, and cards (`cui_kanban_begin`, `cui_kanban_column_begin`,
   `cui_kanban_card_begin`): native columns, composed card content and drag between columns.
@@ -991,7 +979,7 @@ events. [Planning API][fpas-files-planning]
 
 ### Canvas and bars
 
-See [Canvas and bars](ui/canvas-and-bars/README.md) for gallery screenshots
+See [Canvas and bars](ui/gui/canvas-and-bars/README.md) for gallery screenshots
 and FPAS examples, including the node editor and toolbar.
 
 - [x] Format bar (`cui_format_bar`): the original color, styles, alignment,
@@ -1012,7 +1000,7 @@ and FPAS examples, including the node editor and toolbar.
   file and clears the selection. Native count formatting and aggregate-count
   mode preserve the clear proposal without allocating item flags.
 
-The [Canvas and bars APIs](../src/Fpas.Ui/README.md#canvas-and-bars) use the
+The [Canvas and bars APIs](ui/widgets.md#canvas-and-bars) use the
 graphical profile. Windows captures at 1100 × 1700 and 550 × 1700, scale 1,
 match the original page content at rest and after scrolling the narrow layout.
 The wide OpenGL capture differs in one pixel by one RGB level on an
@@ -1021,7 +1009,7 @@ both sizes in software and OpenGL.
 
 ### Motion
 
-See [Motion](ui/motion/README.md) for gallery screenshots and FPAS examples
+See [Motion](ui/gui/motion/README.md) for gallery screenshots and FPAS examples
 of these effects and the compact controls shown on the same page.
 
 - [x] Shimmer text (`cui_shimmer_text`): [API][fpas-motion]. Motion shows the
@@ -1052,7 +1040,7 @@ follows the original page content.
 
 ### AI interfaces
 
-See [AI](ui/ai/README.md) for gallery screenshots and FPAS examples.
+See [AI](ui/gui/ai/README.md) for gallery screenshots and FPAS examples.
 
 - [x] Reasoning panel (`cui_reasoning_begin`): the original expandable thought
   with app-supplied content and running/finished state.
@@ -1064,7 +1052,7 @@ See [AI](ui/ai/README.md) for gallery screenshots and FPAS examples.
 - [x] Source list (`cui_source_list`): the original horizontally scrolling cards.
 - [x] Citation (`cui_citation`): the three original inline source previews.
 - [x] Composer (`cui_chat_composer`): the original AI editor and Voice recorder.
-  See the [Composer guide](ui/voice/composer.md).
+  See the [Composer guide](ui/gui/voice/composer.md).
   Windows checks UTF-8, Shift+Enter, send, stop, recording, cancel and voice send.
 - [x] Model picker (`cui_model_picker`): the embedded menu and a supplementary
   standalone example. Windows checks keyboard selection.
@@ -1084,9 +1072,9 @@ native animation phase to match the reduced-motion workaround. The standalone
 model picker and legacy voice orb follow the original content.
 
 [revision]: https://github.com/yappologistic/CUI/tree/86d9781bbc3c35c264ec46287ad89c1d86a4c4de
-[fpas-motion]: ../src/Fpas.Ui/README.md#motion-and-compact-controls
-[fpas-creative]: ../src/Fpas.Ui/README.md#creative-controls
-[fpas-files-planning]: ../src/Fpas.Ui/README.md#files-and-planning
+[fpas-motion]: ui/widgets.md#motion-and-compact-controls
+[fpas-creative]: ui/widgets.md#creative-controls
+[fpas-files-planning]: ui/widgets.md#files-and-planning
 [components]: https://github.com/yappologistic/CUI/blob/86d9781bbc3c35c264ec46287ad89c1d86a4c4de/docs/components.md
 [header]: https://github.com/yappologistic/CUI/blob/86d9781bbc3c35c264ec46287ad89c1d86a4c4de/include/cui/cui.h
 [gallery]: https://github.com/yappologistic/CUI/blob/86d9781bbc3c35c264ec46287ad89c1d86a4c4de/examples/gallery_ui.c
@@ -1096,69 +1084,69 @@ model picker and legacy voice orb follow the original content.
 [input-limits]: https://github.com/yappologistic/CUI/blob/86d9781bbc3c35c264ec46287ad89c1d86a4c4de/README.md#limitations
 [vendor]: ../third-party/cui/UPSTREAM.md
 [fpas-themes]: ../src/Fpas.Ui/Widgets/Theming/Themes.fpas
-[fpas-layout]: ../src/Fpas.Ui/README.md#layout-and-style
-[fpas-native-layout]: ../src/Fpas.Ui/README.md#native-graphical-layout
-[sidebar]: ../src/Fpas.Ui/README.md#sidebar-navigation
-[fpas-sheet]: ../src/Fpas.Ui/README.md#sheet-and-drawer
-[fpas-icon-button]: ../src/Fpas.Ui/README.md#icon-button
-[fpas-button]: ../src/Fpas.Ui/README.md#button
-[fpas-button-group]: ../src/Fpas.Ui/README.md#button-group
-[fpas-segmented]: ../src/Fpas.Ui/README.md#segmented-control
-[fpas-toggle-group]: ../src/Fpas.Ui/README.md#toggle-group
-[fpas-selection]: ../src/Fpas.Ui/README.md#checkbox-switch-and-radio-controls
-[fpas-radio-cards]: ../src/Fpas.Ui/README.md#radio-cards
-[fpas-sliders]: ../src/Fpas.Ui/README.md#slider-and-range-slider
-[fpas-ruler-histogram]: ../src/Fpas.Ui/README.md#ruler-and-histogram-sliders
-[fpas-audio]: ../src/Fpas.Ui/README.md#audio-controls
-[fpas-tour]: ../src/Fpas.Ui/README.md#guided-tour
-[fpas-capture]: ../src/Fpas.Ui/README.md#capture-controls
-[fpas-surfaces]: ../src/Fpas.Ui/README.md#native-grids-and-surfaces
-[fpas-reader]: ../src/Fpas.Ui/README.md#table-of-contents-and-scroll-anchors
-[fpas-hover-card]: ../src/Fpas.Ui/README.md#link-avatar-and-hover-card
-[fpas-disclosure-feedback]: ../src/Fpas.Ui/README.md#banner-countdown-and-checklist
-[fpas-chips-rating]: ../src/Fpas.Ui/README.md#chip-and-rating
-[fpas-navigation-controls]: ../src/Fpas.Ui/README.md#tabs-breadcrumb-and-pagination
-[fpas-stepper]: ../src/Fpas.Ui/README.md#stepper
-[fpas-toast]: ../src/Fpas.Ui.Gui/README.md#toasts
-[fpas-copy-button]: ../src/Fpas.Ui/README.md#copy-button
-[fpas-hold-button]: ../src/Fpas.Ui/README.md#hold-to-confirm
-[fpas-confirm-button]: ../src/Fpas.Ui/README.md#confirm-button
-[fpas-status-button]: ../src/Fpas.Ui/README.md#status-button
-[fpas-theme-switcher]: ../src/Fpas.Ui/README.md#theme-switcher
-[fpas-theme-toggle]: ../src/Fpas.Ui/README.md#theme-toggle
-[fpas-split-button]: ../src/Fpas.Ui/README.md#split-button
-[fpas-menu]: ../src/Fpas.Ui/README.md#dropdown-menu
-[fpas-reactions]: ../src/Fpas.Ui/README.md#reactions
-[fpas-speed-dial]: ../src/Fpas.Ui/README.md#speed-dial
-[fpas-swipe-actions]: ../src/Fpas.Ui/README.md#swipe-actions
-[fpas-user-menu]: ../src/Fpas.Ui/README.md#user-menu
-[fpas-context-menu]: ../src/Fpas.Ui/README.md#context-menu
-[fpas-popovers]: ../src/Fpas.Ui/README.md#popover-and-confirmation-popover
-[fpas-text-field]: ../src/Fpas.Ui/README.md#text-field
-[fpas-smart-inputs]: ../src/Fpas.Ui/README.md#smart-inputs
-[fpas-search-field]: ../src/Fpas.Ui/README.md#search-field
-[fpas-text-area]: ../src/Fpas.Ui/README.md#text-area
-[fpas-number-field]: ../src/Fpas.Ui/README.md#number-field
-[fpas-tag-input]: ../src/Fpas.Ui/README.md#tag-input
-[fpas-one-time-code]: ../src/Fpas.Ui/README.md#one-time-code-input
-[fpas-password-strength]: ../src/Fpas.Ui/README.md#password-strength-meter
-[fpas-select]: ../src/Fpas.Ui/README.md#select
-[fpas-multi-select]: ../src/Fpas.Ui/README.md#multi-select
-[fpas-date-range]: ../src/Fpas.Ui/README.md#date-range
-[fpas-calendar]: ../src/Fpas.Ui/README.md#calendar-and-date-picker
-[fpas-color-emoji]: ../src/Fpas.Ui/README.md#color-and-emoji-pickers
-[fpas-time-controls]: ../src/Fpas.Ui/README.md#time-picker-wheel-picker-and-time-dial
-[fpas-dialog]: ../src/Fpas.Ui/README.md#dialog-and-action-footer
-[fpas-accordion]: ../src/Fpas.Ui/README.md#accordion-and-expandable-card
-[fpas-data-display]: ../src/Fpas.Ui/README.md#data-display
-[fpas-command-palette]: ../src/Fpas.Ui/README.md#command-palette
-[fpas-expandable-text]: ../src/Fpas.Ui/README.md#expandable-text
-[fpas-feedback]: ../src/Fpas.Ui/README.md#alerts-progress-and-spinners
-[fpas-meter]: ../src/Fpas.Ui/README.md#meter
-[fpas-progress-ring]: ../src/Fpas.Ui/README.md#progress-ring
-[fpas-timeline]: ../src/Fpas.Ui/README.md#timeline-item
-[fpas-skeleton]: ../src/Fpas.Ui/README.md#skeleton
-[fpas-tooltip]: ../src/Fpas.Ui/README.md#tooltip
+[fpas-layout]: ui/widgets.md#layout-and-style
+[fpas-native-layout]: ui/widgets.md#native-graphical-layout
+[sidebar]: ui/widgets.md#sidebar-navigation
+[fpas-sheet]: ui/widgets.md#sheet-and-drawer
+[fpas-icon-button]: ui/widgets.md#icon-button
+[fpas-button]: ui/widgets.md#button
+[fpas-button-group]: ui/widgets.md#button-group
+[fpas-segmented]: ui/widgets.md#segmented-control
+[fpas-toggle-group]: ui/widgets.md#toggle-group
+[fpas-selection]: ui/widgets.md#checkbox-switch-and-radio-controls
+[fpas-radio-cards]: ui/widgets.md#radio-cards
+[fpas-sliders]: ui/widgets.md#slider-and-range-slider
+[fpas-ruler-histogram]: ui/widgets.md#ruler-and-histogram-sliders
+[fpas-audio]: ui/widgets.md#audio-controls
+[fpas-tour]: ui/widgets.md#guided-tour
+[fpas-capture]: ui/widgets.md#capture-controls
+[fpas-surfaces]: ui/widgets.md#native-grids-and-surfaces
+[fpas-reader]: ui/widgets.md#table-of-contents-and-scroll-anchors
+[fpas-hover-card]: ui/widgets.md#link-avatar-and-hover-card
+[fpas-disclosure-feedback]: ui/widgets.md#banner-countdown-and-checklist
+[fpas-chips-rating]: ui/widgets.md#chip-and-rating
+[fpas-navigation-controls]: ui/widgets.md#tabs-breadcrumb-and-pagination
+[fpas-stepper]: ui/widgets.md#stepper
+[fpas-toast]: ui/gui/host.md#toasts
+[fpas-copy-button]: ui/widgets.md#copy-button
+[fpas-hold-button]: ui/widgets.md#hold-to-confirm
+[fpas-confirm-button]: ui/widgets.md#confirm-button
+[fpas-status-button]: ui/widgets.md#status-button
+[fpas-theme-switcher]: ui/widgets.md#theme-switcher
+[fpas-theme-toggle]: ui/widgets.md#theme-toggle
+[fpas-split-button]: ui/widgets.md#split-button
+[fpas-menu]: ui/widgets.md#dropdown-menu
+[fpas-reactions]: ui/widgets.md#reactions
+[fpas-speed-dial]: ui/widgets.md#speed-dial
+[fpas-swipe-actions]: ui/widgets.md#swipe-actions
+[fpas-user-menu]: ui/widgets.md#user-menu
+[fpas-context-menu]: ui/widgets.md#context-menu
+[fpas-popovers]: ui/widgets.md#popover-and-confirmation-popover
+[fpas-text-field]: ui/widgets.md#text-field
+[fpas-smart-inputs]: ui/widgets.md#smart-inputs
+[fpas-search-field]: ui/widgets.md#search-field
+[fpas-text-area]: ui/widgets.md#text-area
+[fpas-number-field]: ui/widgets.md#number-field
+[fpas-tag-input]: ui/widgets.md#tag-input
+[fpas-one-time-code]: ui/widgets.md#one-time-code-input
+[fpas-password-strength]: ui/widgets.md#password-strength-meter
+[fpas-select]: ui/widgets.md#select
+[fpas-multi-select]: ui/widgets.md#multi-select
+[fpas-date-range]: ui/widgets.md#date-range
+[fpas-calendar]: ui/widgets.md#calendar-and-date-picker
+[fpas-color-emoji]: ui/widgets.md#color-and-emoji-pickers
+[fpas-time-controls]: ui/widgets.md#time-picker-wheel-picker-and-time-dial
+[fpas-dialog]: ui/widgets.md#dialog-and-action-footer
+[fpas-accordion]: ui/widgets.md#accordion-and-expandable-card
+[fpas-data-display]: ui/widgets.md#data-display
+[fpas-command-palette]: ui/widgets.md#command-palette
+[fpas-expandable-text]: ui/widgets.md#expandable-text
+[fpas-feedback]: ui/widgets.md#alerts-progress-and-spinners
+[fpas-meter]: ui/widgets.md#meter
+[fpas-progress-ring]: ui/widgets.md#progress-ring
+[fpas-timeline]: ui/widgets.md#timeline-item
+[fpas-skeleton]: ui/widgets.md#skeleton
+[fpas-tooltip]: ui/widgets.md#tooltip
 [gui-gallery-test]: ../tests/Fixtures/gui-host/PublishedGallery.fpas
 [gui-layout-test]: ../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiHostLayoutTests.cs
 [tui-gallery-test]: ../tests/Fpas.IntegrationTests/Tui/TuiGalleryTests.cs

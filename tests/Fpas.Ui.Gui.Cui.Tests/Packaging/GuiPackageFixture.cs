@@ -49,15 +49,17 @@ internal sealed class GuiPackageFixture : IDisposable
             .Save(File("NuGet.Config"));
 
         string inputs = Path.Combine(AppContext.BaseDirectory, "Fixtures", "host");
+        foreach (string folder in new[] { "src", "docs" })
+        {
+            foreach (string source in Directory.EnumerateFiles(Path.Combine(inputs, folder), "*", SearchOption.AllDirectories))
+            {
+                string target = File(Path.GetRelativePath(inputs, source));
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                System.IO.File.Copy(source, target);
+            }
+        }
         foreach (string name in new[] { "Fpas.Ui.Mvu", "Fpas.Ui", "Fpas.Ui.Gui" })
         {
-            string source = Path.Combine(inputs, "src", name);
-            foreach (string file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-            {
-                string target = File("src/" + name + "/" + Path.GetRelativePath(source, file));
-                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                System.IO.File.Copy(file, target);
-            }
             string project = File($"src/{name}/{name}.fpasproj");
             var xml = XDocument.Load(project);
             xml.Root!.SetAttributeValue("Sdk", "Fpas.NET.Sdk/" + Version);

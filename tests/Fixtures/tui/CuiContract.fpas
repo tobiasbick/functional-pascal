@@ -1,6 +1,12 @@
 program CuiContract;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.ButtonGroups as Groups, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Widgets.Actions.CopyButtons as Copy, Fpas.Ui.Tui.Internal.Hosting.Session as Host, Fpas.Ui.Tui.Internal.Terminal.Clipboard as Clipboard, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console, System.Threading as Threads, System.Collections.Generic as Generic;
+uses
+  Fpas.Ui.Widgets.Actions.IconButtons as Icon, Fpas.Ui.Widgets.Actions.CopyButtons as Copy,
+  Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm, Fpas.Ui.Widgets.Actions.HoldButtons as Hold,
+  Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.StatusButtons as Status,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as Segments, Fpas.Ui.Widgets.Actions.ButtonGroups as Groups,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -242,49 +248,6 @@ begin
   Send(Session, Escape, 'open');
 end procedure;
 
-procedure IconAction();
-  function View(State: int): E.Element<int>;
-  begin
-    return E.Column<int>(
-      B.Button<int>('ready', 'Finish loading', 1),
-      Icons.IconButton<int>(
-        'icon', Sys.Char.ConvertFromUtf32($E115), 'Components', 2,
-        new Icons.Options(
-          Loading := State = 0,
-          Enabled := State < 2,
-          Shortcut := 'M',
-          TerminalGlyph := '≡'
-        )
-      )
-    );
-  end function;
-begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 32, 10);
-  discard Session.Send(Tui.Input.Focus('icon'));
-  discard Session.Step();
-  discard Session.Send(Tui.Input.Character(' '));
-  discard Session.Step();
-  const Busy: Tui.ControlSnapshot := Session.Snapshot().Controls[1];
-  Check(
-    Busy.Value = 'loading' and Busy.Focused,
-    'Busy icon button must keep focus and suppress activation.'
-  );
-  discard Session.Send(Tui.Input.Activate('ready'));
-  discard Session.Step();
-  discard Session.Send(Tui.Input.Pointer(Keys.PointerKind.Move, Busy.Column, Busy.Row));
-  discard Session.Step();
-  Check(
-    Session.Snapshot().Lines[9].Contains('Components · M'),
-    'Terminal icon button tooltip and shortcut hint.'
-  );
-  discard Session.Send(Tui.Input.Character(' '));
-  discard Session.Step();
-  Check(
-    not Session.Snapshot().Controls[1].Enabled,
-    'Terminal icon button did not activate from Space.'
-  );
-end procedure;
-
 procedure ButtonAction();
   function View(State: int): E.Element<int>;
   begin
@@ -385,116 +348,58 @@ begin
   Check(not Session.Snapshot().Controls[1].Enabled, 'Disabled buttons must suppress activation.');
 end procedure;
 
-procedure JoinedButtons();
-  function View(State: int): E.Element<int>;
+procedure GraphicalWidgets();
+  procedure CheckProfile(Node: E.Element<int>; Profile: V.Target);
   begin
-    return Groups.ButtonGroup<int>(
-      B.Button<int>('bold', 'Bold', 1, new B.Options(Selected := State = 1)),
-      B.Button<int>(
-        'italic',
-        'Italic',
-        3,
-        new B.Options(Enabled := false, Variant := Styles.ButtonVariant.Outline)
-      ),
-      Icons.IconButton<int>(
-        'underline', Sys.Char.ConvertFromUtf32($E19A), 'Underline', 2,
-        new Icons.Options(TerminalGlyph := 'U', Selected := State = 2)
-      )
-    );
-  end function;
-begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 40, 10);
-  const Frame: Tui.Frame := Session.Snapshot();
-  Check(
-    Frame.Controls.Length = 3 and Frame.Lines[
-      0
-    ].StartsWith('╭') and Frame.Lines[0].TrimEnd().EndsWith('╮')
-    and Frame.Lines[1].Contains('Bold │ Italic │') and not Frame.Lines[1].Contains('['),
-    'Joined buttons must share one outline and cell dividers.'
-  );
-  discard Session.Send(Tui.Input.Focus('bold'));
-  discard Session.Step();
-  discard Session.Send(Tui.Input.KeyPress(Keys.Key.Tab, Keys.KeyModifiers.None));
-  discard Session.Step();
-  Check(Session.Snapshot().Controls[2].Focused, 'Tab must skip a disabled group member.');
-  discard Session.Send(Tui.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
-  discard Session.Step();
-  Check(
-    Session.Snapshot().Controls[2].Value = 'true',
-    'The icon button must retain its own action.'
-  );
-  const Bold: Tui.ControlSnapshot := Frame.Controls[0];
-  discard Session.Send(Tui.Input.Pointer(Keys.PointerKind.Press, Bold.Column + 1, Bold.Row));
-  discard Session.Step();
-  discard Session.Send(Tui.Input.Pointer(Keys.PointerKind.Release, Bold.Column + 1, Bold.Row));
-  discard Session.Step();
-  const Selected: Tui.Frame := Session.Snapshot();
-  Check(
-    Selected.Controls[0].Value = 'true' and Selected.Controls[2].Value = 'false',
-    'Click must activate only the hit member.'
-  );
-end procedure;
+    try
+      discard V.Prepare<int>(Node, Profile);
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains('Graphical'), Error.Message);
+      return;
+    end try;
 
-procedure CopyAction();
-  function View(State: int; Size: L.Viewport): E.Element<int>;
-  begin
-    return E.Column<int>(
-      Copy.CopyButton<int>('copy', Text, function(): int => 1),
-      Copy.CopyButton<int>('disabled-copy', 'Disabled', Enabled := false),
-      E.Text<int>('Copies: ' + State.ToString())
-    );
-  end function;
-  procedure WriteClipboard(Value: string);
-  begin
-    Writes.Add(Clipboard.Sequence(Value));
+    raise new Sys.InvalidOperationException('Preflight accepted a graphical-only widget.');
   end procedure;
 begin
-  const Esc: string := new string(#27, 1);
-  const Text: string := 'λ' + new string(#10, 1) + Esc + 'text';
-  const Writes: Generic.List<string> := new Generic.List<string>();
-  using const Session: Tui.HeadlessSession := Host.Start<int, int>(
-    0, Update, View, 32, 8, procedure(Frame: Tui.Frame) begin end procedure, true,
-    function(State: int): Themes.Theme => Themes.Dark(), WriteClipboard
-  );
-  Check(Writes.Count = 0, 'Preparing a view must not touch the clipboard.');
-  const Before: Tui.ControlSnapshot := Session.Snapshot().Controls[0];
-  discard Session.Send(Tui.Input.KeyPress(Keys.Key.Enter, Keys.KeyModifiers.None));
-  discard Session.Step();
-  const Frame: Tui.Frame := Session.Snapshot();
-  const After: Tui.ControlSnapshot := Frame.Controls[0];
-  Check(
-    Writes.Count = 1 and Writes[0] = Esc + ']52;c;zrsKG3RleHQ=' + Esc + '\',
-    'Copy must submit exactly one UTF-8 OSC 52 clipboard request.'
-  );
-  Check(
-    After.Focused and After.Width = Before.Width and After.Value = 'copied'
-    and Frame.Lines[0].Contains('✓') and Frame.Lines[2].Contains('Copies: 1'),
-    'Copy feedback must preserve focus and size, and send its application notification.'
-  );
-  discard Session.Send(Tui.Input.Activate('disabled-copy'));
-  discard Session.Step();
-  Check(Writes.Count = 1, 'A disabled copy button must not submit text.');
-  Threads.Thread.Sleep(1700);
-  discard Session.Step();
-  const Expired: Tui.Frame := Session.Snapshot();
-  Check(
-    Expired.Controls[
-      0
-    ].Focused and Expired.Controls[0].Value = '' and Expired.Lines[0].Contains('Copy'),
-    'Copy feedback must expire without another user input.'
-  );
+  const Widgets: array of E.Element<int> := [
+    E.Divider<int>(), Icon.IconButton<int>('icon', 'i', 'Inspect', 1),
+    Copy.CopyButton<int>('copy', 'text'), Hold.HoldButton<int>('hold', 'Hold', 1),
+    Confirm.ConfirmButton<int>('confirm', 'Confirm', 1),
+    Status.StatusButton<int>('status', 'Save', Status.Status.Idle, 1),
+    Segments.SegmentedControl<int>(
+      'choice',
+      [new Segments.Item('One')],
+      0,
+      function(N: int): int => N
+    ),
+    Groups.ButtonGroup<int>(B.Button<int>('action', 'Run', 1)),
+    Split.SplitButton<int>('split', 'Run', 1, [new Split.Item<int>('other', 'Other', 2)]),
+    Menus.Menu<int>(
+      'menu',
+      'Menu',
+      [Menus.Entry<int>.Action(new Menus.Item<int>('open', 'Open', 1))]
+    ),
+    Toggles.ThemeToggle<int>('toggle', Themes.Mode.Dark, function(Mode: Themes.Mode): int => 1),
+    Switchers.ThemeSwitcher<int>(
+      'theme', Switchers.Selection.Light,
+      function(Choice: Switchers.Selection): int => 1
+    )
+  ];
+  for Node: E.Element<int> in Widgets do
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+    CheckProfile(Node, V.Target.Terminal);
+    CheckProfile(Node, V.Target.Portable);
+  end for;
 end procedure;
 
 begin
+  GraphicalWidgets();
   Allocation();
   SemanticColors();
   LogicalDistances();
   SheetPlacement();
   SheetFocus();
-  IconAction();
   ButtonAction();
-  JoinedButtons();
-  CopyAction();
   Console.WriteLine('CUI terminal contracts verified');
 end;
 

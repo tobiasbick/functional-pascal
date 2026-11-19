@@ -159,6 +159,7 @@ begin
       for Assembly: string in [
         'Fpas.Ui.dll',
         'Fpas.Ui.Mvu.dll',
+        'Fpas.Ui.Tui.dll',
         'Fpas.Ui.Gui.dll',
         'Fpas.Ui.Gui.Cui.dll'
       ] do

@@ -199,8 +199,9 @@ The gallery DAP test sends the same shortcuts through the private terminal
 and checks that resizing and changing themes produce the expected frames.
 
 The terminal CUI fixture checks the four sheet edges, pinned header, button
-options and focus, button-group traversal, OSC 52 copy data, shared theme
-colors, and cell allocation. `TerminalBoundaryTests` builds it without GUI
+options and focus, shared theme colors, and cell allocation. It also checks
+that graphical-only actions and dividers pass graphical preflight and are
+rejected by the portable and terminal profiles. `TerminalBoundaryTests` builds it without GUI
 assets and checks the generated assembly references.
 
 `HeadlessTuiTests` checks frame updates, bounded input, cached views and
@@ -211,7 +212,7 @@ restoration of native terminal modes after exit and output failure.
 The text-field fixture checks grapheme editing, horizontal scrolling, pointer
 placement, bounded single-line paste, read-only and disabled fields, and
 external replacement on submission. The rendering fixture checks sanitized orphan Unicode clusters against actual
-cells and output positions. The theme fixture compares all default palette colors.
+cells and output positions.
 The composition fixture also checks graphical outline validation, including
 anchor order and scope boundaries for dialogs, popovers, tables and Kanban cards.
 

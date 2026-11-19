@@ -16,11 +16,15 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
     [Fact]
     public async Task Default_selection_compiles_ui_handbook_examples()
     {
-        var document = Path.Combine(checker.Repository, "docs", "ui", "actions", "button.md");
+        var handbook = Path.Combine(checker.Repository, "docs", "ui");
         var report = await checker.RepositoryReport();
-        Assert.Contains(report.GetProperty("results").EnumerateArray(), item =>
-            item.GetProperty("document").GetString() == document &&
-            item.GetProperty("compile").GetString() == "passed");
+        foreach (var relative in new[] { "gui/actions/button.md", "tui/README.md", "mvu/README.md" })
+        {
+            var document = Path.GetFullPath(relative, handbook);
+            Assert.Contains(report.GetProperty("results").EnumerateArray(), item =>
+                item.GetProperty("document").GetString() == document &&
+                item.GetProperty("compile").GetString() == "passed");
+        }
     }
 
     public static IEnumerable<object[]> Scenarios()

@@ -102,7 +102,7 @@ It waits for a successful background snapshot before validation. A missing playl
 falls back to **Music**; a retained playlist with a parse failure opens with a warning.
 
 Online music locations are discovered and monitored in the background by
-[FpasAmp.Library](src/FpasAmp.Library/README.md). Discovery includes subdirectories
+[FpasAmp.Library](../../docs/apps/fpas-amp/library.md). Discovery includes subdirectories
 and the configured extensions, batches changes and retries unavailable locations.
 Directory discovery records which entries exist. A second worker uses ATL to
 read tags/audio properties and computes SHA-256 without decoding audio. The inventory
@@ -121,7 +121,7 @@ Delete asks for confirmation, removes the source from settings and stops its
 monitoring. Actual music files, ratings and other sources' memberships remain.
 
 Set up the [local FPAS SDK](../../docs/build/development.md#build-an-fpas-application)
-and the [native CUI build tools](../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites).
+and the [native CUI build tools](../../docs/ui/gui/native-build.md#prerequisites).
 Run these commands from this directory:
 
 ```sh
@@ -213,7 +213,7 @@ popover with draft/Apply/Reset behavior, and the combined sort field/direction
 menu. Artist and genre choices come from the catalogue. A new order or match set
 requests covers for the newly visible albums only. Narrow windows place the two
 actions below the search field.
-Small content-addressed thumbnails are kept under `covers/thumbnails-v1` beside
+Small [content-addressed thumbnails](../../docs/apps/fpas-amp/imaging.md) are kept under `covers/thumbnails-v1` beside
 `userdata.db`, with bounded disk/memory caches. Cached thumbnails work offline.
 
 Playlist files in music sources are also discovered and monitored. They are
@@ -222,4 +222,4 @@ ATL supports M3U/M3U8, PLS, XSPF, ASX, B4S, DPL and SMIL-family files, plus
 experimental FPL import. The library API can create ordered local lists, import
 independent copies and export UTF-8 M3U8. Local lists are stored in `userdata.db`
 and survive index resets/source removal. A playlist editor is not part of the
-current settings shell. See the [library contract](src/FpasAmp.Library/README.md#playlists).
+current settings shell. See the [library contract](../../docs/apps/fpas-amp/library.md#playlists).

@@ -35,11 +35,11 @@ begin
   );
 end function;
 
-function IconSample(Id: string; Code: int; Caption: string; Terminal: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element<State.Msg>;
+function IconSample(Id: string; Code: int; Caption: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element<State.Msg>;
 begin
   return I.IconButton<State.Msg>(
     Id, Glyph(Code), Caption, State.Msg.Preview,
-    new I.Options(Variant := Style, TerminalGlyph := Terminal, Shortcut := Shortcut)
+    new I.Options(Variant := Style, Shortcut := Shortcut)
   );
 end function;
 
@@ -107,22 +107,19 @@ begin
     'icon-copy',
     $E09E,
     'Copy',
-    '⧉',
     Shortcut := 'Ctrl C'
   );
-  const Share: E.Element<State.Msg> := IconSample('icon-share', $E156, 'Share', '↗');
+  const Share: E.Element<State.Msg> := IconSample('icon-share', $E156, 'Share');
   const Like: E.Element<State.Msg> := IconSample(
     'icon-like',
     $E0F2,
     'Like',
-    '♥',
     S.ButtonVariant.Outline
   );
   const Delete: E.Element<State.Msg> := IconSample(
     'icon-delete',
     $E18E,
     'Delete',
-    '×',
     S.ButtonVariant.Secondary
   );
   const Save: E.Element<State.Msg> := B.Button<State.Msg>(

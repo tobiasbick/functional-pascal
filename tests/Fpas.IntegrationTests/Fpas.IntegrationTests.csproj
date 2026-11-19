@@ -31,7 +31,7 @@
     <Using Include="Xunit" />
     <None Include="../../examples/basics/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/numerics/mandelbrot/main.fpas;../../examples/numerics/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Tui/**/*.fpas" Exclude="../../src/Fpas.Ui.Tui/bin/**/*;../../src/Fpas.Ui.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Tui/**/*.fpas;../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj" Exclude="../../src/Fpas.Ui.Tui/bin/**/*;../../src/Fpas.Ui.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/Fpas.Ui.fpasproj" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" Exclude="../../src/Fpas.Ui.Gui/bin/**/*;../../src/Fpas.Ui.Gui/obj/**/*" Link="Fixtures/gui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
@@ -43,13 +43,7 @@
     <None Include="../Fixtures/tui/CellGrid.fpas" Link="Fixtures/tui/cell-grid.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CuiContract.fpas" Link="Fixtures/tui/cui.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/RenderingContract.fpas" Link="Fixtures/tui/rendering.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/ConfirmButton.fpas" Link="Fixtures/tui/confirm.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TextField.fpas" Link="Fixtures/tui/text-field.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/StatusButton.fpas" Link="Fixtures/tui/status.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/ThemeSwitcher.fpas" Link="Fixtures/tui/theme-switcher.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/ThemeToggle.fpas" Link="Fixtures/tui/theme-toggle.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/SegmentedControl.fpas" Link="Fixtures/tui/segmented.fpas" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/tui/DropdownMenu.fpas" Link="Fixtures/tui/dropdown.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CompositionContract.fpas" Link="Fixtures/tui/composition.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />

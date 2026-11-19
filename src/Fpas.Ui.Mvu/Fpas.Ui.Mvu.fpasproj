@@ -11,7 +11,7 @@
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeMvuRuntime</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../docs/ui/mvu/runtime.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
   <Target Name="IncludeMvuRuntime">
     <ItemGroup>

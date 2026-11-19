@@ -24,8 +24,6 @@ public type Options = record
   public ErrorLabel: string := 'Failed';
   // Optional native glyph before the resting caption.
   public Icon: string := '';
-  // Terminal equivalent of the resting glyph; empty omits it.
-  public TerminalIcon: string := '';
   // Resting appearance. Default resolves to primary.
   public Variant: S.ButtonVariant := S.ButtonVariant.Primary;
   // Requested control size.
@@ -45,7 +43,7 @@ end record;
 // - `Message`: Proposed only when activated while idle.
 // - `Settings`: Feedback captions, appearance and input permission.
 // ## Returns
-// A portable status button. The application owns every state transition and reset.
+// A graphical status button. The application owns every state transition and reset.
 public function StatusButton<TMsg>(Id: string; Label: string; State: Status; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

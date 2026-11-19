@@ -169,7 +169,7 @@ It compiles real FPAS DLL/PDB/source sets and verifies native source breakpoints
 local reads, stepping, exit, stopped-target cleanup, invalid cwd, a host that
 exits before CLR startup, and cancellation with a registered suspended target.
 It checks process exit and exclusive DLL/PDB access before fixture cleanup.
-The [native reference](../src/Fpas.Debugging/Native/README.md) owns dependency
+The [native reference](../docs/architecture/debugger-native.md) owns dependency
 versions, ABI sources and lifetime rules.
 
 `NativeAssetTests` exercises the extracted SDK CLI against valid, missing,
@@ -308,7 +308,7 @@ Metadata cases read synthetic MP3/Vorbis/Opus fixtures through ATL and verify
 multi-value Unicode filters, paging/order, durable ratings, moves/copies,
 streaming cancellation, lazy/offline artwork, index upgrade and damaged user stores.
 The fixtures contain generated silence; running tests does not require FFmpeg.
-See the [library reference](../apps/fpas-amp/src/FpasAmp.Library/README.md#focused-verification)
+See the [library reference](../docs/apps/fpas-amp/library.md#focused-verification)
 for its standalone test command.
 
 [FpasAmp.Ui.Tests](FpasAmp.Ui.Tests/) checks pause preference persistence,

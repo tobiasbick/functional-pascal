@@ -1304,6 +1304,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Entries: array of Menus.Entry<TMsg>,
         const Settings: Menus.Options
       ):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
         MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.FormattedText(
         const Value: string,
@@ -1583,6 +1584,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         NavigationRules.CheckStepper(Steps, Current, Profile, Identify(Id, Location + '/stepper'));
       when E.Element.Separator(const Title: string):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
         Rules.CheckText(Title, Location + '/divider');
       when E.Element.ButtonAction(
         const Id: string,
@@ -1613,10 +1615,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Icons.Options
       ):
         const At: string := Identify(Id, Location + '/iconButton');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Icon, At + '/icon');
         Rules.CheckText(Tooltip, At + '/tooltip');
         Rules.CheckText(Settings.Shortcut, At + '/shortcut');
-        Rules.CheckText(Settings.TerminalGlyph, At + '/terminalGlyph');
         if Sys.String.IsNullOrWhiteSpace(Icon) or Sys.String.IsNullOrWhiteSpace(Tooltip) then
           Rules.Reject(At, 'An icon button needs an icon and a tooltip.');
         end if;
@@ -1627,6 +1629,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Unknown icon button variant or size.');
         end if;
       when E.Element.CopyAction(const Id: string, const Value: string, _, _):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
         Rules.CheckText(Value, Identify(Id, Location + '/copyButton') + '/text');
       when E.Element.HoldAction(
         const Id: string,
@@ -1635,9 +1638,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Holds.Options
       ):
         const At: string := Identify(Id, Location + '/holdButton');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.Icon, At + '/icon');
-        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
         if Settings.DurationMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
           or not Sys.Enum.IsDefined<S.ButtonVariant>(
           Settings.Variant
@@ -1652,10 +1655,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Confirms.Options
       ):
         const At: string := Identify(Id, Location + '/confirmButton');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.ConfirmLabel, At + '/confirmLabel');
         Rules.CheckText(Settings.Icon, At + '/icon');
-        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
         if Settings.TimeoutMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
           or not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
           or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
@@ -1673,11 +1676,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Status.Options
       ):
         const At: string := Identify(Id, Location + '/statusButton');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.SuccessLabel, At + '/successLabel');
         Rules.CheckText(Settings.ErrorLabel, At + '/errorLabel');
         Rules.CheckText(Settings.Icon, At + '/icon');
-        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
         const Busy: string? := Settings.BusyLabel;
         if Busy <> null then
           Rules.CheckText(Busy, At + '/busyLabel');
@@ -1698,6 +1701,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Segmented.Options
       ):
         const At: string := Identify(Id, Location + '/segmented');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
           or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
         then
@@ -1712,7 +1716,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(Segmented.ItemId(Id, Index), At + '/item');
           Rules.CheckText(Item.Label, At + '/label');
           Rules.CheckText(Item.Icon, At + '/icon');
-          Rules.CheckText(Item.TerminalIcon, At + '/terminalIcon');
           if Item.Label = '' or Item.Label.Contains(#10) or Item.Label.Contains(#13)
             or (Item.IconOnly and Item.Icon = '')
           then
@@ -1734,6 +1737,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
       when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
         const At: string := Identify(Id, Location + '/themeToggle');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then
           Rules.Reject(At, 'A theme toggle needs a concrete Light or Dark appearance.');
         end if;
@@ -1744,6 +1748,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: ThemeSwitchers.Options
       ):
         const At: string := Identify(Id, Location + '/themeSwitcher');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         if not Sys.Enum.IsDefined<ThemeSwitchers.Selection>(Selected)
           or (Selected = ThemeSwitchers.Selection.System and not Settings.WithSystem)
         then
@@ -1761,6 +1766,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           );
         end for;
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
+        Rules.RequireProfile(Profile, Target.Graphical, Location);
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
@@ -1774,9 +1780,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Split.Options
       ):
         const At: string := Identify(Id, Location + '/splitButton');
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.Icon, At + '/icon');
-        Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
         discard Identify(Split.MenuId(Id), At + '/menu');
         if Items.Length = 0 or Settings.Variant = S.ButtonVariant.Active
           or not Sys.Enum.IsDefined<S.ButtonVariant>(
@@ -1793,7 +1799,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           const Entry: string := Identify(Split.ItemId(Id, Item.Key), At + '/item');
           Rules.CheckText(Item.Label, Entry + '/label');
           Rules.CheckText(Item.Icon, Entry + '/icon');
-          Rules.CheckText(Item.TerminalIcon, Entry + '/terminalIcon');
         end for;
       when E.Element.Sidebar(
         const Id: string,

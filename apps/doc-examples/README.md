@@ -11,8 +11,8 @@ fence instructions, reports, limits, contexts and companion projects.
 
 Build the Debug compiler and pack its SDK with the
 [source quickstart](../../README.md#build-from-source). The application is a
-net10.0 FPAS consumer with project references to Fpas.Processes.Workflows and
-Fpas.Ui.Gui. Run from the repository root after setting
+net10.0 FPAS consumer with project references to Fpas.Processes.Workflows,
+Fpas.Ui.Tui and Fpas.Ui.Gui. Run from the repository root after setting
 [FPAS_REFERENCE_DIR](../../docs/build/development.md#direct-compiler-invocation).
 
 ```sh

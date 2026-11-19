@@ -1,5 +1,7 @@
 # TUI gallery
 
+[Illustrated TUI widget guide](../../../../docs/ui/tui/README.md)
+
 The left panel lists the GUI gallery's Components and Extended destinations plus
 **Progress bar**, **Text** and **Cell grid**. The right panel previews the selected entry.
 **Components → Inputs** and **Buttons** share a three-track play queue. Enter a

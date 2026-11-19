@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../docs/ui/gui/cui.md" Pack="true" PackagePath="README.md" />
     <None Update="Build/Fpas.Ui.Gui.Cui.targets" Pack="true" PackagePath="buildTransitive/Fpas.Ui.Gui.Cui.targets" />
     <_FpasCuiPackFile Include="$(FpasCuiPackageAssetRoot)/shared/out/$(_FpasCuiPackShared)"
                       PackagePath="native/$(FpasCuiDistributionRid)/shared/$(_FpasCuiPackShared)" />

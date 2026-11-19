@@ -1,8 +1,10 @@
 # FPas GUI based on CUI
 
+[Illustrated GUI widget guide](../../../../docs/ui/gui/README.md)
+
 Build and run `GuiWidgetGallery.fpasproj` after the
 [local SDK bootstrap](../../../../docs/build/development.md#build-an-fpas-application).
-The [CUI build reference](../../../../src/Fpas.Ui.Gui.Cui/native/README.md#prerequisites)
+The [CUI build reference](../../../../docs/ui/gui/native-build.md#prerequisites)
 lists the native prerequisites.
 
 The gallery follows CUI's desktop composition with a full-height 240-point sidebar,

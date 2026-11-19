@@ -31,7 +31,6 @@ begin
       when M.Page.Albums: $E1C1;
       when M.Page.Artists: $E1A4;
       when M.Page.Genres: $E17F;
-      when M.Page.Ratings: $E176;
       when M.Page.Settings: $E154;
       else $E0AD;
     end case
@@ -125,8 +124,7 @@ begin
           Destination(M.Page.Music),
           Destination(M.Page.Albums),
           Destination(M.Page.Artists),
-          Destination(M.Page.Genres),
-          Destination(M.Page.Ratings)
+          Destination(M.Page.Genres)
         ]
       ),
       new Nav.Section<App.Msg>('Playlists', Playlists.ToArray(), GapBefore := 14)

@@ -81,13 +81,13 @@ begin
       E.Row<M.Msg>(
         Row,
         E.Size<M.Msg>(E.Text<M.Msg>(Item.Path), Fill),
-        Copy.CopyButton<M.Msg>('track-copy-path', Item.Path),
         Icons.IconButton<M.Msg>(
           'track-open-folder',
           Sys.Char.ConvertFromUtf32($E247),
           'Show in folder',
           M.Msg.ShowFolder(Item.Path)
-        )
+        ),
+        Copy.CopyButton<M.Msg>('track-copy-path', Item.Path)
       ),
       Rule,
       Texts.Text<M.Msg>('Acoustic fingerprint', Texts.Appearance.Label),

@@ -1,0 +1,115 @@
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
+
+// The AcoustID settings card.
+unit FpasAmp.Ui.Settings.Metadata;
+
+uses
+  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Display.Links as Links, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Style,
+  System.Collections.Generic as C;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function KeyRow(Key: M.AcoustIdKey; Id: string; Label: string; Value: string; Link: string; Width: int): E.Element<M.Msg>;
+begin
+  const Caption: E.Element<M.Msg> := Texts.Text<M.Msg>(Label, Texts.Appearance.Label);
+  const Field: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch),
+    Fields.TextField<M.Msg>(
+      Id, Value, function(Input: string): M.Msg => M.Msg.EditAcoustIdKey(Key, Input),
+      new Fields.Options(Password := true, MaxUtf8Bytes := M.AcoustIdKeyCapacity)
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Justify := L.Justification.Start),
+      Links.Link<M.Msg>(Id + '-setup', Link, M.Msg.OpenAcoustIdKeyPage(Key))
+    )
+  );
+  if Width < 560 then
+    return E.Column<M.Msg>(
+      new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch),
+      Caption,
+      Field
+    );
+  end if;
+
+  return E.Row<M.Msg>(
+    new L.Flow(Gap := Points(24), Align := L.Alignment.Start),
+    E.Size<M.Msg>(
+      E.Column<M.Msg>(new L.Flow(PaddingTop := Points(8)), Caption),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Width div 3)))
+    ),
+    E.Size<M.Msg>(Field, Fill)
+  );
+end function;
+
+// Presents the two optional key fields, their setup links and an explicit save.
+//
+// ## Parameters
+// - `Current`: Last saved values, pending edits and any link failure.
+// - `Width`: Available logical width inside the settings page padding.
+// ## Returns
+// The Metadata tab's AcoustID card.
+public function View(Current: M.State; Width: int): E.Element<M.Msg>;
+begin
+  const Keys: M.AcoustIdKeys := Current.AcoustIdDraft ?? Current.Saved.AcoustId;
+  const Changed: bool := Keys.ApplicationKey <> Current.Saved.AcoustId.ApplicationKey
+    or Keys.UserApiKey <> Current.Saved.AcoustId.UserApiKey;
+  const Padding: int := 20;
+  const FormWidth: int := Width - 2 * Padding;
+  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  if Current.AcoustIdLinkFailed then
+    Parts.Add(
+      Alerts.Alert<M.Msg>(
+        'acoustid-link-error', 'Could not open the AcoustID setup page.',
+        new Alerts.Options(Tone := Style.Tone.Warning, Dismissible := true),
+        function(): M.Msg => M.Msg.DismissError
+      )
+    );
+  end if;
+
+  Parts.Add(
+    KeyRow(
+      M.AcoustIdKey.Application, 'acoustid-application-key', 'Application key',
+      Keys.ApplicationKey, 'Create application key', FormWidth
+    )
+  );
+  Parts.Add(
+    KeyRow(
+      M.AcoustIdKey.User, 'acoustid-user-key', 'User API key',
+      Keys.UserApiKey, 'Get user API key', FormWidth
+    )
+  );
+  Parts.Add(
+    E.Row<M.Msg>(
+      new L.Flow(Justify := L.Justification.End),
+      Buttons.Button<M.Msg>(
+        'save-acoustid-keys', 'Save keys', M.Msg.SaveAcoustIdKeys,
+        new Buttons.Options(Variant := Style.ButtonVariant.Primary, Enabled := Changed)
+      )
+    )
+  );
+  return Cards.Card<M.Msg>(
+    'acoustid-card',
+    [
+      Texts.Text<M.Msg>('AcoustID', Texts.Appearance.HeadingThree),
+      E.Column<M.Msg>(
+        new L.Flow(Gap := Points(24), Align := L.Alignment.Stretch),
+        Parts.ToArray()
+      )
+    ],
+    new Cards.Options(
+      Width := L.Extent.Fill, Align := L.Alignment.Stretch, Padding := cast<float>(Padding),
+      Gap := 14.0F
+    )
+  );
+end function;
+
+end unit;

@@ -31,7 +31,7 @@ Use these `Info` fields when building a library index:
 
 | Index or display need | Fields |
 | --- | --- |
-| Names and credits | `Title`, `Subtitle`, `Album`, `Artists`, `AlbumArtists`, `Composers` |
+| Names and credits | `Title`, `Subtitle`, `Album`, `Artists`, `AlbumArtists`, `Composers`, `Lyricist`, `Producer`, `Piano` |
 | Classification and release | `Genres`, `Grouping`, `Compilation`, `ReleaseDate`, `OriginalReleaseDate` |
 | Position in a release | `TrackNumber`, `TrackTotal`, `DiscNumber`, `DiscTotal` |
 | Sort keys | `SortTitle`, `SortArtist`, `SortAlbumArtist`, `SortAlbum` |

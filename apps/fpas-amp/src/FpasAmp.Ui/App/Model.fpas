@@ -8,6 +8,7 @@ uses
   FpasAmp.Ui.Albums.Model as AlbumView,
   FpasAmp.Ui.Settings.Model as SettingsView,
   FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Ui.TagEditor.Model as Tags,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 
@@ -24,6 +25,8 @@ public type State = record
   public Player: Player.State := new Player.State();
   // Whole-library tracks and their visible cover cache.
   public Songs: LibrarySongs.State := new LibrarySongs.State();
+  // The active tag editor, shared by both track tables.
+  public TagEditor: Tags.State? := null;
 end record;
 
 // Typed proposals routed by the app controller.
@@ -34,6 +37,8 @@ public type Msg = variant
   Albums(Message: AlbumView.Msg);
   // Whole-library song browser and its catalogue subscription.
   Songs(Message: LibrarySongs.Msg);
+  // Draft messages and their background replies.
+  TagEditor(Message: Tags.Msg);
   // Settings edits and library status publications.
   Settings(Message: SettingsView.Msg);
   // Transport, volume and equalizer edits.

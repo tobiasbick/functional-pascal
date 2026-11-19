@@ -774,6 +774,21 @@ namespace ATL.AudioData.IO
             //var isCompressed = (frame.Flags & 8) > 0; Unused for now
             var isUnsynchronized = tag.UsesUnsynchronisation || (frame.Flags & 2) > 0;
 
+            // Owner-prefixed identifiers and private data are byte sequences, not ID3 text.
+            // Base64 carries the bytes through ATL's string-only additional fields.
+            if (frame.ID is "UFID" or "UFI" or "PRIV")
+            {
+                if (dataSize < 0 || dataSize > source.Length - source.Position) return false;
+                byte[] data = isUnsynchronized && dataSize > 0 ? decodeUnsynchronizedStream(source, dataSize) : source.ReadBytes(dataSize);
+                int separator = Array.IndexOf(data, (byte)0);
+                string code = frame.ID == "UFI" ? "UFID" : frame.ID;
+                if (separator >= 0) code += "." + Utils.Latin1Encoding.GetString(data, 0, separator);
+                if (chapterDepth == 0)
+                    SetMetaField(code, Convert.ToBase64String(data, separator + 1, data.Length - separator - 1),
+                        readTagParams.ReadAllMetaFrames, FileStructureHelper.DEFAULT_ZONE_NAME, tag.Version);
+                return true;
+            }
+
             if (!noTextEncodingFields.Contains(frame.ID))
             {
                 dataSize--; // Minus encoding byte
@@ -861,17 +876,6 @@ namespace ATL.AudioData.IO
                 dataSize -= (int)(source.Position - geoStartOffset);
                 frameEncoding = Utils.Latin1Encoding; // Decode encapsulated object using Latin-1
             }
-
-            // General Encapsulated Object
-            if (frame.ID.StartsWith("PRIV"))
-            {
-                long privStartOffset = source.Position;
-                string owner = StreamUtils.ReadNullTerminatedString(source, Utils.Latin1Encoding);
-                frame.ID += "." + owner;
-                dataSize -= (int)(source.Position - privStartOffset);
-                frameEncoding = Utils.Latin1Encoding; // Decode private data using Latin-1
-            }
-
 
             // == READ ACTUAL FRAME DATA
             var dataOffset = source.Position;
@@ -1844,10 +1848,10 @@ namespace ATL.AudioData.IO
                 frameCode = "COMM";
                 isCommentCode = true;
             }
-            // If frame is a General Encapsulated object or a Private Frame,
-            // its code has to be broken down ("GEOB.FileName" / "PRIV.Owner")
+            // Split encapsulated objects and owner-prefixed binary frames into code and owner.
             else if (frameCode.StartsWith("GEO", StringComparison.OrdinalIgnoreCase)
-                     || frameCode.StartsWith("PRIV", StringComparison.OrdinalIgnoreCase))
+                     || frameCode.StartsWith("PRIV.", StringComparison.OrdinalIgnoreCase)
+                     || frameCode.StartsWith("UFID.", StringComparison.OrdinalIgnoreCase))
             {
                 int dotIdx = frameCode.IndexOf('.');
                 if (dotIdx > -1)
@@ -1970,13 +1974,11 @@ namespace ATL.AudioData.IO
                 writeTextEncoding = false;
                 writeNullTermination = true;
             }
-            else if (frameCode.StartsWith("PRIV")) // Private frame
+            else if (frameCode is "UFID" or "PRIV")
             {
-                w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode + '\0')); // Owner
-
-                isExplicitLatin1Encoding = true; // Writing something else than Latin-1 is unsupported for now
-                writeTextEncoding = false;
-                writeNullTermination = true;
+                if (actualFrameCode != frameCode) w.Write(Utils.Latin1Encoding.GetBytes(actualFrameCode + '\0'));
+                w.Write(Convert.FromBase64String(value));
+                writeValue = false;
             }
             else if (value.Contains(Settings.DisplayValueSeparator + ""))
             {

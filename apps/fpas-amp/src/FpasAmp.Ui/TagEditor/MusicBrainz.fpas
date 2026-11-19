@@ -1,0 +1,359 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+// Public MusicBrainz search and lookup, paced across the process.
+unit FpasAmp.Ui.TagEditor.MusicBrainz;
+
+uses
+  FpasAmp.Ui.TagEditor.ResponseJson as Response,
+  System as Sys, System.Net.Http as H, System.Net.Http.Headers as Headers,
+  FpasAmp.Ui.Providers.RequestPacing as Pacing,
+  FpasAmp.Library.TagEditing.Fields as F,
+  System.Text.Json as J, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, System.Reflection as Reflection;
+
+// One selectable pairing of a recording with a release.
+public type Match = record
+  // Recording UUID.
+  public Recording: string;
+  // Release UUID, empty for a recording without a release.
+  public Release: string;
+  // Text shown in the match dropdown.
+  public Label: string;
+end record;
+
+const Client: H.HttpClient := new H.HttpClient();
+const Gate: Pacing.Gate := Pacing.Gate.Create(1000L);
+const TimeoutSeconds: int := 30;
+const RetryDelays: array of long := [2000L, 4000L, 8000L, 16000L, 32000L];
+
+// Returns MusicBrainz's app-wide busy flag and time until another request may start.
+public function Availability(): Pacing.Status;
+begin
+  return Gate.Read();
+end function;
+
+// Formats Reply for the API Endpoint and one-based Attempt without exposing the search terms.
+public function Diagnostics(Reply: H.HttpResponseMessage; Endpoint: string; Attempt: int): string;
+begin
+  const Retry: Headers.RetryConditionHeaderValue? := Reply.Headers.RetryAfter;
+  const Route: string := Endpoint.Split('?', 2, Sys.StringSplitOptions.None)[0];
+  return 'HTTP/' + Reply.Version.ToString() + ' ' + (cast<int>(Reply.StatusCode)).ToString() +
+    ' ' + (Reply.ReasonPhrase ?? '') + ' · GET /ws/2/' + Route + ' · attempt ' +
+    Attempt.ToString() +
+    '/' + (RetryDelays.Length + 1).ToString() + (if Retry <> null then
+      ' · Retry-After: ' + Retry.ToString()
+    else
+      ''
+    end if);
+end function;
+
+async function Fetch(Path: string; Stop: T.CancellationToken): Tasks.Task<string>;
+begin
+  await Gate.Enter(Stop).ConfigureAwait(false);
+  try
+    const Version: Sys.Version := Reflection.Assembly.GetExecutingAssembly().GetName().Version ??
+      new Sys.Version(1, 0);
+    for Attempt: int := 0 to RetryDelays.Length do
+      using const Limit: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+        Stop
+      );
+      using const Request: H.HttpRequestMessage := new H.HttpRequestMessage(
+        H.HttpMethod.Get, 'https://musicbrainz.org/ws/2/' + Path
+      );
+      Request.Headers.UserAgent.ParseAdd(
+        'FPas-Amp/' + Version.ToString() + ' (https://github.com/tobiasbick/functional-pascal)'
+      );
+      await Gate.Start(Stop).ConfigureAwait(false);
+      Limit.CancelAfter(TimeoutSeconds * 1000);
+      using const Reply: H.HttpResponseMessage := await Client.SendAsync(
+        Request,
+        Limit.Token
+      ).ConfigureAwait(false);
+      if Reply.IsSuccessStatusCode then
+        return await Reply.Content.ReadAsStringAsync(Limit.Token).ConfigureAwait(false);
+      end if;
+      const Status: int := cast<int>(Reply.StatusCode);
+      const Hint: long := Pacing.RetryAfter(Reply);
+      if Status = 429 or Status = 503 then
+        const Delay: long := RetryDelays[Sys.Math.Min(Attempt, RetryDelays.Length - 1)];
+        Gate.Cooldown(Sys.Math.Max(Hint, Delay));
+        if Attempt < RetryDelays.Length then
+          continue;
+        end if;
+      elsif Hint > 0L then
+        Gate.Cooldown(Hint);
+      end if;
+
+      raise new H.HttpRequestException(
+        Diagnostics(Reply, Path, Attempt + 1),
+        null,
+        Reply.StatusCode
+      );
+    end for;
+
+    raise new H.HttpRequestException(
+      'MusicBrainz is temporarily unavailable. Try again in a moment.'
+    );
+  catch _Expired: Sys.OperationCanceledException when not Stop.IsCancellationRequested do
+    const Route: string := Path.Split('?', 2, Sys.StringSplitOptions.None)[0];
+    raise new Sys.TimeoutException(
+      'GET /ws/2/' + Route + ' · Timeout after ' + TimeoutSeconds.ToString() + ' s'
+    );
+  finally
+    Gate.Leave();
+  end try;
+end function;
+
+function Artists(Item: J.JsonElement): string;
+begin
+  const Result: C.List<string> := new C.List<string>();
+  for Credit: J.JsonElement in Response.Items(Item, 'artist-credit') do
+    const Name: string := Response.Text(Credit, 'name');
+    if Name <> '' then
+      Result.Add(Name);
+    end if;
+  end for;
+
+  return Sys.String.Join('; ', Result);
+end function;
+
+function AllowedId(Id: string): bool;
+begin
+  var Key: Sys.Guid := Sys.Guid.Empty;
+  return Sys.Guid.TryParseExact(Id, 'D', out Key);
+end function;
+
+// Converts the MusicBrainz recording-search response into selectable recording/release pairs.
+public function DecodeSearch(Json: string): array of Match;
+begin
+  using const Document: J.JsonDocument := J.JsonDocument.Parse(Json);
+  const Result: C.List<Match> := new C.List<Match>();
+  for Recording: J.JsonElement in Response.Items(Document.RootElement, 'recordings') do
+    const Id: string := Response.Text(Recording, 'id');
+    if not AllowedId(Id) then
+      continue;
+    end if;
+    const Title: string := Response.Text(Recording, 'title') + ' · ' + Artists(Recording);
+    const Releases: array of J.JsonElement := Response.Items(Recording, 'releases');
+    if Releases.Length = 0 then
+      Result.Add(new Match(Id, '', Title));
+    end if;
+
+    for Release: J.JsonElement in Releases do
+      const ReleaseId: string := Response.Text(Release, 'id');
+      if AllowedId(ReleaseId) then
+        const Date: string := Response.Text(Release, 'date');
+        const Country: string := Response.Text(Release, 'country');
+        Result.Add(
+          new Match(
+            Id, ReleaseId, Response.Text(Release, 'title') +
+              (if Date <> '' then
+                ' · ' + Date
+              else
+                ''
+              end if) +
+              (if Country <> '' then
+                ' · ' + Country
+              else
+                ''
+              end if) + ' — ' + Title
+          )
+        );
+      end if;
+
+      if Result.Count >= 100 then
+        return Result.ToArray();
+      end if;
+    end for;
+  end for;
+
+  return Result.ToArray();
+end function;
+
+procedure Put(Fields: I.ImmutableDictionary<string, string>.Builder; Key: string; Value: string);
+begin
+  if Value <> '' then
+    Fields[Key] := Value;
+  end if;
+end procedure;
+
+function ArtistIds(Item: J.JsonElement): string;
+begin
+  const Ids: C.List<string> := new C.List<string>();
+  for Credit: J.JsonElement in Response.Items(Item, 'artist-credit') do
+    const Id: string := Response.Text(Response.Property(Credit, 'artist'), 'id');
+    if AllowedId(Id) then
+      Ids.Add(Id);
+    end if;
+  end for;
+
+  return Sys.String.Join('; ', Ids);
+end function;
+
+procedure ReleaseTags(Fields: I.ImmutableDictionary<string, string>.Builder; Release: J.JsonElement);
+begin
+  const Representation: J.JsonElement := Response.Property(Release, 'text-representation');
+  const Group: J.JsonElement := Response.Property(Release, 'release-group');
+  Put(Fields, F.Custom + 'ASIN', Response.Text(Release, 'asin'));
+  Put(Fields, F.Custom + 'BARCODE', Response.Text(Release, 'barcode'));
+  Put(Fields, F.Custom + 'SCRIPT', Response.Text(Representation, 'script'));
+  Put(Fields, F.Custom + 'LANGUAGE', Response.Text(Representation, 'language'));
+  Put(Fields, F.Custom + 'MusicBrainz Album Id', Response.Text(Release, 'id'));
+  Put(Fields, F.Custom + 'MusicBrainz Album Artist Id', ArtistIds(Release));
+  Put(Fields, F.Custom + 'MusicBrainz Album Release Country', Response.Text(Release, 'country'));
+  Put(
+    Fields,
+    F.Custom + 'MusicBrainz Album Status',
+    Response.Text(Release, 'status').ToLowerInvariant()
+  );
+  Put(Fields, F.Custom + 'MusicBrainz Release Group Id', Response.Text(Group, 'id'));
+  Put(
+    Fields,
+    F.Custom + 'MusicBrainz Album Type',
+    Response.Text(Group, 'primary-type').ToLowerInvariant()
+  );
+end procedure;
+
+procedure Credits(Fields: I.ImmutableDictionary<string, string>.Builder; Parent: J.JsonElement);
+begin
+  for Relation: J.JsonElement in Response.Items(Parent, 'relations') do
+    const TypeName: string := Response.Text(Relation, 'type');
+    const Name: string := Response.Text(Response.Property(Relation, 'artist'), 'name');
+    if Name <> '' and (TypeName = 'composer' or TypeName = 'lyricist' or TypeName = 'producer') then
+      Put(
+        Fields, TypeName, if Fields.ContainsKey(TypeName) then
+          Fields[TypeName] + '; ' + Name
+        else
+          Name
+        end if
+      );
+    elsif TypeName = 'instrument' and Name <> '' then
+      for Attribute: J.JsonElement in Response.Items(Relation, 'attributes') do
+        if Attribute.ValueKind = J.JsonValueKind.String and Attribute.GetString() = 'piano' then
+          Put(
+            Fields, 'piano', if Fields.ContainsKey('piano') then
+              Fields['piano'] + '; ' + Name
+            else
+              Name
+            end if
+          );
+        end if;
+      end for;
+    end if;
+    const Work: J.JsonElement := Response.Property(Relation, 'work');
+    if Work.ValueKind = J.JsonValueKind.Object then
+      Put(Fields, F.Custom + 'MusicBrainz Work Id', Response.Text(Work, 'id'));
+      Credits(Fields, Work);
+    end if;
+  end for;
+end procedure;
+
+// Builds selectable values from the chosen recording and release JSON responses.
+public function DecodeTags(RecordingJson: string; ReleaseJson: string): I.ImmutableDictionary<string, string>;
+begin
+  using const RecordingDocument: J.JsonDocument := J.JsonDocument.Parse(RecordingJson);
+  using const ReleaseDocument: J.JsonDocument := J.JsonDocument.Parse(ReleaseJson);
+  const Recording: J.JsonElement := RecordingDocument.RootElement;
+  const Release: J.JsonElement := ReleaseDocument.RootElement;
+  const Id: string := Response.Text(Recording, 'id');
+  const Fields: I.ImmutableDictionary<string, string>.Builder := I.ImmutableDictionary.CreateBuilder<string, string>();
+  Put(Fields, 'recording', Id);
+  Put(Fields, 'title', Response.Text(Recording, 'title'));
+  Put(Fields, 'artist', Artists(Recording));
+  Put(Fields, F.Custom + 'MusicBrainz Artist Id', ArtistIds(Recording));
+  const Genres: C.List<string> := new C.List<string>();
+  for Genre: J.JsonElement in Response.Items(Recording, 'genres') do
+    const Name: string := Response.Text(Genre, 'name');
+    if Name <> '' then
+      Genres.Add(Name);
+    end if;
+  end for;
+
+  Put(Fields, 'genre', Sys.String.Join('; ', Genres));
+  Credits(Fields, Recording);
+  Put(Fields, 'album', Response.Text(Release, 'title'));
+  Put(Fields, 'album-artist', Artists(Release));
+  ReleaseTags(Fields, Release);
+  const Date: string := Response.Text(Release, 'date');
+  if Date.Length >= 4 then
+    Put(Fields, 'year', Date.Substring(0, 4));
+  end if;
+
+  for Label: J.JsonElement in Response.Items(Release, 'label-info') do
+    Put(Fields, F.Custom + 'CATALOGNUMBER', Response.Text(Label, 'catalog-number'));
+    Put(Fields, 'label', Response.Text(Response.Property(Label, 'label'), 'name'));
+    if Fields.ContainsKey('label') then
+      break;
+    end if;
+  end for;
+  const Media: array of J.JsonElement := Response.Items(Release, 'media');
+  for Medium: J.JsonElement in Media do
+    for Track: J.JsonElement in Response.Items(Medium, 'tracks') do
+      if Id <> '' and Response.Text(Response.Property(Track, 'recording'), 'id') = Id then
+        Put(Fields, 'title', Response.Text(Track, 'title'));
+        Put(Fields, 'artist', Artists(Track));
+        Put(Fields, F.Custom + 'MusicBrainz Artist Id', ArtistIds(Track));
+        Put(Fields, F.Custom + 'MusicBrainz Release Track Id', Response.Text(Track, 'id'));
+        Put(Fields, F.Custom + 'TMED', Response.Text(Medium, 'format'));
+        Put(
+          Fields,
+          'track',
+          Response.Text(Track, 'position') + ' / ' + Response.Text(Medium, 'track-count')
+        );
+        Put(Fields, 'disc', Response.Text(Medium, 'position') + ' / ' + Media.Length.ToString());
+        return Fields.ToImmutable();
+      end if;
+    end for;
+  end for;
+
+  return Fields.ToImmutable();
+end function;
+
+// Sends Query to the public recording endpoint with cancellation from Stop.
+// Returns the recording/release choices in search order.
+public async function Search(Query: string; Stop: T.CancellationToken): Tasks.Task<array of Match>;
+  function Phrase(Value: string): string;
+  begin
+    return '"' + Value.Trim().Replace('\', '\\').Replace('"', '\"') + '"';
+  end function;
+begin
+  const Parts: array of string := Query.Split(' · ', 2, Sys.StringSplitOptions.TrimEntries);
+  const Terms: string := 'recording:' + Phrase(Parts[0]) +
+    (if Parts.Length = 2 and Parts[1] <> '' then
+      ' AND artist:' + Phrase(Parts[1])
+    else
+      ''
+    end if);
+  return DecodeSearch(
+    await Fetch('recording?fmt=json&limit=12&query=' + Sys.Uri.EscapeDataString(Terms), Stop)
+  );
+end function;
+
+// Retrieves public recording details for Id, honoring Stop. Returns the recording JSON.
+public function Recording(Id: string; Stop: T.CancellationToken): Tasks.Task<string>;
+begin
+  if not AllowedId(Id) then
+    raise new Sys.ArgumentException('Invalid MusicBrainz recording identity.');
+  end if;
+
+  return Fetch(
+    'recording/' + Id +
+    '?fmt=json&inc=artist-credits+genres+artist-rels+work-rels+work-level-rels',
+    Stop
+  );
+end function;
+
+// Retrieves public release details for Id, honoring Stop. Returns the release JSON.
+public function Release(Id: string; Stop: T.CancellationToken): Tasks.Task<string>;
+begin
+  if not AllowedId(Id) then
+    raise new Sys.ArgumentException('Invalid MusicBrainz release identity.');
+  end if;
+
+  return Fetch(
+    'release/' + Id + '?fmt=json&inc=artist-credits+recordings+labels+release-groups',
+    Stop
+  );
+end function;
+
+end unit;

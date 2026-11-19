@@ -1,0 +1,117 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+// Calculates sparse edits so untouched tags are left as read.
+unit FpasAmp.Ui.TagEditor.Changes;
+
+uses
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Files as Files,
+  FpasAmp.Library.TagEditing.Fields as F, System as Sys,
+  System.Collections.Generic as C, System.Collections.Immutable as I;
+
+function Normalize(Key: string; Text: string): string;
+begin
+  if Key = 'track' or Key = 'disc' then
+    if Text.Split('/', Sys.StringSplitOptions.None).Length > 2 then
+      raise new Sys.ArgumentException('Enter a number or a number / total.');
+    end if;
+    const Number: int? := F.Part(Text, 0);
+    const Total: int? := F.Part(Text, 1);
+    if Number <> null and Total <> null and Number > Total then
+      raise new Sys.ArgumentException('A track or disc number cannot exceed its total.');
+    end if;
+
+    return F.Position(Number, Total);
+  elsif Key = 'year' and Text <> '' then
+    var Year: int := 0;
+    if Text.Length <> 4 or not int.TryParse(Text, out Year) or Year < 1 or Year > 9999 then
+      raise new Sys.ArgumentException('Enter a four-digit release year.');
+    end if;
+  elsif Key = 'recording' and Text <> '' then
+    var Id: Sys.Guid := Sys.Guid.Empty;
+    if not Sys.Guid.TryParseExact(Text, 'D', out Id) then
+      raise new Sys.ArgumentException('Enter a MusicBrainz recording UUID.');
+    end if;
+  elsif Key = 'artist' or Key = 'album-artist' or Key = 'composer' or Key = 'genre' then
+    return Sys.String.Join('; ', F.Names(Text));
+  end if;
+
+  return Text;
+end function;
+
+// Validates the draft and returns only changed fields and explicit custom removals.
+public function Build(Current: M.State; Original: Files.Snapshot): I.ImmutableDictionary<string, string?>;
+begin
+  const Changes: I.ImmutableDictionary<string, string?>.Builder := I.ImmutableDictionary.CreateBuilder<string, string?>();
+  for Field: C.KeyValuePair<string, string> in Current.Values do
+    if Field.Key.StartsWith(F.Custom) then
+      continue;
+    end if;
+    const Text: string := if Current.Selected.Contains(Field.Key) then
+      F.Value(Current.Proposals, Field.Key)
+    else
+      Field.Value
+    end if;
+    if Text <> F.Value(Original.Values, Field.Key) then
+      Changes[Field.Key] := Normalize(Field.Key, Text);
+    end if;
+  end for;
+  const Custom: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
+  const Values: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  for Row: M.Custom in Current.Extra do
+    const Name: string := Row.Name.Trim();
+    if Files.BinaryTag(Name) then
+      continue;
+    end if;
+
+    if Name = '' and Row.Value = '' then
+      continue;
+    end if;
+
+    if not Files.CustomName(Name) or not Custom.Add(Name) then
+      raise new Sys.ArgumentException('Use a unique name for each custom tag: ' + Name);
+    end if;
+    const Key: string := F.Custom + Name;
+    const Text: string := if Current.Selected.Contains(
+      Key
+    ) and Current.Proposals.ContainsKey(Key)
+    then
+      Current.Proposals[Key]
+    else
+      Row.Value
+    end if;
+    Values.Add(Key, Text);
+    if not Original.Values.ContainsKey(Key) or Text <> F.Value(Original.Values, Key) then
+      Changes[Key] := Text;
+    end if;
+  end for;
+
+  for Key: string in Current.Selected do
+    if not Key.StartsWith(
+      F.Custom
+    ) or Values.ContainsKey(Key) or not Current.Proposals.ContainsKey(Key)
+    then
+      continue;
+    end if;
+    const Name: string := Key.Substring(F.Custom.Length);
+    if Files.CustomName(Name) and Custom.Add(Name) then
+      const Text: string := Current.Proposals[Key];
+      Values.Add(Key, Text);
+      if not Original.Values.ContainsKey(Key) or Text <> F.Value(Original.Values, Key) then
+        Changes[Key] := Text;
+      end if;
+    end if;
+  end for;
+
+  for Key: string in Original.Values.Keys do
+    if Key.StartsWith(F.Custom) and not Files.BinaryTag(
+      Key.Substring(F.Custom.Length)
+    ) and not Values.ContainsKey(Key)
+    then
+      Changes[Key] := null;
+    end if;
+  end for;
+
+  return Changes.ToImmutable();
+end function;
+
+end unit;

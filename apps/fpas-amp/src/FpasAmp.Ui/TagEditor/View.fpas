@@ -1,0 +1,428 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+// Variant C. The scroll viewport contains only editable rows.
+unit FpasAmp.Ui.TagEditor.View;
+
+uses
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.SearchView as SearchView,
+  FpasAmp.Library.TagEditing.Fields as F, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Library.TagEditing.Files as TagFiles,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Composition as Composition,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Inputs.TextAreas as Areas,
+  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks,
+  Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialog, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  System as Sys, System.Collections.Generic as C, System.Text as Encoding;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+const TabItems: array of Tabs.Item := [
+  new Tabs.Item('Track'),
+  new Tabs.Item('Release'),
+  new Tabs.Item('Credits'),
+  new Tabs.Item('Custom')
+];
+const Keys: array of array of string := [
+  ['title', 'artist', 'track', 'genre', 'recording'],
+  ['album', 'album-artist', 'year', 'disc', 'label'],
+  ['composer', 'lyricist', 'producer', 'piano']
+];
+const Captions: array of array of string := [
+  ['Title', 'Artist', 'Track', 'Genre', 'Recording ID'],
+  ['Album', 'Album artist', 'Release year', 'Disc', 'Label'],
+  ['Composer', 'Lyricist', 'Producer', 'Piano']
+];
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Fixed(Content: E.Element<M.Msg>; Size: int): E.Element<M.Msg>;
+begin
+  return E.Size<M.Msg>(Content, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Size))));
+end function;
+
+function Text(Value: string; Role: Texts.Appearance := Texts.Appearance.Label): E.Element<M.Msg>;
+begin
+  return Texts.Text<M.Msg>(Value, Role);
+end function;
+
+function Button(
+  Id: string; Title: string; OnClick: M.Msg; Variant: S.ButtonVariant := S.ButtonVariant.Outline;
+  Enabled: bool := true; Size: B.Size := B.Size.Small
+): E.Element<M.Msg>;
+begin
+  return B.Button<M.Msg>(
+    Id,
+    Title,
+    OnClick,
+    new B.Options(Variant := Variant, Enabled := Enabled, ControlSize := Size)
+  );
+end function;
+
+function Input(Id: string; Value: string; Changed: function(string): M.Msg; Current: M.State; Placeholder: string := ''): E.Element<M.Msg>;
+begin
+  const Bytes: int := Encoding.Encoding.UTF8.GetByteCount(Value);
+  if Value.Contains(#0) or Bytes > 65535 then
+    return Text('Tag exceeds editor capacity', Texts.Appearance.Secondary);
+  end if;
+
+  if Value.Contains(#10) or Value.Contains(#13) or Bytes > 4095 then
+    const LF: string := Sys.Char.ConvertFromUtf32(10);
+    const CR: string := Sys.Char.ConvertFromUtf32(13);
+    return Areas.TextArea<M.Msg>(
+      Id, Value.Replace(CR + LF, LF).Replace(CR, LF), Changed,
+      new Areas.Options(
+        Height := 64, ControlSize := B.Size.Small,
+        Enabled := not Current.Saving, MaxUtf8Bytes := 65535
+      )
+    );
+  end if;
+
+  return Fields.TextField<M.Msg>(
+    Id, Value, Changed, new Fields.Options(
+      ControlSize := B.Size.Small,
+      Enabled := not Current.Saving,
+      Placeholder := Placeholder,
+      MaxUtf8Bytes := 4095
+    )
+  );
+end function;
+
+function CustomProposal(Current: M.State; Key: string; Id: string): E.Element<M.Msg>;
+begin
+  const Proposal: string := F.Value(Current.Proposals, Key);
+  return if Proposal = '' then
+    Text('—', Texts.Appearance.Muted)
+  else
+    Checks.Checkbox<M.Msg>(
+      Id, Proposal, Current.Selected.Contains(Key),
+      function(Value: bool): M.Msg => M.Msg.Take(Key, Value), Enabled := not Current.Saving
+    )
+  end if;
+end function;
+
+function CustomRows(Current: M.State; Height: int; Width: int): E.Element<M.Msg>;
+begin
+  const Suggested: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.Ordinal);
+  for Key: string in Current.Proposals.Keys do
+    if Key.StartsWith(F.Custom) then
+      discard Suggested.Add(Key);
+    end if;
+  end for;
+  const Compare: bool := Suggested.Count > 0;
+  const NameWidth: int := Sys.Math.Min(
+    if Compare then
+      186
+    else
+      240
+    end if, (Width - 50) div 3
+  );
+  const ValueWidth: int := Sys.Math.Max(64, (Width - NameWidth - 151) div 2);
+  const ValueSize: L.Flex := if Compare then
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(ValueWidth)))
+  else
+    Fill
+  end if;
+  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  for Tag: M.Custom in Current.Extra do
+    const Id: int := Tag.Id;
+    const Key: string := F.Custom + Tag.Name;
+    discard Suggested.Remove(Key);
+    if TagFiles.BinaryTag(Tag.Name) then
+      const Dot: int := Tag.Name.IndexOf('.');
+      const Frame: string := if Dot >= 0 then
+        Tag.Name.Substring(0, Dot)
+      else
+        Tag.Name
+      end if;
+      Rows.Add(
+        E.Row<M.Msg>(
+          new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
+          Fixed(Text(Frame), NameWidth),
+          E.Size<M.Msg>(
+            Text(TagFiles.BinaryPreview(Tag.Name, Tag.Value), Texts.Appearance.Secondary),
+            Fill
+          ),
+          Text('Read only', Texts.Appearance.Muted)
+        )
+      );
+      continue;
+    end if;
+    const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+    Cells.Add(
+      Fixed(
+        Input(
+          'custom-name-' + Id.ToString(), Tag.Name,
+          function(Value: string): M.Msg => M.Msg.Change(Id, true, Value), Current, 'Tag name'
+        ), NameWidth
+      )
+    );
+    Cells.Add(
+      E.Size<M.Msg>(
+        Input(
+          'custom-value-' + Id.ToString(), Tag.Value,
+          function(Value: string): M.Msg => M.Msg.Change(Id, false, Value), Current, 'Tag value'
+        ), ValueSize
+      )
+    );
+    if Compare then
+      Cells.Add(E.Size<M.Msg>(CustomProposal(Current, Key, 'custom-take-' + Id.ToString()), Fill));
+    end if;
+
+    Cells.Add(
+      Button(
+        'custom-remove-' + Id.ToString(), 'Remove', M.Msg.Remove(Id),
+        S.ButtonVariant.Ghost, not Current.Saving
+      )
+    );
+    Rows.Add(
+      E.Row<M.Msg>(
+        new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
+        Cells.ToArray()
+      )
+    );
+  end for;
+
+  for Key: string in Suggested do
+    Rows.Add(
+      E.Row<M.Msg>(
+        new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
+        Fixed(Text(Key.Substring(F.Custom.Length)), NameWidth),
+        Fixed(Text('—', Texts.Appearance.Muted), ValueWidth),
+        E.Size<M.Msg>(CustomProposal(Current, Key, 'custom-new-' + Key), Fill)
+      )
+    );
+  end for;
+
+  if Rows.Count = 0 then
+    Rows.Add(Text('No custom tags', Texts.Appearance.Secondary));
+  end if;
+
+  const Header: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  Header.Add(Fixed(Text('Name'), NameWidth));
+  Header.Add(E.Size<M.Msg>(Text('Value'), ValueSize));
+  if Compare then
+    Header.Add(E.Size<M.Msg>(Text('MusicBrainz'), Fill));
+  end if;
+
+  Header.Add(Button('custom-add', 'Add tag', M.Msg.Add, Enabled := not Current.Saving));
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := Points(7), Align := L.Alignment.Stretch),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
+      Header.ToArray()
+    ),
+    if Compare then
+      E.Row<M.Msg>(
+        new L.Flow(Justify := L.Justification.End, Gap := Points(8)),
+        Button(
+          'custom-take-all',
+          'Select all',
+          M.Msg.TakeAll(true),
+          S.ButtonVariant.Ghost,
+          not Current.Saving
+        ),
+        Button(
+          'custom-take-none', 'Select none', M.Msg.TakeAll(false), S.ButtonVariant.Ghost,
+          not Current.Saving and Current.Selected.Count > 0
+        )
+      )
+    else
+      E.Column<M.Msg>()
+    end if,
+    E.Divider<M.Msg>(),
+    Fixed(
+      E.ScrollView<M.Msg>(
+        'tag-custom-scroll',
+        E.Column<M.Msg>(new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch), Rows.ToArray()),
+        Current.Offset, function(Change: L.ScrollChange): M.Msg => M.Msg.Scroll(Change.Position)
+      ), Height
+    )
+  );
+end function;
+
+function Compare(Current: M.State; Height: int; Width: int): E.Element<M.Msg>;
+begin
+  const LabelWidth: int := if Width >= 680 then
+    104
+  else
+    85
+  end if;
+  const FileWidth: int := Sys.Math.Max(105, (Width - LabelWidth - 82) div 2);
+  const Original: TagFiles.Snapshot? := Current.Original;
+  const Caption: string := if Original <> null and Original.LibraryOverrides then
+    'Tags with library edits'
+  else
+    'File tags'
+  end if;
+  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  for Index: int := 0 to Keys[Current.Tab].Length - 1 do
+    const Key: string := Keys[Current.Tab][Index];
+    const Proposal: string := F.Value(Current.Proposals, Key);
+    Rows.Add(
+      E.Row<M.Msg>(
+        new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
+        Fixed(Text(Captions[Current.Tab][Index]), LabelWidth),
+        Fixed(
+          Input(
+            'tag-field-' + Key, F.Value(Current.Values, Key),
+            function(Value: string): M.Msg => M.Msg.Edit(Key, Value), Current
+          ), FileWidth
+        ),
+        E.Size<M.Msg>(
+          if Proposal = '' then
+            Text('No suggestion', Texts.Appearance.Muted)
+          else
+            Checks.Checkbox<M.Msg>(
+              'tag-take-' + Key, Proposal, Current.Selected.Contains(Key),
+              function(Value: bool): M.Msg => M.Msg.Take(Key, Value), Enabled := not Current.Saving
+            )
+          end if, Fill
+        )
+      )
+    );
+  end for;
+
+  return E.Column<M.Msg>(
+    new L.Flow(Gap := Points(7), Align := L.Alignment.Stretch),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
+      Fixed(Text('Tag', Texts.Appearance.Muted), LabelWidth), Fixed(Text(Caption), FileWidth),
+      E.Size<M.Msg>(Text('MusicBrainz'), Fill),
+      Button(
+        'tag-take-all', 'Select all', M.Msg.TakeAll(true), S.ButtonVariant.Ghost,
+        not Current.Saving and Current.Proposals.Count > 0
+      ),
+      Button(
+        'tag-take-none', 'Select none', M.Msg.TakeAll(false), S.ButtonVariant.Ghost,
+        not Current.Saving and Current.Selected.Count > 0
+      )
+    ),
+    E.Divider<M.Msg>(),
+    Fixed(
+      E.ScrollView<M.Msg>(
+        'tag-rows-' + Current.Tab.ToString(),
+        E.Column<M.Msg>(new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch), Rows.ToArray())
+      ), Height
+    )
+  );
+end function;
+
+function Footer(Current: M.State): E.Element<M.Msg>;
+begin
+  const Original: TagFiles.Snapshot? := Current.Original;
+  return E.Row<M.Msg>(
+    new L.Flow(
+      Justify := L.Justification.Between,
+      Align := L.Alignment.Center,
+      Gap := Points(8),
+      Wrap := true
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(14), Align := L.Alignment.Center),
+      Text('Save to'),
+      Checks.Checkbox<M.Msg>(
+        'tag-database',
+        'Library database',
+        Current.Database,
+        M.Msg.Database,
+        Enabled := not Current.Saving
+      ),
+      Checks.Checkbox<M.Msg>(
+        'tag-file', 'Audio file', Current.AudioFile, M.Msg.AudioFile,
+        Enabled := not Current.Saving and Original <> null and Original.Size >= 0L
+      )
+    ),
+    E.Row<M.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+      Button(
+        'tag-cancel',
+        'Cancel',
+        M.Msg.Close,
+        S.ButtonVariant.Secondary,
+        not Current.Saving,
+        B.Size.Medium
+      ),
+      Button(
+        'tag-save',
+        if Current.Saving then
+          'Saving…'
+        else
+          'Save tags'
+        end if,
+        M.Msg.Save,
+        S.ButtonVariant.Primary,
+        not Current.Saving and Original <> null and (Current.Database or Current.AudioFile),
+        B.Size.Medium
+      )
+    )
+  );
+end function;
+
+// Overlays Current on Base, forwarding each editor proposal through Message.
+// Width and Height are the viewport dimensions used to bound scrollable rows.
+// Returns the base view with the tag dialog on top.
+public function Build<TParent>(
+  Current: M.State; Width: int; Height: int; Base: E.Element<TParent>;
+  Message: function(M.Msg): TParent
+): E.Element<TParent>;
+begin
+  const DialogWidth: int := Sys.Math.Clamp(Width - 24, 300, 900);
+  const RowHeight: int := Sys.Math.Clamp(
+    Height - (if DialogWidth < 680 then
+      398
+    else
+      306
+    end if), 90, 258
+  );
+  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  if Current.Error <> '' then
+    Parts.Add(
+      Alerts.Alert<M.Msg>(
+        'tag-error', Current.Error,
+        new Alerts.Options(Tone := S.Tone.Warning, Description := Current.HttpDetails)
+      )
+    );
+  end if;
+
+  if Current.Original = null then
+    if Current.Error = '' then
+      Parts.Add(Text('Reading tags…', Texts.Appearance.Secondary));
+    end if;
+  else
+    Parts.Add(SearchView.Build(Current, DialogWidth));
+    Parts.Add(Tabs.Tabs<M.Msg>('tag-tabs', TabItems, Current.Tab, M.Msg.Tab));
+    if Current.Tab = 3 then
+      Parts.Add(CustomRows(Current, RowHeight, DialogWidth));
+    else
+      Parts.Add(Compare(Current, RowHeight, DialogWidth));
+    end if;
+
+    Parts.Add(
+      E.Row<M.Msg>(
+        new L.Flow(Justify := L.Justification.End),
+        Text(
+          SearchView.Status(Current),
+          Texts.Appearance.Muted
+        )
+      )
+    );
+    Parts.Add(E.Divider<M.Msg>());
+    Parts.Add(Footer(Current));
+  end if;
+
+  return Dialog.Dialog<TParent>(
+    'tag-editor', Base, Composition.Map<M.Msg, TParent>(
+      E.Column<M.Msg>(new L.Flow(Gap := Points(11), Align := L.Alignment.Stretch), Parts.ToArray()),
+      Message
+    ),
+    true, new Dialog.Options(
+      'Edit tags', Browse.Title(Current.Track) + ' · ' + Browse.Artist(Current.Track),
+      Width := DialogWidth, Persistent := Current.Saving, CloseButton := not Current.Saving
+    ), Message(M.Msg.Close)
+  );
+end function;
+
+end unit;

@@ -4,7 +4,7 @@
 - Release: `7.20.1`
 - Commit: `db4d1efa833939f51dc5d8c6a3d718ec5c3716db`
 - License: [MIT](LICENSE.txt).
-- Scope: the upstream `ATL/` library directory, with local playlist corrections.
+- Scope: the upstream `ATL/` library directory, with local playlist and ID3 corrections.
 - Checksums: [SHA256SUMS](SHA256SUMS) records the retained source/license bytes.
 - Build: [Fpas.Atl.csproj](../../src/Fpas.Atl/Fpas.Atl.csproj) targets the repository's
   .NET baseline and preserves ATL's namespace and assembly name. The upstream
@@ -38,9 +38,16 @@ These changes are local; no upstream issue or pull request has been published.
 The MIDI source's contact-email line is omitted; its author attribution and
 license notice are retained.
 
+## Local ID3 changes
+
+[ID3v2.cs](ATL/AudioData/IO/ID3v2.cs) retains the owner and binary payload of
+`UFID` and `PRIV` frames. ATL carries the payload as Base64 in additional
+fields under `UFID.<owner>` and `PRIV.<owner>` and decodes it when writing.
+This preserves embedded and trailing zero bytes when another tag changes.
+
 ## Update
 
 Copy the new release's library directory and license, record its exact commit,
-review/reapply the documented playlist changes and regenerate the source checksum
+review/reapply the documented playlist and ID3 changes and regenerate the source checksum
 manifest. Build `src/Fpas.Atl/Fpas.Atl.csproj`, run the focused playlist/container
 tests and review the source diff before committing a dependency update.

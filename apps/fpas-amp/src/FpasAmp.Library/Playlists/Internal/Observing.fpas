@@ -1,19 +1,19 @@
 // [Documentation](../../../../doc/library.md#playlists)
 
-// Background observers query full summaries only after a database commit changes.
+// Background observation of the initial playlist snapshot and committed changes.
 unit FpasAmp.Library.Playlists.Internal.Observing;
 
 uses
   FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Persistence.Queries as Queries,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System as Sys, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
-function Version(Connection: Db.SqliteConnection): long;
+function Version(Connection: Db.SqliteConnection; Pragma: string): long;
 begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'PRAGMA data_version;',
+    Pragma,
     null,
     [],
     []
@@ -41,50 +41,28 @@ begin
 end function;
 
 // Observes summaries in `Database`/`Users` on a background owner. `Publish` is
-// awaited for changed complete snapshots; cancellation closes both read connections.
+// awaited for changed complete snapshots; cancellation closes the read connection.
 // Database versions are polled twice per second; unchanged content is not republished.
 public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray<M.Summary>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
 begin
-  using const Catalogue: Db.SqliteConnection := Sql.Open(Database);
-  using const UserData: Db.SqliteConnection := Sql.Open(Users);
+  using const Connection: Db.SqliteConnection := Queries.OpenRead(Database, Users);
   var CatalogueVersion: long := -1L;
   var UserVersion: long := -1L;
   var Previous: I.ImmutableArray<M.Summary> := I.ImmutableArray<M.Summary>.Empty;
   var Published: bool := false;
   while true do
     Cancellation.ThrowIfCancellationRequested();
-    const CurrentCatalogue: long := Version(Catalogue);
-    const CurrentUsers: long := Version(UserData);
+    const CurrentCatalogue: long := Version(Connection, 'PRAGMA main.data_version;');
+    const CurrentUsers: long := Version(Connection, 'PRAGMA users.data_version;');
     if CurrentCatalogue <> CatalogueVersion or CurrentUsers <> UserVersion then
-      const Items: C.List<M.Summary> := new C.List<M.Summary>();
-      var Offset: int := 0;
-      while true do
-        const Page: I.ImmutableArray<M.Summary> := Queries.List(
-          Database,
-          Users,
-          new M.Query(Limit := 200, Offset := Offset),
-          Cancellation
-        );
-        Items.AddRange(Page);
-        if Page.Length < 200 then
-          break;
-        end if;
-
-        Offset := Offset + Page.Length;
-      end while;
-
-      // A concurrent insertion must not cause skipped/duplicated pagination rows.
-      if CurrentCatalogue = Version(Catalogue) and CurrentUsers = Version(UserData) then
-        CatalogueVersion := CurrentCatalogue;
-        UserVersion := CurrentUsers;
-        const Snapshot: I.ImmutableArray<M.Summary> := I.ImmutableArray.CreateRange<M.Summary>(
-          Items
-        );
-        if not Published or not Same(Previous, Snapshot) then
-          await Publish(Snapshot).ConfigureAwait(false);
-          Previous := Snapshot;
-          Published := true;
-        end if;
+      const Snapshot: I.ImmutableArray<M.Summary> := Queries.Snapshot(Connection, Cancellation);
+      // Keep the versions from before the read so concurrent commits trigger the next poll.
+      CatalogueVersion := CurrentCatalogue;
+      UserVersion := CurrentUsers;
+      if not Published or not Same(Previous, Snapshot) then
+        await Publish(Snapshot).ConfigureAwait(false);
+        Previous := Snapshot;
+        Published := true;
       end if;
     end if;
 

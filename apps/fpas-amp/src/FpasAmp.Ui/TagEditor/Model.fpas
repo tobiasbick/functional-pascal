@@ -1,0 +1,124 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.Ui.TagEditor.Model;
+
+uses
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.TagEditing.Files as Files,
+  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Ui.Providers.RequestPacing as Pacing,
+  Fpas.Ui.Layout as L, System.Collections.Immutable as I;
+
+// A free-form tag row. Id stays stable while the name is edited.
+public type Custom = record
+  // Renderer identity.
+  public Id: int;
+  // Editable native name.
+  public Name: string;
+  // Editable native value.
+  public Value: string;
+end record;
+
+// A single open tag editing draft.
+public type State = record
+  // Indexed track used by both save destinations.
+  public Track: Tracks.Entry;
+  // Original values and file stamp.
+  public Original: Files.Snapshot? := null;
+  // Editable standard values.
+  public Values: I.ImmutableDictionary<string, string> := I.ImmutableDictionary<string, string>.Empty;
+  // Visible custom rows.
+  public Extra: I.ImmutableArray<Custom> := I.ImmutableArray<Custom>.Empty;
+  // Next available stable row key.
+  public NextRow: int := 0;
+  // Active Track, Release, Credits or Custom tab.
+  public Tab: int := 0;
+  // Model-owned Custom list position.
+  public Offset: L.ScrollPosition := L.ScrollPosition.Start;
+  // MusicBrainz recording search text.
+  public Query: string := '';
+  // Recording/release pairings from the last search.
+  public Matches: array of MB.Match := [];
+  // Index of the chosen pairing, or -1.
+  public Match: int := -1;
+  // Available values from the selected result.
+  public Proposals: I.ImmutableDictionary<string, string> := I.ImmutableDictionary<string, string>.Empty;
+  // Keys selected for adoption across all tabs.
+  public Selected: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+  // Whether to save a library override.
+  public Database: bool := true;
+  // Whether to update the actual audio file.
+  public AudioFile: bool := false;
+  // Whether to show the MusicBrainz loading state.
+  public Searching: bool := false;
+  // Whether AcoustID is measuring or looking up the track.
+  public Scanning: bool := false;
+  // Whether the saved settings contain an application key for the scan.
+  public CanScan: bool := false;
+  // Whether a save is pending.
+  public Saving: bool := false;
+  // Latest validation or operation error.
+  public Error: string := '';
+  // Temporary details from the last provider failure.
+  public HttpDetails: string := '';
+  // Availability sampled from the process-wide provider gate.
+  public Provider: Pacing.Status := new Pacing.Status();
+  // Availability sampled from the process-wide AcoustID gate.
+  public AcoustId: Pacing.Status := new Pacing.Status();
+end record;
+
+// Owner-thread messages for opening, editing, comparing and saving.
+public type Msg = variant
+  // Opens a new editor for the selected track.
+  Open(Track: Tracks.Entry);
+  // Delivers the editable snapshot.
+  Loaded(Original: Files.Snapshot);
+  // Changes the selected group.
+  Tab(Index: int);
+  // Edits a standard value and clears its proposed selection.
+  Edit(Key: string; Value: string);
+  // Adds a blank custom row.
+  Add;
+  // Edits the name or value of a custom row.
+  Change(Id: int; Name: bool; Value: string);
+  // Removes a row from the draft.
+  Remove(Id: int);
+  // Records a user scroll.
+  Scroll(Position: L.ScrollPosition);
+  // Updates the search input.
+  Query(Value: string);
+  // Submits the search.
+  Search;
+  // Identifies this track by its acoustic fingerprint.
+  Scan;
+  // Receives available result pairings.
+  Found(Items: array of MB.Match);
+  // Chooses a recording/release match.
+  Lookup(Index: int);
+  // Receives detailed proposals.
+  Proposed(Values: I.ImmutableDictionary<string, string>);
+  // Shows recording proposals while a release lookup is still running.
+  RecordingReady(Values: I.ImmutableDictionary<string, string>);
+  // Reports a release lookup failure while keeping the recording proposals.
+  ReleaseFailed(Details: string);
+  // Selects a single MusicBrainz value.
+  Take(Key: string; Selected: bool);
+  // Selects or clears all available proposals.
+  TakeAll(Selected: bool);
+  // Sets the database destination.
+  Database(Checked: bool);
+  // Sets the file destination.
+  AudioFile(Checked: bool);
+  // Begins an explicit save.
+  Save;
+  // Confirms a successful save.
+  Saved;
+  // Displays an operation failure.
+  Failed(Message: string);
+  // Displays provider diagnostics and samples the shared cooldown.
+  RequestFailed(Details: string);
+  // Refreshes the displayed provider timer.
+  Timer(MusicBrainz: Pacing.Status; AcoustId: Pacing.Status);
+  // Dismisses the editor.
+  Close;
+end variant;
+
+end unit;

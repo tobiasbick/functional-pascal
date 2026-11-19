@@ -18,7 +18,7 @@ type FileVersion = record
   // Full-file SHA-256 if already known.
   public Hash: string;
   // Encoded fingerprint for this content and algorithm, when stored.
-  public Cached: string?;
+  public Cached: Calc.Measurement?;
 end record;
 
 function Version(Database: string; Track: M.Entry): FileVersion;
@@ -26,7 +26,7 @@ begin
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
-    'SELECT f.size,f.modified_utc,COALESCE(NULLIF(m.sha256,''''),s.sha256,''''),p.fingerprint FROM files f ' +
+    'SELECT f.size,f.modified_utc,COALESCE(NULLIF(m.sha256,''''),s.sha256,''''),p.fingerprint,p.duration_seconds FROM files f ' +
     'LEFT JOIN metadata m ON m.file_id=f.id AND m.size=f.size AND m.modified_utc=f.modified_utc ' +
     'LEFT JOIN fingerprint_sources s ON s.file_id=f.id AND s.size=f.size AND s.modified_utc=f.modified_utc ' +
     'LEFT JOIN acoustic_fingerprints p ON p.sha256=COALESCE(NULLIF(m.sha256,''''),s.sha256) AND p.algorithm=$algorithm ' +
@@ -47,7 +47,7 @@ begin
     if Row.IsDBNull(3) then
       null
     else
-      Row.GetString(3)
+      new Calc.Measurement(Row.GetString(3), Row.GetDouble(4))
     end if
   );
 end function;
@@ -70,7 +70,7 @@ begin
 end procedure;
 
 // Returns the stored fingerprint for Track in Database, or null if one has yet to be generated.
-public function Cached(Database: string; Track: M.Entry): string?;
+public function Cached(Database: string; Track: M.Entry): Calc.Measurement?;
 requires Database <> '';
 begin
   return Version(Database, Track).Cached;
@@ -78,8 +78,8 @@ end function;
 
 // Reuses or calculates the fingerprint for Track in Database. Configuration identifies available
 // sources; Gate serializes generators in this library. Cancellation interrupts waiting and fpcalc.
-// Returns the encoded fingerprint only after it has been stored.
-public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task<string?>;
+// Returns the fingerprint and whole-file duration only after they have been stored.
+public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task<Calc.Measurement?>;
 requires Database <> '';
 begin
   await Gate.WaitAsync(Cancellation).ConfigureAwait(false);
@@ -141,7 +141,7 @@ begin
     end if;
 
     Transaction.Commit();
-    return Result.Value;
+    return Result;
   finally
     discard Gate.Release();
   end try;

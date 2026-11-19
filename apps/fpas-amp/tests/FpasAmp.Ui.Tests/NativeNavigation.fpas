@@ -281,13 +281,16 @@ public type NativeNavigationTests = record
           function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 3
         );
         X.Assert.False(Has(Session, 'drawer-open'));
+        X.Assert.DoesNotContain<Gui.Control>(
+          Session.Window.Snapshot().Controls,
+          function(Item: Gui.Control): bool => Item.Id = 'navigation' and Item.Key = 'ratings'
+        );
         Capture(Session, 'navigation-desktop');
         for Page: Nav.Page in [
           Nav.Page.Music,
           Nav.Page.Albums,
           Nav.Page.Artists,
-          Nav.Page.Genres,
-          Nav.Page.Ratings
+          Nav.Page.Genres
         ] do
           SetRoute(Session, Nav.Route.Page(Page));
           X.Assert.Equal<string>(
@@ -299,10 +302,8 @@ public type NativeNavigationTests = record
             Has(
               Session, if Page = Nav.Page.Music then
                 'track-search'
-              elsif Nav.Browsing(Nav.Route.Page(Page)) then
-                'albums-empty'
               else
-                'page-placeholder'
+                'albums-empty'
               end if
             )
           );

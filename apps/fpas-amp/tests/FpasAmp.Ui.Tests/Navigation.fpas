@@ -25,7 +25,6 @@ public type NavigationTests = record
       M.Page.Albums,
       M.Page.Artists,
       M.Page.Genres,
-      M.Page.Ratings,
       M.Page.Settings
     ] do
       const Route: M.Route := M.Route.Page(Page);
@@ -51,6 +50,22 @@ public type NavigationTests = record
     X.Assert.Equal<string>('settings', M.Key(Settings.Active));
     X.Assert.Equal<int>(1, Settings.SettingsTab);
     X.Assert.Equal<int>(1, Update.Apply(Settings, M.Msg.SelectSettingsTab(99)).SettingsTab);
+  end procedure;
+
+  // A window last closed on the retired Ratings page reopens on Music with the saved placement.
+  [X.FactAttribute]
+  public procedure RetiredRatingsPageRestoresMusic();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    IO.File.WriteAllText(
+      IO.Path.Combine(Folder.Path, 'state.json'),
+      '{"width":1200,"height":700,"x":40,"y":50,"maximized":false,"settingsTab":1,"activePage":"ratings"}'
+    );
+    const Saved: AppState.Snapshot := AppState.Load(Folder.Path);
+    X.Assert.Equal<string>('music', Saved.ActivePage);
+    X.Assert.Equal<int>(1200, Saved.Width);
+    X.Assert.Equal<int>(1, Saved.SettingsTab);
+    X.Assert.Equal<int>(0, IO.Directory.GetFiles(Folder.Path, 'state.json.corrupt-*.bak').Length);
   end procedure;
 
   // A saved playlist waits for the first snapshot, then validates UUID/store identity.

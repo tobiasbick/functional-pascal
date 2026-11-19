@@ -1,0 +1,345 @@
+// [Documentation](../../../doc/library.md#tag-editing)
+
+// Reads native tags and stages a verified replacement beside the original.
+unit FpasAmp.Library.TagEditing.Files;
+
+uses
+  ATL as A, Fpas.Media.Tags.AudioFiles as Media, FpasAmp.Library.TagEditing.Fields as F,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Collections.Generic as C,
+  System.Text.Encoding as Encoding;
+
+// Prefix used by uncommitted edits, which inventory discovery ignores.
+public const StagingPrefix: string := '.fpas-tags-';
+
+// Editable values and the file stamp checked before replacing the audio file.
+public type Snapshot = record
+  // Standard fields and prefixed custom fields.
+  public Values: I.ImmutableDictionary<string, string>;
+  // Length in bytes, or -1 when the file is unavailable.
+  public Size: long := -1L;
+  // UTC modification ticks when the file was read.
+  public Modified: long := 0L;
+  // Whether the editor's values include database overrides.
+  public LibraryOverrides: bool := false;
+end record;
+
+function NativeName(Key: string): string;
+begin
+  return if Key.StartsWith('TXXX:', Sys.StringComparison.OrdinalIgnoreCase) then
+    Key.Substring(5)
+  else
+    Key
+  end if;
+end function;
+
+function Named(Key: string): string;
+begin
+  return NativeName(Key).ToUpperInvariant().Replace('_', '').Replace(' ', '');
+end function;
+
+// Recognizes owner-prefixed ID3 binary frames represented by ATL's native keys.
+public function BinaryTag(Name: string): bool;
+begin
+  const Key: string := Name.ToUpperInvariant();
+  return Key = 'UFID' or Key = 'PRIV' or Key.StartsWith('UFID.') or Key.StartsWith('PRIV.');
+end function;
+
+// Formats the owner and a printable identifier or byte preview from a binary frame.
+public function BinaryPreview(Name: string; Value: string): string;
+begin
+  const Dot: int := Name.IndexOf('.');
+  const Owner: string := if Dot >= 0 then
+    Name.Substring(Dot + 1)
+  else
+    ''
+  end if;
+  const Prefix: string := if Owner = '' then
+    'Binary ID3 frame'
+  else
+    'Owner: ' + Owner
+  end if;
+  try
+    const Bytes: array of byte := Sys.Convert.FromBase64String(Value);
+    var Printable: bool := Name.StartsWith(
+      'UFID',
+      Sys.StringComparison.OrdinalIgnoreCase
+    ) and Bytes.Length <= 64;
+    for Item: byte in Bytes do
+      Printable := Printable and Item >= 32 and Item < 127;
+    end for;
+
+    if Printable and Bytes.Length > 0 then
+      return Prefix + ' · ID: ' + Encoding.ASCII.GetString(Bytes);
+    end if;
+    const Length: int := Sys.Math.Min(16, Bytes.Length);
+    return Prefix + ' · ' + Bytes.Length.ToString() + ' bytes · ' +
+      Sys.Convert.ToHexString(Bytes, 0, Length) + (if Length < Bytes.Length then
+        '…'
+      else
+        ''
+      end if);
+  catch _Invalid: Sys.FormatException do
+    return Prefix;
+  end try;
+end function;
+
+// Reports whether Name is valid as a custom key without shadowing an editor field.
+public function CustomName(Name: string): bool;
+begin
+  if BinaryTag(Name) or Name.Trim() = '' or Name.Contains(
+    '='
+  ) or Name.Contains(#10) or Name.Contains(#13) or Name.Contains(#0)
+  then
+    return false;
+  end if;
+
+  case Named(Name) of
+    when 'TITLE', 'ARTIST', 'ALBUM', 'ALBUMARTIST', 'GENRE', 'DATE', 'YEAR', 'TRACK', 'TRACKNUMBER', 'TRACKTOTAL', 'DISC', 'DISCNUMBER', 'DISCTOTAL', 'LABEL', 'PUBLISHER', 'COMPOSER', 'LYRICIST', 'PRODUCER', 'PIANO', 'MUSICBRAINZTRACKID':
+      return false;
+    else
+      return true;
+  end case;
+end function;
+
+// Reads the standard tags and additional native fields from Path.
+public function Read(Path: string): Snapshot;
+begin
+  const Stamp: IO.FileInfo := new IO.FileInfo(Path);
+  const Size: long := Stamp.Length;
+  const Modified: long := Stamp.LastWriteTimeUtc.Ticks;
+  using const Stream: IO.FileStream := new IO.FileStream(
+    Path, IO.FileMode.Open, IO.FileAccess.Read, IO.FileShare.Read or IO.FileShare.Delete
+  );
+  var Values: I.ImmutableDictionary<string, string> := F.FromInfo(
+    Media.Read(Stream, IO.Path.GetExtension(Path) ?? '')
+  );
+  const Track: A.Track := new A.Track(Path);
+  const Extras: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  if Extras <> null then
+    for Pair: C.KeyValuePair<string?, string?> in Extras do
+      const Key: string := Pair.Key ?? '';
+      if BinaryTag(Key) or CustomName(Key) then
+        Values := Values.SetItem(F.Custom + Key, Pair.Value ?? '');
+      end if;
+    end for;
+  end if;
+
+  return new Snapshot(Values, Size, Modified);
+end function;
+
+procedure SetExtra(Track: A.Track; Key: string; Text: string?; Standard: bool := true);
+begin
+  const Extras: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  if Extras = null then
+    raise new IO.InvalidDataException('The file has no writable additional fields.');
+  end if;
+  var Existing: string := Key;
+  if not Extras.ContainsKey(Key) then
+    for Pair: C.KeyValuePair<string?, string?> in Extras do
+      if (Standard and Named(Pair.Key ?? '') = Named(Key))
+        or Sys.String.Equals(
+        NativeName(Pair.Key ?? ''),
+        NativeName(Key),
+        Sys.StringComparison.OrdinalIgnoreCase
+      )
+      then
+        Existing := Pair.Key ?? Key;
+        break;
+      end if;
+    end for;
+  end if;
+
+  if Text = null or (Standard and Text = '') then
+    discard Extras.Remove(Existing);
+  else
+    Extras[Existing] := Text;
+  end if;
+end procedure;
+
+procedure SetRecording(Track: A.Track; Value: string?; Id3: bool);
+begin
+  if Id3 then
+    SetExtra(Track, 'UFID.http://musicbrainz.org', null, false);
+    SetExtra(Track, 'UFID.https://musicbrainz.org', null, false);
+    SetExtra(Track, 'MUSICBRAINZ_TRACKID', null);
+    if Value <> null and Value <> '' then
+      SetExtra(
+        Track, 'UFID.http://musicbrainz.org',
+        Sys.Convert.ToBase64String(Encoding.ASCII.GetBytes(Value)), false
+      );
+    end if;
+  else
+    SetExtra(Track, 'MUSICBRAINZ_TRACKID', Value);
+  end if;
+end procedure;
+
+function Packed(Value: string): string;
+begin
+  return Sys.String.Join(A.Settings.DisplayValueSeparator, F.Names(Value));
+end function;
+
+procedure Edit(Track: A.Track; Key: string; Value: string?; Id3: bool);
+begin
+  const Text: string := Value ?? '';
+  case Key of
+    when 'title':
+      Track.Title := Text;
+    when 'artist':
+      Track.Artist := Packed(Text);
+    when 'genre':
+      Track.Genre := Packed(Text);
+    when 'track':
+      Track.TrackNumber := F.Part(Text, 0);
+      Track.TrackTotal := F.Part(Text, 1);
+    when 'recording':
+      SetRecording(Track, Value, Id3);
+    when 'album':
+      Track.Album := Text;
+    when 'album-artist':
+      Track.AlbumArtist := Packed(Text);
+    when 'year':
+      Track.Year := if Text = '' then
+        null
+      else
+        int.Parse(Text)
+      end if;
+    when 'disc':
+      Track.DiscNumber := F.Part(Text, 0);
+      Track.DiscTotal := F.Part(Text, 1);
+    when 'label':
+      Track.Publisher := Text;
+    when 'composer':
+      Track.Composer := Packed(Text);
+    when 'lyricist':
+      Track.Lyricist := Text;
+    when 'producer':
+      SetExtra(Track, 'PRODUCER', Value);
+    when 'piano':
+      SetExtra(Track, 'PIANO', Value);
+    else
+      if Key.StartsWith(F.Custom) and CustomName(Key.Substring(F.Custom.Length)) then
+        SetExtra(Track, Key.Substring(F.Custom.Length), Value, false);
+      end if;
+  end case;
+end procedure;
+
+procedure VerifyStamp(Path: string; Original: Snapshot);
+begin
+  const File: IO.FileInfo := new IO.FileInfo(Path);
+  if not File.Exists or File.Length <> Original.Size or File.LastWriteTimeUtc.Ticks <>
+    Original.Modified
+  then
+    raise new IO.IOException(
+      'The audio file changed or is unavailable. Reopen the editor before saving it.'
+    );
+  end if;
+
+  if File.LinkTarget <> null then
+    raise new IO.IOException(
+      'Open the target file directly before saving tags to an audio file link.'
+    );
+  end if;
+end procedure;
+
+// Creates a verified sibling of Path with Changes applied. Original is the
+// expected file stamp. Returns the staged path, which the caller owns.
+public function Stage(Path: string; Original: Snapshot; Changes: I.ImmutableDictionary<string, string?>): string;
+begin
+  VerifyStamp(Path, Original);
+  const Temporary: string := IO.Path.Combine(
+    IO.Path.GetDirectoryName(Path) ?? '',
+    StagingPrefix + Sys.Guid.NewGuid().ToString('N') + IO.Path.GetExtension(Path)
+  );
+  try
+    IO.File.Copy(Path, Temporary);
+    const Track: A.Track := new A.Track(Temporary);
+    const Id3: bool := Sys.String.Equals(
+      IO.Path.GetExtension(Path),
+      '.mp3',
+      Sys.StringComparison.OrdinalIgnoreCase
+    );
+    for Change: C.KeyValuePair<string, string?> in Changes do
+      if Change.Value = null then
+        Edit(Track, Change.Key, null, Id3);
+      end if;
+    end for;
+
+    for Change: C.KeyValuePair<string, string?> in Changes do
+      if Change.Value <> null then
+        Edit(Track, Change.Key, Change.Value, Id3);
+      end if;
+    end for;
+
+    if not Track.Save() then
+      raise new IO.IOException('The audio format could not save these tags.');
+    end if;
+    const Saved: Snapshot := Read(Temporary);
+    for Change: C.KeyValuePair<string, string?> in Changes do
+      var Actual: string := F.Value(Saved.Values, Change.Key);
+      if Change.Key.StartsWith(F.Custom) then
+        const Name: string := NativeName(Change.Key.Substring(F.Custom.Length));
+        var Found: bool := false;
+        for Pair: C.KeyValuePair<string, string> in Saved.Values do
+          if Pair.Key.StartsWith(F.Custom) and Sys.String.Equals(
+            NativeName(Pair.Key.Substring(F.Custom.Length)),
+            Name,
+            Sys.StringComparison.OrdinalIgnoreCase
+          )
+          then
+            Actual := Pair.Value;
+            Found := true;
+            break;
+          end if;
+        end for;
+
+        if Change.Value = null and Found then
+          // A renamed key can be encoded with the same spelling by the tag format.
+          var Renamed: bool := false;
+          for Replacement: C.KeyValuePair<string, string?> in Changes do
+            if Replacement.Value <> null and Replacement.Key.StartsWith(
+              F.Custom
+            ) and Sys.String.Equals(
+              NativeName(Replacement.Key.Substring(F.Custom.Length)),
+              Name,
+              Sys.StringComparison.OrdinalIgnoreCase
+            )
+            then
+              Renamed := true;
+              break;
+            end if;
+          end for;
+
+          if Renamed then
+            continue;
+          end if;
+        end if;
+
+        if Found <> (Change.Value <> null) then
+          raise new IO.InvalidDataException(
+            'The audio format could not retain the tag change for ' + Name + '.'
+          );
+        end if;
+      end if;
+
+      if Actual <> (Change.Value ?? '') then
+        raise new IO.InvalidDataException(
+          'The audio format could not retain the tag ' + Change.Key + '.'
+        );
+      end if;
+    end for;
+
+    return Temporary;
+  catch do
+    IO.File.Delete(Temporary);
+    raise;
+  end try;
+end function;
+
+// Installs the verified Temporary file at Path after rechecking Original's stamp.
+public procedure Install(Path: string; Original: Snapshot; Temporary: string);
+begin
+  VerifyStamp(Path, Original);
+  IO.File.Move(Temporary, Path, true);
+end procedure;
+
+end unit;

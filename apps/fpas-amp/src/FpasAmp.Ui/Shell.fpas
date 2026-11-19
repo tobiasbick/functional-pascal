@@ -10,6 +10,7 @@ uses
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.View as AlbumView,
   Fpas.Ui.Composition as Composition,
   FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.View as SettingsView,
+  FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.View as TagView,
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.View as PlayerView,
   FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio,
   Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
@@ -55,7 +56,7 @@ begin
   end if);
   const Page: E.Element<M.Msg> := if Settings then
     SettingsView.Build<M.Msg>(
-      Current.Settings, Current.Navigation.SettingsTab, Theme, Padding, M.Msg.Settings,
+      Current.Settings, Current.Navigation.SettingsTab, Theme, Content, Padding, M.Msg.Settings,
       function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
     )
   elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
@@ -132,7 +133,23 @@ begin
       ), Fill
     )
   end if;
-  return SettingsView.Overlay<M.Msg>(Current.Settings, Base, M.Msg.Settings);
+  const SettingsOverlay: E.Element<M.Msg> := SettingsView.Overlay<M.Msg>(
+    Current.Settings,
+    Base,
+    M.Msg.Settings
+  );
+  const Editor: TagModel.State? := Current.TagEditor;
+  if Editor = null then
+    return SettingsOverlay;
+  end if;
+
+  return TagView.Build<M.Msg>(
+    Editor,
+    Width,
+    Viewport.LogicalHeight ?? 680,
+    SettingsOverlay,
+    M.Msg.TagEditor
+  );
 end function;
 
 // Manually driven native shell, useful for application hosting and focused UI checks.
@@ -185,7 +202,7 @@ public type Session = record implements Sys.IDisposable
         Gains := Settings.Mixer.Gains;
       end with
     );
-    if Initial.Navigation.SettingsTab <> 0 and Initial.Navigation.SettingsTab <> 1 then
+    if not Nav.ValidSettingsTab(Initial.Navigation.SettingsTab) then
       raise new Sys.ArgumentOutOfRangeException('Navigation');
     end if;
     var Last: M.State := Initial;
@@ -295,7 +312,7 @@ end record;
 // Returns the final host placement for storage alongside the selected destination.
 // Player supplies the paused transport and receives the last observed state at close.
 public function Run(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; ref Navigation: Nav.State; ref Player: PlayerModel.State; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
-requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
+requires Navigation.SettingsTab >= 0 and Navigation.SettingsTab <= 2;
 begin
   using const Running: Session := Session.Start(
     Window,

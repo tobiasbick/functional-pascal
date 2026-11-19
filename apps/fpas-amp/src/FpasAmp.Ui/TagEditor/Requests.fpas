@@ -1,0 +1,100 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.Ui.TagEditor.Requests;
+
+uses
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.MusicBrainz as MB,
+  FpasAmp.Ui.TagEditor.AcoustId as Acoust, FpasAmp.Ui.Providers.RequestPacing as Pacing,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Failed(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.RequestFailed(Error.Message);
+end function;
+
+// The editor's single provider operation slot. Closing or saving cancels it.
+public const Slot: string := 'provider';
+
+// Emits changed provider status samples until the editor is closed.
+public function Timer(): A.Command<M.Msg>;
+begin
+  return A.StartBackground<M.Msg>(
+    'timer',
+    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+      var PreviousMusic: Pacing.Status := new Pacing.Status(Seconds := -1L);
+      var PreviousAudio: Pacing.Status := PreviousMusic;
+      while true do
+        Stop.ThrowIfCancellationRequested();
+        const Music: Pacing.Status := MB.Availability();
+        const Audio: Pacing.Status := Acoust.Availability();
+        if Music <> PreviousMusic or Audio <> PreviousAudio then
+          await Post(M.Msg.Timer(Music, Audio));
+          PreviousMusic := Music;
+          PreviousAudio := Audio;
+        end if;
+
+        await Tasks.Task.Delay(125, Stop).ConfigureAwait(false);
+      end while;
+    end function, function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Error.Message)
+  );
+end function;
+
+// Searches MusicBrainz for Query and posts the selectable results.
+public function Search(Query: string): A.Command<M.Msg>;
+begin
+  return A.StartBackground<M.Msg>(
+    Slot,
+    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+      await Post(M.Msg.Found(await MB.Search(Query, Stop)));
+    end function, Failed
+  );
+end function;
+
+// Loads a recording and, when Choice includes one, enriches it with release details.
+public function Lookup(Choice: MB.Match): A.Command<M.Msg>;
+begin
+  return A.StartBackground<M.Msg>(
+    Slot,
+    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+      const Recording: string := await MB.Recording(Choice.Recording, Stop);
+      const Values: I.ImmutableDictionary<string, string> := MB.DecodeTags(Recording, '{}');
+      if Choice.Release = '' then
+        await Post(M.Msg.Proposed(Values));
+        return;
+      end if;
+
+      await Post(M.Msg.RecordingReady(Values));
+      try
+        const Release: string := await MB.Release(Choice.Release, Stop);
+        await Post(M.Msg.Proposed(MB.DecodeTags(Recording, Release)));
+      catch Error: Sys.Exception when not Stop.IsCancellationRequested do
+        await Post(M.Msg.ReleaseFailed(Error.Message));
+      end try;
+    end function, Failed
+  );
+end function;
+
+// Measures Track through Library when needed and searches AcoustID with the saved ApplicationKey.
+public function Scan(Library: Metadata.Session; Track: Tracks.Entry; ApplicationKey: string): A.Command<M.Msg>;
+begin
+  return A.StartBackground<M.Msg>(
+    Slot,
+    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+      const Audio: Fingerprint.Measurement? := await Library.MeasureFingerprintAsync(
+        Track,
+        true,
+        Stop
+      );
+      if Audio = null or Audio.Duration < 1.0 then
+        raise new Sys.InvalidOperationException('There is too little audio to look up this track.');
+      end if;
+
+      await Post(M.Msg.Found(await Acoust.Scan(ApplicationKey, Audio, Stop)));
+    end function, Failed
+  );
+end function;
+
+end unit;

@@ -85,9 +85,17 @@ public type NativeShellTests = record
         end procedure, Library, new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings))
       );
       Step(Session, 0);
-      X.Assert.True(Control(Session, 'clear-database').Enabled);
+      for Item: Gui.Control in Session.Window.Snapshot().Controls do
+        X.Assert.NotEqual<string>('clear-database', Item.Id);
+      end for;
+
       Capture(Session, 'general');
       Step(Session, 1);
+      X.Assert.True(Control(Session, 'clear-database').Enabled);
+      const SourceBounds: Cui.CuiRectangle := Control(Session, 'source-music').Bounds;
+      X.Assert.True(
+        Control(Session, 'database-card').Bounds.Y > SourceBounds.Y + SourceBounds.Height
+      );
       X.Assert.True(
         Control(
           Session,
@@ -200,15 +208,14 @@ public type NativeShellTests = record
       end while;
 
       X.Assert.True(Rescanned);
-      Step(Session, 0);
       Send(Session, Settings.Msg.AskClear(''));
-      Step(Session, 0);
+      Step(Session, 1);
       X.Assert.True(Control(Session, Confirm.ConfirmId('clear-database-confirm')).Enabled);
       Send(Session, Settings.Msg.ConfirmClear);
-      Step(Session, 0);
+      Step(Session, 1);
       var AllCleared: bool := false;
       while not AllCleared and Sys.Environment.TickCount64 < ResumeDeadline do
-        Step(Session, 0);
+        Step(Session, 1);
         const State: Settings.State := Session.State().Settings;
         const Snapshot: Inventory.Snapshot? := State.Inventory;
         AllCleared := State.Clearing = null and Snapshot <> null and Snapshot.Sources[
@@ -220,7 +227,6 @@ public type NativeShellTests = record
       X.Assert.True(AllCleared);
       X.Assert.True(Saved.MusicSources[0].Paused);
       X.Assert.True(IO.File.Exists(Track));
-      Step(Session, 1);
       X.Assert.True(Control(Session, 'source-music-remove').Enabled);
       Send(Session, Settings.Msg.AskRemove(Source.Id));
       Step(Session, 1);

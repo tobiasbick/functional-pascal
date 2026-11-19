@@ -1,0 +1,398 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+// Owns the draft and scopes file and MusicBrainz effects to the open editor.
+unit FpasAmp.Ui.TagEditor.Update;
+
+uses
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.Changes as Changes,
+  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Library.TagEditing.Fields as F,
+  FpasAmp.Library.TagEditing.Files as Files, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Albums.Music.Browse as Browse,
+  FpasAmp.Ui.Providers.RequestPacing as Pacing, FpasAmp.Ui.TagEditor.CustomTags as Custom,
+  FpasAmp.Ui.TagEditor.Requests as Requests, FpasAmp.Ui.TagEditor.AcoustId as Acoust,
+  Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as A,
+  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Failure(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.Failed(Error.Message);
+end function;
+
+function Blocked(Current: M.State; Shown: Pacing.Status; Provider: Pacing.Status): bool;
+begin
+  return Current.Original = null or Current.Searching or Current.Scanning or Shown.Busy
+    or Shown.Seconds > 0L or Provider.Busy or Provider.Seconds > 0L;
+end function;
+
+function SearchText(Track: Tracks.Entry): string;
+begin
+  const Artist: string := Browse.Artist(Track);
+  const Text: string := (Browse.Title(Track) + (if Artist = '' then
+    ''
+  else
+    ' · ' + Artist
+  end if)).Replace(
+    Sys.Char.ConvertFromUtf32(10),
+    ' '
+  ).Replace(Sys.Char.ConvertFromUtf32(13), ' ').Replace(Sys.Char.ConvertFromUtf32(0), '');
+  if Text.Length <= 500 then
+    return Text;
+  end if;
+
+  return Text.Substring(
+    0, if Sys.Char.IsHighSurrogate(Text[499]) then
+      499
+    else
+      500
+    end if
+  );
+end function;
+
+function BeginRequest(Current: M.State; Command: A.Command<M.Msg>; Index: int := -1; Scan: bool := false): A.Transition<M.State?, M.Msg>;
+begin
+  return new A.Transition<M.State?, M.Msg>(
+    Current with
+      Match := Index;
+      Matches := if Index < 0 then
+        []
+      else
+        Current.Matches
+      end if;
+      Searching := not Scan;
+      Scanning := Scan;
+      Proposals := I.ImmutableDictionary<string, string>.Empty;
+      Selected := I.ImmutableHashSet<string>.Empty;
+      Error := '';
+      HttpDetails := '';
+    end with,
+    [Command]
+  );
+end function;
+
+function Complete(Current: M.State): M.State;
+begin
+  return Current with
+    Searching := false;
+    Scanning := false;
+    Provider := MB.Availability();
+    AcoustId := Acoust.Availability();
+  end with;
+end function;
+
+function Detailed(Current: M.State; Values: I.ImmutableDictionary<string, string>): M.State;
+begin
+  const Proposals: I.ImmutableDictionary<string, string> := Custom.MatchNames(Current, Values);
+  var Selected: I.ImmutableHashSet<string> := Current.Selected;
+  for Key: string in Current.Selected do
+    if F.Value(Current.Proposals, Key) <> F.Value(Proposals, Key) then
+      Selected := Selected.Remove(Key);
+    end if;
+  end for;
+
+  return Current with
+    Proposals := Proposals;
+    Selected := Selected;
+  end with;
+end function;
+
+function Loaded(Current: M.State; Original: Files.Snapshot): M.State;
+begin
+  const Rows: I.ImmutableArray<M.Custom>.Builder := I.ImmutableArray.CreateBuilder<M.Custom>();
+  const Names: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.Ordinal);
+  for Key: string in Original.Values.Keys do
+    if Key.StartsWith(F.Custom) then
+      discard Names.Add(Key);
+    end if;
+  end for;
+
+  for Key: string in Names do
+    Rows.Add(new M.Custom(Rows.Count, Key.Substring(F.Custom.Length), Original.Values[Key]));
+  end for;
+
+  return Current with
+    Original := Original;
+    Values := Original.Values;
+    Extra := Rows.ToImmutable();
+    NextRow := Rows.Count;
+  end with;
+end function;
+
+function Save(Current: M.State; Library: Metadata.Session): A.Transition<M.State?, M.Msg>;
+begin
+  const Original: Files.Snapshot? := Current.Original;
+  if Original = null or not (Current.Database or Current.AudioFile) then
+    return new A.Transition<M.State?, M.Msg>(Current, []);
+  end if;
+
+  try
+    const Patch: I.ImmutableDictionary<string, string?> := Changes.Build(Current, Original);
+    if Patch.Count = 0 then
+      return new A.Transition<M.State?, M.Msg>(
+        null,
+        [
+          A.CancelBackground<M.Msg>(Requests.Slot),
+          A.CancelBackground<M.Msg>('timer')
+        ]
+      );
+    end if;
+
+    return new A.Transition<M.State?, M.Msg>(
+      Current with
+        Saving := true;
+        Error := '';
+        HttpDetails := '';
+      end with,
+      [
+        A.CancelBackground<M.Msg>(Requests.Slot),
+        A.StartBackground<M.Msg>(
+          'save',
+          async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+            await Library.WriteTags(
+              Current.Track,
+              Original,
+              Patch,
+              Current.Database,
+              Current.AudioFile,
+              Stop
+            );
+            await Post(M.Msg.Saved);
+          end function, Failure
+        )
+      ]
+    );
+  catch Error: Sys.ArgumentException do
+    return new A.Transition<M.State?, M.Msg>(
+      Current with
+        Error := Error.Message;
+      end with, []
+    );
+  end try;
+end function;
+
+// Applies Message to Current. Library owns the file and database effects, when present.
+// ApplicationKey is the saved AcoustID lookup credential, or empty when unconfigured.
+// Returns the next draft and any effects for the host.
+public function Apply(Current: M.State?; Message: M.Msg; Library: Metadata.Session?; ApplicationKey: string): A.Transition<M.State?, M.Msg>;
+begin
+  case Message of
+    when M.Msg.Open(const Track: Tracks.Entry):
+      if Library = null or Track.TrackId = '' or (Current <> null and Current.Saving) then
+        return new A.Transition<M.State?, M.Msg>(Current, []);
+      end if;
+
+      return new A.Transition<M.State?, M.Msg>(
+        new M.State(
+          Track,
+          Query := SearchText(Track),
+          CanScan := not Sys.String.IsNullOrWhiteSpace(ApplicationKey),
+          Provider := MB.Availability(),
+          AcoustId := Acoust.Availability()
+        ),
+        [
+          A.CancelBackground<M.Msg>(Requests.Slot),
+          Requests.Timer(),
+          A.StartBackground<M.Msg>(
+            'load',
+            async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+              await Post(M.Msg.Loaded(await Library.ReadTags(Track, Stop)));
+            end function, Failure
+          )
+        ]
+      );
+    else
+  end case;
+
+  if Current = null then
+    return new A.Transition<M.State?, M.Msg>(null, []);
+  end if;
+
+  if Current.Saving then
+    case Message of
+      when M.Msg.Saved:
+        return new A.Transition<M.State?, M.Msg>(null, [A.CancelBackground<M.Msg>('timer')]);
+      when M.Msg.Failed(const Error: string):
+        return new A.Transition<M.State?, M.Msg>(
+          Complete(Current) with
+            Saving := false;
+            Error := Error;
+          end with, []
+        );
+      else
+        return new A.Transition<M.State?, M.Msg>(Current, []);
+    end case;
+  end if;
+  var Next: M.State := Current;
+  case Message of
+    when M.Msg.Close:
+      return new A.Transition<M.State?, M.Msg>(
+        null, [
+          A.CancelBackground<M.Msg>('load'),
+          A.CancelBackground<M.Msg>(Requests.Slot),
+          A.CancelBackground<M.Msg>('timer')
+        ]
+      );
+    when M.Msg.Loaded(const Original: Files.Snapshot):
+      Next := Loaded(Current, Original);
+    when M.Msg.Tab(const Index: int):
+      Next := Current with
+        Tab := Index;
+      end with;
+    when M.Msg.Edit(const Key: string, const Text: string):
+      Next := Current with
+        Values := Current.Values.SetItem(Key, Text);
+        Selected := Current.Selected.Remove(Key);
+      end with;
+    when M.Msg.Add:
+      return new A.Transition<M.State?, M.Msg>(
+        Current with
+          Extra := Current.Extra.Add(new M.Custom(Current.NextRow, '', ''));
+          NextRow := Current.NextRow + 1;
+          Offset := L.ScrollPosition.End;
+        end with,
+        [A.Focus<M.Msg>('custom-name-' + Current.NextRow.ToString())]
+      );
+    when M.Msg.Change(const Id: int, const Name: bool, const Text: string):
+      for Index: int := 0 to Current.Extra.Length - 1 do
+        const Row: M.Custom := Current.Extra[Index];
+        if Row.Id = Id and not Files.BinaryTag(Row.Name) and (not Name or not Files.BinaryTag(
+          Text.Trim()
+        ))
+        then
+          const Edited: M.Custom := if Name then
+            Row with
+              Name := Text;
+            end with
+          else
+            Row with
+              Value := Text;
+            end with
+          end if;
+          Next := Current with
+            Extra := Current.Extra.SetItem(Index, Edited);
+            Selected := Current.Selected.Remove(F.Custom + Row.Name).Remove(F.Custom + Edited.Name);
+          end with;
+          break;
+        end if;
+      end for;
+    when M.Msg.Remove(const Id: int):
+      for Index: int := 0 to Current.Extra.Length - 1 do
+        const Row: M.Custom := Current.Extra[Index];
+        if Row.Id = Id and not Files.BinaryTag(Row.Name) then
+          Next := Current with
+            Extra := Current.Extra.RemoveAt(Index);
+            Selected := Current.Selected.Remove(F.Custom + Row.Name);
+          end with;
+          break;
+        end if;
+      end for;
+    when M.Msg.Scroll(const Offset: L.ScrollPosition):
+      Next := Current with
+        Offset := Offset;
+      end with;
+    when M.Msg.Query(const Text: string):
+      Next := Current with
+        Query := Text;
+      end with;
+    when M.Msg.Search:
+      const Query: string := Current.Query.Trim();
+      if not Blocked(Current, Current.Provider, MB.Availability()) and Query <> '' then
+        return BeginRequest(Current, Requests.Search(Query));
+      end if;
+    when M.Msg.Scan:
+      if Library <> null and not Sys.String.IsNullOrWhiteSpace(ApplicationKey)
+        and not Blocked(Current, Current.AcoustId, Acoust.Availability())
+      then
+        return BeginRequest(
+          Current,
+          Requests.Scan(Library, Current.Track, ApplicationKey),
+          Scan := true
+        );
+      end if;
+    when M.Msg.Found(const Items: array of MB.Match):
+      Next := Complete(Current) with
+        Matches := Items;
+        Error := if Items.Length = 0 then
+          (if Current.Scanning then
+            'AcoustID'
+          else
+            'MusicBrainz'
+          end if) + ' found no matching recordings.'
+        else
+          ''
+        end if;
+      end with;
+    when M.Msg.Lookup(const Index: int):
+      if not Blocked(
+        Current,
+        Current.Provider,
+        MB.Availability()
+      ) and Index >= 0 and Index < Current.Matches.Length
+      then
+        return BeginRequest(Current, Requests.Lookup(Current.Matches[Index]), Index);
+      end if;
+    when M.Msg.RecordingReady(const Values: I.ImmutableDictionary<string, string>):
+      Next := Detailed(Current, Values);
+    when M.Msg.Proposed(const Values: I.ImmutableDictionary<string, string>):
+      Next := Complete(Detailed(Current, Values));
+    when M.Msg.ReleaseFailed(const Details: string):
+      Next := Complete(Current) with
+        Error := 'Could not load the release. Recording details are available.';
+        HttpDetails := Details;
+      end with;
+    when M.Msg.Take(const Key: string, const Selected: bool):
+      if Current.Proposals.ContainsKey(Key) then
+        Next := Current with
+          Selected := if Selected then
+            Current.Selected.Add(Key)
+          else
+            Current.Selected.Remove(Key)
+          end if;
+        end with;
+      end if;
+    when M.Msg.TakeAll(const Selected: bool):
+      Next := Current with
+        Selected := if Selected then
+          I.ImmutableHashSet.CreateRange<string>(Current.Proposals.Keys)
+        else
+          I.ImmutableHashSet<string>.Empty
+        end if;
+      end with;
+    when M.Msg.Database(const Checked: bool):
+      Next := Current with
+        Database := Checked;
+      end with;
+    when M.Msg.AudioFile(const Checked: bool):
+      Next := Current with
+        AudioFile := Checked;
+      end with;
+    when M.Msg.Save:
+      if Library <> null then
+        return Save(Current, Library);
+      end if;
+    when M.Msg.Failed(const Error: string):
+      Next := Complete(Current) with
+        Error := Error;
+        HttpDetails := '';
+      end with;
+    when M.Msg.RequestFailed(const Details: string):
+      Next := Complete(Current) with
+        Error := (if Current.Scanning then
+          'AcoustID'
+        else
+          'MusicBrainz'
+        end if) + ' request failed.';
+        HttpDetails := Details;
+      end with;
+    when M.Msg.Timer(const Music: Pacing.Status, const Audio: Pacing.Status):
+      Next := Current with
+        Provider := Music;
+        AcoustId := Audio;
+      end with;
+    else
+  end case;
+
+  return new A.Transition<M.State?, M.Msg>(Next, []);
+end function;
+
+end unit;

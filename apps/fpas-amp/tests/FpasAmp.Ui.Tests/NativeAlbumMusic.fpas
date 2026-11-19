@@ -277,7 +277,7 @@ public type AlbumMusicTests = record
       );
       const CopyPath: Cui.CuiRectangle := Control(Session, 'track-copy-path').Bounds;
       const OpenPath: Cui.CuiRectangle := Control(Session, 'track-open-folder').Bounds;
-      X.Assert.True(CopyPath.Width > 0.0F and OpenPath.X >= CopyPath.X + CopyPath.Width);
+      X.Assert.True(OpenPath.Width > 0.0F and CopyPath.X >= OpenPath.X + OpenPath.Width);
       Click(Session, OpenPath);
       X.Assert.Equal<string>(Track.Path, FolderRequest);
       const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');

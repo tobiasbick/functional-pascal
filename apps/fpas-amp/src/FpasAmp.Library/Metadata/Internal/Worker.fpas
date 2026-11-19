@@ -51,6 +51,7 @@ begin
     using const Connection: Db.SqliteConnection := Sql.Open(Database);
     Schema.Ensure(Connection);
     using const UserConnection: Db.SqliteConnection := Users.Open(UserDatabase);
+    Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [UserDatabase]);
     // Provider waits are synchronous. Keep them short and wait between attempts with cancellation.
     Connection.DefaultTimeout := 1;
     UserConnection.DefaultTimeout := 1;

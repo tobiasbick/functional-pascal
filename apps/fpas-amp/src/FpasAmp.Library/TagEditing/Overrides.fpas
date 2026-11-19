@@ -1,0 +1,39 @@
+// [Documentation](../../../doc/library.md#tag-editing)
+
+// Sparse overrides follow the durable track identity across index rebuilds.
+unit FpasAmp.Library.TagEditing.Overrides;
+
+uses
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
+  System as Sys, System.Collections.Immutable as I, System.Text.Json as J;
+
+// Reads the saved tag changes for Id from the attached users store.
+public function Read(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction?; Id: string): I.ImmutableDictionary<string, string?>;
+begin
+  using const Command: Db.SqliteCommand := Sql.Command(
+    Connection, 'SELECT edits FROM users.tag_edits WHERE track_id=$id;', Transaction, ['$id'], [Id]
+  );
+  const Result: object? := Command.ExecuteScalar();
+  if Result is string then
+    return J.JsonSerializer.Deserialize<I.ImmutableDictionary<string, string?>>(
+      cast<string>(Result)
+    ) ??
+      I.ImmutableDictionary<string, string?>.Empty;
+  end if;
+
+  return I.ImmutableDictionary<string, string?>.Empty;
+end function;
+
+// Writes the complete sparse override map within the caller's transaction.
+public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: string; Changes: I.ImmutableDictionary<string, string?>);
+begin
+  Sql.Execute(
+    Connection,
+    'INSERT INTO users.tag_edits(track_id,edits) VALUES($id,$edits) ON CONFLICT(track_id) DO UPDATE SET edits=excluded.edits;',
+    Transaction,
+    ['$id', '$edits'],
+    [Id, J.JsonSerializer.Serialize<I.ImmutableDictionary<string, string?>>(Changes)]
+  );
+end procedure;
+
+end unit;

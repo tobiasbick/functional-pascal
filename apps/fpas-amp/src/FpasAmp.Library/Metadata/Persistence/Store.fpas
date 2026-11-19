@@ -7,6 +7,7 @@ uses
   Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Albums.Persistence.Store as Albums,
+  FpasAmp.Library.TagEditing.Fields as Fields, FpasAmp.Library.TagEditing.Overrides as Overrides,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Text.Json as J, System.Threading as T;
 
 function First(Values: array of string): string;
@@ -39,6 +40,59 @@ begin
   end for;
 end procedure;
 
+// Replaces the displayed metadata and its derived indexes for the file in the current transaction.
+public procedure Project(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Tags: MediaTags.Info);
+begin
+  Albums.Save(Connection, Transaction, Id, Tags);
+  Sql.Execute(
+    Connection,
+    'UPDATE metadata SET tags_json=$json,title=$title,album=$album,album_key=$albumname,sort_title=$titlekey,sort_album=$albumkey,' +
+    'sort_artist=$artistkey,sort_album_artist=$albumartistkey,release_date=$date,duration_ms=$duration WHERE file_id=$id;' +
+    'DELETE FROM metadata_people WHERE file_id=$id; DELETE FROM metadata_genres WHERE file_id=$id;',
+    Transaction,
+    [
+      '$id',
+      '$json',
+      '$title',
+      '$album',
+      '$albumname',
+      '$titlekey',
+      '$albumkey',
+      '$artistkey',
+      '$albumartistkey',
+      '$date',
+      '$duration'
+    ],
+    [
+      Id,
+      J.JsonSerializer.Serialize<MediaTags.Info>(Tags),
+      Tags.Title,
+      Tags.Album,
+      Tags.Album.ToUpperInvariant(),
+      SortKey(Tags.SortTitle, Tags.Title),
+      SortKey(Tags.SortAlbum, Tags.Album),
+      SortKey(
+        Tags.SortArtist,
+        First(Tags.Artists)
+      ),
+      SortKey(Tags.SortAlbumArtist, First(Tags.AlbumArtists)),
+      Tags.ReleaseDate,
+      cast<object?>(Tags.DurationMilliseconds)
+    ]
+  );
+  People(Connection, Transaction, Id, 'artist', Tags.Artists);
+  People(Connection, Transaction, Id, 'album_artist', Tags.AlbumArtists);
+  People(Connection, Transaction, Id, 'composer', Tags.Composers);
+  for Position: int := 0 to Tags.Genres.Length - 1 do
+    Sql.Execute(
+      Connection,
+      'INSERT INTO metadata_genres(file_id,position,name,name_key) VALUES($file,$position,$name,$key);',
+      Transaction, ['$file', '$position', '$name', '$key'],
+      [Id, Position, Tags.Genres[Position], Tags.Genres[Position].ToUpperInvariant()]
+    );
+  end for;
+end procedure;
+
 // Saves a read only while the same file ID/stamp and an active membership remain.
 // `Tags=null` records `Error` but preserves earlier tags/relationships. Empty `TrackId`
 // or `Hash` retain earlier values. Cancellation or `Current=false` rolls back the write.
@@ -67,54 +121,12 @@ begin
     [Id, TrackId, Hash, Size, Modified, Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Error]
   );
   if Tags <> null then
-    Albums.Save(Connection, Transaction, Id, Tags);
-    Sql.Execute(
+    Project(
       Connection,
-      'UPDATE metadata SET tags_json=$json,title=$title,album=$album,album_key=$albumname,sort_title=$titlekey,sort_album=$albumkey,' +
-      'sort_artist=$artistkey,sort_album_artist=$albumartistkey,release_date=$date,duration_ms=$duration WHERE file_id=$id;' +
-      'DELETE FROM metadata_people WHERE file_id=$id; DELETE FROM metadata_genres WHERE file_id=$id;',
       Transaction,
-      [
-        '$id',
-        '$json',
-        '$title',
-        '$album',
-        '$albumname',
-        '$titlekey',
-        '$albumkey',
-        '$artistkey',
-        '$albumartistkey',
-        '$date',
-        '$duration'
-      ],
-      [
-        Id,
-        J.JsonSerializer.Serialize<MediaTags.Info>(Tags),
-        Tags.Title,
-        Tags.Album,
-        Tags.Album.ToUpperInvariant(),
-        SortKey(Tags.SortTitle, Tags.Title),
-        SortKey(Tags.SortAlbum, Tags.Album),
-        SortKey(
-          Tags.SortArtist,
-          First(Tags.Artists)
-        ),
-        SortKey(Tags.SortAlbumArtist, First(Tags.AlbumArtists)),
-        Tags.ReleaseDate,
-        cast<object?>(Tags.DurationMilliseconds)
-      ]
+      Id,
+      Fields.Project(Tags, Overrides.Read(Connection, Transaction, TrackId))
     );
-    People(Connection, Transaction, Id, 'artist', Tags.Artists);
-    People(Connection, Transaction, Id, 'album_artist', Tags.AlbumArtists);
-    People(Connection, Transaction, Id, 'composer', Tags.Composers);
-    for Position: int := 0 to Tags.Genres.Length - 1 do
-      Sql.Execute(
-        Connection,
-        'INSERT INTO metadata_genres(file_id,position,name,name_key) VALUES($file,$position,$name,$key);',
-        Transaction, ['$file', '$position', '$name', '$key'],
-        [Id, Position, Tags.Genres[Position], Tags.Genres[Position].ToUpperInvariant()]
-      );
-    end for;
   end if;
 
   Cancellation.ThrowIfCancellationRequested();

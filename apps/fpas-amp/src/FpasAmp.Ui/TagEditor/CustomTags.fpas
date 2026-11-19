@@ -1,0 +1,94 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+// Resolves MusicBrainz's Picard names to the file's existing native field names.
+unit FpasAmp.Ui.TagEditor.CustomTags;
+
+uses
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Fields as F,
+  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I;
+
+function Key(Name: string): string;
+begin
+  const Colon: int := Name.LastIndexOf(':');
+  const Native: string := if Colon >= 0 then
+    Name.Substring(Colon + 1)
+  else
+    Name
+  end if;
+  const Normalized: string := Native.Replace('_', '').Replace(' ', '').ToUpperInvariant();
+  case Normalized of
+    when 'MUSICBRAINZALBUMRELEASECOUNTRY':
+      return 'RELEASECOUNTRY';
+    when 'MUSICBRAINZALBUMSTATUS':
+      return 'RELEASESTATUS';
+    when 'MUSICBRAINZALBUMTYPE':
+      return 'RELEASETYPE';
+    when 'TMED':
+      return 'MEDIA';
+    else
+      return Normalized;
+  end case;
+end function;
+
+function VorbisName(Name: string): string;
+begin
+  case Name of
+    when 'MusicBrainz Album Id':
+      return 'MUSICBRAINZ_ALBUMID';
+    when 'MusicBrainz Album Artist Id':
+      return 'MUSICBRAINZ_ALBUMARTISTID';
+    when 'MusicBrainz Artist Id':
+      return 'MUSICBRAINZ_ARTISTID';
+    when 'MusicBrainz Release Group Id':
+      return 'MUSICBRAINZ_RELEASEGROUPID';
+    when 'MusicBrainz Release Track Id':
+      return 'MUSICBRAINZ_RELEASETRACKID';
+    when 'MusicBrainz Work Id':
+      return 'MUSICBRAINZ_WORKID';
+    when 'MusicBrainz Album Release Country':
+      return 'RELEASECOUNTRY';
+    when 'MusicBrainz Album Status':
+      return 'RELEASESTATUS';
+    when 'MusicBrainz Album Type':
+      return 'RELEASETYPE';
+    when 'TMED':
+      return 'MEDIA';
+    else
+      return Name.ToUpperInvariant();
+  end case;
+end function;
+
+// Maps Values onto matching names already in Current. Unmatched proposals use the
+// format's customary spelling. Returns both the standard and the mapped custom values.
+public function MatchNames(Current: M.State; Values: I.ImmutableDictionary<string, string>): I.ImmutableDictionary<string, string>;
+begin
+  const Extension: string := (IO.Path.GetExtension(Current.Track.Path) ?? '').ToLowerInvariant();
+  const Vorbis: bool := Extension = '.flac' or Extension = '.ogg' or Extension = '.opus'
+    or Extension = '.oga';
+  const Result: I.ImmutableDictionary<string, string>.Builder := I.ImmutableDictionary.CreateBuilder<string, string>();
+  for Pair: C.KeyValuePair<string, string> in Values do
+    if not Pair.Key.StartsWith(F.Custom) then
+      Result[Pair.Key] := Pair.Value;
+      continue;
+    end if;
+    const Name: string := Pair.Key.Substring(F.Custom.Length);
+    const Normalized: string := Key(Name);
+    var Target: string := if Vorbis then
+      VorbisName(Name)
+    else
+      Name
+    end if;
+    for Row: M.Custom in Current.Extra do
+      if Key(Row.Name) = Normalized then
+        Target := Row.Name;
+        break;
+      end if;
+    end for;
+
+    Result[F.Custom + Target] := Pair.Value;
+  end for;
+
+  return Result.ToImmutable();
+end function;
+
+end unit;

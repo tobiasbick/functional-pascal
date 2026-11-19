@@ -30,7 +30,7 @@ begin
         Drawer := false;
       end with;
     when M.Msg.SelectSettingsTab(const Index: int):
-      if Index <> 0 and Index <> 1 then
+      if not M.ValidSettingsTab(Index) then
         return Current;
       end if;
 

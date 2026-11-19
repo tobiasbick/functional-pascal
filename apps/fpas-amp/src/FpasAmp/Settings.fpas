@@ -1,6 +1,6 @@
 // [Documentation](../../doc/desktop.md#startup-and-user-files)
 
-// Stores the user's music sources and appearance preferences.
+// Stores the user's sources, appearance, mixer and metadata settings.
 unit FpasAmp.Settings;
 
 uses
@@ -154,6 +154,38 @@ begin
   return new Audio.Settings(cast<float>(Volume ?? 0.0), Gains);
 end function;
 
+function AcoustIdKey(Keys: J.JsonElement; Name: string; ref Valid: bool): string;
+begin
+  const Field: J.JsonElement := Fields.Field(Keys, Name);
+  if Field.ValueKind = J.JsonValueKind.Undefined then
+    return '';
+  end if;
+
+  const Value: string? := Fields.StringValue(Field);
+  if Value <> null and Model.AcoustIdKeyFits(Value) then
+    return Value.Trim();
+  end if;
+
+  Valid := false;
+  return '';
+end function;
+
+function AcoustId(Root: J.JsonElement; ref Valid: bool): Model.AcoustIdKeys;
+begin
+  const Keys: J.JsonElement := Fields.Field(Root, 'acoustId');
+  if Keys.ValueKind = J.JsonValueKind.Object then
+    return new Model.AcoustIdKeys(
+      AcoustIdKey(Keys, 'applicationKey', ref Valid), AcoustIdKey(Keys, 'userApiKey', ref Valid)
+    );
+  end if;
+
+  if Keys.ValueKind <> J.JsonValueKind.Undefined then
+    Valid := false;
+  end if;
+
+  return new Model.AcoustIdKeys();
+end function;
+
 function Decode(Root: J.JsonElement): Files.Decoded<Model.Preferences>;
 begin
   const Items: J.JsonElement := Fields.Field(Root, SourcesKey);
@@ -177,7 +209,13 @@ begin
   );
   const Accent: string := DecodeChoice<Themes.Accent>(Root, 'accent', 'neutral', ref Valid);
   return new Files.Decoded<Model.Preferences>(
-    new Model.Preferences(Sources.ToArray(), Appearance, Accent, Mixer(Root, ref Valid)),
+    new Model.Preferences(
+      Sources.ToArray(),
+      Appearance,
+      Accent,
+      Mixer(Root, ref Valid),
+      AcoustId(Root, ref Valid)
+    ),
     Valid
   );
 end function;
@@ -199,7 +237,7 @@ begin
   );
 end function;
 
-// Validates and saves the music sources and appearance preferences.
+// Validates and saves the user's preferences.
 //
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.

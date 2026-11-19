@@ -22,7 +22,7 @@ begin
       []
     );
     const Version: int := Sys.Convert.ToInt32(Read.ExecuteScalar());
-    if Version < 0 or Version > 5 then
+    if Version < 0 or Version > 6 then
       raise new Sys.InvalidOperationException(
         'Unsupported user database schema. The database was left intact.'
       );
@@ -47,7 +47,9 @@ begin
       'rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 10));' +
       'CREATE TABLE IF NOT EXISTS group_ratings(group_id TEXT PRIMARY KEY,' +
       'rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 10));' +
-      'PRAGMA user_version=5;', Transaction, [], []
+      'CREATE TABLE IF NOT EXISTS tag_edits(track_id TEXT PRIMARY KEY REFERENCES tracks(id) ON DELETE CASCADE,' +
+      'edits TEXT NOT NULL);' +
+      'PRAGMA user_version=6;', Transaction, [], []
     );
     Playlists.UserLists(Connection, Transaction);
     Transaction.Commit();

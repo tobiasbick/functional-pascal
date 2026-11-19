@@ -18,6 +18,7 @@ uses
   FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
   FpasAmp.Ui.App.Analysis as Analysis, Fpas.Media.Audio as Audio,
+  FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.Update as TagUpdate,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -182,6 +183,24 @@ begin
   end if;
 
   return Analysis.After(Current, Next, Library.Metadata);
+end function;
+
+function EditTags(Current: M.State; Message: TagModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+begin
+  const Child: Mvu.Transition<TagModel.State?, M.Msg> := Composition.MapTransition<TagModel.State?, TagModel.Msg, M.Msg>(
+    TagUpdate.Apply(
+      Current.TagEditor,
+      Message,
+      Library.Metadata,
+      Current.Settings.Saved.AcoustId.ApplicationKey
+    ),
+    M.Msg.TagEditor, 'tag-editor'
+  );
+  return new Mvu.Transition<M.State, M.Msg>(
+    Current with
+      TagEditor := Child.Model;
+    end with, Child.Commands
+  );
 end function;
 
 function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
@@ -365,6 +384,8 @@ begin
         case Action of
           when LibrarySongs.Msg.Song(Music.Msg.Play(const FileId: long)):
             return Activate(Current.Songs.Page, FileId);
+          when LibrarySongs.Msg.Song(Music.Msg.EditTags(const Track: Tracks.Entry)):
+            return EditTags(Current, TagModel.Msg.Open(Track), Library);
           else
             return Songs(Current, Action, Library, []);
         end case;
@@ -374,6 +395,12 @@ begin
       if Page <> null and Nav.Browsing(Current.Navigation.Active) then
         return Activate(Page, FileId);
       end if;
+    when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.EditTags(const Track: Tracks.Entry))):
+      if Nav.Browsing(Current.Navigation.Active) then
+        return EditTags(Current, TagModel.Msg.Open(Track), Library);
+      end if;
+    when M.Msg.TagEditor(const Action: TagModel.Msg):
+      return EditTags(Current, Action, Library);
     when M.Msg.Player(const PlayerMessage: PlayerModel.Msg):
       return Transport(Current, PlayerMessage, Port, Library);
     when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):

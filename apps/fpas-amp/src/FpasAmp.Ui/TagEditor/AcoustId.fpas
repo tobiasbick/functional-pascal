@@ -1,0 +1,208 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.Ui.TagEditor.AcoustId;
+
+uses
+  FpasAmp.Ui.TagEditor.ResponseJson as Response,
+  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Ui.Providers.RequestPacing as Pacing,
+  FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint,
+  System as Sys, System.Collections.Generic as C, System.Globalization as G,
+  System.Net.Http as H, System.Net.Http.Headers as Headers, System.Text.Json as J, System.Threading as T,
+  System.Threading.Tasks as Tasks;
+
+const Client: H.HttpClient := new H.HttpClient();
+const Gate: Pacing.Gate := Pacing.Gate.Create(334L);
+
+// Returns the process-wide AcoustID request and cooldown status.
+public function Availability(): Pacing.Status;
+begin
+  return Gate.Read();
+end function;
+
+function Score(Node: J.JsonElement): double;
+begin
+  const Value: J.JsonElement := Response.Property(Node, 'score');
+  return if Value.ValueKind = J.JsonValueKind.Number then
+    Value.GetDouble()
+  else
+    0.0
+  end if;
+end function;
+
+function Id(Node: J.JsonElement): string;
+begin
+  const Value: string := Response.Text(Node, 'id');
+  var Parsed: Sys.Guid := Sys.Guid.Empty;
+  return if Sys.Guid.TryParseExact(Value, 'D', out Parsed) then
+    Parsed.ToString()
+  else
+    ''
+  end if;
+end function;
+
+// Decodes a lookup response into MusicBrainz recording and release choices, best score first.
+// Json is the AcoustID response body. An API error is reported by its numeric code.
+public function Decode(Json: string): array of MB.Match;
+begin
+  using const Document: J.JsonDocument := J.JsonDocument.Parse(Json);
+  const Root: J.JsonElement := Document.RootElement;
+  if Response.Text(Root, 'status') <> 'ok' then
+    const Code: J.JsonElement := Response.Property(Response.Property(Root, 'error'), 'code');
+    raise new Sys.InvalidOperationException(
+      if Code.ValueKind = J.JsonValueKind.Number then
+        'AcoustID API error ' + Code.GetRawText()
+      else
+        'Invalid AcoustID response'
+      end if
+    );
+  end if;
+
+  const Results: array of J.JsonElement := Response.Items(Root, 'results');
+  Sys.Array.Sort<J.JsonElement>(
+    Results,
+    function(Left: J.JsonElement; Right: J.JsonElement): int => Score(Right).CompareTo(Score(Left))
+  );
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Matches: C.List<MB.Match> := new C.List<MB.Match>();
+  for Result: J.JsonElement in Results do
+    const Percent: string := Score(Result).ToString('P0', G.CultureInfo.InvariantCulture);
+    for Recording: J.JsonElement in Response.Items(Result, 'recordings') do
+      const RecordingId: string := Id(Recording);
+      if RecordingId = '' then
+        continue;
+      end if;
+      const Artists: C.List<string> := new C.List<string>();
+      for Artist: J.JsonElement in Response.Items(Recording, 'artists') do
+        const Name: string := Response.Text(Artist, 'name');
+        if Name <> '' then
+          Artists.Add(Name);
+        end if;
+      end for;
+      const Title: string := Response.Text(Recording, 'title');
+      const Label: string := (if Title = '' then
+        RecordingId
+      else
+        Title
+      end if) +
+        (if Artists.Count > 0 then
+          ' · ' + Sys.String.Join(', ', Artists)
+        else
+          ''
+        end if) + ' · ' + Percent;
+      var HasRelease: bool := false;
+      for Group: J.JsonElement in Response.Items(Recording, 'releasegroups') do
+        for Release: J.JsonElement in Response.Items(Group, 'releases') do
+          const ReleaseId: string := Id(Release);
+          if ReleaseId <> '' then
+            HasRelease := true;
+            if Seen.Add(RecordingId + '/' + ReleaseId) then
+              const Name: string := Response.Text(Release, 'title');
+              const Date: string := Response.Text(Release, 'date');
+              const Country: string := Response.Text(Release, 'country');
+              Matches.Add(
+                new MB.Match(
+                  RecordingId, ReleaseId,
+                  (if Name = '' then
+                    Response.Text(Group, 'title')
+                  else
+                    Name
+                  end if) +
+                  (if Date = '' then
+                    ''
+                  else
+                    ' · ' + Date
+                  end if) +
+                  (if Country = '' then
+                    ''
+                  else
+                    ' · ' + Country
+                  end if) + ' — ' + Label
+                )
+              );
+            end if;
+          end if;
+
+          if Matches.Count >= 100 then
+            return Matches.ToArray();
+          end if;
+        end for;
+      end for;
+
+      if not HasRelease and Seen.Add(RecordingId) then
+        Matches.Add(new MB.Match(RecordingId, '', Label));
+      end if;
+
+      if Matches.Count >= 100 then
+        return Matches.ToArray();
+      end if;
+    end for;
+  end for;
+
+  return Matches.ToArray();
+end function;
+
+// Looks up Fingerprint with the saved ApplicationKey. Stop cancels waiting and the HTTP request.
+// Returns selectable MusicBrainz matches. The request body contains no user submission key.
+public async function Scan(ApplicationKey: string; Audio: Fingerprint.Measurement; Stop: T.CancellationToken): Tasks.Task<array of MB.Match>;
+requires ApplicationKey <> '';
+requires Audio.Value <> '' and Audio.Duration >= 1.0;
+begin
+  if not Sys.Double.IsFinite(Audio.Duration) then
+    raise new Sys.ArgumentException('Expected a finite track duration.');
+  end if;
+
+  await Gate.Enter(Stop).ConfigureAwait(false);
+  try
+    using const Limit: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      Stop
+    );
+    using const Request: H.HttpRequestMessage := new H.HttpRequestMessage(
+      H.HttpMethod.Post,
+      'https://api.acoustid.org/v2/lookup'
+    );
+    Request.Content := new H.FormUrlEncodedContent(
+      [
+        new C.KeyValuePair<string?, string?>('client', ApplicationKey),
+        new C.KeyValuePair<string?, string?>(
+          'duration',
+          (cast<long>(Sys.Math.Floor(Audio.Duration))).ToString(G.CultureInfo.InvariantCulture)
+        ),
+        new C.KeyValuePair<string?, string?>('fingerprint', Audio.Value),
+        new C.KeyValuePair<string?, string?>('meta', 'recordings releasegroups releases'),
+        new C.KeyValuePair<string?, string?>('format', 'json')
+      ]
+    );
+    await Gate.Start(Stop).ConfigureAwait(false);
+    Limit.CancelAfter(30000);
+    using const Reply: H.HttpResponseMessage := await Client.SendAsync(
+      Request,
+      Limit.Token
+    ).ConfigureAwait(false);
+    const Hint: long := Pacing.RetryAfter(Reply);
+    if Hint > 0L then
+      Gate.Cooldown(Hint);
+    end if;
+
+    if not Reply.IsSuccessStatusCode then
+      const Retry: Headers.RetryConditionHeaderValue? := Reply.Headers.RetryAfter;
+      raise new H.HttpRequestException(
+        'HTTP/' + Reply.Version.ToString() + ' ' + (cast<int>(Reply.StatusCode)).ToString() +
+        ' ' + (Reply.ReasonPhrase ?? '') + ' · POST /v2/lookup' +
+        (if Retry <> null then
+          ' · Retry-After: ' + Retry.ToString()
+        else
+          ''
+        end if),
+        null, Reply.StatusCode
+      );
+    end if;
+
+    return Decode(await Reply.Content.ReadAsStringAsync(Limit.Token).ConfigureAwait(false));
+  catch _Expired: Sys.OperationCanceledException when not Stop.IsCancellationRequested do
+    raise new Sys.TimeoutException('POST /v2/lookup · Timeout after 30 s');
+  finally
+    Gate.Leave();
+  end try;
+end function;
+
+end unit;

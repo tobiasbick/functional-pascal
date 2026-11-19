@@ -9,7 +9,26 @@ uses
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys;
+  System as Sys, System.Text as Text;
+
+// The capacity of a masked AcoustID field, in UTF-8 bytes.
+public const AcoustIdKeyCapacity: int := 255;
+
+// Identifies one of the two AcoustID settings fields.
+public type AcoustIdKey = enum: byte
+  // Application key used for lookup and submission.
+  Application;
+  // Personal key used for submission.
+  User;
+end enum;
+
+// AcoustID credentials saved in the user's local preferences.
+public type AcoustIdKeys = record
+  // The application key, or an empty string when unconfigured.
+  public ApplicationKey: string := '';
+  // The optional personal submission key, or an empty string when unconfigured.
+  public UserApiKey: string := '';
+end record;
 
 // The persisted FPas-Amp preferences.
 public type Preferences = record
@@ -21,6 +40,8 @@ public type Preferences = record
   public Accent: string := 'neutral';
   // Master volume and ten band gains in dB.
   public Mixer: Audio.Settings := Audio.Settings.Flat;
+  // Optional audio-identification and submission credentials.
+  public AcoustId: AcoustIdKeys := new AcoustIdKeys();
 end record;
 
 // Owner-thread settings state. The rest of the app reads `Saved`; only this
@@ -48,6 +69,10 @@ public type State = record
   public LibraryError: string? := null;
   // Fatal worker failure, retained across successful operations until a new session.
   public TerminalError: string? := null;
+  // Unsaved AcoustID edits, or null to display the stored keys.
+  public AcoustIdDraft: AcoustIdKeys? := null;
+  // Whether the desktop failed to open an AcoustID setup page.
+  public AcoustIdLinkFailed: bool := false;
 end record;
 
 // Settings proposals and library publications.
@@ -56,6 +81,14 @@ public type Msg = variant
   SetAppearance(Choice: Switchers.Selection);
   // Change the accent choice.
   SetAccent(Choice: Themes.Accent);
+  // Edit the selected AcoustID key without persisting the draft.
+  EditAcoustIdKey(Key: AcoustIdKey; Value: string);
+  // Persist both drafted AcoustID keys together.
+  SaveAcoustIdKeys;
+  // Open the official setup page for the selected key.
+  OpenAcoustIdKeyPage(Key: AcoustIdKey);
+  // Report that opening the setup page failed.
+  AcoustIdKeyPageFailed;
   // Change whether an existing source is offline.
   SetOffline(Id: string; Offline: bool);
   // Change whether a source's scan/reconciliation is paused.
@@ -101,6 +134,27 @@ public type Msg = variant
   // Clear the settings write error.
   DismissError;
 end variant;
+
+// Checks whether an AcoustID key fits the single-line password widget.
+//
+// ## Parameters
+// - `Value`: Candidate key, including an empty string for an optional setting.
+// ## Returns
+// True if the value fits the field and has no control characters.
+public function AcoustIdKeyFits(Value: string): bool;
+begin
+  if Text.Encoding.UTF8.GetByteCount(Value) > AcoustIdKeyCapacity then
+    return false;
+  end if;
+
+  for Character: char in Value do
+    if Sys.Char.IsControl(Character) then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
 
 // Resolves the stored appearance choice.
 //

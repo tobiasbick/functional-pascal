@@ -1,0 +1,160 @@
+// [Documentation](../../../doc/library.md#tag-editing)
+
+// Shared field names and conversion between editable text and indexed metadata.
+unit FpasAmp.Library.TagEditing.Fields;
+
+uses Fpas.Media.Tags.AudioFiles as Media, System as Sys, System.Collections.Immutable as I;
+
+// Prefix distinguishing an arbitrary tag key from a standard editor field.
+public const Custom: string := 'custom/';
+
+// Returns a field's text from Values or an empty value.
+public function Value(Values: I.ImmutableDictionary<string, string>; Key: string): string;
+begin
+  var Found: string := '';
+  return if Values.TryGetValue(Key, out Found) then
+    Found
+  else
+    ''
+  end if;
+end function;
+
+// Formats the optional track/disc number and total for a single input.
+public function Position(Number: int?; Total: int?): string;
+begin
+  return (if Number <> null then
+    Number.Value.ToString()
+  else
+    ''
+  end if) +
+    (if Total <> null then
+      ' / ' + Total.Value.ToString()
+    else
+      ''
+    end if);
+end function;
+
+// Parses one part of a track/disc field. Empty parts are absent.
+public function Part(Text: string; Index: int): int?;
+begin
+  const Items: array of string := Text.Split('/', Sys.StringSplitOptions.None);
+  if Index >= Items.Length or Items[Index].Trim() = '' then
+    return null;
+  end if;
+  var Number: int := 0;
+  if not int.TryParse(Items[Index], out Number) or Number < 1 then
+    raise new Sys.ArgumentException('Track and disc positions must be positive numbers.');
+  end if;
+
+  return Number;
+end function;
+
+// Returns edited credits/genres split on the visible semicolon delimiter.
+public function Names(Text: string): array of string;
+begin
+  return Text.Split(
+    [';'],
+    Sys.StringSplitOptions.TrimEntries or Sys.StringSplitOptions.RemoveEmptyEntries
+  );
+end function;
+
+// Builds an editable standard-field snapshot from the indexed or file tags.
+public function FromInfo(Info: Media.Info): I.ImmutableDictionary<string, string>;
+begin
+  return I.ImmutableDictionary<string, string>.Empty.Add('title', Info.Title).Add(
+    'artist',
+    Sys.String.Join('; ', Info.Artists)
+  ).Add(
+    'genre',
+    Sys.String.Join('; ', Info.Genres)
+  ).Add(
+    'track',
+    Position(Info.TrackNumber, Info.TrackTotal)
+  ).Add('recording', Info.MusicBrainzRecordingId).Add('album', Info.Album).Add(
+    'album-artist',
+    Sys.String.Join('; ', Info.AlbumArtists)
+  ).Add(
+    'year', if Info.ReleaseDate.Length >= 4 then
+      Info.ReleaseDate.Substring(0, 4)
+    else
+      ''
+    end if
+  ).Add('disc', Position(Info.DiscNumber, Info.DiscTotal)).Add('label', Info.Label).Add(
+    'composer',
+    Sys.String.Join('; ', Info.Composers)
+  ).Add('lyricist', Info.Lyricist).Add('producer', Info.Producer).Add('piano', Info.Piano);
+end function;
+
+// Applies only the supplied standard fields to Info, preserving its technical properties.
+public function Project(Info: Media.Info; Changes: I.ImmutableDictionary<string, string?>): Media.Info;
+begin
+  var Result: Media.Info := Info;
+  for Field: Sys.Collections.Generic.KeyValuePair<string, string?> in Changes do
+    const Text: string := Field.Value ?? '';
+    case Field.Key of
+      when 'title':
+        Result := Result with
+          Title := Text;
+        end with;
+      when 'artist':
+        Result := Result with
+          Artists := Names(Text);
+        end with;
+      when 'genre':
+        Result := Result with
+          Genres := Names(Text);
+        end with;
+      when 'track':
+        Result := Result with
+          TrackNumber := Part(Text, 0);
+          TrackTotal := Part(Text, 1);
+        end with;
+      when 'recording':
+        Result := Result with
+          MusicBrainzRecordingId := Text;
+        end with;
+      when 'album':
+        Result := Result with
+          Album := Text;
+        end with;
+      when 'album-artist':
+        Result := Result with
+          AlbumArtists := Names(Text);
+        end with;
+      when 'year':
+        Result := Result with
+          ReleaseDate := Text;
+        end with;
+      when 'disc':
+        Result := Result with
+          DiscNumber := Part(Text, 0);
+          DiscTotal := Part(Text, 1);
+        end with;
+      when 'label':
+        Result := Result with
+          Label := Text;
+        end with;
+      when 'composer':
+        Result := Result with
+          Composers := Names(Text);
+        end with;
+      when 'lyricist':
+        Result := Result with
+          Lyricist := Text;
+        end with;
+      when 'producer':
+        Result := Result with
+          Producer := Text;
+        end with;
+      when 'piano':
+        Result := Result with
+          Piano := Text;
+        end with;
+      else
+    end case;
+  end for;
+
+  return Result;
+end function;
+
+end unit;

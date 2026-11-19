@@ -81,6 +81,43 @@ begin
           Accent := Choice.ToString().ToLowerInvariant();
         end with, Save
       );
+    when M.Msg.EditAcoustIdKey(const Key: M.AcoustIdKey, const Value: string):
+      if not M.AcoustIdKeyFits(Value) then
+        return Current;
+      end if;
+
+      const Keys: M.AcoustIdKeys := Current.AcoustIdDraft ?? Settings.AcoustId;
+      const Revised: M.AcoustIdKeys := if Key = M.AcoustIdKey.Application then
+        Keys with
+          ApplicationKey := Value;
+        end with
+      else
+        Keys with
+          UserApiKey := Value;
+        end with
+      end if;
+      return Current with
+        AcoustIdDraft := Revised;
+        SaveFailed := false;
+      end with;
+    when M.Msg.SaveAcoustIdKeys:
+      const Keys: M.AcoustIdKeys? := Current.AcoustIdDraft;
+      if Keys = null then
+        return Current;
+      end if;
+
+      const Saved: M.State := Persist(
+        Current, Settings with
+          AcoustId := new M.AcoustIdKeys(Keys.ApplicationKey.Trim(), Keys.UserApiKey.Trim());
+        end with, Save
+      );
+      return if Saved.SaveFailed then
+        Saved
+      else
+        Saved with
+          AcoustIdDraft := null;
+        end with
+      end if;
     when M.Msg.SetOffline(const Id: string, const Offline: bool):
       for Source: Locations.MusicSource in Settings.MusicSources do
         if Source.Id = Id then
@@ -227,6 +264,7 @@ begin
     when M.Msg.DismissError:
       return Current with
         SaveFailed := false;
+        AcoustIdLinkFailed := false;
       end with;
     else
       return Current;

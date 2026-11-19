@@ -6,7 +6,7 @@ unit Fpas.Media.Tags.AudioFiles;
 uses
   ATL as A, ATL.ChannelsArrangements.ChannelsArrangement as Channels,
   System.IO as IO, System as Sys,
-  System.Collections.Generic as C, System.Globalization as G;
+  System.Collections.Generic as C, System.Globalization as G, System.Text.Encoding as Encoding;
 
 // Selected audio tags; missing text is empty and missing numeric values are null.
 public type Info = record
@@ -82,6 +82,12 @@ public type Info = record
   public ReplayPeakTrack: double? := null;
   // File-supplied linear album peak.
   public ReplayPeakAlbum: double? := null;
+  // Credited lyricist.
+  public Lyricist: string := '';
+  // Credited producer when present as a named extra field.
+  public Producer: string := '';
+  // Credited piano performer when present as a named extra field.
+  public Piano: string := '';
 end record;
 
 function Values(Text: string?): array of string;
@@ -114,6 +120,30 @@ begin
   end if;
 
   return '';
+end function;
+
+function RecordingId(Track: A.Track): string;
+begin
+  const Fields: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  if Fields <> null then
+    for Pair: C.KeyValuePair<string?, string?> in Fields do
+      const Name: string := (Pair.Key ?? '').ToLowerInvariant();
+      if Name = 'ufid.http://musicbrainz.org' or Name = 'ufid.https://musicbrainz.org' then
+        try
+          const Value: string := Encoding.ASCII.GetString(
+            Sys.Convert.FromBase64String(Pair.Value ?? '')
+          );
+          var Id: Sys.Guid := Sys.Guid.Empty;
+          if Sys.Guid.TryParseExact(Value, 'D', out Id) then
+            return Value;
+          end if;
+        catch _Invalid: Sys.FormatException do
+        end try;
+      end if;
+    end for;
+  end if;
+
+  return Extra(Track, 'MUSICBRAINZTRACKID');
 end function;
 
 function Number(Text: string): double?;
@@ -179,23 +209,36 @@ begin
   end if;
   const Arrangement: Channels? := Track.ChannelsArrangement;
   return new Info(
-    Title := Track.Title ?? '', Subtitle := Track.Description ?? '',
-    Album := Track.Album ?? '', Artists := Values(Track.Artist),
-    AlbumArtists := Values(Track.AlbumArtist), Genres := Values(Track.Genre),
-    Composers := Values(Track.Composer), ReleaseDate := Date(Track.Date),
+    Title := Track.Title ?? '',
+    Subtitle := Track.Description ?? '',
+    Album := Track.Album ?? '',
+    Artists := Values(Track.Artist),
+    AlbumArtists := Values(Track.AlbumArtist),
+    Genres := Values(Track.Genre),
+    Composers := Values(Track.Composer),
+    ReleaseDate := Date(Track.Date),
     OriginalReleaseDate := Date(Track.OriginalReleaseDate),
-    TrackNumber := Positive(Track.TrackNumber), TrackTotal := Positive(Track.TrackTotal),
-    DiscNumber := Positive(Track.DiscNumber), DiscTotal := Positive(Track.DiscTotal),
-    SortTitle := Track.SortTitle ?? '', SortArtist := Track.SortArtist ?? '',
-    SortAlbumArtist := Track.SortAlbumArtist ?? '', SortAlbum := Track.SortAlbum ?? '',
+    TrackNumber := Positive(Track.TrackNumber),
+    TrackTotal := Positive(Track.TrackTotal),
+    DiscNumber := Positive(Track.DiscNumber),
+    DiscTotal := Positive(Track.DiscTotal),
+    SortTitle := Track.SortTitle ?? '',
+    SortArtist := Track.SortArtist ?? '',
+    SortAlbumArtist := Track.SortAlbumArtist ?? '',
+    SortAlbum := Track.SortAlbum ?? '',
     Compilation := Extra(Track, 'COMPILATION') = '1' or Extra(Track, 'TCMP') = '1',
-    Comment := Track.Comment ?? '', Grouping := Track.Group ?? '', Label := Track.Publisher ?? '',
-    Copyright := Track.Copyright ?? '', Bpm := PositiveReal(cast<double?>(Track.BPM)),
-    MusicBrainzRecordingId := Extra(Track, 'MUSICBRAINZTRACKID'),
+    Comment := Track.Comment ?? '',
+    Grouping := Track.Group ?? '',
+    Label := Track.Publisher ?? '',
+    Copyright := Track.Copyright ?? '',
+    Bpm := PositiveReal(cast<double?>(Track.BPM)),
+    MusicBrainzRecordingId := RecordingId(Track),
     MusicBrainzReleaseId := Extra(Track, 'MUSICBRAINZALBUMID'),
     MusicBrainzArtistIds := Values(Extra(Track, 'MUSICBRAINZARTISTID')),
-    DurationMilliseconds := Track.DurationMs, Codec := Format.Name ?? '',
-    Bitrate := PositiveReal(Track.Bitrate), SampleRate := PositiveReal(Track.SampleRate),
+    DurationMilliseconds := Track.DurationMs,
+    Codec := Format.Name ?? '',
+    Bitrate := PositiveReal(Track.Bitrate),
+    SampleRate := PositiveReal(Track.SampleRate),
     Channels := if Arrangement <> null then
       Positive(Arrangement.NbChannels)
     else
@@ -209,7 +252,10 @@ begin
     ReplayGainTrack := Number(Extra(Track, 'REPLAYGAINTRACKGAIN')),
     ReplayGainAlbum := Number(Extra(Track, 'REPLAYGAINALBUMGAIN')),
     ReplayPeakTrack := Number(Extra(Track, 'REPLAYGAINTRACKPEAK')),
-    ReplayPeakAlbum := Number(Extra(Track, 'REPLAYGAINALBUMPEAK'))
+    ReplayPeakAlbum := Number(Extra(Track, 'REPLAYGAINALBUMPEAK')),
+    Lyricist := Track.Lyricist ?? '',
+    Producer := Extra(Track, 'PRODUCER'),
+    Piano := Extra(Track, 'PIANO')
   );
 end function;
 

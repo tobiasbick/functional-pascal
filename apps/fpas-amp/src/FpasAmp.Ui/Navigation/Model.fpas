@@ -5,7 +5,7 @@ unit FpasAmp.Ui.Navigation.Model;
 
 uses FpasAmp.Library.Playlists.Model as Lists, System as Sys, System.Collections.Immutable as I;
 
-// Fixed app destinations; the first five form the Library section.
+// Fixed app destinations; the first four form the Library section.
 public type Page = enum
   // Every indexed song.
   Music;
@@ -15,8 +15,6 @@ public type Page = enum
   Artists;
   // Music grouped by genre.
   Genres;
-  // Music filtered by user rating.
-  Ratings;
   // App preferences and music sources.
   Settings;
 end enum;
@@ -59,7 +57,7 @@ end record;
 public type Msg = variant
   // Select a destination and dismiss the compact drawer.
   Select(Destination: Route);
-  // Open Settings and choose General (0) or Library (1).
+  // Open Settings and choose General (0), Library (1) or Metadata (2).
   SelectSettingsTab(Index: int);
   // Open or dismiss the compact drawer.
   SetDrawer(Open: bool);
@@ -68,6 +66,12 @@ public type Msg = variant
   // Keep cached data and report a background failure.
   Failed(Message: string);
 end variant;
+
+// Checks the numeric `Index` used to select and persist a settings tab.
+public function ValidSettingsTab(Index: int): bool;
+begin
+  return Index >= 0 and Index <= 2;
+end function;
 
 // Returns the stable persisted/navigation key for `Destination`.
 public function Key(Destination: Route): string;
@@ -135,7 +139,6 @@ begin
     Page.Albums,
     Page.Artists,
     Page.Genres,
-    Page.Ratings,
     Page.Settings
   ] do
     if Value = Item.ToString().ToLowerInvariant() then

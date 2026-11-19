@@ -74,7 +74,7 @@ begin
     return 0;
   end if;
   const Value: int? := Fields.IntegerValue(Field);
-  if Value = 0 or Value = 1 then
+  if Value <> null and Nav.ValidSettingsTab(Value.Value) then
     return Value.Value;
   end if;
 
@@ -94,7 +94,13 @@ begin
   const Tab: int := SelectedTab(Root, ref Valid);
   const PageField: J.JsonElement := Fields.Field(Root, 'activePage');
   const Page: string := Fields.StringValue(PageField) ?? 'music';
-  const Route: Nav.Route? := Nav.Parse(Page);
+  const Route: Nav.Route? := Nav.Parse(
+    if Page = 'ratings' then
+      'music'
+    else
+      Page
+    end if
+  );
   if Route = null or (PageField.ValueKind <> J.JsonValueKind.Undefined and PageField.ValueKind <>
     J.JsonValueKind.String)
   then
@@ -130,12 +136,12 @@ end function;
 //
 // ## Parameters
 // - `Directory`: Absolute directory for the user's files.
-// - `Value`: Positive normal dimensions, tab 0 or 1, and a valid route key.
+// - `Value`: Positive normal dimensions, a valid settings tab and a valid route key.
 public procedure Save(Directory: string; Value: Snapshot);
 requires Directory.Length > 0;
 requires Value.Width > 0;
 requires Value.Height > 0;
-requires Value.SettingsTab = 0 or Value.SettingsTab = 1;
+requires Value.SettingsTab >= 0 and Value.SettingsTab <= 2;
 begin
   if Nav.Parse(Value.ActivePage) = null then
     raise new Sys.ArgumentException('Invalid navigation route.', 'Value');
@@ -183,7 +189,7 @@ end function;
 // ## Returns
 // The stored placement; coordinates are null where the system reports none.
 public function FromWindow(Value: Cui.CuiWindowPlacement; Navigation: Nav.State; Player: Transport.Saved? := null): Snapshot;
-requires Navigation.SettingsTab = 0 or Navigation.SettingsTab = 1;
+requires Navigation.SettingsTab >= 0 and Navigation.SettingsTab <= 2;
 begin
   const Defaults: Snapshot := new Snapshot();
   return new Snapshot(

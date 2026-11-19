@@ -1,0 +1,45 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.Ui.TagEditor.ResponseJson;
+
+uses System.Text.Json as J, System.Collections.Generic as C;
+
+// Reads the property Name from Item, returning an undefined element when absent.
+public function Property(Item: J.JsonElement; Name: string): J.JsonElement;
+begin
+  var Value: J.JsonElement := new J.JsonElement();
+  if Item.ValueKind = J.JsonValueKind.Object then
+    discard Item.TryGetProperty(Name, out Value);
+  end if;
+
+  return Value;
+end function;
+
+// Returns the elements of array property Name on Item, or an empty array.
+public function Items(Item: J.JsonElement; Name: string): array of J.JsonElement;
+begin
+  const Value: J.JsonElement := Property(Item, Name);
+  const Result: C.List<J.JsonElement> := new C.List<J.JsonElement>();
+  if Value.ValueKind = J.JsonValueKind.Array then
+    for Child: J.JsonElement in Value.EnumerateArray() do
+      Result.Add(Child);
+    end for;
+  end if;
+
+  return Result.ToArray();
+end function;
+
+// Returns the string or numeric text at Name on Item, or an empty string.
+public function Text(Item: J.JsonElement; Name: string): string;
+begin
+  const Value: J.JsonElement := Property(Item, Name);
+  return if Value.ValueKind = J.JsonValueKind.String then
+    Value.GetString() ?? ''
+  elsif Value.ValueKind = J.JsonValueKind.Number then
+    Value.GetRawText()
+  else
+    ''
+  end if;
+end function;
+
+end unit;

@@ -7,10 +7,12 @@ uses
   FpasAmp.Ui.Tests.PlaybackFixture as Wave, FpasAmp.Library.Tests.Support as H,
   FpasAmp.Library.Tests.MetadataSupport as Fixtures, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Metadata.Fingerprints.Calculator as Measurement,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as View,
   FpasAmp.Ui.Music.LibraryPage as Songs, FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
-  Fpas.Media.Audio as Audio, FpasAmp.Ui.Fingerprints as Fp, Fpas.Ui.Elements as E, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Media.Audio as Audio, FpasAmp.Ui.Fingerprints as Fp, Fpas.Ui.Elements as E,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Mvu.Application as Mvu,
   FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Player.Playback as Playback,
   System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, System.Threading.Channels as Channels, Xunit as X;
@@ -170,6 +172,25 @@ public type FingerprintTests = record
         )
       );
       X.Assert.Contains<string>(Auto.Substring(0, 40) + '…', Session.Window.Snapshot().Text);
+      const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+      if SaveAt <> null then
+        discard IO.Directory.CreateDirectory(SaveAt);
+        Session.Window.CapturePng(IO.Path.Combine(SaveAt, 'track-details-copy-icons.png'));
+      end if;
+
+      const Controls: array of Gui.Control := Session.Window.Snapshot().Controls;
+      const PathCopy: Gui.Control? := Sys.Array.Find<Gui.Control>(
+        Controls, function(Item: Gui.Control): bool => Item.Id = 'track-copy-path'
+      );
+      const FingerprintCopy: Gui.Control? := Sys.Array.Find<Gui.Control>(
+        Controls, function(Item: Gui.Control): bool => Item.Id = 'track-copy-fingerprint'
+      );
+      if PathCopy = null or FingerprintCopy = null then
+        raise new Sys.InvalidOperationException('The dialog must show both copy buttons.');
+      end if;
+
+      X.Assert.Equal<float>(PathCopy.Bounds.X, FingerprintCopy.Bounds.X);
+      X.Assert.Equal<float>(PathCopy.Bounds.Width, FingerprintCopy.Bounds.Width);
       discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.Details(B))));
       discard Wait(
         Session,
@@ -224,18 +245,29 @@ public type FingerprintTests = record
         function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
       ).GetAwaiter().GetResult();
       for Item: Tracks.Entry in Items do
+        const Cached: Measurement.Measurement? := Fixtures.Tags(Restart).MeasureFingerprintAsync(
+          Item, false, T.CancellationToken.None
+        ).GetAwaiter().GetResult();
+        if Cached = null then
+          raise new Sys.InvalidOperationException(
+            'The cached fingerprint and duration are missing.'
+          );
+        end if;
+
         X.Assert.Equal<string>(
           if Item.Path = First then
             Auto
           else
             Manual
           end if,
-          Fixtures.Tags(Restart).FingerprintAsync(
-            Item,
-            false,
-            T.CancellationToken.None
-          ).GetAwaiter().GetResult()
+          Cached.Value
         );
+        const Seconds: double := if Item.Path = First then
+          20.0
+        else
+          17.0
+        end if;
+        X.Assert.InRange<double>(Cached.Duration, Seconds - 0.1, Seconds + 0.1);
       end for;
 
       X.Assert.Equal<byte>(BeforeA, IO.File.ReadAllBytes(First));

@@ -1,17 +1,18 @@
 // [Documentation](../../doc/library.md#playlists)
 
-// The navigation observer includes all pages and publishes committed changes.
+// The navigation observer publishes complete snapshots and committed changes.
 unit FpasAmp.Library.Tests.PlaylistObservation;
 
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Inventory.Progress as Progress, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.UserData.Schema as Users,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
   System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T,
   System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
 
-// Background summary snapshots retain complete pagination and cancellation ownership.
+// Background summary snapshots stay current during database and filesystem changes.
 public type ObservationTests = record
   // More than one query page remains complete; edits/deletions propagate and stop joins.
   [X.FactAttribute]
@@ -64,6 +65,66 @@ public type ObservationTests = record
       await Lists.DeleteAsync(Changed[0].Identity.Id, Stop.Token);
       const Deleted: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
       X.Assert.Equal<int>(250, Deleted.Length);
+    finally
+      Stop.Cancel();
+      try
+        await Running;
+      catch Cancelled: Sys.OperationCanceledException do
+      end try;
+    end try;
+  end function;
+
+  // Reopening the catalogue publishes a cached list and a newly discovered list during a scan.
+  [X.FactAttribute]
+  public async function CachedAndDiscoveredListsAreVisibleDuringScan(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Source: Sources.MusicSource := F.Source(Root.Path) with
+      ScanPlaylists := true;
+    end with;
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'Cached list.m3u'), 'cached.mp3' + #10);
+    begin
+      await using const Library: Monitor.Session := F.Start([Source], Data.Path);
+      using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+      const Lists: Access.Session := F.Tags(Library).Playlists;
+      while (await Lists.ListAsync(new M.Query(), Deadline.Token)).Length = 0 do
+        await Tasks.Task.Delay(20, Deadline.Token);
+      end while;
+    end;
+
+    // The root playlist is discovered first. More directories provide a sequence of
+    // real catalogue commits while the observer reads and publishes the new list.
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'New list.m3u'), 'new.mp3' + #10);
+    for Index: int := 1 to 3000 do
+      discard IO.Directory.CreateDirectory(IO.Path.Combine(Root.Path, Index.ToString('D4')));
+    end for;
+
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    await using const Library: Monitor.Session := F.Start([Source], Data.Path);
+    var Status: Progress.Snapshot := await Library.Progress.ReadAsync(Stop.Token);
+    while Status.Sources[0].State <> Progress.Phase.Scanning do
+      Status := await Library.Progress.ReadAsync(Stop.Token);
+    end while;
+    const Updates: Channels.Channel<I.ImmutableArray<M.Summary>> := Channels.Channel.CreateUnbounded<I.ImmutableArray<M.Summary>>();
+    const Running: Tasks.Task := F.Tags(Library).Playlists.ObserveAsync(
+      function(Items: I.ImmutableArray<M.Summary>): Tasks.Task => Updates.Writer.WriteAsync(
+        Items, Stop.Token
+      ).AsTask(),
+      Stop.Token
+    );
+    try
+      var Snapshot: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal<string>('Cached list', Snapshot[0].Name);
+      while Snapshot.Length = 1 do
+        Snapshot := await Updates.Reader.ReadAsync(Stop.Token);
+      end while;
+
+      X.Assert.Equal<int>(2, Snapshot.Length);
+      X.Assert.Equal<string>('New list', Snapshot[1].Name);
+      X.Assert.Equal<long>(1L, Snapshot[1].Count);
+      const DuringRead: Progress.Snapshot := await Library.Progress.ReadAsync(Stop.Token);
+      X.Assert.Equal<Progress.Phase>(Progress.Phase.Scanning, DuringRead.Sources[0].State);
     finally
       Stop.Cancel();
       try

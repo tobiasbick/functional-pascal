@@ -1,0 +1,138 @@
+// [Documentation](../../../doc/library.md#tag-editing)
+
+// Coordinates the two explicit save destinations for an indexed track.
+unit FpasAmp.Library.TagEditing.Access;
+
+uses
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Store as Store,
+  FpasAmp.Library.TagEditing.Fields as F, FpasAmp.Library.TagEditing.Files as Files,
+  FpasAmp.Library.TagEditing.Overrides as Overrides, Fpas.Media.Tags.AudioFiles as Media,
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys,
+  System.Collections.Generic as C, System.Collections.Immutable as I, System.IO as IO,
+  System.Text.Json as J, System.Threading as T;
+
+function Attached(Database: string; Users: string): Db.SqliteConnection;
+begin
+  const Connection: Db.SqliteConnection := Sql.Open(Database);
+  try
+    Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+    return Connection;
+  catch do
+    Connection.Dispose();
+    raise;
+  end try;
+end function;
+
+// Loads the audio tags when available and overlays any library-only changes.
+//
+// ## Parameters
+// - `Database`: The current library catalogue.
+// - `Users`: The durable store that owns the saved overrides.
+// - `Track`: The indexed file and durable track identity.
+// ## Returns
+// The editable values and file stamp needed for an audio-file write.
+public function Load(Database: string; Users: string; Track: Tracks.Entry): Files.Snapshot;
+begin
+  var Original: Files.Snapshot := new Files.Snapshot(
+    F.FromInfo(Track.Metadata ?? new Media.Info())
+  );
+  try
+    Original := Files.Read(Track.Path);
+  catch _Unavailable: IO.IOException do
+  catch _Denied: Sys.UnauthorizedAccessException do
+  end try;
+
+  using const Connection: Db.SqliteConnection := Attached(Database, Users);
+  var Values: I.ImmutableDictionary<string, string> := Original.Values;
+  const Edits: I.ImmutableDictionary<string, string?> := Overrides.Read(
+    Connection,
+    null,
+    Track.TrackId
+  );
+  for Pair: C.KeyValuePair<string, string?> in Edits do
+    const Text: string? := Pair.Value;
+    Values := if Text = null then
+      Values.Remove(Pair.Key)
+    else
+      Values.SetItem(Pair.Key, Text)
+    end if;
+  end for;
+
+  return Original with
+    Values := Values;
+    LibraryOverrides := Edits.Count > 0;
+  end with;
+end function;
+
+procedure SaveDatabase(Database: string; Users: string; Track: Tracks.Entry; Changes: I.ImmutableDictionary<string, string?>; Cancellation: T.CancellationToken);
+begin
+  using const Connection: Db.SqliteConnection := Attached(Database, Users);
+  using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
+  const Edits: I.ImmutableDictionary<string, string?> := Overrides.Read(
+    Connection,
+    Transaction,
+    Track.TrackId
+  ).SetItems(Changes);
+  Overrides.Save(Connection, Transaction, Track.TrackId, Edits);
+  using const Command: Db.SqliteCommand := Sql.Command(
+    Connection, 'SELECT tags_json FROM metadata WHERE file_id=$file AND track_id=$track;',
+    Transaction, ['$file', '$track'], [Track.FileId, Track.TrackId]
+  );
+  const Cached: object? := Command.ExecuteScalar();
+  if Cached is string then
+    const Tags: Media.Info? := J.JsonSerializer.Deserialize<Media.Info>(cast<string>(Cached));
+    if Tags <> null then
+      Store.Project(Connection, Transaction, Track.FileId, F.Project(Tags, Changes));
+    end if;
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  Transaction.Commit();
+end procedure;
+
+// Saves Changes to either selected destination. The file is staged and verified first.
+// If a late file failure follows a database commit, the error identifies the saved destination.
+//
+// ## Parameters
+// - `Database`: The current library catalogue to update.
+// - `Users`: The durable store that owns the saved overrides.
+// - `Track`: The indexed track and path to update.
+// - `Original`: The file stamp from the editor's read.
+// - `Changes`: New field values and explicit removals.
+// - `ToDatabase`: Whether to commit the overrides to SQLite.
+// - `ToFile`: Whether to replace the audio file with verified tags.
+// - `Cancellation`: Stops before publishing pending changes when requested.
+public procedure Save(
+  Database: string; Users: string; Track: Tracks.Entry; Original: Files.Snapshot;
+  Changes: I.ImmutableDictionary<string, string?>; ToDatabase: bool; ToFile: bool; Cancellation: T.CancellationToken
+);
+requires ToDatabase or ToFile;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  var Temporary: string := '';
+  var DatabaseSaved: bool := false;
+  try
+    if ToFile then
+      Temporary := Files.Stage(Track.Path, Original, Changes);
+    end if;
+
+    Cancellation.ThrowIfCancellationRequested();
+    if ToDatabase then
+      SaveDatabase(Database, Users, Track, Changes, Cancellation);
+      DatabaseSaved := true;
+    end if;
+
+    if ToFile then
+      Files.Install(Track.Path, Original, Temporary);
+      Temporary := '';
+    end if;
+  catch Failure: Sys.Exception when DatabaseSaved do
+    raise new IO.IOException('Library database saved. Audio file: ' + Failure.Message, Failure);
+  finally
+    if Temporary <> '' then
+      IO.File.Delete(Temporary);
+    end if;
+  end try;
+end procedure;
+
+end unit;

@@ -1,11 +1,10 @@
 // [Documentation](../../../doc/desktop.md#settings-and-scan-control)
 
-// General appearance and library database controls.
+// General appearance and accent controls.
 unit FpasAmp.Ui.Settings.General;
 
 uses
   FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
-  FpasAmp.Ui.Settings.DatabaseActions as Database,
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
@@ -38,10 +37,10 @@ begin
   );
 end function;
 
-// Builds appearance, accent and database action cards from the current state.
+// Builds appearance and accent cards from the current state.
 //
 // ## Parameters
-// - `Current`: Preferences, clear confirmation and operation status.
+// - `Current`: The current appearance preferences.
 // - `Theme`: The current palette.
 // ## Returns
 // The general settings tab.
@@ -86,26 +85,6 @@ begin
         Texts.Text<M.Msg>(Theme.AccentFamily.ToString(), Texts.Appearance.Secondary)
       ],
       Options
-    ),
-    Cards.Card<M.Msg>(
-      'database-card', [
-        Texts.Text<M.Msg>('Library database', Texts.Appearance.HeadingThree),
-        E.Row<M.Msg>(
-          new L.Flow(
-            Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Wrap := true,
-            Align := L.Alignment.Center, Justify := L.Justification.Between
-          ),
-          E.Column<M.Msg>(
-            new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(4))),
-            Texts.Text<M.Msg>('Clear indexed files for all sources.', Texts.Appearance.Secondary),
-            Texts.Text<M.Msg>(
-              'Music files, ratings and source settings are kept.',
-              Texts.Appearance.Secondary
-            )
-          ),
-          Database.Clear('clear-database', '', 'Clear database', Current, Theme)
-        )
-      ], Options
     )
   );
 end function;

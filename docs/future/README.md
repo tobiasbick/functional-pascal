@@ -10,6 +10,7 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 | Agent tooling, authoring proposals and deferred debugging wishes | [Agent wishes](agent-wishes.md) |
 | Upstream CUI reporting pause, open gallery pixel comparisons and the deferred TUI icon experiment | [CUI gaps](cui-gaps.md) |
 | Desktop application tutorial, GUI host and publishing | [Desktop GUI application gaps](gui-app-gaps.md) |
+| FPas-Amp recording identification and similar-track playback | [Dynamic playlists](../../apps/fpas-amp/doc/future/dynamic-playlist.md) |
 | Confirmed native defects and integration workarounds | [CUI upstream bugs](cui-upstream-bugs.md) |
 | Optional native title bar, upstream proposal and platform validation | [CUI title bar](cui-titlebar.md) |
 | Open platform checks and follow-ups for upstream window state and placement | [CUI window state](cui-window-state.md) |

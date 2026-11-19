@@ -6,13 +6,76 @@ unit FpasAmp.Ui.Tests.Preferences;
 uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as S,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Ui.Settings.Model as M,
-  FpasAmp.Ui.Settings.Update as Update, FpasAmp.Settings as Store,
+  FpasAmp.Ui.Settings.Update as Update, FpasAmp.Ui.Settings.Editing as UpdateEditing,
+  FpasAmp.Settings as Store,
   Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO, System.Threading as T,
   FpasAmp.Library.Inventory.Model as Inventory, System.Collections.Immutable as I,
   System.Threading.Tasks as Tasks, System.Text.Json as J, Xunit as X;
 
-// Verifies pause preferences and accepted/failed settings updates.
+// Verifies stored preferences and accepted or failed settings updates.
 public type PreferenceTests = record
+  // Older settings have empty keys, and repair keeps the valid half of a damaged key pair.
+  [X.FactAttribute]
+  public procedure AcoustIdKeysDefaultAndRecoverIndependently();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
+    IO.File.WriteAllText(Path, '{"musicSources":[]}');
+    const Defaults: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
+    X.Assert.Equal<string>('', Defaults.ApplicationKey);
+    X.Assert.Equal<string>('', Defaults.UserApiKey);
+    X.Assert.Equal<int>(
+      0,
+      IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
+    );
+
+    IO.File.WriteAllText(
+      Path,
+      '{"musicSources":[],"acoustId":{"applicationKey":false,"userApiKey":"fixture-user-key"}}'
+    );
+    const Repaired: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
+    X.Assert.Equal<string>('', Repaired.ApplicationKey);
+    X.Assert.Equal<string>('fixture-user-key', Repaired.UserApiKey);
+    X.Assert.Equal<int>(
+      1,
+      IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
+    );
+    X.Assert.Equal<string>('fixture-user-key', Store.Load(Folder.Path).AcoustId.UserApiKey);
+    X.Assert.Equal<int>(
+      1,
+      IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
+    );
+  end procedure;
+
+  // A rejected write retains the draft and a later save can also clear an optional key.
+  [X.FactAttribute]
+  public procedure AcoustIdSaveRetainsDraftAfterFailure();
+  begin
+    const Current: M.State := new M.State(
+      new M.Preferences([], AcoustId := new M.AcoustIdKeys('fixture-app-key', 'fixture-user-key'))
+    );
+    const Reject: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin
+      raise new IO.IOException('test save failure');
+    end procedure;
+    const Edited: M.State := UpdateEditing.Apply(
+      Current, M.Msg.EditAcoustIdKey(M.AcoustIdKey.User, ''), Reject
+    );
+    const Failed: M.State := UpdateEditing.Apply(Edited, M.Msg.SaveAcoustIdKeys, Reject);
+    X.Assert.True(Failed.SaveFailed);
+    X.Assert.Equal<string>('fixture-user-key', Failed.Saved.AcoustId.UserApiKey);
+
+    using const Folder: H.Folder := H.Folder.Create();
+    const Retried: M.State := UpdateEditing.Apply(
+      Failed, M.Msg.SaveAcoustIdKeys, procedure(Value: M.Preferences) begin
+        Store.Save(Folder.Path, Value);
+      end procedure
+    );
+    X.Assert.False(Retried.SaveFailed);
+    const Stored: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
+    X.Assert.Equal<string>('fixture-app-key', Stored.ApplicationKey);
+    X.Assert.Equal<string>('', Stored.UserApiKey);
+  end procedure;
+
   // Damaged extension policies are repaired to settings that discovery can accept.
   [X.FactAttribute]
   public procedure PlaylistExtensionsAreRepairedAndCannotBeSaved();

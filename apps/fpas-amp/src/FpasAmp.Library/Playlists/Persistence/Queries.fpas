@@ -43,13 +43,21 @@ begin
   );
 end function;
 
-// Lists bounded summaries from `Database` and `Users`; `Request` selects a page.
-// Cancellation is checked during detached result construction.
-public function List(Database: string; Users: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Summary>;
+// Opens `Database` with `Users` attached as users. The caller owns the connection.
+public function OpenRead(Database: string; Users: string): Db.SqliteConnection;
 begin
-  Cancellation.ThrowIfCancellationRequested();
-  using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  const Connection: Db.SqliteConnection := Sql.Open(Database);
+  try
+    Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+    return Connection;
+  catch do
+    Connection.Dispose();
+    raise;
+  end try;
+end function;
+
+function Summaries(Connection: Db.SqliteConnection; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Summary>;
+begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     'SELECT storage,id,name,path,total,error FROM (' +
@@ -78,14 +86,35 @@ begin
   return I.ImmutableArray.CreateRange<M.Summary>(Items);
 end function;
 
+// Lists a bounded page from `Database` and `Users` selected by `Request`.
+// `Cancellation` is checked during detached result construction.
+public function List(Database: string; Users: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Summary>;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Connection: Db.SqliteConnection := OpenRead(Database, Users);
+  return Summaries(Connection, Request, Cancellation);
+end function;
+
+// Reads a complete summary snapshot from both stores in one SQLite statement.
+// `Connection` has the user store attached. `Cancellation` interrupts the read.
+public function Snapshot(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray<M.Summary>;
+begin
+  // SQLite treats a negative limit as unbounded.
+  return Sql.Interruptible<I.ImmutableArray<M.Summary>>(
+    Connection, Cancellation,
+    function(): I.ImmutableArray<M.Summary> => Summaries(
+      Connection, new M.Query(Limit := -1), Cancellation
+    )
+  );
+end function;
+
 // Loads ordered `Identity`, preserving unresolved/duplicate entries and following
 // durable UUID moves. Returns null when the requested list no longer exists.
 public function Read(Database: string; Users: string; Identity: M.Key; Cancellation: T.CancellationToken): M.Playlist?;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Kind: int := Storage(Identity.Storage);
-  using const Connection: Db.SqliteConnection := Sql.Open(Database);
-  Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Users]);
+  using const Connection: Db.SqliteConnection := OpenRead(Database, Users);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
   var Header: M.Summary? := null;
   begin

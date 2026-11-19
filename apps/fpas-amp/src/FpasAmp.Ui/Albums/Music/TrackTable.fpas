@@ -89,6 +89,14 @@ begin
             new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
           ),
           Menus.Entry<M.Msg>.Action(
+            new Menus.Item<M.Msg>(
+              'edit-tags',
+              'Edit tags',
+              M.Msg.EditTags(Item),
+              Enabled := Item.TrackId <> ''
+            )
+          ),
+          Menus.Entry<M.Msg>.Action(
             new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
           )
         ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)

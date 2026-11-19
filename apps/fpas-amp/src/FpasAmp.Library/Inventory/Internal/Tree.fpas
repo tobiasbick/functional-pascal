@@ -11,6 +11,7 @@ uses
   FpasAmp.Library.Inventory.Internal.Catalog as Data,
   Fpas.Media.Tags.Playlists as PlaylistFormats,
   FpasAmp.Library.Albums.Artwork.Names as ArtworkNames,
+  FpasAmp.Library.TagEditing.Files as TagFiles,
   System as Sys, System.IO as IO, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Threading as T;
 
@@ -109,6 +110,14 @@ public type Tree = record
     end function;
     function Selected(Path: string): bool;
     begin
+      if (IO.Path.GetFileName(Path) ?? '').StartsWith(
+        TagFiles.StagingPrefix,
+        Sys.StringComparison.Ordinal
+      )
+      then
+        return false;
+      end if;
+
       for Source: S.MusicSource in Sources do
         if Source.Offline or Source.Paused or not S.Within(Path, Source.Path) then
           continue;

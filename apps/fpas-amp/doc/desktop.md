@@ -17,7 +17,7 @@ Navigation persists stable route identities. A playlist route is validated
 after the first successful summary snapshot, and falls back to Music if the
 playlist has disappeared. A snapshot failure keeps the previous destinations
 available. Playlist destinations currently show a summary heading and any read
-warning. The Ratings destination also displays a placeholder.
+warning. A window last closed on the retired Ratings page reopens on Music.
 
 ## Browsing music and collections
 
@@ -27,6 +27,42 @@ Artist and genre navigation scope the shared album browser by group ID. The
 browser keeps grid state when entering a release and restores it when returning.
 The shell reads realized ranges from native layout and posts them to Music or
 the album browser, which schedule cover work for the current range.
+
+## Editing track tags
+
+**Edit tags** in the track's three-dot menu opens the editor in Music and in
+album track lists. **Track**, **Release**, and **Credits** compare editable
+local tags with individual MusicBrainz proposals. Search is explicit. Choose a
+recording and release from the results, then select proposals individually or
+with **Select all** and **Select none**. Editing a local field clears its
+proposal selection. The heading identifies values that include saved library
+edits. A process-wide gate for each connected provider enforces the interval
+between requests and honors longer `Retry-After` values. MusicBrainz uses
+at least one second between starts and retries HTTP 429 and 503 up to five times,
+with delays of 2, 4, 8, 16 and 32 seconds. The search button and release picker
+are disabled while a request or cooldown is active, even across dialog reopening.
+Track and recording credits appear as soon as the recording is available. If the
+release lookup fails, these values stay available for selection and saving.
+For testing, the alert reports the HTTP status, reason, endpoint, attempt and
+retry hint when available. [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
+
+**Scan AcoustID** identifies the selected track by audio. It needs the application
+key from **Settings → Metadata**. It reuses the cached Chromaprint and full file
+duration or measures and caches them first. The scan sends the application key,
+fingerprint and duration to AcoustID and lists MusicBrainz recording and release
+matches for explicit selection. AcoustID has its own process-wide interval of
+334 ms. [AcoustID API](https://acoustid.org/webservice#lookup-by-fingerprint)
+
+**Custom** lists editable name and value pairs and selectable MusicBrainz
+fields such as barcode, ASIN, script and release IDs. Proposals use the file's
+existing names when they match. Only the list scrolls. **Add tag** moves to the
+new name field. The dialog keeps the tabs, column headings,
+destination checkboxes, and save controls in place. The database is selected
+by default and writing the audio file requires selecting **Audio file**.
+Multiline values open in a text area. Binary ID3 frames display their owner
+and a read-only identifier or hex preview. Saving other tags preserves their
+bytes. Values above 65,535 UTF-8 bytes also stay intact.
+The [library reference](library.md#tag-editing) describes both destinations.
 
 ## Playback and analysis
 
@@ -45,11 +81,17 @@ reference](library.md#on-demand-waveforms) describes the waveform cache.
 ## Settings and scan control
 
 Settings owns the source editor, appearance preferences and inventory progress
-display. Accepted source settings are saved before the library is reconfigured.
+display. The Library database card sits below the source list.
+Accepted source settings are saved before the library is reconfigured.
 A confirmed index clear or source reset saves the corresponding pause settings
 before requesting the clear. The settings view waits for the worker's result
 before releasing the clearing control. See the [library control
 contract](library.md#lifetime-and-control).
+
+The AcoustID card on the Metadata tab has optional application and user API keys. The
+fields mask their contents and link to the corresponding AcoustID setup pages.
+**Save keys** writes the values locally in plain text to `settings.json`.
+Clear a field and save to remove its key.
 
 ## Startup and user files
 
@@ -148,6 +190,7 @@ Run them with the local SDK and native GUI prerequisites described in the
 - `src/FpasAmp.Ui/Settings/`
   - [DatabaseActions.fpas](../src/FpasAmp.Ui/Settings/DatabaseActions.fpas)
   - [Editing.fpas](../src/FpasAmp.Ui/Settings/Editing.fpas)
+  - [Metadata.fpas](../src/FpasAmp.Ui/Settings/Metadata.fpas)
   - [Editor.fpas](../src/FpasAmp.Ui/Settings/Editor.fpas)
   - [General.fpas](../src/FpasAmp.Ui/Settings/General.fpas)
   - [InventoryState.fpas](../src/FpasAmp.Ui/Settings/InventoryState.fpas)
@@ -157,13 +200,30 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [SourceActions.fpas](../src/FpasAmp.Ui/Settings/SourceActions.fpas)
   - [Update.fpas](../src/FpasAmp.Ui/Settings/Update.fpas)
   - [View.fpas](../src/FpasAmp.Ui/Settings/View.fpas)
+- `src/FpasAmp.Ui/Providers/`
+  - [RequestPacing.fpas](../src/FpasAmp.Ui/Providers/RequestPacing.fpas)
+- `src/FpasAmp.Ui/TagEditor/`
+  - [AcoustId.fpas](../src/FpasAmp.Ui/TagEditor/AcoustId.fpas)
+  - [Changes.fpas](../src/FpasAmp.Ui/TagEditor/Changes.fpas)
+  - [CustomTags.fpas](../src/FpasAmp.Ui/TagEditor/CustomTags.fpas)
+  - [Model.fpas](../src/FpasAmp.Ui/TagEditor/Model.fpas)
+  - [MusicBrainz.fpas](../src/FpasAmp.Ui/TagEditor/MusicBrainz.fpas)
+  - [Requests.fpas](../src/FpasAmp.Ui/TagEditor/Requests.fpas)
+  - [ResponseJson.fpas](../src/FpasAmp.Ui/TagEditor/ResponseJson.fpas)
+  - [SearchView.fpas](../src/FpasAmp.Ui/TagEditor/SearchView.fpas)
+  - [Update.fpas](../src/FpasAmp.Ui/TagEditor/Update.fpas)
+  - [View.fpas](../src/FpasAmp.Ui/TagEditor/View.fpas)
 - `tests/FpasAmp.Ui.Tests/`
+  - [AcoustId.fpas](../tests/FpasAmp.Ui.Tests/AcoustId.fpas)
   - [AlbumBrowse.fpas](../tests/FpasAmp.Ui.Tests/AlbumBrowse.fpas)
   - [Albums.fpas](../tests/FpasAmp.Ui.Tests/Albums.fpas)
   - [CollectionFixture.fpas](../tests/FpasAmp.Ui.Tests/CollectionFixture.fpas)
   - [FpasAmp.Ui.Tests.fpasproj](../tests/FpasAmp.Ui.Tests/FpasAmp.Ui.Tests.fpasproj)
   - [NativeAlbumDetails.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbumDetails.fpas)
   - [NativeAlbumMusic.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbumMusic.fpas)
+  - [NativeMetadataSettings.fpas](../tests/FpasAmp.Ui.Tests/NativeMetadataSettings.fpas)
+  - [NativeTagEditor.fpas](../tests/FpasAmp.Ui.Tests/NativeTagEditor.fpas)
+  - [MusicBrainz.fpas](../tests/FpasAmp.Ui.Tests/MusicBrainz.fpas)
   - [NativeAlbumToolbar.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbumToolbar.fpas)
   - [NativeAlbums.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbums.fpas)
   - [NativeCollections.fpas](../tests/FpasAmp.Ui.Tests/NativeCollections.fpas)

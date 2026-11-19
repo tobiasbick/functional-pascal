@@ -11,6 +11,8 @@ properties and SHA-256 without decoding or modifying audio.
 catalogue cache. Passing `true` also runs the packaged Chromaprint `fpcalc` on
 a cache miss. The cache stores the full encoded fingerprint, algorithm number
 and duration reported by the decoder, keyed by the file's SHA-256 and algorithm.
+`MeasureFingerprintAsync` returns both the encoded fingerprint and the cached
+whole-file duration for audio identification.
 Switching files or closing the app can cancel the child process. The inventory
 and metadata scans do not enqueue fingerprint work.
 
@@ -178,6 +180,23 @@ Scans leave image data unloaded. Cached artwork works offline; absence is cached
 too. Images retain their original MIME type/bytes, limited to **sixteen MiB**.
 Cache writes replace temporary files atomically; the cache is reconstructible.
 
+## Tag editing
+
+The editor reads the current audio tags and applies the saved library edits
+over them. Library changes are sparse overrides in `userdata.db` keyed by
+the durable track ID. The metadata worker reapplies overrides when rebuilding
+the catalogue, including the derived sorting, genre and album indexes.
+
+File writes stage a sibling file, verify the edited values through the tag
+reader, and check the original file size and timestamp before installing the
+replacement. The staging name is excluded from discovery. For both
+destinations, the editor verifies the staged file before committing database
+changes. An installation failure after that commit reports the partial save.
+
+ID3v2 `UFID` and `PRIV` are owner-prefixed binary frames. The vendored ATL
+reader and writer retain their bytes. The MusicBrainz owner frame supplies the
+recording ID for MP3, and the editor uses that frame when writing the ID.
+
 ## Search
 
 `Search.Matching` ranks prepared documents for free text the way a modern search
@@ -247,10 +266,11 @@ It shares initialization/cancellation with the owning session and starts no extr
 worker. All file/database I/O stays off the caller's thread.
 
 `ObserveAsync(Publish, Cancellation)` sends complete immutable summary snapshots,
-including an initially empty result. It observes both database commit versions
-twice per second and reloads summaries only after changes. Equal snapshots are
-not republished; pagination is revalidated against concurrent writes. Cancellation
-joins the observation and releases its connections. The caller owns that lifetime.
+including an initially empty result. One SQLite statement reads the current
+catalogue and user lists at startup. The observer checks both databases for
+commits twice per second. Commits during the query trigger another read at the
+next poll, and equal snapshots are skipped. Cancellation joins the observation
+and closes its connection. The caller owns that lifetime.
 
 Sources with `ScanPlaylists := true` discover playlists recursively and reconcile
 watcher changes alongside audio. The app enables this by default; the core source
@@ -397,6 +417,11 @@ Run from the FPas-Amp directory after the [local SDK setup](../../../docs/build/
 - `src/FpasAmp.Library/Search/`
   - [Matching.fpas](../src/FpasAmp.Library/Search/Matching.fpas)
   - [Text.fpas](../src/FpasAmp.Library/Search/Text.fpas)
+- `src/FpasAmp.Library/TagEditing/`
+  - [Access.fpas](../src/FpasAmp.Library/TagEditing/Access.fpas)
+  - [Fields.fpas](../src/FpasAmp.Library/TagEditing/Fields.fpas)
+  - [Files.fpas](../src/FpasAmp.Library/TagEditing/Files.fpas)
+  - [Overrides.fpas](../src/FpasAmp.Library/TagEditing/Overrides.fpas)
 - `src/FpasAmp.Library/UserData/`
   - [Identity.fpas](../src/FpasAmp.Library/UserData/Identity.fpas)
   - [Ratings.fpas](../src/FpasAmp.Library/UserData/Ratings.fpas)
@@ -419,6 +444,7 @@ Run from the FPas-Amp directory after the [local SDK setup](../../../docs/build/
   - [Monitoring.fpas](../tests/FpasAmp.Library.Tests/Monitoring.fpas)
   - [PlaylistDiscovery.fpas](../tests/FpasAmp.Library.Tests/PlaylistDiscovery.fpas)
   - [PlaylistObservation.fpas](../tests/FpasAmp.Library.Tests/PlaylistObservation.fpas)
+  - [TagEditing.fpas](../tests/FpasAmp.Library.Tests/TagEditing.fpas)
   - [PlaylistReaders.fpas](../tests/FpasAmp.Library.Tests/PlaylistReaders.fpas)
   - [PlaylistStorage.fpas](../tests/FpasAmp.Library.Tests/PlaylistStorage.fpas)
   - [PlaylistSupport.fpas](../tests/FpasAmp.Library.Tests/PlaylistSupport.fpas)

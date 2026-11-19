@@ -9,8 +9,10 @@ uses
   FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Worker as Worker,
   FpasAmp.Library.Metadata.Persistence.Queries as Queries, FpasAmp.Library.UserData.Schema as Users,
   FpasAmp.Library.UserData.Ratings as Ratings, FpasAmp.Library.Metadata.Covers as Covers, FpasAmp.Library.Metadata.Waveforms as Waveforms,
-  FpasAmp.Library.Metadata.Fingerprints.Store as Fingerprints, FpasAmp.Library.Playlists.Access as Lists,
+  FpasAmp.Library.Metadata.Fingerprints.Store as Fingerprints,
+  FpasAmp.Library.Metadata.Fingerprints.Calculator as FingerprintData, FpasAmp.Library.Playlists.Access as Lists,
   FpasAmp.Library.Albums.Access as Albums,
+  FpasAmp.Library.TagEditing.Access as TagAccess, FpasAmp.Library.TagEditing.Files as TagFiles,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -30,6 +32,34 @@ public type Session = record implements Sys.IAsyncDisposable
   Lifetime: T.CancellationToken;
   Stop: function(): Tasks.Task;
   FingerprintGate: T.SemaphoreSlim;
+
+  // Loads the editor's snapshot after the owned database schemas are ready.
+  public async function ReadTags(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<TagFiles.Snapshot>;
+  begin
+    await self.Ready.WaitAsync(Cancellation).ConfigureAwait(false);
+    return TagAccess.Load(self.Database, self.UserDatabase, Track);
+  end function;
+
+  // Records the editor's explicit changes in the selected destinations.
+  public async function WriteTags(
+    Track: M.Entry; Original: TagFiles.Snapshot;
+    Changes: I.ImmutableDictionary<string, string?>; ToDatabase: bool; ToFile: bool;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
+  requires ToDatabase or ToFile;
+  begin
+    await self.Ready.WaitAsync(Cancellation).ConfigureAwait(false);
+    TagAccess.Save(
+      self.Database,
+      self.UserDatabase,
+      Track,
+      Original,
+      Changes,
+      ToDatabase,
+      ToFile,
+      Cancellation
+    );
+  end function;
 
   // Replaces isolated normalized source policy and wakes the bounded worker.
   public procedure Configure(Sources: array of S.MusicSource);
@@ -151,21 +181,38 @@ public type Session = record implements Sys.IAsyncDisposable
   public async function FingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task<string?>;
   requires Track.Path <> '';
   begin
+    const Result: FingerprintData.Measurement? := await self.MeasureFingerprintAsync(
+      Track,
+      Generate,
+      Cancellation
+    ).ConfigureAwait(false);
+    return if Result = null then
+      null
+    else
+      Result.Value
+    end if;
+  end function;
+
+  // Reads the fingerprint and whole-file duration for Track and generates them on a miss if Generate is true.
+  // Cancellation interrupts the request and any child process. Returns null when no cached value exists and Generate is false.
+  public async function MeasureFingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task<FingerprintData.Measurement?>;
+  requires Track.Path <> '';
+  begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     if not Generate then
-      return await Tasks.Task.Run<string?>(
-        function(): string? => Fingerprints.Cached(self.Database, Track),
+      return await Tasks.Task.Run<FingerprintData.Measurement?>(
+        function(): FingerprintData.Measurement? => Fingerprints.Cached(self.Database, Track),
         Linked.Token
       ).ConfigureAwait(false);
     end if;
 
-    return await Tasks.TaskExtensions.Unwrap<string?>(
-      Tasks.Task.Run<Tasks.Task<string?>>(
-        function(): Tasks.Task<string?> => Fingerprints.Generate(
+    return await Tasks.TaskExtensions.Unwrap<FingerprintData.Measurement?>(
+      Tasks.Task.Run<Tasks.Task<FingerprintData.Measurement?>>(
+        function(): Tasks.Task<FingerprintData.Measurement?> => Fingerprints.Generate(
           self.Database,
           Track,
           self.Policy,

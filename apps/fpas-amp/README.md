@@ -1,7 +1,7 @@
 # FPas-Amp
 
 FPas-Amp is a desktop music player in development, written in Functional Pascal.
-The navigation groups **Music**, **Albums**, **Artists**, **Genres** and **Ratings**
+The navigation groups **Music**, **Albums**, **Artists** and **Genres**
 under **Library**, followed by all discovered/local **Playlists** in name order.
 
 **Music** lists all songs across your sources in a virtual table. Each row shows the
@@ -153,6 +153,8 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   uses light.
 - `settings.json` saves the master volume and ten equalizer gains in dB under
   `mixer`. The player restores both presets and custom curves from these values.
+- `settings.json` stores the optional keys from **Settings → Metadata** in
+  `acoustId.applicationKey` and `acoustId.userApiKey` as plain text.
 - Closing the window silences playback immediately. `state.json` stores the
   playing selection (album or library, search, filters and sort order), the current
   track ID, its slot, position and duration. On restart the player rebuilds
@@ -165,10 +167,11 @@ on Windows and `~/.config/fpas-amp` on Linux. Linux honors `XDG_CONFIG_HOME`.
   Wayland. FPas-Amp saves the file when its window closes and reopens the
   window there, maximized if it was. A window closed while minimized keeps
   the state it would have come back in.
-- `state.json` also stores `settingsTab`, with `0` for General and `1` for Library,
+- `state.json` also stores `settingsTab`, with `0` for General, `1` for Library
+  and `2` for Metadata,
   and `activePage`: `music`, `albums`, `album:<release ID>`, `artists`, `artist:<artist ID>`,
   `artist:<artist ID>:<release ID>`, `genres`, `genre:<genre ID>`, `genre:<genre ID>:<release ID>`,
-  `ratings`, `settings` or `playlist:<file|local>:<UUID>`. Closing inside an album
+  `settings` or `playlist:<file|local>:<UUID>`. Closing inside an album
   reopens its track list, independently of the playing track. If the catalogue
   no longer contains that release, its parent grid opens. A missing artist or genre returns to its overview. Defaults are Music and General. Malformed
   routes/tabs are repaired to these defaults. The drawer's open state is transient.

@@ -302,6 +302,8 @@ begin
       );
     when M.Msg.ShowFolder(const Path: string):
       return OpenFolder(Current, Path);
+    when M.Msg.EditTags(_):
+      // The shell owns the shared editor.
   end case;
 
   return new A.Transition<M.State, M.Msg>(Next, Empty);

@@ -8,7 +8,8 @@ uses
   FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
-  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+  Fpas.Ui.Gui.Cui.CuiDesktop as Desktop, System as Sys, System.IO as IO,
+  System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Clear(Library: Monitoring.Session; Target: string): Mvu.Command<M.Msg>;
 begin
@@ -25,9 +26,42 @@ begin
   );
 end function;
 
+function OpenKeyPage(Key: M.AcoustIdKey): Mvu.Command<M.Msg>;
+begin
+  const Url: string := if Key = M.AcoustIdKey.Application then
+    'https://acoustid.org/new-application'
+  else
+    'https://acoustid.org/api-key'
+  end if;
+  return Mvu.StartBackground<M.Msg>(
+    'acoustid-key-page',
+    function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      Cancellation.ThrowIfCancellationRequested();
+      if not Desktop.TryOpen(Url) then
+        raise new IO.IOException('Could not open the AcoustID setup page.');
+      end if;
+
+      return Tasks.Task.CompletedTask;
+    end function,
+    function(_Error: Sys.Exception): M.Msg => M.Msg.AcoustIdKeyPageFailed
+  );
+end function;
+
 function Step(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
   case Message of
+    when M.Msg.OpenAcoustIdKeyPage(const Key: M.AcoustIdKey):
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          AcoustIdLinkFailed := false;
+        end with, [OpenKeyPage(Key)]
+      );
+    when M.Msg.AcoustIdKeyPageFailed:
+      return new Mvu.Transition<M.State, M.Msg>(
+        Current with
+          AcoustIdLinkFailed := true;
+        end with, []
+      );
     when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
       return new Mvu.Transition<M.State, M.Msg>(State.Receive(Current, Value), []);
     when M.Msg.ProgressReceived(const Value: Progress.Snapshot):
@@ -113,7 +147,7 @@ end function;
 // - `Save`: Persists a validated set of preferences.
 // - `Library`: Owns scanning, storage and index clearing.
 // ## Returns
-// The next settings state and the background clear, when one was confirmed.
+// The next settings state and any background command requested by the action.
 public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
 begin
   const Next: Mvu.Transition<M.State, M.Msg> := Step(Current, Message, Save, Library);

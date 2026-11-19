@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as Popup, Fpas.Ui.Tui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Tui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Tui.Internal.Widgets.Actions.StatusButton as StatusWidget, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Tui.Internal.Widgets.Actions.ConfirmButton as ConfirmWidget, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Tui.Internal.Widgets.Actions.SplitButton as SplitWidget, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as HoldWidget, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.CopyButton as CopyWidget, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Tui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -235,12 +235,15 @@ public function Prepare<TMsg>(
       when Ui.Element.Hinted(_, _, _):
         raise new Sys.NotSupportedException('Tooltip requires the graphical profile.');
       when Ui.Element.TextField(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), Ui.Element.SearchField(_, _, _, _, _), Ui.Element.TextArea(_, _, _, _, _):
+        const Id: string, const Value: string, const Change: function(string): TMsg,
+        const Settings: Fields.Options, const Submit: Sys.Func<string, TMsg>?
+      ):
+        return FieldWidget.Lower<TMsg>(
+          new Edit.Field<TMsg>(Id, Value, Change, Settings, Submit),
+          Colors,
+          Theme
+        );
+      when Ui.Element.SearchField(_, _, _, _, _), Ui.Element.TextArea(_, _, _, _, _):
         raise new Sys.NotSupportedException('These text editors require the graphical profile.');
       when Ui.Element.TagInput(_, _, _, _), Ui.Element.OneTimeCodeInput(
         _,
@@ -276,9 +279,9 @@ public function Prepare<TMsg>(
         _
       ):
         raise new Sys.NotSupportedException('Feedback widgets require the graphical profile.');
-      when Ui.Element.Dialog(_, _, _, _, _, _), Ui.Element.ActionFooter(_):
+      when Ui.Element.ActionFooter(_):
         raise new Sys.NotSupportedException(
-          'Dialogs and action footers require the graphical profile.'
+          'Action footers require the graphical profile.'
         );
       when Ui.Element.RangeCalendar(_, _, _, _, _), Ui.Element.RangePicker(_, _, _, _):
         raise new Sys.NotSupportedException(
@@ -1069,9 +1072,35 @@ public function Prepare<TMsg>(
         const Id: string, const Base: Ui.Element<TMsg>, const Content: Ui.Element<TMsg>,
         const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
       ):
-        return Sheet.Lower<TMsg>(
-          Id, Visit(Base, Colors, ParentHorizontal), Open, Settings, Dismiss, Colors, Theme,
-          function(Panel: T.Style): E.Element<TMsg> => Visit(Content, Panel)
+        return Panel.Lower<TMsg>(
+          Id, Visit(Base, Colors, ParentHorizontal), Open,
+          new E.ModalOptions(
+            Settings.Title,
+            Settings.Description,
+            Settings.Size,
+            Settings.Edge,
+            Settings.InitialFocus,
+            Sheets.CloseId(Id)
+          ),
+          Dismiss, Colors, Theme,
+          function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
+        );
+      when Ui.Element.Dialog(
+        const Id: string, const Base: Ui.Element<TMsg>, const Content: Ui.Element<TMsg>,
+        const Open: bool, const Settings: Dialogs.Options, const Dismiss: TMsg
+      ):
+        return Panel.Lower<TMsg>(
+          Id, Visit(Base, Colors, ParentHorizontal), Open,
+          new E.ModalOptions(
+            Settings.Title, Settings.Description, Settings.Width, null, Settings.InitialFocus,
+            if Settings.CloseButton then
+              Dialogs.CloseId(Id)
+            else
+              null
+            end if, not Settings.Persistent
+          ),
+          Dismiss, Colors, Theme,
+          function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
         );
       when Ui.Element.Deferred(const Id: string, _):
         return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);

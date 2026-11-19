@@ -16,6 +16,18 @@ public procedure Apply<TMsg>(
 begin
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
+    when A.Binding.Edit(_, _, _, const Caret: int):
+      if Focused then
+        Mark(Caret, Bounds.Y, Theme.Focus);
+        if Bounds.Contains(Caret + 1, Bounds.Y) and Cells[
+          Bounds.Y * Columns + Caret + 1
+        ].Text = ''
+        then
+          Mark(Caret + 1, Bounds.Y, Theme.Focus);
+        end if;
+      end if;
+
+      return;
     when A.Binding.Grid(_, _):
       return;
     when A.Binding.Scroll(const View: V.Viewport<TMsg>):

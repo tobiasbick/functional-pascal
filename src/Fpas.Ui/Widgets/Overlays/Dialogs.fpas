@@ -2,23 +2,23 @@ unit Fpas.Ui.Widgets.Overlays.Dialogs;
 
 uses Fpas.Ui.Elements as E;
 
-// Presentation and dismissal options for CUI's centered dialog.
+// Presentation and dismissal options for a centered modal dialog.
 public type Options = record
   // Literal heading in the dialog header.
   public Title: string;
   // Optional supporting text below the heading.
   public Description: string := '';
-  // Preferred width in logical points. CUI fits it to the window.
+  // Preferred width in logical points. Each host fits it to the viewport.
   public Width: int := 440;
   // Whether Escape and presses on the scrim leave the dialog open.
   public Persistent: bool := false;
-  // Whether to display the native close button.
+  // Whether to display the header close button.
   public CloseButton: bool := true;
-  // Preferred enabled control when opening, before the native close button.
+  // Preferred enabled control when opening, before the header close button.
   public InitialFocus: string? := null;
-  // Let the user move the dialog by dragging its header.
+  // Let the user move the dialog by dragging its header in the GUI.
   public Draggable: bool := false;
-  // Let the user change the dialog size by dragging its edges or corners.
+  // Let the user change the dialog size by dragging its edges or corners in the GUI.
   public Resizable: bool := false;
 end record;
 
@@ -29,12 +29,12 @@ end record;
 // ## Parameters
 // - `Id`: Stable dialog identity.
 // - `Base`: View behind the dialog.
-// - `Content`: Dialog body and any action footer. Retain it through the exit transition.
+// - `Content`: Dialog body. In the GUI, retain it through the exit transition.
 // - `Open`: Whether the model opens the dialog.
 // - `Settings`: Heading, width, dismissal and focus options.
-// - `OnDismiss`: Proposed message when the native dialog requests closure.
+// - `OnDismiss`: Proposed message when the dialog requests closure.
 // ## Returns
-// A graphical view with a native modal dialog.
+// The base view with a centered modal when open.
 public function Dialog<TMsg>(
   Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>; Open: bool;
   Settings: Options; OnDismiss: TMsg
@@ -45,7 +45,7 @@ begin
   return E.Element<TMsg>.Dialog(Id, Base, Content, Open, Settings, OnDismiss);
 end function;
 
-// Returns the stable application ID of the native close button.
+// Returns the stable application ID of the header close button.
 //
 // ## Parameters
 // - `Id`: Dialog identity.

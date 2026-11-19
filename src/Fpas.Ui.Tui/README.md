@@ -14,9 +14,9 @@ The interactive host restores terminal modes on normal exit and failure.
 
 ## Views, layout and validation
 
-Views use the shared Element tree. Supported widgets are buttons, icon buttons,
+Views use the shared Element tree. Supported widgets include single-line text fields, buttons, icon buttons,
 button groups, segmented controls, dropdown menus, copy/hold/confirm/status/split buttons, theme selectors/toggles,
-sidebar navigation, status bars, determinate progress bars and sheets. Text, rows/columns, sizing, borders, styles,
+sidebar navigation, status bars, determinate progress bars, sheets and centered dialogs. Text, rows/columns, sizing, borders, styles,
 cached subviews and scrolling provide their composition foundations.
 
 Preflight validates the view before rendering. Logical distances map to cells:
@@ -54,8 +54,14 @@ Disabling cancels pending pointer capture. Hold-to-confirm requires a continuous
 pointer press and release over its control; terminal input supplies no key-release
 events. Copy uses OSC 52 when the terminal permits clipboard writes.
 
-Sheets dock to any edge with a close button, dimmed backdrop and scrolling body.
-Escape or a backdrop click proposes dismissal; closing restores available focus.
+Single-line text fields accept typing and paste when focused. Left and Right
+move by grapheme, Home and End move to either end, and Enter submits the model
+value. Click to place the caret. Tab moves on.
+
+Sheets dock to any edge. Dialogs center a content-sized panel in the terminal.
+Both dim the background, keep focus inside and scroll a long body. Escape or
+a backdrop click proposes dismissal. A persistent dialog stays open until an
+action closes it. Closing the overlay restores available focus.
 
 ## Terminal extensions
 

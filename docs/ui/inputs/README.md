@@ -2,7 +2,8 @@
 
 The Inputs gallery page combines text editors, credentials and form fields.
 Keep each editable value in the model and apply proposals in the update
-function. These widgets require the GUI host.
+function. The single-line text field also runs in the TUI. The other input
+widgets on this page require the GUI host.
 
 | Widget | When to use it |
 | --- | --- |

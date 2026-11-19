@@ -51,7 +51,8 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Reactions and user menus | | | Yes |
 | Popover and confirmation popover anchored to a button | | | Yes |
 | Tooltip attached to a single control | | | Yes |
-| Single-line text fields with labels, validation, affixes and password reveal | | | Yes |
+| Single-line text field with label, placeholder, hint or error | Yes | Yes | Yes |
+| Field icons, affixes, clear and password buttons, and size variants | | | Yes |
 | Search field and wrapping multiline text area with affixes | | | Yes |
 | Inline editing, scrub and money fields, shortcut recording and native shortcut labels | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | Yes | Yes | Yes |
@@ -63,7 +64,8 @@ and input support. [GUI adapter](../Fpas.Ui.Gui/README.md),
 | Native responsive grid, justification, cards, badges, metrics, avatar groups and empty states | | | Yes |
 | Tabs, breadcrumb, pagination and stepper | | | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
-| Centered modal dialog and action footer | | | Yes |
+| Centered modal dialog | Yes | Yes | Yes |
+| Draggable or resizable dialog and native action footer | | | Yes |
 | Banners, countdowns and onboarding checklists | | | Yes |
 | Determinate progress bar, label, percentage, tone and width | Yes | Yes | Yes |
 | Animated progress, alerts, spinners, meters, rings, skeletons and timeline entries | | | Yes |
@@ -1237,12 +1239,13 @@ requires the Graphical profile.
 ## Dialog and action footer
 
 `Fpas.Ui.Widgets.Overlays.Dialogs.Dialog<TMsg>(Id, Base, Content, Open, Settings, OnDismiss)`
-presents a centered CUI modal above `Base`. The model controls `Open`.
-Keep `Content` available during the exit transition. The host disables the
+presents a centered modal above `Base`. The model controls `Open`.
+In the GUI, keep `Content` available during the exit transition. The host disables the
 underlying view, moves focus into the dialog and restores focus on closure.
 `InitialFocus` can target an enabled control in the body or footer.
 
-CUI fits the requested width to the viewport. Set `Draggable` to let users move
+Both hosts fit the requested width to the viewport. In the TUI the body scrolls
+when it exceeds the available height. In the GUI, set `Draggable` to let users move
 the dialog by its header and `Resizable` to let them drag its edges and corners.
 Both options default to false. A resized dialog keeps its action footer at
 the bottom edge. Escape, the native close
@@ -1253,7 +1256,8 @@ dismissal. Set `CloseButton` to false to hide the native close action.
 `Fpas.Ui.Widgets.Actions.ActionFooters.ActionFooter<TMsg>(Children)` lays out the supplied
 actions in CUI's right-aligned row with an eight-point top inset and an
 eight-point gap. Cancel and Save can close a dialog through their ordinary
-application messages. Both elements require the Graphical profile.
+application messages. The footer requires the Graphical profile. Use a
+regular row of buttons for actions shared with the TUI.
 
 ## Smart inputs
 
@@ -1299,7 +1303,7 @@ for the grouped money display.
 ## Text field
 
 `Fpas.Ui.Widgets.Inputs.TextFields.TextField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
-draws a CUI single-line editor. Set the caption, placeholder, leading icon,
+edits a model-owned single-line value. In the GUI, set the caption, placeholder, leading icon,
 hint, error, prefix and suffix through `Options`. An error replaces the hint.
 The editable value excludes the prefix and suffix. Use shared layout options
 to size the field.
@@ -1314,8 +1318,12 @@ buttons.
 Values are single lines bounded by `MaxUtf8Bytes`, excluding the terminator.
 The default is 255 bytes. Password fields support up to 341 bytes so CUI can
 measure the masked caret and selection. The native eye can reveal the value
-on screen. GUI snapshots omit password values even when revealed. This
-widget requires the Graphical profile.
+on screen. GUI snapshots omit password values even when revealed.
+
+The TUI supports labels, placeholders, hints, errors, read-only and disabled
+states, horizontal caret navigation, insertion, paste, deletion and Enter.
+Use the default control size. Icons, affixes, clear and password controls
+require the Graphical profile.
 
 ## Search field
 

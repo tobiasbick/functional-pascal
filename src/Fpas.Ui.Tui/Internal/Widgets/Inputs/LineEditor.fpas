@@ -1,0 +1,243 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor;
+
+uses
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global,
+  System.Text as Text;
+
+// Model-owned input and callbacks for one terminal field.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Field<TMsg> = record
+  // Stable widget identity.
+  public Id: string;
+  // Text supplied by the model.
+  public Value: string;
+  // Publishes a proposed replacement.
+  public Change: function(string): TMsg;
+  // Shared field options.
+  public Settings: Fields.Options;
+  // Optional Enter action.
+  public Submit: Sys.Func<string, TMsg>?;
+end record;
+
+// Per-field edit position retained between presentations.
+public type Cursor = record
+  // Model text expected after the last input.
+  public Expected: string;
+  // UTF-16 insertion offset at a grapheme boundary.
+  public Offset: int;
+  // First visible UTF-16 offset.
+  public Start: int := 0;
+end record;
+
+// Access to the input router's cursor between layout passes.
+public type Tracking = record
+  // Reads the current edit position.
+  public Read: function(): Cursor;
+  // Records the expected position for the next layout.
+  public Write: procedure(Cursor);
+end record;
+
+// Retains an editor position for keyboard and pointer input.
+// ## Parameters
+// - `Initial`: Cursor used to paint this field.
+// ## Returns
+// Editor state owned by the presented control.
+public function Track(Initial: Cursor): Tracking;
+begin
+  var Current: Cursor := Initial;
+  return new Tracking(
+    function(): Cursor => Current, procedure(Value: Cursor) begin
+      Current := Value;
+    end procedure
+  );
+end function;
+
+function Next(Value: string; Offset: int): int;
+begin
+  return if Offset < Value.Length then
+    Offset + Global.StringInfo.GetNextTextElementLength(Value, Offset)
+  else
+    Offset
+  end if;
+end function;
+
+function Previous(Value: string; Offset: int): int;
+begin
+  const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
+  const Index: int := Sys.Array.BinarySearch<int>(Starts, Offset);
+  const Before: int := (if Index >= 0 then
+    Index
+  else
+    -Index - 1
+  end if) - 1;
+  return if Before >= 0 then
+    Starts[Before]
+  else
+    0
+  end if;
+end function;
+
+// Fits the caret and its display cell inside the current text viewport.
+// ## Parameters
+// - `Value`: Current model text.
+// - `Old`: Cursor from the previous layout for the same field.
+// - `Width`: Available editable columns.
+// ## Returns
+// Cursor positioned for this frame, reset to the end on an external replacement.
+public function Fit(Value: string; Old: Cursor?; Width: int): Cursor;
+begin
+  var Position: Cursor := new Cursor(Value, Value.Length);
+  if Old <> null and Old.Expected = Value then
+    Position := new Cursor(Value, Old.Offset, Sys.Math.Min(Old.Offset, Old.Start));
+  end if;
+
+  // A deletion or insertion can join graphemes across the former viewport boundary.
+  if Position.Start > 0 and Position.Start < Value.Length then
+    Position := Position with
+      Start := Previous(Value, Position.Start + 1);
+    end with;
+  end if;
+  const CaretWidth: int := if Position.Offset = Value.Length then
+    1
+  else
+    G.Width(Global.StringInfo.GetNextTextElement(Value, Position.Offset))
+  end if;
+  const Budget: int := Sys.Math.Max(0, Width - CaretWidth);
+  const Before: string := Value.Substring(Position.Start, Position.Offset - Position.Start);
+  const Excess: int := G.Measure(Before) - Budget;
+  if Excess > 0 then
+    const Cut: int := G.IndexAt(Before, 0, Excess - 1);
+    Position := Position with
+      Start := Position.Start + Next(Before, Cut);
+    end with;
+  end if;
+
+  return Position;
+end function;
+
+procedure Replace<TMsg>(Field: Field<TMsg>; Position: Tracking; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
+begin
+  const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
+  if Value = Field.Value then
+    return;
+  end if;
+  const EndOffset: int := Start + Added.Length;
+  Position.Write(
+    new Cursor(
+      Value, if EndOffset > 0 then
+        Next(Value, Previous(Value, EndOffset))
+      else
+        0
+      end if, Position.Read().Start
+    )
+  );
+  Apply(Field.Change(Value));
+end procedure;
+
+// Inserts a single-line paste or typed text at the caret, up to the UTF-8 limit.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current model value and callbacks.
+// - `Position`: Field's cursor.
+// - `Input`: Incoming text.
+// - `Apply`: Dispatches a proposed edit.
+public procedure Insert<TMsg>(Field: Field<TMsg>; Position: Tracking; Input: string; Apply: procedure(TMsg));
+begin
+  if Field.Settings.ReadOnly then
+    return;
+  end if;
+  var Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Field.Value);
+  const Added: Text.StringBuilder := new Text.StringBuilder();
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
+    G.SingleLine(Input)
+  );
+  while Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    if not Sys.Char.IsControl(
+      Glyph[0]
+    ) and not (Sys.Char.IsSurrogate(Glyph[0]) and not Sys.Char.IsSurrogatePair(Glyph, 0))
+    then
+      const Bytes: int := Text.Encoding.UTF8.GetByteCount(Glyph);
+      if Bytes > Available then
+        break;
+      end if;
+
+      discard Added.Append(Glyph);
+      Available := Available - Bytes;
+    end if;
+  end while;
+
+  if Added.Length > 0 then
+    Replace<TMsg>(Field, Position, Position.Read().Offset, 0, Added.ToString(), Apply);
+  end if;
+end procedure;
+
+// Handles editing and submission before application navigation shortcuts.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current model value and callbacks.
+// - `Position`: Field's cursor.
+// - `Pressed`: Unmodified key.
+// - `Apply`: Dispatches an edit or submission.
+// ## Returns
+// Whether the field consumed this key.
+public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key; Apply: procedure(TMsg)): bool;
+begin
+  const At: int := Position.Read().Offset;
+  case Pressed of
+    when K.Key.Home:
+      Position.Write(
+        Position.Read() with
+          Offset := 0;
+        end with
+      );
+    when K.Key.End:
+      Position.Write(
+        Position.Read() with
+          Offset := Field.Value.Length;
+        end with
+      );
+    when K.Key.Left:
+      Position.Write(
+        Position.Read() with
+          Offset := Previous(Field.Value, At);
+        end with
+      );
+    when K.Key.Right:
+      Position.Write(
+        Position.Read() with
+          Offset := Next(Field.Value, At);
+        end with
+      );
+    when K.Key.Backspace, K.Key.Delete:
+      if not Field.Settings.ReadOnly then
+        const Start: int := if Pressed = K.Key.Backspace then
+          Previous(Field.Value, At)
+        else
+          At
+        end if;
+        const Stop: int := if Pressed = K.Key.Delete then
+          Next(Field.Value, At)
+        else
+          At
+        end if;
+        Replace<TMsg>(Field, Position, Start, Stop - Start, '', Apply);
+      end if;
+    when K.Key.Enter:
+      case Field.Submit of
+        when is Sys.Func<string, TMsg> as Submit:
+          Apply(Submit.Invoke(Field.Value));
+        else
+      end case;
+    else
+      return false;
+  end case;
+
+  return true;
+end function;
+
+end unit;

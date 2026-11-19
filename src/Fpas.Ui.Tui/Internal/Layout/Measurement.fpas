@@ -31,6 +31,8 @@ end function;
 public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
+    when E.Element.TextField(_):
+      return 1;
     when E.Element.StatusBar(_, _):
       return if Horizontal then
         0
@@ -110,7 +112,7 @@ begin
       _,
       _,
       _
-    ), E.Element.EdgeSheet(
+    ), E.Element.ModalPanel(
       _,
       _,
       _,
@@ -141,6 +143,8 @@ public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E
 begin
   if Horizontal then
     case Node of
+      when E.Element.TextField(_):
+        return new E.Flex(Grow := 1);
       when E.Element.Progress(_, _, _, const Width: int?, _):
         if Width <> null then
           return new E.Flex(Basis := Width.Value, Maximum := Width.Value);
@@ -280,6 +284,12 @@ begin
       else
         2
       end if;
+    when E.Element.TextField(_):
+      return if Horizontal then
+        24
+      else
+        1
+      end if;
     when E.Element.CellGrid(_, _, _):
       return 1;
     when E.Element.Progress(_, const Caption: string, const Percent: string, const Width: int?, _):
@@ -349,7 +359,7 @@ begin
       _
     ):
       return Intrinsic<TMsg>(Child, Horizontal, Columns);
-    when E.Element.EdgeSheet(_, _, _, _, _, _):
+    when E.Element.ModalPanel(_, _, _, _, _, _):
       return 0;
     when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
       return Sys.Math.Max(

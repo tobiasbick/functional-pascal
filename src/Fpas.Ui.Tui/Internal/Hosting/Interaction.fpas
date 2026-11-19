@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation as Sidebars, Fpas.Ui.Tui.Internal.Hosting.MenuNavigation as Menus, Fpas.Ui.Tui.Internal.Widgets.Actions.HoldButton as Hold, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -267,6 +267,25 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     case Control.Action of
+      when A.Binding.Edit(
+        const Field: Edit.Field<TMsg>,
+        const Position: Edit.Tracking,
+        const Origin: int,
+        _
+      ):
+        if Button = K.MouseButton.Left then
+          const Cursor: Edit.Cursor := Position.Read();
+          const Clicked: int := Glyphs.IndexAt(
+            Field.Value.Substring(Cursor.Start),
+            0,
+            Column - Origin
+          );
+          Position.Write(
+            Cursor with
+              Offset := Cursor.Start + Clicked;
+            end with
+          );
+        end if;
       when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
         Apply(Changed(Grids.Event.Clicked(Column - Area.X, Row - Area.Y, Button)));
       else
@@ -409,6 +428,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
             return;
           end if;
+        when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
+          if Modifiers = K.KeyModifiers.None and Edit.Key<TMsg>(Field, Position, Key, Apply) then
+            return;
+          end if;
         when A.Binding.Grid(_, _):
       end case;
     end if;
@@ -512,6 +535,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   begin
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Control <> null then
+      case Control.Action of
+        when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
+          Edit.Insert<TMsg>(Field, Position, Text, Apply);
+          return;
+        else
+      end case;
+
       if Typed and Text = ' ' then
         case Control.Action of
           when A.Binding.Invoke(_):

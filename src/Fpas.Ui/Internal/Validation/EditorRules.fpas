@@ -43,7 +43,7 @@ begin
   R.CheckText(Suffix, At + '/suffix');
 end procedure;
 
-// Validates a graphical text field and reserves its native action identities.
+// Validates a single-line text field and reserves its native action identities.
 //
 // ## Parameters
 // - `Id`: Stable editor identity.
@@ -58,7 +58,11 @@ public procedure CheckTextField(
 );
 begin
   const Path: string := Location + '/textField';
-  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  if Settings.Icon <> '' or Settings.Prefix <> '' or Settings.Suffix <> '' or Settings.Password
+    or Settings.Clearable or Settings.ControlSize <> B.Size.Medium
+  then
+    R.RequireProfile(Profile, V.Target.Graphical, Path);
+  end if;
   const At: string := Identify(Id, Path);
   if Settings.Clearable then
     discard Identify(F.ClearId(Id), At + '/clear');

@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Largest column count accepted by the terminal host.
 public const MaximumColumns: int := 500;
@@ -79,6 +79,24 @@ public type ActionView = record
   public Center: bool := true;
 end record;
 
+// Shared terminal geometry and input policy for dialogs and edge sheets.
+public type ModalOptions = record
+  // Literal header and optional supporting line.
+  public Title: string;
+  // Text below the title.
+  public Description: string;
+  // Preferred width or docked extent in logical points.
+  public Size: int;
+  // Null centers the panel; otherwise it docks at the selected edge.
+  public Edge: Sheets.Side?;
+  // The control to focus on opening.
+  public InitialFocus: string?;
+  // Optional header close action identity.
+  public CloseId: string?;
+  // Whether Escape and scrim clicks propose dismissal.
+  public Dismissible: bool := true;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -87,6 +105,8 @@ end record;
 public type Element<TMsg> = variant
   // Paint literal text.
   Label(Value: string);
+  // Single editable row with its model-owned value.
+  TextField(Field: Edit.Field<TMsg>);
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Paint a determinate progress track and optional caption.
@@ -118,9 +138,9 @@ public type Element<TMsg> = variant
   );
   // Paint base content followed by layers and install base-scope shortcuts.
   Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of K.ShortcutBinding<TMsg>);
-  // Place a modal sheet at a viewport edge with a fixed header and a scrolling body.
-  EdgeSheet(
-    Id: string; Settings: Sheets.Options; Size: int; Content: Element<TMsg>;
+  // Place a centered or docked modal with a pinned header and a scrolling body.
+  ModalPanel(
+    Id: string; Settings: ModalOptions; Size: int; Content: Element<TMsg>;
     Dismiss: TMsg; Colors: T.Style
   );
 end variant;

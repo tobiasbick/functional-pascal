@@ -2,6 +2,10 @@
 
 The left panel lists the GUI gallery's Components and Extended destinations plus
 **Progress bar**, **Text** and **Cell grid**. The right panel previews the selected entry.
+**Components → Inputs** and **Buttons** share a three-track play queue. Enter a
+track title and press Enter or choose **Add track**. **Remove last** takes the
+most recently added title off the queue. **Components → Overlays** shows the same queue in a right-hand sheet
+or asks for confirmation before clearing it in a centered dialog.
 **Components → Feedback** shows upload and export progress as colored lines with
 percentages. **Extended → App chrome** places the status bar at the bottom of
 the preview. Click the encoding or focus it and press Enter to switch between
@@ -15,7 +19,18 @@ The panels share the terminal width in a 1:2 ratio with a one-cell gap.
 Use ↑/↓, Page Up/Page Down or Home/End to move through the list. Enter, Space
 or a mouse click opens the destination. The wheel scrolls the list. On Overview,
 Feedback and Progress bar, ←/→ changes the sample by ten percentage points.
+On Inputs, Buttons and Overlays, → moves into the preview. In the title field
+←/→ moves the caret, Home/End jumps to either end and Escape returns to the
+selected sidebar entry. Tab moves between controls. Escape closes an overlay.
 Ctrl+T switches themes and Ctrl+Q exits.
+
+![Typing a track title in the terminal gallery](text-field.png)
+
+![Buttons for editing the queue](buttons.png)
+
+![Play queue in a right-hand sheet](sheet.png)
+
+![Centered dialog with Cancel focused](dialog.png)
 
 ![Feedback in the terminal gallery](panels.png)
 

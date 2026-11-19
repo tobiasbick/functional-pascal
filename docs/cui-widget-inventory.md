@@ -273,7 +273,8 @@ and widget options.
   [API][fpas-text-field]. Inputs shows the responsive text fields. Smart inputs
   shows the original prefix and suffix examples. Windows Software and OpenGL
   cover Unicode editing, submission, read-only input and password reveal.
-  TUI: deferred; graphical profile required.
+  The TUI supports the basic single-line field, caret, paste and submission.
+  Password, clear button, icons, affixes and control sizes are GUI features.
 - [x] Search field, including prefix and suffix (`cui_search`):
   [API][fpas-search-field]. Inputs shows the original project search beside
   Password. Windows Software and OpenGL cover query editing, the native clear
@@ -542,7 +543,8 @@ for gallery screenshots, FPAS examples and widget options.
   and renderers. The resized panel also matches through its outer edge.
   The host fixture exercises the real gallery dialog and checks its footer,
   focus return, Escape, scrim and close dismissal, and the Save changes toast.
-  Requires the graphical profile.
+  TUI supports centered dialogs, focus, dismissal and ordinary buttons in the
+  body. Dragging, resizing and the native action footer require the graphical profile.
 - [x] Sheet/Drawer (`cui_sheet`): [API][fpas-sheet]. TUI: implemented; cell placement
   replaces CUI's slide transition, retaining modal focus, scrolling and dismissal.
   The Notifications sheet shows the original three switches. Their values are

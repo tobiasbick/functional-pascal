@@ -1,6 +1,6 @@
 # Dialog
 
-Use a dialog for a focused task that blocks input to the underlying view. Available in **GUI**.
+Use a dialog for a focused task that blocks input to the underlying view. Available in **GUI and TUI**.
 
 ![Dialog in the FPAS gallery](images/dialog.png)
 
@@ -33,21 +33,25 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Title / Description` | Title is required. Description defaults to empty. |
-| `Width` | 440 logical points. CUI fits the width to the viewport. |
+| `Width` | 440 logical points. Both hosts fit the width to the viewport. |
 | `Persistent / CloseButton` | false / true. Persistent suppresses Escape and scrim dismissal. |
 | `InitialFocus` | null. Supply the ID of an enabled control inside the dialog to choose where focus starts. |
+| `Draggable / Resizable` | Both default to false. Enable either in a GUI view. |
 
 ## Interaction
 
 Click the close button, press Escape or click the scrim to send the dismiss
 message. A focused text field gets Escape first. With Persistent enabled,
-the close button still sends the message when shown. Keep the dialog body
-available during its exit transition. The host restores focus to the
-preceding control when the dialog closes.
+the close button still sends the message when shown. Closing the dialog restores focus to the preceding control.
+
+In the TUI, put ordinary buttons in a row for actions. The dialog stays
+centered when the terminal resizes and its body scrolls if space is limited.
+In the GUI, keep the body available during the exit transition.
 
 ## See also
 
 - [Widget API and types](../../../src/Fpas.Ui/Widgets/Overlays/Dialogs.fpas)
-- [Gallery example](../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Dialog.fpas)
+- [Terminal gallery](../../../examples/ui/tui/gallery/README.md)
+- [GUI gallery example](../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Dialog.fpas)
 - [Action footer](action-footer.md)
 - [Overlays](README.md)

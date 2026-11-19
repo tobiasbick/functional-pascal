@@ -6,13 +6,15 @@ uses
   TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status,
-  TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
+  TuiGallery.QueueSample as Queue, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
   Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, System as Sys, System.Threading as Threads;
 
 type Msg = variant
   SelectPage(Page: Catalog.Entry);
   ChangeProgress(Delta: int);
   Grid(Event: Grids.Event);
+  QueueAction(Action: Queue.Msg);
+  Focus(Id: string);
   ToggleEncoding;
   ToggleTheme;
   Quit;
@@ -23,6 +25,7 @@ type Model = record
   public Mode: Themes.Mode := Themes.Mode.Dark;
   public Percent: int := 60;
   public Upload: int := 68;
+  public QueueState: Queue.State := new Queue.State();
   public Utf8: bool := true;
   public Grid: GridSample.State := new GridSample.State();
 end record;
@@ -67,6 +70,27 @@ begin
           Percent := Sys.Math.Clamp(State.Percent + Delta, 0, 100);
         end with;
       end if;
+    when Msg.Focus(const Id: string):
+      return new Mvu.Transition<Model, Msg>(State, [Mvu.Focus<Msg>(Id)]);
+    when Msg.QueueAction(const Action: Queue.Msg):
+      Next := State with
+        QueueState := Queue.Update(State.QueueState, Action);
+      end with;
+      case Action of
+        when Queue.Msg.Add:
+          if Next.QueueState.Tracks.Length = Queue.Capacity then
+            return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-remove')]);
+          end if;
+
+          return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-title')]);
+        when Queue.Msg.Remove:
+          if Next.QueueState.Tracks.Length = 0 then
+            return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-title')]);
+          end if;
+        when Queue.Msg.Clear:
+          return new Mvu.Transition<Model, Msg>(Next, [Mvu.Focus<Msg>('queue-show')]);
+        else
+      end case;
     when Msg.ToggleEncoding:
       Next := State with
         Utf8 := not State.Utf8;
@@ -138,6 +162,10 @@ begin
         ),
         Label('←/→  Adjust upload by 10%', S.Role.Muted)
       );
+    when Catalog.Preview.Buttons:
+      Example := Composition.Map<Queue.Msg, Msg>(Queue.Buttons(State.QueueState), Msg.QueueAction);
+    when Catalog.Preview.Overlays:
+      Example := Composition.Map<Queue.Msg, Msg>(Queue.Openers(State.QueueState), Msg.QueueAction);
     when Catalog.Preview.AppChrome:
       return E.Column<Msg>(
         new L.Flow(Padding := L.Spacing.Normal),
@@ -197,19 +225,41 @@ begin
     [Section('Components', Catalog.Components), Section('Extended', Catalog.Extended)],
     State.Active.Title
   );
-  return Views.Screen<Msg>(
+  const Editing: bool := State.Active.Demo = Catalog.Preview.Buttons or State.Active.Demo =
+    Catalog.Preview.Overlays;
+  const FirstButton: string := if State.Active.Demo = Catalog.Preview.Overlays then
+    'queue-show'
+  else
+    'queue-title'
+  end if;
+  const SidebarFocus: Msg := Msg.Focus(Nav.ItemId('navigation', State.Active.Title));
+  const Screen: E.Element<Msg> := Views.Screen<Msg>(
     E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),
       Panel(1.0F, E.ScrollView<Msg>('navigation-scroll', List)), Panel(2.0F, Detail(State))
     ),
     [],
     [
-      Keys.Shortcut<Msg>(Keys.Key.Left, Keys.KeyModifiers.None, Msg.ChangeProgress(-10)),
-      Keys.Shortcut<Msg>(Keys.Key.Right, Keys.KeyModifiers.None, Msg.ChangeProgress(10)),
+      Keys.Shortcut<Msg>(
+        Keys.Key.Left, Keys.KeyModifiers.None, if Editing then
+          SidebarFocus
+        else
+          Msg.ChangeProgress(-10)
+        end if
+      ),
+      Keys.Shortcut<Msg>(
+        Keys.Key.Right, Keys.KeyModifiers.None, if Editing then
+          Msg.Focus(FirstButton)
+        else
+          Msg.ChangeProgress(10)
+        end if
+      ),
+      Keys.Shortcut<Msg>(Keys.Key.Escape, Keys.KeyModifiers.None, SidebarFocus),
       Keys.Shortcut<Msg>(Keys.Key.T, Keys.KeyModifiers.Ctrl, Msg.ToggleTheme),
       Keys.Shortcut<Msg>(Keys.Key.Q, Keys.KeyModifiers.Ctrl, Msg.Quit)
     ]
   );
+  return Queue.Present<Msg>(Screen, State.QueueState, Msg.QueueAction);
 end function;
 
 begin

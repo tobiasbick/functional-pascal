@@ -1,6 +1,6 @@
 program RenderingContract;
 
-uses Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -181,6 +181,60 @@ begin
   );
 end procedure;
 
+procedure PersistentDialog();
+  function View(State: int): E.Element<int>;
+  begin
+    return Dialogs.Dialog<int>(
+      'modal', B.Button<int>('open', 'Open', 1), B.Button<int>('done', 'Done', 0),
+      State = 1, new Dialogs.Options('Review', Persistent := true, CloseButton := false), 0
+    );
+  end function;
+  procedure Reject(Settings: Dialogs.Options);
+  begin
+    try
+      discard V.Prepare<int>(
+        Dialogs.Dialog<int>('modal', E.Text<int>('Base'), E.Text<int>('Body'), false, Settings, 0),
+        V.Target.Terminal
+      );
+    catch Error: Sys.ArgumentException do
+      Check(Error.Message.Contains('Graphical profile'), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException('Moving or resizing a dialog requires the GUI.');
+  end procedure;
+  procedure Send(Session: Tui.HeadlessSession; Event: Tui.Input);
+  begin
+    discard Session.Send(Event);
+    discard Session.Step();
+  end procedure;
+begin
+  discard V.Prepare<int>(View(1), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 64, 16);
+  Send(Session, Tui.Input.Activate('open'));
+  const Opened: Tui.Frame := Session.Snapshot();
+  Check(
+    Opened.Controls.Length = 2 and not Opened.Controls[0].Enabled
+    and Opened.Controls[1].Id = 'done' and Opened.Controls[1].Focused,
+    'Without a header button the body must receive focus.'
+  );
+  Send(Session, Tui.Input.KeyPress(Keys.Key.Escape, Keys.KeyModifiers.None));
+  Send(Session, Tui.Input.Pointer(Keys.PointerKind.Press, 0, 0));
+  Send(Session, Tui.Input.Pointer(Keys.PointerKind.Release, 0, 0));
+  Check(
+    Session.Snapshot().Controls[1].Focused,
+    'A persistent dialog must keep focus on Escape and backdrop clicks.'
+  );
+  Send(Session, Tui.Input.Activate('done'));
+  const Closed: Tui.Frame := Session.Snapshot();
+  Check(
+    Closed.Controls.Length = 1 and Closed.Controls[0].Id = 'open' and Closed.Controls[0].Focused,
+    'Explicit completion must restore focus to the opener.'
+  );
+  Reject(new Dialogs.Options('Drag', Draggable := true));
+  Reject(new Dialogs.Options('Resize', Resizable := true));
+end procedure;
+
 procedure ProgressTracks();
   function View(State: int): E.Element<int>;
   begin
@@ -235,6 +289,7 @@ end procedure;
 
 begin
   BorderlessStatus();
+  PersistentDialog();
   ProgressTracks();
   WideIdeographs();
   ZeroWidthClusters();

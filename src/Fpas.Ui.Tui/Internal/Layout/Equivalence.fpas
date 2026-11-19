@@ -12,6 +12,13 @@ begin
         else
           return false;
       end case;
+    when Tree.Binding.Edit(_, _, _, _):
+      case Right of
+        when Tree.Binding.Edit(_, _, _, _):
+          return true;
+        else
+          return false;
+      end case;
     when Tree.Binding.Invoke(_):
       case Right of
         when Tree.Binding.Invoke(_):

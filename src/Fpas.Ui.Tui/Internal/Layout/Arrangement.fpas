@@ -1,6 +1,6 @@
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Tui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.Menu as MenuWidget, Fpas.Ui.Tui.Internal.Layout.Measurement as M, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Widgets.Actions.ButtonGroup as Group, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -87,6 +87,20 @@ public function Arrange<TMsg>(
         end if;
 
         Register(Id, Id, 'cell-grid', '', Clip, ScopeId, true, A.Binding<TMsg>.Grid(Area, Changed));
+      when E.Element.TextField(const Field: Edit.Field<TMsg>):
+        AddControl(
+          FieldWidget.Arrange<TMsg>(
+            Field,
+            Previous,
+            Area,
+            Clip,
+            ScopeId,
+            FocusReturn,
+            Style,
+            Theme,
+            Operations
+          )
+        );
       when E.Element.Label(const Value: string):
         Draw(Value, Area, Clip, Style, true);
       when E.Element.Progress(
@@ -265,16 +279,21 @@ public function Arrange<TMsg>(
         for Layer: E.Element<TMsg> in Layers do
           Visit(Layer, Area, Clip, ScopeId, Style);
         end for;
-      when E.Element.EdgeSheet(
-        const Id: string, const Settings: Sheets.Options, const Size: int,
+      when E.Element.ModalPanel(
+        const Id: string, const Settings: E.ModalOptions, const Size: int,
         const Content: E.Element<TMsg>, const Dismiss: TMsg, const Colors: T.Style
       ):
-        const Layer: Sheet.Placement<TMsg> := Sheet.Arrange<TMsg>(
-          Operations, Screen, Id, Settings, Size, Colors, Theme, Dismiss, FocusReturn
+        const Layer: Panel.Placement<TMsg> := Panel.Arrange<TMsg>(
+          Operations, Screen, Id, Settings, Size, Content, Colors, Theme, Dismiss, FocusReturn
         );
         Scopes.Add(Id);
         Active := Layer.Scope;
-        AddControl(Layer.Close);
+        case Layer.Close of
+          when is A.Control<TMsg> as Close:
+            AddControl(Close);
+          else
+        end case;
+
         Visit(Content, Layer.Body, Layer.Body, Id, Colors);
     end case;
   end procedure;

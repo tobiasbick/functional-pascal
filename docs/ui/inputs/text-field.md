@@ -1,6 +1,6 @@
 # Text field
 
-Use a text field for a single line of editable text. The gallery shows a name field and an email field with an icon and hint. Available in **GUI**.
+Use a text field for a single line of editable text. The gallery shows a name field and an email field with an icon and hint. Available in **GUI and TUI**.
 
 ![Text field in the FPAS gallery](images/text-field.png)
 
@@ -48,12 +48,27 @@ end unit;
 
 ## Interaction
 
-Use the normal caret, selection, clipboard and undo keys while the field has
+In the GUI, use the native caret, selection, clipboard and undo keys while the field has
 focus. Enter sends the optional submission message after any edit from that
 frame. Replacing the value from the model moves the caret to the end and
 clears undo history. A read-only field still allows selection. Password mode
 masks the value and supplies a reveal button. GUI snapshots omit the password
 value.
+
+## Terminal
+
+Use the same `TextField` with a label, placeholder, hint or error. Click to
+place the caret. ←/→ moves by grapheme, Home/End jumps to either end, and
+Backspace/Delete removes the previous or next grapheme. A long value scrolls
+horizontally as the caret moves. Pasting turns line breaks into spaces and
+stops before exceeding `MaxUtf8Bytes`. Enter invokes `OnSubmit` with the
+current model value. Tab moves focus to the next control.
+
+A read-only field accepts focus and caret movement. A disabled field skips
+focus. Password and clear buttons, icons, affixes and non-default control
+sizes require the GUI.
+
+![Editing a track title in the terminal gallery](../../../examples/ui/tui/gallery/text-field.png)
 
 ## Prefix and suffix
 

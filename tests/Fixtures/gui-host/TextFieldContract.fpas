@@ -61,7 +61,12 @@ procedure Validate();
   end procedure;
 begin
   const Identity: function(string): string := function(Value: string): string => Value;
-  Reject(F.TextField<string>('field', '', Identity), V.Target.Terminal, 'Graphical profile');
+  discard V.Prepare<string>(F.TextField<string>('field', '', Identity), V.Target.Portable);
+  Reject(
+    F.TextField<string>('field', '', Identity, new F.Options(Password := true)),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
   Reject(
     SearchFields.SearchField<string>('query', '', Identity),
     V.Target.Terminal,

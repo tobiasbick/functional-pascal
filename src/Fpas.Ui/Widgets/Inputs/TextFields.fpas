@@ -2,7 +2,7 @@ unit Fpas.Ui.Widgets.Inputs.TextFields;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
-// Native presentation and input options for a single-line field.
+// Presentation and input options for a single-line field.
 public type Options = record
   // Caption above the field.
   public Label: string := '';
@@ -22,7 +22,7 @@ public type Options = record
   public Password: bool := false;
   // Show the native clear button while the editable value is nonempty.
   public Clearable: bool := false;
-  // Allow focus and selection while preventing editing.
+  // Allow focus and caret movement while preventing editing.
   public ReadOnly: bool := false;
   // Allow keyboard and pointer input.
   public Enabled: bool := true;
@@ -32,7 +32,7 @@ public type Options = record
   public MaxUtf8Bytes: int := 255;
 end record;
 
-// Builds CUI's single-line editor with a model-owned value.
+// Builds a single-line editor with a model-owned value in the GUI or TUI.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -40,10 +40,10 @@ end record;
 // - `Id`: Stable field identity.
 // - `Value`: Current single-line value.
 // - `OnChange`: Maps a proposed edit to a message.
-// - `Settings`: Optional native field settings.
+// - `Settings`: Presentation options, capacity and enabled or read-only state.
 // - `OnSubmit`: Optional message factory for Enter, receiving the value after any edit in that frame.
 // ## Returns
-// A graphical text field.
+// An editable field for the active host.
 public function TextField<TMsg>(
   Id: string; Value: string; OnChange: function(string): TMsg;
   Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null

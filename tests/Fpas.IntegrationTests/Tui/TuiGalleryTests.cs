@@ -42,7 +42,54 @@ public sealed class TuiGalleryTests
             await Key("Enter");
             var buttons = await Request("snapshot");
             Assert.Equal("Buttons", Selected(buttons));
-            Assert.Contains("Actions triggered", Preview(buttons, 26));
+            Assert.Contains("2 tracks queued", Preview(buttons, 26));
+            await Key("Right");
+            Assert.Equal("Track title", Focused(await Request("snapshot")));
+            Assert.False(Control(buttons, "queue-add").GetProperty("enabled").GetBoolean());
+            await Turn(new() { ["kind"] = "paste", ["text"] = "Evening rain" });
+            await Key("Left");
+            await Turn(new() { ["kind"] = "character", ["text"] = "i" });
+            await Key("Backspace");
+            Assert.Equal("Evening rain", Control(await Request("snapshot"), "queue-title").GetProperty("value").GetString());
+            await Key("Enter");
+            var fullQueue = await Request("snapshot");
+            Assert.Contains("3 tracks queued", Preview(fullQueue, 26));
+            Assert.False(Control(fullQueue, "queue-add").GetProperty("enabled").GetBoolean());
+            Assert.Equal("Remove last", Focused(fullQueue));
+            await Key("Left");
+            await Click("Overlays");
+            await Key("Right");
+            await Key("Enter");
+            var sheet = await Request("snapshot");
+            Assert.Equal("Done", Focused(sheet));
+            Assert.Contains("Evening rain", Preview(sheet, 26));
+            Assert.False(Control(sheet, "navigation/Overview").GetProperty("enabled").GetBoolean());
+            await Key("Escape");
+            Assert.Equal("View queue", Focused(await Request("snapshot")));
+            await Key("Tab");
+            await Key("Enter");
+            var dialog = await Request("snapshot");
+            Assert.Equal("Cancel", Focused(dialog));
+            AssertCenteredDialog(dialog);
+            await Resize(40, 12);
+            AssertCenteredDialog(await Request("snapshot"));
+            await Resize(80, 24);
+            await Turn(new() { ["kind"] = "click", ["button"] = "left", ["column"] = 2, ["row"] = 2 });
+            var dismissed = await Request("snapshot");
+            Assert.Equal("Clear queue…", Focused(dismissed));
+            Assert.Equal("Overlays", Selected(dismissed));
+            Assert.Contains("3 tracks queued", Preview(dismissed, 26));
+            await Key("Enter");
+            await Key("Enter");
+            Assert.Equal("Clear queue…", Focused(await Request("snapshot")));
+            await Key("Enter");
+            await Key("Tab");
+            Assert.Equal("Clear", Focused(await Request("snapshot")));
+            await Key("Enter");
+            var cleared = await Request("snapshot");
+            Assert.Contains("0 tracks queued", Preview(cleared, 26));
+            Assert.Equal("View queue", Focused(cleared));
+            await Key("Left");
             await Resize(100, 28);
             AssertPanels(await Request("snapshot"), 100, 28, 33);
             await Resize(40, 17);
@@ -194,6 +241,24 @@ public sealed class TuiGalleryTests
     }
 
     private static JsonElement.ArrayEnumerator Controls(JsonElement frame) => frame.GetProperty("controls").EnumerateArray();
+
+    private static JsonElement Control(JsonElement frame, string id) =>
+        Controls(frame).Single(c => c.GetProperty("id").GetString() == id);
+
+    private static void AssertCenteredDialog(JsonElement frame)
+    {
+        var rows = frame.GetProperty("lines").EnumerateArray().Select(row => row.GetString()!).ToArray();
+        var width = frame.GetProperty("columns").GetInt32();
+        var top = Array.FindIndex(rows, row => row.Contains("Clear queue?", StringComparison.Ordinal));
+        Assert.InRange(top, 0, rows.Length - 1);
+        var left = rows[top].LastIndexOf('╭', rows[top].IndexOf("Clear queue?", StringComparison.Ordinal));
+        var right = rows[top].IndexOf('╮', left + 1);
+        Assert.Equal((width - 38) / 2, left);
+        Assert.Equal(38, right - left + 1);
+        var bottom = Array.FindIndex(rows, top + 1, row => row[left] == '╰' && row[right] == '╯');
+        Assert.InRange(rows.Length - 1 - bottom - top, 0, 1);
+        Assert.False(Control(frame, "queue-show").GetProperty("enabled").GetBoolean());
+    }
 
     private static string? Focused(JsonElement frame) =>
         Controls(frame).Single(c => c.GetProperty("focused").GetBoolean()).GetProperty("label").GetString();

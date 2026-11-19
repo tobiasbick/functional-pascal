@@ -7,7 +7,7 @@ a toast command from your update to send a notification.
 
 | Widget | When to use it | Hosts |
 | --- | --- | --- |
-| [Dialog](dialog.md) | Block interaction with the underlying view for a short task. | GUI |
+| [Dialog](dialog.md) | Block interaction with the underlying view for a short task. | GUI and TUI |
 | [Action footer](action-footer.md) | Align a dialog's actions in the native footer. | GUI |
 | [Sheet and drawer](sheet.md) | Open a modal panel at a window edge. | GUI and TUI |
 | [Command palette](command-palette.md) | Search for application commands and destinations. | GUI |

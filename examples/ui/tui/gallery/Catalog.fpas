@@ -4,6 +4,8 @@ unit TuiGallery.Catalog;
 public type Preview = enum
   Description;
   Overview;
+  Buttons;
+  Overlays;
   Feedback;
   AppChrome;
   Progress;
@@ -24,11 +26,15 @@ end record;
 // Core gallery destinations followed by the terminal samples.
 public const Components: array of Entry := [
   new Entry('Overview', '↑/↓ to browse · Enter or click to select', Preview.Overview),
-  new Entry('Buttons', 'Actions triggered by a button, a group or an icon.'),
-  new Entry('Inputs', 'Fields for entering and editing values.'),
+  new Entry('Buttons', 'Add or remove a track from the play queue.', Preview.Buttons),
+  new Entry('Inputs', 'Enter a title to add it to the play queue.', Preview.Buttons),
   new Entry('Selection', 'Controls for choosing one option or several.'),
   new Entry('Navigation', 'Sidebars, tabs and paths between views.'),
-  new Entry('Overlays', 'Sheets and menus layered over the current view.'),
+  new Entry(
+    'Overlays',
+    'Inspect the play queue in a sheet or clear it with a dialog.',
+    Preview.Overlays
+  ),
   new Entry('Feedback', 'Show how far a task has progressed.', Preview.Feedback),
   new Entry('Data display', 'Rows and lists for presenting structured information.'),
   new Entry('Charts', 'Visual summaries of values and trends.'),

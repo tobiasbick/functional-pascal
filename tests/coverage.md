@@ -193,7 +193,8 @@ and signing. The probe presents a button through both renderers.
 `TuiGalleryTests` checks both rounded panel outlines, their 1:2 width ratio,
 the one-cell gap and preview at three terminal sizes. It exercises click and
 keyboard selection, scrolling across sections, text, and progress from 0–100%. It verifies
-theme colors through two Ctrl+T toggles and a clean exit with Ctrl+Q.
+queue actions, disabled buttons, sheet and dialog focus, dismissal, dialog
+centering after resize, theme switching and a clean exit with Ctrl+Q.
 The gallery DAP test sends the same shortcuts through the private terminal
 and checks that resizing and changing themes produce the expected frames.
 
@@ -207,7 +208,9 @@ modified arrow shortcuts alongside plain-arrow focus navigation. Effect
 coverage includes completion, cancellation and cleanup, and checks that a host
 request which closes a session skips subsequent commands. `TerminalModeTests` checks
 restoration of native terminal modes after exit and output failure.
-The rendering fixture checks sanitized orphan Unicode clusters against actual
+The text-field fixture checks grapheme editing, horizontal scrolling, pointer
+placement, bounded single-line paste, read-only and disabled fields, and
+external replacement on submission. The rendering fixture checks sanitized orphan Unicode clusters against actual
 cells and output positions. The theme fixture compares all default palette colors.
 The composition fixture also checks graphical outline validation, including
 anchor order and scope boundaries for dialogs, popovers, tables and Kanban cards.

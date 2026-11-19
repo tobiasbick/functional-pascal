@@ -1,0 +1,119 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField;
+
+uses
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Widgets.Developer.Terminal as T,
+  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+
+// Composes a field with its optional caption and supporting text.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Shared value, options and edit callbacks.
+// - `Colors`: Inherited text style.
+// - `Theme`: Semantic colors for errors and hints.
+// ## Returns
+// A single editable row with any requested labels.
+public function Lower<TMsg>(Field: Edit.Field<TMsg>; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  if Field.Settings.Label <> '' then
+    Rows.Add(E.Element<TMsg>.Label(Field.Settings.Label));
+  end if;
+
+  Rows.Add(E.Element<TMsg>.TextField(Field));
+  const Error: bool := Field.Settings.Error <> '';
+  const Hint: string := if Error then
+    Field.Settings.Error
+  else
+    Field.Settings.Hint
+  end if;
+  if Hint <> '' then
+    const Ink: int := Th.Rgb(
+      if Error then
+        Theme.Colors.Danger
+      else
+        Theme.Colors.TextMuted
+      end if, Colors.Background ?? 0
+    );
+    Rows.Add(
+      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Hint), new T.Style(Ink, Colors.Background))
+    );
+  end if;
+
+  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
+end function;
+
+// Paints the displayed slice and binds it to its cursor and model callbacks.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current field.
+// - `Previous`: Earlier presented layout.
+// - `Area`: Allocated cells.
+// - `Clip`: Visible cells.
+// - `Scope`: Owning input scope.
+// - `FocusReturn`: Fallback focus destination.
+// - `Colors`: Inherited text colors.
+// - `Theme`: Semantic field colors.
+// - `Operations`: Paint operations for this frame.
+// ## Returns
+// Interactive bounds of the input row.
+public function Arrange<TMsg>(
+  Field: Edit.Field<TMsg>; Previous: A.Layout<TMsg>?; Area: F.Rect;
+  Clip: F.Rect; Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme;
+  Operations: C.List<D.Operation>
+): A.Control<TMsg>;
+begin
+  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Field.Id);
+  var Old: Edit.Cursor? := null;
+  if Before <> null then
+    case Before.Action of
+      when A.Binding.Edit(_, const Cursor: Edit.Tracking, _, _):
+        Old := Cursor.Read();
+      else
+    end case;
+  end if;
+  const Pad: int := if Area.Width >= 3 then
+    1
+  else
+    0
+  end if;
+  const X: int := Area.X + Pad;
+  const Width: int := Area.Width - 2 * Pad;
+  const Position: Edit.Cursor := Edit.Fit(Field.Value, Old, Width);
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceMuted, Colors.Background ?? 0);
+  const Muted: bool := Field.Value = '' or not Field.Settings.Enabled;
+  const Ink: int := Th.Rgb(
+    if Muted then
+      Theme.Colors.TextMuted
+    else
+      Theme.Colors.Foreground
+    end if, Surface
+  );
+  const Style: T.Style := new T.Style(Ink, Surface);
+  const Row: F.Rect := F.Intersect(new F.Rect(Area.X, Area.Y, Area.Width, 1), Clip);
+  D.Fill(Operations, Row, Style);
+  const Visible: string := if Field.Value = '' then
+    G.SingleLine(Field.Settings.Placeholder)
+  else
+    Field.Value.Substring(Position.Start)
+  end if;
+  Operations.Add(new D.Operation(Visible, new F.Rect(X, Area.Y, Width, 1), Row, Style, false));
+  const Caret: int := X + G.Measure(
+    Field.Value.Substring(Position.Start, Position.Offset - Position.Start)
+  );
+  return new A.Control<TMsg>(
+    Field.Id, if Field.Settings.Label <> '' then
+      Field.Settings.Label
+    else
+      Field.Id
+    end if,
+    'text-field', Field.Value, Row, Scope, FocusReturn, Field.Settings.Enabled,
+    A.Binding<TMsg>.Edit(Field, Edit.Track(Position), X, Caret), S.ButtonVariant.Default
+  );
+end function;
+
+end unit;

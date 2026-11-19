@@ -734,7 +734,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
         _, const Settings: Dialogs.Options, _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/dialog');
+        if Settings.Draggable or Settings.Resizable then
+          Rules.RequireProfile(Profile, Target.Graphical, Location + '/dialog');
+        end if;
+
         if HoverDepth > 0 then
           Rules.Reject(Location, 'Place modal views outside pointer-owned hover card bodies.');
         end if;

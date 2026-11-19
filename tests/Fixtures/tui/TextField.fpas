@@ -1,0 +1,110 @@
+program TextFieldContract;
+
+uses
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Elements as E, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.TerminalExtensions.Input as K,
+  System as Sys, System.Console as Console;
+
+function Update(State: string; Message: string): Mvu.Transition<string, string>;
+begin
+  return new Mvu.Transition<string, string>(Message, []);
+end function;
+
+function View(Value: string): E.Element<string>;
+begin
+  return E.Column<string>(
+    F.TextField<string>(
+      'editor', Value, function(Text: string): string => Text,
+      new F.Options(Label := 'Title', Placeholder := 'Untitled', MaxUtf8Bytes := 9),
+      function(Text: string): string => 'ok'
+    ),
+    F.TextField<string>(
+      'read', 'fixed', function(Text: string): string => 'bad',
+      new F.Options(ReadOnly := true)
+    ),
+    F.TextField<string>(
+      'off', '', function(Text: string): string => 'bad',
+      new F.Options(Enabled := false)
+    )
+  );
+end function;
+
+procedure Verify();
+  procedure Send(Session: Tui.HeadlessSession; Input: Tui.Input);
+  begin
+    discard Session.Send(Input);
+    case Session.Step() of
+      when Tui.StepResult.Failed(_, _, _, const Reason: string):
+        raise new Sys.Exception(Reason);
+      else
+    end case;
+  end procedure;
+  procedure Key(Session: Tui.HeadlessSession; Pressed: K.Key);
+  begin
+    Send(Session, Tui.Input.KeyPress(Pressed, K.KeyModifiers.None));
+  end procedure;
+  procedure Expect(Session: Tui.HeadlessSession; Text: string);
+  begin
+    const Actual: string := Session.Snapshot().Controls[0].Value;
+    if Actual <> Text then
+      raise new Sys.Exception('Expected [' + Text + '] but found [' + Actual + '].');
+    end if;
+  end procedure;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<string, string>(
+    '',
+    Update,
+    View,
+    14,
+    7
+  );
+  if not Session.Snapshot().Lines[1].Contains('Untitled') then
+    raise new Sys.Exception('Missing placeholder.');
+  end if;
+  const Accent: string := 'e' + cast<char>(769);
+  Send(Session, Tui.Input.Paste(Accent + '界ab'));
+  Key(Session, K.Key.Home);
+  Key(Session, K.Key.Right);
+  Key(Session, K.Key.Delete);
+  Expect(Session, Accent + 'ab');
+  Key(Session, K.Key.Backspace);
+  Expect(Session, 'ab');
+  Send(Session, Tui.Input.Paste('x' + #13 + #10 + 'y' + #0));
+  Expect(Session, 'x yab');
+  Key(Session, K.Key.End);
+  Send(Session, Tui.Input.Paste('界界'));
+  Expect(Session, 'x yab界');
+  Send(Session, Tui.Input.Resize(5, 7));
+  if Session.Snapshot().Lines[1].Contains('x') then
+    raise new Sys.Exception('Caret did not scroll.');
+  end if;
+
+  Key(Session, K.Key.Left);
+  if not Session.Snapshot().Lines[1].Contains('界') then
+    raise new Sys.Exception('Wide glyph under the caret is clipped.');
+  end if;
+
+  Key(Session, K.Key.Home);
+  Send(Session, Tui.Input.Click(2, 1));
+  Send(Session, Tui.Input.Character('!'));
+  Expect(Session, 'x! yab界');
+  Key(Session, K.Key.Enter);
+  Expect(Session, 'ok');
+  Send(Session, Tui.Input.Character('!'));
+  Expect(Session, 'ok!');
+  Key(Session, K.Key.Tab);
+  Send(Session, Tui.Input.Paste('ignored'));
+  Key(Session, K.Key.Backspace);
+  Expect(Session, 'ok!');
+  Key(Session, K.Key.Tab);
+  if not Session.Snapshot().Controls[0].Focused then
+    raise new Sys.Exception('Disabled field received focus.');
+  end if;
+end procedure;
+
+begin
+  Verify();
+  Console.WriteLine('Text field contracts verified');
+end;
+
+end program;

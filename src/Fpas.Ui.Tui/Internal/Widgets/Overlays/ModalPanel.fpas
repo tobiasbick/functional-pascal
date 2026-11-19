@@ -1,0 +1,242 @@
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel;
+
+uses Fpas.Ui.Tui.Internal.Layout.Measurement as Measurement, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as Generic;
+
+// Final placement of a modal panel and its pinned close button and scrolling body.
+type PanelBounds = record
+  // Whole panel, excluding the surrounding scrim.
+  public Panel: F.Rect;
+  // Header close-button cell.
+  public Close: F.Rect;
+  // Interior viewport reserved for scrolling content.
+  public Body: F.Rect;
+end record;
+
+// Paints a modal panel's scrim and frame and calculates its interactive geometry.
+//
+// ## Parameters
+// - `Operations`: Ordered terminal paint operations.
+// - `Area`: Available viewport.
+// - `Settings`: Centered or docked panel options.
+// - `Size`: Requested extent in cells.
+// - `Content`: Scrollable body used to measure a centered dialog.
+// - `Colors`: Resolved modal colors.
+// - `Theme`: Terminal theme providing the scrim and border.
+// ## Returns
+// Bounds of the panel, close button and body.
+function PaintPanel<TMsg>(
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Settings: E.ModalOptions;
+  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme
+): PanelBounds;
+begin
+  const InsetX: int := if Area.Width >= 5 then
+    1
+  else
+    0
+  end if;
+  const InsetY: int := if Area.Height >= 5 then
+    1
+  else
+    0
+  end if;
+  const Center: bool := Settings.Edge = null;
+  const Wide: bool := Center or Settings.Edge = Sheets.Side.Left or Settings.Edge =
+    Sheets.Side.Right;
+  const Width: int := Sys.Math.Min(
+    Area.Width - 2 * InsetX, if Wide then
+      Size
+    else
+      Area.Width
+    end if
+  );
+  const AvailableRows: int := Area.Height - 2 * InsetY;
+  var Height: int := if Wide then
+    AvailableRows
+  else
+    Sys.Math.Min(AvailableRows, Size)
+  end if;
+  if Center then
+    const Frame: int := if Width >= 4 and AvailableRows >= 3 then
+      1
+    else
+      0
+    end if;
+    const InnerWidth: int := Sys.Math.Max(0, Width - 2 * Frame);
+    const BodyRows: int := Measurement.Intrinsic<TMsg>(Content, false, InnerWidth);
+    const HeaderRows: int := if Settings.Description = '' then
+      1
+    else
+      2
+    end if;
+    Height := Sys.Math.Min(AvailableRows, HeaderRows + Sys.Math.Max(1, BodyRows) + Frame);
+  end if;
+  const X: int := if Center then
+    Area.X + (Area.Width - Width) div 2
+  elsif Settings.Edge = Sheets.Side.Right then
+    Area.X + Area.Width - InsetX - Width
+  else
+    Area.X + InsetX
+  end if;
+  const Y: int := if Center then
+    Area.Y + (Area.Height - Height) div 2
+  elsif Settings.Edge = Sheets.Side.Bottom then
+    Area.Y + Area.Height - InsetY - Height
+  else
+    Area.Y + InsetY
+  end if;
+  const Panel: F.Rect := new F.Rect(X, Y, Width, Height);
+  const Framed: bool := Width >= 4 and Height >= 3;
+  const Edge: int := if Framed then
+    1
+  else
+    0
+  end if;
+  const Close: F.Rect := new F.Rect(X + Width - 1 - Edge, Y, 1, 1);
+  const CloseWidth: int := if Settings.CloseId = null then
+    0
+  else
+    1
+  end if;
+  const Title: F.Rect := new F.Rect(X + Edge, Y, Sys.Math.Max(0, Width - 2 * Edge - CloseWidth), 1);
+  const DetailRows: int := if Settings.Description <> '' and Height > Edge + 1 then
+    1
+  else
+    0
+  end if;
+  const Detail: F.Rect := new F.Rect(X + Edge, Y + 1, Width - 2 * Edge, DetailRows);
+  const Body: F.Rect := new F.Rect(
+    X + Edge, Y + 1 + DetailRows, Width - 2 * Edge,
+    Sys.Math.Max(0, Height - 1 - DetailRows - Edge)
+  );
+
+  Operations.Add(new D.Operation('', Area, Area, Colors, false, Tint := Theme.Colors.Scrim));
+  D.Fill(Operations, Panel, Colors);
+  if Framed then
+    D.Border(Operations, Panel, Panel, '', Colors, Theme.Widgets);
+  end if;
+
+  Operations.Add(new D.Operation(Settings.Title, Title, Title, Colors, false));
+  if Settings.CloseId <> null then
+    Operations.Add(new D.Operation('×', Close, Panel, Colors, false));
+  end if;
+
+  if DetailRows > 0 then
+    const Muted: T.Style := new T.Style(
+      Th.Rgb(Theme.Colors.TextSecondary, Colors.Background ?? 0), Colors.Background
+    );
+    Operations.Add(new D.Operation(Settings.Description, Detail, Detail, Muted, false));
+  end if;
+
+  return new PanelBounds(Panel, Close, Body);
+end function;
+
+// Resolves an open modal into a terminal layer over its base view.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable modal identity.
+// - `Base`: Lowered underlying view.
+// - `Open`: Model-owned visibility.
+// - `Settings`: Header, edge, size and initial focus.
+// - `Dismiss`: Proposed dismissal message.
+// - `Colors`: Current terminal colors.
+// - `Theme`: Semantic palette for the panel.
+// - `LowerContent`: Resolves the body with the panel's colors.
+// ## Returns
+// The base and its modal layer when visible.
+public function Lower<TMsg>(
+  Id: string; Base: E.Element<TMsg>; Open: bool; Settings: E.ModalOptions;
+  Dismiss: TMsg; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element<TMsg>
+): E.Element<TMsg>;
+begin
+  if not Open then
+    return Base;
+  end if;
+
+  const Across: bool := Settings.Edge = null or Settings.Edge = Sheets.Side.Left or Settings.Edge =
+    Sheets.Side.Right;
+  const Size: int := F.Cells(L.Measure.Logical(Settings.Size), Across);
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Colors.Background ?? 0);
+  const Panel: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+  return E.Element<TMsg>.Desktop(
+    Base, [
+      E.Element<TMsg>.ModalPanel(
+        Id,
+        Settings,
+        Size,
+        E.Element<TMsg>.Scrollable(Id, LowerContent(Panel), true),
+        Dismiss,
+        Panel
+      )
+    ], []
+  );
+end function;
+
+// Places the panel body and registers its input scope and built-in close action.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Placement<TMsg> = record
+  // Modal input scope with scrim dismissal.
+  public Scope: A.Scope<TMsg>;
+  // Close button placed in the header.
+  public Close: A.Control<TMsg>?;
+  // Available viewport for the scrollable body.
+  public Body: F.Rect;
+end record;
+
+// Draws the panel chrome and resolves geometry and routing for its body.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Operations`: Ordered paint operations.
+// - `Screen`: Available viewport.
+// - `Id`: Stable modal identity.
+// - `Settings`: Header, edge and focus settings.
+// - `Size`: Extent in cells.
+// - `Content`: Scrollable body used to measure a centered dialog.
+// - `Colors`: Resolved modal colors.
+// - `Theme`: Semantic palette.
+// - `Dismiss`: Proposed dismissal message.
+// - `FocusReturn`: Inherited fallback control identity.
+// ## Returns
+// The panel's placement and input bindings.
+public function Arrange<TMsg>(
+  Operations: Generic.List<D.Operation>; Screen: F.Rect; Id: string; Settings: E.ModalOptions;
+  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme; Dismiss: TMsg; FocusReturn: string
+): Placement<TMsg>;
+begin
+  const Bounds: PanelBounds := PaintPanel<TMsg>(
+    Operations,
+    Screen,
+    Settings,
+    Size,
+    Content,
+    Colors,
+    Theme
+  );
+  const Escape: Sys.Func<TMsg>? := if Settings.Dismissible then
+    function(): TMsg => Dismiss
+  else
+    null
+  end if;
+  const Scope: A.Scope<TMsg> := new A.Scope<TMsg>(
+    Id, Settings.InitialFocus ?? Settings.CloseId ?? '', Escape, [], Bounds.Panel
+  );
+  var Control: A.Control<TMsg>? := null;
+  case Settings.CloseId of
+    when is string as Close:
+      Control := new A.Control<TMsg>(
+        Close, 'Close', 'button', '', Bounds.Close, Id, FocusReturn, true,
+        A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Dismiss)), S.ButtonVariant.Default,
+        ButtonStyle := true, ArrowFocus := true
+      );
+    else
+  end case;
+
+  return new Placement<TMsg>(Scope, Control, Bounds.Body);
+end function;
+
+end unit;

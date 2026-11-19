@@ -102,6 +102,10 @@ rests before moving onto a control.
 
 ## CUI-045 — Repeated software screenshots omit unchanged tiles
 
+- Upstream: [Issue #101](https://github.com/yappologistic/CUI/issues/101) and
+  [PR #102](https://github.com/yappologistic/CUI/pull/102). The PR includes a
+  regression test for capturing twice into the same cleared buffer.
+
 At the pinned revision `71c383f`, capture a static frame with
 `cui_app_screenshot`, clear the destination buffer and capture the same frame
 into it again. On Linux/X11 the second image differs from the first. The
